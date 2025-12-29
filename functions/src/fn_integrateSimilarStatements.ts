@@ -198,7 +198,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		const now = Date.now();
 
 		// Get creator info from the user who initiated integration (admin)
-		const adminDoc = await db.collection(Collections.users).doc(userId).get();
+		const adminDoc = await db.collection('usersV2').doc(userId).get();
 		const adminData = adminDoc.exists ? adminDoc.data() : null;
 
 		const newStatement: Statement = {
@@ -229,6 +229,8 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 			},
 			hide: false,
 			randomSeed: Math.random(),
+			isCluster: true,
+			integratedOptions: selectedStatementIds, // Source statement IDs that were merged
 		};
 
 		// 6. Create the new statement in Firestore

@@ -2,7 +2,7 @@ import { setUserAdvanceUser } from "@/redux/creator/creatorSlice";
 import { store } from "@/redux/store";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { DB } from "../config";
-import { Collections, Creator } from "delib-npm";
+import { Creator } from "delib-npm";
 
 export async function setUserAdvanceUserToDB(advanceUser: boolean) {
 	try {
@@ -12,7 +12,7 @@ export async function setUserAdvanceUserToDB(advanceUser: boolean) {
 
 		dispatch(setUserAdvanceUser(advanceUser));
 
-		const userDocRef = doc(DB, Collections.users, user.uid);
+		const userDocRef = doc(DB, 'usersV2', user.uid);
 		await updateDoc(userDocRef, {
 			advanceUser: advanceUser,
 		});
@@ -25,7 +25,7 @@ export async function setUserAdvanceUserToDB(advanceUser: boolean) {
 export async function setUserToDB(user: Creator) {
 	try {
 		const dispatch = store.dispatch;
-		const userDocRef = doc(DB, Collections.users, user.uid);
+		const userDocRef = doc(DB, 'usersV2', user.uid);
 
 		// Use atomic merge operation to avoid read-before-write race condition
 		// This will create the document if it doesn't exist, or merge if it does

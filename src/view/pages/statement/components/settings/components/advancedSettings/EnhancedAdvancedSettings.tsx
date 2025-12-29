@@ -15,7 +15,7 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download, RefreshCcw
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';
@@ -25,6 +25,8 @@ import { createStatementsByParentSelector } from '@/redux/utils/selectorFactorie
 import type { RootState } from '@/redux/types';
 import { logError } from '@/utils/errorHandling';
 import type { ExportFormat } from '@/types/export';
+import { requestRecalculateEvaluations } from '@/controllers/db/evaluation/recalculateEvaluations';
+import { RefreshCw } from 'lucide-react';
 
 interface CategoryConfig {
   id: string;
@@ -60,6 +62,14 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     json: false,
     csv: false
   });
+
+  // Recalculate evaluation data state
+  const [isRecalculating, setIsRecalculating] = useState(false);
+  const [recalculateResult, setRecalculateResult] = useState<{
+    success: boolean;
+    statementsProcessed: number;
+    statementsFixed: number;
+  } | null>(null);
 
   // Selector for sub-statements
   const selectSubStatements = createStatementsByParentSelector(
@@ -243,6 +253,32 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     }
   }
 
+  // Recalculate evaluation data handler
+  async function handleRecalculateEvaluations() {
+    setIsRecalculating(true);
+    setRecalculateResult(null);
+    try {
+      const result = await requestRecalculateEvaluations(statement.statementId);
+      setRecalculateResult({
+        success: result.success,
+        statementsProcessed: result.statementsProcessed,
+        statementsFixed: result.statementsFixed
+      });
+    } catch (error) {
+      logError(error, {
+        operation: 'EnhancedAdvancedSettings.handleRecalculateEvaluations',
+        statementId: statement.statementId
+      });
+      setRecalculateResult({
+        success: false,
+        statementsProcessed: 0,
+        statementsFixed: 0
+      });
+    } finally {
+      setIsRecalculating(false);
+    }
+  }
+
   // Toggle switch component
   const ToggleSwitch: FC<{
     isChecked: boolean;
@@ -393,7 +429,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           return (
             <div
               key={category.id}
-              className={`${styles.category} ${styles[`category--${category.priority}`]}`}
+              className={`${styles.category} ${category.id === 'teamFormation' ? styles['category--teamFormation'] : styles[`category--${category.priority}`]}`}
             >
               <button
                 className={styles.categoryHeader}
@@ -409,7 +445,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                 </div>
                 <div className={styles.categoryHeaderRight}>
                   <span className={styles.categoryBadge}>
-                    {category.priority === 'high' && t('Essential')}
+                    {category.id === 'teamFormation' && t('Teams')}
+                    {category.id !== 'teamFormation' && category.priority === 'high' && t('Essential')}
                     {category.priority === 'medium' && t('Recommended')}
                     {category.priority === 'low' && t('Advanced')}
                   </span>
@@ -768,6 +805,38 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                       <p className={styles.exportInfo}>
                         {t('Includes evaluation counts, demographic breakdowns, and anonymized data')}
                       </p>
+
+                      {/* Divider */}
+                      <div className={styles.exportDivider} />
+
+                      {/* Recalculate Evaluation Data */}
+                      <h4 className={styles.sectionTitle}>
+                        <RefreshCw size={18} />
+                        {t('Recalculate Evaluation Data')}
+                      </h4>
+                      <p className={styles.sectionDescription}>
+                        {t('Fix any inconsistencies in evaluation counts by recalculating from actual evaluation data. Use this if you notice incorrect vote counts.')}
+                      </p>
+                      <div className={styles.exportButtons}>
+                        <button
+                          className={`${styles.exportButton} ${styles['exportButton--warning']}`}
+                          onClick={handleRecalculateEvaluations}
+                          disabled={isRecalculating}
+                        >
+                          <RefreshCw size={18} className={isRecalculating ? styles.spinning : ''} />
+                          {isRecalculating ? t('Recalculating...') : t('Recalculate')}
+                        </button>
+                      </div>
+                      {recalculateResult && (
+                        <p className={`${styles.exportInfo} ${recalculateResult.success ? styles['exportInfo--success'] : styles['exportInfo--error']}`}>
+                          {recalculateResult.success
+                            ? t('Processed {{processed}} options, fixed {{fixed}} inconsistencies')
+                                .replace('{{processed}}', String(recalculateResult.statementsProcessed))
+                                .replace('{{fixed}}', String(recalculateResult.statementsFixed))
+                            : t('Recalculation failed. Please try again.')
+                          }
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>

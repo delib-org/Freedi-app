@@ -109,10 +109,54 @@ export default defineConfig(({ mode }) => {
 			cssCodeSplit: false, // Extract all CSS into a single file
 			rollupOptions: {
 				output: {
-					manualChunks: {
-						'vendor-react': ['react', 'react-dom', 'react-router'],
-						// Removed statement manual chunking to allow better code splitting
-						styles: ['./src/view/style/style.scss'],
+					manualChunks: (id) => {
+						// React core libraries and essential React dependencies
+						// use-sync-external-store MUST be bundled with React to avoid initialization errors
+						if (id.includes('node_modules/react/') ||
+							id.includes('node_modules/react-dom/') ||
+							id.includes('node_modules/react-router') ||
+							id.includes('node_modules/use-sync-external-store') ||
+							id.includes('node_modules/scheduler')) {
+							return 'vendor-react';
+						}
+						// Firebase - large, only needed after auth
+						if (id.includes('node_modules/firebase/') ||
+							id.includes('node_modules/@firebase/')) {
+							return 'vendor-firebase';
+						}
+						// Redux - state management
+						if (id.includes('node_modules/@reduxjs/') ||
+							id.includes('node_modules/react-redux/') ||
+							id.includes('node_modules/redux')) {
+							return 'vendor-redux';
+						}
+						// ReactFlow - only used in MindMap
+						if (id.includes('node_modules/reactflow/') ||
+							id.includes('node_modules/@reactflow/') ||
+							id.includes('node_modules/dagre')) {
+							return 'vendor-reactflow';
+						}
+						// TipTap editor - only used in suggestions
+						if (id.includes('node_modules/@tiptap/') ||
+							id.includes('node_modules/prosemirror')) {
+							return 'vendor-editor';
+						}
+						// i18n - internationalization
+						if (id.includes('node_modules/i18next') ||
+							id.includes('node_modules/react-i18next')) {
+							return 'vendor-i18n';
+						}
+						// Sentry - error monitoring
+						if (id.includes('node_modules/@sentry/')) {
+							return 'vendor-sentry';
+						}
+						// Markdown renderer
+						if (id.includes('node_modules/react-markdown') ||
+							id.includes('node_modules/remark') ||
+							id.includes('node_modules/unified') ||
+							id.includes('node_modules/micromark')) {
+							return 'vendor-markdown';
+						}
 					},
 					assetFileNames: (assetInfo) => {
 						if (assetInfo.name?.endsWith('.css')) {

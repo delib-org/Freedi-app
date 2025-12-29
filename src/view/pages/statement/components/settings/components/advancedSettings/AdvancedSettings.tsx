@@ -12,6 +12,17 @@ import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
+import { getOptionsExceedingMax, splitJoinedOption } from '@/controllers/db/joining/splitJoinedOption';
+import { JOINING } from '@/constants/common';
+import { logError } from '@/utils/errorHandling';
+
+interface OptionExceedingMax {
+	statementId: string;
+	statement: string;
+	joinedCount: number;
+	maxMembers: number;
+	excessCount: number;
+}
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -23,16 +34,80 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.maxVotesPerUser);
 	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.maxVotesPerUser || 3);
 
+	// Split rooms state
+	const [exceedingOptions, setExceedingOptions] = useState<OptionExceedingMax[]>([]);
+	const [isLoadingExceeding, setIsLoadingExceeding] = useState(false);
+	const [splitRoomSize, setSplitRoomSize] = useState<number>(JOINING.DEFAULT_MAX_MEMBERS);
+	const [splittingOptionId, setSplittingOptionId] = useState<string | null>(null);
+	const [splitResults, setSplitResults] = useState<{ optionTitle: string; totalRooms: number } | null>(null);
+
 	// Update vote limit state when statement changes
 	useEffect(() => {
 		setIsVoteLimitEnabled(!!statement.evaluationSettings?.maxVotesPerUser);
 		setMaxVotes(statement.evaluationSettings?.maxVotesPerUser || 3);
 	}, [statement.statementId, statement.evaluationSettings?.maxVotesPerUser]);
 
+	// Load exceeding options when maxJoinMembers is set
+	useEffect(() => {
+		if (settings.joiningEnabled && settings.maxJoinMembers) {
+			loadExceedingOptions();
+		} else {
+			setExceedingOptions([]);
+		}
+	}, [statement.statementId, settings.joiningEnabled, settings.maxJoinMembers]);
+
+	async function loadExceedingOptions() {
+		try {
+			setIsLoadingExceeding(true);
+			const response = await getOptionsExceedingMax(statement.statementId);
+			if (response.hasMaxLimit && response.options) {
+				setExceedingOptions(response.options);
+			} else {
+				setExceedingOptions([]);
+			}
+		} catch (error) {
+			logError(error, {
+				operation: 'AdvancedSettings.loadExceedingOptions',
+				statementId: statement.statementId,
+			});
+			setExceedingOptions([]);
+		} finally {
+			setIsLoadingExceeding(false);
+		}
+	}
+
+	async function handleSplitOption(optionId: string) {
+		try {
+			setSplittingOptionId(optionId);
+			const result = await splitJoinedOption({
+				optionStatementId: optionId,
+				parentStatementId: statement.statementId,
+				roomSize: splitRoomSize,
+			});
+
+			if (result.success) {
+				setSplitResults({
+					optionTitle: result.optionTitle,
+					totalRooms: result.totalRooms,
+				});
+				// Refresh the list
+				await loadExceedingOptions();
+			}
+		} catch (error) {
+			logError(error, {
+				operation: 'AdvancedSettings.handleSplitOption',
+				statementId: optionId,
+				metadata: { parentStatementId: statement.statementId, roomSize: splitRoomSize },
+			});
+		} finally {
+			setSplittingOptionId(null);
+		}
+	}
+
 	// Unified handler for all statement settings
 	function handleSettingChange(
 		property: keyof StatementSettings,
-		newValue: boolean | string
+		newValue: boolean | string | number | undefined
 	) {
 		setStatementSettingToDB({
 			statement,
@@ -40,6 +115,17 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			newValue,
 			settingsSection: 'statementSettings',
 		});
+	}
+
+	// Handler for number input changes
+	function handleNumberSettingChange(
+		property: keyof StatementSettings,
+		value: string
+	) {
+		const numValue = value === '' ? undefined : Number(value);
+		if (numValue === undefined || (numValue >= 1 && numValue <= 1000)) {
+			handleSettingChange(property, numValue);
+		}
 	}
 
 	// Handler for hide toggle (root-level property)
@@ -113,6 +199,187 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				</div>
 			</div>
 
+			{/* Smart Join Category - Standalone prominent section for question statements */}
+			{statement.statementType === StatementType.question && (
+				<div className={`${styles.category} ${styles.smartJoinCategory}`}>
+					<div className={styles.categoryHeader}>
+						<span className={styles.categoryTitle}>
+							{t('Smart Join')}
+						</span>
+						<span className={styles.categoryBadge}>
+							{t('Team Formation')}
+						</span>
+					</div>
+					<div className={styles.categoryContent}>
+						{/* Master toggle */}
+						<div className={styles.masterToggle}>
+							<Checkbox
+								label={t('Enable Smart Join')}
+								isChecked={settings.joiningEnabled ?? false}
+								onChange={(checked) =>
+									handleSettingChange('joiningEnabled', checked)
+								}
+							/>
+							<p className={styles.featureDescription}>
+								{t('Allow participants to join options and form teams with size limits')}
+							</p>
+						</div>
+
+						{/* Settings revealed when enabled */}
+						{settings.joiningEnabled && (
+							<div className={styles.settingsGrid}>
+								{/* Join Behavior Card */}
+								<div className={styles.settingCard}>
+									<h4 className={styles.settingCardTitle}>
+										{t('Join Behavior')}
+									</h4>
+									<Checkbox
+										label={t('Single option join only')}
+										isChecked={settings.singleJoinOnly ?? false}
+										onChange={(checked) =>
+											handleSettingChange('singleJoinOnly', checked)
+										}
+									/>
+									<p className={styles.helperText}>
+										{t('Users can only join one option at a time')}
+									</p>
+								</div>
+
+								{/* Team Size Limits Card */}
+								<div className={styles.settingCard}>
+									<h4 className={styles.settingCardTitle}>
+										{t('Team Size Limits')}
+									</h4>
+									<div className={styles.numberInputRow}>
+										<div className={styles.numberInputGroup}>
+											<label>{t('Minimum')}</label>
+											<input
+												type="number"
+												min="1"
+												max="1000"
+												placeholder={t('None')}
+												value={settings.minJoinMembers ?? ''}
+												onChange={(e) => handleNumberSettingChange('minJoinMembers', e.target.value)}
+												className={styles.numberInput}
+											/>
+										</div>
+										<span className={styles.rangeSeparator}>—</span>
+										<div className={styles.numberInputGroup}>
+											<label>{t('Maximum')}</label>
+											<input
+												type="number"
+												min="1"
+												max="1000"
+												placeholder={t('None')}
+												value={settings.maxJoinMembers ?? ''}
+												onChange={(e) => handleNumberSettingChange('maxJoinMembers', e.target.value)}
+												className={styles.numberInput}
+											/>
+										</div>
+									</div>
+									<p className={styles.helperText}>
+										{t('Set team size constraints for each option')}
+									</p>
+								</div>
+
+								{/* Split Rooms Card - Always visible with hint if max not set */}
+								<div className={`${styles.settingCard} ${styles.settingCardFull}`}>
+									<h4 className={styles.settingCardTitle}>
+										{t('Room Splitting')}
+										{!settings.maxJoinMembers && (
+											<span className={styles.requiresTag}>
+												{t('Set maximum first')}
+											</span>
+										)}
+									</h4>
+
+									{settings.maxJoinMembers ? (
+										<div className={styles.splitRoomsContent}>
+											<div className={styles.numberInputGroup}>
+												<label>{t('Room size for splitting')}</label>
+												<input
+													type="number"
+													min={JOINING.MIN_ROOM_SIZE}
+													max="100"
+													value={splitRoomSize}
+													onChange={(e) => setSplitRoomSize(Number(e.target.value) || JOINING.DEFAULT_MAX_MEMBERS)}
+													className={styles.numberInput}
+												/>
+											</div>
+
+											{isLoadingExceeding ? (
+												<p className={styles.loadingText}>{t('Checking options...')}</p>
+											) : exceedingOptions.length === 0 ? (
+												<p className={styles.noExceedingText}>
+													{t('No options exceed the maximum member limit')}
+												</p>
+											) : (
+												<div className={styles.exceedingOptionsList}>
+													<p className={styles.exceedingCount}>
+														{exceedingOptions.length} {t('options exceed maximum')}
+													</p>
+													{exceedingOptions.map((option) => (
+														<div key={option.statementId} className={styles.exceedingOption}>
+															<div className={styles.optionInfo}>
+																<span className={styles.optionTitle}>
+																	{option.statement.substring(0, 50)}
+																	{option.statement.length > 50 ? '...' : ''}
+																</span>
+																<span className={styles.optionCount}>
+																	{option.joinedCount} / {option.maxMembers} {t('members')}
+																	<span className={styles.excessBadge}>
+																		+{option.excessCount}
+																	</span>
+																</span>
+															</div>
+															<button
+																className={styles.splitButton}
+																onClick={() => handleSplitOption(option.statementId)}
+																disabled={splittingOptionId === option.statementId}
+															>
+																{splittingOptionId === option.statementId
+																	? t('Splitting...')
+																	: t('Split Rooms')}
+															</button>
+														</div>
+													))}
+												</div>
+											)}
+
+											{splitResults && (
+												<div className={styles.splitSuccess}>
+													<p>
+														{t('Successfully split')} "{splitResults.optionTitle}" {t('into')} {splitResults.totalRooms} {t('rooms')}
+													</p>
+													<button
+														className={styles.dismissButton}
+														onClick={() => setSplitResults(null)}
+													>
+														{t('Dismiss')}
+													</button>
+												</div>
+											)}
+
+											<button
+												className={styles.refreshButton}
+												onClick={loadExceedingOptions}
+												disabled={isLoadingExceeding}
+											>
+												{t('Refresh list')}
+											</button>
+										</div>
+									) : (
+										<p className={styles.helperText}>
+											{t('Set a maximum team size above to enable room splitting for oversized teams')}
+										</p>
+									)}
+								</div>
+							</div>
+						)}
+					</div>
+				</div>
+			)}
+
 			{/* Participation & Collaboration Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
@@ -121,15 +388,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					</span>
 				</div>
 				<div className={styles.categoryContent}>
-					{statement.statementType === StatementType.question && (
-						<Checkbox
-							label={'Enable Joining an option'}
-							isChecked={settings.joiningEnabled ?? false}
-							onChange={(checked) =>
-								handleSettingChange('joiningEnabled', checked)
-							}
-						/>
-					)}
 					<Checkbox
 						label={'Allow participants to contribute options to the voting page'}
 						isChecked={settings.enableAddVotingOption ?? false}

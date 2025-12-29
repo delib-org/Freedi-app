@@ -85,9 +85,18 @@ import {
   onEvaluationChangeInvalidateCache,
 } from "./fn_clusterAggregation";
 import { checkProfanity } from "./fn_profanityChecker";
+import { recalculateStatementEvaluations } from "./fn_recalculateEvaluations";
+import { fixClusterIntegration } from "./fn_fixClusterIntegration";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
 import { analyzeSubscriptionPatterns } from "./fn_metrics";
+
+// Polarization Index Migration
+import {
+  recalculatePolarizationIndexForStatement,
+  recalculatePolarizationIndexForParent,
+  recalculatePolarizationIndexForGroup,
+} from "./migrations/recalculatePolarizationIndex";
 
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
@@ -105,6 +114,15 @@ import {
   getMyRoomAssignment,
   deleteRoomAssignments,
 } from "./fn_roomAssignment";
+
+// Split Joined Option functions
+import {
+  splitJoinedOption,
+  getOptionsExceedingMax,
+  getAllOptionsWithMembers,
+  clearAllRoomsForParent,
+  cleanupDuplicateRoomSettings,
+} from "./fn_splitJoinedOption";
 
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
@@ -266,6 +284,8 @@ exports.unsubscribeEmail = wrapHttpFunction(unsubscribeEmail);
 exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
+exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapHttpFunction(mergeStatements);
@@ -504,6 +524,13 @@ exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
 exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
 exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
 
+// Split Joined Option functions
+exports.splitJoinedOption = wrapHttpFunction(splitJoinedOption);
+exports.getOptionsExceedingMax = wrapHttpFunction(getOptionsExceedingMax);
+exports.getAllOptionsWithMembers = wrapHttpFunction(getAllOptionsWithMembers);
+exports.clearAllRoomsForParent = wrapHttpFunction(clearAllRoomsForParent);
+exports.cleanupDuplicateRoomSettings = wrapHttpFunction(cleanupDuplicateRoomSettings);
+
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;
 
@@ -536,3 +563,40 @@ exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
 exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
 exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
 exports.testEmbeddingGeneration = wrapHttpFunction(testEmbeddingGeneration);
+
+// Polarization Index Migration (for recalculating with demographic data)
+exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { statementId } = req.body;
+    if (!statementId) {
+      res.status(400).json({ error: "statementId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForStatement(statementId);
+    res.json(result);
+  }
+);
+
+exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { parentId } = req.body;
+    if (!parentId) {
+      res.status(400).json({ error: "parentId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForParent(parentId);
+    res.json(result);
+  }
+);
+
+exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { topParentId } = req.body;
+    if (!topParentId) {
+      res.status(400).json({ error: "topParentId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForGroup(topParentId);
+    res.json(result);
+  }
+);

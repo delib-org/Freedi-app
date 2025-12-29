@@ -240,10 +240,10 @@ export { VoteSchema, getVoteId, VotingSettingsSchema } from "./models/vote/votin
 export type { StatementSnapShot } from "./models/statement/StatementSnapShot";
 export { statementSnapShotSchema } from "./models/statement/StatementSnapShot";
 
-export type { UserDemographicQuestion, DemographicOption, DemographicQuestionScope } from "./models/userDemographic/userDemographicModel";
+export type { UserDemographicQuestion, DemographicOption, DemographicQuestionScope, ExcludedInheritedDemographics } from "./models/userDemographic/userDemographicModel";
 export {
   UserDemographicQuestionType, UserDemographicQuestionSchema,
-  DemographicOptionSchema, DemographicQuestionScopeSchema } from "./models/userDemographic/userDemographicModel";
+  DemographicOptionSchema, DemographicQuestionScopeSchema, ExcludedInheritedDemographicsSchema } from "./models/userDemographic/userDemographicModel";
 
 export { Collections } from "./models/collections/collectionsModel";
 
@@ -296,7 +296,16 @@ export { RoomSchema, RoomSettingsSchema, RoomParticipantSchema, DemographicTagSc
 export type { Room, RoomSettings, RoomParticipant, DemographicTag } from "./models/rooms/roomsModel";
 
 // Survey models
-export type { Survey, SurveySettings, SurveyProgress, QuestionOverrideSettings } from "./models/survey/surveyModel";
+export type {
+  Survey,
+  SurveySettings,
+  SurveyProgress,
+  QuestionOverrideSettings,
+  SurveyDemographicPage,
+  SurveyDemographicQuestion,
+  SurveyDemographicAnswer,
+  SurveyExplanationPage,
+} from "./models/survey/surveyModel";
 export {
   SurveySchema,
   SurveySettingsSchema,
@@ -306,6 +315,10 @@ export {
   DEFAULT_SURVEY_SETTINGS,
   QuestionOverrideSettingsSchema,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
+  SurveyDemographicPageSchema,
+  SurveyDemographicQuestionSchema,
+  SurveyDemographicAnswerSchema,
+  SurveyExplanationPageSchema,
 } from "./models/survey/surveyModel";
 
 // MAD Calculation utilities

@@ -66,6 +66,14 @@ export const roomAssignmentSlice = createSlice({
 		setRoomsArray: (state, action: PayloadAction<Room[]>) => {
 			state.rooms = action.payload;
 		},
+		// Merge rooms for a specific settingsId (keeps rooms from other settings)
+		mergeRoomsBySettingsId: (state, action: PayloadAction<{ settingsId: string; rooms: Room[] }>) => {
+			const { settingsId, rooms: newRooms } = action.payload;
+			// Remove old rooms for this settingsId
+			state.rooms = state.rooms.filter((r) => r.settingsId !== settingsId);
+			// Add the new rooms
+			state.rooms.push(...newRooms);
+		},
 		removeRoom: (state, action: PayloadAction<string>) => {
 			const roomId = action.payload;
 			state.rooms = state.rooms.filter((r) => r.roomId !== roomId);
@@ -85,6 +93,14 @@ export const roomAssignmentSlice = createSlice({
 		},
 		setParticipantsArray: (state, action: PayloadAction<RoomParticipant[]>) => {
 			state.participants = action.payload;
+		},
+		// Merge participants for a specific settingsId (keeps participants from other settings)
+		mergeParticipantsBySettingsId: (state, action: PayloadAction<{ settingsId: string; participants: RoomParticipant[] }>) => {
+			const { settingsId, participants: newParticipants } = action.payload;
+			// Remove old participants for this settingsId
+			state.participants = state.participants.filter((p) => p.settingsId !== settingsId);
+			// Add the new participants
+			state.participants.push(...newParticipants);
 		},
 		removeParticipant: (state, action: PayloadAction<string>) => {
 			const participantId = action.payload;
@@ -123,9 +139,11 @@ export const {
 	clearRoomSettings,
 	setRoom,
 	setRoomsArray,
+	mergeRoomsBySettingsId,
 	removeRoom,
 	setParticipant,
 	setParticipantsArray,
+	mergeParticipantsBySettingsId,
 	removeParticipant,
 	setMyAssignment,
 	setLoading,

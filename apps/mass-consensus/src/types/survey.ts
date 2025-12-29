@@ -6,16 +6,49 @@ export type {
   SurveySettings,
   SurveyProgress,
   QuestionOverrideSettings,
+  SurveyDemographicPage,
+  SurveyDemographicQuestion,
+  SurveyDemographicAnswer,
+  SurveyExplanationPage,
 } from '@freedi/shared-types';
 
 export {
   SurveyStatus,
   DEFAULT_SURVEY_SETTINGS,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
+  SurveyDemographicPageSchema,
+  SurveyDemographicQuestionSchema,
+  SurveyDemographicAnswerSchema,
+  SurveyExplanationPageSchema,
 } from '@freedi/shared-types';
 
+// Re-export flow types and utilities
+export type {
+  FlowItemType,
+  BaseFlowItem,
+  QuestionFlowItem,
+  DemographicFlowItem,
+  ExplanationFlowItem,
+  SurveyFlowItem,
+} from './surveyFlow';
+
+export {
+  buildSurveyFlow,
+  getTotalFlowLength,
+  getFlowItemByIndex,
+  findFlowIndexByQuestionId,
+  findFlowIndexByDemographicPageId,
+  findFlowIndexByExplanationPageId,
+  isQuestionFlowItem,
+  isDemographicFlowItem,
+  isExplanationFlowItem,
+  getQuestionNumber,
+  getTotalQuestions,
+  getDemographicPositionOptions,
+} from './surveyFlow';
+
 // Import for local use
-import type { Survey, SurveySettings, QuestionOverrideSettings } from '@freedi/shared-types';
+import type { Survey, SurveySettings, QuestionOverrideSettings, SurveyDemographicPage, SurveyExplanationPage } from '@freedi/shared-types';
 
 /**
  * Survey with populated question data
@@ -38,6 +71,12 @@ export interface CreateSurveyRequest {
   defaultLanguage?: string;
   /** When true, forces all participants to use defaultLanguage regardless of preferences */
   forceLanguage?: boolean;
+  /** Demographic page configurations */
+  demographicPages?: SurveyDemographicPage[];
+  /** Explanation page configurations (markdown content) */
+  explanationPages?: SurveyExplanationPage[];
+  /** Parent statement ID for inheriting demographic questions */
+  parentStatementId?: string;
 }
 
 /**
@@ -54,6 +93,12 @@ export interface UpdateSurveyRequest {
   defaultLanguage?: string;
   /** When true, forces all participants to use defaultLanguage regardless of preferences */
   forceLanguage?: boolean;
+  /** Demographic page configurations */
+  demographicPages?: SurveyDemographicPage[];
+  /** Explanation page configurations (markdown content) */
+  explanationPages?: SurveyExplanationPage[];
+  /** Parent statement ID for inheriting demographic questions */
+  parentStatementId?: string;
 }
 
 /**
@@ -74,7 +119,11 @@ export interface AddQuestionRequest {
  */
 export interface UpdateProgressRequest {
   currentQuestionIndex: number;
+  /** Current index in the unified flow (questions + demographics) */
+  currentFlowIndex?: number;
   completedQuestionId?: string;
+  /** Demographic page ID that was completed */
+  completedDemographicPageId?: string;
   isCompleted?: boolean;
 }
 

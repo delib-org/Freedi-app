@@ -1,94 +1,279 @@
+// Page 404 - Playful Not Found Page
+// Features: Floating animations, friendly design, mobile-first
+
 .page404 {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    height: 100vh;
-    width: 100vw;
-    background-color: #EFF1FF;
-    color: white;
-    &__cloud1 {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 193.18px;
-        height: 118px;
-        opacity: 1;
-    }
-    &__cloud2 {
-        position: absolute;
-        top: 0;
-        right: 0;
-        width: 35.86px;
-        height: 222.5px;
-        opacity: 1;
-    }
-    &__cloud3{
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        width: 138px;
-        height: 133px;
-        opacity: 1;
-    }
-    &__404_textImg {
-        position: relative;
-        max-width: 100%;
-        height: auto;
-        margin-bottom: 2rem;
-    }
-    &__cables {
-        position: relative;
-        width: 100%;
-        display: flex;
-        justify-content: center;
-        margin-bottom: 2rem;
-        &__CableDog {
-            width: 219px;
-            height: 185px;
-            opacity: 1;
-        }
-        &__Cable {
-            width: 149px;
-            height: 55px;
-            opacity: 1;
-            margin-left: 20px;
-            margin-top: 120px;
-        }
-    }
-    &__text {
-        position: relative;
-        font-size: 1.5rem;
-        p{
-            font-family: Catamaran;
-            font-size: 20px;
-            font-weight: 600;
-            line-height: 32.8px;
-            text-align: center;
-            color: black;
-        }  
-    }
-    &__btn {
-        position: relative;
-        background-color: #81A0D3;
-        margin-top: 25px;
-        align-items: center;
-        border: none;
-        cursor: pointer;
-        width: 217px;
-        height: 36.59px;
-        border-radius: 27.47px ;
-        opacity: 0px;
-        
-        p {
-            font-family: Sora;
-            font-size: 16px;
-            line-height: 17.64px;
-            letter-spacing: -0.03em;
-            color: #FFFFFF;
-            
-        }
-    }
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	min-height: 100vh;
+	width: 100%;
+	padding: 2rem;
+	background-color: var(--statementBackground, #f2f6ff);
+	overflow: hidden;
+
+	// Clouds container
+	&__clouds {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	// Individual cloud styling with drift animation
+	&__cloud {
+		position: absolute;
+		opacity: 0.7;
+		animation: drift 20s ease-in-out infinite alternate;
+
+		&--1 {
+			top: 0;
+			right: 0;
+			width: 180px;
+			height: auto;
+			animation-delay: 0s;
+		}
+
+		&--2 {
+			top: 5%;
+			left: 5%;
+			width: 100px;
+			height: auto;
+			animation-delay: -5s;
+			animation-direction: alternate-reverse;
+		}
+
+		&--3 {
+			bottom: 0;
+			left: 0;
+			width: 140px;
+			height: auto;
+			animation-delay: -10s;
+		}
+	}
+
+	// Main content wrapper
+	&__content {
+		position: relative;
+		z-index: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		max-width: 500px;
+		text-align: center;
+		animation: fadeSlideUp 0.6s ease-out;
+	}
+
+	// 404 number image with float animation
+	&__number {
+		width: 180px;
+		max-width: 60%;
+		margin-bottom: 1.5rem;
+		animation: float 3s ease-in-out infinite;
+		filter: drop-shadow(0 10px 20px rgba(95, 136, 229, 0.2));
+	}
+
+	// Illustration container
+	&__illustration {
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		margin-bottom: 1.5rem;
+		animation: fadeSlideUp 0.6s ease-out 0.2s both;
+	}
+
+	// Dog image with subtle bounce
+	&__dog {
+		width: 200px;
+		max-width: 50vw;
+		animation: dogBounce 2s ease-in-out infinite;
+		filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1));
+	}
+
+	// Cable with sway animation
+	&__cable {
+		width: 120px;
+		max-width: 30vw;
+		margin-left: -15px;
+		margin-bottom: 10px;
+		transform-origin: top center;
+		animation: cableSway 4s ease-in-out infinite;
+	}
+
+	// Primary message
+	&__message {
+		margin: 0 0 0.5rem;
+		font-size: 1.4rem;
+		font-weight: 600;
+		color: var(--text-title, #191e29);
+		line-height: 1.3;
+		animation: fadeSlideUp 0.6s ease-out 0.4s both;
+	}
+
+	// Secondary hint text
+	&__hint {
+		margin: 0 0 2rem;
+		font-size: 1rem;
+		color: var(--text-body, #3d4d71);
+		line-height: 1.5;
+		animation: fadeSlideUp 0.6s ease-out 0.5s both;
+	}
+
+	// Home button with playful styling
+	&__button {
+		padding: 0.875rem 2.5rem;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--white, #ffffff);
+		background: linear-gradient(
+			135deg,
+			var(--btn-primary, #5f88e5) 0%,
+			var(--btn-primary-hover, #80a0ea) 100%
+		);
+		border: none;
+		border-radius: 50px;
+		cursor: pointer;
+		box-shadow: 0 4px 15px rgba(95, 136, 229, 0.35);
+		transition: all 0.3s ease;
+		animation: fadeSlideUp 0.6s ease-out 0.6s both, pulse 2s ease-in-out 1s infinite;
+
+		&:hover {
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px rgba(95, 136, 229, 0.45);
+		}
+
+		&:active {
+			transform: translateY(0) scale(0.98);
+		}
+
+		&:focus-visible {
+			outline: 3px solid var(--btn-primary, #5f88e5);
+			outline-offset: 3px;
+		}
+	}
+}
+
+// Animations
+@keyframes float {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-10px);
+	}
+}
+
+@keyframes drift {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(15px);
+	}
+}
+
+@keyframes fadeSlideUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes dogBounce {
+	0%, 100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-5px);
+	}
+}
+
+@keyframes cableSway {
+	0%, 100% {
+		transform: rotate(-3deg);
+	}
+	50% {
+		transform: rotate(3deg);
+	}
+}
+
+@keyframes pulse {
+	0%, 100% {
+		box-shadow: 0 4px 15px rgba(95, 136, 229, 0.35);
+	}
+	50% {
+		box-shadow: 0 4px 25px rgba(95, 136, 229, 0.55);
+	}
+}
+
+// Mobile responsive
+@media (max-width: 600px) {
+	.page404 {
+		padding: 1rem;
+
+		&__cloud {
+			&--1 {
+				width: 120px;
+			}
+			&--2 {
+				width: 70px;
+			}
+			&--3 {
+				width: 100px;
+			}
+		}
+
+		&__number {
+			width: 140px;
+		}
+
+		&__dog {
+			width: 160px;
+		}
+
+		&__cable {
+			width: 90px;
+		}
+
+		&__message {
+			font-size: 1.2rem;
+		}
+
+		&__hint {
+			font-size: 0.9rem;
+		}
+
+		&__button {
+			padding: 0.75rem 2rem;
+			font-size: 0.95rem;
+		}
+	}
+}
+
+// Reduced motion accessibility
+@media (prefers-reduced-motion: reduce) {
+	.page404 {
+		&__number,
+		&__dog,
+		&__cable,
+		&__cloud,
+		&__button,
+		&__content,
+		&__illustration,
+		&__message,
+		&__hint {
+			animation: none;
+		}
+
+		&__button {
+			&:hover {
+				transform: none;
+			}
+		}
+	}
 }

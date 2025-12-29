@@ -359,25 +359,23 @@ const UserQuestionComp = ({
 				</div>
 			)}
 
-			{/* Scope Toggle - Only show for top parent */}
-			{isTopParent && (
-				<div className={styles.scopeToggle}>
-					<label className={styles.scopeLabel}>
-						<input
-							type='checkbox'
-							checked={isGroupScope}
-							onChange={(e) => handleScopeToggle(e.target.checked)}
-						/>
-						<span>{t('Apply to all sub-discussions')}</span>
-					</label>
-					<p className={styles.scopeHint}>
-						{isGroupScope
-							? t('Members will answer these questions once when joining the group')
-							: t('Members will answer these questions only for this discussion')
-						}
-					</p>
-				</div>
-			)}
+			{/* Scope Toggle - Show for all statements */}
+			<div className={styles.scopeToggle}>
+				<label className={styles.scopeLabel}>
+					<input
+						type='checkbox'
+						checked={isGroupScope}
+						onChange={(e) => handleScopeToggle(e.target.checked)}
+					/>
+					<span>{t('Apply to all sub-discussions')}</span>
+				</label>
+				<p className={styles.scopeHint}>
+					{isGroupScope
+						? t('Members will answer these questions once when joining the group')
+						: t('Members will answer these questions only for this discussion')
+					}
+				</p>
+			</div>
 		</div>
 	);
 };

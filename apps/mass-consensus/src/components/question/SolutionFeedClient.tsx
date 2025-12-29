@@ -116,6 +116,15 @@ export default function SolutionFeedClient({
       detail: { count: solutions.length, questionId }
     });
     window.dispatchEvent(event);
+
+    // Also dispatch after a small delay to ensure listener is set up (handles race conditions)
+    const timeoutId = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('solutions-loaded', {
+        detail: { count: solutions.length, questionId }
+      }));
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [solutions.length, questionId]);
 
   // Initialize user ID and load evaluation history on mount
@@ -169,6 +178,14 @@ export default function SolutionFeedClient({
           );
 
           setEvaluationScores(scoresMap);
+
+          // Notify navigation of initial evaluation count for this question's visible solutions
+          // This handles the case where user returns to a question with existing evaluations
+          if (scoresMap.size > 0) {
+            window.dispatchEvent(new CustomEvent('evaluations-loaded', {
+              detail: { count: scoresMap.size, questionId }
+            }));
+          }
         }
       } catch (error) {
         console.error('Failed to load evaluation history:', error);
@@ -275,6 +292,14 @@ export default function SolutionFeedClient({
 
       // Track successful evaluation
       trackEvaluation(questionId, userId, solutionId, score);
+
+      // Dispatch event for survey navigation to track evaluation count
+      // Only dispatch if this is a new evaluation (not updating an existing one)
+      if (!wasAlreadyEvaluated) {
+        window.dispatchEvent(new CustomEvent('solution-evaluated', {
+          detail: { solutionId, score, questionId }
+        }));
+      }
 
       // Check if all options have been evaluated
       const newTotalEvaluated = allEvaluatedIds.size + (wasAlreadyEvaluated ? 0 : 1);

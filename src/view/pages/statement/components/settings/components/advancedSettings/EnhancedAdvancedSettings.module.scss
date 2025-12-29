@@ -151,6 +151,32 @@
       border-color: rgba(158, 158, 158, 0.3);
     }
 
+    // Team Formation category - prominent styling for high visibility
+    &--teamFormation {
+      border: 3px solid #5f88e5;
+      background: linear-gradient(135deg, rgba(95, 136, 229, 0.03) 0%, #ffffff 100%);
+      box-shadow: 0 4px 16px rgba(95, 136, 229, 0.15);
+
+      .categoryHeader {
+        background: linear-gradient(135deg, rgba(95, 136, 229, 0.08) 0%, rgba(95, 136, 229, 0.02) 100%);
+        border-bottom: 1px solid rgba(95, 136, 229, 0.2);
+
+        .categoryHeaderLeft svg {
+          color: #5f88e5;
+        }
+      }
+
+      &:hover {
+        border-color: #5f88e5;
+        box-shadow: 0 6px 24px rgba(95, 136, 229, 0.25);
+      }
+
+      .categoryBadge {
+        background: #5f88e5 !important;
+        color: white !important;
+      }
+    }
+
     &:hover {
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
     }
@@ -596,6 +622,238 @@
     }
   }
 
+  // Team Formation Section
+  .teamFormationSection {
+    .sectionTitle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 0.5rem 0;
+    }
+
+    .sectionDescription {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin: 0 0 1rem 0;
+      line-height: 1.4;
+    }
+  }
+
+  // Member limits inputs (min/max side by side)
+  .memberLimitsRow {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background: rgba(var(--accent-rgb), 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(var(--accent-rgb), 0.1);
+
+    .limitInputGroup {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+
+      label {
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-primary);
+      }
+
+      .limitInput {
+        width: 100px;
+        padding: 0.5rem;
+        border: 2px solid var(--border-color);
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        transition: all 0.2s ease;
+
+        &:focus {
+          outline: none;
+          border-color: var(--accent);
+          box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+        }
+      }
+    }
+
+    .limitSeparator {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  // Oversized Team Management section
+  .oversizedTeamSection {
+    padding: 1rem;
+    background: rgba(245, 158, 11, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    margin-top: 0.5rem;
+
+    .oversizedTeamTitle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 0 0 0.75rem 0;
+    }
+
+    .loadingText,
+    .noExceedingText {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+
+    .exceedingCount {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #f59e0b;
+      margin-bottom: 0.5rem;
+    }
+
+    .exceedingOptionsList {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .exceedingOption {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem;
+      background: white;
+      border-radius: 6px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      gap: 1rem;
+
+      .optionInfo {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+        flex: 1;
+        min-width: 0;
+
+        .optionTitle {
+          font-size: 0.9rem;
+          font-weight: 500;
+          color: var(--text-primary);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .optionCount {
+          font-size: 0.85rem;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+
+          .excessBadge {
+            background: #f59e0b;
+            color: white;
+            padding: 0.125rem 0.375rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+          }
+        }
+      }
+
+      .splitButton {
+        flex-shrink: 0;
+        padding: 0.5rem 1rem;
+        background: var(--btn-primary, #5f88e5);
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s ease;
+
+        &:hover:not(:disabled) {
+          background: var(--btn-primary-hover, #4a6fc4);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+
+    .refreshButton {
+      align-self: flex-start;
+      margin-top: 0.75rem;
+      padding: 0.5rem 1rem;
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color, #ddd);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+
+      &:hover:not(:disabled) {
+        background: rgba(0, 0, 0, 0.05);
+        border-color: var(--accent);
+        color: var(--text-primary);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+
+    .splitSuccess {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem;
+      background: rgba(79, 171, 154, 0.1);
+      border-radius: 6px;
+      border: 1px solid var(--approve, #4fab9a);
+      margin-top: 0.5rem;
+
+      p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--approve, #4fab9a);
+        font-weight: 500;
+      }
+
+      .dismissButton {
+        padding: 0.25rem 0.75rem;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border-color, #ddd);
+        border-radius: 4px;
+        font-size: 0.8rem;
+        cursor: pointer;
+
+        &:hover {
+          background: rgba(0, 0, 0, 0.05);
+        }
+      }
+    }
+  }
+
   // Language Section
   .languageSection {
     .sectionTitle {
@@ -669,6 +927,28 @@
       svg {
         flex-shrink: 0;
       }
+
+      &--warning {
+        background: #f59e0b;
+
+        &:hover:not(:disabled) {
+          background: #d97706;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+      }
+    }
+
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from {
+        transform: rotate(0deg);
+      }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .exportInfo {
@@ -676,6 +956,16 @@
       color: var(--text-secondary);
       margin: 0;
       font-style: italic;
+
+      &--success {
+        color: #16a34a;
+        font-weight: 500;
+      }
+
+      &--error {
+        color: #dc2626;
+        font-weight: 500;
+      }
     }
 
     .exportDivider {

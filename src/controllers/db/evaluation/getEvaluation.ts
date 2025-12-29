@@ -164,7 +164,7 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 				if (!evaluation.evaluator) {
 					const evaluatorRef = doc(
 						FireStore,
-						Collections.users,
+						'usersV2',
 						evaluation.evaluatorId
 					);
 					const promise = getDoc(evaluatorRef);

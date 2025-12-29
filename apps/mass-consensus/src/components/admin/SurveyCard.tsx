@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus } from '@/types/survey';
 import styles from './Admin.module.scss';
 
@@ -24,19 +26,17 @@ interface SurveyStats {
  */
 export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyCardProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { refreshToken } = useAuth();
   const [stats, setStats] = useState<SurveyStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
 
-  useEffect(() => {
-    fetchStats();
-  }, [survey.surveyId]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem('firebase_token');
+      const token = await refreshToken();
       if (!token) {
-        setStatsLoading(false);
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
@@ -53,7 +53,11 @@ export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyC
     } finally {
       setStatsLoading(false);
     }
-  };
+  }, [survey.surveyId, refreshToken, router]);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const getStatusBadgeClass = () => {
     switch (survey.status) {
