@@ -1324,5 +1324,22 @@
   "answerOptions": "خيارات الإجابة",
   "noOptionsYet": "لم تتم إضافة خيارات بعد",
   "removeOption": "إزالة الخيار",
-  "option": "خيار"
+  "option": "خيار",
+  "explanation": "شرح",
+  "information": "معلومات",
+  "explanationPage": "صفحة الشرح",
+  "explanationPageTitle": "عنوان الصفحة",
+  "explanationContent": "المحتوى (Markdown)",
+  "editContent": "تحرير",
+  "previewContent": "معاينة",
+  "markdownSupported": "يدعم العناوين، النص الغامق، القوائم، الروابط والصور",
+  "addExplanationPage": "إضافة صفحة شرح",
+  "removeExplanationPage": "إزالة صفحة الشرح",
+  "surveyFlow": "تدفق الاستطلاع",
+  "dragToReorderFlow": "اسحب لإعادة ترتيب الأسئلة والديموغرافيا والشروحات. انقر لتوسيع الإعدادات.",
+  "continue": "متابعة",
+  "heroImageUrl": "رابط الصورة الرئيسية (اختياري)",
+  "heroImageUrlPlaceholder": "https://example.com/image.jpg",
+  "explanationTitlePlaceholder": "مثال: قبل أن تبدأ",
+  "explanationContentPlaceholder": "اكتب شرحك هنا باستخدام Markdown..."
 }

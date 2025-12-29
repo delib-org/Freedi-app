@@ -304,6 +304,7 @@ export type {
   SurveyDemographicPage,
   SurveyDemographicQuestion,
   SurveyDemographicAnswer,
+  SurveyExplanationPage,
 } from "./models/survey/surveyModel";
 export {
   SurveySchema,
@@ -317,6 +318,7 @@ export {
   SurveyDemographicPageSchema,
   SurveyDemographicQuestionSchema,
   SurveyDemographicAnswerSchema,
+  SurveyExplanationPageSchema,
 } from "./models/survey/surveyModel";
 
 // MAD Calculation utilities

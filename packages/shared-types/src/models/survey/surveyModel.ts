@@ -113,6 +113,24 @@ export const SurveyDemographicPageSchema = object({
 export type SurveyDemographicPage = InferOutput<typeof SurveyDemographicPageSchema>;
 
 // ============================================
+// Survey Explanation Page Schema
+// ============================================
+export const SurveyExplanationPageSchema = object({
+  /** Unique ID for this explanation page */
+  explanationPageId: string(),
+  /** Title shown to users (e.g., "Before You Begin", "Important Context") */
+  title: string(),
+  /** Markdown content with support for rich text and images */
+  content: string(),
+  /** Position in the survey flow: 0 = before questions, 1-n = after question n, -1 = after all */
+  position: number(),
+  /** Optional hero/header image URL */
+  heroImageUrl: optional(string()),
+});
+
+export type SurveyExplanationPage = InferOutput<typeof SurveyExplanationPageSchema>;
+
+// ============================================
 // Survey Demographic Answer Schema
 // ============================================
 export const SurveyDemographicAnswerSchema = object({
@@ -156,6 +174,8 @@ export const SurveySchema = object({
   forceLanguage: optional(boolean()),
   /** Demographic page configurations */
   demographicPages: optional(array(SurveyDemographicPageSchema)),
+  /** Explanation page configurations */
+  explanationPages: optional(array(SurveyExplanationPageSchema)),
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId: optional(string()),
   createdAt: number(),

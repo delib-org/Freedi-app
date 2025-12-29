@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getSurveyWithQuestions, getSurveyDemographicQuestions } from '@/lib/firebase/surveys';
-import { SurveyStatus, buildSurveyFlow, isQuestionFlowItem, isDemographicFlowItem, getTotalFlowLength } from '@/types/survey';
+import { SurveyStatus, buildSurveyFlow, isQuestionFlowItem, isDemographicFlowItem, isExplanationFlowItem, getTotalFlowLength } from '@/types/survey';
 import { getAdaptiveBatch } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SolutionFeed from '@/components/question/SolutionFeed';
@@ -10,6 +10,7 @@ import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import SurveyQuestionWrapper from '@/components/survey/SurveyQuestionWrapper';
 import SurveyDemographicPage from '@/components/survey/SurveyDemographicPage';
+import SurveyExplanationPage from '@/components/survey/SurveyExplanationPage';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import { getMergedSettings } from '@/lib/utils/settingsUtils';
 
@@ -73,9 +74,14 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
       redirect(`/s/${params.surveyId}`);
     }
 
-    // Build the unified flow (questions + demographics)
+    // Build the unified flow (questions + demographics + explanations)
     const flow = buildSurveyFlow(survey);
     const totalFlowItems = getTotalFlowLength(survey);
+
+    console.info('[SurveyQuestionPage] Survey explanationPages:', survey.explanationPages?.length || 0);
+    console.info('[SurveyQuestionPage] Survey demographicPages:', survey.demographicPages?.length || 0);
+    console.info('[SurveyQuestionPage] Total flow items:', totalFlowItems, 'Flow length:', flow.length);
+    console.info('[SurveyQuestionPage] Flow items:', flow.map(f => ({ type: f.type, id: f.id })));
 
     if (flowIndex >= totalFlowItems) {
       // If index is out of bounds, redirect to completion
@@ -107,6 +113,26 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             survey={survey}
             demographicPage={demographicPage}
             questions={demographicQuestions}
+            currentFlowIndex={flowIndex}
+          />
+        </LanguageOverrideProvider>
+      );
+    }
+
+    // Handle explanation page
+    if (isExplanationFlowItem(flowItem)) {
+      const explanationPage = flowItem.explanationPage;
+
+      console.info('[SurveyQuestionPage] Rendering explanation page:', explanationPage.title);
+
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={survey.defaultLanguage}
+          forceLanguage={survey.forceLanguage ?? true}
+        >
+          <SurveyExplanationPage
+            survey={survey}
+            explanationPage={explanationPage}
             currentFlowIndex={flowIndex}
           />
         </LanguageOverrideProvider>

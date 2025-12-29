@@ -1328,5 +1328,22 @@
   "answerOptions": "Antwortoptionen",
   "noOptionsYet": "Noch keine Optionen hinzugefügt",
   "removeOption": "Option entfernen",
-  "option": "Option"
+  "option": "Option",
+  "explanation": "Erklärung",
+  "information": "Information",
+  "explanationPage": "Erklärungsseite",
+  "explanationPageTitle": "Seitentitel",
+  "explanationContent": "Inhalt (Markdown)",
+  "editContent": "Bearbeiten",
+  "previewContent": "Vorschau",
+  "markdownSupported": "Unterstützt Überschriften, Fettdruck, Listen, Links und Bilder",
+  "addExplanationPage": "Erklärungsseite hinzufügen",
+  "removeExplanationPage": "Erklärungsseite entfernen",
+  "surveyFlow": "Umfrageablauf",
+  "dragToReorderFlow": "Ziehen zum Neuordnen von Fragen, Demografie und Erklärungen. Klicken zum Erweitern der Einstellungen.",
+  "continue": "Weiter",
+  "heroImageUrl": "Hero-Bild-URL (optional)",
+  "heroImageUrlPlaceholder": "https://example.com/image.jpg",
+  "explanationTitlePlaceholder": "z.B.: Bevor Sie beginnen",
+  "explanationContentPlaceholder": "Schreiben Sie hier Ihre Erklärung mit Markdown..."
 }

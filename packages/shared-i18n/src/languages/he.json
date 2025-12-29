@@ -1696,5 +1696,22 @@
   "answerOptions": "אפשרויות תשובה",
   "noOptionsYet": "עדיין לא נוספו אפשרויות",
   "removeOption": "הסר אפשרות",
-  "option": "אפשרות"
+  "option": "אפשרות",
+  "explanation": "הסבר",
+  "information": "מידע",
+  "explanationPage": "דף הסבר",
+  "explanationPageTitle": "כותרת הדף",
+  "explanationContent": "תוכן (Markdown)",
+  "editContent": "עריכה",
+  "previewContent": "תצוגה מקדימה",
+  "markdownSupported": "תומך בכותרות, הדגשה, רשימות, קישורים ותמונות",
+  "addExplanationPage": "הוסף דף הסבר",
+  "removeExplanationPage": "הסר דף הסבר",
+  "surveyFlow": "מהלך הסקר",
+  "dragToReorderFlow": "גרור לשינוי סדר שאלות, דמוגרפיה והסברים. לחץ להרחבת הגדרות.",
+  "continue": "המשך",
+  "heroImageUrl": "כתובת תמונה ראשית (אופציונלי)",
+  "heroImageUrlPlaceholder": "https://example.com/image.jpg",
+  "explanationTitlePlaceholder": "לדוגמה: לפני שמתחילים",
+  "explanationContentPlaceholder": "כתוב את ההסבר שלך כאן באמצעות Markdown..."
 }

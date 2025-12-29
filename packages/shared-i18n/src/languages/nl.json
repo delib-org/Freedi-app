@@ -1328,5 +1328,22 @@
   "answerOptions": "Antwoordopties",
   "noOptionsYet": "Nog geen opties toegevoegd",
   "removeOption": "Optie verwijderen",
-  "option": "Optie"
+  "option": "Optie",
+  "explanation": "Uitleg",
+  "information": "Informatie",
+  "explanationPage": "Uitlegpagina",
+  "explanationPageTitle": "Paginatitel",
+  "explanationContent": "Inhoud (Markdown)",
+  "editContent": "Bewerken",
+  "previewContent": "Voorbeeld",
+  "markdownSupported": "Ondersteunt koppen, vetgedrukt, lijsten, links en afbeeldingen",
+  "addExplanationPage": "Uitlegpagina Toevoegen",
+  "removeExplanationPage": "Uitlegpagina Verwijderen",
+  "surveyFlow": "Enquêtestroom",
+  "dragToReorderFlow": "Sleep om vragen, demografie en uitleg te herordenen. Klik om instellingen uit te vouwen.",
+  "continue": "Doorgaan",
+  "heroImageUrl": "Hero Afbeelding URL (optioneel)",
+  "heroImageUrlPlaceholder": "https://example.com/image.jpg",
+  "explanationTitlePlaceholder": "bijv.: Voordat Je Begint",
+  "explanationContentPlaceholder": "Schrijf je uitleg hier met Markdown..."
 }

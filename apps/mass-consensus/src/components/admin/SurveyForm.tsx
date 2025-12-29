@@ -3,14 +3,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Statement, QuestionOverrideSettings, SurveyDemographicPage, SurveyDemographicQuestion } from '@freedi/shared-types';
+import { Statement, QuestionOverrideSettings, SurveyDemographicPage, SurveyDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
-import QuestionReorder from './QuestionReorder';
+import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
-import DemographicPagesEditor from './DemographicPagesEditor';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -36,6 +35,9 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
   const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
     existingSurvey?.demographicPages || []
+  );
+  const [explanationPages, setExplanationPages] = useState<SurveyExplanationPage[]>(
+    existingSurvey?.explanationPages || []
   );
   const [customDemographicQuestions, setCustomDemographicQuestions] = useState<SurveyDemographicQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -149,6 +151,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         defaultLanguage: defaultLanguage || undefined,
         forceLanguage: forceLanguage || undefined,
         demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
+        explanationPages: explanationPages.length > 0 ? explanationPages : undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -301,20 +304,26 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         )}
       </div>
 
-      {/* Step 3: Reorder Questions & Per-Question Settings */}
-      {!isLoadingQuestions && selectedQuestions.length > 0 && (
+      {/* Step 3: Unified Flow Editor (Questions, Demographics, Explanations) */}
+      {!isLoadingQuestions && (
         <div className={styles.formSection}>
-          <h2 className={styles.sectionTitle}>{t('orderQuestions')}</h2>
+          <h2 className={styles.sectionTitle}>{t('surveyFlow') || 'Survey Flow'}</h2>
           <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-            {t('clickGearForQuestionSettings') || 'Click the gear icon to configure settings for each question'}
+            {t('dragToReorderFlow') || 'Drag to reorder questions, demographics, and explanations. Click to expand settings.'}
           </p>
-          <QuestionReorder
+          <UnifiedFlowEditor
             questions={selectedQuestions}
-            onReorder={handleReorder}
-            onRemove={handleRemoveQuestion}
+            demographicPages={demographicPages}
+            explanationPages={explanationPages}
+            customDemographicQuestions={customDemographicQuestions}
             surveySettings={settings}
             questionSettings={questionSettings}
+            onQuestionsChange={handleReorder}
+            onDemographicPagesChange={setDemographicPages}
+            onExplanationPagesChange={setExplanationPages}
+            onCustomDemographicQuestionsChange={setCustomDemographicQuestions}
             onQuestionSettingsChange={handleQuestionSettingsChange}
+            onRemoveQuestion={handleRemoveQuestion}
           />
         </div>
       )}
@@ -426,22 +435,6 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             </div>
           )}
         </div>
-      </div>
-
-      {/* Step 6: Demographic Sections */}
-      <div className={styles.formSection}>
-        <h2 className={styles.sectionTitle}>{t('demographicSections') || 'Demographic Sections'}</h2>
-        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-          {t('demographicSectionsDescription') || 'Add optional demographic questions to collect information about participants. You can place them before, after, or between survey questions.'}
-        </p>
-
-        <DemographicPagesEditor
-          pages={demographicPages}
-          onPagesChange={setDemographicPages}
-          customQuestions={customDemographicQuestions}
-          onCustomQuestionsChange={setCustomDemographicQuestions}
-          questionCount={selectedQuestions.length}
-        />
       </div>
 
       {/* Actions */}

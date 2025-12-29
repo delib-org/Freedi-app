@@ -9,6 +9,7 @@ export type {
   SurveyDemographicPage,
   SurveyDemographicQuestion,
   SurveyDemographicAnswer,
+  SurveyExplanationPage,
 } from '@freedi/shared-types';
 
 export {
@@ -18,6 +19,7 @@ export {
   SurveyDemographicPageSchema,
   SurveyDemographicQuestionSchema,
   SurveyDemographicAnswerSchema,
+  SurveyExplanationPageSchema,
 } from '@freedi/shared-types';
 
 // Re-export flow types and utilities
@@ -26,6 +28,7 @@ export type {
   BaseFlowItem,
   QuestionFlowItem,
   DemographicFlowItem,
+  ExplanationFlowItem,
   SurveyFlowItem,
 } from './surveyFlow';
 
@@ -35,15 +38,17 @@ export {
   getFlowItemByIndex,
   findFlowIndexByQuestionId,
   findFlowIndexByDemographicPageId,
+  findFlowIndexByExplanationPageId,
   isQuestionFlowItem,
   isDemographicFlowItem,
+  isExplanationFlowItem,
   getQuestionNumber,
   getTotalQuestions,
   getDemographicPositionOptions,
 } from './surveyFlow';
 
 // Import for local use
-import type { Survey, SurveySettings, QuestionOverrideSettings, SurveyDemographicPage } from '@freedi/shared-types';
+import type { Survey, SurveySettings, QuestionOverrideSettings, SurveyDemographicPage, SurveyExplanationPage } from '@freedi/shared-types';
 
 /**
  * Survey with populated question data
@@ -68,6 +73,8 @@ export interface CreateSurveyRequest {
   forceLanguage?: boolean;
   /** Demographic page configurations */
   demographicPages?: SurveyDemographicPage[];
+  /** Explanation page configurations (markdown content) */
+  explanationPages?: SurveyExplanationPage[];
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId?: string;
 }
@@ -88,6 +95,8 @@ export interface UpdateSurveyRequest {
   forceLanguage?: boolean;
   /** Demographic page configurations */
   demographicPages?: SurveyDemographicPage[];
+  /** Explanation page configurations (markdown content) */
+  explanationPages?: SurveyExplanationPage[];
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId?: string;
 }

@@ -1,10 +1,10 @@
-import type { SurveyDemographicPage, Survey } from '@freedi/shared-types';
+import type { SurveyDemographicPage, SurveyExplanationPage, Survey } from '@freedi/shared-types';
 
 // ============================================
 // Flow Item Types
 // ============================================
 
-export type FlowItemType = 'question' | 'demographic';
+export type FlowItemType = 'question' | 'demographic' | 'explanation';
 
 /**
  * Base interface for flow items
@@ -39,53 +39,90 @@ export interface DemographicFlowItem extends BaseFlowItem {
 }
 
 /**
+ * Explanation page flow item
+ */
+export interface ExplanationFlowItem extends BaseFlowItem {
+  type: 'explanation';
+  /** The explanation page configuration */
+  explanationPage: SurveyExplanationPage;
+}
+
+/**
  * Union type for all flow items
  */
-export type SurveyFlowItem = QuestionFlowItem | DemographicFlowItem;
+export type SurveyFlowItem = QuestionFlowItem | DemographicFlowItem | ExplanationFlowItem;
 
 // ============================================
 // Flow Builder Utility
 // ============================================
 
 /**
- * Builds a unified survey flow that interleaves questions and demographic pages
- * based on the demographic page positions.
+ * Builds a unified survey flow that interleaves questions, demographic pages,
+ * and explanation pages based on their positions.
  *
  * Position logic:
  * - 0: Before all questions
  * - 1-n: After question at index n-1 (e.g., position 1 = after first question)
  * - -1: After all questions
  *
- * @param survey - The survey containing questionIds and demographicPages
+ * At each position, explanation pages are added first, then demographic pages.
+ *
+ * @param survey - The survey containing questionIds, demographicPages, and explanationPages
  * @returns Array of SurveyFlowItem in the correct order
  */
 export function buildSurveyFlow(survey: Survey): SurveyFlowItem[] {
   const flow: SurveyFlowItem[] = [];
   const demographicPages = survey.demographicPages || [];
+  const explanationPages = survey.explanationPages || [];
   const questionIds = survey.questionIds || [];
 
   // Group demographic pages by position
-  const pagesByPosition = new Map<number, SurveyDemographicPage[]>();
+  const demographicsByPosition = new Map<number, SurveyDemographicPage[]>();
   for (const page of demographicPages) {
-    const existing = pagesByPosition.get(page.position) || [];
+    const existing = demographicsByPosition.get(page.position) || [];
     existing.push(page);
-    pagesByPosition.set(page.position, existing);
+    demographicsByPosition.set(page.position, existing);
+  }
+
+  // Group explanation pages by position
+  const explanationsByPosition = new Map<number, SurveyExplanationPage[]>();
+  for (const page of explanationPages) {
+    const existing = explanationsByPosition.get(page.position) || [];
+    existing.push(page);
+    explanationsByPosition.set(page.position, existing);
   }
 
   let flowIndex = 0;
 
-  // Add demographic pages at position 0 (before all questions)
-  const pagesAtStart = pagesByPosition.get(0) || [];
-  for (const page of pagesAtStart) {
-    flow.push({
-      type: 'demographic',
-      flowIndex: flowIndex++,
-      id: page.demographicPageId,
-      demographicPage: page,
-    });
-  }
+  // Helper function to add pages at a given position
+  const addPagesAtPosition = (position: number) => {
+    // Add explanation pages first
+    const explanationsAtPosition = explanationsByPosition.get(position) || [];
+    for (const page of explanationsAtPosition) {
+      flow.push({
+        type: 'explanation',
+        flowIndex: flowIndex++,
+        id: page.explanationPageId,
+        explanationPage: page,
+      });
+    }
 
-  // Interleave questions and demographic pages
+    // Then add demographic pages
+    const demographicsAtPosition = demographicsByPosition.get(position) || [];
+    for (const page of demographicsAtPosition) {
+      flow.push({
+        type: 'demographic',
+        flowIndex: flowIndex++,
+        id: page.demographicPageId,
+        demographicPage: page,
+      });
+    }
+  };
+
+  // Add pages at position 0 (before all questions)
+  addPagesAtPosition(0);
+
+  // Interleave questions and pages
   for (let questionIndex = 0; questionIndex < questionIds.length; questionIndex++) {
     const questionId = questionIds[questionIndex];
 
@@ -98,29 +135,12 @@ export function buildSurveyFlow(survey: Survey): SurveyFlowItem[] {
       questionIndex,
     });
 
-    // Add any demographic pages positioned after this question (position = questionIndex + 1)
-    const afterPosition = questionIndex + 1;
-    const pagesAfterQuestion = pagesByPosition.get(afterPosition) || [];
-    for (const page of pagesAfterQuestion) {
-      flow.push({
-        type: 'demographic',
-        flowIndex: flowIndex++,
-        id: page.demographicPageId,
-        demographicPage: page,
-      });
-    }
+    // Add any pages positioned after this question (position = questionIndex + 1)
+    addPagesAtPosition(questionIndex + 1);
   }
 
-  // Add demographic pages at position -1 (after all questions)
-  const pagesAtEnd = pagesByPosition.get(-1) || [];
-  for (const page of pagesAtEnd) {
-    flow.push({
-      type: 'demographic',
-      flowIndex: flowIndex++,
-      id: page.demographicPageId,
-      demographicPage: page,
-    });
-  }
+  // Add pages at position -1 (after all questions)
+  addPagesAtPosition(-1);
 
   return flow;
 }
@@ -129,13 +149,14 @@ export function buildSurveyFlow(survey: Survey): SurveyFlowItem[] {
  * Gets the total number of items in the survey flow
  *
  * @param survey - The survey to calculate flow length for
- * @returns Total number of flow items (questions + demographic pages)
+ * @returns Total number of flow items (questions + demographic pages + explanation pages)
  */
 export function getTotalFlowLength(survey: Survey): number {
   const questionCount = survey.questionIds?.length || 0;
   const demographicPageCount = survey.demographicPages?.length || 0;
+  const explanationPageCount = survey.explanationPages?.length || 0;
 
-  return questionCount + demographicPageCount;
+  return questionCount + demographicPageCount + explanationPageCount;
 }
 
 /**
@@ -187,6 +208,26 @@ export function findFlowIndexByDemographicPageId(
 }
 
 /**
+ * Finds the flow index for a given explanation page ID
+ *
+ * @param survey - The survey containing the flow
+ * @param explanationPageId - The explanation page ID to find
+ * @returns The flow index, or -1 if not found
+ */
+export function findFlowIndexByExplanationPageId(
+  survey: Survey,
+  explanationPageId: string
+): number {
+  const flow = buildSurveyFlow(survey);
+
+  return flow.findIndex(
+    (item) =>
+      item.type === 'explanation' &&
+      item.explanationPage.explanationPageId === explanationPageId
+  );
+}
+
+/**
  * Type guard to check if a flow item is a question
  */
 export function isQuestionFlowItem(item: SurveyFlowItem): item is QuestionFlowItem {
@@ -198,6 +239,13 @@ export function isQuestionFlowItem(item: SurveyFlowItem): item is QuestionFlowIt
  */
 export function isDemographicFlowItem(item: SurveyFlowItem): item is DemographicFlowItem {
   return item.type === 'demographic';
+}
+
+/**
+ * Type guard to check if a flow item is an explanation page
+ */
+export function isExplanationFlowItem(item: SurveyFlowItem): item is ExplanationFlowItem {
+  return item.type === 'explanation';
 }
 
 /**

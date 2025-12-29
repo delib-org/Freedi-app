@@ -88,10 +88,20 @@ export async function createSurvey(
   if (data.forceLanguage !== undefined) {
     survey.forceLanguage = data.forceLanguage;
   }
+  if (data.demographicPages !== undefined && data.demographicPages.length > 0) {
+    survey.demographicPages = data.demographicPages;
+  }
+  if (data.explanationPages !== undefined && data.explanationPages.length > 0) {
+    survey.explanationPages = data.explanationPages;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
 
-  logger.info('[createSurvey] Created survey:', survey.surveyId, 'with questionSettings:', JSON.stringify(survey.questionSettings));
+  logger.info('[createSurvey] Created survey:', survey.surveyId,
+    'questionSettings:', JSON.stringify(survey.questionSettings),
+    'explanationPages:', survey.explanationPages?.length || 0,
+    'demographicPages:', survey.demographicPages?.length || 0
+  );
   return survey;
 }
 
@@ -183,6 +193,9 @@ export async function updateSurvey(
   }
   if (data.demographicPages !== undefined) {
     updates.demographicPages = data.demographicPages;
+  }
+  if (data.explanationPages !== undefined) {
+    updates.explanationPages = data.explanationPages;
   }
   if (data.parentStatementId !== undefined) {
     updates.parentStatementId = data.parentStatementId;

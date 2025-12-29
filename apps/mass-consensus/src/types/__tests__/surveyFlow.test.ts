@@ -1,4 +1,5 @@
 import type { Survey, SurveyDemographicPage } from '@freedi/shared-types';
+import { SurveyStatus } from '@freedi/shared-types';
 import {
   buildSurveyFlow,
   getTotalFlowLength,
@@ -30,7 +31,7 @@ function createMockSurvey(overrides: Partial<Survey> = {}): Survey {
       allowReturning: true,
       minEvaluationsPerQuestion: 3,
     },
-    status: 'active' as const,
+    status: SurveyStatus.active,
     createdAt: Date.now(),
     lastUpdate: Date.now(),
     ...overrides,

@@ -1328,5 +1328,22 @@
   "answerOptions": "Opciones de respuesta",
   "noOptionsYet": "Aún no se han agregado opciones",
   "removeOption": "Eliminar opción",
-  "option": "Opción"
+  "option": "Opción",
+  "explanation": "Explicación",
+  "information": "Información",
+  "explanationPage": "Página de Explicación",
+  "explanationPageTitle": "Título de la Página",
+  "explanationContent": "Contenido (Markdown)",
+  "editContent": "Editar",
+  "previewContent": "Vista previa",
+  "markdownSupported": "Soporta encabezados, negrita, listas, enlaces e imágenes",
+  "addExplanationPage": "Agregar Página de Explicación",
+  "removeExplanationPage": "Eliminar Página de Explicación",
+  "surveyFlow": "Flujo de la Encuesta",
+  "dragToReorderFlow": "Arrastra para reordenar preguntas, demografía y explicaciones. Haz clic para expandir configuración.",
+  "continue": "Continuar",
+  "heroImageUrl": "URL de Imagen Principal (opcional)",
+  "heroImageUrlPlaceholder": "https://example.com/image.jpg",
+  "explanationTitlePlaceholder": "ej.: Antes de Comenzar",
+  "explanationContentPlaceholder": "Escribe tu explicación aquí usando Markdown..."
 }
