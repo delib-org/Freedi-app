@@ -18,6 +18,8 @@ const QUESTION_TYPES = [
   { value: 'textarea', labelKey: 'longText' },
   { value: 'radio', labelKey: 'singleChoice' },
   { value: 'checkbox', labelKey: 'multipleChoice' },
+  { value: 'range', labelKey: 'rangeSlider' },
+  { value: 'number', labelKey: 'numberInput' },
 ] as const;
 
 const DEFAULT_COLORS = [
@@ -46,6 +48,12 @@ export default function DemographicQuestionEditor({
   const hasOptions =
     question.type === UserDemographicQuestionType.radio ||
     question.type === UserDemographicQuestionType.checkbox;
+
+  const hasNumericSettings =
+    question.type === UserDemographicQuestionType.range ||
+    question.type === UserDemographicQuestionType.number;
+
+  const hasRangeLabels = question.type === UserDemographicQuestionType.range;
 
   const handleAddOption = () => {
     const currentOptions = question.options || [];
@@ -83,6 +91,16 @@ export default function DemographicQuestionEditor({
         { option: '', color: DEFAULT_COLORS[0] },
         { option: '', color: DEFAULT_COLORS[1] },
       ];
+    }
+
+    // Initialize numeric settings if switching to range/number
+    if (
+      type === UserDemographicQuestionType.range ||
+      type === UserDemographicQuestionType.number
+    ) {
+      if (question.min === undefined) updates.min = 1;
+      if (question.max === undefined) updates.max = 10;
+      if (question.step === undefined) updates.step = 1;
     }
 
     onUpdate(updates);
@@ -214,6 +232,74 @@ export default function DemographicQuestionEditor({
               >
                 + {t('addOption') || 'Add Option'}
               </button>
+            </div>
+          )}
+
+          {/* Numeric settings for range/number */}
+          {hasNumericSettings && (
+            <div className={styles.numericSettingsSection}>
+              <label>{t('numericSettings') || 'Numeric Settings'}</label>
+
+              <div className={styles.numericRow}>
+                <div className={styles.numericField}>
+                  <label>{t('minValue') || 'Min'}</label>
+                  <input
+                    type="number"
+                    className={styles.numberInput}
+                    value={question.min ?? 1}
+                    onChange={(e) => onUpdate({ min: Number(e.target.value) })}
+                  />
+                </div>
+
+                <div className={styles.numericField}>
+                  <label>{t('maxValue') || 'Max'}</label>
+                  <input
+                    type="number"
+                    className={styles.numberInput}
+                    value={question.max ?? 10}
+                    onChange={(e) => onUpdate({ max: Number(e.target.value) })}
+                  />
+                </div>
+
+                <div className={styles.numericField}>
+                  <label>{t('stepValue') || 'Step'}</label>
+                  <input
+                    type="number"
+                    className={styles.numberInput}
+                    value={question.step ?? 1}
+                    onChange={(e) => onUpdate({ step: Number(e.target.value) })}
+                    min={0.01}
+                    step={0.01}
+                  />
+                </div>
+              </div>
+
+              {/* Range labels (only for range type) */}
+              {hasRangeLabels && (
+                <div className={styles.rangeLabelsRow}>
+                  <div className={styles.rangeLabelField}>
+                    <label>{t('minLabel') || 'Min Label'}</label>
+                    <input
+                      type="text"
+                      className={styles.textInput}
+                      value={question.minLabel ?? ''}
+                      onChange={(e) => onUpdate({ minLabel: e.target.value })}
+                      placeholder={t('minLabelPlaceholder') || 'e.g., Do not want'}
+                    />
+                  </div>
+
+                  <div className={styles.rangeLabelField}>
+                    <label>{t('maxLabel') || 'Max Label'}</label>
+                    <input
+                      type="text"
+                      className={styles.textInput}
+                      value={question.maxLabel ?? ''}
+                      onChange={(e) => onUpdate({ maxLabel: e.target.value })}
+                      placeholder={t('maxLabelPlaceholder') || 'e.g., Want very much'}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
