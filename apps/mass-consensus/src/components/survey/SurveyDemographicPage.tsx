@@ -112,25 +112,76 @@ export default function SurveyDemographicPage({
     }
   }, [errors]);
 
+  const handleNumberChange = useCallback((questionId: string, value: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: { answer: value },
+    }));
+    if (errors[questionId]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[questionId];
+
+        return newErrors;
+      });
+    }
+  }, [errors]);
+
   const validateAnswers = (): boolean => {
     const newErrors: Record<string, string> = {};
 
     questions.forEach((question) => {
-      if (question.required) {
-        const answer = answers[question.questionId];
-        const hasTextAnswer = answer?.answer && answer.answer.trim() !== '';
-        const hasCheckboxAnswer = answer?.answerOptions && answer.answerOptions.length > 0;
+      const answer = answers[question.questionId];
+      const hasTextAnswer = answer?.answer && answer.answer.trim() !== '';
+      const hasCheckboxAnswer = answer?.answerOptions && answer.answerOptions.length > 0;
 
+      // Check required fields
+      if (question.required) {
         if (
           question.type === UserDemographicQuestionType.checkbox &&
           !hasCheckboxAnswer
         ) {
           newErrors[question.questionId] = t('requiredField') || 'This field is required';
+
+          return;
         } else if (
           question.type !== UserDemographicQuestionType.checkbox &&
           !hasTextAnswer
         ) {
           newErrors[question.questionId] = t('requiredField') || 'This field is required';
+
+          return;
+        }
+      }
+
+      // Validate numeric bounds for number and range types
+      if (
+        (question.type === UserDemographicQuestionType.number ||
+          question.type === UserDemographicQuestionType.range) &&
+        hasTextAnswer
+      ) {
+        const numValue = parseFloat(answer?.answer || '');
+
+        if (isNaN(numValue)) {
+          newErrors[question.questionId] = t('invalidNumber') || 'Please enter a valid number';
+
+          return;
+        }
+
+        if (question.min !== undefined && numValue < question.min) {
+          newErrors[question.questionId] =
+            t('valueTooLow', { min: question.min }) ||
+            `Value must be at least ${question.min}`;
+
+          return;
+        }
+
+        if (question.max !== undefined && numValue > question.max) {
+          newErrors[question.questionId] =
+            t('valueTooHigh', { max: question.max }) ||
+            `Value must be at most ${question.max}`;
+
+          return;
         }
       }
     });
@@ -272,6 +323,44 @@ export default function SurveyDemographicPage({
               </label>
             ))}
           </div>
+        )}
+
+        {question.type === UserDemographicQuestionType.range && (
+          <div className={styles.rangeGroup}>
+            <div className={styles.rangeLabels}>
+              <span className={styles.rangeMinLabel}>
+                {question.minLabel || question.min || 1}
+              </span>
+              <span className={styles.rangeValue}>
+                {answer?.answer || question.min || 1}
+              </span>
+              <span className={styles.rangeMaxLabel}>
+                {question.maxLabel || question.max || 10}
+              </span>
+            </div>
+            <input
+              type="range"
+              className={styles.rangeInput}
+              min={question.min ?? 1}
+              max={question.max ?? 10}
+              step={question.step ?? 1}
+              value={answer?.answer || question.min || 1}
+              onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
+            />
+          </div>
+        )}
+
+        {question.type === UserDemographicQuestionType.number && (
+          <input
+            type="number"
+            className={`${styles.questionInput} ${error ? styles.inputError : ''}`}
+            min={question.min ?? undefined}
+            max={question.max ?? undefined}
+            step={question.step ?? 1}
+            value={answer?.answer || ''}
+            onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
+            placeholder={t('enterNumber') || 'Enter a number'}
+          />
         )}
 
         {error && <span className={styles.errorMessage}>{error}</span>}

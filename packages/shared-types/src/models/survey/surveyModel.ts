@@ -74,7 +74,7 @@ export const SurveyDemographicQuestionSchema = object({
   surveyId: string(),
   /** Question text */
   question: string(),
-  /** Question type: text, textarea, radio, checkbox */
+  /** Question type: text, textarea, radio, checkbox, range, number */
   type: UserQuestionTypeSchema,
   /** Options for radio/checkbox types */
   options: optional(array(DemographicOptionSchema)),
@@ -82,6 +82,16 @@ export const SurveyDemographicQuestionSchema = object({
   order: number(),
   /** Whether this question is required */
   required: boolean(),
+  /** Minimum value for range/number types */
+  min: optional(number()),
+  /** Maximum value for range/number types */
+  max: optional(number()),
+  /** Step value for range/number types */
+  step: optional(number()),
+  /** Label for minimum value (e.g., "Do not want") - range type only */
+  minLabel: optional(string()),
+  /** Label for maximum value (e.g., "Wants very much") - range type only */
+  maxLabel: optional(string()),
   createdAt: number(),
   lastUpdate: number(),
 });
