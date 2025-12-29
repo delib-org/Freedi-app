@@ -17,7 +17,7 @@ export default function SurveyProgressBar({
   totalQuestions,
   completedIndices,
 }: SurveyProgressProps) {
-  const { t } = useTranslation();
+  const { tWithParams } = useTranslation();
 
   const getStepStatus = (index: number): 'pending' | 'active' | 'completed' => {
     if (completedIndices.includes(index)) {
@@ -57,9 +57,7 @@ export default function SurveyProgressBar({
         })}
       </div>
       <div className={styles.progressLabel}>
-        {t('questionProgress')
-          .replace('{current}', String(currentIndex + 1))
-          .replace('{total}', String(totalQuestions))}
+        {tWithParams('questionProgress', { current: currentIndex + 1, total: totalQuestions })}
       </div>
     </div>
   );

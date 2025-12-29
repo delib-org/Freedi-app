@@ -67,17 +67,31 @@ export default function SurveyQuestionWrapper({
 
   // Listen for evaluation events to track count
   useEffect(() => {
-    const handleEvaluation = () => {
-      setEvaluatedCount((prev) => prev + 1);
+    const currentQuestionId = survey.questions[currentIndex]?.statementId;
+
+    const handleEvaluation = (event: CustomEvent<{ questionId: string }>) => {
+      // Only count evaluations for the current question
+      if (event.detail.questionId === currentQuestionId) {
+        setEvaluatedCount((prev) => prev + 1);
+      }
+    };
+
+    // Listen for initial evaluation count (loaded from history)
+    const handleInitialCount = (event: CustomEvent<{ count: number; questionId: string }>) => {
+      if (event.detail.questionId === currentQuestionId) {
+        setEvaluatedCount(event.detail.count);
+      }
     };
 
     // Listen for custom evaluation event (dispatched from SolutionCard)
-    window.addEventListener('solution-evaluated', handleEvaluation);
+    window.addEventListener('solution-evaluated', handleEvaluation as EventListener);
+    window.addEventListener('evaluations-loaded', handleInitialCount as EventListener);
 
     return () => {
-      window.removeEventListener('solution-evaluated', handleEvaluation);
+      window.removeEventListener('solution-evaluated', handleEvaluation as EventListener);
+      window.removeEventListener('evaluations-loaded', handleInitialCount as EventListener);
     };
-  }, []);
+  }, [survey.questions, currentIndex]);
 
   // Listen for solutions-loaded event to get actual available count
   useEffect(() => {
