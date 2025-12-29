@@ -56,11 +56,17 @@ export async function createSurvey(
     },
     questionSettings: data.questionSettings || {},
     status: SurveyStatus.draft,
-    defaultLanguage: data.defaultLanguage,
-    forceLanguage: data.forceLanguage,
     createdAt: now,
     lastUpdate: now,
   };
+
+  // Only add optional fields if they have values (Firestore doesn't accept undefined)
+  if (data.defaultLanguage !== undefined) {
+    survey.defaultLanguage = data.defaultLanguage;
+  }
+  if (data.forceLanguage !== undefined) {
+    survey.forceLanguage = data.forceLanguage;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
 
