@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Statement, QuestionOverrideSettings } from '@freedi/shared-types';
+import { Statement, QuestionOverrideSettings, SurveyDemographicPage, SurveyDemographicQuestion } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import QuestionReorder from './QuestionReorder';
 import LanguageSelector from './LanguageSelector';
+import DemographicPagesEditor from './DemographicPagesEditor';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -21,6 +23,7 @@ interface SurveyFormProps {
 export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const router = useRouter();
   const { t } = useTranslation();
+  const { refreshToken } = useAuth();
 
   const [title, setTitle] = useState(existingSurvey?.title || '');
   const [description, setDescription] = useState(existingSurvey?.description || '');
@@ -31,6 +34,10 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
+  const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
+    existingSurvey?.demographicPages || []
+  );
+  const [customDemographicQuestions, setCustomDemographicQuestions] = useState<SurveyDemographicQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -38,39 +45,72 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const isEditing = !!existingSurvey;
 
   // Load existing questions when editing a survey
-  useEffect(() => {
-    if (existingSurvey && existingSurvey.questionIds.length > 0) {
-      const loadExistingQuestions = async () => {
-        setIsLoadingQuestions(true);
-        try {
-          const token = localStorage.getItem('firebase_token');
-          if (!token) return;
+  const loadExistingQuestions = useCallback(async () => {
+    if (!existingSurvey || existingSurvey.questionIds.length === 0) return;
 
-          // Fetch each question by ID
-          const questionPromises = existingSurvey.questionIds.map(async (questionId) => {
-            const response = await fetch(`/api/statements/${questionId}`, {
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            if (response.ok) {
-              const data = await response.json();
-              return data.statement as Statement;
-            }
-            return null;
-          });
+    setIsLoadingQuestions(true);
+    try {
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
 
-          const questions = await Promise.all(questionPromises);
-          const validQuestions = questions.filter((q): q is Statement => q !== null);
-          setSelectedQuestions(validQuestions);
-        } catch (err) {
-          console.error('[SurveyForm] Error loading questions:', err);
-        } finally {
-          setIsLoadingQuestions(false);
+      // Fetch each question by ID
+      const questionPromises = existingSurvey.questionIds.map(async (questionId) => {
+        const response = await fetch(`/api/statements/${questionId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          return data.statement as Statement;
         }
-      };
+        return null;
+      });
 
-      loadExistingQuestions();
+      const questions = await Promise.all(questionPromises);
+      const validQuestions = questions.filter((q): q is Statement => q !== null);
+      setSelectedQuestions(validQuestions);
+    } catch (err) {
+      console.error('[SurveyForm] Error loading questions:', err);
+    } finally {
+      setIsLoadingQuestions(false);
     }
-  }, [existingSurvey]);
+  }, [existingSurvey, refreshToken, router]);
+
+  useEffect(() => {
+    loadExistingQuestions();
+  }, [loadExistingQuestions]);
+
+  // Load existing demographic questions when editing a survey
+  const loadDemographicQuestions = useCallback(async () => {
+    if (!existingSurvey) return;
+
+    try {
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
+
+      const response = await fetch(`/api/surveys/${existingSurvey.surveyId}/demographics`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.questions && data.questions.length > 0) {
+          setCustomDemographicQuestions(data.questions);
+        }
+      }
+    } catch (err) {
+      console.error('[SurveyForm] Error loading demographic questions:', err);
+    }
+  }, [existingSurvey, refreshToken, router]);
+
+  useEffect(() => {
+    loadDemographicQuestions();
+  }, [loadDemographicQuestions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,10 +124,10 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
     setError(null);
 
     try {
-      const token = localStorage.getItem('firebase_token');
+      const token = await refreshToken();
 
       if (!token) {
-        setError('Please log in first');
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
@@ -108,6 +148,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         questionSettings: cleanedQuestionSettings,
         defaultLanguage: defaultLanguage || undefined,
         forceLanguage: forceLanguage || undefined,
+        demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -131,6 +172,38 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
       }
 
       const survey = await response.json();
+
+      // Save demographic questions if there are any
+      if (customDemographicQuestions.length > 0 || demographicPages.length > 0) {
+        const demographicsResponse = await fetch(
+          `/api/surveys/${survey.surveyId}/demographics`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              demographicPages,
+              questions: customDemographicQuestions.map((q) => ({
+                // Pass temp ID for new questions so API can map them
+                questionId: q.questionId.startsWith('demo-q-') ? undefined : q.questionId,
+                tempId: q.questionId.startsWith('demo-q-') ? q.questionId : undefined,
+                question: q.question,
+                type: q.type,
+                options: q.options,
+                order: q.order,
+                required: q.required,
+              })),
+            }),
+          }
+        );
+
+        if (!demographicsResponse.ok) {
+          console.error('[SurveyForm] Failed to save demographic questions');
+        }
+      }
+
       router.push(`/admin/surveys/${survey.surveyId}`);
     } catch (err) {
       console.error('[SurveyForm] Error:', err);
@@ -353,6 +426,22 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Step 6: Demographic Sections */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('demographicSections') || 'Demographic Sections'}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('demographicSectionsDescription') || 'Add optional demographic questions to collect information about participants. You can place them before, after, or between survey questions.'}
+        </p>
+
+        <DemographicPagesEditor
+          pages={demographicPages}
+          onPagesChange={setDemographicPages}
+          customQuestions={customDemographicQuestions}
+          onCustomQuestionsChange={setCustomDemographicQuestions}
+          questionCount={selectedQuestions.length}
+        />
       </div>
 
       {/* Actions */}

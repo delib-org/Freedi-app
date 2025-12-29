@@ -7,6 +7,8 @@ interface SurveyProgressProps {
   currentIndex: number;
   totalQuestions: number;
   completedIndices: number[];
+  /** If true, shows demographic-style progress label */
+  isDemographic?: boolean;
 }
 
 /**
@@ -16,8 +18,9 @@ export default function SurveyProgressBar({
   currentIndex,
   totalQuestions,
   completedIndices,
+  isDemographic = false,
 }: SurveyProgressProps) {
-  const { tWithParams } = useTranslation();
+  const { t, tWithParams } = useTranslation();
 
   const getStepStatus = (index: number): 'pending' | 'active' | 'completed' => {
     if (completedIndices.includes(index)) {
@@ -57,7 +60,9 @@ export default function SurveyProgressBar({
         })}
       </div>
       <div className={styles.progressLabel}>
-        {tWithParams('questionProgress', { current: currentIndex + 1, total: totalQuestions })}
+        {isDemographic
+          ? t('aboutYou') || 'About You'
+          : tWithParams('questionProgress', { current: currentIndex + 1, total: totalQuestions })}
       </div>
     </div>
   );

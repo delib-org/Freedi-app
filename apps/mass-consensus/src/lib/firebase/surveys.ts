@@ -8,6 +8,8 @@ import {
   UpdateSurveyRequest,
   DEFAULT_SURVEY_SETTINGS,
   SurveyStatus,
+  SurveyDemographicQuestion,
+  SurveyDemographicAnswer,
 } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 
@@ -15,6 +17,25 @@ import { logger } from '@/lib/utils/logger';
 const SURVEYS_COLLECTION = 'surveys';
 /** Collection name for survey progress */
 const SURVEY_PROGRESS_COLLECTION = 'surveyProgress';
+/** Collection name for survey demographic questions */
+const SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION = 'surveyDemographicQuestions';
+/** Collection name for survey demographic answers */
+const SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION = 'surveyDemographicAnswers';
+
+/**
+ * Remove undefined values from an object (Firestore doesn't accept undefined)
+ * Returns a new object with only defined values
+ */
+function stripUndefined<T extends Record<string, unknown>>(obj: T): T {
+  const result = {} as T;
+  for (const key in obj) {
+    if (obj[key] !== undefined) {
+      result[key] = obj[key];
+    }
+  }
+
+  return result;
+}
 
 /**
  * Generate a unique survey ID
@@ -159,6 +180,12 @@ export async function updateSurvey(
   }
   if (data.forceLanguage !== undefined) {
     updates.forceLanguage = data.forceLanguage;
+  }
+  if (data.demographicPages !== undefined) {
+    updates.demographicPages = data.demographicPages;
+  }
+  if (data.parentStatementId !== undefined) {
+    updates.parentStatementId = data.parentStatementId;
   }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
@@ -640,4 +667,275 @@ export async function getSurveysByStatus(
     .get();
 
   return snapshot.docs.map((doc) => doc.data() as Survey);
+}
+
+// ============================================
+// SURVEY DEMOGRAPHIC OPERATIONS
+// ============================================
+
+/**
+ * Generate a unique demographic question ID
+ */
+function generateDemographicQuestionId(): string {
+  return `demq_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+}
+
+/**
+ * Generate demographic answer ID
+ */
+function generateDemographicAnswerId(surveyId: string, userId: string, questionId: string): string {
+  return `${surveyId}--${userId}--${questionId}`;
+}
+
+/**
+ * Get demographic questions by their IDs
+ */
+export async function getSurveyDemographicQuestions(
+  surveyId: string,
+  questionIds: string[]
+): Promise<SurveyDemographicQuestion[]> {
+  if (!questionIds || questionIds.length === 0) {
+    return [];
+  }
+
+  const db = getFirestoreAdmin();
+  const questions: SurveyDemographicQuestion[] = [];
+
+  // Firestore 'in' query limit is 30
+  const batchSize = 30;
+
+  for (let i = 0; i < questionIds.length; i += batchSize) {
+    const batch = questionIds.slice(i, i + batchSize);
+    const snapshot = await db
+      .collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION)
+      .where('questionId', 'in', batch)
+      .get();
+
+    const batchQuestions = snapshot.docs.map((doc) => doc.data() as SurveyDemographicQuestion);
+    questions.push(...batchQuestions);
+  }
+
+  // Sort by order field
+  questions.sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  logger.info(
+    '[getSurveyDemographicQuestions] Found',
+    questions.length,
+    'demographic questions for survey:',
+    surveyId
+  );
+
+  return questions;
+}
+
+/**
+ * Get all demographic questions for a survey
+ */
+export async function getAllSurveyDemographicQuestions(
+  surveyId: string
+): Promise<SurveyDemographicQuestion[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .orderBy('order', 'asc')
+    .get();
+
+  const questions = snapshot.docs.map((doc) => doc.data() as SurveyDemographicQuestion);
+
+  logger.info(
+    '[getAllSurveyDemographicQuestions] Found',
+    questions.length,
+    'demographic questions for survey:',
+    surveyId
+  );
+
+  return questions;
+}
+
+/**
+ * Create a new demographic question
+ */
+export async function createSurveyDemographicQuestion(
+  surveyId: string,
+  data: Omit<SurveyDemographicQuestion, 'questionId' | 'surveyId' | 'createdAt' | 'lastUpdate'>
+): Promise<SurveyDemographicQuestion> {
+  const db = getFirestoreAdmin();
+  const now = Date.now();
+
+  const question: SurveyDemographicQuestion = stripUndefined({
+    questionId: generateDemographicQuestionId(),
+    surveyId,
+    createdAt: now,
+    lastUpdate: now,
+    ...data,
+  });
+
+  await db
+    .collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION)
+    .doc(question.questionId)
+    .set(question);
+
+  logger.info(
+    '[createSurveyDemographicQuestion] Created demographic question:',
+    question.questionId,
+    'for survey:',
+    surveyId
+  );
+
+  return question;
+}
+
+/**
+ * Update a demographic question
+ */
+export async function updateSurveyDemographicQuestion(
+  questionId: string,
+  updates: Partial<Omit<SurveyDemographicQuestion, 'questionId' | 'surveyId'>>
+): Promise<SurveyDemographicQuestion | null> {
+  const db = getFirestoreAdmin();
+
+  const doc = await db
+    .collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION)
+    .doc(questionId)
+    .get();
+
+  if (!doc.exists) {
+    logger.info('[updateSurveyDemographicQuestion] Question not found:', questionId);
+    return null;
+  }
+
+  // Strip undefined values (Firestore doesn't accept undefined)
+  const cleanUpdates = stripUndefined(updates as Record<string, unknown>);
+  await db.collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION).doc(questionId).update(cleanUpdates);
+
+  const updatedDoc = await db
+    .collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION)
+    .doc(questionId)
+    .get();
+
+  return updatedDoc.data() as SurveyDemographicQuestion;
+}
+
+/**
+ * Delete a demographic question
+ */
+export async function deleteSurveyDemographicQuestion(questionId: string): Promise<boolean> {
+  const db = getFirestoreAdmin();
+
+  try {
+    await db.collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION).doc(questionId).delete();
+    logger.info('[deleteSurveyDemographicQuestion] Deleted question:', questionId);
+    return true;
+  } catch (error) {
+    logger.error('[deleteSurveyDemographicQuestion] Error deleting question:', questionId, error);
+    return false;
+  }
+}
+
+/**
+ * Save demographic answers for a user
+ */
+export async function saveSurveyDemographicAnswers(
+  surveyId: string,
+  userId: string,
+  answers: Array<{
+    questionId: string;
+    answer?: string;
+    answerOptions?: string[];
+  }>
+): Promise<SurveyDemographicAnswer[]> {
+  const db = getFirestoreAdmin();
+  const now = Date.now();
+  const savedAnswers: SurveyDemographicAnswer[] = [];
+
+  const batch = db.batch();
+
+  for (const answerData of answers) {
+    const answerId = generateDemographicAnswerId(surveyId, userId, answerData.questionId);
+
+    // Strip undefined values (Firestore doesn't accept undefined)
+    const answer: SurveyDemographicAnswer = stripUndefined({
+      answerId,
+      surveyId,
+      userId,
+      questionId: answerData.questionId,
+      answer: answerData.answer,
+      answerOptions: answerData.answerOptions,
+      createdAt: now,
+      lastUpdate: now,
+    });
+
+    const docRef = db.collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION).doc(answerId);
+    batch.set(docRef, answer, { merge: true });
+    savedAnswers.push(answer);
+  }
+
+  await batch.commit();
+
+  logger.info(
+    '[saveSurveyDemographicAnswers] Saved',
+    savedAnswers.length,
+    'answers for user:',
+    userId,
+    'survey:',
+    surveyId
+  );
+
+  return savedAnswers;
+}
+
+/**
+ * Get demographic answers for a user in a survey
+ */
+export async function getSurveyDemographicAnswers(
+  surveyId: string,
+  userId: string
+): Promise<SurveyDemographicAnswer[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .where('userId', '==', userId)
+    .get();
+
+  const answers = snapshot.docs.map((doc) => doc.data() as SurveyDemographicAnswer);
+
+  logger.info(
+    '[getSurveyDemographicAnswers] Found',
+    answers.length,
+    'answers for user:',
+    userId,
+    'survey:',
+    surveyId
+  );
+
+  return answers;
+}
+
+/**
+ * Get all demographic answers for a survey (admin use)
+ */
+export async function getAllSurveyDemographicAnswers(
+  surveyId: string
+): Promise<SurveyDemographicAnswer[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .get();
+
+  const answers = snapshot.docs.map((doc) => doc.data() as SurveyDemographicAnswer);
+
+  logger.info(
+    '[getAllSurveyDemographicAnswers] Found',
+    answers.length,
+    'total answers for survey:',
+    surveyId
+  );
+
+  return answers;
 }

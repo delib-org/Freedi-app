@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useEffect, useCallback } from 'react';
+import { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { SurveyWithQuestions } from '@/types/survey';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import SurveyProgressBar from './SurveyProgress';
@@ -10,6 +10,10 @@ import styles from './Survey.module.scss';
 interface SurveyQuestionWrapperProps {
   survey: SurveyWithQuestions;
   currentIndex: number;
+  /** Total number of items in the flow (questions + demographics) */
+  totalFlowItems: number;
+  /** The actual question ID for this page (not derived from flow index) */
+  questionId: string;
   children: ReactNode;
   /** Merged settings for the current question (survey + per-question overrides) */
   mergedSettings: MergedQuestionSettings;
@@ -31,6 +35,8 @@ declare global {
 export default function SurveyQuestionWrapper({
   survey,
   currentIndex,
+  totalFlowItems,
+  questionId,
   children,
   mergedSettings,
 }: SurveyQuestionWrapperProps) {
@@ -38,6 +44,12 @@ export default function SurveyQuestionWrapper({
   const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [evaluatedCount, setEvaluatedCount] = useState(0);
   const [actualSolutionsCount, setActualSolutionsCount] = useState(0);
+
+  // Find the current question by ID (not by index, since flow includes demographics)
+  const currentQuestion = useMemo(() =>
+    survey.questions.find(q => q.statementId === questionId),
+    [survey.questions, questionId]
+  );
 
   // Debug logging for merged settings
   console.info('[SurveyQuestionWrapper] mergedSettings:', mergedSettings);
@@ -67,18 +79,16 @@ export default function SurveyQuestionWrapper({
 
   // Listen for evaluation events to track count
   useEffect(() => {
-    const currentQuestionId = survey.questions[currentIndex]?.statementId;
-
     const handleEvaluation = (event: CustomEvent<{ questionId: string }>) => {
       // Only count evaluations for the current question
-      if (event.detail.questionId === currentQuestionId) {
+      if (event.detail.questionId === questionId) {
         setEvaluatedCount((prev) => prev + 1);
       }
     };
 
     // Listen for initial evaluation count (loaded from history)
     const handleInitialCount = (event: CustomEvent<{ count: number; questionId: string }>) => {
-      if (event.detail.questionId === currentQuestionId) {
+      if (event.detail.questionId === questionId) {
         setEvaluatedCount(event.detail.count);
       }
     };
@@ -91,15 +101,13 @@ export default function SurveyQuestionWrapper({
       window.removeEventListener('solution-evaluated', handleEvaluation as EventListener);
       window.removeEventListener('evaluations-loaded', handleInitialCount as EventListener);
     };
-  }, [survey.questions, currentIndex]);
+  }, [questionId]);
 
   // Listen for solutions-loaded event to get actual available count
   useEffect(() => {
-    const currentQuestionId = survey.questions[currentIndex]?.statementId;
-
     const handleSolutionsLoaded = (event: CustomEvent<{ count: number; questionId: string }>) => {
       // Only update if the event is for the current question
-      if (event.detail.questionId === currentQuestionId) {
+      if (event.detail.questionId === questionId) {
         setActualSolutionsCount(event.detail.count);
       }
     };
@@ -109,7 +117,7 @@ export default function SurveyQuestionWrapper({
     return () => {
       window.removeEventListener('solutions-loaded', handleSolutionsLoaded as EventListener);
     };
-  }, [survey.questions, currentIndex]);
+  }, [questionId]);
 
   // Reset evaluation count and solutions count when question changes
   useEffect(() => {
@@ -118,7 +126,7 @@ export default function SurveyQuestionWrapper({
     setShowViewProgress(false);
     // Update showAddSuggestion based on merged settings for the new question
     setShowAddSuggestion(mergedSettings.allowParticipantsToAddSuggestions);
-  }, [currentIndex, mergedSettings.allowParticipantsToAddSuggestions]);
+  }, [questionId, mergedSettings.allowParticipantsToAddSuggestions]);
 
   // Listen for show-view-progress events from SolutionFeedClient
   useEffect(() => {
@@ -160,7 +168,7 @@ export default function SurveyQuestionWrapper({
     <div className={styles.questionWrapper}>
       <SurveyProgressBar
         currentIndex={currentIndex}
-        totalQuestions={survey.questions.length}
+        totalQuestions={totalFlowItems}
         completedIndices={completedIndices}
       />
 
@@ -171,9 +179,9 @@ export default function SurveyQuestionWrapper({
       <SurveyNavigation
         surveyId={survey.surveyId}
         currentIndex={currentIndex}
-        totalQuestions={survey.questions.length}
+        totalQuestions={totalFlowItems}
         evaluatedCount={evaluatedCount}
-        availableOptionsCount={actualSolutionsCount || survey.questions[currentIndex]?.numberOfOptions || 0}
+        availableOptionsCount={actualSolutionsCount || currentQuestion?.numberOfOptions || 0}
         mergedSettings={mergedSettings}
         allowReturning={survey.settings.allowReturning}
         onNavigate={handleNavigate}

@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus } from '@/types/survey';
 import styles from './Admin.module.scss';
 
@@ -21,19 +23,20 @@ interface SurveyStats {
  */
 export default function SurveyStatusManager({ survey, onStatusChange }: SurveyStatusManagerProps) {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { refreshToken } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [stats, setStats] = useState<SurveyStats | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch stats on mount
-  useEffect(() => {
-    fetchStats();
-  }, [survey.surveyId]);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem('firebase_token');
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
       const response = await fetch(`/api/surveys/${survey.surveyId}/stats`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -44,7 +47,12 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     } catch (err) {
       console.error('Failed to fetch stats:', err);
     }
-  };
+  }, [survey.surveyId, refreshToken, router]);
+
+  // Fetch stats on mount
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const handleStatusChange = async (newStatus: SurveyStatus) => {
     if (newStatus === SurveyStatus.closed && !showCloseConfirm) {
@@ -57,7 +65,11 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     setShowCloseConfirm(false);
 
     try {
-      const token = localStorage.getItem('firebase_token');
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
       const response = await fetch(`/api/surveys/${survey.surveyId}`, {
         method: 'PUT',
         headers: {
