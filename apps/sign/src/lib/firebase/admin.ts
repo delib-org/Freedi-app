@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { logError } from '@/lib/utils/errorHandling';
 
 // Set emulator host BEFORE any Firebase initialization
 // This allows Firebase Admin to automatically connect to the emulator
@@ -73,7 +74,7 @@ export function initializeFirebaseAdmin(): App {
 
     return app;
   } catch (error) {
-    console.error('[Firebase Admin - Sign] Initialization failed:', error);
+    logError(error, { operation: 'firebase.initializeFirebaseAdmin' });
     throw error;
   }
 }

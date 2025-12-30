@@ -22,6 +22,7 @@ import {
   FirebaseStorage,
   connectStorageEmulator,
 } from 'firebase/storage';
+import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
 const firebaseConfig = {
@@ -107,13 +108,13 @@ export async function googleLogin(): Promise<User | null> {
     if (result.user.email) {
       acceptPendingInvitations().catch((error) => {
         // Don't fail login if invitation acceptance fails
-        console.error('[Firebase Auth] Failed to auto-accept invitations', error);
+        logError(error, { operation: 'auth.googleLogin.acceptInvitations', userId: result.user.uid });
       });
     }
 
     return result.user;
   } catch (error) {
-    console.error('[Firebase Auth] Google login failed', error);
+    logError(error, { operation: 'auth.googleLogin' });
     throw error;
   }
 }
@@ -133,7 +134,7 @@ export async function anonymousLogin(): Promise<User | null> {
 
     return result.user;
   } catch (error) {
-    console.error('[Firebase Auth] Anonymous login failed', error);
+    logError(error, { operation: 'auth.anonymousLogin' });
     throw error;
   }
 }
@@ -153,7 +154,7 @@ export async function logout(): Promise<void> {
 
     console.info('[Firebase Auth] User logged out');
   } catch (error) {
-    console.error('[Firebase Auth] Logout failed', error);
+    logError(error, { operation: 'auth.logout' });
     throw error;
   }
 }
@@ -171,7 +172,7 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
       // Auto-accept pending invitations when user has email (Google login)
       if (user.email) {
         acceptPendingInvitations().catch((error) => {
-          console.error('[Firebase Auth] Failed to auto-accept invitations on auth state change', error);
+          logError(error, { operation: 'auth.onAuthStateChanged.acceptInvitations', userId: user.uid });
         });
       }
     }
@@ -239,7 +240,7 @@ export async function acceptPendingInvitations(): Promise<{
       acceptedInvitations: data.acceptedInvitations || [],
     };
   } catch (error) {
-    console.error('[Firebase Auth] Failed to auto-accept invitations', error);
+    logError(error, { operation: 'auth.acceptPendingInvitations' });
     throw error;
   }
 }
@@ -293,7 +294,7 @@ export async function uploadFile(
         onProgress?.(progress);
       },
       (error) => {
-        console.error('[Firebase Storage] Upload failed', error);
+        logError(error, { operation: 'storage.uploadFile', metadata: { path } });
         reject(error);
       },
       async () => {
@@ -302,7 +303,7 @@ export async function uploadFile(
           console.info('[Firebase Storage] Upload complete', { path });
           resolve(downloadURL);
         } catch (error) {
-          console.error('[Firebase Storage] Failed to get download URL', error);
+          logError(error, { operation: 'storage.uploadFile.getDownloadURL', metadata: { path } });
           reject(error);
         }
       }
