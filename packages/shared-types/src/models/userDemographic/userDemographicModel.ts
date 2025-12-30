@@ -14,6 +14,8 @@ export enum UserDemographicQuestionType {
     textarea = 'textarea',
     checkbox = 'checkbox',
     radio = 'radio',
+    range = 'range',
+    number = 'number',
 }
 
 //scope
@@ -44,8 +46,16 @@ export const UserDemographicQuestionSchema = object({
     order: optional(number()),
     required: optional(boolean()),
     userQuestionId: optional(string()),
-    topParentId: optional(string()),  // NEW: Group identifier
-    scope: optional(DemographicQuestionScopeSchema),  // NEW: 'group' | 'statement' 
+    topParentId: optional(string()),  // Group identifier
+    scope: optional(DemographicQuestionScopeSchema),  // 'group' | 'statement'
 });
 
 export type UserDemographicQuestion = InferOutput<typeof UserDemographicQuestionSchema>;
+
+// Schema for tracking excluded inherited demographic questions per statement
+export const ExcludedInheritedDemographicsSchema = object({
+    statementId: string(),  // The statement that excludes these demographics
+    excludedQuestionIds: array(string()),  // Array of userQuestionIds to exclude
+});
+
+export type ExcludedInheritedDemographics = InferOutput<typeof ExcludedInheritedDemographicsSchema>;

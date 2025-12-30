@@ -11,6 +11,8 @@ interface SurveyNavigationProps {
   totalQuestions: number;
   evaluatedCount: number;
   availableOptionsCount: number;
+  /** Number of solutions this user has contributed to this question */
+  userSolutionCount?: number;
   /** Merged settings for the current question (survey + per-question overrides) */
   mergedSettings: MergedQuestionSettings;
   /** Survey-level allowReturning setting (not per-question) */
@@ -32,6 +34,7 @@ export default function SurveyNavigation({
   totalQuestions,
   evaluatedCount,
   availableOptionsCount,
+  userSolutionCount = 0,
   mergedSettings,
   allowReturning = true,
   onNavigate,
@@ -41,18 +44,36 @@ export default function SurveyNavigation({
   onViewProgress,
 }: SurveyNavigationProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
 
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
-  // Calculate effective minimum - can't require more evaluations than available options
-  const effectiveMinEvaluations = availableOptionsCount > 0
-    ? Math.min(mergedSettings.minEvaluationsPerQuestion, availableOptionsCount)
+  // Calculate evaluatable options (excluding user's own solutions - they can't evaluate their own)
+  const evaluatableOptionsCount = Math.max(0, availableOptionsCount - userSolutionCount);
+
+  // Detect "contributor-only" mode: user has added solutions but has no others to evaluate
+  // In this case, allow them to proceed since they've contributed and can't do more
+  const isContributorOnlyMode = userSolutionCount > 0 && evaluatableOptionsCount === 0;
+
+  // Calculate effective minimum - can't require more evaluations than evaluatable options
+  // If evaluatableOptionsCount is 0 but user has evaluated some, use evaluatedCount as the known minimum
+  const knownOptionsCount = evaluatableOptionsCount > 0 ? evaluatableOptionsCount : evaluatedCount;
+  const effectiveMinEvaluations = knownOptionsCount > 0
+    ? Math.min(mergedSettings.minEvaluationsPerQuestion, knownOptionsCount)
     : mergedSettings.minEvaluationsPerQuestion;
 
   // Check if user can proceed to next question
-  const canProceed = mergedSettings.allowSkipping || evaluatedCount >= effectiveMinEvaluations;
+  // Allow proceeding if:
+  // - Skipping is allowed, OR
+  // - User has met minimum evaluations, OR
+  // - User has evaluated all visible options, OR
+  // - User is in contributor-only mode (added solutions but can't evaluate any)
+  const hasEvaluatedAllVisible = evaluatableOptionsCount > 0 && evaluatedCount >= evaluatableOptionsCount;
+  const canProceed = mergedSettings.allowSkipping ||
+    evaluatedCount >= effectiveMinEvaluations ||
+    hasEvaluatedAllVisible ||
+    isContributorOnlyMode;
   const evaluationsNeeded = Math.max(0, effectiveMinEvaluations - evaluatedCount);
 
   const handleBack = () => {
@@ -118,11 +139,16 @@ export default function SurveyNavigation({
         </button>
       </div>
 
-      {!canProceed && evaluationsNeeded > 0 && (
-        <div className={styles.navHint}>
-          {t('evaluationsNeeded').replace('{count}', String(evaluationsNeeded))}
+      {/* Navigation hint - show different message based on state */}
+      {isContributorOnlyMode ? (
+        <div className={`${styles.navHint} ${styles.navHintSuccess}`}>
+          {t('contributorOnlyMessage')}
         </div>
-      )}
+      ) : !canProceed && evaluationsNeeded > 0 ? (
+        <div className={styles.navHint}>
+          {tWithParams('evaluationsNeeded', { count: evaluationsNeeded })}
+        </div>
+      ) : null}
     </div>
   );
 }

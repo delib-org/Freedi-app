@@ -101,13 +101,18 @@ export async function POST(
     const userEvaluationRef = db.collection(Collections.userEvaluations).doc(userEvaluationId);
 
     // Use set with merge to create if doesn't exist, or update if exists
+    // Check if document exists to set createdAt only on first creation
+    const userEvalDoc = await userEvaluationRef.get();
+    const now = Date.now();
+
     await userEvaluationRef.set({
       userEvaluationId,
       userId,
       parentStatementId: parentId,
       evaluatedOptionsIds: FieldValue.arrayUnion(statementId),
-      lastUpdated: Date.now(),
-      createdAt: FieldValue.serverTimestamp(), // Will only set on create
+      lastUpdated: now,
+      // Only set createdAt if document doesn't exist
+      ...(userEvalDoc.exists ? {} : { createdAt: now }),
     }, { merge: true });
 
     // Update statement consensus (async, don't wait)

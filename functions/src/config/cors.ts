@@ -9,6 +9,8 @@ export const ALLOWED_ORIGINS = [
 	// Development/Testing
 	'https://freedi-app-dev.web.app',
 	'https://freedi-app-dev.firebaseapp.com',
+	'https://freedi-test.web.app',
+	'https://freedi-test.firebaseapp.com',
 	// Local development
 	'http://localhost:5173',
 	'http://localhost:5174',

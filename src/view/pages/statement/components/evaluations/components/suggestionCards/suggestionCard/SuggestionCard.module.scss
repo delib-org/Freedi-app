@@ -225,6 +225,65 @@
     border-left-color: rgba(139, 92, 246, 0.7);
   }
 
+  // Join status visual indicators
+  // Below minimum - needs more members (warning/reddish)
+  &--below-minimum {
+    border-left-color: var(--warning, #f59e0b);
+    background-color: rgba(245, 158, 11, 0.05);
+
+    // Subtle pulsing effect to draw attention
+    animation: needsMembers 2s ease-in-out infinite;
+  }
+
+  @keyframes needsMembers {
+    0%, 100% {
+      background-color: rgba(245, 158, 11, 0.05);
+    }
+    50% {
+      background-color: rgba(245, 158, 11, 0.08);
+    }
+  }
+
+  // At or above minimum - healthy group (greenish)
+  &--above-minimum {
+    border-left-color: var(--approve, #4fab9a);
+    background-color: rgba(79, 171, 154, 0.05);
+  }
+
+  // Exceeds maximum - needs splitting (blue/info indicator for admin)
+  &--exceeds-maximum {
+    border-left-color: var(--btn-primary, #5f88e5);
+    background-color: rgba(95, 136, 229, 0.05);
+  }
+
+  // Join indicator pill showing member count
+  .joinIndicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--inputBackground);
+    color: var(--text-body);
+
+    &--warning {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: var(--warning, #d97706);
+    }
+
+    &--success {
+      background-color: rgba(79, 171, 154, 0.15);
+      color: var(--approve, #059669);
+    }
+
+    &--exceeds {
+      background-color: rgba(95, 136, 229, 0.15);
+      color: var(--btn-primary, #5f88e5);
+    }
+  }
+
   // Voting winner badge - floating pill at top corner
   // Uses CSS logical properties for automatic RTL/LTR support
   .votingWinnerBadge {
