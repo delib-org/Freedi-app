@@ -254,7 +254,7 @@ describe('StatementService', () => {
 			// Assert
 			expect(mockCollection.where).toHaveBeenCalledWith('parentId', '==', 'parent123');
 			expect(mockQuery.where).toHaveBeenCalledWith('statementType', '==', StatementType.option);
-			expect(mockQuery.orderBy).toHaveBeenCalledWith('consensus', 'desc');
+			expect(mockQuery.orderBy).toHaveBeenCalledWith('evaluation.averageEvaluation', 'desc');
 			expect(mockQuery.limit).toHaveBeenCalledWith(10);
 			expect(result).toHaveLength(2);
 			expect(result[0].consensus).toBe(0.9);

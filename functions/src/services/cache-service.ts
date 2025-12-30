@@ -1,5 +1,5 @@
 import { logger } from "firebase-functions";
-import { getFirestore } from "firebase-admin/firestore";
+import { getFirestore, CollectionReference, DocumentData } from "firebase-admin/firestore";
 
 interface CacheEntry {
   value: unknown;
@@ -14,7 +14,17 @@ interface CacheEntry {
  * Provides a simple key-value cache with TTL support
  */
 class FirestoreCacheService {
-  private collection = getFirestore().collection("_cache");
+  private _collection: CollectionReference<DocumentData> | null = null;
+
+  /**
+   * Lazily initialize the Firestore collection to avoid initialization errors during testing
+   */
+  private get collection(): CollectionReference<DocumentData> {
+    if (!this._collection) {
+      this._collection = getFirestore().collection("_cache");
+    }
+    return this._collection;
+  }
 
   /**
    * Retrieves a cached value by key
