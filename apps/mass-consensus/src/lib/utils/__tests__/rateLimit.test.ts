@@ -199,7 +199,7 @@ describe('rateLimit', () => {
     it('should use custom keyGenerator when provided', () => {
       const customConfig: RateLimitConfig = {
         ...config,
-        keyGenerator: (req) => 'custom-key',
+        keyGenerator: (_req) => 'custom-key',
       };
 
       const request1 = createMockRequest({ forwardedFor: 'ip-1' });

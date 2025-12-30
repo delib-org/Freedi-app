@@ -5,7 +5,6 @@ import { SurveySettings, QuestionOverrideSettings } from '@freedi/shared-types';
 import {
   getMergedSettings,
   isSurveyLevelOverride,
-  MergedQuestionSettings,
 } from '../settingsUtils';
 
 describe('settingsUtils', () => {

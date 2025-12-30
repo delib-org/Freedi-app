@@ -11,7 +11,6 @@ import {
   calculateAdjustedPriority,
   SamplingConfig,
   DEFAULT_SAMPLING_CONFIG,
-  ProposalStats,
 } from '../sampling';
 
 describe('sampling utilities', () => {
