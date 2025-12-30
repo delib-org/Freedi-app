@@ -850,6 +850,80 @@ export async function deleteSurveyDemographicQuestion(questionId: string): Promi
   }
 }
 
+interface BatchQuestionData {
+  questionId?: string;
+  tempId?: string;
+  question: string;
+  type: SurveyDemographicQuestion['type'];
+  options?: SurveyDemographicQuestion['options'];
+  order?: number;
+  required?: boolean;
+}
+
+interface BatchSaveResult {
+  savedQuestions: SurveyDemographicQuestion[];
+  idMapping: Record<string, string>;
+}
+
+/**
+ * Batch save demographic questions (create or update) in a single Firestore batch
+ * Much more efficient than individual operations
+ */
+export async function batchSaveDemographicQuestions(
+  surveyId: string,
+  questions: BatchQuestionData[]
+): Promise<BatchSaveResult> {
+  const db = getFirestoreAdmin();
+  const now = Date.now();
+  const batch = db.batch();
+  const savedQuestions: SurveyDemographicQuestion[] = [];
+  const idMapping: Record<string, string> = {};
+
+  for (const questionData of questions) {
+    const isNew = !questionData.questionId || questionData.questionId.startsWith('demo-q-');
+    const questionId: string = isNew ? generateDemographicQuestionId() : questionData.questionId!;
+
+    const question: SurveyDemographicQuestion = stripUndefined({
+      questionId,
+      surveyId,
+      question: questionData.question,
+      type: questionData.type,
+      options: questionData.options,
+      order: questionData.order ?? 0,
+      required: questionData.required ?? false,
+      createdAt: now,
+      lastUpdate: now,
+    });
+
+    const docRef = db.collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION).doc(questionId);
+
+    if (isNew) {
+      batch.set(docRef, question);
+      // Track temp ID mapping
+      const tempId = questionData.tempId || questionData.questionId;
+      if (tempId) {
+        idMapping[tempId] = questionId;
+      }
+    } else {
+      // For updates, use set with merge to preserve createdAt
+      batch.set(docRef, { ...question, createdAt: undefined }, { merge: true });
+    }
+
+    savedQuestions.push(question);
+  }
+
+  await batch.commit();
+
+  logger.info(
+    '[batchSaveDemographicQuestions] Saved',
+    savedQuestions.length,
+    'questions for survey:',
+    surveyId
+  );
+
+  return { savedQuestions, idMapping };
+}
+
 /**
  * Save demographic answers for a user
  */
