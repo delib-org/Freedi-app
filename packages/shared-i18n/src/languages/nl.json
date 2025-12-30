@@ -446,6 +446,9 @@
   "No members found": "Geen leden gevonden",
   "No questions added yet": "Nog geen vragen toegevoegd",
   "No suggestion so far": "Nog geen suggestie",
+  "No solutions yet": "Nog geen oplossingen",
+  "Be the first to submit a solution!": "Wees de eerste om een oplossing in te dienen!",
+  "Solutions will appear here once they are added.": "Oplossingen verschijnen hier zodra ze zijn toegevoegd.",
   "No voters found": "Geen stemmers gevonden",
   "No votes yet": "Nog geen stemmen",
   "Notifications": "Meldingen",
@@ -1359,5 +1362,7 @@
   "heroImageUrl": "Hero Afbeelding URL (optioneel)",
   "heroImageUrlPlaceholder": "https://example.com/image.jpg",
   "explanationTitlePlaceholder": "bijv.: Voordat Je Begint",
-  "explanationContentPlaceholder": "Schrijf je uitleg hier met Markdown..."
+  "explanationContentPlaceholder": "Schrijf je uitleg hier met Markdown...",
+  "evaluationsNeeded": "Evalueer nog {{count}} oplossingen om door te gaan",
+  "contributorOnlyMessage": "Bedankt voor je bijdrage! Ga door wanneer je klaar bent."
 }

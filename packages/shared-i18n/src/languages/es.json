@@ -446,6 +446,9 @@
   "No members found": "No se encontraron miembros",
   "No questions added yet": "Aún no se han añadido preguntas",
   "No suggestion so far": "Ninguna sugerencia hasta ahora",
+  "No solutions yet": "Aún no hay soluciones",
+  "Be the first to submit a solution!": "¡Sé el primero en enviar una solución!",
+  "Solutions will appear here once they are added.": "Las soluciones aparecerán aquí una vez que se agreguen.",
   "No voters found": "No se encontraron votantes",
   "No votes yet": "Sin votos aún",
   "Notifications": "Notificaciones",
@@ -1359,5 +1362,7 @@
   "heroImageUrl": "URL de Imagen Principal (opcional)",
   "heroImageUrlPlaceholder": "https://example.com/image.jpg",
   "explanationTitlePlaceholder": "ej.: Antes de Comenzar",
-  "explanationContentPlaceholder": "Escribe tu explicación aquí usando Markdown..."
+  "explanationContentPlaceholder": "Escribe tu explicación aquí usando Markdown...",
+  "evaluationsNeeded": "Evalúa {{count}} soluciones más para continuar",
+  "contributorOnlyMessage": "¡Gracias por contribuir! Continúa cuando estés listo."
 }
