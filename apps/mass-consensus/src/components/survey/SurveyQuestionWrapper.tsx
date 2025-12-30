@@ -44,6 +44,7 @@ export default function SurveyQuestionWrapper({
   const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [evaluatedCount, setEvaluatedCount] = useState(0);
   const [actualSolutionsCount, setActualSolutionsCount] = useState(0);
+  const [userSolutionCount, setUserSolutionCount] = useState(0);
 
   // Find the current question by ID (not by index, since flow includes demographics)
   const currentQuestion = useMemo(() =>
@@ -119,10 +120,26 @@ export default function SurveyQuestionWrapper({
     };
   }, [questionId]);
 
-  // Reset evaluation count and solutions count when question changes
+  // Listen for user-solution-count event to track how many solutions this user has added
+  useEffect(() => {
+    const handleUserSolutionCount = (event: CustomEvent<{ count: number; questionId: string }>) => {
+      if (event.detail.questionId === questionId) {
+        setUserSolutionCount(event.detail.count);
+      }
+    };
+
+    window.addEventListener('user-solution-count', handleUserSolutionCount as EventListener);
+
+    return () => {
+      window.removeEventListener('user-solution-count', handleUserSolutionCount as EventListener);
+    };
+  }, [questionId]);
+
+  // Reset counts when question changes
   useEffect(() => {
     setEvaluatedCount(0);
     setActualSolutionsCount(0);
+    setUserSolutionCount(0);
     setShowViewProgress(false);
     // Update showAddSuggestion based on merged settings for the new question
     setShowAddSuggestion(mergedSettings.allowParticipantsToAddSuggestions);
@@ -182,6 +199,7 @@ export default function SurveyQuestionWrapper({
         totalQuestions={totalFlowItems}
         evaluatedCount={evaluatedCount}
         availableOptionsCount={actualSolutionsCount || currentQuestion?.numberOfOptions || 0}
+        userSolutionCount={userSolutionCount}
         mergedSettings={mergedSettings}
         allowReturning={survey.settings.allowReturning}
         onNavigate={handleNavigate}

@@ -280,6 +280,15 @@
   margin-top: 0.5rem;
 }
 
+// Success state hint - shown when user has contributed and can proceed
+.navHintSuccess {
+  color: var(--agree, #4caf50);
+  background: rgba(76, 175, 80, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-weight: 500;
+}
+
 // Action buttons in navigation (Add Suggestion, View Progress)
 .navActionButtons {
   display: flex;
@@ -522,6 +531,11 @@
 .questionContent {
   flex: 1;
   padding-bottom: 120px; // Space for unified fixed navigation with action buttons
+  max-width: 75ch;
+  margin: 0 auto;
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 // ============================================

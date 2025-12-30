@@ -445,6 +445,9 @@
   "No members found": "لم يتم العثور على أعضاء",
   "No questions added yet": "لم تتم إضافة أسئلة بعد",
   "No suggestion so far": "لا توجد اقتراحات حتى الآن",
+  "No solutions yet": "لا توجد حلول بعد",
+  "Be the first to submit a solution!": "كن أول من يقدم حلاً!",
+  "Solutions will appear here once they are added.": "ستظهر الحلول هنا بمجرد إضافتها.",
   "No voters found": "لم يتم العثور على مصوتين",
   "No votes yet": "لا توجد أصوات حتى الآن",
   "Notifications": "الإشعارات",
@@ -1355,5 +1358,7 @@
   "heroImageUrl": "رابط الصورة الرئيسية (اختياري)",
   "heroImageUrlPlaceholder": "https://example.com/image.jpg",
   "explanationTitlePlaceholder": "مثال: قبل أن تبدأ",
-  "explanationContentPlaceholder": "اكتب شرحك هنا باستخدام Markdown..."
+  "explanationContentPlaceholder": "اكتب شرحك هنا باستخدام Markdown...",
+  "evaluationsNeeded": "قيّم {{count}} حلول أخرى للمتابعة",
+  "contributorOnlyMessage": "شكراً على مساهمتك! تابع عندما تكون جاهزاً."
 }
