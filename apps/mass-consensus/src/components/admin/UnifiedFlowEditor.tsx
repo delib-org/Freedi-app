@@ -110,7 +110,7 @@ function buildUnifiedFlow(
  */
 function recalculatePositions(
   flow: FlowItemData[],
-  questions: Statement[]
+  _questions: Statement[]
 ): {
   demographicPages: SurveyDemographicPage[];
   explanationPages: SurveyExplanationPage[];

@@ -14,6 +14,8 @@ export enum UserDemographicQuestionType {
     textarea = 'textarea',
     checkbox = 'checkbox',
     radio = 'radio',
+    range = 'range',
+    number = 'number',
 }
 
 //scope

@@ -280,6 +280,15 @@
   margin-top: 0.5rem;
 }
 
+// Success state hint - shown when user has contributed and can proceed
+.navHintSuccess {
+  color: var(--agree, #4caf50);
+  background: rgba(76, 175, 80, 0.1);
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  font-weight: 500;
+}
+
 // Action buttons in navigation (Add Suggestion, View Progress)
 .navActionButtons {
   display: flex;
@@ -522,6 +531,11 @@
 .questionContent {
   flex: 1;
   padding-bottom: 120px; // Space for unified fixed navigation with action buttons
+  max-width: 75ch;
+  margin: 0 auto;
+  width: 100%;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 // ============================================
@@ -698,6 +712,9 @@
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  max-width: 75ch;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .demographicQuestion {
@@ -806,6 +823,93 @@
     height: 80%;
     background: var(--option-color, transparent);
     border-radius: 2px;
+  }
+}
+
+// ============================================
+// RANGE SLIDER STYLES
+// ============================================
+
+.rangeGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+}
+
+.rangeLabels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--text-body, #4a5568);
+}
+
+.rangeMinLabel,
+.rangeMaxLabel {
+  flex: 1;
+  color: var(--text-muted, #718096);
+  font-size: 0.8rem;
+}
+
+.rangeMinLabel {
+  text-align: left;
+}
+
+.rangeMaxLabel {
+  text-align: right;
+}
+
+.rangeValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--btn-primary, #5f88e5);
+  text-align: center;
+  min-width: 3rem;
+}
+
+.rangeInput {
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--border-light, #e2e8f0);
+  outline: none;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+
+  &::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(95, 136, 229, 0.4);
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    border: 3px solid white;
+    box-shadow: 0 2px 8px rgba(95, 136, 229, 0.4);
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
   }
 }
 

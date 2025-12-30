@@ -12,27 +12,19 @@ interface SolutionFeedProps {
 /**
  * Server Component wrapper for solution feed
  * Passes server-fetched data to client component
+ * Always renders client component to enable add solution functionality
  */
 export default function SolutionFeed({
   question,
   initialSolutions,
   mergedSettings
 }: SolutionFeedProps) {
-  // Check if we have solutions
-  if (!initialSolutions || initialSolutions.length === 0) {
-    return (
-      <div style={{ textAlign: 'center', padding: '2rem' }}>
-        <h3>No solutions yet</h3>
-        <p>Be the first to submit a solution!</p>
-      </div>
-    );
-  }
-
-  // Pass to client component for interactivity
+  // Always pass to client component for interactivity
+  // Client component handles empty state with add solution capability
   return (
     <SolutionFeedClient
       question={question}
-      initialSolutions={initialSolutions}
+      initialSolutions={initialSolutions || []}
       mergedSettings={mergedSettings}
     />
   );

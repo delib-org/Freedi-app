@@ -11,9 +11,6 @@ import {
   getQuestionNumber,
   getTotalQuestions,
   getDemographicPositionOptions,
-  type QuestionFlowItem,
-  type DemographicFlowItem,
-  type SurveyFlowItem,
 } from '../surveyFlow';
 
 // ============================================
