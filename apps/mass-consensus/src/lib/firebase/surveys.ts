@@ -743,6 +743,7 @@ export async function getSurveyDemographicQuestions(
 
 /**
  * Get all demographic questions for a survey
+ * Note: Sorting done client-side to avoid requiring composite index
  */
 export async function getAllSurveyDemographicQuestions(
   surveyId: string
@@ -752,10 +753,12 @@ export async function getAllSurveyDemographicQuestions(
   const snapshot = await db
     .collection(SURVEY_DEMOGRAPHIC_QUESTIONS_COLLECTION)
     .where('surveyId', '==', surveyId)
-    .orderBy('order', 'asc')
     .get();
 
   const questions = snapshot.docs.map((doc) => doc.data() as SurveyDemographicQuestion);
+
+  // Sort by order field client-side (avoids needing composite index)
+  questions.sort((a, b) => (a.order || 0) - (b.order || 0));
 
   logger.info(
     '[getAllSurveyDemographicQuestions] Found',
