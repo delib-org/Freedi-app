@@ -2,6 +2,10 @@
 	"preset": "ts-jest",
 	"testEnvironment": "jsdom",
 	"setupFilesAfterEnv": ["<rootDir>/src/setupTests.ts"],
+	"modulePathIgnorePatterns": [
+		"<rootDir>/functions/local-packages/",
+		"<rootDir>/functions/package/"
+	],
 	"moduleNameMapper": {
 		"\\.svg\\?react$": "<rootDir>/src/__mocks__/svgMock.tsx",
 		"\\.(svg|png|jpg|jpeg|gif)$": "<rootDir>/src/__mocks__/fileMock.ts",
