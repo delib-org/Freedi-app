@@ -10,6 +10,34 @@ import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import SurveyProgressBar from './SurveyProgress';
 import styles from './Survey.module.scss';
 
+/**
+ * Small spinner for use inside buttons during loading state
+ */
+function ButtonSpinner() {
+  return (
+    <span className={styles.buttonSpinner} role="status" aria-label="Loading">
+      <svg
+        className={styles.buttonSpinnerSvg}
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          className={styles.buttonSpinnerCircle}
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
 interface SurveyDemographicPageProps {
   survey: SurveyWithQuestions;
   demographicPage: SurveyDemographicPage;
@@ -50,6 +78,10 @@ export default function SurveyDemographicPage({
   const [answers, setAnswers] = useState<FormAnswers>(initialAnswers);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+
+  const isNavigating = isSubmitting || isNavigatingBack || isSkipping;
 
   // Ensure anonymous user ID is set on mount
   useEffect(() => {
@@ -192,6 +224,7 @@ export default function SurveyDemographicPage({
   };
 
   const handleSubmit = async () => {
+    if (isNavigating) return; // Prevent double-clicks
     if (!validateAnswers()) {
       return;
     }
@@ -235,19 +268,24 @@ export default function SurveyDemographicPage({
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
+    if (isNavigating) return; // Prevent double-clicks
+    setIsSkipping(true);
+
     if (isLastItem) {
       router.push(`/s/${survey.surveyId}/complete`);
     } else {
       router.push(`/s/${survey.surveyId}/q/${currentFlowIndex + 1}`);
     }
-  };
+  }, [isNavigating, isLastItem, router, survey.surveyId, currentFlowIndex]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
+    if (isNavigating) return; // Prevent double-clicks
     if (currentFlowIndex > 0 && survey.settings.allowReturning) {
+      setIsNavigatingBack(true);
       router.push(`/s/${survey.surveyId}/q/${currentFlowIndex - 1}`);
     }
-  };
+  }, [isNavigating, currentFlowIndex, survey.settings.allowReturning, router, survey.surveyId]);
 
   const renderQuestion = (question: SurveyDemographicQuestion) => {
     const answer = answers[question.questionId];
@@ -399,10 +437,13 @@ export default function SurveyDemographicPage({
           {survey.settings.allowReturning && currentFlowIndex > 0 && (
             <button
               type="button"
-              className={`${styles.navButton} ${styles.back}`}
+              className={`${styles.navButton} ${styles.back} ${isNavigatingBack ? styles.loading : ''}`}
               onClick={handleBack}
+              disabled={isNavigating}
+              aria-busy={isNavigatingBack}
+              aria-label={isNavigatingBack ? (t('loading') || 'Loading') : (t('back') || 'Back')}
             >
-              {t('back') || 'Back'}
+              {isNavigatingBack ? <ButtonSpinner /> : (t('back') || 'Back')}
             </button>
           )}
 
@@ -411,24 +452,29 @@ export default function SurveyDemographicPage({
           {!demographicPage.required && (
             <button
               type="button"
-              className={`${styles.navButton} ${styles.back}`}
+              className={`${styles.navButton} ${styles.back} ${isSkipping ? styles.loading : ''}`}
               onClick={handleSkip}
+              disabled={isNavigating}
+              aria-busy={isSkipping}
+              aria-label={isSkipping ? (t('loading') || 'Loading') : (t('skip') || 'Skip')}
             >
-              {t('skip') || 'Skip'}
+              {isSkipping ? <ButtonSpinner /> : (t('skip') || 'Skip')}
             </button>
           )}
 
           <button
             type="button"
-            className={`${styles.navButton} ${isLastItem ? styles.finish : styles.next}`}
+            className={`${styles.navButton} ${isLastItem ? styles.finish : styles.next} ${isSubmitting ? styles.loading : ''}`}
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isNavigating}
+            aria-busy={isSubmitting}
+            aria-label={isSubmitting ? (t('loading') || 'Loading') : (isLastItem ? t('finish') || 'Finish' : t('next') || 'Next')}
           >
-            {isSubmitting
-              ? t('saving') || 'Saving...'
-              : isLastItem
-              ? t('finish') || 'Finish'
-              : t('next') || 'Next'}
+            {isSubmitting ? (
+              <ButtonSpinner />
+            ) : (
+              isLastItem ? t('finish') || 'Finish' : t('next') || 'Next'
+            )}
           </button>
         </div>
       </div>

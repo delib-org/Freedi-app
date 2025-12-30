@@ -1014,3 +1014,86 @@
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
+
+// ============================================
+// BUTTON LOADING STATES
+// ============================================
+
+// Loading state for navigation buttons
+.navButton.loading {
+  pointer-events: none;
+  opacity: 0.85;
+  min-width: 120px; // Maintain button width during loading
+
+  // Subtle background pulse for visual feedback
+  &.next,
+  &.finish {
+    animation: buttonPulse 1.5s ease-in-out infinite;
+  }
+}
+
+// Button spinner container
+.buttonSpinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+// Spinner SVG
+.buttonSpinnerSvg {
+  animation: spinnerRotate 0.8s linear infinite;
+}
+
+// Spinner circle - partial circle for spinner effect
+.buttonSpinnerCircle {
+  stroke-dasharray: 45 63; // Creates a partial circle (~70% of circumference)
+  stroke-dashoffset: 0;
+  opacity: 0.9;
+}
+
+// Spinner animation
+@keyframes spinnerRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Subtle background pulse for primary buttons during loading
+@keyframes buttonPulse {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+// Action buttons disabled state during navigation
+.navActionButton:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+// Respect user's motion preferences
+@media (prefers-reduced-motion: reduce) {
+  .buttonSpinnerSvg {
+    animation: none;
+  }
+
+  .navButton.loading {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  // For users who prefer reduced motion, show a static indicator
+  .buttonSpinnerCircle {
+    stroke-dasharray: 63 63; // Full circle
+    opacity: 0.6;
+  }
+}
