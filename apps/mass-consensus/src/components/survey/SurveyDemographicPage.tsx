@@ -365,26 +365,28 @@ export default function SurveyDemographicPage({
 
         {question.type === UserDemographicQuestionType.range && (
           <div className={styles.rangeGroup}>
-            <div className={styles.rangeLabels}>
-              <span className={styles.rangeMinLabel}>
-                {question.minLabel || question.min || 1}
-              </span>
+            <div className={styles.rangeValueDisplay}>
               <span className={styles.rangeValue}>
                 {answer?.answer || question.min || 1}
               </span>
+            </div>
+            <div className={styles.rangeSliderRow}>
+              <span className={styles.rangeMinLabel}>
+                {question.minLabel || question.min || 1}
+              </span>
+              <input
+                type="range"
+                className={styles.rangeInput}
+                min={question.min ?? 1}
+                max={question.max ?? 10}
+                step={question.step ?? 1}
+                value={answer?.answer || question.min || 1}
+                onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
+              />
               <span className={styles.rangeMaxLabel}>
                 {question.maxLabel || question.max || 10}
               </span>
             </div>
-            <input
-              type="range"
-              className={styles.rangeInput}
-              min={question.min ?? 1}
-              max={question.max ?? 10}
-              step={question.step ?? 1}
-              value={answer?.answer || question.min || 1}
-              onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
-            />
           </div>
         )}
 

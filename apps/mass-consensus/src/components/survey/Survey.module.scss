@@ -117,35 +117,69 @@
 
 .progressContainer {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1rem 0.5rem;
   background: white;
   border-bottom: 1px solid var(--border-light, #e2e8f0);
+  overflow: hidden; // Prevent horizontal page overflow
+
+  @media (min-width: 480px) {
+    padding: 1rem 1.5rem;
+  }
 }
 
 .progressBar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center; // Use safe center to prevent overflow clipping
   gap: 0;
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
+  padding: 0.5rem;
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari
+  }
+
+  // Fallback for browsers that don't support 'safe center'
+  @supports not (justify-content: safe center) {
+    justify-content: flex-start;
+  }
 }
 
 .progressStep {
   display: flex;
   align-items: center;
+  flex-shrink: 0; // Prevent steps from shrinking
 }
 
 .progressDot {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  @media (min-width: 480px) {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  @media (min-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
 
   &.pending {
     background: var(--bg-muted, #e2e8f0);
@@ -155,8 +189,12 @@
   &.active {
     background: var(--btn-primary, #5f88e5);
     color: white;
-    box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.2);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
     animation: pulse 2s infinite;
+
+    @media (min-width: 768px) {
+      box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.2);
+    }
   }
 
   &.completed {
@@ -166,33 +204,44 @@
 }
 
 .progressLine {
-  width: 40px;
-  height: 3px;
+  width: 12px;
+  height: 2px;
   background: var(--bg-muted, #e2e8f0);
   transition: background 0.3s ease;
+  flex-shrink: 0;
+
+  @media (min-width: 480px) {
+    width: 20px;
+    height: 3px;
+  }
+
+  @media (min-width: 768px) {
+    width: 40px;
+  }
 
   &.completed {
     background: var(--agree, #48bb78);
-  }
-
-  @media (max-width: 480px) {
-    width: 20px;
   }
 }
 
 .progressLabel {
   text-align: center;
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
   color: var(--text-body, #4a5568);
+
+  @media (min-width: 480px) {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
 }
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.2);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(95, 136, 229, 0.1);
+    box-shadow: 0 0 0 6px rgba(95, 136, 229, 0.1);
   }
 }
 
@@ -833,45 +882,55 @@
 .rangeGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 1rem;
   background: var(--bg-muted, #f7fafc);
   border-radius: 8px;
 }
 
-.rangeLabels {
+.rangeValueDisplay {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.rangeValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--btn-primary, #5f88e5);
+}
+
+.rangeSliderRow {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
-  color: var(--text-body, #4a5568);
+  gap: 0.75rem;
 }
 
 .rangeMinLabel,
 .rangeMaxLabel {
-  flex: 1;
   color: var(--text-muted, #718096);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  max-width: 80px;
+  text-align: center;
+  line-height: 1.2;
+
+  @media (min-width: 480px) {
+    font-size: 0.85rem;
+    max-width: 120px;
+  }
 }
 
 .rangeMinLabel {
-  text-align: left;
-}
-
-.rangeMaxLabel {
   text-align: right;
 }
 
-.rangeValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--btn-primary, #5f88e5);
-  text-align: center;
-  min-width: 3rem;
+.rangeMaxLabel {
+  text-align: left;
 }
 
 .rangeInput {
-  width: 100%;
+  flex: 1;
+  min-width: 0; // Allow shrinking in flexbox
   height: 8px;
   border-radius: 4px;
   background: var(--border-light, #e2e8f0);
