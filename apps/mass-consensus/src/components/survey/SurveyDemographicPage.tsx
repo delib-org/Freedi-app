@@ -36,7 +36,7 @@ export default function SurveyDemographicPage({
   existingAnswers = [],
 }: SurveyDemographicPageProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
 
   // Initialize answers from existing data
   const initialAnswers: FormAnswers = {};
@@ -170,7 +170,7 @@ export default function SurveyDemographicPage({
 
         if (question.min !== undefined && numValue < question.min) {
           newErrors[question.questionId] =
-            t('valueTooLow', { min: question.min }) ||
+            tWithParams('valueTooLow', { min: question.min }) ||
             `Value must be at least ${question.min}`;
 
           return;
@@ -178,7 +178,7 @@ export default function SurveyDemographicPage({
 
         if (question.max !== undefined && numValue > question.max) {
           newErrors[question.questionId] =
-            t('valueTooHigh', { max: question.max }) ||
+            tWithParams('valueTooHigh', { max: question.max }) ||
             `Value must be at most ${question.max}`;
 
           return;
