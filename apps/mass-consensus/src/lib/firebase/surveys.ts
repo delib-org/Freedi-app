@@ -906,7 +906,9 @@ export async function batchSaveDemographicQuestions(
       }
     } else {
       // For updates, use set with merge to preserve createdAt
-      batch.set(docRef, { ...question, createdAt: undefined }, { merge: true });
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { createdAt: _, ...updateData } = question;
+      batch.set(docRef, updateData, { merge: true });
     }
 
     savedQuestions.push(question);
