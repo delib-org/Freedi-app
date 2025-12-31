@@ -1364,5 +1364,6 @@
   "explanationTitlePlaceholder": "bijv.: Voordat Je Begint",
   "explanationContentPlaceholder": "Schrijf je uitleg hier met Markdown...",
   "evaluationsNeeded": "Evalueer nog {{count}} oplossingen om door te gaan",
-  "contributorOnlyMessage": "Bedankt voor je bijdrage! Ga door wanneer je klaar bent."
+  "contributorOnlyMessage": "Bedankt voor je bijdrage! Ga door wanneer je klaar bent.",
+  "markdownHint": "Gebruik **vet** of *cursief* voor nadruk"
 }

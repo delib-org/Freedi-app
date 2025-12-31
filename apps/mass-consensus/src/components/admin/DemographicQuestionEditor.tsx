@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyDemographicQuestion, DemographicOption } from '@freedi/shared-types';
 import { UserDemographicQuestionType } from '@freedi/shared-types';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Admin.module.scss';
 
 interface DemographicQuestionEditorProps {
@@ -151,6 +152,15 @@ export default function DemographicQuestionEditor({
               onChange={(e) => onUpdate({ question: e.target.value })}
               placeholder={t('questionPlaceholder') || 'Enter your question...'}
             />
+            <span className={styles.markdownHint}>
+              {t('markdownHint') || 'Use **bold** or *italic* for emphasis'}
+            </span>
+            {question.question && (
+              <div className={styles.markdownPreviewInline}>
+                <span className={styles.previewLabel}>{t('preview') || 'Preview'}:</span>
+                <InlineMarkdown text={question.question} />
+              </div>
+            )}
           </div>
 
           {/* Question Type */}

@@ -1360,5 +1360,6 @@
   "explanationTitlePlaceholder": "مثال: قبل أن تبدأ",
   "explanationContentPlaceholder": "اكتب شرحك هنا باستخدام Markdown...",
   "evaluationsNeeded": "قيّم {{count}} حلول أخرى للمتابعة",
-  "contributorOnlyMessage": "شكراً على مساهمتك! تابع عندما تكون جاهزاً."
+  "contributorOnlyMessage": "شكراً على مساهمتك! تابع عندما تكون جاهزاً.",
+  "markdownHint": "استخدم **عريض** أو *مائل* للتأكيد"
 }

@@ -1511,6 +1511,38 @@
 }
 
 // ============================================
+// MARKDOWN HINT & PREVIEW (Inline)
+// ============================================
+
+.markdownHint {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
+.markdownPreviewInline {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border: 1px solid var(--border-light, #e2e8f0);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  color: var(--text-body, #4a5568);
+}
+
+.previewLabel {
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+// ============================================
 // NUMERIC SETTINGS (Range/Number types)
 // ============================================
 

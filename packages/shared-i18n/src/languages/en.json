@@ -1080,6 +1080,7 @@
   "createFirstSurvey": "Create your first survey",
   "edit": "Edit",
   "preview": "Preview",
+  "markdownHint": "Use **bold** or *italic* for emphasis",
   "delete": "Delete",
   "active": "Active",
   "inactive": "Inactive",
