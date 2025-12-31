@@ -252,12 +252,34 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
     }));
   };
 
-  const handleQuestionTextChange = (questionId: string, newText: string) => {
+  const handleQuestionTextChange = async (questionId: string, newText: string) => {
+    // Update local state immediately for responsive UI
     setSelectedQuestions((prev) =>
       prev.map((q) =>
         q.statementId === questionId ? { ...q, statement: newText } : q
       )
     );
+
+    // Save to database
+    try {
+      const token = await refreshToken();
+      if (!token) return;
+
+      const response = await fetch(`/api/statements/${questionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ statement: newText }),
+      });
+
+      if (!response.ok) {
+        console.error('[SurveyForm] Failed to save question text:', await response.text());
+      }
+    } catch (err) {
+      console.error('[SurveyForm] Error saving question text:', err);
+    }
   };
 
   return (
