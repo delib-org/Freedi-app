@@ -48,6 +48,12 @@ interface UpdateDemographicsRequest {
     options?: SurveyDemographicQuestion['options'];
     order?: number;
     required?: boolean;
+    // Range-specific fields
+    min?: number;
+    max?: number;
+    step?: number;
+    minLabel?: string;
+    maxLabel?: string;
   }>;
 }
 

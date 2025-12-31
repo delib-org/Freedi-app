@@ -197,6 +197,12 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
                 options: q.options,
                 order: q.order,
                 required: q.required,
+                // Range-specific fields
+                min: q.min,
+                max: q.max,
+                step: q.step,
+                minLabel: q.minLabel,
+                maxLabel: q.maxLabel,
               })),
             }),
           }
@@ -277,7 +283,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="description">{t('surveyDescription')}</label>
+          <label htmlFor="description">{t('surveyDescriptionLabel')}</label>
           <textarea
             id="description"
             className={styles.textArea}
