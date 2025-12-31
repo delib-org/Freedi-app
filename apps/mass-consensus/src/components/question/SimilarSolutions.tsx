@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { VALIDATION, UI } from '@/constants/common';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './SimilarSolutions.module.scss';
 
 interface SimilarSolutionsProps {
@@ -132,7 +133,9 @@ export default function SimilarSolutions({
           </div>
 
           {/* Solution Text */}
-          <div className={styles.solutionText}>{bestSimilar.statement}</div>
+          <div className={styles.solutionText}>
+            <InlineMarkdown text={bestSimilar.statement} />
+          </div>
 
           {/* Your addition preview */}
           <div className={styles.yourAddition}>
@@ -164,7 +167,9 @@ export default function SimilarSolutions({
                   👥 {solution.evaluation?.numberOfEvaluators || 0}
                 </span>
               </div>
-              <div className={styles.solutionText}>{solution.statement}</div>
+              <div className={styles.solutionText}>
+                <InlineMarkdown text={solution.statement} />
+              </div>
               <button
                 onClick={() => handleMerge(solution.statementId)}
                 className={`${styles.chooseButton} ${styles.secondary}`}
