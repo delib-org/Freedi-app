@@ -26,7 +26,7 @@ export default function QuestionTextEditor({
     }
 
     // Parse **bold** and *italic* patterns
-    let html = questionText
+    const html = questionText
       // Escape HTML entities first
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
