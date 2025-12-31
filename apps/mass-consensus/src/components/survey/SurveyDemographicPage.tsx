@@ -8,6 +8,7 @@ import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import SurveyProgressBar from './SurveyProgress';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Survey.module.scss';
 
 /**
@@ -294,7 +295,7 @@ export default function SurveyDemographicPage({
     return (
       <div key={question.questionId} className={styles.demographicQuestion}>
         <label className={styles.questionLabel}>
-          {question.question}
+          <InlineMarkdown text={question.question} />
           {question.required && <span className={styles.required}>*</span>}
         </label>
 
@@ -333,7 +334,7 @@ export default function SurveyDemographicPage({
                   className={styles.optionText}
                   style={{ '--option-color': option.color } as React.CSSProperties}
                 >
-                  {option.option}
+                  <InlineMarkdown text={option.option} />
                 </span>
               </label>
             ))}
@@ -356,7 +357,7 @@ export default function SurveyDemographicPage({
                   className={styles.optionText}
                   style={{ '--option-color': option.color } as React.CSSProperties}
                 >
-                  {option.option}
+                  <InlineMarkdown text={option.option} />
                 </span>
               </label>
             ))}
