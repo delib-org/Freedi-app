@@ -1361,5 +1361,7 @@
   "explanationContentPlaceholder": "اكتب شرحك هنا باستخدام Markdown...",
   "evaluationsNeeded": "قيّم {{count}} حلول أخرى للمتابعة",
   "contributorOnlyMessage": "شكراً على مساهمتك! تابع عندما تكون جاهزاً.",
-  "markdownHint": "استخدم **عريض** أو *مائل* للتأكيد"
+  "markdownHint": "استخدم **عريض** أو *مائل* للتأكيد",
+  "markdownHintSimple": "يدعم تنسيق **عريض** و*مائل*",
+  "questionTextPlaceholder": "أدخل نص السؤال..."
 }

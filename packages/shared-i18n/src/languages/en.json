@@ -1081,6 +1081,8 @@
   "edit": "Edit",
   "preview": "Preview",
   "markdownHint": "Use **bold** or *italic* for emphasis",
+  "markdownHintSimple": "Supports **bold** and *italic* formatting",
+  "questionTextPlaceholder": "Enter the question text...",
   "delete": "Delete",
   "active": "Active",
   "inactive": "Inactive",

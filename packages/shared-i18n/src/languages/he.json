@@ -1091,6 +1091,8 @@
   "evaluated": "הוערכו",
   "preview": "תצוגה מקדימה",
   "markdownHint": "השתמש ב-**מודגש** או *נטוי* להדגשה",
+  "markdownHintSimple": "תומך בעיצוב **מודגש** ו-*נטוי*",
+  "questionTextPlaceholder": "הזן את טקסט השאלה...",
   "delete": "מחק",
   "active": "פעיל",
   "inactive": "לא פעיל",

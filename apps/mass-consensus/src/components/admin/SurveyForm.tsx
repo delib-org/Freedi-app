@@ -252,6 +252,14 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
     }));
   };
 
+  const handleQuestionTextChange = (questionId: string, newText: string) => {
+    setSelectedQuestions((prev) =>
+      prev.map((q) =>
+        q.statementId === questionId ? { ...q, statement: newText } : q
+      )
+    );
+  };
+
   return (
     <form className={styles.surveyForm} onSubmit={handleSubmit}>
       <div className={styles.formHeader}>
@@ -329,6 +337,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             onExplanationPagesChange={setExplanationPages}
             onCustomDemographicQuestionsChange={setCustomDemographicQuestions}
             onQuestionSettingsChange={handleQuestionSettingsChange}
+            onQuestionTextChange={handleQuestionTextChange}
             onRemoveQuestion={handleRemoveQuestion}
           />
         </div>
