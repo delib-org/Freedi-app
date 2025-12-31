@@ -283,7 +283,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="description">{t('surveyDescription')}</label>
+          <label htmlFor="description">{t('surveyDescriptionLabel')}</label>
           <textarea
             id="description"
             className={styles.textArea}

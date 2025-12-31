@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { LanguagesEnum, DEFAULT_LANGUAGE, COOKIE_KEY } from '@freedi/shared-i18n';
+import { LanguagesEnum, DEFAULT_LANGUAGE, COOKIE_KEY, getDirection } from '@freedi/shared-i18n';
 import { isValidLanguage } from '@freedi/shared-i18n/next';
 
 interface LanguageOverrideProviderProps {
@@ -32,6 +32,13 @@ export function LanguageOverrideProvider({
   children,
 }: LanguageOverrideProviderProps) {
   const { currentLanguage, changeLanguage } = useTranslation();
+
+  // Update document direction when language changes
+  useEffect(() => {
+    const dir = getDirection(currentLanguage as LanguagesEnum);
+    document.documentElement.dir = dir;
+    document.documentElement.lang = currentLanguage;
+  }, [currentLanguage]);
 
   useEffect(() => {
     // 1. Admin has set a language preference for this survey
