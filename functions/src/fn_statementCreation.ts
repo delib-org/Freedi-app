@@ -251,8 +251,8 @@ return statementToSimpleStatement(stmt);
 
 		const timestamp = Date.now();
 
-		// Prepare update object
-		const updateData: any = {
+		// Prepare update object - using Record type for Firestore compatibility
+		const updateData: Record<string, FieldValue | SimpleStatement[] | number> = {
 			subStatementsCount: FieldValue.increment(1),
 			lastSubStatements: lastSubStatements,
 			lastUpdate: timestamp,

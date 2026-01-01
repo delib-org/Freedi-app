@@ -54,14 +54,19 @@ const createMarkdownComponents = (fontSize: string): Components => ({
 		</h1>
 	),
 	h2: ({ children }) => (
-		<h2 className={styles.h2} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.25)` : undefined }}>
+		<h2 className={styles.h2} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.3)` : undefined }}>
 			{children}
 		</h2>
 	),
 	h3: ({ children }) => (
-		<h3 className={styles.h3} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.1)` : undefined }}>
+		<h3 className={styles.h3} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.15)` : undefined }}>
 			{children}
 		</h3>
+	),
+	h4: ({ children }) => (
+		<h4 className={styles.h4} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.05)` : undefined }}>
+			{children}
+		</h4>
 	),
 	p: ({ children }) => (
 		<p className={styles.p} style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}>

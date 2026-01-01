@@ -30,20 +30,25 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
         return;
       }
 
-      // If user is already authenticated, no need to check
+      // If user is already authenticated, no need to auto-auth
       if (creator?.uid) {
         setIsCheckingAccess(false);
-        
+
         return;
       }
 
       try {
-        // Get the statement
+        // Auto-authenticate FIRST before fetching any data
+        // This ensures the user has a valid auth token for Firestore
+        console.info('User not authenticated, initiating auto-authentication');
+        await handlePublicAutoAuth();
+
+        // Now fetch the statement with valid auth
         const statement = await getStatementFromDB(statementId);
-        
+
         if (!statement) {
           setIsCheckingAccess(false);
-          
+
           return;
         }
 
@@ -56,13 +61,6 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
         // Determine effective access - statement override or topParent
         const access = statement?.membership?.access || topParentStatement?.membership?.access;
         setEffectiveAccess(access || null);
-
-        // Auto-authenticate for all access levels - don't redirect to login
-        // Users can login explicitly via profile icon if needed
-        if (!creator?.uid) {
-          console.info('User not authenticated, initiating auto-authentication');
-          await handlePublicAutoAuth();
-        }
       } catch (error) {
         console.error('Error checking public access:', error);
       } finally {

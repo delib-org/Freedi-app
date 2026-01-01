@@ -274,23 +274,40 @@ Write a clear, informative summary in ${languageName} that helps readers underst
 3. **How strong is the agreement?** - This discussion shows ${agreementStrength} consensus (top score: ${topSolution.consensus.toFixed(2)})
 4. **Key takeaways** - What should someone know about this decision?
 
+**CRITICAL FORMATTING RULES - YOU MUST FOLLOW THESE**:
+- Use proper markdown headers for ALL section titles:
+  - Use "## " (with space) for main sections (e.g., "## The Discussion Question", "## What Was Agreed")
+  - Use "### " (with space) for subsections (e.g., "### Key Agreements", "### Conclusions")
+- Do NOT use **bold text** for section titles - use ## or ### headers instead
+- Example of CORRECT formatting:
+  ## The Discussion Question
+  The group discussed...
+
+  ## What Was Agreed
+  ### Personal Updates
+  - Agreement 1
+  - Agreement 2
+
+  ## Key Takeaways
+  The main conclusions...
+
+- Example of WRONG formatting (do NOT do this):
+  **The Discussion Question**
+  **What Was Agreed**
+
 **Writing Style**:
 - Write for someone who wasn't part of the discussion - they should fully understand the decisions
 - Focus on the SUBSTANCE of what was agreed, not the process
 - Use clear, accessible language - avoid jargon
 - Be specific about what the group decided to do/believe/support
 ${solutions.length > 10
-		? `- Since there are ${solutions.length} agreements, organize them by theme/category using headers
+		? `- Since there are ${solutions.length} agreements, organize them by theme/category using ## and ### headers
 - For each category, summarize the key agreements briefly
 - Aim for 400-600 words to cover all major decisions`
 		: `- Keep it concise (150-300 words) but ensure all key agreements are clearly explained`}
-- Use bullet points for multiple agreements
+- Use bullet points (- ) for listing multiple agreements under each section
 - If solutions have descriptions, incorporate that detail into your explanation
 - **IMPORTANT: Complete the entire summary - do not stop mid-sentence or mid-section**
 
-**Example of good summary style**:
-Instead of: "Solution 1 achieved a consensus score of 0.65"
-Write: "The group agreed to implement weekly team meetings, with strong support from participants"
-
-Return ONLY the markdown summary text. Do not wrap in code blocks or JSON.`;
+Return ONLY the markdown summary text with proper ## and ### headers. Do not wrap in code blocks or JSON.`;
 }

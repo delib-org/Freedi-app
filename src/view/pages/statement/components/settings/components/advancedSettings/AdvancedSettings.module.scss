@@ -37,59 +37,86 @@
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             border-color: var(--accent);
         }
+    }
 
-        // Category header
+    // Smart Join Category - Special styling for prominence (RED border for visibility)
+    .smartJoinCategory {
+        border: 3px solid #e53935;
+        background: linear-gradient(135deg, rgba(229, 57, 53, 0.03) 0%, #ffffff 100%);
+
         .categoryHeader {
-            width: 100%;
-            padding: 1rem 1.25rem;
-            background: linear-gradient(135deg, #f8f9fb 0%, #ffffff 100%);
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: linear-gradient(135deg, rgba(229, 57, 53, 0.08) 0%, rgba(229, 57, 53, 0.02) 100%);
+            border-bottom: 1px solid rgba(229, 57, 53, 0.2);
+        }
 
-            .categoryTitle {
-                font-size: 1.1rem;
+        &:hover {
+            border-color: #e53935;
+            box-shadow: 0 4px 16px rgba(229, 57, 53, 0.25);
+        }
+    }
+
+    // Category badge for feature type indication
+    .categoryBadge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.75rem;
+        background: #e53935;
+        color: white;
+        border-radius: 12px;
+        font-weight: 500;
+    }
+
+    // Category header (shared across categories)
+    .categoryHeader {
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #f8f9fb 0%, #ffffff 100%);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        .categoryTitle {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+    }
+
+    // Category content
+    .categoryContent {
+        padding: 1rem 1.25rem 1.25rem;
+        background: white;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        animation: slideDown 0.3s ease;
+
+        // Apply grid layout on larger screens for better use of space
+        @media (min-width: 768px) {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1rem;
+        }
+
+        // Evaluation type section styles
+        .evaluationTypeSection {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            grid-column: 1 / -1; // Span full width in grid
+            width: 100%;
+
+            .sectionLabel {
                 font-weight: 600;
                 color: var(--text-primary);
+                margin-bottom: 0.5rem;
+                font-size: 1rem;
             }
         }
 
-        // Category content
-        .categoryContent {
-            padding: 1rem 1.25rem 1.25rem;
-            background: white;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            animation: slideDown 0.3s ease;
-
-            // Apply grid layout on larger screens for better use of space
-            @media (min-width: 768px) {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 1rem;
-            }
-
-            // Evaluation type section styles
-            .evaluationTypeSection {
-                display: flex;
-                flex-direction: column;
-                gap: 0.75rem;
-                grid-column: 1 / -1; // Span full width in grid
-                width: 100%;
-
-                .sectionLabel {
-                    font-weight: 600;
-                    color: var(--text-primary);
-                    margin-bottom: 0.5rem;
-                    font-size: 1rem;
-                }
-            }
-
-            // Vote limit section styles
-            .voteLimitSection {
-                grid-column: 1 / -1; // Span full width in grid
+        // Vote limit section styles
+        .voteLimitSection {
+            grid-column: 1 / -1; // Span full width in grid
                 display: flex;
                 flex-direction: column;
                 gap: 0.75rem;
@@ -129,6 +156,298 @@
                         font-size: 0.85rem;
                         color: var(--text-secondary);
                         margin-top: 0.25rem;
+                    }
+                }
+            }
+
+            // Master toggle area
+            .masterToggle {
+                grid-column: 1 / -1;
+                padding: 1rem;
+                background: rgba(79, 171, 154, 0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(79, 171, 154, 0.15);
+            }
+
+            // Feature description
+            .featureDescription {
+                font-size: 0.9rem;
+                color: var(--text-secondary);
+                margin-top: 0.5rem;
+                line-height: 1.5;
+            }
+
+            // Settings grid for sub-options
+            .settingsGrid {
+                grid-column: 1 / -1;
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 1rem;
+                margin-top: 1rem;
+                animation: fadeIn 0.3s ease;
+            }
+
+            // Individual setting cards
+            .settingCard {
+                padding: 1rem;
+                background: white;
+                border-radius: 8px;
+                border: 1px solid rgba(0, 0, 0, 0.08);
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                transition: all 0.2s ease;
+
+                &:hover {
+                    border-color: var(--accent);
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+                }
+            }
+
+            .settingCardTitle {
+                font-size: 0.95rem;
+                font-weight: 600;
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin: 0;
+            }
+
+            .settingCardFull {
+                grid-column: 1 / -1;
+            }
+
+            // Number input row for min/max side by side
+            .numberInputRow {
+                display: flex;
+                align-items: flex-end;
+                gap: 0.75rem;
+            }
+
+            .rangeSeparator {
+                font-size: 1.2rem;
+                color: var(--text-secondary);
+                padding-bottom: 0.5rem;
+            }
+
+            // Requires tag for conditional features
+            .requiresTag {
+                font-size: 0.75rem;
+                font-weight: 400;
+                color: var(--warning, #f59e0b);
+                background: rgba(245, 158, 11, 0.1);
+                padding: 0.125rem 0.5rem;
+                border-radius: 4px;
+            }
+
+            // Split rooms content wrapper
+            .splitRoomsContent {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+
+            @keyframes fadeIn {
+                from {
+                    opacity: 0;
+                    transform: translateY(-8px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            // Split Rooms section styles
+            .splitRoomsSection {
+                display: flex;
+                flex-direction: column;
+                gap: 0.75rem;
+                padding: 1rem;
+                margin-top: 0.5rem;
+                background: rgba(95, 136, 229, 0.05);
+                border-radius: 8px;
+                border: 1px solid rgba(95, 136, 229, 0.2);
+
+                .splitRoomsTitle {
+                    font-size: 1rem;
+                    font-weight: 600;
+                    color: var(--text-primary);
+                    margin: 0 0 0.5rem 0;
+                }
+
+                .loadingText,
+                .noExceedingText {
+                    font-size: 0.9rem;
+                    color: var(--text-secondary);
+                    font-style: italic;
+                }
+
+                .exceedingOptionsList {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 0.5rem;
+
+                    .exceedingCount {
+                        font-size: 0.9rem;
+                        font-weight: 500;
+                        color: var(--warning, #f59e0b);
+                        margin-bottom: 0.25rem;
+                    }
+
+                    .exceedingOption {
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0.75rem;
+                        background: white;
+                        border-radius: 6px;
+                        border: 1px solid rgba(0, 0, 0, 0.1);
+                        gap: 1rem;
+
+                        .optionInfo {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 0.25rem;
+                            flex: 1;
+                            min-width: 0;
+
+                            .optionTitle {
+                                font-size: 0.9rem;
+                                font-weight: 500;
+                                color: var(--text-primary);
+                                white-space: nowrap;
+                                overflow: hidden;
+                                text-overflow: ellipsis;
+                            }
+
+                            .optionCount {
+                                font-size: 0.85rem;
+                                color: var(--text-secondary);
+                                display: flex;
+                                align-items: center;
+                                gap: 0.5rem;
+
+                                .excessBadge {
+                                    background: var(--warning, #f59e0b);
+                                    color: white;
+                                    padding: 0.125rem 0.375rem;
+                                    border-radius: 4px;
+                                    font-size: 0.75rem;
+                                    font-weight: 600;
+                                }
+                            }
+                        }
+
+                        .splitButton {
+                            flex-shrink: 0;
+                            padding: 0.5rem 1rem;
+                            background: var(--btn-primary, #5f88e5);
+                            color: white;
+                            border: none;
+                            border-radius: 6px;
+                            font-size: 0.85rem;
+                            font-weight: 500;
+                            cursor: pointer;
+                            transition: background 0.2s ease;
+
+                            &:hover:not(:disabled) {
+                                background: var(--btn-primary-hover, #4a6fc4);
+                            }
+
+                            &:disabled {
+                                opacity: 0.6;
+                                cursor: not-allowed;
+                            }
+                        }
+                    }
+                }
+
+                .splitSuccess {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 0.75rem;
+                    background: rgba(79, 171, 154, 0.1);
+                    border-radius: 6px;
+                    border: 1px solid var(--approve, #4fab9a);
+
+                    p {
+                        margin: 0;
+                        font-size: 0.9rem;
+                        color: var(--approve, #4fab9a);
+                        font-weight: 500;
+                    }
+
+                    .dismissButton {
+                        padding: 0.25rem 0.75rem;
+                        background: transparent;
+                        color: var(--text-secondary);
+                        border: 1px solid var(--border-color, #ddd);
+                        border-radius: 4px;
+                        font-size: 0.8rem;
+                        cursor: pointer;
+
+                        &:hover {
+                            background: rgba(0, 0, 0, 0.05);
+                        }
+                    }
+                }
+
+                .refreshButton {
+                    align-self: flex-start;
+                    padding: 0.5rem 1rem;
+                    background: transparent;
+                    color: var(--text-secondary);
+                    border: 1px solid var(--border-color, #ddd);
+                    border-radius: 6px;
+                    font-size: 0.85rem;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+
+                    &:hover:not(:disabled) {
+                        background: rgba(0, 0, 0, 0.05);
+                        border-color: var(--accent);
+                        color: var(--text-primary);
+                    }
+
+                    &:disabled {
+                        opacity: 0.6;
+                        cursor: not-allowed;
+                    }
+                }
+            }
+
+            // Number input group for min/max settings
+            .numberInputGroup {
+                display: flex;
+                flex-direction: column;
+                gap: 0.25rem;
+
+                label {
+                    font-size: 0.9rem;
+                    color: var(--text-primary);
+                    font-weight: 500;
+                }
+
+                .numberInput {
+                    width: 120px;
+                    padding: 0.5rem;
+                    border: 1px solid var(--border-color, #ddd);
+                    border-radius: 4px;
+                    font-size: 1rem;
+                    background: white;
+
+                    &:focus {
+                        outline: none;
+                        border-color: var(--accent);
+                        box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.1);
+                    }
+
+                    &::placeholder {
+                        color: var(--text-secondary);
+                        font-size: 0.85rem;
                     }
                 }
             }

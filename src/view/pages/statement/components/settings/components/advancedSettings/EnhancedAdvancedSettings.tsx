@@ -15,7 +15,7 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download, RefreshCcw
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';
@@ -429,7 +429,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           return (
             <div
               key={category.id}
-              className={`${styles.category} ${styles[`category--${category.priority}`]}`}
+              className={`${styles.category} ${category.id === 'teamFormation' ? styles['category--teamFormation'] : styles[`category--${category.priority}`]}`}
             >
               <button
                 className={styles.categoryHeader}
@@ -445,7 +445,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                 </div>
                 <div className={styles.categoryHeaderRight}>
                   <span className={styles.categoryBadge}>
-                    {category.priority === 'high' && t('Essential')}
+                    {category.id === 'teamFormation' && t('Teams')}
+                    {category.id !== 'teamFormation' && category.priority === 'high' && t('Essential')}
                     {category.priority === 'medium' && t('Recommended')}
                     {category.priority === 'low' && t('Advanced')}
                   </span>

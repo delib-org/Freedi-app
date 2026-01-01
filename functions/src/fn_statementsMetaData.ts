@@ -1,4 +1,4 @@
-import { FieldValue, Timestamp } from 'firebase-admin/firestore';
+import { FieldValue } from 'firebase-admin/firestore';
 import { db } from '.';
 import { logger } from 'firebase-functions/v1';
 import { Collections } from '@freedi/shared-types';
@@ -46,7 +46,7 @@ export async function addOrRemoveMemberFromStatementDB(
 		await db.doc(`${Collections.statementsMetaData}/${statementId}`).set(
 			{
 				numberOfMembers: FieldValue.increment(increment),
-				lastUpdate: Timestamp.now().toMillis(),
+				lastUpdate: Date.now(),
 				statementId,
 			},
 			{ merge: true }

@@ -1,11 +1,20 @@
 // Room Assignment Controllers
 export {
+	// User-facing functions
+	getUserRoomAssignment,
+	listenToUserRoomAssignment,
+	// Admin functions
 	listenToRoomSettingsByStatement,
+	listenToRoomSettingsByTopParent,
 	listenToRoomsBySettingsId,
+	listenToRoomsBySettingsIdMerge,
 	listenToParticipantsBySettingsId,
+	listenToParticipantsBySettingsIdMerge,
+	getRoomAssignmentDataForAdmin,
+	listenToMyRoomAssignmentWithDispatch,
+	// Backwards compatibility aliases
 	getMyRoomAssignmentFromDB,
 	listenToMyRoomAssignment,
-	getRoomAssignmentDataForAdmin,
 } from './getRoomAssignment';
 
 export {

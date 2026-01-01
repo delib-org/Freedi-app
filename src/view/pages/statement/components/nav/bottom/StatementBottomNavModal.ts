@@ -17,6 +17,11 @@ export const sortItems: NavItem[] = [
 		id: SortType.mostUpdated,
 	},
 	{
+		link: SortType.mostJoined,
+		name: 'Joined',
+		id: SortType.mostJoined,
+	},
+	{
 		link: SortType.random,
 		name: 'Random',
 		id: SortType.random,

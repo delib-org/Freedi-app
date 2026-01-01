@@ -79,6 +79,11 @@ export function sortSubStatements(
 						(a: Statement, b: Statement) => b.lastUpdate - a.lastUpdate
 					);
 					break;
+				case SortType.mostJoined:
+					_subStatements = subStatements.sort(
+						(a: Statement, b: Statement) => (b.joined?.length || 0) - (a.joined?.length || 0)
+					);
+					break;
 			}
 		}
 

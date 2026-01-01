@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { auth } from '@/controllers/db/config';
-import { useNavigate, useLocation } from 'react-router';
 import { useDispatch } from 'react-redux';
 import { resetEvaluations } from '@/redux/evaluations/evaluationsSlice';
 import { resetResults } from '@/redux/results/resultsSlice';
@@ -13,7 +12,7 @@ import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { setCreator } from '@/redux/creator/creatorSlice';
 import { setUserToDB } from '../db/user/setUser';
 
-interface AuthState {
+export interface AuthState {
 	isAuthenticated: boolean;
 	isLoading: boolean;
 	user: User | null;
@@ -21,6 +20,18 @@ interface AuthState {
 	initialRoute?: string;
 }
 
+/**
+ * Hook for managing authentication state.
+ *
+ * This hook is responsible ONLY for:
+ * - Tracking authentication state (isAuthenticated, isLoading, user, creator)
+ * - Syncing authenticated user to Redux store
+ * - Persisting user to database
+ * - Resetting Redux state on logout
+ *
+ * Navigation/routing is handled separately by AuthRedirectHandler component.
+ * This separation follows Single Responsibility Principle (SRP).
+ */
 export const useAuthentication = (): AuthState => {
 	const [authState, setAuthState] = useState<AuthState>({
 		isAuthenticated: false,
@@ -30,22 +41,19 @@ export const useAuthentication = (): AuthState => {
 		initialRoute: '',
 	});
 
-	const navigate = useNavigate();
-	const location = useLocation();
 	const dispatch = useDispatch();
 
 	// Get initial route from local storage
 	const initialRoute = useRef(
-		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute))
+		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null')
 	);
 
 	// Track if user has been set to prevent duplicate calls
 	const userSetRef = useRef<string | null>(null);
 
-	// Main auth effect
+	// Main auth effect - only manages state, no navigation
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
-
 			if (user) {
 				// User is authenticated
 				const creator = convertFirebaseUserToCreator(user);
@@ -58,7 +66,7 @@ export const useAuthentication = (): AuthState => {
 					initialRoute: initialRoute.current?.pathname,
 				});
 				dispatch(setCreator(creator));
-				
+
 				// Only set user to DB if it's a new user or user has changed
 				if (userSetRef.current !== user.uid) {
 					userSetRef.current = user.uid;
@@ -67,7 +75,7 @@ export const useAuthentication = (): AuthState => {
 			} else {
 				// User is not authenticated
 				userSetRef.current = null; // Reset the ref when user logs out
-				
+
 				setAuthState({
 					isAuthenticated: false,
 					isLoading: false,
@@ -76,28 +84,7 @@ export const useAuthentication = (): AuthState => {
 					initialRoute: initialRoute.current?.pathname,
 				});
 
-				// Save current location before redirecting to start
-				// Don't redirect if we're on a statement route - it might be public
-				const isStatementRoute = location.pathname.includes('/statement/') || 
-					location.pathname.includes('/stage/') ||
-					location.pathname.includes('/statement-screen/');
-				
-				if (
-					location.pathname !== '/start' &&
-					location.pathname !== '/' &&
-					!isStatementRoute
-				) {
-					const historyData = {
-						pathname: location.pathname,
-					};
-					localStorage.setItem(
-						LocalStorageObjects.InitialRoute,
-						JSON.stringify(historyData)
-					);
-					navigate('/start', { replace: true });
-				}
-
-				// Reset application state
+				// Reset application state on logout
 				dispatch(resetStatements());
 				dispatch(resetEvaluations());
 				dispatch(resetVotes());
@@ -106,7 +93,7 @@ export const useAuthentication = (): AuthState => {
 		});
 
 		return () => unsubscribe();
-	}, []);
+	}, [dispatch]);
 
 	return authState;
 };

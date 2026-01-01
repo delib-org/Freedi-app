@@ -47,6 +47,7 @@ export default function SolutionFeedClient({
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
   const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
+  const [userSolutionCount, setUserSolutionCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
   const [showProgressIndicator, setShowProgressIndicator] = useState(true);
   const hasTrackedPageView = useRef(false);
@@ -63,6 +64,14 @@ export default function SolutionFeedClient({
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;
 
+  // Check if solutions array is empty
+  const hasNoSolutions = solutions.length === 0;
+
+  // Check if participants can add suggestions:
+  // - Always allow when there are no solutions (otherwise survey is stuck)
+  // - Otherwise respect the merged settings (default to true for non-survey)
+  const canAddSuggestions = hasNoSolutions || (mergedSettings?.allowParticipantsToAddSuggestions ?? true);
+
   // Debug logging
   console.info('[SolutionFeedClient] mergedSettings:', mergedSettings);
   console.info('[SolutionFeedClient] requiresSolution:', requiresSolution);
@@ -78,6 +87,15 @@ export default function SolutionFeedClient({
         if (response.ok) {
           const data = await response.json();
           setHasSubmittedSolution(data.hasSubmitted);
+          setUserSolutionCount(data.solutionCount || 0);
+
+          // Emit user solution count for survey navigation
+          if (inSurveyContext) {
+            window.dispatchEvent(new CustomEvent('user-solution-count', {
+              detail: { count: data.solutionCount || 0, questionId }
+            }));
+          }
+
           if (!data.hasSubmitted && requiresSolution) {
             setShowSolutionPrompt(true);
           }
@@ -90,7 +108,7 @@ export default function SolutionFeedClient({
     };
 
     checkUserSolutions();
-  }, [userId, questionId, requiresSolution, hasCheckedUserSolutions]);
+  }, [userId, questionId, requiresSolution, hasCheckedUserSolutions, inSurveyContext]);
 
   // Fetch participant count for completion screen
   useEffect(() => {
@@ -116,6 +134,15 @@ export default function SolutionFeedClient({
       detail: { count: solutions.length, questionId }
     });
     window.dispatchEvent(event);
+
+    // Also dispatch after a small delay to ensure listener is set up (handles race conditions)
+    const timeoutId = setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('solutions-loaded', {
+        detail: { count: solutions.length, questionId }
+      }));
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [solutions.length, questionId]);
 
   // Initialize user ID and load evaluation history on mount
@@ -169,6 +196,14 @@ export default function SolutionFeedClient({
           );
 
           setEvaluationScores(scoresMap);
+
+          // Notify navigation of initial evaluation count for this question's visible solutions
+          // This handles the case where user returns to a question with existing evaluations
+          if (scoresMap.size > 0) {
+            window.dispatchEvent(new CustomEvent('evaluations-loaded', {
+              detail: { count: scoresMap.size, questionId }
+            }));
+          }
         }
       } catch (error) {
         console.error('Failed to load evaluation history:', error);
@@ -276,6 +311,14 @@ export default function SolutionFeedClient({
       // Track successful evaluation
       trackEvaluation(questionId, userId, solutionId, score);
 
+      // Dispatch event for survey navigation to track evaluation count
+      // Only dispatch if this is a new evaluation (not updating an existing one)
+      if (!wasAlreadyEvaluated) {
+        window.dispatchEvent(new CustomEvent('solution-evaluated', {
+          detail: { solutionId, score, questionId }
+        }));
+      }
+
       // Check if all options have been evaluated
       const newTotalEvaluated = allEvaluatedIds.size + (wasAlreadyEvaluated ? 0 : 1);
       if (totalOptionsCount > 0 && newTotalEvaluated >= totalOptionsCount) {
@@ -366,8 +409,17 @@ export default function SolutionFeedClient({
    * Refresh the feed to show new/updated solutions
    */
   const handleSolutionComplete = async () => {
-    // Mark that user has submitted a solution
+    // Mark that user has submitted a solution and increment count
     setHasSubmittedSolution(true);
+    const newCount = userSolutionCount + 1;
+    setUserSolutionCount(newCount);
+
+    // Emit updated user solution count for survey navigation
+    if (inSurveyContext) {
+      window.dispatchEvent(new CustomEvent('user-solution-count', {
+        detail: { count: newCount, questionId }
+      }));
+    }
 
     // Fetch a new batch to show the latest solutions
     // Server handles filtering - no need to send excludeIds
@@ -423,25 +475,51 @@ export default function SolutionFeedClient({
         </div>
       )}
 
-      {/* Instructions */}
-      <div className={styles.instructions}>
-        <h3>{t('Please rate the following suggestions')}</h3>
-        <p>{t('Evaluate each suggestion from -1 (strongly disagree) to +1 (strongly agree)')}</p>
-      </div>
+      {/* Empty state - when no solutions available */}
+      {hasNoSolutions ? (
+        <div className={styles.emptyState}>
+          <h3>{t('No solutions yet')}</h3>
+          {canAddSuggestions ? (
+            <>
+              <p>{t('Be the first to submit a solution!')}</p>
+              <button
+                className={styles.addSolutionButtonPrimary}
+                onClick={() => {
+                  trackAddSolutionClick(questionId, userId);
+                  setShowSolutionPrompt(true);
+                }}
+              >
+                {t('Add Solution')}
+              </button>
+            </>
+          ) : (
+            <p>{t('Solutions will appear here once they are added.')}</p>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Instructions */}
+          <div className={styles.instructions}>
+            <h3>{t('Please rate the following suggestions')}</h3>
+            <p>{t('Evaluate each suggestion from -1 (strongly disagree) to +1 (strongly agree)')}</p>
+          </div>
 
-      {/* Solution cards */}
-      <div className={styles.solutions}>
-        {solutions.map((solution) => (
-          <SolutionCard
-            key={solution.statementId}
-            solution={solution}
-            onEvaluate={handleEvaluate}
-            currentScore={evaluationScores.get(solution.statementId)}
-          />
-        ))}
-      </div>
+          {/* Solution cards */}
+          <div className={styles.solutions}>
+            {solutions.map((solution) => (
+              <SolutionCard
+                key={solution.statementId}
+                solution={solution}
+                onEvaluate={handleEvaluate}
+                currentScore={evaluationScores.get(solution.statementId)}
+              />
+            ))}
+          </div>
+        </>
+      )}
 
-      {/* Batch controls */}
+      {/* Batch controls - only show when there are solutions */}
+      {!hasNoSolutions && (
       <div className={styles.batchControls}>
         {allOptionsEvaluated ? (
           <div className={styles.completionMessage}>
@@ -480,6 +558,7 @@ export default function SolutionFeedClient({
           </>
         )}
       </div>
+      )}
 
         {/* Fixed Bottom Container - Progress & Actions (only show when NOT in survey context) */}
         {!inSurveyContext && (

@@ -4,7 +4,7 @@
 	"scripts": {
 		"clean": "rm -rf node_modules package-lock.json && git rm -r --cache . && git reset && npm install && npm run build",
 		"lint": "eslint --ext .js,.ts . --ignore-pattern 'lib/' --ignore-pattern 'coverage/'",
-		"prebuild": "rm -f freedi-shared-types-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && rm -f package-lock.json && npm install",
+		"prebuild": "rm -f freedi-shared-types-*.tgz && (cd ../packages/shared-types && npm run build && npm pack && mv freedi-shared-types-*.tgz ../../functions/) && rm -rf node_modules/@freedi package-lock.json && npm install",
 		"build": "tsc",
 		"dev": "tsc --watch",
 		"serve": "npm run build && firebase emulators:start --only functions",
@@ -16,11 +16,11 @@
 		"test:watch": "jest --watch"
 	},
 	"engines": {
-		"node": "20"
+		"node": ">=20"
 	},
 	"main": "lib/functions/src/index.js",
 	"dependencies": {
-		"@freedi/shared-types": "file:freedi-shared-types-1.0.0.tgz",
+		"@freedi/shared-types": "file:freedi-shared-types-1.0.1.tgz",
 		"@google/generative-ai": "^0.15.0",
 		"@sendgrid/mail": "^8.1.5",
 		"@types/nodemailer": "^7.0.1",
@@ -35,7 +35,6 @@
 		"valibot": "^1.0.0-rc.1"
 	},
 	"devDependencies": {
-		"@firebase/testing": "^0.20.11",
 		"@types/jest": "^29.5.14",
 		"@types/parse5": "^6.0.3",
 		"firebase-functions-test": "^3.4.1",

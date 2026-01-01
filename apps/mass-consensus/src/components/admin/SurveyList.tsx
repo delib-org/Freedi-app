@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyCard from './SurveyCard';
 import styles from './Admin.module.scss';
@@ -12,25 +14,23 @@ import styles from './Admin.module.scss';
  */
 export default function SurveyList() {
   const { t } = useTranslation();
+  const router = useRouter();
+  const { refreshToken } = useAuth();
   const [surveys, setSurveys] = useState<Survey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSurveys();
-  }, []);
-
-  const fetchSurveys = async () => {
+  const fetchSurveys = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get auth token from localStorage or cookie
-      const token = localStorage.getItem('firebase_token');
+      // Get fresh token (refreshes if expired)
+      const token = await refreshToken();
 
       if (!token) {
-        setError('Please log in to view your surveys');
-        setLoading(false);
+        // Redirect to login if no valid token
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
         return;
       }
 
@@ -53,13 +53,21 @@ export default function SurveyList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshToken, router]);
+
+  useEffect(() => {
+    fetchSurveys();
+  }, [fetchSurveys]);
 
   const handleDelete = async (surveyId: string) => {
     if (!confirm(t('confirmDeleteSurvey'))) return;
 
     try {
-      const token = localStorage.getItem('firebase_token');
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
 
       const response = await fetch(`/api/surveys/${surveyId}`, {
         method: 'DELETE',
@@ -82,7 +90,11 @@ export default function SurveyList() {
 
   const handleStatusChange = async (surveyId: string, newStatus: SurveyStatus) => {
     try {
-      const token = localStorage.getItem('firebase_token');
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+        return;
+      }
 
       const response = await fetch(`/api/surveys/${surveyId}`, {
         method: 'PUT',

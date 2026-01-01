@@ -86,9 +86,17 @@ import {
 } from "./fn_clusterAggregation";
 import { checkProfanity } from "./fn_profanityChecker";
 import { recalculateStatementEvaluations } from "./fn_recalculateEvaluations";
+import { fixClusterIntegration } from "./fn_fixClusterIntegration";
 import { handleImproveSuggestion } from "./fn_improveSuggestion";
 import { onStatementCreated } from "./fn_statementCreation";
 import { analyzeSubscriptionPatterns } from "./fn_metrics";
+
+// Polarization Index Migration
+import {
+  recalculatePolarizationIndexForStatement,
+  recalculatePolarizationIndexForParent,
+  recalculatePolarizationIndexForGroup,
+} from "./migrations/recalculatePolarizationIndex";
 
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
@@ -106,6 +114,15 @@ import {
   getMyRoomAssignment,
   deleteRoomAssignments,
 } from "./fn_roomAssignment";
+
+// Split Joined Option functions
+import {
+  splitJoinedOption,
+  getOptionsExceedingMax,
+  getAllOptionsWithMembers,
+  clearAllRoomsForParent,
+  cleanupDuplicateRoomSettings,
+} from "./fn_splitJoinedOption";
 
 // Discussion Summarization
 import { summarizeDiscussion } from "./fn_summarizeDiscussion";
@@ -207,22 +224,33 @@ const wrapHttpFunction = (
 };
 
 /**
- * Creates a wrapper for Firestore triggers with standardized error handling
- * @param {string} path - Document path
- * @param {Function} triggerType - Firebase trigger type (onDocumentCreated, etc.)
- * @param {Function} callback - Function to execute
- * @param {string} functionName - Function name for logging
- * @returns {Function} - Firebase function with error handling
+ * Creates a wrapper for Firestore triggers with standardized error handling.
+ *
+ * Note: Firebase trigger types (onDocumentCreated, onDocumentUpdated, onDocumentWritten,
+ * onDocumentDeleted) have different event structures and incompatible generic parameters.
+ * The callback's event type is preserved through the generic T, but we use a broad
+ * function type for triggerType because the Firebase SDK types can't be unified.
+ *
+ * @param path - Document path pattern (e.g., '/statements/{statementId}')
+ * @param triggerType - Firebase trigger function (onDocumentCreated, etc.)
+ * @param callback - Handler function that receives the typed event
+ * @param functionName - Name for logging purposes
+ * @returns Configured Firebase Cloud Function
  */
-const createFirestoreFunction = <T>(
+function createFirestoreFunction<T>(
   path: string,
   triggerType: typeof onDocumentCreated | typeof onDocumentUpdated | typeof onDocumentWritten | typeof onDocumentDeleted,
   callback: (event: T) => Promise<unknown>,
   functionName: string
-) => {
-  // Type-safe wrapper that preserves the original event type from the callback
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (triggerType as any)(
+): ReturnType<typeof onDocumentCreated> {
+  // Cast to unknown first, then to a compatible function signature
+  // This is required because Firebase's trigger types have incompatible generic structures
+  const trigger = triggerType as unknown as (
+    opts: { document: string } & typeof functionConfig,
+    handler: (event: T) => Promise<void>
+  ) => ReturnType<typeof onDocumentCreated>;
+
+  return trigger(
     {
       document: path,
       ...functionConfig,
@@ -245,7 +273,7 @@ const createFirestoreFunction = <T>(
       }
     }
   );
-};
+}
 
 // --------------------------
 // HTTP FUNCTIONS
@@ -268,6 +296,7 @@ exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapHttpFunction(mergeStatements);
@@ -506,6 +535,13 @@ exports.getRoomAssignments = wrapHttpFunction(getRoomAssignments);
 exports.getMyRoomAssignment = wrapHttpFunction(getMyRoomAssignment);
 exports.deleteRoomAssignments = wrapHttpFunction(deleteRoomAssignments);
 
+// Split Joined Option functions
+exports.splitJoinedOption = wrapHttpFunction(splitJoinedOption);
+exports.getOptionsExceedingMax = wrapHttpFunction(getOptionsExceedingMax);
+exports.getAllOptionsWithMembers = wrapHttpFunction(getAllOptionsWithMembers);
+exports.clearAllRoomsForParent = wrapHttpFunction(clearAllRoomsForParent);
+exports.cleanupDuplicateRoomSettings = wrapHttpFunction(cleanupDuplicateRoomSettings);
+
 // Discussion Summarization
 exports.summarizeDiscussion = summarizeDiscussion;
 
@@ -538,3 +574,40 @@ exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
 exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
 exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
 exports.testEmbeddingGeneration = wrapHttpFunction(testEmbeddingGeneration);
+
+// Polarization Index Migration (for recalculating with demographic data)
+exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { statementId } = req.body;
+    if (!statementId) {
+      res.status(400).json({ error: "statementId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForStatement(statementId);
+    res.json(result);
+  }
+);
+
+exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { parentId } = req.body;
+    if (!parentId) {
+      res.status(400).json({ error: "parentId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForParent(parentId);
+    res.json(result);
+  }
+);
+
+exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const { topParentId } = req.body;
+    if (!topParentId) {
+      res.status(400).json({ error: "topParentId is required" });
+      return;
+    }
+    const result = await recalculatePolarizationIndexForGroup(topParentId);
+    res.json(result);
+  }
+);

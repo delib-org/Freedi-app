@@ -94,6 +94,10 @@ export async function POST(request: NextRequest) {
       questionIds: body.questionIds || [],
       settings: body.settings,
       questionSettings: body.questionSettings,
+      defaultLanguage: body.defaultLanguage,
+      forceLanguage: body.forceLanguage,
+      demographicPages: body.demographicPages,
+      explanationPages: body.explanationPages,
     });
 
     logger.info('[POST /api/surveys] Created survey:', survey.surveyId, 'questionSettings:', JSON.stringify(body.questionSettings));

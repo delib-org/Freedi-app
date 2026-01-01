@@ -3,6 +3,7 @@
 import { Statement } from '@freedi/shared-types';
 import EvaluationButtons from './EvaluationButtons';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './SolutionCard.module.css';
 
 interface SolutionCardProps {
@@ -37,9 +38,13 @@ export default function SolutionCard({
   return (
     <div className={`${styles.card} ${hasEvaluated ? styles.evaluated : ''}`}>
       <div className={styles.content}>
-        <h3 className={styles.title}>{title}</h3>
+        <h3 className={styles.title}>
+          <InlineMarkdown text={title} />
+        </h3>
         {showDescription && (
-          <p className={styles.description}>{description}</p>
+          <p className={styles.description}>
+            <InlineMarkdown text={description} />
+          </p>
         )}
       </div>
 

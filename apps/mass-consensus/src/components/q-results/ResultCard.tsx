@@ -2,6 +2,7 @@ import { Statement } from '@freedi/shared-types';
 import clsx from 'clsx';
 import { calculateAgreement, getAgreementColor, getFallbackColor } from '@/lib/utils/consensusColors';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './ResultCard.module.scss';
 
 interface ResultCardProps {
@@ -63,9 +64,13 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
           </div>
         )}
         <div className={styles.resultCard__text}>
-          <h3 className={styles.resultCard__title}>{statement.statement}</h3>
+          <h3 className={styles.resultCard__title}>
+            <InlineMarkdown text={statement.statement} />
+          </h3>
           {getParagraphsText(statement.paragraphs) && (
-            <p className={styles.resultCard__description}>{getParagraphsText(statement.paragraphs)}</p>
+            <p className={styles.resultCard__description}>
+              <InlineMarkdown text={getParagraphsText(statement.paragraphs)} />
+            </p>
           )}
         </div>
       </div>

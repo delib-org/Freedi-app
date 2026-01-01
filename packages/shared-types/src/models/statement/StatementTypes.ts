@@ -46,7 +46,6 @@ export const LastMessageSchema = object({
 
 export type LastMessage = InferOutput<typeof LastMessageSchema>;
 
-
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
@@ -104,6 +103,7 @@ export const StatementSchema = object({
 	selections: optional(any()), // the top-options of the statement
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
+	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement
@@ -184,5 +184,3 @@ export const StatementMetaDataSchema = object({
 });
 
 export type StatementMetaData = InferOutput<typeof StatementMetaDataSchema>;
-
-

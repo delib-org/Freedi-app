@@ -55,6 +55,52 @@
   margin: 0;
 }
 
+/* Empty state - when no solutions available */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xxl) var(--spacing-lg);
+  text-align: center;
+  min-height: 300px;
+}
+
+.emptyState h3 {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-body);
+  font-size: 1.25rem;
+}
+
+.emptyState p {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: var(--spacing-lg);
+  max-width: 400px;
+}
+
+.addSolutionButtonPrimary {
+  background: var(--btn-primary);
+  color: white;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: var(--radius-full);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: var(--shadow-md);
+  min-width: 200px;
+}
+
+.addSolutionButtonPrimary:hover {
+  background: var(--btn-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(27, 38, 80, 0.4);
+}
+
+.addSolutionButtonPrimary:active {
+  transform: translateY(0);
+}
+
 .solutions {
   display: flex;
   flex-direction: column;

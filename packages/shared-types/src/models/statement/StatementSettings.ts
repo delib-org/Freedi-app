@@ -28,6 +28,9 @@ export const StatementSettingsSchema = object({
 	enhancedEvaluation: optional(boolean()),
 	evaluationType: optional(enum_(evaluationType)),
 	joiningEnabled: optional(boolean()),
+	singleJoinOnly: optional(boolean()), // If true, user can only join ONE option under this parent
+	minJoinMembers: optional(number()), // Minimum members per option (for visual indicator)
+	maxJoinMembers: optional(number()), // Maximum members per option (for visual indicator + split trigger)
 	showEvaluation: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
 	enableSimilaritiesSearch: optional(boolean()),
@@ -43,6 +46,7 @@ export const StatementSettingsSchema = object({
 	enableMultiSuggestionDetection: optional(boolean()),
 	enableAutoMerge: optional(boolean()), // if true (default), similar proposals will be automatically merged; if false, users choose
 	similarityThreshold: optional(number()), // 0-1, default 0.75 - threshold for finding similar options
+	excludedInheritedDemographicIds: optional(array(string())), // IDs of inherited demographic questions to exclude for this statement
 });
 
 export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;
