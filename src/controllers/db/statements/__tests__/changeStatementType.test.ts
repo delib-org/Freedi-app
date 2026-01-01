@@ -57,8 +57,14 @@ describe('changeStatementType', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Silence expected console.error from error handling tests
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     // Setup doc mock to return a mock document reference
     (doc as jest.Mock).mockReturnValue({ id: 'mock-doc-ref' });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Authorization checks', () => {

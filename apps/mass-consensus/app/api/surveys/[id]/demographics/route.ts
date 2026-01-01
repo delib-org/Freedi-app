@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   getAllSurveyDemographicQuestions,
-  createSurveyDemographicQuestion,
-  updateSurveyDemographicQuestion,
+  batchSaveDemographicQuestions,
   deleteSurveyDemographicQuestion,
   getSurveyById,
   updateSurvey,
@@ -49,6 +48,12 @@ interface UpdateDemographicsRequest {
     options?: SurveyDemographicQuestion['options'];
     order?: number;
     required?: boolean;
+    // Range-specific fields
+    min?: number;
+    max?: number;
+    step?: number;
+    minLabel?: string;
+    maxLabel?: string;
   }>;
 }
 
@@ -98,43 +103,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const body: UpdateDemographicsRequest = await request.json();
 
-    // Map to track temp IDs to real IDs for new questions
-    const idMapping: Record<string, string> = {};
+    // Batch save all questions in a single Firestore operation (much faster)
+    let savedQuestions: SurveyDemographicQuestion[] = [];
+    let idMapping: Record<string, string> = {};
 
-    // Create/update questions first
-    const savedQuestions: SurveyDemographicQuestion[] = [];
-    if (body.questions) {
-      for (const questionData of body.questions) {
-        if (questionData.questionId && !questionData.questionId.startsWith('demo-q-')) {
-          // Update existing question (has real Firebase ID)
-          const updated = await updateSurveyDemographicQuestion(questionData.questionId, {
-            question: questionData.question,
-            type: questionData.type,
-            options: questionData.options,
-            order: questionData.order,
-            required: questionData.required,
-          });
-          if (updated) {
-            savedQuestions.push(updated);
-          }
-        } else {
-          // Create new question
-          const tempId = questionData.tempId || questionData.questionId;
-          const created = await createSurveyDemographicQuestion(surveyId, {
-            question: questionData.question,
-            type: questionData.type,
-            options: questionData.options,
-            order: questionData.order || 0,
-            required: questionData.required ?? false,
-          });
-          savedQuestions.push(created);
-
-          // Track the mapping from temp ID to real ID
-          if (tempId) {
-            idMapping[tempId] = created.questionId;
-          }
-        }
-      }
+    if (body.questions && body.questions.length > 0) {
+      const result = await batchSaveDemographicQuestions(surveyId, body.questions);
+      savedQuestions = result.savedQuestions;
+      idMapping = result.idMapping;
     }
 
     // Update demographic pages with the new question IDs

@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
@@ -46,6 +47,12 @@ export default function SurveyNavigation({
   const router = useRouter();
   const { t, tWithParams } = useTranslation();
 
+  // Loading states for navigation buttons
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  const [isNavigatingNext, setIsNavigatingNext] = useState(false);
+
+  const isNavigating = isNavigatingBack || isNavigatingNext;
+
   const isFirstQuestion = currentIndex === 0;
   const isLastQuestion = currentIndex === totalQuestions - 1;
 
@@ -76,16 +83,20 @@ export default function SurveyNavigation({
     isContributorOnlyMode;
   const evaluationsNeeded = Math.max(0, effectiveMinEvaluations - evaluatedCount);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
+    if (isNavigating) return; // Prevent double-clicks
     if (allowReturning && currentIndex > 0) {
+      setIsNavigatingBack(true);
       onNavigate?.('back');
       router.push(`/s/${surveyId}/q/${currentIndex - 1}`);
     }
-  };
+  }, [isNavigating, allowReturning, currentIndex, onNavigate, router, surveyId]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
+    if (isNavigating) return; // Prevent double-clicks
     if (!canProceed) return;
 
+    setIsNavigatingNext(true);
     onNavigate?.('next');
 
     if (isLastQuestion) {
@@ -93,18 +104,26 @@ export default function SurveyNavigation({
     } else {
       router.push(`/s/${surveyId}/q/${currentIndex + 1}`);
     }
-  };
+  }, [isNavigating, canProceed, onNavigate, isLastQuestion, router, surveyId, currentIndex]);
 
   return (
     <div className={styles.navContainer}>
       <div className={styles.navContent}>
         <button
-          className={`${styles.navButton} ${styles.back}`}
+          className={`${styles.navButton} ${styles.back} ${isNavigatingBack ? styles.loading : ''}`}
           onClick={handleBack}
-          disabled={isFirstQuestion || !allowReturning}
+          disabled={isFirstQuestion || !allowReturning || isNavigating}
+          aria-busy={isNavigatingBack}
+          aria-label={isNavigatingBack ? t('loading') : t('back')}
         >
-          <ArrowLeftIcon />
-          {t('back')}
+          {isNavigatingBack ? (
+            <ButtonSpinner />
+          ) : (
+            <>
+              <ArrowLeftIcon />
+              {t('back')}
+            </>
+          )}
         </button>
 
         {/* Action Buttons - Add Suggestion and View Progress */}
@@ -114,6 +133,7 @@ export default function SurveyNavigation({
               className={styles.navActionButton}
               onClick={onAddSuggestion}
               title={t('Add Suggestion')}
+              disabled={isNavigating}
             >
               <PlusIcon />
             </button>
@@ -123,6 +143,7 @@ export default function SurveyNavigation({
               className={styles.navActionButton}
               onClick={onViewProgress}
               title={t('View Progress')}
+              disabled={isNavigating}
             >
               <ChartIcon />
             </button>
@@ -130,12 +151,20 @@ export default function SurveyNavigation({
         </div>
 
         <button
-          className={`${styles.navButton} ${isLastQuestion ? styles.finish : styles.next}`}
+          className={`${styles.navButton} ${isLastQuestion ? styles.finish : styles.next} ${isNavigatingNext ? styles.loading : ''}`}
           onClick={handleNext}
-          disabled={!canProceed}
+          disabled={!canProceed || isNavigating}
+          aria-busy={isNavigatingNext}
+          aria-label={isNavigatingNext ? t('loading') : (isLastQuestion ? t('finish') : t('next'))}
         >
-          {isLastQuestion ? t('finish') : t('next')}
-          {!isLastQuestion && <ArrowRightIcon />}
+          {isNavigatingNext ? (
+            <ButtonSpinner />
+          ) : (
+            <>
+              {isLastQuestion ? t('finish') : t('next')}
+              {!isLastQuestion && <ArrowRightIcon />}
+            </>
+          )}
         </button>
       </div>
 
@@ -150,6 +179,34 @@ export default function SurveyNavigation({
         </div>
       ) : null}
     </div>
+  );
+}
+
+/**
+ * Small spinner for use inside buttons during loading state
+ */
+function ButtonSpinner() {
+  return (
+    <span className={styles.buttonSpinner} role="status" aria-label="Loading">
+      <svg
+        className={styles.buttonSpinnerSvg}
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          className={styles.buttonSpinnerCircle}
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
   );
 }
 

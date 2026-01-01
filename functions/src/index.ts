@@ -224,22 +224,33 @@ const wrapHttpFunction = (
 };
 
 /**
- * Creates a wrapper for Firestore triggers with standardized error handling
- * @param {string} path - Document path
- * @param {Function} triggerType - Firebase trigger type (onDocumentCreated, etc.)
- * @param {Function} callback - Function to execute
- * @param {string} functionName - Function name for logging
- * @returns {Function} - Firebase function with error handling
+ * Creates a wrapper for Firestore triggers with standardized error handling.
+ *
+ * Note: Firebase trigger types (onDocumentCreated, onDocumentUpdated, onDocumentWritten,
+ * onDocumentDeleted) have different event structures and incompatible generic parameters.
+ * The callback's event type is preserved through the generic T, but we use a broad
+ * function type for triggerType because the Firebase SDK types can't be unified.
+ *
+ * @param path - Document path pattern (e.g., '/statements/{statementId}')
+ * @param triggerType - Firebase trigger function (onDocumentCreated, etc.)
+ * @param callback - Handler function that receives the typed event
+ * @param functionName - Name for logging purposes
+ * @returns Configured Firebase Cloud Function
  */
-const createFirestoreFunction = <T>(
+function createFirestoreFunction<T>(
   path: string,
   triggerType: typeof onDocumentCreated | typeof onDocumentUpdated | typeof onDocumentWritten | typeof onDocumentDeleted,
   callback: (event: T) => Promise<unknown>,
   functionName: string
-) => {
-  // Type-safe wrapper that preserves the original event type from the callback
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (triggerType as any)(
+): ReturnType<typeof onDocumentCreated> {
+  // Cast to unknown first, then to a compatible function signature
+  // This is required because Firebase's trigger types have incompatible generic structures
+  const trigger = triggerType as unknown as (
+    opts: { document: string } & typeof functionConfig,
+    handler: (event: T) => Promise<void>
+  ) => ReturnType<typeof onDocumentCreated>;
+
+  return trigger(
     {
       document: path,
       ...functionConfig,
@@ -262,7 +273,7 @@ const createFirestoreFunction = <T>(
       }
     }
   );
-};
+}
 
 // --------------------------
 // HTTP FUNCTIONS

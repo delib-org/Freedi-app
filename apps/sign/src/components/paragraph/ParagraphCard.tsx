@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { ParagraphType } from '@/types';
 import clsx from 'clsx';
@@ -8,6 +8,8 @@ import { Paragraph } from '@/types';
 import { useUIStore } from '@/store/uiStore';
 import { useParagraphHeatValue } from '@/hooks/useHeatMap';
 import { useViewportTracking } from '@/hooks/useViewportTracking';
+import { sanitizeHTML } from '@/lib/utils/sanitize';
+import { logError } from '@/lib/utils/errorHandling';
 import InteractionBar from './InteractionBar';
 import styles from './ParagraphCard.module.scss';
 
@@ -137,10 +139,18 @@ export default function ParagraphCard({
         setIsNonInteractive(newValue);
         onNonInteractiveToggle?.(paragraph.paragraphId, newValue);
       } else {
-        console.error('Failed to toggle non-interactive mode');
+        logError(new Error('API returned non-ok response'), {
+          operation: 'ParagraphCard.toggleNonInteractive',
+          paragraphId: paragraph.paragraphId,
+          documentId,
+        });
       }
     } catch (error) {
-      console.error('Error toggling non-interactive mode:', error);
+      logError(error, {
+        operation: 'ParagraphCard.toggleNonInteractive',
+        paragraphId: paragraph.paragraphId,
+        documentId,
+      });
     } finally {
       setIsTogglingNonInteractive(false);
     }
@@ -158,40 +168,45 @@ export default function ParagraphCard({
     isExpanded && styles.expanded
   );
 
+  // Sanitize content to prevent XSS attacks
+  // Memoized to avoid re-sanitizing on every render
+  const sanitizedContent = useMemo(
+    () => sanitizeHTML(paragraph.content),
+    [paragraph.content]
+  );
+
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
   const renderContent = () => {
-    const content = paragraph.content;
-
     switch (paragraphType) {
       case ParagraphType.h1:
-        return <h1 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <h1 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
       case ParagraphType.h2:
-        return <h2 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <h2 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
       case ParagraphType.h3:
-        return <h3 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <h3 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
       case ParagraphType.h4:
-        return <h4 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <h4 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
       case ParagraphType.h5:
-        return <h5 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <h5 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
       case ParagraphType.h6:
-        return <h6 className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <h6 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
           </div>
         );
       case ParagraphType.table:
         return (
           <div
             className={styles.tableWrapper}
-            dangerouslySetInnerHTML={{ __html: content }}
+            dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         );
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: content }} />;
+        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
     }
   };
 

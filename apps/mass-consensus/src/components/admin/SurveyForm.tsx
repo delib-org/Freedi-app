@@ -197,6 +197,12 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
                 options: q.options,
                 order: q.order,
                 required: q.required,
+                // Range-specific fields
+                min: q.min,
+                max: q.max,
+                step: q.step,
+                minLabel: q.minLabel,
+                maxLabel: q.maxLabel,
               })),
             }),
           }
@@ -246,6 +252,36 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
     }));
   };
 
+  const handleQuestionTextChange = async (questionId: string, newText: string) => {
+    // Update local state immediately for responsive UI
+    setSelectedQuestions((prev) =>
+      prev.map((q) =>
+        q.statementId === questionId ? { ...q, statement: newText } : q
+      )
+    );
+
+    // Save to database
+    try {
+      const token = await refreshToken();
+      if (!token) return;
+
+      const response = await fetch(`/api/statements/${questionId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ statement: newText }),
+      });
+
+      if (!response.ok) {
+        console.error('[SurveyForm] Failed to save question text:', await response.text());
+      }
+    } catch (err) {
+      console.error('[SurveyForm] Error saving question text:', err);
+    }
+  };
+
   return (
     <form className={styles.surveyForm} onSubmit={handleSubmit}>
       <div className={styles.formHeader}>
@@ -277,7 +313,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         </div>
 
         <div className={styles.formGroup}>
-          <label htmlFor="description">{t('surveyDescription')}</label>
+          <label htmlFor="description">{t('surveyDescriptionLabel')}</label>
           <textarea
             id="description"
             className={styles.textArea}
@@ -323,6 +359,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             onExplanationPagesChange={setExplanationPages}
             onCustomDemographicQuestionsChange={setCustomDemographicQuestions}
             onQuestionSettingsChange={handleQuestionSettingsChange}
+            onQuestionTextChange={handleQuestionTextChange}
             onRemoveQuestion={handleRemoveQuestion}
           />
         </div>

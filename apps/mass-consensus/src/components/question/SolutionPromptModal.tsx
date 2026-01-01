@@ -11,6 +11,7 @@ import SimilarSolutions from './SimilarSolutions';
 import EnhancedLoader from './EnhancedLoader';
 import SuccessMessage from './SuccessMessage';
 import MultiSuggestionPreview from './MultiSuggestionPreview';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './SolutionPromptModal.module.css';
 import { trackSolutionSubmitted } from '@/lib/analytics';
 
@@ -408,7 +409,7 @@ export default function SolutionPromptModal({
               <div className={styles.questionContext}>
                 <span className={styles.questionLabel}>{t('Please add your answer to the following question:')}</span>
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
-                  {questionText}
+                  <InlineMarkdown text={questionText} />
                 </p>
                 {questionText.length > 150 && (
                   <button

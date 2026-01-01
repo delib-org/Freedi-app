@@ -111,6 +111,7 @@ describe('StatementController', () => {
 			expect(mockService.getRandomStatements).toHaveBeenCalledWith({
 				parentId: 'parent123',
 				limit: 10,
+				excludeIds: [],
 			});
 			expect(mockService.updateStatementViewCounts).toHaveBeenCalledWith(mockStatements);
 			expect(mockResponse.status).toHaveBeenCalledWith(200);
@@ -133,6 +134,7 @@ describe('StatementController', () => {
 			expect(mockService.getRandomStatements).toHaveBeenCalledWith({
 				parentId: 'parent123',
 				limit: 6,
+				excludeIds: [],
 			});
 		});
 
@@ -149,6 +151,7 @@ describe('StatementController', () => {
 			expect(mockService.getRandomStatements).toHaveBeenCalledWith({
 				parentId: 'parent123',
 				limit: 50,
+				excludeIds: [],
 			});
 		});
 

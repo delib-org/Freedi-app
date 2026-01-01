@@ -85,7 +85,13 @@ describe('createStatement with validation', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Silence expected console.error from error handling tests
+    jest.spyOn(console, 'error').mockImplementation(() => {});
     (helpers.isStatementTypeAllowedAsChildren as jest.Mock).mockReturnValue(true);
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   describe('Basic creation', () => {

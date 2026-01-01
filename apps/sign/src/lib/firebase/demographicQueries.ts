@@ -11,6 +11,7 @@ import {
   DemographicAnswer,
   QuestionWithAnswer,
 } from '@/types/demographics';
+import { logError } from '@/lib/utils/errorHandling';
 
 const SIGN_SCOPE = 'sign';
 
@@ -87,7 +88,7 @@ export async function getDemographicQuestions(
 
     return [];
   } catch (error) {
-    console.error('[Demographics] Error getting questions:', error);
+    logError(error, { operation: 'demographics.getDemographicQuestions', documentId });
     throw error;
   }
 }
@@ -147,7 +148,7 @@ export async function getUserDemographicAnswers(
 
     return answeredQuestions;
   } catch (error) {
-    console.error('[Demographics] Error getting user answers:', error);
+    logError(error, { operation: 'demographics.getUserDemographicAnswers', documentId, userId });
     throw error;
   }
 }
@@ -195,8 +196,7 @@ export async function checkSurveyCompletion(
       missingQuestionIds,
     };
   } catch (error) {
-    console.error('[Demographics] Error checking survey completion:', error);
-
+    logError(error, { operation: 'demographics.checkSurveyCompletion', documentId, userId });
     return {
       isComplete: false,
       totalQuestions: 0,
@@ -247,7 +247,7 @@ export async function saveDemographicQuestion(
       isInherited: false,
     };
   } catch (error) {
-    console.error('[Demographics] Error saving question:', error);
+    logError(error, { operation: 'demographics.saveDemographicQuestion', documentId });
     throw error;
   }
 }
@@ -262,7 +262,7 @@ export async function deleteDemographicQuestion(questionId: string): Promise<voi
     await db.collection(Collections.userDemographicQuestions).doc(questionId).delete();
     console.info(`[Demographics] Deleted question: ${questionId}`);
   } catch (error) {
-    console.error('[Demographics] Error deleting question:', error);
+    logError(error, { operation: 'demographics.deleteDemographicQuestion', metadata: { questionId } });
     throw error;
   }
 }
@@ -306,7 +306,7 @@ export async function saveUserDemographicAnswers(
     await batch.commit();
     console.info(`[Demographics] Saved ${answers.length} answers for user: ${userId}`);
   } catch (error) {
-    console.error('[Demographics] Error saving answers:', error);
+    logError(error, { operation: 'demographics.saveUserDemographicAnswers', documentId, userId });
     throw error;
   }
 }
@@ -361,7 +361,7 @@ export async function getAllQuestionsForDocument(
 
     return allQuestions;
   } catch (error) {
-    console.error('[Demographics] Error getting all questions:', error);
+    logError(error, { operation: 'demographics.getAllQuestionsForDocument', documentId });
     throw error;
   }
 }

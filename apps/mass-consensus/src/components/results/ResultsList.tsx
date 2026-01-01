@@ -1,5 +1,6 @@
 import { Statement } from '@freedi/shared-types';
 import AIFeedbackButton from './AIFeedbackButton';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './ResultsList.module.css';
 
 interface ResultsListProps {
@@ -39,7 +40,9 @@ export default function ResultsList({
           <div key={solution.statementId} className={styles.item}>
             <div className={styles.rank}>#{index + 1}</div>
             <div className={styles.content}>
-              <p className={styles.text}>{solution.statement}</p>
+              <p className={styles.text}>
+                <InlineMarkdown text={solution.statement} />
+              </p>
               <div className={styles.meta}>
                 <span className={styles.consensus}>
                   Score: {(solution.consensus || 0).toFixed(2)}

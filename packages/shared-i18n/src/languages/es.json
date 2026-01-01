@@ -1364,5 +1364,8 @@
   "explanationTitlePlaceholder": "ej.: Antes de Comenzar",
   "explanationContentPlaceholder": "Escribe tu explicación aquí usando Markdown...",
   "evaluationsNeeded": "Evalúa {{count}} soluciones más para continuar",
-  "contributorOnlyMessage": "¡Gracias por contribuir! Continúa cuando estés listo."
+  "contributorOnlyMessage": "¡Gracias por contribuir! Continúa cuando estés listo.",
+  "markdownHint": "Usa **negrita** o *cursiva* para dar énfasis",
+  "markdownHintSimple": "Admite formato **negrita** y *cursiva*",
+  "questionTextPlaceholder": "Ingresa el texto de la pregunta..."
 }

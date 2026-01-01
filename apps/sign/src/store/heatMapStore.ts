@@ -15,6 +15,7 @@ import {
   EMPTY_DEMOGRAPHIC_FILTER,
   SegmentMetadata,
 } from '@/types/heatMap';
+import { logError } from '@/lib/utils/errorHandling';
 
 interface HeatMapState {
   // Configuration
@@ -169,7 +170,7 @@ export const useHeatMapStore = create<HeatMapState>((set, get) => ({
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('[HeatMapStore] Error loading data:', errorMessage);
+      logError(error, { operation: 'heatMapStore.loadHeatMapData', documentId });
       set({
         error: errorMessage,
         isLoading: false,
@@ -243,7 +244,7 @@ export const useHeatMapStore = create<HeatMapState>((set, get) => ({
         isDemographicsLoading: false,
       });
     } catch (error) {
-      console.error('[HeatMapStore] Error loading demographics:', error);
+      logError(error, { operation: 'heatMapStore.loadAvailableDemographics', documentId });
       set({
         availableDemographics: [],
         isDemographicsLoading: false,
