@@ -5,6 +5,7 @@ import { SurveyWithQuestions } from '@/types/survey';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import SurveyProgressBar from './SurveyProgress';
 import SurveyNavigation from './SurveyNavigation';
+import { ConnectedWalletDisplay } from '@/components/fair-eval';
 import styles from './Survey.module.scss';
 
 interface SurveyQuestionWrapperProps {
@@ -181,13 +182,33 @@ export default function SurveyQuestionWrapper({
     }
   };
 
+  // Get the topParentId for fair eval (use survey's parent or first question's topParent)
+  const topParentId = useMemo(() => {
+    if (currentQuestion?.topParentId) return currentQuestion.topParentId;
+    if (survey.questions.length > 0) return survey.questions[0].topParentId;
+
+    return survey.surveyId;
+  }, [currentQuestion, survey.questions, survey.surveyId]);
+
   return (
     <div className={styles.questionWrapper}>
-      <SurveyProgressBar
-        currentIndex={currentIndex}
-        totalQuestions={totalFlowItems}
-        completedIndices={completedIndices}
-      />
+      <div className={styles.questionWrapperHeader}>
+        <SurveyProgressBar
+          currentIndex={currentIndex}
+          totalQuestions={totalFlowItems}
+          completedIndices={completedIndices}
+        />
+
+        {/* Show wallet display when fair evaluation is enabled */}
+        {mergedSettings.enableFairEvaluation && (
+          <ConnectedWalletDisplay
+            topParentId={topParentId}
+            size="small"
+            compact
+            className={styles.walletDisplay}
+          />
+        )}
+      </div>
 
       <div className={styles.questionContent}>
         {children}

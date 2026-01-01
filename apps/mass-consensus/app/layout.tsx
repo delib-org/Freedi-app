@@ -9,6 +9,7 @@ import {
 } from '@freedi/shared-i18n/next';
 import { COOKIE_KEY } from '@freedi/shared-i18n';
 import { AuthProvider } from '@/components/auth/AuthProvider';
+import { StoreProvider } from '@/lib/store';
 import './globals.css';
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
@@ -69,8 +70,10 @@ export default async function RootLayout({
           initialDictionary={dictionary}
         >
           <AuthProvider>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {children as any}
+            <StoreProvider>
+              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+              {children as any}
+            </StoreProvider>
           </AuthProvider>
         </NextTranslationProvider>
         <Analytics />

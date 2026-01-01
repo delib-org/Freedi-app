@@ -628,6 +628,38 @@
   min-height: 100vh;
 }
 
+.questionWrapperHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: white;
+  border-bottom: 1px solid var(--border-light, #e2e8f0);
+  padding: 0 0.5rem;
+
+  @media (min-width: 480px) {
+    padding: 0 1.5rem;
+  }
+
+  // Override progress container padding when in header wrapper
+  .progressContainer {
+    border-bottom: none;
+    flex: 1;
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+}
+
+.walletDisplay {
+  flex-shrink: 0;
+  margin-right: 0.5rem;
+
+  @media (min-width: 480px) {
+    margin-right: 0;
+  }
+}
+
 .questionContent {
   flex: 1;
   padding-bottom: 120px; // Space for unified fixed navigation with action buttons

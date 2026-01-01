@@ -10,6 +10,8 @@ export interface MergedQuestionSettings {
   allowSkipping: boolean;
   minEvaluationsPerQuestion: number;
   randomizeOptions: boolean;
+  /** Enable fair evaluation wallet system for this question */
+  enableFairEvaluation: boolean;
 }
 
 /**
@@ -51,6 +53,9 @@ export function getMergedSettings(
 
     // Per-question randomize options (survey-level randomizeQuestions is for question ORDER)
     randomizeOptions: questionOverrides?.randomizeOptions ?? false,
+
+    // Fair evaluation (per-question only, no survey-level override)
+    enableFairEvaluation: questionOverrides?.enableFairEvaluation ?? false,
   };
 }
 

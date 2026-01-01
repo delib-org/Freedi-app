@@ -60,6 +60,8 @@ export const QuestionOverrideSettingsSchema = object({
   minEvaluationsPerQuestion: optional(number()),
   /** Randomize options order for THIS question */
   randomizeOptions: optional(boolean()),
+  /** Enable fair evaluation wallet system for THIS question */
+  enableFairEvaluation: optional(boolean()),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -238,4 +240,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   allowSkipping: undefined,
   minEvaluationsPerQuestion: undefined,
   randomizeOptions: undefined,
+  enableFairEvaluation: undefined,
 };
