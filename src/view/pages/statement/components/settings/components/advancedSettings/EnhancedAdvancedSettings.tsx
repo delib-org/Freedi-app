@@ -15,7 +15,8 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download, RefreshCcw
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download, RefreshCcw,
+  Wallet, Clock
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';
@@ -602,6 +603,54 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         description={t('Users submit final choices rather than continuous voting')}
                         icon={Send}
                       />
+
+                      {/* Fair Evaluation Section */}
+                      <div className={styles.fairEvalSection}>
+                        <h4 className={styles.sectionTitle}>
+                          <Wallet size={18} />
+                          {t('Fair Evaluation')}
+                        </h4>
+                        <ToggleSwitch
+                          isChecked={settings.enableFairEvaluation ?? false}
+                          onChange={(checked) => handleSettingChange('enableFairEvaluation', checked)}
+                          label={t('Enable Fair Evaluation')}
+                          description={t('Time-based wallet system where users invest minutes to support answers')}
+                          icon={Clock}
+                          badge="new"
+                        />
+                        {settings.enableFairEvaluation && (
+                          <div className={styles.fairEvalConfig}>
+                            <label className={styles.inputGroup}>
+                              <span>{t('Default Answer Cost')}</span>
+                              <input
+                                type="number"
+                                min="1"
+                                max="10000"
+                                value={settings.defaultAnswerCost ?? 1000}
+                                onChange={(e) => handleSettingChange('defaultAnswerCost', Number(e.target.value))}
+                                className={styles.numberInput}
+                              />
+                              <span className={styles.helperText}>
+                                {t('Minutes required to accept an answer')}
+                              </span>
+                            </label>
+                            <label className={styles.inputGroup}>
+                              <span>{t('Initial Wallet Balance')}</span>
+                              <input
+                                type="number"
+                                min="0"
+                                max="1000"
+                                value={settings.initialWalletBalance ?? 10}
+                                onChange={(e) => handleSettingChange('initialWalletBalance', Number(e.target.value))}
+                                className={styles.numberInput}
+                              />
+                              <span className={styles.helperText}>
+                                {t('Minutes given to new members')}
+                              </span>
+                            </label>
+                          </div>
+                        )}
+                      </div>
                     </>
                   )}
 

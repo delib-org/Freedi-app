@@ -21,10 +21,12 @@
 		"paths": {
 			"@/*": ["src/*"],
 			"@freedi/shared-i18n": ["packages/shared-i18n/src/index.ts"],
-			"@freedi/shared-i18n/*": ["packages/shared-i18n/src/*"]
+			"@freedi/shared-i18n/*": ["packages/shared-i18n/src/*"],
+			"@freedi/shared-types": ["packages/shared-types/src/index.ts"],
+			"@freedi/shared-types/*": ["packages/shared-types/src/*"]
 		}
 	},
-	"include": ["src", "./functions/src", "packages/shared-i18n/src"],
+	"include": ["src", "./functions/src", "packages/shared-i18n/src", "packages/shared-types/src"],
 	"exclude": ["node_modules", "node_modules/delib-npm/src"],
 	"references": [{
 		"path": "./tsconfig.node.json"

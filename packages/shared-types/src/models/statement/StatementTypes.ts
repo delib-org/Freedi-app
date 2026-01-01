@@ -26,6 +26,7 @@ import { UserDataSchema } from '../user/UserSettings';
 import { StatementEvaluationSchema, StatementEvaluationSettingsSchema } from '../evaluation/Evaluation';
 import { QuestionnaireSchema } from '../questionnaire/questionnaireModel';
 import { FairDivisionSelectionSchema } from './fairDivision';
+import { FairEvalAnswerMetricsSchema, FairEvalQuestionSettingsSchema } from '../fairEvaluation';
 import { VotingSettingsSchema } from '../vote/votingModel';
 import { EvidenceType } from '../evidence/evidenceModel';
 import { PopperHebbianScoreSchema } from '../popper/popperTypes';
@@ -168,6 +169,10 @@ export const StatementSchema = object({
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
 	randomSeed: optional(number()), // an optional random seed for the statement
+	// Fair Evaluation fields
+	fairEvalSettings: optional(FairEvalQuestionSettingsSchema), // fair evaluation settings (for questions)
+	fairEvalMetrics: optional(FairEvalAnswerMetricsSchema), // cached fair evaluation metrics (for answers)
+	answerCost: optional(number()), // cost of this answer in fair evaluation minutes
 });
 
 export type Statement = InferOutput<typeof StatementSchema>;

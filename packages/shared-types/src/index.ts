@@ -295,6 +295,50 @@ export { FeedbackSchema } from "./models/feedback/feedbackModel";
 export { RoomSchema, RoomSettingsSchema, RoomParticipantSchema, DemographicTagSchema } from "./models/rooms/roomsModel";
 export type { Room, RoomSettings, RoomParticipant, DemographicTag } from "./models/rooms/roomsModel";
 
+// Fair Evaluation models
+export type {
+  FairEvalWallet,
+  FairEvalTransaction,
+  FairEvalTransactionMetadata,
+  FairEvalAnswerMetrics,
+  FairEvalQuestionSettings,
+} from "./models/fairEvaluation";
+
+export {
+  FairEvalWalletSchema,
+  FairEvalTransactionSchema,
+  FairEvalTransactionMetadataSchema,
+  FairEvalAnswerMetricsSchema,
+  FairEvalQuestionSettingsSchema,
+  FairEvalTransactionType,
+  WalletLevel,
+  getWalletId,
+  DEFAULT_INITIAL_WALLET_BALANCE,
+  DEFAULT_ANSWER_COST,
+} from "./models/fairEvaluation";
+
+// Fair Evaluation calculations
+export type {
+  UserEvaluationData,
+  AnswerMetricsResult,
+  PaymentResult,
+  CompleteToGoalResult,
+  SimulationAnswer,
+  FairEvalStatus,
+} from "./utils/fairEvalCalculations";
+
+export {
+  getPositiveRating,
+  calculateAnswerMetrics,
+  calculateUserPayment,
+  calculateAllPayments,
+  calculateCompleteToGoal,
+  verifyPaymentTotal,
+  simulateFairAcceptance,
+  getAnswerStatus,
+  getProgressPercentage,
+} from "./utils/fairEvalCalculations";
+
 // Survey models
 export type {
   Survey,

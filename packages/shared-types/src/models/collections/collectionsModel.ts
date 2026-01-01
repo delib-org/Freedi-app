@@ -64,4 +64,7 @@ export enum Collections {
     framingRequests = 'framingRequests',
     clusterAggregations = 'clusterAggregations',
     framingSnapshots = 'framingSnapshots',
+    // Fair Evaluation collections
+    fairEvalWallets = 'fairEvalWallets',
+    fairEvalTransactions = 'fairEvalTransactions',
 }

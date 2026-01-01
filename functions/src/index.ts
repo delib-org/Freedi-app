@@ -98,6 +98,18 @@ import {
   recalculatePolarizationIndexForGroup,
 } from "./migrations/recalculatePolarizationIndex";
 
+// Fair Evaluation functions
+import {
+  initializeWallet,
+  onFairEvalEvaluationChange,
+  addMinutesToGroup,
+  setAnswerCost,
+  acceptFairEvalAnswer,
+  completeToGoal,
+  getWalletInfo,
+  getTransactionHistory,
+} from "./fn_fairEvaluation";
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
 import { refineIdea } from "./fn_popperHebbian_refineIdea";
@@ -611,3 +623,38 @@ exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
     res.json(result);
   }
 );
+
+// Fair Evaluation Functions
+// Trigger: Initialize wallet when user joins a group with fair eval enabled
+exports.initializeFairEvalWallet = createFirestoreFunction(
+  `/${Collections.statementsSubscribe}/{subscriptionId}`,
+  onDocumentCreated,
+  initializeWallet,
+  "initializeFairEvalWallet"
+);
+
+// Trigger: Recalculate answer metrics when evaluation changes
+exports.onFairEvalEvaluationChange = createFirestoreFunction(
+  `/${Collections.evaluations}/{evaluationId}`,
+  onDocumentWritten,
+  onFairEvalEvaluationChange,
+  "onFairEvalEvaluationChange"
+);
+
+// HTTP: Add minutes to all members in a group (admin only)
+exports.addMinutesToGroup = wrapHttpFunction(addMinutesToGroup);
+
+// HTTP: Set/update answer cost (admin only)
+exports.setAnswerCost = wrapHttpFunction(setAnswerCost);
+
+// HTTP: Accept an answer and deduct payments (admin only)
+exports.acceptFairEvalAnswer = wrapHttpFunction(acceptFairEvalAnswer);
+
+// HTTP: Add minutes to reach goal then accept (admin only)
+exports.completeToGoal = wrapHttpFunction(completeToGoal);
+
+// HTTP: Get wallet info for a user
+exports.getWalletInfo = wrapHttpFunction(getWalletInfo);
+
+// HTTP: Get transaction history for a user
+exports.getTransactionHistory = wrapHttpFunction(getTransactionHistory);
