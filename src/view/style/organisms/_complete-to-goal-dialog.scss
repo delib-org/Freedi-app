@@ -1,0 +1,300 @@
+// ============================================================================
+// COMPLETE TO GOAL DIALOG - ORGANISM SCSS
+// ============================================================================
+// Modal dialog for completing an answer to its goal.
+// Shows breakdown of additional minutes needed and per-user distribution.
+
+@import '../mixins';
+
+// ============================================================================
+// BASE STYLES
+// ============================================================================
+
+.complete-to-goal-dialog {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 1rem;
+
+	// ============================================================================
+	// OVERLAY
+	// ============================================================================
+
+	&__overlay {
+		position: absolute;
+		inset: 0;
+		background-color: rgba(0, 0, 0, 0.5);
+		backdrop-filter: blur(2px);
+	}
+
+	// ============================================================================
+	// CONTENT
+	// ============================================================================
+
+	&__content {
+		position: relative;
+		width: 100%;
+		max-width: 420px;
+		background-color: var(--card-default);
+		border-radius: 16px;
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+		overflow: hidden;
+		animation: dialogSlideIn 0.2s ease-out;
+	}
+
+	// ============================================================================
+	// HEADER
+	// ============================================================================
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem 1.25rem;
+		background-color: var(--btn-primary);
+		color: white;
+	}
+
+	&__title {
+		font-size: 1.125rem;
+		font-weight: 600;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	&__close {
+		background: none;
+		border: none;
+		color: white;
+		cursor: pointer;
+		padding: 0.25rem;
+		border-radius: 4px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background-color 0.2s ease;
+
+		&:hover {
+			background-color: rgba(255, 255, 255, 0.2);
+		}
+
+		svg {
+			width: 20px;
+			height: 20px;
+		}
+	}
+
+	// ============================================================================
+	// BODY
+	// ============================================================================
+
+	&__body {
+		padding: 1.25rem;
+	}
+
+	&__description {
+		font-size: 0.875rem;
+		color: var(--text-body);
+		line-height: 1.5;
+		margin-bottom: 1.25rem;
+	}
+
+	// ============================================================================
+	// BREAKDOWN
+	// ============================================================================
+
+	&__breakdown {
+		background-color: rgba(var(--btn-primary-rgb, 95, 136, 229), 0.08);
+		border-radius: 12px;
+		padding: 1rem;
+		margin-bottom: 1.25rem;
+	}
+
+	&__breakdown-title {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-dim);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin-bottom: 0.75rem;
+	}
+
+	&__breakdown-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.75rem;
+
+		@include mobile {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__breakdown-item {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.75rem;
+		background-color: var(--card-default);
+		border-radius: 8px;
+		border: 1px solid var(--border-color);
+
+		&--highlight {
+			background-color: var(--btn-primary);
+			border-color: var(--btn-primary);
+
+			.complete-to-goal-dialog__breakdown-label {
+				color: rgba(255, 255, 255, 0.8);
+			}
+
+			.complete-to-goal-dialog__breakdown-value {
+				color: white;
+			}
+		}
+
+		&--full-width {
+			grid-column: 1 / -1;
+		}
+	}
+
+	&__breakdown-label {
+		font-size: 0.625rem;
+		color: var(--text-dim);
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+	}
+
+	&__breakdown-value {
+		font-size: 1.25rem;
+		font-weight: 700;
+		color: var(--text-dark);
+		display: flex;
+		align-items: baseline;
+		gap: 0.25rem;
+
+		&-unit {
+			font-size: 0.75rem;
+			font-weight: 500;
+			color: var(--text-dim);
+		}
+	}
+
+	// ============================================================================
+	// WARNING
+	// ============================================================================
+
+	&__warning {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		background-color: rgba(var(--text-warning-rgb, 239, 117, 80), 0.1);
+		border-radius: 8px;
+		margin-bottom: 1.25rem;
+	}
+
+	&__warning-icon {
+		color: var(--text-warning);
+		flex-shrink: 0;
+
+		svg {
+			width: 18px;
+			height: 18px;
+		}
+	}
+
+	&__warning-text {
+		font-size: 0.75rem;
+		color: var(--text-body);
+		line-height: 1.5;
+	}
+
+	// ============================================================================
+	// FOOTER
+	// ============================================================================
+
+	&__footer {
+		display: flex;
+		gap: 0.75rem;
+		padding: 1rem 1.25rem;
+		border-top: 1px solid var(--border-color);
+		background-color: var(--card-default);
+	}
+
+	&__btn {
+		flex: 1;
+		padding: 0.75rem 1rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		border: none;
+		border-radius: 8px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		transition: all 0.2s ease;
+
+		svg {
+			width: 18px;
+			height: 18px;
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		&--cancel {
+			background-color: var(--border-color);
+			color: var(--text-body);
+
+			&:hover:not(:disabled) {
+				background-color: var(--text-dim);
+				color: white;
+			}
+		}
+
+		&--confirm {
+			background-color: var(--agree);
+			color: white;
+
+			&:hover:not(:disabled) {
+				filter: brightness(1.1);
+			}
+		}
+	}
+
+	// ============================================================================
+	// LOADING STATE
+	// ============================================================================
+
+	&--loading {
+		.complete-to-goal-dialog__btn--confirm {
+			pointer-events: none;
+		}
+	}
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes dialogSlideIn {
+	from {
+		opacity: 0;
+		transform: scale(0.95) translateY(-10px);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}

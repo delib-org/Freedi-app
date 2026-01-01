@@ -337,6 +337,7 @@ export {
   simulateFairAcceptance,
   getAnswerStatus,
   getProgressPercentage,
+  calculateDistancePerSupporter,
 } from "./utils/fairEvalCalculations";
 
 // Survey models

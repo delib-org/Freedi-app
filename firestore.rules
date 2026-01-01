@@ -648,5 +648,29 @@ service cloud.firestore {
     // Room Assignment Rules are defined above in the simple rules section
     // (rooms, roomsSettings, roomParticipants at lines 343-356)
     // Cloud functions handle authorization for writes
+
+    // Fair Evaluation System Rules
+
+    // Fair Eval Wallets - Users can only read their own wallet
+    // All writes happen through Cloud Functions
+    match /fairEvalWallets/{walletId} {
+      // Users can read their own wallet (walletId format: topParentId--userId)
+      allow read: if request.auth != null &&
+                    resource.data.userId == request.auth.uid;
+
+      // Only Cloud Functions can write (no client-side writes)
+      allow write: if false;
+    }
+
+    // Fair Eval Transactions - Users can only read their own transactions
+    // All writes happen through Cloud Functions
+    match /fairEvalTransactions/{transactionId} {
+      // Users can read their own transactions
+      allow read: if request.auth != null &&
+                    resource.data.userId == request.auth.uid;
+
+      // Only Cloud Functions can write (no client-side writes)
+      allow write: if false;
+    }
   }
 }

@@ -366,3 +366,19 @@ export function getProgressPercentage(
 	if (answerCost <= 0) return 100;
 	return Math.min(100, (totalContribution / answerCost) * 100);
 }
+
+/**
+ * Calculate distance per supporter (d = D / W).
+ * Used to determine how many minutes each supporter needs to contribute.
+ *
+ * @param distanceToGoal - D: Current distance to goal
+ * @param weightedSupporters - W: Sum of positive ratings
+ * @returns Distance per supporter (Infinity if no supporters)
+ */
+export function calculateDistancePerSupporter(
+	distanceToGoal: number,
+	weightedSupporters: number
+): number {
+	if (weightedSupporters <= 0) return Infinity;
+	return distanceToGoal / weightedSupporters;
+}
