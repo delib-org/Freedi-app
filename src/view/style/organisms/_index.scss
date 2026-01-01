@@ -1,5 +1,7 @@
 // Organisms Index
 // Import all organism SCSS files here
+// Using @use instead of @forward to avoid mixin name conflicts
+// (each file imports _mixins.scss which would cause duplicate mixin exports)
 
-@forward 'complete-to-goal-dialog';
-@forward 'fair-eval-history';
+@use 'complete-to-goal-dialog';
+@use 'fair-eval-history';
