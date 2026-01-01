@@ -33,6 +33,7 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import StatementImage from './StatementImage';
 import IntegrateSuggestionsModal from '@/view/components/integrateSuggestions/IntegrateSuggestionsModal';
 import RoomBadge from '@/view/components/roomBadge/RoomBadge';
+import { FairEvalInfo } from '@/view/components/atomic/molecules/FairEvalInfo';
 
 interface Props {
 	statement: Statement | undefined;
@@ -57,6 +58,7 @@ const SuggestionCard: FC<Props> = ({
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
 	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
+	const enableFairEvaluation = parentStatement?.statementSettings?.enableFairEvaluation;
 	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
 	const anchorDescription = parentStatement?.evaluationSettings?.anchored?.anchorDescription;
 	const anchorLabel = parentStatement?.evaluationSettings?.anchored?.anchorLabel;
@@ -516,6 +518,16 @@ const SuggestionCard: FC<Props> = ({
 								<CommunityBadge />
 							)}
 						</div>
+					)}
+					{/* Fair Evaluation Info */}
+					{enableFairEvaluation && (
+						<FairEvalInfo
+							statementId={statement.statementId}
+							answerCost={statement.answerCost}
+							metrics={statement.fairEvalMetrics}
+							isAdmin={isAdmin}
+							isAccepted={statement.fairEvalAccepted}
+						/>
 					)}
 					{hasChildren && (
 						<IconButton

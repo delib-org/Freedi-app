@@ -173,6 +173,7 @@ export const StatementSchema = object({
 	fairEvalSettings: optional(FairEvalQuestionSettingsSchema), // fair evaluation settings (for questions)
 	fairEvalMetrics: optional(FairEvalAnswerMetricsSchema), // cached fair evaluation metrics (for answers)
 	answerCost: optional(number()), // cost of this answer in fair evaluation minutes
+	fairEvalAccepted: optional(boolean()), // if true, this answer has been accepted in fair evaluation
 });
 
 export type Statement = InferOutput<typeof StatementSchema>;

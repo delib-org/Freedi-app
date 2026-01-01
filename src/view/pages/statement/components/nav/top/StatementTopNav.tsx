@@ -1,7 +1,8 @@
-import { FC } from "react";
+import { FC, useEffect } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
-import { Role, Screen, Statement } from "delib-npm";
+import { Role, Screen } from "delib-npm";
+import { Statement } from "@freedi/shared-types";
 
 // Constants
 import { LANGUAGES } from "@/constants/Languages";
@@ -13,10 +14,15 @@ import useStatementColor from "@/controllers/hooks/useStatementColor.ts";
 
 // Redux
 import { statementSubscriptionSelector } from "@/redux/statements/statementsSlice";
+import { selectCurrentUserBalance } from "@/redux/fairEval/fairEvalSlice";
+
+// Controllers
+import { subscribeFairEvalWallet } from "@/controllers/db/fairEval/fairEvalController";
 
 // Components
 import NavButtons from "./navButtons/NavButtons";
 import HeaderMenu from "./headerMenu/HeaderMenu";
+import { WalletDisplay } from "@/view/components/atomic/molecules/WalletDisplay";
 
 interface Props {
   statement?: Statement;
@@ -47,6 +53,20 @@ const StatementTopNav: FC<Props> = ({
     statementSubscriptionSelector(statement?.statementId)
   )?.role;
   const headerStyle = useStatementColor({ statement });
+
+  // Fair Evaluation: Get wallet balance
+  const topParentId = statement?.topParentId || statement?.statementId;
+  const walletBalance = useSelector(selectCurrentUserBalance(topParentId || ''));
+  const isFairEvalEnabled = statement?.statementSettings?.enableFairEvaluation;
+
+  // Subscribe to wallet when fair eval is enabled
+  useEffect(() => {
+    if (!isFairEvalEnabled || !topParentId || !user?.uid) return;
+
+    const unsubscribe = subscribeFairEvalWallet(topParentId, user.uid);
+
+    return () => unsubscribe();
+  }, [isFairEvalEnabled, topParentId, user?.uid]);
 
   if (!statement) return null;
 
@@ -81,6 +101,14 @@ const StatementTopNav: FC<Props> = ({
       style={{ backgroundColor: headerStyle.backgroundColor }}
     >
       <div className="app-header-wrapper">
+        {/* Fair Evaluation Wallet Display */}
+        {isFairEvalEnabled && walletBalance !== undefined && (
+          <WalletDisplay
+            balance={walletBalance}
+            size="small"
+            compact
+          />
+        )}
         {statement && (
           <HeaderMenu
             statement={statement}

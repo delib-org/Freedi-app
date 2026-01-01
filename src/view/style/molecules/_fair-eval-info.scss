@@ -1,0 +1,358 @@
+// ============================================================================
+// FAIR EVAL INFO - MOLECULE SCSS
+// ============================================================================
+// Compact metrics display for answer cards when fair evaluation is enabled.
+// Shows progress bar, metrics, and admin actions inline.
+
+@import '../mixins';
+
+// ============================================================================
+// BASE STYLES
+// ============================================================================
+
+.fair-eval-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.75rem;
+	background-color: var(--card-default);
+	border-radius: 8px;
+	border: 1px solid var(--border-color);
+	margin-top: 0.5rem;
+
+	// ============================================================================
+	// STATUS-BASED BORDER COLORS
+	// ============================================================================
+
+	&--reached {
+		border-left: 4px solid var(--agree);
+	}
+
+	&--hasSupport {
+		border-left: 4px solid var(--option);
+	}
+
+	&--noSupport {
+		border-left: 4px solid var(--disagree);
+	}
+
+	// ============================================================================
+	// LOADING STATE
+	// ============================================================================
+
+	&--loading {
+		opacity: 0.7;
+		pointer-events: none;
+
+		.fair-eval-info__progress-fill {
+			animation: none;
+		}
+	}
+
+	// ============================================================================
+	// ACCEPTED STATE
+	// ============================================================================
+
+	&--accepted {
+		background-color: rgba(var(--agree-rgb, 87, 198, 178), 0.1);
+		border-color: var(--agree);
+
+		.fair-eval-info__status-badge {
+			background-color: var(--agree);
+			color: white;
+		}
+	}
+
+	// ============================================================================
+	// HEADER
+	// ============================================================================
+
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	&__title {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-body);
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+
+		svg {
+			width: 14px;
+			height: 14px;
+		}
+	}
+
+	&__status-badge {
+		font-size: 0.625rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		padding: 0.125rem 0.375rem;
+		border-radius: 4px;
+		background-color: var(--border-color);
+		color: var(--text-body);
+
+		&--reached {
+			background-color: var(--agree);
+			color: white;
+		}
+
+		&--hasSupport {
+			background-color: var(--option);
+			color: var(--text-dark);
+		}
+
+		&--noSupport {
+			background-color: var(--disagree);
+			color: white;
+		}
+	}
+
+	// ============================================================================
+	// PROGRESS BAR
+	// ============================================================================
+
+	&__progress {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__progress-bar {
+		position: relative;
+		height: 6px;
+		background-color: var(--border-color);
+		border-radius: 3px;
+		overflow: hidden;
+	}
+
+	&__progress-fill {
+		position: absolute;
+		top: 0;
+		left: 0;
+		height: 100%;
+		border-radius: 3px;
+		background: linear-gradient(90deg, var(--option), var(--agree));
+		transition: width 0.3s ease-out;
+
+		// Shimmer animation for active progress
+		&::after {
+			content: '';
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			bottom: 0;
+			background: linear-gradient(
+				90deg,
+				transparent,
+				rgba(255, 255, 255, 0.3),
+				transparent
+			);
+			animation: shimmer 2s infinite;
+		}
+	}
+
+	&__progress-labels {
+		display: flex;
+		justify-content: space-between;
+		font-size: 0.625rem;
+		color: var(--text-dim);
+	}
+
+	// ============================================================================
+	// METRICS GRID
+	// ============================================================================
+
+	&__metrics {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.5rem;
+
+		@include mobile {
+			grid-template-columns: repeat(2, 1fr);
+		}
+	}
+
+	&__metric {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.375rem;
+		background-color: rgba(var(--btn-primary-rgb, 95, 136, 229), 0.05);
+		border-radius: 6px;
+	}
+
+	&__metric-value {
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: var(--text-dark);
+	}
+
+	&__metric-label {
+		font-size: 0.5rem;
+		color: var(--text-dim);
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+		text-align: center;
+	}
+
+	// ============================================================================
+	// ADMIN COST INPUT
+	// ============================================================================
+
+	&__cost-input {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem;
+		background-color: rgba(var(--btn-primary-rgb, 95, 136, 229), 0.08);
+		border-radius: 6px;
+	}
+
+	&__cost-label {
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--text-body);
+		white-space: nowrap;
+	}
+
+	&__cost-field {
+		flex: 1;
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	&__cost-input-field {
+		width: 60px;
+		padding: 0.25rem 0.5rem;
+		font-size: 0.875rem;
+		border: 1px solid var(--border-color);
+		border-radius: 4px;
+		background-color: var(--card-default);
+		color: var(--text-dark);
+		text-align: center;
+
+		&:focus {
+			outline: none;
+			border-color: var(--btn-primary);
+		}
+
+		&::-webkit-inner-spin-button,
+		&::-webkit-outer-spin-button {
+			-webkit-appearance: none;
+			margin: 0;
+		}
+	}
+
+	&__cost-unit {
+		font-size: 0.75rem;
+		color: var(--text-dim);
+	}
+
+	&__cost-save {
+		padding: 0.25rem 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: white;
+		background-color: var(--btn-primary);
+		border: none;
+		border-radius: 4px;
+		cursor: pointer;
+		transition: background-color 0.2s ease;
+
+		&:hover:not(:disabled) {
+			background-color: var(--btn-primary-hover);
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	// ============================================================================
+	// ADMIN ACTIONS
+	// ============================================================================
+
+	&__actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	&__action-btn {
+		flex: 1;
+		min-width: 100px;
+		padding: 0.375rem 0.75rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		border: none;
+		border-radius: 6px;
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		transition: all 0.2s ease;
+
+		svg {
+			width: 14px;
+			height: 14px;
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+
+		&--accept {
+			background-color: var(--agree);
+			color: white;
+
+			&:hover:not(:disabled) {
+				filter: brightness(1.1);
+			}
+		}
+
+		&--complete {
+			background-color: var(--btn-primary);
+			color: white;
+
+			&:hover:not(:disabled) {
+				filter: brightness(1.1);
+			}
+		}
+	}
+
+	// ============================================================================
+	// NO COST STATE
+	// ============================================================================
+
+	&__no-cost {
+		text-align: center;
+		padding: 0.5rem;
+		font-size: 0.75rem;
+		color: var(--text-dim);
+		font-style: italic;
+	}
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes shimmer {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
