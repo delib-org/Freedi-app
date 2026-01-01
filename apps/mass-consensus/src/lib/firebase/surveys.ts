@@ -858,6 +858,12 @@ interface BatchQuestionData {
   options?: SurveyDemographicQuestion['options'];
   order?: number;
   required?: boolean;
+  // Range-specific fields
+  min?: number;
+  max?: number;
+  step?: number;
+  minLabel?: string;
+  maxLabel?: string;
 }
 
 interface BatchSaveResult {
@@ -891,6 +897,12 @@ export async function batchSaveDemographicQuestions(
       options: questionData.options,
       order: questionData.order ?? 0,
       required: questionData.required ?? false,
+      // Range-specific fields
+      min: questionData.min,
+      max: questionData.max,
+      step: questionData.step,
+      minLabel: questionData.minLabel,
+      maxLabel: questionData.maxLabel,
       createdAt: now,
       lastUpdate: now,
     });

@@ -89,26 +89,8 @@ export default function SurveyWelcome({ survey }: SurveyWelcomeProps) {
           <p className={styles.welcomeDescription}>{survey.description}</p>
         )}
 
-        <div className={styles.welcomeInfo}>
-          <div className={styles.infoItem}>
-            <span className={styles.infoNumber}>{survey.questions.length}</span>
-            <span className={styles.infoLabel}>{t('questions')}</span>
-          </div>
-          {progress?.hasProgress && !progress.isCompleted && (
-            <div className={styles.infoItem}>
-              <span className={styles.infoNumber}>{progress.completedQuestionIds?.length ?? 0}</span>
-              <span className={styles.infoLabel}>{t('completed')}</span>
-            </div>
-          )}
-        </div>
-
         <div className={styles.welcomeInstructions}>
-          <h3>{t('howItWorks')}</h3>
-          <ol>
-            <li>{t('surveyInstruction1')}</li>
-            <li>{t('surveyInstruction2')}</li>
-            <li>{t('surveyInstruction3')}</li>
-          </ol>
+          <p>{t('surveyDescription')}</p>
         </div>
 
         <button

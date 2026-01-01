@@ -1364,5 +1364,8 @@
   "explanationTitlePlaceholder": "z.B.: Bevor Sie beginnen",
   "explanationContentPlaceholder": "Schreiben Sie hier Ihre Erklärung mit Markdown...",
   "evaluationsNeeded": "Bewerten Sie noch {{count}} Lösungen, um fortzufahren",
-  "contributorOnlyMessage": "Danke für Ihren Beitrag! Fahren Sie fort, wenn Sie bereit sind."
+  "contributorOnlyMessage": "Danke für Ihren Beitrag! Fahren Sie fort, wenn Sie bereit sind.",
+  "markdownHint": "Verwenden Sie **fett** oder *kursiv* zur Hervorhebung",
+  "markdownHintSimple": "Unterstützt **fett** und *kursiv* Formatierung",
+  "questionTextPlaceholder": "Geben Sie den Fragetext ein..."
 }

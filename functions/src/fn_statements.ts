@@ -1,7 +1,6 @@
 import { logger } from 'firebase-functions';
 
 import {
-	Timestamp,
 	FieldValue,
 	QueryDocumentSnapshot,
 } from 'firebase-admin/firestore';
@@ -41,9 +40,9 @@ export async function updateNumberOfNewSubStatements(
 		const lastMessage:LastMessage = {
 			message: _statement.statement,
 			creator: _statement.creator.displayName || "Anonymous",
-			createdAt: Timestamp.now().toMillis(),
+			createdAt: Date.now(),
 		}
-		const lastUpdate = Timestamp.now().toMillis();
+		const lastUpdate = Date.now();
 		parentRef.update({
 			lastMessage,
 			lastUpdate,

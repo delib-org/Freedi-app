@@ -6,6 +6,8 @@ import { getFirestoreAdmin } from './admin';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { Paragraph, ParagraphType, StatementWithParagraphs } from '@/types';
 import { descriptionToParagraphs, sortParagraphs } from '@/lib/utils/paragraphUtils';
+import { logError } from '@/lib/utils/errorHandling';
+import { QUERY_LIMITS, UI } from '@/constants/common';
 
 // Types for Sign app
 export interface Signature {
@@ -74,7 +76,7 @@ export async function getDocumentForSigning(documentId: string): Promise<Stateme
 
     return statement;
   } catch (error) {
-    console.error('[Sign Queries] Error getting document:', error);
+    logError(error, { operation: 'queries.getDocumentForSigning', documentId });
     throw error;
   }
 }
@@ -158,7 +160,7 @@ export async function getParagraphsByParent(parentId: string): Promise<Statement
       .where('parentId', '==', parentId)
       .where('statementType', '==', StatementType.option)
       .orderBy('createdAt', 'asc')
-      .limit(200)
+      .limit(QUERY_LIMITS.PARAGRAPHS)
       .get();
 
     const paragraphs = snapshot.docs
@@ -169,7 +171,7 @@ export async function getParagraphsByParent(parentId: string): Promise<Statement
 
     return paragraphs;
   } catch (error) {
-    console.error('[Sign Queries] Error getting paragraphs:', error);
+    logError(error, { operation: 'queries.getParagraphsByParent', documentId: parentId });
     throw error;
   }
 }
@@ -197,7 +199,7 @@ export async function getAllParagraphsForDocument(documentId: string): Promise<S
 
     return paragraphs;
   } catch (error) {
-    console.error('[Sign Queries] Error getting all paragraphs:', error);
+    logError(error, { operation: 'queries.getAllParagraphsForDocument', documentId });
     throw error;
   }
 }
@@ -221,7 +223,7 @@ export async function getUserSignature(
 
     return doc.data() as Signature;
   } catch (error) {
-    console.error('[Sign Queries] Error getting signature:', error);
+    logError(error, { operation: 'queries.getUserSignature', documentId, userId });
     throw error;
   }
 }
@@ -240,7 +242,7 @@ export async function getDocumentSignatures(documentId: string): Promise<Signatu
 
     return snapshot.docs.map((doc) => doc.data() as Signature);
   } catch (error) {
-    console.error('[Sign Queries] Error getting document signatures:', error);
+    logError(error, { operation: 'queries.getDocumentSignatures', documentId });
     throw error;
   }
 }
@@ -263,7 +265,7 @@ export async function getUserApprovals(
 
     return snapshot.docs.map((doc) => doc.data() as Approval);
   } catch (error) {
-    console.error('[Sign Queries] Error getting user approvals:', error);
+    logError(error, { operation: 'queries.getUserApprovals', documentId, userId });
     throw error;
   }
 }
@@ -282,7 +284,7 @@ export async function getParagraphApprovals(paragraphId: string): Promise<Approv
 
     return snapshot.docs.map((doc) => doc.data() as Approval);
   } catch (error) {
-    console.error('[Sign Queries] Error getting paragraph approvals:', error);
+    logError(error, { operation: 'queries.getParagraphApprovals', paragraphId });
     throw error;
   }
 }
@@ -299,14 +301,14 @@ export async function getComments(paragraphId: string): Promise<Statement[]> {
       .where('parentId', '==', paragraphId)
       .where('statementType', '==', StatementType.statement) // Comments are regular statements
       .orderBy('createdAt', 'asc')
-      .limit(100)
+      .limit(QUERY_LIMITS.COMMENTS)
       .get();
 
     return snapshot.docs
       .map((doc) => doc.data() as Statement)
       .filter((s) => !s.hide);
   } catch (error) {
-    console.error('[Sign Queries] Error getting comments:', error);
+    logError(error, { operation: 'queries.getComments', paragraphId });
     throw error;
   }
 }
@@ -349,8 +351,7 @@ export async function getCommentCountsForDocument(
 
     return commentCounts;
   } catch (error) {
-    console.error('[Sign Queries] Error getting comment counts:', error);
-
+    logError(error, { operation: 'queries.getCommentCountsForDocument', documentId });
     return {};
   }
 }
@@ -406,8 +407,7 @@ export async function getUserInteractionsForDocument(
 
     return interactedParagraphs;
   } catch (error) {
-    console.error('[Sign Queries] Error getting user interactions:', error);
-
+    logError(error, { operation: 'queries.getUserInteractionsForDocument', documentId, userId });
     return new Set<string>();
   }
 }
@@ -506,11 +506,10 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
       viewedCount,
       totalComments,
       averageApproval: Math.round(averageApproval * 100) / 100,
-      topParagraphs: topParagraphs.slice(0, 10),
+      topParagraphs: topParagraphs.slice(0, UI.TOP_PARAGRAPHS_LIMIT),
     };
   } catch (error) {
-    console.error('[Sign Queries] Error getting document stats:', error);
-
+    logError(error, { operation: 'queries.getDocumentStats', documentId });
     return {
       totalParticipants: 0,
       signedCount: 0,

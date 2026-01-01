@@ -8,7 +8,36 @@ import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import SurveyProgressBar from './SurveyProgress';
+import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Survey.module.scss';
+
+/**
+ * Small spinner for use inside buttons during loading state
+ */
+function ButtonSpinner() {
+  return (
+    <span className={styles.buttonSpinner} role="status" aria-label="Loading">
+      <svg
+        className={styles.buttonSpinnerSvg}
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <circle
+          className={styles.buttonSpinnerCircle}
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          strokeWidth="3"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+}
 
 interface SurveyDemographicPageProps {
   survey: SurveyWithQuestions;
@@ -50,6 +79,10 @@ export default function SurveyDemographicPage({
   const [answers, setAnswers] = useState<FormAnswers>(initialAnswers);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isNavigatingBack, setIsNavigatingBack] = useState(false);
+  const [isSkipping, setIsSkipping] = useState(false);
+
+  const isNavigating = isSubmitting || isNavigatingBack || isSkipping;
 
   // Ensure anonymous user ID is set on mount
   useEffect(() => {
@@ -192,6 +225,7 @@ export default function SurveyDemographicPage({
   };
 
   const handleSubmit = async () => {
+    if (isNavigating) return; // Prevent double-clicks
     if (!validateAnswers()) {
       return;
     }
@@ -235,19 +269,24 @@ export default function SurveyDemographicPage({
     }
   };
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
+    if (isNavigating) return; // Prevent double-clicks
+    setIsSkipping(true);
+
     if (isLastItem) {
       router.push(`/s/${survey.surveyId}/complete`);
     } else {
       router.push(`/s/${survey.surveyId}/q/${currentFlowIndex + 1}`);
     }
-  };
+  }, [isNavigating, isLastItem, router, survey.surveyId, currentFlowIndex]);
 
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
+    if (isNavigating) return; // Prevent double-clicks
     if (currentFlowIndex > 0 && survey.settings.allowReturning) {
+      setIsNavigatingBack(true);
       router.push(`/s/${survey.surveyId}/q/${currentFlowIndex - 1}`);
     }
-  };
+  }, [isNavigating, currentFlowIndex, survey.settings.allowReturning, router, survey.surveyId]);
 
   const renderQuestion = (question: SurveyDemographicQuestion) => {
     const answer = answers[question.questionId];
@@ -256,7 +295,7 @@ export default function SurveyDemographicPage({
     return (
       <div key={question.questionId} className={styles.demographicQuestion}>
         <label className={styles.questionLabel}>
-          {question.question}
+          <InlineMarkdown text={question.question} />
           {question.required && <span className={styles.required}>*</span>}
         </label>
 
@@ -295,7 +334,7 @@ export default function SurveyDemographicPage({
                   className={styles.optionText}
                   style={{ '--option-color': option.color } as React.CSSProperties}
                 >
-                  {option.option}
+                  <InlineMarkdown text={option.option} />
                 </span>
               </label>
             ))}
@@ -318,7 +357,7 @@ export default function SurveyDemographicPage({
                   className={styles.optionText}
                   style={{ '--option-color': option.color } as React.CSSProperties}
                 >
-                  {option.option}
+                  <InlineMarkdown text={option.option} />
                 </span>
               </label>
             ))}
@@ -327,26 +366,28 @@ export default function SurveyDemographicPage({
 
         {question.type === UserDemographicQuestionType.range && (
           <div className={styles.rangeGroup}>
-            <div className={styles.rangeLabels}>
-              <span className={styles.rangeMinLabel}>
-                {question.minLabel || question.min || 1}
-              </span>
+            <div className={styles.rangeValueDisplay}>
               <span className={styles.rangeValue}>
                 {answer?.answer || question.min || 1}
               </span>
+            </div>
+            <div className={styles.rangeSliderRow}>
+              <span className={styles.rangeMinLabel}>
+                {question.minLabel || question.min || 1}
+              </span>
+              <input
+                type="range"
+                className={styles.rangeInput}
+                min={question.min ?? 1}
+                max={question.max ?? 10}
+                step={question.step ?? 1}
+                value={answer?.answer || question.min || 1}
+                onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
+              />
               <span className={styles.rangeMaxLabel}>
                 {question.maxLabel || question.max || 10}
               </span>
             </div>
-            <input
-              type="range"
-              className={styles.rangeInput}
-              min={question.min ?? 1}
-              max={question.max ?? 10}
-              step={question.step ?? 1}
-              value={answer?.answer || question.min || 1}
-              onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
-            />
           </div>
         )}
 
@@ -399,10 +440,13 @@ export default function SurveyDemographicPage({
           {survey.settings.allowReturning && currentFlowIndex > 0 && (
             <button
               type="button"
-              className={`${styles.navButton} ${styles.back}`}
+              className={`${styles.navButton} ${styles.back} ${isNavigatingBack ? styles.loading : ''}`}
               onClick={handleBack}
+              disabled={isNavigating}
+              aria-busy={isNavigatingBack}
+              aria-label={isNavigatingBack ? (t('loading') || 'Loading') : (t('back') || 'Back')}
             >
-              {t('back') || 'Back'}
+              {isNavigatingBack ? <ButtonSpinner /> : (t('back') || 'Back')}
             </button>
           )}
 
@@ -411,24 +455,29 @@ export default function SurveyDemographicPage({
           {!demographicPage.required && (
             <button
               type="button"
-              className={`${styles.navButton} ${styles.back}`}
+              className={`${styles.navButton} ${styles.back} ${isSkipping ? styles.loading : ''}`}
               onClick={handleSkip}
+              disabled={isNavigating}
+              aria-busy={isSkipping}
+              aria-label={isSkipping ? (t('loading') || 'Loading') : (t('skip') || 'Skip')}
             >
-              {t('skip') || 'Skip'}
+              {isSkipping ? <ButtonSpinner /> : (t('skip') || 'Skip')}
             </button>
           )}
 
           <button
             type="button"
-            className={`${styles.navButton} ${isLastItem ? styles.finish : styles.next}`}
+            className={`${styles.navButton} ${isLastItem ? styles.finish : styles.next} ${isSubmitting ? styles.loading : ''}`}
             onClick={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isNavigating}
+            aria-busy={isSubmitting}
+            aria-label={isSubmitting ? (t('loading') || 'Loading') : (isLastItem ? t('finish') || 'Finish' : t('next') || 'Next')}
           >
-            {isSubmitting
-              ? t('saving') || 'Saving...'
-              : isLastItem
-              ? t('finish') || 'Finish'
-              : t('next') || 'Next'}
+            {isSubmitting ? (
+              <ButtonSpinner />
+            ) : (
+              isLastItem ? t('finish') || 'Finish' : t('next') || 'Next'
+            )}
           </button>
         </div>
       </div>

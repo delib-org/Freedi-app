@@ -30,6 +30,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import DemographicQuestionEditor from './DemographicQuestionEditor';
 import ExplanationEditor from './ExplanationEditor';
+import QuestionTextEditor from './QuestionTextEditor';
 import styles from './Admin.module.scss';
 
 interface UnifiedFlowEditorProps {
@@ -44,6 +45,7 @@ interface UnifiedFlowEditorProps {
   onExplanationPagesChange: (pages: SurveyExplanationPage[]) => void;
   onCustomDemographicQuestionsChange: (questions: SurveyDemographicQuestion[]) => void;
   onQuestionSettingsChange: (questionId: string, settings: QuestionOverrideSettings) => void;
+  onQuestionTextChange: (questionId: string, newText: string) => void;
   onRemoveQuestion: (questionId: string) => void;
 }
 
@@ -154,6 +156,7 @@ interface SortableFlowItemProps {
   surveySettings?: SurveySettings;
   questionSetting?: QuestionOverrideSettings;
   onQuestionSettingsChange?: (settings: QuestionOverrideSettings) => void;
+  onQuestionTextChange?: (newText: string) => void;
   // For demographics
   customQuestions?: SurveyDemographicQuestion[];
   onDemographicUpdate?: (updates: Partial<SurveyDemographicPage>) => void;
@@ -172,6 +175,7 @@ function SortableFlowItem({
   surveySettings,
   questionSetting,
   onQuestionSettingsChange,
+  onQuestionTextChange,
   customQuestions,
   onDemographicUpdate,
   onAddDemographicQuestion,
@@ -251,11 +255,19 @@ function SortableFlowItem({
       {expanded && (
         <div className={styles.flowItemContent}>
           {item.type === 'question' && surveySettings && onQuestionSettingsChange && (
-            <QuestionSettingsPanel
-              questionSetting={questionSetting}
-              surveySettings={surveySettings}
-              onChange={onQuestionSettingsChange}
-            />
+            <>
+              {onQuestionTextChange && (
+                <QuestionTextEditor
+                  questionText={item.question.statement}
+                  onChange={onQuestionTextChange}
+                />
+              )}
+              <QuestionSettingsPanel
+                questionSetting={questionSetting}
+                surveySettings={surveySettings}
+                onChange={onQuestionSettingsChange}
+              />
+            </>
           )}
 
           {item.type === 'demographic' && onDemographicUpdate && (
@@ -456,6 +468,7 @@ export default function UnifiedFlowEditor({
   onExplanationPagesChange,
   onCustomDemographicQuestionsChange,
   onQuestionSettingsChange,
+  onQuestionTextChange,
   onRemoveQuestion,
 }: UnifiedFlowEditorProps) {
   const { t } = useTranslation();
@@ -636,6 +649,11 @@ export default function UnifiedFlowEditor({
                 onQuestionSettingsChange={
                   item.type === 'question'
                     ? (settings) => onQuestionSettingsChange(item.id, settings)
+                    : undefined
+                }
+                onQuestionTextChange={
+                  item.type === 'question'
+                    ? (newText) => onQuestionTextChange(item.id, newText)
                     : undefined
                 }
                 customQuestions={customDemographicQuestions}

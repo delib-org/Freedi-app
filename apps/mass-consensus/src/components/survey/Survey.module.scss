@@ -64,26 +64,17 @@
 }
 
 .welcomeInstructions {
-  text-align: left;
+  text-align: center;
   background: var(--card-default, #f9fafb);
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   border-radius: 12px;
   margin-bottom: 2rem;
 
-  h3 {
-    font-size: 1.1rem;
-    color: var(--text-heading, #1a1a2e);
-    margin-bottom: 1rem;
-  }
-
-  ol {
-    padding-left: 1.5rem;
+  p {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
     color: var(--text-body, #4a5568);
-
-    li {
-      margin-bottom: 0.5rem;
-      line-height: 1.5;
-    }
   }
 }
 
@@ -117,35 +108,69 @@
 
 .progressContainer {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 1rem 0.5rem;
   background: white;
   border-bottom: 1px solid var(--border-light, #e2e8f0);
+  overflow: hidden; // Prevent horizontal page overflow
+
+  @media (min-width: 480px) {
+    padding: 1rem 1.5rem;
+  }
 }
 
 .progressBar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center; // Use safe center to prevent overflow clipping
   gap: 0;
-  max-width: 600px;
+  max-width: 100%;
   margin: 0 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; // Firefox
+  -ms-overflow-style: none; // IE/Edge
+  padding: 0.5rem;
+
+  &::-webkit-scrollbar {
+    display: none; // Chrome/Safari
+  }
+
+  // Fallback for browsers that don't support 'safe center'
+  @supports not (justify-content: safe center) {
+    justify-content: flex-start;
+  }
 }
 
 .progressStep {
   display: flex;
   align-items: center;
+  flex-shrink: 0; // Prevent steps from shrinking
 }
 
 .progressDot {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.875rem;
+  font-size: 0.7rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  flex-shrink: 0;
+
+  @media (min-width: 480px) {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  @media (min-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+  }
 
   &.pending {
     background: var(--bg-muted, #e2e8f0);
@@ -155,8 +180,12 @@
   &.active {
     background: var(--btn-primary, #5f88e5);
     color: white;
-    box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.2);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
     animation: pulse 2s infinite;
+
+    @media (min-width: 768px) {
+      box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.2);
+    }
   }
 
   &.completed {
@@ -166,33 +195,44 @@
 }
 
 .progressLine {
-  width: 40px;
-  height: 3px;
+  width: 12px;
+  height: 2px;
   background: var(--bg-muted, #e2e8f0);
   transition: background 0.3s ease;
+  flex-shrink: 0;
+
+  @media (min-width: 480px) {
+    width: 20px;
+    height: 3px;
+  }
+
+  @media (min-width: 768px) {
+    width: 40px;
+  }
 
   &.completed {
     background: var(--agree, #48bb78);
-  }
-
-  @media (max-width: 480px) {
-    width: 20px;
   }
 }
 
 .progressLabel {
   text-align: center;
-  margin-top: 0.75rem;
-  font-size: 0.875rem;
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
   color: var(--text-body, #4a5568);
+
+  @media (min-width: 480px) {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+  }
 }
 
 @keyframes pulse {
   0%, 100% {
-    box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.2);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.2);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(95, 136, 229, 0.1);
+    box-shadow: 0 0 0 6px rgba(95, 136, 229, 0.1);
   }
 }
 
@@ -205,11 +245,16 @@
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 1rem 1.5rem;
-  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  padding: 0.75rem 0.75rem;
+  padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
   background: white;
   border-top: 1px solid var(--border-light, #e2e8f0);
   z-index: 100;
+
+  @media (min-width: 480px) {
+    padding: 1rem 1.5rem;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
 }
 
 .navContent {
@@ -218,7 +263,11 @@
   justify-content: space-between;
   max-width: 600px;
   margin: 0 auto;
-  gap: 1rem;
+  gap: 0.5rem;
+
+  @media (min-width: 480px) {
+    gap: 1rem;
+  }
 }
 
 .navButton {
@@ -226,13 +275,23 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  padding: 0.875rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
   font-weight: 600;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 120px;
+  min-width: 80px;
+  flex: 1;
+  max-width: 140px;
+
+  @media (min-width: 480px) {
+    padding: 0.875rem 1.5rem;
+    font-size: 1rem;
+    min-width: 120px;
+    flex: none;
+    max-width: none;
+  }
 
   &.back {
     background: var(--bg-muted, #e2e8f0);
@@ -337,8 +396,12 @@
   align-items: center;
   justify-content: center;
   min-height: 80vh;
-  padding: 1.5rem;
+  padding: 1rem;
   text-align: center;
+
+  @media (min-width: 480px) {
+    padding: 1.5rem;
+  }
 }
 
 .completeIcon {
@@ -360,10 +423,14 @@
 }
 
 .completeTitle {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-heading, #1a1a2e);
   margin-bottom: 0.5rem;
+
+  @media (min-width: 480px) {
+    font-size: 2rem;
+  }
 }
 
 .completeSubtitle {
@@ -375,11 +442,17 @@
 .completeSummary {
   display: flex;
   justify-content: center;
-  gap: 2rem;
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
   background: var(--card-default, #f9fafb);
   border-radius: 12px;
+
+  @media (min-width: 480px) {
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+  }
 }
 
 .summaryItem {
@@ -405,18 +478,29 @@
   gap: 1rem;
   width: 100%;
   max-width: 300px;
+  margin-top: 1rem;
+  padding: 0 0.5rem;
+
+  @media (min-width: 480px) {
+    padding: 0;
+  }
 }
 
 .actionButton {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem 1.5rem;
-  font-size: 1rem;
+  padding: 0.875rem 1.25rem;
+  font-size: 0.875rem;
   font-weight: 600;
   border-radius: 50px;
   cursor: pointer;
   transition: all 0.2s ease;
+
+  @media (min-width: 480px) {
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+  }
 
   &.primary {
     background: var(--btn-primary, #5f88e5);
@@ -458,10 +542,15 @@
 .emailSignup {
   width: 100%;
   max-width: 400px;
-  margin-top: 2rem;
-  padding: 1.5rem;
+  margin-top: 1.5rem;
+  padding: 1rem;
   background: var(--card-default, #f9fafb);
   border-radius: 12px;
+
+  @media (min-width: 480px) {
+    margin-top: 2rem;
+    padding: 1.5rem;
+  }
 }
 
 .emailTitle {
@@ -479,7 +568,13 @@
 
 .emailForm {
   display: flex;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @media (min-width: 480px) {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
 }
 
 .emailInput {
@@ -506,6 +601,11 @@
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
+  width: 100%;
+
+  @media (min-width: 480px) {
+    width: auto;
+  }
 
   &:hover {
     background: #4a6fc4;
@@ -833,45 +933,56 @@
 .rangeGroup {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
   padding: 1rem;
   background: var(--bg-muted, #f7fafc);
   border-radius: 8px;
 }
 
-.rangeLabels {
+.rangeValueDisplay {
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.rangeValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--btn-primary, #5f88e5);
+}
+
+.rangeSliderRow {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  font-size: 0.875rem;
-  color: var(--text-body, #4a5568);
+  gap: 0.75rem;
 }
 
 .rangeMinLabel,
 .rangeMaxLabel {
-  flex: 1;
-  color: var(--text-muted, #718096);
-  font-size: 0.8rem;
+  color: var(--text-body, #3d4d71);
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+  max-width: 80px;
+  text-align: center;
+  line-height: 1.2;
+
+  @media (min-width: 480px) {
+    font-size: 1rem;
+    max-width: 120px;
+  }
 }
 
 .rangeMinLabel {
-  text-align: left;
-}
-
-.rangeMaxLabel {
   text-align: right;
 }
 
-.rangeValue {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: var(--btn-primary, #5f88e5);
-  text-align: center;
-  min-width: 3rem;
+.rangeMaxLabel {
+  text-align: left;
 }
 
 .rangeInput {
-  width: 100%;
+  flex: 1;
+  min-width: 0; // Allow shrinking in flexbox
   height: 8px;
   border-radius: 4px;
   background: var(--border-light, #e2e8f0);
@@ -929,7 +1040,12 @@
 }
 
 .navSpacer {
-  flex: 1;
+  display: none;
+
+  @media (min-width: 480px) {
+    display: block;
+    flex: 1;
+  }
 }
 
 // ============================================
@@ -940,6 +1056,7 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  overflow-x: hidden; // Prevent horizontal scroll
 }
 
 .explanationContent {
@@ -950,12 +1067,21 @@
   max-width: 720px;
   margin: 0 auto;
   width: 100%;
+  box-sizing: border-box;
+
+  @media (max-width: 767px) {
+    max-width: 100%;
+  }
 }
 
 .explanationHero {
   width: 100%;
-  max-height: 300px;
+  max-height: 200px;
   object-fit: cover;
+
+  @media (min-width: 480px) {
+    max-height: 250px;
+  }
 
   @media (min-width: 768px) {
     border-radius: 0 0 16px 16px;
@@ -964,8 +1090,14 @@
 }
 
 .explanationBody {
-  padding: 1.5rem;
+  padding: 1rem;
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  @media (min-width: 480px) {
+    padding: 1.5rem;
+  }
 
   @media (min-width: 768px) {
     padding: 2rem;
@@ -973,11 +1105,18 @@
 }
 
 .explanationTitle {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text-heading, #1a1a2e);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  @media (min-width: 480px) {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
 
   @media (min-width: 768px) {
     font-size: 2rem;
@@ -986,5 +1125,91 @@
 
 .explanationText {
   // Markdown styles are handled by MarkdownRenderer component
-  // This class provides additional context-specific styling if needed
+  // Additional mobile-specific styling for contained markdown
+  overflow-x: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+// ============================================
+// BUTTON LOADING STATES
+// ============================================
+
+// Loading state for navigation buttons
+.navButton.loading {
+  pointer-events: none;
+  opacity: 0.85;
+  min-width: 120px; // Maintain button width during loading
+
+  // Subtle background pulse for visual feedback
+  &.next,
+  &.finish {
+    animation: buttonPulse 1.5s ease-in-out infinite;
+  }
+}
+
+// Button spinner container
+.buttonSpinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+// Spinner SVG
+.buttonSpinnerSvg {
+  animation: spinnerRotate 0.8s linear infinite;
+}
+
+// Spinner circle - partial circle for spinner effect
+.buttonSpinnerCircle {
+  stroke-dasharray: 45 63; // Creates a partial circle (~70% of circumference)
+  stroke-dashoffset: 0;
+  opacity: 0.9;
+}
+
+// Spinner animation
+@keyframes spinnerRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+// Subtle background pulse for primary buttons during loading
+@keyframes buttonPulse {
+  0%, 100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+
+// Action buttons disabled state during navigation
+.navActionButton:disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+// Respect user's motion preferences
+@media (prefers-reduced-motion: reduce) {
+  .buttonSpinnerSvg {
+    animation: none;
+  }
+
+  .navButton.loading {
+    animation: none;
+    opacity: 0.7;
+  }
+
+  // For users who prefer reduced motion, show a static indicator
+  .buttonSpinnerCircle {
+    stroke-dasharray: 63 63; // Full circle
+    opacity: 0.6;
+  }
 }

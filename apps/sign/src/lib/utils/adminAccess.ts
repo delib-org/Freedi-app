@@ -13,6 +13,7 @@ import {
 	ViewerLink,
 } from '@freedi/shared-types';
 import { Statement } from '@freedi/shared-types';
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * Result of admin access check
@@ -92,8 +93,7 @@ export async function checkAdminAccess(
 			isViewer: false,
 		};
 	} catch (error) {
-		console.error('[AdminAccess] Error checking admin access:', error);
-
+		logError(error, { operation: 'adminAccess.checkAdminAccess', documentId, userId });
 		return {
 			isAdmin: false,
 			permissionLevel: null,
@@ -139,8 +139,7 @@ export async function checkViewerLinkAccess(
 			documentId: viewerLink.documentId,
 		};
 	} catch (error) {
-		console.error('[AdminAccess] Error checking viewer link:', error);
-
+		logError(error, { operation: 'adminAccess.checkViewerLinkAccess', metadata: { token } });
 		return { isValid: false, viewerLink: null, documentId: null };
 	}
 }
@@ -178,8 +177,7 @@ export async function getDocumentCollaborators(
 
 		return snapshot.docs.map(doc => doc.data() as DocumentCollaborator);
 	} catch (error) {
-		console.error('[AdminAccess] Error getting collaborators:', error);
-
+		logError(error, { operation: 'adminAccess.getDocumentCollaborators', documentId });
 		return [];
 	}
 }
@@ -209,8 +207,7 @@ export async function getDocumentViewerLinks(
 			.map(doc => doc.data() as ViewerLink)
 			.filter(link => link.expiresAt > now);
 	} catch (error) {
-		console.error('[AdminAccess] Error getting viewer links:', error);
-
+		logError(error, { operation: 'adminAccess.getDocumentViewerLinks', documentId });
 		return [];
 	}
 }

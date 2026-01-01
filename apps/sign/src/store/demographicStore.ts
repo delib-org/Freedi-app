@@ -10,6 +10,7 @@ import {
   DemographicAnswer,
   QuestionWithAnswer,
 } from '@/types/demographics';
+import { logError } from '@/lib/utils/errorHandling';
 
 export interface DemographicStatus {
   isLoaded: boolean;
@@ -142,7 +143,7 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
         set({ isSurveyModalOpen: true });
       }
     } catch (error) {
-      console.error('[DemographicStore] Error fetching status:', error);
+      logError(error, { operation: 'demographicStore.fetchStatus', documentId });
       set({
         error: 'Failed to load survey status',
         isLoading: false,
@@ -174,7 +175,7 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
         isLoading: false,
       });
     } catch (error) {
-      console.error('[DemographicStore] Error fetching questions:', error);
+      logError(error, { operation: 'demographicStore.fetchQuestions', documentId });
       set({
         error: 'Failed to load survey questions',
         isLoading: false,
@@ -211,7 +212,7 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
         currentAnswers,
       });
     } catch (error) {
-      console.error('[DemographicStore] Error fetching answers:', error);
+      logError(error, { operation: 'demographicStore.fetchAnswers', documentId });
     }
   },
 
@@ -242,7 +243,7 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
 
       return true;
     } catch (error) {
-      console.error('[DemographicStore] Error submitting answers:', error);
+      logError(error, { operation: 'demographicStore.submitAnswers', documentId });
       set({
         error: 'Failed to submit survey answers',
         isSubmitting: false,
