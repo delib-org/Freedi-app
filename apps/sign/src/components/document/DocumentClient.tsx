@@ -249,19 +249,28 @@ export default function DocumentClient({
     initializeUserInteractions(userInteractions);
   }, [userInteractions, initializeUserInteractions]);
 
-  // Fetch demographic status on mount
+  // Ensure user has ID and fetch demographic status on mount
   useEffect(() => {
-    if (documentId && user) {
-      fetchStatus(documentId);
+    if (documentId) {
+      // Create anonymous user if none exists (sets cookie for API calls)
+      if (!user) {
+        getOrCreateAnonymousUser();
+      }
+      // Small delay to ensure cookie is set before API call
+      const timer = setTimeout(() => {
+        fetchStatus(documentId);
+      }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [documentId, user, fetchStatus]);
 
-  // Auto-open survey modal if mandatory and incomplete
+  // Auto-open survey modal if mandatory and incomplete (for all users)
   useEffect(() => {
-    if (isInteractionBlocked && user && !isSurveyModalOpen) {
+    if (isInteractionBlocked && !isSurveyModalOpen) {
       openSurveyModal();
     }
-  }, [isInteractionBlocked, user, isSurveyModalOpen, openSurveyModal]);
+  }, [isInteractionBlocked, isSurveyModalOpen, openSurveyModal]);
 
   // Cleanup confetti timeout on unmount
   useEffect(() => {
