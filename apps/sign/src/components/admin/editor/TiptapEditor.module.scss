@@ -84,6 +84,54 @@
   display: none;
 }
 
+.imageToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--info-bg, #e3f2fd);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.imageToolbarLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-inline-end: var(--spacing-xs);
+}
+
+.widthSelect {
+  height: 32px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--card-default, #fff);
+  color: var(--text-body);
+  font-size: 0.875rem;
+  cursor: pointer;
+  min-width: 70px;
+
+  &:hover {
+    border-color: var(--btn-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 1px;
+  }
+}
+
+.deleteButton {
+  background: var(--error-bg, #ffebee) !important;
+  color: var(--error, #d32f2f) !important;
+
+  &:hover {
+    background: var(--error, #d32f2f) !important;
+    color: white !important;
+  }
+}
+
 .editorContent {
   min-height: 200px;
   padding: var(--spacing-md);
@@ -148,6 +196,13 @@
       border-radius: var(--radius-sm);
       margin: 1em 0;
       display: block;
+      cursor: pointer;
+      transition: outline 0.15s ease;
+
+      &.ProseMirror-selectednode {
+        outline: 3px solid var(--btn-primary);
+        outline-offset: 2px;
+      }
     }
 
     // Placeholder
@@ -218,6 +273,25 @@
     border-color: var(--border-dark, #333);
     color: var(--text-light, #e0e0e0);
   }
+
+  .imageToolbar {
+    background: var(--background-dark, #16162a);
+    border-color: var(--border-dark, #333);
+  }
+
+  .imageToolbarLabel {
+    color: var(--text-light, #e0e0e0);
+  }
+
+  .widthSelect {
+    background: var(--card-dark, #1a1a2e);
+    border-color: var(--border-dark, #333);
+    color: var(--text-light, #e0e0e0);
+  }
+
+  .deleteButton {
+    background: rgba(211, 47, 47, 0.2) !important;
+  }
 }
 
 // Responsive
@@ -237,6 +311,21 @@
   .headingSelect {
     height: 28px;
     font-size: 0.8rem;
+  }
+
+  .imageToolbar {
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .imageToolbarLabel {
+    font-size: 0.8rem;
+  }
+
+  .widthSelect {
+    height: 28px;
+    font-size: 0.8rem;
+    min-width: 60px;
   }
 
   .editorContent {

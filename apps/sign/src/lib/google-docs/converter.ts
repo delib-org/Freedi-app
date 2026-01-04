@@ -346,14 +346,14 @@ function extractImagesFromParagraph(
             content: '', // Images don't have text content
             order: currentOrder,
             imageUrl: sourceUrl, // Will be replaced with Firebase Storage URL after processing
-            imageAlt: altText || undefined,
+            ...(altText ? { imageAlt: altText } : {}), // Only include if altText exists (Firestore doesn't accept undefined)
           };
 
           const extractedImage: ExtractedImage = {
             paragraphId,
             sourceUrl,
             order: currentOrder,
-            altText: altText || undefined,
+            ...(altText ? { altText } : {}), // Only include if altText exists
           };
 
           results.push({

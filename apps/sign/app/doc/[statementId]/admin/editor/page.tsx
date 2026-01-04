@@ -222,19 +222,8 @@ export default function EditorPage() {
         <p>{t('Edit paragraphs, add images, and reorder content')}</p>
       </header>
 
-      {/* Actions Bar */}
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.addButton}
-          onClick={() => setShowAddModal(true)}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          {t('Add Paragraph')}
-        </button>
+      {/* Import Section */}
+      <div className={styles.importSection}>
         <GoogleDocsImport
           statementId={statementId}
           onImportComplete={handleImportSuccess}
@@ -246,122 +235,175 @@ export default function EditorPage() {
         {paragraphs.length === 0 ? (
           <div className={styles.empty}>
             <p>{t('No content yet. Add a paragraph or import from Google Docs.')}</p>
+            <button
+              type="button"
+              className={styles.emptyAddButton}
+              onClick={() => setShowAddModal(true)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              {t('Add Paragraph')}
+            </button>
           </div>
         ) : (
-          paragraphs.map((paragraph, index) => (
-            <div
-              key={paragraph.paragraphId}
-              className={`${styles.paragraphItem} ${draggedIndex === index ? styles.dragging : ''}`}
-              draggable={editingParagraph !== paragraph.paragraphId}
-              onDragStart={() => handleDragStart(index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragEnd={handleDragEnd}
-            >
-              {/* Drag Handle */}
-              <div className={styles.dragHandle} title={t('Drag to reorder')}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="9" cy="6" r="1.5" />
-                  <circle cx="15" cy="6" r="1.5" />
-                  <circle cx="9" cy="12" r="1.5" />
-                  <circle cx="15" cy="12" r="1.5" />
-                  <circle cx="9" cy="18" r="1.5" />
-                  <circle cx="15" cy="18" r="1.5" />
-                </svg>
-              </div>
-
-              {/* Paragraph Content */}
-              <div className={styles.paragraphContent}>
-                {editingParagraph === paragraph.paragraphId ? (
-                  <div className={styles.editMode}>
-                    <select
-                      value={editType}
-                      onChange={(e) => setEditType(e.target.value as ParagraphType)}
-                      className={styles.typeSelect}
-                    >
-                      <option value={ParagraphType.paragraph}>{t('Paragraph')}</option>
-                      <option value={ParagraphType.h1}>{t('Heading')} 1</option>
-                      <option value={ParagraphType.h2}>{t('Heading')} 2</option>
-                      <option value={ParagraphType.h3}>{t('Heading')} 3</option>
-                      <option value={ParagraphType.h4}>{t('Heading')} 4</option>
-                      <option value={ParagraphType.h5}>{t('Heading')} 5</option>
-                      <option value={ParagraphType.h6}>{t('Heading')} 6</option>
-                      <option value={ParagraphType.li}>{t('List item')}</option>
-                    </select>
-                    <TiptapEditor
-                      content={editContent}
-                      onChange={setEditContent}
-                      documentId={statementId}
-                      placeholder={t('Enter content...')}
-                    />
-                    <div className={styles.editActions}>
-                      <button
-                        type="button"
-                        onClick={() => handleSaveParagraph(paragraph.paragraphId)}
-                        disabled={saving}
-                        className={styles.saveButton}
-                      >
-                        {saving ? t('Saving...') : t('Save')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={cancelEditing}
-                        className={styles.cancelButton}
-                      >
-                        {t('Cancel')}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className={styles.viewMode}>
-                    <span className={styles.typeLabel}>{paragraph.type}</span>
-                    {paragraph.type === ParagraphType.image ? (
-                      paragraph.imageUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={paragraph.imageUrl}
-                          alt={paragraph.imageAlt || t('Document image')}
-                          className={styles.previewImage}
-                        />
-                      )
-                    ) : (
-                      <div
-                        className={styles.preview}
-                        dangerouslySetInnerHTML={{ __html: paragraph.content }}
-                      />
-                    )}
+          <>
+            {paragraphs.map((paragraph, index) => (
+              <div key={paragraph.paragraphId}>
+                {/* Insert trigger before first paragraph */}
+                {index === 0 && (
+                  <div className={styles.insertTrigger} onClick={() => setShowAddModal(true)}>
+                    <span className={styles.insertLine} />
+                    <span className={styles.insertIcon}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                        <line x1="12" y1="5" x2="12" y2="19" />
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                      </svg>
+                    </span>
+                    <span className={styles.insertLine} />
                   </div>
                 )}
-              </div>
 
-              {/* Actions */}
-              {editingParagraph !== paragraph.paragraphId && (
-                <div className={styles.itemActions}>
-                  <button
-                    type="button"
-                    onClick={() => startEditing(paragraph)}
-                    className={styles.editButton}
-                    title={t('Edit')}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                <div
+                  className={`${styles.paragraphItem} ${draggedIndex === index ? styles.dragging : ''}`}
+                  draggable={editingParagraph !== paragraph.paragraphId}
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                >
+                  {/* Drag Handle */}
+                  <div className={styles.dragHandle} title={t('Drag to reorder')}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="9" cy="6" r="1.5" />
+                      <circle cx="15" cy="6" r="1.5" />
+                      <circle cx="9" cy="12" r="1.5" />
+                      <circle cx="15" cy="12" r="1.5" />
+                      <circle cx="9" cy="18" r="1.5" />
+                      <circle cx="15" cy="18" r="1.5" />
                     </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteParagraph(paragraph.paragraphId)}
-                    className={styles.deleteButton}
-                    title={t('Delete')}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
+                  </div>
+
+                  {/* Paragraph Content */}
+                  <div className={styles.paragraphContent}>
+                    {editingParagraph === paragraph.paragraphId ? (
+                      <div className={styles.editMode}>
+                        <select
+                          value={editType}
+                          onChange={(e) => setEditType(e.target.value as ParagraphType)}
+                          className={styles.typeSelect}
+                        >
+                          <option value={ParagraphType.paragraph}>{t('Paragraph')}</option>
+                          <option value={ParagraphType.h1}>{t('Heading')} 1</option>
+                          <option value={ParagraphType.h2}>{t('Heading')} 2</option>
+                          <option value={ParagraphType.h3}>{t('Heading')} 3</option>
+                          <option value={ParagraphType.h4}>{t('Heading')} 4</option>
+                          <option value={ParagraphType.h5}>{t('Heading')} 5</option>
+                          <option value={ParagraphType.h6}>{t('Heading')} 6</option>
+                          <option value={ParagraphType.li}>{t('List item')}</option>
+                        </select>
+                        <TiptapEditor
+                          content={editContent}
+                          onChange={setEditContent}
+                          documentId={statementId}
+                          placeholder={t('Enter content...')}
+                        />
+                        <div className={styles.editActions}>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveParagraph(paragraph.paragraphId)}
+                            disabled={saving}
+                            className={styles.saveButton}
+                          >
+                            {saving ? t('Saving...') : t('Save')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={cancelEditing}
+                            className={styles.cancelButton}
+                          >
+                            {t('Cancel')}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className={styles.viewMode}>
+                        <span className={styles.typeLabel}>{paragraph.type}</span>
+                        {paragraph.type === ParagraphType.image ? (
+                          paragraph.imageUrl && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={paragraph.imageUrl}
+                              alt={paragraph.imageAlt || t('Document image')}
+                              className={styles.previewImage}
+                            />
+                          )
+                        ) : (
+                          <div
+                            className={styles.preview}
+                            dangerouslySetInnerHTML={{ __html: paragraph.content }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  {editingParagraph !== paragraph.paragraphId && (
+                    <div className={styles.itemActions}>
+                      <button
+                        type="button"
+                        onClick={() => startEditing(paragraph)}
+                        className={styles.editButton}
+                        title={t('Edit')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteParagraph(paragraph.paragraphId)}
+                        className={styles.deleteButton}
+                        title={t('Delete')}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <polyline points="3 6 5 6 21 6" />
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ))
+
+                {/* Insert trigger after each paragraph */}
+                <div className={styles.insertTrigger} onClick={() => setShowAddModal(true)}>
+                  <span className={styles.insertLine} />
+                  <span className={styles.insertIcon}>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </span>
+                  <span className={styles.insertLine} />
+                </div>
+              </div>
+            ))}
+
+            {/* Bottom Add Button */}
+            <button
+              type="button"
+              className={styles.addToEndButton}
+              onClick={() => setShowAddModal(true)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+              {t('Add Paragraph')}
+            </button>
+          </>
         )}
       </div>
 

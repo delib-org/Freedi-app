@@ -26,34 +26,8 @@
   color: var(--text-secondary);
 }
 
-.actions {
-  display: flex;
-  gap: var(--spacing-md);
+.importSection {
   margin-bottom: var(--spacing-lg);
-  flex-wrap: wrap;
-}
-
-.addButton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-md);
-  background: var(--btn-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-
-  &:hover {
-    background: var(--btn-primary-hover, #4a73d0);
-  }
-
-  svg {
-    width: 16px;
-    height: 16px;
-  }
 }
 
 .paragraphsList {
@@ -68,6 +42,98 @@
   background: var(--background-alt, #f9f9f9);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.emptyAddButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--btn-primary-hover, #4a73d0);
+  }
+}
+
+// Insert trigger between paragraphs (Notion-style)
+.insertTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  margin: var(--spacing-xs) 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.insertLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+.insertIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: white;
+  margin: 0 var(--spacing-sm);
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  .insertTrigger:hover & {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Bottom "Add Paragraph" button
+.addToEndButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: 100%;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  background: transparent;
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+    background: rgba(27, 38, 80, 0.02);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .paragraphItem {
@@ -322,15 +388,6 @@
     padding: var(--spacing-md);
   }
 
-  .actions {
-    flex-direction: column;
-  }
-
-  .addButton {
-    width: 100%;
-    justify-content: center;
-  }
-
   .paragraphItem {
     flex-direction: column;
     align-items: stretch;
@@ -345,6 +402,22 @@
     margin-top: var(--spacing-sm);
     padding-top: var(--spacing-sm);
     border-top: 1px solid var(--border-light);
+  }
+
+  // On mobile, show insert triggers as always-visible but subtle
+  .insertTrigger {
+    opacity: 0.4;
+    height: 32px; // Larger touch target
+
+    &:hover,
+    &:active {
+      opacity: 1;
+    }
+  }
+
+  .addToEndButton {
+    padding: var(--spacing-lg);
+    font-size: 1rem;
   }
 
   .modal {
