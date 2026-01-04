@@ -292,6 +292,18 @@
   }
 }
 
+.rejectionReason {
+  display: block;
+  max-width: 200px;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  cursor: help;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Settings Page */
 .settingsPage {
   max-width: 800px;

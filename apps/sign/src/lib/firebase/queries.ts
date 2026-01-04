@@ -19,6 +19,7 @@ export interface Signature {
   signed: 'signed' | 'rejected' | 'viewed';
   date: number;
   levelOfSignature?: number;
+  rejectionReason?: string;
 }
 
 export interface Approval {
