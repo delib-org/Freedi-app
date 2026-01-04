@@ -205,6 +205,25 @@ export default function ParagraphCard({
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         );
+      case ParagraphType.image:
+        return (
+          <figure className={styles.imageWrapper}>
+            {paragraph.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={paragraph.imageUrl}
+                alt={paragraph.imageAlt || t('Document image')}
+                className={styles.image}
+                loading="lazy"
+              />
+            )}
+            {paragraph.imageCaption && (
+              <figcaption className={styles.imageCaption}>
+                {paragraph.imageCaption}
+              </figcaption>
+            )}
+          </figure>
+        );
       default:
         return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
     }

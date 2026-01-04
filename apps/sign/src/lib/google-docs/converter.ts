@@ -29,25 +29,62 @@ const HEADING_STYLE_MAP: Record<string, ParagraphType> = {
 };
 
 /**
+ * Image info extracted from Google Docs for processing
+ */
+export interface ExtractedImage {
+  paragraphId: string;
+  sourceUrl: string;
+  order: number;
+  altText?: string;
+}
+
+/**
+ * Result of converting a Google Doc, including text paragraphs and images to process
+ */
+export interface ConversionResult {
+  paragraphs: Paragraph[];
+  images: ExtractedImage[];
+}
+
+/**
  * Convert a Google Docs API response to an array of Paragraphs
  * @param document - The Google Docs API document response
- * @returns Array of Paragraph objects
+ * @returns ConversionResult with paragraphs and images to process
  */
 export function convertGoogleDocsToParagraphs(
   document: docs_v1.Schema$Document
-): Paragraph[] {
+): ConversionResult {
   const paragraphs: Paragraph[] = [];
+  const images: ExtractedImage[] = [];
   let order = 0;
 
   const content = document.body?.content;
   if (!content) {
-    return paragraphs;
+    return { paragraphs, images };
   }
 
   const lists = document.lists || {};
+  const inlineObjects = document.inlineObjects || {};
 
   for (const element of content) {
     if (element.paragraph) {
+      // Check for images in the paragraph first
+      const imageResults = extractImagesFromParagraph(
+        element.paragraph,
+        order,
+        inlineObjects
+      );
+
+      if (imageResults.length > 0) {
+        // Add image paragraphs
+        for (const imgResult of imageResults) {
+          paragraphs.push(imgResult.paragraph);
+          images.push(imgResult.extractedImage);
+          order++;
+        }
+      }
+
+      // Then extract text content (excluding images)
       const para = convertParagraphElement(element.paragraph, order, lists);
       if (para) {
         paragraphs.push(para);
@@ -62,7 +99,7 @@ export function convertGoogleDocsToParagraphs(
     }
   }
 
-  return paragraphs;
+  return { paragraphs, images };
 }
 
 /**
@@ -251,4 +288,84 @@ function escapeHtml(text: string): string {
  */
 export function getDocumentTitle(document: docs_v1.Schema$Document): string {
   return document.title || 'Untitled Document';
+}
+
+/**
+ * Result of extracting a single image from a paragraph
+ */
+interface ImageExtractionResult {
+  paragraph: Paragraph;
+  extractedImage: ExtractedImage;
+}
+
+/**
+ * Extract images from a Google Docs paragraph element
+ * @param paragraph - The paragraph element to extract images from
+ * @param startOrder - The starting order for image paragraphs
+ * @param inlineObjects - The document's inline objects map containing image data
+ * @returns Array of image extraction results
+ */
+function extractImagesFromParagraph(
+  paragraph: docs_v1.Schema$Paragraph,
+  startOrder: number,
+  inlineObjects: { [key: string]: docs_v1.Schema$InlineObject }
+): ImageExtractionResult[] {
+  const results: ImageExtractionResult[] = [];
+
+  if (!paragraph.elements) {
+    return results;
+  }
+
+  let currentOrder = startOrder;
+
+  for (const element of paragraph.elements) {
+    // Check for inline object (image)
+    if (element.inlineObjectElement?.inlineObjectId) {
+      const objectId = element.inlineObjectElement.inlineObjectId;
+      const inlineObject = inlineObjects[objectId];
+
+      if (inlineObject?.inlineObjectProperties?.embeddedObject) {
+        const embeddedObject = inlineObject.inlineObjectProperties.embeddedObject;
+
+        // Get image URL - can be from imageProperties or contentUri
+        let sourceUrl: string | undefined;
+
+        if (embeddedObject.imageProperties?.contentUri) {
+          sourceUrl = embeddedObject.imageProperties.contentUri;
+        }
+
+        // Get alt text if available
+        const altText = embeddedObject.title || embeddedObject.description;
+
+        if (sourceUrl) {
+          const paragraphId = generateParagraphId();
+
+          const imageParagraph: Paragraph = {
+            paragraphId,
+            type: ParagraphType.image,
+            content: '', // Images don't have text content
+            order: currentOrder,
+            imageUrl: sourceUrl, // Will be replaced with Firebase Storage URL after processing
+            imageAlt: altText || undefined,
+          };
+
+          const extractedImage: ExtractedImage = {
+            paragraphId,
+            sourceUrl,
+            order: currentOrder,
+            altText: altText || undefined,
+          };
+
+          results.push({
+            paragraph: imageParagraph,
+            extractedImage,
+          });
+
+          currentOrder++;
+        }
+      }
+    }
+  }
+
+  return results;
 }
