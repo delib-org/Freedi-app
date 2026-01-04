@@ -469,6 +469,24 @@
   }
 }
 
+/* Select Dropdown for Settings */
+.select {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  min-width: 180px;
+  font-family: 'Assistant', sans-serif;
+  background: var(--card-default, #ffffff);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+  }
+}
+
 /* Logo Upload Row */
 .logoUploadRow {
   display: flex;

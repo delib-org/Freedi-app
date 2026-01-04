@@ -14,7 +14,7 @@ import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
-import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocSettings, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
 interface PageProps {
   params: Promise<{ statementId: string }>;
@@ -96,12 +96,22 @@ export default async function DocumentPage({ params }: PageProps) {
     forceLanguage?: boolean;
     logoUrl?: string;
     brandName?: string;
+    tocEnabled?: boolean;
+    tocMaxLevel?: number;
+    tocPosition?: TocPosition;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
   const forceLanguage = signSettings?.forceLanguage ?? true;
   const logoUrl = signSettings?.logoUrl || DEFAULT_LOGO_URL;
   const brandName = signSettings?.brandName || DEFAULT_BRAND_NAME;
+
+  // TOC settings
+  const tocSettings: TocSettings = {
+    tocEnabled: signSettings?.tocEnabled ?? false,
+    tocMaxLevel: signSettings?.tocMaxLevel ?? 2,
+    tocPosition: signSettings?.tocPosition ?? 'auto',
+  };
 
   // Serialize data to ensure it's JSON-compatible (removes Firebase Timestamps, etc.)
   const serializedDocument = JSON.parse(JSON.stringify(document));
@@ -126,6 +136,7 @@ export default async function DocumentPage({ params }: PageProps) {
         logoUrl={logoUrl}
         brandName={brandName}
         isAdmin={isAdmin}
+        tocSettings={tocSettings}
       />
     </LanguageOverrideProvider>
   );

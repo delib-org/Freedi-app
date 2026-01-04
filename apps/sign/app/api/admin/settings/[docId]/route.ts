@@ -4,7 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { DemographicMode } from '@/types/demographics';
-import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
 export interface DocumentSettings {
@@ -21,6 +21,9 @@ export interface DocumentSettings {
   forceLanguage: boolean;
   logoUrl: string;
   brandName: string;
+  tocEnabled: boolean;
+  tocMaxLevel: number;
+  tocPosition: TocPosition;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -37,6 +40,9 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   forceLanguage: true,
   logoUrl: DEFAULT_LOGO_URL,
   brandName: DEFAULT_BRAND_NAME,
+  tocEnabled: false,
+  tocMaxLevel: 2,
+  tocPosition: 'auto',
 };
 
 /**
@@ -98,6 +104,9 @@ export async function GET(
       forceLanguage: document?.signSettings?.forceLanguage ?? DEFAULT_SETTINGS.forceLanguage,
       logoUrl: document?.signSettings?.logoUrl ?? DEFAULT_SETTINGS.logoUrl,
       brandName: document?.signSettings?.brandName ?? DEFAULT_SETTINGS.brandName,
+      tocEnabled: document?.signSettings?.tocEnabled ?? DEFAULT_SETTINGS.tocEnabled,
+      tocMaxLevel: document?.signSettings?.tocMaxLevel ?? DEFAULT_SETTINGS.tocMaxLevel,
+      tocPosition: document?.signSettings?.tocPosition ?? DEFAULT_SETTINGS.tocPosition,
     };
 
     return NextResponse.json(settings);
@@ -173,6 +182,17 @@ export async function PUT(
       ? body.textDirection
       : (existingSettings.textDirection ?? DEFAULT_SETTINGS.textDirection);
 
+    // Validate tocPosition
+    const validTocPositions: TocPosition[] = ['auto', 'left', 'right'];
+    const tocPosition: TocPosition = validTocPositions.includes(body.tocPosition)
+      ? body.tocPosition
+      : (existingSettings.tocPosition ?? DEFAULT_SETTINGS.tocPosition);
+
+    // Validate tocMaxLevel (must be 1-6)
+    const tocMaxLevel = typeof body.tocMaxLevel === 'number' && body.tocMaxLevel >= 1 && body.tocMaxLevel <= 6
+      ? body.tocMaxLevel
+      : (existingSettings.tocMaxLevel ?? DEFAULT_SETTINGS.tocMaxLevel);
+
     // Merge settings - only update fields that are provided
     const settings: DocumentSettings = {
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
@@ -188,6 +208,9 @@ export async function PUT(
       forceLanguage: body.forceLanguage !== undefined ? Boolean(body.forceLanguage) : (existingSettings.forceLanguage ?? DEFAULT_SETTINGS.forceLanguage),
       logoUrl: body.logoUrl !== undefined ? String(body.logoUrl) : (existingSettings.logoUrl ?? DEFAULT_SETTINGS.logoUrl),
       brandName: body.brandName !== undefined ? String(body.brandName) : (existingSettings.brandName ?? DEFAULT_SETTINGS.brandName),
+      tocEnabled: body.tocEnabled !== undefined ? Boolean(body.tocEnabled) : (existingSettings.tocEnabled ?? DEFAULT_SETTINGS.tocEnabled),
+      tocMaxLevel,
+      tocPosition,
     };
 
     // Update document with new settings

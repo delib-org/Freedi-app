@@ -525,12 +525,36 @@
   }
 }
 
+// TOC scroll target highlight animation
+// Applied via class when user clicks a TOC item
+.card {
+  &:global(.toc-scroll-target) {
+    animation: tocHighlight 2s ease-out;
+  }
+}
+
+@keyframes tocHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5);
+  }
+  20% {
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
 // Reduced motion support
 @media (prefers-reduced-motion: reduce) {
   .card,
   .interactionWrapper,
   .stateIndicator {
     transition: none;
+  }
+
+  .card:global(.toc-scroll-target) {
+    animation: none;
   }
 }
 

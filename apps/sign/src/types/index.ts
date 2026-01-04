@@ -83,6 +83,23 @@ export type DemographicMode = 'disabled' | 'inherit' | 'custom';
 // Text direction mode (legacy - kept for backwards compatibility)
 export type TextDirection = 'auto' | 'ltr' | 'rtl';
 
+// Table of Contents position mode
+export type TocPosition = 'auto' | 'left' | 'right';
+
+// Table of Contents item for navigation
+export interface TocItem {
+  id: string;          // paragraphId
+  text: string;        // Header text (stripped HTML)
+  level: number;       // 1-6 for h1-h6
+}
+
+// TOC settings interface
+export interface TocSettings {
+  tocEnabled: boolean;
+  tocMaxLevel: number;       // 1-6, default 2 (show h1 and h2)
+  tocPosition: TocPosition;  // auto = based on text direction
+}
+
 // Admin settings for a document
 export interface DocumentSettings {
   enableComments: boolean;
@@ -104,6 +121,10 @@ export interface DocumentSettings {
   // Branding settings
   logoUrl?: string;
   brandName?: string;
+  // Table of Contents settings
+  tocEnabled: boolean;
+  tocMaxLevel: number;
+  tocPosition: TocPosition;
 }
 
 // Default branding constants
@@ -126,4 +147,7 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   textDirection: 'auto',
   logoUrl: DEFAULT_LOGO_URL,
   brandName: DEFAULT_BRAND_NAME,
+  tocEnabled: false,
+  tocMaxLevel: 2,
+  tocPosition: 'auto',
 };

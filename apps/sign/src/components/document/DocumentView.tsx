@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
@@ -11,6 +11,7 @@ import SignButton from './SignButton';
 import RejectButton from './RejectButton';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
+import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -25,6 +26,7 @@ interface DocumentViewProps {
   logoUrl?: string;
   brandName?: string;
   isAdmin?: boolean;
+  tocSettings?: TocSettings;
 }
 
 export default function DocumentView({
@@ -39,6 +41,7 @@ export default function DocumentView({
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
   isAdmin = false,
+  tocSettings,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -48,6 +51,12 @@ export default function DocumentView({
   // Resolve text direction based on setting and content
   const paragraphContents = paragraphs.map((p) => p.content);
   const resolvedDirection = resolveTextDirection(textDirection, paragraphContents);
+
+  // Extract TOC items from paragraphs
+  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2);
+
+  // Determine if TOC should be shown
+  const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
 
   return (
       <DocumentClient
@@ -61,6 +70,13 @@ export default function DocumentView({
         <div className={styles.container} dir={resolvedDirection} data-text-dir={resolvedDirection}>
         {/* Top Bar with Logo and User Avatar */}
         <div className={styles.topBar}>
+          {/* Mobile TOC hamburger menu */}
+          {showToc && (
+            <TocMobileMenu
+              items={tocItems}
+              textDirection={resolvedDirection}
+            />
+          )}
           <a href={`/doc/${document.statementId}`} className={styles.logo}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -86,6 +102,14 @@ export default function DocumentView({
             />
           </div>
         </div>
+
+        {/* Desktop Table of Contents sidebar */}
+        {showToc && (
+          <TableOfContents
+            items={tocItems}
+            textDirection={resolvedDirection}
+          />
+        )}
 
         {/* Document Header */}
         <header className={styles.header}>
