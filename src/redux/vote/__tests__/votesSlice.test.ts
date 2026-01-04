@@ -2,7 +2,94 @@
  * Tests for votesSlice Redux store
  */
 
-import { Statement, StatementType, Vote } from '@freedi/shared-types';
+// Mock @freedi/shared-types before import
+jest.mock('@freedi/shared-types', () => ({
+	StatementType: {
+		statement: 'statement',
+		option: 'option',
+		question: 'question',
+		document: 'document',
+		group: 'group',
+		comment: 'comment',
+	},
+	StatementSchema: {},
+	getVoteId: jest.fn((userId: string, parentId: string) => `${userId}--${parentId}`),
+	updateArray: jest.fn((array: unknown[], newItem: unknown, key: string) => {
+		const arr = array as Record<string, unknown>[];
+		const item = newItem as Record<string, unknown>;
+		const index = arr.findIndex((i) => i[key] === item[key]);
+		if (index === -1) {
+			return [...arr, item];
+		}
+
+		const newArr = [...arr];
+		newArr[index] = item;
+
+		return newArr;
+	}),
+}));
+
+// Mock valibot
+jest.mock('valibot', () => ({
+	parse: jest.fn((schema, value) => value),
+	safeParse: jest.fn((schema, data) => ({ success: true, output: data })),
+	string: jest.fn(() => ({})),
+	number: jest.fn(() => ({})),
+	boolean: jest.fn(() => ({})),
+	object: jest.fn(() => ({})),
+	array: jest.fn(() => ({})),
+	optional: jest.fn((s) => s),
+	nullable: jest.fn((s) => s),
+	union: jest.fn(() => ({})),
+	literal: jest.fn(() => ({})),
+	enum_: jest.fn(() => ({})),
+}));
+
+// Define types locally since we're mocking the module
+enum StatementType {
+	statement = 'statement',
+	option = 'option',
+	question = 'question',
+	document = 'document',
+	group = 'group',
+	comment = 'comment',
+}
+
+interface Creator {
+	uid: string;
+	displayName: string;
+	email: string;
+}
+
+interface Statement {
+	statementId: string;
+	parentId: string;
+	topParentId: string;
+	statement: string;
+	statementType: StatementType;
+	creator: Creator;
+	creatorId: string;
+	createdAt: number;
+	lastUpdate: number;
+	consensus: number;
+	parents: string[];
+	results: unknown[];
+	resultsSettings: {
+		resultsBy: string;
+		numberOfResults: number;
+		cutoffBy: string;
+	};
+}
+
+interface Vote {
+	voteId: string;
+	statementId: string;
+	parentId: string;
+	userId: string;
+	createdAt: number;
+	lastUpdate: number;
+}
+
 import {
 	votesSlicer,
 	setVoteToStore,
@@ -10,11 +97,6 @@ import {
 	votesSelector,
 	parentVoteSelector,
 } from '../votesSlice';
-
-// Mock valibot
-jest.mock('valibot', () => ({
-	parse: jest.fn((schema, value) => value),
-}));
 
 // Mock timestamp helpers
 jest.mock('@/helpers/timestampHelpers', () => ({

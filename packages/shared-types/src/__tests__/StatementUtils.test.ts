@@ -3,14 +3,7 @@
  */
 
 import { StatementType } from '../models/TypeEnums';
-import { Role } from '../models/user/UserSettings';
 import { StageSelectionType } from '../models/stage/stageTypes';
-
-// Mock valibot
-jest.mock('valibot', () => ({
-	parse: jest.fn((schema, data) => data),
-	safeParse: jest.fn((schema, data) => ({ success: true, output: data })),
-}));
 
 // Mock getRandomUID to return predictable values
 jest.mock('../models/TypeUtils', () => ({

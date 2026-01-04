@@ -2,7 +2,44 @@
  * Tests for setMembership controller
  */
 
-import { WaitingMember, Role, Collections } from 'delib-npm';
+// Mock delib-npm before import to prevent valibot loading
+jest.mock('delib-npm', () => ({
+	Role: {
+		admin: 'admin',
+		member: 'member',
+		waitingMember: 'waitingMember',
+		banned: 'banned',
+	},
+	Collections: {
+		statementsSubscribe: 'statementsSubscribe',
+		awaitingUsers: 'awaitingUsers',
+	},
+}));
+
+// Define types locally
+enum Role {
+	admin = 'admin',
+	member = 'member',
+	waitingMember = 'waitingMember',
+	banned = 'banned',
+}
+
+const Collections = {
+	statementsSubscribe: 'statementsSubscribe',
+	awaitingUsers: 'awaitingUsers',
+};
+
+interface WaitingMember {
+	odema: string;
+	odemaId: string;
+	odemaTitle: string;
+	statementId: string;
+	statementsSubscribeId: string;
+	role: Role;
+	displayName: string;
+	photoURL: string;
+}
+
 import { approveMembership } from '../setMembership';
 
 // Mock Firebase Firestore

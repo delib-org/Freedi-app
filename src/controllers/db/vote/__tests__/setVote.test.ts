@@ -2,8 +2,59 @@
  * Tests for setVote controller
  */
 
-import { Statement, User, Vote, StatementType } from '@freedi/shared-types';
-import { setVoteToDB } from '../setVote';
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
+	StatementType: {
+		statement: 'statement',
+		option: 'option',
+		question: 'question',
+		document: 'document',
+		group: 'group',
+		comment: 'comment',
+	},
+	Collections: {
+		votes: 'votes',
+		statements: 'statements',
+	},
+	VoteSchema: {},
+	getVoteId: jest.fn((userId: string, parentId: string) => `${userId}--${parentId}`),
+}));
+
+// Define types locally since we're mocking the module
+enum StatementType {
+	statement = 'statement',
+	option = 'option',
+	question = 'question',
+	document = 'document',
+	group = 'group',
+	comment = 'comment',
+}
+
+interface User {
+	uid: string;
+	displayName: string;
+	email: string;
+}
+
+interface Statement {
+	statementId: string;
+	parentId: string;
+	topParentId: string;
+	statement: string;
+	statementType: StatementType;
+	creator: User;
+	creatorId: string;
+	createdAt: number;
+	lastUpdate: number;
+	consensus: number;
+	parents: string[];
+	results: unknown[];
+	resultsSettings: {
+		resultsBy: string;
+		numberOfResults: number;
+		cutoffBy: string;
+	};
+}
 
 // Mock Firebase
 jest.mock('firebase/firestore', () => ({
@@ -40,6 +91,7 @@ jest.mock('@/services/logger', () => ({
 	},
 }));
 
+import { setVoteToDB } from '../setVote';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';

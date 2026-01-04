@@ -1,4 +1,76 @@
-import { StatementType, Statement, Role, QuestionType } from '@freedi/shared-types';
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
+	StatementType: {
+		statement: 'statement',
+		option: 'option',
+		question: 'question',
+		document: 'document',
+		group: 'group',
+		comment: 'comment',
+	},
+	Role: {
+		admin: 'admin',
+		member: 'member',
+		waiting: 'waiting',
+		banned: 'banned',
+	},
+	QuestionType: {
+		multipleChoice: 'multipleChoice',
+		openEnded: 'openEnded',
+	},
+}));
+
+// Define types locally
+enum StatementType {
+	statement = 'statement',
+	option = 'option',
+	question = 'question',
+	document = 'document',
+	group = 'group',
+	comment = 'comment',
+}
+
+enum Role {
+	admin = 'admin',
+	member = 'member',
+	waiting = 'waiting',
+	banned = 'banned',
+}
+
+enum QuestionType {
+	multipleChoice = 'multipleChoice',
+	openEnded = 'openEnded',
+}
+
+interface Creator {
+	uid: string;
+	displayName: string;
+	email?: string;
+}
+
+interface Statement {
+	statementId: string;
+	parentId: string;
+	topParentId: string;
+	statement: string;
+	statementType: StatementType;
+	creator: Creator;
+	creatorId: string;
+	createdAt: number;
+	lastUpdate: number;
+	lastChildUpdate?: number;
+	consensus: number;
+	parents: string[];
+	results: unknown[];
+	resultsSettings: {
+		resultsBy: string;
+		numberOfResults: number;
+		cutoffBy: string;
+	};
+	description?: string;
+	questionType?: QuestionType;
+}
+
 import {
   isStatementTypeAllowedAsChildren,
   validateStatementTypeHierarchy,

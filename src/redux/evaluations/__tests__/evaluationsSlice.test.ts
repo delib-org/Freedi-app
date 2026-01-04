@@ -2,7 +2,39 @@
  * Tests for evaluationsSlice Redux store
  */
 
-import { Evaluation } from '@freedi/shared-types';
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
+	EvaluationSchema: {},
+	updateArray: jest.fn((array: unknown[], newItem: unknown, key: string) => {
+		const arr = array as Record<string, unknown>[];
+		const item = newItem as Record<string, unknown>;
+		const index = arr.findIndex((i) => i[key] === item[key]);
+		if (index === -1) {
+			return [...arr, item];
+		}
+
+		const newArr = [...arr];
+		newArr[index] = item;
+
+		return newArr;
+	}),
+}));
+
+// Mock valibot parse
+jest.mock('valibot', () => ({
+	parse: jest.fn((schema, value) => value),
+}));
+
+// Define types locally
+interface Evaluation {
+	evaluationId: string;
+	statementId: string;
+	parentId: string;
+	evaluatorId: string;
+	evaluation: number;
+	updatedAt: number;
+}
+
 import {
 	evaluationsSlicer,
 	setEvaluationToStore,
@@ -14,11 +46,6 @@ import {
 	userVotesInParentSelector,
 	userVotedStatementsInParentSelector,
 } from '../evaluationsSlice';
-
-// Mock valibot parse
-jest.mock('valibot', () => ({
-	parse: jest.fn((schema, value) => value),
-}));
 
 describe('evaluationsSlice', () => {
 	const mockEvaluation: Evaluation = {

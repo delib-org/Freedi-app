@@ -2,7 +2,71 @@
  * Tests for setSubscriptions controller
  */
 
-import { Statement, Role, StatementType, Creator } from '@freedi/shared-types';
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
+	StatementType: {
+		statement: 'statement',
+		option: 'option',
+		question: 'question',
+		document: 'document',
+		group: 'group',
+		comment: 'comment',
+	},
+	Role: {
+		admin: 'admin',
+		member: 'member',
+		waiting: 'waiting',
+		banned: 'banned',
+	},
+	Collections: {
+		statementsSubscriptions: 'statementsSubscriptions',
+	},
+	SubscriptionSchema: {},
+}));
+
+// Define types locally since we're mocking the module
+enum StatementType {
+	statement = 'statement',
+	option = 'option',
+	question = 'question',
+	document = 'document',
+	group = 'group',
+	comment = 'comment',
+}
+
+enum Role {
+	admin = 'admin',
+	member = 'member',
+	waiting = 'waiting',
+	banned = 'banned',
+}
+
+interface Creator {
+	uid: string;
+	displayName: string;
+	email: string;
+}
+
+interface Statement {
+	statementId: string;
+	parentId: string;
+	topParentId: string;
+	statement: string;
+	statementType: StatementType;
+	creator: Creator;
+	creatorId: string;
+	createdAt: number;
+	lastUpdate: number;
+	consensus: number;
+	parents: string[];
+	results: unknown[];
+	resultsSettings: {
+		resultsBy: string;
+		numberOfResults: number;
+		cutoffBy: string;
+	};
+}
+
 import {
 	setStatementSubscriptionToDB,
 	updateLastReadTimestamp,
@@ -111,15 +175,22 @@ describe('setSubscriptions', () => {
 				exists: () => false,
 			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
 
+			// Use a different user than the statement creator to test member role
+			const differentCreator: Creator = {
+				uid: 'different-user-789',
+				displayName: 'Different User',
+				email: 'different@example.com',
+			};
+
 			await setStatementSubscriptionToDB({
 				statement: mockStatement,
-				creator: mockCreator,
+				creator: differentCreator,
 			});
 
 			expect(mockSetDoc).toHaveBeenCalledWith(
 				expect.anything(),
 				expect.objectContaining({
-					userId: 'user-123',
+					userId: 'different-user-789',
 					statementId: 'stmt-123',
 					role: Role.member,
 				}),

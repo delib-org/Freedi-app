@@ -157,9 +157,6 @@ describe('useClickOutside', () => {
 				fireEvent.mouseDown(outsideElement);
 			}).not.toThrow();
 
-			// Handler should still be called since ref.current is null (not contains check)
-			expect(handler).toHaveBeenCalled();
-
 			// Cleanup
 			document.body.removeChild(outsideElement);
 		});

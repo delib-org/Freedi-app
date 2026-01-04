@@ -2,7 +2,57 @@
  * Tests for setEvaluation controller
  */
 
-import { Statement, User, Collections, EvaluationUI } from '@freedi/shared-types';
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
+	Collections: {
+		evaluations: 'evaluations',
+		statements: 'statements',
+	},
+	EvaluationUI: {
+		stars: 'stars',
+		thumbs: 'thumbs',
+		percentage: 'percentage',
+	},
+	EvaluationSchema: {},
+}));
+
+// Define types locally
+interface User {
+	uid: string;
+	displayName: string;
+}
+
+interface Statement {
+	statementId: string;
+	parentId: string;
+	topParentId: string;
+	statement: string;
+	statementType: string;
+	creator: User;
+	creatorId: string;
+	createdAt: number;
+	lastUpdate: number;
+	consensus: number;
+	parents: string[];
+	results: unknown[];
+	resultsSettings: {
+		resultsBy: string;
+		numberOfResults: number;
+		cutoffBy: string;
+	};
+}
+
+enum EvaluationUI {
+	stars = 'stars',
+	thumbs = 'thumbs',
+	percentage = 'percentage',
+}
+
+const Collections = {
+	evaluations: 'evaluations',
+	statements: 'statements',
+};
+
 import {
 	setEvaluationToDB,
 	setEvaluationUIType,
@@ -38,12 +88,6 @@ jest.mock('valibot', () => ({
 		}
 		return value;
 	}),
-}));
-
-// Mock shared-types schemas
-jest.mock('@freedi/shared-types', () => ({
-	...jest.requireActual('@freedi/shared-types'),
-	EvaluationSchema: 'evaluation-schema',
 }));
 
 // Mock analytics service

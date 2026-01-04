@@ -3,6 +3,8 @@
  * Runs before each test file
  */
 
+import '@testing-library/jest-dom';
+
 // Mock console.error to capture error logs in tests
 const originalConsoleError = console.error;
 

@@ -4,11 +4,6 @@
 
 import { updateArray } from '../controllers/helpers';
 
-// Mock the valibot parse function
-jest.mock('valibot', () => ({
-	parse: jest.fn((schema, data) => data),
-}));
-
 describe('helpers', () => {
 	describe('updateArray', () => {
 		beforeEach(() => {

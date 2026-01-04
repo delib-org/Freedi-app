@@ -2,8 +2,6 @@
  * Tests for NotificationService
  */
 
-import { NotificationService } from '../notificationService';
-
 // Mock platform service
 jest.mock('../platformService', () => ({
 	PlatformService: {
@@ -13,17 +11,15 @@ jest.mock('../platformService', () => ({
 	isBrowserNotificationsSupported: jest.fn(() => true),
 }));
 
-// Mock push service
-const mockPushService = {
-	safeGetPermission: jest.fn(() => 'granted'),
-	requestPermission: jest.fn(() => Promise.resolve(true)),
-	hasPermission: jest.fn(() => true),
-	isInitialized: jest.fn(() => true),
-	getTokenRefreshInterval: jest.fn(() => 24 * 60 * 60 * 1000),
-};
-
+// Mock push service - define inline to avoid hoisting issues
 jest.mock('../pushService', () => ({
-	PushService: mockPushService,
+	PushService: {
+		safeGetPermission: jest.fn(() => 'granted'),
+		requestPermission: jest.fn(() => Promise.resolve(true)),
+		hasPermission: jest.fn(() => true),
+		isInitialized: jest.fn(() => true),
+		getTokenRefreshInterval: jest.fn(() => 24 * 60 * 60 * 1000),
+	},
 	waitForServiceWorker: jest.fn(() => Promise.resolve()),
 	initializeMessaging: jest.fn(() => Promise.resolve(true)),
 	getOrRefreshToken: jest.fn(() => Promise.resolve('mock-fcm-token')),
@@ -31,6 +27,8 @@ jest.mock('../pushService', () => ({
 	deleteCurrentToken: jest.fn(() => Promise.resolve()),
 	setNotificationHandler: jest.fn(),
 }));
+
+import { NotificationService } from '../notificationService';
 
 // Mock notification repository
 jest.mock('../notificationRepository', () => ({

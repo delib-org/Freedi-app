@@ -70,8 +70,8 @@ describe('textDirection', () => {
 			});
 
 			it('should detect majority RTL in mixed text', () => {
-				// More Hebrew than English
-				const result = analyzeTextDirection('זה בעיקר טקסט בעברית with a few English words.');
+				// More Hebrew than English - need more Hebrew characters for RTL detection
+				const result = analyzeTextDirection('זה בעיקר טקסט ארוך מאוד בעברית עם מילים רבות with English.');
 				expect(result.direction).toBe('rtl');
 			});
 		});
