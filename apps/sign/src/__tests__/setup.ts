@@ -36,6 +36,7 @@ expect.extend({
 
 // Type declaration for custom matchers
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeValidTimestamp(): R;
