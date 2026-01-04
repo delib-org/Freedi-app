@@ -130,11 +130,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<UploadRes
       url,
     });
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     logger.error('Upload error:', error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to upload image. Please try again.',
+        error: `Failed to upload image: ${errorMessage}`,
         errorCode: 'SERVER_ERROR',
       },
       { status: 500 }

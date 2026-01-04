@@ -18,6 +18,12 @@ let storage: Storage;
  * Only initializes once per server instance
  */
 export function initializeFirebaseAdmin(): App {
+  // Debug: Log credentials status on every call
+  console.info('[Firebase Admin - Sign] Init called. Apps:', getApps().length,
+    'CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? 'SET' : 'NOT SET',
+    'PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'SET (' + process.env.FIREBASE_PRIVATE_KEY.length + ' chars)' : 'NOT SET'
+  );
+
   if (getApps().length > 0) {
     app = getApps()[0]!;
 
@@ -31,6 +37,14 @@ export function initializeFirebaseAdmin(): App {
       process.env.FIREBASE_PRIVATE_KEY;
 
     const hasServiceAccountFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+
+    // Debug logging
+    console.info('[Firebase Admin - Sign] Credentials check:', {
+      hasExplicitCredentials: !!hasExplicitCredentials,
+      hasServiceAccountFile: !!hasServiceAccountFile,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL ? 'set' : 'not set',
+      privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'set (length: ' + process.env.FIREBASE_PRIVATE_KEY.length + ')' : 'not set',
+    });
 
     if (hasExplicitCredentials) {
       // Initialize with explicit service account credentials
@@ -47,6 +61,7 @@ export function initializeFirebaseAdmin(): App {
         privateKey = privateKey.replace(/\\\\n/g, '\n');
       }
 
+      const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
       app = initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
@@ -54,24 +69,29 @@ export function initializeFirebaseAdmin(): App {
           privateKey,
         }),
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with explicit credentials');
+      console.info('[Firebase Admin - Sign] Initialized with explicit credentials, bucket:', storageBucket);
     } else if (hasServiceAccountFile) {
       // Initialize with service account file (GOOGLE_APPLICATION_CREDENTIALS)
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fs = require('fs');
       const serviceAccount = JSON.parse(fs.readFileSync(hasServiceAccountFile, 'utf8'));
+      const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`;
       app = initializeApp({
         credential: cert(serviceAccount),
         projectId: serviceAccount.project_id,
+        storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with service account file');
+      console.info('[Firebase Admin - Sign] Initialized with service account file, bucket:', storageBucket);
     } else {
       // Use default credentials (works in Firebase Functions, Cloud Run, etc.)
+      const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
       app = initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with default credentials');
+      console.info('[Firebase Admin - Sign] Initialized with default credentials, bucket:', storageBucket);
     }
 
     return app;
@@ -174,7 +194,7 @@ export async function uploadImageFromUrl(
 
     // Get storage bucket
     const storageInstance = getStorageAdmin();
-    const bucketName = process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
     const bucket = storageInstance.bucket(bucketName);
 
     // Create a file reference and upload
@@ -219,7 +239,7 @@ export async function uploadBufferToStorage(
     }
 
     const storageInstance = getStorageAdmin();
-    const bucketName = process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
     const bucket = storageInstance.bucket(bucketName);
 
     const file = bucket.file(storagePath);
