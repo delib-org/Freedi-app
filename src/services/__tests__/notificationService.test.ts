@@ -95,19 +95,22 @@ describe('NotificationService', () => {
 
 	describe('safeGetPermission()', () => {
 		it('should return permission status', () => {
-			mockPushService.safeGetPermission.mockReturnValue('granted');
+			const { PushService } = require('../pushService');
+			PushService.safeGetPermission.mockReturnValue('granted');
 
 			expect(service.safeGetPermission()).toBe('granted');
 		});
 
 		it('should return unsupported when not available', () => {
-			mockPushService.safeGetPermission.mockReturnValue('unsupported');
+			const { PushService } = require('../pushService');
+			PushService.safeGetPermission.mockReturnValue('unsupported');
 
 			expect(service.safeGetPermission()).toBe('unsupported');
 		});
 
 		it('should return denied when permission denied', () => {
-			mockPushService.safeGetPermission.mockReturnValue('denied');
+			const { PushService } = require('../pushService');
+			PushService.safeGetPermission.mockReturnValue('denied');
 
 			expect(service.safeGetPermission()).toBe('denied');
 		});
@@ -115,7 +118,8 @@ describe('NotificationService', () => {
 
 	describe('requestPermission()', () => {
 		it('should return true when permission granted', async () => {
-			mockPushService.requestPermission.mockResolvedValue(true);
+			const { PushService } = require('../pushService');
+			PushService.requestPermission.mockResolvedValue(true);
 
 			const result = await service.requestPermission();
 
@@ -123,7 +127,8 @@ describe('NotificationService', () => {
 		});
 
 		it('should return false when permission denied', async () => {
-			mockPushService.requestPermission.mockResolvedValue(false);
+			const { PushService } = require('../pushService');
+			PushService.requestPermission.mockResolvedValue(false);
 
 			const result = await service.requestPermission();
 
@@ -133,13 +138,15 @@ describe('NotificationService', () => {
 
 	describe('hasPermission()', () => {
 		it('should return true when permission is granted', () => {
-			mockPushService.hasPermission.mockReturnValue(true);
+			const { PushService } = require('../pushService');
+			PushService.hasPermission.mockReturnValue(true);
 
 			expect(service.hasPermission()).toBe(true);
 		});
 
 		it('should return false when permission is not granted', () => {
-			mockPushService.hasPermission.mockReturnValue(false);
+			const { PushService } = require('../pushService');
+			PushService.hasPermission.mockReturnValue(false);
 
 			expect(service.hasPermission()).toBe(false);
 		});
@@ -159,7 +166,8 @@ describe('NotificationService', () => {
 
 	describe('isInitialized()', () => {
 		it('should return false when no token', () => {
-			mockPushService.isInitialized.mockReturnValue(true);
+			const { PushService } = require('../pushService');
+			PushService.isInitialized.mockReturnValue(true);
 			// Token is null by default
 			expect(service.isInitialized()).toBe(false);
 		});
@@ -179,9 +187,8 @@ describe('NotificationService', () => {
 
 		it('should set up token refresh on successful initialization', async () => {
 			isBrowserNotificationsSupported.mockReturnValue(true);
-			mockPushService.requestPermission.mockResolvedValue(true);
-
-			const { initializeMessaging, getOrRefreshToken } = require('../pushService');
+			const { PushService, initializeMessaging, getOrRefreshToken } = require('../pushService');
+			PushService.requestPermission.mockResolvedValue(true);
 			initializeMessaging.mockResolvedValue(true);
 			getOrRefreshToken.mockResolvedValue('mock-token');
 
@@ -202,9 +209,8 @@ describe('NotificationService', () => {
 
 		it('should return early if permission denied', async () => {
 			isBrowserNotificationsSupported.mockReturnValue(true);
-			mockPushService.requestPermission.mockResolvedValue(false);
-
-			const { initializeMessaging, setupForegroundListener } = require('../pushService');
+			const { PushService, initializeMessaging, setupForegroundListener } = require('../pushService');
+			PushService.requestPermission.mockResolvedValue(false);
 			initializeMessaging.mockResolvedValue(true);
 
 			await service.initialize('user-123');
@@ -281,10 +287,10 @@ describe('NotificationService', () => {
 		it('should reset service state', async () => {
 			// Initialize first
 			const { isBrowserNotificationsSupported } = require('../platformService');
-			const { initializeMessaging, getOrRefreshToken } = require('../pushService');
+			const { PushService, initializeMessaging, getOrRefreshToken } = require('../pushService');
 
 			isBrowserNotificationsSupported.mockReturnValue(true);
-			mockPushService.requestPermission.mockResolvedValue(true);
+			PushService.requestPermission.mockResolvedValue(true);
 			initializeMessaging.mockResolvedValue(true);
 			getOrRefreshToken.mockResolvedValue('mock-token');
 
@@ -379,9 +385,10 @@ describe('NotificationService', () => {
 	describe('getDiagnostics()', () => {
 		it('should return diagnostic information', async () => {
 			const { PlatformService, isBrowserNotificationsSupported } = require('../platformService');
+			const { PushService } = require('../pushService');
 			isBrowserNotificationsSupported.mockReturnValue(true);
-			mockPushService.safeGetPermission.mockReturnValue('granted');
-			mockPushService.isInitialized.mockReturnValue(false);
+			PushService.safeGetPermission.mockReturnValue('granted');
+			PushService.isInitialized.mockReturnValue(false);
 			PlatformService.getPlatformName.mockReturnValue('web');
 			PlatformService.isServiceWorkerSupported.mockReturnValue(false);
 

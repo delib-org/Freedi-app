@@ -20,17 +20,15 @@ describe('Button', () => {
 
 			const button = screen.getByRole('button');
 			expect(button).toHaveClass('button');
-			expect(button).toHaveClass('button--medium');
+			// Component doesn't add button--medium for default size
+			expect(button).toHaveClass('button--primary'); // default variant
 		});
 
-		it('should render children when provided instead of text', () => {
-			render(
-				<Button>
-					<span data-testid="child">Custom Child</span>
-				</Button>
-			);
+		it('should render text prop in button__text span', () => {
+			render(<Button text="Custom Text" />);
 
-			expect(screen.getByTestId('child')).toBeInTheDocument();
+			const textSpan = screen.getByText('Custom Text');
+			expect(textSpan).toHaveClass('button__text');
 		});
 	});
 
@@ -59,17 +57,17 @@ describe('Button', () => {
 			expect(screen.getByRole('button')).toHaveClass('button--disagree');
 		});
 
-		it('should apply text variant class', () => {
-			render(<Button text="Text" variant="text" />);
+		it('should apply cancel variant class', () => {
+			render(<Button text="Cancel" variant="cancel" />);
 
-			expect(screen.getByRole('button')).toHaveClass('button--text');
+			expect(screen.getByRole('button')).toHaveClass('button--cancel');
 		});
 
-		it('should not apply variant class for default variant', () => {
-			render(<Button text="Default" variant="default" />);
+		it('should apply primary variant by default', () => {
+			render(<Button text="Default" />);
 
 			const button = screen.getByRole('button');
-			expect(button).not.toHaveClass('button--default');
+			expect(button).toHaveClass('button--primary');
 		});
 	});
 
@@ -80,10 +78,14 @@ describe('Button', () => {
 			expect(screen.getByRole('button')).toHaveClass('button--small');
 		});
 
-		it('should apply medium size class by default', () => {
+		it('should not add size class for medium (default)', () => {
 			render(<Button text="Medium" />);
 
-			expect(screen.getByRole('button')).toHaveClass('button--medium');
+			const button = screen.getByRole('button');
+			// Medium is default, no explicit size class added
+			expect(button).not.toHaveClass('button--small');
+			expect(button).not.toHaveClass('button--large');
+			expect(button).not.toHaveClass('button--medium');
 		});
 
 		it('should apply large size class', () => {
@@ -176,11 +178,13 @@ describe('Button', () => {
 			expect(iconWrapper).toHaveClass('button__icon');
 		});
 
-		it('should apply icon-only class when no text and has icon', () => {
+		it('should render icon alongside text', () => {
 			const icon = <span data-testid="icon">Icon</span>;
-			render(<Button icon={icon} />);
+			render(<Button text="With Icon" icon={icon} />);
 
-			expect(screen.getByRole('button')).toHaveClass('button--icon-only');
+			// Icon and text should both be present
+			expect(screen.getByTestId('icon')).toBeInTheDocument();
+			expect(screen.getByText('With Icon')).toBeInTheDocument();
 		});
 	});
 
@@ -211,16 +215,16 @@ describe('Button', () => {
 			expect(screen.getByRole('button')).toHaveClass('custom-class');
 		});
 
-		it('should pass through aria-label', () => {
-			render(<Button text="Action" aria-label="Perform action" />);
+		it('should pass ariaLabel prop to aria-label attribute', () => {
+			render(<Button text="Action" ariaLabel="Perform action" />);
 
 			expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Perform action');
 		});
 
-		it('should pass through data attributes', () => {
-			render(<Button text="Data" data-testid="custom-button" />);
+		it('should use text as aria-label when ariaLabel not provided', () => {
+			render(<Button text="Button Text" />);
 
-			expect(screen.getByTestId('custom-button')).toBeInTheDocument();
+			expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Button Text');
 		});
 	});
 
@@ -232,11 +236,12 @@ describe('Button', () => {
 			expect(textSpan).toHaveClass('button__text');
 		});
 
-		it('should not render text span when no text provided', () => {
-			const icon = <span data-testid="icon">Icon</span>;
-			render(<Button icon={icon} />);
+		it('should always render text span even when empty', () => {
+			render(<Button text="" />);
 
-			expect(screen.queryByText(/./)).toBeNull();
+			// Component always renders button__text span
+			const button = screen.getByRole('button');
+			expect(button.querySelector('.button__text')).toBeInTheDocument();
 		});
 	});
 });

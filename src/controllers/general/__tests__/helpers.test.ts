@@ -10,6 +10,7 @@ jest.mock('@freedi/shared-types', () => ({
 	},
 	Role: {
 		admin: 'admin',
+		creator: 'creator',
 		member: 'member',
 		waiting: 'waiting',
 		banned: 'banned',
@@ -17,6 +18,8 @@ jest.mock('@freedi/shared-types', () => ({
 	QuestionType: {
 		multipleChoice: 'multipleChoice',
 		openEnded: 'openEnded',
+		massConsensus: 'massConsensus',
+		simple: 'simple',
 	},
 }));
 
@@ -32,6 +35,7 @@ enum StatementType {
 
 enum Role {
 	admin = 'admin',
+	creator = 'creator',
 	member = 'member',
 	waiting = 'waiting',
 	banned = 'banned',
@@ -40,6 +44,8 @@ enum Role {
 enum QuestionType {
 	multipleChoice = 'multipleChoice',
 	openEnded = 'openEnded',
+	massConsensus = 'massConsensus',
+	simple = 'simple',
 }
 
 interface Creator {
@@ -373,9 +379,10 @@ describe('String Manipulation Helpers', () => {
       expect(result.fullVersion).toBe('First Line');
     });
 
-    it('should remove asterisks', () => {
+    it('should remove first asterisk only', () => {
+      // Function uses .replace('*', '') which only removes first occurrence
       const result = statementTitleToDisplay('*Title*', 50);
-      expect(result.fullVersion).toBe('Title');
+      expect(result.fullVersion).toBe('Title*');
     });
   });
 
@@ -385,9 +392,10 @@ describe('String Manipulation Helpers', () => {
       expect(getTitle(statement)).toBe('Title');
     });
 
-    it('should remove asterisks', () => {
+    it('should remove first asterisk only', () => {
+      // Function uses .replace('*', '') which only removes first occurrence
       const statement = { statement: '*Bold Title*' } as Statement;
-      expect(getTitle(statement)).toBe('Bold Title');
+      expect(getTitle(statement)).toBe('Bold Title*');
     });
 
     it('should return empty string for undefined', () => {

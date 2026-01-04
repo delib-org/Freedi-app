@@ -21,10 +21,10 @@ describe('Toggle', () => {
 			expect(container).toBeInTheDocument();
 		});
 
-		it('should render toggle slider element', () => {
+		it('should render toggle track element', () => {
 			const { container } = render(<Toggle checked={false} onChange={() => {}} />);
 
-			expect(container.querySelector('.toggle__slider')).toBeInTheDocument();
+			expect(container.querySelector('.toggle__track')).toBeInTheDocument();
 		});
 	});
 
@@ -41,16 +41,17 @@ describe('Toggle', () => {
 			expect(screen.getByRole('checkbox')).toBeChecked();
 		});
 
-		it('should apply checked class when checked', () => {
-			const { container } = render(<Toggle checked={true} onChange={() => {}} />);
+		it('should have checked checkbox when checked prop is true', () => {
+			render(<Toggle checked={true} onChange={() => {}} />);
 
-			expect(container.querySelector('.toggle--checked')).toBeInTheDocument();
+			// Component uses CSS :checked pseudo-class for styling, not a class
+			expect(screen.getByRole('checkbox')).toBeChecked();
 		});
 
-		it('should not apply checked class when unchecked', () => {
-			const { container } = render(<Toggle checked={false} onChange={() => {}} />);
+		it('should have unchecked checkbox when checked prop is false', () => {
+			render(<Toggle checked={false} onChange={() => {}} />);
 
-			expect(container.querySelector('.toggle--checked')).not.toBeInTheDocument();
+			expect(screen.getByRole('checkbox')).not.toBeChecked();
 		});
 	});
 
@@ -162,10 +163,14 @@ describe('Toggle', () => {
 			expect(container.querySelector('.toggle--small')).toBeInTheDocument();
 		});
 
-		it('should apply medium size class by default', () => {
+		it('should not apply size class for medium (default)', () => {
 			const { container } = render(<Toggle checked={false} onChange={() => {}} />);
 
-			expect(container.querySelector('.toggle--medium')).toBeInTheDocument();
+			// Medium is default, so no size modifier class is added
+			const toggle = container.querySelector('.toggle');
+			expect(toggle).not.toHaveClass('toggle--small');
+			expect(toggle).not.toHaveClass('toggle--medium');
+			expect(toggle).not.toHaveClass('toggle--large');
 		});
 
 		it('should apply large size class', () => {
@@ -176,24 +181,24 @@ describe('Toggle', () => {
 	});
 
 	describe('variants', () => {
-		it('should apply primary variant class', () => {
-			const { container } = render(<Toggle checked={false} onChange={() => {}} variant="primary" />);
-
-			expect(container.querySelector('.toggle--primary')).toBeInTheDocument();
-		});
-
 		it('should apply success variant class', () => {
 			const { container } = render(<Toggle checked={false} onChange={() => {}} variant="success" />);
 
 			expect(container.querySelector('.toggle--success')).toBeInTheDocument();
 		});
 
-		it('should apply default variant by default', () => {
+		it('should apply warning variant class', () => {
+			const { container } = render(<Toggle checked={false} onChange={() => {}} variant="warning" />);
+
+			expect(container.querySelector('.toggle--warning')).toBeInTheDocument();
+		});
+
+		it('should not apply variant class for default', () => {
 			const { container } = render(<Toggle checked={false} onChange={() => {}} />);
 
 			const toggle = container.querySelector('.toggle');
-			expect(toggle).not.toHaveClass('toggle--primary');
 			expect(toggle).not.toHaveClass('toggle--success');
+			expect(toggle).not.toHaveClass('toggle--warning');
 		});
 	});
 
@@ -204,17 +209,16 @@ describe('Toggle', () => {
 			expect(screen.getByRole('checkbox', { name: /toggle feature/i })).toBeInTheDocument();
 		});
 
-		it('should support aria-label', () => {
-			render(<Toggle checked={false} onChange={() => {}} aria-label="Custom aria label" />);
+		it('should support ariaLabel prop', () => {
+			render(<Toggle checked={false} onChange={() => {}} ariaLabel="Custom aria label" />);
 
 			expect(screen.getByRole('checkbox')).toHaveAttribute('aria-label', 'Custom aria label');
 		});
 
-		it('should support aria-describedby for hints', () => {
-			render(<Toggle checked={false} onChange={() => {}} hint="Description" id="my-toggle" />);
+		it('should use label as aria-label when ariaLabel not provided', () => {
+			render(<Toggle checked={false} onChange={() => {}} label="Toggle Label" />);
 
-			const checkbox = screen.getByRole('checkbox');
-			expect(checkbox).toHaveAttribute('aria-describedby', 'my-toggle-hint');
+			expect(screen.getByRole('checkbox')).toHaveAttribute('aria-label', 'Toggle Label');
 		});
 	});
 
