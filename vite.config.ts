@@ -108,6 +108,15 @@ export default defineConfig(({ mode }) => {
 			sourcemap: (isTestMode && !isTestMinified) || isProdUnminified, // Sourcemaps for test (non-minified) and prod-unminified
 			cssCodeSplit: false, // Extract all CSS into a single file
 			rollupOptions: {
+				// Suppress warnings from third-party libraries
+				onwarn(warning, warn) {
+					// Ignore PURE annotation warnings from react-flip-toolkit
+					if (warning.code === 'INVALID_ANNOTATION' &&
+						warning.message?.includes('react-flip-toolkit')) {
+						return;
+					}
+					warn(warning);
+				},
 				output: {
 					manualChunks: (id) => {
 						// React core libraries and essential React dependencies
