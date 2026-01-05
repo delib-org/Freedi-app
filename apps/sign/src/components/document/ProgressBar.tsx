@@ -29,7 +29,7 @@ export default function ProgressBar({
     Object.keys(approvals).forEach(id => dealtWithSet.add(id));
 
     // Add all interacted paragraphs
-    userInteractions.forEach(id => dealtWithSet.add(id));
+    userInteractions.forEach((id: string) => dealtWithSet.add(id));
 
     return dealtWithSet.size;
   }, [approvals, userInteractions]);

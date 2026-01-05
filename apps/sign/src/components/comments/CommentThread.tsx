@@ -7,6 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { useCommentDraft } from '@/hooks/useCommentDraft';
 import Comment from './Comment';
+import SuggestionPrompt from '../suggestions/SuggestionPrompt';
 import styles from './CommentThread.module.scss';
 
 interface CommentThreadProps {
@@ -15,6 +16,9 @@ interface CommentThreadProps {
   isLoggedIn: boolean;
   userId: string | null;
   onDraftChange?: (draft: string) => void;
+  enableSuggestions?: boolean;
+  originalContent?: string;
+  onOpenSuggestions?: () => void;
 }
 
 export default function CommentThread({
@@ -23,6 +27,9 @@ export default function CommentThread({
   isLoggedIn,
   userId,
   onDraftChange,
+  enableSuggestions = false,
+  originalContent: _originalContent = '',
+  onOpenSuggestions,
 }: CommentThreadProps) {
   const { t } = useTranslation();
   const { incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
@@ -32,6 +39,7 @@ export default function CommentThread({
   const { draft: newComment, setDraft: setNewComment, clearDraft } = useCommentDraft({ paragraphId });
   const [error, setError] = useState<string | null>(null);
   const [effectiveUserId, setEffectiveUserId] = useState<string | null>(userId);
+  const [showSuggestionPrompt, setShowSuggestionPrompt] = useState(false);
 
   // Notify parent of draft changes for minimize feature
   useEffect(() => {
@@ -112,6 +120,10 @@ export default function CommentThread({
         incrementCommentCount(paragraphId);
         // Mark paragraph as interacted
         addUserInteraction(paragraphId);
+        // Show suggestion prompt if suggestions are enabled
+        if (enableSuggestions) {
+          setShowSuggestionPrompt(true);
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to post comment');
@@ -207,6 +219,15 @@ export default function CommentThread({
             {isSubmitting ? t('Posting...') : t('Post Comment')}
           </button>
         </form>
+      )}
+
+      {/* Post-comment suggestion prompt */}
+      {showSuggestionPrompt && enableSuggestions && onOpenSuggestions && (
+        <SuggestionPrompt
+          paragraphId={paragraphId}
+          onOpenSuggestions={onOpenSuggestions}
+          onDismiss={() => setShowSuggestionPrompt(false)}
+        />
       )}
     </div>
   );

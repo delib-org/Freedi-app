@@ -6,6 +6,7 @@ import { Statement, Paragraph as SharedParagraph } from '@freedi/shared-types';
 
 // Re-export from shared-types
 export { ParagraphType } from '@freedi/shared-types';
+export type { Suggestion } from '@freedi/shared-types';
 
 // Re-export from queries for convenience
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
@@ -106,6 +107,7 @@ export interface DocumentSettings {
   enableApproval: boolean;
   enableImportance: boolean;
   enableLikes: boolean;
+  enableSuggestions: boolean;
   showScores: boolean;
   requireLogin: boolean;
   isHidden: boolean;
@@ -138,6 +140,7 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   enableApproval: true,
   enableImportance: false,
   enableLikes: true,
+  enableSuggestions: false,
   showScores: false,
   requireLogin: false,
   isHidden: false,

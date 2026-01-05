@@ -21,12 +21,14 @@ interface DocumentViewProps {
   userSignature: Signature | null;
   userApprovals: Record<string, boolean>;
   commentCounts: Record<string, number>;
+  suggestionCounts?: Record<string, number>;
   userInteractions?: string[];
   textDirection?: TextDirection;
   logoUrl?: string;
   brandName?: string;
   isAdmin?: boolean;
   tocSettings?: TocSettings;
+  enableSuggestions?: boolean;
 }
 
 export default function DocumentView({
@@ -36,12 +38,14 @@ export default function DocumentView({
   userSignature,
   userApprovals,
   commentCounts,
+  suggestionCounts = {},
   userInteractions = [],
   textDirection = 'auto',
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
   isAdmin = false,
   tocSettings,
+  enableSuggestions = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -64,8 +68,12 @@ export default function DocumentView({
         user={user}
         userSignature={userSignature}
         commentCounts={commentCounts}
+        suggestionCounts={suggestionCounts}
         userInteractions={userInteractions}
         isAdmin={isAdmin}
+        enableSuggestions={enableSuggestions}
+        paragraphs={paragraphs}
+        textDirection={resolvedDirection}
       >
         <div className={styles.container} dir={resolvedDirection} data-text-dir={resolvedDirection}>
         {/* Top Bar with Logo and User Avatar */}
@@ -140,6 +148,8 @@ export default function DocumentView({
                 isLoggedIn={!!user}
                 isAdmin={isAdmin}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
+                suggestionCount={suggestionCounts[paragraph.paragraphId] || 0}
+                enableSuggestions={enableSuggestions}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
               />
             ))

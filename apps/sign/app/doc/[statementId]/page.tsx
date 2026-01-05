@@ -8,6 +8,7 @@ import {
   getUserApprovals,
   getCommentCountsForDocument,
   getUserInteractionsForDocument,
+  getSuggestionCountsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
@@ -109,6 +110,7 @@ export default async function DocumentPage({ params }: PageProps) {
     tocEnabled?: boolean;
     tocMaxLevel?: number;
     tocPosition?: TocPosition;
+    enableSuggestions?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -122,6 +124,17 @@ export default async function DocumentPage({ params }: PageProps) {
     tocMaxLevel: signSettings?.tocMaxLevel ?? 2,
     tocPosition: signSettings?.tocPosition ?? 'auto',
   };
+
+  // Suggestions feature setting
+  const enableSuggestions = signSettings?.enableSuggestions ?? false;
+
+  // Fetch suggestion counts if feature is enabled
+  let suggestionCounts: Record<string, number> = {};
+  if (enableSuggestions && paragraphIds.length > 0) {
+    const suggestStart = Date.now();
+    suggestionCounts = await getSuggestionCountsForDocument(statementId, paragraphIds);
+    console.info(`[Perf] getSuggestionCountsForDocument: ${Date.now() - suggestStart}ms`);
+  }
 
   // Serialize data to ensure it's JSON-compatible (removes Firebase Timestamps, etc.)
   const serializedDocument = JSON.parse(JSON.stringify(document));
@@ -141,12 +154,14 @@ export default async function DocumentPage({ params }: PageProps) {
         userSignature={serializedSignature}
         userApprovals={approvalsMap}
         commentCounts={commentCounts}
+        suggestionCounts={suggestionCounts}
         userInteractions={userInteractionsArray}
         textDirection={textDirection}
         logoUrl={logoUrl}
         brandName={brandName}
         isAdmin={isAdmin}
         tocSettings={tocSettings}
+        enableSuggestions={enableSuggestions}
       />
     </LanguageOverrideProvider>
   );

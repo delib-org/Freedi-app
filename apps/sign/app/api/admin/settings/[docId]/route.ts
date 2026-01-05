@@ -10,6 +10,7 @@ import { logger } from '@/lib/utils/logger';
 export interface DocumentSettings {
   allowComments: boolean;
   allowApprovals: boolean;
+  enableSuggestions: boolean;
   requireLogin: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
@@ -29,6 +30,7 @@ export interface DocumentSettings {
 const DEFAULT_SETTINGS: DocumentSettings = {
   allowComments: true,
   allowApprovals: true,
+  enableSuggestions: false,
   requireLogin: false,
   showHeatMap: true,
   showViewCounts: true,
@@ -93,6 +95,7 @@ export async function GET(
     const settings: DocumentSettings = {
       allowComments: document?.signSettings?.allowComments ?? DEFAULT_SETTINGS.allowComments,
       allowApprovals: document?.signSettings?.allowApprovals ?? DEFAULT_SETTINGS.allowApprovals,
+      enableSuggestions: document?.signSettings?.enableSuggestions ?? DEFAULT_SETTINGS.enableSuggestions,
       requireLogin: document?.signSettings?.requireLogin ?? DEFAULT_SETTINGS.requireLogin,
       showHeatMap: document?.signSettings?.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap,
       showViewCounts: document?.signSettings?.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts,
@@ -197,6 +200,7 @@ export async function PUT(
     const settings: DocumentSettings = {
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
       allowApprovals: body.allowApprovals !== undefined ? Boolean(body.allowApprovals) : (existingSettings.allowApprovals ?? DEFAULT_SETTINGS.allowApprovals),
+      enableSuggestions: body.enableSuggestions !== undefined ? Boolean(body.enableSuggestions) : (existingSettings.enableSuggestions ?? DEFAULT_SETTINGS.enableSuggestions),
       requireLogin: body.requireLogin !== undefined ? Boolean(body.requireLogin) : (existingSettings.requireLogin ?? DEFAULT_SETTINGS.requireLogin),
       showHeatMap: body.showHeatMap !== undefined ? Boolean(body.showHeatMap) : (existingSettings.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap),
       showViewCounts: body.showViewCounts !== undefined ? Boolean(body.showViewCounts) : (existingSettings.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts),

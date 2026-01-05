@@ -16,6 +16,7 @@ import styles from '../admin.module.scss';
 interface Settings {
   allowComments: boolean;
   allowApprovals: boolean;
+  enableSuggestions: boolean;
   requireLogin: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
@@ -42,6 +43,7 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings>({
     allowComments: true,
     allowApprovals: true,
+    enableSuggestions: false,
     requireLogin: false,
     showHeatMap: true,
     showViewCounts: true,
@@ -216,6 +218,21 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.allowApprovals ? styles.active : ''}`}
             onClick={() => handleToggle('allowApprovals')}
             aria-pressed={settings.allowApprovals}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enable Suggestions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Allow users to suggest alternative text for paragraphs')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.enableSuggestions ? styles.active : ''}`}
+            onClick={() => handleToggle('enableSuggestions')}
+            aria-pressed={settings.enableSuggestions}
           />
         </div>
       </section>

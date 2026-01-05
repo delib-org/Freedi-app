@@ -10,6 +10,7 @@ interface ModalProps {
   size?: 'small' | 'medium' | 'large';
   canMinimize?: boolean;
   onMinimize?: () => void;
+  direction?: 'ltr' | 'rtl';
 }
 
 export default function Modal({
@@ -19,6 +20,7 @@ export default function Modal({
   size = 'medium',
   canMinimize = false,
   onMinimize,
+  direction,
 }: ModalProps) {
   // Close on Escape key
   const handleKeyDown = useCallback(
@@ -56,7 +58,7 @@ export default function Modal({
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
     >
-      <div className={`${styles.modal} ${styles[size]}`}>
+      <div className={`${styles.modal} ${styles[size]}`} dir={direction} data-text-dir={direction}>
         {title && (
           <header className={styles.header}>
             <h2 id="modal-title" className={styles.title}>
