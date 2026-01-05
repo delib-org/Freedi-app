@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
+import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 // import InstallPWA from './InstallPWA';
 
 // Function to clear badge count
@@ -69,6 +71,9 @@ interface PWAWrapperProps {
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
 
+	// Sync Redux unread notification count with app badge
+	useBadgeSync();
+
 	// Check if we're in the MassConsensus route using window.location
 	const checkIfInMassConsensus = () => {
 		return window.location.pathname.includes('/mass-consensus');
@@ -121,17 +126,12 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		// Helper function to check if we're on iOS
-		const isIOS = (): boolean => {
-			const userAgent = navigator.userAgent.toLowerCase();
-
-			return /iphone|ipad|ipod/.test(userAgent) ||
-				   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-		};
-
 		// Explicitly register the Firebase Messaging Service Worker
-		// DO NOT register on iOS - Firebase Messaging is not supported on iOS browsers
-		if ('serviceWorker' in navigator && !isIOS()) {
+		// Register on iOS only if it's an installed PWA with Web Push support (iOS 16.4+)
+		const shouldRegisterFirebaseSW = 'serviceWorker' in navigator &&
+			(!isIOS() || isIOSWebPushSupported());
+
+		if (shouldRegisterFirebaseSW) {
 			// First check if it's already registered
 			navigator.serviceWorker.getRegistrations().then(registrations => {
 				const firebaseSW = registrations.find(r =>
@@ -164,8 +164,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					// Firebase Messaging SW already registered
 				}
 			});
-		} else if (isIOS()) {
-			console.info('[PWAWrapper] Skipping Firebase Messaging SW registration on iOS (not supported)');
+		} else if (isIOS() && !isInstalledPWA()) {
+			console.info('[PWAWrapper] iOS detected but not installed as PWA - push notifications require installing the app to home screen');
 		}
 
 		registerSW({
