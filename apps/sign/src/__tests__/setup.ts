@@ -3,6 +3,8 @@
  * Runs before each test file
  */
 
+import '@testing-library/jest-dom';
+
 // Mock console.error to capture error logs in tests
 const originalConsoleError = console.error;
 
@@ -36,6 +38,7 @@ expect.extend({
 
 // Type declaration for custom matchers
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace jest {
     interface Matchers<R> {
       toBeValidTimestamp(): R;

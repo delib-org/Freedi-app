@@ -5,7 +5,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { ParagraphType } from '@/types';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore, UIState } from '@/store/uiStore';
 import { useParagraphHeatValue } from '@/hooks/useHeatMap';
 import { useViewportTracking } from '@/hooks/useViewportTracking';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
@@ -22,6 +22,8 @@ interface ParagraphCardProps {
   viewCount?: number;
   isAdmin?: boolean;
   commentCount?: number;
+  suggestionCount?: number;
+  enableSuggestions?: boolean;
   hasInteracted?: boolean;
   onNonInteractiveToggle?: (paragraphId: string, isNonInteractive: boolean) => void;
 }
@@ -35,6 +37,8 @@ export default function ParagraphCard({
   viewCount,
   isAdmin,
   commentCount: initialCommentCount = 0,
+  suggestionCount: initialSuggestionCount = 0,
+  enableSuggestions = false,
   hasInteracted: initialHasInteracted = false,
   onNonInteractiveToggle,
 }: ParagraphCardProps) {
@@ -69,15 +73,20 @@ export default function ParagraphCard({
   );
 
   // Get comment count from store (updates in real-time)
-  const storeCommentCount = useUIStore((state) => state.commentCounts[paragraph.paragraphId]);
+  const storeCommentCount = useUIStore((state: UIState) => state.commentCounts[paragraph.paragraphId]);
   // Use store value if available, otherwise fall back to initial prop
   const commentCount = storeCommentCount !== undefined ? storeCommentCount : initialCommentCount;
 
+  // Get suggestion count from store (updates in real-time)
+  const storeSuggestionCount = useUIStore((state: UIState) => state.suggestionCounts[paragraph.paragraphId]);
+  // Use store value if available, otherwise fall back to initial prop
+  const suggestionCount = storeSuggestionCount !== undefined ? storeSuggestionCount : initialSuggestionCount;
+
   // Get approval state from store (updates in real-time when user approves/rejects)
-  const storeApproval = useUIStore((state) => state.approvals[paragraph.paragraphId]);
+  const storeApproval = useUIStore((state: UIState) => state.approvals[paragraph.paragraphId]);
 
   // Get interaction state from store (updates in real-time when user comments/evaluates)
-  const storeHasInteracted = useUIStore((state) => state.userInteractions.has(paragraph.paragraphId));
+  const storeHasInteracted = useUIStore((state: UIState) => state.userInteractions.has(paragraph.paragraphId));
 
   // Use store value if available, otherwise fall back to initial prop
   const isApproved = storeApproval !== undefined ? storeApproval : initialApproval;
@@ -111,7 +120,13 @@ export default function ParagraphCard({
   }, [isExpanded]);
 
   // Toggle expansion on tap (for mobile)
+  // Allow text selection - only toggle if no text is selected
   const handleTap = useCallback(() => {
+    const selection = window.getSelection();
+    // If user is selecting text (selection has content), don't toggle
+    if (selection && selection.toString().trim().length > 0) {
+      return;
+    }
     setIsExpanded(prev => !prev);
   }, []);
 
@@ -205,6 +220,25 @@ export default function ParagraphCard({
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
         );
+      case ParagraphType.image:
+        return (
+          <figure className={styles.imageWrapper}>
+            {paragraph.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={paragraph.imageUrl}
+                alt={paragraph.imageAlt || t('Document image')}
+                className={styles.image}
+                loading="lazy"
+              />
+            )}
+            {paragraph.imageCaption && (
+              <figcaption className={styles.imageCaption}>
+                {paragraph.imageCaption}
+              </figcaption>
+            )}
+          </figure>
+        );
       default:
         return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
     }
@@ -254,6 +288,8 @@ export default function ParagraphCard({
             isApproved={isApproved}
             isLoggedIn={isLoggedIn}
             commentCount={commentCount}
+            suggestionCount={suggestionCount}
+            enableSuggestions={enableSuggestions}
           />
         </div>
       )}

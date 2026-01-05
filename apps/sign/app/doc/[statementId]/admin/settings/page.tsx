@@ -8,7 +8,7 @@ import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
 import { DemographicMode } from '@/types/demographics';
-import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
@@ -16,6 +16,7 @@ import styles from '../admin.module.scss';
 interface Settings {
   allowComments: boolean;
   allowApprovals: boolean;
+  enableSuggestions: boolean;
   requireLogin: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
@@ -27,6 +28,9 @@ interface Settings {
   forceLanguage: boolean;
   logoUrl: string;
   brandName: string;
+  tocEnabled: boolean;
+  tocMaxLevel: number;
+  tocPosition: TocPosition;
 }
 
 export default function AdminSettingsPage() {
@@ -39,6 +43,7 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings>({
     allowComments: true,
     allowApprovals: true,
+    enableSuggestions: false,
     requireLogin: false,
     showHeatMap: true,
     showViewCounts: true,
@@ -50,6 +55,9 @@ export default function AdminSettingsPage() {
     forceLanguage: true,
     logoUrl: DEFAULT_LOGO_URL,
     brandName: DEFAULT_BRAND_NAME,
+    tocEnabled: false,
+    tocMaxLevel: 2,
+    tocPosition: 'auto',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -212,6 +220,21 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.allowApprovals}
           />
         </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enable Suggestions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Allow users to suggest alternative text for paragraphs')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.enableSuggestions ? styles.active : ''}`}
+            onClick={() => handleToggle('enableSuggestions')}
+            aria-pressed={settings.enableSuggestions}
+          />
+        </div>
       </section>
 
       {/* Display Settings */}
@@ -247,6 +270,52 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.showViewCounts}
           />
         </div>
+      </section>
+
+      {/* Table of Contents Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Table of Contents')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enable Table of Contents')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show a navigation menu for document sections')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.tocEnabled ? styles.active : ''}`}
+            onClick={() => handleToggle('tocEnabled')}
+            aria-pressed={settings.tocEnabled}
+          />
+        </div>
+
+        {settings.tocEnabled && (
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>{t('Maximum Heading Level')}</p>
+              <p className={styles.settingDescription}>
+                {t('Select which heading levels to include in the table of contents')}
+              </p>
+            </div>
+            <select
+              className={styles.select}
+              value={settings.tocMaxLevel}
+              onChange={(e) => {
+                setSettings(prev => ({ ...prev, tocMaxLevel: parseInt(e.target.value, 10) }));
+                setSaved(false);
+              }}
+            >
+              <option value={1}>{t('H1 only')}</option>
+              <option value={2}>{t('Up to H2')}</option>
+              <option value={3}>{t('Up to H3')}</option>
+              <option value={4}>{t('Up to H4')}</option>
+              <option value={5}>{t('Up to H5')}</option>
+              <option value={6}>{t('Up to H6')}</option>
+            </select>
+          </div>
+        )}
       </section>
 
       {/* Language Settings */}
