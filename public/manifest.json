@@ -6,22 +6,6 @@
 	"display": "standalone",
 	"background_color": "#6b3fa0",
 	"theme_color": "#6b3fa0",
-	"categories": ["productivity", "social"],
-	"id": "/",
-	"screenshots": [
-		{
-			"src": "icons/screenshot-desktop.png",
-			"sizes": "1280x800",
-			"type": "image/png",
-			"form_factor": "wide"
-		},
-		{
-			"src": "icons/screenshot-mobile.png",
-			"sizes": "750x1334",
-			"type": "image/png",
-			"form_factor": "narrow"
-		}
-	],
 	"icons": [{
 			"src": "icons/logo-48px.png",
 			"sizes": "48x48",

@@ -24,8 +24,12 @@ describe('setFeedback', () => {
 	const mockFeedback: Feedback = {
 		feedbackId: 'feedback-123',
 		statementId: 'stmt-123',
+		statementTitle: 'Test Statement',
 		feedbackText: 'This is feedback text',
-		userId: 'user-123',
+		creator: {
+			displayName: 'Test User',
+			uid: 'user-123',
+		},
 		createdAt: Date.now(),
 	};
 
@@ -159,8 +163,12 @@ describe('setFeedback', () => {
 			const minimalFeedback: Feedback = {
 				feedbackId: 'min-123',
 				statementId: 'stmt-456',
+				statementTitle: 'Minimal Statement',
 				feedbackText: 'x',
-				userId: 'user-789',
+				creator: {
+					displayName: 'Min User',
+					uid: 'user-789',
+				},
 				createdAt: Date.now(),
 			};
 

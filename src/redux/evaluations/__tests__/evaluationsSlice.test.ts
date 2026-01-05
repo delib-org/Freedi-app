@@ -169,11 +169,11 @@ describe('evaluationsSlice', () => {
 			creator: {
 				creator: { uid: 'user-123' },
 			},
-		} as unknown;
+		};
 
 		describe('evaluationsSelector', () => {
 			it('should return all evaluations', () => {
-				const result = evaluationsSelector(mockRootState as ReturnType<typeof evaluationsSelector>);
+				const result = evaluationsSelector(mockRootState as Parameters<typeof evaluationsSelector>[0]);
 				expect(result).toHaveLength(3);
 			});
 		});
@@ -181,20 +181,20 @@ describe('evaluationsSlice', () => {
 		describe('evaluationsParentSelector', () => {
 			it('should return evaluations for a specific parent', () => {
 				const selector = evaluationsParentSelector('parent-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toHaveLength(2);
 				expect(result.every(e => e.parentId === 'parent-123')).toBe(true);
 			});
 
 			it('should return empty array for non-existent parent', () => {
 				const selector = evaluationsParentSelector('non-existent');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toHaveLength(0);
 			});
 
 			it('should return empty array for undefined parent', () => {
 				const selector = evaluationsParentSelector(undefined);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toHaveLength(0);
 			});
 		});
@@ -202,19 +202,19 @@ describe('evaluationsSlice', () => {
 		describe('evaluationSelector', () => {
 			it('should return evaluation value for statement and user', () => {
 				const selector = evaluationSelector('stmt-123', 'user-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBe(0.5);
 			});
 
 			it('should use creator from state if creatorId not provided', () => {
 				const selector = evaluationSelector('stmt-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBe(0.5);
 			});
 
 			it('should return undefined for non-existent evaluation', () => {
 				const selector = evaluationSelector('non-existent', 'user-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 		});
@@ -222,20 +222,20 @@ describe('evaluationsSlice', () => {
 		describe('numberOfEvaluatedStatements', () => {
 			it('should return count of non-evaluated statements', () => {
 				const selector = numberOfEvaluatedStatements(['stmt-123', 'stmt-456', 'stmt-new']);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				// 3 statements, 2 evaluated = 1 non-evaluated
 				expect(result).toBe(1);
 			});
 
 			it('should return statement count when none evaluated', () => {
 				const selector = numberOfEvaluatedStatements(['new-1', 'new-2']);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBe(2);
 			});
 
 			it('should return 0 when all evaluated', () => {
 				const selector = numberOfEvaluatedStatements(['stmt-123']);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBe(0);
 			});
 		});
@@ -243,20 +243,20 @@ describe('evaluationsSlice', () => {
 		describe('userVotesInParentSelector', () => {
 			it('should count positive votes (value === 1) for user in parent', () => {
 				const selector = userVotesInParentSelector('parent-123', 'user-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				// Only eval-456 has evaluation === 1 in parent-123 for user-123
 				expect(result).toBe(1);
 			});
 
 			it('should return 0 for undefined parentId', () => {
 				const selector = userVotesInParentSelector(undefined);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBe(0);
 			});
 
 			it('should use creator from state if userId not provided', () => {
 				const selector = userVotesInParentSelector('parent-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBe(1);
 			});
 		});
@@ -264,14 +264,14 @@ describe('evaluationsSlice', () => {
 		describe('userVotedStatementsInParentSelector', () => {
 			it('should return statement IDs of positive votes', () => {
 				const selector = userVotedStatementsInParentSelector('parent-123', 'user-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toContain('stmt-456');
 				expect(result).not.toContain('stmt-123'); // This has 0.5, not 1
 			});
 
 			it('should return empty array for undefined parentId', () => {
 				const selector = userVotedStatementsInParentSelector(undefined);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toHaveLength(0);
 			});
 		});
