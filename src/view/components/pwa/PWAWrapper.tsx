@@ -126,6 +126,31 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
+		// Listen for service worker messages (e.g., module fetch failures after deployment)
+		const handleServiceWorkerMessage = (event: MessageEvent) => {
+			if (event.data && event.data.type === 'MODULE_FETCH_FAILED') {
+				console.info('[PWAWrapper] Module fetch failed, reloading to get updated version...');
+				// Clear caches and reload to get the new version
+				const reloadPage = () => location.reload();
+
+				if (typeof caches !== 'undefined') {
+					caches.keys().then((names) => {
+						names.forEach((name) => {
+							if (name === 'static-resources') {
+								caches.delete(name);
+							}
+						});
+					}).finally(reloadPage);
+				} else {
+					reloadPage();
+				}
+			}
+		};
+
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+		}
+
 		// Explicitly register the Firebase Messaging Service Worker
 		// Register on iOS only if it's an installed PWA with Web Push support (iOS 16.4+)
 		const shouldRegisterFirebaseSW = 'serviceWorker' in navigator &&
@@ -215,6 +240,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					return () => {
 						clearInterval(updateInterval);
 						document.removeEventListener('visibilitychange', handleVisibilityChange);
+						if ('serviceWorker' in navigator) {
+							navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+						}
 					};
 				},
 				onRegisterError(error) {

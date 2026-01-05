@@ -30,12 +30,13 @@ registerRoute(
 	})
 );
 
-// Cache JS and CSS with stale-while-revalidate
+// Cache JS and CSS with network-first to avoid stale module issues after deployments
 registerRoute(
 	({ request }) =>
 		request.destination === 'script' || request.destination === 'style',
-	new StaleWhileRevalidate({
+	new NetworkFirst({
 		cacheName: 'static-resources',
+		networkTimeoutSeconds: 5,
 		plugins: [
 			new CacheableResponsePlugin({
 				statuses: [0, 200],
@@ -104,17 +105,52 @@ registerRoute(
 
 // Handle service worker lifecycle events
 self.addEventListener('install', (event) => {
-	// Don't force immediate activation - let it wait for user interaction
 	console.info('[SW] Service worker installed');
+	// Skip waiting to activate immediately and avoid stale cache issues
+	self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
 	console.info('[SW] Service worker activated');
+	// Take control of all clients immediately
+	event.waitUntil(
+		Promise.all([
+			// Claim all clients
+			self.clients.claim(),
+			// Clear old static-resources cache to avoid stale module issues
+			caches.open('static-resources').then((cache) => {
+				return cache.keys().then((keys) => {
+					return Promise.all(
+						keys.map((key) => cache.delete(key))
+					);
+				});
+			}),
+		])
+	);
 });
 
 // Listen for messages from the main thread
 self.addEventListener('message', (event) => {
 	if (event.data && event.data.type === 'SKIP_WAITING') {
 		self.skipWaiting();
+	}
+});
+
+// Handle fetch errors for dynamically imported modules
+self.addEventListener('fetch', (event) => {
+	// Only handle module script requests that might fail after deployment
+	if (event.request.destination === 'script' && event.request.url.includes('/assets/')) {
+		event.respondWith(
+			fetch(event.request).catch((error) => {
+				console.error('[SW] Failed to fetch module, triggering reload:', event.request.url);
+				// Notify clients to reload
+				self.clients.matchAll().then((clients) => {
+					clients.forEach((client) => {
+						client.postMessage({ type: 'MODULE_FETCH_FAILED', url: event.request.url });
+					});
+				});
+				throw error;
+			})
+		);
 	}
 });
