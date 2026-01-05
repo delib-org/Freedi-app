@@ -57,7 +57,7 @@ export default function TableOfContents({
               onKeyDown={(e) => handleKeyDown(e, item.id)}
               aria-current={activeId === item.id ? 'location' : undefined}
             >
-              <span className={styles.tocLinkText}>{item.text}</span>
+              <span className={styles.tocLinkText} suppressHydrationWarning>{item.text}</span>
             </button>
           </li>
         ))}

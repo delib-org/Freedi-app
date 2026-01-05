@@ -6,6 +6,7 @@ import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demogra
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
+import MinimizedModalIndicator from '../shared/MinimizedModalIndicator';
 import CommentThread from '../comments/CommentThread';
 import LoginModal from '../shared/LoginModal';
 import RejectionFeedbackModal from './RejectionFeedbackModal';
@@ -49,6 +50,9 @@ export default function DocumentClient({
     resetSigningAnimation,
     initializeCommentCounts,
     initializeUserInteractions,
+    isModalMinimized,
+    minimizeModal,
+    restoreModal,
   } = useUIStore();
 
   // State for rejection feedback modal
@@ -338,8 +342,14 @@ export default function DocumentClient({
       )}
 
       {/* Comments Modal */}
-      {activeModal === 'comments' && modalContext?.paragraphId && (
-        <Modal title="Comments" onClose={closeModal} size="large">
+      {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (
+        <Modal
+          title="Comments"
+          onClose={closeModal}
+          size="large"
+          canMinimize={true}
+          onMinimize={minimizeModal}
+        >
           <CommentThread
             paragraphId={modalContext.paragraphId}
             documentId={documentId}
@@ -347,6 +357,11 @@ export default function DocumentClient({
             userId={user?.uid || null}
           />
         </Modal>
+      )}
+
+      {/* Minimized Comments Indicator */}
+      {activeModal === 'comments' && isModalMinimized && (
+        <MinimizedModalIndicator onClick={restoreModal} />
       )}
 
       {/* Signature Confirmation Modal */}

@@ -18,8 +18,11 @@ interface UIState {
   // Modal state
   activeModal: ModalType;
   modalContext: ModalContext | null;
+  isModalMinimized: boolean;
   openModal: (modal: ModalType, context?: ModalContext) => void;
   closeModal: () => void;
+  minimizeModal: () => void;
+  restoreModal: () => void;
 
   // Edit mode (admin only)
   isEditMode: boolean;
@@ -69,9 +72,12 @@ export const useUIStore = create<UIState>((set) => ({
   // Modal state
   activeModal: null,
   modalContext: null,
+  isModalMinimized: false,
   openModal: (modal, context) =>
-    set({ activeModal: modal, modalContext: context ?? null }),
-  closeModal: () => set({ activeModal: null, modalContext: null }),
+    set({ activeModal: modal, modalContext: context ?? null, isModalMinimized: false }),
+  closeModal: () => set({ activeModal: null, modalContext: null, isModalMinimized: false }),
+  minimizeModal: () => set({ isModalMinimized: true }),
+  restoreModal: () => set({ isModalMinimized: false }),
 
   // Edit mode
   isEditMode: false,
@@ -153,3 +159,5 @@ export const selectIsTocExpanded = (state: UIState) => state.isTocExpanded;
 
 export const selectSigningAnimationState = (state: UIState) =>
   state.signingAnimationState;
+
+export const selectIsModalMinimized = (state: UIState) => state.isModalMinimized;

@@ -60,6 +60,8 @@
   color: var(--text-body);
   margin: 0;
   font-size: var(--p-font-size);
+  user-select: text; // Allow text selection
+  cursor: text; // Show text cursor when hovering over content
 
   // Inline formatting styles from Google Docs import
   strong {

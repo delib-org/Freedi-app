@@ -171,7 +171,7 @@ export default function TocMobileMenu({
                   onKeyDown={(e) => handleItemKeyDown(e, item.id)}
                   aria-current={activeId === item.id ? 'location' : undefined}
                 >
-                  <span className={styles.menuLinkText}>{item.text}</span>
+                  <span className={styles.menuLinkText} suppressHydrationWarning>{item.text}</span>
                 </button>
               </li>
             ))}

@@ -111,7 +111,13 @@ export default function ParagraphCard({
   }, [isExpanded]);
 
   // Toggle expansion on tap (for mobile)
+  // Allow text selection - only toggle if no text is selected
   const handleTap = useCallback(() => {
+    const selection = window.getSelection();
+    // If user is selecting text (selection has content), don't toggle
+    if (selection && selection.toString().trim().length > 0) {
+      return;
+    }
     setIsExpanded(prev => !prev);
   }, []);
 

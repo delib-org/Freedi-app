@@ -73,12 +73,20 @@
   margin: 0;
 }
 
+.headerButtons {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.minimizeButton,
 .closeButton {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 32px;
   height: 32px;
+  border: none;
   border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-secondary);
