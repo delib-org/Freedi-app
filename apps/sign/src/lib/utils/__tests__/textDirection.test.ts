@@ -7,8 +7,6 @@ import {
 	detectDocumentDirection,
 	resolveTextDirection,
 	detectParagraphDirection,
-	DirectionAnalysis,
-	TextDirection,
 } from '../textDirection';
 
 describe('textDirection', () => {

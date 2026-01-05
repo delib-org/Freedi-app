@@ -16,7 +16,7 @@ jest.mock('@/lib/utils/errorHandling', () => ({
 import { getFirestoreAdmin } from '../admin';
 import {
 	getDemographicQuestions,
-	getUserDemographicAnswers,
+	// getUserDemographicAnswers is tested implicitly through checkSurveyCompletion
 	checkSurveyCompletion,
 	saveDemographicQuestion,
 	deleteDemographicQuestion,

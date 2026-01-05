@@ -91,10 +91,13 @@ export function useScrollSpy(
       }
     });
 
+    // Capture ref values for cleanup
+    const currentVisibleSections = visibleSections.current;
+
     return () => {
       observer.disconnect();
       observerRef.current = null;
-      visibleSections.current.clear();
+      currentVisibleSections.clear();
     };
   }, [itemIds, offset, selectorPrefix, updateActiveSection]);
 

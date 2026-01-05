@@ -41,7 +41,6 @@ import {
 	getDocumentCollaborators,
 	getDocumentViewerLinks,
 	generateSecureToken,
-	AdminAccessResult,
 } from '../adminAccess';
 import { hasPermissionLevel } from '@freedi/shared-types';
 import { randomBytes } from 'node:crypto';

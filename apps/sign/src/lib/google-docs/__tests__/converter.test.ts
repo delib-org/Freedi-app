@@ -15,7 +15,6 @@ import {
 	convertGoogleDocsToParagraphs,
 	getDocumentTitle,
 	hasHtmlFormatting,
-	ConversionResult,
 } from '../converter';
 
 describe('converter', () => {
