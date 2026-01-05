@@ -432,27 +432,10 @@ self.addEventListener('message', (event) => {
 		event.waitUntil(
 			(async () => {
 				try {
-					// Clear all displayed notifications
+					// Clear all displayed notifications only
+					// Badge count is managed by the app's Redux state via useBadgeSync
 					const notifications = await self.registration.getNotifications();
 					notifications.forEach(notification => notification.close());
-
-					// Reset badge count
-					badgeCount = 0;
-					await saveBadgeCount(0);
-
-					// Clear badge using standard or experimental APIs based on browser support
-					if ('clearAppBadge' in navigator) {
-						// Standard Badging API (Chrome, Edge, Safari)
-						await navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
-					} else if ('clearExperimentalAppBadge' in navigator) {
-						// Experimental API for some browsers
-						// @ts-ignore - Experimental API
-						await navigator.clearExperimentalAppBadge().catch(err => console.error('Error clearing experimental badge:', err));
-					} else if ('ExperimentalBadge' in window) {
-						// Another experimental API seen in some browsers
-						// @ts-ignore - Experimental API
-						await window.ExperimentalBadge.clear().catch(err => console.error('Error clearing ExperimentalBadge:', err));
-					}
 
 					// Send confirmation back if ports are available
 					if (event.ports && event.ports[0]) {

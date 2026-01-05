@@ -4,66 +4,6 @@ import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 // import InstallPWA from './InstallPWA';
 
-// Function to clear badge count
-const clearBadgeCount = async () => {
-	try {
-		// Clear badge using standard or experimental APIs based on browser support
-		if ('clearAppBadge' in navigator) {
-			await navigator.clearAppBadge();
-		} else if ('clearExperimentalAppBadge' in navigator) {
-			// @ts-ignore - Experimental API
-			await navigator.clearExperimentalAppBadge();
-		} else if ('ExperimentalBadge' in window) {
-			// @ts-ignore - Experimental API
-			await window.ExperimentalBadge.clear();
-		}
-
-		// Try to reset badge count in IndexedDB (safely)
-		try {
-			const openRequest = indexedDB.open('FreeDiNotifications', 1);
-
-			// Handle database upgrade - this runs when the database is created or version is changed
-			openRequest.onupgradeneeded = (event) => {
-				// @ts-ignore - Type issues with event.target
-				const db = event.target.result;
-				// Create the object store if it doesn't exist
-				if (!db.objectStoreNames.contains('badgeCounter')) {
-					db.createObjectStore('badgeCounter', { keyPath: 'id' });
-				}
-			};
-
-			openRequest.onsuccess = (event) => {
-				try {
-					// @ts-ignore - Type issues with event.target
-					const db = event.target.result;
-
-					// Check if the badgeCounter store exists
-					if (!db.objectStoreNames.contains('badgeCounter')) {
-						console.info('badgeCounter object store does not exist');
-
-						return;
-					}
-
-					const transaction = db.transaction('badgeCounter', 'readwrite');
-					const store = transaction.objectStore('badgeCounter');
-					store.put({ id: 'badge', count: 0 });
-				} catch (innerError) {
-					console.info('Error accessing badgeCounter store:', innerError);
-				}
-			};
-
-			openRequest.onerror = (event) => {
-				console.info('IndexedDB open error:', event);
-			};
-		} catch (dbError) {
-			console.info('IndexedDB operation failed:', dbError);
-			// Not a critical error, just log and continue
-		}
-	} catch (error) {
-		console.error('Error clearing badge count:', error);
-	}
-};
-
 interface PWAWrapperProps {
 	children: React.ReactNode;
 }
@@ -107,15 +47,14 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		// Note: In development, service workers might behave differently
 		// Always register service worker for notification support
 
-		// Clear badge when app is opened or focused
-		clearBadgeCount();
+		// Note: Badge count is managed by useBadgeSync hook which syncs with Redux state.
+		// We don't manually clear badge here to avoid race conditions.
+		// The badge will reflect the actual unread count from Redux.
 
-		// Set up visibility change listener to clear badge when app comes into focus
+		// Set up visibility change listener to sync badge and clear displayed notifications
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
-				clearBadgeCount();
-
-				// Also tell the service worker to clear notifications
+				// Tell the service worker to clear displayed notifications (not the badge)
 				if (navigator.serviceWorker.controller) {
 					navigator.serviceWorker.controller.postMessage({
 						type: 'CLEAR_NOTIFICATIONS'
