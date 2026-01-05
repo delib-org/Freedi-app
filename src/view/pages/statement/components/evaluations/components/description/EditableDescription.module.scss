@@ -1,4 +1,4 @@
-@import "@/view/style/mixins";
+@use "@/view/style/mixins" as *;
 
 .editableDescription {
 	width: 100%;
