@@ -35,7 +35,7 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || curr
 		messagingSenderId: '47037334917',
 		appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
 	};
-} else if (currentDomain === 'wizcol-app.web.app') {
+} else if (currentDomain === 'wizcol-app.web.app' || currentDomain === 'app.wizcol.com') {
 	// Wizcol Production config
 	firebaseConfig = {
 		apiKey: 'AIzaSyBtm5USTMMQqf9KQ3ZIne6VbZ6AGOiT-Ts',
