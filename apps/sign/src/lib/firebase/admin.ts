@@ -18,15 +18,8 @@ let storage: Storage;
  * Only initializes once per server instance
  */
 export function initializeFirebaseAdmin(): App {
-  // Debug: Log credentials status on every call
-  console.info('[Firebase Admin - Sign] Init called. Apps:', getApps().length,
-    'CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? 'SET' : 'NOT SET',
-    'PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? 'SET (' + process.env.FIREBASE_PRIVATE_KEY.length + ' chars)' : 'NOT SET'
-  );
-
   if (getApps().length > 0) {
     app = getApps()[0]!;
-
     return app;
   }
 
@@ -37,14 +30,6 @@ export function initializeFirebaseAdmin(): App {
       process.env.FIREBASE_PRIVATE_KEY;
 
     const hasServiceAccountFile = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-
-    // Debug logging
-    console.info('[Firebase Admin - Sign] Credentials check:', {
-      hasExplicitCredentials: !!hasExplicitCredentials,
-      hasServiceAccountFile: !!hasServiceAccountFile,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL ? 'set' : 'not set',
-      privateKey: process.env.FIREBASE_PRIVATE_KEY ? 'set (length: ' + process.env.FIREBASE_PRIVATE_KEY.length + ')' : 'not set',
-    });
 
     if (hasExplicitCredentials) {
       // Initialize with explicit service account credentials
@@ -71,7 +56,6 @@ export function initializeFirebaseAdmin(): App {
         projectId: process.env.FIREBASE_PROJECT_ID,
         storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with explicit credentials, bucket:', storageBucket);
     } else if (hasServiceAccountFile) {
       // Initialize with service account file (GOOGLE_APPLICATION_CREDENTIALS)
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -83,7 +67,6 @@ export function initializeFirebaseAdmin(): App {
         projectId: serviceAccount.project_id,
         storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with service account file, bucket:', storageBucket);
     } else {
       // Use default credentials (works in Firebase Functions, Cloud Run, etc.)
       const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
@@ -91,7 +74,6 @@ export function initializeFirebaseAdmin(): App {
         projectId: process.env.FIREBASE_PROJECT_ID,
         storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with default credentials, bucket:', storageBucket);
     }
 
     return app;
@@ -110,17 +92,8 @@ export function getFirestoreAdmin(): Firestore {
     if (!app) {
       initializeFirebaseAdmin();
     }
-
     firestore = getFirestore(app);
-
-    const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-    if (emulatorHost) {
-      console.info('[Firebase Admin - Sign] Connected to Firestore emulator:', emulatorHost);
-    } else {
-      console.info('[Firebase Admin - Sign] Connected to production Firestore');
-    }
   }
-
   return firestore;
 }
 

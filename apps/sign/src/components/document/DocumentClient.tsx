@@ -10,8 +10,8 @@ import MinimizedModalIndicator from '../shared/MinimizedModalIndicator';
 import CommentThread from '../comments/CommentThread';
 import LoginModal from '../shared/LoginModal';
 import RejectionFeedbackModal from './RejectionFeedbackModal';
-import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
 import { DemographicSurveyModal } from '../demographics';
+import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -269,12 +269,8 @@ export default function DocumentClient({
       if (!user) {
         getOrCreateAnonymousUser();
       }
-      // Small delay to ensure cookie is set before API call
-      const timer = setTimeout(() => {
-        fetchStatus(documentId);
-      }, 100);
-
-      return () => clearTimeout(timer);
+      // Fetch demographic status (cookie is already set synchronously)
+      fetchStatus(documentId);
     }
   }, [documentId, user, fetchStatus]);
 
@@ -332,7 +328,7 @@ export default function DocumentClient({
     <HeatMapProvider documentId={documentId}>
       {children}
 
-      {/* Heat Map Controls - visible to admins */}
+      {/* Heat Map Controls - visible to admins only */}
       {isAdmin && (
         <>
           <HeatMapToolbar />
