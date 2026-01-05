@@ -121,52 +121,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		// Helper function to check if we're on iOS
-		const isIOS = (): boolean => {
-			const userAgent = navigator.userAgent.toLowerCase();
-
-			return /iphone|ipad|ipod/.test(userAgent) ||
-				   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-		};
-
-		// Explicitly register the Firebase Messaging Service Worker
-		// DO NOT register on iOS - Firebase Messaging is not supported on iOS browsers
-		if ('serviceWorker' in navigator && !isIOS()) {
-			// First check if it's already registered
-			navigator.serviceWorker.getRegistrations().then(registrations => {
-				const firebaseSW = registrations.find(r =>
-					r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
-					r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
-					r.waiting?.scriptURL.includes('firebase-messaging-sw.js')
-				);
-
-				if (!firebaseSW) {
-					// Register Firebase Messaging SW
-					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-						scope: '/'
-					})
-					.then(registration => {
-						// Firebase Messaging SW registered successfully
-
-						// Wait for activation
-						if (registration.installing) {
-							registration.installing.addEventListener('statechange', function() {
-								if (this.state === 'activated') {
-									// Firebase Messaging SW activated
-								}
-							});
-						}
-					})
-					.catch(error => {
-						console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
-					});
-				} else {
-					// Firebase Messaging SW already registered
-				}
-			});
-		} else if (isIOS()) {
-			console.info('[PWAWrapper] Skipping Firebase Messaging SW registration on iOS (not supported)');
-		}
+		// Removed legacy firebase-messaging-sw.js registration block.
+		// The main sw.js (registered by registerSW below) now handles all Firebase Messaging.
 
 		registerSW({
 				immediate: true, // Register immediately
