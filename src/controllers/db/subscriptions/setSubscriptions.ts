@@ -15,6 +15,7 @@ import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { setShowGroupDemographicModal } from '@/redux/userDemographic/userDemographicSlice';
 import { getGroupDemographicQuestions, getUserGroupAnswers } from '../userDemographic/getUserDemographic';
+import { getStatementFromDB } from '../statements/getStatement';
 
 interface SetSubscriptionProps {
 	statement: Statement,
@@ -233,7 +234,6 @@ export async function updateMemberRole(
 		// If changing role to banned, validate that the user can be banned
 		if (newRole === Role.banned) {
 			const { canBanUser, getBanDisabledReason } = await import('@/helpers/roleHelpers');
-			const { getStatementFromDB } = await import('../statements/getStatement');
 
 			// Get current subscription data to check role
 			const subscriptionDoc = await getDoc(statementSubscriptionRef);
