@@ -1,15 +1,17 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import Modal from '../shared/Modal';
+import MinimizedModalIndicator from '../shared/MinimizedModalIndicator';
 import CommentThread from '../comments/CommentThread';
 import LoginModal from '../shared/LoginModal';
-import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
+import RejectionFeedbackModal from './RejectionFeedbackModal';
 import { DemographicSurveyModal } from '../demographics';
+import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -48,7 +50,13 @@ export default function DocumentClient({
     resetSigningAnimation,
     initializeCommentCounts,
     initializeUserInteractions,
+    isModalMinimized,
+    minimizeModal,
+    restoreModal,
   } = useUIStore();
+
+  // State for rejection feedback modal
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // Demographics store
   const {
@@ -203,13 +211,18 @@ export default function DocumentClient({
             // Show rejected confirmation animation
             setSigningAnimationState('rejected');
 
-            // Wait for rejected animation before reload
+            // Wait for rejected animation before showing feedback modal
             await new Promise((resolve) =>
               setTimeout(resolve, ANIMATION_DURATION.REJECTED)
             );
+
+            // Show feedback modal instead of immediate reload
+            setShowFeedbackModal(true);
+
+            return; // Don't reload - the modal will handle it
           }
 
-          // Refresh the page to show updated state
+          // Refresh the page to show updated state (only for sign action)
           window.location.reload();
         } else {
           const error = await response.json();
@@ -256,12 +269,8 @@ export default function DocumentClient({
       if (!user) {
         getOrCreateAnonymousUser();
       }
-      // Small delay to ensure cookie is set before API call
-      const timer = setTimeout(() => {
-        fetchStatus(documentId);
-      }, 100);
-
-      return () => clearTimeout(timer);
+      // Fetch demographic status (cookie is already set synchronously)
+      fetchStatus(documentId);
     }
   }, [documentId, user, fetchStatus]);
 
@@ -319,7 +328,7 @@ export default function DocumentClient({
     <HeatMapProvider documentId={documentId}>
       {children}
 
-      {/* Heat Map Controls - visible to admins */}
+      {/* Heat Map Controls - visible to admins only */}
       {isAdmin && (
         <>
           <HeatMapToolbar />
@@ -329,8 +338,14 @@ export default function DocumentClient({
       )}
 
       {/* Comments Modal */}
-      {activeModal === 'comments' && modalContext?.paragraphId && (
-        <Modal title="Comments" onClose={closeModal} size="large">
+      {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (
+        <Modal
+          title="Comments"
+          onClose={closeModal}
+          size="large"
+          canMinimize={true}
+          onMinimize={minimizeModal}
+        >
           <CommentThread
             paragraphId={modalContext.paragraphId}
             documentId={documentId}
@@ -338,6 +353,11 @@ export default function DocumentClient({
             userId={user?.uid || null}
           />
         </Modal>
+      )}
+
+      {/* Minimized Comments Indicator */}
+      {activeModal === 'comments' && isModalMinimized && (
+        <MinimizedModalIndicator onClick={restoreModal} />
       )}
 
       {/* Signature Confirmation Modal */}
@@ -357,6 +377,14 @@ export default function DocumentClient({
 
       {/* Demographic Survey Modal */}
       <DemographicSurveyModal documentId={documentId} isAdmin={isAdmin} />
+
+      {/* Rejection Feedback Modal */}
+      {showFeedbackModal && (
+        <RejectionFeedbackModal
+          documentId={documentId}
+          onClose={() => setShowFeedbackModal(false)}
+        />
+      )}
     </HeatMapProvider>
   );
 }

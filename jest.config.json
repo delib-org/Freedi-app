@@ -6,14 +6,29 @@
 		"<rootDir>/functions/local-packages/",
 		"<rootDir>/functions/package/"
 	],
+	"roots": ["<rootDir>/src", "<rootDir>/__mocks__", "<rootDir>/packages"],
 	"moduleNameMapper": {
+		"^valibot$": "<rootDir>/__mocks__/valibot.ts",
+		"^clsx$": "<rootDir>/__mocks__/clsx.ts",
 		"\\.svg\\?react$": "<rootDir>/src/__mocks__/svgMock.tsx",
 		"\\.(svg|png|jpg|jpeg|gif)$": "<rootDir>/src/__mocks__/fileMock.ts",
 		"\\.(css|less|scss|sass)$": "identity-obj-proxy",
-		"^@/(.*)$": "<rootDir>/src/$1"
+		"^@/(.*)$": "<rootDir>/src/$1",
+		"^@freedi/shared-types$": "<rootDir>/packages/shared-types/src/index.ts",
+		"^@freedi/shared-types/(.*)$": "<rootDir>/packages/shared-types/src/$1"
 	},
+	"transformIgnorePatterns": [
+		"node_modules/(?!(valibot|clsx)/)"
+	],
 	"transform": {
 		"^.+\\.(ts|tsx)$": ["<rootDir>/jest-transformer.cjs", {
+			"isolatedModules": true,
+			"tsconfig": {
+				"esModuleInterop": true,
+				"jsx": "react"
+			}
+		}],
+		"packages/.+\\.(ts|tsx)$": ["<rootDir>/jest-transformer.cjs", {
 			"isolatedModules": true,
 			"tsconfig": {
 				"esModuleInterop": true,

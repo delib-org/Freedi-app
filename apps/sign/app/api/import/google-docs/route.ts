@@ -6,10 +6,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { Collections } from '@freedi/shared-types';
-import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { getFirebaseAdmin, uploadImageFromUrl } from '@/lib/firebase/admin';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { fetchGoogleDoc, getServiceAccountEmail } from '@/lib/google-docs/client';
-import { convertGoogleDocsToParagraphs, getDocumentTitle } from '@/lib/google-docs/converter';
+import {
+  convertGoogleDocsToParagraphs,
+  getDocumentTitle,
+} from '@/lib/google-docs/converter';
 import { Paragraph } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
@@ -22,6 +25,8 @@ interface ImportResponse {
   success: boolean;
   paragraphs?: Paragraph[];
   documentTitle?: string;
+  imagesProcessed?: number;
+  imagesFailed?: number;
   error?: string;
   errorCode?: string;
   serviceAccountEmail?: string;
@@ -44,6 +49,27 @@ function extractDocumentId(url: string): string | null {
   }
 
   return null;
+}
+
+/**
+ * Get image extension from URL or default to .jpg
+ */
+function getImageExtension(url: string): string {
+  try {
+    const urlObj = new URL(url);
+    const pathname = urlObj.pathname;
+
+    // Check for common image extensions
+    const extensionMatch = pathname.match(/\.(jpg|jpeg|png|gif|webp|svg)$/i);
+    if (extensionMatch) {
+      return `.${extensionMatch[1].toLowerCase()}`;
+    }
+
+    // Default to jpg for Google-hosted images
+    return '.jpg';
+  } catch {
+    return '.jpg';
+  }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse<ImportResponse>> {
@@ -156,7 +182,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
     }
 
     // Convert to paragraphs
-    const paragraphs = convertGoogleDocsToParagraphs(googleDoc);
+    const { paragraphs, images } = convertGoogleDocsToParagraphs(googleDoc);
     const documentTitle = getDocumentTitle(googleDoc);
 
     if (paragraphs.length === 0) {
@@ -170,8 +196,51 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       );
     }
 
-    // Generate description from paragraphs (first 200 chars)
+    // Process images: download from Google and upload to Firebase Storage
+    let imagesProcessed = 0;
+    let imagesFailed = 0;
+
+    if (images.length > 0) {
+      logger.info(`Processing ${images.length} images from Google Doc`);
+
+      for (const image of images) {
+        try {
+          // Generate storage path
+          const extension = getImageExtension(image.sourceUrl);
+          const storagePath = `documents/${statementId}/images/${image.paragraphId}${extension}`;
+
+          // Upload image to Firebase Storage
+          const firebaseUrl = await uploadImageFromUrl(image.sourceUrl, storagePath);
+
+          // Update the paragraph with the Firebase Storage URL
+          const paragraph = paragraphs.find((p) => p.paragraphId === image.paragraphId);
+          if (paragraph) {
+            paragraph.imageUrl = firebaseUrl;
+          }
+
+          imagesProcessed++;
+          logger.info(`Processed image ${image.paragraphId}`);
+        } catch (error) {
+          logger.error(`Failed to process image ${image.paragraphId}:`, error);
+          imagesFailed++;
+
+          // Remove failed image paragraph from the list
+          const index = paragraphs.findIndex((p) => p.paragraphId === image.paragraphId);
+          if (index !== -1) {
+            paragraphs.splice(index, 1);
+          }
+        }
+      }
+
+      // Reorder paragraphs after removing failed images
+      paragraphs.forEach((p, i) => {
+        p.order = i;
+      });
+    }
+
+    // Generate description from text paragraphs (first 200 chars)
     const description = paragraphs
+      .filter((p) => p.content) // Only paragraphs with text content
       .map((p) => p.content)
       .join(' ')
       .slice(0, 200);
@@ -187,6 +256,8 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       success: true,
       paragraphs,
       documentTitle,
+      imagesProcessed,
+      imagesFailed,
     });
   } catch (error) {
     logger.error('Import error:', error);

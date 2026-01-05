@@ -14,6 +14,7 @@ interface User {
   signedAt: number | null;
   approvalsCount: number;
   commentsCount: number;
+  rejectionReason?: string;
 }
 
 export default function AdminUsersPage() {
@@ -197,6 +198,7 @@ export default function AdminUsersPage() {
                 <th>{t('Date')}</th>
                 <th>{t('Approvals')}</th>
                 <th>{t('Comments')}</th>
+                <th>{t('Reason')}</th>
               </tr>
             </thead>
             <tbody>
@@ -219,6 +221,20 @@ export default function AdminUsersPage() {
                   <td>{formatDate(user.signedAt)}</td>
                   <td>{user.approvalsCount}</td>
                   <td>{user.commentsCount}</td>
+                  <td>
+                    {user.signed === 'rejected' && user.rejectionReason ? (
+                      <span
+                        className={styles.rejectionReason}
+                        title={user.rejectionReason}
+                      >
+                        {user.rejectionReason.length > 50
+                          ? `${user.rejectionReason.substring(0, 50)}...`
+                          : user.rejectionReason}
+                      </span>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                 </tr>
               ))}
             </tbody>

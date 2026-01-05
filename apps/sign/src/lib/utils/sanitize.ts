@@ -27,11 +27,15 @@ export function sanitizeHTML(html: string): string {
       'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td', 'caption', 'colgroup', 'col',
       // Links
       'a',
+      // Images
+      'img', 'figure', 'figcaption',
     ],
     ALLOWED_ATTR: [
       'href', 'target', 'rel',
       'class', 'style',
       'colspan', 'rowspan', 'scope',
+      // Image attributes
+      'src', 'alt', 'width', 'height', 'loading',
     ],
     // Force all links to open in new tab with security attributes
     FORCE_BODY: true,

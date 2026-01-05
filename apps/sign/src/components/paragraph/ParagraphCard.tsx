@@ -111,7 +111,13 @@ export default function ParagraphCard({
   }, [isExpanded]);
 
   // Toggle expansion on tap (for mobile)
+  // Allow text selection - only toggle if no text is selected
   const handleTap = useCallback(() => {
+    const selection = window.getSelection();
+    // If user is selecting text (selection has content), don't toggle
+    if (selection && selection.toString().trim().length > 0) {
+      return;
+    }
     setIsExpanded(prev => !prev);
   }, []);
 
@@ -204,6 +210,25 @@ export default function ParagraphCard({
             className={styles.tableWrapper}
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
           />
+        );
+      case ParagraphType.image:
+        return (
+          <figure className={styles.imageWrapper}>
+            {paragraph.imageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={paragraph.imageUrl}
+                alt={paragraph.imageAlt || t('Document image')}
+                className={styles.image}
+                loading="lazy"
+              />
+            )}
+            {paragraph.imageCaption && (
+              <figcaption className={styles.imageCaption}>
+                {paragraph.imageCaption}
+              </figcaption>
+            )}
+          </figure>
         );
       default:
         return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;

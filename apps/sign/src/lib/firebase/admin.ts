@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getStorage, Storage } from 'firebase-admin/storage';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Set emulator host BEFORE any Firebase initialization
@@ -10,6 +11,7 @@ if (process.env.USE_FIREBASE_EMULATOR === 'true' && process.env.FIRESTORE_EMULAT
 
 let app: App;
 let firestore: Firestore;
+let storage: Storage;
 
 /**
  * Initialize Firebase Admin SDK
@@ -18,7 +20,6 @@ let firestore: Firestore;
 export function initializeFirebaseAdmin(): App {
   if (getApps().length > 0) {
     app = getApps()[0]!;
-
     return app;
   }
 
@@ -45,6 +46,7 @@ export function initializeFirebaseAdmin(): App {
         privateKey = privateKey.replace(/\\\\n/g, '\n');
       }
 
+      const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
       app = initializeApp({
         credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
@@ -52,24 +54,26 @@ export function initializeFirebaseAdmin(): App {
           privateKey,
         }),
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with explicit credentials');
     } else if (hasServiceAccountFile) {
       // Initialize with service account file (GOOGLE_APPLICATION_CREDENTIALS)
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const fs = require('fs');
       const serviceAccount = JSON.parse(fs.readFileSync(hasServiceAccountFile, 'utf8'));
+      const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${serviceAccount.project_id}.appspot.com`;
       app = initializeApp({
         credential: cert(serviceAccount),
         projectId: serviceAccount.project_id,
+        storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with service account file');
     } else {
       // Use default credentials (works in Firebase Functions, Cloud Run, etc.)
+      const storageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
       app = initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket,
       });
-      console.info('[Firebase Admin - Sign] Initialized with default credentials');
     }
 
     return app;
@@ -88,17 +92,8 @@ export function getFirestoreAdmin(): Firestore {
     if (!app) {
       initializeFirebaseAdmin();
     }
-
     firestore = getFirestore(app);
-
-    const emulatorHost = process.env.FIRESTORE_EMULATOR_HOST;
-    if (emulatorHost) {
-      console.info('[Firebase Admin - Sign] Connected to Firestore emulator:', emulatorHost);
-    } else {
-      console.info('[Firebase Admin - Sign] Connected to production Firestore');
-    }
   }
-
   return firestore;
 }
 
@@ -117,9 +112,134 @@ export function getFirebaseAdmin(): { db: Firestore; app: App } {
   };
 }
 
+/**
+ * Get Firebase Storage instance
+ */
+export function getStorageAdmin(): Storage {
+  if (!storage) {
+    if (!app) {
+      initializeFirebaseAdmin();
+    }
+
+    storage = getStorage(app);
+  }
+
+  return storage;
+}
+
+/**
+ * Maximum image size in bytes (5 MB)
+ */
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
+/**
+ * Download an image from a URL and upload it to Firebase Storage
+ * @param sourceUrl - The URL to download the image from
+ * @param storagePath - The path in Firebase Storage (e.g., 'documents/docId/images/imgId.jpg')
+ * @returns The public download URL of the uploaded image
+ */
+export async function uploadImageFromUrl(
+  sourceUrl: string,
+  storagePath: string
+): Promise<string> {
+  try {
+    // Fetch the image from the source URL
+    const response = await fetch(sourceUrl);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+    }
+
+    // Check content type
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    if (!contentType.startsWith('image/')) {
+      throw new Error(`Invalid content type: ${contentType}`);
+    }
+
+    // Get the image data as a buffer
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Check file size
+    if (buffer.length > MAX_IMAGE_SIZE) {
+      throw new Error(`Image too large: ${(buffer.length / 1024 / 1024).toFixed(2)} MB (max ${MAX_IMAGE_SIZE / 1024 / 1024} MB)`);
+    }
+
+    // Get storage bucket
+    const storageInstance = getStorageAdmin();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
+    const bucket = storageInstance.bucket(bucketName);
+
+    // Create a file reference and upload
+    const file = bucket.file(storagePath);
+    await file.save(buffer, {
+      metadata: {
+        contentType,
+        cacheControl: 'public, max-age=31536000', // Cache for 1 year
+      },
+    });
+
+    // Make the file public and get the download URL
+    await file.makePublic();
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${storagePath}`;
+
+    return publicUrl;
+  } catch (error) {
+    logError(error, {
+      operation: 'firebase.uploadImageFromUrl',
+      metadata: { sourceUrl, storagePath },
+    });
+    throw error;
+  }
+}
+
+/**
+ * Upload a buffer directly to Firebase Storage
+ * @param buffer - The file buffer to upload
+ * @param storagePath - The path in Firebase Storage
+ * @param contentType - The MIME type of the file
+ * @returns The public download URL
+ */
+export async function uploadBufferToStorage(
+  buffer: Buffer,
+  storagePath: string,
+  contentType: string
+): Promise<string> {
+  try {
+    // Check file size
+    if (buffer.length > MAX_IMAGE_SIZE) {
+      throw new Error(`File too large: ${(buffer.length / 1024 / 1024).toFixed(2)} MB (max ${MAX_IMAGE_SIZE / 1024 / 1024} MB)`);
+    }
+
+    const storageInstance = getStorageAdmin();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || `${process.env.FIREBASE_PROJECT_ID}.appspot.com`;
+    const bucket = storageInstance.bucket(bucketName);
+
+    const file = bucket.file(storagePath);
+    await file.save(buffer, {
+      metadata: {
+        contentType,
+        cacheControl: 'public, max-age=31536000',
+      },
+    });
+
+    await file.makePublic();
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${storagePath}`;
+
+    return publicUrl;
+  } catch (error) {
+    logError(error, {
+      operation: 'firebase.uploadBufferToStorage',
+      metadata: { storagePath, contentType, size: buffer.length },
+    });
+    throw error;
+  }
+}
+
 // Export singleton instance
 export const admin = {
   firestore: getFirestoreAdmin,
+  storage: getStorageAdmin,
   app: () => app || initializeFirebaseAdmin(),
 };
 
