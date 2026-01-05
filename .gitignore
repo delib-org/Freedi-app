@@ -56,3 +56,6 @@ functions/.runtimeconfig.json
 functions/scripts/serviceAccountKey.json
 
 apps/sign/tsconfig.tsbuildinfo
+
+# Worktrees
+.worktrees/
