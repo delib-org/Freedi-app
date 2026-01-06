@@ -1826,5 +1826,20 @@
 
   "Be the first to share your idea!": "היו הראשונים לשתף את הרעיון שלכם!",
   "Press \"Add an answer\" to add your suggestion": "לחצו על \"הוספת תשובה\" כדי להוסיף את ההצעה שלכם",
-  "Press the + button to add your suggestion": "לחצו על כפתור ה-+ כדי להוסיף את ההצעה שלכם"
+  "Press the + button to add your suggestion": "לחצו על כפתור ה-+ כדי להוסיף את ההצעה שלכם",
+
+  "Add an answer": "הוספת תשובה",
+  "Title of the answer": "כותרת התשובה",
+  "Enter your answer title...": "הזינו את כותרת התשובה...",
+  "Answer description": "תיאור התשובה",
+  "Describe your answer...": "תארו את התשובה שלכם...",
+  "Search for similar answers": "חיפוש תשובות דומות",
+  "Enter group title...": "הזינו את שם הקבוצה...",
+  "Describe the group...": "תארו את הקבוצה...",
+  "Search for similar groups": "חיפוש קבוצות דומות",
+  "Enter question title...": "הזינו את כותרת השאלה...",
+  "Describe the question...": "תארו את השאלה...",
+  "Search for similar questions": "חיפוש שאלות דומות",
+  "Enter title...": "הזינו כותרת...",
+  "Enter description...": "הזינו תיאור..."
 }
