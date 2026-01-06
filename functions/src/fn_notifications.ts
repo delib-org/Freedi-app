@@ -31,6 +31,100 @@ interface SendResult {
 }
 
 /**
+ * Quiet hours configuration stored with FCM tokens.
+ */
+interface QuietHoursConfig {
+	enabled: boolean;
+	startTime: string; // HH:mm format
+	endTime: string; // HH:mm format
+	timezone: string; // IANA timezone
+}
+
+/**
+ * Check if current time is within quiet hours for a user.
+ */
+function isInQuietHours(config: QuietHoursConfig | undefined): boolean {
+	if (!config || !config.enabled) {
+		return false;
+	}
+
+	try {
+		// Get current time in user's timezone
+		const now = new Date();
+		const formatter = new Intl.DateTimeFormat('en-US', {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false,
+			timeZone: config.timezone,
+		});
+
+		const currentTime = formatter.format(now);
+		const [currentHour, currentMinute] = currentTime.split(':').map(Number);
+		const currentMinutes = currentHour * 60 + currentMinute;
+
+		const [startHour, startMinute] = config.startTime.split(':').map(Number);
+		const startMinutes = startHour * 60 + startMinute;
+
+		const [endHour, endMinute] = config.endTime.split(':').map(Number);
+		const endMinutes = endHour * 60 + endMinute;
+
+		// Handle overnight quiet hours (e.g., 22:00 - 08:00)
+		if (startMinutes > endMinutes) {
+			// Quiet hours span midnight
+			return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+		} else {
+			// Quiet hours within same day
+			return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+		}
+	} catch (error) {
+		logger.error('Error checking quiet hours:', error);
+
+		return false;
+	}
+}
+
+/**
+ * Filter FCM subscribers by quiet hours - removes subscribers currently in quiet hours.
+ */
+async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubscriber[]> {
+	if (subscribers.length === 0) return [];
+
+	// Get unique user IDs to batch fetch quiet hours
+	const userIds = [...new Set(subscribers.map(s => s.userId))];
+	const quietHoursMap = new Map<string, QuietHoursConfig | null>();
+
+	// Batch fetch quiet hours for all users (using tokens)
+	const fetchPromises = userIds.map(async (userId) => {
+		try {
+			const tokensSnapshot = await db
+				.collection('pushNotifications')
+				.where('userId', '==', userId)
+				.limit(1)
+				.get();
+
+			if (!tokensSnapshot.empty) {
+				const tokenData = tokensSnapshot.docs[0].data();
+				quietHoursMap.set(userId, tokenData.quietHours as QuietHoursConfig | undefined || null);
+			} else {
+				quietHoursMap.set(userId, null);
+			}
+		} catch (error) {
+			logger.warn(`Error fetching quiet hours for user ${userId}:`, error);
+			quietHoursMap.set(userId, null);
+		}
+	});
+
+	await Promise.all(fetchPromises);
+
+	// Filter out subscribers who are in quiet hours
+	return subscribers.filter(subscriber => {
+		const quietHours = quietHoursMap.get(subscriber.userId);
+
+		return !isInQuietHours(quietHours || undefined);
+	});
+}
+
+/**
  * Updates in-app notifications when a new statement is created as a reply.
  * Creates notifications for users subscribed to the parent statement.
  */
@@ -444,24 +538,87 @@ async function processFcmNotificationsImproved(
 
 	if (validTokens.length === 0) {
 		logger.warn('No valid tokens found after validation');
-		
+
 return result;
 	}
 
-	// Format FCM messages for valid tokens only
-	const fcmMessages = validTokens.map((subscriber) => ({
+	// Filter out users in quiet hours
+	const tokensAfterQuietHours = await filterByQuietHours(validTokens);
+	const quietHoursFiltered = validTokens.length - tokensAfterQuietHours.length;
+
+	if (quietHoursFiltered > 0) {
+		logger.info(`Filtered ${quietHoursFiltered} tokens due to quiet hours`);
+	}
+
+	if (tokensAfterQuietHours.length === 0) {
+		logger.info('No tokens remaining after quiet hours filter');
+
+		return result;
+	}
+
+	// Format FCM messages for valid tokens only with rich notification features
+	const creatorName = newStatement.creator.displayName || 'Someone';
+	const creatorPhoto = newStatement.creator.photoURL || '';
+	const statementPreview = newStatement.statement.substring(0, 100) +
+		(newStatement.statement.length > 100 ? '...' : '');
+
+	// Build URL for notification click
+	const notificationUrl = `/statement/${newStatement.parentId}?focusId=${newStatement.statementId}`;
+
+	// Tag for grouping notifications from same discussion
+	const notificationTag = `discussion-${newStatement.parentId}`;
+
+	const fcmMessages = tokensAfterQuietHours.map((subscriber) => ({
 		token: subscriber.token,
 		notification: {
-			title: `New reply from ${newStatement.creator.displayName}`,
-			body:
-				newStatement.statement.substring(0, 100) +
-				(newStatement.statement.length > 100 ? '...' : ''),
+			title: `New reply from ${creatorName}`,
+			body: statementPreview,
+			// Include creator's photo as notification image
+			...(creatorPhoto && { image: creatorPhoto }),
 		},
 		data: {
 			statementId: newStatement.statementId,
 			parentId: newStatement.parentId,
 			createdAt: newStatement.createdAt.toString(),
 			notificationType: 'statement_reply',
+			// Rich notification data
+			url: notificationUrl,
+			tag: notificationTag,
+			openActionTitle: 'View Reply',
+			creatorPhoto: creatorPhoto,
+			creatorName: creatorName,
+			// Require interaction so user sees it
+			requireInteraction: 'true',
+		},
+		// Web push specific options
+		webpush: {
+			headers: {
+				Urgency: 'high',
+			},
+			fcmOptions: {
+				link: notificationUrl,
+			},
+		},
+		// Android specific options
+		android: {
+			priority: 'high' as const,
+			notification: {
+				channelId: 'freedi_replies',
+				tag: notificationTag,
+				clickAction: 'OPEN_DISCUSSION',
+			},
+		},
+		// APNs specific options for iOS
+		apns: {
+			headers: {
+				'apns-priority': '10',
+			},
+			payload: {
+				aps: {
+					'mutable-content': 1,
+					sound: 'default',
+				},
+			},
 		},
 	}));
 
@@ -469,8 +626,8 @@ return result;
 	const fcmBatchSize = 500;
 	for (let i = 0; i < fcmMessages.length; i += fcmBatchSize) {
 		const batch = fcmMessages.slice(i, i + fcmBatchSize);
-		const batchResult = await sendBatchWithRetry(batch, validTokens.slice(i, i + fcmBatchSize));
-		
+		const batchResult = await sendBatchWithRetry(batch, tokensAfterQuietHours.slice(i, i + fcmBatchSize));
+
 		result.successful += batchResult.successful;
 		result.failed += batchResult.failed;
 		result.invalidTokens.push(...batchResult.invalidTokens);
@@ -478,7 +635,7 @@ return result;
 
 	// Clean up any newly discovered invalid tokens
 	if (result.invalidTokens.length > 0) {
-		const tokensToRemove = validTokens.filter(t => result.invalidTokens.includes(t.token));
+		const tokensToRemove = tokensAfterQuietHours.filter(t => result.invalidTokens.includes(t.token));
 		await removeInvalidTokens(tokensToRemove);
 	}
 

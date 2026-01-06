@@ -31,6 +31,16 @@ import { getDeviceInfo } from './platformService';
 import { FIREBASE } from '@/constants/common';
 
 /**
+ * Quiet hours configuration for push notifications.
+ */
+export interface QuietHoursConfig {
+	enabled: boolean;
+	startTime: string; // HH:mm format (e.g., "22:00")
+	endTime: string; // HH:mm format (e.g., "08:00")
+	timezone: string; // IANA timezone (e.g., "America/New_York")
+}
+
+/**
  * Metadata stored with each FCM token.
  */
 export interface TokenMetadata {
@@ -43,6 +53,7 @@ export interface TokenMetadata {
 		userAgent: string;
 		language: string;
 	};
+	quietHours?: QuietHoursConfig;
 }
 
 /**
@@ -282,6 +293,106 @@ export const removeTokenFromAllSubscriptions = async (
 };
 
 /**
+ * Save quiet hours configuration for a user.
+ * This updates all tokens belonging to the user.
+ */
+export const saveQuietHours = async (
+	userId: string,
+	config: QuietHoursConfig
+): Promise<void> => {
+	// Get all tokens for this user
+	const tokensQuery = query(
+		collection(DB, 'pushNotifications'),
+		where('userId', '==', userId)
+	);
+
+	const tokensSnapshot = await getDocs(tokensQuery);
+
+	if (tokensSnapshot.empty) {
+		console.info('No tokens found for user to update quiet hours');
+
+		return;
+	}
+
+	// Batch update all user's tokens with quiet hours
+	const batch = writeBatch(DB);
+	tokensSnapshot.docs.forEach((docSnapshot) => {
+		batch.update(docSnapshot.ref, {
+			quietHours: config,
+			lastUpdate: new Date(),
+		});
+	});
+
+	await batch.commit();
+	console.info(`Updated quiet hours for ${tokensSnapshot.size} token(s)`);
+};
+
+/**
+ * Get quiet hours configuration for a user.
+ * Returns the config from any of the user's tokens.
+ */
+export const getQuietHours = async (userId: string): Promise<QuietHoursConfig | null> => {
+	const tokensQuery = query(
+		collection(DB, 'pushNotifications'),
+		where('userId', '==', userId)
+	);
+
+	const tokensSnapshot = await getDocs(tokensQuery);
+
+	if (tokensSnapshot.empty) {
+		return null;
+	}
+
+	// Return quiet hours from the first token (they should all be the same)
+	const tokenData = tokensSnapshot.docs[0].data() as TokenMetadata;
+
+	return tokenData.quietHours || null;
+};
+
+/**
+ * Check if current time is within quiet hours for a user.
+ */
+export const isInQuietHours = (config: QuietHoursConfig): boolean => {
+	if (!config.enabled) {
+		return false;
+	}
+
+	try {
+		// Get current time in user's timezone
+		const now = new Date();
+		const formatter = new Intl.DateTimeFormat('en-US', {
+			hour: '2-digit',
+			minute: '2-digit',
+			hour12: false,
+			timeZone: config.timezone,
+		});
+
+		const currentTime = formatter.format(now);
+		const [currentHour, currentMinute] = currentTime.split(':').map(Number);
+		const currentMinutes = currentHour * 60 + currentMinute;
+
+		const [startHour, startMinute] = config.startTime.split(':').map(Number);
+		const startMinutes = startHour * 60 + startMinute;
+
+		const [endHour, endMinute] = config.endTime.split(':').map(Number);
+		const endMinutes = endHour * 60 + endMinute;
+
+		// Handle overnight quiet hours (e.g., 22:00 - 08:00)
+		if (startMinutes > endMinutes) {
+			// Quiet hours span midnight
+			return currentMinutes >= startMinutes || currentMinutes < endMinutes;
+		} else {
+			// Quiet hours within same day
+			return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+		}
+	} catch (error) {
+		console.error('Error checking quiet hours:', error);
+
+		return false;
+	}
+};
+
+/**
  * NotificationRepository singleton for convenience.
  */
 export const NotificationRepository = {
@@ -293,4 +404,7 @@ export const NotificationRepository = {
 	unregisterFromStatementNotifications,
 	syncTokenWithSubscriptions,
 	removeTokenFromAllSubscriptions,
+	saveQuietHours,
+	getQuietHours,
+	isInQuietHours,
 } as const;
