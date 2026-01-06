@@ -38,7 +38,7 @@ const UserQuestionComp = ({
 	onDeleteQuestion,
 	onUpdateQuestion,
 	minQuestionAmount = 2,
-	isTopParent = false,
+	_isTopParent = false,
 }: Props) => {
 	const { t } = useTranslation();
 	const dispatch = useDispatch();

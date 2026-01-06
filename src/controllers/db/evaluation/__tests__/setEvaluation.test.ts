@@ -2,6 +2,8 @@
  * Tests for setEvaluation controller
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Mock @freedi/shared-types before import to prevent valibot loading
 jest.mock('@freedi/shared-types', () => ({
 	Collections: {

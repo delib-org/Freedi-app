@@ -122,6 +122,7 @@ return cached;
     return results;
   } catch (error) {
     logger.error("Error in getCachedSimilarStatementIds:", error);
+
     // Fall back to direct AI call on cache error
     return findSimilarStatementsByIds(
       statements,

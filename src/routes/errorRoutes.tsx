@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { RouteObject } from 'react-router';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Page401 from '@/view/pages/page401/Page401';

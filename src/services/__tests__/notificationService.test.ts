@@ -2,6 +2,8 @@
  * Tests for NotificationService
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Mock platform service
 jest.mock('../platformService', () => ({
 	PlatformService: {

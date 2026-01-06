@@ -319,7 +319,7 @@ return [];
   }
 
   // Format statements as numbered list with IDs for the AI
-  const statementsForAI = statements.map((s, i) => `[${s.id}]: "${s.text}"`).join('\n');
+  const statementsForAI = statements.map((s) => `[${s.id}]: "${s.text}"`).join('\n');
 
   const prompt = `You are helping find similar suggestions in a collaborative platform.
 

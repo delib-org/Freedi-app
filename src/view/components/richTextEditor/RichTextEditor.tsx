@@ -20,12 +20,6 @@ interface RichTextEditorProps {
 }
 
 // TipTap node types for type safety
-interface TipTapTextNode {
-	type: string;
-	text?: string;
-	content?: TipTapNode[];
-}
-
 interface TipTapNode {
 	type: string;
 	content?: TipTapNode[];

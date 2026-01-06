@@ -2,7 +2,7 @@
  * Tests for computeMenuPosition utility
  */
 
-import { computeMenuPosition, Placement } from '../computeMenuPosition';
+import { computeMenuPosition } from '../computeMenuPosition';
 
 describe('computeMenuPosition', () => {
 	// Store original window dimensions

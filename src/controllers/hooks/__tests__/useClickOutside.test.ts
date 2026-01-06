@@ -2,7 +2,7 @@
  * Tests for useClickOutside hook
  */
 
-import { renderHook, act } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { fireEvent } from '@testing-library/react';
 import useClickOutside from '../useClickOutside';
 

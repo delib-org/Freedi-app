@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { RoomParticipant, RoomSettings, Room } from '@freedi/shared-types';
+import { RoomParticipant, RoomSettings } from '@freedi/shared-types';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
