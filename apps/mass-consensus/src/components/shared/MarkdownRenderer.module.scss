@@ -74,8 +74,35 @@
     }
   }
 
+  ul {
+    list-style-type: disc;
+
+    // Nested lists
+    ul {
+      list-style-type: circle;
+
+      ul {
+        list-style-type: square;
+      }
+    }
+  }
+
+  ol {
+    list-style-type: decimal;
+
+    // Nested ordered lists
+    ol {
+      list-style-type: lower-alpha;
+
+      ol {
+        list-style-type: lower-roman;
+      }
+    }
+  }
+
   li {
     margin-bottom: 0.5em;
+    display: list-item;
   }
 
   // Links
