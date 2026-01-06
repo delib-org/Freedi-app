@@ -54,10 +54,10 @@ export async function ensureFirebaseServiceWorker() {
 
         // Firebase SW not found, registering
 
-        // Register Firebase messaging service worker at ROOT scope to receive push notifications
-        // Firebase messaging requires the SW to be at root scope to intercept push events
+        // Register Firebase messaging service worker with Firebase's default scope
+        // This allows it to coexist with the PWA's main sw.js at root scope
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-            scope: '/',
+            scope: '/firebase-cloud-messaging-push-scope',
             updateViaCache: 'none' // Ensure fresh SW updates
         });
 

@@ -105,13 +105,13 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				);
 
 				if (!firebaseSW) {
-					// Register Firebase Messaging SW at ROOT scope to receive push notifications
-					// Firebase messaging requires the SW to be at root scope to intercept push events
+					// Register Firebase Messaging SW with Firebase's default scope
+					// This allows it to coexist with the PWA's main sw.js at root scope
 					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-						scope: '/'
+						scope: '/firebase-cloud-messaging-push-scope'
 					})
 					.then(registration => {
-						console.info('[PWAWrapper] Firebase Messaging SW registered successfully at root scope');
+						console.info('[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope');
 
 						// Wait for activation
 						if (registration.installing) {

@@ -99,10 +99,10 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 		// First, list all registrations
 		const allRegistrations = await navigator.serviceWorker.getRegistrations();
 
-		// Check if firebase-messaging-sw.js is already registered at root scope
-		let registration = await navigator.serviceWorker.getRegistration('/');
+		// Check if firebase-messaging-sw.js is registered at Firebase's default scope
+		let registration = await navigator.serviceWorker.getRegistration('/firebase-cloud-messaging-push-scope');
 
-		// If the root registration isn't the Firebase one, look for it explicitly
+		// If not found at Firebase scope, look for it in all registrations
 		if (!registration || !registration.active?.scriptURL.includes('firebase-messaging-sw.js')) {
 			// Try to find it in all registrations
 			registration = allRegistrations.find((r) =>
