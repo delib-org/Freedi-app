@@ -3,6 +3,11 @@ import styles from './notificationPrompt.module.scss';
 import useNotifications from '@/controllers/hooks/useNotifications';
 import { isIOS, isInstalledPWA, getIOSVersion } from '@/services/platformService';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import {
+  trackPermissionRequest,
+  trackIOSInstallPromptShown,
+  trackIOSUnsupportedPromptShown,
+} from '@/services/notificationAnalytics';
 
 interface NotificationPromptProps {
   onClose?: () => void;
@@ -32,20 +37,25 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ onClose }) => {
       // Don't show the prompt immediately, wait a bit for better user experience
       const timer = setTimeout(() => {
         setVisible(true);
+
+        // Track iOS-specific prompts
+        if (isIOSUnsupported) {
+          trackIOSUnsupportedPromptShown();
+        } else if (needsPWAInstall) {
+          trackIOSInstallPromptShown();
+        }
       }, 3000);
 
       return () => clearTimeout(timer);
     } else {
       setVisible(false);
     }
-  }, [permissionState.permission, permissionState.loading]);
+  }, [permissionState.permission, permissionState.loading, isIOSUnsupported, needsPWAInstall]);
 
   // Handle permission request
   const handleEnableClick = async (): Promise<void> => {
     const result = await requestPermission();
-    if (result === 'granted') {
-      // Permission granted successfully
-    }
+    trackPermissionRequest(result);
     setVisible(false);
     onClose?.();
   };
