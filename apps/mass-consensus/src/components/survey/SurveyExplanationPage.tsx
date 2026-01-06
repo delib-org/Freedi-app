@@ -110,7 +110,6 @@ export default function SurveyExplanationPage({
         )}
 
         <div className={styles.explanationBody}>
-          <h1 className={styles.explanationTitle}>{explanationPage.title}</h1>
           <div className={styles.explanationText}>
             <MarkdownRenderer content={explanationPage.content} />
           </div>
