@@ -1453,5 +1453,9 @@
   "hours ago": "uur",
   "days ago": "dagen",
   "Update Suggestion": "Suggestie Bijwerken",
-  "Submitting...": "Bezig met indienen..."
+  "Submitting...": "Bezig met indienen...",
+
+  "Be the first to share your idea!": "Wees de eerste om je idee te delen!",
+  "Press \"Add an answer\" to add your suggestion": "Druk op \"Antwoord toevoegen\" om je suggestie toe te voegen",
+  "Press the + button to add your suggestion": "Druk op de +-knop om je suggestie toe te voegen"
 }

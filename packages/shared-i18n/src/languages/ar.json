@@ -1449,5 +1449,9 @@
   "hours ago": "ساعات",
   "days ago": "أيام",
   "Update Suggestion": "تحديث الاقتراح",
-  "Submitting...": "جاري الإرسال..."
+  "Submitting...": "جاري الإرسال...",
+
+  "Be the first to share your idea!": "كن أول من يشارك فكرته!",
+  "Press \"Add an answer\" to add your suggestion": "اضغط على \"إضافة إجابة\" لإضافة اقتراحك",
+  "Press the + button to add your suggestion": "اضغط على زر + لإضافة اقتراحك"
 }

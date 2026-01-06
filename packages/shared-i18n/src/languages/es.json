@@ -1453,5 +1453,9 @@
   "hours ago": "horas",
   "days ago": "días",
   "Update Suggestion": "Actualizar Sugerencia",
-  "Submitting...": "Enviando..."
+  "Submitting...": "Enviando...",
+
+  "Be the first to share your idea!": "¡Sé el primero en compartir tu idea!",
+  "Press \"Add an answer\" to add your suggestion": "Pulsa \"Agregar respuesta\" para agregar tu sugerencia",
+  "Press the + button to add your suggestion": "Pulsa el botón + para agregar tu sugerencia"
 }

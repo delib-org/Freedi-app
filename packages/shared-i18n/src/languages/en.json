@@ -1834,5 +1834,9 @@
   "notifications.iosStep4": "Open the app from your home screen",
   "common.ok": "OK",
   "common.gotIt": "Got it",
-  "common.notNow": "Not Now"
+  "common.notNow": "Not Now",
+
+  "Be the first to share your idea!": "Be the first to share your idea!",
+  "Press \"Add an answer\" to add your suggestion": "Press \"Add an answer\" to add your suggestion",
+  "Press the + button to add your suggestion": "Press the + button to add your suggestion"
 }
