@@ -1,15 +1,18 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { AuthState } from './useAuthentication';
 
 /**
- * Routes that allow unauthenticated access.
+ * Routes that require exact match for unauthenticated access.
+ */
+const EXACT_PUBLIC_ROUTES = ['/', '/start'] as const;
+
+/**
+ * Route prefixes that allow unauthenticated access.
  * These routes handle public content (statement routes may have public access).
  */
-const PUBLIC_ROUTE_PATTERNS = [
-	'/start',
-	'/',
+const PUBLIC_ROUTE_PREFIXES = [
 	'/statement/',
 	'/stage/',
 	'/statement-screen/',
@@ -19,10 +22,19 @@ const PUBLIC_ROUTE_PATTERNS = [
  * Check if a route allows unauthenticated access.
  */
 const isPublicRoute = (pathname: string): boolean => {
-	return PUBLIC_ROUTE_PATTERNS.some(
-		(pattern) => pathname === pattern || pathname.includes(pattern)
-	);
+	// Check exact matches first
+	if (EXACT_PUBLIC_ROUTES.includes(pathname as typeof EXACT_PUBLIC_ROUTES[number])) {
+		return true;
+	}
+
+	// Check prefix matches for routes that can have public access
+	return PUBLIC_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 };
+
+interface AuthRedirectResult {
+	/** Whether the auth redirect check is still pending */
+	isRedirecting: boolean;
+}
 
 /**
  * Hook for handling authentication-based navigation.
@@ -35,10 +47,12 @@ const isPublicRoute = (pathname: string): boolean => {
  * Components can use useAuthentication for state and optionally useAuthRedirect for navigation.
  *
  * @param authState - The authentication state from useAuthentication
+ * @returns Object with isRedirecting flag to prevent rendering during redirect
  */
-export const useAuthRedirect = (authState: AuthState): void => {
+export const useAuthRedirect = (authState: AuthState): AuthRedirectResult => {
 	const navigate = useNavigate();
 	const location = useLocation();
+	const [isRedirecting, setIsRedirecting] = useState(false);
 
 	useEffect(() => {
 		// Only redirect after auth check is complete
@@ -57,7 +71,10 @@ export const useAuthRedirect = (authState: AuthState): void => {
 				JSON.stringify(historyData)
 			);
 
+			setIsRedirecting(true);
 			navigate('/start', { replace: true });
 		}
 	}, [authState.isAuthenticated, authState.isLoading, location.pathname, navigate]);
+
+	return { isRedirecting };
 };
