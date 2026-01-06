@@ -58,15 +58,9 @@ const fallbackConfig = (() => {
 })();
 
 const loadFirebaseConfig = async () => {
-	try {
-		const response = await fetch('/firebase-config.json', { cache: 'no-store' });
-		if (response.ok) {
-			return await response.json();
-		}
-	} catch (error) {
-		console.warn('Failed to load firebase-config.json, using fallback config:', error);
-	}
-
+	// We use domain-based config selection instead of loading from a file
+	// This ensures the correct config is used in all environments
+	console.info(`[firebase-messaging-sw] Using domain-based config for: ${currentDomain}`);
 	return null;
 };
 
@@ -79,14 +73,149 @@ let badgeCount = 0;
 const setupMessagingHandlers = (messagingInstance) => {
 	messaging = messagingInstance;
 
+	// Set up background message handler AFTER messaging is initialized
+	messaging.onBackgroundMessage(async function (payload) {
+		try {
+			// Received background message
+
+			// If there's no notification object, we can't show a notification
+			if (!payload.notification) {
+				console.error('No notification data in payload');
+				return;
+			}
+
+			const { title, body, image } = payload.notification;
+			const data = payload.data || {};
+
+			// Generate a unique ID for this notification if not provided
+			const notificationId = data.id || new Date().getTime().toString();
+
+			// Store notification data in cache for access when user clicks
+			notificationCache.set(notificationId, {
+				...payload,
+				timestamp: new Date().getTime()
+			});
+
+			// Default URL to open when notification is clicked
+			const url = data.url || `/statement/${data.parentId || data.statementId}`;
+
+			// Enhanced notification options
+			const notificationOptions = {
+				body: body || '',
+				icon: '/icons/logo-192px.png', // Local app icon
+				badge: '/icons/logo-48px.png', // Badge icon
+				image: image || '', // Large image if provided
+				vibrate: [100, 50, 100, 50, 100], // Vibration pattern
+				sound: '/assets/sounds/bell.mp3', // Sound file
+				tag: data.tag || `statement-${data.parentId || notificationId}`, // Group similar notifications
+				data: {
+					...data,
+					notificationId,
+					url
+				},
+				// Only show a single action button to prevent duplicate notifications with different buttons
+				actions: [
+					{
+						action: 'open',
+						title: data.openActionTitle || 'Open'
+					}
+				],
+				// Make notification require interaction (won't auto-dismiss)
+				requireInteraction: data.requireInteraction !== 'false',
+				// Timestamp when notification was received
+				timestamp: new Date().getTime(),
+				// Direction for text (useful for RTL languages)
+				dir: data.dir || 'auto',
+				// Controls notification appearance in Android
+				android: {
+					style: 'bigtext',
+					priority: 'high',
+					channelId: data.channelId || 'default'
+				}
+			};
+
+			// Handle badge counter for notification
+			try {
+				// Get all clients to check if any are visible
+				const clients = await self.clients.matchAll({
+					type: 'window',
+					includeUncontrolled: true
+				});
+
+				// Only increment badge if all windows are hidden or not focused
+				const allHidden = clients.every(client =>
+					!client.visibilityState ||
+					client.visibilityState === 'hidden' ||
+					!client.focused
+				);
+
+				if (allHidden) {
+					// Increment badge count
+					badgeCount++;
+
+					// Save the updated count to IndexedDB
+					await saveBadgeCount(badgeCount);
+
+					// Set badge using standard or experimental APIs based on browser support
+					if ('setAppBadge' in navigator) {
+						// Standard Badging API (Chrome, Edge, Safari)
+						await navigator.setAppBadge(badgeCount)
+							.catch(err => console.error('Error setting badge:', err));
+					} else if ('setExperimentalAppBadge' in navigator) {
+						// Experimental API for some browsers
+						// @ts-ignore - Experimental API
+						await navigator.setExperimentalAppBadge(badgeCount)
+							.catch(err => console.error('Error setting experimental badge:', err));
+					} else if ('ExperimentalBadge' in window) {
+						// Another experimental API seen in some browsers
+						// @ts-ignore - Experimental API
+						await window.ExperimentalBadge.set(badgeCount)
+							.catch(err => console.error('Error setting ExperimentalBadge:', err));
+					}
+				} else {
+					// If app is visible, notify it about the new message anyway
+					clients.forEach(client => {
+						client.postMessage({
+							type: 'NEW_NOTIFICATION_RECEIVED',
+							payload: {
+								...payload,
+								notificationId
+							}
+						});
+					});
+				}
+			} catch (error) {
+				console.error('Error handling badge counter:', error);
+			}
+
+			// Show the notification
+			await self.registration.showNotification(title || 'FreeDi App', notificationOptions);
+
+			// Try to play sound (though this typically won't work in service worker)
+			await playNotificationSound();
+
+			// Notification displayed successfully
+			console.info('[firebase-messaging-sw] Notification shown:', title);
+		} catch (error) {
+			console.error('Error showing notification:', error);
+		}
+	});
+
+	console.info('[firebase-messaging-sw] Messaging handlers initialized');
 };
 
 const initializeFirebase = async () => {
-	const firebaseConfig = await loadFirebaseConfig() || fallbackConfig;
-	firebase.initializeApp(firebaseConfig);
-	setupMessagingHandlers(firebase.messaging());
+	try {
+		const firebaseConfig = await loadFirebaseConfig() || fallbackConfig;
+		firebase.initializeApp(firebaseConfig);
+		setupMessagingHandlers(firebase.messaging());
+		console.info('[firebase-messaging-sw] Firebase initialized successfully');
+	} catch (error) {
+		console.error('[firebase-messaging-sw] Failed to initialize Firebase:', error);
+	}
 };
 
+// Initialize Firebase immediately
 initializeFirebase();
 
 // Add push event listener for debugging
@@ -206,133 +335,6 @@ const playNotificationSound = async () => {
 		console.error('Error playing notification sound:', error);
 	}
 };
-
-// Handle background messages (when app is closed or in background)
-messaging.onBackgroundMessage(async function (payload) {
-	try {
-		// Received background message
-
-		// If there's no notification object, we can't show a notification
-		if (!payload.notification) {
-			console.error('No notification data in payload');
-			return;
-		}
-
-		const { title, body, image } = payload.notification;
-		const data = payload.data || {};
-
-		// Generate a unique ID for this notification if not provided
-		const notificationId = data.id || new Date().getTime().toString();
-
-		// Store notification data in cache for access when user clicks
-		notificationCache.set(notificationId, {
-			...payload,
-			timestamp: new Date().getTime()
-		});
-
-		// Default URL to open when notification is clicked
-		const url = data.url || '/';
-
-		// Enhanced notification options
-		const notificationOptions = {
-			body: body || '',
-			icon: '/icons/logo-192px.png', // Local app icon
-			badge: '/icons/logo-48px.png', // Badge icon
-			image: image || '', // Large image if provided
-			vibrate: [100, 50, 100, 50, 100], // Vibration pattern
-			sound: '/assets/sounds/bell.mp3', // Sound file
-			tag: data.tag || notificationId, // Group similar notifications
-			data: {
-				...data,
-				notificationId,
-				url
-			},
-			// Only show a single action button to prevent duplicate notifications with different buttons
-			actions: [
-				{
-					action: 'open',
-					title: data.openActionTitle || 'Open'
-				}
-			],
-			// Make notification require interaction (won't auto-dismiss)
-			requireInteraction: data.requireInteraction !== 'false',
-			// Timestamp when notification was received
-			timestamp: new Date().getTime(),
-			// Direction for text (useful for RTL languages)
-			dir: data.dir || 'auto',
-			// Controls notification appearance in Android
-			android: {
-				style: 'bigtext',
-				priority: 'high',
-				channelId: data.channelId || 'default'
-			}
-		};
-
-		// Handle badge counter for notification
-		try {
-			// Get all clients to check if any are visible
-			const clients = await self.clients.matchAll({
-				type: 'window',
-				includeUncontrolled: true
-			});
-
-			// Only increment badge if all windows are hidden or not focused
-			const allHidden = clients.every(client =>
-				!client.visibilityState ||
-				client.visibilityState === 'hidden' ||
-				!client.focused
-			);
-
-			if (allHidden) {
-				// Increment badge count
-				badgeCount++;
-
-				// Save the updated count to IndexedDB
-				await saveBadgeCount(badgeCount);
-
-				// Set badge using standard or experimental APIs based on browser support
-				if ('setAppBadge' in navigator) {
-					// Standard Badging API (Chrome, Edge, Safari)
-					await navigator.setAppBadge(badgeCount)
-						.catch(err => console.error('Error setting badge:', err));
-				} else if ('setExperimentalAppBadge' in navigator) {
-					// Experimental API for some browsers
-					// @ts-ignore - Experimental API
-					await navigator.setExperimentalAppBadge(badgeCount)
-						.catch(err => console.error('Error setting experimental badge:', err));
-				} else if ('ExperimentalBadge' in window) {
-					// Another experimental API seen in some browsers
-					// @ts-ignore - Experimental API
-					await window.ExperimentalBadge.set(badgeCount)
-						.catch(err => console.error('Error setting ExperimentalBadge:', err));
-				}
-			} else {
-				// If app is visible, notify it about the new message anyway
-				clients.forEach(client => {
-					client.postMessage({
-						type: 'NEW_NOTIFICATION_RECEIVED',
-						payload: {
-							...payload,
-							notificationId
-						}
-					});
-				});
-			}
-		} catch (error) {
-			console.error('Error handling badge counter:', error);
-		}
-
-		// Show the notification
-		await self.registration.showNotification(title || 'FreeDi App', notificationOptions);
-
-		// Try to play sound (though this typically won't work in service worker)
-		await playNotificationSound();
-
-		// Notification displayed successfully
-	} catch (error) {
-		console.error('Error showing notification:', error);
-	}
-});
 
 // Handle notification click
 self.addEventListener('notificationclick', function (event) {

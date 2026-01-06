@@ -54,9 +54,10 @@ export async function ensureFirebaseServiceWorker() {
 
         // Firebase SW not found, registering
 
-        // Register Firebase messaging service worker with explicit scope
+        // Register Firebase messaging service worker at ROOT scope to receive push notifications
+        // Firebase messaging requires the SW to be at root scope to intercept push events
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-            scope: '/firebase-messaging-sw/',
+            scope: '/',
             updateViaCache: 'none' // Ensure fresh SW updates
         });
 
