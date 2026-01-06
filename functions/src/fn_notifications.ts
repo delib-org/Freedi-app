@@ -295,27 +295,113 @@ async function validateTokens(subscribers: FcmSubscriber[]): Promise<TokenValida
 }
 
 /**
- * Removes invalid tokens from the database
+ * Removes invalid tokens from all relevant collections:
+ * 1. askedToBeNotified (legacy)
+ * 2. pushNotifications (token metadata)
+ * 3. statementsSubscribe.tokens[] (subscription tokens array)
  */
 async function removeInvalidTokens(invalidTokens: FcmSubscriber[]): Promise<void> {
 	if (invalidTokens.length === 0) return;
 
 	const batch = db.batch();
-	
+
 	for (const subscriber of invalidTokens) {
-		// Remove from askedToBeNotified collection
+		// Remove from askedToBeNotified collection (legacy)
 		if (subscriber.documentId) {
 			const docRef = db.doc(`${Collections.askedToBeNotified}/${subscriber.documentId}`);
 			batch.delete(docRef);
 		}
-		
-		// Also remove from pushNotifications collection
+
+		// Remove from pushNotifications collection
 		const pushNotificationRef = db.doc(`pushNotifications/${subscriber.token}`);
 		batch.delete(pushNotificationRef);
 	}
 
 	await batch.commit();
-	logger.info(`Removed ${invalidTokens.length} invalid tokens`);
+
+	// Remove tokens from statementsSubscribe.tokens[] arrays
+	// This requires querying subscriptions by userId and updating them
+	await removeTokensFromSubscriptions(invalidTokens);
+
+	logger.info(`Removed ${invalidTokens.length} invalid tokens from all collections`);
+}
+
+/**
+ * Removes invalid tokens from statementsSubscribe.tokens[] arrays.
+ * Groups tokens by userId for efficient batch updates.
+ */
+async function removeTokensFromSubscriptions(invalidTokens: FcmSubscriber[]): Promise<void> {
+	if (invalidTokens.length === 0) return;
+
+	// Group tokens by userId
+	const tokensByUser = new Map<string, string[]>();
+	for (const subscriber of invalidTokens) {
+		const tokens = tokensByUser.get(subscriber.userId) || [];
+		tokens.push(subscriber.token);
+		tokensByUser.set(subscriber.userId, tokens);
+	}
+
+	// Process each user's subscriptions
+	const updatePromises: Promise<void>[] = [];
+
+	for (const [userId, tokens] of tokensByUser) {
+		updatePromises.push(removeUserTokensFromSubscriptions(userId, tokens));
+	}
+
+	await Promise.all(updatePromises);
+}
+
+/**
+ * Removes specific tokens from all of a user's statement subscriptions.
+ */
+async function removeUserTokensFromSubscriptions(userId: string, tokens: string[]): Promise<void> {
+	try {
+		// Query all subscriptions for this user that have tokens
+		const subscriptionsSnapshot = await db
+			.collection(Collections.statementsSubscribe)
+			.where('userId', '==', userId)
+			.get();
+
+		if (subscriptionsSnapshot.empty) return;
+
+		// Batch update to remove tokens
+		const batchSize = 500;
+		let batch = db.batch();
+		let operationCount = 0;
+
+		for (const docSnapshot of subscriptionsSnapshot.docs) {
+			const subscription = docSnapshot.data();
+			const currentTokens: string[] = subscription.tokens || [];
+
+			// Filter out invalid tokens
+			const updatedTokens = currentTokens.filter(t => !tokens.includes(t));
+
+			// Only update if tokens changed
+			if (updatedTokens.length !== currentTokens.length) {
+				batch.update(docSnapshot.ref, {
+					tokens: updatedTokens,
+					lastUpdate: Date.now()
+				});
+				operationCount++;
+
+				// Commit batch if we hit the limit
+				if (operationCount >= batchSize) {
+					await batch.commit();
+					batch = db.batch();
+					operationCount = 0;
+				}
+			}
+		}
+
+		// Commit remaining operations
+		if (operationCount > 0) {
+			await batch.commit();
+		}
+
+		logger.info(`Removed ${tokens.length} invalid tokens from ${userId}'s subscriptions`);
+	} catch (error) {
+		logger.error(`Error removing tokens from user ${userId} subscriptions:`, error);
+	}
 }
 
 /**
