@@ -77,6 +77,10 @@ export interface CreateSurveyRequest {
   explanationPages?: SurveyExplanationPage[];
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId?: string;
+  /** Custom introduction text to show on welcome screen (replaces default translation) */
+  customIntroText?: string;
+  /** Whether to show the introduction text on welcome screen (defaults to true) */
+  showIntro?: boolean;
 }
 
 /**
@@ -99,6 +103,10 @@ export interface UpdateSurveyRequest {
   explanationPages?: SurveyExplanationPage[];
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId?: string;
+  /** Custom introduction text to show on welcome screen (replaces default translation) */
+  customIntroText?: string;
+  /** Whether to show the introduction text on welcome screen (defaults to true) */
+  showIntro?: boolean;
 }
 
 /**

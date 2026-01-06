@@ -92,6 +92,36 @@
   }
 }
 
+// iOS installation instructions
+.iosInstructions {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+
+  p {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #333;
+  }
+
+  ol {
+    margin: 0;
+    padding-left: 20px;
+
+    li {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 4px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+
 @media (max-width: 480px) {
   .notificationPrompt {
     left: 10px;

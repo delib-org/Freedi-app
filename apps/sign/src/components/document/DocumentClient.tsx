@@ -1,15 +1,20 @@
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
+import { Paragraph } from '@/types';
 import Modal from '../shared/Modal';
+import MinimizedModalIndicator from '../shared/MinimizedModalIndicator';
 import CommentThread from '../comments/CommentThread';
+import SuggestionThread from '../suggestions/SuggestionThread';
 import LoginModal from '../shared/LoginModal';
-import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
+import RejectionFeedbackModal from './RejectionFeedbackModal';
 import { DemographicSurveyModal } from '../demographics';
+import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -25,8 +30,12 @@ interface DocumentClientProps {
   user: SignUser | null;
   userSignature: Signature | null;
   commentCounts: Record<string, number>;
+  suggestionCounts?: Record<string, number>;
   userInteractions?: string[];
   isAdmin?: boolean;
+  enableSuggestions?: boolean;
+  paragraphs?: Paragraph[];
+  textDirection?: 'ltr' | 'rtl';
   children: React.ReactNode;
 }
 
@@ -35,20 +44,33 @@ export default function DocumentClient({
   user,
   userSignature,
   commentCounts,
+  suggestionCounts = {},
   userInteractions = [],
   isAdmin,
+  enableSuggestions = false,
+  paragraphs = [],
+  textDirection = 'ltr',
   children,
 }: DocumentClientProps) {
+  const { t } = useTranslation();
   const {
     activeModal,
     modalContext,
     closeModal,
+    openModal,
     setSubmitting,
     setSigningAnimationState,
     resetSigningAnimation,
     initializeCommentCounts,
+    initializeSuggestionCounts,
     initializeUserInteractions,
+    isModalMinimized,
+    minimizeModal,
+    restoreModal,
   } = useUIStore();
+
+  // State for rejection feedback modal
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   // Demographics store
   const {
@@ -203,13 +225,18 @@ export default function DocumentClient({
             // Show rejected confirmation animation
             setSigningAnimationState('rejected');
 
-            // Wait for rejected animation before reload
+            // Wait for rejected animation before showing feedback modal
             await new Promise((resolve) =>
               setTimeout(resolve, ANIMATION_DURATION.REJECTED)
             );
+
+            // Show feedback modal instead of immediate reload
+            setShowFeedbackModal(true);
+
+            return; // Don't reload - the modal will handle it
           }
 
-          // Refresh the page to show updated state
+          // Refresh the page to show updated state (only for sign action)
           window.location.reload();
         } else {
           const error = await response.json();
@@ -244,24 +271,50 @@ export default function DocumentClient({
     initializeCommentCounts(commentCounts);
   }, [commentCounts, initializeCommentCounts]);
 
+  // Initialize suggestion counts from server data
+  useEffect(() => {
+    if (enableSuggestions && Object.keys(suggestionCounts).length > 0) {
+      initializeSuggestionCounts(suggestionCounts);
+    }
+  }, [suggestionCounts, enableSuggestions, initializeSuggestionCounts]);
+
+  // Get current paragraph content for suggestions modal
+  const currentParagraph = useMemo(() => {
+    if (!modalContext?.paragraphId) return null;
+
+    return paragraphs.find((p) => p.paragraphId === modalContext.paragraphId) || null;
+  }, [modalContext?.paragraphId, paragraphs]);
+
+  // Handler to open suggestions modal from comments
+  const handleOpenSuggestions = useCallback(() => {
+    if (modalContext?.paragraphId) {
+      openModal('suggestions', { paragraphId: modalContext.paragraphId });
+    }
+  }, [modalContext?.paragraphId, openModal]);
+
   // Initialize user interactions from server data
   useEffect(() => {
     initializeUserInteractions(userInteractions);
   }, [userInteractions, initializeUserInteractions]);
 
-  // Fetch demographic status on mount
+  // Ensure user has ID and fetch demographic status on mount
   useEffect(() => {
-    if (documentId && user) {
+    if (documentId) {
+      // Create anonymous user if none exists (sets cookie for API calls)
+      if (!user) {
+        getOrCreateAnonymousUser();
+      }
+      // Fetch demographic status (cookie is already set synchronously)
       fetchStatus(documentId);
     }
   }, [documentId, user, fetchStatus]);
 
-  // Auto-open survey modal if mandatory and incomplete
+  // Auto-open survey modal if mandatory and incomplete (for all users)
   useEffect(() => {
-    if (isInteractionBlocked && user && !isSurveyModalOpen) {
+    if (isInteractionBlocked && !isSurveyModalOpen) {
       openSurveyModal();
     }
-  }, [isInteractionBlocked, user, isSurveyModalOpen, openSurveyModal]);
+  }, [isInteractionBlocked, isSurveyModalOpen, openSurveyModal]);
 
   // Cleanup confetti timeout on unmount
   useEffect(() => {
@@ -310,7 +363,7 @@ export default function DocumentClient({
     <HeatMapProvider documentId={documentId}>
       {children}
 
-      {/* Heat Map Controls - visible to admins */}
+      {/* Heat Map Controls - visible to admins only */}
       {isAdmin && (
         <>
           <HeatMapToolbar />
@@ -320,15 +373,55 @@ export default function DocumentClient({
       )}
 
       {/* Comments Modal */}
-      {activeModal === 'comments' && modalContext?.paragraphId && (
-        <Modal title="Comments" onClose={closeModal} size="large">
+      {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (
+        <Modal
+          title={t('Comments')}
+          onClose={closeModal}
+          size="large"
+          canMinimize={true}
+          onMinimize={minimizeModal}
+          direction={textDirection}
+        >
           <CommentThread
             paragraphId={modalContext.paragraphId}
             documentId={documentId}
             isLoggedIn={!!user}
             userId={user?.uid || null}
+            enableSuggestions={enableSuggestions}
+            originalContent={currentParagraph?.content || ''}
+            onOpenSuggestions={handleOpenSuggestions}
           />
         </Modal>
+      )}
+
+      {/* Suggestions Modal */}
+      {activeModal === 'suggestions' && modalContext?.paragraphId && !isModalMinimized && (
+        <Modal
+          title={t('Suggestions')}
+          onClose={closeModal}
+          size="large"
+          canMinimize={true}
+          onMinimize={minimizeModal}
+          direction={textDirection}
+        >
+          <SuggestionThread
+            paragraphId={modalContext.paragraphId}
+            documentId={documentId}
+            originalContent={currentParagraph?.content || ''}
+            userId={user?.uid || null}
+            onClose={closeModal}
+          />
+        </Modal>
+      )}
+
+      {/* Minimized Comments Indicator */}
+      {activeModal === 'comments' && isModalMinimized && (
+        <MinimizedModalIndicator onClick={restoreModal} />
+      )}
+
+      {/* Minimized Suggestions Indicator */}
+      {activeModal === 'suggestions' && isModalMinimized && (
+        <MinimizedModalIndicator onClick={restoreModal} />
       )}
 
       {/* Signature Confirmation Modal */}
@@ -348,6 +441,14 @@ export default function DocumentClient({
 
       {/* Demographic Survey Modal */}
       <DemographicSurveyModal documentId={documentId} isAdmin={isAdmin} />
+
+      {/* Rejection Feedback Modal */}
+      {showFeedbackModal && (
+        <RejectionFeedbackModal
+          documentId={documentId}
+          onClose={() => setShowFeedbackModal(false)}
+        />
+      )}
     </HeatMapProvider>
   );
 }

@@ -108,7 +108,6 @@
 
 .commentButton {
   position: relative;
-  margin-inline-start: auto;
 
   &:hover:not(:disabled) {
     color: var(--btn-primary);
@@ -125,6 +124,33 @@
   height: 14px;
   padding: 0 3px;
   background: var(--btn-primary);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestButton {
+  position: relative;
+
+  &:hover:not(:disabled) {
+    color: var(--warning, #f0ad4e);
+    border-color: var(--warning, #f0ad4e);
+    background: rgba(240, 173, 78, 0.08);
+  }
+}
+
+.suggestionCount {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  background: var(--warning, #f0ad4e);
   color: white;
   font-size: 0.6rem;
   font-weight: 600;
@@ -159,11 +185,6 @@
   .button {
     flex-direction: row-reverse;
   }
-
-  .commentButton {
-    margin-inline-start: auto;
-    margin-inline-end: 0;
-  }
 }
 
 /* LTR Support - explicitly set LTR even if root HTML is RTL */
@@ -179,10 +200,5 @@
 
   .button {
     flex-direction: row;
-  }
-
-  .commentButton {
-    margin-inline-end: 0;
-    margin-inline-start: auto;
   }
 }
