@@ -106,7 +106,8 @@ export async function addRandomSeedToStatement(statementId: string): Promise<voi
 
 		if (data?.randomSeed !== undefined) {
 			logger.info(`Statement ${statementId} already has randomSeed: ${data.randomSeed}`);
-			return;
+			
+return;
 		}
 
 		const randomSeed = Math.random();

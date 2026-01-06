@@ -127,7 +127,8 @@ jest.mock('valibot', () => ({
 		if (schema === 'number-schema' && typeof value !== 'number') {
 			throw new Error('Invalid number');
 		}
-		return value;
+		
+return value;
 	}),
 }));
 

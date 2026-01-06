@@ -268,7 +268,8 @@ export async function checkForInappropriateContent(userInput: string): Promise<{
     const errorMessage = error instanceof Error ? error.message : String(error);
     if (errorMessage.includes('SAFETY') || errorMessage.includes('blocked') || errorMessage.includes('harm')) {
       logger.warn("Content blocked by Google safety filters - treating as inappropriate");
-      return { isInappropriate: true, error: "Content blocked by safety filters" };
+      
+return { isInappropriate: true, error: "Content blocked by safety filters" };
     }
 
     // On error, allow the content through rather than blocking legitimate content
@@ -313,7 +314,8 @@ export async function findSimilarStatementsByIds(
 ): Promise<string[]> {
   if (statements.length === 0) {
     logger.info("No existing statements to compare against");
-    return [];
+    
+return [];
   }
 
   // Format statements as numbered list with IDs for the AI
@@ -362,7 +364,8 @@ If no similar suggestions found, return: {"ids": []}`;
     return [];
   } catch (error) {
     logger.error("Error in findSimilarStatementsByIds:", error);
-    return [];
+    
+return [];
   }
 }
 
@@ -583,7 +586,8 @@ Return JSON ONLY:`;
           parsed.description && typeof parsed.description === "string" &&
           parsed.title !== parsed.description) {
         logger.info("Using AI-generated values (different title/description)");
-        return {
+        
+return {
           title: parsed.title,
           description: parsed.description,
         };
@@ -743,7 +747,8 @@ If NOT multiple suggestions (single idea), return: {"isMultiple": false, "sugges
     return { isMultiple: false, suggestions: [] };
   } catch (error) {
     logger.error("Error in detectAndSplitMultipleSuggestions:", error);
-    return { isMultiple: false, suggestions: [] };
+    
+return { isMultiple: false, suggestions: [] };
   }
 }
 

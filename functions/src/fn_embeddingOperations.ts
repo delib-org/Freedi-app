@@ -40,7 +40,8 @@ export async function generateBulkEmbeddings(
         ok: false,
         error: "parentStatementId is required",
       });
-      return;
+      
+return;
     }
 
     logger.info("Starting bulk embedding generation", {
@@ -60,7 +61,8 @@ export async function generateBulkEmbeddings(
         ok: false,
         error: "Parent statement not found",
       });
-      return;
+      
+return;
     }
 
     const parentStatement = parentDoc.data() as Statement;
@@ -87,7 +89,8 @@ export async function generateBulkEmbeddings(
           processingTimeMs: Date.now() - startTime,
         },
       });
-      return;
+      
+return;
     }
 
     const progress: BackfillProgress = {
@@ -202,7 +205,8 @@ export async function getEmbeddingStatus(
         ok: false,
         error: "parentStatementId query parameter is required",
       });
-      return;
+      
+return;
     }
 
     // Get coverage statistics
@@ -245,7 +249,8 @@ export async function regenerateEmbedding(
         ok: false,
         error: "statementId is required",
       });
-      return;
+      
+return;
     }
 
     // Get the statement
@@ -259,7 +264,8 @@ export async function regenerateEmbedding(
         ok: false,
         error: "Statement not found",
       });
-      return;
+      
+return;
     }
 
     const statement = statementDoc.data() as Statement;
@@ -269,7 +275,8 @@ export async function regenerateEmbedding(
         ok: false,
         error: "Statement text is too short for embedding",
       });
-      return;
+      
+return;
     }
 
     // Get parent for context
@@ -332,7 +339,8 @@ export async function deleteEmbedding(
         ok: false,
         error: "statementId is required",
       });
-      return;
+      
+return;
     }
 
     await embeddingCache.deleteEmbedding(statementId);
@@ -367,7 +375,8 @@ export async function testEmbeddingGeneration(
         ok: false,
         error: "text1 and text2 are required",
       });
-      return;
+      
+return;
     }
 
     logger.info("=== EMBEDDING TEST START ===", { text1, text2, context });

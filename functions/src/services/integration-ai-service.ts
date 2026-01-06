@@ -123,7 +123,8 @@ export async function findSimilarAndGenerateSuggestion(
 
 	if (otherStatements.length === 0) {
 		logger.info("No other statements to compare against");
-		return { similarStatements: [] };
+		
+return { similarStatements: [] };
 	}
 
 	// Format statements compactly for AI
@@ -187,7 +188,8 @@ If none similar: {"similarIds":[],"mergedTitle":"","mergedDesc":""}`;
 		};
 	} catch (error) {
 		logger.error("Error in findSimilarAndGenerateSuggestion:", error);
-		return { similarStatements: [] };
+		
+return { similarStatements: [] };
 	}
 }
 
@@ -201,7 +203,8 @@ export async function findSimilarToStatement(
 	questionContext: string
 ): Promise<StatementWithEvaluation[]> {
 	const result = await findSimilarAndGenerateSuggestion(targetStatement, allStatements, questionContext);
-	return result.similarStatements;
+	
+return result.similarStatements;
 }
 
 /**
@@ -245,7 +248,8 @@ export async function generateIntegratedSuggestion(
 		const weight = totalEvaluators > 0
 			? Math.round((s.numberOfEvaluators / totalEvaluators) * 100)
 			: Math.round(100 / statements.length);
-		return {
+		
+return {
 			title: s.statement,
 			description: s.paragraphsText || "",
 			evaluators: s.numberOfEvaluators,
@@ -305,10 +309,12 @@ Return JSON format:
 
 		// Fallback: combine titles
 		logger.warn("AI returned invalid format, using fallback");
-		return createFallbackIntegratedSuggestion(statements);
+		
+return createFallbackIntegratedSuggestion(statements);
 	} catch (error) {
 		logger.error("Error generating integrated suggestion:", error);
-		return createFallbackIntegratedSuggestion(statements);
+		
+return createFallbackIntegratedSuggestion(statements);
 	}
 }
 

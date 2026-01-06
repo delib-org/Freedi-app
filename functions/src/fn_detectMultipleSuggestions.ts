@@ -53,7 +53,8 @@ export async function detectMultipleSuggestions(
         suggestions: [],
         originalText: userInput || "",
       } as DetectMultipleSuggestionsResponse);
-      return;
+      
+return;
     }
 
     // Log request for monitoring
@@ -75,7 +76,8 @@ export async function detectMultipleSuggestions(
         suggestions: [],
         originalText: userInput,
       } as DetectMultipleSuggestionsResponse);
-      return;
+      
+return;
     }
 
     // Step 2: Get question context if available

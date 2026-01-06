@@ -101,7 +101,8 @@ export async function getCachedSimilarStatementIds(
     const cached = await cache.get<string[]>(cacheKey);
     if (cached) {
       logger.info("Cache hit for similar statement IDs");
-      return cached;
+      
+return cached;
     }
 
     // Call AI service

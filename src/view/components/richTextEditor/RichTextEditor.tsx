@@ -127,7 +127,8 @@ function extractTextFromNode(node: TipTapNode): string {
 			if (child.type === 'paragraph' && child.content) {
 				return extractTextFromNode(child);
 			}
-			return '';
+			
+return '';
 		})
 		.join('');
 }
@@ -288,7 +289,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 			if (existingPara && existingPara.content === newPara.content) {
 				return { ...newPara, paragraphId: existingPara.paragraphId };
 			}
-			return newPara;
+			
+return newPara;
 		});
 
 		await onSave(mergedParagraphs);

@@ -59,7 +59,8 @@ const CreatedRoomsDisplay: FC<CreatedRoomsDisplayProps> = ({ statementId, option
 			if (!existing || setting.createdAt > existing.createdAt) {
 				acc.set(setting.statementId, setting);
 			}
-			return acc;
+			
+return acc;
 		}, new Map<string, RoomSettings>());
 
 		const result = Array.from(settingsMap.values());
