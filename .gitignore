@@ -59,3 +59,5 @@ apps/sign/tsconfig.tsbuildinfo
 
 # Worktrees
 .worktrees/
+
+functions/freedi-shared-types-1.0.1.tgz
