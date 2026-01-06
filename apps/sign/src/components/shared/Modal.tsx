@@ -8,6 +8,9 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   size?: 'small' | 'medium' | 'large';
+  canMinimize?: boolean;
+  onMinimize?: () => void;
+  direction?: 'ltr' | 'rtl';
 }
 
 export default function Modal({
@@ -15,6 +18,9 @@ export default function Modal({
   onClose,
   children,
   size = 'medium',
+  canMinimize = false,
+  onMinimize,
+  direction,
 }: ModalProps) {
   // Close on Escape key
   const handleKeyDown = useCallback(
@@ -52,32 +58,55 @@ export default function Modal({
       aria-modal="true"
       aria-labelledby={title ? 'modal-title' : undefined}
     >
-      <div className={`${styles.modal} ${styles[size]}`}>
+      <div className={`${styles.modal} ${styles[size]}`} dir={direction} data-text-dir={direction}>
         {title && (
           <header className={styles.header}>
             <h2 id="modal-title" className={styles.title}>
               {title}
             </h2>
-            <button
-              type="button"
-              className={styles.closeButton}
-              onClick={onClose}
-              aria-label="Close modal"
-            >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className={styles.headerButtons}>
+              {canMinimize && onMinimize && (
+                <button
+                  type="button"
+                  className={styles.minimizeButton}
+                  onClick={onMinimize}
+                  aria-label="Minimize modal"
+                >
+                  <svg
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                  </svg>
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.closeButton}
+                onClick={onClose}
+                aria-label="Close modal"
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
           </header>
         )}
         <div className={styles.content}>{children}</div>

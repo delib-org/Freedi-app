@@ -188,6 +188,10 @@ export const SurveySchema = object({
   explanationPages: optional(array(SurveyExplanationPageSchema)),
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId: optional(string()),
+  /** Custom introduction text to show on welcome screen (replaces default translation) */
+  customIntroText: optional(string()),
+  /** Whether to show the introduction text on welcome screen (defaults to true) */
+  showIntro: optional(boolean()),
   createdAt: number(),
   lastUpdate: number(),
 });

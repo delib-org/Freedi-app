@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore, UIState } from '@/store/uiStore';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -16,7 +16,7 @@ interface CommentProps {
 
 export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate }: CommentProps) {
   const { t } = useTranslation();
-  const addUserInteraction = useUIStore((state) => state.addUserInteraction);
+  const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
   const [consensus, setConsensus] = useState(comment.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);

@@ -1,0 +1,426 @@
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--spacing-lg);
+}
+
+.header {
+  margin-bottom: var(--spacing-lg);
+
+  h1 {
+    font-size: var(--h2-font-size);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-xs);
+  }
+
+  p {
+    color: var(--text-secondary);
+    margin: 0;
+  }
+}
+
+.loading {
+  text-align: center;
+  padding: var(--spacing-xl);
+  color: var(--text-secondary);
+}
+
+.importSection {
+  margin-bottom: var(--spacing-lg);
+}
+
+.paragraphsList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.empty {
+  text-align: center;
+  padding: var(--spacing-xl);
+  background: var(--background-alt, #f9f9f9);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.emptyAddButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--btn-primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--btn-primary-hover, #4a73d0);
+  }
+}
+
+// Insert trigger between paragraphs (Notion-style)
+.insertTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  margin: var(--spacing-xs) 0;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  cursor: pointer;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.insertLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+.insertIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: white;
+  margin: 0 var(--spacing-sm);
+  flex-shrink: 0;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  .insertTrigger:hover & {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Bottom "Add Paragraph" button
+.addToEndButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  width: 100%;
+  padding: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  background: transparent;
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+    background: rgba(27, 38, 80, 0.02);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+.paragraphItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  background: var(--card-default, #fff);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  transition: box-shadow 0.15s ease, opacity 0.15s ease;
+
+  &:hover {
+    box-shadow: var(--shadow-sm);
+  }
+
+  &.dragging {
+    opacity: 0.5;
+    box-shadow: var(--shadow-md);
+  }
+}
+
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  color: var(--text-caption);
+  cursor: grab;
+  flex-shrink: 0;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.paragraphContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.viewMode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.typeLabel {
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--background-alt, #f0f0f0);
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  color: var(--text-caption);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.preview {
+  line-height: 1.6;
+  color: var(--text-body);
+
+  // Truncate long content
+  max-height: 100px;
+  overflow: hidden;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(transparent, var(--card-default, #fff));
+  }
+}
+
+.previewImage {
+  max-width: 200px;
+  max-height: 150px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+}
+
+.editMode {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.typeSelect {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--card-default, #fff);
+  color: var(--text-body);
+  font-size: 0.875rem;
+  cursor: pointer;
+  width: fit-content;
+
+  &:hover {
+    border-color: var(--btn-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 1px;
+  }
+}
+
+.editActions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.saveButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--agree);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--agree-dark, #1a7f37);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.cancelButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--background-alt, #f0f0f0);
+  color: var(--text-body);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--border-light);
+  }
+}
+
+.itemActions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.editButton,
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: var(--background-alt, #f0f0f0);
+    color: var(--text-body);
+  }
+}
+
+.deleteButton:hover {
+  background: var(--disagree-light, #fce8e8);
+  color: var(--disagree);
+}
+
+// Modal
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: var(--spacing-md);
+}
+
+.modal {
+  background: var(--card-default, #fff);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  max-width: 600px;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+
+  h2 {
+    font-size: var(--h3-font-size);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-md);
+  }
+}
+
+.modalContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+
+  label {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+  }
+}
+
+.modalActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-lg);
+  justify-content: flex-end;
+}
+
+// RTL Support
+:global([data-text-dir="rtl"]) {
+  .paragraphItem {
+    direction: rtl;
+  }
+
+  .modalActions {
+    justify-content: flex-start;
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .container {
+    padding: var(--spacing-md);
+  }
+
+  .paragraphItem {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dragHandle {
+    display: none; // Hide drag on mobile, touch drag is complex
+  }
+
+  .itemActions {
+    justify-content: flex-end;
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-light);
+  }
+
+  // On mobile, show insert triggers as always-visible but subtle
+  .insertTrigger {
+    opacity: 0.4;
+    height: 32px; // Larger touch target
+
+    &:hover,
+    &:active {
+      opacity: 1;
+    }
+  }
+
+  .addToEndButton {
+    padding: var(--spacing-lg);
+    font-size: 1rem;
+  }
+
+  .modal {
+    padding: var(--spacing-md);
+  }
+}

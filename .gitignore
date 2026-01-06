@@ -12,6 +12,7 @@ env/.env.*
 !env/.env.example
 node_modules/
 dist/
+coverage/
 *.log
 package-lock.json
 yarn.lock
@@ -53,3 +54,8 @@ yarn.lock
 functions/.runtimeconfig.json
 
 functions/scripts/serviceAccountKey.json
+
+apps/sign/tsconfig.tsbuildinfo
+
+# Worktrees
+.worktrees/

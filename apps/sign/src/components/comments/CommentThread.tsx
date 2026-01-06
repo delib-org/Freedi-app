@@ -5,7 +5,9 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { useCommentDraft } from '@/hooks/useCommentDraft';
 import Comment from './Comment';
+import SuggestionPrompt from '../suggestions/SuggestionPrompt';
 import styles from './CommentThread.module.scss';
 
 interface CommentThreadProps {
@@ -13,6 +15,10 @@ interface CommentThreadProps {
   documentId: string;
   isLoggedIn: boolean;
   userId: string | null;
+  onDraftChange?: (draft: string) => void;
+  enableSuggestions?: boolean;
+  originalContent?: string;
+  onOpenSuggestions?: () => void;
 }
 
 export default function CommentThread({
@@ -20,15 +26,25 @@ export default function CommentThread({
   documentId,
   isLoggedIn,
   userId,
+  onDraftChange,
+  enableSuggestions = false,
+  originalContent: _originalContent = '',
+  onOpenSuggestions,
 }: CommentThreadProps) {
   const { t } = useTranslation();
   const { incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
   const [comments, setComments] = useState<Statement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [newComment, setNewComment] = useState('');
+  const { draft: newComment, setDraft: setNewComment, clearDraft } = useCommentDraft({ paragraphId });
   const [error, setError] = useState<string | null>(null);
   const [effectiveUserId, setEffectiveUserId] = useState<string | null>(userId);
+  const [showSuggestionPrompt, setShowSuggestionPrompt] = useState(false);
+
+  // Notify parent of draft changes for minimize feature
+  useEffect(() => {
+    onDraftChange?.(newComment);
+  }, [newComment, onDraftChange]);
 
   // Ensure anonymous user is created if not logged in
   useEffect(() => {
@@ -99,11 +115,15 @@ export default function CommentThread({
       if (response.ok) {
         const data = await response.json();
         setComments((prev) => [...prev, data.comment]);
-        setNewComment('');
+        clearDraft(); // Clear draft from localStorage on successful submit
         // Update comment count in store
         incrementCommentCount(paragraphId);
         // Mark paragraph as interacted
         addUserInteraction(paragraphId);
+        // Show suggestion prompt if suggestions are enabled
+        if (enableSuggestions) {
+          setShowSuggestionPrompt(true);
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.error || 'Failed to post comment');
@@ -199,6 +219,15 @@ export default function CommentThread({
             {isSubmitting ? t('Posting...') : t('Post Comment')}
           </button>
         </form>
+      )}
+
+      {/* Post-comment suggestion prompt */}
+      {showSuggestionPrompt && enableSuggestions && onOpenSuggestions && (
+        <SuggestionPrompt
+          paragraphId={paragraphId}
+          onOpenSuggestions={onOpenSuggestions}
+          onDismiss={() => setShowSuggestionPrompt(false)}
+        />
       )}
     </div>
   );

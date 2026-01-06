@@ -11,6 +11,16 @@ jest.mock("../services/ai-service");
 jest.mock("../services/cached-statement-service");
 jest.mock("../services/cached-ai-service");
 jest.mock("../services/statement-service");
+jest.mock("../services/vector-search-service", () => ({
+  vectorSearchService: {
+    findSimilarToText: jest.fn().mockResolvedValue([]),
+  },
+}));
+jest.mock("../services/embedding-cache-service", () => ({
+  embeddingCache: {
+    getEmbeddingCoverage: jest.fn().mockResolvedValue({ coveragePercent: 0 }),
+  },
+}));
 jest.mock("firebase-functions", () => ({
   logger: {
     info: jest.fn(),
@@ -93,17 +103,27 @@ describe("findSimilarStatements - Optimized", () => {
         .mockResolvedValue({
           isInappropriate: false,
         });
+
+      // Parent statement is always fetched first to get threshold
+      jest
+        .spyOn(cachedStatementService, "getCachedParentStatement")
+        .mockResolvedValue({
+          statement: "parent question",
+          statementSettings: { similarityThreshold: 0.75 },
+        } as Partial<Statement> as Statement);
     });
 
     it("should return cached response when available", async () => {
       const cachedData = {
         similarStatements: [{ statement: "cached statement", statementId: "cached1", creatorId: "user1", creator: { uid: "user1", displayName: "Test" }, statementType: "option", createdAt: Date.now(), lastUpdate: Date.now() } as Partial<Statement>] as Statement[],
         userText: "cached user text",
+        generatedTitle: "cached title",
+        generatedDescription: "cached description",
       };
 
       jest
         .spyOn(cachedAiService, "getCachedSimilarityResponse")
-        .mockResolvedValue(cachedData as { similarStatements: Statement[]; userText: string });
+        .mockResolvedValue(cachedData as { similarStatements: Statement[]; userText: string; generatedTitle?: string; generatedDescription?: string });
 
       await findSimilarStatements(
         mockRequest as Request,
@@ -113,23 +133,19 @@ describe("findSimilarStatements - Optimized", () => {
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
-          ...cachedData,
+          similarStatements: cachedData.similarStatements,
+          userText: cachedData.userText,
           ok: true,
           cached: true,
         })
       );
 
-      // Should not fetch from database when cache hit
-      expect(cachedStatementService.getCachedParentStatement).not.toHaveBeenCalled();
+      // Parent statement IS fetched to get threshold, but sub-statements should not be fetched
+      expect(cachedStatementService.getCachedParentStatement).toHaveBeenCalled();
       expect(cachedStatementService.getCachedSubStatements).not.toHaveBeenCalled();
     });
 
     it("should compute and cache response on cache miss", async () => {
-      const mockParentStatement = {
-        statement: "parent question",
-        statementSettings: { numberOfOptionsPerUser: 10 },
-      };
-
       const mockSubStatements = [
         { statementId: "sub1", statement: "statement 1", creatorId: "creator1" },
         { statementId: "sub2", statement: "statement 2", creatorId: "creator2" },
@@ -138,10 +154,6 @@ describe("findSimilarStatements - Optimized", () => {
       jest
         .spyOn(cachedAiService, "getCachedSimilarityResponse")
         .mockResolvedValue(null);
-
-      jest
-        .spyOn(cachedStatementService, "getCachedParentStatement")
-        .mockResolvedValue(mockParentStatement as Partial<Statement> as Statement);
 
       jest
         .spyOn(cachedStatementService, "getCachedSubStatements")
@@ -162,12 +174,13 @@ describe("findSimilarStatements - Optimized", () => {
           { id: "sub2", statement: "statement 2" },
         ]);
 
+      // Mock LLM-based similarity search (used when embedding coverage is low)
       jest
-        .spyOn(cachedAiService, "getCachedSimilarStatements")
-        .mockResolvedValue(["statement 1"]);
+        .spyOn(cachedAiService, "getCachedSimilarStatementIds")
+        .mockResolvedValue(["sub1"]);
 
       jest
-        .spyOn(statementService, "getStatementsFromTexts")
+        .spyOn(statementService, "getStatementsByIds")
         .mockReturnValue([mockSubStatements[0]] as Partial<Statement>[] as Statement[]);
 
       jest
@@ -176,6 +189,11 @@ describe("findSimilarStatements - Optimized", () => {
           statements: [mockSubStatements[0]] as Partial<Statement>[] as Statement[],
           duplicateStatement: undefined,
         });
+
+      // Mock title/description generation
+      jest
+        .spyOn(aiService, "generateTitleAndDescription")
+        .mockResolvedValue({ title: "Generated Title", description: "Generated Description" });
 
       const saveSpy = jest
         .spyOn(cachedAiService, "saveCachedSimilarityResponse")
@@ -186,22 +204,21 @@ describe("findSimilarStatements - Optimized", () => {
         mockResponse as Response
       );
 
-      // Verify response was saved to cache
+      // Verify response was saved to cache (now with 5 params including threshold)
       expect(saveSpy).toHaveBeenCalledWith(
         "test-statement-id",
         "test user input",
         "test-creator-id",
         expect.objectContaining({
-          similarStatements: [mockSubStatements[0]],
           userText: "test user input",
-        })
+        }),
+        0.75 // default threshold
       );
 
       expect(mockStatus).toHaveBeenCalledWith(200);
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           ok: true,
-          similarStatements: [mockSubStatements[0]],
           userText: "test user input",
         })
       );
@@ -240,11 +257,15 @@ describe("findSimilarStatements - Optimized", () => {
       jest.spyOn(statementService, "getUserStatements").mockReturnValue([]);
       jest.spyOn(statementService, "hasReachedMaxStatements").mockReturnValue(false);
       jest.spyOn(statementService, "convertToSimpleStatements").mockReturnValue([]);
-      jest.spyOn(cachedAiService, "getCachedSimilarStatements").mockResolvedValue([]);
-      jest.spyOn(statementService, "getStatementsFromTexts").mockReturnValue([]);
+      jest.spyOn(cachedAiService, "getCachedSimilarStatementIds").mockResolvedValue([]);
+      jest.spyOn(statementService, "getStatementsByIds").mockReturnValue([]);
       jest.spyOn(statementService, "removeDuplicateStatement").mockReturnValue({
         statements: [],
         duplicateStatement: undefined,
+      });
+      jest.spyOn(aiService, "generateTitleAndDescription").mockResolvedValue({
+        title: "Title",
+        description: "Description",
       });
 
       await findSimilarStatements(
@@ -252,7 +273,7 @@ describe("findSimilarStatements - Optimized", () => {
         mockResponse as Response
       );
 
-      // Both should be called before either resolves (parallel execution)
+      // Parent should be called first (to get threshold), then sub-statements
       expect(parentSpy).toHaveBeenCalledWith("test-statement-id");
       expect(subsSpy).toHaveBeenCalledWith("test-statement-id");
     });
@@ -282,15 +303,15 @@ describe("findSimilarStatements - Optimized", () => {
         .mockReturnValue(false);
 
       const aiSpy = jest
-        .spyOn(cachedAiService, "getCachedSimilarStatements")
-        .mockResolvedValue(["statement 1"]);
+        .spyOn(cachedAiService, "getCachedSimilarStatementIds")
+        .mockResolvedValue(["sub1"]);
 
       jest
         .spyOn(statementService, "convertToSimpleStatements")
         .mockReturnValue([{ id: "sub1", statement: "statement 1" }]);
 
       jest
-        .spyOn(statementService, "getStatementsFromTexts")
+        .spyOn(statementService, "getStatementsByIds")
         .mockReturnValue([mockSubStatements[0]] as Partial<Statement>[] as Statement[]);
 
       jest
@@ -299,6 +320,11 @@ describe("findSimilarStatements - Optimized", () => {
           statements: [mockSubStatements[0]] as Partial<Statement>[] as Statement[],
           duplicateStatement: undefined,
         });
+
+      jest.spyOn(aiService, "generateTitleAndDescription").mockResolvedValue({
+        title: "Title",
+        description: "Description",
+      });
 
       await findSimilarStatements(
         mockRequest as Request,
@@ -417,11 +443,21 @@ describe("findSimilarStatements - Optimized", () => {
           isInappropriate: false,
         });
 
+      // Parent statement must be fetched first to get threshold
+      jest
+        .spyOn(cachedStatementService, "getCachedParentStatement")
+        .mockResolvedValue({
+          statement: "parent question",
+          statementSettings: { similarityThreshold: 0.75 },
+        } as Partial<Statement> as Statement);
+
       jest
         .spyOn(cachedAiService, "getCachedSimilarityResponse")
         .mockResolvedValue({
           similarStatements: [],
           userText: "test",
+          generatedTitle: "Test Title",
+          generatedDescription: "Test Description",
         });
 
       await findSimilarStatements(
