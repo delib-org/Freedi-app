@@ -46,6 +46,9 @@ Sentry.init({
     // User-cancelled requests
     'AbortError',
     'The operation was aborted',
+    // Vercel Live feedback instrumentation errors (null references during lifecycle events)
+    "Cannot read properties of null (reading 'getItem')",
+    "Cannot read properties of null (reading 'removeEventListener')",
   ],
 
   // Don't send PII

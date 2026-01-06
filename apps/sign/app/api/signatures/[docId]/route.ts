@@ -3,6 +3,8 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
+import { DemographicMode } from '@/types/demographics';
 
 interface SignatureInput {
   signed: 'signed' | 'rejected' | 'viewed';
@@ -96,6 +98,37 @@ export async function POST(
     // Get document info for topParentId and parentId
     const docRef = await db.collection(Collections.statements).doc(docId).get();
     const document = docRef.exists ? docRef.data() : null;
+
+    // For actual signatures (not just 'viewed'), verify demographic survey completion
+    if (signed !== 'viewed') {
+      const signSettings = document?.signSettings || {};
+      const mode: DemographicMode = signSettings.demographicMode || 'disabled';
+      const demographicRequired = signSettings.demographicRequired || false;
+      const topParentId = document?.topParentId || docId;
+
+      if (mode !== 'disabled' && demographicRequired) {
+        const surveyStatus = await checkSurveyCompletion(
+          docId,
+          userId,
+          mode,
+          topParentId,
+          demographicRequired
+        );
+
+        if (!surveyStatus.isComplete) {
+          logger.info(`[Signatures API] Blocked signature - incomplete survey: ${userId} on ${docId}`);
+
+          return NextResponse.json(
+            {
+              error: 'Survey incomplete',
+              message: 'Please complete the required survey before signing',
+              surveyStatus,
+            },
+            { status: 400 }
+          );
+        }
+      }
+    }
 
     const signature = {
       signatureId,
