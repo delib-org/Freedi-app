@@ -38,6 +38,7 @@ const UserQuestionComp = ({
 	onDeleteQuestion,
 	onUpdateQuestion,
 	minQuestionAmount = 2,
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	isTopParent = false,
 }: Props) => {
 	const { t } = useTranslation();

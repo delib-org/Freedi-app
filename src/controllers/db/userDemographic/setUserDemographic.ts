@@ -1,4 +1,4 @@
-import { Collections, DemographicOption, DemographicOptionSchema, Statement, UserDemographicQuestion, UserDemographicQuestionSchema } from "delib-npm";
+import { Collections, DemographicOption, DemographicOptionSchema, Statement, UserDemographicQuestion, UserDemographicQuestionSchema } from "@freedi/shared-types";
 import { deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from "firebase/firestore";
 import { DB } from "../config";
 import { parse, safeParse } from "valibot";

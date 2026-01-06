@@ -1,80 +1,43 @@
 import { FC } from 'react';
 import styles from './EmptyScreen.module.scss';
 import ideaImage from '@/assets/images/manWithIdeaLamp.png';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
-import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
-
-// /graphics
-import WhitePlusIcon from '@/view/components/icons/WhitePlusIcon';
-import { useDispatch } from 'react-redux';
-import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { Statement, StatementType } from '@freedi/shared-types';
+import { useUserConfig } from '@/controllers/hooks/useUserConfig';
+import { ChevronDown } from 'lucide-react';
+import { Statement } from '@freedi/shared-types';
 
 interface Props {
 	statement: Statement;
 }
 
-const EmptyScreen: FC<Props> = ({ statement }) => {
-	const dispatch = useDispatch();
-	const { t } = useTranslation();
-	const { width } = useWindowDimensions();
-	const smallScreen = width < 1024;
+const EmptyScreen: FC<Props> = ({ statement: _statement }) => {
+	const { t, learning } = useUserConfig();
 
-	function handleCreateNewOption() {
-		dispatch(setNewStatementModal({
-			parentStatement: statement,
-			newStatement: {
-				statementType: StatementType.option,
-			},
-			showModal: true,
-			isLoading: false,
-			error: null,
-		}))
-	}
+	// Check if user is still in learning phase
+	const isLearning = (learning?.addOptions ?? 0) > 0;
 
 	return (
-		<div
-			className={styles.addingStatementWrapper}
-			style={{ paddingTop: '2rem' }}
-		>
-			<div className={styles.header}>
-				<div className={styles.title}>
-					<h1 className={styles.h1}>
-						{smallScreen ? (
-							<>
-								{t('Click on')}{' '}
-								<span className={styles.titleSpan}>
-									{t('Add an answer')}
-								</span>{' '}
-								{t('to add your answer')}
-							</>
-						) : (
-							<>
-								{t('Click on')}{' '}
-								<span className={styles.titleSpan}>
-									{t('Add an answer')}
-								</span>
-								<br />
-								{t('to add your answer')}
-							</>
-						)}
-					</h1>
-				</div>
-				<button
-					className={styles.plusButton}
-					onClick={handleCreateNewOption}
-					style={smallScreen ? { width: '4rem', height: '4rem' } : {}}
-				>
-					{smallScreen ? (
-						<WhitePlusIcon />
-					) : (
-						<span className={styles.addSuggestionText}>
-							{t('Add an answer')} <WhitePlusIcon />
-						</span>
-					)}
-				</button>
-			</div>
-			<img src={ideaImage} alt={t('Compose your suggestion')} className={styles.ideaImage} />
+		<div className={styles.emptyScreen}>
+			<img
+				src={ideaImage}
+				alt={t('Compose your suggestion')}
+				className={styles.ideaImage}
+			/>
+
+			<h1 className={styles.title}>
+				{isLearning
+					? t('Be the first to share your idea!')
+					: t('No suggestions yet')
+				}
+			</h1>
+
+			<p className={styles.subtitle}>
+				{isLearning
+					? t('Press "Add an answer" to add your suggestion')
+					: t('Press the + button to add your suggestion')
+				}
+			</p>
+
+			{isLearning && <ChevronDown className={styles.arrow} size={32} />}
 		</div>
 	);
 };

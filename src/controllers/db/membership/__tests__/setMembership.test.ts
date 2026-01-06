@@ -30,14 +30,17 @@ const Collections = {
 };
 
 interface WaitingMember {
-	odema: string;
-	odemaId: string;
-	odemaTitle: string;
-	statementId: string;
-	statementsSubscribeId: string;
+	adminId: string;
 	role: Role;
-	displayName: string;
-	photoURL: string;
+	userId: string;
+	statementId: string;
+	lastUpdate: number;
+	statementsSubscribeId: string;
+	statement: unknown;
+	user: {
+		displayName: string;
+		uid: string;
+	};
 }
 
 import { approveMembership } from '../setMembership';
@@ -67,14 +70,17 @@ jest.mock('valibot', () => ({
 
 describe('setMembership', () => {
 	const mockWaitingMember: WaitingMember = {
-		odema: 'test-odema',
-		odemaId: 'odema-123',
-		odemaTitle: 'Test Odema',
-		statementId: 'stmt-123',
-		statementsSubscribeId: 'sub-123',
+		adminId: 'admin-123',
 		role: Role.waitingMember,
-		displayName: 'Test User',
-		photoURL: 'https://example.com/photo.jpg',
+		userId: 'user-123',
+		statementId: 'stmt-123',
+		lastUpdate: Date.now(),
+		statementsSubscribeId: 'sub-123',
+		statement: { statementId: 'stmt-123', statement: 'Test Statement' },
+		user: {
+			displayName: 'Test User',
+			uid: 'user-123',
+		},
 	};
 
 	beforeEach(() => {
@@ -89,7 +95,7 @@ describe('setMembership', () => {
 
 	describe('approveMembership', () => {
 		it('should approve membership when accept is true', async () => {
-			await approveMembership(mockWaitingMember, true);
+			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
 
 			expect(mockDoc).toHaveBeenCalledWith(
 				expect.anything(),
@@ -100,13 +106,13 @@ describe('setMembership', () => {
 		});
 
 		it('should ban member when accept is false', async () => {
-			await approveMembership(mockWaitingMember, false);
+			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], false);
 
 			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', { role: Role.banned });
 		});
 
 		it('should delete from waiting list after approval', async () => {
-			await approveMembership(mockWaitingMember, true);
+			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
 
 			expect(mockDoc).toHaveBeenCalledWith(
 				expect.anything(),
@@ -118,7 +124,7 @@ describe('setMembership', () => {
 		});
 
 		it('should delete from waiting list after rejection', async () => {
-			await approveMembership(mockWaitingMember, false);
+			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], false);
 
 			expect(mockBatchDelete).toHaveBeenCalled();
 			expect(mockBatchCommit).toHaveBeenCalled();
@@ -129,7 +135,7 @@ describe('setMembership', () => {
 			mockUpdateDoc.mockRejectedValueOnce(error);
 			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-			await expect(approveMembership(mockWaitingMember, true)).rejects.toThrow('Update failed');
+			await expect(approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true)).rejects.toThrow('Update failed');
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith('Error in approveMembership:', error);
 			consoleErrorSpy.mockRestore();
@@ -140,22 +146,23 @@ describe('setMembership', () => {
 			mockBatchCommit.mockRejectedValueOnce(error);
 			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-			await expect(approveMembership(mockWaitingMember, true)).rejects.toThrow('Batch commit failed');
+			await expect(approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true)).rejects.toThrow('Batch commit failed');
 
 			expect(consoleErrorSpy).toHaveBeenCalled();
 			consoleErrorSpy.mockRestore();
 		});
 
 		it('should validate waiting member schema', async () => {
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
 			const { parse } = require('valibot');
 
-			await approveMembership(mockWaitingMember, true);
+			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
 
 			expect(parse).toHaveBeenCalled();
 		});
 
 		it('should use statementsSubscribeId as document key', async () => {
-			await approveMembership(mockWaitingMember, true);
+			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
 
 			// Should use statementsSubscribeId for both subscription and waiting list
 			expect(mockDoc).toHaveBeenCalledWith(
@@ -174,15 +181,20 @@ describe('setMembership', () => {
 	describe('edge cases', () => {
 		it('should handle waitingMember with minimal data', async () => {
 			const minimalMember: WaitingMember = {
-				odema: '',
-				odemaId: '',
-				odemaTitle: '',
-				statementId: '',
-				statementsSubscribeId: 'sub-minimal',
+				adminId: 'admin-min',
 				role: Role.waitingMember,
+				userId: 'user-min',
+				statementId: 'stmt-min',
+				lastUpdate: Date.now(),
+				statementsSubscribeId: 'sub-minimal',
+				statement: {},
+				user: {
+					displayName: 'Minimal User',
+					uid: 'user-min',
+				},
 			};
 
-			await approveMembership(minimalMember, true);
+			await approveMembership(minimalMember as unknown as Parameters<typeof approveMembership>[0], true);
 
 			expect(mockUpdateDoc).toHaveBeenCalled();
 		});

@@ -89,6 +89,7 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 		return () => unsubscribe();
 	}, [statement.statementId]);
 
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const handleCreateImprovedVersion = (): void => {
 		if (onCreateImprovedVersion) {
 			onCreateImprovedVersion();

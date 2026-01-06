@@ -26,6 +26,8 @@ interface ParagraphCardProps {
   enableSuggestions?: boolean;
   hasInteracted?: boolean;
   onNonInteractiveToggle?: (paragraphId: string, isNonInteractive: boolean) => void;
+  /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
+  enhancedVisibility?: boolean;
 }
 
 export default function ParagraphCard({
@@ -41,6 +43,7 @@ export default function ParagraphCard({
   enableSuggestions = false,
   hasInteracted: initialHasInteracted = false,
   onNonInteractiveToggle,
+  enhancedVisibility = false,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -281,7 +284,10 @@ export default function ParagraphCard({
 
       {/* Show interaction bar only when paragraph is interactive */}
       {!isNonInteractive && (
-        <div className={styles.interactionWrapper}>
+        <div className={clsx(
+          styles.interactionWrapper,
+          enhancedVisibility && styles.alwaysVisible
+        )}>
           <InteractionBar
             paragraphId={paragraph.paragraphId}
             documentId={documentId}

@@ -1,4 +1,4 @@
-import { lazy } from 'react';
+import React, { lazy } from 'react';
 import { RouteObject } from 'react-router';
 import { StatementSkeleton } from '@/view/components/atomic/molecules/StatementSkeleton';
 import withSuspense, { withCustomSuspense } from './withSuspense';

@@ -524,14 +524,16 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		// Only generate embeddings for options with valid text
 		if (!statement.statement || statement.statement.trim().length < 3) {
 			logger.info(`Skipping embedding for statement ${statement.statementId} - text too short`);
-			return;
+			
+return;
 		}
 
 		// Get parent statement for context
 		const parentId = statement.parentId;
 		if (!parentId || parentId === 'top') {
 			logger.info(`Skipping embedding for statement ${statement.statementId} - no parent context`);
-			return;
+			
+return;
 		}
 
 		const parentDoc = await db
@@ -541,7 +543,8 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 
 		if (!parentDoc.exists) {
 			logger.warn(`Parent statement ${parentId} not found for embedding context`);
-			return;
+			
+return;
 		}
 
 		const parentStatement = parentDoc.data() as Statement;

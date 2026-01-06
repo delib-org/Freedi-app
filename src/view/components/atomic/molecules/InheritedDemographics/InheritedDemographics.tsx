@@ -5,7 +5,6 @@ import { Toggle } from '@/view/components/atomic/atoms/Toggle';
 import {
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
-	DemographicQuestionScope,
 } from '@freedi/shared-types';
 
 // Icons - using SVG react components
@@ -76,6 +75,8 @@ const QuestionTypeDisplay: React.FC<QuestionTypeDisplayProps> = ({
 		[UserDemographicQuestionType.textarea]: t('Text Area'),
 		[UserDemographicQuestionType.radio]: t('Single Choice'),
 		[UserDemographicQuestionType.checkbox]: t('Multiple Choice'),
+		[UserDemographicQuestionType.range]: t('Range'),
+		[UserDemographicQuestionType.number]: t('Number'),
 	};
 
 	return (

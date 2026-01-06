@@ -1,4 +1,4 @@
-@import '@/view/style/mixins';
+@use '@/view/style/mixins' as *;
 
 .optionRooms {
 	display: flex;

@@ -68,7 +68,8 @@ export async function detectMultipleSuggestions(
     }
 
     const data: MultiSuggestionDetectionResponse = await response.json();
-    return data;
+    
+return data;
   } catch (error) {
     logError(error, {
       operation: 'multiSuggestionDetection.detectMultipleSuggestions',

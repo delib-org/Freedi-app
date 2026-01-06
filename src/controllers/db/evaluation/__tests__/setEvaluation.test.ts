@@ -2,6 +2,8 @@
  * Tests for setEvaluation controller
  */
 
+/* eslint-disable @typescript-eslint/no-require-imports */
+
 // Mock @freedi/shared-types before import to prevent valibot loading
 jest.mock('@freedi/shared-types', () => ({
 	Collections: {
@@ -9,11 +11,30 @@ jest.mock('@freedi/shared-types', () => ({
 		statements: 'statements',
 	},
 	EvaluationUI: {
-		stars: 'stars',
-		thumbs: 'thumbs',
-		percentage: 'percentage',
+		suggestions: 'suggestions',
+		voting: 'voting',
+		checkbox: 'checkbox',
+		clustering: 'clustering',
 	},
 	EvaluationSchema: {},
+	StatementType: {
+		statement: 'statement',
+		option: 'option',
+		question: 'question',
+		document: 'document',
+		group: 'group',
+		comment: 'comment',
+	},
+	ResultsBy: {
+		consensus: 'consensus',
+		mostLiked: 'mostLiked',
+		averageLikesDislikes: 'averageLikesDislikes',
+		topOptions: 'topOptions',
+	},
+	CutoffBy: {
+		topOptions: 'topOptions',
+		aboveThreshold: 'aboveThreshold',
+	},
 }));
 
 // Define types locally
@@ -22,12 +43,33 @@ interface User {
 	displayName: string;
 }
 
+enum StatementType {
+	statement = 'statement',
+	option = 'option',
+	question = 'question',
+	document = 'document',
+	group = 'group',
+	comment = 'comment',
+}
+
+enum ResultsBy {
+	consensus = 'consensus',
+	mostLiked = 'mostLiked',
+	averageLikesDislikes = 'averageLikesDislikes',
+	topOptions = 'topOptions',
+}
+
+enum CutoffBy {
+	topOptions = 'topOptions',
+	aboveThreshold = 'aboveThreshold',
+}
+
 interface Statement {
 	statementId: string;
 	parentId: string;
 	topParentId: string;
 	statement: string;
-	statementType: string;
+	statementType: StatementType;
 	creator: User;
 	creatorId: string;
 	createdAt: number;
@@ -36,16 +78,17 @@ interface Statement {
 	parents: string[];
 	results: unknown[];
 	resultsSettings: {
-		resultsBy: string;
+		resultsBy: ResultsBy;
 		numberOfResults: number;
-		cutoffBy: string;
+		cutoffBy: CutoffBy;
 	};
 }
 
 enum EvaluationUI {
-	stars = 'stars',
-	thumbs = 'thumbs',
-	percentage = 'percentage',
+	suggestions = 'suggestions',
+	voting = 'voting',
+	checkbox = 'checkbox',
+	clustering = 'clustering',
 }
 
 const Collections = {
@@ -86,7 +129,8 @@ jest.mock('valibot', () => ({
 		if (schema === 'number-schema' && typeof value !== 'number') {
 			throw new Error('Invalid number');
 		}
-		return value;
+		
+return value;
 	}),
 }));
 
@@ -111,7 +155,7 @@ describe('setEvaluation', () => {
 		parentId: 'parent-123',
 		topParentId: 'top-123',
 		statement: 'Test statement',
-		statementType: 'option' as Statement['statementType'],
+		statementType: StatementType.option,
 		creator: { uid: 'user-456', displayName: 'Test User' } as User,
 		creatorId: 'user-456',
 		createdAt: Date.now(),
@@ -120,9 +164,9 @@ describe('setEvaluation', () => {
 		parents: ['parent-123'],
 		results: [],
 		resultsSettings: {
-			resultsBy: 'consensus' as const,
+			resultsBy: ResultsBy.consensus,
 			numberOfResults: 1,
-			cutoffBy: 'topOptions' as const,
+			cutoffBy: CutoffBy.topOptions,
 		},
 	};
 

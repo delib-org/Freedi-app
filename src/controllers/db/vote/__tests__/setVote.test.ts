@@ -12,6 +12,16 @@ jest.mock('@freedi/shared-types', () => ({
 		group: 'group',
 		comment: 'comment',
 	},
+	ResultsBy: {
+		consensus: 'consensus',
+		mostLiked: 'mostLiked',
+		averageLikesDislikes: 'averageLikesDislikes',
+		topOptions: 'topOptions',
+	},
+	CutoffBy: {
+		topOptions: 'topOptions',
+		aboveThreshold: 'aboveThreshold',
+	},
 	Collections: {
 		votes: 'votes',
 		statements: 'statements',
@@ -28,6 +38,18 @@ enum StatementType {
 	document = 'document',
 	group = 'group',
 	comment = 'comment',
+}
+
+enum ResultsBy {
+	consensus = 'consensus',
+	mostLiked = 'mostLiked',
+	averageLikesDislikes = 'averageLikesDislikes',
+	topOptions = 'topOptions',
+}
+
+enum CutoffBy {
+	topOptions = 'topOptions',
+	aboveThreshold = 'aboveThreshold',
 }
 
 interface User {
@@ -50,9 +72,9 @@ interface Statement {
 	parents: string[];
 	results: unknown[];
 	resultsSettings: {
-		resultsBy: string;
+		resultsBy: ResultsBy;
 		numberOfResults: number;
-		cutoffBy: string;
+		cutoffBy: CutoffBy;
 	};
 }
 
@@ -121,9 +143,9 @@ describe('setVote', () => {
 		parents: ['top-123', 'parent-123'],
 		results: [],
 		resultsSettings: {
-			resultsBy: 'consensus',
+			resultsBy: ResultsBy.consensus,
 			numberOfResults: 1,
-			cutoffBy: 'topOptions',
+			cutoffBy: CutoffBy.topOptions,
 		},
 	};
 

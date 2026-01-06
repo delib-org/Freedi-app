@@ -17,7 +17,20 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['firebasestorage.googleapis.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mc.wizcol.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'lh3.googleusercontent.com', // Google user avatars
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
 

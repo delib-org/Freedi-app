@@ -18,6 +18,16 @@ jest.mock('@freedi/shared-types', () => ({
 		waiting: 'waiting',
 		banned: 'banned',
 	},
+	ResultsBy: {
+		consensus: 'consensus',
+		mostLiked: 'mostLiked',
+		averageLikesDislikes: 'averageLikesDislikes',
+		topOptions: 'topOptions',
+	},
+	CutoffBy: {
+		topOptions: 'topOptions',
+		aboveThreshold: 'aboveThreshold',
+	},
 	Collections: {
 		statementsSubscriptions: 'statementsSubscriptions',
 	},
@@ -41,6 +51,18 @@ enum Role {
 	banned = 'banned',
 }
 
+enum ResultsBy {
+	consensus = 'consensus',
+	mostLiked = 'mostLiked',
+	averageLikesDislikes = 'averageLikesDislikes',
+	topOptions = 'topOptions',
+}
+
+enum CutoffBy {
+	topOptions = 'topOptions',
+	aboveThreshold = 'aboveThreshold',
+}
+
 interface Creator {
 	uid: string;
 	displayName: string;
@@ -61,9 +83,9 @@ interface Statement {
 	parents: string[];
 	results: unknown[];
 	resultsSettings: {
-		resultsBy: string;
+		resultsBy: ResultsBy;
 		numberOfResults: number;
-		cutoffBy: string;
+		cutoffBy: CutoffBy;
 	};
 }
 
@@ -151,9 +173,9 @@ describe('setSubscriptions', () => {
 		parents: ['top-123', 'parent-123'],
 		results: [],
 		resultsSettings: {
-			resultsBy: 'consensus',
+			resultsBy: ResultsBy.consensus,
 			numberOfResults: 1,
-			cutoffBy: 'topOptions',
+			cutoffBy: CutoffBy.topOptions,
 		},
 	};
 

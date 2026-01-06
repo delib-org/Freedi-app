@@ -2,7 +2,7 @@
  * Tests for statementsSlice Redux store
  */
 
-import { Statement, StatementSubscription, StatementType, Role, Access } from '@freedi/shared-types';
+import { Statement, StatementSubscription, StatementType, Role, ResultsBy, CutoffBy } from '@freedi/shared-types';
 import {
 	statementsSlicer,
 	setStatement,
@@ -25,7 +25,7 @@ jest.mock('@/utils/errorHandling', () => ({
 }));
 
 describe('statementsSlice', () => {
-	const mockStatement: Statement = {
+	const mockStatement = {
 		statementId: 'stmt-123',
 		parentId: 'parent-123',
 		topParentId: 'top-123',
@@ -43,20 +43,24 @@ describe('statementsSlice', () => {
 		parents: ['top-123', 'parent-123'],
 		results: [],
 		resultsSettings: {
-			resultsBy: 'consensus' as const,
+			resultsBy: ResultsBy.consensus,
 			numberOfResults: 1,
-			cutoffBy: 'topOptions' as const,
+			cutoffBy: CutoffBy.topOptions,
 		},
-	};
+	} as unknown as Statement;
 
-	const mockSubscription: StatementSubscription = {
+	const mockSubscription = {
 		statementId: 'stmt-123',
 		statementsSubscribeId: 'sub-123',
 		statement: mockStatement,
 		role: Role.member,
 		lastUpdate: Date.now(),
 		userId: 'user-123',
-	};
+		user: {
+			uid: 'user-123',
+			displayName: 'Test User',
+		},
+	} as unknown as StatementSubscription;
 
 	const initialState = statementsSlicer.getInitialState();
 
@@ -276,18 +280,18 @@ describe('statementsSlice', () => {
 				statementMembership: [],
 				screen: StatementScreen.chat,
 			},
-		} as unknown;
+		};
 
 		describe('totalMessageBoxesSelector', () => {
 			it('should return count of statements', () => {
-				const result = totalMessageBoxesSelector(mockRootState as ReturnType<typeof totalMessageBoxesSelector>);
+				const result = totalMessageBoxesSelector(mockRootState as Parameters<typeof totalMessageBoxesSelector>[0]);
 				expect(result).toBe(1);
 			});
 		});
 
 		describe('screenSelector', () => {
 			it('should return current screen', () => {
-				const result = screenSelector(mockRootState as ReturnType<typeof screenSelector>);
+				const result = screenSelector(mockRootState as Parameters<typeof screenSelector>[0]);
 				expect(result).toBe(StatementScreen.chat);
 			});
 		});
@@ -295,26 +299,26 @@ describe('statementsSlice', () => {
 		describe('statementSelectorById', () => {
 			it('should return statement by ID', () => {
 				const selector = statementSelectorById(mockStatement.statementId);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result?.statementId).toBe(mockStatement.statementId);
 			});
 
 			it('should return undefined for non-existent ID', () => {
 				const selector = statementSelectorById('non-existent');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 
 			it('should return undefined for undefined ID', () => {
 				const selector = statementSelectorById(undefined);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 		});
 
 		describe('statementsSelector', () => {
 			it('should return all statements', () => {
-				const result = statementsSelector(mockRootState as ReturnType<typeof statementsSelector>);
+				const result = statementsSelector(mockRootState as Parameters<typeof statementsSelector>[0]);
 				expect(result).toHaveLength(1);
 				expect(result[0].statementId).toBe(mockStatement.statementId);
 			});

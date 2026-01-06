@@ -8,14 +8,14 @@ import { statementSelectorById, setStatement } from "@/redux/statements/statemen
 import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
 import { logError } from "@/utils/errorHandling";
 import LoadingPage from "@/view/pages/loadingPage/LoadingPage";
+import Chat from "../chat/Chat";
+import PopperHebbianDiscussion from "../popperHebbian/PopperHebbianDiscussion";
 
 // Lazy load heavy screen components
 const Triangle = lazy(() => import("@/view/components/maps/triangle/Triangle"));
 const MindMap = lazy(() => import("../map/MindMap"));
-const Chat = lazy(() => import("../chat/Chat"));
 const StatementSettings = lazy(() => import("../settings/StatementSettings"));
 const PolarizationIndexComp = lazy(() => import("@/view/components/maps/polarizationIndex/PolarizationIndex"));
-const PopperHebbianDiscussion = lazy(() => import("../popperHebbian/PopperHebbianDiscussion"));
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;

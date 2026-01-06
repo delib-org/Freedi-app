@@ -113,7 +113,8 @@ async function recalculateClusterOptionEvaluations(
 
 	if (sourceIds.length === 0) {
 		logger.info(`No sources found for cluster ${statementId} - skipping recalculation`);
-		return null;
+		
+return null;
 	}
 
 	const userEvaluations = new Map<string, UserEvaluationData>();
@@ -291,7 +292,8 @@ async function recalculateSingleStatementEvaluations(
 
 	if (!statementDoc.exists) {
 		logger.warn(`Statement ${statementId} not found`);
-		return null;
+		
+return null;
 	}
 
 	const statement = statementDoc.data() as Statement & {

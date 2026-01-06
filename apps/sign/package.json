@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "check-all": "npm run lint && npm run typecheck && npm run test && npm run build"
   },
   "dependencies": {
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",

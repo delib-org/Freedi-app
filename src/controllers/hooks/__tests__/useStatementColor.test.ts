@@ -4,7 +4,7 @@
 
 import { renderHook, act } from '@testing-library/react';
 import { Statement, StatementType } from 'delib-npm';
-import useStatementColor, { StyleProps } from '../useStatementColor';
+import useStatementColor from '../useStatementColor';
 
 describe('useStatementColor', () => {
 	const baseStatement: Partial<Statement> = {

@@ -104,7 +104,7 @@ return;
 		}
 	};
 
-	const { header, title: titleLabel, description: descriptionLabel } =
+	const { header, title: titleLabel, titlePlaceholder, description: descriptionLabel, descriptionPlaceholder, similarSearchLabel } =
 		getTexts(newStatementType);
 
 	if (loading) {
@@ -122,16 +122,18 @@ return;
 			<form className={styles.form} onSubmit={handleSubmit}>
 				<Input
 					label={t(titleLabel)}
+					placeholder={t(titlePlaceholder)}
 					name='title'
 					autoFocus={true}
 				/>
 				<Textarea
 					label={t(descriptionLabel)}
+					placeholder={t(descriptionPlaceholder)}
 					name='description'
 				/>
 				<div className={styles.similarityToggle}>
 					<Checkbox
-						label={t('Search for similar statements')}
+						label={t(similarSearchLabel)}
 						isChecked={lookingForSimilarStatements}
 						onChange={setLookingForSimilarStatements}
 					/>
@@ -166,8 +168,10 @@ return;
 function getTexts(statementType: StatementType): {
 	header: string;
 	title: string;
+	titlePlaceholder: string;
 	description: string;
-	placeholder: string;
+	descriptionPlaceholder: string;
+	similarSearchLabel: string;
 } {
 	try {
 		switch (statementType) {
@@ -175,22 +179,37 @@ function getTexts(statementType: StatementType): {
 				return {
 					header: 'Create a group',
 					title: 'Group Title',
+					titlePlaceholder: 'Enter group title...',
 					description: 'Group Description',
-					placeholder: 'Describe the group',
+					descriptionPlaceholder: 'Describe the group...',
+					similarSearchLabel: 'Search for similar groups',
 				};
 			case StatementType.question:
 				return {
 					header: 'Create a question',
 					title: 'Question Title',
+					titlePlaceholder: 'Enter question title...',
 					description: 'Question Description',
-					placeholder: 'Describe the question',
+					descriptionPlaceholder: 'Describe the question...',
+					similarSearchLabel: 'Search for similar questions',
+				};
+			case StatementType.option:
+				return {
+					header: 'Add an answer',
+					title: 'Title of the answer',
+					titlePlaceholder: 'Enter your answer title...',
+					description: 'Answer description',
+					descriptionPlaceholder: 'Describe your answer...',
+					similarSearchLabel: 'Search for similar answers',
 				};
 			default:
 				return {
 					header: 'Create a statement',
 					title: 'Title',
+					titlePlaceholder: 'Enter title...',
 					description: 'Description',
-					placeholder: 'Description',
+					descriptionPlaceholder: 'Enter description...',
+					similarSearchLabel: 'Search for similar statements',
 				};
 		}
 	} catch (error) {
@@ -199,8 +218,10 @@ function getTexts(statementType: StatementType): {
 		return {
 			header: 'Create a statement',
 			title: 'Title',
+			titlePlaceholder: 'Enter title...',
 			description: 'Description',
-			placeholder: 'Description',
+			descriptionPlaceholder: 'Enter description...',
+			similarSearchLabel: 'Search for similar statements',
 		};
 	}
 }

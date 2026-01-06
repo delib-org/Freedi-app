@@ -127,6 +127,9 @@ export interface DocumentSettings {
   tocEnabled: boolean;
   tocMaxLevel: number;
   tocPosition: TocPosition;
+  // Accessibility settings
+  /** When true, shows interaction buttons as ghosted hints even before hover/tap (for elderly users) */
+  enhancedVisibility?: boolean;
 }
 
 // Default branding constants
@@ -153,4 +156,5 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   tocEnabled: false,
   tocMaxLevel: 2,
   tocPosition: 'auto',
+  enhancedVisibility: false,
 };

@@ -25,7 +25,6 @@ import {
 	setNotificationHandler as setPushNotificationHandler,
 } from './pushService';
 import {
-	NotificationRepository,
 	storeToken,
 	deleteToken as deleteTokenFromDb,
 	getTokenLastRefresh,
@@ -35,8 +34,6 @@ import {
 	removeTokenFromAllSubscriptions as removeTokenFromAllSubs,
 	TokenMetadata,
 } from './notificationRepository';
-import { DB } from '@/controllers/db/config';
-import { doc, getDoc } from 'firebase/firestore';
 
 // Re-export TokenMetadata for backward compatibility
 export type { TokenMetadata };

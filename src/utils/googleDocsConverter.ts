@@ -202,7 +202,8 @@ function extractTextContent(elements?: GoogleDocsParagraphElement[]): string {
 			if (element.textRun?.content) {
 				return element.textRun.content;
 			}
-			return '';
+			
+return '';
 		})
 		.join('')
 		.replace(/\n$/, ''); // Remove trailing newline
@@ -254,7 +255,8 @@ function extractCellContent(cell: GoogleDocsTableCell): string {
 			if (element.paragraph) {
 				return extractTextContent(element.paragraph.elements);
 			}
-			return '';
+			
+return '';
 		})
 		.join('\n')
 		.trim();

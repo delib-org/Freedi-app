@@ -26,6 +26,7 @@ import {
   Change,
   FirestoreEvent,
 } from "firebase-functions/v2/firestore";
+import { firestore as FirebaseFirestore } from "firebase-admin";
 import { db } from ".";
 
 /**

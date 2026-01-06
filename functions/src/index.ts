@@ -98,6 +98,9 @@ import {
   recalculatePolarizationIndexForGroup,
 } from "./migrations/recalculatePolarizationIndex";
 
+// Token Cleanup Scheduled Function
+import { cleanupStaleTokens, performTokenCleanup } from "./fn_tokenCleanup";
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from "./fn_popperHebbian_analyzeFalsifiability";
 import { refineIdea } from "./fn_popperHebbian_refineIdea";
@@ -581,7 +584,8 @@ exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
     const { statementId } = req.body;
     if (!statementId) {
       res.status(400).json({ error: "statementId is required" });
-      return;
+      
+return;
     }
     const result = await recalculatePolarizationIndexForStatement(statementId);
     res.json(result);
@@ -593,7 +597,8 @@ exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
     const { parentId } = req.body;
     if (!parentId) {
       res.status(400).json({ error: "parentId is required" });
-      return;
+      
+return;
     }
     const result = await recalculatePolarizationIndexForParent(parentId);
     res.json(result);
@@ -605,9 +610,25 @@ exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
     const { topParentId } = req.body;
     if (!topParentId) {
       res.status(400).json({ error: "topParentId is required" });
-      return;
+      
+return;
     }
     const result = await recalculatePolarizationIndexForGroup(topParentId);
+    res.json(result);
+  }
+);
+
+// --------------------------
+// SCHEDULED FUNCTIONS
+// --------------------------
+
+// Scheduled function to clean up stale FCM tokens (runs daily at 3:00 AM UTC)
+exports.cleanupStaleTokens = cleanupStaleTokens;
+
+// HTTP endpoint for manual token cleanup
+exports.manualTokenCleanup = wrapHttpFunction(
+  async (req: Request, res: Response) => {
+    const result = await performTokenCleanup();
     res.json(result);
   }
 );

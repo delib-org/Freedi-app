@@ -100,6 +100,7 @@ const SuggestionCard: FC<Props> = ({
 	const [showImprovementModal, setShowImprovementModal] = useState(false);
 	const [isImproving, setIsImproving] = useState(false);
 	const [originalTitle, setOriginalTitle] = useState<string | null>(null);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [originalDescription, setOriginalDescription] = useState<string | null>(null);
 	const [hasBeenImproved, setHasBeenImproved] = useState(false);
 
