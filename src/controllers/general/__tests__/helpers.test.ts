@@ -21,6 +21,16 @@ jest.mock('@freedi/shared-types', () => ({
 		massConsensus: 'massConsensus',
 		simple: 'simple',
 	},
+	ResultsBy: {
+		consensus: 'consensus',
+		mostLiked: 'mostLiked',
+		averageLikesDislikes: 'averageLikesDislikes',
+		topOptions: 'topOptions',
+	},
+	CutoffBy: {
+		topOptions: 'topOptions',
+		aboveThreshold: 'aboveThreshold',
+	},
 }));
 
 // Define types locally
@@ -48,6 +58,18 @@ enum QuestionType {
 	simple = 'simple',
 }
 
+enum ResultsBy {
+	consensus = 'consensus',
+	mostLiked = 'mostLiked',
+	averageLikesDislikes = 'averageLikesDislikes',
+	topOptions = 'topOptions',
+}
+
+enum CutoffBy {
+	topOptions = 'topOptions',
+	aboveThreshold = 'aboveThreshold',
+}
+
 interface Creator {
 	uid: string;
 	displayName: string;
@@ -69,9 +91,9 @@ interface Statement {
 	parents: string[];
 	results: unknown[];
 	resultsSettings: {
-		resultsBy: string;
+		resultsBy: ResultsBy;
 		numberOfResults: number;
-		cutoffBy: string;
+		cutoffBy: CutoffBy;
 	};
 	description?: string;
 	questionType?: QuestionType;
@@ -270,15 +292,15 @@ describe('Statement Type Validation', () => {
 describe('Role and Type Helpers', () => {
   describe('isAdmin', () => {
     it('should return true for admin role', () => {
-      expect(isAdmin(Role.admin)).toBe(true);
+      expect(isAdmin(Role.admin as unknown as Parameters<typeof isAdmin>[0])).toBe(true);
     });
 
     it('should return true for creator role', () => {
-      expect(isAdmin(Role.creator)).toBe(true);
+      expect(isAdmin(Role.creator as unknown as Parameters<typeof isAdmin>[0])).toBe(true);
     });
 
     it('should return false for member role', () => {
-      expect(isAdmin(Role.member)).toBe(false);
+      expect(isAdmin(Role.member as unknown as Parameters<typeof isAdmin>[0])).toBe(false);
     });
 
     it('should return false for undefined', () => {
@@ -288,25 +310,25 @@ describe('Role and Type Helpers', () => {
 
   describe('isChatMessage', () => {
     it('should return true for statement type', () => {
-      expect(isChatMessage(StatementType.statement)).toBe(true);
+      expect(isChatMessage(StatementType.statement as unknown as Parameters<typeof isChatMessage>[0])).toBe(true);
     });
 
     it('should return false for option type', () => {
-      expect(isChatMessage(StatementType.option)).toBe(false);
+      expect(isChatMessage(StatementType.option as unknown as Parameters<typeof isChatMessage>[0])).toBe(false);
     });
 
     it('should return false for question type', () => {
-      expect(isChatMessage(StatementType.question)).toBe(false);
+      expect(isChatMessage(StatementType.question as unknown as Parameters<typeof isChatMessage>[0])).toBe(false);
     });
   });
 
   describe('isMassConsensus', () => {
     it('should return true for massConsensus type', () => {
-      expect(isMassConsensus(QuestionType.massConsensus)).toBe(true);
+      expect(isMassConsensus(QuestionType.massConsensus as unknown as Parameters<typeof isMassConsensus>[0])).toBe(true);
     });
 
     it('should return false for simple type', () => {
-      expect(isMassConsensus(QuestionType.simple)).toBe(false);
+      expect(isMassConsensus(QuestionType.simple as unknown as Parameters<typeof isMassConsensus>[0])).toBe(false);
     });
   });
 });
@@ -388,13 +410,13 @@ describe('String Manipulation Helpers', () => {
 
   describe('getTitle', () => {
     it('should return first line of statement', () => {
-      const statement = { statement: 'Title\nDescription here' } as Statement;
+      const statement = { statement: 'Title\nDescription here' } as unknown as Parameters<typeof getTitle>[0];
       expect(getTitle(statement)).toBe('Title');
     });
 
     it('should remove first asterisk only', () => {
       // Function uses .replace('*', '') which only removes first occurrence
-      const statement = { statement: '*Bold Title*' } as Statement;
+      const statement = { statement: '*Bold Title*' } as unknown as Parameters<typeof getTitle>[0];
       expect(getTitle(statement)).toBe('Bold Title*');
     });
 
@@ -405,12 +427,12 @@ describe('String Manipulation Helpers', () => {
 
   describe('getDescription', () => {
     it('should return everything after first line', () => {
-      const statement = { statement: 'Title\nLine 1\nLine 2' } as Statement;
+      const statement = { statement: 'Title\nLine 1\nLine 2' } as unknown as Parameters<typeof getDescription>[0];
       expect(getDescription(statement)).toBe('Line 1\nLine 2');
     });
 
     it('should return empty for single line', () => {
-      const statement = { statement: 'Just a title' } as Statement;
+      const statement = { statement: 'Just a title' } as unknown as Parameters<typeof getDescription>[0];
       expect(getDescription(statement)).toBe('');
     });
   });
@@ -511,16 +533,16 @@ describe('Array Helpers', () => {
         { lastUpdate: 100 },
         { lastUpdate: 300 },
         { lastUpdate: 200 },
-      ] as Statement[];
+      ] as unknown as Parameters<typeof getLatestUpdateStatements>[0];
       expect(getLatestUpdateStatements(statements)).toBe(300);
     });
 
     it('should return 0 for empty array', () => {
-      expect(getLatestUpdateStatements([])).toBe(0);
+      expect(getLatestUpdateStatements([] as Parameters<typeof getLatestUpdateStatements>[0])).toBe(0);
     });
 
     it('should return 0 for undefined', () => {
-      expect(getLatestUpdateStatements(undefined as unknown as Statement[])).toBe(0);
+      expect(getLatestUpdateStatements(undefined as unknown as Parameters<typeof getLatestUpdateStatements>[0])).toBe(0);
     });
   });
 });

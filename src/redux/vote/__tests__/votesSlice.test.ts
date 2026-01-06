@@ -12,6 +12,16 @@ jest.mock('@freedi/shared-types', () => ({
 		group: 'group',
 		comment: 'comment',
 	},
+	ResultsBy: {
+		consensus: 'consensus',
+		mostLiked: 'mostLiked',
+		averageLikesDislikes: 'averageLikesDislikes',
+		topOptions: 'topOptions',
+	},
+	CutoffBy: {
+		topOptions: 'topOptions',
+		aboveThreshold: 'aboveThreshold',
+	},
 	StatementSchema: {},
 	getVoteId: jest.fn((userId: string, parentId: string) => `${userId}--${parentId}`),
 	updateArray: jest.fn((array: unknown[], newItem: unknown, key: string) => {
@@ -55,6 +65,18 @@ enum StatementType {
 	comment = 'comment',
 }
 
+enum ResultsBy {
+	consensus = 'consensus',
+	mostLiked = 'mostLiked',
+	averageLikesDislikes = 'averageLikesDislikes',
+	topOptions = 'topOptions',
+}
+
+enum CutoffBy {
+	topOptions = 'topOptions',
+	aboveThreshold = 'aboveThreshold',
+}
+
 interface Creator {
 	uid: string;
 	displayName: string;
@@ -75,9 +97,9 @@ interface Statement {
 	parents: string[];
 	results: unknown[];
 	resultsSettings: {
-		resultsBy: string;
+		resultsBy: ResultsBy;
 		numberOfResults: number;
-		cutoffBy: string;
+		cutoffBy: CutoffBy;
 	};
 }
 
@@ -122,9 +144,9 @@ describe('votesSlice', () => {
 		parents: ['top-123', 'parent-123'],
 		results: [],
 		resultsSettings: {
-			resultsBy: 'consensus',
+			resultsBy: ResultsBy.consensus,
 			numberOfResults: 1,
-			cutoffBy: 'topOptions',
+			cutoffBy: CutoffBy.topOptions,
 		},
 	};
 
@@ -135,7 +157,7 @@ describe('votesSlice', () => {
 			it('should add new vote when no existing vote', () => {
 				const newState = votesSlicer.reducer(
 					initialState,
-					setVoteToStore(mockStatement)
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
 				);
 
 				expect(newState.votes).toHaveLength(1);
@@ -160,7 +182,7 @@ describe('votesSlice', () => {
 
 				const newState = votesSlicer.reducer(
 					stateWithVote,
-					setVoteToStore(mockStatement)
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
 				);
 
 				expect(newState.votes).toHaveLength(1);
@@ -183,7 +205,7 @@ describe('votesSlice', () => {
 
 				const newState = votesSlicer.reducer(
 					stateWithVote,
-					setVoteToStore(mockStatement)
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
 				);
 
 				expect(newState.votes).toHaveLength(1);
@@ -193,7 +215,7 @@ describe('votesSlice', () => {
 			it('should create correct voteId from user and parent', () => {
 				const newState = votesSlicer.reducer(
 					initialState,
-					setVoteToStore(mockStatement)
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
 				);
 
 				expect(newState.votes[0].voteId).toBe('user-123--parent-123');
@@ -202,7 +224,7 @@ describe('votesSlice', () => {
 			it('should include timestamp fields', () => {
 				const newState = votesSlicer.reducer(
 					initialState,
-					setVoteToStore(mockStatement)
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
 				);
 
 				expect(newState.votes[0].createdAt).toBeDefined();
@@ -215,7 +237,7 @@ describe('votesSlice', () => {
 				let state = initialState;
 
 				// First vote
-				state = votesSlicer.reducer(state, setVoteToStore(mockStatement));
+				state = votesSlicer.reducer(state, setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]));
 
 				// Second vote for different parent
 				const secondStatement = {
@@ -223,7 +245,7 @@ describe('votesSlice', () => {
 					statementId: 'option-456',
 					parentId: 'parent-456',
 				};
-				state = votesSlicer.reducer(state, setVoteToStore(secondStatement));
+				state = votesSlicer.reducer(state, setVoteToStore(secondStatement as Parameters<typeof setVoteToStore>[0]));
 
 				expect(state.votes).toHaveLength(2);
 			});
@@ -291,7 +313,7 @@ describe('votesSlice', () => {
 
 		describe('votesSelector', () => {
 			it('should return all votes', () => {
-				const result = votesSelector(mockRootState as unknown as ReturnType<typeof votesSelector>);
+				const result = votesSelector(mockRootState as Parameters<typeof votesSelector>[0]);
 
 				expect(result).toHaveLength(2);
 			});
@@ -300,7 +322,7 @@ describe('votesSlice', () => {
 		describe('parentVoteSelector', () => {
 			it('should return vote for specific parent', () => {
 				const selector = parentVoteSelector('parent-123');
-				const result = selector(mockRootState as unknown as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 
 				expect(result?.parentId).toBe('parent-123');
 				expect(result?.statementId).toBe('option-123');
@@ -308,14 +330,14 @@ describe('votesSlice', () => {
 
 			it('should return undefined for non-existent parent', () => {
 				const selector = parentVoteSelector('non-existent');
-				const result = selector(mockRootState as unknown as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 
 				expect(result).toBeUndefined();
 			});
 
 			it('should return undefined for undefined parentId', () => {
 				const selector = parentVoteSelector(undefined);
-				const result = selector(mockRootState as unknown as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 
 				expect(result).toBeUndefined();
 			});
@@ -336,7 +358,7 @@ describe('votesSlice', () => {
 
 	describe('action creators', () => {
 		it('setVoteToStore should create correct action', () => {
-			const action = setVoteToStore(mockStatement);
+			const action = setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]);
 
 			expect(action.type).toBe('votes/setVoteToStore');
 			expect(action.payload).toEqual(mockStatement);

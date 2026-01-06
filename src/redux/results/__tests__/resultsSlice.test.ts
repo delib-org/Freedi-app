@@ -19,7 +19,7 @@ describe('resultsSlice', () => {
 
 	const mockResults: Results = {
 		top: mockStatement as Statement,
-		alternatives: [],
+		sub: [],
 	};
 
 	const initialState = resultsSlice.getInitialState();
@@ -65,7 +65,7 @@ describe('resultsSlice', () => {
 						mockResults,
 						{
 							top: { ...mockStatement, statementId: 'stmt-456' } as Statement,
-							alternatives: [],
+							sub: [],
 						},
 					],
 				};
@@ -84,34 +84,34 @@ describe('resultsSlice', () => {
 					mockResults,
 					{
 						top: { ...mockStatement, statementId: 'stmt-456' } as Statement,
-						alternatives: [],
+						sub: [],
 					},
 				],
 			},
-		} as unknown;
+		};
 
 		describe('resultSelector', () => {
 			it('should return result by top statement ID', () => {
 				const selector = resultSelector('stmt-123');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result?.top.statementId).toBe('stmt-123');
 			});
 
 			it('should return undefined for non-existent ID', () => {
 				const selector = resultSelector('non-existent');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 
 			it('should return undefined for undefined ID', () => {
 				const selector = resultSelector(undefined);
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toBeUndefined();
 			});
 
 			it('should find specific result among multiple', () => {
 				const selector = resultSelector('stmt-456');
-				const result = selector(mockRootState as ReturnType<typeof selector>);
+				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result?.top.statementId).toBe('stmt-456');
 			});
 		});

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyExplanationPage } from '@freedi/shared-types';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
@@ -48,11 +49,13 @@ export default function ExplanationEditor({
           placeholder={t('heroImageUrlPlaceholder') || 'https://example.com/image.jpg'}
         />
         {page.heroImageUrl && (
-          <div className={styles.imagePreview}>
-            <img
+          <div className={styles.imagePreview} style={{ position: 'relative', width: '100%', height: '150px', marginTop: '0.5rem' }}>
+            <Image
               src={page.heroImageUrl}
               alt="Hero preview"
-              style={{ maxWidth: '100%', maxHeight: '150px', borderRadius: '8px', marginTop: '0.5rem' }}
+              fill
+              style={{ objectFit: 'contain', borderRadius: '8px' }}
+              unoptimized
               onError={(e) => {
                 (e.target as HTMLImageElement).style.display = 'none';
               }}
