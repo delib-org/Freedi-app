@@ -64,12 +64,14 @@ const My = () => {
 
 					<RadioButtonWithLabel
 						id='simple-user'
+						name='userType'
 						labelText={t('Simple User')}
 						checked={!isAdvancedUser}
 						onChange={() => setUserAdvanceUserToDB(false)}
 					/>
 					<RadioButtonWithLabel
 						id='advanced-user'
+						name='userType'
 						labelText={t('Advance User')}
 						checked={!!isAdvancedUser}
 						onChange={() => setUserAdvanceUserToDB(true)}
@@ -77,7 +79,7 @@ const My = () => {
 					<Button
 						className={styles.save}
 						text='save'
-						onClick={() => navigate('/')}
+						onClick={() => navigate('/home')}
 					/>
 				</div>
 				

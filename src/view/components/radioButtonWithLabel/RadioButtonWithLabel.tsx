@@ -6,12 +6,14 @@ import styles from './RadioButtonWithLabel.module.scss';
 interface RadioButtonWithLabelProps extends ComponentProps<'input'> {
 	labelText: string;
 	id: string;
+	name?: string;
 }
 
 export default function RadioButtonWithLabel({
 	labelText,
 	id,
 	checked,
+	name = 'radioGroup',
 	...inputProps
 }: RadioButtonWithLabelProps) {
 	return (
@@ -19,11 +21,18 @@ export default function RadioButtonWithLabel({
 			htmlFor={id}
 			className={`${styles.radioButtonWithLabel} ${checked ? styles.checked : ''}`}
 		>
-			{checked ? <RadioButtonCheckedIcon /> : <RadioButtonEmptyIcon />}
+			<span className={styles.iconWrapper}>
+				<span className={`${styles.icon} ${checked ? styles.visible : styles.hidden}`}>
+					<RadioButtonCheckedIcon />
+				</span>
+				<span className={`${styles.icon} ${!checked ? styles.visible : styles.hidden}`}>
+					<RadioButtonEmptyIcon />
+				</span>
+			</span>
 			<input
 				id={id}
 				type='radio'
-				name='resultsBy'
+				name={name}
 				checked={checked}
 				{...inputProps}
 			/>

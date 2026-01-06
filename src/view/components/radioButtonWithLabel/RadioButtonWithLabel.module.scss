@@ -10,13 +10,39 @@
         color: var(--icon-disabled-filled);
     }
 
-    svg {
-        width: 24px;
-        height: 24px;
-    }
-
     input[type="radio"] {
         display: none;
         background: var(--icon-blue);
     }
+}
+
+.iconWrapper {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.icon {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 24px;
+    height: 24px;
+    transition: opacity 0.15s ease-in-out;
+
+    svg {
+        width: 24px;
+        height: 24px;
+    }
+}
+
+.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
 }

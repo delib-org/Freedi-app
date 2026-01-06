@@ -1453,5 +1453,24 @@
   "hours ago": "horas",
   "days ago": "días",
   "Update Suggestion": "Actualizar Sugerencia",
-  "Submitting...": "Enviando..."
+  "Submitting...": "Enviando...",
+
+  "Be the first to share your idea!": "¡Sé el primero en compartir tu idea!",
+  "Press \"Add an answer\" to add your suggestion": "Pulsa \"Agregar respuesta\" para agregar tu sugerencia",
+  "Press the + button to add your suggestion": "Pulsa el botón + para agregar tu sugerencia",
+
+  "Add an answer": "Agregar respuesta",
+  "Title of the answer": "Título de la respuesta",
+  "Enter your answer title...": "Ingresa el título de tu respuesta...",
+  "Answer description": "Descripción de la respuesta",
+  "Describe your answer...": "Describe tu respuesta...",
+  "Search for similar answers": "Buscar respuestas similares",
+  "Enter group title...": "Ingresa el título del grupo...",
+  "Describe the group...": "Describe el grupo...",
+  "Search for similar groups": "Buscar grupos similares",
+  "Enter question title...": "Ingresa el título de la pregunta...",
+  "Describe the question...": "Describe la pregunta...",
+  "Search for similar questions": "Buscar preguntas similares",
+  "Enter title...": "Ingresa el título...",
+  "Enter description...": "Ingresa la descripción..."
 }
