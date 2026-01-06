@@ -89,9 +89,12 @@ export default function SurveyWelcome({ survey }: SurveyWelcomeProps) {
           <p className={styles.welcomeDescription}>{survey.description}</p>
         )}
 
-        <div className={styles.welcomeInstructions}>
-          <p>{t('surveyDescription')}</p>
-        </div>
+        {/* Introduction text - can be customized or hidden by admin */}
+        {(survey.showIntro !== false) && (
+          <div className={styles.welcomeInstructions}>
+            <p>{survey.customIntroText || t('surveyDescription')}</p>
+          </div>
+        )}
 
         <button
           className={styles.startButton}
