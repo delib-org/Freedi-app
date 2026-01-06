@@ -22,6 +22,7 @@ import {
 	collection,
 	writeBatch,
 	Timestamp,
+	arrayUnion,
 } from 'firebase/firestore';
 import { Collections } from 'delib-npm';
 import { DB } from '@/controllers/db/config';
@@ -121,12 +122,24 @@ export const deleteToken = async (token: string): Promise<void> => {
 
 /**
  * Register for statement notifications.
+ * Adds the FCM token to the statementsSubscribe.tokens[] array.
+ * Also maintains legacy askedToBeNotified for backward compatibility during migration.
  */
 export const registerForStatementNotifications = async (
 	userId: string,
 	token: string,
 	statementId: string
 ): Promise<void> => {
+	// Import addTokenToSubscription to add token to subscription
+	const { addTokenToSubscription } = await import(
+		'@/controllers/db/subscriptions/setSubscriptions'
+	);
+
+	// Add token to statementsSubscribe.tokens[] (new approach)
+	await addTokenToSubscription(statementId, userId, token);
+
+	// Also update legacy collection for backward compatibility during migration
+	// TODO: Remove this after migration is complete
 	const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
 	await setDoc(
 		notificationRef,
@@ -143,21 +156,34 @@ export const registerForStatementNotifications = async (
 
 /**
  * Unregister from statement notifications.
+ * Removes the FCM token from statementsSubscribe.tokens[] array.
+ * Also cleans up legacy askedToBeNotified collection.
  */
 export const unregisterFromStatementNotifications = async (
 	token: string,
 	statementId: string,
 	userId: string
 ): Promise<void> => {
-	const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
-	await deleteDoc(notificationRef);
-
-	// Also remove token from statement subscription
+	// Remove token from statementsSubscribe.tokens[] (primary)
 	await removeTokenFromSubscription(statementId, userId, token);
+
+	// Also clean up legacy collection
+	// TODO: Remove this after migration is complete
+	try {
+		const notificationRef = doc(DB, Collections.askedToBeNotified, `${token}_${statementId}`);
+		await deleteDoc(notificationRef);
+	} catch (error) {
+		// Silently handle if document doesn't exist in legacy collection
+		const err = error as { code?: string };
+		if (err?.code !== 'not-found') {
+			console.error('Error cleaning up legacy notification doc:', error);
+		}
+	}
 };
 
 /**
  * Sync token with all user's statement subscriptions.
+ * Uses arrayUnion to add token to the tokens[] array without duplicates.
  */
 export const syncTokenWithSubscriptions = async (
 	userId: string,
@@ -186,10 +212,10 @@ export const syncTokenWithSubscriptions = async (
 			continue;
 		}
 
-		// Update the subscription with the token
+		// Update the subscription with the token in the tokens array
 		const subscriptionRef = docSnapshot.ref;
 		currentBatch.update(subscriptionRef, {
-			token,
+			tokens: arrayUnion(token),
 			lastTokenUpdate: new Date(),
 		});
 
