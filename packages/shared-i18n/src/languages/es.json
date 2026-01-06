@@ -1472,5 +1472,9 @@
   "Describe the question...": "Describe la pregunta...",
   "Search for similar questions": "Buscar preguntas similares",
   "Enter title...": "Ingresa el título...",
-  "Enter description...": "Ingresa la descripción..."
+  "Enter description...": "Ingresa la descripción...",
+
+  "Accessibility": "Accesibilidad",
+  "Enhanced Visibility": "Visibilidad Mejorada",
+  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Mostrar botones de interacción como indicaciones visibles en todo momento. Útil para usuarios mayores que pueden no descubrir las interacciones de pasar el cursor/tocar."
 }

@@ -111,6 +111,7 @@ export default async function DocumentPage({ params }: PageProps) {
     tocMaxLevel?: number;
     tocPosition?: TocPosition;
     enableSuggestions?: boolean;
+    enhancedVisibility?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -127,6 +128,9 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Suggestions feature setting
   const enableSuggestions = signSettings?.enableSuggestions ?? false;
+
+  // Accessibility setting - show ghosted buttons always for elderly users
+  const enhancedVisibility = signSettings?.enhancedVisibility ?? false;
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -162,6 +166,7 @@ export default async function DocumentPage({ params }: PageProps) {
         isAdmin={isAdmin}
         tocSettings={tocSettings}
         enableSuggestions={enableSuggestions}
+        enhancedVisibility={enhancedVisibility}
       />
     </LanguageOverrideProvider>
   );

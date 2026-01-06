@@ -1853,5 +1853,9 @@
   "Describe the question...": "Describe the question...",
   "Search for similar questions": "Search for similar questions",
   "Enter title...": "Enter title...",
-  "Enter description...": "Enter description..."
+  "Enter description...": "Enter description...",
+
+  "Accessibility": "Accessibility",
+  "Enhanced Visibility": "Enhanced Visibility",
+  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions."
 }

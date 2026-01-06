@@ -18,10 +18,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 8px 12px;
+  min-height: 44px; // WCAG 2.1 minimum touch target
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -30,8 +31,9 @@
   color: var(--text-caption);
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
   }
 
   &:hover:not(:disabled) {
@@ -64,10 +66,9 @@
   }
 }
 
+// Button text always visible for better accessibility (especially for elderly users)
 .buttonText {
-  @media (max-width: 768px) {
-    display: none;
-  }
+  // Text always visible on all screen sizes
 }
 
 .approveButton {

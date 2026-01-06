@@ -1468,5 +1468,9 @@
   "Describe the question...": "صف السؤال...",
   "Search for similar questions": "البحث عن أسئلة مشابهة",
   "Enter title...": "أدخل العنوان...",
-  "Enter description...": "أدخل الوصف..."
+  "Enter description...": "أدخل الوصف...",
+
+  "Accessibility": "إمكانية الوصول",
+  "Enhanced Visibility": "رؤية محسّنة",
+  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "عرض أزرار التفاعل كتلميحات مرئية في جميع الأوقات. مفيد للمستخدمين المسنين الذين قد لا يكتشفون تفاعلات التمرير/النقر."
 }

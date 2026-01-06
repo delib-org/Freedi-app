@@ -1472,5 +1472,9 @@
   "Describe the question...": "Beschrijf de vraag...",
   "Search for similar questions": "Zoeken naar vergelijkbare vragen",
   "Enter title...": "Voer titel in...",
-  "Enter description...": "Voer beschrijving in..."
+  "Enter description...": "Voer beschrijving in...",
+
+  "Accessibility": "Toegankelijkheid",
+  "Enhanced Visibility": "Verbeterde Zichtbaarheid",
+  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Toon interactieknoppen als zichtbare hints te allen tijde. Nuttig voor oudere gebruikers die mogelijk geen hover/tik-interacties ontdekken."
 }

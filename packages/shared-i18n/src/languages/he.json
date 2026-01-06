@@ -1841,5 +1841,9 @@
   "Describe the question...": "תארו את השאלה...",
   "Search for similar questions": "חיפוש שאלות דומות",
   "Enter title...": "הזינו כותרת...",
-  "Enter description...": "הזינו תיאור..."
+  "Enter description...": "הזינו תיאור...",
+
+  "Accessibility": "נגישות",
+  "Enhanced Visibility": "נראות משופרת",
+  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "הצגת כפתורי האינטראקציה כרמזים גלויים בכל עת. מועיל למשתמשים מבוגרים שעשויים לא לגלות אינטראקציות ריחוף/הקשה."
 }
