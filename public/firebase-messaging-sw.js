@@ -6,50 +6,48 @@ importScripts(
 	"https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"
 );
 
-// Initialize the Firebase app in the service worker with the production configuration
-// First, determine the current domain
+// Initialize the Firebase app in the service worker with build-time config
 const currentDomain = self.location.hostname;
-// Current domain detected: ' + currentDomain
+let messaging = null;
 
-// Select Firebase config based on the domain
-let firebaseConfig;
-if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
-	// Development config
-	firebaseConfig = {
-		apiKey: "AIzaSyBEumZUTCL3Jc9pt7_CjiSVTxmz9aMqSvo",
-		authDomain: "synthesistalyaron.firebaseapp.com",
-		databaseURL: "https://synthesistalyaron.firebaseio.com",
-		projectId: "synthesistalyaron",
-		storageBucket: "synthesistalyaron.appspot.com",
-		messagingSenderId: "799655218679",
-		appId: "1:799655218679:web:1409dd5e3b4154ecb9b2f2",
-		measurementId: "G-XSGFFBXM9X",
-	};
-} else if (currentDomain === 'freedi-test.web.app') {
-	// Freedi Test config
-	firebaseConfig = {
-		apiKey: 'AIzaSyBCgq3y9WjS8ZkB-q_lnkFM2BuUdLp2M-g',
-		authDomain: 'freedi-test.firebaseapp.com',
-		projectId: 'freedi-test',
-		storageBucket: 'freedi-test.firebasestorage.app',
-		messagingSenderId: '47037334917',
-		appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
-	};
-} else if (currentDomain === 'wizcol-app.web.app' || currentDomain === 'app.wizcol.com') {
-	// Wizcol Production config
-	firebaseConfig = {
-		apiKey: 'AIzaSyBtm5USTMMQqf9KQ3ZIne6VbZ6AGOiT-Ts',
-		authDomain: 'wizcol-app.firebaseapp.com',
-		projectId: 'wizcol-app',
-		storageBucket: 'wizcol-app.firebasestorage.app',
-		messagingSenderId: '337833396726',
-		appId: '1:337833396726:web:b80268707145886ce95fd7'
-	};
-} else {
-	// Fallback or staging config
+const fallbackConfig = (() => {
+	if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || currentDomain === 'localhost' || currentDomain === '127.0.0.1') {
+		return {
+			apiKey: "AIzaSyBEumZUTCL3Jc9pt7_CjiSVTxmz9aMqSvo",
+			authDomain: "synthesistalyaron.firebaseapp.com",
+			databaseURL: "https://synthesistalyaron.firebaseio.com",
+			projectId: "synthesistalyaron",
+			storageBucket: "synthesistalyaron.appspot.com",
+			messagingSenderId: "799655218679",
+			appId: "1:799655218679:web:1409dd5e3b4154ecb9b2f2",
+			measurementId: "G-XSGFFBXM9X",
+		};
+	}
+
+	if (currentDomain === 'freedi-test.web.app') {
+		return {
+			apiKey: 'AIzaSyBCgq3y9WjS8ZkB-q_lnkFM2BuUdLp2M-g',
+			authDomain: 'freedi-test.firebaseapp.com',
+			projectId: 'freedi-test',
+			storageBucket: 'freedi-test.firebasestorage.app',
+			messagingSenderId: '47037334917',
+			appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
+		};
+	}
+
+	if (currentDomain === 'wizcol-app.web.app' || currentDomain === 'app.wizcol.com' || currentDomain.endsWith('.wizcol.com') || currentDomain === 'wizcol.com') {
+		return {
+			apiKey: 'AIzaSyBtm5USTMMQqf9KQ3ZIne6VbZ6AGOiT-Ts',
+			authDomain: 'wizcol-app.firebaseapp.com',
+			projectId: 'wizcol-app',
+			storageBucket: 'wizcol-app.firebasestorage.app',
+			messagingSenderId: '337833396726',
+			appId: '1:337833396726:web:b80268707145886ce95fd7'
+		};
+	}
+
 	console.warn('Using fallback config for unknown domain:', currentDomain);
-	firebaseConfig = {
-		// Use your fallback configuration here
+	return {
 		apiKey: 'AIzaSyBCgq3y9WjS8ZkB-q_lnkFM2BuUdLp2M-g',
 		authDomain: 'freedi-test.firebaseapp.com',
 		projectId: 'freedi-test',
@@ -57,20 +55,39 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || curr
 		messagingSenderId: '47037334917',
 		appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
 	};
-}
+})();
 
-// Initialize Firebase
+const loadFirebaseConfig = async () => {
+	try {
+		const response = await fetch('/firebase-config.json', { cache: 'no-store' });
+		if (response.ok) {
+			return await response.json();
+		}
+	} catch (error) {
+		console.warn('Failed to load firebase-config.json, using fallback config:', error);
+	}
 
-firebase.initializeApp(firebaseConfig);
-
-// Retrieve an instance of Firebase Messaging
-const messaging = firebase.messaging();
+	return null;
+};
 
 // Cache for storing notification data
 const notificationCache = new Map();
 
 // Badge counter in IndexedDB to persist across refreshes
 let badgeCount = 0;
+
+const setupMessagingHandlers = (messagingInstance) => {
+	messaging = messagingInstance;
+
+};
+
+const initializeFirebase = async () => {
+	const firebaseConfig = await loadFirebaseConfig() || fallbackConfig;
+	firebase.initializeApp(firebaseConfig);
+	setupMessagingHandlers(firebase.messaging());
+};
+
+initializeFirebase();
 
 // Add push event listener for debugging
 self.addEventListener('push', function(event) {

@@ -107,7 +107,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				if (!firebaseSW) {
 					// Register Firebase Messaging SW
 					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-						scope: '/'
+						scope: '/firebase-messaging-sw/'
 					})
 					.then(registration => {
 						// Firebase Messaging SW registered successfully

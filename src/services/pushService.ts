@@ -101,7 +101,7 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 
 		// Check if firebase-messaging-sw.js is already registered
 		let registration = await navigator.serviceWorker.getRegistration(
-			'/firebase-messaging-sw.js'
+			'/firebase-messaging-sw/'
 		);
 
 		if (!registration) {
@@ -202,11 +202,11 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 			}
 		}
 
-		// Get service worker registration
-		const swRegistration = await navigator.serviceWorker.getRegistration();
+		// Get Firebase messaging service worker registration
+		const swRegistration = await waitForServiceWorker();
 
 		if (!swRegistration) {
-			console.error('[PushService] No service worker registration found!');
+			console.error('[PushService] No Firebase messaging service worker registration found!');
 
 			return null;
 		}

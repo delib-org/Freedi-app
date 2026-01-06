@@ -13,7 +13,7 @@ import { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
 
-interface FcmSubscriber {
+export interface FcmSubscriber {
 	userId: string;
 	token: string;
 	documentId?: string;
@@ -407,7 +407,7 @@ async function removeUserTokensFromSubscriptions(userId: string, tokens: string[
 /**
  * Sends FCM push notifications with improved error handling and retry logic
  */
-async function processFcmNotificationsImproved(
+export async function processFcmNotificationsImproved(
 	fcmSubscribers: FcmSubscriber[],
 	newStatement: Statement
 ): Promise<SendResult> {

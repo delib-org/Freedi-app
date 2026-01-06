@@ -56,7 +56,7 @@ export async function ensureFirebaseServiceWorker() {
 
         // Register Firebase messaging service worker with explicit scope
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-            scope: '/',
+            scope: '/firebase-messaging-sw/',
             updateViaCache: 'none' // Ensure fresh SW updates
         });
 
