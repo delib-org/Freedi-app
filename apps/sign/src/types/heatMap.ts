@@ -37,7 +37,8 @@ export interface HeatMapData {
   approval: Record<string, number>;    // paragraphId -> score (-1 to 1)
   comments: Record<string, number>;    // paragraphId -> count
   rating: Record<string, number>;      // paragraphId -> average (0-5)
-  viewership: Record<string, number>;  // paragraphId -> percentage (0-100)
+  viewership: Record<string, number>;  // paragraphId -> percentage (0-100) - used for heat level calculation
+  viewershipCount: Record<string, number>;  // paragraphId -> viewer count - used for display
 }
 
 /**
@@ -107,7 +108,8 @@ export function calculateHeatLevel(
  */
 export function formatHeatValue(
   value: number,
-  type: Exclude<HeatMapType, 'none'>
+  type: Exclude<HeatMapType, 'none'>,
+  viewerCount?: number
 ): string {
   switch (type) {
     case 'approval':
@@ -115,7 +117,8 @@ export function formatHeatValue(
       const sign = value > 0 ? '+' : '';
       return `${sign}${value.toFixed(1)}`;
     case 'viewership':
-      return `${Math.round(value)}%`;
+      // Display actual viewer count instead of percentage
+      return viewerCount !== undefined ? viewerCount.toString() : Math.round(value).toString();
     case 'comments':
       return value.toString();
     case 'rating':
@@ -137,11 +140,14 @@ export function getHeatMapValue(
     return null;
   }
 
+  // For viewership, get the viewer count for display
+  const viewerCount = type === 'viewership' ? data.viewershipCount?.[paragraphId] : undefined;
+
   return {
     type,
     level: calculateHeatLevel(rawValue, type),
     rawValue,
-    displayValue: formatHeatValue(rawValue, type),
+    displayValue: formatHeatValue(rawValue, type, viewerCount),
   };
 }
 
