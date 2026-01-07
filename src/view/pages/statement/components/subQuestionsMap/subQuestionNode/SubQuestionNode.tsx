@@ -2,6 +2,7 @@ import { useNavigate, useParams, useLocation } from "react-router";
 import styles from "./SubQuestionNode.module.scss";
 import React, { FC, useEffect, useRef, useState, memo } from "react";
 import { Statement } from "delib-npm";
+import { renderInlineMarkdown } from "@/helpers/inlineMarkdownHelpers";
 
 interface SubQuestionNodeProps {
   statement: Statement;
@@ -83,7 +84,7 @@ const SubQuestionNode: FC<SubQuestionNodeProps> = ({
         className={`${styles.node} ${isInStatement ? styles.green : ""} ${isFollowedStatement ? styles.followMe : ""} ${depth <= 1 && !isInStatement && !isFollowedStatement ? styles.group : ""} ${!isInStatement ? styles.clickable : ""} ${clicked ? styles.animate : ""}`}
         onClick={!isInStatement ? handleClick : undefined}
       >
-        <h3>{statement.statement}</h3>
+        <h3>{renderInlineMarkdown(statement.statement)}</h3>
       </button>
 
       {

@@ -9,6 +9,7 @@ import SummaryDisplay from '../components/SummaryDisplay/SummaryDisplay';
 import SummarizeButton from '../components/SummarizeButton/SummarizeButton';
 import SummarizeModal from '../components/SummarizeModal/SummarizeModal';
 import styles from '../MultiStageQuestion.module.scss';
+import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 
 interface IntroductionSectionProps {
   statement: Statement;
@@ -43,7 +44,7 @@ export const IntroductionSection: FC<IntroductionSectionProps> = ({ statement })
         />
       </div>
       <div className={styles.multiStageTitle}>
-        <h3>{statement.statement}</h3>
+        <h3>{renderInlineMarkdown(statement.statement)}</h3>
       </div>
       <div className={styles.topicDescription}>
         <InfoIcon />

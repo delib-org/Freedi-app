@@ -13,6 +13,7 @@ import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { closePanels } from '@/controllers/hooks/panelUtils';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { Statement } from '@freedi/shared-types';
+import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 
 export default function SimilarStatements() {
 	const dispatch = useDispatch();
@@ -163,7 +164,7 @@ export default function SimilarStatements() {
 											{t('Best match')}
 										</div>
 									)}
-									<h3 className="similarity-card__title">{statement.statement}</h3>
+									<h3 className="similarity-card__title">{renderInlineMarkdown(statement.statement)}</h3>
 									{descriptionText && (
 										<p className="similarity-card__description">{descriptionText}</p>
 									)}
