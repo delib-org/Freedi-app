@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import {
   DemographicMode,
+  SurveyTriggerMode,
   SignDemographicQuestion,
   UserDemographicQuestionType,
   DemographicOption,
@@ -14,15 +15,18 @@ interface DemographicSettingsProps {
   documentId: string;
   mode: DemographicMode;
   required: boolean;
+  surveyTrigger: SurveyTriggerMode;
   onModeChange: (mode: DemographicMode) => void;
   onRequiredChange: (required: boolean) => void;
+  onSurveyTriggerChange: (trigger: SurveyTriggerMode) => void;
 }
 
 // Auto-save demographic settings to Firestore
 async function saveDemographicSettings(
   documentId: string,
   mode: DemographicMode,
-  required: boolean
+  required: boolean,
+  surveyTrigger: SurveyTriggerMode
 ): Promise<boolean> {
   try {
     const response = await fetch(`/api/admin/settings/${documentId}`, {
@@ -31,11 +35,14 @@ async function saveDemographicSettings(
       body: JSON.stringify({
         demographicMode: mode,
         demographicRequired: required,
+        surveyTrigger,
       }),
     });
+
     return response.ok;
   } catch (error) {
     console.error('Failed to save demographic settings:', error);
+
     return false;
   }
 }
@@ -44,8 +51,10 @@ export default function DemographicSettings({
   documentId,
   mode,
   required,
+  surveyTrigger,
   onModeChange,
   onRequiredChange,
+  onSurveyTriggerChange,
 }: DemographicSettingsProps) {
   const { t } = useTranslation();
   const [questions, setQuestions] = useState<SignDemographicQuestion[]>([]);
@@ -66,7 +75,7 @@ export default function DemographicSettings({
 
     // Auto-save the mode change so questions can be created immediately
     setSavingMode(true);
-    const saved = await saveDemographicSettings(documentId, newMode, required);
+    const saved = await saveDemographicSettings(documentId, newMode, required, surveyTrigger);
     setSavingMode(false);
 
     if (!saved) {
@@ -79,11 +88,24 @@ export default function DemographicSettings({
     onRequiredChange(newRequired);
 
     setSavingMode(true);
-    const saved = await saveDemographicSettings(documentId, mode, newRequired);
+    const saved = await saveDemographicSettings(documentId, mode, newRequired, surveyTrigger);
     setSavingMode(false);
 
     if (!saved) {
       console.error('Failed to save demographic required setting');
+    }
+  };
+
+  // Handle survey trigger change with auto-save
+  const handleSurveyTriggerChange = async (newTrigger: SurveyTriggerMode) => {
+    onSurveyTriggerChange(newTrigger);
+
+    setSavingMode(true);
+    const saved = await saveDemographicSettings(documentId, mode, required, newTrigger);
+    setSavingMode(false);
+
+    if (!saved) {
+      console.error('Failed to save survey trigger setting');
     }
   };
 
@@ -225,23 +247,58 @@ export default function DemographicSettings({
         <p className={styles.savingText}>{t('Saving...')}</p>
       )}
 
-      {/* Required Toggle (shown when demographics enabled) */}
+      {/* Survey Trigger Mode (shown when demographics enabled) */}
       {mode !== 'disabled' && (
-        <div className={styles.requiredRow}>
-          <div className={styles.requiredInfo}>
-            <p className={styles.requiredLabel}>{t('Required Survey')}</p>
-            <p className={styles.requiredDescription}>
-              {t('Users must complete the survey before interacting with the document')}
-            </p>
+        <>
+          {/* Required Survey Toggle */}
+          <div className={styles.requiredRow}>
+            <div className={styles.requiredInfo}>
+              <p className={styles.requiredLabel}>{t('Required Survey')}</p>
+              <p className={styles.requiredDescription}>
+                {t('Users must complete the survey to interact with the document')}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={`${styles.toggle} ${required ? styles.active : ''}`}
+              onClick={() => handleRequiredChange(!required)}
+              aria-pressed={required}
+              disabled={savingMode}
+            />
           </div>
-          <button
-            type="button"
-            className={`${styles.toggle} ${required ? styles.active : ''}`}
-            onClick={() => handleRequiredChange(!required)}
-            aria-pressed={required}
-            disabled={savingMode}
-          />
-        </div>
+
+          {/* Survey Trigger Mode - only shown when required is enabled */}
+          {required && (
+            <div className={styles.triggerModeSection}>
+              <p className={styles.triggerModeLabel}>{t('When should users complete the survey?')}</p>
+              <div className={styles.triggerModeOptions}>
+                <button
+                  type="button"
+                  className={`${styles.triggerOption} ${surveyTrigger === 'on_interaction' ? styles.active : ''}`}
+                  onClick={() => handleSurveyTriggerChange('on_interaction')}
+                  disabled={savingMode}
+                >
+                  <span className={styles.triggerOptionLabel}>{t('Before interacting')}</span>
+                  <span className={styles.triggerOptionDescription}>
+                    {t('Users can read the document freely. Survey appears when they try to approve, comment, or sign.')}
+                  </span>
+                  <span className={styles.triggerOptionBadge}>{t('Default')}</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.triggerOption} ${surveyTrigger === 'before_viewing' ? styles.active : ''}`}
+                  onClick={() => handleSurveyTriggerChange('before_viewing')}
+                  disabled={savingMode}
+                >
+                  <span className={styles.triggerOptionLabel}>{t('Before viewing')}</span>
+                  <span className={styles.triggerOptionDescription}>
+                    {t('Users must complete the survey before accessing the document. Use for sensitive documents.')}
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* Questions List */}

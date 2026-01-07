@@ -1472,5 +1472,13 @@
   "Describe the question...": "Describe la pregunta...",
   "Search for similar questions": "Buscar preguntas similares",
   "Enter title...": "Ingresa el título...",
-  "Enter description...": "Ingresa la descripción..."
+  "Enter description...": "Ingresa la descripción...",
+
+  "When should users complete the survey?": "¿Cuándo deben completar la encuesta los usuarios?",
+  "Before interacting": "Antes de interactuar",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "Los usuarios pueden leer el documento libremente. La encuesta aparece cuando intentan aprobar, comentar o firmar.",
+  "Before viewing": "Antes de ver",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "Los usuarios deben completar la encuesta antes de acceder al documento. Usar para documentos sensibles.",
+  "Default": "Predeterminado",
+  "Users must complete the survey to interact with the document": "Los usuarios deben completar la encuesta para interactuar con el documento"
 }
