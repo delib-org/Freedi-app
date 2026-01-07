@@ -36,9 +36,9 @@ export default function LoginPage() {
     setIsSigningIn(true);
 
     try {
-      const result = await signIn();
-      if (result?.user?.uid) {
-        trackUserLogin(result.user.uid, 'google');
+      const user = await signIn();
+      if (user?.uid) {
+        trackUserLogin(user.uid, 'google');
       }
       router.push(redirectUrl);
     } catch (err) {
