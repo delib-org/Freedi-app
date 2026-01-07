@@ -14,10 +14,19 @@ import './globals.css';
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
-  title: 'Freedi Discussion',
+  title: 'WizCol: Mass Consensus',
   description: 'Fast crowdsourced solution platform',
   icons: {
     icon: '/favicon.ico',
+    apple: '/icons/logo-192px.png',
+    other: [
+      { rel: 'icon', type: 'image/png', sizes: '48x48', url: '/icons/logo-48px.png' },
+      { rel: 'icon', type: 'image/png', sizes: '72x72', url: '/icons/logo-72px.png' },
+      { rel: 'icon', type: 'image/png', sizes: '96x96', url: '/icons/logo-96px.png' },
+      { rel: 'icon', type: 'image/png', sizes: '128x128', url: '/icons/logo-128px.png' },
+      { rel: 'icon', type: 'image/png', sizes: '192x192', url: '/icons/logo-192px.png' },
+      { rel: 'icon', type: 'image/png', sizes: '512x512', url: '/icons/logo-512px.png' },
+    ],
   },
 };
 
