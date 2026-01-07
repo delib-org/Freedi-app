@@ -3,15 +3,7 @@
  * Tracks user interactions with documents
  */
 
-declare global {
-  interface Window {
-    gtag?: (
-      command: 'event' | 'config' | 'set',
-      action: string,
-      params?: Record<string, unknown>
-    ) => void;
-  }
-}
+// Window.gtag type is declared in GoogleAnalytics.tsx
 
 export enum AnalyticsEvent {
   // User actions

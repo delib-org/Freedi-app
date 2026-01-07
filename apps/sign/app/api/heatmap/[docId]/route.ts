@@ -237,6 +237,7 @@ export async function GET(
       comments: {},
       rating: {},
       viewership: {},
+      viewershipCount: {},
     };
 
     // Initialize all paragraphs with defaults
@@ -245,6 +246,7 @@ export async function GET(
       heatMapData.comments[id] = 0;
       heatMapData.rating[id] = 0;
       heatMapData.viewership[id] = 0;
+      heatMapData.viewershipCount[id] = 0;
     });
 
     // Calculate approval score per paragraph (-1 to 1 scale)
@@ -364,11 +366,14 @@ export async function GET(
     // Use filtered visitor count when filtering by segment
     const effectiveTotalVisitors = segmentUsers ? filteredVisitors.size : totalVisitors;
 
-    // Convert to percentages (of total visitors to document)
+    // Convert to percentages (of total visitors to document) and store viewer counts
     Object.entries(viewsByParagraph).forEach(([id, visitors]) => {
+      // Store percentage for heat level calculation
       heatMapData.viewership[id] = effectiveTotalVisitors > 0
         ? Math.round((visitors.size / effectiveTotalVisitors) * 100)
         : 0;
+      // Store actual viewer count for display
+      heatMapData.viewershipCount[id] = visitors.size;
     });
 
     const filterInfo = segmentMetadata
