@@ -1,5 +1,4 @@
 import { Metadata, Viewport } from 'next';
-import Script from 'next/script';
 import { Analytics } from '@vercel/analytics/react';
 import { cookies, headers } from 'next/headers';
 import {
@@ -8,9 +7,8 @@ import {
   NextTranslationProvider,
 } from '@freedi/shared-i18n/next';
 import { COOKIE_KEY } from '@freedi/shared-i18n';
+import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import './globals.scss';
-
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID;
 
 export const metadata: Metadata = {
   title: 'WizCol Sign',

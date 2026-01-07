@@ -104,6 +104,98 @@
   }
 }
 
+// Survey Trigger Mode Section
+.triggerModeSection {
+  background: var(--background);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-top: calc(-1 * var(--spacing-sm)); // Visually connect to required toggle
+  border-top: 1px dashed var(--border-light);
+}
+
+.triggerModeLabel {
+  font-weight: 500;
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 0.9375rem;
+}
+
+.triggerModeOptions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.triggerOption {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background: var(--card-default);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    background: var(--background);
+  }
+
+  &.active {
+    border-color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.08);
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: var(--spacing-md);
+      right: var(--spacing-md);
+      width: 20px;
+      height: 20px;
+      background: var(--btn-primary);
+      border-radius: 50%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z'/%3E%3C/svg%3E");
+      background-size: 14px;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.triggerOptionLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.triggerOptionDescription {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.4;
+  padding-right: var(--spacing-xl); // Space for checkmark
+}
+
+.triggerOptionBadge {
+  display: inline-block;
+  background: rgba(95, 136, 229, 0.15);
+  color: var(--btn-primary);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 // Questions List
 .questionsList {
   background: var(--background);
@@ -378,6 +470,20 @@
 
   .toggle.active::after {
     transform: translateX(-24px);
+  }
+
+  .triggerOption {
+    text-align: right;
+
+    &.active::before {
+      right: auto;
+      left: var(--spacing-md);
+    }
+  }
+
+  .triggerOptionDescription {
+    padding-right: 0;
+    padding-left: var(--spacing-xl);
   }
 
   .questionInfo {

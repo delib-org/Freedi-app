@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
-import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
+import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import { Paragraph } from '@/types';
@@ -79,6 +79,7 @@ export default function DocumentClient({
     openSurveyModal,
   } = useDemographicStore();
   const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
+  const isViewBlocked = useDemographicStore(selectIsViewBlocked);
 
   const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -309,12 +310,13 @@ export default function DocumentClient({
     }
   }, [documentId, user, fetchStatus]);
 
-  // Auto-open survey modal if mandatory and incomplete (for all users)
+  // Auto-open survey modal only if viewing is blocked (before_viewing mode)
+  // For on_interaction mode, modal opens when user attempts to interact
   useEffect(() => {
-    if (isInteractionBlocked && !isSurveyModalOpen) {
+    if (isViewBlocked && !isSurveyModalOpen) {
       openSurveyModal();
     }
-  }, [isInteractionBlocked, isSurveyModalOpen, openSurveyModal]);
+  }, [isViewBlocked, isSurveyModalOpen, openSurveyModal]);
 
   // Cleanup confetti timeout on unmount
   useEffect(() => {
