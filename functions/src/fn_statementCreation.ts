@@ -19,6 +19,7 @@ import { db } from './index';
 import { getDefaultQuestionType } from './model/questionTypeDefaults';
 import { embeddingService } from './services/embedding-service';
 import { embeddingCache } from './services/embedding-cache-service';
+import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notifications';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -366,12 +367,16 @@ async function addStatementToMassConsensus(statement: Statement): Promise<void> 
 async function createNotificationsForStatement(statement: Statement): Promise<void> {
 	try {
 		// Get parent statement and subscribers
-		const [parentStatementDB, subscribersDB] = await Promise.all([
+		const [parentStatementDB, subscribersDB, pushSubscribersDB] = await Promise.all([
 			db.doc(`${Collections.statements}/${statement.parentId}`).get(),
 			db.collection(Collections.statementsSubscribe)
 				.where('statementId', '==', statement.parentId)
 				.where('getInAppNotification', '==', true)
-				.get()
+				.get(),
+			db.collection(Collections.statementsSubscribe)
+				.where('statementId', '==', statement.parentId)
+				.where('getPushNotification', '==', true)
+				.get(),
 		]);
 
 		// Check if parent exists (for non-top statements)
@@ -388,6 +393,9 @@ return;
 		}
 		const parentStatement = parse(StatementSchema, parentData);
 		const subscribers = subscribersDB.docs.map(
+			doc => doc.data() as StatementSubscription
+		);
+		const pushSubscribers = pushSubscribersDB.docs.map(
 			doc => doc.data() as StatementSubscription
 		);
 
@@ -430,6 +438,35 @@ return;
 			});
 
 			await batch.commit();
+		}
+
+		if (pushSubscribers.length > 0) {
+			const fcmSubscribers: FcmSubscriber[] = [];
+
+			pushSubscribers.forEach((subscriber) => {
+				if (subscriber.tokens && subscriber.tokens.length > 0) {
+					subscriber.tokens.forEach((token) => {
+						fcmSubscribers.push({
+							userId: subscriber.userId,
+							token: token,
+							documentId: `${subscriber.userId}_${statement.parentId}`,
+						});
+					});
+				}
+			});
+
+			const sendResult = await processFcmNotificationsImproved(
+				fcmSubscribers,
+				statement
+			);
+
+			logger.info('Push notifications processed', {
+				statementId: statement.statementId,
+				parentId: statement.parentId,
+				successful: sendResult.successful,
+				failed: sendResult.failed,
+				invalidTokens: sendResult.invalidTokens.length,
+			});
 		}
 	} catch (error) {
 		logger.error('Error in createNotificationsForStatement:', error);

@@ -105,18 +105,19 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				);
 
 				if (!firebaseSW) {
-					// Register Firebase Messaging SW
+					// Register Firebase Messaging SW with Firebase's default scope
+					// This allows it to coexist with the PWA's main sw.js at root scope
 					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-						scope: '/'
+						scope: '/firebase-cloud-messaging-push-scope'
 					})
 					.then(registration => {
-						// Firebase Messaging SW registered successfully
+						console.info('[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope');
 
 						// Wait for activation
 						if (registration.installing) {
 							registration.installing.addEventListener('statechange', function() {
 								if (this.state === 'activated') {
-									// Firebase Messaging SW activated
+									console.info('[PWAWrapper] Firebase Messaging SW activated');
 								}
 							});
 						}
@@ -125,7 +126,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
 					});
 				} else {
-					// Firebase Messaging SW already registered
+					console.info('[PWAWrapper] Firebase Messaging SW already registered');
 				}
 			});
 		} else if (isIOS() && !isInstalledPWA()) {
