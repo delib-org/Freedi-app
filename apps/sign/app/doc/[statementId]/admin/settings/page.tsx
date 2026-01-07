@@ -7,7 +7,7 @@ import { isRTL, LanguagesEnum } from '@freedi/shared-i18n';
 import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
-import { DemographicMode } from '@/types/demographics';
+import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
 import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
@@ -23,6 +23,7 @@ interface Settings {
   isPublic: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  surveyTrigger: SurveyTriggerMode;
   textDirection: TextDirection;
   defaultLanguage: string;
   forceLanguage: boolean;
@@ -50,6 +51,7 @@ export default function AdminSettingsPage() {
     isPublic: true,
     demographicMode: 'disabled',
     demographicRequired: false,
+    surveyTrigger: 'on_interaction',
     textDirection: 'auto',
     defaultLanguage: '',
     forceLanguage: true,
@@ -373,12 +375,17 @@ export default function AdminSettingsPage() {
           documentId={statementId}
           mode={settings.demographicMode}
           required={settings.demographicRequired}
+          surveyTrigger={settings.surveyTrigger}
           onModeChange={(mode) => {
             setSettings((prev) => ({ ...prev, demographicMode: mode }));
             setSaved(false);
           }}
           onRequiredChange={(required) => {
             setSettings((prev) => ({ ...prev, demographicRequired: required }));
+            setSaved(false);
+          }}
+          onSurveyTriggerChange={(trigger) => {
+            setSettings((prev) => ({ ...prev, surveyTrigger: trigger }));
             setSaved(false);
           }}
         />

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { QRCodeSVG } from 'qrcode.react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey, SurveyStatus } from '@/types/survey';
+import { trackSurveyLinkShared, trackQrCodeDownloaded } from '@/lib/analytics';
 import styles from './Admin.module.scss';
 
 interface SurveyShareProps {
@@ -30,6 +31,7 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
     try {
       await navigator.clipboard.writeText(surveyUrl);
       setCopied(true);
+      trackSurveyLinkShared(survey.surveyId);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('[SurveyShare] Copy failed:', err);
@@ -55,6 +57,7 @@ export default function SurveyShare({ survey }: SurveyShareProps) {
       downloadLink.download = `survey-${survey.surveyId}-qr.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
+      trackQrCodeDownloaded(survey.surveyId);
     };
 
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);

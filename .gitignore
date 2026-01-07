@@ -31,6 +31,7 @@ yarn.lock
 
 # API Keys and secrets
 **/firebase-config.js
+**/firebase-config.json
 **/google-config.js
 **/*credentials*
 **/*secret*
@@ -59,3 +60,5 @@ apps/sign/tsconfig.tsbuildinfo
 
 # Worktrees
 .worktrees/
+
+functions/freedi-shared-types-1.0.1.tgz

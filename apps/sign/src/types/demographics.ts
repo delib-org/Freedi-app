@@ -25,6 +25,9 @@ export type DemographicQuestionScope = 'group' | 'statement';
 // Sign-specific demographic mode
 export type DemographicMode = 'disabled' | 'inherit' | 'custom';
 
+// Survey trigger mode - when should the survey be shown
+export type SurveyTriggerMode = 'on_interaction' | 'before_viewing';
+
 // Extended scope that includes 'sign' for Sign app specific questions
 // Note: 'sign' is not in delib-npm's DemographicQuestionScope enum yet
 export type SignDemographicScope = DemographicQuestionScope | 'sign';
@@ -36,6 +39,7 @@ export interface SurveyCompletionStatus {
   answeredQuestions: number;
   isRequired: boolean;
   missingQuestionIds: string[];
+  surveyTrigger?: SurveyTriggerMode; // Optional - added at API level
 }
 
 // Demographic answer for submission
@@ -62,6 +66,7 @@ export interface QuestionWithAnswer extends SignDemographicQuestion {
 export interface DemographicSettings {
   mode: DemographicMode;
   required: boolean;
+  surveyTrigger: SurveyTriggerMode;
 }
 
 // API request types

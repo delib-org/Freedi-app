@@ -99,12 +99,11 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 		// First, list all registrations
 		const allRegistrations = await navigator.serviceWorker.getRegistrations();
 
-		// Check if firebase-messaging-sw.js is already registered
-		let registration = await navigator.serviceWorker.getRegistration(
-			'/firebase-messaging-sw.js'
-		);
+		// Check if firebase-messaging-sw.js is registered at Firebase's default scope
+		let registration = await navigator.serviceWorker.getRegistration('/firebase-cloud-messaging-push-scope');
 
-		if (!registration) {
+		// If not found at Firebase scope, look for it in all registrations
+		if (!registration || !registration.active?.scriptURL.includes('firebase-messaging-sw.js')) {
 			// Try to find it in all registrations
 			registration = allRegistrations.find((r) =>
 				r.active?.scriptURL.includes('firebase-messaging-sw.js')
@@ -202,11 +201,11 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 			}
 		}
 
-		// Get service worker registration
-		const swRegistration = await navigator.serviceWorker.getRegistration();
+		// Get Firebase messaging service worker registration
+		const swRegistration = await waitForServiceWorker();
 
 		if (!swRegistration) {
-			console.error('[PushService] No service worker registration found!');
+			console.error('[PushService] No Firebase messaging service worker registration found!');
 
 			return null;
 		}

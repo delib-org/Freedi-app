@@ -2,7 +2,7 @@
  * Tests for statementsSlice Redux store
  */
 
-import { Statement, StatementSubscription, StatementType, Role, Access, ResultsBy, CutoffBy } from '@freedi/shared-types';
+import { Statement, StatementSubscription, StatementType, Role, ResultsBy, CutoffBy } from '@freedi/shared-types';
 import {
 	statementsSlicer,
 	setStatement,

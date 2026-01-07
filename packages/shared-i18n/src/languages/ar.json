@@ -1449,5 +1449,32 @@
   "hours ago": "ساعات",
   "days ago": "أيام",
   "Update Suggestion": "تحديث الاقتراح",
-  "Submitting...": "جاري الإرسال..."
+  "Submitting...": "جاري الإرسال...",
+
+  "Be the first to share your idea!": "كن أول من يشارك فكرته!",
+  "Press \"Add an answer\" to add your suggestion": "اضغط على \"إضافة إجابة\" لإضافة اقتراحك",
+  "Press the + button to add your suggestion": "اضغط على زر + لإضافة اقتراحك",
+
+  "Add an answer": "إضافة إجابة",
+  "Title of the answer": "عنوان الإجابة",
+  "Enter your answer title...": "أدخل عنوان إجابتك...",
+  "Answer description": "وصف الإجابة",
+  "Describe your answer...": "صف إجابتك...",
+  "Search for similar answers": "البحث عن إجابات مشابهة",
+  "Enter group title...": "أدخل اسم المجموعة...",
+  "Describe the group...": "صف المجموعة...",
+  "Search for similar groups": "البحث عن مجموعات مشابهة",
+  "Enter question title...": "أدخل عنوان السؤال...",
+  "Describe the question...": "صف السؤال...",
+  "Search for similar questions": "البحث عن أسئلة مشابهة",
+  "Enter title...": "أدخل العنوان...",
+  "Enter description...": "أدخل الوصف...",
+
+  "When should users complete the survey?": "متى يجب على المستخدمين إكمال الاستبيان؟",
+  "Before interacting": "قبل التفاعل",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "يمكن للمستخدمين قراءة المستند بحرية. يظهر الاستبيان عندما يحاولون الموافقة أو التعليق أو التوقيع.",
+  "Before viewing": "قبل العرض",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "يجب على المستخدمين إكمال الاستبيان قبل الوصول إلى المستند. استخدم للمستندات الحساسة.",
+  "Default": "افتراضي",
+  "Users must complete the survey to interact with the document": "يجب على المستخدمين إكمال الاستبيان للتفاعل مع المستند"
 }

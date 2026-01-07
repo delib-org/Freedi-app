@@ -128,6 +128,25 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
   }
 };
 
+function generateFirebaseConfigFile(sourceVars, envName) {
+  const firebaseConfig = {
+    apiKey: sourceVars.FIREBASE_API_KEY || '',
+    authDomain: sourceVars.FIREBASE_AUTH_DOMAIN || '',
+    databaseURL: sourceVars.FIREBASE_DATABASE_URL || '',
+    projectId: sourceVars.FIREBASE_PROJECT_ID || '',
+    storageBucket: sourceVars.FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: sourceVars.FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: sourceVars.FIREBASE_APP_ID || '',
+    measurementId: sourceVars.FIREBASE_MEASUREMENT_ID || '',
+  };
+
+  const outputPath = path.join(ROOT_DIR, 'public', 'firebase-config.json');
+  const content = `${JSON.stringify(firebaseConfig, null, 2)}\n`;
+
+  fs.writeFileSync(outputPath, content);
+  console.info(`  Generated: ${outputPath} (${envName})`);
+}
+
 /**
  * Parse a .env file into key-value pairs
  */
@@ -262,6 +281,8 @@ function main() {
 
     generateEnvFile(appConfig, sourceVars, envName);
   }
+
+  generateFirebaseConfigFile(sourceVars, envName);
 
   console.info(`\nEnvironment '${envName}' loaded successfully!`);
   console.info(`Firebase Project: ${sourceVars.FIREBASE_PROJECT_ID}`);

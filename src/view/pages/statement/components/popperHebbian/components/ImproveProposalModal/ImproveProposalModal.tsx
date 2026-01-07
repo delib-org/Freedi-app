@@ -9,7 +9,6 @@ import {
 	applyImprovement
 } from '@/controllers/db/popperHebbian/improveProposalController';
 import {
-	ImproveProposalResponse,
 	ImproveProposalModalState,
 	StatementVersion,
 	getLoadingMessages

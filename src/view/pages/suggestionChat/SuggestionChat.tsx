@@ -117,7 +117,8 @@ const StatementDescription: FC<StatementDescriptionProps> = ({
 	const textToParagraphs = (text: string) => {
 		if (!text.trim()) return undefined;
 		const lines = text.split('\n').filter(line => line.trim());
-		return lines.map((line, index) => ({
+		
+return lines.map((line, index) => ({
 			paragraphId: generateParagraphId(),
 			type: ParagraphType.paragraph,
 			content: line,

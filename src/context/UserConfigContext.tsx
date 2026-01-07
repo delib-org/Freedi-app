@@ -82,7 +82,8 @@ const getDirections = (
   language: string
 ): { dir: Direction; rowDirection: RowDirection } => {
   const lang = language as LanguagesEnum;
-  return {
+  
+return {
     dir: getDirection(lang),
     rowDirection: getRowDirection(lang),
   };

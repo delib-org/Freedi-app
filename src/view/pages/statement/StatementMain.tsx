@@ -96,7 +96,7 @@ const StatementMain: React.FC = () => {
 	useNotificationSetup({ statement, setError });
 
 	// Set document title
-	useDocumentTitle({ statement, screen });
+	useDocumentTitle({ statement });
 	
 	// Track statement view and interaction time
 	const { elementRef } = useStatementViewTracking({

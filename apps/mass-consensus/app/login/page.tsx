@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { trackUserLogin } from '@/lib/analytics';
 import styles from './login.module.scss';
 
 /**
@@ -35,7 +36,10 @@ export default function LoginPage() {
     setIsSigningIn(true);
 
     try {
-      await signIn();
+      const result = await signIn();
+      if (result?.user?.uid) {
+        trackUserLogin(result.user.uid, 'google');
+      }
       router.push(redirectUrl);
     } catch (err) {
       console.error('Sign in error:', err);

@@ -5,6 +5,7 @@
 import { create } from 'zustand';
 import {
   DemographicMode,
+  SurveyTriggerMode,
   SignDemographicQuestion,
   SurveyCompletionStatus,
   DemographicAnswer,
@@ -19,6 +20,7 @@ export interface DemographicStatus {
   isComplete: boolean;
   totalQuestions: number;
   answeredQuestions: number;
+  surveyTrigger: SurveyTriggerMode;
 }
 
 interface DemographicState {
@@ -69,6 +71,7 @@ const initialStatus: DemographicStatus = {
   isComplete: true,
   totalQuestions: 0,
   answeredQuestions: 0,
+  surveyTrigger: 'on_interaction',
 };
 
 export const useDemographicStore = create<DemographicState>((set, get) => ({
@@ -125,6 +128,7 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
       const data = await response.json();
       const completionStatus: SurveyCompletionStatus = data.status;
       const mode: DemographicMode = data.mode;
+      const surveyTrigger: SurveyTriggerMode = completionStatus.surveyTrigger || 'on_interaction';
 
       set({
         status: {
@@ -134,12 +138,13 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
           isComplete: completionStatus.isComplete,
           totalQuestions: completionStatus.totalQuestions,
           answeredQuestions: completionStatus.answeredQuestions,
+          surveyTrigger,
         },
         isLoading: false,
       });
 
-      // Auto-open modal if survey is required and incomplete
-      if (completionStatus.isRequired && !completionStatus.isComplete) {
+      // Auto-open modal only if survey is required, incomplete, AND trigger is before_viewing
+      if (completionStatus.isRequired && !completionStatus.isComplete && surveyTrigger === 'before_viewing') {
         set({ isSurveyModalOpen: true });
       }
     } catch (error) {
@@ -255,14 +260,30 @@ export const useDemographicStore = create<DemographicState>((set, get) => ({
 }));
 
 // Selectors
+
+// Blocks interactions (sign, comment, approve) when survey is required and incomplete
 export const selectIsInteractionBlocked = (state: DemographicState) =>
   state.status.isLoaded && state.status.isRequired && !state.status.isComplete;
 
-export const selectShouldShowSurveyModal = (state: DemographicState) =>
-  state.status.isLoaded && state.status.isRequired && !state.status.isComplete;
+// Blocks viewing the document when survey is required, incomplete, AND trigger is before_viewing
+export const selectIsViewBlocked = (state: DemographicState) =>
+  state.status.isLoaded &&
+  state.status.isRequired &&
+  !state.status.isComplete &&
+  state.status.surveyTrigger === 'before_viewing';
+
+// Should show survey modal (for before_viewing mode - auto-open on page load)
+export const selectShouldAutoShowSurveyModal = (state: DemographicState) =>
+  state.status.isLoaded &&
+  state.status.isRequired &&
+  !state.status.isComplete &&
+  state.status.surveyTrigger === 'before_viewing';
 
 export const selectIsDemographicsEnabled = (state: DemographicState) =>
   state.status.mode !== 'disabled';
+
+export const selectSurveyTrigger = (state: DemographicState) =>
+  state.status.surveyTrigger;
 
 export const selectProgress = (state: DemographicState) => ({
   total: state.status.totalQuestions,

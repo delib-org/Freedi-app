@@ -307,13 +307,15 @@ export async function recalculatePolarizationIndexForStatement(
 		await db.collection(Collections.polarizationIndex).doc(statementId).set(polarizationIndex, { merge: true });
 
 		logger.info(`Successfully recalculated polarization index for ${statementId}`);
-		return {
+		
+return {
 			success: true,
 			message: `Recalculated with ${usersDemographicEvaluations.length} users, ${axes.length} axes`,
 		};
 	} catch (error) {
 		logger.error(`Error recalculating polarization index for ${statementId}:`, error);
-		return { success: false, message: `Error: ${error}` };
+		
+return { success: false, message: `Error: ${error}` };
 	}
 }
 
@@ -404,10 +406,12 @@ export async function recalculatePolarizationIndexForParent(
 		}
 
 		logger.info(`Completed: processed ${processed}, errors ${errors}`);
-		return { success: true, processed, errors };
+		
+return { success: true, processed, errors };
 	} catch (error) {
 		logger.error('Error in recalculatePolarizationIndexForParent:', error);
-		return { success: false, processed: 0, errors: 1 };
+		
+return { success: false, processed: 0, errors: 1 };
 	}
 }
 
@@ -443,9 +447,11 @@ export async function recalculatePolarizationIndexForGroup(
 		}
 
 		logger.info(`Completed group recalculation: processed ${processed}, errors/skipped ${errors}`);
-		return { success: true, processed, errors };
+		
+return { success: true, processed, errors };
 	} catch (error) {
 		logger.error('Error in recalculatePolarizationIndexForGroup:', error);
-		return { success: false, processed: 0, errors: 1 };
+		
+return { success: false, processed: 0, errors: 1 };
 	}
 }

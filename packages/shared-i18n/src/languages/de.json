@@ -1453,5 +1453,32 @@
   "hours ago": "Stunden",
   "days ago": "Tage",
   "Update Suggestion": "Vorschlag aktualisieren",
-  "Submitting...": "Wird eingereicht..."
+  "Submitting...": "Wird eingereicht...",
+
+  "Be the first to share your idea!": "Seien Sie der Erste, der seine Idee teilt!",
+  "Press \"Add an answer\" to add your suggestion": "Drücken Sie \"Antwort hinzufügen\" um Ihren Vorschlag hinzuzufügen",
+  "Press the + button to add your suggestion": "Drücken Sie die +-Taste um Ihren Vorschlag hinzuzufügen",
+
+  "Add an answer": "Antwort hinzufügen",
+  "Title of the answer": "Titel der Antwort",
+  "Enter your answer title...": "Geben Sie den Titel Ihrer Antwort ein...",
+  "Answer description": "Beschreibung der Antwort",
+  "Describe your answer...": "Beschreiben Sie Ihre Antwort...",
+  "Search for similar answers": "Nach ähnlichen Antworten suchen",
+  "Enter group title...": "Gruppentitel eingeben...",
+  "Describe the group...": "Beschreiben Sie die Gruppe...",
+  "Search for similar groups": "Nach ähnlichen Gruppen suchen",
+  "Enter question title...": "Fragetitel eingeben...",
+  "Describe the question...": "Beschreiben Sie die Frage...",
+  "Search for similar questions": "Nach ähnlichen Fragen suchen",
+  "Enter title...": "Titel eingeben...",
+  "Enter description...": "Beschreibung eingeben...",
+
+  "When should users complete the survey?": "Wann sollen Benutzer die Umfrage ausfüllen?",
+  "Before interacting": "Vor der Interaktion",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "Benutzer können das Dokument frei lesen. Die Umfrage erscheint, wenn sie versuchen zu genehmigen, kommentieren oder unterschreiben.",
+  "Before viewing": "Vor dem Ansehen",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "Benutzer müssen die Umfrage ausfüllen, bevor sie auf das Dokument zugreifen können. Für sensible Dokumente verwenden.",
+  "Default": "Standard",
+  "Users must complete the survey to interact with the document": "Benutzer müssen die Umfrage ausfüllen, um mit dem Dokument zu interagieren"
 }

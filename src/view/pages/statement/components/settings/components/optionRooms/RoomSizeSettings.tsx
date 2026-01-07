@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './OptionRooms.module.scss';
 

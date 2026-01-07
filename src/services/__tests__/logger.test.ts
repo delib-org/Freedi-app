@@ -11,8 +11,7 @@ jest.mock('@sentry/react', () => ({
 	addBreadcrumb: jest.fn(),
 }));
 
-// Mock import.meta.env
-const originalEnv = (global as unknown as { import: { meta: { env: { DEV: boolean } } } }).import?.meta?.env;
+// Mock import.meta.env - original env stored for potential future restoration
 
 describe('Logger', () => {
 	let logger: Logger;

@@ -1453,5 +1453,32 @@
   "hours ago": "uur",
   "days ago": "dagen",
   "Update Suggestion": "Suggestie Bijwerken",
-  "Submitting...": "Bezig met indienen..."
+  "Submitting...": "Bezig met indienen...",
+
+  "Be the first to share your idea!": "Wees de eerste om je idee te delen!",
+  "Press \"Add an answer\" to add your suggestion": "Druk op \"Antwoord toevoegen\" om je suggestie toe te voegen",
+  "Press the + button to add your suggestion": "Druk op de +-knop om je suggestie toe te voegen",
+
+  "Add an answer": "Antwoord toevoegen",
+  "Title of the answer": "Titel van het antwoord",
+  "Enter your answer title...": "Voer de titel van je antwoord in...",
+  "Answer description": "Beschrijving van het antwoord",
+  "Describe your answer...": "Beschrijf je antwoord...",
+  "Search for similar answers": "Zoeken naar vergelijkbare antwoorden",
+  "Enter group title...": "Voer groepstitel in...",
+  "Describe the group...": "Beschrijf de groep...",
+  "Search for similar groups": "Zoeken naar vergelijkbare groepen",
+  "Enter question title...": "Voer vraagtitel in...",
+  "Describe the question...": "Beschrijf de vraag...",
+  "Search for similar questions": "Zoeken naar vergelijkbare vragen",
+  "Enter title...": "Voer titel in...",
+  "Enter description...": "Voer beschrijving in...",
+
+  "When should users complete the survey?": "Wanneer moeten gebruikers de enquête invullen?",
+  "Before interacting": "Voor interactie",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "Gebruikers kunnen het document vrij lezen. Enquête verschijnt wanneer ze proberen goed te keuren, te reageren of te ondertekenen.",
+  "Before viewing": "Voor het bekijken",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "Gebruikers moeten de enquête invullen voordat ze toegang krijgen tot het document. Gebruik voor gevoelige documenten.",
+  "Default": "Standaard",
+  "Users must complete the survey to interact with the document": "Gebruikers moeten de enquête invullen om met het document te interacteren"
 }

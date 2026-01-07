@@ -6,6 +6,7 @@ import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { StageSelectionType, StatementType, ParagraphType } from '@freedi/shared-types';
 import { generateParagraphId } from '@/utils/paragraphUtils';
+import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 
 interface AddStageProps {
 	setShowAddStage: (showAddStage: boolean) => void;
@@ -66,7 +67,7 @@ const AddStage: FC<AddStageProps> = ({ setShowAddStage }) => {
 					onClick={handleCloseModal}
 					className={styles.xBtn}
 				/>
-				<h1>{statement.statement}</h1>
+				<h1>{renderInlineMarkdown(statement.statement)}</h1>
 				<select
 					name='stageSelectionType'
 					id='stageSelectionType'
