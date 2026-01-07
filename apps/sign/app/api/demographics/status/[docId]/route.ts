@@ -3,7 +3,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
-import { DemographicMode, DemographicStatusResponse } from '@/types/demographics';
+import { DemographicMode, SurveyTriggerMode, DemographicStatusResponse } from '@/types/demographics';
 import { logger } from '@/lib/utils/logger';
 
 /**
@@ -27,6 +27,7 @@ export async function GET(
           answeredQuestions: 0,
           isRequired: false,
           missingQuestionIds: [],
+          surveyTrigger: 'on_interaction' as SurveyTriggerMode,
         },
         mode: 'disabled' as DemographicMode,
       });
@@ -51,6 +52,7 @@ export async function GET(
 
     const mode: DemographicMode = signSettings.demographicMode || 'disabled';
     const required = signSettings.demographicRequired || false;
+    const surveyTrigger: SurveyTriggerMode = signSettings.surveyTrigger || 'on_interaction';
 
     // Check completion status
     const status = await checkSurveyCompletion(
@@ -61,8 +63,14 @@ export async function GET(
       required
     );
 
+    // Add surveyTrigger to the status
+    const statusWithTrigger = {
+      ...status,
+      surveyTrigger,
+    };
+
     const response: DemographicStatusResponse = {
-      status,
+      status: statusWithTrigger,
       mode,
     };
 

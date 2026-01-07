@@ -1841,5 +1841,13 @@
   "Describe the question...": "תארו את השאלה...",
   "Search for similar questions": "חיפוש שאלות דומות",
   "Enter title...": "הזינו כותרת...",
-  "Enter description...": "הזינו תיאור..."
+  "Enter description...": "הזינו תיאור...",
+
+  "When should users complete the survey?": "מתי המשתמשים צריכים למלא את השאלון?",
+  "Before interacting": "לפני אינטראקציה",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "משתמשים יכולים לקרוא את המסמך בחופשיות. השאלון מופיע כשהם מנסים לאשר, להגיב או לחתום.",
+  "Before viewing": "לפני צפייה",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "משתמשים חייבים למלא את השאלון לפני גישה למסמך. לשימוש במסמכים רגישים.",
+  "Default": "ברירת מחדל",
+  "Users must complete the survey to interact with the document": "המשתמשים חייבים למלא את השאלון כדי לתקשר עם המסמך"
 }
