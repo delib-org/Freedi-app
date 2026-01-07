@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { useUIStore, selectToasts } from '@/store/uiStore';
-import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
+import { useUIStore } from '@/store/uiStore';
+import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
+import { trackDocumentSign, trackDocumentReject, trackDocumentView } from '@/lib/analytics';
 import { Paragraph } from '@/types';
 import { logger } from '@/lib/utils/logger';
 import Modal from '../shared/Modal';
@@ -86,6 +87,7 @@ export default function DocumentClient({
     isLoading: isDemographicLoading,
   } = useDemographicStore();
   const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
+  const isViewBlocked = useDemographicStore(selectIsViewBlocked);
 
   const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -236,6 +238,8 @@ export default function DocumentClient({
 
         if (response.ok) {
           if (action === 'sign') {
+            // Track sign event
+            trackDocumentSign(documentId, user?.uid);
             // Show success animation with confetti
             setSigningAnimationState('success');
             triggerConfetti();
@@ -246,6 +250,8 @@ export default function DocumentClient({
               setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
             );
           } else {
+            // Track reject event
+            trackDocumentReject(documentId, user?.uid);
             // Show rejected confirmation animation
             setSigningAnimationState('rejected');
 
@@ -360,12 +366,13 @@ export default function DocumentClient({
     }
   }, [documentId, user, fetchStatus]);
 
-  // Auto-open survey modal if mandatory and incomplete (for all users)
+  // Auto-open survey modal only if viewing is blocked (before_viewing mode)
+  // For on_interaction mode, modal opens when user attempts to interact
   useEffect(() => {
-    if (isInteractionBlocked && !isSurveyModalOpen) {
+    if (isViewBlocked && !isSurveyModalOpen) {
       openSurveyModal();
     }
-  }, [isInteractionBlocked, isSurveyModalOpen, openSurveyModal]);
+  }, [isViewBlocked, isSurveyModalOpen, openSurveyModal]);
 
   // Cleanup confetti timeout on unmount
   useEffect(() => {
@@ -397,6 +404,8 @@ export default function DocumentClient({
   // Track document view
   useEffect(() => {
     if (user && !userSignature) {
+      // Track view in GA
+      trackDocumentView(documentId, user.uid);
       // Mark as viewed if not already signed/rejected
       fetch(`/api/signatures/${documentId}`, {
         method: 'POST',

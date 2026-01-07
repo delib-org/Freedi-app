@@ -1864,7 +1864,11 @@
   "Enter title...": "Enter title...",
   "Enter description...": "Enter description...",
 
-  "Accessibility": "Accessibility",
-  "Enhanced Visibility": "Enhanced Visibility",
-  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions."
+  "When should users complete the survey?": "When should users complete the survey?",
+  "Before interacting": "Before interacting",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "Users can read the document freely. Survey appears when they try to approve, comment, or sign.",
+  "Before viewing": "Before viewing",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "Users must complete the survey before accessing the document. Use for sensitive documents.",
+  "Default": "Default",
+  "Users must complete the survey to interact with the document": "Users must complete the survey to interact with the document"
 }

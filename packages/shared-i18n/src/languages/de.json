@@ -1483,7 +1483,11 @@
   "Enter title...": "Titel eingeben...",
   "Enter description...": "Beschreibung eingeben...",
 
-  "Accessibility": "Barrierefreiheit",
-  "Enhanced Visibility": "Verbesserte Sichtbarkeit",
-  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Interaktionsschaltflächen als sichtbare Hinweise jederzeit anzeigen. Hilfreich für ältere Benutzer, die möglicherweise keine Hover-/Tipp-Interaktionen entdecken."
+  "When should users complete the survey?": "Wann sollen Benutzer die Umfrage ausfüllen?",
+  "Before interacting": "Vor der Interaktion",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "Benutzer können das Dokument frei lesen. Die Umfrage erscheint, wenn sie versuchen zu genehmigen, kommentieren oder unterschreiben.",
+  "Before viewing": "Vor dem Ansehen",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "Benutzer müssen die Umfrage ausfüllen, bevor sie auf das Dokument zugreifen können. Für sensible Dokumente verwenden.",
+  "Default": "Standard",
+  "Users must complete the survey to interact with the document": "Benutzer müssen die Umfrage ausfüllen, um mit dem Dokument zu interagieren"
 }

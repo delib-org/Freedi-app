@@ -3,7 +3,7 @@ import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
-import { DemographicMode } from '@/types/demographics';
+import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
 import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
@@ -17,6 +17,7 @@ export interface DocumentSettings {
   isPublic: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  surveyTrigger: SurveyTriggerMode;
   textDirection: TextDirection;
   defaultLanguage: string;
   forceLanguage: boolean;
@@ -37,6 +38,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   isPublic: true,
   demographicMode: 'disabled',
   demographicRequired: false,
+  surveyTrigger: 'on_interaction',
   textDirection: 'auto',
   defaultLanguage: '',
   forceLanguage: true,
@@ -102,6 +104,7 @@ export async function GET(
       isPublic: document?.signSettings?.isPublic ?? DEFAULT_SETTINGS.isPublic,
       demographicMode: document?.signSettings?.demographicMode ?? DEFAULT_SETTINGS.demographicMode,
       demographicRequired: document?.signSettings?.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired,
+      surveyTrigger: document?.signSettings?.surveyTrigger ?? DEFAULT_SETTINGS.surveyTrigger,
       textDirection: document?.signSettings?.textDirection ?? DEFAULT_SETTINGS.textDirection,
       defaultLanguage: document?.signSettings?.defaultLanguage ?? DEFAULT_SETTINGS.defaultLanguage,
       forceLanguage: document?.signSettings?.forceLanguage ?? DEFAULT_SETTINGS.forceLanguage,
@@ -179,6 +182,12 @@ export async function PUT(
       ? body.demographicMode
       : (existingSettings.demographicMode ?? DEFAULT_SETTINGS.demographicMode);
 
+    // Validate surveyTrigger
+    const validTriggers: SurveyTriggerMode[] = ['on_interaction', 'before_viewing'];
+    const surveyTrigger: SurveyTriggerMode = validTriggers.includes(body.surveyTrigger)
+      ? body.surveyTrigger
+      : (existingSettings.surveyTrigger ?? DEFAULT_SETTINGS.surveyTrigger);
+
     // Validate textDirection
     const validDirections: TextDirection[] = ['auto', 'ltr', 'rtl'];
     const textDirection: TextDirection = validDirections.includes(body.textDirection)
@@ -207,6 +216,7 @@ export async function PUT(
       isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : (existingSettings.isPublic ?? DEFAULT_SETTINGS.isPublic),
       demographicMode,
       demographicRequired: body.demographicRequired !== undefined ? Boolean(body.demographicRequired) : (existingSettings.demographicRequired ?? DEFAULT_SETTINGS.demographicRequired),
+      surveyTrigger,
       textDirection,
       defaultLanguage: body.defaultLanguage !== undefined ? String(body.defaultLanguage) : (existingSettings.defaultLanguage ?? DEFAULT_SETTINGS.defaultLanguage),
       forceLanguage: body.forceLanguage !== undefined ? Boolean(body.forceLanguage) : (existingSettings.forceLanguage ?? DEFAULT_SETTINGS.forceLanguage),

@@ -1479,7 +1479,11 @@
   "Enter title...": "أدخل العنوان...",
   "Enter description...": "أدخل الوصف...",
 
-  "Accessibility": "إمكانية الوصول",
-  "Enhanced Visibility": "رؤية محسّنة",
-  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "عرض أزرار التفاعل كتلميحات مرئية في جميع الأوقات. مفيد للمستخدمين المسنين الذين قد لا يكتشفون تفاعلات التمرير/النقر."
+  "When should users complete the survey?": "متى يجب على المستخدمين إكمال الاستبيان؟",
+  "Before interacting": "قبل التفاعل",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "يمكن للمستخدمين قراءة المستند بحرية. يظهر الاستبيان عندما يحاولون الموافقة أو التعليق أو التوقيع.",
+  "Before viewing": "قبل العرض",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "يجب على المستخدمين إكمال الاستبيان قبل الوصول إلى المستند. استخدم للمستندات الحساسة.",
+  "Default": "افتراضي",
+  "Users must complete the survey to interact with the document": "يجب على المستخدمين إكمال الاستبيان للتفاعل مع المستند"
 }

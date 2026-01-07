@@ -87,7 +87,7 @@ return;
 
 			if (!auth.currentUser) {
 				setIsSaving(false);
-				
+
 return;
 			}
 
@@ -99,6 +99,21 @@ return;
 			await updateNotificationPreferences(statementId, auth.currentUser.uid, {
 				[key]: value
 			});
+
+			// If enabling push notifications, add the FCM token to the subscription
+			if (key === 'getPushNotification' && value === true) {
+				const token = notificationService.getToken();
+				if (token) {
+					await notificationService.registerForStatementNotifications(
+						auth.currentUser.uid,
+						token,
+						statementId
+					);
+					console.info('[NotificationPreferences] Added FCM token to subscription');
+				} else {
+					console.info('[NotificationPreferences] No FCM token available, will sync on next initialization');
+				}
+			}
 
 			setIsSaving(false);
 		} catch (error) {

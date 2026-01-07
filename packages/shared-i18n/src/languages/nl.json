@@ -1483,7 +1483,11 @@
   "Enter title...": "Voer titel in...",
   "Enter description...": "Voer beschrijving in...",
 
-  "Accessibility": "Toegankelijkheid",
-  "Enhanced Visibility": "Verbeterde Zichtbaarheid",
-  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Toon interactieknoppen als zichtbare hints te allen tijde. Nuttig voor oudere gebruikers die mogelijk geen hover/tik-interacties ontdekken."
+  "When should users complete the survey?": "Wanneer moeten gebruikers de enquête invullen?",
+  "Before interacting": "Voor interactie",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "Gebruikers kunnen het document vrij lezen. Enquête verschijnt wanneer ze proberen goed te keuren, te reageren of te ondertekenen.",
+  "Before viewing": "Voor het bekijken",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "Gebruikers moeten de enquête invullen voordat ze toegang krijgen tot het document. Gebruik voor gevoelige documenten.",
+  "Default": "Standaard",
+  "Users must complete the survey to interact with the document": "Gebruikers moeten de enquête invullen om met het document te interacteren"
 }

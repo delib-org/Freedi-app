@@ -1852,7 +1852,11 @@
   "Enter title...": "הזינו כותרת...",
   "Enter description...": "הזינו תיאור...",
 
-  "Accessibility": "נגישות",
-  "Enhanced Visibility": "נראות משופרת",
-  "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "הצגת כפתורי האינטראקציה כרמזים גלויים בכל עת. מועיל למשתמשים מבוגרים שעשויים לא לגלות אינטראקציות ריחוף/הקשה."
+  "When should users complete the survey?": "מתי המשתמשים צריכים למלא את השאלון?",
+  "Before interacting": "לפני אינטראקציה",
+  "Users can read the document freely. Survey appears when they try to approve, comment, or sign.": "משתמשים יכולים לקרוא את המסמך בחופשיות. השאלון מופיע כשהם מנסים לאשר, להגיב או לחתום.",
+  "Before viewing": "לפני צפייה",
+  "Users must complete the survey before accessing the document. Use for sensitive documents.": "משתמשים חייבים למלא את השאלון לפני גישה למסמך. לשימוש במסמכים רגישים.",
+  "Default": "ברירת מחדל",
+  "Users must complete the survey to interact with the document": "המשתמשים חייבים למלא את השאלון כדי לתקשר עם המסמך"
 }

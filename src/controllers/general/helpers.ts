@@ -197,7 +197,7 @@ export const statementTitleToDisplay = (
 	titleLength: number
 ) => {
 	const _title =
-		statement.split('\n')[0].replace('*', '') || statement.replace('*', '');
+		statement.split('\n')[0].replace(/\*/g, '') || statement.replace(/\*/g, '');
 
 	const titleToSet =
 		_title.length > titleLength - 3
@@ -231,7 +231,7 @@ export function getTitle(statement: Statement | undefined) {
 	try {
 		if (!statement) return '';
 
-		const title = statement.statement.split('\n')[0].replace('*', '');
+		const title = statement.statement.split('\n')[0].replace(/\*/g, '');
 
 		return title;
 	} catch (error) {
