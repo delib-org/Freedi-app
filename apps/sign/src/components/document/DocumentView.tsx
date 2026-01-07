@@ -29,6 +29,8 @@ interface DocumentViewProps {
   isAdmin?: boolean;
   tocSettings?: TocSettings;
   enableSuggestions?: boolean;
+  /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
+  enhancedVisibility?: boolean;
 }
 
 export default function DocumentView({
@@ -46,6 +48,7 @@ export default function DocumentView({
   isAdmin = false,
   tocSettings,
   enableSuggestions = false,
+  enhancedVisibility = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -151,6 +154,7 @@ export default function DocumentView({
                 suggestionCount={suggestionCounts[paragraph.paragraphId] || 0}
                 enableSuggestions={enableSuggestions}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
+                enhancedVisibility={enhancedVisibility}
               />
             ))
           )}

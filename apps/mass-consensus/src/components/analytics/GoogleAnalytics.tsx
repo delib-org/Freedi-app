@@ -8,8 +8,8 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 
 declare global {
   interface Window {
-    gtag: (
-      command: 'config' | 'event' | 'js',
+    gtag?: (
+      command: 'config' | 'event' | 'js' | 'set',
       targetId: string | Date,
       config?: Record<string, unknown>
     ) => void;
@@ -22,7 +22,7 @@ function GoogleAnalyticsTracking(): null {
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    if (!GA_MEASUREMENT_ID || typeof window.gtag !== 'function') return;
+    if (!GA_MEASUREMENT_ID || !window.gtag) return;
 
     const url = pathname + (searchParams?.toString() ? `?${searchParams.toString()}` : '');
 
@@ -67,7 +67,7 @@ export function trackEvent(
   label?: string,
   value?: number
 ): void {
-  if (!GA_MEASUREMENT_ID || typeof window === 'undefined' || typeof window.gtag !== 'function') {
+  if (!GA_MEASUREMENT_ID || typeof window === 'undefined' || !window.gtag) {
     return;
   }
 

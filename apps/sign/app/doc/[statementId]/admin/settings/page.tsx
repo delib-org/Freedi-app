@@ -32,6 +32,8 @@ interface Settings {
   tocEnabled: boolean;
   tocMaxLevel: number;
   tocPosition: TocPosition;
+  /** When true, shows interaction buttons as ghosted hints always (for elderly users) */
+  enhancedVisibility: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -60,6 +62,7 @@ export default function AdminSettingsPage() {
     tocEnabled: false,
     tocMaxLevel: 2,
     tocPosition: 'auto',
+    enhancedVisibility: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -270,6 +273,26 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.showViewCounts ? styles.active : ''}`}
             onClick={() => handleToggle('showViewCounts')}
             aria-pressed={settings.showViewCounts}
+          />
+        </div>
+      </section>
+
+      {/* Accessibility Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Accessibility')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enhanced Visibility')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.enhancedVisibility ? styles.active : ''}`}
+            onClick={() => handleToggle('enhancedVisibility')}
+            aria-pressed={settings.enhancedVisibility}
           />
         </div>
       </section>
