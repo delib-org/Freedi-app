@@ -23,7 +23,8 @@ class FirestoreCacheService {
     if (!this._collection) {
       this._collection = getFirestore().collection("_cache");
     }
-    return this._collection;
+    
+return this._collection;
   }
 
   /**

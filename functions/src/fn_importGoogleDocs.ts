@@ -116,7 +116,8 @@ function extractCellContent(cell: docs_v1.Schema$TableCell): string {
       if (element.paragraph) {
         return extractTextContent(element.paragraph.elements);
       }
-      return "";
+      
+return "";
     })
     .join("\n")
     .trim();
@@ -269,7 +270,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
     // Only allow POST
     if (req.method !== "POST") {
       res.status(405).json({ success: false, error: "Method not allowed" });
-      return;
+      
+return;
     }
 
     const { documentUrl, statementId, userId } = req.body;
@@ -277,17 +279,20 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
     // Validate inputs
     if (!documentUrl) {
       res.status(400).json({ success: false, error: "Document URL is required" });
-      return;
+      
+return;
     }
 
     if (!statementId) {
       res.status(400).json({ success: false, error: "Statement ID is required" });
-      return;
+      
+return;
     }
 
     if (!userId) {
       res.status(401).json({ success: false, error: "User ID is required" });
-      return;
+      
+return;
     }
 
     // Extract Google Doc ID from URL
@@ -297,7 +302,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
         success: false,
         error: "Please enter a valid Google Docs URL",
       });
-      return;
+      
+return;
     }
 
     // Verify user is admin of the statement
@@ -306,7 +312,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
 
     if (!docSnap.exists) {
       res.status(404).json({ success: false, error: "Statement not found" });
-      return;
+      
+return;
     }
 
     const docData = docSnap.data();
@@ -317,7 +324,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
         success: false,
         error: "You do not have permission to import to this statement",
       });
-      return;
+      
+return;
     }
 
     // Fetch Google Doc
@@ -334,7 +342,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
           success: false,
           error: "Document not found. Please check the URL.",
         });
-        return;
+        
+return;
       }
 
       if (errorMessage.includes("permission") || errorMessage.includes("403")) {
@@ -344,7 +353,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
           error: `Cannot access this document. Please share it with: ${serviceEmail}`,
           serviceAccountEmail: serviceEmail,
         });
-        return;
+        
+return;
       }
 
       console.error("Google Docs API error:", error);
@@ -352,7 +362,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
         success: false,
         error: "Failed to fetch document. Please try again.",
       });
-      return;
+      
+return;
     }
 
     // Convert to paragraphs
@@ -364,7 +375,8 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
         success: false,
         error: "The document appears to be empty or has no importable content.",
       });
-      return;
+      
+return;
     }
 
     // Generate description from paragraphs (first 200 chars)

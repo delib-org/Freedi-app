@@ -1,6 +1,6 @@
 import { FC, useEffect, useState, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import { RoomParticipant, RoomSettings, Room } from '@freedi/shared-types';
+import { RoomParticipant, RoomSettings } from '@freedi/shared-types';
 import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
@@ -59,7 +59,8 @@ const CreatedRoomsDisplay: FC<CreatedRoomsDisplayProps> = ({ statementId, option
 			if (!existing || setting.createdAt > existing.createdAt) {
 				acc.set(setting.statementId, setting);
 			}
-			return acc;
+			
+return acc;
 		}, new Map<string, RoomSettings>());
 
 		const result = Array.from(settingsMap.values());

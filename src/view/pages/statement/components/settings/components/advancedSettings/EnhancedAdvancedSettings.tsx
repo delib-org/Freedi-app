@@ -15,7 +15,7 @@ import {
   MessageSquare, Navigation, Plus, Settings,
   ChevronDown, ChevronUp, HelpCircle,
   Zap, Database, Lightbulb, Award, Target,
-  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download, RefreshCcw
+  Activity, PieChart, Sparkles, Shield, Lock, Globe, Scissors, Download
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';

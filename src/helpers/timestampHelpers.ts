@@ -101,7 +101,7 @@ export function normalizeStatementData(data: unknown): unknown {
 			// Note: This may not be accurate for deeply nested statements,
 			// but it's better than failing validation
 			obj.topParentId = obj.parentId;
-			console.warn(`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`);
+			console.info(`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`);
 		}
 	}
 

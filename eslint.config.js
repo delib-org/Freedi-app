@@ -9,7 +9,23 @@ import jsxA11y from 'eslint-plugin-jsx-a11y';
 import importPlugin from 'eslint-plugin-import';
 
 export default [
-	{ ignores: ['dist'] },
+	{
+		ignores: [
+			'dist',
+			'build',
+			'node_modules',
+			'**/node_modules/**',
+			'apps/**/dist',
+			'apps/**/build',
+			'apps/**/.next',
+			'packages/**/dist',
+			'functions/lib',
+			'coverage',
+			'*.config.js',
+			'*.config.mjs',
+			'vite.config.ts.timestamp*',
+		],
+	},
 	{
 		files: ['**/*.{ts,tsx}', 'functions/**/*.{ts,tsx}'],
 		languageOptions: {

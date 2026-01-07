@@ -2,7 +2,7 @@
  * Controller for importing Google Docs into statements
  */
 
-import { getFunctions, httpsCallable } from 'firebase/functions';
+import { getFunctions } from 'firebase/functions';
 import { Statement, Paragraph } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 
@@ -33,7 +33,8 @@ export async function importGoogleDocToStatement(
 	userId: string
 ): Promise<ImportResponse> {
 	try {
-		const functions = getFunctions();
+		// Initialize functions (may be needed for future httpsCallable usage)
+		getFunctions();
 
 		// Get the function URL based on environment
 		const isProduction = import.meta.env.PROD;

@@ -1834,5 +1834,24 @@
   "notifications.iosStep4": "Open the app from your home screen",
   "common.ok": "OK",
   "common.gotIt": "Got it",
-  "common.notNow": "Not Now"
+  "common.notNow": "Not Now",
+
+  "Be the first to share your idea!": "Be the first to share your idea!",
+  "Press \"Add an answer\" to add your suggestion": "Press \"Add an answer\" to add your suggestion",
+  "Press the + button to add your suggestion": "Press the + button to add your suggestion",
+
+  "Add an answer": "Add an answer",
+  "Title of the answer": "Title of the answer",
+  "Enter your answer title...": "Enter your answer title...",
+  "Answer description": "Answer description",
+  "Describe your answer...": "Describe your answer...",
+  "Search for similar answers": "Search for similar answers",
+  "Enter group title...": "Enter group title...",
+  "Describe the group...": "Describe the group...",
+  "Search for similar groups": "Search for similar groups",
+  "Enter question title...": "Enter question title...",
+  "Describe the question...": "Describe the question...",
+  "Search for similar questions": "Search for similar questions",
+  "Enter title...": "Enter title...",
+  "Enter description...": "Enter description..."
 }

@@ -584,7 +584,8 @@ exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
     const { statementId } = req.body;
     if (!statementId) {
       res.status(400).json({ error: "statementId is required" });
-      return;
+      
+return;
     }
     const result = await recalculatePolarizationIndexForStatement(statementId);
     res.json(result);
@@ -596,7 +597,8 @@ exports.recalculatePolarizationIndexForParent = wrapHttpFunction(
     const { parentId } = req.body;
     if (!parentId) {
       res.status(400).json({ error: "parentId is required" });
-      return;
+      
+return;
     }
     const result = await recalculatePolarizationIndexForParent(parentId);
     res.json(result);
@@ -608,7 +610,8 @@ exports.recalculatePolarizationIndexForGroup = wrapHttpFunction(
     const { topParentId } = req.body;
     if (!topParentId) {
       res.status(400).json({ error: "topParentId is required" });
-      return;
+      
+return;
     }
     const result = await recalculatePolarizationIndexForGroup(topParentId);
     res.json(result);

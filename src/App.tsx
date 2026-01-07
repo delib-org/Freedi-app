@@ -15,11 +15,13 @@ export default function App() {
 	const { isLoading, user } = authState;
 
 	// Handle auth-based navigation (redirects unauthenticated users)
-	useAuthRedirect(authState);
+	const { isRedirecting } = useAuthRedirect(authState);
 
 	const { shouldShowPrompt, handleInstall, handleDismiss } = usePWAInstallPrompt();
 
-	if (isLoading) {
+	// Show loading while auth check is pending or during redirect
+	// This prevents race conditions with Suspense during navigation
+	if (isLoading || isRedirecting) {
 		return <LoadingPage />;
 	}
 

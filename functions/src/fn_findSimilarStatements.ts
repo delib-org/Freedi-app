@@ -78,7 +78,8 @@ export async function findSimilarStatements(
         ok: false,
         error: "Parent statement not found",
       });
-      return;
+      
+return;
     }
 
     // Get threshold from settings (default 0.75)

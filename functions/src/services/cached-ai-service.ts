@@ -101,7 +101,8 @@ export async function getCachedSimilarStatementIds(
     const cached = await cache.get<string[]>(cacheKey);
     if (cached) {
       logger.info("Cache hit for similar statement IDs");
-      return cached;
+      
+return cached;
     }
 
     // Call AI service
@@ -121,6 +122,7 @@ export async function getCachedSimilarStatementIds(
     return results;
   } catch (error) {
     logger.error("Error in getCachedSimilarStatementIds:", error);
+
     // Fall back to direct AI call on cache error
     return findSimilarStatementsByIds(
       statements,

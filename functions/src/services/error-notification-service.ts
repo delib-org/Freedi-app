@@ -41,7 +41,8 @@ async function getEmailTransporter(): Promise<nodemailer.Transporter | null> {
     });
   } catch (error) {
     logger.error('Error creating email transporter:', error);
-    return null;
+    
+return null;
   }
 }
 
@@ -64,19 +65,22 @@ export async function sendErrorNotification(options: ErrorNotificationOptions): 
   // Check throttle
   if (shouldThrottle(errorType)) {
     logger.info(`Error notification throttled for: ${errorType}`);
-    return false;
+    
+return false;
   }
 
   if (!ADMIN_EMAILS) {
     logger.warn('No admin emails configured for error notifications');
-    return false;
+    
+return false;
   }
 
   try {
     const transporter = await getEmailTransporter();
     if (!transporter) {
       logger.warn('Email transporter not available for error notification');
-      return false;
+      
+return false;
     }
 
     const emailUser = process.env.EMAIL_USER ||
@@ -127,11 +131,13 @@ export async function sendErrorNotification(options: ErrorNotificationOptions): 
     errorThrottle.set(errorType, Date.now());
 
     logger.info('Error notification sent', { errorType, severity });
-    return true;
+    
+return true;
 
   } catch (error) {
     logger.error('Failed to send error notification', { error, errorType });
-    return false;
+    
+return false;
   }
 }
 

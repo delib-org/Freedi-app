@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState } from 'react';
+import React, { FC, ReactNode, useState } from 'react';
 import { ChevronDown, ChevronUp, HelpCircle, LucideIcon } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './SettingsSection.module.scss';

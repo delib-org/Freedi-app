@@ -153,6 +153,7 @@ describe('setMembership', () => {
 		});
 
 		it('should validate waiting member schema', async () => {
+			// eslint-disable-next-line @typescript-eslint/no-require-imports
 			const { parse } = require('valibot');
 
 			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);

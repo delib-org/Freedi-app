@@ -99,13 +99,15 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 		}
 
 		logger.info(`Recalculation complete. Processed: ${results.processed}, Updated: ${results.updated}`);
-		return results;
+		
+return results;
 
 	} catch (error) {
 		const errorMessage = `Error in recalculateOptionsEvaluations: ${error}`;
 		logger.error(errorMessage);
 		results.errors.push(errorMessage);
-		return results;
+		
+return results;
 	}
 }
 

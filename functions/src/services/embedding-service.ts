@@ -29,7 +29,8 @@ function getOpenAI(): OpenAI {
   if (!apiKey) {
     throw new Error("Missing OPENAI_API_KEY environment variable");
   }
-  return new OpenAI({ apiKey });
+  
+return new OpenAI({ apiKey });
 }
 
 /**

@@ -22,37 +22,45 @@ export async function debugDeploymentNotifications() {
     // 3. Service Worker Firebase config
     console.info('%c3. Service Worker Config (expected):', 'color: blue; font-weight: bold');
     const currentDomain = window.location.hostname;
-    
-    if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
-        console.info('   - Expected: Development config (synthesistalyaron)');
-        console.info('   - Project ID: synthesistalyaron');
-        console.info('   - Sender ID: 799655218679');
-    } else if (currentDomain === 'freedi-test.web.app') {
-        console.info('   - Expected: Production config (freedi-test)');
-        console.info('   - Project ID: freedi-test');
-        console.info('   - Sender ID: 47037334917');
-    } else {
-        console.info('   - ⚠️  Unknown domain! Using fallback config');
-        console.info('   - Project ID: freedi-test (fallback)');
-        console.info('   - Sender ID: 47037334917 (fallback)');
+    let expectedProjectId = '';
+    let expectedSenderId = '';
+
+    try {
+        const response = await fetch('/firebase-config.json', { cache: 'no-store' });
+        if (response.ok) {
+            const swConfig = await response.json();
+            expectedProjectId = swConfig.projectId || '';
+            expectedSenderId = swConfig.messagingSenderId || '';
+            console.info('   - Source: firebase-config.json');
+            console.info('   - Project ID:', expectedProjectId || 'NOT SET');
+            console.info('   - Sender ID:', expectedSenderId || 'NOT SET');
+        }
+    } catch (error) {
+        console.warn('   - Failed to load firebase-config.json:', error);
+    }
+
+    if (!expectedProjectId || !expectedSenderId) {
+        if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
+            expectedProjectId = 'synthesistalyaron';
+            expectedSenderId = '799655218679';
+        } else if (currentDomain === 'freedi-test.web.app') {
+            expectedProjectId = 'freedi-test';
+            expectedSenderId = '47037334917';
+        } else if (currentDomain === 'wizcol-app.web.app' || currentDomain === 'app.wizcol.com' || currentDomain.endsWith('.wizcol.com') || currentDomain === 'wizcol.com') {
+            expectedProjectId = 'wizcol-app';
+            expectedSenderId = '337833396726';
+        } else {
+            expectedProjectId = 'freedi-test';
+            expectedSenderId = '47037334917';
+        }
+
+        console.info('   - Source: domain fallback');
+        console.info('   - Project ID:', expectedProjectId);
+        console.info('   - Sender ID:', expectedSenderId);
     }
     
     // 4. Check for config mismatch
     console.info('%c4. Configuration Match Check:', 'color: orange; font-weight: bold');
-    
-    let expectedProjectId = '';
-    let expectedSenderId = '';
-    
-    if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app') {
-        expectedProjectId = 'synthesistalyaron';
-        expectedSenderId = '799655218679';
-    } else if (currentDomain === 'freedi-test.web.app') {
-        expectedProjectId = 'freedi-test';
-        expectedSenderId = '47037334917';
-    } else {
-        expectedProjectId = 'freedi-test'; // fallback
-        expectedSenderId = '47037334917';
-    }
     
     const projectIdMatch = firebaseConfig.projectId === expectedProjectId;
     const senderIdMatch = firebaseConfig.messagingSenderId === expectedSenderId;
@@ -91,9 +99,9 @@ export async function debugDeploymentNotifications() {
     console.info('%c6. Recommendations:', 'color: purple; font-weight: bold');
     
     if (!projectIdMatch || !senderIdMatch) {
-        console.info('   1. Update firebase-messaging-sw.js to include config for:', currentDomain);
-        console.info('   2. Or ensure your deployment uses one of the configured domains');
-        console.info('   3. Make sure environment variables match the service worker config');
+        console.info('   1. Ensure firebase-config.json matches the deployed environment');
+        console.info('   2. Re-run env loader for the target environment and redeploy hosting');
+        console.info('   3. Confirm VITE_FIREBASE_* values match the backend project');
     }
     
     if (!vapidKey || vapidKey === 'undefined') {
