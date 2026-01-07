@@ -9,6 +9,7 @@ import { useAuthorization } from "@/controllers/hooks/useAuthorization";
 import OnlineUsers from "../nav/online/OnlineUsers";
 import SubQuestionsMap from "../subQuestionsMap/SubQuestionsMap";
 import ChatPanel from "../chat/components/chatPanel/ChatPanel";
+import { renderInlineMarkdown } from "@/helpers/inlineMarkdownHelpers";
 
 const Switch = () => {
   const { statement } = useContext(StatementContext);
@@ -37,7 +38,7 @@ const Switch = () => {
       {isAdmin ? (
         <button className={styles.header} onClick={handleStartEdit}>
           {!edit ? (
-            <h1>{statement?.statement}</h1>
+            <h1>{renderInlineMarkdown(statement?.statement)}</h1>
           ) : (
             <h1>
               <input
@@ -51,7 +52,7 @@ const Switch = () => {
         </button>
       ) : (
         <div className={styles.header}>
-          <h1>{statement?.statement}</h1>
+          <h1>{renderInlineMarkdown(statement?.statement)}</h1>
         </div>
       )}
 
