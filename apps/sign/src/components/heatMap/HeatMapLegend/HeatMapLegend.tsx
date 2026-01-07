@@ -57,9 +57,9 @@ const LEGEND_CONFIGS: Record<Exclude<HeatMapType, 'none'>, LegendConfig> = {
     ],
   },
   viewership: {
-    title: 'Viewership',
-    lowLabel: 'Low',
-    highLabel: 'High',
+    title: 'Viewers',
+    lowLabel: 'Few',
+    highLabel: 'Many',
     levels: [
       { level: 1, label: '<20%' },
       { level: 2, label: '20-39%' },
