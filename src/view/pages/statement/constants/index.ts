@@ -1,7 +1,7 @@
 // Application constants
 export const APP_CONSTANTS = {
 	NOTIFICATION_DELAY: 1000,
-	DOCUMENT_TITLE_PREFIX: 'FreeDi',
+	DOCUMENT_TITLE_PREFIX: 'WizCol',
 	TITLE_MAX_LENGTH: 15,
 	SCREEN_TYPES: {
 		MAIN: 'main',
