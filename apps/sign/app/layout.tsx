@@ -52,22 +52,6 @@ export default async function RootLayout({
     <html lang={language} dir={dir}>
       <head>
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
-        {GA_MEASUREMENT_ID && (
-          <>
-            <Script
-              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
-              strategy="afterInteractive"
-            />
-            <Script id="google-analytics" strategy="afterInteractive">
-              {`
-                window.dataLayer = window.dataLayer || [];
-                function gtag(){dataLayer.push(arguments);}
-                gtag('js', new Date());
-                gtag('config', '${GA_MEASUREMENT_ID}');
-              `}
-            </Script>
-          </>
-        )}
       </head>
       <body suppressHydrationWarning>
         <NextTranslationProvider
@@ -77,6 +61,7 @@ export default async function RootLayout({
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
           {children as any}
         </NextTranslationProvider>
+        <GoogleAnalytics />
         <Analytics />
       </body>
     </html>

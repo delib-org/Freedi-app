@@ -6,6 +6,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
+import { trackDocumentSign, trackDocumentReject, trackDocumentView } from '@/lib/analytics';
 import { Paragraph } from '@/types';
 import Modal from '../shared/Modal';
 import MinimizedModalIndicator from '../shared/MinimizedModalIndicator';
@@ -214,6 +215,8 @@ export default function DocumentClient({
 
         if (response.ok) {
           if (action === 'sign') {
+            // Track sign event
+            trackDocumentSign(documentId, user?.uid);
             // Show success animation with confetti
             setSigningAnimationState('success');
             triggerConfetti();
@@ -223,6 +226,8 @@ export default function DocumentClient({
               setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
             );
           } else {
+            // Track reject event
+            trackDocumentReject(documentId, user?.uid);
             // Show rejected confirmation animation
             setSigningAnimationState('rejected');
 
@@ -348,6 +353,8 @@ export default function DocumentClient({
   // Track document view
   useEffect(() => {
     if (user && !userSignature) {
+      // Track view in GA
+      trackDocumentView(documentId, user.uid);
       // Mark as viewed if not already signed/rejected
       fetch(`/api/signatures/${documentId}`, {
         method: 'POST',
