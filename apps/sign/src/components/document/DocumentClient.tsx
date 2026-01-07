@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore, selectToasts } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
