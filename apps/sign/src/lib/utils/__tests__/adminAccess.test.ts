@@ -8,7 +8,7 @@ import { AdminPermissionLevel } from '@freedi/shared-types';
 jest.mock('@freedi/shared-types', () => ({
 	AdminPermissionLevel: {
 		owner: 'owner',
-		editor: 'editor',
+		admin: 'admin',
 		viewer: 'viewer',
 	},
 	Collections: {
@@ -17,7 +17,7 @@ jest.mock('@freedi/shared-types', () => ({
 		viewerLinks: 'viewerLinks',
 	},
 	hasPermissionLevel: jest.fn((userLevel: string, requiredLevel: string) => {
-		const levels = ['viewer', 'editor', 'owner'];
+		const levels = ['viewer', 'admin', 'owner'];
 		const userIndex = levels.indexOf(userLevel);
 		const requiredIndex = levels.indexOf(requiredLevel);
 		return userIndex >= requiredIndex;
@@ -53,29 +53,29 @@ describe('adminAccess', () => {
 
 		it('should allow owner for any permission level', () => {
 			expect(checkPermission(AdminPermissionLevel.owner, AdminPermissionLevel.viewer)).toBe(true);
-			expect(checkPermission(AdminPermissionLevel.owner, AdminPermissionLevel.editor)).toBe(true);
+			expect(checkPermission(AdminPermissionLevel.owner, AdminPermissionLevel.admin)).toBe(true);
 			expect(checkPermission(AdminPermissionLevel.owner, AdminPermissionLevel.owner)).toBe(true);
 		});
 
-		it('should allow editor for viewer and editor levels', () => {
-			expect(checkPermission(AdminPermissionLevel.editor, AdminPermissionLevel.viewer)).toBe(true);
-			expect(checkPermission(AdminPermissionLevel.editor, AdminPermissionLevel.editor)).toBe(true);
+		it('should allow admin for viewer and admin levels', () => {
+			expect(checkPermission(AdminPermissionLevel.admin, AdminPermissionLevel.viewer)).toBe(true);
+			expect(checkPermission(AdminPermissionLevel.admin, AdminPermissionLevel.admin)).toBe(true);
 		});
 
-		it('should not allow editor for owner level', () => {
-			expect(checkPermission(AdminPermissionLevel.editor, AdminPermissionLevel.owner)).toBe(false);
+		it('should not allow admin for owner level', () => {
+			expect(checkPermission(AdminPermissionLevel.admin, AdminPermissionLevel.owner)).toBe(false);
 		});
 
 		it('should only allow viewer for viewer level', () => {
 			expect(checkPermission(AdminPermissionLevel.viewer, AdminPermissionLevel.viewer)).toBe(true);
-			expect(checkPermission(AdminPermissionLevel.viewer, AdminPermissionLevel.editor)).toBe(false);
+			expect(checkPermission(AdminPermissionLevel.viewer, AdminPermissionLevel.admin)).toBe(false);
 			expect(checkPermission(AdminPermissionLevel.viewer, AdminPermissionLevel.owner)).toBe(false);
 		});
 
 		it('should call hasPermissionLevel from shared-types', () => {
-			checkPermission(AdminPermissionLevel.editor, AdminPermissionLevel.viewer);
+			checkPermission(AdminPermissionLevel.admin, AdminPermissionLevel.viewer);
 			expect(hasPermissionLevel).toHaveBeenCalledWith(
-				AdminPermissionLevel.editor,
+				AdminPermissionLevel.admin,
 				AdminPermissionLevel.viewer
 			);
 		});
@@ -99,9 +99,14 @@ describe('adminAccess', () => {
 	});
 
 	describe('checkAdminAccess', () => {
-		const mockDb = {
-			collection: jest.fn(() => mockDb),
-			doc: jest.fn(() => mockDb),
+		interface MockDb {
+			collection: jest.Mock;
+			doc: jest.Mock;
+			get: jest.Mock;
+		}
+		const mockDb: MockDb = {
+			collection: jest.fn(),
+			doc: jest.fn(),
 			get: jest.fn(),
 		};
 
@@ -157,7 +162,7 @@ describe('adminAccess', () => {
 				.mockResolvedValueOnce({
 					exists: true,
 					data: () => ({
-						permissionLevel: AdminPermissionLevel.editor,
+						permissionLevel: AdminPermissionLevel.admin,
 					}),
 				});
 
@@ -169,7 +174,7 @@ describe('adminAccess', () => {
 
 			expect(result.isAdmin).toBe(true);
 			expect(result.isOwner).toBe(false);
-			expect(result.permissionLevel).toBe(AdminPermissionLevel.editor);
+			expect(result.permissionLevel).toBe(AdminPermissionLevel.admin);
 		});
 
 		it('should return not admin when user has no access', async () => {
@@ -209,10 +214,16 @@ describe('adminAccess', () => {
 	});
 
 	describe('checkViewerLinkAccess', () => {
-		const mockDb = {
-			collection: jest.fn(() => mockDb),
-			where: jest.fn(() => mockDb),
-			limit: jest.fn(() => mockDb),
+		interface MockDb {
+			collection: jest.Mock;
+			where: jest.Mock;
+			limit: jest.Mock;
+			get: jest.Mock;
+		}
+		const mockDb: MockDb = {
+			collection: jest.fn(),
+			where: jest.fn(),
+			limit: jest.fn(),
 			get: jest.fn(),
 		};
 
@@ -298,9 +309,14 @@ describe('adminAccess', () => {
 	});
 
 	describe('getDocumentCollaborators', () => {
-		const mockDb = {
-			collection: jest.fn(() => mockDb),
-			doc: jest.fn(() => mockDb),
+		interface MockDb {
+			collection: jest.Mock;
+			doc: jest.Mock;
+			get: jest.Mock;
+		}
+		const mockDb: MockDb = {
+			collection: jest.fn(),
+			doc: jest.fn(),
 			get: jest.fn(),
 		};
 
@@ -313,7 +329,7 @@ describe('adminAccess', () => {
 		it('should return array of collaborators', async () => {
 			mockDb.get.mockResolvedValueOnce({
 				docs: [
-					{ data: () => ({ userId: 'user-1', permissionLevel: 'editor' }) },
+					{ data: () => ({ userId: 'user-1', permissionLevel: 'admin' }) },
 					{ data: () => ({ userId: 'user-2', permissionLevel: 'viewer' }) },
 				],
 			});
@@ -352,9 +368,14 @@ describe('adminAccess', () => {
 	});
 
 	describe('getDocumentViewerLinks', () => {
-		const mockDb = {
-			collection: jest.fn(() => mockDb),
-			where: jest.fn(() => mockDb),
+		interface MockDb {
+			collection: jest.Mock;
+			where: jest.Mock;
+			get: jest.Mock;
+		}
+		const mockDb: MockDb = {
+			collection: jest.fn(),
+			where: jest.fn(),
 			get: jest.fn(),
 		};
 

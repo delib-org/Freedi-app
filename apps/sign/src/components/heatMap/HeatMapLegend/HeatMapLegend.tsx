@@ -68,6 +68,18 @@ const LEGEND_CONFIGS: Record<Exclude<HeatMapType, 'none'>, LegendConfig> = {
       { level: 5, label: '80%+' },
     ],
   },
+  suggestions: {
+    title: 'Suggestions',
+    lowLabel: 'Few',
+    highLabel: 'Many',
+    levels: [
+      { level: 1, label: '1' },
+      { level: 2, label: '2-3' },
+      { level: 3, label: '4-6' },
+      { level: 4, label: '7-10' },
+      { level: 5, label: '11+' },
+    ],
+  },
 };
 
 export default function HeatMapLegend({ className }: HeatMapLegendProps) {
