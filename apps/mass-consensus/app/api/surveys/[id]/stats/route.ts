@@ -6,6 +6,9 @@ import { logger } from '@/lib/utils/logger';
 /**
  * GET /api/surveys/[id]/stats
  * Get survey statistics (response count, completion count, completion rate)
+ *
+ * Query params:
+ * - includeTestData: boolean - If true, includes test data in counts (default: false)
  */
 export async function GET(
   request: NextRequest,
@@ -13,6 +16,10 @@ export async function GET(
 ) {
   try {
     const { id: surveyId } = await params;
+
+    // Parse query params
+    const { searchParams } = new URL(request.url);
+    const includeTestData = searchParams.get('includeTestData') === 'true';
 
     // Extract and verify token
     const token = extractBearerToken(request.headers.get('authorization'));
@@ -35,7 +42,7 @@ export async function GET(
       return NextResponse.json({ error: 'You can only view stats for your own surveys' }, { status: 403 });
     }
 
-    const stats = await getSurveyStats(surveyId);
+    const stats = await getSurveyStats(surveyId, { includeTestData });
 
     return NextResponse.json(stats);
   } catch (error) {
