@@ -153,6 +153,8 @@ export const SurveyDemographicAnswerSchema = object({
   answer: optional(string()),
   /** For checkbox questions (multiple selections) */
   answerOptions: optional(array(string())),
+  /** Whether this answer was submitted during test mode */
+  isTestData: optional(boolean()),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -192,6 +194,8 @@ export const SurveySchema = object({
   customIntroText: optional(string()),
   /** Whether to show the introduction text on welcome screen (defaults to true) */
   showIntro: optional(boolean()),
+  /** Whether the survey is currently in test mode - responses collected in test mode are flagged */
+  isTestMode: optional(boolean()),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -220,6 +224,8 @@ export const SurveyProgressSchema = object({
   lastUpdated: number(),
   /** True when user has completed all questions */
   isCompleted: boolean(),
+  /** Whether this progress was created during test mode */
+  isTestData: optional(boolean()),
 });
 
 export type SurveyProgress = InferOutput<typeof SurveyProgressSchema>;

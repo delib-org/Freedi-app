@@ -429,14 +429,12 @@ export default function DocumentClient({
     <HeatMapProvider documentId={documentId}>
       {children}
 
-      {/* Heat Map Controls - visible to admins only */}
-      {isAdmin && (
-        <>
-          <HeatMapToolbar />
-          <HeatMapLegend />
-          <DemographicFilter documentId={documentId} />
-        </>
-      )}
+      {/* Heat Map Controls - visible to all users */}
+      <HeatMapToolbar />
+      <HeatMapLegend />
+
+      {/* Demographic Filter - admin only for privacy */}
+      {isAdmin && <DemographicFilter documentId={documentId} />}
 
       {/* Comments Modal */}
       {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (

@@ -166,6 +166,25 @@
   }
 }
 
+// Suggestions colors
+.suggestions {
+  .level-1 .colorSwatch {
+    background: var(--heat-suggestions-1);
+  }
+  .level-2 .colorSwatch {
+    background: var(--heat-suggestions-2);
+  }
+  .level-3 .colorSwatch {
+    background: var(--heat-suggestions-3);
+  }
+  .level-4 .colorSwatch {
+    background: var(--heat-suggestions-4);
+  }
+  .level-5 .colorSwatch {
+    background: var(--heat-suggestions-5);
+  }
+}
+
 // Responsive adjustments
 @media (max-width: 600px) {
   .legend {
