@@ -200,6 +200,9 @@ export async function updateSurvey(
   if (data.parentStatementId !== undefined) {
     updates.parentStatementId = data.parentStatementId;
   }
+  if (data.isTestMode !== undefined) {
+    updates.isTestMode = data.isTestMode;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
 
@@ -327,6 +330,8 @@ export async function upsertSurveyProgress(
     currentQuestionIndex?: number;
     completedQuestionId?: string;
     isCompleted?: boolean;
+    /** Mark this progress as test data (set when survey is in test mode) */
+    isTestData?: boolean;
   }
 ): Promise<SurveyProgress> {
   const db = getFirestoreAdmin();
@@ -356,6 +361,8 @@ export async function upsertSurveyProgress(
       progressUpdates.isCompleted = updates.isCompleted;
     }
 
+    // Note: Don't update isTestData on existing progress - it was set when created
+
     await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).update(progressUpdates);
 
     logger.info('[upsertSurveyProgress] Updated progress:', progressId);
@@ -376,6 +383,11 @@ export async function upsertSurveyProgress(
       lastUpdated: now,
       isCompleted: updates.isCompleted || false,
     };
+
+    // Set isTestData flag if provided (when survey is in test mode)
+    if (updates.isTestData === true) {
+      newProgress.isTestData = true;
+    }
 
     await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).set(newProgress);
 
@@ -634,14 +646,30 @@ export async function changeSurveyStatus(
   return updateSurvey(surveyId, { status: newStatus });
 }
 
-/**
- * Get survey statistics (response and completion counts)
- */
-export async function getSurveyStats(surveyId: string): Promise<{
+export interface SurveyStatsOptions {
+  /** Include test data in stats (default: false) */
+  includeTestData?: boolean;
+}
+
+export interface SurveyStatsResult {
   responseCount: number;
   completionCount: number;
   completionRate: number;
-}> {
+  /** Test response count (only returned if test data exists) */
+  testResponseCount?: number;
+  /** Test completion count (only returned if test data exists) */
+  testCompletionCount?: number;
+}
+
+/**
+ * Get survey statistics (response and completion counts)
+ * By default, excludes test data from counts
+ */
+export async function getSurveyStats(
+  surveyId: string,
+  options: SurveyStatsOptions = {}
+): Promise<SurveyStatsResult> {
+  const { includeTestData = false } = options;
   const db = getFirestoreAdmin();
 
   const progressSnapshot = await db
@@ -649,17 +677,146 @@ export async function getSurveyStats(surveyId: string): Promise<{
     .where('surveyId', '==', surveyId)
     .get();
 
-  const responseCount = progressSnapshot.size;
-  const completionCount = progressSnapshot.docs.filter(
+  const allDocs = progressSnapshot.docs;
+
+  // Separate test data from live data
+  const liveDocs = allDocs.filter((doc) => doc.data().isTestData !== true);
+  const testDocs = allDocs.filter((doc) => doc.data().isTestData === true);
+
+  // Calculate live data stats
+  const liveResponseCount = liveDocs.length;
+  const liveCompletionCount = liveDocs.filter(
     (doc) => doc.data().isCompleted === true
   ).length;
+
+  // Calculate test data stats
+  const testResponseCount = testDocs.length;
+  const testCompletionCount = testDocs.filter(
+    (doc) => doc.data().isCompleted === true
+  ).length;
+
+  // Determine which counts to return based on includeTestData option
+  const responseCount = includeTestData
+    ? liveResponseCount + testResponseCount
+    : liveResponseCount;
+  const completionCount = includeTestData
+    ? liveCompletionCount + testCompletionCount
+    : liveCompletionCount;
   const completionRate = responseCount > 0 ? (completionCount / responseCount) * 100 : 0;
 
-  return {
+  const result: SurveyStatsResult = {
     responseCount,
     completionCount,
     completionRate: Math.round(completionRate),
   };
+
+  // Include test data counts if there are any
+  if (testResponseCount > 0) {
+    result.testResponseCount = testResponseCount;
+    result.testCompletionCount = testCompletionCount;
+  }
+
+  return result;
+}
+
+export interface TestDataCounts {
+  progressCount: number;
+  demographicAnswerCount: number;
+  total: number;
+}
+
+/**
+ * Get counts of test data for a survey
+ */
+export async function getTestDataCounts(surveyId: string): Promise<TestDataCounts> {
+  const db = getFirestoreAdmin();
+
+  // Count test progress documents
+  const progressSnapshot = await db
+    .collection(SURVEY_PROGRESS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .where('isTestData', '==', true)
+    .get();
+  const progressCount = progressSnapshot.size;
+
+  // Count test demographic answers
+  const answersSnapshot = await db
+    .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .where('isTestData', '==', true)
+    .get();
+  const demographicAnswerCount = answersSnapshot.size;
+
+  return {
+    progressCount,
+    demographicAnswerCount,
+    total: progressCount + demographicAnswerCount,
+  };
+}
+
+export interface ClearTestDataResult {
+  success: boolean;
+  deletedCounts: TestDataCounts;
+}
+
+/**
+ * Clear all test data for a survey
+ * Deletes progress documents and demographic answers marked as test data
+ */
+export async function clearSurveyTestData(surveyId: string): Promise<ClearTestDataResult> {
+  const db = getFirestoreAdmin();
+  const deletedCounts: TestDataCounts = {
+    progressCount: 0,
+    demographicAnswerCount: 0,
+    total: 0,
+  };
+
+  try {
+    // Get and delete test progress documents
+    const progressSnapshot = await db
+      .collection(SURVEY_PROGRESS_COLLECTION)
+      .where('surveyId', '==', surveyId)
+      .where('isTestData', '==', true)
+      .get();
+
+    // Get and delete test demographic answers
+    const answersSnapshot = await db
+      .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+      .where('surveyId', '==', surveyId)
+      .where('isTestData', '==', true)
+      .get();
+
+    // Batch delete (Firestore batch limit is 500)
+    const BATCH_SIZE = 500;
+    const allDocs = [...progressSnapshot.docs, ...answersSnapshot.docs];
+
+    for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
+      const batch = db.batch();
+      const batchDocs = allDocs.slice(i, i + BATCH_SIZE);
+
+      for (const doc of batchDocs) {
+        batch.delete(doc.ref);
+      }
+
+      await batch.commit();
+    }
+
+    deletedCounts.progressCount = progressSnapshot.size;
+    deletedCounts.demographicAnswerCount = answersSnapshot.size;
+    deletedCounts.total = deletedCounts.progressCount + deletedCounts.demographicAnswerCount;
+
+    logger.info(
+      '[clearSurveyTestData] Cleared test data for survey:',
+      surveyId,
+      'deleted:',
+      deletedCounts.total
+    );
+
+    return { success: true, deletedCounts };
+  } catch (error) {
+    logger.error('[clearSurveyTestData] Error clearing test data:', surveyId, error);
+    return { success: false, deletedCounts };
+  }
 }
 
 /**
@@ -938,6 +1095,11 @@ export async function batchSaveDemographicQuestions(
   return { savedQuestions, idMapping };
 }
 
+export interface SaveDemographicAnswersOptions {
+  /** Mark answers as test data (set when survey is in test mode) */
+  isTestData?: boolean;
+}
+
 /**
  * Save demographic answers for a user
  */
@@ -948,7 +1110,8 @@ export async function saveSurveyDemographicAnswers(
     questionId: string;
     answer?: string;
     answerOptions?: string[];
-  }>
+  }>,
+  options: SaveDemographicAnswersOptions = {}
 ): Promise<SurveyDemographicAnswer[]> {
   const db = getFirestoreAdmin();
   const now = Date.now();
@@ -967,6 +1130,7 @@ export async function saveSurveyDemographicAnswers(
       questionId: answerData.questionId,
       answer: answerData.answer,
       answerOptions: answerData.answerOptions,
+      isTestData: options.isTestData === true ? true : undefined,
       createdAt: now,
       lastUpdate: now,
     });
@@ -984,7 +1148,8 @@ export async function saveSurveyDemographicAnswers(
     'answers for user:',
     userId,
     'survey:',
-    surveyId
+    surveyId,
+    options.isTestData ? '(test data)' : ''
   );
 
   return savedAnswers;

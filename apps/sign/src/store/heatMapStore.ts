@@ -64,6 +64,7 @@ const initialData: HeatMapData = {
   rating: {},
   viewership: {},
   viewershipCount: {},
+  suggestions: {},
 };
 
 export const useHeatMapStore = create<HeatMapState>((set, get) => ({
