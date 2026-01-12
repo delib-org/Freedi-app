@@ -235,7 +235,7 @@ export async function saveDemographicQuestion(
 
     // Cast the scope as the delib-npm type only accepts 'group' | 'statement' but we use 'sign'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const questionData: UserDemographicQuestion = {
+    const questionData: SignDemographicQuestion = {
       question: question.question || '',
       type: question.type || UserDemographicQuestionType.text,
       options: question.options || [],
@@ -245,7 +245,8 @@ export async function saveDemographicQuestion(
       scope: SIGN_SCOPE as 'group' | 'statement',
       order: question.order || 0,
       required: question.required || false,
-    } as UserDemographicQuestion;
+      displayType: question.displayType, // For radio questions: 'radio' or 'dropdown'
+    } as SignDemographicQuestion;
 
     await db
       .collection(Collections.userDemographicQuestions)

@@ -144,6 +144,7 @@ export async function POST(
       options: body.options || [],
       required: body.required,
       order,
+      displayType: body.displayType,
     });
 
     console.info(`[API] Question created for document ${docId} by user ${userId}`);

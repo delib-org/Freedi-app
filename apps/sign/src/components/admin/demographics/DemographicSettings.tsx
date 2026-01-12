@@ -26,6 +26,7 @@ import {
   SignDemographicQuestion,
   UserDemographicQuestionType,
   DemographicOption,
+  SingleChoiceDisplayType,
 } from '@/types/demographics';
 import styles from './DemographicSettings.module.scss';
 
@@ -41,6 +42,7 @@ interface SortableQuestionItemProps {
   editOptions: DemographicOption[];
   editOptionText: string;
   editIsRequired: boolean;
+  editDisplayType: SingleChoiceDisplayType;
   loading: boolean;
   t: (key: string) => string;
   onStartEdit: (question: SignDemographicQuestion) => void;
@@ -52,6 +54,7 @@ interface SortableQuestionItemProps {
   setEditOptions: (options: DemographicOption[]) => void;
   setEditOptionText: (value: string) => void;
   setEditIsRequired: (value: boolean) => void;
+  setEditDisplayType: (value: SingleChoiceDisplayType) => void;
   onAddEditOption: () => void;
   onRemoveEditOption: (index: number) => void;
 }
@@ -67,6 +70,7 @@ function SortableQuestionItem({
   editOptions,
   editOptionText,
   editIsRequired,
+  editDisplayType,
   loading,
   t,
   onStartEdit,
@@ -78,6 +82,7 @@ function SortableQuestionItem({
   setEditOptions,
   setEditOptionText,
   setEditIsRequired,
+  setEditDisplayType,
   onAddEditOption,
   onRemoveEditOption,
 }: SortableQuestionItemProps) {
@@ -172,6 +177,37 @@ function SortableQuestionItem({
             </div>
           )}
 
+          {editType === 'radio' && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>{t('Display Style')}</label>
+              <div className={styles.displayTypeSelector}>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${editDisplayType === 'radio' ? styles.active : ''}`}
+                  onClick={() => setEditDisplayType('radio')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="4" fill="currentColor" />
+                  </svg>
+                  {t('Radio Buttons')}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${editDisplayType === 'dropdown' ? styles.active : ''}`}
+                  onClick={() => setEditDisplayType('dropdown')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                    <path d="M8 12h8" />
+                    <path d="M15 10l2 2-2 2" />
+                  </svg>
+                  {t('Dropdown')}
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className={styles.formGroup}>
             <label className={styles.checkboxLabel}>
               <input
@@ -231,6 +267,9 @@ function SortableQuestionItem({
                 <span className={styles.questionType}>
                   {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
                 </span>
+                {question.type === 'radio' && question.displayType === 'dropdown' && (
+                  <span className={styles.displayTypeBadge}>{t('Dropdown')}</span>
+                )}
                 {question.required && (
                   <span className={styles.requiredBadge}>{t('Required')}</span>
                 )}
@@ -322,6 +361,7 @@ export default function DemographicSettings({
   const [newOptions, setNewOptions] = useState<DemographicOption[]>([]);
   const [newOptionText, setNewOptionText] = useState('');
   const [isRequired, setIsRequired] = useState(false);
+  const [newDisplayType, setNewDisplayType] = useState<SingleChoiceDisplayType>('radio');
 
   // Edit question state
   const [editingQuestion, setEditingQuestion] = useState<SignDemographicQuestion | null>(null);
@@ -330,6 +370,7 @@ export default function DemographicSettings({
   const [editOptions, setEditOptions] = useState<DemographicOption[]>([]);
   const [editOptionText, setEditOptionText] = useState('');
   const [editIsRequired, setEditIsRequired] = useState(false);
+  const [editDisplayType, setEditDisplayType] = useState<SingleChoiceDisplayType>('radio');
 
   // Handle mode change with auto-save
   const handleModeChange = async (newMode: DemographicMode) => {
@@ -420,6 +461,7 @@ export default function DemographicSettings({
           type: newType,
           options: (newType === 'radio' || newType === 'checkbox') ? newOptions : [],
           required: isRequired,
+          displayType: newType === 'radio' ? newDisplayType : undefined,
         }),
       });
 
@@ -429,6 +471,7 @@ export default function DemographicSettings({
         setNewType(UserDemographicQuestionType.text);
         setNewOptions([]);
         setIsRequired(false);
+        setNewDisplayType('radio');
         setShowEditor(false);
         await fetchQuestions();
       } else {
@@ -470,6 +513,7 @@ export default function DemographicSettings({
     setEditType(question.type || UserDemographicQuestionType.text);
     setEditOptions(question.options || []);
     setEditIsRequired(question.required || false);
+    setEditDisplayType(question.displayType || 'radio');
   };
 
   const handleCancelEdit = () => {
@@ -479,6 +523,7 @@ export default function DemographicSettings({
     setEditOptions([]);
     setEditOptionText('');
     setEditIsRequired(false);
+    setEditDisplayType('radio');
   };
 
   const handleAddEditOption = () => {
@@ -508,6 +553,7 @@ export default function DemographicSettings({
             options: (editType === 'radio' || editType === 'checkbox') ? editOptions : [],
             required: editIsRequired,
             order: editingQuestion.order,
+            displayType: editType === 'radio' ? editDisplayType : undefined,
           }),
         }
       );
@@ -741,6 +787,7 @@ export default function DemographicSettings({
                       editOptions={editOptions}
                       editOptionText={editOptionText}
                       editIsRequired={editIsRequired}
+                      editDisplayType={editDisplayType}
                       loading={loading}
                       t={t}
                       onStartEdit={handleStartEdit}
@@ -752,6 +799,7 @@ export default function DemographicSettings({
                       setEditOptions={setEditOptions}
                       setEditOptionText={setEditOptionText}
                       setEditIsRequired={setEditIsRequired}
+                      setEditDisplayType={setEditDisplayType}
                       onAddEditOption={handleAddEditOption}
                       onRemoveEditOption={handleRemoveEditOption}
                     />
@@ -832,6 +880,38 @@ export default function DemographicSettings({
                   onClick={handleAddOption}
                 >
                   {t('Add')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Display type for radio questions */}
+          {newType === 'radio' && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>{t('Display Style')}</label>
+              <div className={styles.displayTypeSelector}>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${newDisplayType === 'radio' ? styles.active : ''}`}
+                  onClick={() => setNewDisplayType('radio')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="4" fill="currentColor" />
+                  </svg>
+                  {t('Radio Buttons')}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${newDisplayType === 'dropdown' ? styles.active : ''}`}
+                  onClick={() => setNewDisplayType('dropdown')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                    <path d="M8 12h8" />
+                    <path d="M15 10l2 2-2 2" />
+                  </svg>
+                  {t('Dropdown')}
                 </button>
               </div>
             </div>

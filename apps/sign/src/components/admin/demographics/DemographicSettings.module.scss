@@ -333,6 +333,68 @@
   font-weight: 500;
 }
 
+.displayTypeBadge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: rgba(108, 117, 125, 0.15);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+// Display Type Selector (for radio questions)
+.displayTypeSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--card-default);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.displayTypeLabel {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.displayTypeOptions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.displayTypeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--background);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+  }
+
+  &.active {
+    border-color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.1);
+    color: var(--btn-primary);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
 // Drag Handle for reordering
 .dragHandle {
   display: flex;
