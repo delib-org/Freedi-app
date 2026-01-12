@@ -4,6 +4,23 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { isRTL } from '@freedi/shared-i18n';
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import {
   DemographicMode,
   SurveyTriggerMode,
   SignDemographicQuestion,
@@ -11,6 +28,241 @@ import {
   DemographicOption,
 } from '@/types/demographics';
 import styles from './DemographicSettings.module.scss';
+
+// Sortable Question Item Component
+interface SortableQuestionItemProps {
+  question: SignDemographicQuestion;
+  index: number;
+  mode: DemographicMode;
+  isEditing: boolean;
+  questionTypes: { value: UserDemographicQuestionType; label: string }[];
+  editQuestion: string;
+  editType: UserDemographicQuestionType;
+  editOptions: DemographicOption[];
+  editOptionText: string;
+  editIsRequired: boolean;
+  loading: boolean;
+  t: (key: string) => string;
+  onStartEdit: (question: SignDemographicQuestion) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: () => void;
+  onDelete: (questionId: string) => void;
+  setEditQuestion: (value: string) => void;
+  setEditType: (value: UserDemographicQuestionType) => void;
+  setEditOptions: (options: DemographicOption[]) => void;
+  setEditOptionText: (value: string) => void;
+  setEditIsRequired: (value: boolean) => void;
+  onAddEditOption: () => void;
+  onRemoveEditOption: (index: number) => void;
+}
+
+function SortableQuestionItem({
+  question,
+  index,
+  mode,
+  isEditing,
+  questionTypes,
+  editQuestion,
+  editType,
+  editOptions,
+  editOptionText,
+  editIsRequired,
+  loading,
+  t,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onDelete,
+  setEditQuestion,
+  setEditType,
+  setEditOptions,
+  setEditOptionText,
+  setEditIsRequired,
+  onAddEditOption,
+  onRemoveEditOption,
+}: SortableQuestionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.userQuestionId || `temp-${index}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.questionItem} ${isDragging ? styles.dragging : ''}`}
+    >
+      {isEditing ? (
+        // Edit mode
+        <div className={styles.editQuestionForm}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>{t('Question Text')}</label>
+            <input
+              type="text"
+              className={styles.formInput}
+              value={editQuestion}
+              onChange={(e) => setEditQuestion(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>{t('Question Type')}</label>
+            <select
+              className={styles.formSelect}
+              value={editType}
+              onChange={(e) => {
+                setEditType(e.target.value as UserDemographicQuestionType);
+                if (e.target.value === 'text' || e.target.value === 'textarea') {
+                  setEditOptions([]);
+                }
+              }}
+            >
+              {questionTypes.map((qt) => (
+                <option key={qt.value} value={qt.value}>
+                  {qt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(editType === 'radio' || editType === 'checkbox') && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>{t('Options')}</label>
+              <div className={styles.optionsList}>
+                {editOptions.map((option, optIdx) => (
+                  <div key={optIdx} className={styles.optionItem}>
+                    <span>{option.option}</span>
+                    <button
+                      type="button"
+                      className={styles.removeOptionButton}
+                      onClick={() => onRemoveEditOption(optIdx)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.addOptionRow}>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={editOptionText}
+                  onChange={(e) => setEditOptionText(e.target.value)}
+                  placeholder={t('Add option')}
+                  onKeyPress={(e) => e.key === 'Enter' && onAddEditOption()}
+                />
+                <button
+                  type="button"
+                  className={styles.addOptionButton}
+                  onClick={onAddEditOption}
+                >
+                  {t('Add')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.formGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={editIsRequired}
+                onChange={(e) => setEditIsRequired(e.target.checked)}
+              />
+              {t('This question is required')}
+            </label>
+          </div>
+
+          <div className={styles.editActions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onCancelEdit}
+            >
+              {t('Cancel')}
+            </button>
+            <button
+              type="button"
+              className={styles.saveEditButton}
+              onClick={onSaveEdit}
+              disabled={!editQuestion.trim() || loading}
+            >
+              {loading ? t('Saving...') : t('Save')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        // View mode
+        <>
+          {mode === 'custom' && !question.isInherited && (
+            <button
+              type="button"
+              className={styles.dragHandle}
+              {...attributes}
+              {...listeners}
+              aria-label={t('Drag to reorder')}
+              title={t('Drag to reorder')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="6" r="1.5" />
+                <circle cx="15" cy="6" r="1.5" />
+                <circle cx="9" cy="12" r="1.5" />
+                <circle cx="15" cy="12" r="1.5" />
+                <circle cx="9" cy="18" r="1.5" />
+                <circle cx="15" cy="18" r="1.5" />
+              </svg>
+            </button>
+          )}
+          <div className={styles.questionInfo}>
+            <span className={styles.questionNumber}>{index + 1}.</span>
+            <div className={styles.questionContent}>
+              <p className={styles.questionText}>{question.question}</p>
+              <div className={styles.questionMeta}>
+                <span className={styles.questionType}>
+                  {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
+                </span>
+                {question.required && (
+                  <span className={styles.requiredBadge}>{t('Required')}</span>
+                )}
+                {question.isInherited && (
+                  <span className={styles.inheritedBadge}>{t('Inherited')}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {mode === 'custom' && !question.isInherited && (
+            <div className={styles.questionActions}>
+              <button
+                type="button"
+                className={styles.editButton}
+                onClick={() => onStartEdit(question)}
+              >
+                {t('Edit')}
+              </button>
+              <button
+                type="button"
+                className={styles.deleteButton}
+                onClick={() => onDelete(question.userQuestionId || '')}
+              >
+                {t('Delete')}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </li>
+  );
+}
 
 interface DemographicSettingsProps {
   documentId: string;
@@ -276,56 +528,64 @@ export default function DemographicSettings({
     }
   };
 
-  // Reorder question handlers
-  const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+  // DnD sensors configuration
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
-    // Validate bounds
-    if (targetIndex < 0 || targetIndex >= questions.length) return;
+  // Handle drag end for reordering
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
 
-    const currentQuestion = questions[index];
-    const targetQuestion = questions[targetIndex];
+    if (!over || active.id === over.id) return;
 
-    if (!currentQuestion.userQuestionId || !targetQuestion.userQuestionId) return;
+    const oldIndex = questions.findIndex(
+      (q) => (q.userQuestionId || `temp-${questions.indexOf(q)}`) === active.id
+    );
+    const newIndex = questions.findIndex(
+      (q) => (q.userQuestionId || `temp-${questions.indexOf(q)}`) === over.id
+    );
 
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Optimistically update UI
+    const newQuestions = arrayMove(questions, oldIndex, newIndex);
+    setQuestions(newQuestions);
+
+    // Persist order changes to server
     try {
       setLoading(true);
 
-      // Swap the order values
-      const currentOrder = currentQuestion.order ?? index;
-      const targetOrder = targetQuestion.order ?? targetIndex;
+      // Update all questions with new order values
+      const updatePromises = newQuestions.map((question, index) => {
+        if (!question.userQuestionId) return Promise.resolve();
 
-      // Update both questions with swapped orders
-      await Promise.all([
-        fetch(`/api/demographics/questions/${documentId}/${currentQuestion.userQuestionId}`, {
+        return fetch(`/api/demographics/questions/${documentId}/${question.userQuestionId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            question: currentQuestion.question,
-            type: currentQuestion.type,
-            options: currentQuestion.options || [],
-            required: currentQuestion.required,
-            order: targetOrder,
+            question: question.question,
+            type: question.type,
+            options: question.options || [],
+            required: question.required,
+            order: index,
           }),
-        }),
-        fetch(`/api/demographics/questions/${documentId}/${targetQuestion.userQuestionId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            question: targetQuestion.question,
-            type: targetQuestion.type,
-            options: targetQuestion.options || [],
-            required: targetQuestion.required,
-            order: currentOrder,
-          }),
-        }),
-      ]);
+        });
+      });
 
-      // Refresh questions list
-      await fetchQuestions();
+      await Promise.all(updatePromises);
     } catch (error) {
       console.error('Failed to reorder questions:', error);
       alert(t('Failed to reorder questions'));
+      // Revert on error
+      await fetchQuestions();
     } finally {
       setLoading(false);
     }
@@ -458,178 +718,47 @@ export default function DemographicSettings({
                 : t('No custom questions yet. Add your first question above.')}
             </p>
           ) : (
-            <ul className={styles.questionsListItems}>
-              {questions.map((question, index) => (
-                <li key={question.userQuestionId || index} className={styles.questionItem}>
-                  {editingQuestion?.userQuestionId === question.userQuestionId ? (
-                    // Edit mode
-                    <div className={styles.editQuestionForm}>
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>{t('Question Text')}</label>
-                        <input
-                          type="text"
-                          className={styles.formInput}
-                          value={editQuestion}
-                          onChange={(e) => setEditQuestion(e.target.value)}
-                        />
-                      </div>
-
-                      <div className={styles.formGroup}>
-                        <label className={styles.formLabel}>{t('Question Type')}</label>
-                        <select
-                          className={styles.formSelect}
-                          value={editType}
-                          onChange={(e) => {
-                            setEditType(e.target.value as UserDemographicQuestionType);
-                            if (e.target.value === 'text' || e.target.value === 'textarea') {
-                              setEditOptions([]);
-                            }
-                          }}
-                        >
-                          {questionTypes.map((qt) => (
-                            <option key={qt.value} value={qt.value}>
-                              {qt.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {(editType === 'radio' || editType === 'checkbox') && (
-                        <div className={styles.formGroup}>
-                          <label className={styles.formLabel}>{t('Options')}</label>
-                          <div className={styles.optionsList}>
-                            {editOptions.map((option, optIdx) => (
-                              <div key={optIdx} className={styles.optionItem}>
-                                <span>{option.option}</span>
-                                <button
-                                  type="button"
-                                  className={styles.removeOptionButton}
-                                  onClick={() => handleRemoveEditOption(optIdx)}
-                                >
-                                  ×
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          <div className={styles.addOptionRow}>
-                            <input
-                              type="text"
-                              className={styles.formInput}
-                              value={editOptionText}
-                              onChange={(e) => setEditOptionText(e.target.value)}
-                              placeholder={t('Add option')}
-                              onKeyPress={(e) => e.key === 'Enter' && handleAddEditOption()}
-                            />
-                            <button
-                              type="button"
-                              className={styles.addOptionButton}
-                              onClick={handleAddEditOption}
-                            >
-                              {t('Add')}
-                            </button>
-                          </div>
-                        </div>
-                      )}
-
-                      <div className={styles.formGroup}>
-                        <label className={styles.checkboxLabel}>
-                          <input
-                            type="checkbox"
-                            checked={editIsRequired}
-                            onChange={(e) => setEditIsRequired(e.target.checked)}
-                          />
-                          {t('This question is required')}
-                        </label>
-                      </div>
-
-                      <div className={styles.editActions}>
-                        <button
-                          type="button"
-                          className={styles.cancelButton}
-                          onClick={handleCancelEdit}
-                        >
-                          {t('Cancel')}
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.saveEditButton}
-                          onClick={handleSaveEdit}
-                          disabled={!editQuestion.trim() || loading}
-                        >
-                          {loading ? t('Saving...') : t('Save')}
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    // View mode - No RTL classes needed, dir attribute handles layout
-                    <>
-                      <div className={styles.questionInfo}>
-                        <span className={styles.questionNumber}>{index + 1}.</span>
-                        <div className={styles.questionContent}>
-                          <p className={styles.questionText}>{question.question}</p>
-                          <div className={styles.questionMeta}>
-                            <span className={styles.questionType}>
-                              {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
-                            </span>
-                            {question.required && (
-                              <span className={styles.requiredBadge}>{t('Required')}</span>
-                            )}
-                            {question.isInherited && (
-                              <span className={styles.inheritedBadge}>{t('Inherited')}</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {mode === 'custom' && !question.isInherited && (
-                        <div className={styles.questionActions}>
-                          {/* Reorder buttons */}
-                          <div className={styles.orderButtons}>
-                            <button
-                              type="button"
-                              className={styles.orderButton}
-                              onClick={() => handleMoveQuestion(index, 'up')}
-                              disabled={index === 0 || loading}
-                              aria-label={t('Move up')}
-                              title={t('Move up')}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="18 15 12 9 6 15" />
-                              </svg>
-                            </button>
-                            <button
-                              type="button"
-                              className={styles.orderButton}
-                              onClick={() => handleMoveQuestion(index, 'down')}
-                              disabled={index === questions.length - 1 || loading}
-                              aria-label={t('Move down')}
-                              title={t('Move down')}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                <polyline points="6 9 12 15 18 9" />
-                              </svg>
-                            </button>
-                          </div>
-                          <button
-                            type="button"
-                            className={styles.editButton}
-                            onClick={() => handleStartEdit(question)}
-                          >
-                            {t('Edit')}
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.deleteButton}
-                            onClick={() => handleDeleteQuestion(question.userQuestionId || '')}
-                          >
-                            {t('Delete')}
-                          </button>
-                        </div>
-                      )}
-                    </>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={questions.map((q, i) => q.userQuestionId || `temp-${i}`)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className={styles.questionsListItems}>
+                  {questions.map((question, index) => (
+                    <SortableQuestionItem
+                      key={question.userQuestionId || index}
+                      question={question}
+                      index={index}
+                      mode={mode}
+                      isEditing={editingQuestion?.userQuestionId === question.userQuestionId}
+                      questionTypes={questionTypes}
+                      editQuestion={editQuestion}
+                      editType={editType}
+                      editOptions={editOptions}
+                      editOptionText={editOptionText}
+                      editIsRequired={editIsRequired}
+                      loading={loading}
+                      t={t}
+                      onStartEdit={handleStartEdit}
+                      onCancelEdit={handleCancelEdit}
+                      onSaveEdit={handleSaveEdit}
+                      onDelete={handleDeleteQuestion}
+                      setEditQuestion={setEditQuestion}
+                      setEditType={setEditType}
+                      setEditOptions={setEditOptions}
+                      setEditOptionText={setEditOptionText}
+                      setEditIsRequired={setEditIsRequired}
+                      onAddEditOption={handleAddEditOption}
+                      onRemoveEditOption={handleRemoveEditOption}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       )}
