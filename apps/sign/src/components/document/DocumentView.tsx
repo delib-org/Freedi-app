@@ -186,9 +186,6 @@ export default function DocumentView({
             </div>
 
             <div className={styles.signatureActions}>
-              {explanationVideoUrl && (
-                <ExplanationButton videoUrl={explanationVideoUrl} />
-              )}
               {!user ? (
                 <a
                   href={`/login?redirect=/doc/${document.statementId}`}
@@ -214,6 +211,14 @@ export default function DocumentView({
             WizCol
           </a>
         </div>
+
+        {/* Floating Explanation Video Button */}
+        {explanationVideoUrl && (
+          <ExplanationButton
+            videoUrl={explanationVideoUrl}
+            documentId={document.statementId}
+          />
+        )}
       </div>
       </DocumentClient>
   );

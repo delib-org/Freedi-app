@@ -1,44 +1,179 @@
-.explanationButton {
+/* Floating Explanation Video Button - Optimized for elderly users */
+
+.floatingButton {
+  position: fixed;
+  top: 80px;
+  left: 24px;
+  z-index: 90;
+
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: transparent;
-  color: var(--btn-primary);
-  border: 2px solid var(--btn-primary);
-  border-radius: var(--radius-md);
-  font-size: 0.9375rem;
-  font-weight: 500;
+  min-height: 52px;
+  min-width: 160px;
+
+  /* Friendly, trustworthy blue - not alarming like red */
+  background: linear-gradient(135deg, #47b4ef 0%, #2196f3 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(33, 150, 243, 0.35);
+
+  font-size: 1rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 44px;
+  transition: all 0.3s ease;
+
+  /* Gentle pulse animation - stops after 3 iterations */
+  animation: gentlePulse 2s ease-in-out 3;
 
   &:hover {
-    background: var(--btn-primary);
-    color: white;
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.45);
+    animation: none;
   }
 
   &:focus {
-    outline: 2px solid var(--btn-primary);
-    outline-offset: 2px;
+    outline: 3px solid rgba(33, 150, 243, 0.5);
+    outline-offset: 3px;
   }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+.iconWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.3);
 
   svg {
-    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
   }
 }
 
-/* Mobile */
+.buttonText {
+  white-space: nowrap;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+}
+
+/* "New" badge for first-time visitors */
+.newBadge {
+  position: absolute;
+  top: -8px;
+  left: -8px;
+  background: #ff9800;
+  color: white;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: badgeBounce 0.5s ease-out;
+}
+
+/* Gentle pulse animation - limited to 3 times to avoid fatigue */
+@keyframes gentlePulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(33, 150, 243, 0.35);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(33, 150, 243, 0.5),
+                0 0 0 6px rgba(33, 150, 243, 0.1);
+  }
+}
+
+@keyframes badgeBounce {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Mobile - keep text visible for elderly users */
 @media (max-width: 640px) {
-  .explanationButton {
-    width: 100%;
+  .floatingButton {
+    top: auto;
+    bottom: 180px;
+    left: 16px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    min-width: 140px;
+  }
+
+  .iconWrapper {
+    width: 36px;
+    height: 36px;
+  }
+
+  .buttonText {
+    font-size: 0.9375rem;
+    /* Keep text visible on mobile for elderly users */
+  }
+
+  .newBadge {
+    top: -6px;
+    left: -6px;
+    font-size: 0.5625rem;
+    padding: 2px 6px;
   }
 }
 
-/* RTL Support */
+/* RTL Support - flip to right side for RTL */
 [dir="rtl"] {
-  .explanationButton {
+  .floatingButton {
+    left: auto;
+    right: 24px;
     flex-direction: row-reverse;
+  }
+
+  .newBadge {
+    left: auto;
+    right: -8px;
+  }
+}
+
+@media (max-width: 640px) {
+  [dir="rtl"] {
+    .floatingButton {
+      left: auto;
+      right: 16px;
+    }
+
+    .newBadge {
+      left: auto;
+      right: -6px;
+    }
+  }
+}
+
+/* Reduced motion support - critical for elderly/accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .floatingButton {
+    animation: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  .newBadge {
+    animation: none;
   }
 }
