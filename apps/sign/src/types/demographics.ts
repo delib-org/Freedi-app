@@ -32,6 +32,9 @@ export type SurveyTriggerMode = 'on_interaction' | 'before_viewing';
 // Note: 'sign' is not in delib-npm's DemographicQuestionScope enum yet
 export type SignDemographicScope = DemographicQuestionScope | 'sign';
 
+// Display type for single-choice questions (radio can be shown as dropdown)
+export type SingleChoiceDisplayType = 'radio' | 'dropdown';
+
 // Survey completion status
 export interface SurveyCompletionStatus {
   isComplete: boolean;
@@ -54,6 +57,7 @@ export interface SignDemographicQuestion extends Omit<UserDemographicQuestion, '
   scope?: SignDemographicScope;
   documentId?: string;
   isInherited?: boolean;
+  displayType?: SingleChoiceDisplayType; // For radio questions: show as radio buttons or dropdown
 }
 
 // Question with user's answer for display
@@ -76,6 +80,7 @@ export interface CreateQuestionRequest {
   options?: DemographicOption[];
   required?: boolean;
   order?: number;
+  displayType?: SingleChoiceDisplayType; // For radio questions: show as radio buttons or dropdown
 }
 
 export interface SaveAnswersRequest {

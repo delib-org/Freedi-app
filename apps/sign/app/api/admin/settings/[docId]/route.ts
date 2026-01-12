@@ -4,7 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
-import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
 export interface DocumentSettings {
@@ -26,6 +26,8 @@ export interface DocumentSettings {
   tocEnabled: boolean;
   tocMaxLevel: number;
   tocPosition: TocPosition;
+  explanationVideoUrl: string;
+  explanationVideoMode: ExplanationVideoMode;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -47,6 +49,8 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   tocEnabled: false,
   tocMaxLevel: 2,
   tocPosition: 'auto',
+  explanationVideoUrl: '',
+  explanationVideoMode: 'optional',
 };
 
 /**
@@ -113,6 +117,8 @@ export async function GET(
       tocEnabled: document?.signSettings?.tocEnabled ?? DEFAULT_SETTINGS.tocEnabled,
       tocMaxLevel: document?.signSettings?.tocMaxLevel ?? DEFAULT_SETTINGS.tocMaxLevel,
       tocPosition: document?.signSettings?.tocPosition ?? DEFAULT_SETTINGS.tocPosition,
+      explanationVideoUrl: document?.signSettings?.explanationVideoUrl ?? DEFAULT_SETTINGS.explanationVideoUrl,
+      explanationVideoMode: document?.signSettings?.explanationVideoMode ?? DEFAULT_SETTINGS.explanationVideoMode,
     };
 
     return NextResponse.json(settings);
@@ -205,6 +211,12 @@ export async function PUT(
       ? body.tocMaxLevel
       : (existingSettings.tocMaxLevel ?? DEFAULT_SETTINGS.tocMaxLevel);
 
+    // Validate explanationVideoMode
+    const validVideoModes: ExplanationVideoMode[] = ['optional', 'before_viewing'];
+    const explanationVideoMode: ExplanationVideoMode = validVideoModes.includes(body.explanationVideoMode)
+      ? body.explanationVideoMode
+      : (existingSettings.explanationVideoMode ?? DEFAULT_SETTINGS.explanationVideoMode);
+
     // Merge settings - only update fields that are provided
     const settings: DocumentSettings = {
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
@@ -225,6 +237,8 @@ export async function PUT(
       tocEnabled: body.tocEnabled !== undefined ? Boolean(body.tocEnabled) : (existingSettings.tocEnabled ?? DEFAULT_SETTINGS.tocEnabled),
       tocMaxLevel,
       tocPosition,
+      explanationVideoUrl: body.explanationVideoUrl !== undefined ? String(body.explanationVideoUrl) : (existingSettings.explanationVideoUrl ?? DEFAULT_SETTINGS.explanationVideoUrl),
+      explanationVideoMode,
     };
 
     // Update document with new settings

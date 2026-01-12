@@ -87,6 +87,11 @@ export type TextDirection = 'auto' | 'ltr' | 'rtl';
 // Table of Contents position mode
 export type TocPosition = 'auto' | 'left' | 'right';
 
+// Explanation video display mode
+// 'optional' - Button only, user can click to watch
+// 'before_viewing' - Video must be dismissed before viewing document
+export type ExplanationVideoMode = 'optional' | 'before_viewing';
+
 // Table of Contents item for navigation
 export interface TocItem {
   id: string;          // paragraphId

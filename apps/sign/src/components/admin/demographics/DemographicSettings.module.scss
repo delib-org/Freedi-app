@@ -20,7 +20,7 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
+  text-align: start; // Logical property - adapts to direction
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
@@ -138,7 +138,7 @@
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: all 0.2s ease;
-  text-align: left;
+  text-align: start; // Logical property
 
   &:hover {
     border-color: var(--btn-primary);
@@ -153,7 +153,7 @@
       content: '';
       position: absolute;
       top: var(--spacing-md);
-      right: var(--spacing-md);
+      inset-inline-end: var(--spacing-md); // Logical property - right in LTR, left in RTL
       width: 20px;
       height: 20px;
       background: var(--btn-primary);
@@ -181,7 +181,7 @@
   font-size: 0.8125rem;
   color: var(--text-secondary);
   line-height: 1.4;
-  padding-right: var(--spacing-xl); // Space for checkmark
+  padding-inline-end: var(--spacing-xl); // Logical property - space for checkmark
 }
 
 .triggerOptionBadge {
@@ -259,26 +259,36 @@
   gap: var(--spacing-sm);
 }
 
+// Question Item - Bidirectional Layout
+// Uses CSS logical properties to automatically handle LTR/RTL
+// The parent container should have dir="rtl" or dir="ltr" set
 .questionItem {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: var(--spacing-sm);
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
   background: var(--card-default);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-light);
+  // No need for flex-direction: row-reverse - flexbox respects dir attribute
 }
 
 .questionInfo {
   display: flex;
+  align-items: flex-start;
   gap: var(--spacing-sm);
   flex: 1;
+  min-width: 0; // Prevents flex item from overflowing
 }
 
 .questionNumber {
   color: var(--text-secondary);
-  font-weight: 500;
-  min-width: 24px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  min-width: 1.5rem;
+  flex-shrink: 0;
+  // Number naturally aligns based on text direction
 }
 
 .questionContent {
@@ -307,6 +317,147 @@
   font-weight: 500;
 }
 
+.questionMeta {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.requiredBadge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: var(--warning);
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.displayTypeBadge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: rgba(108, 117, 125, 0.15);
+  color: var(--text-secondary);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+// Display Type Selector (for radio questions)
+.displayTypeSelector {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--card-default);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.displayTypeLabel {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.displayTypeOptions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.displayTypeOption {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: var(--background);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+  }
+
+  &.active {
+    border-color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.1);
+    color: var(--btn-primary);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+// Drag Handle for reordering
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 40px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: grab;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  touch-action: none;
+
+  &:hover {
+    color: var(--btn-primary);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+// Dragging state for question item
+.questionItem.dragging {
+  background: var(--background);
+  border-color: var(--btn-primary);
+  box-shadow: var(--shadow-md);
+  z-index: 100;
+}
+
+.questionActions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  // No margin needed - gap on parent handles spacing
+  // Flexbox automatically positions at the end based on dir attribute
+}
+
+.editButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  color: var(--btn-primary);
+  border: 1px solid var(--btn-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--btn-primary);
+    color: white;
+  }
+}
+
 .deleteButton {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
@@ -320,6 +471,57 @@
   &:hover {
     background: var(--disagree);
     color: white;
+  }
+}
+
+// Edit Question Form (inline edit)
+.editQuestionForm {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--background);
+  border-radius: var(--radius-md);
+}
+
+.editActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end; // flex-end respects dir attribute
+  margin-top: var(--spacing-md);
+}
+
+.cancelButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--background);
+    border-color: var(--text-secondary);
+  }
+}
+
+.saveEditButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--btn-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 
@@ -458,44 +660,16 @@
   }
 }
 
-// RTL Support
-[dir="rtl"] {
-  .modeOption {
-    text-align: right;
-  }
+// RTL Support - Only override styles that cannot use logical properties
+// Most RTL support is now handled automatically via:
+// 1. CSS logical properties (inset-inline-start, margin-inline-end, etc.)
+// 2. Flexbox respecting the dir attribute
+// 3. text-align: start instead of left/right
 
-  .requiredRow {
-    flex-direction: row-reverse;
-  }
-
+.demographicSettings[dir="rtl"] {
+  // Toggle knob animation needs to go opposite direction in RTL
   .toggle.active::after {
     transform: translateX(-24px);
-  }
-
-  .triggerOption {
-    text-align: right;
-
-    &.active::before {
-      right: auto;
-      left: var(--spacing-md);
-    }
-  }
-
-  .triggerOptionDescription {
-    padding-right: 0;
-    padding-left: var(--spacing-xl);
-  }
-
-  .questionInfo {
-    flex-direction: row-reverse;
-  }
-
-  .questionItem {
-    flex-direction: row-reverse;
-  }
-
-  .addOptionRow {
-    flex-direction: row-reverse;
   }
 }
 
