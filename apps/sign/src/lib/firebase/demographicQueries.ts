@@ -155,6 +155,7 @@ export async function getUserDemographicAnswers(
 
 /**
  * Check if user has completed the required survey
+ * Only REQUIRED questions are considered for completion - optional questions don't block interactions
  */
 export async function checkSurveyCompletion(
   documentId: string,
@@ -176,17 +177,29 @@ export async function checkSurveyCompletion(
   try {
     const questionsWithAnswers = await getUserDemographicAnswers(documentId, userId, topParentId, mode);
 
-    const totalQuestions = questionsWithAnswers.length;
-    const answeredQuestions = questionsWithAnswers.filter(
+    // FIX: Only count REQUIRED questions for completion check
+    // Non-required questions should not block user interactions
+    const requiredQuestions = questionsWithAnswers.filter((q) => q.required === true);
+    const totalRequiredQuestions = requiredQuestions.length;
+
+    const answeredRequiredQuestions = requiredQuestions.filter(
       (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
     ).length;
 
-    const missingQuestionIds = questionsWithAnswers
+    // Get IDs of unanswered REQUIRED questions only
+    const missingQuestionIds = requiredQuestions
       .filter((q) => q.userAnswer === undefined && (!q.userAnswerOptions || q.userAnswerOptions.length === 0))
       .map((q) => q.userQuestionId)
       .filter(Boolean) as string[];
 
-    const isComplete = totalQuestions === 0 || answeredQuestions === totalQuestions;
+    // Survey is complete if all REQUIRED questions are answered (optional questions don't matter)
+    const isComplete = totalRequiredQuestions === 0 || answeredRequiredQuestions === totalRequiredQuestions;
+
+    // Return total counts for all questions (for UI display purposes)
+    const totalQuestions = questionsWithAnswers.length;
+    const answeredQuestions = questionsWithAnswers.filter(
+      (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
+    ).length;
 
     return {
       isComplete,
