@@ -1,4 +1,4 @@
-import { FC, useState, useMemo } from 'react';
+import React, { FC, useState, useMemo } from 'react';
 import { shallowEqual } from 'react-redux';
 import {
 	Statement,

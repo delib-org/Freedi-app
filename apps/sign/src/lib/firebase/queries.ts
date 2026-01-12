@@ -3,7 +3,7 @@
  */
 
 import { getFirestoreAdmin } from './admin';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, Suggestion } from '@freedi/shared-types';
 import { Paragraph, ParagraphType, StatementWithParagraphs } from '@/types';
 import { descriptionToParagraphs, sortParagraphs } from '@/lib/utils/paragraphUtils';
 import { logError } from '@/lib/utils/errorHandling';
@@ -19,6 +19,7 @@ export interface Signature {
   signed: 'signed' | 'rejected' | 'viewed';
   date: number;
   levelOfSignature?: number;
+  rejectionReason?: string;
 }
 
 export interface Approval {
@@ -519,5 +520,99 @@ export async function getDocumentStats(documentId: string): Promise<DocumentStat
       averageApproval: 0,
       topParagraphs: [],
     };
+  }
+}
+
+/**
+ * Get suggestions for a paragraph
+ */
+export async function getSuggestions(paragraphId: string): Promise<Suggestion[]> {
+  try {
+    const db = getFirestoreAdmin();
+
+    const snapshot = await db
+      .collection(Collections.suggestions)
+      .where('paragraphId', '==', paragraphId)
+      .where('hide', '==', false)
+      .orderBy('createdAt', 'desc')
+      .limit(QUERY_LIMITS.SUGGESTIONS)
+      .get();
+
+    return snapshot.docs.map((doc) => doc.data() as Suggestion);
+  } catch (error) {
+    logError(error, { operation: 'queries.getSuggestions', paragraphId });
+    throw error;
+  }
+}
+
+/**
+ * Get suggestion counts for all paragraphs in a document
+ * Returns a map of paragraphId -> suggestionCount
+ */
+export async function getSuggestionCountsForDocument(
+  documentId: string,
+  paragraphIds: string[]
+): Promise<Record<string, number>> {
+  try {
+    const db = getFirestoreAdmin();
+    const suggestionCounts: Record<string, number> = {};
+
+    // Initialize all paragraphs with 0
+    paragraphIds.forEach((id) => {
+      suggestionCounts[id] = 0;
+    });
+
+    if (paragraphIds.length === 0) {
+      return suggestionCounts;
+    }
+
+    // Query all suggestions for this document
+    const snapshot = await db
+      .collection(Collections.suggestions)
+      .where('documentId', '==', documentId)
+      .where('hide', '==', false)
+      .get();
+
+    // Count suggestions per paragraph
+    snapshot.docs.forEach((doc) => {
+      const suggestion = doc.data() as Suggestion;
+      if (paragraphIds.includes(suggestion.paragraphId)) {
+        suggestionCounts[suggestion.paragraphId] = (suggestionCounts[suggestion.paragraphId] || 0) + 1;
+      }
+    });
+
+    return suggestionCounts;
+  } catch (error) {
+    logError(error, { operation: 'queries.getSuggestionCountsForDocument', documentId });
+    return {};
+  }
+}
+
+/**
+ * Get user's suggestion for a specific paragraph
+ */
+export async function getUserSuggestion(
+  paragraphId: string,
+  userId: string
+): Promise<Suggestion | null> {
+  try {
+    const db = getFirestoreAdmin();
+
+    const snapshot = await db
+      .collection(Collections.suggestions)
+      .where('paragraphId', '==', paragraphId)
+      .where('creatorId', '==', userId)
+      .where('hide', '==', false)
+      .limit(1)
+      .get();
+
+    if (snapshot.empty) {
+      return null;
+    }
+
+    return snapshot.docs[0].data() as Suggestion;
+  } catch (error) {
+    logError(error, { operation: 'queries.getUserSuggestion', paragraphId, userId });
+    throw error;
   }
 }

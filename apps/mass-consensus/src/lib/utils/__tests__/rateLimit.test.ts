@@ -160,7 +160,7 @@ describe('rateLimit', () => {
         checkRateLimit(request, customConfig);
       }
 
-      const result = checkRateLimit(request, customConfig);
+      const result = checkRateLimit(request, customConfig) as { body: { error: string } } | null;
       expect(result?.body.error).toBe('Custom rate limit message');
     });
 

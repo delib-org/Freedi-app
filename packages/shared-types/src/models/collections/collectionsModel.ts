@@ -67,4 +67,5 @@ export enum Collections {
     // Fair Evaluation collections
     fairEvalWallets = 'fairEvalWallets',
     fairEvalTransactions = 'fairEvalTransactions',
+    suggestions = 'suggestions',
 }

@@ -29,6 +29,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	const [maxMembers, setMaxMembers] = useState(settings.maxJoinMembers ?? 7); // Default to 7 for optimal group size
 	const [scrambleByQuestions, setScrambleByQuestions] = useState<string[]>([]);
 	const [options, setOptions] = useState<OptionWithMembers[]>([]);
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [isLoadingOptions, setIsLoadingOptions] = useState(false);
 	const [isSplitting, setIsSplitting] = useState(false);
 	const [splitResult, setSplitResult] = useState<SplitResult | null>(null);

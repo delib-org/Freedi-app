@@ -8,13 +8,14 @@ import {
   getUserApprovals,
   getCommentCountsForDocument,
   getUserInteractionsForDocument,
+  getSuggestionCountsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
-import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocSettings, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
 interface PageProps {
   params: Promise<{ statementId: string }>;
@@ -37,17 +38,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function DocumentPage({ params }: PageProps) {
+  const pageStart = Date.now();
   const { statementId } = await params;
 
   // Fetch document (includes paragraphs array)
+  const docStart = Date.now();
   const document = await getDocumentForSigning(statementId);
+  console.info(`[Perf] getDocumentForSigning: ${Date.now() - docStart}ms`);
 
   if (!document) {
     notFound();
   }
 
   // Get paragraphs from document (embedded, child options, or description fallback)
+  const paraStart = Date.now();
   const paragraphs = await getDocumentParagraphs(document);
+  console.info(`[Perf] getDocumentParagraphs: ${Date.now() - paraStart}ms`);
   const paragraphIds = paragraphs.map((p) => p.paragraphId);
 
   // Get user info from cookies
@@ -55,7 +61,9 @@ export default async function DocumentPage({ params }: PageProps) {
   const user = getUserFromCookies(cookieStore);
 
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
+  const commentStart = Date.now();
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
+  console.info(`[Perf] getCommentCountsForDocument: ${Date.now() - commentStart}ms`);
 
   // If user exists, get their signature, approvals, interactions, and admin status
   let userSignature = null;
@@ -64,6 +72,7 @@ export default async function DocumentPage({ params }: PageProps) {
   let isAdmin = false;
 
   if (user) {
+    const userStart = Date.now();
     const { db } = getFirebaseAdmin();
     const [signature, approvals, interactions, adminAccess] = await Promise.all([
       getUserSignature(statementId, user.uid),
@@ -71,11 +80,13 @@ export default async function DocumentPage({ params }: PageProps) {
       getUserInteractionsForDocument(statementId, user.uid, paragraphIds),
       checkAdminAccess(db, statementId, user.uid),
     ]);
+    console.info(`[Perf] User queries (parallel): ${Date.now() - userStart}ms`);
     userSignature = signature;
     userApprovals = approvals;
     userInteractions = interactions;
     isAdmin = adminAccess.isAdmin;
   }
+  console.info(`[Perf] Total page load: ${Date.now() - pageStart}ms`);
 
   // Convert approvals array to a map for easier lookup
   // Note: approvals now use paragraphId instead of statementId
@@ -96,12 +107,34 @@ export default async function DocumentPage({ params }: PageProps) {
     forceLanguage?: boolean;
     logoUrl?: string;
     brandName?: string;
+    tocEnabled?: boolean;
+    tocMaxLevel?: number;
+    tocPosition?: TocPosition;
+    enableSuggestions?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
   const forceLanguage = signSettings?.forceLanguage ?? true;
   const logoUrl = signSettings?.logoUrl || DEFAULT_LOGO_URL;
   const brandName = signSettings?.brandName || DEFAULT_BRAND_NAME;
+
+  // TOC settings
+  const tocSettings: TocSettings = {
+    tocEnabled: signSettings?.tocEnabled ?? false,
+    tocMaxLevel: signSettings?.tocMaxLevel ?? 2,
+    tocPosition: signSettings?.tocPosition ?? 'auto',
+  };
+
+  // Suggestions feature setting
+  const enableSuggestions = signSettings?.enableSuggestions ?? false;
+
+  // Fetch suggestion counts if feature is enabled
+  let suggestionCounts: Record<string, number> = {};
+  if (enableSuggestions && paragraphIds.length > 0) {
+    const suggestStart = Date.now();
+    suggestionCounts = await getSuggestionCountsForDocument(statementId, paragraphIds);
+    console.info(`[Perf] getSuggestionCountsForDocument: ${Date.now() - suggestStart}ms`);
+  }
 
   // Serialize data to ensure it's JSON-compatible (removes Firebase Timestamps, etc.)
   const serializedDocument = JSON.parse(JSON.stringify(document));
@@ -121,11 +154,14 @@ export default async function DocumentPage({ params }: PageProps) {
         userSignature={serializedSignature}
         userApprovals={approvalsMap}
         commentCounts={commentCounts}
+        suggestionCounts={suggestionCounts}
         userInteractions={userInteractionsArray}
         textDirection={textDirection}
         logoUrl={logoUrl}
         brandName={brandName}
         isAdmin={isAdmin}
+        tocSettings={tocSettings}
+        enableSuggestions={enableSuggestions}
       />
     </LanguageOverrideProvider>
   );

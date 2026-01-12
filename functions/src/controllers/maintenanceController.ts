@@ -104,7 +104,8 @@ export class MaintenanceController {
 					error: 'parentId is required',
 					ok: false
 				});
-				return;
+				
+return;
 			}
 
 			const { recalculateOptionsEvaluations } = await import('../migrations/recalculateEvaluations');
@@ -140,7 +141,8 @@ export class MaintenanceController {
 					ok: true,
 					...stats
 				});
-				return;
+				
+return;
 			}
 
 			const result = await migrateAddRandomSeed(parentId);

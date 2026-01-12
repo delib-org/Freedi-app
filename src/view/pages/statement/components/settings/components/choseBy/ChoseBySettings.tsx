@@ -158,18 +158,21 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 				</h3>
 				<RadioButtonWithLabel
 					id={ResultsBy.consensus}
+					name='resultsBy'
 					labelText={t('By Consensus')}
 					checked={resultsSettings?.resultsBy === ResultsBy.consensus}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
 					id={ResultsBy.mostLiked}
+					name='resultsBy'
 					labelText={t('By most liked')}
 					checked={resultsSettings?.resultsBy === ResultsBy.mostLiked}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
 					id={ResultsBy.averageLikesDislikes}
+					name='resultsBy'
 					labelText={t('By sum liked - disliked')}
 					checked={resultsSettings?.resultsBy === ResultsBy.averageLikesDislikes}
 					onChange={handleEvaluationChange}
@@ -181,12 +184,14 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 				</h3>
 				<RadioButtonWithLabel
 					id={CutoffBy.topOptions}
+					name='cutoffBy'
 					labelText={`${t('Top results')}`}
 					checked={resultsSettings.cutoffBy === CutoffBy.topOptions}
 					onChange={handleCutoffChange}
 				/>
 				<RadioButtonWithLabel
 					id={CutoffBy.aboveThreshold}
+					name='cutoffBy'
 					labelText={`${t('Above specific value')}`}
 					checked={resultsSettings.cutoffBy === CutoffBy.aboveThreshold}
 					onChange={handleCutoffChange}

@@ -154,6 +154,74 @@
 		margin: 1rem 0 0 0;
 		font-style: italic;
 	}
+
+	.quietHoursSection {
+		margin-top: 1.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--border-color, #eee);
+
+		h4 {
+			margin: 0 0 0.5rem 0;
+			font-size: 1rem;
+			color: var(--text-primary);
+			font-weight: 500;
+		}
+
+		.quietHoursDescription {
+			color: var(--text-secondary);
+			font-size: 0.875rem;
+			margin-bottom: 1rem;
+		}
+
+		.quietHoursToggle {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			margin-bottom: 1rem;
+		}
+
+		.timeInputs {
+			display: flex;
+			align-items: center;
+			gap: 0.75rem;
+			flex-wrap: wrap;
+
+			.timeGroup {
+				display: flex;
+				align-items: center;
+				gap: 0.5rem;
+
+				label {
+					color: var(--text-secondary);
+					font-size: 0.875rem;
+				}
+
+				input[type="time"] {
+					padding: 0.5rem;
+					border: 1px solid var(--border-color, #ddd);
+					border-radius: 4px;
+					font-size: 0.875rem;
+					background: var(--input-bg, #fff);
+					color: var(--text-primary);
+
+					&:disabled {
+						opacity: 0.5;
+						cursor: not-allowed;
+					}
+				}
+			}
+
+			.separator {
+				color: var(--text-secondary);
+			}
+		}
+
+		.timezoneNote {
+			margin-top: 0.75rem;
+			font-size: 0.75rem;
+			color: var(--text-secondary);
+		}
+	}
 }
 
 // Dark mode support

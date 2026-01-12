@@ -20,7 +20,8 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "valibot": "^1.0.0-rc.1"

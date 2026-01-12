@@ -35,7 +35,7 @@ if (currentDomain === 'freedi.tech' || currentDomain === 'delib.web.app' || curr
 		messagingSenderId: '47037334917',
 		appId: '1:47037334917:web:f9bce2dd772b5efd29f0ec'
 	};
-} else if (currentDomain === 'wizcol-app.web.app') {
+} else if (currentDomain === 'wizcol-app.web.app' || currentDomain === 'app.wizcol.com') {
 	// Wizcol Production config
 	firebaseConfig = {
 		apiKey: 'AIzaSyBtm5USTMMQqf9KQ3ZIne6VbZ6AGOiT-Ts',
@@ -190,6 +190,9 @@ const playNotificationSound = async () => {
 	}
 };
 
+// Track grouped notification counts for summary
+const groupedNotificationCounts = new Map();
+
 // Handle background messages (when app is closed or in background)
 messaging.onBackgroundMessage(async function (payload) {
 	try {
@@ -206,6 +209,7 @@ messaging.onBackgroundMessage(async function (payload) {
 
 		// Generate a unique ID for this notification if not provided
 		const notificationId = data.id || new Date().getTime().toString();
+		const notificationTag = data.tag || notificationId;
 
 		// Store notification data in cache for access when user clicks
 		notificationCache.set(notificationId, {
@@ -216,15 +220,45 @@ messaging.onBackgroundMessage(async function (payload) {
 		// Default URL to open when notification is clicked
 		const url = data.url || '/';
 
+		// Check if we have existing notifications with same tag (grouping)
+		let groupedBody = body || '';
+		let groupedTitle = title;
+
+		if (notificationTag.startsWith('discussion-')) {
+			// Get existing notifications with this tag
+			const existingNotifications = await self.registration.getNotifications({
+				tag: notificationTag
+			});
+
+			// Track count for this group
+			const currentCount = (groupedNotificationCounts.get(notificationTag) || 0) + 1;
+			groupedNotificationCounts.set(notificationTag, currentCount);
+
+			// If there are existing notifications, create a summary
+			if (existingNotifications.length > 0 || currentCount > 1) {
+				const totalReplies = existingNotifications.length + 1;
+				groupedTitle = `${totalReplies} new replies in discussion`;
+
+				// Build summary body with creator names
+				const creatorName = data.creatorName || 'Someone';
+				if (totalReplies === 2) {
+					groupedBody = `${creatorName} and 1 other replied`;
+				} else if (totalReplies > 2) {
+					groupedBody = `${creatorName} and ${totalReplies - 1} others replied`;
+				}
+			}
+		}
+
 		// Enhanced notification options
 		const notificationOptions = {
-			body: body || '',
+			body: groupedBody,
 			icon: '/icons/logo-192px.png', // Local app icon
 			badge: '/icons/logo-48px.png', // Badge icon
 			image: image || '', // Large image if provided
 			vibrate: [100, 50, 100, 50, 100], // Vibration pattern
 			sound: '/assets/sounds/bell.mp3', // Sound file
-			tag: data.tag || notificationId, // Group similar notifications
+			tag: notificationTag, // Group similar notifications
+			renotify: true, // Always notify even if replacing existing
 			data: {
 				...data,
 				notificationId,
@@ -306,7 +340,7 @@ messaging.onBackgroundMessage(async function (payload) {
 		}
 
 		// Show the notification
-		await self.registration.showNotification(title || 'FreeDi App', notificationOptions);
+		await self.registration.showNotification(groupedTitle || 'FreeDi App', notificationOptions);
 
 		// Try to play sound (though this typically won't work in service worker)
 		await playNotificationSound();
@@ -328,6 +362,12 @@ self.addEventListener('notificationclick', function (event) {
 	const data = event.notification.data || {};
 	const url = data.url || '/';
 	const notificationId = data.notificationId;
+	const notificationTag = data.tag;
+
+	// Clear grouped notification count for this tag
+	if (notificationTag && groupedNotificationCounts.has(notificationTag)) {
+		groupedNotificationCounts.delete(notificationTag);
+	}
 
 	// Clear badge when notification is clicked
 	try {
@@ -432,27 +472,10 @@ self.addEventListener('message', (event) => {
 		event.waitUntil(
 			(async () => {
 				try {
-					// Clear all displayed notifications
+					// Clear all displayed notifications only
+					// Badge count is managed by the app's Redux state via useBadgeSync
 					const notifications = await self.registration.getNotifications();
 					notifications.forEach(notification => notification.close());
-
-					// Reset badge count
-					badgeCount = 0;
-					await saveBadgeCount(0);
-
-					// Clear badge using standard or experimental APIs based on browser support
-					if ('clearAppBadge' in navigator) {
-						// Standard Badging API (Chrome, Edge, Safari)
-						await navigator.clearAppBadge().catch(err => console.error('Error clearing badge:', err));
-					} else if ('clearExperimentalAppBadge' in navigator) {
-						// Experimental API for some browsers
-						// @ts-ignore - Experimental API
-						await navigator.clearExperimentalAppBadge().catch(err => console.error('Error clearing experimental badge:', err));
-					} else if ('ExperimentalBadge' in window) {
-						// Another experimental API seen in some browsers
-						// @ts-ignore - Experimental API
-						await window.ExperimentalBadge.clear().catch(err => console.error('Error clearing ExperimentalBadge:', err));
-					}
 
 					// Send confirmation back if ports are available
 					if (event.ports && event.ports[0]) {

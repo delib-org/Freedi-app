@@ -2,7 +2,7 @@
 
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
@@ -11,6 +11,7 @@ import SignButton from './SignButton';
 import RejectButton from './RejectButton';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
+import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -20,11 +21,14 @@ interface DocumentViewProps {
   userSignature: Signature | null;
   userApprovals: Record<string, boolean>;
   commentCounts: Record<string, number>;
+  suggestionCounts?: Record<string, number>;
   userInteractions?: string[];
   textDirection?: TextDirection;
   logoUrl?: string;
   brandName?: string;
   isAdmin?: boolean;
+  tocSettings?: TocSettings;
+  enableSuggestions?: boolean;
 }
 
 export default function DocumentView({
@@ -34,11 +38,14 @@ export default function DocumentView({
   userSignature,
   userApprovals,
   commentCounts,
+  suggestionCounts = {},
   userInteractions = [],
   textDirection = 'auto',
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
   isAdmin = false,
+  tocSettings,
+  enableSuggestions = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -49,18 +56,35 @@ export default function DocumentView({
   const paragraphContents = paragraphs.map((p) => p.content);
   const resolvedDirection = resolveTextDirection(textDirection, paragraphContents);
 
+  // Extract TOC items from paragraphs
+  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2);
+
+  // Determine if TOC should be shown
+  const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
+
   return (
       <DocumentClient
         documentId={document.statementId}
         user={user}
         userSignature={userSignature}
         commentCounts={commentCounts}
+        suggestionCounts={suggestionCounts}
         userInteractions={userInteractions}
         isAdmin={isAdmin}
+        enableSuggestions={enableSuggestions}
+        paragraphs={paragraphs}
+        textDirection={resolvedDirection}
       >
         <div className={styles.container} dir={resolvedDirection} data-text-dir={resolvedDirection}>
         {/* Top Bar with Logo and User Avatar */}
         <div className={styles.topBar}>
+          {/* Mobile TOC hamburger menu */}
+          {showToc && (
+            <TocMobileMenu
+              items={tocItems}
+              textDirection={resolvedDirection}
+            />
+          )}
           <a href={`/doc/${document.statementId}`} className={styles.logo}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -86,6 +110,14 @@ export default function DocumentView({
             />
           </div>
         </div>
+
+        {/* Desktop Table of Contents sidebar */}
+        {showToc && (
+          <TableOfContents
+            items={tocItems}
+            textDirection={resolvedDirection}
+          />
+        )}
 
         {/* Document Header */}
         <header className={styles.header}>
@@ -116,6 +148,8 @@ export default function DocumentView({
                 isLoggedIn={!!user}
                 isAdmin={isAdmin}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
+                suggestionCount={suggestionCounts[paragraph.paragraphId] || 0}
+                enableSuggestions={enableSuggestions}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
               />
             ))

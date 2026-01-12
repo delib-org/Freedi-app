@@ -13,6 +13,7 @@ export interface UserData {
   signedAt: number | null;
   approvalsCount: number;
   commentsCount: number;
+  rejectionReason?: string;
 }
 
 /**
@@ -94,15 +95,23 @@ export async function GET(
     // Build user list
     const users: UserData[] = signaturesSnap.docs.map((doc) => {
       const sig = doc.data() as DocumentData;
+      const userId = sig.odlUserId || sig.userId;
 
-      return {
-        odlUserId: sig.odlUserId || sig.userId,
+      const userData: UserData = {
+        odlUserId: userId,
         odlUserDisplayName: sig.odlUserDisplayName || sig.displayName || 'Anonymous',
         signed: sig.signed || 'pending',
         signedAt: sig.date || null,
-        approvalsCount: approvalsByUser.get(sig.odlUserId || sig.userId) || 0,
-        commentsCount: commentsByUser.get(sig.odlUserId || sig.userId) || 0,
+        approvalsCount: approvalsByUser.get(userId) || 0,
+        commentsCount: commentsByUser.get(userId) || 0,
       };
+
+      // Include rejection reason if available
+      if (sig.rejectionReason) {
+        userData.rejectionReason = sig.rejectionReason;
+      }
+
+      return userData;
     });
 
     // Apply search filter

@@ -21,6 +21,7 @@ export const TIME = {
 export const QUERY_LIMITS = {
   PARAGRAPHS: 200,
   COMMENTS: 100,
+  SUGGESTIONS: 50,
   INVITATIONS: 50,
   DEFAULT: 50,
   SIGNATURES: 200,
@@ -84,6 +85,18 @@ export const VALIDATION = {
 } as const;
 
 /**
+ * Suggestion feature constants
+ */
+export const SUGGESTIONS = {
+  MIN_LENGTH: 10,
+  MAX_LENGTH: 5000,
+  MAX_REASONING_LENGTH: 1000,
+  POST_COMMENT_PROMPT_DELAY_MS: 500,
+  AUTO_DISMISS_DELAY_MS: 5000,
+  REALTIME_POLL_INTERVAL_MS: 5000,
+} as const;
+
+/**
  * Error messages
  */
 export const ERROR_MESSAGES = {
@@ -114,6 +127,8 @@ export const API_ROUTES = {
   HEATMAP: (documentId: string) => `/api/heatmap/${documentId}`,
   HEATMAP_DEMOGRAPHICS: (documentId: string) => `/api/heatmap/${documentId}/demographics`,
   COMMENTS: (paragraphId: string) => `/api/comments/${paragraphId}`,
+  SUGGESTIONS: (paragraphId: string) => `/api/suggestions/${paragraphId}`,
+  SUGGESTION_EVALUATIONS: (suggestionId: string) => `/api/suggestion-evaluations/${suggestionId}`,
   APPROVAL: '/api/approval',
   SIGNATURE: '/api/signature',
 } as const;
