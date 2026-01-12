@@ -199,7 +199,7 @@ function SortableFlowItem({
   };
 
   const getTitle = () => {
-    if (item.type === 'question') return item.question.statement;
+    if (item.type === 'question') return `${item.question.statement} [ID: ${item.question.statementId}]`;
     if (item.type === 'demographic') return item.page.title;
     if (item.type === 'explanation') return item.page.title;
     return '';

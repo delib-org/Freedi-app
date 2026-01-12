@@ -79,6 +79,16 @@
   --heat-viewership-4: rgba(255, 224, 130, 0.35);      /* 60-79% */
   --heat-viewership-5: rgba(255, 193, 7, 0.25);        /* 80%+ */
 
+  /* Heat Map - Suggestions (light teal to teal) */
+  --heat-suggestions-low: rgba(178, 223, 219, 0.3);    /* light teal */
+  --heat-suggestions-high: rgba(0, 150, 136, 0.25);    /* teal */
+  --heat-suggestions-border: #009688;
+  --heat-suggestions-1: rgba(178, 223, 219, 0.25);     /* 1 suggestion */
+  --heat-suggestions-2: rgba(128, 203, 196, 0.28);     /* 2-3 */
+  --heat-suggestions-3: rgba(77, 182, 172, 0.25);      /* 4-6 */
+  --heat-suggestions-4: rgba(38, 166, 154, 0.25);      /* 7-10 */
+  --heat-suggestions-5: rgba(0, 150, 136, 0.25);       /* 11+ */
+
   /* Spacing - 8px grid system */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
