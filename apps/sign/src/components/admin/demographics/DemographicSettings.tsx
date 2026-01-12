@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { isRTL } from '@freedi/shared-i18n';
 import {
   DemographicMode,
   SurveyTriggerMode,
@@ -56,7 +57,8 @@ export default function DemographicSettings({
   onRequiredChange,
   onSurveyTriggerChange,
 }: DemographicSettingsProps) {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
+  const rtl = isRTL(currentLanguage);
   const [questions, setQuestions] = useState<SignDemographicQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -274,6 +276,61 @@ export default function DemographicSettings({
     }
   };
 
+  // Reorder question handlers
+  const handleMoveQuestion = async (index: number, direction: 'up' | 'down') => {
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    // Validate bounds
+    if (targetIndex < 0 || targetIndex >= questions.length) return;
+
+    const currentQuestion = questions[index];
+    const targetQuestion = questions[targetIndex];
+
+    if (!currentQuestion.userQuestionId || !targetQuestion.userQuestionId) return;
+
+    try {
+      setLoading(true);
+
+      // Swap the order values
+      const currentOrder = currentQuestion.order ?? index;
+      const targetOrder = targetQuestion.order ?? targetIndex;
+
+      // Update both questions with swapped orders
+      await Promise.all([
+        fetch(`/api/demographics/questions/${documentId}/${currentQuestion.userQuestionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: currentQuestion.question,
+            type: currentQuestion.type,
+            options: currentQuestion.options || [],
+            required: currentQuestion.required,
+            order: targetOrder,
+          }),
+        }),
+        fetch(`/api/demographics/questions/${documentId}/${targetQuestion.userQuestionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: targetQuestion.question,
+            type: targetQuestion.type,
+            options: targetQuestion.options || [],
+            required: targetQuestion.required,
+            order: currentOrder,
+          }),
+        }),
+      ]);
+
+      // Refresh questions list
+      await fetchQuestions();
+    } catch (error) {
+      console.error('Failed to reorder questions:', error);
+      alert(t('Failed to reorder questions'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const modeOptions: { value: DemographicMode; label: string; description: string }[] = [
     {
       value: 'disabled',
@@ -300,7 +357,7 @@ export default function DemographicSettings({
   ];
 
   return (
-    <div className={styles.demographicSettings}>
+    <div className={styles.demographicSettings} dir={rtl ? 'rtl' : 'ltr'}>
       {/* Mode Selection */}
       <div className={styles.modeSelector}>
         {modeOptions.map((option) => (
@@ -504,7 +561,7 @@ export default function DemographicSettings({
                       </div>
                     </div>
                   ) : (
-                    // View mode
+                    // View mode - No RTL classes needed, dir attribute handles layout
                     <>
                       <div className={styles.questionInfo}>
                         <span className={styles.questionNumber}>{index + 1}.</span>
@@ -525,6 +582,33 @@ export default function DemographicSettings({
                       </div>
                       {mode === 'custom' && !question.isInherited && (
                         <div className={styles.questionActions}>
+                          {/* Reorder buttons */}
+                          <div className={styles.orderButtons}>
+                            <button
+                              type="button"
+                              className={styles.orderButton}
+                              onClick={() => handleMoveQuestion(index, 'up')}
+                              disabled={index === 0 || loading}
+                              aria-label={t('Move up')}
+                              title={t('Move up')}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="18 15 12 9 6 15" />
+                              </svg>
+                            </button>
+                            <button
+                              type="button"
+                              className={styles.orderButton}
+                              onClick={() => handleMoveQuestion(index, 'down')}
+                              disabled={index === questions.length - 1 || loading}
+                              aria-label={t('Move down')}
+                              title={t('Move down')}
+                            >
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <polyline points="6 9 12 15 18 9" />
+                              </svg>
+                            </button>
+                          </div>
                           <button
                             type="button"
                             className={styles.editButton}
