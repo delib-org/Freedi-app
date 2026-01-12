@@ -26,6 +26,7 @@ export interface DocumentSettings {
   tocEnabled: boolean;
   tocMaxLevel: number;
   tocPosition: TocPosition;
+  explanationVideoUrl: string;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -47,6 +48,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   tocEnabled: false,
   tocMaxLevel: 2,
   tocPosition: 'auto',
+  explanationVideoUrl: '',
 };
 
 /**
@@ -113,6 +115,7 @@ export async function GET(
       tocEnabled: document?.signSettings?.tocEnabled ?? DEFAULT_SETTINGS.tocEnabled,
       tocMaxLevel: document?.signSettings?.tocMaxLevel ?? DEFAULT_SETTINGS.tocMaxLevel,
       tocPosition: document?.signSettings?.tocPosition ?? DEFAULT_SETTINGS.tocPosition,
+      explanationVideoUrl: document?.signSettings?.explanationVideoUrl ?? DEFAULT_SETTINGS.explanationVideoUrl,
     };
 
     return NextResponse.json(settings);
@@ -225,6 +228,7 @@ export async function PUT(
       tocEnabled: body.tocEnabled !== undefined ? Boolean(body.tocEnabled) : (existingSettings.tocEnabled ?? DEFAULT_SETTINGS.tocEnabled),
       tocMaxLevel,
       tocPosition,
+      explanationVideoUrl: body.explanationVideoUrl !== undefined ? String(body.explanationVideoUrl) : (existingSettings.explanationVideoUrl ?? DEFAULT_SETTINGS.explanationVideoUrl),
     };
 
     // Update document with new settings

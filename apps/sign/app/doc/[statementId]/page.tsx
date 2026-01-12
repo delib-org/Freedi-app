@@ -112,6 +112,7 @@ export default async function DocumentPage({ params }: PageProps) {
     tocPosition?: TocPosition;
     enableSuggestions?: boolean;
     enhancedVisibility?: boolean;
+    explanationVideoUrl?: string;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -131,6 +132,9 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Accessibility setting - show ghosted buttons always for elderly users
   const enhancedVisibility = signSettings?.enhancedVisibility ?? false;
+
+  // Explanation video URL
+  const explanationVideoUrl = signSettings?.explanationVideoUrl || '';
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -167,6 +171,7 @@ export default async function DocumentPage({ params }: PageProps) {
         tocSettings={tocSettings}
         enableSuggestions={enableSuggestions}
         enhancedVisibility={enhancedVisibility}
+        explanationVideoUrl={explanationVideoUrl}
       />
     </LanguageOverrideProvider>
   );

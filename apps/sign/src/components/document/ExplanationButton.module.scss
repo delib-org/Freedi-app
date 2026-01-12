@@ -1,0 +1,44 @@
+.explanationButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  color: var(--btn-primary);
+  border: 2px solid var(--btn-primary);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 44px;
+
+  &:hover {
+    background: var(--btn-primary);
+    color: white;
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .explanationButton {
+    width: 100%;
+  }
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  .explanationButton {
+    flex-direction: row-reverse;
+  }
+}

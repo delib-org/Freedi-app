@@ -9,6 +9,7 @@ import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
 import RejectButton from './RejectButton';
+import ExplanationButton from './ExplanationButton';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
 import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
@@ -31,6 +32,8 @@ interface DocumentViewProps {
   enableSuggestions?: boolean;
   /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
   enhancedVisibility?: boolean;
+  /** YouTube video URL for explanation video */
+  explanationVideoUrl?: string;
 }
 
 export default function DocumentView({
@@ -49,6 +52,7 @@ export default function DocumentView({
   tocSettings,
   enableSuggestions = false,
   enhancedVisibility = false,
+  explanationVideoUrl = '',
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -182,6 +186,9 @@ export default function DocumentView({
             </div>
 
             <div className={styles.signatureActions}>
+              {explanationVideoUrl && (
+                <ExplanationButton videoUrl={explanationVideoUrl} />
+              )}
               {!user ? (
                 <a
                   href={`/login?redirect=/doc/${document.statementId}`}
