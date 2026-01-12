@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import ExplanationVideoModal from './ExplanationVideoModal';
 import styles from './ExplanationButton.module.scss';
@@ -8,70 +8,29 @@ import styles from './ExplanationButton.module.scss';
 interface ExplanationButtonProps {
   videoUrl: string;
   documentId: string;
-  /** Delay in ms before auto-showing the video (default: 2000) */
-  autoShowDelay?: number;
 }
 
-const STORAGE_KEY_PREFIX = 'explanation_video_seen_';
-
+/**
+ * Floating button for optional video mode
+ * Users click to watch the explanation video
+ */
 export default function ExplanationButton({
   videoUrl,
   documentId,
-  autoShowDelay = 2000
 }: ExplanationButtonProps) {
   const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
-  const [hasAutoShown, setHasAutoShown] = useState(false);
-  const [isFirstVisit, setIsFirstVisit] = useState(false);
-
-  // Check if user has already seen the auto-popup for this document
-  const getStorageKey = useCallback(() => {
-    return `${STORAGE_KEY_PREFIX}${documentId}`;
-  }, [documentId]);
-
-  const hasSeenVideo = useCallback(() => {
-    if (typeof window === 'undefined') return true;
-    return sessionStorage.getItem(getStorageKey()) === 'true';
-  }, [getStorageKey]);
-
-  const markVideoAsSeen = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      sessionStorage.setItem(getStorageKey(), 'true');
-    }
-  }, [getStorageKey]);
-
-  // Check first visit status
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setIsFirstVisit(!hasSeenVideo());
-    }
-  }, [hasSeenVideo]);
-
-  // Auto-show video modal after delay (only once per session)
-  useEffect(() => {
-    if (!videoUrl || hasAutoShown || hasSeenVideo()) {
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setShowModal(true);
-      setHasAutoShown(true);
-      markVideoAsSeen();
-      setIsFirstVisit(false);
-    }, autoShowDelay);
-
-    return () => clearTimeout(timer);
-  }, [videoUrl, autoShowDelay, hasAutoShown, hasSeenVideo, markVideoAsSeen]);
 
   const handleOpenModal = () => {
     setShowModal(true);
-    markVideoAsSeen();
-    setIsFirstVisit(false);
   };
 
   const handleCloseModal = () => {
     setShowModal(false);
   };
+
+  // Suppress unused variable warning - documentId kept for future use (analytics, etc.)
+  void documentId;
 
   // Don't render if no video URL
   if (!videoUrl) {
@@ -88,13 +47,6 @@ export default function ExplanationButton({
         aria-label={t('Watch video guide')}
         title={t('Click to watch explanation video')}
       >
-        {/* "New" badge for first-time visitors */}
-        {isFirstVisit && (
-          <span className={styles.newBadge}>
-            {t('new') || 'NEW'}
-          </span>
-        )}
-
         <span className={styles.iconWrapper}>
           {/* Video player/TV icon - clearer than generic play button */}
           <svg

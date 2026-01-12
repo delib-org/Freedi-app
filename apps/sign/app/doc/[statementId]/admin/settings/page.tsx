@@ -8,7 +8,7 @@ import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
 import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
-import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
@@ -54,6 +54,8 @@ interface Settings {
   enhancedVisibility: boolean;
   /** YouTube video URL for explanation video */
   explanationVideoUrl: string;
+  /** Video display mode: 'optional' = button only, 'before_viewing' = must watch before viewing */
+  explanationVideoMode: ExplanationVideoMode;
 }
 
 export default function AdminSettingsPage() {
@@ -84,6 +86,7 @@ export default function AdminSettingsPage() {
     tocPosition: 'auto',
     enhancedVisibility: false,
     explanationVideoUrl: '',
+    explanationVideoMode: 'optional',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -506,20 +509,44 @@ export default function AdminSettingsPage() {
         </div>
 
         {settings.explanationVideoUrl && (
-          <div className={styles.videoPreviewRow}>
-            <p className={styles.settingLabel}>{t('Preview')}</p>
-            <div className={styles.videoPreview}>
-              <iframe
-                width="300"
-                height="170"
-                src={getYouTubeEmbedUrl(settings.explanationVideoUrl)}
-                title={t('Video Preview')}
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
+          <>
+            <div className={styles.videoPreviewRow}>
+              <p className={styles.settingLabel}>{t('Preview')}</p>
+              <div className={styles.videoPreview}>
+                <iframe
+                  width="300"
+                  height="170"
+                  src={getYouTubeEmbedUrl(settings.explanationVideoUrl)}
+                  title={t('Video Preview')}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            {/* Video Display Mode Toggle */}
+            <div className={styles.settingRow}>
+              <div className={styles.settingInfo}>
+                <p className={styles.settingLabel}>{t('Require Video Before Viewing')}</p>
+                <p className={styles.settingDescription}>
+                  {t('When enabled, users must watch the video before they can view the document')}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`${styles.toggle} ${settings.explanationVideoMode === 'before_viewing' ? styles.active : ''}`}
+                onClick={() => {
+                  setSettings((prev) => ({
+                    ...prev,
+                    explanationVideoMode: prev.explanationVideoMode === 'before_viewing' ? 'optional' : 'before_viewing',
+                  }));
+                  setSaved(false);
+                }}
+                aria-pressed={settings.explanationVideoMode === 'before_viewing'}
               />
             </div>
-          </div>
+          </>
         )}
       </section>
 

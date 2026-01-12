@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
@@ -10,6 +11,7 @@ import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
 import RejectButton from './RejectButton';
 import ExplanationButton from './ExplanationButton';
+import ExplanationVideoOverlay from './ExplanationVideoOverlay';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
 import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
@@ -34,6 +36,8 @@ interface DocumentViewProps {
   enhancedVisibility?: boolean;
   /** YouTube video URL for explanation video */
   explanationVideoUrl?: string;
+  /** Video display mode: 'optional' (button only) or 'before_viewing' (blocking overlay) */
+  explanationVideoMode?: ExplanationVideoMode;
 }
 
 export default function DocumentView({
@@ -53,8 +57,12 @@ export default function DocumentView({
   enableSuggestions = false,
   enhancedVisibility = false,
   explanationVideoUrl = '',
+  explanationVideoMode = 'optional',
 }: DocumentViewProps) {
   const { t } = useTranslation();
+
+  // State to track if blocking video overlay has been dismissed
+  const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
 
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
@@ -212,11 +220,20 @@ export default function DocumentView({
           </a>
         </div>
 
-        {/* Floating Explanation Video Button */}
-        {explanationVideoUrl && (
+        {/* Floating Explanation Video Button (optional mode only) */}
+        {explanationVideoUrl && explanationVideoMode === 'optional' && (
           <ExplanationButton
             videoUrl={explanationVideoUrl}
             documentId={document.statementId}
+          />
+        )}
+
+        {/* Blocking Video Overlay (before_viewing mode) */}
+        {explanationVideoUrl && explanationVideoMode === 'before_viewing' && !videoOverlayDismissed && (
+          <ExplanationVideoOverlay
+            videoUrl={explanationVideoUrl}
+            documentId={document.statementId}
+            onDismiss={() => setVideoOverlayDismissed(true)}
           />
         )}
       </div>

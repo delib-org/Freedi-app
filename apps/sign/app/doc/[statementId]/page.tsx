@@ -15,7 +15,7 @@ import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
-import { TextDirection, TocSettings, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 
 interface PageProps {
   params: Promise<{ statementId: string }>;
@@ -113,6 +113,7 @@ export default async function DocumentPage({ params }: PageProps) {
     enableSuggestions?: boolean;
     enhancedVisibility?: boolean;
     explanationVideoUrl?: string;
+    explanationVideoMode?: ExplanationVideoMode;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -133,8 +134,9 @@ export default async function DocumentPage({ params }: PageProps) {
   // Accessibility setting - show ghosted buttons always for elderly users
   const enhancedVisibility = signSettings?.enhancedVisibility ?? false;
 
-  // Explanation video URL
+  // Explanation video settings
   const explanationVideoUrl = signSettings?.explanationVideoUrl || '';
+  const explanationVideoMode: ExplanationVideoMode = signSettings?.explanationVideoMode || 'optional';
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -172,6 +174,7 @@ export default async function DocumentPage({ params }: PageProps) {
         enableSuggestions={enableSuggestions}
         enhancedVisibility={enhancedVisibility}
         explanationVideoUrl={explanationVideoUrl}
+        explanationVideoMode={explanationVideoMode}
       />
     </LanguageOverrideProvider>
   );
