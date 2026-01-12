@@ -307,6 +307,44 @@
   font-weight: 500;
 }
 
+.questionMeta {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.requiredBadge {
+  font-size: 0.7rem;
+  padding: 2px 6px;
+  background: var(--warning);
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.questionActions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-shrink: 0;
+}
+
+.editButton {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: transparent;
+  color: var(--btn-primary);
+  border: 1px solid var(--btn-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--btn-primary);
+    color: white;
+  }
+}
+
 .deleteButton {
   padding: var(--spacing-xs) var(--spacing-sm);
   background: transparent;
@@ -320,6 +358,57 @@
   &:hover {
     background: var(--disagree);
     color: white;
+  }
+}
+
+// Edit Question Form (inline edit)
+.editQuestionForm {
+  width: 100%;
+  padding: var(--spacing-md);
+  background: var(--background);
+  border-radius: var(--radius-md);
+}
+
+.editActions {
+  display: flex;
+  gap: var(--spacing-sm);
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+}
+
+.cancelButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--background);
+    border-color: var(--text-secondary);
+  }
+}
+
+.saveEditButton {
+  padding: var(--spacing-xs) var(--spacing-md);
+  background: var(--btn-primary);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: white;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 }
 

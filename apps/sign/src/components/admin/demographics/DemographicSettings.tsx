@@ -69,6 +69,14 @@ export default function DemographicSettings({
   const [newOptionText, setNewOptionText] = useState('');
   const [isRequired, setIsRequired] = useState(false);
 
+  // Edit question state
+  const [editingQuestion, setEditingQuestion] = useState<SignDemographicQuestion | null>(null);
+  const [editQuestion, setEditQuestion] = useState('');
+  const [editType, setEditType] = useState<UserDemographicQuestionType>(UserDemographicQuestionType.text);
+  const [editOptions, setEditOptions] = useState<DemographicOption[]>([]);
+  const [editOptionText, setEditOptionText] = useState('');
+  const [editIsRequired, setEditIsRequired] = useState(false);
+
   // Handle mode change with auto-save
   const handleModeChange = async (newMode: DemographicMode) => {
     onModeChange(newMode);
@@ -196,6 +204,71 @@ export default function DemographicSettings({
       }
     } catch (error) {
       console.error('Failed to delete question:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Edit question handlers
+  const handleStartEdit = (question: SignDemographicQuestion) => {
+    setEditingQuestion(question);
+    setEditQuestion(question.question || '');
+    setEditType(question.type || UserDemographicQuestionType.text);
+    setEditOptions(question.options || []);
+    setEditIsRequired(question.required || false);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuestion(null);
+    setEditQuestion('');
+    setEditType(UserDemographicQuestionType.text);
+    setEditOptions([]);
+    setEditOptionText('');
+    setEditIsRequired(false);
+  };
+
+  const handleAddEditOption = () => {
+    if (editOptionText.trim()) {
+      setEditOptions([...editOptions, { option: editOptionText.trim() }]);
+      setEditOptionText('');
+    }
+  };
+
+  const handleRemoveEditOption = (index: number) => {
+    setEditOptions(editOptions.filter((_, i) => i !== index));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingQuestion?.userQuestionId || !editQuestion.trim()) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/api/demographics/questions/${documentId}/${editingQuestion.userQuestionId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: editQuestion.trim(),
+            type: editType,
+            options: (editType === 'radio' || editType === 'checkbox') ? editOptions : [],
+            required: editIsRequired,
+            order: editingQuestion.order,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        handleCancelEdit();
+        await fetchQuestions();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update question:', errorData);
+        alert(t('Failed to update question') + ': ' + (errorData.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to update question:', error);
+      alert(t('Failed to update question'));
     } finally {
       setLoading(false);
     }
@@ -331,26 +404,144 @@ export default function DemographicSettings({
             <ul className={styles.questionsListItems}>
               {questions.map((question, index) => (
                 <li key={question.userQuestionId || index} className={styles.questionItem}>
-                  <div className={styles.questionInfo}>
-                    <span className={styles.questionNumber}>{index + 1}.</span>
-                    <div className={styles.questionContent}>
-                      <p className={styles.questionText}>{question.question}</p>
-                      <span className={styles.questionType}>
-                        {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
-                        {question.isInherited && (
-                          <span className={styles.inheritedBadge}>{t('Inherited')}</span>
-                        )}
-                      </span>
+                  {editingQuestion?.userQuestionId === question.userQuestionId ? (
+                    // Edit mode
+                    <div className={styles.editQuestionForm}>
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>{t('Question Text')}</label>
+                        <input
+                          type="text"
+                          className={styles.formInput}
+                          value={editQuestion}
+                          onChange={(e) => setEditQuestion(e.target.value)}
+                        />
+                      </div>
+
+                      <div className={styles.formGroup}>
+                        <label className={styles.formLabel}>{t('Question Type')}</label>
+                        <select
+                          className={styles.formSelect}
+                          value={editType}
+                          onChange={(e) => {
+                            setEditType(e.target.value as UserDemographicQuestionType);
+                            if (e.target.value === 'text' || e.target.value === 'textarea') {
+                              setEditOptions([]);
+                            }
+                          }}
+                        >
+                          {questionTypes.map((qt) => (
+                            <option key={qt.value} value={qt.value}>
+                              {qt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {(editType === 'radio' || editType === 'checkbox') && (
+                        <div className={styles.formGroup}>
+                          <label className={styles.formLabel}>{t('Options')}</label>
+                          <div className={styles.optionsList}>
+                            {editOptions.map((option, optIdx) => (
+                              <div key={optIdx} className={styles.optionItem}>
+                                <span>{option.option}</span>
+                                <button
+                                  type="button"
+                                  className={styles.removeOptionButton}
+                                  onClick={() => handleRemoveEditOption(optIdx)}
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className={styles.addOptionRow}>
+                            <input
+                              type="text"
+                              className={styles.formInput}
+                              value={editOptionText}
+                              onChange={(e) => setEditOptionText(e.target.value)}
+                              placeholder={t('Add option')}
+                              onKeyPress={(e) => e.key === 'Enter' && handleAddEditOption()}
+                            />
+                            <button
+                              type="button"
+                              className={styles.addOptionButton}
+                              onClick={handleAddEditOption}
+                            >
+                              {t('Add')}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className={styles.formGroup}>
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            checked={editIsRequired}
+                            onChange={(e) => setEditIsRequired(e.target.checked)}
+                          />
+                          {t('This question is required')}
+                        </label>
+                      </div>
+
+                      <div className={styles.editActions}>
+                        <button
+                          type="button"
+                          className={styles.cancelButton}
+                          onClick={handleCancelEdit}
+                        >
+                          {t('Cancel')}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.saveEditButton}
+                          onClick={handleSaveEdit}
+                          disabled={!editQuestion.trim() || loading}
+                        >
+                          {loading ? t('Saving...') : t('Save')}
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                  {mode === 'custom' && !question.isInherited && (
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => handleDeleteQuestion(question.userQuestionId || '')}
-                    >
-                      {t('Delete')}
-                    </button>
+                  ) : (
+                    // View mode
+                    <>
+                      <div className={styles.questionInfo}>
+                        <span className={styles.questionNumber}>{index + 1}.</span>
+                        <div className={styles.questionContent}>
+                          <p className={styles.questionText}>{question.question}</p>
+                          <div className={styles.questionMeta}>
+                            <span className={styles.questionType}>
+                              {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
+                            </span>
+                            {question.required && (
+                              <span className={styles.requiredBadge}>{t('Required')}</span>
+                            )}
+                            {question.isInherited && (
+                              <span className={styles.inheritedBadge}>{t('Inherited')}</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      {mode === 'custom' && !question.isInherited && (
+                        <div className={styles.questionActions}>
+                          <button
+                            type="button"
+                            className={styles.editButton}
+                            onClick={() => handleStartEdit(question)}
+                          >
+                            {t('Edit')}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.deleteButton}
+                            onClick={() => handleDeleteQuestion(question.userQuestionId || '')}
+                          >
+                            {t('Delete')}
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </li>
               ))}
