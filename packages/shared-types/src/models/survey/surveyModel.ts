@@ -174,6 +174,8 @@ export const SurveyDemographicAnswerSchema = object({
   answerOptions: optional(array(string())),
   /** Whether this answer was submitted during test mode */
   isTestData: optional(boolean()),
+  /** Timestamp when this data was retroactively marked as test data (if applicable) */
+  markedAsTestAt: optional(number()),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -245,6 +247,8 @@ export const SurveyProgressSchema = object({
   isCompleted: boolean(),
   /** Whether this progress was created during test mode */
   isTestData: optional(boolean()),
+  /** Timestamp when this data was retroactively marked as test data (if applicable) */
+  markedAsTestAt: optional(number()),
 });
 
 export type SurveyProgress = InferOutput<typeof SurveyProgressSchema>;

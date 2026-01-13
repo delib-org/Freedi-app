@@ -831,6 +831,345 @@ export async function clearSurveyTestData(surveyId: string): Promise<ClearTestDa
   }
 }
 
+export interface MarkAllAsTestDataResult {
+  success: boolean;
+  markedCounts: {
+    progressCount: number;
+    demographicAnswerCount: number;
+    evaluationCount: number;
+    userEvaluationCount: number;
+    total: number;
+  };
+  markedAt: number;
+}
+
+/**
+ * Mark all existing live data (progress, demographics, evaluations) as test/pilot data
+ * This is useful when admin wants to mark all data collected up to now as pilot data
+ * and start fresh for real data collection
+ */
+export async function markAllDataAsTestData(
+  surveyId: string,
+  questionIds: string[]
+): Promise<MarkAllAsTestDataResult> {
+  const db = getFirestoreAdmin();
+  const markedAt = Date.now();
+  const markedCounts = {
+    progressCount: 0,
+    demographicAnswerCount: 0,
+    evaluationCount: 0,
+    userEvaluationCount: 0,
+    total: 0,
+  };
+
+  try {
+    const BATCH_SIZE = 500;
+
+    // 1. Mark all progress documents that are NOT already test data
+    // Note: We query all and filter client-side because Firestore != queries
+    // don't include documents where the field doesn't exist
+    const progressSnapshot = await db
+      .collection(SURVEY_PROGRESS_COLLECTION)
+      .where('surveyId', '==', surveyId)
+      .get();
+
+    // Filter out documents that already have isTestData=true
+    const progressDocs = progressSnapshot.docs.filter(
+      (doc) => doc.data().isTestData !== true
+    );
+
+    // 2. Mark all demographic answers that are NOT already test data
+    const answersSnapshot = await db
+      .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+      .where('surveyId', '==', surveyId)
+      .get();
+
+    const answerDocs = answersSnapshot.docs.filter(
+      (doc) => doc.data().isTestData !== true
+    );
+
+    // 3. Mark all evaluations for this survey's questions
+    const evaluationDocs: FirebaseFirestore.DocumentSnapshot[] = [];
+    const userEvaluationDocs: FirebaseFirestore.DocumentSnapshot[] = [];
+
+    // Get evaluations and userEvaluations for each question in the survey
+    for (const questionId of questionIds) {
+      // Get evaluations where parentId matches (evaluations of solutions under this question)
+      const evalSnapshot = await db
+        .collection(Collections.evaluations)
+        .where('parentId', '==', questionId)
+        .get();
+
+      const filteredEvalDocs = evalSnapshot.docs.filter(
+        (doc) => doc.data().isTestData !== true
+      );
+      evaluationDocs.push(...filteredEvalDocs);
+
+      // Get userEvaluations for this question
+      const userEvalSnapshot = await db
+        .collection(Collections.userEvaluations)
+        .where('parentStatementId', '==', questionId)
+        .get();
+
+      const filteredUserEvalDocs = userEvalSnapshot.docs.filter(
+        (doc) => doc.data().isTestData !== true
+      );
+      userEvaluationDocs.push(...filteredUserEvalDocs);
+    }
+
+    // Combine all documents to update
+    const allDocs = [
+      ...progressDocs.map((doc) => ({ ref: doc.ref, type: 'progress' })),
+      ...answerDocs.map((doc) => ({ ref: doc.ref, type: 'demographic' })),
+      ...evaluationDocs.map((doc) => ({ ref: doc.ref, type: 'evaluation' })),
+      ...userEvaluationDocs.map((doc) => ({ ref: doc.ref, type: 'userEvaluation' })),
+    ];
+
+    // Batch update all documents
+    for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
+      const batch = db.batch();
+      const batchDocs = allDocs.slice(i, i + BATCH_SIZE);
+
+      for (const { ref } of batchDocs) {
+        batch.update(ref, {
+          isTestData: true,
+          markedAsTestAt: markedAt,
+        });
+      }
+
+      await batch.commit();
+    }
+
+    // Count by type
+    markedCounts.progressCount = progressDocs.length;
+    markedCounts.demographicAnswerCount = answerDocs.length;
+    markedCounts.evaluationCount = evaluationDocs.length;
+    markedCounts.userEvaluationCount = userEvaluationDocs.length;
+    markedCounts.total =
+      markedCounts.progressCount +
+      markedCounts.demographicAnswerCount +
+      markedCounts.evaluationCount +
+      markedCounts.userEvaluationCount;
+
+    logger.info(
+      '[markAllDataAsTestData] Marked data as test for survey:',
+      surveyId,
+      'counts:',
+      markedCounts
+    );
+
+    return { success: true, markedCounts, markedAt };
+  } catch (error) {
+    logger.error('[markAllDataAsTestData] Error marking data as test:', surveyId, error);
+    return { success: false, markedCounts, markedAt };
+  }
+}
+
+export interface UnmarkTestDataResult {
+  success: boolean;
+  unmarkedCounts: {
+    progressCount: number;
+    demographicAnswerCount: number;
+    evaluationCount: number;
+    userEvaluationCount: number;
+    total: number;
+  };
+}
+
+/**
+ * Unmark data that was retroactively marked as test data (has markedAsTestAt field)
+ * This reverses the markAllDataAsTestData operation
+ * Note: Only unmarks data that was RETROACTIVELY marked (has markedAsTestAt),
+ * not data that was collected while test mode was ON
+ */
+export async function unmarkRetroactiveTestData(
+  surveyId: string,
+  questionIds: string[]
+): Promise<UnmarkTestDataResult> {
+  const db = getFirestoreAdmin();
+  const unmarkedCounts = {
+    progressCount: 0,
+    demographicAnswerCount: 0,
+    evaluationCount: 0,
+    userEvaluationCount: 0,
+    total: 0,
+  };
+
+  try {
+    const BATCH_SIZE = 500;
+
+    // 1. Find progress documents that were retroactively marked (have markedAsTestAt)
+    const progressSnapshot = await db
+      .collection(SURVEY_PROGRESS_COLLECTION)
+      .where('surveyId', '==', surveyId)
+      .where('isTestData', '==', true)
+      .get();
+
+    const progressDocs = progressSnapshot.docs.filter(
+      (doc) => doc.data().markedAsTestAt !== undefined
+    );
+
+    // 2. Find demographic answers that were retroactively marked
+    const answersSnapshot = await db
+      .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+      .where('surveyId', '==', surveyId)
+      .where('isTestData', '==', true)
+      .get();
+
+    const answerDocs = answersSnapshot.docs.filter(
+      (doc) => doc.data().markedAsTestAt !== undefined
+    );
+
+    // 3. Find evaluations and userEvaluations that were retroactively marked
+    const evaluationDocs: FirebaseFirestore.DocumentSnapshot[] = [];
+    const userEvaluationDocs: FirebaseFirestore.DocumentSnapshot[] = [];
+
+    for (const questionId of questionIds) {
+      const evalSnapshot = await db
+        .collection(Collections.evaluations)
+        .where('parentId', '==', questionId)
+        .where('isTestData', '==', true)
+        .get();
+
+      const filteredEvalDocs = evalSnapshot.docs.filter(
+        (doc) => doc.data().markedAsTestAt !== undefined
+      );
+      evaluationDocs.push(...filteredEvalDocs);
+
+      const userEvalSnapshot = await db
+        .collection(Collections.userEvaluations)
+        .where('parentStatementId', '==', questionId)
+        .where('isTestData', '==', true)
+        .get();
+
+      const filteredUserEvalDocs = userEvalSnapshot.docs.filter(
+        (doc) => doc.data().markedAsTestAt !== undefined
+      );
+      userEvaluationDocs.push(...filteredUserEvalDocs);
+    }
+
+    // Combine all documents to update
+    const allDocs = [
+      ...progressDocs.map((doc) => ({ ref: doc.ref, type: 'progress' })),
+      ...answerDocs.map((doc) => ({ ref: doc.ref, type: 'demographic' })),
+      ...evaluationDocs.map((doc) => ({ ref: doc.ref, type: 'evaluation' })),
+      ...userEvaluationDocs.map((doc) => ({ ref: doc.ref, type: 'userEvaluation' })),
+    ];
+
+    // Batch update - remove isTestData and markedAsTestAt using FieldValue.delete()
+    const { FieldValue } = await import('firebase-admin/firestore');
+
+    for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
+      const batch = db.batch();
+      const batchDocs = allDocs.slice(i, i + BATCH_SIZE);
+
+      for (const { ref } of batchDocs) {
+        batch.update(ref, {
+          isTestData: FieldValue.delete(),
+          markedAsTestAt: FieldValue.delete(),
+        });
+      }
+
+      await batch.commit();
+    }
+
+    // Count by type
+    unmarkedCounts.progressCount = progressDocs.length;
+    unmarkedCounts.demographicAnswerCount = answerDocs.length;
+    unmarkedCounts.evaluationCount = evaluationDocs.length;
+    unmarkedCounts.userEvaluationCount = userEvaluationDocs.length;
+    unmarkedCounts.total =
+      unmarkedCounts.progressCount +
+      unmarkedCounts.demographicAnswerCount +
+      unmarkedCounts.evaluationCount +
+      unmarkedCounts.userEvaluationCount;
+
+    logger.info(
+      '[unmarkRetroactiveTestData] Unmarked retroactive test data for survey:',
+      surveyId,
+      'counts:',
+      unmarkedCounts
+    );
+
+    return { success: true, unmarkedCounts };
+  } catch (error) {
+    logger.error('[unmarkRetroactiveTestData] Error unmarking test data:', surveyId, error);
+    return { success: false, unmarkedCounts };
+  }
+}
+
+/**
+ * Get counts of data that was retroactively marked as pilot (has markedAsTestAt)
+ */
+export async function getRetroactiveTestDataCounts(
+  surveyId: string,
+  questionIds: string[]
+): Promise<{
+  progressCount: number;
+  demographicAnswerCount: number;
+  evaluationCount: number;
+  userEvaluationCount: number;
+  total: number;
+}> {
+  const db = getFirestoreAdmin();
+
+  // Count progress documents with markedAsTestAt
+  const progressSnapshot = await db
+    .collection(SURVEY_PROGRESS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .where('isTestData', '==', true)
+    .get();
+
+  const progressCount = progressSnapshot.docs.filter(
+    (doc) => doc.data().markedAsTestAt !== undefined
+  ).length;
+
+  // Count demographic answers with markedAsTestAt
+  const answersSnapshot = await db
+    .collection(SURVEY_DEMOGRAPHIC_ANSWERS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .where('isTestData', '==', true)
+    .get();
+
+  const demographicAnswerCount = answersSnapshot.docs.filter(
+    (doc) => doc.data().markedAsTestAt !== undefined
+  ).length;
+
+  // Count evaluations and userEvaluations with markedAsTestAt
+  let evaluationCount = 0;
+  let userEvaluationCount = 0;
+
+  for (const questionId of questionIds) {
+    const evalSnapshot = await db
+      .collection(Collections.evaluations)
+      .where('parentId', '==', questionId)
+      .where('isTestData', '==', true)
+      .get();
+
+    evaluationCount += evalSnapshot.docs.filter(
+      (doc) => doc.data().markedAsTestAt !== undefined
+    ).length;
+
+    const userEvalSnapshot = await db
+      .collection(Collections.userEvaluations)
+      .where('parentStatementId', '==', questionId)
+      .where('isTestData', '==', true)
+      .get();
+
+    userEvaluationCount += userEvalSnapshot.docs.filter(
+      (doc) => doc.data().markedAsTestAt !== undefined
+    ).length;
+  }
+
+  return {
+    progressCount,
+    demographicAnswerCount,
+    evaluationCount,
+    userEvaluationCount,
+    total: progressCount + demographicAnswerCount + evaluationCount + userEvaluationCount,
+  };
+}
+
 /**
  * Get surveys by status
  * REQUIRES Firestore composite index: creatorId + status + createdAt (desc)
