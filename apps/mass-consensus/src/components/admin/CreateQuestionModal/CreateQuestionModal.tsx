@@ -50,7 +50,7 @@ export default function CreateQuestionModal({
   const [questionText, setQuestionText] = useState('');
   const [evaluationType, setEvaluationType] = useState<EvaluationType>('suggestions');
   const [maxVotes, setMaxVotes] = useState(3);
-  const [requireSolutionFirst, setRequireSolutionFirst] = useState(false);
+  const [requireSolutionFirst, setRequireSolutionFirst] = useState(true);
 
   // Step 3: Solutions
   const [solutionsText, setSolutionsText] = useState('');
@@ -99,7 +99,7 @@ export default function CreateQuestionModal({
       setQuestionText('');
       setEvaluationType('suggestions');
       setMaxVotes(3);
-      setRequireSolutionFirst(false);
+      setRequireSolutionFirst(true);
       setSolutionsText('');
       setSkipSolutions(false);
       setError(null);

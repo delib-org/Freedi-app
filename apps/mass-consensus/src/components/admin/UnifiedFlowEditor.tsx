@@ -357,7 +357,7 @@ function QuestionSettingsPanel({
         <label className={styles.settingLabel}>
           <input
             type="checkbox"
-            checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? false}
+            checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
             onChange={(e) => handleToggle('askUserForASolutionBeforeEvaluation', e.target.checked)}
           />
           <span>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
