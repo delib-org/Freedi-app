@@ -10,6 +10,7 @@ import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS } from '@/types/su
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
+import { CreateQuestionModal } from './CreateQuestionModal';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -45,6 +46,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [isCreateQuestionModalOpen, setIsCreateQuestionModalOpen] = useState(false);
 
   const isEditing = !!existingSurvey;
 
@@ -362,7 +364,17 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
 
       {/* Step 2: Select Questions */}
       <div className={styles.formSection}>
-        <h2 className={styles.sectionTitle}>{t('selectQuestions')}</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>{t('selectQuestions')}</h2>
+          <button
+            type="button"
+            className={styles.createButton}
+            onClick={() => setIsCreateQuestionModalOpen(true)}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+          >
+            {t('createNewQuestion') || '+ Create New Question'}
+          </button>
+        </div>
         {isLoadingQuestions ? (
           <div className={styles.loadingQuestions}>
             <div className={styles.spinner} />
@@ -375,6 +387,16 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
           />
         )}
       </div>
+
+      {/* Create Question Modal */}
+      <CreateQuestionModal
+        isOpen={isCreateQuestionModalOpen}
+        onClose={() => setIsCreateQuestionModalOpen(false)}
+        onQuestionCreated={(question) => {
+          setSelectedQuestions((prev) => [...prev, question]);
+          setIsCreateQuestionModalOpen(false);
+        }}
+      />
 
       {/* Step 3: Unified Flow Editor (Questions, Demographics, Explanations) */}
       {!isLoadingQuestions && (
