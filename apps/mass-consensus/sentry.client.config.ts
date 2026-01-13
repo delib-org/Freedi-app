@@ -19,19 +19,6 @@ Sentry.init({
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
 
-  // Session Replay - capture user sessions for debugging
-  replaysOnErrorSampleRate: 1.0, // Capture 100% of sessions with errors
-  replaysSessionSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 0, // Sample 10% of sessions in production
-
-  // Integrations
-  integrations: [
-    Sentry.replayIntegration({
-      // Additional replay options
-      maskAllText: false, // Set to true if you want to mask all text
-      blockAllMedia: false, // Set to true if you want to block all media
-    }),
-  ],
-
   // Ignore certain errors that are not actionable
   ignoreErrors: [
     // Browser extensions
