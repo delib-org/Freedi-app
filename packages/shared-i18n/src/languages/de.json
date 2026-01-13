@@ -1524,5 +1524,11 @@
   "Equal weight to merge and add new": "Gleiches Gewicht für Zusammenführen und Neu hinzufügen",
   "Encourage Merging": "Zusammenführen fördern",
   "Pushes users to merge with existing (current behavior)": "Drängt Benutzer zum Zusammenführen mit Bestehendem (aktuelles Verhalten)",
-  "Use Survey Default": "Umfrage-Standard verwenden"
+  "Use Survey Default": "Umfrage-Standard verwenden",
+
+  "suggestionModeEncourage": "Neue Ideen fördern",
+  "suggestionModeBalanced": "Ausgewogen",
+  "suggestionModeRestrict": "Zusammenführen fördern",
+  "useSurveyDefault": "Umfrage-Standard verwenden",
+  "suggestionModeOverride": "Vorschlagsmodus"
 }

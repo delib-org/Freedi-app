@@ -1535,5 +1535,11 @@
   "Equal weight to merge and add new": "وزن متساوٍ للدمج والإضافة الجديدة",
   "Encourage Merging": "تشجيع الدمج",
   "Pushes users to merge with existing (current behavior)": "يدفع المستخدمين للدمج مع الموجود (السلوك الحالي)",
-  "Use Survey Default": "استخدام الافتراضي للاستبيان"
+  "Use Survey Default": "استخدام الافتراضي للاستبيان",
+
+  "suggestionModeEncourage": "تشجيع الأفكار الجديدة",
+  "suggestionModeBalanced": "متوازن",
+  "suggestionModeRestrict": "تشجيع الدمج",
+  "useSurveyDefault": "استخدام الافتراضي للاستبيان",
+  "suggestionModeOverride": "وضع الاقتراحات"
 }

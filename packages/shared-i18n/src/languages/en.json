@@ -1967,5 +1967,11 @@
   "Equal weight to merge and add new": "Equal weight to merge and add new",
   "Encourage Merging": "Encourage Merging",
   "Pushes users to merge with existing (current behavior)": "Pushes users to merge with existing (current behavior)",
-  "Use Survey Default": "Use Survey Default"
+  "Use Survey Default": "Use Survey Default",
+
+  "suggestionModeEncourage": "Encourage New Ideas",
+  "suggestionModeBalanced": "Balanced",
+  "suggestionModeRestrict": "Encourage Merging",
+  "useSurveyDefault": "Use Survey Default",
+  "suggestionModeOverride": "Suggestion Mode"
 }

@@ -1955,5 +1955,11 @@
   "Equal weight to merge and add new": "משקל שווה למיזוג והוספה חדשה",
   "Encourage Merging": "עידוד מיזוג",
   "Pushes users to merge with existing (current behavior)": "מעודד משתמשים למזג עם קיים (התנהגות נוכחית)",
-  "Use Survey Default": "השתמש בברירת מחדל של הסקר"
+  "Use Survey Default": "השתמש בברירת מחדל של הסקר",
+
+  "suggestionModeEncourage": "עידוד רעיונות חדשים",
+  "suggestionModeBalanced": "מאוזן",
+  "suggestionModeRestrict": "עידוד מיזוג",
+  "useSurveyDefault": "השתמש בברירת מחדל של הסקר",
+  "suggestionModeOverride": "מצב הצעות"
 }

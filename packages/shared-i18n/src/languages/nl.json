@@ -1524,5 +1524,11 @@
   "Equal weight to merge and add new": "Gelijk gewicht voor samenvoegen en nieuw toevoegen",
   "Encourage Merging": "Samenvoegen aanmoedigen",
   "Pushes users to merge with existing (current behavior)": "Duwt gebruikers om samen te voegen met bestaande (huidig gedrag)",
-  "Use Survey Default": "Enquête-standaard gebruiken"
+  "Use Survey Default": "Enquête-standaard gebruiken",
+
+  "suggestionModeEncourage": "Nieuwe ideeën aanmoedigen",
+  "suggestionModeBalanced": "Gebalanceerd",
+  "suggestionModeRestrict": "Samenvoegen aanmoedigen",
+  "useSurveyDefault": "Enquête-standaard gebruiken",
+  "suggestionModeOverride": "Suggestiemodus"
 }
