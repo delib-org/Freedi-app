@@ -1,10 +1,15 @@
+/**
+ * NAMING CLARIFICATION:
+ * - EvaluationUI (evaluationSettings.evaluationUI) = Evaluation MODE (how users participate: suggestions, voting, checkbox, clustering)
+ * - evaluationType (statementSettings.evaluationType) = Rating SCALE (what input UI they see: range/5-point, likeDislike/simple, singleLike/like-only)
+ */
 import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
 import React, { FC, useState, useRef } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { EvaluationUI, StatementType } from '@freedi/shared-types';
+import { EvaluationUI, StatementType, evaluationType } from '@freedi/shared-types';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
@@ -12,6 +17,8 @@ import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
+import LikeIcon from '@/assets/icons/likeIcon.svg?react';
+import EvaluationsIcon from '@/assets/icons/evaluationsIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
@@ -75,6 +82,67 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				property: 'askUserForASolutionBeforeEvaluation',
 				newValue: enabled,
 				settingsSection: 'questionSettings',
+			});
+		}
+
+		/**
+		 * Handle evaluation type change - sets both evaluationSettings.evaluationUI
+		 * and statementSettings.evaluationType for main app compatibility
+		 */
+		function handleEvaluationTypeChange(value: EvaluationUI) {
+			// Set the EvaluationUI for MC app and question settings
+			setEvaluationUIType(statement.statementId, value);
+
+			// Map EvaluationUI to evaluationType for main app Evaluation component
+			let evalType: evaluationType;
+			switch (value) {
+				case EvaluationUI.voting:
+				case EvaluationUI.checkbox:
+					evalType = evaluationType.singleLike;
+					break;
+				case EvaluationUI.suggestions:
+				case EvaluationUI.clustering:
+				default:
+					evalType = evaluationType.range;
+					break;
+			}
+
+			// Set statementSettings.evaluationType for main app
+			setStatementSettingToDB({
+				statement,
+				property: 'evaluationType',
+				newValue: evalType,
+				settingsSection: 'statementSettings',
+			});
+
+			// Also set enhancedEvaluation for backward compatibility
+			setStatementSettingToDB({
+				statement,
+				property: 'enhancedEvaluation',
+				newValue: evalType === evaluationType.range,
+				settingsSection: 'statementSettings',
+			});
+		}
+
+		/**
+		 * Handle rating scale change - sets statementSettings.evaluationType
+		 * This determines which evaluation UI component is rendered in the main app
+		 * (5-point emoji scale, thumbs up/down, or like-only)
+		 */
+		function handleRatingScaleChange(scale: evaluationType) {
+			setStatementSettingToDB({
+				statement,
+				property: 'evaluationType',
+				newValue: scale,
+				settingsSection: 'statementSettings',
+			});
+
+			// Backward compatibility: enhancedEvaluation = true means 5-point range scale
+			setStatementSettingToDB({
+				statement,
+				property: 'enhancedEvaluation',
+				newValue: scale === evaluationType.range,
+				settingsSection: 'statementSettings',
 			});
 		}
 
@@ -253,7 +321,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 		return (
 			<div className={styles.questionSettings}>
-				<SectionTitle title={t('Evaluation Type')} />
+				<SectionTitle title={t('Evaluation Mode')} />
 				<MultiSwitch
 					options={[
 						{ label: t('Agreement'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon />, toolTip: t('Consensus') },
@@ -261,10 +329,37 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						{ label: t('Approval'), value: EvaluationUI.checkbox, icon: <ConsentIcon />, toolTip: t('Consent') },
 						{ label: t('Cluster'), value: EvaluationUI.clustering, icon: <ClusterIcon />, toolTip: t('Clustering') },
 					]}
-					onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
+					onClick={(value) => { handleEvaluationTypeChange(value as EvaluationUI); }}
 					currentValue={statement.evaluationSettings?.evaluationUI}
 				/>
 				{isVoting && <VotingSettings />}
+
+				<SectionTitle title={t('Rating Scale')} />
+				<MultiSwitch
+					options={[
+						{
+							label: t('5-Point Scale'),
+							value: evaluationType.range,
+							icon: <SuggestionsIcon />,
+							toolTip: t('5 emoji faces from negative to positive')
+						},
+						{
+							label: t('Simple Scale'),
+							value: evaluationType.likeDislike,
+							icon: <EvaluationsIcon />,
+							toolTip: t('Thumbs up or down')
+						},
+						{
+							label: t('Like Only'),
+							value: evaluationType.singleLike,
+							icon: <LikeIcon />,
+							toolTip: t('Only positive feedback')
+						},
+					]}
+					onClick={(value) => { handleRatingScaleChange(value as evaluationType); }}
+					currentValue={statement.statementSettings?.evaluationType || evaluationType.range}
+				/>
+
 				<SectionTitle title={t('Question Settings')} />
 
 				<div className={styles.questionLink}>
