@@ -89,4 +89,16 @@
     padding: 2rem;
     text-align: center;
   }
+
+  .totalEvaluators {
+    position: absolute;
+    top: -2.5rem;
+    right: 0;
+    font-size: 0.9rem;
+    color: var(--text-body);
+    @media (max-height: 600px) {
+      top: -2rem;
+      font-size: 0.8rem;
+    }
+  }
 }

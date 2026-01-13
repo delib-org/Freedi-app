@@ -5,7 +5,7 @@
 import * as Sentry from '@sentry/nextjs';
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: 'https://687d07447e58ad981faad6c30f81159e@o4509747282640896.ingest.de.sentry.io/4510664509292624',
 
   // Only enable Sentry in production
   enabled: process.env.NODE_ENV === 'production',
@@ -36,12 +36,6 @@ Sentry.init({
     // User-cancelled requests
     'AbortError',
     'The operation was aborted',
-    // Vercel Live feedback instrumentation errors (null references during lifecycle events)
-    "Cannot read properties of null (reading 'getItem')",
-    "Cannot read properties of null (reading 'removeEventListener')",
-    // IndexedDB errors (common in Facebook in-app browser on iOS)
-    'Connection to Indexed Database server lost',
-    /IndexedDB.*lost/,
   ],
 
   // Don't send PII
@@ -51,11 +45,15 @@ Sentry.init({
   beforeSend(event) {
     // Remove potentially sensitive data from URLs
     if (event.request?.url) {
-      const url = new URL(event.request.url);
-      // Remove query parameters that might contain sensitive data
-      url.searchParams.delete('token');
-      url.searchParams.delete('userId');
-      event.request.url = url.toString();
+      try {
+        const url = new URL(event.request.url);
+        // Remove query parameters that might contain sensitive data
+        url.searchParams.delete('token');
+        url.searchParams.delete('userId');
+        event.request.url = url.toString();
+      } catch {
+        // Ignore URL parsing errors
+      }
     }
 
     return event;

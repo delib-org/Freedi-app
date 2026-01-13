@@ -1009,6 +1009,32 @@
   }
 }
 
+.downloadAction {
+  color: var(--btn-primary, #5f88e5);
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.1);
+    color: #4a6fc4;
+  }
+}
+
+// ============================================
+// EXPORT MODAL
+// ============================================
+
+.exportSurveyName {
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 1.5rem;
+}
+
+.exportOptions {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+}
+
 // ============================================
 // LANGUAGE SELECTOR
 // ============================================
@@ -2114,4 +2140,195 @@
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
   margin-bottom: 1rem;
+}
+
+// ============================================
+// PILOT DATA SECTION
+// ============================================
+
+.pilotDataSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+}
+
+.pilotDataHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+
+  h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-heading, #1a1a2e);
+  }
+}
+
+.pilotDataBadge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  background: #8b5cf6;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pilotDataDescription {
+  font-size: 0.8rem;
+  color: var(--text-body, #4a5568);
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.pilotDataActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.markAsPilotButton {
+  padding: 0.5rem 1rem;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #7c3aed;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.unmarkPilotButton {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.pilotDataStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 6px;
+  margin-top: 0.75rem;
+
+  span {
+    font-size: 0.8rem;
+    color: #6d28d9;
+  }
+}
+
+.pilotDataCountItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &::after {
+    content: '|';
+    margin-left: 0.5rem;
+    color: rgba(139, 92, 246, 0.4);
+  }
+
+  &:last-child::after {
+    content: none;
+  }
+}
+
+// ============================================
+// RADIO GROUP (for Suggestion Mode, etc.)
+// ============================================
+
+.groupLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 0.25rem;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radioOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    background: var(--border-light, #e2e8f0);
+  }
+
+  &:has(input:checked) {
+    border-color: var(--btn-primary, #5f88e5);
+    background: rgba(95, 136, 229, 0.08);
+  }
+
+  input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.radioContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.radioLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+}
+
+.radioDescription {
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  line-height: 1.4;
 }

@@ -37,3 +37,6 @@ export const recalculateEvaluations = (req: Request, res: Response) =>
 
 export const addRandomSeed = (req: Request, res: Response) =>
 	maintenanceController.addRandomSeed(req, res);
+
+export const backfillEvaluationType = (req: Request, res: Response) =>
+	maintenanceController.backfillEvaluationType(req, res);
