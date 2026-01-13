@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSurveyProgress, upsertSurveyProgress } from '@/lib/firebase/surveys';
+import { getSurveyProgress, upsertSurveyProgress, getSurveyById } from '@/lib/firebase/surveys';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { UpdateProgressRequest } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
@@ -45,6 +45,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     logger.error('[GET /api/surveys/[id]/progress] Error:', error);
+
     return NextResponse.json(
       { error: 'Failed to fetch progress' },
       { status: 500 }
@@ -54,6 +55,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
 /**
  * POST /api/surveys/[id]/progress - Update user's progress
+ * If the survey is in test mode, the progress will be marked as test data
  */
 export async function POST(request: NextRequest, context: RouteContext) {
   try {
@@ -69,17 +71,27 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const body: UpdateProgressRequest = await request.json();
 
+    // Check if survey is in test mode
+    const survey = await getSurveyById(surveyId);
+    const isTestMode = survey?.isTestMode === true;
+
     const progress = await upsertSurveyProgress(surveyId, userId, {
       currentQuestionIndex: body.currentQuestionIndex,
       completedQuestionId: body.completedQuestionId,
       isCompleted: body.isCompleted,
+      isTestData: isTestMode,
     });
 
-    logger.info('[POST /api/surveys/[id]/progress] Updated progress for user:', userId);
+    logger.info(
+      '[POST /api/surveys/[id]/progress] Updated progress for user:',
+      userId,
+      isTestMode ? '(test mode)' : ''
+    );
 
     return NextResponse.json(progress);
   } catch (error) {
     logger.error('[POST /api/surveys/[id]/progress] Error:', error);
+
     return NextResponse.json(
       { error: 'Failed to update progress' },
       { status: 500 }
