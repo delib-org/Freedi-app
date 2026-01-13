@@ -38,8 +38,9 @@ export function getMergedSettings(
       (questionOverrides?.allowParticipantsToAddSuggestions ?? false),
 
     // Per-question askUserForASolutionBeforeEvaluation (no survey-level equivalent)
+    // Default to true: users should provide their own suggestion before seeing others
     askUserForASolutionBeforeEvaluation:
-      questionOverrides?.askUserForASolutionBeforeEvaluation ?? false,
+      questionOverrides?.askUserForASolutionBeforeEvaluation ?? true,
 
     // Survey-level allowSkipping overrides per-question when enabled
     allowSkipping:

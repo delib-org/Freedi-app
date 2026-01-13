@@ -258,7 +258,7 @@ export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
   minEvaluationsPerQuestion: 3,
   showQuestionPreview: false,
   randomizeQuestions: false,
-  allowParticipantsToAddSuggestions: false,
+  allowParticipantsToAddSuggestions: true,
   suggestionMode: SuggestionMode.encourage,
 };
 
