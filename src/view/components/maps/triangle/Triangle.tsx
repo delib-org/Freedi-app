@@ -68,6 +68,9 @@ const Triangle: FC = () => {
 				<span className={styles.yAxis}>{t('Objections')}</span>
 				<span className={styles.conflicts}>{t('Conflicts')}</span>
 				<span className={styles.abstention}>{t('Abstention')}</span>
+				<span className={styles.totalEvaluators}>
+					{t('Total evaluators')}: {statement?.totalEvaluators ?? 0}
+				</span>
 			</div>
 		</>
 	);
