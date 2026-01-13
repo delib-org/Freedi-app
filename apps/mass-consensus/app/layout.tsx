@@ -9,6 +9,7 @@ import {
 import { COOKIE_KEY } from '@freedi/shared-i18n';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import ConnectionLostHandler from '@/components/shared/ConnectionLostHandler';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -63,6 +64,7 @@ export default async function RootLayout({
             {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
             {children as any}
           </AuthProvider>
+          <ConnectionLostHandler />
         </NextTranslationProvider>
         <GoogleAnalytics />
         <Analytics />

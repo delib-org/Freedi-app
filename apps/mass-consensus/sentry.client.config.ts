@@ -7,6 +7,9 @@ import * as Sentry from '@sentry/nextjs';
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
+  // Only enable Sentry in production
+  enabled: process.env.NODE_ENV === 'production',
+
   // Environment
   environment: process.env.NODE_ENV,
 
@@ -49,6 +52,9 @@ Sentry.init({
     // Vercel Live feedback instrumentation errors (null references during lifecycle events)
     "Cannot read properties of null (reading 'getItem')",
     "Cannot read properties of null (reading 'removeEventListener')",
+    // IndexedDB errors (common in Facebook in-app browser on iOS)
+    'Connection to Indexed Database server lost',
+    /IndexedDB.*lost/,
   ],
 
   // Don't send PII
