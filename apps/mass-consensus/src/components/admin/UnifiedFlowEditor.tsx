@@ -10,7 +10,7 @@ import type {
   SurveySettings,
   QuestionOverrideSettings,
 } from '@freedi/shared-types';
-import { UserDemographicQuestionType } from '@freedi/shared-types';
+import { UserDemographicQuestionType, SuggestionMode } from '@freedi/shared-types';
 import {
   DndContext,
   closestCenter,
@@ -317,6 +317,28 @@ function QuestionSettingsPanel({
     onChange({ ...questionSetting, [key]: value });
   };
 
+  const handleSuggestionMode = (value: string) => {
+    if (value === 'default') {
+      // Remove the override by creating new object without suggestionMode
+      const newSetting = { ...questionSetting };
+      delete newSetting.suggestionMode;
+      onChange(newSetting);
+    } else {
+      onChange({ ...questionSetting, suggestionMode: value as SuggestionMode });
+    }
+  };
+
+  // Get the survey default label for the dropdown
+  const getSurveyDefaultLabel = () => {
+    const defaultMode = surveySettings.suggestionMode || SuggestionMode.encourage;
+    const labels: Record<string, string> = {
+      [SuggestionMode.encourage]: t('suggestionModeEncourage') || 'Encourage New Ideas',
+      [SuggestionMode.balanced]: t('suggestionModeBalanced') || 'Balanced',
+      [SuggestionMode.restrict]: t('suggestionModeRestrict') || 'Encourage Merging',
+    };
+    return labels[defaultMode] || defaultMode;
+  };
+
   return (
     <div className={styles.questionSettingsPanel}>
       <div className={styles.settingRow}>
@@ -340,6 +362,35 @@ function QuestionSettingsPanel({
           />
           <span>{t('askForSuggestionBeforeEvaluation') || 'Ask for suggestion before showing options'}</span>
         </label>
+      </div>
+
+      {/* Suggestion Mode override */}
+      <div className={styles.settingRow}>
+        <label className={styles.settingLabel}>
+          <span>{t('suggestionModeOverride') || 'Suggestion Mode'}</span>
+        </label>
+        <select
+          className={styles.selectInput}
+          value={questionSetting?.suggestionMode || 'default'}
+          onChange={(e) => handleSuggestionMode(e.target.value)}
+          style={{ marginTop: '0.25rem' }}
+        >
+          <option value="default">
+            {t('useSurveyDefault') || 'Use Survey Default'} ({getSurveyDefaultLabel()})
+          </option>
+          <option value={SuggestionMode.encourage}>
+            {t('suggestionModeEncourage') || 'Encourage New Ideas'}
+          </option>
+          <option value={SuggestionMode.balanced}>
+            {t('suggestionModeBalanced') || 'Balanced'}
+          </option>
+          <option value={SuggestionMode.restrict}>
+            {t('suggestionModeRestrict') || 'Encourage Merging'}
+          </option>
+        </select>
+        <span className={styles.settingHint}>
+          {t('suggestionModeHint') || 'Controls how easy it is to add new vs. merge with existing'}
+        </span>
       </div>
 
       <div className={styles.settingRow}>
