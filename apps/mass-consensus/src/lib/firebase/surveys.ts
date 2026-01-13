@@ -203,6 +203,12 @@ export async function updateSurvey(
   if (data.isTestMode !== undefined) {
     updates.isTestMode = data.isTestMode;
   }
+  if (data.showIntro !== undefined) {
+    updates.showIntro = data.showIntro;
+  }
+  if (data.customIntroText !== undefined) {
+    updates.customIntroText = data.customIntroText;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
 

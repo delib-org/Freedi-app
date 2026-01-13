@@ -151,7 +151,7 @@ function SortableItem({
             <label className={styles.settingLabel}>
               <input
                 type="checkbox"
-                checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? false}
+                checked={questionSetting?.askUserForASolutionBeforeEvaluation ?? true}
                 onChange={(e) =>
                   handleSettingToggle('askUserForASolutionBeforeEvaluation', e.target.checked)
                 }

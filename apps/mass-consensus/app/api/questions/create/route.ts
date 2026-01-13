@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
       ...questionStatement,
       questionSettings: {
         questionType: QuestionType.massConsensus,
-        askUserForASolutionBeforeEvaluation: body.askUserForASolutionBeforeEvaluation ?? false,
+        askUserForASolutionBeforeEvaluation: body.askUserForASolutionBeforeEvaluation ?? true,
       },
       evaluationSettings: {
         evaluationUI,

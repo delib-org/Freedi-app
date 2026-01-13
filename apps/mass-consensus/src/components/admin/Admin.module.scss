@@ -2115,3 +2115,69 @@
   border-radius: 6px;
   margin-bottom: 1rem;
 }
+
+// ============================================
+// RADIO GROUP (for Suggestion Mode, etc.)
+// ============================================
+
+.groupLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 0.25rem;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radioOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    background: var(--border-light, #e2e8f0);
+  }
+
+  &:has(input:checked) {
+    border-color: var(--btn-primary, #5f88e5);
+    background: rgba(95, 136, 229, 0.08);
+  }
+
+  input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.radioContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.radioLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+}
+
+.radioDescription {
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  line-height: 1.4;
+}

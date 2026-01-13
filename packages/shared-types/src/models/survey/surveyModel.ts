@@ -27,6 +27,21 @@ export enum SurveyStatus {
 export const SurveyStatusSchema = enum_(SurveyStatus);
 
 // ============================================
+// Suggestion Mode Enum
+// Controls UX friction when adding new suggestions vs merging
+// ============================================
+export enum SuggestionMode {
+  /** Easy to add new - "Add as New" is primary, no confirmation modal */
+  encourage = 'encourage',
+  /** Equal options - both buttons same weight, no modal */
+  balanced = 'balanced',
+  /** Push toward merge - "Merge" is primary, extra confirmation modal */
+  restrict = 'restrict',
+}
+
+export const SuggestionModeSchema = enum_(SuggestionMode);
+
+// ============================================
 // Survey Settings Schema
 // ============================================
 export const SurveySettingsSchema = object({
@@ -42,6 +57,8 @@ export const SurveySettingsSchema = object({
   randomizeQuestions: optional(boolean()),
   /** Allow participants to add their own suggestions/solutions */
   allowParticipantsToAddSuggestions: optional(boolean()),
+  /** Controls UX friction when adding new suggestions vs merging with existing */
+  suggestionMode: optional(SuggestionModeSchema),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
@@ -60,6 +77,8 @@ export const QuestionOverrideSettingsSchema = object({
   minEvaluationsPerQuestion: optional(number()),
   /** Randomize options order for THIS question */
   randomizeOptions: optional(boolean()),
+  /** Override suggestion mode for THIS question */
+  suggestionMode: optional(SuggestionModeSchema),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -239,7 +258,8 @@ export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
   minEvaluationsPerQuestion: 3,
   showQuestionPreview: false,
   randomizeQuestions: false,
-  allowParticipantsToAddSuggestions: false,
+  allowParticipantsToAddSuggestions: true,
+  suggestionMode: SuggestionMode.encourage,
 };
 
 export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
@@ -248,4 +268,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   allowSkipping: undefined,
   minEvaluationsPerQuestion: undefined,
   randomizeOptions: undefined,
+  suggestionMode: undefined,
 };
