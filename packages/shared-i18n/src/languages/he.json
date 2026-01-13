@@ -1961,5 +1961,11 @@
   "suggestionModeBalanced": "מאוזן",
   "suggestionModeRestrict": "עידוד מיזוג",
   "useSurveyDefault": "השתמש בברירת מחדל של הסקר",
-  "suggestionModeOverride": "מצב הצעות"
+  "suggestionModeOverride": "מצב הצעות",
+
+  "downloadData": "הורדה",
+  "exportSurveyData": "ייצוא נתוני סקר",
+  "includeTestData": "כלול נתוני בדיקה",
+  "includeTestDataHint": "אם מסומן, תשובות הבדיקה יכללו בייצוא",
+  "downloading": "מוריד..."
 }

@@ -11,6 +11,12 @@ import {
   SurveyDemographicQuestion,
   SurveyDemographicAnswer,
 } from '@/types/survey';
+import {
+  SurveyExportData,
+  QuestionExportData,
+  ExportStats,
+} from '@/types/export';
+import { getAllSolutionsSorted } from './queries';
 import { logger } from '@/lib/utils/logger';
 
 /** Collection name for surveys */
@@ -1213,4 +1219,122 @@ export async function getAllSurveyDemographicAnswers(
   );
 
   return answers;
+}
+
+/**
+ * Get all survey progress records for a survey (admin use)
+ */
+export async function getAllSurveyProgress(
+  surveyId: string
+): Promise<SurveyProgress[]> {
+  const db = getFirestoreAdmin();
+
+  const snapshot = await db
+    .collection(SURVEY_PROGRESS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .get();
+
+  const progress = snapshot.docs.map((doc) => doc.data() as SurveyProgress);
+
+  logger.info(
+    '[getAllSurveyProgress] Found',
+    progress.length,
+    'progress records for survey:',
+    surveyId
+  );
+
+  return progress;
+}
+
+// ============================================
+// SURVEY EXPORT OPERATIONS
+// ============================================
+
+export interface GetSurveyExportDataOptions {
+  /** Include test data in the export (default: false) */
+  includeTestData?: boolean;
+}
+
+/**
+ * Get complete survey data for export
+ * Fetches all survey data including questions, options, responses, and demographics
+ */
+export async function getSurveyExportData(
+  surveyId: string,
+  options: GetSurveyExportDataOptions = {}
+): Promise<SurveyExportData | null> {
+  const { includeTestData = false } = options;
+  const db = getFirestoreAdmin();
+
+  logger.info('[getSurveyExportData] Starting export for survey:', surveyId, 'includeTestData:', includeTestData);
+
+  // 1. Get survey configuration
+  const survey = await getSurveyById(surveyId);
+  if (!survey) {
+    logger.error('[getSurveyExportData] Survey not found:', surveyId);
+    return null;
+  }
+
+  // 2. Fetch all questions
+  const questions: QuestionExportData[] = [];
+  for (const questionId of survey.questionIds) {
+    const questionDoc = await db.collection(Collections.statements).doc(questionId).get();
+    if (questionDoc.exists) {
+      const question = questionDoc.data() as Statement;
+      // Get all options for this question, sorted by consensus
+      const optionsData = await getAllSolutionsSorted(questionId, 1000);
+      questions.push({
+        question,
+        options: optionsData,
+        optionCount: optionsData.length,
+      });
+    }
+  }
+
+  // 3. Get demographic questions
+  const demographicQuestions = await getAllSurveyDemographicQuestions(surveyId);
+
+  // 4. Get all progress records
+  const allProgress = await getAllSurveyProgress(surveyId);
+  const filteredProgress = includeTestData
+    ? allProgress
+    : allProgress.filter((p) => p.isTestData !== true);
+
+  // 5. Get all demographic answers
+  const allAnswers = await getAllSurveyDemographicAnswers(surveyId);
+  const filteredAnswers = includeTestData
+    ? allAnswers
+    : allAnswers.filter((a) => a.isTestData !== true);
+
+  // 6. Calculate stats
+  const totalResponses = filteredProgress.length;
+  const completedResponses = filteredProgress.filter((p) => p.isCompleted === true).length;
+  const completionRate = totalResponses > 0 ? Math.round((completedResponses / totalResponses) * 100) : 0;
+
+  const stats: ExportStats = {
+    totalResponses,
+    completedResponses,
+    completionRate,
+  };
+
+  logger.info('[getSurveyExportData] Export complete:', {
+    surveyId,
+    questionCount: questions.length,
+    demographicQuestionCount: demographicQuestions.length,
+    progressCount: filteredProgress.length,
+    answersCount: filteredAnswers.length,
+  });
+
+  return {
+    exportedAt: Date.now(),
+    includesTestData: includeTestData,
+    survey,
+    questions,
+    demographicQuestions,
+    responses: {
+      progress: filteredProgress,
+      demographicAnswers: filteredAnswers,
+    },
+    stats,
+  };
 }

@@ -1009,6 +1009,32 @@
   }
 }
 
+.downloadAction {
+  color: var(--btn-primary, #5f88e5);
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.1);
+    color: #4a6fc4;
+  }
+}
+
+// ============================================
+// EXPORT MODAL
+// ============================================
+
+.exportSurveyName {
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 1.5rem;
+}
+
+.exportOptions {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+}
+
 // ============================================
 // LANGUAGE SELECTOR
 // ============================================

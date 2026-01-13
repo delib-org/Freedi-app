@@ -1530,5 +1530,11 @@
   "suggestionModeBalanced": "Gebalanceerd",
   "suggestionModeRestrict": "Samenvoegen aanmoedigen",
   "useSurveyDefault": "Enquête-standaard gebruiken",
-  "suggestionModeOverride": "Suggestiemodus"
+  "suggestionModeOverride": "Suggestiemodus",
+
+  "downloadData": "Downloaden",
+  "exportSurveyData": "Enquêtegegevens exporteren",
+  "includeTestData": "Testgegevens opnemen",
+  "includeTestDataHint": "Indien aangevinkt, worden testantwoorden opgenomen in de export",
+  "downloading": "Downloaden..."
 }

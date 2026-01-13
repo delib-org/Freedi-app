@@ -345,12 +345,21 @@ function QuestionSettingsPanel({
         <label className={styles.settingLabel}>
           <input
             type="checkbox"
-            checked={questionSetting?.allowParticipantsToAddSuggestions ?? false}
+            checked={
+              surveySettings.allowParticipantsToAddSuggestions
+                ? true
+                : questionSetting?.allowParticipantsToAddSuggestions ?? true
+            }
             disabled={surveySettings.allowParticipantsToAddSuggestions}
             onChange={(e) => handleToggle('allowParticipantsToAddSuggestions', e.target.checked)}
           />
           <span>{t('allowParticipantsToAddSuggestionsQuestion') || 'Allow participants to add suggestions'}</span>
         </label>
+        {surveySettings.allowParticipantsToAddSuggestions && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+            {t('surveySettingEnabled') || '(Survey setting enabled)'}
+          </span>
+        )}
       </div>
 
       <div className={styles.settingRow}>

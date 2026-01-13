@@ -1541,5 +1541,11 @@
   "suggestionModeBalanced": "متوازن",
   "suggestionModeRestrict": "تشجيع الدمج",
   "useSurveyDefault": "استخدام الافتراضي للاستبيان",
-  "suggestionModeOverride": "وضع الاقتراحات"
+  "suggestionModeOverride": "وضع الاقتراحات",
+
+  "downloadData": "تحميل",
+  "exportSurveyData": "تصدير بيانات الاستبيان",
+  "includeTestData": "تضمين بيانات الاختبار",
+  "includeTestDataHint": "إذا تم التحديد، سيتم تضمين ردود الاختبار في التصدير",
+  "downloading": "جارٍ التحميل..."
 }

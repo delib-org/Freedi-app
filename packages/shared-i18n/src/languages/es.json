@@ -1530,5 +1530,11 @@
   "suggestionModeBalanced": "Equilibrado",
   "suggestionModeRestrict": "Fomentar fusión",
   "useSurveyDefault": "Usar predeterminado de la encuesta",
-  "suggestionModeOverride": "Modo de sugerencias"
+  "suggestionModeOverride": "Modo de sugerencias",
+
+  "downloadData": "Descargar",
+  "exportSurveyData": "Exportar datos de la encuesta",
+  "includeTestData": "Incluir datos de prueba",
+  "includeTestDataHint": "Si está marcado, las respuestas de prueba se incluirán en la exportación",
+  "downloading": "Descargando..."
 }

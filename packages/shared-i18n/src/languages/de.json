@@ -1530,5 +1530,11 @@
   "suggestionModeBalanced": "Ausgewogen",
   "suggestionModeRestrict": "Zusammenführen fördern",
   "useSurveyDefault": "Umfrage-Standard verwenden",
-  "suggestionModeOverride": "Vorschlagsmodus"
+  "suggestionModeOverride": "Vorschlagsmodus",
+
+  "downloadData": "Herunterladen",
+  "exportSurveyData": "Umfragedaten exportieren",
+  "includeTestData": "Testdaten einschließen",
+  "includeTestDataHint": "Wenn aktiviert, werden Testantworten in den Export einbezogen",
+  "downloading": "Wird heruntergeladen..."
 }

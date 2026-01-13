@@ -132,7 +132,7 @@ function SortableItem({
                 checked={
                   suggestionsOverridden
                     ? true
-                    : questionSetting?.allowParticipantsToAddSuggestions ?? false
+                    : questionSetting?.allowParticipantsToAddSuggestions ?? true
                 }
                 disabled={suggestionsOverridden}
                 onChange={(e) =>
