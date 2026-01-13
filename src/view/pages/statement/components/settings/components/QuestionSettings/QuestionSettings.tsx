@@ -4,7 +4,7 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { EvaluationUI, StatementType } from '@freedi/shared-types';
+import { EvaluationUI, StatementType, evaluationType } from '@freedi/shared-types';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
@@ -75,6 +75,45 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				property: 'askUserForASolutionBeforeEvaluation',
 				newValue: enabled,
 				settingsSection: 'questionSettings',
+			});
+		}
+
+		/**
+		 * Handle evaluation type change - sets both evaluationSettings.evaluationUI
+		 * and statementSettings.evaluationType for main app compatibility
+		 */
+		function handleEvaluationTypeChange(value: EvaluationUI) {
+			// Set the EvaluationUI for MC app and question settings
+			setEvaluationUIType(statement.statementId, value);
+
+			// Map EvaluationUI to evaluationType for main app Evaluation component
+			let evalType: evaluationType;
+			switch (value) {
+				case EvaluationUI.voting:
+				case EvaluationUI.checkbox:
+					evalType = evaluationType.singleLike;
+					break;
+				case EvaluationUI.suggestions:
+				case EvaluationUI.clustering:
+				default:
+					evalType = evaluationType.range;
+					break;
+			}
+
+			// Set statementSettings.evaluationType for main app
+			setStatementSettingToDB({
+				statement,
+				property: 'evaluationType',
+				newValue: evalType,
+				settingsSection: 'statementSettings',
+			});
+
+			// Also set enhancedEvaluation for backward compatibility
+			setStatementSettingToDB({
+				statement,
+				property: 'enhancedEvaluation',
+				newValue: evalType === evaluationType.range,
+				settingsSection: 'statementSettings',
 			});
 		}
 
@@ -261,7 +300,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						{ label: t('Approval'), value: EvaluationUI.checkbox, icon: <ConsentIcon />, toolTip: t('Consent') },
 						{ label: t('Cluster'), value: EvaluationUI.clustering, icon: <ClusterIcon />, toolTip: t('Clustering') },
 					]}
-					onClick={(value) => { setEvaluationUIType(statement.statementId, value as EvaluationUI); }}
+					onClick={(value) => { handleEvaluationTypeChange(value as EvaluationUI); }}
 					currentValue={statement.evaluationSettings?.evaluationUI}
 				/>
 				{isVoting && <VotingSettings />}

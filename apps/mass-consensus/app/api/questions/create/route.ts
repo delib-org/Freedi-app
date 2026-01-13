@@ -11,6 +11,7 @@ import {
   CutoffBy,
   createStatementObject,
   getRandomUID,
+  evaluationType,
 } from '@freedi/shared-types';
 import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
 import { verifyToken, extractBearerToken, isAdminOfStatement } from '@/lib/auth/verifyAdmin';
@@ -122,8 +123,9 @@ export async function POST(request: NextRequest) {
     const now = Date.now();
     const questionId = getRandomUID();
 
-    // Determine evaluation UI based on input
+    // Determine evaluation UI and statement evaluation type based on input
     const evaluationUI = mapEvaluationType(body.evaluationType);
+    const statementEvalType = mapToStatementEvaluationType(body.evaluationType);
 
     // Create the question statement
     const questionStatement = createStatementObject({
@@ -147,6 +149,8 @@ export async function POST(request: NextRequest) {
         enableAddVotingOption: true,
         hasChat: true,
         hasChildren: false, // Mass consensus questions don't have children
+        evaluationType: statementEvalType, // For main app evaluation component routing
+        enhancedEvaluation: statementEvalType === evaluationType.range, // Backward compatibility
       },
     });
 
@@ -298,5 +302,20 @@ function mapEvaluationType(type?: string): EvaluationUI {
     case 'suggestions':
     default:
       return EvaluationUI.suggestions;
+  }
+}
+
+/**
+ * Map MC evaluation type input to statementSettings.evaluationType
+ * This ensures the main app displays the correct evaluation component
+ */
+function mapToStatementEvaluationType(type?: string): evaluationType {
+  switch (type) {
+    case 'voting':
+    case 'checkbox':
+      return evaluationType.singleLike;
+    case 'suggestions':
+    default:
+      return evaluationType.range;
   }
 }
