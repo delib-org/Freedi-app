@@ -49,6 +49,9 @@ Sentry.init({
     // Vercel Live feedback instrumentation errors (null references during lifecycle events)
     "Cannot read properties of null (reading 'getItem')",
     "Cannot read properties of null (reading 'removeEventListener')",
+    // IndexedDB errors (common in Facebook in-app browser on iOS)
+    'Connection to Indexed Database server lost',
+    /IndexedDB.*lost/,
   ],
 
   // Don't send PII
