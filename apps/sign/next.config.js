@@ -48,24 +48,40 @@ const nextConfig = {
   },
 };
 
-// Skip Sentry wrapping if not configured
-const sentryConfigured = process.env.SENTRY_ORG && process.env.SENTRY_PROJECT && process.env.SENTRY_AUTH_TOKEN;
+// Check if Sentry is properly configured for source map uploads
+const sentryFullyConfigured =
+  process.env.SENTRY_ORG &&
+  process.env.SENTRY_PROJECT &&
+  process.env.SENTRY_AUTH_TOKEN &&
+  process.env.SENTRY_ORG.length > 0 &&
+  process.env.SENTRY_PROJECT.length > 0 &&
+  process.env.SENTRY_AUTH_TOKEN.length > 0;
 
-module.exports = sentryConfigured ? withSentryConfig(nextConfig, {
+module.exports = withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
-  org: process.env.SENTRY_ORG,
-  project: process.env.SENTRY_PROJECT,
+  org: process.env.SENTRY_ORG || 'placeholder',
+  project: process.env.SENTRY_PROJECT || 'placeholder',
 
   // Only print logs for uploading source maps in CI
   silent: !process.env.CI,
+
+  // Disable source map uploads if Sentry is not fully configured
+  sourcemaps: {
+    disable: !sentryFullyConfigured,
+  },
+
+  // Skip release creation if not configured
+  release: {
+    create: sentryFullyConfigured,
+  },
 
   // For all available options, see:
   // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: true,
+  widenClientFileUpload: sentryFullyConfigured,
 
   // Automatically annotate React components to show their full name in breadcrumbs and session replay
   reactComponentAnnotation: {
@@ -77,5 +93,5 @@ module.exports = sentryConfigured ? withSentryConfig(nextConfig, {
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
-}) : nextConfig;
+});
 // Build trigger: 1765803738
