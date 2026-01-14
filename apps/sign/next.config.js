@@ -57,41 +57,20 @@ const sentryFullyConfigured =
   process.env.SENTRY_PROJECT.length > 0 &&
   process.env.SENTRY_AUTH_TOKEN.length > 0;
 
-module.exports = withSentryConfig(nextConfig, {
-  // For all available options, see:
-  // https://github.com/getsentry/sentry-webpack-plugin#options
-
-  org: process.env.SENTRY_ORG || 'placeholder',
-  project: process.env.SENTRY_PROJECT || 'placeholder',
-
-  // Only print logs for uploading source maps in CI
-  silent: !process.env.CI,
-
-  // Disable source map uploads if Sentry is not fully configured
-  sourcemaps: {
-    disable: !sentryFullyConfigured,
-  },
-
-  // Skip release creation if not configured
-  release: {
-    create: sentryFullyConfigured,
-  },
-
-  // For all available options, see:
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
-
-  // Upload a larger set of source maps for prettier stack traces (increases build time)
-  widenClientFileUpload: sentryFullyConfigured,
-
-  // Automatically annotate React components to show their full name in breadcrumbs and session replay
-  reactComponentAnnotation: {
-    enabled: true,
-  },
-
-  // Hides source maps from generated client bundles
-  hideSourceMaps: true,
-
-  // Automatically tree-shake Sentry logger statements to reduce bundle size
-  disableLogger: true,
-});
-// Build trigger: 1765803738
+// Only use withSentryConfig when Sentry is fully configured
+// Otherwise, export plain nextConfig to avoid build failures
+if (sentryFullyConfigured) {
+  module.exports = withSentryConfig(nextConfig, {
+    org: process.env.SENTRY_ORG,
+    project: process.env.SENTRY_PROJECT,
+    silent: !process.env.CI,
+    widenClientFileUpload: true,
+    reactComponentAnnotation: {
+      enabled: true,
+    },
+    hideSourceMaps: true,
+    disableLogger: true,
+  });
+} else {
+  module.exports = nextConfig;
+}
