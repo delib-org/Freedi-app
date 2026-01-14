@@ -82,10 +82,11 @@ export async function POST(
       subscriberId,
       email: email.toLowerCase(),
       statementId,
-      userId: userId || undefined,
       createdAt: Date.now(),
       isActive: true,
       source: 'mass-consensus',
+      // Only include userId if provided (Firestore rejects undefined values)
+      ...(userId && { userId }),
     };
 
     await db.collection(EMAIL_SUBSCRIBERS_COLLECTION).doc(subscriberId).set(subscription);
