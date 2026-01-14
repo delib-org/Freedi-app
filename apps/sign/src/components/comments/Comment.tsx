@@ -230,7 +230,7 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
               onClick={handleCancelEdit}
               disabled={isSaving}
             >
-              {t('Cancel')}
+              {t('Cancel')}4
             </button>
             <button
               type="button"
