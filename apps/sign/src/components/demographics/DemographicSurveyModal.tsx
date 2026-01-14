@@ -75,10 +75,12 @@ export default function DemographicSurveyModal({
     }
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
     // Only allow close if not required or if user is admin
     if (!status.isRequired || isAdmin) {
-      closeSurveyModal();
+      // Save acknowledgement when dismissing (even without answers)
+      // This marks the survey as "seen" so it won't show again
+      await submitAnswers(documentId, []);
     }
   };
 
