@@ -184,6 +184,7 @@ export default function SurveyQuestionWrapper({
       fetch(`/api/surveys/${survey.surveyId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           currentQuestionIndex: currentIndex + 1,
           completedQuestionId: questionId,

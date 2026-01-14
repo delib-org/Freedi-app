@@ -79,7 +79,7 @@ export default [
 			'no-duplicate-case': 'error',
 			'newline-before-return': 'error',
 			'import/newline-after-import': ['error', { count: 1 }],
-			'no-console': ['error', { allow: ['error', 'info'] }],
+			'no-console': ['error', { allow: ['error', 'warn', 'info'] }],
 			'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 0, maxBOF: 0 }],
 		},
 	},

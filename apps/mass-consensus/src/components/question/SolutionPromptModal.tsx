@@ -7,6 +7,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import type { FlowState, SimilarCheckResponse, MultiSuggestionResponse, SplitSuggestion } from '@/types/api';
+import { SuggestionMode } from '@freedi/shared-types';
 import SimilarSolutions from './SimilarSolutions';
 import EnhancedLoader from './EnhancedLoader';
 import SuccessMessage from './SuccessMessage';
@@ -23,6 +24,8 @@ interface SolutionPromptModalProps {
   onSubmitSuccess: () => void;
   title?: string;
   questionText?: string;
+  /** Controls UX friction when adding new suggestions vs merging */
+  suggestionMode?: SuggestionMode;
 }
 
 const MAX_ROWS = 8;
@@ -36,6 +39,7 @@ export default function SolutionPromptModal({
   onSubmitSuccess,
   title = 'Add Your Solution',
   questionText,
+  suggestionMode = SuggestionMode.encourage,
 }: SolutionPromptModalProps) {
   const { t } = useTranslation();
   const [text, setText] = useState('');
@@ -487,6 +491,7 @@ export default function SolutionPromptModal({
             onSelect={handleSelectSolution}
             onMerge={handleMergeSolution}
             onBack={handleBack}
+            suggestionMode={suggestionMode}
           />
         )}
 

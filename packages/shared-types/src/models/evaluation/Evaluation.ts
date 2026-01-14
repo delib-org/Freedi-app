@@ -18,6 +18,10 @@ export const EvaluationSchema = object({
 	updatedAt: number(),
 	evaluation: number(),
 	evaluator: optional(UserSchema),
+	/** Whether this evaluation was collected during test/pilot mode */
+	isTestData: optional(boolean()),
+	/** Timestamp when this data was retroactively marked as test data (if applicable) */
+	markedAsTestAt: optional(number()),
 });
 
 export type Evaluation = InferOutput<typeof EvaluationSchema>;
@@ -102,6 +106,11 @@ export const UserEvaluationSchema = object({
     evaluatedCount: optional(number()),
     totalOptionsAvailable: optional(number()),
     completedAt: optional(number()),
+
+    /** Whether this evaluation was collected during test/pilot mode */
+    isTestData: optional(boolean()),
+    /** Timestamp when this data was retroactively marked as test data (if applicable) */
+    markedAsTestAt: optional(number()),
   });
 
 export type UserEvaluation = InferOutput<typeof UserEvaluationSchema>;
