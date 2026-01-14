@@ -2,14 +2,306 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { isRTL } from '@freedi/shared-i18n';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   DemographicMode,
   SurveyTriggerMode,
   SignDemographicQuestion,
   UserDemographicQuestionType,
   DemographicOption,
+  SingleChoiceDisplayType,
 } from '@/types/demographics';
 import styles from './DemographicSettings.module.scss';
+
+// Sortable Question Item Component
+interface SortableQuestionItemProps {
+  question: SignDemographicQuestion;
+  index: number;
+  mode: DemographicMode;
+  isEditing: boolean;
+  questionTypes: { value: UserDemographicQuestionType; label: string }[];
+  editQuestion: string;
+  editType: UserDemographicQuestionType;
+  editOptions: DemographicOption[];
+  editOptionText: string;
+  editIsRequired: boolean;
+  editDisplayType: SingleChoiceDisplayType;
+  loading: boolean;
+  t: (key: string) => string;
+  onStartEdit: (question: SignDemographicQuestion) => void;
+  onCancelEdit: () => void;
+  onSaveEdit: () => void;
+  onDelete: (questionId: string) => void;
+  setEditQuestion: (value: string) => void;
+  setEditType: (value: UserDemographicQuestionType) => void;
+  setEditOptions: (options: DemographicOption[]) => void;
+  setEditOptionText: (value: string) => void;
+  setEditIsRequired: (value: boolean) => void;
+  setEditDisplayType: (value: SingleChoiceDisplayType) => void;
+  onAddEditOption: () => void;
+  onRemoveEditOption: (index: number) => void;
+}
+
+function SortableQuestionItem({
+  question,
+  index,
+  mode,
+  isEditing,
+  questionTypes,
+  editQuestion,
+  editType,
+  editOptions,
+  editOptionText,
+  editIsRequired,
+  editDisplayType,
+  loading,
+  t,
+  onStartEdit,
+  onCancelEdit,
+  onSaveEdit,
+  onDelete,
+  setEditQuestion,
+  setEditType,
+  setEditOptions,
+  setEditOptionText,
+  setEditIsRequired,
+  setEditDisplayType,
+  onAddEditOption,
+  onRemoveEditOption,
+}: SortableQuestionItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: question.userQuestionId || `temp-${index}` });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={`${styles.questionItem} ${isDragging ? styles.dragging : ''}`}
+    >
+      {isEditing ? (
+        // Edit mode
+        <div className={styles.editQuestionForm}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>{t('Question Text')}</label>
+            <input
+              type="text"
+              className={styles.formInput}
+              value={editQuestion}
+              onChange={(e) => setEditQuestion(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel}>{t('Question Type')}</label>
+            <select
+              className={styles.formSelect}
+              value={editType}
+              onChange={(e) => {
+                setEditType(e.target.value as UserDemographicQuestionType);
+                if (e.target.value === 'text' || e.target.value === 'textarea') {
+                  setEditOptions([]);
+                }
+              }}
+            >
+              {questionTypes.map((qt) => (
+                <option key={qt.value} value={qt.value}>
+                  {qt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {(editType === 'radio' || editType === 'checkbox') && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>{t('Options')}</label>
+              <div className={styles.optionsList}>
+                {editOptions.map((option, optIdx) => (
+                  <div key={optIdx} className={styles.optionItem}>
+                    <span>{option.option}</span>
+                    <button
+                      type="button"
+                      className={styles.removeOptionButton}
+                      onClick={() => onRemoveEditOption(optIdx)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <div className={styles.addOptionRow}>
+                <input
+                  type="text"
+                  className={styles.formInput}
+                  value={editOptionText}
+                  onChange={(e) => setEditOptionText(e.target.value)}
+                  placeholder={t('Add option')}
+                  onKeyPress={(e) => e.key === 'Enter' && onAddEditOption()}
+                />
+                <button
+                  type="button"
+                  className={styles.addOptionButton}
+                  onClick={onAddEditOption}
+                >
+                  {t('Add')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {editType === 'radio' && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>{t('Display Style')}</label>
+              <div className={styles.displayTypeSelector}>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${editDisplayType === 'radio' ? styles.active : ''}`}
+                  onClick={() => setEditDisplayType('radio')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="4" fill="currentColor" />
+                  </svg>
+                  {t('Radio Buttons')}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${editDisplayType === 'dropdown' ? styles.active : ''}`}
+                  onClick={() => setEditDisplayType('dropdown')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                    <path d="M8 12h8" />
+                    <path d="M15 10l2 2-2 2" />
+                  </svg>
+                  {t('Dropdown')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className={styles.formGroup}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={editIsRequired}
+                onChange={(e) => setEditIsRequired(e.target.checked)}
+              />
+              {t('This question is required')}
+            </label>
+          </div>
+
+          <div className={styles.editActions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onCancelEdit}
+            >
+              {t('Cancel')}
+            </button>
+            <button
+              type="button"
+              className={styles.saveEditButton}
+              onClick={onSaveEdit}
+              disabled={!editQuestion.trim() || loading}
+            >
+              {loading ? t('Saving...') : t('Save')}
+            </button>
+          </div>
+        </div>
+      ) : (
+        // View mode
+        <>
+          {mode === 'custom' && !question.isInherited && (
+            <button
+              type="button"
+              className={styles.dragHandle}
+              {...attributes}
+              {...listeners}
+              aria-label={t('Drag to reorder')}
+              title={t('Drag to reorder')}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="9" cy="6" r="1.5" />
+                <circle cx="15" cy="6" r="1.5" />
+                <circle cx="9" cy="12" r="1.5" />
+                <circle cx="15" cy="12" r="1.5" />
+                <circle cx="9" cy="18" r="1.5" />
+                <circle cx="15" cy="18" r="1.5" />
+              </svg>
+            </button>
+          )}
+          <div className={styles.questionInfo}>
+            <span className={styles.questionNumber}>{index + 1}.</span>
+            <div className={styles.questionContent}>
+              <p className={styles.questionText}>{question.question}</p>
+              <div className={styles.questionMeta}>
+                <span className={styles.questionType}>
+                  {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
+                </span>
+                {question.type === 'radio' && question.displayType === 'dropdown' && (
+                  <span className={styles.displayTypeBadge}>{t('Dropdown')}</span>
+                )}
+                {question.required && (
+                  <span className={styles.requiredBadge}>{t('Required')}</span>
+                )}
+                {question.isInherited && (
+                  <span className={styles.inheritedBadge}>{t('Inherited')}</span>
+                )}
+              </div>
+            </div>
+          </div>
+          {mode === 'custom' && !question.isInherited && (
+            <div className={styles.questionActions}>
+              <button
+                type="button"
+                className={styles.editButton}
+                onClick={() => onStartEdit(question)}
+              >
+                {t('Edit')}
+              </button>
+              <button
+                type="button"
+                className={styles.deleteButton}
+                onClick={() => onDelete(question.userQuestionId || '')}
+              >
+                {t('Delete')}
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </li>
+  );
+}
 
 interface DemographicSettingsProps {
   documentId: string;
@@ -56,7 +348,8 @@ export default function DemographicSettings({
   onRequiredChange,
   onSurveyTriggerChange,
 }: DemographicSettingsProps) {
-  const { t } = useTranslation();
+  const { t, currentLanguage } = useTranslation();
+  const rtl = isRTL(currentLanguage);
   const [questions, setQuestions] = useState<SignDemographicQuestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -68,6 +361,16 @@ export default function DemographicSettings({
   const [newOptions, setNewOptions] = useState<DemographicOption[]>([]);
   const [newOptionText, setNewOptionText] = useState('');
   const [isRequired, setIsRequired] = useState(false);
+  const [newDisplayType, setNewDisplayType] = useState<SingleChoiceDisplayType>('radio');
+
+  // Edit question state
+  const [editingQuestion, setEditingQuestion] = useState<SignDemographicQuestion | null>(null);
+  const [editQuestion, setEditQuestion] = useState('');
+  const [editType, setEditType] = useState<UserDemographicQuestionType>(UserDemographicQuestionType.text);
+  const [editOptions, setEditOptions] = useState<DemographicOption[]>([]);
+  const [editOptionText, setEditOptionText] = useState('');
+  const [editIsRequired, setEditIsRequired] = useState(false);
+  const [editDisplayType, setEditDisplayType] = useState<SingleChoiceDisplayType>('radio');
 
   // Handle mode change with auto-save
   const handleModeChange = async (newMode: DemographicMode) => {
@@ -158,6 +461,7 @@ export default function DemographicSettings({
           type: newType,
           options: (newType === 'radio' || newType === 'checkbox') ? newOptions : [],
           required: isRequired,
+          displayType: newType === 'radio' ? newDisplayType : undefined,
         }),
       });
 
@@ -167,6 +471,7 @@ export default function DemographicSettings({
         setNewType(UserDemographicQuestionType.text);
         setNewOptions([]);
         setIsRequired(false);
+        setNewDisplayType('radio');
         setShowEditor(false);
         await fetchQuestions();
       } else {
@@ -201,6 +506,137 @@ export default function DemographicSettings({
     }
   };
 
+  // Edit question handlers
+  const handleStartEdit = (question: SignDemographicQuestion) => {
+    setEditingQuestion(question);
+    setEditQuestion(question.question || '');
+    setEditType(question.type || UserDemographicQuestionType.text);
+    setEditOptions(question.options || []);
+    setEditIsRequired(question.required || false);
+    setEditDisplayType(question.displayType || 'radio');
+  };
+
+  const handleCancelEdit = () => {
+    setEditingQuestion(null);
+    setEditQuestion('');
+    setEditType(UserDemographicQuestionType.text);
+    setEditOptions([]);
+    setEditOptionText('');
+    setEditIsRequired(false);
+    setEditDisplayType('radio');
+  };
+
+  const handleAddEditOption = () => {
+    if (editOptionText.trim()) {
+      setEditOptions([...editOptions, { option: editOptionText.trim() }]);
+      setEditOptionText('');
+    }
+  };
+
+  const handleRemoveEditOption = (index: number) => {
+    setEditOptions(editOptions.filter((_, i) => i !== index));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingQuestion?.userQuestionId || !editQuestion.trim()) return;
+
+    try {
+      setLoading(true);
+      const response = await fetch(
+        `/api/demographics/questions/${documentId}/${editingQuestion.userQuestionId}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: editQuestion.trim(),
+            type: editType,
+            options: (editType === 'radio' || editType === 'checkbox') ? editOptions : [],
+            required: editIsRequired,
+            order: editingQuestion.order,
+            displayType: editType === 'radio' ? editDisplayType : undefined,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        handleCancelEdit();
+        await fetchQuestions();
+      } else {
+        const errorData = await response.json();
+        console.error('Failed to update question:', errorData);
+        alert(t('Failed to update question') + ': ' + (errorData.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to update question:', error);
+      alert(t('Failed to update question'));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // DnD sensors configuration
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Handle drag end for reordering
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = questions.findIndex(
+      (q) => (q.userQuestionId || `temp-${questions.indexOf(q)}`) === active.id
+    );
+    const newIndex = questions.findIndex(
+      (q) => (q.userQuestionId || `temp-${questions.indexOf(q)}`) === over.id
+    );
+
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    // Optimistically update UI
+    const newQuestions = arrayMove(questions, oldIndex, newIndex);
+    setQuestions(newQuestions);
+
+    // Persist order changes to server
+    try {
+      setLoading(true);
+
+      // Update all questions with new order values
+      const updatePromises = newQuestions.map((question, index) => {
+        if (!question.userQuestionId) return Promise.resolve();
+
+        return fetch(`/api/demographics/questions/${documentId}/${question.userQuestionId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            question: question.question,
+            type: question.type,
+            options: question.options || [],
+            required: question.required,
+            order: index,
+          }),
+        });
+      });
+
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error('Failed to reorder questions:', error);
+      alert(t('Failed to reorder questions'));
+      // Revert on error
+      await fetchQuestions();
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const modeOptions: { value: DemographicMode; label: string; description: string }[] = [
     {
       value: 'disabled',
@@ -227,7 +663,7 @@ export default function DemographicSettings({
   ];
 
   return (
-    <div className={styles.demographicSettings}>
+    <div className={styles.demographicSettings} dir={rtl ? 'rtl' : 'ltr'}>
       {/* Mode Selection */}
       <div className={styles.modeSelector}>
         {modeOptions.map((option) => (
@@ -328,33 +764,49 @@ export default function DemographicSettings({
                 : t('No custom questions yet. Add your first question above.')}
             </p>
           ) : (
-            <ul className={styles.questionsListItems}>
-              {questions.map((question, index) => (
-                <li key={question.userQuestionId || index} className={styles.questionItem}>
-                  <div className={styles.questionInfo}>
-                    <span className={styles.questionNumber}>{index + 1}.</span>
-                    <div className={styles.questionContent}>
-                      <p className={styles.questionText}>{question.question}</p>
-                      <span className={styles.questionType}>
-                        {questionTypes.find((qt) => qt.value === question.type)?.label || question.type}
-                        {question.isInherited && (
-                          <span className={styles.inheritedBadge}>{t('Inherited')}</span>
-                        )}
-                      </span>
-                    </div>
-                  </div>
-                  {mode === 'custom' && !question.isInherited && (
-                    <button
-                      type="button"
-                      className={styles.deleteButton}
-                      onClick={() => handleDeleteQuestion(question.userQuestionId || '')}
-                    >
-                      {t('Delete')}
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={questions.map((q, i) => q.userQuestionId || `temp-${i}`)}
+                strategy={verticalListSortingStrategy}
+              >
+                <ul className={styles.questionsListItems}>
+                  {questions.map((question, index) => (
+                    <SortableQuestionItem
+                      key={question.userQuestionId || index}
+                      question={question}
+                      index={index}
+                      mode={mode}
+                      isEditing={editingQuestion?.userQuestionId === question.userQuestionId}
+                      questionTypes={questionTypes}
+                      editQuestion={editQuestion}
+                      editType={editType}
+                      editOptions={editOptions}
+                      editOptionText={editOptionText}
+                      editIsRequired={editIsRequired}
+                      editDisplayType={editDisplayType}
+                      loading={loading}
+                      t={t}
+                      onStartEdit={handleStartEdit}
+                      onCancelEdit={handleCancelEdit}
+                      onSaveEdit={handleSaveEdit}
+                      onDelete={handleDeleteQuestion}
+                      setEditQuestion={setEditQuestion}
+                      setEditType={setEditType}
+                      setEditOptions={setEditOptions}
+                      setEditOptionText={setEditOptionText}
+                      setEditIsRequired={setEditIsRequired}
+                      setEditDisplayType={setEditDisplayType}
+                      onAddEditOption={handleAddEditOption}
+                      onRemoveEditOption={handleRemoveEditOption}
+                    />
+                  ))}
+                </ul>
+              </SortableContext>
+            </DndContext>
           )}
         </div>
       )}
@@ -428,6 +880,38 @@ export default function DemographicSettings({
                   onClick={handleAddOption}
                 >
                   {t('Add')}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Display type for radio questions */}
+          {newType === 'radio' && (
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>{t('Display Style')}</label>
+              <div className={styles.displayTypeSelector}>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${newDisplayType === 'radio' ? styles.active : ''}`}
+                  onClick={() => setNewDisplayType('radio')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="4" fill="currentColor" />
+                  </svg>
+                  {t('Radio Buttons')}
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.displayTypeOption} ${newDisplayType === 'dropdown' ? styles.active : ''}`}
+                  onClick={() => setNewDisplayType('dropdown')}
+                >
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="3" y="6" width="18" height="12" rx="2" />
+                    <path d="M8 12h8" />
+                    <path d="M15 10l2 2-2 2" />
+                  </svg>
+                  {t('Dropdown')}
                 </button>
               </div>
             </div>

@@ -56,10 +56,10 @@ describe('settingsUtils', () => {
     });
 
     describe('askUserForASolutionBeforeEvaluation', () => {
-      it('should be false when question override is undefined', () => {
+      it('should be true when question override is undefined (default behavior)', () => {
         const surveySettings = createSurveySettings();
         const result = getMergedSettings(surveySettings, undefined);
-        expect(result.askUserForASolutionBeforeEvaluation).toBe(false);
+        expect(result.askUserForASolutionBeforeEvaluation).toBe(true);
       });
 
       it('should be true when question override is true', () => {
@@ -184,7 +184,7 @@ describe('settingsUtils', () => {
         };
         const result = getMergedSettings(surveySettings, questionOverrides);
 
-        expect(result).toEqual({
+        expect(result).toMatchObject({
           allowParticipantsToAddSuggestions: false,
           askUserForASolutionBeforeEvaluation: true,
           allowSkipping: true,

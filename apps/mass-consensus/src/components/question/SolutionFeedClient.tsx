@@ -59,7 +59,7 @@ export default function SolutionFeedClient({
   // Falls back to question-level setting if not in survey context
   const questionSettingsLegacy = question.questionSettings as { askUserForASolutionBeforeEvaluation?: boolean } | undefined;
   const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ??
-    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? false;
+    questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true;
 
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;

@@ -20,6 +20,14 @@ interface SurveyStats {
   testCompletionCount?: number;
 }
 
+interface PilotDataCounts {
+  progressCount: number;
+  demographicAnswerCount: number;
+  evaluationCount: number;
+  userEvaluationCount: number;
+  total: number;
+}
+
 /**
  * Component for managing survey status (draft/active/closed) and test mode
  */
@@ -30,10 +38,15 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
   const [isUpdating, setIsUpdating] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [showClearTestDataConfirm, setShowClearTestDataConfirm] = useState(false);
+  const [showMarkAsPilotConfirm, setShowMarkAsPilotConfirm] = useState(false);
+  const [showUnmarkPilotConfirm, setShowUnmarkPilotConfirm] = useState(false);
   const [stats, setStats] = useState<SurveyStats | null>(null);
   const [testDataCounts, setTestDataCounts] = useState<TestDataCounts | null>(null);
+  const [pilotDataCounts, setPilotDataCounts] = useState<PilotDataCounts | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isClearingTestData, setIsClearingTestData] = useState(false);
+  const [isMarkingAsPilot, setIsMarkingAsPilot] = useState(false);
+  const [isUnmarkingPilot, setIsUnmarkingPilot] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -72,11 +85,29 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     }
   }, [survey.surveyId, refreshToken]);
 
-  // Fetch stats and test data counts on mount
+  const fetchPilotDataCounts = useCallback(async () => {
+    try {
+      const token = await refreshToken();
+      if (!token) return;
+
+      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setPilotDataCounts(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch pilot data counts:', err);
+    }
+  }, [survey.surveyId, refreshToken]);
+
+  // Fetch stats, test data counts, and pilot data counts on mount
   useEffect(() => {
     fetchStats();
     fetchTestDataCounts();
-  }, [fetchStats, fetchTestDataCounts]);
+    fetchPilotDataCounts();
+  }, [fetchStats, fetchTestDataCounts, fetchPilotDataCounts]);
 
   const handleStatusChange = async (newStatus: SurveyStatus) => {
     if (newStatus === SurveyStatus.closed && !showCloseConfirm) {
@@ -199,6 +230,72 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
     }
   };
 
+  const handleMarkAllAsPilot = async () => {
+    setIsMarkingAsPilot(true);
+    setError(null);
+
+    try {
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+
+        return;
+      }
+
+      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to mark data as pilot');
+      }
+
+      // Refresh all counts
+      await Promise.all([fetchStats(), fetchTestDataCounts(), fetchPilotDataCounts()]);
+      setShowMarkAsPilotConfirm(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to mark data as pilot');
+    } finally {
+      setIsMarkingAsPilot(false);
+    }
+  };
+
+  const handleUnmarkPilotData = async () => {
+    setIsUnmarkingPilot(true);
+    setError(null);
+
+    try {
+      const token = await refreshToken();
+      if (!token) {
+        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+
+        return;
+      }
+
+      const response = await fetch(`/api/surveys/${survey.surveyId}/test-data/mark-all`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to restore pilot data');
+      }
+
+      // Refresh all counts
+      await Promise.all([fetchStats(), fetchTestDataCounts(), fetchPilotDataCounts()]);
+      setShowUnmarkPilotConfirm(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to restore pilot data');
+    } finally {
+      setIsUnmarkingPilot(false);
+    }
+  };
+
   return (
     <div className={styles.statusManager}>
       <h2>{t('surveyStatus')}</h2>
@@ -256,6 +353,54 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
             {t('testModeWarning') || 'Responses collected now will be marked as test data.'}
           </div>
         )}
+
+        {/* Pilot Data Section */}
+        <div className={styles.pilotDataSection}>
+          <div className={styles.pilotDataHeader}>
+            <h4>{t('pilotData') || 'Pilot Data Management'}</h4>
+            {(pilotDataCounts?.total ?? 0) > 0 && (
+              <span className={styles.pilotDataBadge}>
+                {pilotDataCounts?.total} {t('marked') || 'marked'}
+              </span>
+            )}
+          </div>
+          <p className={styles.pilotDataDescription}>
+            {t('pilotDataDescription') || 'Mark all data collected up to now as pilot/test data. This is useful when transitioning from a pilot phase to live data collection. Data can be unmarked later if needed.'}
+          </p>
+          <div className={styles.pilotDataActions}>
+            {stats && stats.responseCount > 0 && (
+              <button
+                className={styles.markAsPilotButton}
+                onClick={() => setShowMarkAsPilotConfirm(true)}
+                disabled={isMarkingAsPilot}
+              >
+                {t('markAllAsPilot') || 'Mark All Current Data as Pilot'}
+              </button>
+            )}
+            {(pilotDataCounts?.total ?? 0) > 0 && (
+              <button
+                className={styles.unmarkPilotButton}
+                onClick={() => setShowUnmarkPilotConfirm(true)}
+                disabled={isUnmarkingPilot}
+              >
+                {t('restorePilotData') || 'Restore Pilot Data to Live'}
+              </button>
+            )}
+          </div>
+          {(pilotDataCounts?.total ?? 0) > 0 && (
+            <div className={styles.pilotDataStats}>
+              <span className={styles.pilotDataCountItem}>
+                {pilotDataCounts?.progressCount || 0} {t('responses')}
+              </span>
+              <span className={styles.pilotDataCountItem}>
+                {pilotDataCounts?.demographicAnswerCount || 0} {t('demographicAnswers') || 'demographics'}
+              </span>
+              <span className={styles.pilotDataCountItem}>
+                {pilotDataCounts?.evaluationCount || 0} {t('evaluations') || 'evaluations'}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats Section */}
@@ -370,6 +515,62 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
                 disabled={isClearingTestData}
               >
                 {isClearingTestData ? (t('clearing') || 'Clearing...') : (t('clearTestData') || 'Clear Test Data')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mark All as Pilot Confirmation Modal */}
+      {showMarkAsPilotConfirm && (
+        <div className={styles.confirmModal}>
+          <div className={styles.confirmContent}>
+            <h3>{t('markAllAsPilot') || 'Mark All as Pilot Data'}</h3>
+            <p>{t('markAsPilotConfirm') || 'This will mark all current live data as pilot/test data. The data will still exist but will be excluded from statistics and exports by default.'}</p>
+            <p className={styles.testDataPreview}>
+              {stats?.responseCount || 0} {t('responses')} | {stats?.completionCount || 0} {t('completions')}
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.cancelButton}
+                onClick={() => setShowMarkAsPilotConfirm(false)}
+              >
+                {t('cancel')}
+              </button>
+              <button
+                className={styles.markAsPilotButton}
+                onClick={handleMarkAllAsPilot}
+                disabled={isMarkingAsPilot}
+              >
+                {isMarkingAsPilot ? (t('marking') || 'Marking...') : (t('confirmMarkAsPilot') || 'Mark as Pilot')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Unmark Pilot Data Confirmation Modal */}
+      {showUnmarkPilotConfirm && (
+        <div className={styles.confirmModal}>
+          <div className={styles.confirmContent}>
+            <h3>{t('restorePilotData') || 'Restore Pilot Data'}</h3>
+            <p>{t('restorePilotDataConfirm') || 'This will restore all retroactively marked pilot data back to live data. Only data that was manually marked as pilot will be restored.'}</p>
+            <p className={styles.testDataPreview}>
+              {pilotDataCounts?.total || 0} {t('itemsToRestore') || 'items to restore'}
+            </p>
+            <div className={styles.confirmActions}>
+              <button
+                className={styles.cancelButton}
+                onClick={() => setShowUnmarkPilotConfirm(false)}
+              >
+                {t('cancel')}
+              </button>
+              <button
+                className={styles.markAsPilotButton}
+                onClick={handleUnmarkPilotData}
+                disabled={isUnmarkingPilot}
+              >
+                {isUnmarkingPilot ? (t('restoring') || 'Restoring...') : (t('confirmRestore') || 'Restore to Live')}
               </button>
             </div>
           </div>

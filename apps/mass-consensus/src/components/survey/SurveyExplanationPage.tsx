@@ -73,6 +73,7 @@ export default function SurveyExplanationPage({
     fetch(`/api/surveys/${survey.surveyId}/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({
         currentQuestionIndex: currentFlowIndex + 1,
         isCompleted: isLastItem,

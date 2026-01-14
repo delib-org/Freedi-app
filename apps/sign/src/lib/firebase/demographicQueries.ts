@@ -155,6 +155,7 @@ export async function getUserDemographicAnswers(
 
 /**
  * Check if user has completed the required survey
+ * Only REQUIRED questions are considered for completion - optional questions don't block interactions
  */
 export async function checkSurveyCompletion(
   documentId: string,
@@ -176,17 +177,29 @@ export async function checkSurveyCompletion(
   try {
     const questionsWithAnswers = await getUserDemographicAnswers(documentId, userId, topParentId, mode);
 
-    const totalQuestions = questionsWithAnswers.length;
-    const answeredQuestions = questionsWithAnswers.filter(
+    // FIX: Only count REQUIRED questions for completion check
+    // Non-required questions should not block user interactions
+    const requiredQuestions = questionsWithAnswers.filter((q) => q.required === true);
+    const totalRequiredQuestions = requiredQuestions.length;
+
+    const answeredRequiredQuestions = requiredQuestions.filter(
       (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
     ).length;
 
-    const missingQuestionIds = questionsWithAnswers
+    // Get IDs of unanswered REQUIRED questions only
+    const missingQuestionIds = requiredQuestions
       .filter((q) => q.userAnswer === undefined && (!q.userAnswerOptions || q.userAnswerOptions.length === 0))
       .map((q) => q.userQuestionId)
       .filter(Boolean) as string[];
 
-    const isComplete = totalQuestions === 0 || answeredQuestions === totalQuestions;
+    // Survey is complete if all REQUIRED questions are answered (optional questions don't matter)
+    const isComplete = totalRequiredQuestions === 0 || answeredRequiredQuestions === totalRequiredQuestions;
+
+    // Return total counts for all questions (for UI display purposes)
+    const totalQuestions = questionsWithAnswers.length;
+    const answeredQuestions = questionsWithAnswers.filter(
+      (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
+    ).length;
 
     return {
       isComplete,
@@ -222,7 +235,7 @@ export async function saveDemographicQuestion(
 
     // Cast the scope as the delib-npm type only accepts 'group' | 'statement' but we use 'sign'
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const questionData: UserDemographicQuestion = {
+    const questionData: SignDemographicQuestion = {
       question: question.question || '',
       type: question.type || UserDemographicQuestionType.text,
       options: question.options || [],
@@ -232,7 +245,8 @@ export async function saveDemographicQuestion(
       scope: SIGN_SCOPE as 'group' | 'statement',
       order: question.order || 0,
       required: question.required || false,
-    } as UserDemographicQuestion;
+      displayType: question.displayType, // For radio questions: 'radio' or 'dropdown'
+    } as SignDemographicQuestion;
 
     await db
       .collection(Collections.userDemographicQuestions)

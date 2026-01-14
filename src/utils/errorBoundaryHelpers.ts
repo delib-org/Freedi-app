@@ -95,6 +95,54 @@ ${errorInfo.componentStack}
 }
 
 /**
+ * Checks if an error is related to failed chunk/module loading (stale cache issue)
+ */
+export function isChunkLoadError(error: Error): boolean {
+  const message = error.message.toLowerCase();
+  const name = error.name.toLowerCase();
+
+  return (
+    message.includes('dynamically imported module') ||
+    message.includes('loading chunk') ||
+    message.includes('failed to fetch dynamically') ||
+    message.includes('loading css chunk') ||
+    name.includes('chunkloaderror') ||
+    // MIME type error when HTML is served instead of JS
+    message.includes('expected a javascript') ||
+    message.includes('mime type')
+  );
+}
+
+/**
+ * Handles chunk loading errors by clearing cache and reloading
+ */
+export function handleChunkLoadError(): void {
+  // Clear service worker caches
+  if ('caches' in window) {
+    caches.keys().then((names) => {
+      names.forEach((name) => {
+        caches.delete(name);
+      });
+    });
+  }
+
+  // Unregister service workers
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then((registrations) => {
+      registrations.forEach((registration) => {
+        registration.unregister();
+      });
+    });
+  }
+
+  // Store a flag to show a message after reload
+  sessionStorage.setItem('app_updated', 'true');
+
+  // Force reload from server (bypass cache)
+  window.location.reload();
+}
+
+/**
  * Generates a user-friendly error message based on error type
  */
 export function getUserFriendlyErrorMessage(error: Error): {
@@ -102,7 +150,19 @@ export function getUserFriendlyErrorMessage(error: Error): {
   description: string;
   titleHebrew: string;
   descriptionHebrew: string;
+  shouldAutoReload?: boolean;
 } {
+  // Check for chunk loading errors (stale cache after deployment)
+  if (isChunkLoadError(error)) {
+    return {
+      title: 'App Update Available',
+      description: 'A new version is available. The page will reload automatically.',
+      titleHebrew: 'עדכון זמין',
+      descriptionHebrew: 'גרסה חדשה זמינה. הדף יטען מחדש אוטומטית.',
+      shouldAutoReload: true
+    };
+  }
+
   // Check for specific error types
   if (error.message.includes('Network') || error.message.includes('fetch')) {
     return {

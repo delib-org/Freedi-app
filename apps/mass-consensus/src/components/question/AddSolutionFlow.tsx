@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { FlowState, SimilarCheckResponse, MultiSuggestionResponse, SplitSuggestion } from '@/types/api';
+import { SuggestionMode } from '@freedi/shared-types';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import { useToast } from '@/components/shared/Toast';
@@ -15,6 +16,8 @@ interface AddSolutionFlowProps {
   questionId: string;
   userId: string;
   onComplete: () => void;
+  /** Controls UX friction when adding new suggestions vs merging */
+  suggestionMode?: SuggestionMode;
 }
 
 /**
@@ -25,6 +28,7 @@ export default function AddSolutionFlow({
   questionId,
   userId,
   onComplete,
+  suggestionMode = SuggestionMode.encourage,
 }: AddSolutionFlowProps) {
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [userInput, setUserInput] = useState('');
@@ -341,6 +345,7 @@ export default function AddSolutionFlow({
           similarSolutions={flowState.data.similarStatements}
           onSelect={handleSelectSolution}
           onBack={handleBack}
+          suggestionMode={suggestionMode}
         />
       )}
 

@@ -80,6 +80,7 @@ export async function PUT(
       options: body.options || [],
       required: body.required,
       order: body.order,
+      displayType: body.displayType,
     });
 
     console.info(`[API] Question ${questionId} updated for document ${docId} by user ${userId}`);
