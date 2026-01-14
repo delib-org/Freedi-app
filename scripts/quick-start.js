@@ -282,10 +282,16 @@ async function showOptions() {
 	println(`      ${c.dim}${checkmarks.arrow} Check if everything is configured correctly${c.reset}`);
 	println();
 
+	// Option 5 - Apps Info
+	println(`  ${c.bgWhite}${c.black}${c.bright} 5 ${c.reset} ${c.white}${c.bright}How to Run Apps${c.reset}`);
+	println(`      ${c.dim}${checkmarks.arrow} View commands and URLs for all apps${c.reset}`);
+	println(`      ${c.dim}${checkmarks.arrow} Main App, Mass Consensus, Sign, Emulators${c.reset}`);
+	println();
+
 	drawSeparator('─', 50);
 	println();
 
-	const choice = await question(`  ${c.bright}Enter your choice (1-4): ${c.reset}`);
+	const choice = await question(`  ${c.bright}Enter your choice (1-5): ${c.reset}`);
 	return choice.trim();
 }
 
@@ -594,8 +600,131 @@ async function showSuccessScreen(command, endpoints) {
 	println();
 	println(`  ${c.brightCyan}Happy coding! 🚀${c.reset}`);
 	println();
+	println(`  ${c.dim}Run ${c.cyan}npm start${c.dim} again and choose option 5 to see all apps info${c.reset}`);
+	println();
 	println(`  ${c.dim}Created by WizCol.com: fostering collaboration${c.reset}`);
 	println();
+}
+
+// Show how to run each app
+async function showAppsInfo() {
+	println();
+	drawBox(
+		[
+			`${c.brightCyan}${c.bright}How to Run Freedi Apps${c.reset}`,
+			'',
+			'Each app can be run independently or together',
+		],
+		{ color: c.cyan, title: checkmarks.star + ' APPS INFO ' }
+	);
+
+	println();
+	await sleep(200);
+
+	// Main Freedi App
+	println(`  ${c.bgCyan}${c.black}${c.bright} MAIN APP ${c.reset}  ${c.cyan}${c.bright}Freedi${c.reset}`);
+	println(`  ${c.dim}The core deliberation platform with full feature set${c.reset}`);
+	println();
+	println(`  ${c.bright}Run command:${c.reset}`);
+	println(`    ${c.green}npm run dev${c.reset}              ${c.dim}# Standard development${c.reset}`);
+	println(`    ${c.green}npm run dev:emulator${c.reset}     ${c.dim}# With Firebase emulators${c.reset}`);
+	println(`    ${c.green}npm run dev:all${c.reset}          ${c.dim}# All services together${c.reset}`);
+	println();
+	println(`  ${c.bright}Open in browser:${c.reset}`);
+	println(`    ${c.brightCyan}${c.underline}http://localhost:5173${c.reset}`);
+	println();
+
+	drawSeparator('─', 55, c.brightBlack);
+	println();
+	await sleep(200);
+
+	// Mass Consensus App
+	println(`  ${c.bgBlue}${c.white}${c.bright} MASS CONSENSUS ${c.reset}  ${c.blue}${c.bright}Anonymous Voting${c.reset}`);
+	println(`  ${c.dim}High-performance anonymous participation for crowdsourced evaluation${c.reset}`);
+	println(`  ${c.dim}Features: No login required, real-time voting, AI suggestions${c.reset}`);
+	println();
+	println(`  ${c.bright}Run command:${c.reset}`);
+	println(`    ${c.green}cd apps/mass-consensus && npm install${c.reset}  ${c.dim}# First time only${c.reset}`);
+	println(`    ${c.green}npm run dev:mc${c.reset}                          ${c.dim}# From root folder${c.reset}`);
+	println(`    ${c.dim}or${c.reset}`);
+	println(`    ${c.green}cd apps/mass-consensus && npm run dev${c.reset}   ${c.dim}# From app folder${c.reset}`);
+	println();
+	println(`  ${c.bright}Open in browser:${c.reset}`);
+	println(`    ${c.brightCyan}${c.underline}http://localhost:3001${c.reset}`);
+	println();
+
+	drawSeparator('─', 55, c.brightBlack);
+	println();
+	await sleep(200);
+
+	// Sign App
+	println(`  ${c.bgMagenta}${c.white}${c.bright} FREEDI SIGN ${c.reset}  ${c.magenta}${c.bright}Document Review${c.reset}`);
+	println(`  ${c.dim}Collaborative document review with paragraph-level feedback${c.reset}`);
+	println(`  ${c.dim}Features: Approve/reject paragraphs, heat maps, demographics${c.reset}`);
+	println();
+	println(`  ${c.bright}Run command:${c.reset}`);
+	println(`    ${c.green}cd apps/sign && npm install${c.reset}             ${c.dim}# First time only${c.reset}`);
+	println(`    ${c.green}cd apps/sign && npm run dev${c.reset}             ${c.dim}# Start development${c.reset}`);
+	println();
+	println(`  ${c.bright}Open in browser:${c.reset}`);
+	println(`    ${c.brightCyan}${c.underline}http://localhost:3002${c.reset}`);
+	println();
+
+	drawSeparator('─', 55, c.brightBlack);
+	println();
+	await sleep(200);
+
+	// Firebase Emulators
+	println(`  ${c.bgYellow}${c.black}${c.bright} FIREBASE EMULATORS ${c.reset}  ${c.yellow}${c.bright}Local Backend${c.reset}`);
+	println(`  ${c.dim}Local Firebase services (Auth, Firestore, Storage, Functions)${c.reset}`);
+	println(`  ${c.dim}No Firebase account needed - data stored locally${c.reset}`);
+	println();
+	println(`  ${c.bright}Run command:${c.reset}`);
+	println(`    ${c.green}npm run dev:emulator${c.reset}     ${c.dim}# App + emulators${c.reset}`);
+	println(`    ${c.green}npm run deve${c.reset}             ${c.dim}# Emulators only${c.reset}`);
+	println();
+	println(`  ${c.bright}Open Emulator UI:${c.reset}`);
+	println(`    ${c.brightCyan}${c.underline}http://localhost:4000${c.reset}`);
+	println();
+
+	drawSeparator('─', 55, c.brightBlack);
+	println();
+
+	// Docker option
+	println(`  ${c.bgGreen}${c.black}${c.bright} DOCKER ${c.reset}  ${c.green}${c.bright}All-in-One${c.reset}`);
+	println(`  ${c.dim}Run everything in containers - consistent environment${c.reset}`);
+	println();
+	println(`  ${c.bright}Run command:${c.reset}`);
+	println(`    ${c.green}docker compose up${c.reset}        ${c.dim}# Main app + emulators${c.reset}`);
+	println(`    ${c.green}docker compose --profile full up${c.reset}  ${c.dim}# All apps${c.reset}`);
+	println();
+	println(`  ${c.bright}Open in browser:${c.reset}`);
+	println(`    ${c.dim}Same URLs as above${c.reset}`);
+	println();
+
+	drawSeparator('═', 55, c.brightBlack);
+	println();
+
+	// Quick reference table
+	drawBox(
+		[
+			`${c.bright}Quick Reference - Browser URLs${c.reset}`,
+			'',
+			`  ${c.cyan}Main App${c.reset}           ${c.brightCyan}http://localhost:5173${c.reset}`,
+			`  ${c.blue}Mass Consensus${c.reset}     ${c.brightCyan}http://localhost:3001${c.reset}`,
+			`  ${c.magenta}Freedi Sign${c.reset}        ${c.brightCyan}http://localhost:3002${c.reset}`,
+			`  ${c.yellow}Emulator UI${c.reset}        ${c.brightCyan}http://localhost:4000${c.reset}`,
+			'',
+			`${c.dim}Tip: Bookmark these URLs for quick access!${c.reset}`,
+		],
+		{ color: c.brightCyan, title: ' URLS ' }
+	);
+
+	println();
+	println(`  ${c.dim}Created by WizCol.com: fostering collaboration${c.reset}`);
+	println();
+
+	return true;
 }
 
 // Create emulator environment file
@@ -724,6 +853,9 @@ async function main() {
 				break;
 			case '4':
 				await verifySetup();
+				break;
+			case '5':
+				await showAppsInfo();
 				break;
 			default:
 				println();
