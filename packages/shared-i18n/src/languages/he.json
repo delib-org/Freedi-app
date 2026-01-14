@@ -1721,7 +1721,7 @@
   "exportDetailedTitle": "ייצא מסמך עם כל הפסקאות, הערות ודמוגרפיה",
   "exportDemographicAnalysis": "ייצוא ניתוח דמוגרפי",
   "exportDemographicTitle": "ייצא נתוני השוואה דמוגרפית - מראה כיצד כל פלח תקשר עם כל פסקה",
-  "exportJson": "ייצוא JSON",
+  "exportJson": "ייצא אינטראקציות",
   "exportJsonTitle": "ייצא נתונים מלאים כ-JSON - כולל כל האינטראקציות, דמוגרפיה וניתוח צולב עם נתוני משתמשים אנונימיים",
   "Manage document participants": "ניהול משתתפי המסמך",
   "Search users...": "חיפוש משתמשים...",
