@@ -8,10 +8,28 @@ import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
 import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
-import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
+
+/**
+ * Extract YouTube video ID and return embed URL
+ */
+function getYouTubeEmbedUrl(url: string): string {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+
+  return '';
+}
 
 interface Settings {
   allowComments: boolean;
@@ -34,6 +52,10 @@ interface Settings {
   tocPosition: TocPosition;
   /** When true, shows interaction buttons as ghosted hints always (for elderly users) */
   enhancedVisibility: boolean;
+  /** YouTube video URL for explanation video */
+  explanationVideoUrl: string;
+  /** Video display mode: 'optional' = button only, 'before_viewing' = must watch before viewing */
+  explanationVideoMode: ExplanationVideoMode;
 }
 
 export default function AdminSettingsPage() {
@@ -63,6 +85,8 @@ export default function AdminSettingsPage() {
     tocMaxLevel: 2,
     tocPosition: 'auto',
     enhancedVisibility: false,
+    explanationVideoUrl: '',
+    explanationVideoMode: 'optional',
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -456,6 +480,74 @@ export default function AdminSettingsPage() {
             }}
           />
         </div>
+      </section>
+
+      {/* Explanation Video Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Explanation Video')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Add a YouTube video to help users understand the document. Users can access it via the Explanation button.')}
+        </p>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('YouTube Video URL')}</p>
+            <p className={styles.settingDescription}>
+              {t('Paste a YouTube video URL (e.g., https://youtube.com/watch?v=...)')}
+            </p>
+          </div>
+          <input
+            type="url"
+            className={styles.textInput}
+            value={settings.explanationVideoUrl}
+            onChange={(e) => {
+              setSettings((prev) => ({ ...prev, explanationVideoUrl: e.target.value }));
+              setSaved(false);
+            }}
+            placeholder="https://youtube.com/watch?v=..."
+          />
+        </div>
+
+        {settings.explanationVideoUrl && (
+          <>
+            <div className={styles.videoPreviewRow}>
+              <p className={styles.settingLabel}>{t('Preview')}</p>
+              <div className={styles.videoPreview}>
+                <iframe
+                  width="300"
+                  height="170"
+                  src={getYouTubeEmbedUrl(settings.explanationVideoUrl)}
+                  title={t('Video Preview')}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            {/* Video Display Mode Toggle */}
+            <div className={styles.settingRow}>
+              <div className={styles.settingInfo}>
+                <p className={styles.settingLabel}>{t('Require Video Before Viewing')}</p>
+                <p className={styles.settingDescription}>
+                  {t('When enabled, users must watch the video before they can view the document')}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`${styles.toggle} ${settings.explanationVideoMode === 'before_viewing' ? styles.active : ''}`}
+                onClick={() => {
+                  setSettings((prev) => ({
+                    ...prev,
+                    explanationVideoMode: prev.explanationVideoMode === 'before_viewing' ? 'optional' : 'before_viewing',
+                  }));
+                  setSaved(false);
+                }}
+                aria-pressed={settings.explanationVideoMode === 'before_viewing'}
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* Save Button */}

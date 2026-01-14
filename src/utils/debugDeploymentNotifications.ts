@@ -36,7 +36,7 @@ export async function debugDeploymentNotifications() {
             console.info('   - Sender ID:', expectedSenderId || 'NOT SET');
         }
     } catch (error) {
-        console.warn('   - Failed to load firebase-config.json:', error);
+        console.error('   - Failed to load firebase-config.json:', error);
     }
 
     if (!expectedProjectId || !expectedSenderId) {

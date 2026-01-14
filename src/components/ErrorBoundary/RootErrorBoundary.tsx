@@ -1,7 +1,7 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import * as Sentry from "@sentry/react";
 import styles from "./ErrorBoundary.module.scss";
-import { generateBugReportEmail, getUserFriendlyErrorMessage, formatErrorDetails } from "../../utils/errorBoundaryHelpers";
+import { generateBugReportEmail, getUserFriendlyErrorMessage, formatErrorDetails, isChunkLoadError, handleChunkLoadError } from "../../utils/errorBoundaryHelpers";
 
 interface Props {
   children: ReactNode;
@@ -40,6 +40,14 @@ export class RootErrorBoundary extends Component<Props, State> {
     // Log to console in development
     if (import.meta.env.DEV) {
       console.error("Error caught by boundary:", error, errorInfo);
+    }
+
+    // Check for chunk loading errors (stale cache after deployment)
+    if (isChunkLoadError(error)) {
+      console.info("Chunk loading error detected, reloading to get latest version...");
+      handleChunkLoadError();
+
+      return; // Don't continue, page will reload
     }
 
     // Send to Sentry
