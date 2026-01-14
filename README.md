@@ -193,32 +193,54 @@ See [CLAUDE.md](./CLAUDE.md) for comprehensive development guidelines.
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+
-- Java JDK 17+ (for Firebase emulator)
-- Firebase CLI: `npm install -g firebase-tools`
-
-### Quick Setup
+### Quickest Start (2 minutes)
 
 ```bash
 git clone https://github.com/delib-org/Freedi-app.git
 cd Freedi-app
-npm run setup:all
+npm start
 ```
 
-This automated script guides you through Firebase project creation and configuration.
+The interactive wizard offers three paths:
+- **Quick Start** - Uses Firebase emulators (no account needed)
+- **Docker** - Containerized environment with all dependencies included
+- **Full Setup** - Connect to your own Firebase project (for deployment)
+
+### With Docker (Recommended)
+
+Just have Docker installed? Run:
+
+```bash
+docker compose up
+```
+
+This starts everything: web app, Firebase emulators, and all dependencies.
+
+### Manual Prerequisites
+
+If not using Docker:
+- Node.js 18+
+- Java JDK 17+ (for Firebase emulator)
+- Firebase CLI: `npm install -g firebase-tools`
 
 ### Development
 
 ```bash
-npm run dev:all    # Start all apps + emulator
+# With Docker
+docker compose up
+
+# Without Docker (uses Firebase emulators)
+npm run dev:emulator
+
+# With your own Firebase project
+npm run dev:all
 ```
 
 **Access Points:**
 - Main App: http://localhost:5173
+- Firebase Emulator UI: http://localhost:4000
 - Mass Consensus: http://localhost:3001
 - Freedi Sign: http://localhost:3002
-- Firebase Emulators: http://localhost:5002
 
 ### Commands
 
@@ -328,6 +350,8 @@ The framework addresses structural limitations identified in political science l
 
 ## Documentation
 
+- [GETTING_STARTED.md](./GETTING_STARTED.md) - Quick start guide for new developers
+- [DOCKER.md](./DOCKER.md) - Docker development guide
 - [CLAUDE.md](./CLAUDE.md) - Development guidelines
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution process
 - [ATOMIC-DESIGN-SYSTEM.md](./ATOMIC-DESIGN-SYSTEM.md) - Component architecture

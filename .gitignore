@@ -7,9 +7,10 @@ firebase.json
 .env*
 !.env.example
 
-# Centralized env directory (keep example and loader)
+# Centralized env directory (keep example, loader, and docker config)
 env/.env.*
 !env/.env.example
+!env/.env.docker
 node_modules/
 dist/
 coverage/

@@ -1,0 +1,112 @@
+# Freedi Development Environment
+#
+# Usage:
+#   docker compose up          # Start all services
+#   docker compose up app      # Start only the web app
+#   docker compose up -d       # Start in background
+#   docker compose down        # Stop all services
+#   docker compose logs -f     # Follow logs
+
+services:
+  # Main web application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/functions/node_modules
+      - /app/packages/shared-types/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+    env_file:
+      - ./env/.env.docker
+    command: npm run dev -- --host
+    depends_on:
+      - emulators
+    networks:
+      - freedi-network
+
+  # Firebase Emulators (Auth, Firestore, Storage, Functions)
+  emulators:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"   # Emulator UI
+      - "9099:9099"   # Auth
+      - "5001:5001"   # Functions
+      - "8080:8080"   # Firestore
+      - "8081:8081"   # Firestore (alternative)
+      - "9199:9199"   # Storage
+      - "5000:5000"   # Hosting
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/functions/node_modules
+      - emulator-data:/app/.emulator-data
+    environment:
+      - FIREBASE_EMULATORS_IMPORT_DIRECTORY=.emulator-data
+    command: >
+      sh -c "
+        firebase emulators:start
+        --only auth,firestore,storage,functions
+        --import=.emulator-data
+        --export-on-exit=.emulator-data
+      "
+    networks:
+      - freedi-network
+
+  # Mass Consensus App (optional)
+  mass-consensus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/mass-consensus:/app/apps/mass-consensus
+      - /app/apps/mass-consensus/node_modules
+    working_dir: /app/apps/mass-consensus
+    env_file:
+      - ./apps/mass-consensus/.env.docker
+    command: npm run dev -- --host --port 3001
+    depends_on:
+      - emulators
+    profiles:
+      - full
+    networks:
+      - freedi-network
+
+  # Sign App (optional)
+  sign:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./apps/sign:/app/apps/sign
+      - /app/apps/sign/node_modules
+    working_dir: /app/apps/sign
+    env_file:
+      - ./apps/sign/.env.docker
+    command: npm run dev -- --host --port 3002
+    depends_on:
+      - emulators
+    profiles:
+      - full
+    networks:
+      - freedi-network
+
+networks:
+  freedi-network:
+    driver: bridge
+
+volumes:
+  emulator-data:
+    driver: local
