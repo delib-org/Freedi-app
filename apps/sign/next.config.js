@@ -48,7 +48,10 @@ const nextConfig = {
   },
 };
 
-module.exports = withSentryConfig(nextConfig, {
+// Skip Sentry wrapping if not configured
+const sentryConfigured = process.env.SENTRY_ORG && process.env.SENTRY_PROJECT && process.env.SENTRY_AUTH_TOKEN;
+
+module.exports = sentryConfigured ? withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://github.com/getsentry/sentry-webpack-plugin#options
 
@@ -74,5 +77,5 @@ module.exports = withSentryConfig(nextConfig, {
 
   // Automatically tree-shake Sentry logger statements to reduce bundle size
   disableLogger: true,
-});
+}) : nextConfig;
 // Build trigger: 1765803738
