@@ -1260,6 +1260,8 @@
   "exportDetailedTitle": "Document exporteren met alle paragrafen, reacties en demografie",
   "exportDemographicAnalysis": "Demografische Analyse Exporteren",
   "exportDemographicTitle": "Demografische vergelijkingsgegevens exporteren - toont hoe elk segment met elke paragraaf interacteerde",
+  "exportJson": "JSON Exporteren",
+  "exportJsonTitle": "Volledige gegevens exporteren als JSON - inclusief alle interacties, demografie en kruisanalyse met geanonimiseerde gebruikersgegevens",
   "Manage document participants": "Documentdeelnemers beheren",
   "Search users...": "Gebruikers zoeken...",
   "All Status": "Alle Statussen",
