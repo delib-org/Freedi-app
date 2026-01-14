@@ -101,7 +101,7 @@ Everything in Freedi is a "Statement" with semantic types:
 - **Options**: Proposed solutions or choices under questions
 - **Statements**: Chat messages and discussions within the hierarchy
 
-This hierarchical model enables unlimited nesting depth with full ancestry tracking.
+This hierarchical model enables unlimited nesting depth with full ancestry tracking
 
 ### Core Capabilities
 
