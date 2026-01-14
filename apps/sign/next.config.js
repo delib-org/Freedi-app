@@ -17,7 +17,12 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['firebasestorage.googleapis.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
 
@@ -45,33 +50,49 @@ const nextConfig = {
   // Experimental features
   experimental: {
     optimizePackageImports: ['delib-npm'],
+    // Enable instrumentation for Sentry
+    instrumentationHook: true,
   },
 };
 
-// Check if Sentry is properly configured for source map uploads
-const sentryFullyConfigured =
-  process.env.SENTRY_ORG &&
-  process.env.SENTRY_PROJECT &&
-  process.env.SENTRY_AUTH_TOKEN &&
-  process.env.SENTRY_ORG.length > 0 &&
-  process.env.SENTRY_PROJECT.length > 0 &&
-  process.env.SENTRY_AUTH_TOKEN.length > 0;
+// Sentry configuration options
+// Note: Source map upload and release creation are disabled because
+// the sign app doesn't have its own Sentry project yet.
+// To enable: create a Sentry project for sign and set SENTRY_PROJECT_SIGN in Vercel
+const sentryWebpackPluginOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT_SIGN || 'freedi-sign',
 
-// Only use withSentryConfig when Sentry is fully configured
-// Otherwise, export plain nextConfig to avoid build failures
-if (sentryFullyConfigured) {
-  module.exports = withSentryConfig(nextConfig, {
-    org: process.env.SENTRY_ORG,
-    project: process.env.SENTRY_PROJECT,
-    silent: !process.env.CI,
-    widenClientFileUpload: true,
-    reactComponentAnnotation: {
-      enabled: true,
-    },
-    hideSourceMaps: true,
-    disableLogger: true,
-  });
-} else {
-  module.exports = nextConfig;
-}
-// Build trigger: 1736841600
+  // Disable source map upload - sign doesn't have its own Sentry project yet
+  sourcemaps: {
+    disable: true,
+  },
+
+  // Disable release creation - sign doesn't have its own Sentry project yet
+  release: {
+    create: false,
+  },
+
+  // Disable telemetry
+  telemetry: false,
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // Upload a larger set of source maps for prettier stack traces
+  widenClientFileUpload: true,
+
+  // Automatically annotate React components
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+
+  // Hides source maps from generated client bundles
+  hideSourceMaps: true,
+
+  // Automatically tree-shake Sentry logger statements
+  disableLogger: true,
+};
+
+// Export configuration wrapped with Sentry
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
