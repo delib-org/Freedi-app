@@ -234,8 +234,8 @@ if (!isProduction) {
 		// Check if emulators are already connected to avoid duplicate connections
 		// @ts-ignore - accessing private property for debugging
 		if (!FireStore._settings?.host?.includes('localhost')) {
-			connectFirestoreEmulator(FireStore, 'localhost', 8081);
-			console.info('Connected to Firestore emulator on localhost:8081');
+			connectFirestoreEmulator(FireStore, 'localhost', 8080);
+			console.info('Connected to Firestore emulator on localhost:8080');
 		}
 	} catch (error) {
 		console.error('Failed to connect to Firestore emulator:', error);
