@@ -32,10 +32,8 @@ export async function GET(
 			);
 		}
 
-		const document = docSnap.data();
-
-		// Check if document is public (optional - depends on your access model)
-		// For now, we allow access to all documents
+		// Document exists - proceed to get versions
+		// Note: We could add a public access check here using docSnap.data()
 
 		// Get all published and archived versions (not drafts)
 		const versionsSnapshot = await db

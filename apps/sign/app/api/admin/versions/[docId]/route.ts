@@ -10,7 +10,7 @@ import {
 	getVersionId,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
-import { QUERY_LIMITS, VERSIONING } from '@/constants/common';
+import { VERSIONING } from '@/constants/common';
 
 /**
  * GET /api/admin/versions/[docId]

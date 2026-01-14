@@ -12,6 +12,7 @@ import RejectButton from './RejectButton';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
 import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
+import VersionSelector from '../versions/VersionSelector';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -124,7 +125,10 @@ export default function DocumentView({
 
         {/* Document Header */}
         <header className={styles.header}>
-          <h1 className={styles.title}>{document.statement}</h1>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>{document.statement}</h1>
+            <VersionSelector documentId={document.statementId} />
+          </div>
 
           {/* Progress indicator */}
           {user && paragraphs.length > 0 && (

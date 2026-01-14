@@ -35,6 +35,14 @@
       text-align: right;
     }
 
+    .titleRow {
+      flex-direction: row-reverse;
+
+      @media (max-width: 600px) {
+        flex-direction: column;
+      }
+    }
+
     .description {
       text-align: right;
     }
@@ -173,11 +181,27 @@
   margin-bottom: var(--spacing-xl);
 }
 
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+}
+
 .title {
   font-size: var(--h1-font-size);
   color: var(--text-primary);
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: 0;
   line-height: 1.3;
+  flex: 1;
 }
 
 .description {

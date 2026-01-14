@@ -23,7 +23,7 @@ export default function AdminVersionsPage() {
 	const params = useParams();
 	const router = useRouter();
 	const statementId = params.statementId as string;
-	const { t } = useTranslation();
+	const { t, tWithParams } = useTranslation();
 	const { canManageSettings } = useAdminContext();
 
 	const [versions, setVersions] = useState<DocumentVersion[]>([]);
@@ -33,7 +33,11 @@ export default function AdminVersionsPage() {
 	const [generationMessage, setGenerationMessage] = useState('');
 
 	// Settings for generation
-	const [settings, setSettings] = useState({
+	const [settings, setSettings] = useState<{
+		k1: number;
+		k2: number;
+		minImpactThreshold: number;
+	}>({
 		k1: VERSIONING.DEFAULT_K1,
 		k2: VERSIONING.DEFAULT_K2,
 		minImpactThreshold: VERSIONING.DEFAULT_MIN_IMPACT_THRESHOLD,
@@ -130,7 +134,7 @@ export default function AdminVersionsPage() {
 			if (generateData.changesNeedingAI > 0) {
 				setGenerationStep('processing-ai');
 				setGenerationMessage(
-					t('Processing {{count}} changes with AI...', { count: generateData.changesNeedingAI })
+					tWithParams('Processing {{count}} changes with AI...', { count: generateData.changesNeedingAI })
 				);
 
 				// Step 3: Process with AI
@@ -391,7 +395,7 @@ export default function AdminVersionsPage() {
 							>
 								<div className={styles.versionHeader}>
 									<span className={styles.versionNumber}>
-										{t('Version {{number}}', { number: version.versionNumber })}
+										{tWithParams('Version {{number}}', { number: version.versionNumber })}
 									</span>
 									{getStatusBadge(version.status)}
 								</div>
@@ -409,7 +413,7 @@ export default function AdminVersionsPage() {
 
 								{version.changesCount !== undefined && version.changesCount > 0 && (
 									<span className={styles.changesCount}>
-										{t('{{count}} changes', { count: version.changesCount })}
+										{tWithParams('{{count}} changes', { count: version.changesCount })}
 									</span>
 								)}
 
@@ -447,7 +451,7 @@ export default function AdminVersionsPage() {
 			{selectedVersion && (
 				<section className={styles.settingsSection}>
 					<h2 className={styles.settingsSectionTitle}>
-						{t('Version {{number}} Details', { number: selectedVersion.versionNumber })}
+						{tWithParams('Version {{number}} Details', { number: selectedVersion.versionNumber })}
 					</h2>
 
 					{selectedVersion.summary && (
@@ -467,7 +471,7 @@ export default function AdminVersionsPage() {
 									<div key={change.changeId} className={styles.changeCard}>
 										<div className={styles.changeHeader}>
 											<span className={styles.impactScore}>
-												{t('Impact: {{score}}', {
+												{tWithParams('Impact: {{score}}', {
 													score: change.combinedImpact.toFixed(2),
 												})}
 											</span>
@@ -499,7 +503,7 @@ export default function AdminVersionsPage() {
 										)}
 
 										<div className={styles.sourcesInfo}>
-											<h4>{t('Based on {{count}} feedback items', { count: change.sources.length })}</h4>
+											<h4>{tWithParams('Based on {{count}} feedback items', { count: change.sources.length })}</h4>
 											<ul>
 												{change.sources.slice(0, 3).map((source) => (
 													<li key={source.sourceId}>
@@ -507,7 +511,7 @@ export default function AdminVersionsPage() {
 															{source.type === 'suggestion' ? t('Suggestion') : t('Comment')}
 														</span>
 														<span className={styles.sourceImpact}>
-															{t('Impact: {{score}}', { score: source.impact.toFixed(2) })}
+															{tWithParams('Impact: {{score}}', { score: source.impact.toFixed(2) })}
 														</span>
 														<q>{source.content.substring(0, 100)}...</q>
 														<span className={styles.sourceAuthor}>

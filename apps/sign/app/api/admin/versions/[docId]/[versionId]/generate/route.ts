@@ -174,9 +174,6 @@ export async function POST(
 		const uniqueVisitors = new Set(viewsSnapshot.docs.map(doc => doc.data().visitorId));
 		const totalViewers = Math.max(uniqueVisitors.size, 1); // At least 1 to avoid division by zero
 
-		// Collect all paragraph IDs
-		const paragraphIds = paragraphs.map(p => p.paragraphId);
-
 		// Get suggestions for all paragraphs
 		let suggestions: Suggestion[] = [];
 		if (includeSuggestions) {
