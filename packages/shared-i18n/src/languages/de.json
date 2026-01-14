@@ -1260,6 +1260,8 @@
   "exportDetailedTitle": "Dokument mit allen Absätzen, Kommentaren und Demografien exportieren",
   "exportDemographicAnalysis": "Demografische Analyse exportieren",
   "exportDemographicTitle": "Demografische Vergleichsdaten exportieren - zeigt, wie jedes Segment mit jedem Absatz interagiert hat",
+  "exportJson": "Interaktionen Exportieren",
+  "exportJsonTitle": "Vollständige Daten als JSON exportieren - enthält alle Interaktionen, Demografien und Kreuzanalyse mit anonymisierten Benutzerdaten",
   "Manage document participants": "Dokumentteilnehmer verwalten",
   "Search users...": "Benutzer suchen...",
   "All Status": "Alle Status",

@@ -155,7 +155,13 @@ export async function getUserDemographicAnswers(
 
 /**
  * Check if user has completed the required survey
- * Only REQUIRED questions are considered for completion - optional questions don't block interactions
+ * Only REQUIRED questions are considered for blocking - optional questions don't block interactions
+ *
+ * Logic:
+ * - If mode is 'disabled': No survey needed
+ * - If there are no questions: No survey needed
+ * - If there are required questions: Must answer all of them
+ * - If there are only optional questions: Must acknowledge the survey (submit at least once)
  */
 export async function checkSurveyCompletion(
   documentId: string,
@@ -176,13 +182,28 @@ export async function checkSurveyCompletion(
 
   try {
     const questionsWithAnswers = await getUserDemographicAnswers(documentId, userId, topParentId, mode);
+    const totalQuestions = questionsWithAnswers.length;
 
-    // FIX: Only count REQUIRED questions for completion check
-    // Non-required questions should not block user interactions
+    // If there are no questions, survey is complete
+    if (totalQuestions === 0) {
+      return {
+        isComplete: true,
+        totalQuestions: 0,
+        answeredQuestions: 0,
+        isRequired: false,
+        missingQuestionIds: [],
+      };
+    }
+
+    // Count required and answered questions
     const requiredQuestions = questionsWithAnswers.filter((q) => q.required === true);
     const totalRequiredQuestions = requiredQuestions.length;
 
     const answeredRequiredQuestions = requiredQuestions.filter(
+      (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
+    ).length;
+
+    const answeredQuestions = questionsWithAnswers.filter(
       (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
     ).length;
 
@@ -192,14 +213,19 @@ export async function checkSurveyCompletion(
       .map((q) => q.userQuestionId)
       .filter(Boolean) as string[];
 
-    // Survey is complete if all REQUIRED questions are answered (optional questions don't matter)
-    const isComplete = totalRequiredQuestions === 0 || answeredRequiredQuestions === totalRequiredQuestions;
+    // Check if user has acknowledged the survey (has any answer record or acknowledgement)
+    const hasAcknowledged = await checkSurveyAcknowledgement(documentId, userId);
 
-    // Return total counts for all questions (for UI display purposes)
-    const totalQuestions = questionsWithAnswers.length;
-    const answeredQuestions = questionsWithAnswers.filter(
-      (q) => q.userAnswer !== undefined || (q.userAnswerOptions && q.userAnswerOptions.length > 0)
-    ).length;
+    // Determine completion:
+    // - If there are required questions: all must be answered
+    // - If no required questions: user must have acknowledged (submitted) the survey
+    let isComplete: boolean;
+    if (totalRequiredQuestions > 0) {
+      isComplete = answeredRequiredQuestions === totalRequiredQuestions;
+    } else {
+      // No required questions - just need acknowledgement
+      isComplete = hasAcknowledged;
+    }
 
     return {
       isComplete,
@@ -217,6 +243,54 @@ export async function checkSurveyCompletion(
       isRequired,
       missingQuestionIds: [],
     };
+  }
+}
+
+/**
+ * Check if user has acknowledged the survey for a document
+ */
+async function checkSurveyAcknowledgement(
+  documentId: string,
+  userId: string
+): Promise<boolean> {
+  const db = getFirestoreAdmin();
+
+  try {
+    // Check for acknowledgement record
+    const ackId = `survey-ack--${documentId}--${userId}`;
+    const ackDoc = await db.collection(Collections.usersData).doc(ackId).get();
+
+    return ackDoc.exists;
+  } catch (error) {
+    logError(error, { operation: 'demographics.checkSurveyAcknowledgement', documentId, userId });
+    return false;
+  }
+}
+
+/**
+ * Save survey acknowledgement (called when user submits/dismisses the survey)
+ */
+export async function saveSurveyAcknowledgement(
+  documentId: string,
+  userId: string,
+  topParentId: string
+): Promise<void> {
+  const db = getFirestoreAdmin();
+
+  try {
+    const ackId = `survey-ack--${documentId}--${userId}`;
+    await db.collection(Collections.usersData).doc(ackId).set({
+      documentId,
+      topParentId,
+      odlUserId: userId,
+      acknowledgedAt: Date.now(),
+      type: 'survey-acknowledgement',
+    });
+
+    console.info(`[Demographics] Survey acknowledged for user ${userId} on document ${documentId}`);
+  } catch (error) {
+    logError(error, { operation: 'demographics.saveSurveyAcknowledgement', documentId, userId });
+    throw error;
   }
 }
 
