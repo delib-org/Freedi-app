@@ -5,6 +5,7 @@ import { Collections } from '@freedi/shared-types';
 import {
   getUserDemographicAnswers,
   saveUserDemographicAnswers,
+  saveSurveyAcknowledgement,
 } from '@/lib/firebase/demographicQueries';
 import {
   DemographicMode,
@@ -117,15 +118,11 @@ export async function POST(
     // Parse request body
     const body: SaveAnswersRequest = await request.json();
 
-    if (!body.answers || !Array.isArray(body.answers) || body.answers.length === 0) {
-      return NextResponse.json(
-        { error: 'Answers array is required' },
-        { status: 400 }
-      );
-    }
+    // Answers can be empty (user dismissing optional survey or submitting without answers)
+    const answers = body.answers || [];
 
-    // Validate answers
-    for (const answer of body.answers) {
+    // Validate answers if any provided
+    for (const answer of answers) {
       if (!answer.userQuestionId) {
         return NextResponse.json(
           { error: 'Each answer must have a userQuestionId' },
@@ -134,14 +131,19 @@ export async function POST(
       }
     }
 
-    // Save the answers
-    await saveUserDemographicAnswers(docId, userId, topParentId, body.answers);
+    // Save the answers (if any)
+    if (answers.length > 0) {
+      await saveUserDemographicAnswers(docId, userId, topParentId, answers);
+    }
 
-    console.info(`[API] Saved ${body.answers.length} answers for user ${userId} on document ${docId}`);
+    // Save acknowledgement that user has submitted/dismissed the survey
+    await saveSurveyAcknowledgement(docId, userId, topParentId);
+
+    console.info(`[API] Saved ${answers.length} answers for user ${userId} on document ${docId}`);
 
     return NextResponse.json({
       success: true,
-      savedCount: body.answers.length,
+      savedCount: answers.length,
     });
   } catch (error) {
     logger.error('[API] Demographics answers POST failed:', error);

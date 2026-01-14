@@ -512,6 +512,28 @@
   }
 }
 
+/* Video Preview Row */
+.videoPreviewRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md) 0;
+  border-top: 1px solid var(--border-light);
+  margin-top: var(--spacing-sm);
+}
+
+.videoPreview {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--background);
+  max-width: 320px;
+
+  iframe {
+    display: block;
+    border-radius: var(--radius-md);
+  }
+}
+
 /* RTL Support */
 [dir="rtl"] {
   .sidebar {

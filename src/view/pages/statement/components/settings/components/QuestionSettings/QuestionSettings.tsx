@@ -1,3 +1,8 @@
+/**
+ * NAMING CLARIFICATION:
+ * - EvaluationUI (evaluationSettings.evaluationUI) = Evaluation MODE (how users participate: suggestions, voting, checkbox, clustering)
+ * - evaluationType (statementSettings.evaluationType) = Rating SCALE (what input UI they see: range/5-point, likeDislike/simple, singleLike/like-only)
+ */
 import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
 import React, { FC, useState, useRef } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
@@ -12,6 +17,8 @@ import ClusterIcon from '@/assets/icons/networkIcon.svg?react';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
+import LikeIcon from '@/assets/icons/likeIcon.svg?react';
+import EvaluationsIcon from '@/assets/icons/evaluationsIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
@@ -113,6 +120,28 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				statement,
 				property: 'enhancedEvaluation',
 				newValue: evalType === evaluationType.range,
+				settingsSection: 'statementSettings',
+			});
+		}
+
+		/**
+		 * Handle rating scale change - sets statementSettings.evaluationType
+		 * This determines which evaluation UI component is rendered in the main app
+		 * (5-point emoji scale, thumbs up/down, or like-only)
+		 */
+		function handleRatingScaleChange(scale: evaluationType) {
+			setStatementSettingToDB({
+				statement,
+				property: 'evaluationType',
+				newValue: scale,
+				settingsSection: 'statementSettings',
+			});
+
+			// Backward compatibility: enhancedEvaluation = true means 5-point range scale
+			setStatementSettingToDB({
+				statement,
+				property: 'enhancedEvaluation',
+				newValue: scale === evaluationType.range,
 				settingsSection: 'statementSettings',
 			});
 		}
@@ -292,7 +321,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 
 		return (
 			<div className={styles.questionSettings}>
-				<SectionTitle title={t('Evaluation Type')} />
+				<SectionTitle title={t('Evaluation Mode')} />
 				<MultiSwitch
 					options={[
 						{ label: t('Agreement'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon />, toolTip: t('Consensus') },
@@ -304,6 +333,33 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					currentValue={statement.evaluationSettings?.evaluationUI}
 				/>
 				{isVoting && <VotingSettings />}
+
+				<SectionTitle title={t('Rating Scale')} />
+				<MultiSwitch
+					options={[
+						{
+							label: t('5-Point Scale'),
+							value: evaluationType.range,
+							icon: <SuggestionsIcon />,
+							toolTip: t('5 emoji faces from negative to positive')
+						},
+						{
+							label: t('Simple Scale'),
+							value: evaluationType.likeDislike,
+							icon: <EvaluationsIcon />,
+							toolTip: t('Thumbs up or down')
+						},
+						{
+							label: t('Like Only'),
+							value: evaluationType.singleLike,
+							icon: <LikeIcon />,
+							toolTip: t('Only positive feedback')
+						},
+					]}
+					onClick={(value) => { handleRatingScaleChange(value as evaluationType); }}
+					currentValue={statement.statementSettings?.evaluationType || evaluationType.range}
+				/>
+
 				<SectionTitle title={t('Question Settings')} />
 
 				<div className={styles.questionLink}>
