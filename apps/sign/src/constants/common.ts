@@ -97,6 +97,26 @@ export const SUGGESTIONS = {
 } as const;
 
 /**
+ * Document versioning constants
+ */
+export const VERSIONING = {
+  /** Default multiplier for suggestions/comments impact */
+  DEFAULT_K1: 5,
+  /** Default multiplier for support/objection impact */
+  DEFAULT_K2: 3,
+  /** Default minimum impact threshold */
+  DEFAULT_MIN_IMPACT_THRESHOLD: 0.1,
+  /** Maximum versions to keep per document */
+  MAX_VERSIONS: 100,
+  /** Maximum changes per version */
+  MAX_CHANGES_PER_VERSION: 500,
+  /** Maximum summary length */
+  MAX_SUMMARY_LENGTH: 2000,
+  /** Maximum AI reasoning length */
+  MAX_AI_REASONING_LENGTH: 1000,
+} as const;
+
+/**
  * Error messages
  */
 export const ERROR_MESSAGES = {
@@ -131,4 +151,13 @@ export const API_ROUTES = {
   SUGGESTION_EVALUATIONS: (suggestionId: string) => `/api/suggestion-evaluations/${suggestionId}`,
   APPROVAL: '/api/approval',
   SIGNATURE: '/api/signature',
+  // Version management routes
+  VERSIONS: (documentId: string) => `/api/versions/${documentId}`,
+  ADMIN_VERSIONS: (documentId: string) => `/api/admin/versions/${documentId}`,
+  ADMIN_VERSION: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}`,
+  ADMIN_VERSION_GENERATE: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/generate`,
+  ADMIN_VERSION_PROCESS_AI: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/process-ai`,
+  ADMIN_VERSION_PUBLISH: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/publish`,
+  ADMIN_VERSION_SETTINGS: (documentId: string) => `/api/admin/version-settings/${documentId}`,
+  ADMIN_CHANGE: (changeId: string) => `/api/admin/changes/${changeId}`,
 } as const;
