@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useCallback, useState, memo } from 'react';
-import MindElixir, { MindElixirInstance, NodeObj } from 'mind-elixir';
-import { useNavigate } from 'react-router-dom';
-import { Results, Statement, StatementType, Role } from '@freedi/shared-types';
+import MindElixir from 'mind-elixir';
+import type { MindElixirInstance, NodeObj, Operation } from 'mind-elixir';
+import { useNavigate } from 'react-router';
+import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
@@ -9,9 +10,7 @@ import { updateStatementParents } from '@/controllers/db/statements/setStatement
 import Modal from '@/view/components/modal/Modal';
 import {
 	toMindElixirData,
-	FreediNodeObj,
 	canHaveChildren,
-	getStyleForType,
 } from '../mapHelpers/mindElixirTransform';
 import { FilterType } from '@/controllers/general/sorting';
 import styles from './MindElixirMap.module.scss';
@@ -76,6 +75,9 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
 	const [direction, setDirection] = useState<'SIDE' | 'LEFT' | 'RIGHT'>('SIDE');
 
+	// Double click handler ref
+	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
+
 	// Apply filter if needed
 	const filteredDescendants =
 		filterBy === FilterType.questionsResults
@@ -95,11 +97,56 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			draggable: isAdmin, // Only admins can drag nodes
 			contextMenu: true,
 			toolBar: false, // We'll use our own toolbar
-			nodeMenu: true,
 			keypress: true,
 			editable: true, // Allow inline editing
 			allowUndo: true,
 			overflowHidden: false,
+			// Intercept operations before they happen
+			before: {
+				addChild: async (el) => {
+					// Get the node object
+					const nodeObj = el ? mindRef.current?.nodeData : null;
+					if (!nodeObj) return false;
+
+					// Find the corresponding statement
+					const statement = findStatementById(descendants, nodeObj.id);
+
+					// Options cannot have children
+					if (statement && !canHaveChildren(statement.statementType)) {
+						return false; // Prevent adding
+					}
+
+					// Show our create modal instead
+					setMapContext((prev) => ({
+						...prev,
+						showModal: true,
+						parentStatement: statement || descendants.top,
+					}));
+
+					return false; // Prevent MindElixir from adding directly
+				},
+				insertSibling: async () => {
+					// Get the current node
+					const currentNode = mindRef.current?.currentNode;
+					if (!currentNode) return false;
+
+					// Find the parent statement
+					const nodeData = currentNode.nodeObj as NodeObj;
+					const currentStatement = findStatementById(descendants, nodeData.id);
+					const parentStatement = currentStatement?.parentId
+						? findStatementById(descendants, currentStatement.parentId)
+						: descendants.top;
+
+					// Show our create modal
+					setMapContext((prev) => ({
+						...prev,
+						showModal: true,
+						parentStatement: parentStatement || descendants.top,
+					}));
+
+					return false; // Prevent MindElixir from adding directly
+				},
+			},
 		});
 
 		// Initialize with data
@@ -112,84 +159,52 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		mind.toCenter();
 
 		// Event: Node selected
-		mind.bus.addListener('selectNode', (node: NodeObj) => {
-			setMapContext((prev) => ({
-				...prev,
-				selectedId: node.id,
-			}));
-		});
+		mind.bus.addListener('selectNewNode', (nodeObj: NodeObj) => {
+			// Check for double click
+			const now = Date.now();
+			const lastClick = lastClickRef.current;
 
-		// Event: Node double-clicked - navigate to statement
-		mind.bus.addListener('dblclickNode', (node: NodeObj) => {
-			navigate(`/statement/${node.id}/chat`, {
-				state: { from: window.location.pathname },
-			});
-		});
-
-		// Event: Before adding a node - intercept to show our modal
-		mind.bus.addListener('beforeAddChild', (node: NodeObj) => {
-			// Find the statement for this node
-			const parentStatement = findStatementById(descendants, node.id);
-
-			// Options cannot have children
-			if (parentStatement && !canHaveChildren(parentStatement.statementType)) {
-				return false; // Prevent adding
+			if (lastClick.nodeId === nodeObj.id && now - lastClick.time < 300) {
+				// Double click detected - navigate to statement
+				navigate(`/statement/${nodeObj.id}/chat`, {
+					state: { from: window.location.pathname },
+				});
 			}
 
-			// Show our create modal instead
+			// Update last click
+			lastClickRef.current = { time: now, nodeId: nodeObj.id };
+
+			// Update selected ID in context
 			setMapContext((prev) => ({
 				...prev,
-				showModal: true,
-				parentStatement: parentStatement || descendants.top,
+				selectedId: nodeObj.id,
 			}));
-
-			return false; // Prevent MindElixir from adding directly
 		});
 
-		// Event: Before adding sibling
-		mind.bus.addListener('beforeAddSibling', (node: NodeObj) => {
-			// Find the parent statement
-			const currentStatement = findStatementById(descendants, node.id);
-			const parentStatement = currentStatement?.parentId
-				? findStatementById(descendants, currentStatement.parentId)
-				: descendants.top;
+		// Event: Operation happened (for tracking node moves)
+		mind.bus.addListener('operation', (operation: Operation) => {
+			if (isAdmin && operation.name === 'moveNodeIn') {
+				// A node was moved - store IDs for confirmation
+				if ('obj' in operation && 'toObj' in operation) {
+					const typedOp = operation as { obj: NodeObj; toObj: NodeObj; name: string };
+					setDraggedNodeId(typedOp.obj.id);
+					setIntersectedNodeId(typedOp.toObj.id);
 
-			// Show our create modal
-			setMapContext((prev) => ({
-				...prev,
-				showModal: true,
-				parentStatement: parentStatement || descendants.top,
-			}));
-
-			return false; // Prevent MindElixir from adding directly
+					// Show confirmation modal
+					setMapContext((prev) => ({
+						...prev,
+						moveStatementModal: true,
+					}));
+				}
+			}
 		});
-
-		// Event: Node moved (drag & drop) - admin only
-		if (isAdmin) {
-			mind.bus.addListener('moveNode', (fromNode: NodeObj, toNode: NodeObj) => {
-				// Store IDs for the move modal
-				setDraggedNodeId(fromNode.id);
-				setIntersectedNodeId(toNode.id);
-
-				// Show confirmation modal
-				setMapContext((prev) => ({
-					...prev,
-					moveStatementModal: true,
-				}));
-
-				return false; // Prevent immediate move, wait for confirmation
-			});
-		}
 
 		// Cleanup
 		return () => {
-			// MindElixir doesn't have a destroy method, but we can clean up the container
-			if (containerRef.current) {
-				containerRef.current.innerHTML = '';
-			}
+			mind.destroy();
 			mindRef.current = null;
 		};
-	}, [data?.nodeData.id, isAdmin]); // Only reinit when root changes or admin status changes
+	}, [data?.nodeData.id, isAdmin, descendants]);
 
 	// Update data when descendants change
 	useEffect(() => {
@@ -209,15 +224,18 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		if (!mindRef.current) return;
 		setDirection(newDirection);
 
-		// MindElixir supports changing direction
-		const directionValue =
-			newDirection === 'SIDE'
-				? MindElixir.SIDE
-				: newDirection === 'LEFT'
-					? MindElixir.LEFT
-					: MindElixir.RIGHT;
-
-		mindRef.current.changeDirection(directionValue);
+		// MindElixir uses init methods for direction change
+		switch (newDirection) {
+			case 'SIDE':
+				mindRef.current.initSide();
+				break;
+			case 'LEFT':
+				mindRef.current.initLeft();
+				break;
+			case 'RIGHT':
+				mindRef.current.initRight();
+				break;
+		}
 	}, []);
 
 	// Handle move statement confirmation
@@ -231,6 +249,9 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			if (draggedStatement && newParentStatement) {
 				await updateStatementParents(draggedStatement, newParentStatement);
 			}
+		} else if (!move && mindRef.current) {
+			// Undo the move in MindElixir
+			mindRef.current.undo();
 		}
 
 		// Close modal
