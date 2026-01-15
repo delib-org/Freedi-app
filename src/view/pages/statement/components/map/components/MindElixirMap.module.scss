@@ -3,10 +3,14 @@
 
 // Container styling for MindElixir
 .mindElixirContainer {
-	width: 100%;
+	// Fill the entire viewport width
+	width: 100vw;
 	height: 100%;
+	flex: 1;
 	direction: ltr;
 	position: relative;
+	// Offset the centering from page__main by using negative margin
+	margin-left: calc(-50vw + 50%);
 
 	// Custom enhancements on top of MindElixir's default styles
 	:global {
