@@ -151,7 +151,7 @@ const MindMap: FC = () => {
 	`;
 
 	return (
-		<main className='page__main' style={{ padding: 0, alignItems: 'stretch' }}>
+		<main className='page__main' style={{ padding: 0, position: 'relative' }}>
 			<style>{spinnerStyle}</style>
 			<select
 				aria-label='Select filter type for'
@@ -160,10 +160,9 @@ const MindMap: FC = () => {
 				}
 				value={filterBy}
 				style={{
-					width: '100vw',
 					maxWidth: '300px',
-					margin: '1rem auto',
 					position: 'absolute',
+					top: '1rem',
 					right: '1rem',
 					zIndex: 100,
 				}}
@@ -177,10 +176,9 @@ const MindMap: FC = () => {
 			</select>
 			<div
 				style={{
-					height: '100vh',
-					width: '100vw',
+					width: '100%',
+					height: '100%',
 					direction: 'ltr',
-					position: 'relative',
 				}}
 			>
 				{/* Only render map when results are available */}

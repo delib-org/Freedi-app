@@ -90,9 +90,25 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	useEffect(() => {
 		if (!containerRef.current || !data) return;
 
+		// Wait for container to be properly sized
+		const container = containerRef.current;
+		const rect = container.getBoundingClientRect();
+
+		// If container has no size yet, wait and retry
+		if (rect.width < 100 || rect.height < 100) {
+			const timeoutId = setTimeout(() => {
+				// Force re-render by triggering state update
+				if (mindRef.current) {
+					mindRef.current.toCenter();
+				}
+			}, 100);
+
+			return () => clearTimeout(timeoutId);
+		}
+
 		// Create MindElixir instance
 		const mind = new MindElixir({
-			el: containerRef.current,
+			el: container,
 			direction: MindElixir.SIDE,
 			draggable: isAdmin, // Only admins can drag nodes
 			contextMenu: true,
@@ -155,8 +171,13 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		// Store reference
 		mindRef.current = mind;
 
-		// Center the view
-		mind.toCenter();
+		// Use RIGHT layout for compact single-direction tree, then center
+		setTimeout(() => {
+			if (mindRef.current) {
+				mindRef.current.initRight();
+				mindRef.current.toCenter();
+			}
+		}, 100);
 
 		// Event: Node selected
 		mind.bus.addListener('selectNewNode', (nodeObj: NodeObj) => {

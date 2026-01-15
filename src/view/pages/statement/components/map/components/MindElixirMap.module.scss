@@ -1,98 +1,25 @@
 // MindElixir Map Component Styles
 // Uses design system colors and variables
 
+// Container styling for MindElixir
 .mindElixirContainer {
 	width: 100%;
 	height: 100%;
 	direction: ltr;
-	position: absolute;
-	top: 0;
-	left: 0;
-	background-color: transparent;
+	position: relative;
 
-	// MindElixir node styling overrides
+	// Custom enhancements on top of MindElixir's default styles
 	:global {
-		// Main node topic
-		.mind-elixir-topic {
+		// Ensure the map container fills our container
+		.map-container {
+			width: 100%;
+			height: 100%;
+		}
+
+		// Enhanced topic styling
+		me-tpc {
 			border-radius: 8px;
-			padding: 8px 16px;
-			font-size: 0.875rem;
-			font-family: inherit;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-			transition: box-shadow 0.2s ease, transform 0.2s ease;
-			max-width: 200px;
-			word-wrap: break-word;
-
-			&:hover {
-				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-				transform: scale(1.02);
-			}
-		}
-
-		// Selected node
-		.mind-elixir-topic.selected,
-		.mind-elixir-topic:focus {
-			outline: 3px solid var(--btn-primary, #5f88e5);
-			outline-offset: 2px;
-		}
-
-		// Root node (main topic)
-		.mind-elixir-root > .mind-elixir-topic {
-			font-size: 1rem;
-			font-weight: 600;
-			padding: 12px 20px;
-		}
-
-		// Connection lines/paths
-		svg.svg3btn path,
-		svg.svg3btn line {
-			stroke: var(--text-muted, #8b98ad);
-			stroke-width: 2;
-		}
-
-		// Expand/collapse button
-		.mind-elixir-expand-btn {
-			background-color: var(--btn-primary, #5f88e5);
-			color: white;
-			border-radius: 50%;
-			width: 20px;
-			height: 20px;
-			font-size: 12px;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		// Context menu styling
-		.mind-elixir-context-menu {
-			background: var(--card-default, #ffffff);
-			border-radius: 8px;
-			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-			border: 1px solid var(--border-color, #e0e0e0);
-			padding: 4px 0;
-
-			.mind-elixir-menu-item {
-				padding: 8px 16px;
-				font-size: 0.875rem;
-				cursor: pointer;
-				transition: background-color 0.15s ease;
-
-				&:hover {
-					background-color: var(--hover-bg, #f5f5f5);
-				}
-			}
-		}
-
-		// Node input for editing
-		.mind-elixir-topic textarea,
-		.mind-elixir-topic input {
-			font-family: inherit;
-			font-size: inherit;
-			padding: 4px;
-			border: 1px solid var(--btn-primary, #5f88e5);
-			border-radius: 4px;
-			outline: none;
-			resize: none;
 		}
 	}
 }
