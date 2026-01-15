@@ -1,0 +1,264 @@
+// MindElixir Map Component Styles
+// Uses design system colors and variables
+
+.mindElixirContainer {
+	width: 100vw;
+	height: 100vh;
+	direction: ltr;
+	position: relative;
+	background-color: var(--card-default, #ffffff);
+
+	// MindElixir node styling overrides
+	:global {
+		// Main node topic
+		.mind-elixir-topic {
+			border-radius: 8px;
+			padding: 8px 16px;
+			font-size: 0.875rem;
+			font-family: inherit;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			transition: box-shadow 0.2s ease, transform 0.2s ease;
+			max-width: 200px;
+			word-wrap: break-word;
+
+			&:hover {
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+				transform: scale(1.02);
+			}
+		}
+
+		// Selected node
+		.mind-elixir-topic.selected,
+		.mind-elixir-topic:focus {
+			outline: 3px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+
+		// Root node (main topic)
+		.mind-elixir-root > .mind-elixir-topic {
+			font-size: 1rem;
+			font-weight: 600;
+			padding: 12px 20px;
+		}
+
+		// Connection lines/paths
+		svg.svg3btn path,
+		svg.svg3btn line {
+			stroke: var(--text-muted, #8b98ad);
+			stroke-width: 2;
+		}
+
+		// Expand/collapse button
+		.mind-elixir-expand-btn {
+			background-color: var(--btn-primary, #5f88e5);
+			color: white;
+			border-radius: 50%;
+			width: 20px;
+			height: 20px;
+			font-size: 12px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+
+		// Context menu styling
+		.mind-elixir-context-menu {
+			background: var(--card-default, #ffffff);
+			border-radius: 8px;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+			border: 1px solid var(--border-color, #e0e0e0);
+			padding: 4px 0;
+
+			.mind-elixir-menu-item {
+				padding: 8px 16px;
+				font-size: 0.875rem;
+				cursor: pointer;
+				transition: background-color 0.15s ease;
+
+				&:hover {
+					background-color: var(--hover-bg, #f5f5f5);
+				}
+			}
+		}
+
+		// Node input for editing
+		.mind-elixir-topic textarea,
+		.mind-elixir-topic input {
+			font-family: inherit;
+			font-size: inherit;
+			padding: 4px;
+			border: 1px solid var(--btn-primary, #5f88e5);
+			border-radius: 4px;
+			outline: none;
+			resize: none;
+		}
+	}
+}
+
+// Loading state
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+	flex-direction: column;
+	gap: 1rem;
+	color: var(--text-body, #3d4d71);
+	font-size: 1.1rem;
+}
+
+.spinner {
+	width: 60px;
+	height: 60px;
+	border: 5px solid #f3f3f3;
+	border-top: 5px solid var(--btn-primary, #5f88e5);
+	border-radius: 50%;
+	animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+// Controls Panel
+.controlsPanel {
+	position: fixed;
+	bottom: 2rem;
+	right: 2rem;
+	z-index: 100;
+}
+
+.mainButton {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background-color: var(--btn-primary, #5f88e5);
+	border: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+	&:hover {
+		transform: scale(1.1);
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+	}
+
+	img {
+		width: 24px;
+		height: 24px;
+		filter: brightness(0) invert(1);
+	}
+}
+
+.arcButtons {
+	display: flex;
+	flex-direction: column-reverse;
+	gap: 0.75rem;
+	align-items: center;
+
+	button {
+		width: 48px;
+		height: 48px;
+		border-radius: 50%;
+		background-color: var(--card-default, #ffffff);
+		border: 2px solid var(--btn-primary, #5f88e5);
+		cursor: pointer;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		transition: background-color 0.2s ease, transform 0.2s ease;
+		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+		&:hover {
+			background-color: var(--btn-primary, #5f88e5);
+			transform: scale(1.1);
+
+			img {
+				filter: brightness(0) invert(1);
+			}
+		}
+
+		img {
+			width: 20px;
+			height: 20px;
+			transition: filter 0.2s ease;
+		}
+
+		&:first-child {
+			background-color: var(--disagree, #fe6ba2);
+			border-color: var(--disagree, #fe6ba2);
+
+			img {
+				filter: brightness(0) invert(1);
+			}
+
+			&:hover {
+				background-color: darken(#fe6ba2, 10%);
+			}
+		}
+	}
+}
+
+// Move statement modal
+.moveModal {
+	padding: 1.5rem;
+	text-align: center;
+
+	h1 {
+		font-size: 1.25rem;
+		color: var(--text-body, #3d4d71);
+		margin-bottom: 1.5rem;
+	}
+}
+
+.btnBox {
+	display: flex;
+	gap: 1rem;
+	justify-content: center;
+}
+
+// Responsive styles
+@media (max-width: 768px) {
+	.mindElixirContainer {
+		:global {
+			.mind-elixir-topic {
+				max-width: 150px;
+				font-size: 0.75rem;
+				padding: 6px 12px;
+			}
+
+			.mind-elixir-root > .mind-elixir-topic {
+				font-size: 0.875rem;
+				padding: 10px 16px;
+			}
+		}
+	}
+
+	.controlsPanel {
+		bottom: 1rem;
+		right: 1rem;
+	}
+
+	.mainButton {
+		width: 48px;
+		height: 48px;
+	}
+
+	.arcButtons button {
+		width: 40px;
+		height: 40px;
+
+		img {
+			width: 16px;
+			height: 16px;
+		}
+	}
+}
