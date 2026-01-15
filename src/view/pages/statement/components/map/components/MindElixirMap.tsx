@@ -12,6 +12,11 @@ import {
 	toMindElixirData,
 	canHaveChildren,
 } from '../mapHelpers/mindElixirTransform';
+import {
+	createMindMapChild,
+	createMindMapSibling,
+	updateMindMapNodeText,
+} from '../mapHelpers/mindMapStatements';
 import { FilterType } from '@/controllers/general/sorting';
 import styles from './MindElixirMap.module.scss';
 
@@ -78,6 +83,10 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
 
+	// Ref to hold current descendants for keyboard handler (avoids re-creating MindElixir on data change)
+	const descendantsRef = useRef<Results>(descendants);
+	descendantsRef.current = descendants;
+
 	// Apply filter if needed
 	const filteredDescendants =
 		filterBy === FilterType.questionsResults
@@ -113,54 +122,19 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			draggable: isAdmin, // Only admins can drag nodes
 			contextMenu: true,
 			toolBar: false, // We'll use our own toolbar
-			keypress: true,
+			keypress: false, // We handle keyboard shortcuts ourselves
 			editable: true, // Allow inline editing
 			allowUndo: true,
 			overflowHidden: false,
 			// Intercept operations before they happen
 			before: {
-				addChild: async (el) => {
-					// Get the node object
-					const nodeObj = el ? mindRef.current?.nodeData : null;
-					if (!nodeObj) return false;
-
-					// Find the corresponding statement
-					const statement = findStatementById(descendants, nodeObj.id);
-
-					// Options cannot have children
-					if (statement && !canHaveChildren(statement.statementType)) {
-						return false; // Prevent adding
-					}
-
-					// Show our create modal instead
-					setMapContext((prev) => ({
-						...prev,
-						showModal: true,
-						parentStatement: statement || descendants.top,
-					}));
-
-					return false; // Prevent MindElixir from adding directly
+				addChild: async () => {
+					// We handle child creation via Tab key
+					return false;
 				},
 				insertSibling: async () => {
-					// Get the current node
-					const currentNode = mindRef.current?.currentNode;
-					if (!currentNode) return false;
-
-					// Find the parent statement
-					const nodeData = currentNode.nodeObj as NodeObj;
-					const currentStatement = findStatementById(descendants, nodeData.id);
-					const parentStatement = currentStatement?.parentId
-						? findStatementById(descendants, currentStatement.parentId)
-						: descendants.top;
-
-					// Show our create modal
-					setMapContext((prev) => ({
-						...prev,
-						showModal: true,
-						parentStatement: parentStatement || descendants.top,
-					}));
-
-					return false; // Prevent MindElixir from adding directly
+					// We handle sibling creation via Enter key
+					return false;
 				},
 			},
 		});
@@ -202,8 +176,8 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			}));
 		});
 
-		// Event: Operation happened (for tracking node moves)
-		mind.bus.addListener('operation', (operation: Operation) => {
+		// Event: Operation happened (for tracking node moves and text edits)
+		mind.bus.addListener('operation', async (operation: Operation) => {
 			if (isAdmin && operation.name === 'moveNodeIn') {
 				// A node was moved - store IDs for confirmation
 				if ('obj' in operation && 'toObj' in operation) {
@@ -218,18 +192,102 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 					}));
 				}
 			}
+
+			// Handle inline text editing
+			if (operation.name === 'finishEdit' && 'obj' in operation && 'origin' in operation) {
+				const typedOp = operation as { obj: NodeObj; origin: string; name: string };
+				const statement = findStatementById(descendantsRef.current, typedOp.obj.id);
+				if (statement && typedOp.obj.topic !== typedOp.origin) {
+					await updateMindMapNodeText({
+						statement,
+						newText: typedOp.obj.topic,
+					});
+				}
+			}
 		});
+
+		// Keyboard handler for Tab (child) and Enter (sibling)
+		const handleKeyDown = async (e: KeyboardEvent) => {
+			if (!mindRef.current?.currentNode) return;
+
+			const currentNode = mindRef.current.currentNode;
+			const nodeData = currentNode.nodeObj as NodeObj;
+			// Use ref to get current descendants (avoids stale closure)
+			const currentDescendants = descendantsRef.current;
+			const currentStatement = findStatementById(currentDescendants, nodeData.id);
+
+			if (!currentStatement) return;
+
+			// Tab key - create child
+			if (e.key === 'Tab') {
+				e.preventDefault();
+
+				// Check if this node can have children
+				if (!canHaveChildren(currentStatement.statementType)) {
+					console.info('Options cannot have children');
+					return;
+				}
+
+				const newStatement = await createMindMapChild({
+					parentStatement: currentStatement,
+				});
+
+				if (newStatement) {
+					// The mind map will update via the data refresh when Firebase listener triggers
+					console.info('Child created:', newStatement.statementId);
+				}
+			}
+
+			// Enter key - create sibling
+			if (e.key === 'Enter' && !e.shiftKey) {
+				// Don't intercept Enter if we're editing a node
+				const activeElement = document.activeElement;
+				if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') {
+					return;
+				}
+
+				e.preventDefault();
+
+				// Find parent statement
+				const parentStatement = currentStatement.parentId
+					? findStatementById(currentDescendants, currentStatement.parentId)
+					: null;
+
+				if (!parentStatement) {
+					console.info('Cannot create sibling for root node');
+					return;
+				}
+
+				const newStatement = await createMindMapSibling({
+					currentStatement,
+					parentStatement,
+				});
+
+				if (newStatement) {
+					console.info('Sibling created:', newStatement.statementId);
+				}
+			}
+		};
+
+		// Add keyboard listener to container
+		container.addEventListener('keydown', handleKeyDown);
 
 		// Cleanup
 		return () => {
+			container.removeEventListener('keydown', handleKeyDown);
 			mind.destroy();
 			mindRef.current = null;
 		};
-	}, [data?.nodeData.id, isAdmin, descendants]);
+	}, [data?.nodeData.id, isAdmin]);
 
 	// Update data when descendants change
 	useEffect(() => {
 		if (!mindRef.current || !data) return;
+
+		// Save current scale and position before refresh
+		const currentScale = mindRef.current.scaleVal;
+		const mapElement = mindRef.current.map;
+		const currentTransform = mapElement?.style.transform || '';
 
 		// Refresh the mind map with new data
 		try {
@@ -237,6 +295,14 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		} catch {
 			// If refresh fails, reinitialize
 			mindRef.current.init(data);
+		}
+
+		// Restore scale and position after refresh
+		if (currentScale && mindRef.current) {
+			mindRef.current.scaleVal = currentScale;
+		}
+		if (currentTransform && mapElement) {
+			mapElement.style.transform = currentTransform;
 		}
 	}, [data]);
 
@@ -324,7 +390,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	return (
 		<>
-			<div ref={containerRef} className={styles.mindElixirContainer} />
+			<div ref={containerRef} className={styles.mindElixirContainer} tabIndex={0} />
 
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>
