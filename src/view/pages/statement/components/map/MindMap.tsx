@@ -151,7 +151,7 @@ const MindMap: FC = () => {
 	`;
 
 	return (
-		<main className='page__main' style={{ padding: 0, position: 'relative' }}>
+		<>
 			<style>{spinnerStyle}</style>
 			<select
 				aria-label='Select filter type for'
@@ -174,45 +174,37 @@ const MindMap: FC = () => {
 					{t('Questions, options and Results')}
 				</option>
 			</select>
-			<div
-				style={{
-					width: '100%',
+			{/* Only render map when results are available */}
+			{results ? (
+				<MindElixirMap
+					descendants={results}
+					isAdmin={_isAdmin}
+					filterBy={filterBy}
+				/>
+			) : (
+				<div style={{
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
 					height: '100%',
-					direction: 'ltr',
-				}}
-			>
-				{/* Only render map when results are available */}
-				{results ? (
-					<MindElixirMap
-						descendants={results}
-						isAdmin={_isAdmin}
-						filterBy={filterBy}
-					/>
-				) : (
-					<div style={{
-						display: 'flex',
-						alignItems: 'center',
-						justifyContent: 'center',
-						height: '100%',
-						flexDirection: 'column',
-						gap: '1rem'
-					}}>
-						{showSkeleton && (
-							<div className="skeleton-loader" style={{
-								width: '60px',
-								height: '60px',
-								border: '5px solid #f3f3f3',
-								borderTop: '5px solid var(--btn-primary)',
-								borderRadius: '50%',
-								animation: 'spin 1s linear infinite'
-							}}></div>
-						)}
-						<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
-							{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
-						</div>
+					flexDirection: 'column',
+					gap: '1rem'
+				}}>
+					{showSkeleton && (
+						<div className="skeleton-loader" style={{
+							width: '60px',
+							height: '60px',
+							border: '5px solid #f3f3f3',
+							borderTop: '5px solid var(--btn-primary)',
+							borderRadius: '50%',
+							animation: 'spin 1s linear infinite'
+						}}></div>
+					)}
+					<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
+						{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
 					</div>
-				)}
-			</div>
+				</div>
+			)}
 
 			{mapContext.showModal && (
 				<Modal>
@@ -227,7 +219,7 @@ const MindMap: FC = () => {
 					/>
 				</Modal>
 			)}
-		</main>
+		</>
 	);
 };
 
