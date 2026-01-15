@@ -1,4 +1,5 @@
 import { useContext,  useState } from "react";
+import { useParams } from "react-router";
 
 import { StatementContext } from "../../StatementCont";
 import styles from "./Switch.module.scss";
@@ -13,7 +14,9 @@ import ChatPanel from "../chat/components/chatPanel/ChatPanel";
 const Switch = () => {
   const { statement } = useContext(StatementContext);
   const { role } = useAuthorization(statement?.statementId);
+  const { screen } = useParams<{ screen?: string }>();
   const isAdmin = role === Role.admin || role === Role.creator;
+  const isSettingsScreen = screen === 'settings';
 
   const [edit, setEdit] = useState(false);
 
@@ -56,8 +59,8 @@ const Switch = () => {
       )}
 
       <OnlineUsers statementId={statement?.statementId} />
-      {statement && <SubQuestionsMap statement={statement} />}
-      <ChatPanel />
+      {statement && !isSettingsScreen && <SubQuestionsMap statement={statement} />}
+      {!isSettingsScreen && <ChatPanel />}
       <SwitchScreen statement={statement} role={role} />
     </main>
   );
