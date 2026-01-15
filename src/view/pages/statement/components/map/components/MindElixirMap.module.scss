@@ -2,11 +2,13 @@
 // Uses design system colors and variables
 
 .mindElixirContainer {
-	width: 100vw;
-	height: 100vh;
+	width: 100%;
+	height: 100%;
 	direction: ltr;
-	position: relative;
-	background-color: var(--card-default, #ffffff);
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: transparent;
 
 	// MindElixir node styling overrides
 	:global {
