@@ -9,6 +9,9 @@ import { AdminProvider } from './AdminContext';
 import AdminSidebar from './AdminSidebar';
 import styles from './admin.module.scss';
 
+// Prevent caching to ensure fresh permission checks (important for newly invited admins)
+export const dynamic = 'force-dynamic';
+
 interface AdminLayoutProps {
   children: React.ReactNode;
   params: Promise<{ statementId: string }>;
