@@ -20,10 +20,27 @@
 			height: 100%;
 		}
 
-		// Enhanced topic styling
+		// Enhanced topic styling with text wrapping
 		me-tpc {
 			border-radius: 8px;
 			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+			// Control node width and text wrapping
+			max-width: 250px;
+			white-space: normal;
+			word-wrap: break-word;
+			overflow-wrap: break-word;
+			line-height: 1.4;
+			text-align: start;
+		}
+
+		// Root node can be wider
+		me-root > me-tpc {
+			max-width: 300px;
+		}
+
+		// Main branches (first level) slightly wider
+		me-main > me-tpc {
+			max-width: 280px;
 		}
 	}
 }
