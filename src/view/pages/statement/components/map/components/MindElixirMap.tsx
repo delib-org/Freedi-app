@@ -57,6 +57,7 @@ function findStatementById(results: Results, id: string): Statement | null {
 		const found = findStatementById(sub, id);
 		if (found) return found;
 	}
+
 	return null;
 }
 
@@ -73,7 +74,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
-	const [direction, setDirection] = useState<'SIDE' | 'LEFT' | 'RIGHT'>('SIDE');
 
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
@@ -222,7 +222,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Handle layout direction change
 	const handleLayoutChange = useCallback((newDirection: 'SIDE' | 'LEFT' | 'RIGHT') => {
 		if (!mindRef.current) return;
-		setDirection(newDirection);
 
 		// MindElixir uses init methods for direction change
 		switch (newDirection) {
@@ -264,13 +263,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		setDraggedNodeId('');
 		setIntersectedNodeId('');
 	};
-
-	// Save current state to localStorage
-	const handleSave = useCallback(() => {
-		if (!mindRef.current) return;
-		const data = mindRef.current.getData();
-		localStorage.setItem('mindElixirData', JSON.stringify(data));
-	}, []);
 
 	// Restore state from localStorage
 	const handleRestore = useCallback(() => {
