@@ -186,6 +186,16 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
 function setCookiesFromUser(user: User): void {
   const maxAge = 60 * 60 * 24 * 30; // 30 days
 
+  // DEBUG: Log what Firebase returns for the user
+  console.info('[DEBUG] setCookiesFromUser - Firebase user data:', {
+    uid: user.uid,
+    email: user.email,
+    emailLower: user.email?.toLowerCase(),
+    displayName: user.displayName,
+    providerId: user.providerId,
+    providerData: user.providerData?.map(p => ({ providerId: p.providerId, email: p.email })),
+  });
+
   document.cookie = `userId=${user.uid}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
   if (user.displayName) {
@@ -193,6 +203,10 @@ function setCookiesFromUser(user: User): void {
   }
 
   if (user.email) {
+    console.info('[DEBUG] setCookiesFromUser - Setting email cookie:', {
+      originalEmail: user.email,
+      encodedEmail: encodeURIComponent(user.email),
+    });
     document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
 }
