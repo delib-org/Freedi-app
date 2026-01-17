@@ -105,11 +105,9 @@ export async function googleLogin(): Promise<User | null> {
     setCookiesFromUser(result.user);
 
     // Auto-accept any pending invitations for this user's email
+    // Use sendBeacon to survive page navigation/refresh after login
     if (result.user.email) {
-      acceptPendingInvitations().catch((error) => {
-        // Don't fail login if invitation acceptance fails
-        logError(error, { operation: 'auth.googleLogin.acceptInvitations', userId: result.user.uid });
-      });
+      triggerAutoAcceptInvitations();
     }
 
     return result.user;
@@ -170,10 +168,9 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
       setCookiesFromUser(user);
 
       // Auto-accept pending invitations when user has email (Google login)
+      // Use sendBeacon to survive page navigation/refresh
       if (user.email) {
-        acceptPendingInvitations().catch((error) => {
-          logError(error, { operation: 'auth.onAuthStateChanged.acceptInvitations', userId: user.uid });
-        });
+        triggerAutoAcceptInvitations();
       }
     }
     callback(user);
@@ -218,6 +215,32 @@ export function getCurrentUser(): User | null {
   const authInstance = getFirebaseAuth();
 
   return authInstance.currentUser;
+}
+
+/**
+ * Trigger auto-accept using sendBeacon (fire-and-forget)
+ * This survives page navigation/refresh after login
+ */
+function triggerAutoAcceptInvitations(): void {
+  try {
+    // sendBeacon survives page unload/navigation
+    const success = navigator.sendBeacon('/api/auth/accept-pending-invitations');
+    if (success) {
+      console.info('[Firebase Auth] Triggered auto-accept invitations via sendBeacon');
+    } else {
+      // Fallback to fetch if sendBeacon fails
+      console.info('[Firebase Auth] sendBeacon failed, falling back to fetch');
+      acceptPendingInvitations().catch((error) => {
+        logError(error, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
+      });
+    }
+  } catch (error) {
+    // Fallback to fetch if sendBeacon throws
+    console.info('[Firebase Auth] sendBeacon not available, falling back to fetch');
+    acceptPendingInvitations().catch((err) => {
+      logError(err, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
+    });
+  }
 }
 
 /**
