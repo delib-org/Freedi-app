@@ -14,9 +14,6 @@ import { logger } from '@/lib/utils/logger';
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-// Prevent caching to ensure fresh permission checks (important for newly invited admins)
-export const dynamic = 'force-dynamic';
-
 interface AdminLayoutProps {
   children: React.ReactNode;
   params: Promise<{ statementId: string }>;
