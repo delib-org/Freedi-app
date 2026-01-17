@@ -23,7 +23,6 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 		const invitationsRef = db.collection(Collections.adminInvitations);
 		const querySnapshot = await invitationsRef
 			.where('invitedEmail', '==', normalizedEmail)
-			.orderBy('createdAt', 'desc')
 			.limit(20)
 			.get();
 
@@ -45,22 +44,34 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
 		// Also check collaborators collection for this email
 		// We need to search across all documents, so let's use collectionGroup
-		const collaboratorsQuery = await db
-			.collectionGroup('collaborators')
-			.where('email', '==', normalizedEmail)
-			.limit(20)
-			.get();
+		let collaborators: Array<{
+			documentId: string;
+			userId: string;
+			email: string;
+			permissionLevel: string;
+			addedAt: string;
+		}> = [];
 
-		const collaborators = collaboratorsQuery.docs.map(doc => {
-			const data = doc.data();
-			return {
-				documentId: data.documentId,
-				userId: data.userId,
-				email: data.email,
-				permissionLevel: data.permissionLevel,
-				addedAt: new Date(data.addedAt).toISOString(),
-			};
-		});
+		try {
+			const collaboratorsQuery = await db
+				.collectionGroup('collaborators')
+				.where('email', '==', normalizedEmail)
+				.limit(20)
+				.get();
+
+			collaborators = collaboratorsQuery.docs.map(doc => {
+				const data = doc.data();
+				return {
+					documentId: data.documentId,
+					userId: data.userId,
+					email: data.email,
+					permissionLevel: data.permissionLevel,
+					addedAt: new Date(data.addedAt).toISOString(),
+				};
+			});
+		} catch (collabError) {
+			console.error('[DEBUG] Collaborators query failed (may need index):', collabError);
+		}
 
 		return NextResponse.json({
 			searchedEmail: normalizedEmail,
