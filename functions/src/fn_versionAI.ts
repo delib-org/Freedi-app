@@ -7,19 +7,107 @@
 
 import { Request, Response } from "firebase-functions/v1";
 import { getFirestore } from "firebase-admin/firestore";
-import {
-  Collections,
-  DocumentVersion,
-  VersionChange,
-  VersionStatus,
-  Paragraph,
-  ChangeType,
-  ChangeSource,
-} from "delib-npm";
 
 const db = getFirestore();
 
-// AI Configuration
+// ============================================================================
+// TYPES (from @freedi/shared-types - defined inline for Firebase Functions)
+// ============================================================================
+
+// Collection names
+const SignCollections = {
+  documentVersions: "documentVersions",
+  versionChanges: "versionChanges",
+} as const;
+
+// Enums
+enum VersionStatus {
+  draft = "draft",
+  published = "published",
+  archived = "archived",
+}
+
+enum ChangeType {
+  modified = "modified",
+  added = "added",
+  removed = "removed",
+  unchanged = "unchanged",
+}
+
+enum ChangeSourceType {
+  suggestion = "suggestion",
+  comment = "comment",
+}
+
+enum ParagraphType {
+  h1 = "h1",
+  h2 = "h2",
+  h3 = "h3",
+  h4 = "h4",
+  h5 = "h5",
+  h6 = "h6",
+  paragraph = "paragraph",
+  li = "li",
+  table = "table",
+  image = "image",
+}
+
+// Interfaces
+interface ChangeSource {
+  type: ChangeSourceType;
+  sourceId: string;
+  content: string;
+  impact: number;
+  supporters: number;
+  objectors: number;
+  creatorId: string;
+  creatorDisplayName: string;
+}
+
+interface Paragraph {
+  paragraphId: string;
+  type: ParagraphType;
+  content: string;
+  order: number;
+  listType?: "ul" | "ol";
+  sourceStatementId?: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
+}
+
+interface VersionChange {
+  changeId: string;
+  versionId: string;
+  paragraphId: string;
+  originalContent: string;
+  proposedContent: string;
+  finalContent?: string;
+  changeType: ChangeType;
+  sources: ChangeSource[];
+  aiReasoning: string;
+  combinedImpact: number;
+}
+
+interface DocumentVersion {
+  versionId: string;
+  documentId: string;
+  versionNumber: number;
+  paragraphs: Paragraph[];
+  status: VersionStatus;
+  createdAt: number;
+  publishedAt?: number;
+  createdBy: string;
+  publishedBy?: string;
+  aiGenerated: boolean;
+  aiModel?: string;
+  summary?: string;
+}
+
+// ============================================================================
+// AI CONFIGURATION
+// ============================================================================
+
 const GEMINI_MODEL = "gemini-3-flash-preview";
 const MAX_TOKENS = 8192;
 const TEMPERATURE = 0.3;
@@ -145,7 +233,7 @@ function formatFeedback(sources: ChangeSource[]): string {
 
   return sources
     .map((source, index) => {
-      const type = source.type === "suggestion" ? "Suggestion" : "Comment";
+      const type = source.type === ChangeSourceType.suggestion ? "Suggestion" : "Comment";
       const support =
         source.supporters > 0 || source.objectors > 0
           ? ` (${source.supporters} supporters, ${source.objectors} objectors)`
@@ -282,7 +370,7 @@ export async function processVersionAI(
     console.info(`[processVersionAI] Starting for version ${versionId}`);
 
     // Get the version
-    const versionRef = db.collection(Collections.documentVersions).doc(versionId);
+    const versionRef = db.collection(SignCollections.documentVersions).doc(versionId);
     const versionSnap = await versionRef.get();
 
     if (!versionSnap.exists) {
@@ -304,7 +392,7 @@ export async function processVersionAI(
 
     // Get changes
     const changesSnapshot = await db
-      .collection(Collections.versionChanges)
+      .collection(SignCollections.versionChanges)
       .where("versionId", "==", versionId)
       .get();
 
@@ -359,7 +447,7 @@ export async function processVersionAI(
 
     for (const analysis of analysisResults) {
       const changeRef = db
-        .collection(Collections.versionChanges)
+        .collection(SignCollections.versionChanges)
         .doc(analysis.changeId);
       batch.update(changeRef, {
         proposedContent: analysis.result.proposedContent,
