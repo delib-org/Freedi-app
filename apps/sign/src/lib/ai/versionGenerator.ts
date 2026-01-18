@@ -347,8 +347,8 @@ async function callGemini(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
-	// Use Gemini 3 Flash as default - latest model for document analysis
-	const model = config.model || 'gemini-3-flash';
+	// Use Gemini 3 Flash Preview as default - latest model for document analysis
+	const model = config.model || 'gemini-3-flash-preview';
 	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
 
