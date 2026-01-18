@@ -2,19 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import {
-	Collections,
-	AdminPermissionLevel,
-	DocumentVersion,
-	VersionStatus,
-} from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
-import { logError } from '@/lib/utils/errorHandling';
+
+// Inline constants to avoid import issues
+const COLLECTIONS = {
+	documentVersions: 'documentVersions',
+} as const;
+
+const VERSION_STATUS = {
+	draft: 'draft',
+	published: 'published',
+	archived: 'archived',
+} as const;
+
+const ADMIN_PERMISSION_LEVEL = {
+	viewer: 'viewer',
+} as const;
 
 /**
  * Firebase Function URL for AI processing
  * Uses Firebase Functions for longer timeout (540s vs Vercel's 30s)
- * Delegates heavy AI work to Firebase to avoid Vercel timeout limits
  */
 const FIREBASE_FUNCTION_URL =
 	process.env.FIREBASE_FUNCTIONS_URL ||
@@ -45,7 +52,7 @@ export async function POST(
 		// Check admin access
 		const accessResult = await checkAdminAccess(db, docId, userId);
 
-		if (!accessResult.isAdmin || accessResult.permissionLevel === AdminPermissionLevel.viewer) {
+		if (!accessResult.isAdmin || accessResult.permissionLevel === ADMIN_PERMISSION_LEVEL.viewer) {
 			return NextResponse.json(
 				{ error: 'Forbidden - Admin access required' },
 				{ status: 403 }
@@ -53,7 +60,7 @@ export async function POST(
 		}
 
 		// Get the version to verify it exists and is in draft status
-		const versionRef = db.collection(Collections.documentVersions).doc(versionId);
+		const versionRef = db.collection(COLLECTIONS.documentVersions).doc(versionId);
 		const versionSnap = await versionRef.get();
 
 		if (!versionSnap.exists) {
@@ -63,16 +70,16 @@ export async function POST(
 			);
 		}
 
-		const version = versionSnap.data() as DocumentVersion;
+		const version = versionSnap.data();
 
-		if (version.documentId !== docId) {
+		if (!version || version.documentId !== docId) {
 			return NextResponse.json(
 				{ error: 'Version does not belong to this document' },
 				{ status: 400 }
 			);
 		}
 
-		if (version.status !== VersionStatus.draft) {
+		if (version.status !== VERSION_STATUS.draft) {
 			return NextResponse.json(
 				{ error: 'Only draft versions can be processed' },
 				{ status: 400 }
@@ -116,12 +123,7 @@ export async function POST(
 			totalChanges: result.totalChanges,
 		});
 	} catch (error) {
-		const { docId, versionId } = await params;
-		logError(error, {
-			operation: 'api.versions.processAI',
-			documentId: docId,
-			metadata: { versionId },
-		});
+		logger.error('[Process AI] Error:', error);
 
 		return NextResponse.json(
 			{ error: 'Internal server error' },
