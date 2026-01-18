@@ -65,6 +65,82 @@ export interface DocumentSynthesisOutput {
 }
 
 // ============================================================================
+// HELPERS
+// ============================================================================
+
+/**
+ * Extract and parse JSON from AI response
+ * Handles common cases like markdown code blocks, extra text before/after JSON
+ */
+function extractJSON<T>(response: string, fallback?: T): T {
+	let cleanedResponse = response.trim();
+
+	// Log the raw response for debugging (first 500 chars)
+	console.info('[extractJSON] Raw response (first 500 chars):', cleanedResponse.substring(0, 500));
+
+	// Remove markdown code blocks (```json ... ``` or ``` ... ```)
+	const codeBlockMatch = cleanedResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
+	if (codeBlockMatch) {
+		cleanedResponse = codeBlockMatch[1].trim();
+	}
+
+	// Try to find JSON object or array in the response
+	const jsonMatch = cleanedResponse.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+	if (jsonMatch) {
+		cleanedResponse = jsonMatch[1];
+	}
+
+	try {
+		// Parse the cleaned JSON
+		return JSON.parse(cleanedResponse);
+	} catch (parseError) {
+		console.error('[extractJSON] Parse error:', parseError);
+		console.error('[extractJSON] Cleaned response:', cleanedResponse.substring(0, 1000));
+
+		// If we have a fallback, return it
+		if (fallback !== undefined) {
+			return fallback;
+		}
+
+		// Try to fix common truncation issues
+		// Add missing closing braces/brackets
+		let fixedResponse = cleanedResponse;
+		const openBraces = (fixedResponse.match(/\{/g) || []).length;
+		const closeBraces = (fixedResponse.match(/\}/g) || []).length;
+		const openBrackets = (fixedResponse.match(/\[/g) || []).length;
+		const closeBrackets = (fixedResponse.match(/\]/g) || []).length;
+
+		// Add missing closing brackets/braces
+		for (let i = 0; i < openBrackets - closeBrackets; i++) {
+			fixedResponse += ']';
+		}
+		for (let i = 0; i < openBraces - closeBraces; i++) {
+			fixedResponse += '}';
+		}
+
+		try {
+			console.info('[extractJSON] Attempting fixed response');
+			return JSON.parse(fixedResponse);
+		} catch {
+			// Try to extract partial content for paragraph analysis responses
+			// This handles truncated JSON by extracting what we can
+			const proposedContentMatch = cleanedResponse.match(/"proposedContent"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/);
+			if (proposedContentMatch) {
+				console.info('[extractJSON] Recovered proposedContent from truncated response');
+				return {
+					proposedContent: proposedContentMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n'),
+					reasoning: 'Response was truncated - partial recovery',
+					confidence: 0.7,
+				} as T;
+			}
+
+			// Re-throw original error
+			throw parseError;
+		}
+	}
+}
+
+// ============================================================================
 // PROMPTS
 // ============================================================================
 
@@ -88,7 +164,13 @@ CRITICAL - Your reasoning MUST:
 - Explicitly reference which feedback items you incorporated and why
 - Explain why you chose to address certain feedback over others
 - If you made no changes, explain why the existing text is already adequate
-- Be specific about what words/phrases you changed and the rationale`;
+- Be specific about what words/phrases you changed and the rationale
+
+LANGUAGE REQUIREMENT:
+- ALWAYS respond in the SAME LANGUAGE as the original document content
+- If the document is in Hebrew, your reasoning and all text must be in Hebrew
+- If the document is in English, respond in English
+- Match the document's language exactly`;
 
 const PARAGRAPH_ANALYSIS_USER_PROMPT = `
 Analyze this paragraph and the public feedback, then propose a revision.
@@ -113,6 +195,7 @@ IMPORTANT:
 - Reference feedback items by their number (e.g., "Incorporated suggestion #1 because...")
 - Explain trade-offs when feedback is contradictory
 - Confidence should reflect how certain you are about the proposed changes (0.0-1.0)
+- RESPOND IN THE SAME LANGUAGE AS THE ORIGINAL PARAGRAPH - if it's Hebrew, respond in Hebrew
 `;
 
 const DOCUMENT_SYNTHESIS_SYSTEM_PROMPT = `You are an expert document editor performing a final review of proposed document changes based on community feedback.
@@ -133,7 +216,13 @@ Guidelines:
 The summary you provide will be shown to administrators and should:
 - Highlight the most significant changes
 - Explain the overall direction of the revision
-- Note how many paragraphs were modified and why`;
+- Note how many paragraphs were modified and why
+
+LANGUAGE REQUIREMENT:
+- ALWAYS respond in the SAME LANGUAGE as the document content
+- If the document is in Hebrew, your summary and all text must be in Hebrew
+- If the document is in English, respond in English
+- Match the document's language exactly`;
 
 const DOCUMENT_SYNTHESIS_USER_PROMPT = `
 Review these proposed document changes and ensure consistency across the entire document.
@@ -146,21 +235,18 @@ Review these proposed document changes and ensure consistency across the entire 
 
 Respond in JSON format:
 {
-  "paragraphs": [
-    {"paragraphId": "id", "content": "final content", "type": "paragraph"}
+  "changedParagraphs": [
+    {"paragraphId": "id", "content": "final revised content"}
   ],
-  "summary": "A 2-3 sentence executive summary of this version's changes for administrators",
-  "changesSummary": [
-    "Paragraph X: Brief description of what changed and why",
-    "Paragraph Y: Brief description of what changed and why"
-  ]
+  "summary": "A 2-3 sentence executive summary of this version's changes",
+  "changesSummary": ["Brief description of each change"]
 }
 
 IMPORTANT:
-- The "summary" should give administrators a quick understanding of the version
-- Each item in "changesSummary" should reference the specific paragraph and explain the change
-- If you made consistency adjustments beyond the proposed changes, note them
-- Keep paragraph IDs exactly as provided - do not modify them
+- ONLY include paragraphs in "changedParagraphs" that were actually modified
+- Do NOT include unchanged paragraphs in the response
+- Keep paragraph IDs exactly as provided
+- Keep your response concise to avoid truncation
 `;
 
 // ============================================================================
@@ -181,7 +267,7 @@ async function callOpenAI(
 ): Promise<string> {
 	// Use GPT-4o as default - a smart model for quality analysis
 	const model = config.model || 'gpt-4o';
-	const maxTokens = config.maxTokens || 2000;
+	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
 
 	const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -223,7 +309,7 @@ async function callClaude(
 ): Promise<string> {
 	// Use Claude 3.5 Sonnet as default - excellent for nuanced document analysis
 	const model = config.model || 'claude-3-5-sonnet-20241022';
-	const maxTokens = config.maxTokens || 2000;
+	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
 
 	const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -263,7 +349,7 @@ async function callGemini(
 ): Promise<string> {
 	// Use Gemini 3 Pro as default - the smartest model for document analysis
 	const model = config.model || 'gemini-3-pro-preview';
-	const maxTokens = config.maxTokens || 2000;
+	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
 
 	const response = await fetch(
@@ -438,7 +524,11 @@ export async function analyzeParagraph(
 			'ai.analyzeParagraph'
 		);
 
-		const parsed = JSON.parse(response);
+		const parsed = extractJSON<{
+			proposedContent?: string;
+			reasoning?: string;
+			confidence?: number;
+		}>(response);
 
 		return {
 			proposedContent: parsed.proposedContent || input.paragraph.content || '',
@@ -509,11 +599,19 @@ Proposed: "${change.proposedContent}"`
 			'ai.synthesizeDocument'
 		);
 
-		const parsed = JSON.parse(response);
+		const parsed = extractJSON<{
+			changedParagraphs?: Array<{ paragraphId: string; content?: string }>;
+			paragraphs?: Array<{ paragraphId: string; content?: string }>; // backwards compat
+			summary?: string;
+			changesSummary?: string[];
+		}>(response);
+
+		// Use changedParagraphs (new) or paragraphs (old format) for backwards compatibility
+		const aiChangedParagraphs = parsed.changedParagraphs || parsed.paragraphs || [];
 
 		// Merge AI output with original paragraph structure
 		const paragraphs = input.originalParagraphs.map((original) => {
-			const aiParagraph = parsed.paragraphs?.find(
+			const aiParagraph = aiChangedParagraphs.find(
 				(p: { paragraphId: string }) => p.paragraphId === original.paragraphId
 			);
 

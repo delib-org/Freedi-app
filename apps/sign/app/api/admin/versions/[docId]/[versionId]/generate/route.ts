@@ -187,6 +187,8 @@ export async function POST(
 			);
 		}
 
+		logger.info(`[Versions API] Document paragraphIds: ${paragraphs.map((p: Paragraph) => p.paragraphId).join(', ')}`);
+
 		// Get total viewers for the document (for impact calculation)
 		const viewsSnapshot = await db
 			.collection(Collections.statementViews)
@@ -196,6 +198,8 @@ export async function POST(
 		// Count unique visitors
 		const uniqueVisitors = new Set(viewsSnapshot.docs.map(doc => doc.data().visitorId));
 		const totalViewers = Math.max(uniqueVisitors.size, 1); // At least 1 to avoid division by zero
+
+		logger.info(`[Versions API] Document ${docId}: ${totalViewers} unique viewers`);
 
 		// Get suggestions for all paragraphs
 		let suggestions: Suggestion[] = [];
@@ -207,6 +211,10 @@ export async function POST(
 				.get();
 
 			suggestions = suggestionsSnapshot.docs.map(doc => doc.data() as Suggestion);
+			logger.info(`[Versions API] Found ${suggestions.length} suggestions for document ${docId}`);
+			if (suggestions.length > 0) {
+				logger.info(`[Versions API] Suggestion paragraphIds: ${suggestions.map(s => s.paragraphId).join(', ')}`);
+			}
 		}
 
 		// Get comments for all paragraphs
@@ -230,6 +238,10 @@ export async function POST(
 					parentId: data.parentId,
 				};
 			});
+			logger.info(`[Versions API] Found ${comments.length} comments for document ${docId}`);
+			if (comments.length > 0) {
+				logger.info(`[Versions API] Comment parentIds: ${comments.map(c => c.parentId).join(', ')}`);
+			}
 		}
 
 		// Get evaluations for suggestions
@@ -300,6 +312,8 @@ export async function POST(
 				const evals = suggestionEvaluations.get(suggestion.suggestionId) || { supporters: 0, objectors: 0 };
 				const impact = calculateItemImpact(evals.supporters, evals.objectors, totalViewers, k1, k2);
 
+				logger.info(`[Versions API] Suggestion ${suggestion.suggestionId}: supporters=${evals.supporters}, objectors=${evals.objectors}, impact=${impact.toFixed(3)}, threshold=${minImpactThreshold}`);
+
 				if (impact >= minImpactThreshold) {
 					sources.push({
 						type: ChangeSourceType.suggestion,
@@ -317,9 +331,15 @@ export async function POST(
 			// Process comments for this paragraph
 			const paragraphComments = comments.filter(c => c.parentId === paragraphId);
 
+			if (paragraphComments.length > 0) {
+				logger.info(`[Versions API] Paragraph ${paragraphId}: found ${paragraphComments.length} comments`);
+			}
+
 			for (const comment of paragraphComments) {
 				const evals = commentEvaluations.get(comment.statementId) || { supporters: 0, objectors: 0 };
 				const impact = calculateItemImpact(evals.supporters, evals.objectors, totalViewers, k1, k2);
+
+				logger.info(`[Versions API] Comment ${comment.statementId}: supporters=${evals.supporters}, objectors=${evals.objectors}, impact=${impact.toFixed(3)}, threshold=${minImpactThreshold}`);
 
 				if (impact >= minImpactThreshold) {
 					sources.push({
@@ -384,7 +404,8 @@ export async function POST(
 
 		await batch.commit();
 
-		logger.info(`[Versions API] Generated ${changes.length} changes for version ${versionId}`);
+		const changesWithSources = changes.filter(c => c.sources.length > 0);
+		logger.info(`[Versions API] Generated ${changes.length} total changes, ${changesWithSources.length} with sources for version ${versionId}`);
 
 		// Return the changes that need AI processing
 		const changesNeedingAI = changes.filter(c => c.changeType !== ChangeType.unchanged && c.sources.length > 0);
