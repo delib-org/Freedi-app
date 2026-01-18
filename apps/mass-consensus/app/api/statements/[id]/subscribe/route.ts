@@ -78,6 +78,7 @@ export async function POST(
     // Create subscription ID matching the format in Firebase function
     const subscriberId = `${statementId}--${email.toLowerCase().replace(/[^a-z0-9]/g, '_')}--${Date.now()}`;
 
+    // Build subscription object, only including userId if it's a valid non-empty string
     const subscription: EmailSubscriber = {
       subscriberId,
       email: email.toLowerCase(),
@@ -85,9 +86,12 @@ export async function POST(
       createdAt: Date.now(),
       isActive: true,
       source: 'mass-consensus',
-      // Only include userId if provided (Firestore rejects undefined values)
-      ...(userId && { userId }),
     };
+
+    // Only add userId if it's a valid non-empty string (Firestore rejects undefined values)
+    if (typeof userId === 'string' && userId.trim().length > 0) {
+      subscription.userId = userId;
+    }
 
     await db.collection(EMAIL_SUBSCRIBERS_COLLECTION).doc(subscriberId).set(subscription);
 
