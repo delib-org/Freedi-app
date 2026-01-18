@@ -410,7 +410,7 @@ See [LICENSE.md](./LICENSE.md) for full details.
 
 If you use Freedi in academic research, please cite:
 
-> Yaron, T. (2025). The Consensus Algorithm: A Deliberative Framework for Scalable Collective Decision-Making. *Working Paper*.
+> Yaron, T. (2026). A Confidence-Adjusted Consensus Mechanism for Scalable Deliberative Decision-Making. *SocArXiv*. https://doi.org/10.31235/osf.io/u4phy_v1
 
 ---
 
