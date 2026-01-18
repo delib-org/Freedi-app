@@ -2,6 +2,29 @@
 
 **Freedi** is an open-source platform for scalable deliberative democracy. It implements a novel consensus-building framework that enables meaningful participation at scale through continuous preference expression, open proposal generation, and real-time consensus measurement.
 
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE.md)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange)](https://firebase.google.com/)
+
+---
+
+## Table of Contents
+
+- [The Problem](#the-problem-scale-vs-participation)
+- [The Solution](#the-solution-a-new-deliberative-framework)
+- [Consensus Algorithm](#the-consensus-algorithm)
+- [Real-World Applications](#proof-of-concept-real-world-applications)
+- [Platform Features](#platform-features)
+- [Technical Architecture](#technical-architecture)
+- [Getting Started](#getting-started)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [For Researchers](#for-researchers-exploring-the-code)
+- [License](#license)
+
+---
+
 ## The Problem: Scale vs. Participation
 
 As groups grow in size, the complexity of collective decision-making increases exponentially. This forces societies to concentrate authority in small hierarchical subgroups. While this enables coordination at scale, it systematically underrepresents the interests of broader populations and limits collective learning.
@@ -72,6 +95,8 @@ This ensures that small samples with zero variance are treated as having uncerta
 ### One Evaluator, One Vote
 
 Each participant may submit only one evaluation per proposal (though they may update it at any time). This prevents manipulation through repeated voting.
+
+> 📄 **Deep Dive**: See [Consensus Scoring Update](./docs/features/CONSENSUS_SCORING_UPDATE.md) for full implementation details.
 
 ## Proof of Concept: Real-World Applications
 
@@ -163,6 +188,11 @@ Collaborative document review with granular feedback:
 - Firebase Cloud Functions (50+ serverless functions)
 - Firebase Cloud Messaging (push notifications)
 
+**AI/ML**
+- OpenAI embeddings for semantic search (text-embedding-3-small)
+- Google Gemini for proposal improvements and summarization
+- Firestore Vector Search for similarity detection
+
 **Development & Quality**
 - TypeScript strict mode throughout
 - ESLint + Prettier for code quality
@@ -248,6 +278,48 @@ npm run deploy <target> [options]
 
 Options: `--hosting`, `--functions`, `--rules`, `--skip-build`, `--dry-run`
 
+## Documentation
+
+All documentation is organized in the [`docs/`](./docs/) folder:
+
+| Folder | Description |
+|--------|-------------|
+| [`docs/setup/`](./docs/setup/) | Firebase, email, and deployment setup guides |
+| [`docs/guides/`](./docs/guides/) | Coding style, contributing, testing, design system |
+| [`docs/security/`](./docs/security/) | Security policies and vulnerability tracking |
+| [`docs/quality/`](./docs/quality/) | Code quality reviews and improvements |
+| [`docs/performance/`](./docs/performance/) | Server optimization guides and results |
+| [`docs/features/`](./docs/features/) | Feature implementations and updates |
+| [`docs/architecture/`](./docs/architecture/) | System design and recommendations |
+| [`docs/bugs/`](./docs/bugs/) | Issue tracking and debugging guides |
+| [`docs/plans/`](./docs/plans/) | Feature planning documents |
+| [`docs/papers/`](./docs/papers/) | Research and technical papers |
+
+### Quick Links
+
+| Need to... | Document |
+|------------|----------|
+| Set up Firebase | [docs/setup/FIREBASE_SETUP.md](./docs/setup/FIREBASE_SETUP.md) |
+| Understand coding standards | [docs/guides/CODING_STYLE_GUIDE.md](./docs/guides/CODING_STYLE_GUIDE.md) |
+| Contribute code | [docs/guides/CONTRIBUTING.md](./docs/guides/CONTRIBUTING.md) |
+| Run tests | [docs/guides/TESTING.md](./docs/guides/TESTING.md) |
+| Review architecture | [docs/architecture/](./docs/architecture/) |
+| Check code quality | [docs/quality/CODE_QUALITY_REVIEW.md](./docs/quality/CODE_QUALITY_REVIEW.md) |
+
+See [docs/INDEX.md](./docs/INDEX.md) for a complete documentation index.
+
+## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./docs/guides/CONTRIBUTING.md) for details.
+
+### Quick Start for Contributors
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/my-feature`
+3. Make your changes following the [Coding Style Guide](./docs/guides/CODING_STYLE_GUIDE.md)
+4. Run tests: `npm run check-all`
+5. Submit a pull request
+
 ## Limitations and Future Work
 
 We acknowledge several important limitations:
@@ -279,7 +351,7 @@ We invite researchers and practitioners to help advance deliberative democracy:
 2. **Document findings** covering strengths, concerns, and proposed improvements
 3. **Contact maintainers** via [GitHub Issues](https://github.com/delib-org/Freedi-app/issues)
 4. **Discuss implementation** before writing code
-5. **Submit pull requests** following our [contribution guidelines](./CONTRIBUTING.md)
+5. **Submit pull requests** following our [contribution guidelines](./docs/guides/CONTRIBUTING.md)
 
 See the "For Researchers" section below for detailed guidance.
 
@@ -326,18 +398,13 @@ Freedi draws on research from:
 
 The framework addresses structural limitations identified in political science literature regarding hierarchical decision-making, coordination complexity, and the polarization dynamics of traditional voting systems.
 
-## Documentation
-
-- [CLAUDE.md](./CLAUDE.md) - Development guidelines
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution process
-- [ATOMIC-DESIGN-SYSTEM.md](./ATOMIC-DESIGN-SYSTEM.md) - Component architecture
-- [docs/design-guide.md](./docs/design-guide.md) - UI/UX patterns
-- [docs/FREEDI_ARCHITECTURE.md](./docs/FREEDI_ARCHITECTURE.md) - System architecture
-- [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) - Firebase configuration
-
 ## License
 
-This project is licensed under the terms specified in [LICENSE.md](./LICENSE.md).
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)** with an additional attribution requirement.
+
+**Attribution Requirement:** When creating your own instance of the app, you must include prominent attribution to the [Deliberative Democracy Institute](https://delib.org) on the main page, About page, and any other relevant sections.
+
+See [LICENSE.md](./LICENSE.md) for full details.
 
 ## Citation
 
@@ -347,4 +414,10 @@ If you use Freedi in academic research, please cite:
 
 ---
 
+<div align="center">
+
 **Freedi** - Enabling meaningful democratic participation at scale through open-source deliberative technology.
+
+[Website](https://freedi.tech) · [Documentation](./docs/INDEX.md) · [Issues](https://github.com/delib-org/Freedi-app/issues) · [Discussions](https://github.com/delib-org/Freedi-app/discussions)
+
+</div>
