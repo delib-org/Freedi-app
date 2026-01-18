@@ -5,7 +5,7 @@
  * document revisions based on public feedback.
  *
  * Uses the smartest available AI models for high-quality analysis:
- * - Gemini 3 Pro (default) - Best for nuanced document analysis
+ * - Gemini 3.0 Flash (default) - Excellent for nuanced document analysis
  * - GPT-4o - Strong alternative
  * - Claude 3.5 Sonnet - Excellent for detailed reasoning
  */
@@ -347,8 +347,8 @@ async function callGemini(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
-	// Use Gemini 3 Pro as default - the smartest model for document analysis
-	const model = config.model || 'gemini-3-pro-preview';
+	// Use Gemini 3.0 Flash as default - excellent for document analysis
+	const model = config.model || 'gemini-3.0-flash';
 	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
 
