@@ -234,7 +234,7 @@ function triggerAutoAcceptInvitations(): void {
         logError(error, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
       });
     }
-  } catch (error) {
+  } catch {
     // Fallback to fetch if sendBeacon throws
     console.info('[Firebase Auth] sendBeacon not available, falling back to fetch');
     acceptPendingInvitations().catch((err) => {
