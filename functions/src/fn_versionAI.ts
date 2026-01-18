@@ -317,10 +317,14 @@ async function analyzeParagraph(
     );
 
   try {
+    console.info(`[analyzeParagraph] Calling Gemini for paragraph ${paragraph.paragraphId} with ${sources.length} sources`);
+
     const response = await callGemini(
       PARAGRAPH_ANALYSIS_SYSTEM_PROMPT,
       userPrompt
     );
+
+    console.info(`[analyzeParagraph] Gemini response length: ${response.length}`);
 
     const parsed = extractJSON<{
       proposedContent?: string;
@@ -328,8 +332,18 @@ async function analyzeParagraph(
       confidence?: number;
     }>(response);
 
+    const originalContent = paragraph.content || "";
+    const proposedContent = parsed.proposedContent || originalContent;
+    const isChanged = proposedContent !== originalContent;
+
+    console.info(`[analyzeParagraph] Paragraph ${paragraph.paragraphId}: changed=${isChanged}, confidence=${parsed.confidence}`);
+    if (isChanged) {
+      console.info(`[analyzeParagraph] Original (first 100 chars): ${originalContent.substring(0, 100)}...`);
+      console.info(`[analyzeParagraph] Proposed (first 100 chars): ${proposedContent.substring(0, 100)}...`);
+    }
+
     return {
-      proposedContent: parsed.proposedContent || paragraph.content || "",
+      proposedContent,
       reasoning: parsed.reasoning || "AI analysis completed.",
       confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.8,
     };
@@ -410,14 +424,31 @@ export async function processVersionAI(
       return;
     }
 
+    // Log all changes for debugging
+    console.info(`[processVersionAI] Total changes: ${changes.length}`);
+    for (const change of changes) {
+      console.info(`[processVersionAI] Change ${change.paragraphId}: type=${change.changeType}, sources=${change.sources?.length || 0}`);
+    }
+
     // Filter changes needing AI
     const changesNeedingAI = changes.filter(
       (c) => c.changeType !== ChangeType.unchanged && c.sources.length > 0
     );
 
     console.info(
-      `[processVersionAI] Processing ${changesNeedingAI.length} paragraphs with AI`
+      `[processVersionAI] Processing ${changesNeedingAI.length} paragraphs with AI (filtered from ${changes.length} total)`
     );
+
+    if (changesNeedingAI.length === 0) {
+      console.info(`[processVersionAI] No changes need AI processing - all paragraphs either unchanged or have no sources`);
+      res.json({
+        success: true,
+        processedChanges: 0,
+        totalChanges: changes.length,
+        message: "No paragraphs had feedback requiring AI processing",
+      });
+      return;
+    }
 
     // Process all paragraphs in parallel
     const analysisPromises = changesNeedingAI.map(async (change) => {
