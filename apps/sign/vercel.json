@@ -47,6 +47,9 @@
   "functions": {
     "app/api/**/*.ts": {
       "maxDuration": 30
+    },
+    "app/api/admin/versions/**/process-ai/route.ts": {
+      "maxDuration": 60
     }
   },
   "crons": [],

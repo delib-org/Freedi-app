@@ -682,21 +682,16 @@ export async function processVersionChanges(
 }> {
 	const aiConfig = config || getDefaultAIConfig();
 
-	// Step 1: Analyze each paragraph with feedback
+	// Step 1: Analyze each paragraph with feedback (in parallel for speed)
 	const changesNeedingAI = changes.filter(
 		(c) => c.changeType !== ChangeType.unchanged && c.sources.length > 0
 	);
 
-	const analysisResults: Array<{
-		changeId: string;
-		paragraphId: string;
-		result: ParagraphAnalysisOutput;
-	}> = [];
-
-	for (const change of changesNeedingAI) {
+	// Process all paragraphs in parallel to avoid Vercel timeout
+	const analysisPromises = changesNeedingAI.map(async (change) => {
 		const paragraph = paragraphs.find((p) => p.paragraphId === change.paragraphId);
 
-		if (!paragraph) continue;
+		if (!paragraph) return null;
 
 		const result = await analyzeParagraph(
 			{
@@ -706,12 +701,17 @@ export async function processVersionChanges(
 			aiConfig
 		);
 
-		analysisResults.push({
+		return {
 			changeId: change.changeId,
 			paragraphId: change.paragraphId,
 			result,
-		});
-	}
+		};
+	});
+
+	const analysisResultsWithNulls = await Promise.all(analysisPromises);
+	const analysisResults = analysisResultsWithNulls.filter(
+		(r): r is { changeId: string; paragraphId: string; result: ParagraphAnalysisOutput } => r !== null
+	);
 
 	// Step 2: Update changes with AI proposals
 	const updatedChanges = changes.map((change) => {
