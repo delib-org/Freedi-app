@@ -35,7 +35,7 @@ COPY packages/shared-types/package*.json ./packages/shared-types/
 COPY packages/shared-i18n/package*.json ./packages/shared-i18n/
 COPY apps/sign/package*.json ./apps/sign/
 
-# Install dependencies
+# Install root dependencies
 RUN npm ci --ignore-scripts
 
 # Copy source code
@@ -43,15 +43,18 @@ COPY packages/shared-types ./packages/shared-types
 COPY packages/shared-i18n ./packages/shared-i18n
 COPY apps/sign ./apps/sign
 
-# Build shared packages
+# Build shared-types (install valibot dependency)
 WORKDIR /app/packages/shared-types
+RUN npm install
 RUN npm run build
 
+# Build shared-i18n (may not have build script)
 WORKDIR /app/packages/shared-i18n
-RUN npm run build || true
+RUN npm install || true
 
-# Build the Next.js app
+# Install and build the Next.js app
 WORKDIR /app/apps/sign
+RUN npm install
 RUN npm run build
 
 # Production stage
@@ -67,15 +70,16 @@ ENV HOSTNAME="0.0.0.0"
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy built application
-# The standalone output for a monorepo preserves the directory structure
-COPY --from=builder /app/apps/sign/public ./apps/sign/public
+# Copy the standalone output
 COPY --from=builder --chown=nextjs:nodejs /app/apps/sign/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/apps/sign/.next/static ./apps/sign/.next/static
+
+# Copy public and static files relative to server.js (at root)
+COPY --from=builder --chown=nextjs:nodejs /app/apps/sign/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/apps/sign/.next/static ./.next/static
 
 USER nextjs
 
 EXPOSE 8080
 
-# The server.js is located within the apps/sign directory in standalone mode
-CMD ["node", "apps/sign/server.js"]
+# server.js is at root level in standalone output
+CMD ["node", "server.js"]

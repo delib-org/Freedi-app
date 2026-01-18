@@ -55,41 +55,6 @@ gcloud artifacts repositories create cloud-run-source-deploy \
     --location=${REGION} \
     --description="Cloud Run source deployments" 2>/dev/null || true
 
-# Parse .env.local and separate build-time (NEXT_PUBLIC_*) from runtime vars
-echo -e "${YELLOW}Parsing environment variables from .env.local...${NC}"
-BUILD_ARGS=""
-RUNTIME_VARS="NODE_ENV=production"
-
-while IFS='=' read -r key value || [ -n "$key" ]; do
-    # Skip comments and empty lines
-    [[ "$key" =~ ^#.*$ ]] && continue
-    [[ -z "$key" ]] && continue
-
-    # Remove leading/trailing whitespace
-    key=$(echo "$key" | xargs)
-
-    # Skip empty keys
-    [[ -z "$key" ]] && continue
-
-    # Skip emulator-related vars
-    [[ "$key" =~ ^USE_FIREBASE_EMULATOR.*$ ]] && continue
-    [[ "$key" =~ ^FIRESTORE_EMULATOR.*$ ]] && continue
-
-    # Get value (everything after first =)
-    value=$(echo "$value" | sed 's/^"\(.*\)"$/\1/')
-
-    # Add to appropriate list
-    if [ -n "$value" ]; then
-        if [[ "$key" =~ ^NEXT_PUBLIC_.* ]]; then
-            # Build-time variables (inlined by Next.js)
-            BUILD_ARGS="${BUILD_ARGS} --build-arg ${key}=${value}"
-        else
-            # Runtime variables
-            RUNTIME_VARS="${RUNTIME_VARS},${key}=${value}"
-        fi
-    fi
-done < .env.local
-
 # Go to monorepo root
 cd ../..
 
@@ -97,45 +62,99 @@ cd ../..
 echo -e "${YELLOW}Loading production environment...${NC}"
 npm run env:prod
 
-# Create a cloudbuild.yaml for the build with args
+# Create cloudbuild.yaml with build args from .env.local
 echo -e "${YELLOW}Building and pushing Docker image...${NC}"
-cat > /tmp/cloudbuild-sign.yaml << EOF
+
+# Start cloudbuild.yaml
+cat > /tmp/cloudbuild-sign.yaml << 'HEADER'
 steps:
   - name: 'gcr.io/cloud-builders/docker'
     args:
       - 'build'
       - '-t'
-      - '${ARTIFACT_REGISTRY}'
-      - '-f'
-      - 'apps/sign/Dockerfile'
-EOF
+HEADER
 
-# Add build args to cloudbuild.yaml
-while IFS='=' read -r key value || [ -n "$key" ]; do
-    [[ "$key" =~ ^#.*$ ]] && continue
-    [[ -z "$key" ]] && continue
-    key=$(echo "$key" | xargs)
-    [[ -z "$key" ]] && continue
-    [[ "$key" =~ ^USE_FIREBASE_EMULATOR.*$ ]] && continue
-    [[ "$key" =~ ^FIRESTORE_EMULATOR.*$ ]] && continue
-    value=$(echo "$value" | sed 's/^"\(.*\)"$/\1/')
-    if [ -n "$value" ] && [[ "$key" =~ ^NEXT_PUBLIC_.* ]]; then
-        echo "      - '--build-arg'" >> /tmp/cloudbuild-sign.yaml
-        echo "      - '${key}=${value}'" >> /tmp/cloudbuild-sign.yaml
-    fi
-done < apps/sign/.env.local
+echo "      - '${ARTIFACT_REGISTRY}'" >> /tmp/cloudbuild-sign.yaml
+echo "      - '-f'" >> /tmp/cloudbuild-sign.yaml
+echo "      - 'apps/sign/Dockerfile'" >> /tmp/cloudbuild-sign.yaml
 
-cat >> /tmp/cloudbuild-sign.yaml << EOF
+# Add NEXT_PUBLIC build args using node to properly parse .env file
+node -e "
+const fs = require('fs');
+const content = fs.readFileSync('apps/sign/.env.local', 'utf-8');
+content.split('\n').forEach(line => {
+  if (line.startsWith('#') || !line.trim()) return;
+  const match = line.match(/^(NEXT_PUBLIC_[^=]+)=(.*)$/);
+  if (match) {
+    let value = match[2].trim();
+    // Remove surrounding quotes
+    if ((value.startsWith('\"') && value.endsWith('\"')) || (value.startsWith(\"'\") && value.endsWith(\"'\"))) {
+      value = value.slice(1, -1);
+    }
+    console.log(\"      - '--build-arg'\");
+    console.log(\"      - '\" + match[1] + \"=\" + value + \"'\");
+  }
+});
+" >> /tmp/cloudbuild-sign.yaml
+
+cat >> /tmp/cloudbuild-sign.yaml << 'FOOTER'
       - '.'
 images:
   - '${ARTIFACT_REGISTRY}'
 timeout: '1800s'
-EOF
+FOOTER
+
+# Replace placeholder in footer
+sed -i.bak "s|\${ARTIFACT_REGISTRY}|${ARTIFACT_REGISTRY}|g" /tmp/cloudbuild-sign.yaml
+rm -f /tmp/cloudbuild-sign.yaml.bak
 
 # Run Cloud Build
 gcloud builds submit --config=/tmp/cloudbuild-sign.yaml .
 
-# Deploy to Cloud Run
+# Create env.yaml for Cloud Run runtime vars using node
+echo -e "${YELLOW}Preparing runtime environment variables...${NC}"
+node -e "
+const fs = require('fs');
+const content = fs.readFileSync('apps/sign/.env.local', 'utf-8');
+const vars = { NODE_ENV: 'production' };
+
+content.split('\n').forEach(line => {
+  if (line.startsWith('#') || !line.trim()) return;
+  const eqIndex = line.indexOf('=');
+  if (eqIndex === -1) return;
+
+  const key = line.substring(0, eqIndex).trim();
+  let value = line.substring(eqIndex + 1).trim();
+
+  // Skip NEXT_PUBLIC (build-time only) and emulator vars
+  if (key.startsWith('NEXT_PUBLIC_')) return;
+  if (key.includes('EMULATOR')) return;
+  if (!value) return;
+
+  // Remove surrounding quotes
+  if ((value.startsWith('\"') && value.endsWith('\"')) || (value.startsWith(\"'\") && value.endsWith(\"'\"))) {
+    value = value.slice(1, -1);
+  }
+
+  vars[key] = value;
+});
+
+// Output as YAML
+let yaml = '';
+for (const [k, v] of Object.entries(vars)) {
+  // Escape special chars for YAML
+  const needsQuotes = v.includes(':') || v.includes('#') || v.includes('\\n') || v.includes('\"');
+  if (needsQuotes) {
+    yaml += k + ': \"' + v.replace(/\"/g, '\\\\\"') + '\"\n';
+  } else {
+    yaml += k + ': ' + v + '\n';
+  }
+}
+fs.writeFileSync('/tmp/env-sign.yaml', yaml);
+console.log('Environment variables prepared');
+"
+
+# Deploy to Cloud Run with env vars file
 echo -e "${YELLOW}Deploying to Cloud Run...${NC}"
 gcloud run deploy ${SERVICE_NAME} \
     --image ${ARTIFACT_REGISTRY} \
@@ -148,7 +167,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --min-instances 0 \
     --max-instances 10 \
     --timeout 300 \
-    --set-env-vars "${RUNTIME_VARS}"
+    --env-vars-file /tmp/env-sign.yaml
 
 # Get the Cloud Run URL
 CLOUD_RUN_URL=$(gcloud run services describe ${SERVICE_NAME} --region ${REGION} --format 'value(status.url)')
@@ -160,7 +179,7 @@ firebase use ${PROJECT_ID}
 firebase deploy --only hosting:sign
 
 # Cleanup
-rm -f /tmp/cloudbuild-sign.yaml
+rm -f /tmp/cloudbuild-sign.yaml /tmp/env-sign.yaml
 
 echo -e "${GREEN}========================================${NC}"
 echo -e "${GREEN}  Deployment Complete!${NC}"
