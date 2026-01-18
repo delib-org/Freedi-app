@@ -226,8 +226,13 @@ return;
     return;
   } catch (error) {
     const errorTime = Date.now() - startTime;
+    // Properly serialize error for logging (some error types don't serialize with { error })
+    const errorDetails = error instanceof Error
+      ? { message: error.message, stack: error.stack, name: error.name }
+      : { message: String(error) };
+
     logger.error("Error in findSimilarStatements:", {
-      error,
+      ...errorDetails,
       responseTime: errorTime,
     });
 

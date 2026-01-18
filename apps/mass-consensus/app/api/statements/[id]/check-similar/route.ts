@@ -61,7 +61,34 @@ export async function POST(
       }),
     });
 
-    const data = await response.json();
+    // Parse response - handle non-JSON responses (e.g., gateway errors)
+    let data: Record<string, unknown>;
+    const contentType = response.headers.get('content-type') || '';
+
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      // Non-JSON response (gateway error, timeout, etc.)
+      const textResponse = await response.text();
+      logError(new Error('Non-JSON response from Cloud Function'), {
+        operation: 'api.checkSimilar',
+        userId,
+        questionId,
+        metadata: {
+          status: response.status,
+          contentType,
+          responsePreview: textResponse.substring(0, 100),
+        },
+      });
+
+      return NextResponse.json(
+        {
+          error: 'Service temporarily unavailable',
+          message: 'The similarity check service returned an unexpected response. Please try again.',
+        },
+        { status: 503 }
+      );
+    }
 
     // Pass through the response
     if (!response.ok) {
