@@ -9,6 +9,16 @@ import {
 	VersionStatus,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import * as v from 'valibot';
+
+/**
+ * Valibot schema for publish input
+ */
+const PublishInputSchema = v.object({
+	applyToDocument: v.optional(v.boolean()),
+});
+
+type PublishInput = v.InferOutput<typeof PublishInputSchema>;
 
 /**
  * POST /api/admin/versions/[docId]/[versionId]/publish
@@ -70,7 +80,25 @@ export async function POST(
 			);
 		}
 
-		const body = await request.json().catch(() => ({}));
+		// Parse and validate request body
+		let body: PublishInput;
+		try {
+			const rawBody = await request.json().catch(() => ({}));
+			body = v.parse(PublishInputSchema, rawBody);
+		} catch (validationError) {
+			const issues = validationError instanceof v.ValiError ? validationError.issues : [];
+			return NextResponse.json(
+				{
+					error: 'Invalid request body',
+					details: issues.map((issue: v.BaseIssue<unknown>) => ({
+						path: issue.path?.map((p) => String(p.key)).join('.'),
+						message: issue.message,
+					})),
+				},
+				{ status: 400 }
+			);
+		}
+
 		const applyToDocument = body.applyToDocument ?? true;
 
 		const batch = db.batch();

@@ -19,6 +19,7 @@ import {
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { VERSIONING, FIREBASE } from '@/constants/common';
+import * as v from 'valibot';
 
 interface CommentData {
 	statementId: string;
@@ -33,13 +34,18 @@ interface EvaluationData {
 	evaluation: number;
 }
 
-interface GenerationInput {
-	k1?: number;
-	k2?: number;
-	minImpactThreshold?: number;
-	includeComments?: boolean;
-	includeSuggestions?: boolean;
-}
+/**
+ * Valibot schema for generation input validation
+ */
+const GenerationInputSchema = v.object({
+	k1: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(20))),
+	k2: v.optional(v.pipe(v.number(), v.minValue(1), v.maxValue(20))),
+	minImpactThreshold: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(1))),
+	includeComments: v.optional(v.boolean()),
+	includeSuggestions: v.optional(v.boolean()),
+});
+
+type GenerationInput = v.InferOutput<typeof GenerationInputSchema>;
 
 /**
  * Calculate impact for a suggestion or comment based on evaluations
@@ -135,8 +141,25 @@ export async function POST(
 			);
 		}
 
-		// Parse generation settings
-		const body: GenerationInput = await request.json().catch(() => ({}));
+		// Parse and validate generation settings
+		let body: GenerationInput;
+		try {
+			const rawBody = await request.json().catch(() => ({}));
+			body = v.parse(GenerationInputSchema, rawBody);
+		} catch (validationError) {
+			const issues = validationError instanceof v.ValiError ? validationError.issues : [];
+			return NextResponse.json(
+				{
+					error: 'Invalid request body',
+					details: issues.map((issue: v.BaseIssue<unknown>) => ({
+						path: issue.path?.map((p) => String(p.key)).join('.'),
+						message: issue.message,
+					})),
+				},
+				{ status: 400 }
+			);
+		}
+
 		const k1 = body.k1 ?? VERSIONING.DEFAULT_K1;
 		const k2 = body.k2 ?? VERSIONING.DEFAULT_K2;
 		const minImpactThreshold = body.minImpactThreshold ?? VERSIONING.DEFAULT_MIN_IMPACT_THRESHOLD;

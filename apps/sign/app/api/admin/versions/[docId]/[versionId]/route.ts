@@ -10,6 +10,16 @@ import {
 	VersionStatus,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import * as v from 'valibot';
+import { ParagraphSchema } from '@freedi/shared-types';
+
+/**
+ * Valibot schema for version update input
+ */
+const VersionUpdateSchema = v.object({
+	paragraphs: v.optional(v.array(ParagraphSchema)),
+	summary: v.optional(v.pipe(v.string(), v.maxLength(2000))),
+});
 
 /**
  * GET /api/admin/versions/[docId]/[versionId]
@@ -146,7 +156,24 @@ export async function PUT(
 			);
 		}
 
-		const body = await request.json();
+		// Parse and validate request body
+		let body: v.InferOutput<typeof VersionUpdateSchema>;
+		try {
+			const rawBody = await request.json();
+			body = v.parse(VersionUpdateSchema, rawBody);
+		} catch (validationError) {
+			const issues = validationError instanceof v.ValiError ? validationError.issues : [];
+			return NextResponse.json(
+				{
+					error: 'Invalid request body',
+					details: issues.map((issue: v.BaseIssue<unknown>) => ({
+						path: issue.path?.map((p) => String(p.key)).join('.'),
+						message: issue.message,
+					})),
+				},
+				{ status: 400 }
+			);
+		}
 
 		// Build update object - only allow certain fields to be updated
 		const updateData: Partial<DocumentVersion> = {};

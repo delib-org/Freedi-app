@@ -1,11 +1,13 @@
 /**
  * AI-powered document version generation service
  *
- * Supports multiple AI providers (OpenAI, Claude) for generating
+ * Supports multiple AI providers (Gemini, OpenAI, Claude) for generating
  * document revisions based on public feedback.
  *
- * Uses smart AI models (GPT-4o, Claude 3.5 Sonnet) for high-quality
- * analysis and detailed explanations of proposed changes.
+ * Uses the smartest available AI models for high-quality analysis:
+ * - Gemini 2.5 Pro (default) - Best for nuanced document analysis
+ * - GPT-4o - Strong alternative
+ * - Claude 3.5 Sonnet - Excellent for detailed reasoning
  */
 
 import {
@@ -24,7 +26,7 @@ import {
 // TYPES
 // ============================================================================
 
-export type AIProvider = 'openai' | 'claude';
+export type AIProvider = 'gemini' | 'openai' | 'claude';
 
 export interface AIConfig {
 	provider: AIProvider;
@@ -254,12 +256,61 @@ async function callClaude(
 	return data.content[0]?.text || '';
 }
 
+async function callGemini(
+	systemPrompt: string,
+	userPrompt: string,
+	config: AIConfig
+): Promise<string> {
+	// Use Gemini 2.5 Pro as default - the smartest model for document analysis
+	const model = config.model || 'gemini-2.5-pro-preview-05-06';
+	const maxTokens = config.maxTokens || 2000;
+	const temperature = config.temperature || 0.3;
+
+	const response = await fetch(
+		`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				contents: [
+					{
+						role: 'user',
+						parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+					},
+				],
+				generationConfig: {
+					temperature,
+					maxOutputTokens: maxTokens,
+					responseMimeType: 'application/json',
+				},
+			}),
+		}
+	);
+
+	if (!response.ok) {
+		const errorText = await response.text();
+		throw new NetworkError(`Gemini API error: ${response.status}`, {
+			status: response.status,
+			error: errorText,
+			model,
+		});
+	}
+
+	const data = await response.json();
+
+	return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
 async function callAIRaw(
 	systemPrompt: string,
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
 	switch (config.provider) {
+		case 'gemini':
+			return callGemini(systemPrompt, userPrompt, config);
 		case 'openai':
 			return callOpenAI(systemPrompt, userPrompt, config);
 		case 'claude':
@@ -291,13 +342,23 @@ async function callAI(
 
 /**
  * Get the default AI configuration from environment variables
+ * Priority: Gemini (smartest) > OpenAI > Claude
  */
 export function getDefaultAIConfig(): AIConfig {
-	const provider = (process.env.AI_PROVIDER as AIProvider) || 'openai';
-	const apiKey =
-		provider === 'openai'
-			? process.env.OPENAI_API_KEY || ''
-			: process.env.ANTHROPIC_API_KEY || '';
+	const provider = (process.env.AI_PROVIDER as AIProvider) || 'gemini';
+
+	let apiKey = '';
+	switch (provider) {
+		case 'gemini':
+			apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_AI_API_KEY || '';
+			break;
+		case 'openai':
+			apiKey = process.env.OPENAI_API_KEY || '';
+			break;
+		case 'claude':
+			apiKey = process.env.ANTHROPIC_API_KEY || '';
+			break;
+	}
 
 	return {
 		provider,

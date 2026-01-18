@@ -12,12 +12,23 @@ import {
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { VERSIONING } from '@/constants/common';
+import * as v from 'valibot';
 
-interface UpdateChangeInput {
-	adminDecision: ChangeDecision;
-	finalContent?: string;
-	adminNote?: string;
-}
+/**
+ * Valibot schema for change update input
+ */
+const UpdateChangeInputSchema = v.object({
+	adminDecision: v.picklist([
+		ChangeDecision.pending,
+		ChangeDecision.approved,
+		ChangeDecision.rejected,
+		ChangeDecision.modified,
+	]),
+	finalContent: v.optional(v.string()),
+	adminNote: v.optional(v.pipe(v.string(), v.maxLength(1000))),
+});
+
+type UpdateChangeInput = v.InferOutput<typeof UpdateChangeInputSchema>;
 
 /**
  * GET /api/admin/changes/[changeId]
@@ -152,13 +163,21 @@ export async function PUT(
 			);
 		}
 
-		const body: UpdateChangeInput = await request.json();
-
-		// Validate decision
-		const validDecisions = Object.values(ChangeDecision);
-		if (!validDecisions.includes(body.adminDecision)) {
+		// Parse and validate request body
+		let body: UpdateChangeInput;
+		try {
+			const rawBody = await request.json();
+			body = v.parse(UpdateChangeInputSchema, rawBody);
+		} catch (validationError) {
+			const issues = validationError instanceof v.ValiError ? validationError.issues : [];
 			return NextResponse.json(
-				{ error: 'Invalid admin decision' },
+				{
+					error: 'Invalid request body',
+					details: issues.map((issue: v.BaseIssue<unknown>) => ({
+						path: issue.path?.map((p) => String(p.key)).join('.'),
+						message: issue.message,
+					})),
+				},
 				{ status: 400 }
 			);
 		}
