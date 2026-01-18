@@ -253,14 +253,22 @@ Your role is to:
 2. Understand what changes the community is requesting through their feedback
 3. Propose a revised version that incorporates the most impactful and supported feedback
 4. Maintain the document's original intent, tone, and professional quality
-5. Make targeted, meaningful changes - neither too conservative nor too aggressive
+5. Make targeted, meaningful changes to address the feedback
 
-Guidelines:
+IMPORTANT - YOU MUST MAKE CHANGES:
+- When feedback exists with significant impact scores, you MUST propose changes to address it
+- Comments that ask questions (like "what does X mean?") indicate the text needs CLARIFICATION - add clarifying text
+- Comments that critique or challenge a statement indicate it needs REFINEMENT or NUANCING
+- Suggestions should be incorporated directly when they improve the text
+- Only return the original content unchanged if the feedback is completely irrelevant or contradictory with equal support
+
+Guidelines for making changes:
 - PRIORITIZE feedback with higher impact scores (these represent community consensus)
-- Preserve the original meaning unless feedback specifically requests changes
+- When a comment asks a question, ADD clarifying text to answer it within the paragraph
+- When a comment critiques wording, REVISE the wording to address the concern
+- When a comment points out ambiguity, CLARIFY the ambiguous part
 - Use clear, professional language appropriate to the document's context
 - If feedback is contradictory, favor the higher-impact suggestions
-- If no changes are warranted, return the original content unchanged
 
 LANGUAGE REQUIREMENT:
 - ALWAYS respond in the SAME LANGUAGE as the original document content
@@ -279,14 +287,19 @@ Analyze this paragraph and the public feedback, then propose a revision.
 
 **Paragraph Approval Rate:** {approvalRate}%
 
+TASK: You MUST revise the paragraph to address the feedback. Each feedback item with a high impact score represents community consensus that something needs to change.
+
 Respond in JSON format:
 {
-  "proposedContent": "Your revised paragraph text (or original if no changes needed)",
-  "reasoning": "Detailed explanation including: 1) Which feedback items you incorporated, 2) Why you prioritized certain feedback, 3) Specific changes made and why, 4) Why you rejected any feedback (if applicable)",
+  "proposedContent": "Your REVISED paragraph text that addresses the feedback",
+  "reasoning": "Detailed explanation including: 1) Which feedback items you incorporated, 2) How you addressed each piece of feedback, 3) Specific changes made and why",
   "confidence": 0.85
 }
 
 IMPORTANT:
+- You MUST make changes to address the feedback - do not return the original text unchanged
+- If a comment asks a question, add text that answers or clarifies it
+- If a comment critiques something, revise that part to address the concern
 - RESPOND IN THE SAME LANGUAGE AS THE ORIGINAL PARAGRAPH - if it's Hebrew, respond in Hebrew
 `;
 
