@@ -14,6 +14,7 @@ import { logError } from '@/lib/utils/errorHandling';
 /**
  * Firebase Function URL for AI processing
  * Uses Firebase Functions for longer timeout (540s vs Vercel's 30s)
+ * Delegates heavy AI work to Firebase to avoid Vercel timeout limits
  */
 const FIREBASE_FUNCTION_URL =
 	process.env.FIREBASE_FUNCTIONS_URL ||
