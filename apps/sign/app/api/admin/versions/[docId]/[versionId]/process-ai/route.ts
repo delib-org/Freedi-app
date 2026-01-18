@@ -6,21 +6,23 @@ import {
 	Collections,
 	AdminPermissionLevel,
 	DocumentVersion,
-	VersionChange,
 	VersionStatus,
-	Paragraph,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
-import {
-	processVersionChanges,
-	isAIConfigured,
-	getDefaultAIConfig,
-} from '@/lib/ai/versionGenerator';
 import { logError } from '@/lib/utils/errorHandling';
+
+/**
+ * Firebase Function URL for AI processing
+ * Uses Firebase Functions for longer timeout (540s vs Vercel's 30s)
+ */
+const FIREBASE_FUNCTION_URL =
+	process.env.FIREBASE_FUNCTIONS_URL ||
+	'https://us-central1-delib-v3-dev.cloudfunctions.net';
 
 /**
  * POST /api/admin/versions/[docId]/[versionId]/process-ai
  * Process changes through AI to generate proposed content
+ * Delegates to Firebase Function for longer timeout
  */
 export async function POST(
 	request: NextRequest,
@@ -49,7 +51,7 @@ export async function POST(
 			);
 		}
 
-		// Get the version
+		// Get the version to verify it exists and is in draft status
 		const versionRef = db.collection(Collections.documentVersions).doc(versionId);
 		const versionSnap = await versionRef.get();
 
@@ -76,79 +78,41 @@ export async function POST(
 			);
 		}
 
-		// Security: Only use server-side AI configuration
-		// Do NOT accept API keys from client requests
-		if (!isAIConfigured()) {
-			return NextResponse.json(
-				{
-					error: 'AI not configured. Please configure AI_PROVIDER and OPENAI_API_KEY or ANTHROPIC_API_KEY environment variables on the server.',
-				},
-				{ status: 400 }
-			);
-		}
+		// Call Firebase Function for AI processing (has 540s timeout vs Vercel's 30s)
+		logger.info(`[Process AI] Calling Firebase Function for version ${versionId}`);
 
-		// Use server-side AI configuration only
-		const aiConfig = getDefaultAIConfig();
+		const functionUrl = `${FIREBASE_FUNCTION_URL}/processVersionAI`;
 
-		// Get changes for this version
-		const changesSnapshot = await db
-			.collection(Collections.versionChanges)
-			.where('versionId', '==', versionId)
-			.get();
-
-		const changes = changesSnapshot.docs.map((doc) => doc.data() as VersionChange);
-
-		if (changes.length === 0) {
-			return NextResponse.json(
-				{ error: 'No changes found for this version. Run generate first.' },
-				{ status: 400 }
-			);
-		}
-
-		// Get paragraphs
-		const paragraphs: Paragraph[] = version.paragraphs || [];
-
-		if (paragraphs.length === 0) {
-			return NextResponse.json(
-				{ error: 'Version has no paragraphs' },
-				{ status: 400 }
-			);
-		}
-
-		// Process through AI
-		logger.info(`[Process AI] Starting AI processing for version ${versionId}`);
-
-		const result = await processVersionChanges(changes, paragraphs, aiConfig);
-
-		// Update changes in database
-		const batch = db.batch();
-
-		for (const change of result.updatedChanges) {
-			const changeRef = db.collection(Collections.versionChanges).doc(change.changeId);
-			batch.update(changeRef, {
-				proposedContent: change.proposedContent,
-				aiReasoning: change.aiReasoning,
-			});
-		}
-
-		// Update version with processed paragraphs and summary
-		batch.update(versionRef, {
-			paragraphs: result.updatedParagraphs,
-			summary: result.summary,
-			aiModel: aiConfig?.model || 'default',
+		const response = await fetch(functionUrl, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				versionId,
+				documentId: docId,
+			}),
 		});
 
-		await batch.commit();
+		if (!response.ok) {
+			const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+			logger.error(`[Process AI] Firebase Function error: ${response.status}`, errorData);
+
+			return NextResponse.json(
+				{ error: errorData.error || 'AI processing failed' },
+				{ status: response.status }
+			);
+		}
+
+		const result = await response.json();
 
 		logger.info(`[Process AI] Completed AI processing for version ${versionId}`);
 
 		return NextResponse.json({
 			success: true,
-			summary: result.summary,
-			processedChanges: result.updatedChanges.filter(
-				(c) => c.aiReasoning && c.aiReasoning.length > 0
-			).length,
-			totalChanges: changes.length,
+			summary: `Version generated with ${result.processedChanges} AI-processed changes.`,
+			processedChanges: result.processedChanges,
+			totalChanges: result.totalChanges,
 		});
 	} catch (error) {
 		const { docId, versionId } = await params;

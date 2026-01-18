@@ -137,6 +137,9 @@ import { findSimilarForIntegration, executeIntegration } from "./fn_integrateSim
 // Google Docs Import
 import { importGoogleDoc } from "./fn_importGoogleDocs";
 
+// Document Version AI Processing
+import { processVersionAI } from "./fn_versionAI";
+
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
 import {
@@ -182,6 +185,7 @@ const corsConfig = isProduction
       "https://delib-5.web.app",
       "https://wizcol-app.web.app",
       "https://app.wizcol.com",
+      "https://sign.wizcol.com",
     ]
   : [
       "http://localhost:5173",
@@ -591,6 +595,9 @@ exports.serveOgTags = serveOgTags;
 
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
+
+// Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
+exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
 
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
