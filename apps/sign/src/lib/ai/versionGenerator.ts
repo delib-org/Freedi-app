@@ -377,6 +377,7 @@ async function callGemini(
 
 	if (!response.ok) {
 		const errorText = await response.text();
+		console.error(`[Gemini API] Error ${response.status} for model ${model}:`, errorText);
 		throw new NetworkError(`Gemini API error: ${response.status}`, {
 			status: response.status,
 			error: errorText,
