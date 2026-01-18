@@ -26,7 +26,7 @@ import {
 } from 'firebase/firestore';
 import { Collections } from 'delib-npm';
 import { DB } from '@/controllers/db/config';
-import { removeTokenFromSubscription } from '@/controllers/db/subscriptions/setSubscriptions';
+import { removeTokenFromSubscription, addTokenToSubscription } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getDeviceInfo } from './platformService';
 import { FIREBASE } from '@/constants/common';
 
@@ -141,11 +141,6 @@ export const registerForStatementNotifications = async (
 	token: string,
 	statementId: string
 ): Promise<void> => {
-	// Import addTokenToSubscription to add token to subscription
-	const { addTokenToSubscription } = await import(
-		'@/controllers/db/subscriptions/setSubscriptions'
-	);
-
 	// Add token to statementsSubscribe.tokens[] (new approach)
 	await addTokenToSubscription(statementId, userId, token);
 

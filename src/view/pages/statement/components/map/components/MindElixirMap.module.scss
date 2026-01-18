@@ -1,5 +1,6 @@
 // MindElixir Map Component Styles
 // Uses design system colors and variables
+@use "sass:color";
 
 // Container styling for MindElixir
 .mindElixirContainer {
@@ -151,7 +152,7 @@
 			}
 
 			&:hover {
-				background-color: darken(#fe6ba2, 10%);
+				background-color: color.adjust(#fe6ba2, $lightness: -10%);
 			}
 		}
 	}
