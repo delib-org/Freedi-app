@@ -14,15 +14,9 @@ import { logger } from '@/lib/utils/logger';
 import {
 	processVersionChanges,
 	isAIConfigured,
-	AIConfig,
-	AIProvider,
+	getDefaultAIConfig,
 } from '@/lib/ai/versionGenerator';
-
-interface ProcessAIInput {
-	provider?: AIProvider;
-	apiKey?: string;
-	model?: string;
-}
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * POST /api/admin/versions/[docId]/[versionId]/process-ai
@@ -82,26 +76,19 @@ export async function POST(
 			);
 		}
 
-		// Parse optional AI config from request
-		const body: ProcessAIInput = await request.json().catch(() => ({}));
-
-		// Build AI config
-		let aiConfig: AIConfig | undefined;
-
-		if (body.apiKey) {
-			aiConfig = {
-				provider: body.provider || 'openai',
-				apiKey: body.apiKey,
-				model: body.model,
-			};
-		} else if (!isAIConfigured()) {
+		// Security: Only use server-side AI configuration
+		// Do NOT accept API keys from client requests
+		if (!isAIConfigured()) {
 			return NextResponse.json(
 				{
-					error: 'AI not configured. Please provide an API key or configure AI_PROVIDER and OPENAI_API_KEY/ANTHROPIC_API_KEY environment variables.',
+					error: 'AI not configured. Please configure AI_PROVIDER and OPENAI_API_KEY or ANTHROPIC_API_KEY environment variables on the server.',
 				},
 				{ status: 400 }
 			);
 		}
+
+		// Use server-side AI configuration only
+		const aiConfig = getDefaultAIConfig();
 
 		// Get changes for this version
 		const changesSnapshot = await db
@@ -164,7 +151,12 @@ export async function POST(
 			totalChanges: changes.length,
 		});
 	} catch (error) {
-		logger.error('[Process AI] Error:', error);
+		const { docId, versionId } = await params;
+		logError(error, {
+			operation: 'api.versions.processAI',
+			documentId: docId,
+			metadata: { versionId },
+		});
 
 		return NextResponse.json(
 			{ error: 'Internal server error' },

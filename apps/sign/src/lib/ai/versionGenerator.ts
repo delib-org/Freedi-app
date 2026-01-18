@@ -3,6 +3,9 @@
  *
  * Supports multiple AI providers (OpenAI, Claude) for generating
  * document revisions based on public feedback.
+ *
+ * Uses smart AI models (GPT-4o, Claude 3.5 Sonnet) for high-quality
+ * analysis and detailed explanations of proposed changes.
  */
 
 import {
@@ -11,7 +14,11 @@ import {
 	Paragraph,
 	ChangeType,
 } from '@freedi/shared-types';
-import { logger } from '@/lib/utils/logger';
+import {
+	logError,
+	withRetry,
+	NetworkError,
+} from '@/lib/utils/errorHandling';
 
 // ============================================================================
 // TYPES
@@ -59,19 +66,27 @@ export interface DocumentSynthesisOutput {
 // PROMPTS
 // ============================================================================
 
-const PARAGRAPH_ANALYSIS_SYSTEM_PROMPT = `You are an expert document editor helping to revise documents based on public feedback.
+const PARAGRAPH_ANALYSIS_SYSTEM_PROMPT = `You are an expert document editor helping to revise documents based on democratic public feedback.
+
 Your role is to:
-1. Analyze the original paragraph and the feedback (suggestions and comments)
-2. Understand what changes the public is requesting
-3. Propose a revised version that addresses the most impactful feedback
-4. Maintain the document's original intent and tone
-5. Keep changes minimal but meaningful
+1. Carefully analyze the original paragraph and all feedback (suggestions and comments)
+2. Understand what changes the community is requesting through their feedback
+3. Propose a revised version that incorporates the most impactful and supported feedback
+4. Maintain the document's original intent, tone, and professional quality
+5. Make targeted, meaningful changes - neither too conservative nor too aggressive
 
 Guidelines:
-- Prioritize feedback with higher impact scores
-- Preserve the original meaning unless feedback specifically asks for changes
-- Use clear, professional language
-- If no changes are needed, return the original content unchanged`;
+- PRIORITIZE feedback with higher impact scores (these represent community consensus)
+- Preserve the original meaning unless feedback specifically requests changes
+- Use clear, professional language appropriate to the document's context
+- If feedback is contradictory, favor the higher-impact suggestions
+- If no changes are warranted, return the original content unchanged
+
+CRITICAL - Your reasoning MUST:
+- Explicitly reference which feedback items you incorporated and why
+- Explain why you chose to address certain feedback over others
+- If you made no changes, explain why the existing text is already adequate
+- Be specific about what words/phrases you changed and the rationale`;
 
 const PARAGRAPH_ANALYSIS_USER_PROMPT = `
 Analyze this paragraph and the public feedback, then propose a revision.
@@ -79,63 +94,90 @@ Analyze this paragraph and the public feedback, then propose a revision.
 **Original Paragraph:**
 {originalContent}
 
-**Public Feedback (sorted by impact):**
+**Public Feedback (sorted by impact score - higher means more community support):**
 {feedbackList}
 
 **Paragraph Approval Rate:** {approvalRate}%
 
-Please respond in JSON format:
+Respond in JSON format:
 {
-  "proposedContent": "Your revised paragraph text",
-  "reasoning": "Brief explanation of what you changed and why",
-  "confidence": 0.8
+  "proposedContent": "Your revised paragraph text (or original if no changes needed)",
+  "reasoning": "Detailed explanation including: 1) Which feedback items you incorporated, 2) Why you prioritized certain feedback, 3) Specific changes made and why, 4) Why you rejected any feedback (if applicable)",
+  "confidence": 0.85
 }
 
-If no changes are needed, return the original content with reasoning explaining why.
+IMPORTANT:
+- The "reasoning" field is shown to administrators - make it clear and actionable
+- Reference feedback items by their number (e.g., "Incorporated suggestion #1 because...")
+- Explain trade-offs when feedback is contradictory
+- Confidence should reflect how certain you are about the proposed changes (0.0-1.0)
 `;
 
-const DOCUMENT_SYNTHESIS_SYSTEM_PROMPT = `You are an expert document editor performing a final review of proposed document changes.
+const DOCUMENT_SYNTHESIS_SYSTEM_PROMPT = `You are an expert document editor performing a final review of proposed document changes based on community feedback.
+
 Your role is to:
-1. Review all proposed changes for consistency
-2. Ensure the document flows naturally
-3. Fix any contradictions between paragraphs
+1. Review all proposed changes for consistency and coherence
+2. Ensure the document flows naturally after incorporating changes
+3. Resolve any contradictions between paragraphs
 4. Maintain consistent tone and style throughout
-5. Generate a summary of the changes made
+5. Generate a clear, detailed summary of all changes made
 
 Guidelines:
 - Preserve the original document structure
-- Only make minimal adjustments for consistency
+- Only make minimal adjustments for cross-paragraph consistency
 - Keep all paragraph IDs intact
-- Summarize changes in clear, concise language`;
+- Create summaries that administrators can use to understand the version at a glance
+
+The summary you provide will be shown to administrators and should:
+- Highlight the most significant changes
+- Explain the overall direction of the revision
+- Note how many paragraphs were modified and why`;
 
 const DOCUMENT_SYNTHESIS_USER_PROMPT = `
-Review these proposed document changes and ensure consistency.
+Review these proposed document changes and ensure consistency across the entire document.
 
 **Original Document:**
 {originalDocument}
 
-**Proposed Changes:**
+**Proposed Changes (based on community feedback):**
 {proposedChanges}
 
-Please respond in JSON format:
+Respond in JSON format:
 {
   "paragraphs": [
     {"paragraphId": "id", "content": "final content", "type": "paragraph"}
   ],
-  "summary": "Overall summary of changes to this document version",
-  "changesSummary": ["Change 1 description", "Change 2 description"]
+  "summary": "A 2-3 sentence executive summary of this version's changes for administrators",
+  "changesSummary": [
+    "Paragraph X: Brief description of what changed and why",
+    "Paragraph Y: Brief description of what changed and why"
+  ]
 }
+
+IMPORTANT:
+- The "summary" should give administrators a quick understanding of the version
+- Each item in "changesSummary" should reference the specific paragraph and explain the change
+- If you made consistency adjustments beyond the proposed changes, note them
+- Keep paragraph IDs exactly as provided - do not modify them
 `;
 
 // ============================================================================
 // AI PROVIDER IMPLEMENTATIONS
 // ============================================================================
 
+// AI retry configuration
+const AI_RETRY_OPTIONS = {
+	maxRetries: 3,
+	delayMs: 1000,
+	exponentialBackoff: true,
+};
+
 async function callOpenAI(
 	systemPrompt: string,
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
+	// Use GPT-4o as default - a smart model for quality analysis
 	const model = config.model || 'gpt-4o';
 	const maxTokens = config.maxTokens || 2000;
 	const temperature = config.temperature || 0.3;
@@ -159,8 +201,12 @@ async function callOpenAI(
 	});
 
 	if (!response.ok) {
-		const error = await response.text();
-		throw new Error(`OpenAI API error: ${response.status} - ${error}`);
+		const errorText = await response.text();
+		throw new NetworkError(`OpenAI API error: ${response.status}`, {
+			status: response.status,
+			error: errorText,
+			model,
+		});
 	}
 
 	const data = await response.json();
@@ -173,6 +219,7 @@ async function callClaude(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
+	// Use Claude 3.5 Sonnet as default - excellent for nuanced document analysis
 	const model = config.model || 'claude-3-5-sonnet-20241022';
 	const maxTokens = config.maxTokens || 2000;
 	const temperature = config.temperature || 0.3;
@@ -194,8 +241,12 @@ async function callClaude(
 	});
 
 	if (!response.ok) {
-		const error = await response.text();
-		throw new Error(`Claude API error: ${response.status} - ${error}`);
+		const errorText = await response.text();
+		throw new NetworkError(`Claude API error: ${response.status}`, {
+			status: response.status,
+			error: errorText,
+			model,
+		});
 	}
 
 	const data = await response.json();
@@ -203,7 +254,7 @@ async function callClaude(
 	return data.content[0]?.text || '';
 }
 
-async function callAI(
+async function callAIRaw(
 	systemPrompt: string,
 	userPrompt: string,
 	config: AIConfig
@@ -216,6 +267,22 @@ async function callAI(
 		default:
 			throw new Error(`Unsupported AI provider: ${config.provider}`);
 	}
+}
+
+/**
+ * Call AI with retry logic for transient failures
+ */
+async function callAI(
+	systemPrompt: string,
+	userPrompt: string,
+	config: AIConfig,
+	operation: string
+): Promise<string> {
+	return withRetry(
+		() => callAIRaw(systemPrompt, userPrompt, config),
+		AI_RETRY_OPTIONS,
+		{ operation, metadata: { provider: config.provider, model: config.model } }
+	);
 }
 
 // ============================================================================
@@ -306,7 +373,8 @@ export async function analyzeParagraph(
 		const response = await callAI(
 			PARAGRAPH_ANALYSIS_SYSTEM_PROMPT,
 			userPrompt,
-			aiConfig
+			aiConfig,
+			'ai.analyzeParagraph'
 		);
 
 		const parsed = JSON.parse(response);
@@ -317,12 +385,19 @@ export async function analyzeParagraph(
 			confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
 		};
 	} catch (error) {
-		logger.error('[AI] Paragraph analysis failed:', error);
+		logError(error, {
+			operation: 'ai.analyzeParagraph',
+			paragraphId: input.paragraph.paragraphId,
+			metadata: {
+				sourcesCount: input.sources.length,
+				provider: config?.provider || 'default',
+			},
+		});
 
-		// Return original on error
+		// Return original on error with clear explanation
 		return {
 			proposedContent: input.paragraph.content || '',
-			reasoning: 'AI analysis failed. Original content preserved.',
+			reasoning: 'AI analysis encountered an error. The original content has been preserved. An administrator should review this paragraph manually.',
 			confidence: 0.0,
 		};
 	}
@@ -369,7 +444,8 @@ Proposed: "${change.proposedContent}"`
 		const response = await callAI(
 			DOCUMENT_SYNTHESIS_SYSTEM_PROMPT,
 			userPrompt,
-			aiConfig
+			aiConfig,
+			'ai.synthesizeDocument'
 		);
 
 		const parsed = JSON.parse(response);
@@ -392,13 +468,20 @@ Proposed: "${change.proposedContent}"`
 
 		return {
 			paragraphs,
-			summary: parsed.summary || 'Document revision completed.',
+			summary: parsed.summary || 'Document revision completed based on community feedback.',
 			changesSummary: parsed.changesSummary || [],
 		};
 	} catch (error) {
-		logger.error('[AI] Document synthesis failed:', error);
+		logError(error, {
+			operation: 'ai.synthesizeDocument',
+			metadata: {
+				paragraphCount: input.originalParagraphs.length,
+				changesCount: input.proposedChanges.length,
+				provider: config?.provider || 'default',
+			},
+		});
 
-		// Return original with proposed changes applied
+		// Return original with proposed changes applied (graceful degradation)
 		const paragraphs = input.originalParagraphs.map((original) => {
 			const change = input.proposedChanges.find(
 				(c) => c.paragraphId === original.paragraphId
@@ -416,9 +499,9 @@ Proposed: "${change.proposedContent}"`
 
 		return {
 			paragraphs,
-			summary: 'Document revision completed (synthesis step failed).',
+			summary: `Document revision completed with ${input.proposedChanges.length} changes. Note: Cross-paragraph consistency check was skipped due to an error.`,
 			changesSummary: input.proposedChanges.map(
-				(c) => `Updated paragraph ${c.paragraphId}`
+				(c) => `Paragraph ${c.paragraphId}: Updated based on community feedback`
 			),
 		};
 	}
@@ -514,9 +597,15 @@ export async function processVersionChanges(
 			updatedParagraphs = synthesis.paragraphs;
 			summary = synthesis.summary;
 		} catch (error) {
-			logger.error('[AI] Synthesis step failed, using individual analyses:', error);
+			logError(error, {
+				operation: 'ai.processVersionChanges.synthesis',
+				metadata: {
+					changesCount: proposedChanges.length,
+					provider: aiConfig.provider,
+				},
+			});
 
-			// Apply changes without synthesis
+			// Apply changes without synthesis (graceful degradation)
 			updatedParagraphs = paragraphs.map((p) => {
 				const change = proposedChanges.find((c) => c.paragraphId === p.paragraphId);
 
@@ -526,6 +615,8 @@ export async function processVersionChanges(
 
 				return p;
 			});
+
+			summary = `Version generated with ${proposedChanges.length} changes based on community feedback. Individual paragraphs were analyzed but cross-document consistency check was skipped.`;
 		}
 	}
 

@@ -49,7 +49,12 @@ export default function VersionSelector({
 				}
 			}
 		} catch (error) {
-			console.error('Failed to fetch versions:', error);
+			// Log error with context for debugging
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			console.error(`[VersionSelector] fetchVersions failed: ${errorMessage}`, {
+				documentId,
+				error: errorMessage,
+			});
 		} finally {
 			setLoading(false);
 		}

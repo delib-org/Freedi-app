@@ -9,9 +9,22 @@ import {
 	VersionChange,
 	ChangeDecision,
 } from '@freedi/shared-types';
-import { API_ROUTES, VERSIONING } from '@/constants/common';
+import { API_ROUTES, VERSIONING, UI } from '@/constants/common';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
+
+/**
+ * Log errors with context for debugging
+ */
+function logVersionError(operation: string, error: unknown, context?: Record<string, unknown>): void {
+	const errorMessage = error instanceof Error ? error.message : String(error);
+	console.error(`[Versions] ${operation}: ${errorMessage}`, {
+		operation,
+		error: errorMessage,
+		...context,
+		timestamp: new Date().toISOString(),
+	});
+}
 
 type GenerationStep = 'idle' | 'creating' | 'generating' | 'processing-ai' | 'complete' | 'error';
 
@@ -53,7 +66,7 @@ export default function AdminVersionsPage() {
 				setVersions(data.versions || []);
 			}
 		} catch (error) {
-			console.error('Failed to fetch versions:', error);
+			logVersionError('fetchVersions', error, { statementId });
 		} finally {
 			setLoading(false);
 		}
@@ -71,7 +84,7 @@ export default function AdminVersionsPage() {
 				});
 			}
 		} catch (error) {
-			console.error('Failed to fetch version details:', error);
+			logVersionError('fetchVersionDetails', error, { statementId, versionId });
 		}
 	}, [statementId]);
 
@@ -148,7 +161,7 @@ export default function AdminVersionsPage() {
 
 				if (!aiResponse.ok) {
 					// AI processing failed, but version is still created
-					console.error('AI processing failed, continuing without AI suggestions');
+					logVersionError('processAI', new Error('AI processing failed'), { versionId: version.versionId });
 				}
 			}
 
@@ -162,16 +175,16 @@ export default function AdminVersionsPage() {
 			setTimeout(() => {
 				setGenerationStep('idle');
 				setGenerationMessage('');
-			}, 3000);
+			}, UI.TOAST_DURATION);
 		} catch (error) {
-			console.error('Version creation failed:', error);
+			logVersionError('createVersion', error, { statementId, settings });
 			setGenerationStep('error');
 			setGenerationMessage(t('Failed to create version. Please try again.'));
 
 			setTimeout(() => {
 				setGenerationStep('idle');
 				setGenerationMessage('');
-			}, 5000);
+			}, UI.TOAST_DURATION + 2000);
 		}
 	};
 
@@ -198,7 +211,7 @@ export default function AdminVersionsPage() {
 				}
 			}
 		} catch (error) {
-			console.error('Failed to publish version:', error);
+			logVersionError('publishVersion', error, { statementId, versionId });
 		}
 	};
 
@@ -221,7 +234,7 @@ export default function AdminVersionsPage() {
 				}
 			}
 		} catch (error) {
-			console.error('Failed to delete version:', error);
+			logVersionError('deleteVersion', error, { statementId, versionId });
 		}
 	};
 
@@ -237,7 +250,7 @@ export default function AdminVersionsPage() {
 				await fetchVersionDetails(selectedVersion.versionId);
 			}
 		} catch (error) {
-			console.error('Failed to update change decision:', error);
+			logVersionError('updateChangeDecision', error, { changeId, decision });
 		}
 	};
 

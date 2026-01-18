@@ -18,7 +18,7 @@ import {
 	getChangeId,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
-import { VERSIONING } from '@/constants/common';
+import { VERSIONING, FIREBASE } from '@/constants/common';
 
 interface CommentData {
 	statementId: string;
@@ -214,12 +214,11 @@ export async function POST(
 		let suggestionEvaluations = new Map<string, { supporters: number; objectors: number }>();
 
 		if (suggestionIds.length > 0) {
-			// Firestore 'in' query limit is 30, so we need to batch
-			const batchSize = 30;
+			// Firestore 'in' query limit
 			const allEvaluations: EvaluationData[] = [];
 
-			for (let i = 0; i < suggestionIds.length; i += batchSize) {
-				const batch = suggestionIds.slice(i, i + batchSize);
+			for (let i = 0; i < suggestionIds.length; i += FIREBASE.IN_QUERY_LIMIT) {
+				const batch = suggestionIds.slice(i, i + FIREBASE.IN_QUERY_LIMIT);
 				const evalSnapshot = await db
 					.collection(Collections.evaluations)
 					.where('statementId', 'in', batch)
@@ -242,11 +241,10 @@ export async function POST(
 		let commentEvaluations = new Map<string, { supporters: number; objectors: number }>();
 
 		if (commentIds.length > 0) {
-			const batchSize = 30;
 			const allEvaluations: EvaluationData[] = [];
 
-			for (let i = 0; i < commentIds.length; i += batchSize) {
-				const batch = commentIds.slice(i, i + batchSize);
+			for (let i = 0; i < commentIds.length; i += FIREBASE.IN_QUERY_LIMIT) {
+				const batch = commentIds.slice(i, i + FIREBASE.IN_QUERY_LIMIT);
 				const evalSnapshot = await db
 					.collection(Collections.evaluations)
 					.where('statementId', 'in', batch)

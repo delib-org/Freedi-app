@@ -28,6 +28,16 @@ export const QUERY_LIMITS = {
 } as const;
 
 /**
+ * Firebase-specific limits
+ */
+export const FIREBASE = {
+  /** Maximum items in a Firestore 'in' query */
+  IN_QUERY_LIMIT: 30,
+  /** Maximum items in a batch write */
+  BATCH_SIZE: 500,
+} as const;
+
+/**
  * Animation durations in milliseconds
  */
 export const ANIMATION = {
