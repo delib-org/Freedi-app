@@ -184,6 +184,16 @@ export async function POST(
 			acceptedByDisplayName: null,
 		};
 
+		// DEBUG: Log invitation being created
+		logger.info('[DEBUG] Creating invitation:', {
+			invitationId,
+			documentId: docId,
+			originalEmail: email,
+			storedEmail: email.toLowerCase(),
+			permissionLevel: effectivePermission,
+			invitedBy: userId,
+		});
+
 		// Save invitation
 		await db.collection(Collections.adminInvitations).doc(invitationId).set(invitation);
 

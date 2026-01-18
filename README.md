@@ -90,7 +90,7 @@ Each participant may submit only one evaluation per proposal (though they may up
 - **Outcome**: Proposals achieving >60% consensus threshold were synthesized into a draft charter using AI
 - **Reception**: Positive feedback and requests for wider dissemination
 
-These cases demonstrate the system's ability to support both rapid convergence on simple decisions and sustained deliberation on complex, value-laden issues among heterogeneous groups.
+These cases demonstrate the system's ability to support both rapid convergence on simple decisions and sustained deliberation on complex, value-laden issues among heterogeneous groups
 
 ## Platform Features
 
@@ -101,7 +101,7 @@ Everything in Freedi is a "Statement" with semantic types:
 - **Options**: Proposed solutions or choices under questions
 - **Statements**: Chat messages and discussions within the hierarchy
 
-This hierarchical model enables unlimited nesting depth with full ancestry tracking.
+This hierarchical model enables unlimited nesting depth with full ancestry tracking
 
 ### Core Capabilities
 
