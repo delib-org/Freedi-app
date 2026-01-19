@@ -38,7 +38,7 @@ export async function setStatementSubscriptionToDB({
 		// Validate inputs
 		if (!statement || !creator || !creator.uid) {
 			console.error('Invalid inputs for setStatementSubscriptionToDB', { statement, creator });
-			
+
 			return;
 		}
 

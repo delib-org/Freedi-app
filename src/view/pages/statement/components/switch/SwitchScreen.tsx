@@ -126,8 +126,7 @@ function SwitchScreen({
 					<Chat />
 				</Suspense>
 			);
-		case Screen.SETTINGS:
-		case 'settings':
+		case Screen.settings:
 			return (
 				<Suspense fallback={<LoadingPage />}>
 					<StatementSettings />

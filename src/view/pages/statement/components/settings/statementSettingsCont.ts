@@ -8,6 +8,7 @@ import {
 	setStatementToDB,
 	updateStatement,
 } from '@/controllers/db/statements/setStatements';
+import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getVoters } from '@/controllers/db/vote/getVotes';
 import {
 	StatementSettings,
@@ -17,6 +18,7 @@ import {
 	Vote,
 	Creator,
 	Paragraph,
+	Role,
 } from '@freedi/shared-types';
 import { Dispatch, SetStateAction } from 'react';
 
@@ -119,6 +121,18 @@ export async function setNewStatement({
 				parentStatement: 'top',
 				statement: newStatement,
 			});
+
+			// Create subscription for the creator
+			if (newStatement.creator) {
+				await setStatementSubscriptionToDB({
+					statement: newStatement,
+					creator: newStatement.creator,
+					role: Role.admin,
+					getInAppNotification: true,
+					getEmailNotification: false,
+					getPushNotification: false,
+				});
+			}
 
 			return newStatement;
 		}

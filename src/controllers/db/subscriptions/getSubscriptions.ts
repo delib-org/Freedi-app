@@ -77,12 +77,15 @@ export const listenToStatementSubSubscriptions = (
 				const statementSubscriptions: StatementSubscription[] = [];
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
+					// Handle lastUpdate - could be stored as number (new) or Timestamp (old data)
+					const lastUpdate = typeof data.lastUpdate === 'number'
+						? data.lastUpdate
+						: data.lastUpdate?.toMillis?.() ?? Date.now();
 					const statementSubscription = parse(
 						StatementSubscriptionSchema,
-
 						{
 							...data,
-							lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+							lastUpdate,
 						}
 					);
 					if (change.type === 'added') {
@@ -153,12 +156,22 @@ export function listenToStatementSubscriptions(
 		);
 
 		return onSnapshot(
-			q, 
+			q,
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					try {
-						const statementSubscription =
-							change.doc.data() as StatementSubscription;
+						const data = change.doc.data();
+						// Handle lastUpdate - could be stored as number (new) or Timestamp (old data)
+						const lastUpdate = typeof data.lastUpdate === 'number'
+							? data.lastUpdate
+							: data.lastUpdate?.toMillis?.() ?? Date.now();
+						const statementSubscription = parse(
+							StatementSubscriptionSchema,
+							{
+								...data,
+								lastUpdate,
+							}
+						);
 
 						if (change.type === 'added' || change.type === 'modified')
 							dispatch(
@@ -172,10 +185,7 @@ export function listenToStatementSubscriptions(
 								)
 							);
 					} catch (error) {
-						console.error(
-							'Listen to statement subscriptions each error',
-							error
-						);
+						console.error(error);
 					}
 				});
 			},
@@ -420,11 +430,15 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
+					// Handle lastUpdate - could be stored as number (new) or Timestamp (old data)
+					const lastUpdate = typeof data.lastUpdate === 'number'
+						? data.lastUpdate
+						: data.lastUpdate?.toMillis?.() ?? Date.now();
 					const statementSubscription = parse(
 						StatementSubscriptionSchema,
 						{
 							...data,
-							lastUpdated: data.lastUpdated?.toDate?.() ?? null,
+							lastUpdate,
 						}
 					);
 
