@@ -6,6 +6,7 @@ import { ParagraphType, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
 import { useUIStore, UIState } from '@/store/uiStore';
+import { useAccessibilityStore } from '@/store/accessibilityStore';
 import { useParagraphHeatValue } from '@/hooks/useHeatMap';
 import { useViewportTracking } from '@/hooks/useViewportTracking';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
@@ -72,8 +73,12 @@ export default function ParagraphCard({
   // Non-interactive state is: manually set OR (is header AND header reactions not allowed)
   const effectiveNonInteractive = isNonInteractive || (isHeader && !allowHeaderReactions);
 
-  // Get header color for this paragraph type
-  const headerColor = isHeader && headerColors
+  // Check if high contrast mode is active
+  const contrastMode = useAccessibilityStore((state) => state.contrastMode);
+  const isHighContrast = contrastMode !== 'default';
+
+  // Get header color for this paragraph type (disabled in high contrast mode)
+  const headerColor = isHeader && headerColors && !isHighContrast
     ? headerColors[paragraphType as keyof HeaderColors]
     : undefined;
 
