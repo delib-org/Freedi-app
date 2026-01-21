@@ -129,7 +129,7 @@ export default function ImageAltWarning({
             </div>
             <div className={styles.imageInfo}>
               <span className={styles.imageCaption}>
-                {image.imageCaption || t('Image {{number}}', { number: image.order })}
+                {image.imageCaption || `${t('Image')} ${image.order}`}
               </span>
               {editingId === image.paragraphId ? (
                 <div className={styles.editForm}>
