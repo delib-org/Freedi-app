@@ -107,7 +107,7 @@ export default function ImageAltWarning({
           <p className={styles.subtitle}>
             {imagesWithoutAlt.length === 1
               ? t('1 image is missing alt text')
-              : t('{{count}} images are missing alt text', { count: imagesWithoutAlt.length })}
+              : `${imagesWithoutAlt.length} ${t('images are missing alt text')}`}
           </p>
         </div>
       </div>
