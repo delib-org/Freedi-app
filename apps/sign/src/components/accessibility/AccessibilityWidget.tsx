@@ -49,17 +49,18 @@ export default function AccessibilityWidget({ documentId }: AccessibilityWidgetP
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isPanelOpen, isKeyboardModalOpen, closePanel, closeKeyboardModal]);
 
-  // Apply accessibility classes to document body
+  // Apply accessibility classes to document
   useEffect(() => {
+    const html = document.documentElement;
     const body = document.body;
 
-    // Font size
-    body.classList.remove('a11y-text-normal', 'a11y-text-large', 'a11y-text-larger', 'a11y-text-largest');
+    // Font size - applied to html element since rem units are relative to root
+    html.classList.remove('a11y-text-normal', 'a11y-text-large', 'a11y-text-larger', 'a11y-text-largest');
     if (fontSize !== 'normal') {
-      body.classList.add(`a11y-text-${fontSize}`);
+      html.classList.add(`a11y-text-${fontSize}`);
     }
 
-    // Contrast mode
+    // Contrast mode - applied to body for color overrides
     body.classList.remove('a11y-contrast-light', 'a11y-contrast-dark');
     if (contrastMode === 'high-light') {
       body.classList.add('a11y-contrast-light');
@@ -67,7 +68,7 @@ export default function AccessibilityWidget({ documentId }: AccessibilityWidgetP
       body.classList.add('a11y-contrast-dark');
     }
 
-    // Reduce motion
+    // Reduce motion - applied to body
     if (reduceMotion) {
       body.classList.add('a11y-reduce-motion');
     } else {

@@ -274,16 +274,16 @@ button:disabled {
    Accessibility Styles (IS 5568 Compliance)
    ============================================= */
 
-/* Text Size Levels */
-body.a11y-text-large {
+/* Text Size Levels - applied to html for rem units to work */
+html.a11y-text-large {
   font-size: 115%;
 }
 
-body.a11y-text-larger {
+html.a11y-text-larger {
   font-size: 130%;
 }
 
-body.a11y-text-largest {
+html.a11y-text-largest {
   font-size: 150%;
 }
 

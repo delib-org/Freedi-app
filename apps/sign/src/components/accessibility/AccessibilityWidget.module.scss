@@ -5,10 +5,14 @@
 
 .widget {
   position: fixed;
-  bottom: var(--spacing-lg, 24px);
+  bottom: 100px; // Above the sign/reject footer
   right: var(--spacing-lg, 24px);
   z-index: 9999;
   font-family: var(--font-family-base, sans-serif);
+
+  @media (max-width: 600px) {
+    bottom: 160px; // More space for stacked footer on mobile
+  }
 }
 
 // Floating accessibility button
