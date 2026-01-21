@@ -4,7 +4,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
-import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { logger } from '@/lib/utils/logger';
 
 export interface DocumentSettings {
@@ -28,6 +28,12 @@ export interface DocumentSettings {
   tocPosition: TocPosition;
   explanationVideoUrl: string;
   explanationVideoMode: ExplanationVideoMode;
+  /** When true, shows ghosted interaction buttons always (for elderly users) */
+  enhancedVisibility: boolean;
+  /** When false, headers (h1-h6) won't show interaction buttons */
+  allowHeaderReactions: boolean;
+  /** Custom colors for each heading level */
+  headerColors: HeaderColors;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -51,6 +57,9 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   tocPosition: 'auto',
   explanationVideoUrl: '',
   explanationVideoMode: 'optional',
+  enhancedVisibility: false,
+  allowHeaderReactions: false,
+  headerColors: DEFAULT_HEADER_COLORS,
 };
 
 /**
@@ -119,6 +128,9 @@ export async function GET(
       tocPosition: document?.signSettings?.tocPosition ?? DEFAULT_SETTINGS.tocPosition,
       explanationVideoUrl: document?.signSettings?.explanationVideoUrl ?? DEFAULT_SETTINGS.explanationVideoUrl,
       explanationVideoMode: document?.signSettings?.explanationVideoMode ?? DEFAULT_SETTINGS.explanationVideoMode,
+      enhancedVisibility: document?.signSettings?.enhancedVisibility ?? DEFAULT_SETTINGS.enhancedVisibility,
+      allowHeaderReactions: document?.signSettings?.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions,
+      headerColors: document?.signSettings?.headerColors ?? DEFAULT_SETTINGS.headerColors,
     };
 
     return NextResponse.json(settings);
@@ -217,6 +229,31 @@ export async function PUT(
       ? body.explanationVideoMode
       : (existingSettings.explanationVideoMode ?? DEFAULT_SETTINGS.explanationVideoMode);
 
+    // Validate headerColors - ensure all values are valid hex colors
+    const isValidHexColor = (color: unknown): color is string => {
+      if (typeof color !== 'string') return false;
+      return /^#([0-9A-Fa-f]{3}){1,2}$/.test(color);
+    };
+
+    const validateHeaderColors = (colors: unknown): HeaderColors => {
+      if (!colors || typeof colors !== 'object') {
+        return existingSettings.headerColors ?? DEFAULT_SETTINGS.headerColors;
+      }
+      const colorsObj = colors as Record<string, unknown>;
+      return {
+        h1: isValidHexColor(colorsObj.h1) ? colorsObj.h1 : (existingSettings.headerColors?.h1 ?? DEFAULT_HEADER_COLORS.h1),
+        h2: isValidHexColor(colorsObj.h2) ? colorsObj.h2 : (existingSettings.headerColors?.h2 ?? DEFAULT_HEADER_COLORS.h2),
+        h3: isValidHexColor(colorsObj.h3) ? colorsObj.h3 : (existingSettings.headerColors?.h3 ?? DEFAULT_HEADER_COLORS.h3),
+        h4: isValidHexColor(colorsObj.h4) ? colorsObj.h4 : (existingSettings.headerColors?.h4 ?? DEFAULT_HEADER_COLORS.h4),
+        h5: isValidHexColor(colorsObj.h5) ? colorsObj.h5 : (existingSettings.headerColors?.h5 ?? DEFAULT_HEADER_COLORS.h5),
+        h6: isValidHexColor(colorsObj.h6) ? colorsObj.h6 : (existingSettings.headerColors?.h6 ?? DEFAULT_HEADER_COLORS.h6),
+      };
+    };
+
+    const headerColors = body.headerColors !== undefined
+      ? validateHeaderColors(body.headerColors)
+      : (existingSettings.headerColors ?? DEFAULT_SETTINGS.headerColors);
+
     // Merge settings - only update fields that are provided
     const settings: DocumentSettings = {
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
@@ -239,6 +276,9 @@ export async function PUT(
       tocPosition,
       explanationVideoUrl: body.explanationVideoUrl !== undefined ? String(body.explanationVideoUrl) : (existingSettings.explanationVideoUrl ?? DEFAULT_SETTINGS.explanationVideoUrl),
       explanationVideoMode,
+      enhancedVisibility: body.enhancedVisibility !== undefined ? Boolean(body.enhancedVisibility) : (existingSettings.enhancedVisibility ?? DEFAULT_SETTINGS.enhancedVisibility),
+      allowHeaderReactions: body.allowHeaderReactions !== undefined ? Boolean(body.allowHeaderReactions) : (existingSettings.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions),
+      headerColors,
     };
 
     // Update document with new settings

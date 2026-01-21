@@ -106,6 +106,26 @@ export interface TocSettings {
   tocPosition: TocPosition;  // auto = based on text direction
 }
 
+// Header colors type for customizing heading colors
+export interface HeaderColors {
+  h1?: string;
+  h2?: string;
+  h3?: string;
+  h4?: string;
+  h5?: string;
+  h6?: string;
+}
+
+// Default header colors (shades of blue)
+export const DEFAULT_HEADER_COLORS: HeaderColors = {
+  h1: '#1e3a5f',
+  h2: '#2c5282',
+  h3: '#3182ce',
+  h4: '#4299e1',
+  h5: '#63b3ed',
+  h6: '#90cdf4',
+};
+
 // Admin settings for a document
 export interface DocumentSettings {
   enableComments: boolean;
@@ -135,6 +155,11 @@ export interface DocumentSettings {
   // Accessibility settings
   /** When true, shows interaction buttons as ghosted hints even before hover/tap (for elderly users) */
   enhancedVisibility?: boolean;
+  // Header customization settings
+  /** When false, headers (h1-h6) won't show interaction buttons */
+  allowHeaderReactions?: boolean;
+  /** Custom colors for each heading level */
+  headerColors?: HeaderColors;
 }
 
 // Default branding constants
@@ -162,4 +187,6 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   tocMaxLevel: 2,
   tocPosition: 'auto',
   enhancedVisibility: false,
+  allowHeaderReactions: false,
+  headerColors: DEFAULT_HEADER_COLORS,
 };

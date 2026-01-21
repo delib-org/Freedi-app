@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
@@ -16,6 +16,7 @@ import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
 import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
 import VersionSelector from '../versions/VersionSelector';
+import { AccessibilityWidget } from '../accessibility';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -39,6 +40,10 @@ interface DocumentViewProps {
   explanationVideoUrl?: string;
   /** Video display mode: 'optional' (button only) or 'before_viewing' (blocking overlay) */
   explanationVideoMode?: ExplanationVideoMode;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions?: boolean;
+  /** Custom colors for each heading level */
+  headerColors?: HeaderColors;
 }
 
 export default function DocumentView({
@@ -59,6 +64,8 @@ export default function DocumentView({
   enhancedVisibility = false,
   explanationVideoUrl = '',
   explanationVideoMode = 'optional',
+  allowHeaderReactions = false,
+  headerColors = DEFAULT_HEADER_COLORS,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -171,6 +178,8 @@ export default function DocumentView({
                 enableSuggestions={enableSuggestions}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
                 enhancedVisibility={enhancedVisibility}
+                allowHeaderReactions={allowHeaderReactions}
+                headerColors={headerColors}
               />
             ))
           )}
@@ -240,6 +249,9 @@ export default function DocumentView({
             onDismiss={() => setVideoOverlayDismissed(true)}
           />
         )}
+
+        {/* Accessibility Widget (IS 5568 compliance) */}
+        <AccessibilityWidget documentId={document.statementId} />
       </div>
       </DocumentClient>
   );
