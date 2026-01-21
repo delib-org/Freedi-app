@@ -12,10 +12,10 @@ import {
 import styles from './AccessibilityWidget.module.scss';
 
 interface AccessibilityWidgetProps {
-  documentId: string;
+  documentId?: string;
 }
 
-export default function AccessibilityWidget({ documentId }: AccessibilityWidgetProps) {
+export default function AccessibilityWidget({ documentId: _documentId }: AccessibilityWidgetProps) {
   const { t } = useTranslation();
   const {
     fontSize,
@@ -212,7 +212,7 @@ export default function AccessibilityWidget({ documentId }: AccessibilityWidgetP
                   type="button"
                   className={clsx(styles.toggle, reduceMotion && styles.active)}
                   onClick={() => setReduceMotion(!reduceMotion)}
-                  aria-pressed={reduceMotion}
+                  aria-checked={reduceMotion}
                   role="switch"
                 />
               </div>
