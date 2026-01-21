@@ -60,6 +60,14 @@ export default async function DocumentPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const user = getUserFromCookies(cookieStore);
 
+  // Debug: log cookie data
+  const userIdCookie = cookieStore.get('userId');
+  console.info('[DEBUG] Page cookies:', {
+    hasUserId: !!userIdCookie,
+    userId: userIdCookie?.value?.substring(0, 10) + '...',
+    user: user ? { uid: user.uid.substring(0, 10) + '...', displayName: user.displayName } : null,
+  });
+
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
   const commentStart = Date.now();
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
@@ -85,6 +93,14 @@ export default async function DocumentPage({ params }: PageProps) {
     userApprovals = approvals;
     userInteractions = interactions;
     isAdmin = adminAccess.isAdmin;
+
+    // Debug: log admin check result
+    console.info('[DEBUG] Admin check result:', {
+      userId: user.uid.substring(0, 10) + '...',
+      isAdmin: adminAccess.isAdmin,
+      isOwner: adminAccess.isOwner,
+      permissionLevel: adminAccess.permissionLevel,
+    });
   }
   console.info(`[Perf] Total page load: ${Date.now() - pageStart}ms`);
 
