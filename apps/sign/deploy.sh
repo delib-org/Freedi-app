@@ -5,6 +5,9 @@
 
 set -e
 
+# Add gcloud to PATH
+export PATH="$HOME/google-cloud-sdk/bin:$PATH"
+
 # Configuration
 PROJECT_ID="wizcol-app"
 REGION="me-west1"
@@ -139,15 +142,18 @@ content.split('\n').forEach(line => {
   vars[key] = value;
 });
 
-// Output as YAML
+// Output as YAML with proper escaping
 let yaml = '';
 for (const [k, v] of Object.entries(vars)) {
-  // Escape special chars for YAML
-  const needsQuotes = v.includes(':') || v.includes('#') || v.includes('\\n') || v.includes('\"');
-  if (needsQuotes) {
-    yaml += k + ': \"' + v.replace(/\"/g, '\\\\\"') + '\"\n';
+  // For private keys or values with special chars, use single quotes and escape single quotes
+  if (k.includes('PRIVATE_KEY') || v.includes('-----BEGIN')) {
+    // Keep \\n as literal for private keys - Cloud Run will pass them as-is
+    // and the app code will convert them to real newlines
+    yaml += k + \": '\" + v.replace(/'/g, \"''\") + \"'\\n\";
+  } else if (v.includes(':') || v.includes('#') || v.includes('\"')) {
+    yaml += k + \": '\" + v.replace(/'/g, \"''\") + \"'\\n\";
   } else {
-    yaml += k + ': ' + v + '\n';
+    yaml += k + ': ' + v + '\\n';
   }
 }
 fs.writeFileSync('/tmp/env-sign.yaml', yaml);

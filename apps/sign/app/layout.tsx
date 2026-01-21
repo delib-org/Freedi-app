@@ -1,5 +1,4 @@
 import { Metadata, Viewport } from 'next';
-import { Analytics } from '@vercel/analytics/react';
 import { cookies, headers } from 'next/headers';
 import {
   getTranslations,
@@ -62,7 +61,6 @@ export default async function RootLayout({
           {children as any}
         </NextTranslationProvider>
         <GoogleAnalytics />
-        <Analytics />
       </body>
     </html>
   );

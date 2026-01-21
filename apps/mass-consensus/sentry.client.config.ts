@@ -42,6 +42,10 @@ Sentry.init({
     // IndexedDB errors (common in Facebook in-app browser on iOS)
     'Connection to Indexed Database server lost',
     /IndexedDB.*lost/,
+    // WebKit message handlers errors (Facebook in-app browser on iOS)
+    // Third-party libraries (Vercel Analytics, etc.) may attempt native bridge calls
+    /window\.webkit\.messageHandlers/,
+    "undefined is not an object (evaluating 'window.webkit.messageHandlers",
   ],
 
   // Don't send PII
