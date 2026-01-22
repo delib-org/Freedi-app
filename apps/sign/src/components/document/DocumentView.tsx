@@ -44,6 +44,8 @@ interface DocumentViewProps {
   allowHeaderReactions?: boolean;
   /** Custom colors for each heading level */
   headerColors?: HeaderColors;
+  /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
+  nonInteractiveNormalStyle?: boolean;
 }
 
 export default function DocumentView({
@@ -66,6 +68,7 @@ export default function DocumentView({
   explanationVideoMode = 'optional',
   allowHeaderReactions = false,
   headerColors = DEFAULT_HEADER_COLORS,
+  nonInteractiveNormalStyle = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -185,6 +188,7 @@ export default function DocumentView({
                 enhancedVisibility={enhancedVisibility}
                 allowHeaderReactions={allowHeaderReactions}
                 headerColors={headerColors}
+                nonInteractiveNormalStyle={nonInteractiveNormalStyle}
               />
             ))
           )}
