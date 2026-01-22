@@ -777,6 +777,19 @@
   }
 }
 
+// Non-interactive with normal style (admin setting to keep normal text color)
+.nonInteractiveNormal {
+  opacity: 1;
+
+  .stateIndicator {
+    opacity: 0.6;
+  }
+
+  .content {
+    color: var(--text-body);
+  }
+}
+
 // Non-interactive label for regular users
 .nonInteractiveLabel {
   display: flex;

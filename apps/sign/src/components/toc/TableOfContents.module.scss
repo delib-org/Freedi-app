@@ -1,17 +1,17 @@
 // Table of Contents Desktop Sidebar
-// Positioned on left (LTR) or right (RTL)
+// Fixed full-height panel like Firebase Console
 
 .tocSidebar {
   position: fixed;
-  top: 100px;
-  width: 240px;
-  max-height: calc(100vh - 160px);
-  padding: var(--spacing-md, 16px);
+  top: 0;
+  bottom: 0;
+  width: 260px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-lg, 24px);
+  padding-top: var(--spacing-xl, 32px);
   background: var(--card-default, #ffffff);
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  overflow-y: auto;
-  z-index: 100;
+  z-index: 50;
 
   // Hide on screens smaller than 1200px (mobile uses hamburger menu)
   @media (max-width: 1199px) {
@@ -21,20 +21,14 @@
 
 // LTR: Sidebar on left
 .tocSidebarLeft {
-  left: calc((100vw - 900px) / 2 - 280px);
-
-  @media (max-width: 1500px) {
-    left: 20px;
-  }
+  left: 0;
+  border-right: 1px solid var(--border-light, #e5e7eb);
 }
 
 // RTL: Sidebar on right
 .tocSidebarRight {
-  right: calc((100vw - 900px) / 2 - 280px);
-
-  @media (max-width: 1500px) {
-    right: 20px;
-  }
+  right: 0;
+  border-left: 1px solid var(--border-light, #e5e7eb);
 }
 
 .tocTitle {
@@ -52,6 +46,29 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  flex: 1;
+  overflow-y: auto;
+
+  // Scrollbar styling
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-color, #e5e7eb) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-color, #e5e7eb);
+    border-radius: 3px;
+
+    &:hover {
+      background: var(--text-secondary, #6b7280);
+    }
+  }
 }
 
 .tocItem {
@@ -96,10 +113,10 @@
   background: transparent;
   border: none;
   border-radius: 4px;
-  cursor: pointer;
   text-align: start;
-  transition: all 0.2s ease;
   position: relative;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
 
   &:hover {
     background: var(--bg-hover, #f3f4f6);
@@ -140,32 +157,4 @@
   white-space: nowrap;
 }
 
-// Scrollbar styling
-.tocSidebar {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-color, #e5e7eb) transparent;
 
-  &::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: var(--border-color, #e5e7eb);
-    border-radius: 3px;
-
-    &:hover {
-      background: var(--text-secondary, #6b7280);
-    }
-  }
-}
-
-// Reduced motion support
-@media (prefers-reduced-motion: reduce) {
-  .tocLink {
-    transition: none;
-  }
-}

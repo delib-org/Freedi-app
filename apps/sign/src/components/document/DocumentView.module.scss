@@ -1,8 +1,45 @@
+// Page layout wrapper - handles TOC sidebar + content grid
+.pageLayout {
+  min-height: 100vh;
+  display: flex;
+
+  // RTL/LTR direction handling at layout level
+  &[data-text-dir="rtl"] {
+    direction: rtl;
+    flex-direction: row-reverse;
+  }
+
+  &[data-text-dir="ltr"] {
+    direction: ltr;
+    flex-direction: row;
+  }
+
+  // On mobile, stack vertically
+  @media (max-width: 1199px) {
+    flex-direction: column;
+  }
+}
+
+// Layout with TOC sidebar
+.pageLayoutWithToc {
+  // Sidebar styles are handled by the TOC component itself
+}
+
 .container {
+  flex: 1;
   max-width: 900px;
   margin: 0 auto;
   padding: var(--spacing-lg);
   padding-bottom: 140px; // Space for footer on desktop
+
+  // When TOC sidebar is visible, add margin to account for fixed sidebar
+  .pageLayoutWithToc & {
+    margin-inline-start: 260px; // Sidebar width
+
+    @media (max-width: 1199px) {
+      margin-inline-start: 0; // Reset on mobile
+    }
+  }
 
   // On mobile, footer stacks vertically and needs more space
   @media (max-width: 600px) {

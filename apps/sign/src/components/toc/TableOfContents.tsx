@@ -38,13 +38,13 @@ export default function TableOfContents({
   const sidebarClass = isRtl ? styles.tocSidebarRight : styles.tocSidebarLeft;
 
   return (
-    <nav
+    <aside
       className={`${styles.tocSidebar} ${sidebarClass}`}
       aria-label={t('Table of Contents')}
       dir={textDirection}
     >
       <h2 className={styles.tocTitle}>{t('Table of Contents')}</h2>
-      <ul className={styles.tocList} role="list">
+      <ul className={styles.tocList}>
         {items.map((item) => (
           <li
             key={item.id}
@@ -62,6 +62,6 @@ export default function TableOfContents({
           </li>
         ))}
       </ul>
-    </nav>
+    </aside>
   );
 }

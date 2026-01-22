@@ -33,6 +33,8 @@ interface ParagraphCardProps {
   allowHeaderReactions?: boolean;
   /** Custom colors for each heading level */
   headerColors?: HeaderColors;
+  /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
+  nonInteractiveNormalStyle?: boolean;
 }
 
 export default function ParagraphCard({
@@ -51,6 +53,7 @@ export default function ParagraphCard({
   enhancedVisibility = false,
   allowHeaderReactions = false,
   headerColors = DEFAULT_HEADER_COLORS,
+  nonInteractiveNormalStyle = false,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -208,6 +211,8 @@ export default function ParagraphCard({
     styles.card,
     styles[`type-${paragraphType}`],
     effectiveNonInteractive ? styles.nonInteractive : styles[approvalState],
+    // Normal style override for non-interactive paragraphs (admin setting)
+    effectiveNonInteractive && nonInteractiveNormalStyle && styles.nonInteractiveNormal,
     // Legacy heat level prop
     heatLevel && styles[`heat-${heatLevel}`],
     // New heat map integration
