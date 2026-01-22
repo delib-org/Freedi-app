@@ -1,0 +1,422 @@
+/**
+ * AccessibilityWidget styles
+ * Floating button and panel for accessibility controls
+ */
+
+.widget {
+  position: fixed;
+  bottom: 100px; // Above the sign/reject footer
+  right: var(--spacing-lg, 24px);
+  z-index: 9999;
+  font-family: var(--font-family-base, sans-serif);
+
+  @media (max-width: 600px) {
+    bottom: 160px; // More space for stacked footer on mobile
+  }
+}
+
+// Floating accessibility button
+.floatingButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  &:focus {
+    outline: 3px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+// Accessibility panel
+.panel {
+  position: absolute;
+  bottom: 60px;
+  right: 0;
+  width: 320px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--card-default, white);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  border: 1px solid var(--border-color, #e2e8f0);
+  animation: slideUp 0.2s ease-out;
+
+  @media (max-width: 400px) {
+    width: calc(100vw - 32px);
+    right: -8px;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md, 16px);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-title, #1a202c);
+}
+
+.closeButton {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-secondary, #718096);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--bg-hover, #f7fafc);
+    color: var(--text-title, #1a202c);
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+}
+
+.panelContent {
+  padding: var(--spacing-md, 16px);
+}
+
+.section {
+  margin-bottom: var(--spacing-md, 16px);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.sectionTitle {
+  margin: 0 0 var(--spacing-sm, 8px);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary, #718096);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+// Font size buttons
+.fontSizeButtons {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.fontSizeButton {
+  padding: var(--spacing-sm, 8px) 4px;
+  background: var(--bg-secondary, #f7fafc);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--bg-hover, #edf2f7);
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background: var(--btn-primary-light, #ebf8ff);
+    border-color: var(--btn-primary, #5f88e5);
+    color: var(--btn-primary, #5f88e5);
+  }
+}
+
+.fontSizeLabel {
+  font-weight: 700;
+  line-height: 1;
+}
+
+.fontSizeName {
+  font-size: 10px;
+  color: var(--text-secondary, #718096);
+  text-align: center;
+
+  .active & {
+    color: var(--btn-primary, #5f88e5);
+  }
+}
+
+// Contrast buttons
+.contrastButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.contrastButton {
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: var(--bg-secondary, #f7fafc);
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--bg-hover, #edf2f7);
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+
+  &.active {
+    background: var(--btn-primary-light, #ebf8ff);
+    border-color: var(--btn-primary, #5f88e5);
+    color: var(--btn-primary, #5f88e5);
+  }
+}
+
+// Toggle row
+.toggleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-sm, 8px) 0;
+}
+
+.toggleLabel {
+  font-size: 0.875rem;
+  color: var(--text-body, #4a5568);
+}
+
+.toggle {
+  width: 48px;
+  height: 28px;
+  padding: 2px;
+  background: var(--bg-tertiary, #e2e8f0);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.2s ease;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease;
+  }
+
+  &.active {
+    background: var(--btn-primary, #5f88e5);
+
+    &::after {
+      transform: translateX(20px);
+    }
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+}
+
+// Link buttons
+.linkButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  width: 100%;
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: var(--bg-secondary, #f7fafc);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-body, #4a5568);
+  font-size: 0.875rem;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--bg-hover, #edf2f7);
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+}
+
+// Reset button
+.resetButton {
+  width: 100%;
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: transparent;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #718096);
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: var(--bg-secondary, #f7fafc);
+    color: var(--text-body, #4a5568);
+  }
+
+  &:focus {
+    outline: 2px solid var(--focus-color, #4a90d9);
+    outline-offset: 2px;
+  }
+}
+
+// Modal overlay
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+// Modal
+.modal {
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--card-default, white);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  animation: scaleIn 0.2s ease-out;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md, 16px) var(--spacing-lg, 24px);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-title, #1a202c);
+}
+
+.modalContent {
+  padding: var(--spacing-lg, 24px);
+}
+
+// Keyboard shortcuts table
+.shortcutsTable {
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #e2e8f0);
+  }
+
+  th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-secondary, #718096);
+    background: var(--bg-secondary, #f7fafc);
+  }
+
+  td {
+    font-size: 0.875rem;
+    color: var(--text-body, #4a5568);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  kbd {
+    display: inline-block;
+    padding: 2px 6px;
+    background: var(--bg-tertiary, #e2e8f0);
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.75rem;
+    color: var(--text-title, #1a202c);
+  }
+}

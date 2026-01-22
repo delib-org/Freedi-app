@@ -32,6 +32,14 @@ export async function GET(
 		const userDisplayName = getUserDisplayNameFromCookie(cookieHeader) || 'Unknown';
 		const userEmail = getUserEmailFromCookie(cookieHeader);
 
+		// DEBUG: Log cookie extraction
+		logger.info('[DEBUG] Invite accept - Cookie extraction:', {
+			hasUserId: !!userId,
+			hasUserEmail: !!userEmail,
+			userEmail: userEmail,
+			userEmailLower: userEmail?.toLowerCase(),
+		});
+
 		// If not logged in, return info to redirect to login
 		if (!userId) {
 			return NextResponse.json({
@@ -68,6 +76,17 @@ export async function GET(
 
 		const invitationDoc = querySnapshot.docs[0];
 		const invitation = invitationDoc.data() as AdminInvitation;
+
+		// DEBUG: Log invitation data and email comparison
+		logger.info('[DEBUG] Invite accept - Email comparison:', {
+			invitedEmail: invitation.invitedEmail,
+			invitedEmailLower: invitation.invitedEmail.toLowerCase(),
+			userEmail: userEmail,
+			userEmailLower: userEmail?.toLowerCase(),
+			emailsMatch: userEmail?.toLowerCase() === invitation.invitedEmail.toLowerCase(),
+			invitationStatus: invitation.status,
+			documentId: invitation.documentId,
+		});
 
 		// Check invitation status
 		if (invitation.status !== AdminInvitationStatus.pending) {

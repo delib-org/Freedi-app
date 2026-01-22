@@ -52,7 +52,8 @@
     "deploy:prod": "npm run deploy:h:prod && npm run deploy:f:prod && npm run deploy:rules:prod",
     "deploy:dev": "npm-run-all deploy:h:dev deploy:f:dev deploy:rules:dev",
     "deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test",
-    "deploy:sign": "curl -X POST \"https://api.vercel.com/v1/integrations/deploy/prj_0m8aMtkMP7PPgfqdOpLVO55AsvfU/gsFjuMHuE9\""
+    "deploy:sign": "cd apps/sign && ./deploy.sh",
+    "deploy:sign:vercel": "curl -X POST \"https://api.vercel.com/v1/integrations/deploy/prj_0m8aMtkMP7PPgfqdOpLVO55AsvfU/gsFjuMHuE9\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -72,6 +73,7 @@
     "esbuild": "0.25.2",
     "firebase": "^11.0.2",
     "lucide-react": "^0.474.0",
+    "mind-elixir": "^5.5.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

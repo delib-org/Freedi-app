@@ -2,17 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { useUIStore } from '@/store/uiStore';
-import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
+import { useUIStore, selectToasts } from '@/store/uiStore';
+import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
 import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
+import { trackDocumentSign, trackDocumentReject, trackDocumentView } from '@/lib/analytics';
 import { Paragraph } from '@/types';
+import { logger } from '@/lib/utils/logger';
 import Modal from '../shared/Modal';
 import MinimizedModalIndicator from '../shared/MinimizedModalIndicator';
 import CommentThread from '../comments/CommentThread';
 import SuggestionThread from '../suggestions/SuggestionThread';
 import LoginModal from '../shared/LoginModal';
 import RejectionFeedbackModal from './RejectionFeedbackModal';
+import Toast from '../shared/Toast';
 import { DemographicSurveyModal } from '../demographics';
 import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
 
@@ -67,7 +70,10 @@ export default function DocumentClient({
     isModalMinimized,
     minimizeModal,
     restoreModal,
+    showToast,
+    removeToast,
   } = useUIStore();
+  const toasts = useUIStore(selectToasts);
 
   // State for rejection feedback modal
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
@@ -77,8 +83,11 @@ export default function DocumentClient({
     fetchStatus,
     isSurveyModalOpen,
     openSurveyModal,
+    status: demographicStatus,
+    isLoading: isDemographicLoading,
   } = useDemographicStore();
   const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
+  const isViewBlocked = useDemographicStore(selectIsViewBlocked);
 
   const confettiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -168,16 +177,32 @@ export default function DocumentClient({
   // Handle sign/reject button clicks with animation
   const handleSignatureAction = useCallback(
     async (action: 'sign' | 'reject') => {
+      // Check if demographic status is still loading - prevent action until we know
+      if (isDemographicLoading || !demographicStatus.isLoaded) {
+        showToast('info', t('Please wait while we load your profile...'));
+
+        return;
+      }
+
       // Check if blocked by demographic survey
       if (isInteractionBlocked) {
         openSurveyModal();
+        showToast('info', t('Please complete the survey first'));
 
         return;
       }
 
       // Ensure user has an ID (create anonymous user if needed)
+      // This is synchronous and sets the cookie immediately
       if (!user) {
-        getOrCreateAnonymousUser();
+        try {
+          getOrCreateAnonymousUser();
+        } catch (err) {
+          logger.error('[DocumentClient] Failed to create anonymous user:', err);
+          showToast('error', t('Failed to initialize user. Please refresh and try again.'));
+
+          return;
+        }
       }
 
       setSubmitting(true);
@@ -213,15 +238,20 @@ export default function DocumentClient({
 
         if (response.ok) {
           if (action === 'sign') {
+            // Track sign event
+            trackDocumentSign(documentId, user?.uid);
             // Show success animation with confetti
             setSigningAnimationState('success');
             triggerConfetti();
+            showToast('success', t('Document signed successfully!'));
 
             // Wait for success animation before reload
             await new Promise((resolve) =>
               setTimeout(resolve, ANIMATION_DURATION.SUCCESS)
             );
           } else {
+            // Track reject event
+            trackDocumentReject(documentId, user?.uid);
             // Show rejected confirmation animation
             setSigningAnimationState('rejected');
 
@@ -239,16 +269,39 @@ export default function DocumentClient({
           // Refresh the page to show updated state (only for sign action)
           window.location.reload();
         } else {
-          const error = await response.json();
-          console.error('Failed to submit signature:', error);
+          const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+          logger.error('[DocumentClient] Failed to submit signature:', {
+            status: response.status,
+            error: errorData,
+            action,
+            documentId,
+          });
           setSigningAnimationState('error');
-          alert('Failed to submit. Please try again.');
+
+          // Show specific error message based on status and error type
+          if (response.status === 401) {
+            showToast('error', t('Please sign in to continue'));
+          } else if (response.status === 400) {
+            // Check if it's a survey incomplete error
+            if (errorData.error === 'Survey incomplete') {
+              showToast('warning', t('Please complete the survey before signing'));
+              openSurveyModal();
+            } else {
+              showToast('error', t('Invalid request. Please refresh and try again.'));
+            }
+          } else {
+            showToast('error', t('Failed to submit. Please try again.'));
+          }
           resetSigningAnimation();
         }
       } catch (error) {
-        console.error('Error submitting signature:', error);
+        logger.error('[DocumentClient] Error submitting signature:', {
+          error,
+          action,
+          documentId,
+        });
         setSigningAnimationState('error');
-        alert('Failed to submit. Please try again.');
+        showToast('error', t('Network error. Please check your connection and try again.'));
         resetSigningAnimation();
       } finally {
         setSubmitting(false);
@@ -262,7 +315,11 @@ export default function DocumentClient({
       resetSigningAnimation,
       triggerConfetti,
       isInteractionBlocked,
+      isDemographicLoading,
+      demographicStatus.isLoaded,
       openSurveyModal,
+      showToast,
+      t,
     ]
   );
 
@@ -309,12 +366,13 @@ export default function DocumentClient({
     }
   }, [documentId, user, fetchStatus]);
 
-  // Auto-open survey modal if mandatory and incomplete (for all users)
+  // Auto-open survey modal only if viewing is blocked (before_viewing mode)
+  // For on_interaction mode, modal opens when user attempts to interact
   useEffect(() => {
-    if (isInteractionBlocked && !isSurveyModalOpen) {
+    if (isViewBlocked && !isSurveyModalOpen) {
       openSurveyModal();
     }
-  }, [isInteractionBlocked, isSurveyModalOpen, openSurveyModal]);
+  }, [isViewBlocked, isSurveyModalOpen, openSurveyModal]);
 
   // Cleanup confetti timeout on unmount
   useEffect(() => {
@@ -346,6 +404,8 @@ export default function DocumentClient({
   // Track document view
   useEffect(() => {
     if (user && !userSignature) {
+      // Track view in GA
+      trackDocumentView(documentId, user.uid);
       // Mark as viewed if not already signed/rejected
       fetch(`/api/signatures/${documentId}`, {
         method: 'POST',
@@ -355,7 +415,13 @@ export default function DocumentClient({
         body: JSON.stringify({
           signed: 'viewed',
         }),
-      }).catch(console.error);
+      }).catch((error) => {
+        logger.error('[DocumentClient] Failed to track document view:', {
+          error,
+          documentId,
+          userId: user.uid,
+        });
+      });
     }
   }, [documentId, user, userSignature]);
 
@@ -363,14 +429,12 @@ export default function DocumentClient({
     <HeatMapProvider documentId={documentId}>
       {children}
 
-      {/* Heat Map Controls - visible to admins only */}
-      {isAdmin && (
-        <>
-          <HeatMapToolbar />
-          <HeatMapLegend />
-          <DemographicFilter documentId={documentId} />
-        </>
-      )}
+      {/* Heat Map Controls - visible to all users */}
+      <HeatMapToolbar />
+      <HeatMapLegend />
+
+      {/* Demographic Filter - admin only for privacy */}
+      {isAdmin && <DemographicFilter documentId={documentId} />}
 
       {/* Comments Modal */}
       {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (
@@ -449,6 +513,9 @@ export default function DocumentClient({
           onClose={() => setShowFeedbackModal(false)}
         />
       )}
+
+      {/* Toast Notifications */}
+      <Toast toasts={toasts} onRemove={removeToast} />
     </HeatMapProvider>
   );
 }

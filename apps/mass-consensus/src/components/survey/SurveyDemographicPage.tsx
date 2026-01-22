@@ -255,6 +255,19 @@ export default function SurveyDemographicPage({
         throw new Error(`Failed to save answers: ${response.status}`);
       }
 
+      // Save progress to server for statistics tracking
+      fetch(`/api/surveys/${survey.surveyId}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentQuestionIndex: currentFlowIndex + 1,
+          isCompleted: isLastItem,
+        }),
+      }).catch((error) => {
+        console.error('[SurveyDemographicPage] Failed to save progress to server:', error);
+      });
+
       // Navigate to the next item in the flow
       if (isLastItem) {
         router.push(`/s/${survey.surveyId}/complete`);
@@ -272,6 +285,19 @@ export default function SurveyDemographicPage({
   const handleSkip = useCallback(() => {
     if (isNavigating) return; // Prevent double-clicks
     setIsSkipping(true);
+
+    // Save progress to server for statistics tracking (even when skipping)
+    fetch(`/api/surveys/${survey.surveyId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        currentQuestionIndex: currentFlowIndex + 1,
+        isCompleted: isLastItem,
+      }),
+    }).catch((error) => {
+      console.error('[SurveyDemographicPage] Failed to save progress to server:', error);
+    });
 
     if (isLastItem) {
       router.push(`/s/${survey.surveyId}/complete`);

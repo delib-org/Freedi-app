@@ -63,6 +63,26 @@ export default function DemographicQuestionInput({
         );
 
       case 'radio':
+        // Check if admin chose dropdown display
+        if (question.displayType === 'dropdown') {
+          return (
+            <select
+              className={styles.selectInput}
+              value={typeof value === 'string' ? value : ''}
+              onChange={(e) => handleRadioChange(e.target.value)}
+              disabled={disabled}
+            >
+              <option value="">{t('Select an option')}</option>
+              {question.options?.map((option, index) => (
+                <option key={index} value={option.option}>
+                  {option.option}
+                </option>
+              ))}
+            </select>
+          );
+        }
+
+        // Default: render radio buttons
         return (
           <div className={styles.optionsContainer}>
             {question.options?.map((option, index) => {

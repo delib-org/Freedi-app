@@ -27,6 +27,21 @@ export enum SurveyStatus {
 export const SurveyStatusSchema = enum_(SurveyStatus);
 
 // ============================================
+// Suggestion Mode Enum
+// Controls UX friction when adding new suggestions vs merging
+// ============================================
+export enum SuggestionMode {
+  /** Easy to add new - "Add as New" is primary, no confirmation modal */
+  encourage = 'encourage',
+  /** Equal options - both buttons same weight, no modal */
+  balanced = 'balanced',
+  /** Push toward merge - "Merge" is primary, extra confirmation modal */
+  restrict = 'restrict',
+}
+
+export const SuggestionModeSchema = enum_(SuggestionMode);
+
+// ============================================
 // Survey Settings Schema
 // ============================================
 export const SurveySettingsSchema = object({
@@ -42,6 +57,8 @@ export const SurveySettingsSchema = object({
   randomizeQuestions: optional(boolean()),
   /** Allow participants to add their own suggestions/solutions */
   allowParticipantsToAddSuggestions: optional(boolean()),
+  /** Controls UX friction when adding new suggestions vs merging with existing */
+  suggestionMode: optional(SuggestionModeSchema),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
@@ -62,6 +79,8 @@ export const QuestionOverrideSettingsSchema = object({
   randomizeOptions: optional(boolean()),
   /** Enable fair evaluation wallet system for THIS question */
   enableFairEvaluation: optional(boolean()),
+  /** Override suggestion mode for THIS question */
+  suggestionMode: optional(SuggestionModeSchema),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -155,6 +174,10 @@ export const SurveyDemographicAnswerSchema = object({
   answer: optional(string()),
   /** For checkbox questions (multiple selections) */
   answerOptions: optional(array(string())),
+  /** Whether this answer was submitted during test mode */
+  isTestData: optional(boolean()),
+  /** Timestamp when this data was retroactively marked as test data (if applicable) */
+  markedAsTestAt: optional(number()),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -194,6 +217,8 @@ export const SurveySchema = object({
   customIntroText: optional(string()),
   /** Whether to show the introduction text on welcome screen (defaults to true) */
   showIntro: optional(boolean()),
+  /** Whether the survey is currently in test mode - responses collected in test mode are flagged */
+  isTestMode: optional(boolean()),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -222,6 +247,10 @@ export const SurveyProgressSchema = object({
   lastUpdated: number(),
   /** True when user has completed all questions */
   isCompleted: boolean(),
+  /** Whether this progress was created during test mode */
+  isTestData: optional(boolean()),
+  /** Timestamp when this data was retroactively marked as test data (if applicable) */
+  markedAsTestAt: optional(number()),
 });
 
 export type SurveyProgress = InferOutput<typeof SurveyProgressSchema>;
@@ -235,7 +264,8 @@ export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
   minEvaluationsPerQuestion: 3,
   showQuestionPreview: false,
   randomizeQuestions: false,
-  allowParticipantsToAddSuggestions: false,
+  allowParticipantsToAddSuggestions: true,
+  suggestionMode: SuggestionMode.encourage,
 };
 
 export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
@@ -245,4 +275,5 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   minEvaluationsPerQuestion: undefined,
   randomizeOptions: undefined,
   enableFairEvaluation: undefined,
+  suggestionMode: undefined,
 };

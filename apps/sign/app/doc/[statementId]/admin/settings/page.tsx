@@ -7,11 +7,29 @@ import { isRTL, LanguagesEnum } from '@freedi/shared-i18n';
 import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
-import { DemographicMode } from '@/types/demographics';
-import { TextDirection, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
+
+/**
+ * Extract YouTube video ID and return embed URL
+ */
+function getYouTubeEmbedUrl(url: string): string {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+
+  return '';
+}
 
 interface Settings {
   allowComments: boolean;
@@ -23,6 +41,7 @@ interface Settings {
   isPublic: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  surveyTrigger: SurveyTriggerMode;
   textDirection: TextDirection;
   defaultLanguage: string;
   forceLanguage: boolean;
@@ -31,6 +50,16 @@ interface Settings {
   tocEnabled: boolean;
   tocMaxLevel: number;
   tocPosition: TocPosition;
+  /** When true, shows interaction buttons as ghosted hints always (for elderly users) */
+  enhancedVisibility: boolean;
+  /** YouTube video URL for explanation video */
+  explanationVideoUrl: string;
+  /** Video display mode: 'optional' = button only, 'before_viewing' = must watch before viewing */
+  explanationVideoMode: ExplanationVideoMode;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions: boolean;
+  /** Custom colors for each heading level */
+  headerColors: HeaderColors;
 }
 
 export default function AdminSettingsPage() {
@@ -50,6 +79,7 @@ export default function AdminSettingsPage() {
     isPublic: true,
     demographicMode: 'disabled',
     demographicRequired: false,
+    surveyTrigger: 'on_interaction',
     textDirection: 'auto',
     defaultLanguage: '',
     forceLanguage: true,
@@ -58,6 +88,11 @@ export default function AdminSettingsPage() {
     tocEnabled: false,
     tocMaxLevel: 2,
     tocPosition: 'auto',
+    enhancedVisibility: false,
+    explanationVideoUrl: '',
+    explanationVideoMode: 'optional',
+    allowHeaderReactions: false,
+    headerColors: DEFAULT_HEADER_COLORS,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -235,6 +270,71 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.enableSuggestions}
           />
         </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Allow Header Reactions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Enable users to react (approve/reject) to headings')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.allowHeaderReactions ? styles.active : ''}`}
+            onClick={() => handleToggle('allowHeaderReactions')}
+            aria-pressed={settings.allowHeaderReactions}
+          />
+        </div>
+      </section>
+
+      {/* Header Styling Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Header Styling')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Customize header colors')}
+        </p>
+
+        {(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((level) => (
+          <div key={level} className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>{level.toUpperCase()} {t('Color')}</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="color"
+                value={settings.headerColors[level] || DEFAULT_HEADER_COLORS[level]}
+                onChange={(e) => {
+                  setSettings(prev => ({
+                    ...prev,
+                    headerColors: {
+                      ...prev.headerColors,
+                      [level]: e.target.value,
+                    },
+                  }));
+                  setSaved(false);
+                }}
+                style={{ width: '40px', height: '32px', cursor: 'pointer', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSettings(prev => ({
+                    ...prev,
+                    headerColors: {
+                      ...prev.headerColors,
+                      [level]: DEFAULT_HEADER_COLORS[level],
+                    },
+                  }));
+                  setSaved(false);
+                }}
+                style={{ padding: '4px 8px', fontSize: '12px', cursor: 'pointer', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                title={t('Reset to default')}
+              >
+                {t('Reset')}
+              </button>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Display Settings */}
@@ -268,6 +368,26 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.showViewCounts ? styles.active : ''}`}
             onClick={() => handleToggle('showViewCounts')}
             aria-pressed={settings.showViewCounts}
+          />
+        </div>
+      </section>
+
+      {/* Accessibility Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Accessibility')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enhanced Visibility')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.enhancedVisibility ? styles.active : ''}`}
+            onClick={() => handleToggle('enhancedVisibility')}
+            aria-pressed={settings.enhancedVisibility}
           />
         </div>
       </section>
@@ -373,12 +493,17 @@ export default function AdminSettingsPage() {
           documentId={statementId}
           mode={settings.demographicMode}
           required={settings.demographicRequired}
+          surveyTrigger={settings.surveyTrigger}
           onModeChange={(mode) => {
             setSettings((prev) => ({ ...prev, demographicMode: mode }));
             setSaved(false);
           }}
           onRequiredChange={(required) => {
             setSettings((prev) => ({ ...prev, demographicRequired: required }));
+            setSaved(false);
+          }}
+          onSurveyTriggerChange={(trigger) => {
+            setSettings((prev) => ({ ...prev, surveyTrigger: trigger }));
             setSaved(false);
           }}
         />
@@ -426,6 +551,74 @@ export default function AdminSettingsPage() {
             }}
           />
         </div>
+      </section>
+
+      {/* Explanation Video Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Explanation Video')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Add a YouTube video to help users understand the document. Users can access it via the Explanation button.')}
+        </p>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('YouTube Video URL')}</p>
+            <p className={styles.settingDescription}>
+              {t('Paste a YouTube video URL (e.g., https://youtube.com/watch?v=...)')}
+            </p>
+          </div>
+          <input
+            type="url"
+            className={styles.textInput}
+            value={settings.explanationVideoUrl}
+            onChange={(e) => {
+              setSettings((prev) => ({ ...prev, explanationVideoUrl: e.target.value }));
+              setSaved(false);
+            }}
+            placeholder="https://youtube.com/watch?v=..."
+          />
+        </div>
+
+        {settings.explanationVideoUrl && (
+          <>
+            <div className={styles.videoPreviewRow}>
+              <p className={styles.settingLabel}>{t('Preview')}</p>
+              <div className={styles.videoPreview}>
+                <iframe
+                  width="300"
+                  height="170"
+                  src={getYouTubeEmbedUrl(settings.explanationVideoUrl)}
+                  title={t('Video Preview')}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            {/* Video Display Mode Toggle */}
+            <div className={styles.settingRow}>
+              <div className={styles.settingInfo}>
+                <p className={styles.settingLabel}>{t('Require Video Before Viewing')}</p>
+                <p className={styles.settingDescription}>
+                  {t('When enabled, users must watch the video before they can view the document')}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`${styles.toggle} ${settings.explanationVideoMode === 'before_viewing' ? styles.active : ''}`}
+                onClick={() => {
+                  setSettings((prev) => ({
+                    ...prev,
+                    explanationVideoMode: prev.explanationVideoMode === 'before_viewing' ? 'optional' : 'before_viewing',
+                  }));
+                  setSaved(false);
+                }}
+                aria-pressed={settings.explanationVideoMode === 'before_viewing'}
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* Save Button */}

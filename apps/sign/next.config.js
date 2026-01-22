@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // Standalone output for Docker/Cloud Run deployment
+  output: 'standalone',
+
   // Transpile shared packages
   transpilePackages: ['@freedi/shared-i18n'],
 
@@ -15,7 +18,12 @@ const nextConfig = {
 
   // Image optimization
   images: {
-    domains: ['firebasestorage.googleapis.com'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+    ],
     formats: ['image/avif', 'image/webp'],
   },
 
@@ -47,4 +55,3 @@ const nextConfig = {
 };
 
 module.exports = nextConfig;
-// Build trigger: 1765803738

@@ -65,6 +65,11 @@
       border-color: var(--heat-viewership-border);
       color: var(--heat-viewership-border);
     }
+
+    &.suggestions {
+      border-color: var(--heat-suggestions-border);
+      color: var(--heat-suggestions-border);
+    }
   }
 }
 
@@ -180,6 +185,14 @@
     &.selected {
       background: var(--heat-viewership-5);
       color: var(--heat-viewership-border);
+    }
+  }
+
+  &.suggestions {
+    &:hover,
+    &.selected {
+      background: var(--heat-suggestions-5);
+      color: var(--heat-suggestions-border);
     }
   }
 

@@ -253,8 +253,13 @@ export async function mergeStatements(
 		response.status(200).send(responseData);
 	} catch (error) {
 		const errorTime = Date.now() - startTime;
+		// Properly serialize error for logging (some error types don't serialize with { error })
+		const errorDetails = error instanceof Error
+			? { message: error.message, stack: error.stack, name: error.name }
+			: { message: String(error) };
+
 		logger.error("Error in mergeStatements:", {
-			error,
+			...errorDetails,
 			responseTime: errorTime,
 		});
 

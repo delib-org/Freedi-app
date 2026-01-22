@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Page Update Required</title>
+  <script>
+    // This page is served when an old cached page requests a JS/CSS chunk that no longer exists.
+    // Force a full page reload to get the latest version of the app.
+    (function() {
+      // Only auto-reload for asset requests (JS/CSS chunks)
+      var isAssetRequest = window.location.pathname.startsWith('/assets/');
+
+      if (isAssetRequest) {
+        // Clear any service worker caches and reload
+        if ('caches' in window) {
+          caches.keys().then(function(names) {
+            for (var name of names) {
+              caches.delete(name);
+            }
+          });
+        }
+
+        // Navigate to the home page with cache-busting
+        window.location.replace('/?reload=' + Date.now());
+      }
+    })();
+  </script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      background: #f5f5f5;
+      color: #333;
+    }
+    .container {
+      text-align: center;
+      padding: 2rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    p {
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+    a {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      background: #5f88e5;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+    }
+    a:hover {
+      background: #4a6fc4;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>App Updated</h1>
+    <p>A new version is available. Refreshing...</p>
+    <noscript>
+      <p>JavaScript is required. <a href="/">Click here to continue</a></p>
+    </noscript>
+  </div>
+</body>
+</html>

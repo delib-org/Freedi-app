@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyForm from './SurveyForm';
@@ -19,13 +18,11 @@ type Tab = 'share' | 'status' | 'edit';
  */
 export default function SurveyEditView({ survey: initialSurvey }: SurveyEditViewProps) {
   const { t } = useTranslation();
-  const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>('share');
   const [survey, setSurvey] = useState<Survey>(initialSurvey);
 
   const handleStatusChange = (updatedSurvey: Survey) => {
     setSurvey(updatedSurvey);
-    router.refresh();
   };
 
   const getStatusBadgeStyle = (status: SurveyStatus) => {

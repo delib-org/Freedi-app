@@ -15,7 +15,7 @@ import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
-import { TextDirection, TocSettings, TocPosition, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 
 interface PageProps {
   params: Promise<{ statementId: string }>;
@@ -60,6 +60,14 @@ export default async function DocumentPage({ params }: PageProps) {
   const cookieStore = await cookies();
   const user = getUserFromCookies(cookieStore);
 
+  // Debug: log cookie data
+  const userIdCookie = cookieStore.get('userId');
+  console.info('[DEBUG] Page cookies:', {
+    hasUserId: !!userIdCookie,
+    userId: userIdCookie?.value?.substring(0, 10) + '...',
+    user: user ? { uid: user.uid.substring(0, 10) + '...', displayName: user.displayName } : null,
+  });
+
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
   const commentStart = Date.now();
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
@@ -85,6 +93,14 @@ export default async function DocumentPage({ params }: PageProps) {
     userApprovals = approvals;
     userInteractions = interactions;
     isAdmin = adminAccess.isAdmin;
+
+    // Debug: log admin check result
+    console.info('[DEBUG] Admin check result:', {
+      userId: user.uid.substring(0, 10) + '...',
+      isAdmin: adminAccess.isAdmin,
+      isOwner: adminAccess.isOwner,
+      permissionLevel: adminAccess.permissionLevel,
+    });
   }
   console.info(`[Perf] Total page load: ${Date.now() - pageStart}ms`);
 
@@ -111,6 +127,11 @@ export default async function DocumentPage({ params }: PageProps) {
     tocMaxLevel?: number;
     tocPosition?: TocPosition;
     enableSuggestions?: boolean;
+    enhancedVisibility?: boolean;
+    explanationVideoUrl?: string;
+    explanationVideoMode?: ExplanationVideoMode;
+    allowHeaderReactions?: boolean;
+    headerColors?: HeaderColors;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -127,6 +148,17 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Suggestions feature setting
   const enableSuggestions = signSettings?.enableSuggestions ?? false;
+
+  // Accessibility setting - show ghosted buttons always for elderly users
+  const enhancedVisibility = signSettings?.enhancedVisibility ?? false;
+
+  // Explanation video settings
+  const explanationVideoUrl = signSettings?.explanationVideoUrl || '';
+  const explanationVideoMode: ExplanationVideoMode = signSettings?.explanationVideoMode || 'optional';
+
+  // Header customization settings
+  const allowHeaderReactions = signSettings?.allowHeaderReactions ?? false;
+  const headerColors: HeaderColors = signSettings?.headerColors ?? DEFAULT_HEADER_COLORS;
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -162,6 +194,11 @@ export default async function DocumentPage({ params }: PageProps) {
         isAdmin={isAdmin}
         tocSettings={tocSettings}
         enableSuggestions={enableSuggestions}
+        enhancedVisibility={enhancedVisibility}
+        explanationVideoUrl={explanationVideoUrl}
+        explanationVideoMode={explanationVideoMode}
+        allowHeaderReactions={allowHeaderReactions}
+        headerColors={headerColors}
       />
     </LanguageOverrideProvider>
   );

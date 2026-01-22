@@ -128,6 +128,14 @@ return;
 		}
 
 		if (!userId) {
+			// Log detailed info to help debug missing evaluator data
+			logger.error('Missing userId in evaluation', {
+				evaluationId: event.data.id,
+				statementId,
+				parentId,
+				hasEvaluator: !!evaluation.evaluator,
+				evaluatorKeys: evaluation.evaluator ? Object.keys(evaluation.evaluator) : [],
+			});
 			throw new Error('User ID is required');
 		}
 

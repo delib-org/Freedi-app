@@ -69,6 +69,19 @@ export default function SurveyExplanationPage({
     if (isNavigating) return; // Prevent double-clicks
     setIsNavigatingNext(true);
 
+    // Save progress to server for statistics tracking
+    fetch(`/api/surveys/${survey.surveyId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        currentQuestionIndex: currentFlowIndex + 1,
+        isCompleted: isLastItem,
+      }),
+    }).catch((error) => {
+      console.error('[SurveyExplanationPage] Failed to save progress to server:', error);
+    });
+
     if (isLastItem) {
       router.push(`/s/${survey.surveyId}/complete`);
     } else {

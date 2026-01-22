@@ -465,3 +465,157 @@
     transform: none;
   }
 }
+
+// ============================================
+// ENCOURAGE MODE - Favors adding new ideas
+// ============================================
+
+.encourageMode {
+  .header {
+    background: linear-gradient(135deg, var(--agree, #57c6b2) 0%, var(--approve, #4fab9a) 100%);
+  }
+
+  .yourSolutionCard {
+    border-color: var(--agree, #57c6b2);
+    background: linear-gradient(
+      135deg,
+      rgba(87, 198, 178, 0.15) 0%,
+      rgba(79, 171, 154, 0.1) 100%
+    );
+  }
+}
+
+.yourSolutionLabel {
+  font-size: 0.85rem;
+  color: var(--agree, #57c6b2);
+  font-weight: 600;
+  margin-bottom: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.yourSolutionText {
+  font-size: 1.05rem;
+  color: var(--text-title, #3d4d71);
+  line-height: 1.6;
+  margin: 0 0 1rem 0;
+}
+
+// ============================================
+// BALANCED MODE - Equal options
+// ============================================
+
+.balancedMode {
+  .header {
+    background: linear-gradient(135deg, var(--accent, #7cacf8) 0%, var(--btn-primary, #5f88e5) 100%);
+  }
+}
+
+.balancedOptions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.balancedButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  border: 2px solid var(--border-light, #d0d7e2);
+  border-radius: 12px;
+  background: var(--white, white);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+  }
+
+  &.addNew {
+    &:hover {
+      border-color: var(--agree, #57c6b2);
+      background: rgba(87, 198, 178, 0.05);
+    }
+  }
+
+  &.merge {
+    &:hover {
+      border-color: var(--btn-primary, #5f88e5);
+      background: rgba(95, 136, 229, 0.05);
+    }
+  }
+
+  @media (max-width: 500px) {
+    padding: 1.25rem;
+  }
+}
+
+.balancedIcon {
+  font-size: 2rem;
+}
+
+.balancedLabel {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-title, #3d4d71);
+}
+
+.balancedDesc {
+  font-size: 0.85rem;
+  color: var(--text-caption, #5a6b8c);
+}
+
+.suggestionPreview {
+  background: var(--card-default, #f5f7fa);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+
+  p {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.95rem;
+    color: var(--text-title, #3d4d71);
+    font-style: italic;
+  }
+}
+
+.previewLabel {
+  font-size: 0.8rem;
+  color: var(--text-caption, #5a6b8c);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mergeSmallButton {
+  padding: 0.5rem 1rem;
+  background: var(--btn-primary, #5f88e5);
+  color: var(--white, white);
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--btn-primary-hover, #7ca0f0);
+  }
+}
+
+// ============================================
+// RESTRICT MODE - Favors merging (current)
+// ============================================
+
+.restrictMode {
+  // Uses default styles - merge is primary
+}

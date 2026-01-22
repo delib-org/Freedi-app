@@ -2,7 +2,7 @@ import { logger } from "@/services/logger";
 
 export function monitorPushEvents() {
     console.info('=== MONITORING PUSH EVENTS ===');
-    console.info('Listening for push events in both main thread and service worker...\n');
+    console.info('Listening for push events in both main thread and service worker...\n'); 
     
     let eventCount = 0;
     
