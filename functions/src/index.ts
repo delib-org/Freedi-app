@@ -47,7 +47,8 @@ import {
   maintainSubscriptionToken,
   updateAverageEvaluation,
   recalculateEvaluations,
-  addRandomSeed
+  addRandomSeed,
+  backfillEvaluationType
 } from "./fn_httpRequests";
 import { findSimilarStatements } from "./fn_findSimilarStatements";
 import { detectMultipleSuggestions } from "./fn_detectMultipleSuggestions";
@@ -147,6 +148,9 @@ import { findSimilarForIntegration, executeIntegration } from "./fn_integrateSim
 // Google Docs Import
 import { importGoogleDoc } from "./fn_importGoogleDocs";
 
+// Document Version AI Processing
+import { processVersionAI } from "./fn_versionAI";
+
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
 import {
@@ -192,6 +196,7 @@ const corsConfig = isProduction
       "https://delib-5.web.app",
       "https://wizcol-app.web.app",
       "https://app.wizcol.com",
+      "https://sign.wizcol.com",
     ]
   : [
       "http://localhost:5173",
@@ -221,6 +226,42 @@ const wrapHttpFunction = (
       const startTimestamp = getTimestamp();
       const functionName = handler.name || 'HTTP function';
       console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
+
+      try {
+        await handler(req, res);
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  );
+};
+
+/**
+ * Creates a wrapper for memory-intensive HTTP functions (AI, embeddings, etc.)
+ * Uses 1GB memory instead of default 256MB
+ * @param {Function} handler - The function handler to wrap
+ * @returns {Function} - Wrapped function with error handling and increased memory
+ */
+const wrapMemoryIntensiveHttpFunction = (
+  handler: (req: Request, res: Response) => Promise<void>
+) => {
+  return onRequest(
+    {
+      ...functionConfig,
+      cors: corsConfig,
+      memory: "1GiB",
+    },
+    async (req, res) => {
+      const startTime = Date.now();
+      const startTimestamp = getTimestamp();
+      const functionName = handler.name || 'HTTP function';
+      console.info(`[${startTimestamp}] ▶ Starting ${functionName} (memory-intensive)`);
 
       try {
         await handler(req, res);
@@ -295,7 +336,7 @@ function createFirestoreFunction<T>(
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.findSimilarStatements = wrapHttpFunction(findSimilarStatements);
+exports.findSimilarStatements = wrapMemoryIntensiveHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
@@ -311,9 +352,9 @@ exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
 exports.fixClusterIntegration = fixClusterIntegration;
-exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
-exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
-exports.mergeStatements = wrapHttpFunction(mergeStatements);
+exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
+exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
+exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
 
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
@@ -326,6 +367,7 @@ exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
 exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
 exports.addRandomSeed = wrapHttpFunction(addRandomSeed);
+exports.backfillEvaluationType = wrapHttpFunction(backfillEvaluationType);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
@@ -564,6 +606,9 @@ exports.serveOgTags = serveOgTags;
 
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
+
+// Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
+exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
 
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;

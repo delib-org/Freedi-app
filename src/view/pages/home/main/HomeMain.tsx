@@ -38,13 +38,12 @@ const HomeMain = () => {
 	const allStatementsSubscriptions = useAppSelector(statementsSubscriptionsSelector);
 
 	const topSubscriptions = useMemo(
-		() =>
-			allTopSubscriptions.filter(
-				(sub) =>
-					sub.user?.uid === user?.uid &&
-					sub.statement.statementType === StatementType.group
-			),
-		[allTopSubscriptions, user?.uid]
+		() => allTopSubscriptions.filter(
+			(sub) =>
+				sub.userId === userId &&
+				sub.statement.statementType === StatementType.group
+		),
+		[allTopSubscriptions, userId]
 	);
 
 	const latestDecisions = useMemo(

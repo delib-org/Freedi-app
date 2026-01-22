@@ -79,6 +79,16 @@
   --heat-viewership-4: rgba(255, 224, 130, 0.35);      /* 60-79% */
   --heat-viewership-5: rgba(255, 193, 7, 0.25);        /* 80%+ */
 
+  /* Heat Map - Suggestions (light teal to teal) */
+  --heat-suggestions-low: rgba(178, 223, 219, 0.3);    /* light teal */
+  --heat-suggestions-high: rgba(0, 150, 136, 0.25);    /* teal */
+  --heat-suggestions-border: #009688;
+  --heat-suggestions-1: rgba(178, 223, 219, 0.25);     /* 1 suggestion */
+  --heat-suggestions-2: rgba(128, 203, 196, 0.28);     /* 2-3 */
+  --heat-suggestions-3: rgba(77, 182, 172, 0.25);      /* 4-6 */
+  --heat-suggestions-4: rgba(38, 166, 154, 0.25);      /* 7-10 */
+  --heat-suggestions-5: rgba(0, 150, 136, 0.25);       /* 11+ */
+
   /* Spacing - 8px grid system */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
@@ -257,5 +267,119 @@ button:disabled {
   &--neutral {
     background: #e5e7eb;
     color: var(--text-body);
+  }
+}
+
+/* =============================================
+   Accessibility Styles (IS 5568 Compliance)
+   ============================================= */
+
+/* Text Size Levels - applied to html for rem units to work */
+html.a11y-text-large {
+  font-size: 115%;
+}
+
+html.a11y-text-larger {
+  font-size: 130%;
+}
+
+html.a11y-text-largest {
+  font-size: 150%;
+}
+
+/* High Contrast - Light Mode */
+body.a11y-contrast-light {
+  --background: #ffffff;
+  --card-default: #ffffff;
+  --text-primary: #000000;
+  --text-body: #000000;
+  --text-secondary: #333333;
+  --text-caption: #333333;
+  --btn-primary: #0000cc;
+  --btn-primary-hover: #0000aa;
+  --border-light: #000000;
+  --agree: #006600;
+  --disagree: #cc0000;
+}
+
+body.a11y-contrast-light a {
+  color: #0000cc;
+  text-decoration: underline;
+}
+
+body.a11y-contrast-light button:focus,
+body.a11y-contrast-light a:focus,
+body.a11y-contrast-light [tabindex]:focus {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+}
+
+/* High Contrast - Dark Mode */
+body.a11y-contrast-dark {
+  --background: #000000;
+  --card-default: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-body: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-caption: #e0e0e0;
+  --btn-primary: #66b3ff;
+  --btn-primary-hover: #99ccff;
+  --border-light: #ffffff;
+  --agree: #66ff66;
+  --disagree: #ff6666;
+}
+
+body.a11y-contrast-dark a {
+  color: #66b3ff;
+  text-decoration: underline;
+}
+
+body.a11y-contrast-dark button:focus,
+body.a11y-contrast-dark a:focus,
+body.a11y-contrast-dark [tabindex]:focus {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Reduce Motion */
+body.a11y-reduce-motion,
+body.a11y-reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Respect system preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--btn-primary);
+  outline-offset: 2px;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--btn-primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  z-index: 10000;
+  transition: top 0.2s ease;
+
+  &:focus {
+    top: var(--spacing-md);
   }
 }

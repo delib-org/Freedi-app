@@ -5,12 +5,11 @@ import { APP_CONSTANTS } from '../constants';
 
 interface UseDocumentTitleProps {
 	statement: Statement | null;
-	screen?: string;
 }
 
-export const useDocumentTitle = ({ statement, screen }: UseDocumentTitleProps) => {
+export const useDocumentTitle = ({ statement }: UseDocumentTitleProps) => {
 	useEffect(() => {
-		if (!statement || !screen) {
+		if (!statement) {
 			document.title = APP_CONSTANTS.DOCUMENT_TITLE_PREFIX;
 
 			return;
@@ -26,5 +25,5 @@ export const useDocumentTitle = ({ statement, screen }: UseDocumentTitleProps) =
 			console.error('Error setting document title:', error);
 			document.title = APP_CONSTANTS.DOCUMENT_TITLE_PREFIX;
 		}
-	}, [statement, screen]);
+	}, [statement]);
 };

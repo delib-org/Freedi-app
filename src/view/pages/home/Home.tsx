@@ -33,6 +33,13 @@ export default function Home() {
 		}
 	}, [location]);
 
+	// Set document title for main page
+	useEffect(() => {
+		if (!statementId && !location.pathname.includes('addStatement')) {
+			document.title = 'WizCol - Main';
+		}
+	}, [location, statementId]);
+
 	useEffect(() => {
 		let unsubscribe: () => void = () => { };
 		let updatesUnsubscribe: () => void = () => { };

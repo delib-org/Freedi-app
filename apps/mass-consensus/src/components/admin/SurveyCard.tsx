@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus } from '@/types/survey';
+import ExportModal from './ExportModal';
 import styles from './Admin.module.scss';
 
 interface SurveyCardProps {
@@ -31,6 +32,7 @@ export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyC
   const [stats, setStats] = useState<SurveyStats | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchStats = useCallback(async () => {
     try {
@@ -85,6 +87,36 @@ export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyC
     } finally {
       setIsActivating(false);
     }
+  };
+
+  const handleExport = async (includeTestData: boolean) => {
+    const token = await refreshToken();
+    if (!token) {
+      router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+      return;
+    }
+
+    const response = await fetch(
+      `/api/surveys/${survey.surveyId}/export?includeTestData=${includeTestData}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Export failed');
+    }
+
+    // Get the blob and trigger download
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `survey-${survey.surveyId}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
   };
 
   const isDraft = survey.status === SurveyStatus.draft;
@@ -174,12 +206,28 @@ export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyC
           </Link>
         )}
         <button
+          onClick={() => setShowExportModal(true)}
+          className={`${styles.cardAction} ${styles.downloadAction}`}
+        >
+          {t('downloadData')}
+        </button>
+        <button
           onClick={handleDeleteClick}
           className={`${styles.cardAction} ${styles.deleteAction}`}
         >
           {t('delete')}
         </button>
       </div>
+
+      {/* Export Modal */}
+      {showExportModal && (
+        <ExportModal
+          surveyId={survey.surveyId}
+          surveyTitle={survey.title}
+          onClose={() => setShowExportModal(false)}
+          onExport={handleExport}
+        />
+      )}
     </div>
   );
 }

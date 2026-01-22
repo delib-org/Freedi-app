@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import Modal from '../shared/Modal';
+import { trackRejectionFeedback } from '@/lib/analytics';
 import styles from './RejectionFeedbackModal.module.scss';
 
 interface RejectionFeedbackModalProps {
@@ -49,6 +50,7 @@ export default function RejectionFeedbackModal({
 
       if (response.ok) {
         setSubmitState('success');
+        trackRejectionFeedback(documentId);
         // Wait for thank you animation before closing
         setTimeout(() => {
           onClose();

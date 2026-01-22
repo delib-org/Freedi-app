@@ -59,6 +59,14 @@ export default function QuickActions({ statementId }: QuickActionsProps) {
             >
               {t('exportDemographicAnalysis')}
             </a>
+            <a
+              href={`/api/admin/export-json/${statementId}`}
+              className={styles.exportButton}
+              style={{ textDecoration: 'none', background: 'var(--text-secondary, #6b7280)' }}
+              title={t('exportJsonTitle')}
+            >
+              {t('exportJson')}
+            </a>
           </>
         )}
       </div>

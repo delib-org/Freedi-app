@@ -179,6 +179,21 @@ export default function SurveyQuestionWrapper({
         completedIndices: newCompleted,
         lastUpdated: Date.now(),
       }));
+
+      // Save to server for statistics tracking
+      const isLastQuestion = currentIndex === totalFlowItems - 1;
+      fetch(`/api/surveys/${survey.surveyId}/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          currentQuestionIndex: currentIndex + 1,
+          completedQuestionId: questionId,
+          isCompleted: isLastQuestion,
+        }),
+      }).catch((error) => {
+        console.error('[SurveyQuestionWrapper] Failed to save progress to server:', error);
+      });
     }
   };
 

@@ -8,6 +8,14 @@ import { create } from 'zustand';
 export type ModalType = 'comments' | 'signature' | 'settings' | 'login' | 'demographics' | 'suggestions' | null;
 export type ViewMode = 'default' | 'views' | 'support' | 'importance';
 export type SigningAnimationState = 'idle' | 'signing' | 'success' | 'error' | 'rejecting' | 'rejected';
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastMessage {
+  id: string;
+  type: ToastType;
+  message: string;
+  duration?: number;
+}
 
 interface ModalContext {
   paragraphId?: string;
@@ -77,6 +85,12 @@ export interface UIState {
   userInteractions: Set<string>;
   initializeUserInteractions: (paragraphIds: string[]) => void;
   addUserInteraction: (paragraphId: string) => void;
+
+  // Toast notifications
+  toasts: ToastMessage[];
+  showToast: (type: ToastType, message: string, duration?: number) => void;
+  removeToast: (id: string) => void;
+  clearToasts: () => void;
 }
 
 export const useUIStore = create<UIState>((set, get) => ({
@@ -185,6 +199,20 @@ export const useUIStore = create<UIState>((set, get) => ({
 
       return { userInteractions: newInteractions };
     }),
+
+  // Toast notifications
+  toasts: [],
+  showToast: (type, message, duration = 5000) => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    set((state) => ({
+      toasts: [...state.toasts, { id, type, message, duration }],
+    }));
+  },
+  removeToast: (id) =>
+    set((state) => ({
+      toasts: state.toasts.filter((toast) => toast.id !== id),
+    })),
+  clearToasts: () => set({ toasts: [] }),
 }));
 
 // Selectors for common patterns
@@ -203,3 +231,5 @@ export const selectSigningAnimationState = (state: UIState) =>
   state.signingAnimationState;
 
 export const selectIsModalMinimized = (state: UIState) => state.isModalMinimized;
+
+export const selectToasts = (state: UIState) => state.toasts;

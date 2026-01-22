@@ -165,6 +165,46 @@
   color: var(--text-primary);
 }
 
+// Dropdown select for radio questions
+.selectInput {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.9375rem;
+  background: var(--card-default);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+  width: 100%;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236c757d' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-md) center;
+  padding-right: calc(var(--spacing-md) * 2 + 12px);
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+  }
+
+  &:disabled {
+    background-color: var(--background);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  option {
+    padding: var(--spacing-sm);
+  }
+}
+
+// RTL Support for select dropdown
+[dir="rtl"] .selectInput {
+  background-position: left var(--spacing-md) center;
+  padding-right: var(--spacing-md);
+  padding-left: calc(var(--spacing-md) * 2 + 12px);
+}
+
 // RTL Support - flexbox naturally respects dir="rtl"
 // No need to manually reverse - just ensure text-align is correct
 [dir="rtl"] {

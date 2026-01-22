@@ -1,4 +1,4 @@
-import { SurveySettings, QuestionOverrideSettings } from '@/types/survey';
+import { SurveySettings, QuestionOverrideSettings, SuggestionMode } from '@/types/survey';
 
 /**
  * Merged settings that apply to a specific question
@@ -12,6 +12,8 @@ export interface MergedQuestionSettings {
   randomizeOptions: boolean;
   /** Enable fair evaluation wallet system for this question */
   enableFairEvaluation: boolean;
+  /** Controls UX friction when adding new suggestions vs merging */
+  suggestionMode: SuggestionMode;
 }
 
 /**
@@ -38,8 +40,9 @@ export function getMergedSettings(
       (questionOverrides?.allowParticipantsToAddSuggestions ?? false),
 
     // Per-question askUserForASolutionBeforeEvaluation (no survey-level equivalent)
+    // Default to true: users should provide their own suggestion before seeing others
     askUserForASolutionBeforeEvaluation:
-      questionOverrides?.askUserForASolutionBeforeEvaluation ?? false,
+      questionOverrides?.askUserForASolutionBeforeEvaluation ?? true,
 
     // Survey-level allowSkipping overrides per-question when enabled
     allowSkipping:
@@ -56,6 +59,13 @@ export function getMergedSettings(
 
     // Fair evaluation (per-question only, no survey-level override)
     enableFairEvaluation: questionOverrides?.enableFairEvaluation ?? false,
+
+    // Suggestion mode: per-question override takes precedence, otherwise survey default
+    // Falls back to 'encourage' for existing surveys without the setting
+    suggestionMode:
+      questionOverrides?.suggestionMode ??
+      surveySettings.suggestionMode ??
+      SuggestionMode.restrict, // Backward compatible: existing surveys use restrict (current behavior)
   };
 }
 
@@ -76,10 +86,11 @@ export function isSurveyLevelOverride(
       return surveySettings.allowParticipantsToAddSuggestions === true;
     case 'allowSkipping':
       return surveySettings.allowSkipping === true;
-    // These settings don't have survey-level overrides
+    // These settings don't have survey-level overrides (per-question can always override)
     case 'askUserForASolutionBeforeEvaluation':
     case 'minEvaluationsPerQuestion':
     case 'randomizeOptions':
+    case 'suggestionMode':
       return false;
     default:
       return false;

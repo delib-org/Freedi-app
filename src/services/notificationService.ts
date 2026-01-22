@@ -121,6 +121,15 @@ export class NotificationService {
 			if (token) {
 				console.info('[NotificationService] Token registered in pushNotifications collection');
 				this.setupTokenRefresh(userId);
+
+				// Sync token with existing subscriptions that have push notifications enabled
+				// This ensures the new token is added to all push-enabled subscriptions
+				try {
+					await syncTokenInDb(userId, token);
+					console.info('[NotificationService] Token synced with existing subscriptions');
+				} catch (error) {
+					console.error('[NotificationService] Error syncing token with subscriptions:', error);
+				}
 			} else {
 				console.info(
 					'[NotificationService] Initialized without FCM token - browser notifications only'

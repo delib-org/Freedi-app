@@ -197,6 +197,8 @@ export async function GET(
           comments: {},
           rating: {},
           viewership: {},
+          viewershipCount: {},
+          suggestions: {},
         },
       });
     }
@@ -226,7 +228,14 @@ export async function GET(
       .where('documentId', '==', docId)
       .get();
 
-    // 6. Get total unique visitors for viewership percentage
+    // 6. Get all suggestions
+    const suggestionsSnapshot = await db
+      .collection(Collections.suggestions)
+      .where('documentId', '==', docId)
+      .where('hide', '==', false)
+      .get();
+
+    // 7. Get total unique visitors for viewership percentage
     const totalVisitors = new Set(
       viewsSnapshot.docs.map((doc) => (doc.data() as ParagraphViewDoc).visitorId)
     ).size;
@@ -237,6 +246,8 @@ export async function GET(
       comments: {},
       rating: {},
       viewership: {},
+      viewershipCount: {},
+      suggestions: {},
     };
 
     // Initialize all paragraphs with defaults
@@ -245,6 +256,8 @@ export async function GET(
       heatMapData.comments[id] = 0;
       heatMapData.rating[id] = 0;
       heatMapData.viewership[id] = 0;
+      heatMapData.viewershipCount[id] = 0;
+      heatMapData.suggestions[id] = 0;
     });
 
     // Calculate approval score per paragraph (-1 to 1 scale)
@@ -364,11 +377,31 @@ export async function GET(
     // Use filtered visitor count when filtering by segment
     const effectiveTotalVisitors = segmentUsers ? filteredVisitors.size : totalVisitors;
 
-    // Convert to percentages (of total visitors to document)
+    // Convert to percentages (of total visitors to document) and store viewer counts
     Object.entries(viewsByParagraph).forEach(([id, visitors]) => {
+      // Store percentage for heat level calculation
       heatMapData.viewership[id] = effectiveTotalVisitors > 0
         ? Math.round((visitors.size / effectiveTotalVisitors) * 100)
         : 0;
+      // Store actual viewer count for display
+      heatMapData.viewershipCount[id] = visitors.size;
+    });
+
+    // Count suggestions per paragraph
+    suggestionsSnapshot.docs.forEach((doc) => {
+      const suggestion = doc.data();
+      const paragraphId = suggestion.paragraphId;
+      const creatorId = suggestion.creatorId;
+
+      // Skip if filtering by segment and creator not in segment
+      if (segmentUsers && creatorId && !segmentUsers.has(creatorId)) {
+        return;
+      }
+
+      if (paragraphId && paragraphIds.includes(paragraphId)) {
+        heatMapData.suggestions[paragraphId] =
+          (heatMapData.suggestions[paragraphId] || 0) + 1;
+      }
     });
 
     const filterInfo = segmentMetadata

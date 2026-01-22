@@ -9,9 +9,10 @@
  * - comments: Shows comment count/activity per paragraph
  * - rating: Shows average evaluation score per paragraph
  * - viewership: Shows percentage of users who viewed the paragraph (5+ seconds)
+ * - suggestions: Shows suggestion count per paragraph
  * - none: Heat map disabled
  */
-export type HeatMapType = 'approval' | 'comments' | 'rating' | 'viewership' | 'none';
+export type HeatMapType = 'approval' | 'comments' | 'rating' | 'viewership' | 'suggestions' | 'none';
 
 /**
  * Heat intensity levels (1-5)
@@ -37,7 +38,9 @@ export interface HeatMapData {
   approval: Record<string, number>;    // paragraphId -> score (-1 to 1)
   comments: Record<string, number>;    // paragraphId -> count
   rating: Record<string, number>;      // paragraphId -> average (0-5)
-  viewership: Record<string, number>;  // paragraphId -> percentage (0-100)
+  viewership: Record<string, number>;  // paragraphId -> percentage (0-100) - used for heat level calculation
+  viewershipCount: Record<string, number>;  // paragraphId -> viewer count - used for display
+  suggestions: Record<string, number>; // paragraphId -> suggestion count
 }
 
 /**
@@ -70,6 +73,7 @@ export interface HeatMapThresholds {
   comments: readonly [number, number, number, number];
   rating: readonly [number, number, number, number];
   viewership: readonly [number, number, number, number];
+  suggestions: readonly [number, number, number, number];
 }
 
 /**
@@ -84,6 +88,8 @@ export const HEAT_MAP_THRESHOLDS: HeatMapThresholds = {
   rating: [1.5, 2.5, 3.5, 4.5],
   // Viewership: <20% = L1, 20-39% = L2, 40-59% = L3, 60-79% = L4, 80%+ = L5
   viewership: [20, 40, 60, 80],
+  // Suggestions: 1 = L1, 2-3 = L2, 4-6 = L3, 7-10 = L4, 11+ = L5
+  suggestions: [2, 4, 7, 11],
 } as const;
 
 /**
@@ -107,19 +113,24 @@ export function calculateHeatLevel(
  */
 export function formatHeatValue(
   value: number,
-  type: Exclude<HeatMapType, 'none'>
+  type: Exclude<HeatMapType, 'none'>,
+  viewerCount?: number
 ): string {
   switch (type) {
     case 'approval':
       // Show as signed decimal (-1 to +1)
       const sign = value > 0 ? '+' : '';
+
       return `${sign}${value.toFixed(1)}`;
     case 'viewership':
-      return `${Math.round(value)}%`;
+      // Display actual viewer count instead of percentage
+      return viewerCount !== undefined ? viewerCount.toString() : Math.round(value).toString();
     case 'comments':
       return value.toString();
     case 'rating':
       return value.toFixed(1);
+    case 'suggestions':
+      return value.toString();
   }
 }
 
@@ -137,11 +148,14 @@ export function getHeatMapValue(
     return null;
   }
 
+  // For viewership, get the viewer count for display
+  const viewerCount = type === 'viewership' ? data.viewershipCount?.[paragraphId] : undefined;
+
   return {
     type,
     level: calculateHeatLevel(rawValue, type),
     rawValue,
-    displayValue: formatHeatValue(rawValue, type),
+    displayValue: formatHeatValue(rawValue, type, viewerCount),
   };
 }
 
@@ -169,6 +183,11 @@ export const HEAT_MAP_COLORS = {
     low: 'var(--heat-viewership-low)',
     high: 'var(--heat-viewership-high)',
     border: 'var(--heat-viewership-border)',
+  },
+  suggestions: {
+    low: 'var(--heat-suggestions-low)',
+    high: 'var(--heat-suggestions-high)',
+    border: 'var(--heat-suggestions-border)',
   },
 } as const;
 
