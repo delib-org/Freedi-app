@@ -184,6 +184,7 @@ export type {
 export {
   StatementSubscriptionSchema,
   getStatementSubscriptionId,
+  getSubscriptionId,
   StatementViewSchema,
   WaitingMemberSchema
 } from "./models/statement/StatementSubscription";

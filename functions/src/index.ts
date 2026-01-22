@@ -649,8 +649,8 @@ exports.onFairEvalEvaluationChange = createFirestoreFunction(
 // HTTP: Add minutes to all members in a group (admin only)
 exports.addMinutesToGroup = wrapHttpFunction(addMinutesToGroup);
 
-// HTTP: Set/update answer cost (admin only)
-exports.setAnswerCost = wrapHttpFunction(setAnswerCost);
+/// Callable: Set/update answer cost (admin only)
+exports.setAnswerCost = setAnswerCost;
 
 // HTTP: Accept an answer and deduct payments (admin only)
 exports.acceptFairEvalAnswer = wrapHttpFunction(acceptFairEvalAnswer);

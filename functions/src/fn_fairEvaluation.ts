@@ -7,6 +7,7 @@
 
 import { logger } from "firebase-functions/v1";
 import { Request, Response } from "firebase-functions/v1";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import {
   FirestoreEvent,
   QueryDocumentSnapshot,
@@ -27,12 +28,14 @@ import {
   FairEvalTransactionType,
   FairEvalAnswerMetrics,
   getWalletId,
+  getSubscriptionId,
   DEFAULT_INITIAL_WALLET_BALANCE,
   DEFAULT_ANSWER_COST,
   calculateAnswerMetrics,
   calculateAllPayments,
   calculateCompleteToGoal,
   UserEvaluationData,
+  functionConfig,
 } from "@freedi/shared-types";
 import { RequestValidator } from "./utils/validation";
 
@@ -49,15 +52,24 @@ async function isAdmin(
   userId: string,
   statementId: string
 ): Promise<boolean> {
-  const subscriptionId = `${statementId}--${userId}`;
+  const subscriptionId = getSubscriptionId(userId, statementId);
   const subDoc = await db
     .collection(Collections.statementsSubscribe)
     .doc(subscriptionId)
     .get();
 
-  if (!subDoc.exists) return false;
+  if (!subDoc.exists) {
+    logger.info("isAdmin: subscription not found", { subscriptionId, userId, statementId });
+    return false;
+  }
 
   const subscription = subDoc.data() as StatementSubscription;
+  logger.info("isAdmin: subscription found", {
+    subscriptionId,
+    role: subscription.role,
+    isAdmin: subscription.role === Role.admin,
+    isCreator: subscription.role === Role.creator
+  });
   return subscription.role === Role.admin || subscription.role === Role.creator;
 }
 
@@ -512,36 +524,40 @@ export async function addMinutesToGroup(
 /**
  * Set/update answer cost
  *
- * Admin-only HTTP function
+ * Admin-only callable function
  */
-export async function setAnswerCost(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    const validator = new RequestValidator();
-    const statementId = req.body.statementId as string;
-    const newCost = req.body.newCost as number;
-    const adminId = req.body.adminId as string;
+interface SetAnswerCostRequest {
+  statementId: string;
+  cost: number;
+}
 
-    validator.requireString(statementId, "statementId");
-    validator.requireString(adminId, "adminId");
+interface SetAnswerCostResult {
+  success: boolean;
+  message: string;
+  statementId: string;
+  cost: number;
+}
 
-    if (!validator.isValid()) {
-      res.status(400).send({
-        error: validator.getErrorMessage(),
-        ok: false,
-      });
-      return;
+export const setAnswerCost = onCall<SetAnswerCostRequest>(
+  { region: functionConfig.region },
+  async (request): Promise<SetAnswerCostResult> => {
+    const { statementId, cost } = request.data;
+
+    // Validate input
+    if (!statementId || typeof statementId !== "string") {
+      throw new HttpsError("invalid-argument", "statementId is required");
     }
 
-    if (typeof newCost !== "number" || newCost < 0) {
-      res.status(400).send({
-        error: "newCost must be a non-negative number",
-        ok: false,
-      });
-      return;
+    if (typeof cost !== "number" || cost < 0) {
+      throw new HttpsError("invalid-argument", "cost must be a non-negative number");
     }
+
+    // Check authentication
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "User must be authenticated");
+    }
+
+    const userId = request.auth.uid;
 
     // Get statement
     const statementDoc = await db
@@ -550,36 +566,36 @@ export async function setAnswerCost(
       .get();
 
     if (!statementDoc.exists) {
-      res.status(404).send({
-        error: "Statement not found",
-        ok: false,
-      });
-      return;
+      throw new HttpsError("not-found", "Statement not found");
     }
 
     const statement = statementDoc.data() as Statement;
 
+    // Debug logging
+    const subscriptionId = getSubscriptionId(userId, statement.topParentId);
+    logger.info("Checking admin permission", {
+      userId,
+      topParentId: statement.topParentId,
+      subscriptionId,
+      statementId,
+    });
+
     // Verify admin permission
-    if (!(await isAdmin(adminId, statement.topParentId))) {
-      res.status(403).send({
-        error: "Only admins can set answer cost",
-        ok: false,
-      });
-      return;
+    const adminCheck = await isAdmin(userId, statement.topParentId);
+    logger.info("Admin check result", { adminCheck, subscriptionId });
+
+    if (!adminCheck) {
+      throw new HttpsError("permission-denied", "Only admins can set answer cost");
     }
 
     // Check if already accepted
     if (statement.fairEvalMetrics?.isAccepted) {
-      res.status(400).send({
-        error: "Cannot change cost of accepted answer",
-        ok: false,
-      });
-      return;
+      throw new HttpsError("failed-precondition", "Cannot change cost of accepted answer");
     }
 
     // Update cost and recalculate metrics
     await db.collection(Collections.statements).doc(statementId).update({
-      answerCost: newCost,
+      answerCost: cost,
       lastUpdate: Date.now(),
     });
 
@@ -588,22 +604,19 @@ export async function setAnswerCost(
       statementId,
       statement.parentId,
       statement.topParentId,
-      newCost
+      cost
     );
 
-    res.send({
-      message: `Answer cost updated to ${newCost}`,
-      ok: true,
-    });
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error("setAnswerCost error:", error);
-    res.status(500).send({
-      error: errorMessage,
-      ok: false,
-    });
+    logger.info("Answer cost updated", { statementId, cost, userId });
+
+    return {
+      success: true,
+      message: `Answer cost updated to ${cost}`,
+      statementId,
+      cost,
+    };
   }
-}
+);
 
 /**
  * Accept an answer and deduct payments from supporters

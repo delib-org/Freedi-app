@@ -44,6 +44,17 @@ export function getStatementSubscriptionId(
 	return `${user.uid}--${statementId}`;
 }
 
+/**
+ * Get subscription ID from userId string (for backend use)
+ * Format: {userId}--{statementId}
+ */
+export function getSubscriptionId(
+	userId: string,
+	statementId: string
+): string {
+	return `${userId}--${statementId}`;
+}
+
 export const StatementViewSchema = object({
 	statementId: string(),
 	userId: string(),
