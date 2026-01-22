@@ -14,6 +14,7 @@ export type {
 
 export {
   SurveyStatus,
+  SuggestionMode,
   DEFAULT_SURVEY_SETTINGS,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
   SurveyDemographicPageSchema,
@@ -77,6 +78,10 @@ export interface CreateSurveyRequest {
   explanationPages?: SurveyExplanationPage[];
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId?: string;
+  /** Custom introduction text to show on welcome screen (replaces default translation) */
+  customIntroText?: string;
+  /** Whether to show the introduction text on welcome screen (defaults to true) */
+  showIntro?: boolean;
 }
 
 /**
@@ -99,6 +104,12 @@ export interface UpdateSurveyRequest {
   explanationPages?: SurveyExplanationPage[];
   /** Parent statement ID for inheriting demographic questions */
   parentStatementId?: string;
+  /** Custom introduction text to show on welcome screen (replaces default translation) */
+  customIntroText?: string;
+  /** Whether to show the introduction text on welcome screen (defaults to true) */
+  showIntro?: boolean;
+  /** Toggle test mode - when enabled, new responses are marked as test data */
+  isTestMode?: boolean;
 }
 
 /**
@@ -141,4 +152,34 @@ export interface SurveyListResponse {
 export interface AvailableQuestionsResponse {
   questions: Statement[];
   total: number;
+}
+
+/**
+ * Test data counts for a survey
+ */
+export interface TestDataCounts {
+  progressCount: number;
+  demographicAnswerCount: number;
+  total: number;
+}
+
+/**
+ * Result of clearing test data
+ */
+export interface ClearTestDataResult {
+  success: boolean;
+  deletedCounts: TestDataCounts;
+}
+
+/**
+ * Survey stats with test data breakdown
+ */
+export interface SurveyStatsResponse {
+  responseCount: number;
+  completionCount: number;
+  completionRate: number;
+  /** Test response count (only present if test data exists) */
+  testResponseCount?: number;
+  /** Test completion count (only present if test data exists) */
+  testCompletionCount?: number;
 }

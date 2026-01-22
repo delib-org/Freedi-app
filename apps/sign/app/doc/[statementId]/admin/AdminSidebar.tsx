@@ -60,6 +60,27 @@ export default function AdminSidebar({
           {t('collaborationIndex')}
         </Link>
 
+        {canManageSettings && (
+          <Link href={`/doc/${statementId}/admin/editor`} className={styles.navLink}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+            {t('Content Editor')}
+          </Link>
+        )}
+
+        {canManageSettings && (
+          <Link href={`/doc/${statementId}/admin/versions`} className={styles.navLink}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="10" />
+              <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49" />
+            </svg>
+            {t('versions')}
+          </Link>
+        )}
+
         {canCreateViewerLinks && (
           <Link href={`/doc/${statementId}/admin/team`} className={styles.navLink}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

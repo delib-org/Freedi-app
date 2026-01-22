@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
+import { logger } from 'firebase-functions/v1';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
@@ -174,12 +175,12 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 				// Check if response was truncated
 				const finishReason = response.candidates?.[0]?.finishReason;
 				if (finishReason && finishReason !== 'STOP') {
-					console.warn(`Gemini response finished with reason: ${finishReason}`);
+					logger.warn(`Gemini response finished with reason: ${finishReason}`);
 					if (finishReason === 'SAFETY') {
 						throw new HttpsError('failed-precondition', 'Content was filtered by safety settings');
 					}
 					if (finishReason === 'MAX_TOKENS' && attempts < maxAttempts) {
-						console.warn('Summary was truncated, retrying with condensed prompt...');
+						logger.warn('Summary was truncated, retrying with condensed prompt...');
 						// Continue to retry with higher token count (already at max, so this is best effort)
 						continue;
 					}
@@ -192,7 +193,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 				const endsWithPunctuation = /[.!?؟。،:\n]$/.test(trimmedText);
 
 				if (!endsWithPunctuation && trimmedText.length > 100 && attempts < maxAttempts) {
-					console.warn('Summary appears truncated (no ending punctuation), retrying...');
+					logger.warn('Summary appears truncated (no ending punctuation), retrying...');
 					continue;
 				}
 

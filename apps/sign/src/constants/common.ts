@@ -21,9 +21,20 @@ export const TIME = {
 export const QUERY_LIMITS = {
   PARAGRAPHS: 200,
   COMMENTS: 100,
+  SUGGESTIONS: 50,
   INVITATIONS: 50,
   DEFAULT: 50,
   SIGNATURES: 200,
+} as const;
+
+/**
+ * Firebase-specific limits
+ */
+export const FIREBASE = {
+  /** Maximum items in a Firestore 'in' query */
+  IN_QUERY_LIMIT: 30,
+  /** Maximum items in a batch write */
+  BATCH_SIZE: 500,
 } as const;
 
 /**
@@ -84,6 +95,38 @@ export const VALIDATION = {
 } as const;
 
 /**
+ * Suggestion feature constants
+ */
+export const SUGGESTIONS = {
+  MIN_LENGTH: 10,
+  MAX_LENGTH: 5000,
+  MAX_REASONING_LENGTH: 1000,
+  POST_COMMENT_PROMPT_DELAY_MS: 500,
+  AUTO_DISMISS_DELAY_MS: 5000,
+  REALTIME_POLL_INTERVAL_MS: 5000,
+} as const;
+
+/**
+ * Document versioning constants
+ */
+export const VERSIONING = {
+  /** Default multiplier for suggestions/comments impact */
+  DEFAULT_K1: 5,
+  /** Default multiplier for support/objection impact */
+  DEFAULT_K2: 3,
+  /** Default minimum impact threshold */
+  DEFAULT_MIN_IMPACT_THRESHOLD: 0.1,
+  /** Maximum versions to keep per document */
+  MAX_VERSIONS: 100,
+  /** Maximum changes per version */
+  MAX_CHANGES_PER_VERSION: 500,
+  /** Maximum summary length */
+  MAX_SUMMARY_LENGTH: 2000,
+  /** Maximum AI reasoning length */
+  MAX_AI_REASONING_LENGTH: 1000,
+} as const;
+
+/**
  * Error messages
  */
 export const ERROR_MESSAGES = {
@@ -114,6 +157,17 @@ export const API_ROUTES = {
   HEATMAP: (documentId: string) => `/api/heatmap/${documentId}`,
   HEATMAP_DEMOGRAPHICS: (documentId: string) => `/api/heatmap/${documentId}/demographics`,
   COMMENTS: (paragraphId: string) => `/api/comments/${paragraphId}`,
+  SUGGESTIONS: (paragraphId: string) => `/api/suggestions/${paragraphId}`,
+  SUGGESTION_EVALUATIONS: (suggestionId: string) => `/api/suggestion-evaluations/${suggestionId}`,
   APPROVAL: '/api/approval',
   SIGNATURE: '/api/signature',
+  // Version management routes
+  VERSIONS: (documentId: string) => `/api/versions/${documentId}`,
+  ADMIN_VERSIONS: (documentId: string) => `/api/admin/versions/${documentId}`,
+  ADMIN_VERSION: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}`,
+  ADMIN_VERSION_GENERATE: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/generate`,
+  ADMIN_VERSION_PROCESS_AI: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/process-ai`,
+  ADMIN_VERSION_PUBLISH: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/publish`,
+  ADMIN_VERSION_SETTINGS: (documentId: string) => `/api/admin/version-settings/${documentId}`,
+  ADMIN_CHANGE: (changeId: string) => `/api/admin/changes/${changeId}`,
 } as const;

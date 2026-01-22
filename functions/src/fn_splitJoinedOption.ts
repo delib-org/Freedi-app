@@ -737,7 +737,8 @@ export async function cleanupDuplicateRoomSettings(req: Request, res: Response):
 
 		if (!topParentId) {
 			res.status(400).json({ error: 'Missing topParentId' });
-			return;
+			
+return;
 		}
 
 		logger.info(`Cleaning up duplicate room settings for topParentId: ${topParentId}`);
@@ -750,7 +751,8 @@ export async function cleanupDuplicateRoomSettings(req: Request, res: Response):
 
 		if (settingsSnapshot.empty) {
 			res.status(200).json({ message: 'No room settings found', cleaned: 0 });
-			return;
+			
+return;
 		}
 
 		// Group by option (statementId) and find duplicates

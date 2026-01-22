@@ -1009,6 +1009,32 @@
   }
 }
 
+.downloadAction {
+  color: var(--btn-primary, #5f88e5);
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.1);
+    color: #4a6fc4;
+  }
+}
+
+// ============================================
+// EXPORT MODAL
+// ============================================
+
+.exportSurveyName {
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 1.5rem;
+}
+
+.exportOptions {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+}
+
 // ============================================
 // LANGUAGE SELECTOR
 // ============================================
@@ -1922,4 +1948,387 @@
   em {
     font-style: italic;
   }
+}
+
+// ============================================
+// TEST MODE SECTION
+// ============================================
+
+.testModeSection {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+
+  &:has(input[type="checkbox"]:checked) {
+    border-color: #fbbf24;
+  }
+}
+
+.testModeHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-heading, #1a1a2e);
+  }
+}
+
+.testModeBadge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: #fbbf24;
+  color: #92400e;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.testModeDescription {
+  font-size: 0.875rem;
+  color: var(--text-body, #4a5568);
+  margin: 0 0 1rem 0;
+}
+
+.testModeToggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.toggleSwitch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+
+    &:checked + .toggleSlider {
+      background-color: #fbbf24;
+    }
+
+    &:checked + .toggleSlider::before {
+      transform: translateX(22px);
+    }
+
+    &:focus + .toggleSlider {
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.3);
+    }
+
+    &:disabled + .toggleSlider {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.toggleSlider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--border-light, #e2e8f0);
+  border-radius: 26px;
+  transition: background-color 0.2s;
+
+  &::before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.toggleLabel {
+  font-size: 0.875rem;
+  color: var(--text-body, #4a5568);
+  font-weight: 500;
+}
+
+.testDataStats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.testDataCount {
+  font-size: 0.875rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
+.clearTestDataButton {
+  margin-left: auto;
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--disagree, #e53e3e);
+  color: var(--disagree, #e53e3e);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(229, 62, 62, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.testModeWarning {
+  padding: 0.75rem 1rem;
+  background: rgba(251, 191, 36, 0.15);
+  border: 1px solid #fbbf24;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  color: #92400e;
+}
+
+.statsNote {
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  margin: 0 0 0.5rem 0;
+}
+
+.testStatsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+  border-top: 1px solid var(--border-light, #e2e8f0);
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+}
+
+.testStatsLabel {
+  font-weight: 500;
+  color: var(--text-body, #4a5568);
+}
+
+.testDataPreview {
+  font-size: 0.875rem;
+  color: var(--text-muted, #718096);
+  background: var(--bg-muted, #f7fafc);
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+}
+
+// ============================================
+// PILOT DATA SECTION
+// ============================================
+
+.pilotDataSection {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(139, 92, 246, 0.05);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 8px;
+}
+
+.pilotDataHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+
+  h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--text-heading, #1a1a2e);
+  }
+}
+
+.pilotDataBadge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  background: #8b5cf6;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 600;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pilotDataDescription {
+  font-size: 0.8rem;
+  color: var(--text-body, #4a5568);
+  margin: 0 0 1rem 0;
+  line-height: 1.4;
+}
+
+.pilotDataActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.markAsPilotButton {
+  padding: 0.5rem 1rem;
+  background: #8b5cf6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+
+  &:hover:not(:disabled) {
+    background: #7c3aed;
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.unmarkPilotButton {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  color: #8b5cf6;
+  border: 1px solid #8b5cf6;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+
+  &:hover:not(:disabled) {
+    background: rgba(139, 92, 246, 0.1);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.pilotDataStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(139, 92, 246, 0.1);
+  border-radius: 6px;
+  margin-top: 0.75rem;
+
+  span {
+    font-size: 0.8rem;
+    color: #6d28d9;
+  }
+}
+
+.pilotDataCountItem {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+
+  &::after {
+    content: '|';
+    margin-left: 0.5rem;
+    color: rgba(139, 92, 246, 0.4);
+  }
+
+  &:last-child::after {
+    content: none;
+  }
+}
+
+// ============================================
+// RADIO GROUP (for Suggestion Mode, etc.)
+// ============================================
+
+.groupLabel {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 0.25rem;
+}
+
+.radioGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.radioOption {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+
+  &:hover {
+    background: var(--border-light, #e2e8f0);
+  }
+
+  &:has(input:checked) {
+    border-color: var(--btn-primary, #5f88e5);
+    background: rgba(95, 136, 229, 0.08);
+  }
+
+  input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    margin-top: 2px;
+    accent-color: var(--btn-primary, #5f88e5);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+.radioContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.radioLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+}
+
+.radioDescription {
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  line-height: 1.4;
 }

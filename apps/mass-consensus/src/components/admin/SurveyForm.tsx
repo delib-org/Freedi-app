@@ -6,10 +6,11 @@ import Link from 'next/link';
 import { Statement, QuestionOverrideSettings, SurveyDemographicPage, SurveyDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS } from '@/types/survey';
+import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
+import { CreateQuestionModal } from './CreateQuestionModal';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -33,6 +34,8 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
+  const [showIntro, setShowIntro] = useState(existingSurvey?.showIntro ?? true);
+  const [customIntroText, setCustomIntroText] = useState(existingSurvey?.customIntroText || '');
   const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
     existingSurvey?.demographicPages || []
   );
@@ -43,6 +46,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
+  const [isCreateQuestionModalOpen, setIsCreateQuestionModalOpen] = useState(false);
 
   const isEditing = !!existingSurvey;
 
@@ -152,6 +156,8 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         forceLanguage: forceLanguage || undefined,
         demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
         explanationPages: explanationPages.length > 0 ? explanationPages : undefined,
+        showIntro,
+        customIntroText: showIntro && customIntroText.trim() ? customIntroText.trim() : undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -322,11 +328,53 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
             placeholder={t('surveyDescriptionPlaceholder')}
           />
         </div>
+
+        {/* Introduction Text Settings */}
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={showIntro}
+              onChange={(e) => setShowIntro(e.target.checked)}
+            />
+            {' '}{t('showIntroText') || 'Show introduction text'}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('showIntroTextDescription') || 'Display an introductory message to participants on the welcome screen'}
+          </p>
+        </div>
+
+        {showIntro && (
+          <div className={styles.formGroup}>
+            <label htmlFor="customIntroText">{t('customIntroText') || 'Custom introduction text'}</label>
+            <textarea
+              id="customIntroText"
+              className={styles.textArea}
+              value={customIntroText}
+              onChange={(e) => setCustomIntroText(e.target.value)}
+              placeholder={t('customIntroTextPlaceholder') || 'Leave empty to use the default introduction text'}
+              rows={4}
+            />
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+              {t('customIntroTextNote') || 'If left empty, the default system introduction will be shown'}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Step 2: Select Questions */}
       <div className={styles.formSection}>
-        <h2 className={styles.sectionTitle}>{t('selectQuestions')}</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 className={styles.sectionTitle} style={{ marginBottom: 0 }}>{t('selectQuestions')}</h2>
+          <button
+            type="button"
+            className={styles.createButton}
+            onClick={() => setIsCreateQuestionModalOpen(true)}
+            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
+          >
+            {t('createNewQuestion') || '+ Create New Question'}
+          </button>
+        </div>
         {isLoadingQuestions ? (
           <div className={styles.loadingQuestions}>
             <div className={styles.spinner} />
@@ -339,6 +387,16 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
           />
         )}
       </div>
+
+      {/* Create Question Modal */}
+      <CreateQuestionModal
+        isOpen={isCreateQuestionModalOpen}
+        onClose={() => setIsCreateQuestionModalOpen(false)}
+        onQuestionCreated={(question) => {
+          setSelectedQuestions((prev) => [...prev, question]);
+          setIsCreateQuestionModalOpen(false);
+        }}
+      />
 
       {/* Step 3: Unified Flow Editor (Questions, Demographics, Explanations) */}
       {!isLoadingQuestions && (
@@ -434,6 +492,61 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
             {t('allowSuggestionsNote') || 'When enabled, overrides all per-question suggestion settings'}
           </p>
+        </div>
+
+        {/* Suggestion Mode - controls UX when adding new suggestions */}
+        <div className={styles.formGroup}>
+          <label className={styles.groupLabel}>{t('suggestionMode') || 'Suggestion Mode'}</label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.75rem' }}>
+            {t('suggestionModeDescription') || 'Controls how easy it is for users to add new suggestions vs. merging with existing ones'}
+          </p>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="suggestionMode"
+                value={SuggestionMode.encourage}
+                checked={settings.suggestionMode === SuggestionMode.encourage}
+                onChange={() => setSettings({ ...settings, suggestionMode: SuggestionMode.encourage })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('suggestionModeEncourage') || 'Encourage New Ideas'}</span>
+                <span className={styles.radioDescription}>
+                  {t('suggestionModeEncourageDesc') || '"Add as New" is primary. Easy for users to contribute unique suggestions.'}
+                </span>
+              </div>
+            </label>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="suggestionMode"
+                value={SuggestionMode.balanced}
+                checked={settings.suggestionMode === SuggestionMode.balanced}
+                onChange={() => setSettings({ ...settings, suggestionMode: SuggestionMode.balanced })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('suggestionModeBalanced') || 'Balanced'}</span>
+                <span className={styles.radioDescription}>
+                  {t('suggestionModeBalancedDesc') || 'Both options shown equally. Users choose freely between adding new or merging.'}
+                </span>
+              </div>
+            </label>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="suggestionMode"
+                value={SuggestionMode.restrict}
+                checked={(settings.suggestionMode === SuggestionMode.restrict) || !settings.suggestionMode}
+                onChange={() => setSettings({ ...settings, suggestionMode: SuggestionMode.restrict })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('suggestionModeRestrict') || 'Encourage Merging'}</span>
+                <span className={styles.radioDescription}>
+                  {t('suggestionModeRestrictDesc') || '"Merge" is primary with confirmation for new. Consolidates similar ideas.'}
+                </span>
+              </div>
+            </label>
+          </div>
         </div>
       </div>
 

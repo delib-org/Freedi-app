@@ -5,21 +5,32 @@
 
 import { create } from 'zustand';
 
-export type ModalType = 'comments' | 'signature' | 'settings' | 'login' | 'demographics' | null;
+export type ModalType = 'comments' | 'signature' | 'settings' | 'login' | 'demographics' | 'suggestions' | null;
 export type ViewMode = 'default' | 'views' | 'support' | 'importance';
 export type SigningAnimationState = 'idle' | 'signing' | 'success' | 'error' | 'rejecting' | 'rejected';
+export type ToastType = 'success' | 'error' | 'warning' | 'info';
+
+export interface ToastMessage {
+  id: string;
+  type: ToastType;
+  message: string;
+  duration?: number;
+}
 
 interface ModalContext {
   paragraphId?: string;
   documentId?: string;
 }
 
-interface UIState {
+export interface UIState {
   // Modal state
   activeModal: ModalType;
   modalContext: ModalContext | null;
+  isModalMinimized: boolean;
   openModal: (modal: ModalType, context?: ModalContext) => void;
   closeModal: () => void;
+  minimizeModal: () => void;
+  restoreModal: () => void;
 
   // Edit mode (admin only)
   isEditMode: boolean;
@@ -59,19 +70,39 @@ interface UIState {
   incrementCommentCount: (paragraphId: string) => void;
   decrementCommentCount: (paragraphId: string) => void;
 
+  // Suggestion counts (for real-time updates)
+  suggestionCounts: Record<string, number>;
+  initializeSuggestionCounts: (counts: Record<string, number>) => void;
+  incrementSuggestionCount: (paragraphId: string) => void;
+  decrementSuggestionCount: (paragraphId: string) => void;
+
+  // Post-comment suggestion prompts (track dismissed prompts)
+  dismissedSuggestionPrompts: Set<string>;
+  dismissSuggestionPrompt: (paragraphId: string) => void;
+  isSuggestionPromptDismissed: (paragraphId: string) => boolean;
+
   // User interactions (paragraphs where user has commented or evaluated)
   userInteractions: Set<string>;
   initializeUserInteractions: (paragraphIds: string[]) => void;
   addUserInteraction: (paragraphId: string) => void;
+
+  // Toast notifications
+  toasts: ToastMessage[];
+  showToast: (type: ToastType, message: string, duration?: number) => void;
+  removeToast: (id: string) => void;
+  clearToasts: () => void;
 }
 
-export const useUIStore = create<UIState>((set) => ({
+export const useUIStore = create<UIState>((set, get) => ({
   // Modal state
   activeModal: null,
   modalContext: null,
+  isModalMinimized: false,
   openModal: (modal, context) =>
-    set({ activeModal: modal, modalContext: context ?? null }),
-  closeModal: () => set({ activeModal: null, modalContext: null }),
+    set({ activeModal: modal, modalContext: context ?? null, isModalMinimized: false }),
+  closeModal: () => set({ activeModal: null, modalContext: null, isModalMinimized: false }),
+  minimizeModal: () => set({ isModalMinimized: true }),
+  restoreModal: () => set({ isModalMinimized: false }),
 
   // Edit mode
   isEditMode: false,
@@ -126,6 +157,37 @@ export const useUIStore = create<UIState>((set) => ({
       },
     })),
 
+  // Suggestion counts
+  suggestionCounts: {},
+  initializeSuggestionCounts: (counts) => set({ suggestionCounts: counts }),
+  incrementSuggestionCount: (paragraphId) =>
+    set((state) => ({
+      suggestionCounts: {
+        ...state.suggestionCounts,
+        [paragraphId]: (state.suggestionCounts[paragraphId] || 0) + 1,
+      },
+    })),
+  decrementSuggestionCount: (paragraphId) =>
+    set((state) => ({
+      suggestionCounts: {
+        ...state.suggestionCounts,
+        [paragraphId]: Math.max(0, (state.suggestionCounts[paragraphId] || 0) - 1),
+      },
+    })),
+
+  // Post-comment suggestion prompts
+  dismissedSuggestionPrompts: new Set<string>(),
+  dismissSuggestionPrompt: (paragraphId) =>
+    set((state) => {
+      const newDismissed = new Set(state.dismissedSuggestionPrompts);
+      newDismissed.add(paragraphId);
+
+      return { dismissedSuggestionPrompts: newDismissed };
+    }),
+  isSuggestionPromptDismissed: (paragraphId: string): boolean => {
+    return get().dismissedSuggestionPrompts.has(paragraphId);
+  },
+
   // User interactions
   userInteractions: new Set<string>(),
   initializeUserInteractions: (paragraphIds) =>
@@ -137,6 +199,20 @@ export const useUIStore = create<UIState>((set) => ({
 
       return { userInteractions: newInteractions };
     }),
+
+  // Toast notifications
+  toasts: [],
+  showToast: (type, message, duration = 5000) => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    set((state) => ({
+      toasts: [...state.toasts, { id, type, message, duration }],
+    }));
+  },
+  removeToast: (id) =>
+    set((state) => ({
+      toasts: state.toasts.filter((toast) => toast.id !== id),
+    })),
+  clearToasts: () => set({ toasts: [] }),
 }));
 
 // Selectors for common patterns
@@ -153,3 +229,7 @@ export const selectIsTocExpanded = (state: UIState) => state.isTocExpanded;
 
 export const selectSigningAnimationState = (state: UIState) =>
   state.signingAnimationState;
+
+export const selectIsModalMinimized = (state: UIState) => state.isModalMinimized;
+
+export const selectToasts = (state: UIState) => state.toasts;

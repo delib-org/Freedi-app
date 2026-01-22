@@ -18,10 +18,11 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 4px 10px;
+  gap: 6px;
+  padding: 8px 12px;
+  min-height: 44px; // WCAG 2.1 minimum touch target
   border-radius: var(--radius-sm);
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -30,8 +31,9 @@
   color: var(--text-caption);
 
   svg {
-    width: 14px;
-    height: 14px;
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
   }
 
   &:hover:not(:disabled) {
@@ -64,10 +66,9 @@
   }
 }
 
+// Button text always visible for better accessibility (especially for elderly users)
 .buttonText {
-  @media (max-width: 768px) {
-    display: none;
-  }
+  // Text always visible on all screen sizes
 }
 
 .approveButton {
@@ -108,7 +109,6 @@
 
 .commentButton {
   position: relative;
-  margin-inline-start: auto;
 
   &:hover:not(:disabled) {
     color: var(--btn-primary);
@@ -125,6 +125,33 @@
   height: 14px;
   padding: 0 3px;
   background: var(--btn-primary);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.suggestButton {
+  position: relative;
+
+  &:hover:not(:disabled) {
+    color: var(--warning, #f0ad4e);
+    border-color: var(--warning, #f0ad4e);
+    background: rgba(240, 173, 78, 0.08);
+  }
+}
+
+.suggestionCount {
+  position: absolute;
+  top: -4px;
+  inset-inline-end: -4px;
+  min-width: 14px;
+  height: 14px;
+  padding: 0 3px;
+  background: var(--warning, #f0ad4e);
   color: white;
   font-size: 0.6rem;
   font-weight: 600;
@@ -159,11 +186,6 @@
   .button {
     flex-direction: row-reverse;
   }
-
-  .commentButton {
-    margin-inline-start: auto;
-    margin-inline-end: 0;
-  }
 }
 
 /* LTR Support - explicitly set LTR even if root HTML is RTL */
@@ -179,10 +201,5 @@
 
   .button {
     flex-direction: row;
-  }
-
-  .commentButton {
-    margin-inline-end: 0;
-    margin-inline-start: auto;
   }
 }

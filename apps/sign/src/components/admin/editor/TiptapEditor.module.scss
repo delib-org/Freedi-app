@@ -1,0 +1,335 @@
+.editorContainer {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--card-default, #fff);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm);
+  border-bottom: 1px solid var(--border-light);
+  background: var(--background-alt, #f9f9f9);
+}
+
+.toolbarGroup {
+  display: flex;
+  gap: 2px;
+  padding-inline-end: var(--spacing-sm);
+  border-inline-end: 1px solid var(--border-light);
+
+  &:last-child {
+    border-inline-end: none;
+    padding-inline-end: 0;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-body);
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--border-light);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    &.active {
+      background: var(--btn-primary);
+      color: white;
+    }
+
+    svg {
+      width: 16px;
+      height: 16px;
+    }
+  }
+}
+
+.headingSelect {
+  height: 32px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--card-default, #fff);
+  color: var(--text-body);
+  font-size: 0.875rem;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--btn-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 1px;
+  }
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.imageToolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--info-bg, #e3f2fd);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.imageToolbarLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-inline-end: var(--spacing-xs);
+}
+
+.widthSelect {
+  height: 32px;
+  padding: 0 var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  background: var(--card-default, #fff);
+  color: var(--text-body);
+  font-size: 0.875rem;
+  cursor: pointer;
+  min-width: 70px;
+
+  &:hover {
+    border-color: var(--btn-primary);
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 1px;
+  }
+}
+
+.deleteButton {
+  background: var(--error-bg, #ffebee) !important;
+  color: var(--error, #d32f2f) !important;
+
+  &:hover {
+    background: var(--error, #d32f2f) !important;
+    color: white !important;
+  }
+}
+
+.editorContent {
+  min-height: 200px;
+  padding: var(--spacing-md);
+
+  // Tiptap editor styles
+  :global(.tiptap) {
+    outline: none;
+    min-height: 180px;
+
+    // Typography
+    p {
+      margin: 0 0 1em;
+      line-height: 1.7;
+      color: var(--text-body);
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      margin: 1.5em 0 0.5em;
+      color: var(--text-primary);
+      line-height: 1.3;
+
+      &:first-child {
+        margin-top: 0;
+      }
+    }
+
+    h1 { font-size: var(--h1-font-size, 2rem); font-weight: 700; }
+    h2 { font-size: var(--h2-font-size, 1.5rem); font-weight: 600; }
+    h3 { font-size: var(--h3-font-size, 1.25rem); font-weight: 600; }
+    h4 { font-size: var(--h4-font-size, 1.1rem); font-weight: 600; }
+    h5 { font-size: var(--h5-font-size, 1rem); font-weight: 600; }
+    h6 { font-size: var(--h6-font-size, 0.9rem); font-weight: 600; }
+
+    // Lists
+    ul, ol {
+      margin: 0 0 1em;
+      padding-inline-start: 1.5em;
+    }
+
+    li {
+      margin-bottom: 0.25em;
+
+      p {
+        margin: 0;
+      }
+    }
+
+    // Text formatting
+    strong { font-weight: 700; }
+    em { font-style: italic; }
+    u { text-decoration: underline; }
+    s { text-decoration: line-through; }
+
+    // Images
+    img {
+      max-width: 100%;
+      height: auto;
+      border-radius: var(--radius-sm);
+      margin: 1em 0;
+      display: block;
+      cursor: pointer;
+      transition: outline 0.15s ease;
+
+      &.ProseMirror-selectednode {
+        outline: 3px solid var(--btn-primary);
+        outline-offset: 2px;
+      }
+    }
+
+    // Placeholder
+    p.is-editor-empty:first-child::before {
+      content: attr(data-placeholder);
+      color: var(--text-caption);
+      pointer-events: none;
+      float: left;
+      height: 0;
+    }
+  }
+}
+
+.editorImage {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-sm);
+}
+
+// RTL Support
+:global([data-text-dir="rtl"]) {
+  .toolbar {
+    direction: rtl;
+  }
+
+  .toolbarGroup {
+    border-inline-end: none;
+    border-inline-start: 1px solid var(--border-light);
+    padding-inline-end: 0;
+    padding-inline-start: var(--spacing-sm);
+
+    &:last-child {
+      border-inline-start: none;
+      padding-inline-start: 0;
+    }
+  }
+
+  .editorContent {
+    :global(.tiptap) {
+      direction: rtl;
+      text-align: right;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .editorContainer {
+    background: var(--card-dark, #1a1a2e);
+    border-color: var(--border-dark, #333);
+  }
+
+  .toolbar {
+    background: var(--background-dark, #16162a);
+    border-color: var(--border-dark, #333);
+  }
+
+  .toolbarGroup button {
+    color: var(--text-light, #e0e0e0);
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  .headingSelect {
+    background: var(--card-dark, #1a1a2e);
+    border-color: var(--border-dark, #333);
+    color: var(--text-light, #e0e0e0);
+  }
+
+  .imageToolbar {
+    background: var(--background-dark, #16162a);
+    border-color: var(--border-dark, #333);
+  }
+
+  .imageToolbarLabel {
+    color: var(--text-light, #e0e0e0);
+  }
+
+  .widthSelect {
+    background: var(--card-dark, #1a1a2e);
+    border-color: var(--border-dark, #333);
+    color: var(--text-light, #e0e0e0);
+  }
+
+  .deleteButton {
+    background: rgba(211, 47, 47, 0.2) !important;
+  }
+}
+
+// Responsive
+@media (max-width: 600px) {
+  .toolbar {
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .toolbarGroup {
+    button {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .headingSelect {
+    height: 28px;
+    font-size: 0.8rem;
+  }
+
+  .imageToolbar {
+    gap: var(--spacing-xs);
+    padding: var(--spacing-xs);
+  }
+
+  .imageToolbarLabel {
+    font-size: 0.8rem;
+  }
+
+  .widthSelect {
+    height: 28px;
+    font-size: 0.8rem;
+    min-width: 60px;
+  }
+
+  .editorContent {
+    padding: var(--spacing-sm);
+    min-height: 150px;
+  }
+}

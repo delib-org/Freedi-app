@@ -115,7 +115,7 @@ export async function comprehensiveNotificationDebug() {
             console.info('✅ Firebase messaging SW found and active');
         } else {
             // Check if it's registered under a different scope
-            const fbSwRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw.js');
+            const fbSwRegistration = await navigator.serviceWorker.getRegistration('/firebase-messaging-sw/');
             if (fbSwRegistration) {
                 console.info('✅ Firebase messaging SW found under specific scope:', { scope: fbSwRegistration.scope });
                 results.serviceWorkers.registrations.push({

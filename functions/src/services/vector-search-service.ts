@@ -214,7 +214,8 @@ class VectorSearchService {
 
       if (statementsWithEmbeddings.length === 0) {
         logger.info("No statements with embeddings found for parent", { parentId });
-        return [];
+        
+return [];
       }
 
       // Get full statement data for the ones with embeddings
@@ -283,7 +284,8 @@ class VectorSearchService {
       });
 
       await vectorQuery.get();
-      return true;
+      
+return true;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
 
@@ -292,7 +294,8 @@ class VectorSearchService {
         errorMessage.includes("FAILED_PRECONDITION")
       ) {
         logger.warn("Vector index not available", { error: errorMessage });
-        return false;
+        
+return false;
       }
 
       // Re-throw other errors

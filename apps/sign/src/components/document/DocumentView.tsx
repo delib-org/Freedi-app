@@ -1,16 +1,22 @@
 'use client';
 
+import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { SignUser } from '@/lib/utils/user';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
 import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
 import RejectButton from './RejectButton';
+import ExplanationButton from './ExplanationButton';
+import ExplanationVideoOverlay from './ExplanationVideoOverlay';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
+import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
+import VersionSelector from '../versions/VersionSelector';
+import { AccessibilityWidget } from '../accessibility';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -20,11 +26,24 @@ interface DocumentViewProps {
   userSignature: Signature | null;
   userApprovals: Record<string, boolean>;
   commentCounts: Record<string, number>;
+  suggestionCounts?: Record<string, number>;
   userInteractions?: string[];
   textDirection?: TextDirection;
   logoUrl?: string;
   brandName?: string;
   isAdmin?: boolean;
+  tocSettings?: TocSettings;
+  enableSuggestions?: boolean;
+  /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
+  enhancedVisibility?: boolean;
+  /** YouTube video URL for explanation video */
+  explanationVideoUrl?: string;
+  /** Video display mode: 'optional' (button only) or 'before_viewing' (blocking overlay) */
+  explanationVideoMode?: ExplanationVideoMode;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions?: boolean;
+  /** Custom colors for each heading level */
+  headerColors?: HeaderColors;
 }
 
 export default function DocumentView({
@@ -34,13 +53,24 @@ export default function DocumentView({
   userSignature,
   userApprovals,
   commentCounts,
+  suggestionCounts = {},
   userInteractions = [],
   textDirection = 'auto',
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
   isAdmin = false,
+  tocSettings,
+  enableSuggestions = false,
+  enhancedVisibility = false,
+  explanationVideoUrl = '',
+  explanationVideoMode = 'optional',
+  allowHeaderReactions = false,
+  headerColors = DEFAULT_HEADER_COLORS,
 }: DocumentViewProps) {
   const { t } = useTranslation();
+
+  // State to track if blocking video overlay has been dismissed
+  const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
 
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
@@ -49,18 +79,35 @@ export default function DocumentView({
   const paragraphContents = paragraphs.map((p) => p.content);
   const resolvedDirection = resolveTextDirection(textDirection, paragraphContents);
 
+  // Extract TOC items from paragraphs
+  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2);
+
+  // Determine if TOC should be shown
+  const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
+
   return (
       <DocumentClient
         documentId={document.statementId}
         user={user}
         userSignature={userSignature}
         commentCounts={commentCounts}
+        suggestionCounts={suggestionCounts}
         userInteractions={userInteractions}
         isAdmin={isAdmin}
+        enableSuggestions={enableSuggestions}
+        paragraphs={paragraphs}
+        textDirection={resolvedDirection}
       >
         <div className={styles.container} dir={resolvedDirection} data-text-dir={resolvedDirection}>
         {/* Top Bar with Logo and User Avatar */}
         <div className={styles.topBar}>
+          {/* Mobile TOC hamburger menu */}
+          {showToc && (
+            <TocMobileMenu
+              items={tocItems}
+              textDirection={resolvedDirection}
+            />
+          )}
           <a href={`/doc/${document.statementId}`} className={styles.logo}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -87,9 +134,20 @@ export default function DocumentView({
           </div>
         </div>
 
+        {/* Desktop Table of Contents sidebar */}
+        {showToc && (
+          <TableOfContents
+            items={tocItems}
+            textDirection={resolvedDirection}
+          />
+        )}
+
         {/* Document Header */}
         <header className={styles.header}>
-          <h1 className={styles.title}>{document.statement}</h1>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>{document.statement}</h1>
+            <VersionSelector documentId={document.statementId} />
+          </div>
 
           {/* Progress indicator */}
           {user && paragraphs.length > 0 && (
@@ -116,7 +174,12 @@ export default function DocumentView({
                 isLoggedIn={!!user}
                 isAdmin={isAdmin}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
+                suggestionCount={suggestionCounts[paragraph.paragraphId] || 0}
+                enableSuggestions={enableSuggestions}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
+                enhancedVisibility={enhancedVisibility}
+                allowHeaderReactions={allowHeaderReactions}
+                headerColors={headerColors}
               />
             ))
           )}
@@ -169,6 +232,26 @@ export default function DocumentView({
             WizCol
           </a>
         </div>
+
+        {/* Floating Explanation Video Button (optional mode only) */}
+        {explanationVideoUrl && explanationVideoMode === 'optional' && (
+          <ExplanationButton
+            videoUrl={explanationVideoUrl}
+            documentId={document.statementId}
+          />
+        )}
+
+        {/* Blocking Video Overlay (before_viewing mode) */}
+        {explanationVideoUrl && explanationVideoMode === 'before_viewing' && !videoOverlayDismissed && (
+          <ExplanationVideoOverlay
+            videoUrl={explanationVideoUrl}
+            documentId={document.statementId}
+            onDismiss={() => setVideoOverlayDismissed(true)}
+          />
+        )}
+
+        {/* Accessibility Widget (IS 5568 compliance) */}
+        <AccessibilityWidget documentId={document.statementId} />
       </div>
       </DocumentClient>
   );

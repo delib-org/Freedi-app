@@ -64,18 +64,45 @@
     margin-bottom: 1em;
   }
 
-  // Lists
+  // Lists - use logical properties for RTL support
   ul, ol {
     margin: 1em 0;
-    padding-left: 1.5em;
+    padding-inline-start: 1.5em;
 
     @media (min-width: 480px) {
-      padding-left: 2em;
+      padding-inline-start: 2em;
+    }
+  }
+
+  ul {
+    list-style-type: disc;
+
+    // Nested lists
+    ul {
+      list-style-type: circle;
+
+      ul {
+        list-style-type: square;
+      }
+    }
+  }
+
+  ol {
+    list-style-type: decimal;
+
+    // Nested ordered lists
+    ol {
+      list-style-type: lower-alpha;
+
+      ol {
+        list-style-type: lower-roman;
+      }
     }
   }
 
   li {
     margin-bottom: 0.5em;
+    display: list-item;
   }
 
   // Links

@@ -20,28 +20,31 @@ export async function updateApprovalResults(
 
 		if (!action) throw new Error('No action found');
 
-		const approveAfterData = parse(ApprovalSchema, event.data.after.data());
-		const approveBeforeData = parse(
-			ApprovalSchema,
-			event.data.before.data()
-		);
+		// Only parse data that exists for the given action
+		const afterData = event.data.after.data();
+		const beforeData = event.data.before.data();
+
+		const approveAfterData = afterData ? parse(ApprovalSchema, afterData) : undefined;
+		const approveBeforeData = beforeData ? parse(ApprovalSchema, beforeData) : undefined;
 
 		const eventData = approveAfterData || approveBeforeData;
+
+		if (!eventData) throw new Error('No event data found');
 
 		const { statementId, documentId, userId } = eventData;
 
 		let approvedDiff = 0;
 		let approvingUserDiff = 0;
 
-		if (action === Action.create) {
+		if (action === Action.create && approveAfterData) {
 			const { approval } = approveAfterData;
 			approvingUserDiff = 1;
 			approvedDiff = approval ? 1 : 0;
-		} else if (action === Action.delete) {
+		} else if (action === Action.delete && approveBeforeData) {
 			const { approval } = approveBeforeData;
 			approvingUserDiff = -1;
 			approvedDiff = approval ? -1 : 0;
-		} else if (action === Action.update) {
+		} else if (action === Action.update && approveAfterData && approveBeforeData) {
 			const { approval: approvalAfter } = approveAfterData;
 			const { approval: approvalBefore } = approveBeforeData;
 

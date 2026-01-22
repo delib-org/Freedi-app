@@ -1,9 +1,6 @@
 import { useState, useCallback, useMemo } from 'react';
 import { useSelector } from 'react-redux';
-import {
-	Statement,
-	UserDemographicQuestion,
-} from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { RootState } from '@/redux/store';
 import { logError } from '@/utils/errorHandling';
 import type { InheritedQuestion } from '@/view/components/atomic/molecules/InheritedDemographics';

@@ -1,4 +1,5 @@
 import { useContext,  useState } from "react";
+import { useParams } from "react-router";
 
 import { StatementContext } from "../../StatementCont";
 import styles from "./Switch.module.scss";
@@ -9,11 +10,14 @@ import { useAuthorization } from "@/controllers/hooks/useAuthorization";
 import OnlineUsers from "../nav/online/OnlineUsers";
 import SubQuestionsMap from "../subQuestionsMap/SubQuestionsMap";
 import ChatPanel from "../chat/components/chatPanel/ChatPanel";
+import { renderInlineMarkdown } from "@/helpers/inlineMarkdownHelpers";
 
 const Switch = () => {
   const { statement } = useContext(StatementContext);
   const { role } = useAuthorization(statement?.statementId);
+  const { screen } = useParams<{ screen?: string }>();
   const isAdmin = role === Role.admin || role === Role.creator;
+  const isSettingsScreen = screen === 'settings';
 
   const [edit, setEdit] = useState(false);
 
@@ -37,7 +41,7 @@ const Switch = () => {
       {isAdmin ? (
         <button className={styles.header} onClick={handleStartEdit}>
           {!edit ? (
-            <h1>{statement?.statement}</h1>
+            <h1>{renderInlineMarkdown(statement?.statement)}</h1>
           ) : (
             <h1>
               <input
@@ -51,13 +55,13 @@ const Switch = () => {
         </button>
       ) : (
         <div className={styles.header}>
-          <h1>{statement?.statement}</h1>
+          <h1>{renderInlineMarkdown(statement?.statement)}</h1>
         </div>
       )}
 
       <OnlineUsers statementId={statement?.statementId} />
-      {statement && <SubQuestionsMap statement={statement} />}
-      <ChatPanel />
+      {statement && !isSettingsScreen && <SubQuestionsMap statement={statement} />}
+      {!isSettingsScreen && <ChatPanel />}
       <SwitchScreen statement={statement} role={role} />
     </main>
   );

@@ -5,7 +5,6 @@ import { Toggle } from '@/view/components/atomic/atoms/Toggle';
 import {
 	UserDemographicQuestion,
 	UserDemographicQuestionType,
-	DemographicQuestionScope,
 } from '@freedi/shared-types';
 
 // Icons - using SVG react components

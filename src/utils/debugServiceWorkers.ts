@@ -53,7 +53,9 @@ return;
     console.info('%c4. Manual Firebase SW Registration Test:', 'color: orange; font-weight: bold');
     try {
         console.info('   - Attempting to register /firebase-messaging-sw.js...');
-        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+        const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
+            scope: '/firebase-messaging-sw/'
+        });
         console.info('   - ✅ Registration successful!');
         console.info('   - Scope:', registration.scope);
         console.info('   - Active:', !!registration.active);

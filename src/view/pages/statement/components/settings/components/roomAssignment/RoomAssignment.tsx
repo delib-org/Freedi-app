@@ -1,6 +1,6 @@
 import { FC, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Statement, RoomSettings, User } from '@freedi/shared-types';
+import { Statement, User } from '@freedi/shared-types';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SectionTitle from '../sectionTitle/SectionTitle';

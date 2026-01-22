@@ -13,7 +13,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  signIn: () => Promise<void>;
+  signIn: () => Promise<User>;
   signOut: () => Promise<void>;
   refreshToken: () => Promise<string | null>;
 }
@@ -54,10 +54,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async () => {
+  const signIn = async (): Promise<User> => {
     try {
       setIsLoading(true);
-      await signInWithGoogle();
+      const user = await signInWithGoogle();
+      return user;
     } catch (error) {
       console.error('Sign in failed:', error);
       throw error;

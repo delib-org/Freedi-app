@@ -4,6 +4,7 @@ import { useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { googleLogin, anonymousLogin } from '@/lib/firebase/client';
+import { trackUserLogin } from '@/lib/analytics';
 import styles from './login.module.scss';
 
 export default function LoginPage() {
@@ -24,6 +25,7 @@ export default function LoginPage() {
 
         if (user) {
           console.info(`[Login] User signed in via ${method}`, { userId: user.uid });
+          trackUserLogin(user.uid, method === 'Google' ? 'google' : 'anonymous');
           // Use window.location for full page reload to send new cookies to server
           window.location.href = redirectUrl;
         } else {

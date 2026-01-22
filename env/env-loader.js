@@ -98,8 +98,57 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'AI_MODEL_NAME': 'AI_MODEL_NAME',
     },
     extra: ''
+  },
+  sign: {
+    path: path.join(ROOT_DIR, 'apps', 'sign'),
+    filename: '.env.local',
+    // Map generic vars to Next.js vars
+    mappings: [
+      // Server-side vars (no prefix) - for Firebase Admin SDK
+      ['FIREBASE_PROJECT_ID', 'FIREBASE_PROJECT_ID'],
+      ['FIREBASE_CLIENT_EMAIL', 'FIREBASE_CLIENT_EMAIL'],
+      ['FIREBASE_PRIVATE_KEY', 'FIREBASE_PRIVATE_KEY'],
+      ['FIREBASE_STORAGE_BUCKET', 'FIREBASE_STORAGE_BUCKET'],
+      ['USE_FIREBASE_EMULATOR', 'USE_FIREBASE_EMULATOR'],
+      ['FIRESTORE_EMULATOR_HOST', 'FIRESTORE_EMULATOR_HOST'],
+      ['FIREBASE_AUTH_EMULATOR_HOST', 'FIREBASE_AUTH_EMULATOR_HOST'],
+      // Google Docs API credentials (for importing from Google Docs)
+      ['GOOGLE_DOCS_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_DOCS_SERVICE_ACCOUNT_EMAIL'],
+      ['GOOGLE_DOCS_PRIVATE_KEY', 'GOOGLE_DOCS_PRIVATE_KEY'],
+      // AI Configuration (for document versioning)
+      ['GEMINI_API_KEY', 'GEMINI_API_KEY'],
+      ['AI_PROVIDER', 'AI_PROVIDER'],
+      // Client-side vars (NEXT_PUBLIC_ prefix)
+      ['FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_API_KEY'],
+      ['FIREBASE_AUTH_DOMAIN', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'],
+      ['FIREBASE_PROJECT_ID', 'NEXT_PUBLIC_FIREBASE_PROJECT_ID'],
+      ['FIREBASE_STORAGE_BUCKET', 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET'],
+      ['FIREBASE_MESSAGING_SENDER_ID', 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID'],
+      ['FIREBASE_APP_ID', 'NEXT_PUBLIC_FIREBASE_APP_ID'],
+      ['FIREBASE_MEASUREMENT_ID', 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID'],
+    ],
+    extra: ''
   }
 };
+
+function generateFirebaseConfigFile(sourceVars, envName) {
+  const firebaseConfig = {
+    apiKey: sourceVars.FIREBASE_API_KEY || '',
+    authDomain: sourceVars.FIREBASE_AUTH_DOMAIN || '',
+    databaseURL: sourceVars.FIREBASE_DATABASE_URL || '',
+    projectId: sourceVars.FIREBASE_PROJECT_ID || '',
+    storageBucket: sourceVars.FIREBASE_STORAGE_BUCKET || '',
+    messagingSenderId: sourceVars.FIREBASE_MESSAGING_SENDER_ID || '',
+    appId: sourceVars.FIREBASE_APP_ID || '',
+    measurementId: sourceVars.FIREBASE_MEASUREMENT_ID || '',
+  };
+
+  const outputPath = path.join(ROOT_DIR, 'public', 'firebase-config.json');
+  const content = `${JSON.stringify(firebaseConfig, null, 2)}\n`;
+
+  fs.writeFileSync(outputPath, content);
+  console.info(`  Generated: ${outputPath} (${envName})`);
+}
 
 /**
  * Parse a .env file into key-value pairs
@@ -235,6 +284,8 @@ function main() {
 
     generateEnvFile(appConfig, sourceVars, envName);
   }
+
+  generateFirebaseConfigFile(sourceVars, envName);
 
   console.info(`\nEnvironment '${envName}' loaded successfully!`);
   console.info(`Firebase Project: ${sourceVars.FIREBASE_PROJECT_ID}`);

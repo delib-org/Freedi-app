@@ -6,6 +6,7 @@ import { Statement, Paragraph as SharedParagraph } from '@freedi/shared-types';
 
 // Re-export from shared-types
 export { ParagraphType } from '@freedi/shared-types';
+export type { Suggestion } from '@freedi/shared-types';
 
 // Re-export from queries for convenience
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
@@ -83,12 +84,55 @@ export type DemographicMode = 'disabled' | 'inherit' | 'custom';
 // Text direction mode (legacy - kept for backwards compatibility)
 export type TextDirection = 'auto' | 'ltr' | 'rtl';
 
+// Table of Contents position mode
+export type TocPosition = 'auto' | 'left' | 'right';
+
+// Explanation video display mode
+// 'optional' - Button only, user can click to watch
+// 'before_viewing' - Video must be dismissed before viewing document
+export type ExplanationVideoMode = 'optional' | 'before_viewing';
+
+// Table of Contents item for navigation
+export interface TocItem {
+  id: string;          // paragraphId
+  text: string;        // Header text (stripped HTML)
+  level: number;       // 1-6 for h1-h6
+}
+
+// TOC settings interface
+export interface TocSettings {
+  tocEnabled: boolean;
+  tocMaxLevel: number;       // 1-6, default 2 (show h1 and h2)
+  tocPosition: TocPosition;  // auto = based on text direction
+}
+
+// Header colors type for customizing heading colors
+export interface HeaderColors {
+  h1?: string;
+  h2?: string;
+  h3?: string;
+  h4?: string;
+  h5?: string;
+  h6?: string;
+}
+
+// Default header colors (shades of blue)
+export const DEFAULT_HEADER_COLORS: HeaderColors = {
+  h1: '#1e3a5f',
+  h2: '#2c5282',
+  h3: '#3182ce',
+  h4: '#4299e1',
+  h5: '#63b3ed',
+  h6: '#90cdf4',
+};
+
 // Admin settings for a document
 export interface DocumentSettings {
   enableComments: boolean;
   enableApproval: boolean;
   enableImportance: boolean;
   enableLikes: boolean;
+  enableSuggestions: boolean;
   showScores: boolean;
   requireLogin: boolean;
   isHidden: boolean;
@@ -104,6 +148,18 @@ export interface DocumentSettings {
   // Branding settings
   logoUrl?: string;
   brandName?: string;
+  // Table of Contents settings
+  tocEnabled: boolean;
+  tocMaxLevel: number;
+  tocPosition: TocPosition;
+  // Accessibility settings
+  /** When true, shows interaction buttons as ghosted hints even before hover/tap (for elderly users) */
+  enhancedVisibility?: boolean;
+  // Header customization settings
+  /** When false, headers (h1-h6) won't show interaction buttons */
+  allowHeaderReactions?: boolean;
+  /** Custom colors for each heading level */
+  headerColors?: HeaderColors;
 }
 
 // Default branding constants
@@ -117,6 +173,7 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   enableApproval: true,
   enableImportance: false,
   enableLikes: true,
+  enableSuggestions: false,
   showScores: false,
   requireLogin: false,
   isHidden: false,
@@ -126,4 +183,10 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   textDirection: 'auto',
   logoUrl: DEFAULT_LOGO_URL,
   brandName: DEFAULT_BRAND_NAME,
+  tocEnabled: false,
+  tocMaxLevel: 2,
+  tocPosition: 'auto',
+  enhancedVisibility: false,
+  allowHeaderReactions: false,
+  headerColors: DEFAULT_HEADER_COLORS,
 };

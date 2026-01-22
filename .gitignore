@@ -12,6 +12,7 @@ env/.env.*
 !env/.env.example
 node_modules/
 dist/
+coverage/
 *.log
 package-lock.json
 yarn.lock
@@ -30,6 +31,7 @@ yarn.lock
 
 # API Keys and secrets
 **/firebase-config.js
+**/firebase-config.json
 **/google-config.js
 **/*credentials*
 **/*secret*
@@ -53,3 +55,10 @@ yarn.lock
 functions/.runtimeconfig.json
 
 functions/scripts/serviceAccountKey.json
+
+apps/sign/tsconfig.tsbuildinfo
+
+# Worktrees
+.worktrees/
+
+functions/freedi-shared-types-1.0.1.tgz

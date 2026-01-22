@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyExplanationPage as SurveyExplanationPageType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
@@ -68,6 +69,19 @@ export default function SurveyExplanationPage({
     if (isNavigating) return; // Prevent double-clicks
     setIsNavigatingNext(true);
 
+    // Save progress to server for statistics tracking
+    fetch(`/api/surveys/${survey.surveyId}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        currentQuestionIndex: currentFlowIndex + 1,
+        isCompleted: isLastItem,
+      }),
+    }).catch((error) => {
+      console.error('[SurveyExplanationPage] Failed to save progress to server:', error);
+    });
+
     if (isLastItem) {
       router.push(`/s/${survey.surveyId}/complete`);
     } else {
@@ -95,16 +109,20 @@ export default function SurveyExplanationPage({
       <div className={styles.explanationContent}>
         {/* Hero image if provided */}
         {explanationPage.heroImageUrl && (
-          <img
-            src={explanationPage.heroImageUrl}
-            alt=""
-            className={styles.explanationHero}
-            role="presentation"
-          />
+          <div style={{ position: 'relative', width: '100%', height: '200px' }}>
+            <Image
+              src={explanationPage.heroImageUrl}
+              alt=""
+              fill
+              className={styles.explanationHero}
+              style={{ objectFit: 'cover' }}
+              role="presentation"
+              unoptimized
+            />
+          </div>
         )}
 
         <div className={styles.explanationBody}>
-          <h1 className={styles.explanationTitle}>{explanationPage.title}</h1>
           <div className={styles.explanationText}>
             <MarkdownRenderer content={explanationPage.content} />
           </div>

@@ -67,4 +67,8 @@ export enum Collections {
     // Fair Evaluation collections
     fairEvalWallets = 'fairEvalWallets',
     fairEvalTransactions = 'fairEvalTransactions',
+    suggestions = 'suggestions',
+    documentVersions = 'documentVersions',
+    versionChanges = 'versionChanges',
+    versioningSettings = 'versioningSettings',
 }

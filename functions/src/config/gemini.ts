@@ -46,5 +46,6 @@ export function getGenAI() {
 	if (!apiKey) {
 		throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY in .env');
 	}
-	return new GoogleGenerativeAI(apiKey);
+	
+return new GoogleGenerativeAI(apiKey);
 }

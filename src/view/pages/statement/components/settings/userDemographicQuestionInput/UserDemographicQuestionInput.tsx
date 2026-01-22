@@ -21,6 +21,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const [validationError, setValidationError] = useState('');
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	const [isChosen, setIsChosen] = useState<number | null>(null);
 	const validateInput = (inputValue: string | string[]) => {
 		if (!required) {

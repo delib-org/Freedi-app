@@ -5,17 +5,18 @@ import QuestionPage from "../statementTypes/question/QuestionPage";
 import { useParams } from "react-router";
 import { useSelector, useDispatch } from "react-redux";
 import { statementSelectorById, setStatement } from "@/redux/statements/statementsSlice";
+import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
 import { logError } from "@/utils/errorHandling";
 import LoadingPage from "@/view/pages/loadingPage/LoadingPage";
+import Chat from "../chat/Chat";
+import PopperHebbianDiscussion from "../popperHebbian/PopperHebbianDiscussion";
 
 // Lazy load heavy screen components
 const Triangle = lazy(() => import("@/view/components/maps/triangle/Triangle"));
 const MindMap = lazy(() => import("../map/MindMap"));
-const Chat = lazy(() => import("../chat/Chat"));
 const StatementSettings = lazy(() => import("../settings/StatementSettings"));
 const PolarizationIndexComp = lazy(() => import("@/view/components/maps/polarizationIndex/PolarizationIndex"));
-const PopperHebbianDiscussion = lazy(() => import("../popperHebbian/PopperHebbianDiscussion"));
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -28,6 +29,7 @@ function SwitchScreen({
 }: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const dispatch = useDispatch();
+	const user = useSelector(creatorSelector);
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 
 	// Check if Popper-Hebbian discussion is enabled (check parent statement for options)
@@ -74,7 +76,9 @@ function SwitchScreen({
 	}
 
 	//allowed screens
-	const hasPermission = role === Role.admin || role === Role.creator;
+	const isCreator = user?.uid === statement?.creatorId;
+	const hasPermission = role === Role.admin || role === Role.creator || isCreator;
+
 	if (!hasPermission && screen === 'settings') {
 		screen = 'main';
 	}

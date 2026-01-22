@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { useUIStore } from '@/store/uiStore';
+import { useUIStore, UIState } from '@/store/uiStore';
+import { getVisitorId } from '@/lib/utils/visitor';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -16,7 +17,7 @@ interface CommentProps {
 
 export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate }: CommentProps) {
   const { t } = useTranslation();
-  const addUserInteraction = useUIStore((state) => state.addUserInteraction);
+  const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
   const [consensus, setConsensus] = useState(comment.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -24,15 +25,24 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
   const [editText, setEditText] = useState(comment.statement);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Get effective ID - use userId if logged in, otherwise use visitorId for anonymous
+  const visitorId = getVisitorId();
+  const effectiveId = userId || visitorId;
+
   // Check if current user owns this comment
-  const isOwner = userId && comment.creatorId === userId;
+  const isOwner = effectiveId && comment.creatorId === effectiveId;
 
   // Fetch user's existing evaluation
   const fetchEvaluation = useCallback(async () => {
-    if (!userId) return;
+    if (!effectiveId) return;
 
     try {
-      const response = await fetch(`/api/evaluations/${comment.statementId}`);
+      // Pass visitorId as query param for anonymous users
+      const url = userId
+        ? `/api/evaluations/${comment.statementId}`
+        : `/api/evaluations/${comment.statementId}?visitorId=${encodeURIComponent(visitorId)}`;
+
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         setUserEvaluation(data.userEvaluation);
@@ -41,7 +51,7 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
     } catch (err) {
       console.error('Error fetching evaluation:', err);
     }
-  }, [comment.statementId, userId]);
+  }, [comment.statementId, effectiveId, userId, visitorId]);
 
   useEffect(() => {
     fetchEvaluation();
@@ -49,13 +59,18 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
 
   // Handle evaluation (approve/reject)
   const handleEvaluate = async (evaluation: number) => {
-    if (!userId || isOwner || isLoading) return;
+    if (!effectiveId || isOwner || isLoading) return;
 
     // If clicking the same evaluation, remove it
     if (userEvaluation === evaluation) {
       setIsLoading(true);
       try {
-        const response = await fetch(`/api/evaluations/${comment.statementId}`, {
+        // Pass visitorId as query param for anonymous users when deleting
+        const url = userId
+          ? `/api/evaluations/${comment.statementId}`
+          : `/api/evaluations/${comment.statementId}?visitorId=${encodeURIComponent(visitorId)}`;
+
+        const response = await fetch(url, {
           method: 'DELETE',
         });
 
@@ -78,7 +93,11 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ evaluation }),
+        body: JSON.stringify({
+          evaluation,
+          // Include visitorId for anonymous users
+          ...(userId ? {} : { visitorId }),
+        }),
       });
 
       if (response.ok) {
@@ -246,8 +265,8 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
         <p className={styles.content}>{comment.statement}</p>
       )}
 
-      {/* Evaluation section - only show if user is logged in and not the owner */}
-      {userId && !isOwner && !isEditing && (
+      {/* Evaluation section - show for all users (including anonymous) except owners */}
+      {effectiveId && !isOwner && !isEditing && (
         <div className={styles.evaluationBar}>
           <button
             type="button"
@@ -281,8 +300,8 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
         </div>
       )}
 
-      {/* Show consensus for non-logged-in users or comment owners */}
-      {(!userId || isOwner) && consensus !== 0 && !isEditing && (
+      {/* Show consensus for comment owners (they can't vote on their own comments) */}
+      {isOwner && consensus !== 0 && !isEditing && (
         <div className={styles.consensusDisplay}>
           <span className={`${styles.consensusScore} ${consensus > 0 ? styles.positive : styles.negative}`}>
             {consensus > 0 ? '+' : ''}{consensus}

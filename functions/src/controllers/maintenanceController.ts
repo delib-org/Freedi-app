@@ -104,7 +104,8 @@ export class MaintenanceController {
 					error: 'parentId is required',
 					ok: false
 				});
-				return;
+				
+return;
 			}
 
 			const { recalculateOptionsEvaluations } = await import('../migrations/recalculateEvaluations');
@@ -140,7 +141,8 @@ export class MaintenanceController {
 					ok: true,
 					...stats
 				});
-				return;
+
+return;
 			}
 
 			const result = await migrateAddRandomSeed(parentId);
@@ -148,6 +150,40 @@ export class MaintenanceController {
 			res.send({
 				ok: true,
 				parentId: parentId || 'all',
+				...result
+			});
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
+	 * Backfill evaluationType for Mass Consensus questions
+	 * Ensures MC questions display the correct evaluation component in the main app
+	 * Query params:
+	 * - stats (optional): If 'true', only return statistics without running migration
+	 */
+	async backfillEvaluationType(req: Request, res: Response): Promise<void> {
+		try {
+			const statsOnly = req.query.stats === 'true';
+
+			// Import the migration functions
+			const { migrateBackfillEvaluationType, getEvaluationTypeStats } = await import('../migrations/backfillEvaluationType');
+
+			if (statsOnly) {
+				const stats = await getEvaluationTypeStats();
+				res.send({
+					ok: true,
+					...stats
+				});
+
+				return;
+			}
+
+			const result = await migrateBackfillEvaluationType();
+
+			res.send({
+				ok: true,
 				...result
 			});
 		} catch (error) {

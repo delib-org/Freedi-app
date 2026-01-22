@@ -78,7 +78,8 @@ function isEventAlreadyProcessed(eventId: string): boolean {
 		// Clean up expired entry
 		processedEvents.delete(eventId);
 	}
-	return false;
+	
+return false;
 }
 
 function markEventAsProcessed(eventId: string): void {
@@ -106,7 +107,8 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Check for duplicate event processing
 		if (isEventAlreadyProcessed(eventId)) {
 			logger.info(`Skipping duplicate event ${eventId} for evaluation ${event.data.id}`);
-			return;
+			
+return;
 		}
 		markEventAsProcessed(eventId);
 
@@ -117,7 +119,8 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Skip processing for migrated evaluations - the migration function handles the statement update
 		if (evaluation.migratedAt) {
 			logger.info(`Skipping trigger for migrated evaluation ${event.data.id}`);
-			return;
+			
+return;
 		}
 
 		if (!statementId) {
@@ -125,6 +128,14 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		}
 
 		if (!userId) {
+			// Log detailed info to help debug missing evaluator data
+			logger.error('Missing userId in evaluation', {
+				evaluationId: event.data.id,
+				statementId,
+				parentId,
+				hasEvaluator: !!evaluation.evaluator,
+				evaluatorKeys: evaluation.evaluator ? Object.keys(evaluation.evaluator) : [],
+			});
 			throw new Error('User ID is required');
 		}
 
@@ -166,7 +177,8 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		// Check for duplicate event processing
 		if (isEventAlreadyProcessed(eventId)) {
 			logger.info(`Skipping duplicate delete event ${eventId}`);
-			return;
+			
+return;
 		}
 		markEventAsProcessed(eventId);
 
@@ -207,7 +219,8 @@ export async function updateEvaluation(event: FirestoreEvent<Change<DocumentSnap
 		// Check for duplicate event processing
 		if (isEventAlreadyProcessed(eventId)) {
 			logger.info(`Skipping duplicate update event ${eventId}`);
-			return;
+			
+return;
 		}
 		markEventAsProcessed(eventId);
 
@@ -853,7 +866,8 @@ function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | D
 async function updateParentStatementWithChosenOptions(parentId: string | undefined): Promise<void> {
 	if (!parentId) {
 		logger.warn('updateParentStatementWithChosenOptions: parentId is undefined');
-		return;
+		
+return;
 	}
 
 	try {
@@ -989,7 +1003,8 @@ async function choseTopOptions(parentId: string, resultsSettings: ResultsSetting
 		if (!chosenOptions?.length) {
 			// No options found is a valid state, not an error
 			logger.info(`No options found for parent ${parentId}`);
-			return [];
+			
+return [];
 		}
 
 		const sortedOptions = getSortedOptions(chosenOptions, resultsSettings);
@@ -998,7 +1013,8 @@ async function choseTopOptions(parentId: string, resultsSettings: ResultsSetting
 		return sortedOptions;
 	} catch (error) {
 		logger.error('Error choosing top options:', error);
-		return [];
+		
+return [];
 	}
 }
 
@@ -1074,14 +1090,16 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 
 		if (snapshot.empty) {
 			logger.info(`getOptionsUsingMethod: No options found for parent ${parentId}`);
-			return [];
+			
+return [];
 		}
 
 		const options = snapshot.docs
 			.map(doc => {
 				const data = doc.data() as Statement;
 				logger.info(`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}, hide=${data.hide}`);
-				return data;
+				
+return data;
 			})
 			// Filter out hidden statements (e.g., merged source statements)
 			.filter(opt => !opt.hide);
@@ -1092,7 +1110,8 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 		// Return top N results (no cutoff filtering in topOptions mode)
 		const result = sortedOptions.slice(0, Math.ceil(Number(effectiveNumberOfResults)));
 		logger.info(`getOptionsUsingMethod (topOptions): Returning top ${result.length} options (limit: ${effectiveNumberOfResults})`);
-		return result;
+		
+return result;
 	}
 
 	if (effectiveCutoffBy === CutoffBy.aboveThreshold) {
@@ -1110,11 +1129,13 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 		// Filter options above the threshold
 		const filtered = options.filter(opt => getEvaluationValue(opt, resultsBy) > effectiveCutoffNumber);
 		logger.info(`getOptionsUsingMethod (aboveThreshold): After filtering, ${filtered.length} options remain`);
-		return filtered;
+		
+return filtered;
 	}
 
 	logger.warn(`getOptionsUsingMethod: Unknown cutoffBy value: ${effectiveCutoffBy}`);
-	return undefined;
+	
+return undefined;
 }
 
 function getEvaluationValue(statement: Statement, resultsBy: ResultsBy): number {
@@ -1135,10 +1156,10 @@ function sortOptionsByResultsBy(options: Statement[], resultsBy: ResultsBy): Sta
 	return [...options].sort((a, b) => {
 		const aValue = getEvaluationValue(a, resultsBy);
 		const bValue = getEvaluationValue(b, resultsBy);
-		return bValue - aValue; // Descending order
+		
+return bValue - aValue; // Descending order
 	});
 }
-
 
 // ============================================================================
 // EVALUATION MIGRATION FOR INTEGRATION FEATURE

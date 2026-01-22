@@ -13,6 +13,8 @@ interface InteractionBarProps {
   isApproved: boolean | undefined;
   isLoggedIn: boolean;
   commentCount: number;
+  suggestionCount?: number;
+  enableSuggestions?: boolean;
 }
 
 export default function InteractionBar({
@@ -21,6 +23,8 @@ export default function InteractionBar({
   isApproved,
   isLoggedIn,
   commentCount,
+  suggestionCount = 0,
+  enableSuggestions = false,
 }: InteractionBarProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,6 +97,17 @@ export default function InteractionBar({
     }
 
     openModal('comments', { paragraphId });
+  };
+
+  const handleOpenSuggestions = () => {
+    // Check if blocked by demographic survey
+    if (isInteractionBlocked) {
+      openSurveyModal();
+
+      return;
+    }
+
+    openModal('suggestions', { paragraphId });
   };
 
   // Tooltip text when blocked
@@ -172,10 +187,36 @@ export default function InteractionBar({
         >
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
         </svg>
+        <span className={styles.buttonText}>{t('Comments')}</span>
         {commentCount > 0 && (
           <span className={styles.commentCount}>{commentCount}</span>
         )}
       </button>
+
+      {/* Suggest button - only show if suggestions are enabled */}
+      {enableSuggestions && (
+        <button
+          type="button"
+          className={`${styles.button} ${styles.suggestButton} ${isInteractionBlocked ? styles.blocked : ''}`}
+          onClick={(e) => handleButtonClick(e, handleOpenSuggestions)}
+          title={blockedTitle || t('Suggest Alternative')}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.26c1.81-1.27 3-3.36 3-5.74a7 7 0 0 0-7-7z" />
+          </svg>
+          <span className={styles.buttonText}>{t('Suggest')}</span>
+          {suggestionCount > 0 && (
+            <span className={styles.suggestionCount}>{suggestionCount}</span>
+          )}
+        </button>
+      )}
     </div>
   );
 }

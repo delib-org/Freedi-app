@@ -86,13 +86,22 @@ export async function POST(request: NextRequest, context: RouteContext) {
       );
     }
 
-    const savedAnswers = await saveSurveyDemographicAnswers(surveyId, userId, body.answers);
+    // Check if survey is in test mode
+    const isTestMode = survey.isTestMode === true;
+
+    const savedAnswers = await saveSurveyDemographicAnswers(
+      surveyId,
+      userId,
+      body.answers,
+      { isTestData: isTestMode }
+    );
 
     logger.info(
       '[POST /api/surveys/[id]/demographics/[pageId]/answers] Saved',
       savedAnswers.length,
       'answers for user:',
-      userId
+      userId,
+      isTestMode ? '(test mode)' : ''
     );
 
     return NextResponse.json({

@@ -5,6 +5,7 @@ import { store } from '../redux/store';
 
 // Mock all the complex dependencies
 jest.mock('../App', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const ReactMock = require('react');
 
   return {

@@ -1,66 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
+import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 // import InstallPWA from './InstallPWA';
-
-// Function to clear badge count
-const clearBadgeCount = async () => {
-	try {
-		// Clear badge using standard or experimental APIs based on browser support
-		if ('clearAppBadge' in navigator) {
-			await navigator.clearAppBadge();
-		} else if ('clearExperimentalAppBadge' in navigator) {
-			// @ts-ignore - Experimental API
-			await navigator.clearExperimentalAppBadge();
-		} else if ('ExperimentalBadge' in window) {
-			// @ts-ignore - Experimental API
-			await window.ExperimentalBadge.clear();
-		}
-
-		// Try to reset badge count in IndexedDB (safely)
-		try {
-			const openRequest = indexedDB.open('FreeDiNotifications', 1);
-
-			// Handle database upgrade - this runs when the database is created or version is changed
-			openRequest.onupgradeneeded = (event) => {
-				// @ts-ignore - Type issues with event.target
-				const db = event.target.result;
-				// Create the object store if it doesn't exist
-				if (!db.objectStoreNames.contains('badgeCounter')) {
-					db.createObjectStore('badgeCounter', { keyPath: 'id' });
-				}
-			};
-
-			openRequest.onsuccess = (event) => {
-				try {
-					// @ts-ignore - Type issues with event.target
-					const db = event.target.result;
-
-					// Check if the badgeCounter store exists
-					if (!db.objectStoreNames.contains('badgeCounter')) {
-						console.info('badgeCounter object store does not exist');
-
-						return;
-					}
-
-					const transaction = db.transaction('badgeCounter', 'readwrite');
-					const store = transaction.objectStore('badgeCounter');
-					store.put({ id: 'badge', count: 0 });
-				} catch (innerError) {
-					console.info('Error accessing badgeCounter store:', innerError);
-				}
-			};
-
-			openRequest.onerror = (event) => {
-				console.info('IndexedDB open error:', event);
-			};
-		} catch (dbError) {
-			console.info('IndexedDB operation failed:', dbError);
-			// Not a critical error, just log and continue
-		}
-	} catch (error) {
-		console.error('Error clearing badge count:', error);
-	}
-};
 
 interface PWAWrapperProps {
 	children: React.ReactNode;
@@ -68,6 +10,9 @@ interface PWAWrapperProps {
 
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+
+	// Sync Redux unread notification count with app badge
+	useBadgeSync();
 
 	// Check if we're in the MassConsensus route using window.location
 	const checkIfInMassConsensus = () => {
@@ -102,15 +47,14 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		// Note: In development, service workers might behave differently
 		// Always register service worker for notification support
 
-		// Clear badge when app is opened or focused
-		clearBadgeCount();
+		// Note: Badge count is managed by useBadgeSync hook which syncs with Redux state.
+		// We don't manually clear badge here to avoid race conditions.
+		// The badge will reflect the actual unread count from Redux.
 
-		// Set up visibility change listener to clear badge when app comes into focus
+		// Set up visibility change listener to sync badge and clear displayed notifications
 		const handleVisibilityChange = () => {
 			if (document.visibilityState === 'visible') {
-				clearBadgeCount();
-
-				// Also tell the service worker to clear notifications
+				// Tell the service worker to clear displayed notifications (not the badge)
 				if (navigator.serviceWorker.controller) {
 					navigator.serviceWorker.controller.postMessage({
 						type: 'CLEAR_NOTIFICATIONS'
@@ -121,17 +65,37 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
-		// Helper function to check if we're on iOS
-		const isIOS = (): boolean => {
-			const userAgent = navigator.userAgent.toLowerCase();
+		// Listen for service worker messages (e.g., module fetch failures after deployment)
+		const handleServiceWorkerMessage = (event: MessageEvent) => {
+			if (event.data && event.data.type === 'MODULE_FETCH_FAILED') {
+				console.info('[PWAWrapper] Module fetch failed, reloading to get updated version...');
+				// Clear caches and reload to get the new version
+				const reloadPage = () => location.reload();
 
-			return /iphone|ipad|ipod/.test(userAgent) ||
-				   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+				if (typeof caches !== 'undefined') {
+					caches.keys().then((names) => {
+						names.forEach((name) => {
+							if (name === 'static-resources') {
+								caches.delete(name);
+							}
+						});
+					}).finally(reloadPage);
+				} else {
+					reloadPage();
+				}
+			}
 		};
 
+		if ('serviceWorker' in navigator) {
+			navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+		}
+
 		// Explicitly register the Firebase Messaging Service Worker
-		// DO NOT register on iOS - Firebase Messaging is not supported on iOS browsers
-		if ('serviceWorker' in navigator && !isIOS()) {
+		// Register on iOS only if it's an installed PWA with Web Push support (iOS 16.4+)
+		const shouldRegisterFirebaseSW = 'serviceWorker' in navigator &&
+			(!isIOS() || isIOSWebPushSupported());
+
+		if (shouldRegisterFirebaseSW) {
 			// First check if it's already registered
 			navigator.serviceWorker.getRegistrations().then(registrations => {
 				const firebaseSW = registrations.find(r =>
@@ -141,18 +105,19 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				);
 
 				if (!firebaseSW) {
-					// Register Firebase Messaging SW
+					// Register Firebase Messaging SW with Firebase's default scope
+					// This allows it to coexist with the PWA's main sw.js at root scope
 					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-						scope: '/'
+						scope: '/firebase-cloud-messaging-push-scope'
 					})
 					.then(registration => {
-						// Firebase Messaging SW registered successfully
+						console.info('[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope');
 
 						// Wait for activation
 						if (registration.installing) {
 							registration.installing.addEventListener('statechange', function() {
 								if (this.state === 'activated') {
-									// Firebase Messaging SW activated
+									console.info('[PWAWrapper] Firebase Messaging SW activated');
 								}
 							});
 						}
@@ -161,11 +126,11 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
 					});
 				} else {
-					// Firebase Messaging SW already registered
+					console.info('[PWAWrapper] Firebase Messaging SW already registered');
 				}
 			});
-		} else if (isIOS()) {
-			console.info('[PWAWrapper] Skipping Firebase Messaging SW registration on iOS (not supported)');
+		} else if (isIOS() && !isInstalledPWA()) {
+			console.info('[PWAWrapper] iOS detected but not installed as PWA - push notifications require installing the app to home screen');
 		}
 
 		registerSW({
@@ -215,6 +180,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					return () => {
 						clearInterval(updateInterval);
 						document.removeEventListener('visibilitychange', handleVisibilityChange);
+						if ('serviceWorker' in navigator) {
+							navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+						}
 					};
 				},
 				onRegisterError(error) {

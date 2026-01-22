@@ -1,8 +1,127 @@
-import { StatementType, Statement } from '@freedi/shared-types';
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
+	StatementType: {
+		statement: 'statement',
+		option: 'option',
+		question: 'question',
+		document: 'document',
+		group: 'group',
+		comment: 'comment',
+	},
+	Role: {
+		admin: 'admin',
+		creator: 'creator',
+		member: 'member',
+		waiting: 'waiting',
+		banned: 'banned',
+	},
+	QuestionType: {
+		multipleChoice: 'multipleChoice',
+		openEnded: 'openEnded',
+		massConsensus: 'massConsensus',
+		simple: 'simple',
+	},
+	ResultsBy: {
+		consensus: 'consensus',
+		mostLiked: 'mostLiked',
+		averageLikesDislikes: 'averageLikesDislikes',
+		topOptions: 'topOptions',
+	},
+	CutoffBy: {
+		topOptions: 'topOptions',
+		aboveThreshold: 'aboveThreshold',
+	},
+}));
+
+// Define types locally
+enum StatementType {
+	statement = 'statement',
+	option = 'option',
+	question = 'question',
+	document = 'document',
+	group = 'group',
+	comment = 'comment',
+}
+
+enum Role {
+	admin = 'admin',
+	creator = 'creator',
+	member = 'member',
+	waiting = 'waiting',
+	banned = 'banned',
+}
+
+enum QuestionType {
+	multipleChoice = 'multipleChoice',
+	openEnded = 'openEnded',
+	massConsensus = 'massConsensus',
+	simple = 'simple',
+}
+
+enum ResultsBy {
+	consensus = 'consensus',
+	mostLiked = 'mostLiked',
+	averageLikesDislikes = 'averageLikesDislikes',
+	topOptions = 'topOptions',
+}
+
+enum CutoffBy {
+	topOptions = 'topOptions',
+	aboveThreshold = 'aboveThreshold',
+}
+
+interface Creator {
+	uid: string;
+	displayName: string;
+	email?: string;
+}
+
+interface Statement {
+	statementId: string;
+	parentId: string;
+	topParentId: string;
+	statement: string;
+	statementType: StatementType;
+	creator: Creator;
+	creatorId: string;
+	createdAt: number;
+	lastUpdate: number;
+	lastChildUpdate?: number;
+	consensus: number;
+	parents: string[];
+	results: unknown[];
+	resultsSettings: {
+		resultsBy: ResultsBy;
+		numberOfResults: number;
+		cutoffBy: CutoffBy;
+	};
+	description?: string;
+	questionType?: QuestionType;
+}
+
 import {
   isStatementTypeAllowedAsChildren,
   validateStatementTypeHierarchy,
-  TYPE_RESTRICTIONS
+  TYPE_RESTRICTIONS,
+  isAdmin,
+  isChatMessage,
+  isMassConsensus,
+  getInitials,
+  getRandomColor,
+  statementTitleToDisplay,
+  getTitle,
+  getDescription,
+  getFirstName,
+  getNumberDigits,
+  truncateString,
+  getLatestUpdateStatements,
+  emojiTransformer,
+  calculateFontSize,
+  getSetTimerId,
+  getRoomTimerId,
+  getStatementSubscriptionId,
+  getLastElements,
+  isProduction,
 } from '../helpers';
 
 describe('Statement Type Validation', () => {
@@ -167,5 +286,294 @@ describe('Statement Type Validation', () => {
       // Should default to allowing since restrictions wouldn't apply
       expect(result.allowed).toBe(true);
     });
+  });
+});
+
+describe('Role and Type Helpers', () => {
+  describe('isAdmin', () => {
+    it('should return true for admin role', () => {
+      expect(isAdmin(Role.admin as unknown as Parameters<typeof isAdmin>[0])).toBe(true);
+    });
+
+    it('should return true for creator role', () => {
+      expect(isAdmin(Role.creator as unknown as Parameters<typeof isAdmin>[0])).toBe(true);
+    });
+
+    it('should return false for member role', () => {
+      expect(isAdmin(Role.member as unknown as Parameters<typeof isAdmin>[0])).toBe(false);
+    });
+
+    it('should return false for undefined', () => {
+      expect(isAdmin(undefined)).toBe(false);
+    });
+  });
+
+  describe('isChatMessage', () => {
+    it('should return true for statement type', () => {
+      expect(isChatMessage(StatementType.statement as unknown as Parameters<typeof isChatMessage>[0])).toBe(true);
+    });
+
+    it('should return false for option type', () => {
+      expect(isChatMessage(StatementType.option as unknown as Parameters<typeof isChatMessage>[0])).toBe(false);
+    });
+
+    it('should return false for question type', () => {
+      expect(isChatMessage(StatementType.question as unknown as Parameters<typeof isChatMessage>[0])).toBe(false);
+    });
+  });
+
+  describe('isMassConsensus', () => {
+    it('should return true for massConsensus type', () => {
+      expect(isMassConsensus(QuestionType.massConsensus as unknown as Parameters<typeof isMassConsensus>[0])).toBe(true);
+    });
+
+    it('should return false for simple type', () => {
+      expect(isMassConsensus(QuestionType.simple as unknown as Parameters<typeof isMassConsensus>[0])).toBe(false);
+    });
+  });
+});
+
+describe('String Manipulation Helpers', () => {
+  describe('getInitials', () => {
+    it('should return initials for full name', () => {
+      expect(getInitials('John Doe')).toBe('JD');
+    });
+
+    it('should handle single name', () => {
+      expect(getInitials('John')).toBe('J');
+    });
+
+    it('should handle multiple names', () => {
+      expect(getInitials('John Michael Doe')).toBe('JMD');
+    });
+
+    it('should handle lowercase names', () => {
+      expect(getInitials('john doe')).toBe('JD');
+    });
+
+    it('should handle empty string', () => {
+      expect(getInitials('')).toBe('');
+    });
+  });
+
+  describe('getFirstName', () => {
+    it('should return first name with initial from full name', () => {
+      expect(getFirstName('John Doe')).toBe('John D.');
+    });
+
+    it('should return just first name for single name', () => {
+      expect(getFirstName('John')).toBe('John');
+    });
+
+    it('should handle empty string', () => {
+      expect(getFirstName('')).toBe('');
+    });
+  });
+
+  describe('truncateString', () => {
+    it('should truncate long strings', () => {
+      expect(truncateString('This is a very long string that needs truncation', 20)).toBe('This is a very long ...');
+    });
+
+    it('should not truncate short strings', () => {
+      expect(truncateString('Short', 20)).toBe('Short');
+    });
+
+    it('should use default max length of 20', () => {
+      expect(truncateString('This is exactly twenty char!')).toBe('This is exactly twen...');
+    });
+  });
+
+  describe('statementTitleToDisplay', () => {
+    it('should truncate title if too long', () => {
+      const result = statementTitleToDisplay('This is a very long title', 10);
+      expect(result.shortVersion).toBe('This is a ...');
+    });
+
+    it('should return full title if short enough', () => {
+      const result = statementTitleToDisplay('Short', 20);
+      expect(result.shortVersion).toBe('Short');
+      expect(result.fullVersion).toBe('Short');
+    });
+
+    it('should extract first line from multiline', () => {
+      const result = statementTitleToDisplay('First Line\nSecond Line', 50);
+      expect(result.fullVersion).toBe('First Line');
+    });
+
+    it('should remove all asterisks', () => {
+      // Function uses .replace(/\*/g, '') which removes all asterisks (markdown bold markers)
+      const result = statementTitleToDisplay('*Title*', 50);
+      expect(result.fullVersion).toBe('Title');
+    });
+  });
+
+  describe('getTitle', () => {
+    it('should return first line of statement', () => {
+      const statement = { statement: 'Title\nDescription here' } as unknown as Parameters<typeof getTitle>[0];
+      expect(getTitle(statement)).toBe('Title');
+    });
+
+    it('should remove all asterisks', () => {
+      // Function uses .replace(/\*/g, '') which removes all asterisks (markdown bold markers)
+      const statement = { statement: '*Bold Title*' } as unknown as Parameters<typeof getTitle>[0];
+      expect(getTitle(statement)).toBe('Bold Title');
+    });
+
+    it('should return empty string for undefined', () => {
+      expect(getTitle(undefined)).toBe('');
+    });
+  });
+
+  describe('getDescription', () => {
+    it('should return everything after first line', () => {
+      const statement = { statement: 'Title\nLine 1\nLine 2' } as unknown as Parameters<typeof getDescription>[0];
+      expect(getDescription(statement)).toBe('Line 1\nLine 2');
+    });
+
+    it('should return empty for single line', () => {
+      const statement = { statement: 'Just a title' } as unknown as Parameters<typeof getDescription>[0];
+      expect(getDescription(statement)).toBe('');
+    });
+  });
+});
+
+describe('Number Helpers', () => {
+  describe('getNumberDigits', () => {
+    it('should return correct digit count for positive numbers', () => {
+      expect(getNumberDigits(1)).toBe(1);
+      expect(getNumberDigits(10)).toBe(2);
+      expect(getNumberDigits(100)).toBe(3);
+      expect(getNumberDigits(1000)).toBe(4);
+    });
+
+    it('should handle decimal numbers by flooring', () => {
+      expect(getNumberDigits(99.9)).toBe(2);
+      expect(getNumberDigits(9.5)).toBe(1);
+    });
+  });
+
+  describe('calculateFontSize', () => {
+    it('should return smaller font for longer text', () => {
+      const shortFont = calculateFontSize('Short', 6, 14);
+      const longFont = calculateFontSize('This is a very long text string', 6, 14);
+
+      const shortSize = parseFloat(shortFont);
+      const longSize = parseFloat(longFont);
+
+      expect(shortSize).toBeGreaterThan(longSize);
+    });
+
+    it('should not go below min size', () => {
+      const result = calculateFontSize('A'.repeat(100), 6, 14);
+      expect(parseFloat(result)).toBe(6);
+    });
+  });
+});
+
+describe('ID Generation Helpers', () => {
+  describe('getSetTimerId', () => {
+    it('should create timer ID from statement and order', () => {
+      expect(getSetTimerId('stmt-123', 1)).toBe('stmt-123--1');
+    });
+  });
+
+  describe('getRoomTimerId', () => {
+    it('should create room timer ID', () => {
+      expect(getRoomTimerId('stmt-123', 2, 3)).toBe('stmt-123--2--3');
+    });
+  });
+
+  describe('getStatementSubscriptionId', () => {
+    it('should create subscription ID from user and statement', () => {
+      expect(getStatementSubscriptionId('stmt-123', 'user-456')).toBe('user-456--stmt-123');
+    });
+
+    it('should return undefined for missing statementId', () => {
+      expect(getStatementSubscriptionId('', 'user-456')).toBeUndefined();
+    });
+  });
+
+  describe('getRandomColor', () => {
+    it('should return a valid hex color', () => {
+      const color = getRandomColor();
+      expect(color).toMatch(/^#[0-9A-F]{6}$/);
+    });
+
+    it('should generate different colors on multiple calls', () => {
+      const colors = new Set([
+        getRandomColor(),
+        getRandomColor(),
+        getRandomColor(),
+        getRandomColor(),
+        getRandomColor(),
+      ]);
+      // With randomness, we should get at least 2 different colors
+      expect(colors.size).toBeGreaterThanOrEqual(2);
+    });
+  });
+});
+
+describe('Array Helpers', () => {
+  describe('getLastElements', () => {
+    it('should return last N elements', () => {
+      const arr = [1, 2, 3, 4, 5];
+      expect(getLastElements(arr, 3)).toEqual([3, 4, 5]);
+    });
+
+    it('should return from index 1 if array is smaller', () => {
+      const arr = [1, 2];
+      expect(getLastElements(arr, 5)).toEqual([2]);
+    });
+  });
+
+  describe('getLatestUpdateStatements', () => {
+    it('should return the latest lastUpdate value', () => {
+      const statements = [
+        { lastUpdate: 100 },
+        { lastUpdate: 300 },
+        { lastUpdate: 200 },
+      ] as unknown as Parameters<typeof getLatestUpdateStatements>[0];
+      expect(getLatestUpdateStatements(statements)).toBe(300);
+    });
+
+    it('should return 0 for empty array', () => {
+      expect(getLatestUpdateStatements([] as Parameters<typeof getLatestUpdateStatements>[0])).toBe(0);
+    });
+
+    it('should return 0 for undefined', () => {
+      expect(getLatestUpdateStatements(undefined as unknown as Parameters<typeof getLatestUpdateStatements>[0])).toBe(0);
+    });
+  });
+});
+
+describe('Emoji Transformer', () => {
+  describe('emojiTransformer', () => {
+    it('should transform sentiment codes to emojis', () => {
+      expect(emojiTransformer(':1')).toContain('😁');
+      expect(emojiTransformer(':-1')).toContain('😠');
+      expect(emojiTransformer(':0')).toContain('😐');
+    });
+
+    it('should handle empty string', () => {
+      expect(emojiTransformer('')).toBe('');
+    });
+
+    it('should handle text without sentiment codes', () => {
+      expect(emojiTransformer('Hello world')).toBe('Hello world');
+    });
+
+    it('should preserve surrounding text', () => {
+      const result = emojiTransformer('I feel :1 about this');
+      expect(result).toContain('😁');
+      expect(result).toContain('I feel');
+      expect(result).toContain('about this');
+    });
+  });
+});
+
+describe('isProduction', () => {
+  it('should return false in test environment', () => {
+    expect(isProduction()).toBe(false);
   });
 });

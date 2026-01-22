@@ -14,7 +14,8 @@ function extractEmbeddingArray(embedding: unknown): number[] | null {
   // If it's a VectorValue with toArray method
   if (typeof embedding === "object" && embedding !== null && "toArray" in embedding) {
     const vectorValue = embedding as { toArray: () => number[] };
-    return vectorValue.toArray();
+    
+return vectorValue.toArray();
   }
 
   return null;
@@ -54,13 +55,15 @@ class EmbeddingCacheService {
 
       const data = doc.data();
       const embedding = extractEmbeddingArray(data?.embedding);
-      return embedding;
+      
+return embedding;
     } catch (error) {
       logger.error("Failed to get embedding from cache", {
         statementId,
         error,
       });
-      return null;
+      
+return null;
     }
   }
 
@@ -99,10 +102,12 @@ class EmbeddingCacheService {
       }
 
       logger.info(`Retrieved ${result.size}/${statementIds.length} embeddings`);
-      return result;
+      
+return result;
     } catch (error) {
       logger.error("Failed to get batch embeddings", { error });
-      return result;
+      
+return result;
     }
   }
 
@@ -200,7 +205,8 @@ class EmbeddingCacheService {
     }
 
     logger.info(`Batch save complete: ${success} success, ${failed} failed`);
-    return { success, failed };
+    
+return { success, failed };
   }
 
   /**
@@ -220,13 +226,15 @@ class EmbeddingCacheService {
       }
 
       const data = doc.data();
-      return Boolean(data?.embedding);
+      
+return Boolean(data?.embedding);
     } catch (error) {
       logger.error("Failed to check embedding existence", {
         statementId,
         error,
       });
-      return false;
+      
+return false;
     }
   }
 
@@ -266,10 +274,12 @@ class EmbeddingCacheService {
       logger.info(
         `Found ${results.length} statements with embeddings under parent ${parentId}`
       );
-      return results;
+      
+return results;
     } catch (error) {
       logger.error("Failed to get embeddings for parent", { parentId, error });
-      return [];
+      
+return [];
     }
   }
 
@@ -321,7 +331,8 @@ class EmbeddingCacheService {
       };
     } catch (error) {
       logger.error("Failed to get embedding coverage", { parentId, error });
-      return {
+      
+return {
         totalStatements: 0,
         withEmbeddings: 0,
         withoutEmbeddings: 0,

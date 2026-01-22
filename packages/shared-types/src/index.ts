@@ -41,6 +41,10 @@ export {
 export type { Approval } from "./models/approval/Approval";
 export { ApprovalSchema } from "./models/approval/Approval";
 
+// Suggestion models
+export type { Suggestion } from "./models/suggestion/suggestionModel";
+export { SuggestionSchema } from "./models/suggestion/suggestionModel";
+
 // ChoseBy models
 export type {
   ChoseBy
@@ -180,6 +184,7 @@ export type {
 export {
   StatementSubscriptionSchema,
   getStatementSubscriptionId,
+  getSubscriptionId,
   StatementViewSchema,
   WaitingMemberSchema
 } from "./models/statement/StatementSubscription";
@@ -357,6 +362,8 @@ export {
   SurveyProgressSchema,
   SurveyStatus,
   SurveyStatusSchema,
+  SuggestionMode,
+  SuggestionModeSchema,
   DEFAULT_SURVEY_SETTINGS,
   QuestionOverrideSettingsSchema,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
@@ -426,3 +433,32 @@ export {
   hasValidEmbedding,
   validateEmbeddingDimensions,
 } from "./models/embedding/embeddingModel";
+
+// Version models
+export type {
+  DocumentVersion,
+  VersionChange,
+  ChangeSource,
+  VersionGenerationSettings,
+  DocumentVersioningSettings,
+} from "./models/version/versionModel";
+
+export {
+  DocumentVersionSchema,
+  VersionChangeSchema,
+  ChangeSourceSchema,
+  VersionGenerationSettingsSchema,
+  DocumentVersioningSettingsSchema,
+  VersionStatus,
+  ChangeDecision,
+  ChangeType,
+  ChangeSourceType,
+  DEFAULT_VERSION_GENERATION_SETTINGS,
+  DEFAULT_VERSIONING_SETTINGS,
+  getVersionId,
+  getChangeId,
+  calculateImpact,
+  hasSignificantImpact,
+  sortChangesByImpact,
+  filterSignificantChanges,
+} from "./models/version/versionModel";

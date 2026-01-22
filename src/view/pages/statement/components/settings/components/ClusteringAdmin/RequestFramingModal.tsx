@@ -1,4 +1,4 @@
-import { FC, useState } from 'react';
+import React, { FC, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Framing } from '@freedi/shared-types';
 import { requestCustomFraming } from '@/controllers/db/framing/framingController';

@@ -7,26 +7,59 @@ import { isRTL, LanguagesEnum } from '@freedi/shared-i18n';
 import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
-import { DemographicMode } from '@/types/demographics';
-import { TextDirection, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
 
+/**
+ * Extract YouTube video ID and return embed URL
+ */
+function getYouTubeEmbedUrl(url: string): string {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match) {
+      return `https://www.youtube.com/embed/${match[1]}`;
+    }
+  }
+
+  return '';
+}
+
 interface Settings {
   allowComments: boolean;
   allowApprovals: boolean;
+  enableSuggestions: boolean;
   requireLogin: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
   demographicMode: DemographicMode;
   demographicRequired: boolean;
+  surveyTrigger: SurveyTriggerMode;
   textDirection: TextDirection;
   defaultLanguage: string;
   forceLanguage: boolean;
   logoUrl: string;
   brandName: string;
+  tocEnabled: boolean;
+  tocMaxLevel: number;
+  tocPosition: TocPosition;
+  /** When true, shows interaction buttons as ghosted hints always (for elderly users) */
+  enhancedVisibility: boolean;
+  /** YouTube video URL for explanation video */
+  explanationVideoUrl: string;
+  /** Video display mode: 'optional' = button only, 'before_viewing' = must watch before viewing */
+  explanationVideoMode: ExplanationVideoMode;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions: boolean;
+  /** Custom colors for each heading level */
+  headerColors: HeaderColors;
 }
 
 export default function AdminSettingsPage() {
@@ -39,17 +72,27 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<Settings>({
     allowComments: true,
     allowApprovals: true,
+    enableSuggestions: false,
     requireLogin: false,
     showHeatMap: true,
     showViewCounts: true,
     isPublic: true,
     demographicMode: 'disabled',
     demographicRequired: false,
+    surveyTrigger: 'on_interaction',
     textDirection: 'auto',
     defaultLanguage: '',
     forceLanguage: true,
     logoUrl: DEFAULT_LOGO_URL,
     brandName: DEFAULT_BRAND_NAME,
+    tocEnabled: false,
+    tocMaxLevel: 2,
+    tocPosition: 'auto',
+    enhancedVisibility: false,
+    explanationVideoUrl: '',
+    explanationVideoMode: 'optional',
+    allowHeaderReactions: false,
+    headerColors: DEFAULT_HEADER_COLORS,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -212,6 +255,86 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.allowApprovals}
           />
         </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enable Suggestions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Allow users to suggest alternative text for paragraphs')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.enableSuggestions ? styles.active : ''}`}
+            onClick={() => handleToggle('enableSuggestions')}
+            aria-pressed={settings.enableSuggestions}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Allow Header Reactions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Enable users to react (approve/reject) to headings')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.allowHeaderReactions ? styles.active : ''}`}
+            onClick={() => handleToggle('allowHeaderReactions')}
+            aria-pressed={settings.allowHeaderReactions}
+          />
+        </div>
+      </section>
+
+      {/* Header Styling Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Header Styling')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Customize header colors')}
+        </p>
+
+        {(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((level) => (
+          <div key={level} className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>{level.toUpperCase()} {t('Color')}</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="color"
+                value={settings.headerColors[level] || DEFAULT_HEADER_COLORS[level]}
+                onChange={(e) => {
+                  setSettings(prev => ({
+                    ...prev,
+                    headerColors: {
+                      ...prev.headerColors,
+                      [level]: e.target.value,
+                    },
+                  }));
+                  setSaved(false);
+                }}
+                style={{ width: '40px', height: '32px', cursor: 'pointer', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSettings(prev => ({
+                    ...prev,
+                    headerColors: {
+                      ...prev.headerColors,
+                      [level]: DEFAULT_HEADER_COLORS[level],
+                    },
+                  }));
+                  setSaved(false);
+                }}
+                style={{ padding: '4px 8px', fontSize: '12px', cursor: 'pointer', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                title={t('Reset to default')}
+              >
+                {t('Reset')}
+              </button>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Display Settings */}
@@ -247,6 +370,72 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.showViewCounts}
           />
         </div>
+      </section>
+
+      {/* Accessibility Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Accessibility')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enhanced Visibility')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.enhancedVisibility ? styles.active : ''}`}
+            onClick={() => handleToggle('enhancedVisibility')}
+            aria-pressed={settings.enhancedVisibility}
+          />
+        </div>
+      </section>
+
+      {/* Table of Contents Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Table of Contents')}</h2>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Enable Table of Contents')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show a navigation menu for document sections')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.tocEnabled ? styles.active : ''}`}
+            onClick={() => handleToggle('tocEnabled')}
+            aria-pressed={settings.tocEnabled}
+          />
+        </div>
+
+        {settings.tocEnabled && (
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>{t('Maximum Heading Level')}</p>
+              <p className={styles.settingDescription}>
+                {t('Select which heading levels to include in the table of contents')}
+              </p>
+            </div>
+            <select
+              className={styles.select}
+              value={settings.tocMaxLevel}
+              onChange={(e) => {
+                setSettings(prev => ({ ...prev, tocMaxLevel: parseInt(e.target.value, 10) }));
+                setSaved(false);
+              }}
+            >
+              <option value={1}>{t('H1 only')}</option>
+              <option value={2}>{t('Up to H2')}</option>
+              <option value={3}>{t('Up to H3')}</option>
+              <option value={4}>{t('Up to H4')}</option>
+              <option value={5}>{t('Up to H5')}</option>
+              <option value={6}>{t('Up to H6')}</option>
+            </select>
+          </div>
+        )}
       </section>
 
       {/* Language Settings */}
@@ -304,12 +493,17 @@ export default function AdminSettingsPage() {
           documentId={statementId}
           mode={settings.demographicMode}
           required={settings.demographicRequired}
+          surveyTrigger={settings.surveyTrigger}
           onModeChange={(mode) => {
             setSettings((prev) => ({ ...prev, demographicMode: mode }));
             setSaved(false);
           }}
           onRequiredChange={(required) => {
             setSettings((prev) => ({ ...prev, demographicRequired: required }));
+            setSaved(false);
+          }}
+          onSurveyTriggerChange={(trigger) => {
+            setSettings((prev) => ({ ...prev, surveyTrigger: trigger }));
             setSaved(false);
           }}
         />
@@ -357,6 +551,74 @@ export default function AdminSettingsPage() {
             }}
           />
         </div>
+      </section>
+
+      {/* Explanation Video Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Explanation Video')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Add a YouTube video to help users understand the document. Users can access it via the Explanation button.')}
+        </p>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('YouTube Video URL')}</p>
+            <p className={styles.settingDescription}>
+              {t('Paste a YouTube video URL (e.g., https://youtube.com/watch?v=...)')}
+            </p>
+          </div>
+          <input
+            type="url"
+            className={styles.textInput}
+            value={settings.explanationVideoUrl}
+            onChange={(e) => {
+              setSettings((prev) => ({ ...prev, explanationVideoUrl: e.target.value }));
+              setSaved(false);
+            }}
+            placeholder="https://youtube.com/watch?v=..."
+          />
+        </div>
+
+        {settings.explanationVideoUrl && (
+          <>
+            <div className={styles.videoPreviewRow}>
+              <p className={styles.settingLabel}>{t('Preview')}</p>
+              <div className={styles.videoPreview}>
+                <iframe
+                  width="300"
+                  height="170"
+                  src={getYouTubeEmbedUrl(settings.explanationVideoUrl)}
+                  title={t('Video Preview')}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            </div>
+
+            {/* Video Display Mode Toggle */}
+            <div className={styles.settingRow}>
+              <div className={styles.settingInfo}>
+                <p className={styles.settingLabel}>{t('Require Video Before Viewing')}</p>
+                <p className={styles.settingDescription}>
+                  {t('When enabled, users must watch the video before they can view the document')}
+                </p>
+              </div>
+              <button
+                type="button"
+                className={`${styles.toggle} ${settings.explanationVideoMode === 'before_viewing' ? styles.active : ''}`}
+                onClick={() => {
+                  setSettings((prev) => ({
+                    ...prev,
+                    explanationVideoMode: prev.explanationVideoMode === 'before_viewing' ? 'optional' : 'before_viewing',
+                  }));
+                  setSaved(false);
+                }}
+                aria-pressed={settings.explanationVideoMode === 'before_viewing'}
+              />
+            </div>
+          </>
+        )}
       </section>
 
       {/* Save Button */}

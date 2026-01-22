@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -64,10 +65,13 @@ export default function AdminHeader() {
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
             {user?.photoURL ? (
-              <img
+              <Image
                 src={user.photoURL}
                 alt={user.displayName || 'User'}
+                width={32}
+                height={32}
                 className={styles.userAvatar}
+                unoptimized
               />
             ) : (
               <div className={styles.userAvatarPlaceholder}>

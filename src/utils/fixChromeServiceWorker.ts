@@ -26,7 +26,7 @@ export async function fixChromeServiceWorker() {
         console.info('\n2. Attempting to register Firebase SW manually...');
         try {
             const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-                scope: '/'
+                scope: '/firebase-messaging-sw/'
             });
             
             console.info('✅ Firebase SW registered successfully!');

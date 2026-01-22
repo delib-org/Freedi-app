@@ -17,8 +17,26 @@ initSentry();
 
 // Initialize IndexedDB error handler early to catch connection errors
 import { setupIndexedDBErrorHandler } from "./utils/indexedDBErrorHandler";
+import { isChunkLoadError, handleChunkLoadError } from "./utils/errorBoundaryHelpers";
 
 setupIndexedDBErrorHandler();
+
+// Global handler for chunk loading errors (stale cache after deployment)
+window.addEventListener("error", (event) => {
+  if (event.error && isChunkLoadError(event.error)) {
+    console.info("Chunk loading error detected (global handler), reloading...");
+    event.preventDefault();
+    handleChunkLoadError();
+  }
+});
+
+window.addEventListener("unhandledrejection", (event) => {
+  if (event.reason && isChunkLoadError(event.reason)) {
+    console.info("Chunk loading promise rejection detected, reloading...");
+    event.preventDefault();
+    handleChunkLoadError();
+  }
+});
 
 // Ensure Firebase service worker is registered
 import "./utils/ensureFirebaseServiceWorker";

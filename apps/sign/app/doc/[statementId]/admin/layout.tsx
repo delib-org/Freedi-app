@@ -8,6 +8,11 @@ import { AdminPermissionLevel } from '@freedi/shared-types';
 import { AdminProvider } from './AdminContext';
 import AdminSidebar from './AdminSidebar';
 import styles from './admin.module.scss';
+import { logger } from '@/lib/utils/logger';
+
+// Next.js route segment config - prevent caching for fresh permission checks
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -38,7 +43,10 @@ export default async function AdminLayout({
   const { db } = getFirebaseAdmin();
   const accessResult: AdminAccessResult = await checkAdminAccess(db, statementId, userId);
 
+  logger.info(`[AdminLayout] Access check for userId=${userId}, documentId=${statementId}: isAdmin=${accessResult.isAdmin}, permissionLevel=${accessResult.permissionLevel}, isOwner=${accessResult.isOwner}`);
+
   if (!accessResult.isAdmin) {
+    logger.warn(`[AdminLayout] Access denied for userId=${userId} on document=${statementId}. Redirecting to document view.`);
     redirect(`/doc/${statementId}`);
   }
 

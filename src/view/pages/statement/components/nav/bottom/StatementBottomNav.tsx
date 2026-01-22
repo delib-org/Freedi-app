@@ -22,7 +22,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import { statementSubscriptionSelector, statementOptionsSelector } from '@/redux/statements/statementsSlice';
 import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
@@ -41,8 +41,12 @@ const StatementBottomNav: FC<Props> = () => {
 
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
+	const options = useSelector(statementOptionsSelector(statementId));
 	const role = subscription?.role;
 	const isAdmin = role === 'admin' || role === Role.creator;
+
+	// Only show sort buttons when there are at least 2 answers
+	const hasEnoughOptionsToSort = options.length >= 2;
 
 	const { dir, learning, t, currentLanguage } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
@@ -225,53 +229,55 @@ const StatementBottomNav: FC<Props> = () => {
 						</button>
 					)}
 
-					{/* Sort menu (absolute fan-out like main branch) */}
-					<div className={styles.sortMenu}>
-						{filteredSortItems.map((navItem, i) => (
-							<div
-								key={`item-id-${i}`}
-								className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
-							>
-								<button
-									className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
-									aria-label="Sorting options"
-									onClick={() => handleSortClick(navItem)}
+					{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}
+					{hasEnoughOptionsToSort && (
+						<div className={styles.sortMenu}>
+							{filteredSortItems.map((navItem, i) => (
+								<div
+									key={`item-id-${i}`}
+									className={`${styles.sortMenu__item} ${showSorting ? styles.active : ''}`}
 								>
-									<NavIcon name={navItem.id} color={statementColor.backgroundColor} />
-								</button>
-								<span className={styles.buttonName}>{navItem.name}</span>
-							</div>
-						))}
-						{/* Admin-only toggle for showing/hiding hidden cards */}
-						{isAdmin && (
-							<div
-								className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
-							>
-								<button
-									className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
-									aria-label={t('Toggle visibility of hidden suggestion cards')}
-									title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
-									onClick={toggleShowHiddenCards}
+									<button
+										className={`${styles.openNavIcon} ${showSorting ? styles.active : ''}`}
+										aria-label="Sorting options"
+										onClick={() => handleSortClick(navItem)}
+									>
+										<NavIcon name={navItem.id} color={statementColor.backgroundColor} />
+									</button>
+									<span className={styles.buttonName}>{navItem.name}</span>
+								</div>
+							))}
+							{/* Admin-only toggle for showing/hiding hidden cards */}
+							{isAdmin && (
+								<div
+									className={`${styles.sortMenu__item} ${styles.sortMenu__item_visibility} ${showSorting ? styles.active : ''}`}
 								>
-									{showHiddenCards ? (
-										<EyeIcon style={{ color: statementColor.backgroundColor }} />
-									) : (
-										<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
-									)}
-								</button>
-								<span className={styles.buttonName}>
-									{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
-								</span>
-							</div>
-						)}
-						<button
-							className={styles.sortButton}
-							onClick={handleSortingClick}
-							aria-label={showSorting ? 'Close sorting' : 'Open sorting'}
-						>
-							{showSorting ? <XmenuIcon className={styles.whiteIcon} /> : <SortIcon />}
-						</button>
-					</div>
+									<button
+										className={`${styles.openNavIcon} ${styles.visibilityToggle} ${showSorting ? styles.active : ''} ${showHiddenCards ? styles.visibilityToggle_active : ''}`}
+										aria-label={t('Toggle visibility of hidden suggestion cards')}
+										title={showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+										onClick={toggleShowHiddenCards}
+									>
+										{showHiddenCards ? (
+											<EyeIcon style={{ color: statementColor.backgroundColor }} />
+										) : (
+											<EyeCrossIcon style={{ color: statementColor.backgroundColor }} />
+										)}
+									</button>
+									<span className={styles.buttonName}>
+										{showHiddenCards ? t('Hide hidden cards') : t('Show hidden cards')}
+									</span>
+								</div>
+							)}
+							<button
+								className={styles.sortButton}
+								onClick={handleSortingClick}
+								aria-label={showSorting ? 'Close sorting' : 'Open sorting'}
+							>
+								{showSorting ? <XmenuIcon className={styles.whiteIcon} /> : <SortIcon />}
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 
