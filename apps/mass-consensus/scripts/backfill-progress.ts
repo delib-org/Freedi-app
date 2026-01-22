@@ -13,6 +13,7 @@
 
 import { readFileSync } from 'fs';
 import path from 'path';
+import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 // Load .env file
 const envPath = path.join(__dirname, '..', '.env');
@@ -127,7 +128,7 @@ async function backfillSurveyProgress(surveyId: string): Promise<BackfillResult>
     answerCount: number;
   }>();
 
-  answersSnapshot.docs.forEach(doc => {
+  answersSnapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
     const answer = doc.data() as DemographicAnswer;
     const existing = userDataMap.get(answer.userId);
 
@@ -166,7 +167,7 @@ async function backfillSurveyProgress(surveyId: string): Promise<BackfillResult>
       .where('progressId', 'in', progressIds)
       .get();
 
-    progressSnapshot.docs.forEach(doc => {
+    progressSnapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
       existingProgressIds.add(doc.id);
     });
   }
@@ -247,7 +248,7 @@ async function getSurveyIdsWithDemographicAnswers(): Promise<string[]> {
     .get();
 
   const surveyIds = new Set<string>();
-  snapshot.docs.forEach(doc => {
+  snapshot.docs.forEach((doc: QueryDocumentSnapshot) => {
     const data = doc.data();
     if (data.surveyId) {
       surveyIds.add(data.surveyId);

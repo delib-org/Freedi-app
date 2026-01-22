@@ -1295,6 +1295,7 @@
   "Status": "الحالة",
   "Date": "التاريخ",
   "Demographics Survey Responses": "استجابات الاستطلاع الديموغرافي",
+  "Reject": "ارفض",
   "rejected": "مرفوض",
   "Pending": "قيد الانتظار",
   "Set the default language for this document. RTL languages (Hebrew, Arabic) will automatically switch text direction.": "تعيين اللغة الافتراضية لهذا المستند. ستقوم لغات RTL (العبرية، العربية) بتبديل اتجاه النص تلقائيًا.",

@@ -70,6 +70,17 @@ export default function AdminSidebar({
           </Link>
         )}
 
+        {canManageSettings && (
+          <Link href={`/doc/${statementId}/admin/versions`} className={styles.navLink}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 8v4l3 3" />
+              <circle cx="12" cy="12" r="10" />
+              <path d="M16.24 7.76a6 6 0 0 1 0 8.49m-8.48-.01a6 6 0 0 1 0-8.49" />
+            </svg>
+            {t('versions')}
+          </Link>
+        )}
+
         {canCreateViewerLinks && (
           <Link href={`/doc/${statementId}/admin/team`} className={styles.navLink}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

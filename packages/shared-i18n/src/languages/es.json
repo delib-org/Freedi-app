@@ -1271,6 +1271,7 @@
   "Status": "Estado",
   "Date": "Fecha",
   "Demographics Survey Responses": "Respuestas de Encuesta Demográfica",
+  "Reject": "Rechazar",
   "rejected": "Rechazado",
   "Pending": "Pendiente",
   "Set the default language for this document. RTL languages (Hebrew, Arabic) will automatically switch text direction.": "Establece el idioma predeterminado para este documento. Los idiomas RTL (hebreo, árabe) cambiarán automáticamente la dirección del texto.",

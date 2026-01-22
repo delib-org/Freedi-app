@@ -1271,6 +1271,7 @@
   "Status": "Status",
   "Date": "Datum",
   "Demographics Survey Responses": "Demografische Enquêtereacties",
+  "Reject": "Afwijzen",
   "rejected": "Afgewezen",
   "Pending": "In afwachting",
   "Set the default language for this document. RTL languages (Hebrew, Arabic) will automatically switch text direction.": "Stel de standaardtaal voor dit document in. RTL-talen (Hebreeuws, Arabisch) wisselen automatisch de tekstrichting.",

@@ -1,8 +1,7 @@
 import { useState, FC, useEffect } from 'react';
 import { useSelector } from 'react-redux';
-import { ReactFlowProvider } from 'reactflow';
 import CreateStatementModal from '../createStatementModal/CreateStatementModal';
-import MindMapChart from './components/MindMapChart';
+import MindElixirMap from './components/MindElixirMap';
 import { isAdmin } from '@/controllers/general/helpers';
 import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -152,87 +151,75 @@ const MindMap: FC = () => {
 	`;
 
 	return (
-		<main className='page__main' style={{ padding: 0, alignItems: 'stretch' }}>
+		<>
 			<style>{spinnerStyle}</style>
-			<ReactFlowProvider>
-				<select
-					aria-label='Select filter type for'
-					onChange={(ev) =>
-						setFilterBy(ev.target.value as FilterType)
-					}
-					value={filterBy}
-					style={{
-						width: '100vw',
-						maxWidth: '300px',
-						margin: '1rem auto',
-						position: 'absolute',
-						right: '1rem',
-						zIndex: 100,
-					}}
-				>
-					<option value={FilterType.questionsResults}>
-						{t('Questions and Results')}
-					</option>
-					<option value={FilterType.questionsResultsOptions}>
-						{t('Questions, options and Results')}
-					</option>
-				</select>
-				<div
-					style={{
-						height: '100vh',
-						width: '100vw',
-						direction: 'ltr',
-						position: 'relative',
-					}}
-				>
-					{/* Only render chart when results are available */}
-					{results ? (
-						<MindMapChart
-							descendants={results}
-							isAdmin={_isAdmin}
-							filterBy={filterBy}
-						/>
-					) : (
-						<div style={{
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							height: '100%',
-							flexDirection: 'column',
-							gap: '1rem'
-						}}>
-							{showSkeleton && (
-								<div className="skeleton-loader" style={{
-									width: '60px',
-									height: '60px',
-									border: '5px solid #f3f3f3',
-									borderTop: '5px solid var(--btn-primary)',
-									borderRadius: '50%',
-									animation: 'spin 1s linear infinite'
-								}}></div>
-							)}
-							<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
-								{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
-							</div>
-						</div>
+			<select
+				aria-label='Select filter type for'
+				onChange={(ev) =>
+					setFilterBy(ev.target.value as FilterType)
+				}
+				value={filterBy}
+				style={{
+					maxWidth: '300px',
+					position: 'absolute',
+					top: '1rem',
+					right: '1rem',
+					zIndex: 100,
+				}}
+			>
+				<option value={FilterType.questionsResults}>
+					{t('Questions and Results')}
+				</option>
+				<option value={FilterType.questionsResultsOptions}>
+					{t('Questions, options and Results')}
+				</option>
+			</select>
+			{/* Only render map when results are available */}
+			{results ? (
+				<MindElixirMap
+					descendants={results}
+					isAdmin={_isAdmin}
+					filterBy={filterBy}
+				/>
+			) : (
+				<div style={{
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					height: '100%',
+					flexDirection: 'column',
+					gap: '1rem'
+				}}>
+					{showSkeleton && (
+						<div className="skeleton-loader" style={{
+							width: '60px',
+							height: '60px',
+							border: '5px solid #f3f3f3',
+							borderTop: '5px solid var(--btn-primary)',
+							borderRadius: '50%',
+							animation: 'spin 1s linear infinite'
+						}}></div>
 					)}
+					<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
+						{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
+					</div>
 				</div>
+			)}
 
-				{mapContext.showModal && (
-					<Modal>
-						<CreateStatementModal
-							allowedTypes={[
-								isOptionAllowed && StatementType.option,
-								StatementType.question,
-							]}
-							parentStatement={mapContext.parentStatement}
-							isOption={isDefaultOption}
-							setShowModal={toggleModal}
-						/>
-					</Modal>
-				)}
-			</ReactFlowProvider>
-		</main>
+			{mapContext.showModal && (
+				<Modal>
+					<CreateStatementModal
+						allowedTypes={[
+							isOptionAllowed && StatementType.option,
+							StatementType.question,
+						]}
+						parentStatement={mapContext.parentStatement}
+						isOption={isDefaultOption}
+						setShowModal={toggleModal}
+					/>
+				</Modal>
+			)}
+		</>
 	);
 };
 
