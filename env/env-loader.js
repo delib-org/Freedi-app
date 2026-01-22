@@ -115,6 +115,9 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       // Google Docs API credentials (for importing from Google Docs)
       ['GOOGLE_DOCS_SERVICE_ACCOUNT_EMAIL', 'GOOGLE_DOCS_SERVICE_ACCOUNT_EMAIL'],
       ['GOOGLE_DOCS_PRIVATE_KEY', 'GOOGLE_DOCS_PRIVATE_KEY'],
+      // AI Configuration (for document versioning)
+      ['GEMINI_API_KEY', 'GEMINI_API_KEY'],
+      ['AI_PROVIDER', 'AI_PROVIDER'],
       // Client-side vars (NEXT_PUBLIC_ prefix)
       ['FIREBASE_API_KEY', 'NEXT_PUBLIC_FIREBASE_API_KEY'],
       ['FIREBASE_AUTH_DOMAIN', 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN'],
