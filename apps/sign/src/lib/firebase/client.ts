@@ -359,7 +359,7 @@ export function getFirebaseFirestore(): Firestore {
     // Connect to Firestore emulator in development
     if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
       try {
-        connectFirestoreEmulator(firestore, 'localhost', 8080);
+        connectFirestoreEmulator(firestore, 'localhost', 8081);
         firestoreEmulatorConnected = true;
         console.info('[Firebase Client - Sign] Connected to Firestore emulator');
       } catch {
