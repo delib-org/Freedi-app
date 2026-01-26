@@ -4,9 +4,9 @@
  * Firebase Function (fn_evaluation.ts) triggers automatically to calculate consensus
  */
 
-import { doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { Collections } from '@freedi/shared-types';
+import { Collections, Statement } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface SetSuggestionEvaluationParams {
@@ -30,22 +30,48 @@ export async function setSuggestionEvaluation({
 }: SetSuggestionEvaluationParams): Promise<void> {
   try {
     const firestore = getFirebaseFirestore();
+
+    // Get the suggestion statement to find its parentId
+    const suggestionRef = doc(firestore, Collections.statements, suggestionId);
+    const suggestionSnap = await getDoc(suggestionRef);
+
+    if (!suggestionSnap.exists()) {
+      throw new Error(`Suggestion ${suggestionId} not found`);
+    }
+
+    const suggestionData = suggestionSnap.data() as Statement;
+    const parentId = suggestionData.parentId;
+
+    if (!parentId) {
+      throw new Error(`Suggestion ${suggestionId} has no parentId`);
+    }
+
     const evaluationId = `${suggestionId}--${userId}`;
     const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
+    const now = Date.now();
 
+    // Match the Evaluation schema from shared-types
     const evaluationData = {
       evaluationId,
       statementId: suggestionId,
-      userId,
-      displayName: userDisplayName,
+      parentId, // Required by schema
+      evaluatorId: userId, // Schema uses evaluatorId not userId
       evaluation,
-      createdAt: Date.now(),
-      lastUpdate: Date.now(),
+      updatedAt: now, // Schema uses updatedAt
+      // Add evaluator object for Firebase Function compatibility
+      evaluator: {
+        uid: userId,
+        displayName: userDisplayName,
+        email: '',
+        photoURL: '',
+        isAnonymous: true,
+      },
     };
 
     console.info('[setSuggestionEvaluation] Writing evaluation to Firestore', {
       evaluationId,
       suggestionId,
+      parentId,
       userId,
       evaluation,
       collection: Collections.evaluations,
