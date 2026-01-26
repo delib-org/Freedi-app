@@ -1,165 +1,102 @@
-/**
- * API endpoint for creating paragraphs
- * POST /api/admin/paragraphs - Create new paragraph
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { Collections, ParagraphType } from '@freedi/shared-types';
-import { getFirebaseAdmin } from '@/lib/firebase/admin';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import { Paragraph } from '@/types';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { getUserIdFromCookie } from '@/lib/utils/user';
+import {
+  Collections,
+  createParagraphStatement,
+  Paragraph,
+  ParagraphType,
+} from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
-interface CreateRequest {
+interface AddParagraphInput {
   documentId: string;
   content: string;
   type: ParagraphType;
-  order?: number;
-  imageUrl?: string;
-  imageAlt?: string;
-  imageCaption?: string;
-  listType?: 'ul' | 'ol';
-}
-
-interface CreateResponse {
-  success: boolean;
-  paragraph?: Paragraph;
-  error?: string;
 }
 
 /**
- * Generate a unique paragraph ID
+ * POST /api/admin/paragraphs
+ * Create a new paragraph as a Statement object
  */
-function generateParagraphId(): string {
-  return `p_${crypto.randomUUID().slice(0, 8)}`;
-}
-
-export async function POST(request: NextRequest): Promise<NextResponse<CreateResponse>> {
+export async function POST(request: NextRequest) {
   try {
-    // Get user from cookies
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    const cookieHeader = request.headers.get('cookie');
+    const userId = getUserIdFromCookie(cookieHeader);
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    // Parse request body
-    const body = await request.json() as CreateRequest;
-    const { documentId, content, type, order, imageUrl, imageAlt, imageCaption, listType } = body;
+    const body: AddParagraphInput = await request.json();
+    const { documentId, content, type } = body;
 
-    if (!documentId) {
-      return NextResponse.json(
-        { success: false, error: 'Document ID is required' },
-        { status: 400 }
-      );
+    if (!documentId || !content) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (!type) {
-      return NextResponse.json(
-        { success: false, error: 'Paragraph type is required' },
-        { status: 400 }
-      );
-    }
+    const db = getFirestoreAdmin();
 
-    // For non-image types, content is required
-    if (type !== ParagraphType.image && !content) {
-      return NextResponse.json(
-        { success: false, error: 'Content is required' },
-        { status: 400 }
-      );
-    }
-
-    // For image type, imageUrl is required
-    if (type === ParagraphType.image && !imageUrl) {
-      return NextResponse.json(
-        { success: false, error: 'Image URL is required for image paragraphs' },
-        { status: 400 }
-      );
-    }
-
-    // Get document and verify admin
-    const { db } = getFirebaseAdmin();
+    // Get document to verify it exists and get creator info
     const docRef = db.collection(Collections.statements).doc(documentId);
     const docSnap = await docRef.get();
 
     if (!docSnap.exists) {
-      return NextResponse.json(
-        { success: false, error: 'Document not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
     }
 
-    // Check admin access
-    const accessResult = await checkAdminAccess(db, documentId, userId);
+    // Count existing paragraphs to determine order
+    const paragraphsSnapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', documentId)
+      .where('doc.isOfficialParagraph', '==', true)
+      .get();
 
-    if (!accessResult.isAdmin || accessResult.isViewer) {
-      return NextResponse.json(
-        { success: false, error: 'You do not have permission to modify this document' },
-        { status: 403 }
-      );
-    }
+    const newOrder = paragraphsSnapshot.size;
 
+    // Create creator object (use document owner info if available)
     const docData = docSnap.data();
-    const paragraphs: Paragraph[] = docData?.paragraphs || [];
-
-    // Create new paragraph
-    const newParagraph: Paragraph = {
-      paragraphId: generateParagraphId(),
-      type,
-      content: content || '',
-      order: order !== undefined ? order : paragraphs.length,
+    const creator = {
+      uid: userId,
+      displayName: docData?.creator?.displayName || 'Admin',
+      email: docData?.creator?.email || '',
+      photoURL: docData?.creator?.photoURL || '',
+      isAnonymous: false,
     };
 
-    // Add optional fields
-    if (imageUrl) {
-      newParagraph.imageUrl = imageUrl;
-    }
-    if (imageAlt) {
-      newParagraph.imageAlt = imageAlt;
-    }
-    if (imageCaption) {
-      newParagraph.imageCaption = imageCaption;
-    }
-    if (listType) {
-      newParagraph.listType = listType;
-    }
+    // Create the paragraph as a Statement object
+    const paragraphStatement = createParagraphStatement(
+      content,
+      type,
+      newOrder,
+      documentId,
+      creator
+    );
 
-    // If order is specified and is in the middle, reorder existing paragraphs
-    if (order !== undefined && order < paragraphs.length) {
-      // Shift paragraphs at and after the specified order
-      paragraphs.forEach((p, i) => {
-        if (p.order >= order) {
-          paragraphs[i] = { ...p, order: p.order + 1 };
-        }
-      });
+    if (!paragraphStatement) {
+      return NextResponse.json({ error: 'Failed to create paragraph statement' }, { status: 500 });
     }
-
-    // Add new paragraph
-    paragraphs.push(newParagraph);
-
-    // Sort by order
-    paragraphs.sort((a, b) => a.order - b.order);
 
     // Save to Firestore
-    await docRef.update({
-      paragraphs,
-      lastUpdate: Date.now(),
+    await db.collection(Collections.statements).doc(paragraphStatement.statementId).set(paragraphStatement);
+
+    logger.info(`[Paragraphs API] Created paragraph statement: ${paragraphStatement.statementId}`, {
+      documentId,
+      type,
+      order: newOrder,
     });
 
-    logger.info(`Paragraph created: ${newParagraph.paragraphId} in document ${documentId}`);
+    // Return in legacy Paragraph format for admin panel compatibility
+    const legacyParagraph: Paragraph = {
+      paragraphId: paragraphStatement.statementId,
+      content: content,
+      type: type,
+      order: newOrder,
+    };
 
-    return NextResponse.json({ success: true, paragraph: newParagraph });
+    return NextResponse.json({ success: true, paragraph: legacyParagraph });
   } catch (error) {
-    logger.error('Error creating paragraph:', error);
-
-    return NextResponse.json(
-      { success: false, error: 'Failed to create paragraph' },
-      { status: 500 }
-    );
+    logger.error('[Paragraphs API] POST error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
