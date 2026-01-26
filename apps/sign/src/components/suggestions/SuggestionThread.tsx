@@ -6,7 +6,7 @@ import { Suggestion as SuggestionType, Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
-import { useUser } from '@/hooks/useUser';
+import { useAutoLogin } from '@/hooks/useAutoLogin';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
 import Modal from '../shared/Modal';
@@ -27,7 +27,7 @@ export default function SuggestionThread({
 }: SuggestionThreadProps) {
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
-  const user = useUser();
+  const user = useAutoLogin(); // Auto-login anonymously if not logged in
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);

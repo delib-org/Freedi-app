@@ -5,7 +5,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
-import { useUser } from '@/hooks/useUser';
+import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
 import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
@@ -32,7 +32,7 @@ export default function SuggestionModal({
 }: SuggestionModalProps) {
   const { t } = useTranslation();
   const { incrementSuggestionCount, addUserInteraction } = useUIStore();
-  const user = useUser();
+  const user = useAutoLogin(); // Auto-login anonymously if not logged in
 
   // State
   const [isOriginalExpanded, setIsOriginalExpanded] = useState(false);
