@@ -121,7 +121,23 @@ export default function SuggestionModal({
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
 
   const handleSubmit = async () => {
-    if (!isValid || submitState === 'submitting') return;
+    console.log('[SuggestionModal] handleSubmit called', {
+      isValid,
+      submitState,
+      hasUser: !!user,
+      userId: user?.uid,
+    });
+
+    if (!isValid || submitState === 'submitting') {
+      console.warn('[SuggestionModal] Submit blocked:', { isValid, submitState });
+      return;
+    }
+
+    if (!user) {
+      console.error('[SuggestionModal] No user - cannot submit');
+      setErrorMessage('Please wait for authentication to complete...');
+      return;
+    }
 
     setSubmitState('submitting');
     setErrorMessage('');
@@ -141,6 +157,12 @@ export default function SuggestionModal({
             originalContent,
           };
 
+      console.log('[SuggestionModal] Sending request:', {
+        method,
+        url: API_ROUTES.SUGGESTIONS(paragraphId),
+        bodyKeys: Object.keys(body),
+      });
+
       const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId), {
         method,
         headers: {
@@ -149,10 +171,20 @@ export default function SuggestionModal({
         body: JSON.stringify(body),
       });
 
+      console.log('[SuggestionModal] Response:', {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+      });
+
       if (!response.ok) {
         const data = await response.json();
+        console.error('[SuggestionModal] Error response:', data);
         throw new Error(data.error || 'Failed to submit suggestion');
       }
+
+      const responseData = await response.json();
+      console.log('[SuggestionModal] Success:', responseData);
 
       setSubmitState('success');
       clearDraft();
@@ -171,6 +203,7 @@ export default function SuggestionModal({
         onClose();
       }, 500);
     } catch (error) {
+      console.error('[SuggestionModal] Submit error:', error);
       setSubmitState('error');
       setErrorMessage(error instanceof Error ? error.message : t('Failed to submit suggestion'));
     }
