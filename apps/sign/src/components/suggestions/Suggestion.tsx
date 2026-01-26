@@ -227,7 +227,7 @@ export default function Suggestion({
           </button>
 
           <span className={`${styles.voteScore} ${(suggestion.consensus || 0) > 0 ? styles.positive : (suggestion.consensus || 0) < 0 ? styles.negative : ''}`}>
-            {(suggestion.consensus || 0) > 0 ? '+' : ''}{suggestion.consensus || 0}
+            {(suggestion.consensus || 0) > 0 ? '+' : ''}{(suggestion.consensus || 0).toFixed(2)}
           </span>
 
           <button
@@ -249,7 +249,7 @@ export default function Suggestion({
       {isOwner && (suggestion.consensus || 0) !== 0 && (
         <div className={styles.consensusDisplay}>
           <span className={`${styles.voteScore} ${(suggestion.consensus || 0) > 0 ? styles.positive : styles.negative}`}>
-            {(suggestion.consensus || 0) > 0 ? '+' : ''}{suggestion.consensus || 0}
+            {(suggestion.consensus || 0) > 0 ? '+' : ''}{(suggestion.consensus || 0).toFixed(2)}
           </span>
         </div>
       )}
