@@ -221,55 +221,38 @@ export default function ParagraphCard({
     isExpanded && styles.expanded
   );
 
-  // Track client-side hydration to fix SSR mismatch
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
-
   // Sanitize content to prevent XSS attacks
   // Memoized to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(
-    () => {
-      // During SSR, return empty string if content is missing to avoid hydration mismatch
-      if (!isClient && (!paragraph.content || paragraph.content.trim() === '')) {
-        return '';
-      }
-      return sanitizeHTML(paragraph.content || '');
-    },
-    [paragraph.content, isClient]
+    () => sanitizeHTML(paragraph.content || ''),
+    [paragraph.content]
   );
 
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
+  // Always render an element (never null) to maintain consistent structure between SSR and client
   const renderContent = () => {
-    // Don't render empty content (prevents hydration mismatch)
-    if (!sanitizedContent) {
-      return null;
-    }
-
     // Style object for headers with custom color
     const headerStyle = headerColor ? { color: headerColor } : undefined;
 
     switch (paragraphType) {
       case ParagraphType.h1:
-        return <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h2:
-        return <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h3:
-        return <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h4:
-        return <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h5:
-        return <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h6:
-        return <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
           </div>
         );
       case ParagraphType.table:
@@ -277,6 +260,7 @@ export default function ParagraphCard({
           <div
             className={styles.tableWrapper}
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            suppressHydrationWarning
           />
         );
       case ParagraphType.image: {
@@ -319,7 +303,7 @@ export default function ParagraphCard({
         );
       }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
     }
   };
 
@@ -354,7 +338,7 @@ export default function ParagraphCard({
         </div>
       )}
 
-      <div className={styles.contentWrapper}>
+      <div className={styles.contentWrapper} suppressHydrationWarning>
         {renderContent()}
       </div>
 

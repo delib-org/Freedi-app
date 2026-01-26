@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
+import { useUser } from '@/hooks/useUser';
+import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
+import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
 import styles from './SuggestionModal.module.scss';
 
@@ -29,11 +32,17 @@ export default function SuggestionModal({
 }: SuggestionModalProps) {
   const { t } = useTranslation();
   const { incrementSuggestionCount, addUserInteraction } = useUIStore();
+  const user = useUser();
 
   // State
   const [isOriginalExpanded, setIsOriginalExpanded] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Real-time collaborative editing
+  const liveEditingManager = useRef<LiveEditingManager | null>(null);
+  const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Draft handling
   const {
@@ -44,6 +53,61 @@ export default function SuggestionModal({
     clearDraft,
     hasDraft,
   } = useSuggestionDraft({ paragraphId });
+
+  // Initialize real-time editing session
+  useEffect(() => {
+    if (!user) return;
+
+    const manager = new LiveEditingManager();
+    liveEditingManager.current = manager;
+
+    // Join editing session for this paragraph
+    manager
+      .joinSession(
+        documentId,
+        paragraphId,
+        user.uid,
+        user.displayName || 'Anonymous',
+        suggestedContent || originalContent
+      )
+      .catch((error) => {
+        console.error('Failed to join editing session:', error);
+      });
+
+    // Subscribe to session updates to see other editors
+    const unsubscribe = manager.subscribeToSession((session: LiveEditingSession | null) => {
+      if (session) {
+        const editors = manager.getActiveEditors(session);
+        setActiveEditors(editors);
+
+        // Update draft content from RTDB if it changed from another user
+        if (session.draftContent !== suggestedContent) {
+          setSuggestedContent(session.draftContent);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      manager.cleanup();
+    };
+  }, [user, documentId, paragraphId, originalContent, suggestedContent, setSuggestedContent]);
+
+  // Handle textarea changes with real-time sync
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newContent = e.target.value;
+      const cursorPosition = e.target.selectionStart || 0;
+
+      setSuggestedContent(newContent);
+
+      // Update RTDB for real-time collaboration (300ms debounced)
+      if (liveEditingManager.current) {
+        liveEditingManager.current.updateDraft(newContent, cursorPosition);
+      }
+    },
+    [setSuggestedContent]
+  );
 
   // Pre-fill if editing existing suggestion
   useEffect(() => {
@@ -141,13 +205,31 @@ export default function SuggestionModal({
         )}
       </div>
 
-      {/* Suggestion textarea */}
+      {/* Active editors indicator */}
+      {activeEditors.length > 0 && (
+        <div className={styles.activeEditors}>
+          <span className={styles.activeEditorsLabel}>{t('Also editing')}:</span>
+          {activeEditors.map((editor) => (
+            <span
+              key={editor.userId}
+              className={styles.activeEditorBadge}
+              style={{ backgroundColor: editor.color }}
+              title={editor.displayName}
+            >
+              {editor.displayName.charAt(0).toUpperCase()}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Suggestion textarea with real-time collaboration */}
       <div className={styles.field}>
         <label htmlFor="suggested-content">{t('Your Suggested Text')}</label>
         <textarea
+          ref={textareaRef}
           id="suggested-content"
           value={suggestedContent}
-          onChange={(e) => setSuggestedContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder={t('Write your alternative version...')}
           rows={5}
           maxLength={SUGGESTIONS.MAX_LENGTH}

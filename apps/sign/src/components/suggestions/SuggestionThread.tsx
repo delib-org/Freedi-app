@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Suggestion as SuggestionType } from '@freedi/shared-types';
+import { Suggestion as SuggestionType, Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
-import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
+import { API_ROUTES } from '@/constants/common';
+import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
 import Modal from '../shared/Modal';
@@ -28,42 +29,35 @@ export default function SuggestionThread({
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
 
-  const [suggestions, setSuggestions] = useState<SuggestionType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);
+
+  // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
+  const suggestionStatements = useParagraphSuggestions(paragraphId);
+
+  // Convert Statement[] to legacy Suggestion[] format for compatibility
+  const suggestions: SuggestionType[] = useMemo(() => {
+    return suggestionStatements.map((statement: Statement) => ({
+      suggestionId: statement.statementId,
+      paragraphId: paragraphId,
+      documentId: documentId,
+      suggestedContent: statement.statement,
+      reasoning: '', // TODO: Add reasoning field to Statement if needed
+      creatorId: statement.creatorId,
+      creatorName: statement.creator?.displayName || 'Anonymous',
+      createdAt: statement.createdAt,
+      votes: statement.evaluation || 0,
+      consensus: statement.consensus || 0,
+    }));
+  }, [suggestionStatements, paragraphId, documentId]);
+
+  const isLoading = false; // Real-time hook handles loading internally
 
   // Check if user already has a suggestion
   const userSuggestion = useMemo(() => {
     if (!userId) return null;
-
     return suggestions.find((s) => s.creatorId === userId) || null;
   }, [suggestions, userId]);
-
-  // Fetch suggestions
-  const fetchSuggestions = useCallback(async () => {
-    try {
-      const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId));
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data.suggestions || []);
-      }
-    } catch (err) {
-      console.error('Error fetching suggestions:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [paragraphId]);
-
-  // Initial fetch and polling for real-time updates
-  useEffect(() => {
-    fetchSuggestions();
-
-    // Poll for updates every 5 seconds
-    const interval = setInterval(fetchSuggestions, SUGGESTIONS.REALTIME_POLL_INTERVAL_MS);
-
-    return () => clearInterval(interval);
-  }, [fetchSuggestions]);
 
   // Handle delete
   const handleDelete = async (suggestionId: string) => {
@@ -93,7 +87,7 @@ export default function SuggestionThread({
 
   // Handle add/edit success
   const handleModalSuccess = () => {
-    fetchSuggestions();
+    // No need to fetch - real-time listener will update automatically
     setShowAddModal(false);
     setEditingSuggestion(null);
   };
