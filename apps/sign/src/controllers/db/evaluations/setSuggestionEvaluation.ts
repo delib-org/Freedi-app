@@ -43,9 +43,17 @@ export async function setSuggestionEvaluation({
       lastUpdate: Date.now(),
     };
 
+    console.info('[setSuggestionEvaluation] Writing evaluation to Firestore', {
+      evaluationId,
+      suggestionId,
+      userId,
+      evaluation,
+      collection: Collections.evaluations,
+    });
+
     await setDoc(evaluationRef, evaluationData, { merge: true });
 
-    console.info('[setSuggestionEvaluation] Evaluation saved', {
+    console.info('[setSuggestionEvaluation] Evaluation saved successfully', {
       suggestionId,
       userId,
       evaluation,

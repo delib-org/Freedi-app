@@ -73,6 +73,11 @@ export function useParagraphSuggestions(
           console.info('[useParagraphSuggestions] Updated suggestions', {
             paragraphId,
             count: updatedSuggestions.length,
+            suggestions: updatedSuggestions.map(s => ({
+              id: s.statementId,
+              consensus: s.consensus,
+              evaluation: s.evaluation,
+            })),
           });
         },
         (error) => {
