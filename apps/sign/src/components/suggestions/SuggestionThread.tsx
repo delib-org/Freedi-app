@@ -6,6 +6,7 @@ import { Suggestion as SuggestionType, Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
+import { useUser } from '@/hooks/useUser';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
 import Modal from '../shared/Modal';
@@ -15,7 +16,6 @@ interface SuggestionThreadProps {
   paragraphId: string;
   documentId: string;
   originalContent: string;
-  userId: string | null;
   onClose: () => void;
 }
 
@@ -23,11 +23,11 @@ export default function SuggestionThread({
   paragraphId,
   documentId,
   originalContent,
-  userId,
   onClose: _onClose,
 }: SuggestionThreadProps) {
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
+  const user = useUser();
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);
@@ -55,9 +55,9 @@ export default function SuggestionThread({
 
   // Check if user already has a suggestion
   const userSuggestion = useMemo(() => {
-    if (!userId) return null;
-    return suggestions.find((s) => s.creatorId === userId) || null;
-  }, [suggestions, userId]);
+    if (!user) return null;
+    return suggestions.find((s) => s.creatorId === user.uid) || null;
+  }, [suggestions, user]);
 
   // Handle delete
   const handleDelete = async (suggestionId: string) => {
@@ -107,7 +107,8 @@ export default function SuggestionThread({
             <Suggestion
               key={suggestion.suggestionId}
               suggestion={suggestion}
-              userId={userId}
+              userId={user?.uid || null}
+              userDisplayName={user?.displayName || null}
               paragraphId={paragraphId}
               onDelete={handleDelete}
               onEdit={handleEdit}
@@ -125,7 +126,7 @@ export default function SuggestionThread({
         <button
           type="button"
           className={styles.addButton}
-          onClick={() => setShowAddModal(true)}
+          onClick={() => user ? setShowAddModal(true) : alert(t('Please sign in to suggest alternatives'))}
         >
           <svg
             width="16"

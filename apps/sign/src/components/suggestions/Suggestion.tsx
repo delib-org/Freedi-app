@@ -4,12 +4,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { Suggestion as SuggestionType } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, UIState } from '@/store/uiStore';
-import { API_ROUTES } from '@/constants/common';
+import {
+  setSuggestionEvaluation,
+  removeSuggestionEvaluation,
+  getUserEvaluation,
+} from '@/controllers/db/evaluations/setSuggestionEvaluation';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
   suggestion: SuggestionType;
   userId: string | null;
+  userDisplayName: string | null;
   paragraphId: string;
   onDelete: (suggestionId: string) => void;
   onEdit: (suggestion: SuggestionType) => void;
@@ -18,30 +23,29 @@ interface SuggestionProps {
 export default function Suggestion({
   suggestion,
   userId,
+  userDisplayName,
   paragraphId,
   onDelete,
   onEdit,
 }: SuggestionProps) {
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
-  const [consensus, setConsensus] = useState(suggestion.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Check if current user owns this suggestion
   const isOwner = userId && suggestion.creatorId === userId;
 
-  // Fetch user's existing evaluation
+  // Fetch user's existing evaluation from Firestore
   const fetchEvaluation = useCallback(async () => {
     if (!userId) return;
 
     try {
-      const response = await fetch(API_ROUTES.SUGGESTION_EVALUATIONS(suggestion.suggestionId));
-      if (response.ok) {
-        const data = await response.json();
-        setUserEvaluation(data.userEvaluation);
-        setConsensus(data.sumEvaluation || 0);
-      }
+      const evaluation = await getUserEvaluation({
+        suggestionId: suggestion.suggestionId,
+        userId,
+      });
+      setUserEvaluation(evaluation);
     } catch (err) {
       console.error('Error fetching suggestion evaluation:', err);
     }
@@ -51,50 +55,36 @@ export default function Suggestion({
     fetchEvaluation();
   }, [fetchEvaluation]);
 
-  // Handle evaluation (vote up/down)
+  // Handle evaluation (vote up/down) with direct Firestore write
   const handleVote = async (vote: number) => {
-    if (!userId || isOwner || isLoading) return;
-
-    // If clicking the same vote, remove it
-    if (userEvaluation === vote) {
-      setIsLoading(true);
-      try {
-        const response = await fetch(API_ROUTES.SUGGESTION_EVALUATIONS(suggestion.suggestionId), {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          setConsensus((prev) => prev - vote);
-          setUserEvaluation(null);
-        }
-      } catch (err) {
-        console.error('Error removing vote:', err);
-      } finally {
-        setIsLoading(false);
-      }
-
-      return;
-    }
+    if (!userId || !userDisplayName || isOwner || isLoading) return;
 
     setIsLoading(true);
-    try {
-      const response = await fetch(API_ROUTES.SUGGESTION_EVALUATIONS(suggestion.suggestionId), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ evaluation: vote }),
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setConsensus(data.newConsensus);
+    try {
+      // If clicking the same vote, remove it
+      if (userEvaluation === vote) {
+        await removeSuggestionEvaluation({
+          suggestionId: suggestion.suggestionId,
+          userId,
+        });
+        setUserEvaluation(null);
+      } else {
+        // Create or update evaluation
+        await setSuggestionEvaluation({
+          suggestionId: suggestion.suggestionId,
+          userId,
+          userDisplayName,
+          evaluation: vote,
+        });
         setUserEvaluation(vote);
         // Mark paragraph as interacted
         addUserInteraction(paragraphId);
       }
+
+      // Note: Consensus will be updated automatically by Firebase Function and real-time listener
     } catch (err) {
-      console.error('Error submitting vote:', err);
+      console.error('Error handling vote:', err);
     } finally {
       setIsLoading(false);
     }
@@ -207,8 +197,8 @@ export default function Suggestion({
             </svg>
           </button>
 
-          <span className={`${styles.voteScore} ${consensus > 0 ? styles.positive : consensus < 0 ? styles.negative : ''}`}>
-            {consensus > 0 ? '+' : ''}{consensus}
+          <span className={`${styles.voteScore} ${(suggestion.consensus || 0) > 0 ? styles.positive : (suggestion.consensus || 0) < 0 ? styles.negative : ''}`}>
+            {(suggestion.consensus || 0) > 0 ? '+' : ''}{suggestion.consensus || 0}
           </span>
 
           <button
@@ -227,10 +217,10 @@ export default function Suggestion({
       )}
 
       {/* Show consensus for suggestion owners */}
-      {isOwner && consensus !== 0 && (
+      {isOwner && (suggestion.consensus || 0) !== 0 && (
         <div className={styles.consensusDisplay}>
-          <span className={`${styles.voteScore} ${consensus > 0 ? styles.positive : styles.negative}`}>
-            {consensus > 0 ? '+' : ''}{consensus}
+          <span className={`${styles.voteScore} ${(suggestion.consensus || 0) > 0 ? styles.positive : styles.negative}`}>
+            {(suggestion.consensus || 0) > 0 ? '+' : ''}{suggestion.consensus || 0}
           </span>
         </div>
       )}

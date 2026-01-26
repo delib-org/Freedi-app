@@ -472,7 +472,6 @@ export default function DocumentClient({
             paragraphId={modalContext.paragraphId}
             documentId={documentId}
             originalContent={currentParagraph?.content || ''}
-            userId={user?.uid || null}
             onClose={closeModal}
           />
         </Modal>
