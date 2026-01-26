@@ -221,16 +221,34 @@ export default function ParagraphCard({
     isExpanded && styles.expanded
   );
 
+  // Track client-side hydration to fix SSR mismatch
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   // Sanitize content to prevent XSS attacks
   // Memoized to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(
-    () => sanitizeHTML(paragraph.content),
-    [paragraph.content]
+    () => {
+      // During SSR, return empty string if content is missing to avoid hydration mismatch
+      if (!isClient && (!paragraph.content || paragraph.content.trim() === '')) {
+        return '';
+      }
+      return sanitizeHTML(paragraph.content || '');
+    },
+    [paragraph.content, isClient]
   );
 
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
   const renderContent = () => {
+    // Don't render empty content (prevents hydration mismatch)
+    if (!sanitizedContent) {
+      return null;
+    }
+
     // Style object for headers with custom color
     const headerStyle = headerColor ? { color: headerColor } : undefined;
 
