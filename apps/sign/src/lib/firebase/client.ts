@@ -22,6 +22,11 @@ import {
   FirebaseStorage,
   connectStorageEmulator,
 } from 'firebase/storage';
+import {
+  getDatabase,
+  connectDatabaseEmulator,
+  Database,
+} from 'firebase/database';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
@@ -38,8 +43,10 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let storage: FirebaseStorage;
+let database: Database;
 let authEmulatorConnected = false;
 let storageEmulatorConnected = false;
+let databaseEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -305,6 +312,31 @@ export function getFirebaseStorage(): FirebaseStorage {
   }
 
   return storage;
+}
+
+/**
+ * Get Firebase Realtime Database instance
+ */
+export function getFirebaseRealtimeDatabase(): Database {
+  if (!database) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    database = getDatabase(app);
+
+    // Connect to database emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !databaseEmulatorConnected) {
+      try {
+        connectDatabaseEmulator(database, 'localhost', 9000);
+        databaseEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Realtime Database emulator');
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return database;
 }
 
 /**

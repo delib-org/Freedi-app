@@ -86,6 +86,7 @@ export const StatementSchema = object({
 		object({
 			isDoc: boolean(),
 			order: number(),
+			isOfficialParagraph: optional(boolean()), // Sign app: marks standing paragraphs (vs suggestions)
 		})
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
