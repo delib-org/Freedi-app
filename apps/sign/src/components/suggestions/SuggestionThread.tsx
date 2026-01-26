@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Flipper, Flipped } from 'react-flip-toolkit';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion as SuggestionType, Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
@@ -9,6 +10,7 @@ import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
+import SortControls, { SortType } from './SortControls';
 import Modal from '../shared/Modal';
 import styles from './SuggestionThread.module.scss';
 
@@ -17,6 +19,14 @@ interface SuggestionThreadProps {
   documentId: string;
   originalContent: string;
   onClose: () => void;
+}
+
+// Seeded random for consistent random order during session
+function seededRandom(seed: number): () => number {
+  return function () {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
 }
 
 export default function SuggestionThread({
@@ -41,13 +51,17 @@ export default function SuggestionThread({
 
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);
+  const [sortType, setSortType] = useState<SortType>('newest'); // Default to newest
+  const [randomSeed] = useState(() => Date.now());
+  const [isFrozen, setIsFrozen] = useState(false); // Stop real-time reordering
+  const [frozenSuggestions, setFrozenSuggestions] = useState<SuggestionType[]>([]);
 
   // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
   const suggestionStatements = useParagraphSuggestions(paragraphId);
 
   // Convert Statement[] to legacy Suggestion[] format for compatibility
   const suggestions: SuggestionType[] = useMemo(() => {
-    return suggestionStatements.map((statement: Statement) => ({
+    const converted = suggestionStatements.map((statement: Statement) => ({
       suggestionId: statement.statementId,
       paragraphId: paragraphId,
       documentId: documentId,
@@ -59,7 +73,46 @@ export default function SuggestionThread({
       votes: statement.evaluation || 0,
       consensus: statement.consensus || 0,
     }));
-  }, [suggestionStatements, paragraphId, documentId]);
+
+    // Update frozen suggestions when new items arrive (but don't reorder)
+    if (isFrozen) {
+      const existingIds = new Set(frozenSuggestions.map(s => s.suggestionId));
+      const newItems = converted.filter(s => !existingIds.has(s.suggestionId));
+      if (newItems.length > 0) {
+        setFrozenSuggestions(prev => [...newItems, ...prev]); // Add new items at top
+      }
+      return frozenSuggestions;
+    }
+
+    return converted;
+  }, [suggestionStatements, paragraphId, documentId, isFrozen, frozenSuggestions]);
+
+  // Sort suggestions based on selected sort type
+  const sortedSuggestions = useMemo(() => {
+    const sorted = [...suggestions];
+
+    switch (sortType) {
+      case 'consensus':
+        return sorted.sort((a, b) => (b.consensus || 0) - (a.consensus || 0));
+
+      case 'newest':
+        return sorted.sort((a, b) => b.createdAt - a.createdAt);
+
+      case 'random': {
+        const random = seededRandom(randomSeed);
+        return sorted.sort(() => random() - 0.5);
+      }
+
+      default:
+        return sorted;
+    }
+  }, [suggestions, sortType, randomSeed]);
+
+  // Generate flip key from sorted order
+  const flipKey = useMemo(
+    () => sortedSuggestions.map((s) => s.suggestionId).join(','),
+    [sortedSuggestions]
+  );
 
   const isLoading = false; // Real-time hook handles loading internally
 
@@ -68,6 +121,24 @@ export default function SuggestionThread({
     if (!user) return null;
     return suggestions.find((s) => s.creatorId === user.uid) || null;
   }, [suggestions, user]);
+
+  // Handle sort change
+  const handleSortChange = useCallback((newSort: SortType) => {
+    setSortType(newSort);
+    // Unfreezeif changing sort order
+    if (isFrozen) {
+      setIsFrozen(false);
+    }
+  }, [isFrozen]);
+
+  // Handle freeze/unfreeze
+  const handleToggleFreeze = useCallback(() => {
+    if (!isFrozen) {
+      // Freeze: Save current sorted order
+      setFrozenSuggestions(sortedSuggestions);
+    }
+    setIsFrozen(!isFrozen);
+  }, [isFrozen, sortedSuggestions]);
 
   // Handle delete
   const handleDelete = async (suggestionId: string) => {
@@ -104,28 +175,69 @@ export default function SuggestionThread({
 
   return (
     <div className={styles.container}>
-      <div className={styles.list}>
+      {/* Sort Controls with Stop/Resume Button */}
+      <div className={styles.controls}>
+        <SortControls
+          activeSort={sortType}
+          onSortChange={handleSortChange}
+          disabled={suggestions.length <= 1 || isFrozen}
+        />
+        <button
+          type="button"
+          className={`${styles.freezeButton} ${isFrozen ? styles.frozen : ''}`}
+          onClick={handleToggleFreeze}
+          disabled={suggestions.length === 0}
+          title={isFrozen ? t('Resume live updates') : t('Stop live updates')}
+        >
+          {isFrozen ? (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              {t('Resume')}
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+              </svg>
+              {t('Stop')}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Animated Suggestion List */}
+      <Flipper
+        flipKey={flipKey}
+        spring={{ stiffness: 300, damping: 30 }}
+        className={styles.list}
+      >
         {isLoading ? (
           <div className={styles.loading}>
             <div className={styles.skeleton} />
             <div className={styles.skeleton} />
           </div>
-        ) : suggestions.length === 0 ? (
+        ) : sortedSuggestions.length === 0 ? (
           <p className={styles.empty}>{t('No suggestions yet')}</p>
         ) : (
-          suggestions.map((suggestion) => (
-            <Suggestion
-              key={suggestion.suggestionId}
-              suggestion={suggestion}
-              userId={user?.uid || null}
-              userDisplayName={user?.displayName || null}
-              paragraphId={paragraphId}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
+          sortedSuggestions.map((suggestion) => (
+            <Flipped key={suggestion.suggestionId} flipId={suggestion.suggestionId}>
+              <div>
+                <Suggestion
+                  suggestion={suggestion}
+                  userId={user?.uid || null}
+                  userDisplayName={user?.displayName || null}
+                  paragraphId={paragraphId}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                />
+              </div>
+            </Flipped>
           ))
         )}
-      </div>
+      </Flipper>
 
       {/* Add suggestion button or notice */}
       {userSuggestion ? (

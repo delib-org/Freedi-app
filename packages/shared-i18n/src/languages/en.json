@@ -2140,5 +2140,14 @@
   "exportSurveyData": "Export Survey Data",
   "includeTestData": "Include test data",
   "includeTestDataHint": "If checked, test responses will be included in the export",
-  "downloading": "Downloading..."
+  "downloading": "Downloading...",
+
+  "Consensus": "Consensus",
+  "Random": "Random",
+  "Newest": "Newest",
+  "Sort suggestions by": "Sort suggestions by",
+  "Stop": "Stop",
+  "Resume": "Resume",
+  "Stop live updates": "Stop live updates",
+  "Resume live updates": "Resume live updates"
 }

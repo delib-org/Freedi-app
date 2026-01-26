@@ -1,0 +1,91 @@
+.sortControls {
+  display: flex;
+  margin-bottom: var(--spacing-md, 1rem);
+}
+
+.sortButton {
+  flex: 1;
+  padding: var(--spacing-xs, 0.5rem) var(--spacing-sm, 0.75rem);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-caption, #6b7280);
+  background: transparent;
+  border: 1px solid var(--border-light, #e5e7eb);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  // Remove border overlap between buttons
+  &:not(:first-child) {
+    margin-left: -1px;
+  }
+
+  &.first {
+    border-radius: var(--radius-sm, 8px) 0 0 var(--radius-sm, 8px);
+  }
+
+  &.last {
+    border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+  }
+
+  &:hover:not(:disabled):not(.active) {
+    background: var(--background, #f9fafb);
+    border-color: var(--text-caption, #6b7280);
+    z-index: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #3b82f6);
+    outline-offset: 2px;
+    z-index: 2;
+  }
+
+  &.active {
+    background: var(--btn-primary, #3b82f6);
+    border-color: var(--btn-primary, #3b82f6);
+    color: white;
+    z-index: 1;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* RTL Support */
+:global([data-text-dir="rtl"]),
+[dir="rtl"] {
+  .sortControls {
+    flex-direction: row-reverse;
+  }
+
+  .sortButton {
+    &:not(:first-child) {
+      margin-left: 0;
+      margin-right: -1px;
+    }
+
+    &.first {
+      border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+    }
+
+    &.last {
+      border-radius: var(--radius-sm, 8px) 0 0 var(--radius-sm, 8px);
+    }
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .sortButton {
+    padding: var(--spacing-xs, 0.5rem);
+    font-size: 0.75rem;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .sortButton {
+    transition: none;
+  }
+}

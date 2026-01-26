@@ -4,6 +4,59 @@
   gap: var(--spacing-md);
 }
 
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 0.75rem);
+}
+
+.freezeButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.5rem);
+  padding: var(--spacing-xs, 0.5rem) var(--spacing-sm, 0.75rem);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--background, #f9fafb);
+  color: var(--text-caption, #6b7280);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary, #3b82f6);
+    color: white;
+    border-color: var(--btn-primary, #3b82f6);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #3b82f6);
+    outline-offset: 2px;
+  }
+
+  &.frozen {
+    background: var(--success, #10b981);
+    color: white;
+    border-color: var(--success, #10b981);
+
+    &:hover:not(:disabled) {
+      background: var(--success-dark, #059669);
+      border-color: var(--success-dark, #059669);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 .list {
   display: flex;
   flex-direction: column;

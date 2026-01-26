@@ -2129,5 +2129,14 @@
   "exportSurveyData": "ייצוא נתוני סקר",
   "includeTestData": "כלול נתוני בדיקה",
   "includeTestDataHint": "אם מסומן, תשובות הבדיקה יכללו בייצוא",
-  "downloading": "מוריד..."
+  "downloading": "מוריד...",
+
+  "Consensus": "קונצנזוס",
+  "Random": "אקראי",
+  "Newest": "החדשים",
+  "Sort suggestions by": "מיין הצעות לפי",
+  "Stop": "עצור",
+  "Resume": "המשך",
+  "Stop live updates": "עצור עדכונים בזמן אמת",
+  "Resume live updates": "המשך עדכונים בזמן אמת"
 }
