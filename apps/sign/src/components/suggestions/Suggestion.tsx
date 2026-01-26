@@ -74,10 +74,9 @@ export default function Suggestion({
       isLoading,
     });
 
-    if (!userId || !userDisplayName || isOwner || isLoading) {
+    if (!userId || isOwner || isLoading) {
       console.warn('[handleVote] Blocked due to conditions:', {
         hasUserId: !!userId,
-        hasUserDisplayName: !!userDisplayName,
         isOwner,
         isLoading,
       });
@@ -87,6 +86,8 @@ export default function Suggestion({
     setIsLoading(true);
 
     try {
+      // Use 'Anonymous' as default display name for anonymous users
+      const displayName = userDisplayName || 'Anonymous';
       // If clicking the same vote, remove it
       if (userEvaluation === vote) {
         console.info('[handleVote] Removing existing vote');
@@ -101,7 +102,7 @@ export default function Suggestion({
         await setSuggestionEvaluation({
           suggestionId: suggestion.suggestionId,
           userId,
-          userDisplayName,
+          userDisplayName: displayName,
           evaluation: vote,
         });
         setUserEvaluation(vote);
