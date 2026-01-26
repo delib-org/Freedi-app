@@ -104,13 +104,7 @@ export default function EditorPage() {
         type: editType,
       });
 
-      // Update local state
-      setParagraphs(prev =>
-        prev.map(p => p.paragraphId === paragraphId
-          ? { ...p, content: editContent, type: editType }
-          : p
-        )
-      );
+      // Real-time listener will update UI automatically - no manual state update needed
       setEditingParagraph(null);
 
       console.info('[EditorPage] Paragraph updated successfully', { paragraphId });
@@ -137,8 +131,7 @@ export default function EditorPage() {
       // Delete paragraph using direct Firestore write (soft delete)
       await deleteParagraphStatementToDB(paragraphId);
 
-      // Update local state
-      setParagraphs(prev => prev.filter(p => p.paragraphId !== paragraphId));
+      // Real-time listener will update UI automatically - no manual state update needed
 
       console.info('[EditorPage] Paragraph deleted successfully', { paragraphId });
     } catch (error) {
@@ -177,15 +170,7 @@ export default function EditorPage() {
         },
       });
 
-      // Add to local state
-      const newParagraph: Paragraph = {
-        paragraphId,
-        content: newContent,
-        type: newType,
-        order: paragraphs.length,
-      };
-
-      setParagraphs(prev => [...prev, newParagraph].sort((a, b) => a.order - b.order));
+      // Real-time listener will update UI automatically - no manual state update needed
       setShowAddModal(false);
       setNewContent('');
       setNewType(ParagraphType.paragraph);
