@@ -17,17 +17,7 @@ export function useAutoLogin() {
   useEffect(() => {
     // If no Firebase Auth user, auto-login anonymously
     if (!user) {
-      console.info('[useAutoLogin] No Firebase Auth user detected, logging in anonymously...');
-
       anonymousLogin()
-        .then((firebaseUser) => {
-          if (firebaseUser) {
-            console.info('[useAutoLogin] Anonymous login successful', {
-              uid: firebaseUser.uid,
-              isAnonymous: firebaseUser.isAnonymous,
-            });
-          }
-        })
         .catch((error) => {
           console.error('[useAutoLogin] Failed to login anonymously:', error);
         });

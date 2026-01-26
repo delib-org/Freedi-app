@@ -68,22 +68,7 @@ export async function setSuggestionEvaluation({
       },
     };
 
-    console.info('[setSuggestionEvaluation] Writing evaluation to Firestore', {
-      evaluationId,
-      suggestionId,
-      parentId,
-      userId,
-      evaluation,
-      collection: Collections.evaluations,
-    });
-
     await setDoc(evaluationRef, evaluationData, { merge: true });
-
-    console.info('[setSuggestionEvaluation] Evaluation saved successfully', {
-      suggestionId,
-      userId,
-      evaluation,
-    });
   } catch (error) {
     logError(error, {
       operation: 'controllers.setSuggestionEvaluation',
@@ -114,11 +99,6 @@ export async function removeSuggestionEvaluation({
     const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
 
     await deleteDoc(evaluationRef);
-
-    console.info('[removeSuggestionEvaluation] Evaluation removed', {
-      suggestionId,
-      userId,
-    });
   } catch (error) {
     logError(error, {
       operation: 'controllers.removeSuggestionEvaluation',

@@ -39,16 +39,6 @@ export default function SuggestionThread({
   const { decrementSuggestionCount } = useUIStore();
   const user = useAutoLogin(); // Auto-login anonymously if not logged in
 
-  // Debug logging
-  useEffect(() => {
-    console.log('[SuggestionThread] User state:', {
-      hasUser: !!user,
-      uid: user?.uid,
-      displayName: user?.displayName,
-      isAnonymous: user?.isAnonymous,
-    });
-  }, [user]);
-
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);
   const [sortType, setSortType] = useState<SortType>('newest'); // Default to newest

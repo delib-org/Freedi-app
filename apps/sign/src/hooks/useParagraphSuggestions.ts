@@ -69,16 +69,6 @@ export function useParagraphSuggestions(
           });
 
           setSuggestions(updatedSuggestions);
-
-          console.info('[useParagraphSuggestions] Updated suggestions', {
-            paragraphId,
-            count: updatedSuggestions.length,
-            suggestions: updatedSuggestions.map(s => ({
-              id: s.statementId,
-              consensus: s.consensus,
-              evaluation: s.evaluation,
-            })),
-          });
         },
         (error) => {
           logError(error, {
@@ -164,11 +154,6 @@ export function useDocumentSuggestions(
           });
 
           setSuggestionMap(newSuggestionMap);
-
-          console.info('[useDocumentSuggestions] Updated suggestions', {
-            documentId,
-            paragraphCount: Object.keys(newSuggestionMap).length,
-          });
         },
         (error) => {
           logError(error, {
