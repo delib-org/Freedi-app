@@ -33,6 +33,16 @@ export default function Suggestion({
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Debug logging for props
+  useEffect(() => {
+    console.log('[Suggestion] Component props:', {
+      suggestionId: suggestion.suggestionId,
+      userId,
+      userDisplayName,
+      isOwner: userId && suggestion.creatorId === userId,
+    });
+  }, [suggestion.suggestionId, userId, userDisplayName, suggestion.creatorId]);
+
   // Check if current user owns this suggestion
   const isOwner = userId && suggestion.creatorId === userId;
 
@@ -57,13 +67,29 @@ export default function Suggestion({
 
   // Handle evaluation (vote up/down) with direct Firestore write
   const handleVote = async (vote: number) => {
-    if (!userId || !userDisplayName || isOwner || isLoading) return;
+    console.log('[handleVote] Called with vote:', vote, {
+      userId,
+      userDisplayName,
+      isOwner,
+      isLoading,
+    });
+
+    if (!userId || !userDisplayName || isOwner || isLoading) {
+      console.warn('[handleVote] Blocked due to conditions:', {
+        hasUserId: !!userId,
+        hasUserDisplayName: !!userDisplayName,
+        isOwner,
+        isLoading,
+      });
+      return;
+    }
 
     setIsLoading(true);
 
     try {
       // If clicking the same vote, remove it
       if (userEvaluation === vote) {
+        console.info('[handleVote] Removing existing vote');
         await removeSuggestionEvaluation({
           suggestionId: suggestion.suggestionId,
           userId,
@@ -71,6 +97,7 @@ export default function Suggestion({
         setUserEvaluation(null);
       } else {
         // Create or update evaluation
+        console.info('[handleVote] Creating/updating vote');
         await setSuggestionEvaluation({
           suggestionId: suggestion.suggestionId,
           userId,
@@ -82,9 +109,10 @@ export default function Suggestion({
         addUserInteraction(paragraphId);
       }
 
+      console.info('[handleVote] Vote completed successfully');
       // Note: Consensus will be updated automatically by Firebase Function and real-time listener
     } catch (err) {
-      console.error('Error handling vote:', err);
+      console.error('[handleVote] Error handling vote:', err);
     } finally {
       setIsLoading(false);
     }
