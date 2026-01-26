@@ -5,7 +5,7 @@
 
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { Collections, createParagraphStatement, ParagraphType } from '@freedi/shared-types';
+import { Collections, createParagraphStatement, ParagraphType, Paragraph } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface CreateParagraphParams {
@@ -30,11 +30,17 @@ export async function createParagraphStatementToDB(params: CreateParagraphParams
   try {
     const firestore = getFirebaseFirestore();
 
+    // First, create a Paragraph object
+    const paragraph: Paragraph = {
+      paragraphId: `paragraph_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      type: params.type,
+      content: params.content,
+      order: params.order,
+    };
+
     // Create the paragraph statement object
     const paragraphStatement = createParagraphStatement(
-      params.content,
-      params.type,
-      params.order,
+      paragraph,
       params.documentId,
       params.creator
     );
