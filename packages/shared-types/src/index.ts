@@ -201,6 +201,8 @@ export {
 export {
   createBasicStatement,
   createStatementObject,
+  createParagraphStatement,
+  createSuggestionStatement,
   defaultStatementSettings
 } from "./models/statement/StatementUtils";
 export type { CreateStatementParams } from "./models/statement/StatementUtils";
