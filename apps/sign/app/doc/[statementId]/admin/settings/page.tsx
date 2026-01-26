@@ -60,6 +60,8 @@ interface Settings {
   allowHeaderReactions: boolean;
   /** Custom colors for each heading level */
   headerColors: HeaderColors;
+  /** When true, non-interactive elements use normal text color instead of dimmed styling */
+  nonInteractiveNormalStyle: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -93,6 +95,7 @@ export default function AdminSettingsPage() {
     explanationVideoMode: 'optional',
     allowHeaderReactions: false,
     headerColors: DEFAULT_HEADER_COLORS,
+    nonInteractiveNormalStyle: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -368,6 +371,21 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.showViewCounts ? styles.active : ''}`}
             onClick={() => handleToggle('showViewCounts')}
             aria-pressed={settings.showViewCounts}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Non-Interactive Normal Style')}</p>
+            <p className={styles.settingDescription}>
+              {t('Display non-interactive paragraphs with normal text color instead of dimmed/disabled styling')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.nonInteractiveNormalStyle ? styles.active : ''}`}
+            onClick={() => handleToggle('nonInteractiveNormalStyle')}
+            aria-pressed={settings.nonInteractiveNormalStyle}
           />
         </div>
       </section>

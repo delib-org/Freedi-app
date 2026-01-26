@@ -19,6 +19,7 @@ jest.mock('../paragraph/ParagraphCard.module.scss', () => ({
 	pending: 'pending',
 	interacted: 'interacted',
 	nonInteractive: 'nonInteractive',
+	nonInteractiveNormal: 'nonInteractiveNormal',
 	expanded: 'expanded',
 	content: 'content',
 	contentWrapper: 'contentWrapper',
@@ -51,6 +52,16 @@ jest.mock('@/store/uiStore', () => ({
 			approvals: mockApprovals,
 			commentCounts: mockCommentCounts,
 			userInteractions: mockUserInteractions,
+		};
+		return selector(state);
+	},
+}));
+
+// Mock accessibility store
+jest.mock('@/store/accessibilityStore', () => ({
+	useAccessibilityStore: (selector: (state: unknown) => unknown) => {
+		const state = {
+			contrastMode: 'default',
 		};
 		return selector(state);
 	},
@@ -211,6 +222,26 @@ describe('ParagraphCard', () => {
 			};
 			render(<ParagraphCard {...props} />);
 			expect(screen.queryByText('Informational')).not.toBeInTheDocument();
+		});
+
+		it('applies normal style class when nonInteractiveNormalStyle is true', () => {
+			const props = {
+				...defaultProps,
+				paragraph: { ...defaultProps.paragraph, isNonInteractive: true },
+				nonInteractiveNormalStyle: true,
+			};
+			render(<ParagraphCard {...props} />);
+			expect(document.querySelector('.nonInteractiveNormal')).toBeInTheDocument();
+		});
+
+		it('does not apply normal style class when nonInteractiveNormalStyle is false', () => {
+			const props = {
+				...defaultProps,
+				paragraph: { ...defaultProps.paragraph, isNonInteractive: true },
+				nonInteractiveNormalStyle: false,
+			};
+			render(<ParagraphCard {...props} />);
+			expect(document.querySelector('.nonInteractiveNormal')).not.toBeInTheDocument();
 		});
 	});
 

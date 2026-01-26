@@ -160,6 +160,9 @@ export interface DocumentSettings {
   allowHeaderReactions?: boolean;
   /** Custom colors for each heading level */
   headerColors?: HeaderColors;
+  // Non-interactive element styling
+  /** When true, non-interactive elements use normal text color instead of dimmed/disabled styling */
+  nonInteractiveNormalStyle?: boolean;
 }
 
 // Default branding constants
@@ -189,4 +192,5 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   enhancedVisibility: false,
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
+  nonInteractiveNormalStyle: false,
 };
