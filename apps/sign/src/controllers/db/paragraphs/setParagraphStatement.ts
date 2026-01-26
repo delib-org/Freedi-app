@@ -96,3 +96,29 @@ export async function updateParagraphStatementToDB({
     throw error;
   }
 }
+
+/**
+ * Delete (hide) a paragraph statement
+ */
+export async function deleteParagraphStatementToDB(paragraphId: string): Promise<void> {
+  try {
+    const firestore = getFirebaseFirestore();
+    const statementRef = doc(firestore, Collections.statements, paragraphId);
+
+    // Soft delete by marking as hidden
+    await updateDoc(statementRef, {
+      hide: true,
+      lastUpdate: Date.now(),
+    });
+
+    console.info('[deleteParagraphStatementToDB] Paragraph hidden', {
+      paragraphId,
+    });
+  } catch (error) {
+    logError(error, {
+      operation: 'controllers.deleteParagraphStatementToDB',
+      paragraphId,
+    });
+    throw error;
+  }
+}

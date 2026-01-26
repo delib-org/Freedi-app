@@ -3,11 +3,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { ParagraphType } from '@freedi/shared-types';
+import { ParagraphType, Collections, Statement } from '@freedi/shared-types';
 import { Paragraph } from '@/types';
 import TiptapEditor from '@/components/admin/editor/TiptapEditor';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
+import { useAutoLogin } from '@/hooks/useAutoLogin';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import {
+  createParagraphStatementToDB,
+  updateParagraphStatementToDB,
+  deleteParagraphStatementToDB,
+} from '@/controllers/db/paragraphs/setParagraphStatement';
 import styles from './editor.module.scss';
 
 export default function EditorPage() {
@@ -16,6 +24,7 @@ export default function EditorPage() {
   const statementId = params.statementId as string;
   const { t } = useTranslation();
   const { canManageSettings } = useAdminContext();
+  const user = useAutoLogin(); // Auto-login for Firebase Auth
 
   const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
   const [loading, setLoading] = useState(true);
@@ -28,24 +37,50 @@ export default function EditorPage() {
   const [newType, setNewType] = useState<ParagraphType>(ParagraphType.paragraph);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-  const fetchParagraphs = useCallback(async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`/api/documents/${statementId}`);
-      if (response.ok) {
-        const data = await response.json();
-        setParagraphs(data.paragraphs || []);
-      }
-    } catch (error) {
-      console.error('Failed to fetch paragraphs:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [statementId]);
-
+  // Real-time listener for paragraphs
   useEffect(() => {
-    fetchParagraphs();
-  }, [fetchParagraphs]);
+    setLoading(true);
+
+    const firestore = getFirebaseFirestore();
+    const q = query(
+      collection(firestore, Collections.statements),
+      where('parentId', '==', statementId),
+      where('doc.isOfficialParagraph', '==', true),
+      orderBy('doc.order', 'asc')
+    );
+
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const paragraphStatements: Paragraph[] = [];
+
+        snapshot.forEach((doc) => {
+          const statement = doc.data() as Statement;
+          if (!statement.hide) {
+            paragraphStatements.push({
+              paragraphId: statement.statementId,
+              content: statement.statement,
+              type: (statement.doc?.type as ParagraphType) || ParagraphType.paragraph,
+              order: statement.doc?.order || 0,
+            });
+          }
+        });
+
+        setParagraphs(paragraphStatements);
+        setLoading(false);
+
+        console.info('[EditorPage] Paragraphs updated from Firestore', {
+          count: paragraphStatements.length,
+        });
+      },
+      (error) => {
+        console.error('[EditorPage] Error listening to paragraphs:', error);
+        setLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [statementId]);
 
   // Redirect viewers - they cannot access editor
   useEffect(() => {
@@ -55,62 +90,64 @@ export default function EditorPage() {
   }, [canManageSettings, router, statementId]);
 
   const handleSaveParagraph = useCallback(async (paragraphId: string) => {
+    if (!user) {
+      alert(t('Please wait for authentication...'));
+      return;
+    }
+
     setSaving(true);
     try {
-      const response = await fetch(`/api/admin/paragraphs/${paragraphId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documentId: statementId,
-          content: editContent,
-          type: editType,
-        }),
+      // Update paragraph using direct Firestore write
+      await updateParagraphStatementToDB({
+        paragraphId,
+        content: editContent,
+        type: editType,
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setParagraphs(prev =>
-          prev.map(p => p.paragraphId === paragraphId ? data.paragraph : p)
-        );
-        setEditingParagraph(null);
-      } else {
-        const error = await response.json();
-        alert(error.error || t('Failed to save'));
-      }
+      // Update local state
+      setParagraphs(prev =>
+        prev.map(p => p.paragraphId === paragraphId
+          ? { ...p, content: editContent, type: editType }
+          : p
+        )
+      );
+      setEditingParagraph(null);
+
+      console.info('[EditorPage] Paragraph updated successfully', { paragraphId });
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('[EditorPage] Save error:', error);
       alert(t('Failed to save'));
     } finally {
       setSaving(false);
     }
-  }, [statementId, editContent, editType, t]);
+  }, [user, editContent, editType, t]);
 
   const handleDeleteParagraph = useCallback(async (paragraphId: string) => {
     if (!confirm(t('Are you sure you want to delete this paragraph?'))) {
       return;
     }
 
+    if (!user) {
+      alert(t('Please wait for authentication...'));
+      return;
+    }
+
     setSaving(true);
     try {
-      const response = await fetch(`/api/admin/paragraphs/${paragraphId}`, {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ documentId: statementId }),
-      });
+      // Delete paragraph using direct Firestore write (soft delete)
+      await deleteParagraphStatementToDB(paragraphId);
 
-      if (response.ok) {
-        setParagraphs(prev => prev.filter(p => p.paragraphId !== paragraphId));
-      } else {
-        const error = await response.json();
-        alert(error.error || t('Failed to delete'));
-      }
+      // Update local state
+      setParagraphs(prev => prev.filter(p => p.paragraphId !== paragraphId));
+
+      console.info('[EditorPage] Paragraph deleted successfully', { paragraphId });
     } catch (error) {
-      console.error('Delete error:', error);
+      console.error('[EditorPage] Delete error:', error);
       alert(t('Failed to delete'));
     } finally {
       setSaving(false);
     }
-  }, [statementId, t]);
+  }, [user, t]);
 
   const handleAddParagraph = useCallback(async () => {
     if (!newContent.trim() && newType !== ParagraphType.image) {
@@ -118,35 +155,49 @@ export default function EditorPage() {
       return;
     }
 
+    if (!user) {
+      alert(t('Please wait for authentication...'));
+      return;
+    }
+
     setSaving(true);
     try {
-      const response = await fetch('/api/admin/paragraphs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documentId: statementId,
-          content: newContent,
-          type: newType,
-        }),
+      // Create paragraph using direct Firestore write
+      const paragraphId = await createParagraphStatementToDB({
+        content: newContent,
+        type: newType,
+        order: paragraphs.length,
+        documentId: statementId,
+        creator: {
+          uid: user.uid,
+          displayName: user.displayName || 'Admin',
+          email: user.email || '',
+          photoURL: user.photoURL || '',
+          isAnonymous: user.isAnonymous,
+        },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setParagraphs(prev => [...prev, data.paragraph].sort((a, b) => a.order - b.order));
-        setShowAddModal(false);
-        setNewContent('');
-        setNewType(ParagraphType.paragraph);
-      } else {
-        const error = await response.json();
-        alert(error.error || t('Failed to add'));
-      }
+      // Add to local state
+      const newParagraph: Paragraph = {
+        paragraphId,
+        content: newContent,
+        type: newType,
+        order: paragraphs.length,
+      };
+
+      setParagraphs(prev => [...prev, newParagraph].sort((a, b) => a.order - b.order));
+      setShowAddModal(false);
+      setNewContent('');
+      setNewType(ParagraphType.paragraph);
+
+      console.info('[EditorPage] Paragraph created successfully', { paragraphId });
     } catch (error) {
-      console.error('Add error:', error);
+      console.error('[EditorPage] Add error:', error);
       alert(t('Failed to add'));
     } finally {
       setSaving(false);
     }
-  }, [statementId, newContent, newType, t]);
+  }, [user, statementId, newContent, newType, paragraphs.length, t]);
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -167,30 +218,17 @@ export default function EditorPage() {
   const handleDragEnd = useCallback(async () => {
     if (draggedIndex === null) return;
 
-    // Save new order to server
-    const orderedIds = paragraphs.map(p => p.paragraphId);
+    // TODO: Implement reorder using direct Firestore batch updates
+    // For now, just reset draggedIndex
+    // The real-time listener will handle updates automatically
 
-    try {
-      const response = await fetch('/api/admin/paragraphs/reorder', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          documentId: statementId,
-          orderedParagraphIds: orderedIds,
-        }),
-      });
-
-      if (!response.ok) {
-        console.error('Failed to save order');
-        fetchParagraphs(); // Revert on failure
-      }
-    } catch (error) {
-      console.error('Reorder error:', error);
-      fetchParagraphs(); // Revert on failure
-    }
+    console.info('[EditorPage] Drag ended - reorder not yet implemented', {
+      draggedIndex,
+      newOrder: paragraphs.map(p => p.paragraphId),
+    });
 
     setDraggedIndex(null);
-  }, [draggedIndex, paragraphs, statementId, fetchParagraphs]);
+  }, [draggedIndex, paragraphs]);
 
   const startEditing = useCallback((paragraph: Paragraph) => {
     setEditingParagraph(paragraph.paragraphId);
@@ -204,8 +242,9 @@ export default function EditorPage() {
   }, []);
 
   const handleImportSuccess = useCallback(() => {
-    fetchParagraphs();
-  }, [fetchParagraphs]);
+    // Real-time listener will automatically update paragraphs
+    console.info('[EditorPage] Import completed - waiting for real-time updates');
+  }, []);
 
   if (loading) {
     return (
