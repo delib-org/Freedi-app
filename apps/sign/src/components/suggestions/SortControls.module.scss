@@ -55,10 +55,6 @@
 /* RTL Support */
 :global([data-text-dir="rtl"]),
 [dir="rtl"] {
-  .sortControls {
-    flex-direction: row-reverse;
-  }
-
   .sortButton {
     &:not(:first-child) {
       margin-left: 0;
