@@ -27,6 +27,11 @@ import {
   connectDatabaseEmulator,
   Database,
 } from 'firebase/database';
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  Firestore,
+} from 'firebase/firestore';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
@@ -44,9 +49,11 @@ let app: FirebaseApp;
 let auth: Auth;
 let storage: FirebaseStorage;
 let database: Database;
+let firestore: Firestore;
 let authEmulatorConnected = false;
 let storageEmulatorConnected = false;
 let databaseEmulatorConnected = false;
+let firestoreEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -337,6 +344,31 @@ export function getFirebaseRealtimeDatabase(): Database {
   }
 
   return database;
+}
+
+/**
+ * Get Firebase Firestore instance
+ */
+export function getFirebaseFirestore(): Firestore {
+  if (!firestore) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    firestore = getFirestore(app);
+
+    // Connect to Firestore emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
+      try {
+        connectFirestoreEmulator(firestore, 'localhost', 8080);
+        firestoreEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Firestore emulator');
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return firestore;
 }
 
 /**

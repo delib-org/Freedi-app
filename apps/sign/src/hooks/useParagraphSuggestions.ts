@@ -10,8 +10,7 @@
 
 import { useEffect, useState } from 'react';
 import { collection, query, where, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
-import { getFirestore } from 'firebase/firestore';
-import { initializeFirebaseClient } from '@/lib/firebase/client';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { QUERY_LIMITS } from '@/constants/common';
@@ -42,9 +41,8 @@ export function useParagraphSuggestions(
     let unsubscribe: Unsubscribe | null = null;
 
     try {
-      // Initialize Firebase client
-      initializeFirebaseClient();
-      const firestore = getFirestore();
+      // Get Firestore instance (auto-initializes and connects to emulator)
+      const firestore = getFirebaseFirestore();
 
       // Query suggestions for this paragraph
       const q = query(
@@ -128,8 +126,8 @@ export function useDocumentSuggestions(
     let unsubscribe: Unsubscribe | null = null;
 
     try {
-      initializeFirebaseClient();
-      const firestore = getFirestore();
+      // Get Firestore instance (auto-initializes and connects to emulator)
+      const firestore = getFirebaseFirestore();
 
       // Query all suggestions for this document
       const q = query(

@@ -71,7 +71,7 @@ export default function SuggestionThread({
       });
 
       if (response.ok) {
-        setSuggestions((prev) => prev.filter((s) => s.suggestionId !== suggestionId));
+        // Real-time listener will update suggestions automatically
         decrementSuggestionCount(paragraphId);
       }
     } catch (err) {
