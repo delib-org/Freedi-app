@@ -8,7 +8,7 @@ import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
 import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
-import { htmlToMarkdown } from '@/lib/utils/htmlToMarkdown';
+import { htmlToMarkdown, markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
 import styles from './SuggestionModal.module.scss';
 
@@ -116,10 +116,11 @@ export default function SuggestionModal({
     [setSuggestedContent]
   );
 
-  // Pre-fill if editing existing suggestion
+  // Pre-fill if editing existing suggestion (convert HTML to Markdown)
   useEffect(() => {
     if (existingSuggestion && !hasDraft) {
-      setSuggestedContent(existingSuggestion.suggestedContent);
+      const markdownContent = htmlToMarkdown(existingSuggestion.suggestedContent);
+      setSuggestedContent(markdownContent);
       setReasoning(existingSuggestion.reasoning || '');
     }
   }, [existingSuggestion, hasDraft, setSuggestedContent, setReasoning]);
@@ -157,15 +158,18 @@ export default function SuggestionModal({
     setErrorMessage('');
 
     try {
+      // Convert Markdown to HTML before submitting
+      const htmlContent = markdownToHtml(suggestedContent.trim());
+
       const method = isEditing ? 'PUT' : 'POST';
       const body = isEditing
         ? {
             suggestionId: existingSuggestion.suggestionId,
-            suggestedContent: suggestedContent.trim(),
+            suggestedContent: htmlContent,
             reasoning: reasoning.trim(),
           }
         : {
-            suggestedContent: suggestedContent.trim(),
+            suggestedContent: htmlContent,
             reasoning: reasoning.trim(),
             documentId,
             originalContent,

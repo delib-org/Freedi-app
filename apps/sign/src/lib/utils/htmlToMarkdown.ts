@@ -72,6 +72,72 @@ export function htmlToMarkdown(html: string): string {
 }
 
 /**
+ * Convert Markdown to HTML
+ * Handles common formatting: bold, italic, headers, lists, line breaks
+ */
+export function markdownToHtml(markdown: string): string {
+  if (!markdown) return '';
+
+  let html = markdown;
+
+  // Escape HTML entities first (prevent XSS)
+  html = html.replace(/&/g, '&amp;');
+  html = html.replace(/</g, '&lt;');
+  html = html.replace(/>/g, '&gt;');
+
+  // Convert headers (must be at start of line)
+  html = html.replace(/^######\s+(.+)$/gm, '<h6>$1</h6>');
+  html = html.replace(/^#####\s+(.+)$/gm, '<h5>$1</h5>');
+  html = html.replace(/^####\s+(.+)$/gm, '<h4>$1</h4>');
+  html = html.replace(/^###\s+(.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^##\s+(.+)$/gm, '<h2>$1</h2>');
+  html = html.replace(/^#\s+(.+)$/gm, '<h1>$1</h1>');
+
+  // Convert **bold** and __bold__
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+  // Convert *italic* and _italic_ (but not __ which was already converted)
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>');
+
+  // Convert unordered lists (lines starting with -, *, or +)
+  html = html.replace(/^[\-\*\+]\s+(.+)$/gm, '<li>$1</li>');
+  // Wrap consecutive <li> in <ul>
+  html = html.replace(/(<li>.*<\/li>(\n|$))+/g, (match) => `<ul>${match}</ul>`);
+
+  // Convert numbered lists (lines starting with 1., 2., etc.)
+  html = html.replace(/^\d+\.\s+(.+)$/gm, '<li>$1</li>');
+  // Wrap consecutive numbered <li> in <ol>
+  html = html.replace(/(<li>.*<\/li>(\n|$))+/g, (match) => {
+    // Only wrap if not already wrapped by <ul>
+    if (!match.includes('<ul>')) {
+      return `<ol>${match}</ol>`;
+    }
+    return match;
+  });
+
+  // Convert line breaks (double newline = paragraph, single newline = <br>)
+  const paragraphs = html.split('\n\n');
+  html = paragraphs
+    .map((para) => {
+      // Don't wrap if already has block-level tags
+      if (para.match(/^<(h[1-6]|ul|ol|li)/)) {
+        return para;
+      }
+      // Convert single newlines to <br>
+      const withBreaks = para.replace(/\n/g, '<br>');
+      return `<p>${withBreaks}</p>`;
+    })
+    .join('\n');
+
+  // Clean up extra newlines
+  html = html.replace(/\n{3,}/g, '\n\n');
+
+  return html.trim();
+}
+
+/**
  * Strip all HTML tags and return plain text
  */
 export function stripHTML(html: string): string {
