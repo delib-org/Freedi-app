@@ -10,6 +10,7 @@ import {
   getUserEvaluation,
 } from '@/controllers/db/evaluations/setSuggestionEvaluation';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
+import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
@@ -37,10 +38,19 @@ export default function Suggestion({
   const [isLoading, setIsLoading] = useState(false);
 
   // Sanitize HTML content to prevent XSS attacks
-  const sanitizedContent = useMemo(
-    () => sanitizeHTML(suggestion.suggestedContent || ''),
-    [suggestion.suggestedContent]
-  );
+  // If content contains Markdown syntax, convert it to HTML first
+  const sanitizedContent = useMemo(() => {
+    const content = suggestion.suggestedContent || '';
+
+    // Check if content looks like Markdown (contains ** or * or # or - at line start)
+    const hasMarkdownSyntax = /\*\*|\*|^#{1,6}\s|^[-*+]\s/m.test(content);
+
+    // If it's Markdown, convert to HTML first, then sanitize
+    // If it's already HTML, just sanitize
+    const htmlContent = hasMarkdownSyntax ? markdownToHtml(content) : content;
+
+    return sanitizeHTML(htmlContent);
+  }, [suggestion.suggestedContent]);
 
   // Check if current user owns this suggestion
   const isOwner = userId && suggestion.creatorId === userId;
