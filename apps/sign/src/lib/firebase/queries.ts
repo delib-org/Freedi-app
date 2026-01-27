@@ -581,6 +581,8 @@ export async function getSuggestions(paragraphId: string): Promise<Suggestion[]>
 /**
  * Get suggestion counts for all paragraphs in a document
  * Returns a map of paragraphId -> suggestionCount
+ *
+ * Queries the statements collection for suggestion statements (children of official paragraphs)
  */
 export async function getSuggestionCountsForDocument(
   documentId: string,
@@ -599,18 +601,32 @@ export async function getSuggestionCountsForDocument(
       return suggestionCounts;
     }
 
-    // Query all suggestions for this document
+    // Query all suggestion statements for this document
+    // Suggestions are statements where:
+    // - statementType is 'option'
+    // - parentId is one of the official paragraphs
+    // - doc.isOfficialParagraph is not true (filter out official paragraphs themselves)
     const snapshot = await db
-      .collection(Collections.suggestions)
-      .where('documentId', '==', documentId)
-      .where('hide', '==', false)
+      .collection(Collections.statements)
+      .where('topParentId', '==', documentId)
+      .where('statementType', '==', StatementType.option)
       .get();
 
-    // Count suggestions per paragraph
+    // Count suggestions per paragraph (filter and count client-side)
     snapshot.docs.forEach((doc) => {
-      const suggestion = doc.data() as Suggestion;
-      if (paragraphIds.includes(suggestion.paragraphId)) {
-        suggestionCounts[suggestion.paragraphId] = (suggestionCounts[suggestion.paragraphId] || 0) + 1;
+      const statement = doc.data() as Statement;
+
+      // Only count if:
+      // 1. Not hidden
+      // 2. ParentId is a paragraph (not the document itself)
+      // 3. Not an official paragraph
+      if (
+        !statement.hide &&
+        statement.parentId &&
+        paragraphIds.includes(statement.parentId) &&
+        !statement.doc?.isOfficialParagraph
+      ) {
+        suggestionCounts[statement.parentId] = (suggestionCounts[statement.parentId] || 0) + 1;
       }
     });
 
