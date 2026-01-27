@@ -124,6 +124,13 @@ export default function SuggestionModal({
     }
   }, [existingSuggestion, hasDraft, setSuggestedContent, setReasoning]);
 
+  // Initialize with markdown original content for new suggestions
+  useEffect(() => {
+    if (!existingSuggestion && !hasDraft && !suggestedContent) {
+      setSuggestedContent(markdownOriginalContent);
+    }
+  }, [existingSuggestion, hasDraft, suggestedContent, markdownOriginalContent, setSuggestedContent]);
+
   const isEditing = !!existingSuggestion;
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
 
