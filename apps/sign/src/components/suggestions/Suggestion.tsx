@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Suggestion as SuggestionType } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, UIState } from '@/store/uiStore';
@@ -9,6 +9,7 @@ import {
   removeSuggestionEvaluation,
   getUserEvaluation,
 } from '@/controllers/db/evaluations/setSuggestionEvaluation';
+import { sanitizeHTML } from '@/lib/utils/sanitize';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
@@ -34,6 +35,12 @@ export default function Suggestion({
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sanitize HTML content to prevent XSS attacks
+  const sanitizedContent = useMemo(
+    () => sanitizeHTML(suggestion.suggestedContent || ''),
+    [suggestion.suggestedContent]
+  );
 
   // Check if current user owns this suggestion
   const isOwner = userId && suggestion.creatorId === userId;
@@ -190,7 +197,11 @@ export default function Suggestion({
       </header>
 
       <div className={styles.content}>
-        <p className={styles.suggestedText}>{suggestion.suggestedContent}</p>
+        <div
+          className={styles.suggestedText}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+          suppressHydrationWarning
+        />
         {suggestion.reasoning && (
           <div className={styles.reasoning}>
             <span className={styles.reasoningLabel}>{t('Reasoning')}:</span>
