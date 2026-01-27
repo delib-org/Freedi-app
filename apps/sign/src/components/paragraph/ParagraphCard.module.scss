@@ -8,6 +8,9 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   overflow: visible; // Allow comment badge to overflow
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 
   // Hover effect to indicate interactivity (desktop) - more visible for accessibility
   @media (hover: hover) {
@@ -62,6 +65,10 @@
   font-size: var(--p-font-size);
   user-select: text; // Allow text selection
   cursor: text; // Show text cursor when hovering over content
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 
   // Inline formatting styles from Google Docs import
   strong {
@@ -106,6 +113,9 @@
     max-height 0.2s ease,
     margin-top 0.2s ease;
   pointer-events: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 
   // Enhanced visibility mode - show ghosted buttons always (admin-controlled per document)
   &.alwaysVisible {
@@ -539,7 +549,7 @@
 // Responsive adjustments
 @media (max-width: 600px) {
   .card {
-    padding-inline-start: 0.75rem; // Keep space for wider state indicator
+    padding-inline-start: 1rem; // Increased space for state indicator on mobile (16px)
   }
 
   .type-h1 .content {
@@ -661,8 +671,8 @@
 
   @media (max-width: 600px) {
     .card {
-      padding-inline-end: 0.625rem;
-      padding-inline-start: 0;
+      padding-inline-end: 0; // Left side in RTL
+      padding-inline-start: 1rem; // Right side in RTL - where the indicator is (16px)
     }
   }
 }
@@ -740,7 +750,7 @@
 
   @media (max-width: 600px) {
     .card {
-      padding-inline-start: 0.625rem;
+      padding-inline-start: 1rem; // Increased to prevent overlap (16px)
       padding-inline-end: 0;
     }
   }
