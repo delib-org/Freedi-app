@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
@@ -8,6 +8,7 @@ import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
 import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
+import { htmlToMarkdown } from '@/lib/utils/htmlToMarkdown';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
 import styles from './SuggestionModal.module.scss';
 
@@ -44,6 +45,12 @@ export default function SuggestionModal({
   const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Convert HTML original content to Markdown for user-friendly editing
+  const markdownOriginalContent = useMemo(
+    () => htmlToMarkdown(originalContent),
+    [originalContent]
+  );
+
   // Draft handling
   const {
     suggestedContent,
@@ -68,7 +75,7 @@ export default function SuggestionModal({
         paragraphId,
         user.uid,
         user.displayName || 'Anonymous',
-        suggestedContent || originalContent
+        suggestedContent || markdownOriginalContent
       )
       .catch((error) => {
         console.error('Failed to join editing session:', error);
@@ -91,7 +98,7 @@ export default function SuggestionModal({
       unsubscribe();
       manager.cleanup();
     };
-  }, [user, documentId, paragraphId, originalContent, suggestedContent, setSuggestedContent]);
+  }, [user, documentId, paragraphId, markdownOriginalContent, suggestedContent, setSuggestedContent]);
 
   // Handle textarea changes with real-time sync
   const handleContentChange = useCallback(
