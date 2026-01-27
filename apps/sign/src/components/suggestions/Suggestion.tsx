@@ -131,7 +131,7 @@ export default function Suggestion({
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {suggestion.creatorDisplayName || t('Official')}
+            {suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous'))}
           </span>
           <span className={styles.date}>
             {formatDate(suggestion.createdAt)}
