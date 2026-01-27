@@ -106,6 +106,21 @@ export default function SuggestionThread({
 
   const isLoading = false; // Real-time hook handles loading internally
 
+  // Create current paragraph as a pseudo-suggestion (not votable by itself yet)
+  const currentParagraphSuggestion = useMemo((): SuggestionType => ({
+    suggestionId: `current-${paragraphId}`,
+    paragraphId: paragraphId,
+    documentId: documentId,
+    suggestedContent: originalContent,
+    reasoning: '',
+    creatorId: 'official',
+    creatorName: t('Official'),
+    creatorDisplayName: t('Official'),
+    createdAt: Date.now(), // Use current time for now
+    votes: 0,
+    consensus: 0, // TODO: Calculate consensus from evaluations
+  }), [paragraphId, documentId, originalContent, t]);
+
   // Check if user already has a suggestion
   const userSuggestion = useMemo(() => {
     if (!user) return null;
@@ -198,6 +213,26 @@ export default function SuggestionThread({
         </button>
       </div>
 
+      {/* Current version section */}
+      <div className={styles.currentSection}>
+        <Suggestion
+          suggestion={currentParagraphSuggestion}
+          userId={user?.uid || null}
+          userDisplayName={user?.displayName || null}
+          paragraphId={paragraphId}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          isCurrent={true}
+        />
+      </div>
+
+      {/* Divider between current and alternatives */}
+      {sortedSuggestions.length > 0 && (
+        <div className={styles.sectionDivider}>
+          <span className={styles.dividerLabel}>{t('Suggested Alternatives')}</span>
+        </div>
+      )}
+
       {/* Animated Suggestion List */}
       <Flipper
         flipKey={flipKey}
@@ -222,6 +257,7 @@ export default function SuggestionThread({
                   paragraphId={paragraphId}
                   onDelete={handleDelete}
                   onEdit={handleEdit}
+                  isCurrent={false}
                 />
               </div>
             </Flipped>

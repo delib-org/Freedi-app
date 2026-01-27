@@ -121,6 +121,45 @@
   margin: 0;
 }
 
+/* Current version section */
+.currentSection {
+  margin-bottom: var(--spacing-sm);
+}
+
+.sectionLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Divider between sections */
+.sectionDivider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+}
+
+.sectionDivider::before,
+.sectionDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-light, #e5e7eb);
+}
+
+.dividerLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
 .hasNotice {
   padding: var(--spacing-sm);
   background: rgba(240, 173, 78, 0.1);
@@ -183,6 +222,10 @@
   .empty {
     text-align: right;
   }
+
+  .sectionLabel {
+    text-align: right;
+  }
 }
 
 /* Also support standard dir="rtl" attribute */
@@ -202,6 +245,10 @@
   }
 
   .empty {
+    text-align: right;
+  }
+
+  .sectionLabel {
     text-align: right;
   }
 }

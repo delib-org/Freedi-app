@@ -18,6 +18,7 @@ interface SuggestionProps {
   paragraphId: string;
   onDelete: (suggestionId: string) => void;
   onEdit: (suggestion: SuggestionType) => void;
+  isCurrent?: boolean; // Mark as current official version
 }
 
 export default function Suggestion({
@@ -27,6 +28,7 @@ export default function Suggestion({
   paragraphId,
   onDelete,
   onEdit,
+  isCurrent = false,
 }: SuggestionProps) {
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
@@ -119,20 +121,31 @@ export default function Suggestion({
   };
 
   return (
-    <article className={styles.suggestion}>
+    <article
+      className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''}`}
+      aria-label={isCurrent ? t('Current official version') : undefined}
+    >
       <header className={styles.header}>
-        <div className={styles.avatar}>
+        <div className={`${styles.avatar} ${isCurrent ? styles['avatar--current'] : ''}`}>
           {suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?'}
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {suggestion.creatorDisplayName || t('Anonymous')}
+            {suggestion.creatorDisplayName || t('Official')}
           </span>
           <span className={styles.date}>
             {formatDate(suggestion.createdAt)}
           </span>
         </div>
-        {isOwner && (
+        {isCurrent && (
+          <div className={styles.currentBadge}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            </svg>
+            {t('Current Version')}
+          </div>
+        )}
+        {isOwner && !isCurrent && (
           <div className={styles.ownerActions}>
             <button
               type="button"

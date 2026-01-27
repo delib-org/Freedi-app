@@ -2138,5 +2138,8 @@
   "Stop": "עצור",
   "Resume": "המשך",
   "Stop live updates": "עצור עדכונים בזמן אמת",
-  "Resume live updates": "המשך עדכונים בזמן אמת"
+  "Resume live updates": "המשך עדכונים בזמן אמת",
+  "Current Version": "הגרסה הנוכחית",
+  "Official": "רשמי",
+  "Suggested Alternatives": "חלופות מוצעות"
 }

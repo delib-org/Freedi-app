@@ -2149,5 +2149,8 @@
   "Stop": "Stop",
   "Resume": "Resume",
   "Stop live updates": "Stop live updates",
-  "Resume live updates": "Resume live updates"
+  "Resume live updates": "Resume live updates",
+  "Current Version": "Current Version",
+  "Official": "Official",
+  "Suggested Alternatives": "Suggested Alternatives"
 }
