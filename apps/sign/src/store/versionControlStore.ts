@@ -5,8 +5,11 @@
 
 import { create } from 'zustand';
 import { onSnapshot, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/clientApp';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections, Statement } from '@freedi/shared-types';
+
+// Initialize Firestore
+const db = getFirebaseFirestore();
 
 /**
  * Version Control Settings Interface

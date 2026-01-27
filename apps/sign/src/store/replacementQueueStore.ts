@@ -5,8 +5,11 @@
 
 import { create } from 'zustand';
 import { onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
-import { db } from '@/lib/firebase/clientApp';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections, PendingReplacement, ReplacementQueueStatus } from '@freedi/shared-types';
+
+// Initialize Firestore
+const db = getFirebaseFirestore();
 
 /**
  * Replacement Queue Store State
