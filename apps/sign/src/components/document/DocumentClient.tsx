@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, selectToasts } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
@@ -434,7 +434,11 @@ export default function DocumentClient({
       <HeatMapLegend />
 
       {/* Demographic Filter - admin only for privacy */}
-      {isAdmin && <DemographicFilter documentId={documentId} />}
+      {isAdmin && (
+        <Suspense fallback={null}>
+          <DemographicFilter documentId={documentId} />
+        </Suspense>
+      )}
 
       {/* Comments Modal */}
       {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (
