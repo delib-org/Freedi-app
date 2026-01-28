@@ -9,6 +9,22 @@ import {
 } from '@freedi/shared-types';
 
 /**
+ * Strip HTML tags from text (server-side version)
+ */
+function stripHtml(html: string): string {
+	if (!html) return '';
+	return html
+		.replace(/<[^>]*>/g, '') // Remove HTML tags
+		.replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+		.replace(/&amp;/g, '&') // Replace &amp; with &
+		.replace(/&lt;/g, '<') // Replace &lt; with <
+		.replace(/&gt;/g, '>') // Replace &gt; with >
+		.replace(/&quot;/g, '"') // Replace &quot; with "
+		.replace(/&#39;/g, "'") // Replace &#39; with '
+		.trim();
+}
+
+/**
  * Cloud Function: Create Replacement Queue Item
  *
  * Triggers when a suggestion's consensus crosses the review threshold.
@@ -118,8 +134,8 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 					documentId: after.topParentId,
 					paragraphId: after.parentId,
 					suggestionId: after.statementId,
-					currentText: paragraph.statement,
-					proposedText: after.statement,
+					currentText: stripHtml(paragraph.statement),
+					proposedText: stripHtml(after.statement),
 					consensus: after.consensus,
 					consensusAtCreation: after.consensus, // Snapshot for staleness detection
 					evaluationCount: after.totalEvaluators || 0,

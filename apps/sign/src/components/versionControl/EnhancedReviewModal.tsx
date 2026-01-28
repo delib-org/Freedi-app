@@ -8,6 +8,7 @@ import { PendingReplacement, Paragraph } from '@freedi/shared-types';
 import { DiffView } from './DiffView';
 import { DocumentContextPanel } from './DocumentContextPanel';
 import { ActionConfirmation } from './ActionConfirmation';
+import { stripHtml } from '@/utils/textUtils';
 import styles from './enhancedReviewModal.module.scss';
 
 interface EnhancedReviewModalProps {
@@ -45,16 +46,17 @@ export function EnhancedReviewModal({
 
 	const settings = getSettings(queueItem.documentId);
 
-	// State
+	// State - Strip HTML from queue item text (for backward compatibility with existing data)
 	const [viewMode, setViewMode] = useState<ViewMode>('diff');
-	const [editedText, setEditedText] = useState(queueItem.proposedText);
+	const [editedText, setEditedText] = useState(stripHtml(queueItem.proposedText));
 	const [adminNotes, setAdminNotes] = useState('');
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
 	const [pendingAction, setPendingAction] = useState<ActionType>(null);
 
 	// Derived state
-	const isEdited = editedText !== queueItem.proposedText;
+	const originalProposedText = stripHtml(queueItem.proposedText);
+	const isEdited = editedText !== originalProposedText;
 	const consensusDrop = queueItem.consensusAtCreation - queueItem.consensus;
 	const isStale = consensusDrop > 0.1;
 
@@ -282,8 +284,8 @@ export function EnhancedReviewModal({
 					{viewMode === 'diff' && (
 						<div id="panel-diff" role="tabpanel" className={styles.modal__panel}>
 							<DiffView
-								currentText={queueItem.currentText}
-								proposedText={settings.allowAdminEdit ? editedText : queueItem.proposedText}
+								currentText={stripHtml(queueItem.currentText)}
+								proposedText={settings.allowAdminEdit ? editedText : originalProposedText}
 								mode="inline"
 								highlightWords={true}
 							/>
@@ -294,8 +296,8 @@ export function EnhancedReviewModal({
 					{viewMode === 'sideBySide' && (
 						<div id="panel-sideBySide" role="tabpanel" className={styles.modal__panel}>
 							<DiffView
-								currentText={queueItem.currentText}
-								proposedText={settings.allowAdminEdit ? editedText : queueItem.proposedText}
+								currentText={stripHtml(queueItem.currentText)}
+								proposedText={settings.allowAdminEdit ? editedText : originalProposedText}
 								mode="sideBySide"
 								showLineNumbers={true}
 							/>
@@ -309,7 +311,7 @@ export function EnhancedReviewModal({
 								currentParagraph={currentParagraph}
 								prevParagraph={prevParagraph}
 								nextParagraph={nextParagraph}
-								proposedText={settings.allowAdminEdit ? editedText : queueItem.proposedText}
+								proposedText={settings.allowAdminEdit ? editedText : originalProposedText}
 								paragraphNumber={paragraphIndex + 1}
 								onNavigate={onNavigateToContext}
 							/>
@@ -331,7 +333,7 @@ export function EnhancedReviewModal({
 								{isEdited && (
 									<button
 										type="button"
-										onClick={() => setEditedText(queueItem.proposedText)}
+										onClick={() => setEditedText(originalProposedText)}
 										className={styles.modal__resetButton}
 									>
 										{t('Reset to Original')}

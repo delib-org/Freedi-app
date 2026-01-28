@@ -6,6 +6,22 @@ import { logger } from '@/lib/utils/logger';
 import { verifyAdmin } from '@/lib/utils/versionControlHelpers';
 
 /**
+ * Strip HTML tags from text (server-side version)
+ */
+function stripHtml(html: string): string {
+	if (!html) return '';
+	return html
+		.replace(/<[^>]*>/g, '') // Remove HTML tags
+		.replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
+		.replace(/&amp;/g, '&') // Replace &amp; with &
+		.replace(/&lt;/g, '<') // Replace &lt; with <
+		.replace(/&gt;/g, '>') // Replace &gt; with >
+		.replace(/&quot;/g, '"') // Replace &quot; with "
+		.replace(/&#39;/g, "'") // Replace &#39; with '
+		.trim();
+}
+
+/**
  * POST /api/admin/version-control/[documentId]/sync
  * Scan existing suggestions and add qualifying ones to the review queue
  *
@@ -143,8 +159,8 @@ export async function POST(
 					documentId,
 					paragraphId,
 					suggestionId: topSuggestion.statementId,
-					currentText: paragraph.statement,
-					proposedText: topSuggestion.statement,
+					currentText: stripHtml(paragraph.statement),
+					proposedText: stripHtml(topSuggestion.statement),
 					consensus: topSuggestion.consensus,
 					consensusAtCreation: topSuggestion.consensus,
 					evaluationCount: topSuggestion.totalEvaluators || 0,
