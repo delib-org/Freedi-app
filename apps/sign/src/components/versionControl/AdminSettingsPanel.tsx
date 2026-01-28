@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { useVersionControlStore } from '@/store/versionControlStore';
 import styles from './versionControl.module.scss';
 
@@ -13,6 +14,7 @@ interface AdminSettingsPanelProps {
  * Simplified MVP version - toggle, threshold slider, basic settings
  */
 export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
+	const { t } = useTranslation();
 	const { settings, isLoading, error, subscribeToSettings, updateSettings, getSettings } =
 		useVersionControlStore();
 
@@ -26,6 +28,8 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
 	const [saveSuccess, setSaveSuccess] = useState(false);
+	const [isSyncing, setIsSyncing] = useState(false);
+	const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
 	// Subscribe to settings on mount
 	useEffect(() => {
@@ -54,16 +58,44 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 			setSaveSuccess(true);
 			setTimeout(() => setSaveSuccess(false), 3000);
 		} catch (error) {
-			setSaveError(error instanceof Error ? error.message : 'Failed to save settings');
+			setSaveError(error instanceof Error ? error.message : t('Error loading settings'));
 		} finally {
 			setIsSaving(false);
+		}
+	};
+
+	const handleSyncQueue = async () => {
+		setIsSyncing(true);
+		setSyncMessage(null);
+		setSaveError(null);
+
+		try {
+			const response = await fetch(`/api/admin/version-control/${documentId}/sync`, {
+				method: 'POST',
+			});
+
+			if (!response.ok) {
+				const error = await response.json();
+				throw new Error(error.error || 'Failed to sync queue');
+			}
+
+			const result = await response.json();
+			const message = result.paragraphsScanned === 0
+				? `No paragraphs found to scan. Make sure your document has official paragraphs.`
+				: `${t('Queue synced successfully!')} ${result.addedCount} ${t('suggestions added to queue')}, ${result.skippedCount} ${t('skipped (already in queue)')}. Scanned ${result.paragraphsScanned} paragraphs.`;
+			setSyncMessage(message);
+			setTimeout(() => setSyncMessage(null), 8000);
+		} catch (error) {
+			setSaveError(error instanceof Error ? error.message : 'Failed to sync queue');
+		} finally {
+			setIsSyncing(false);
 		}
 	};
 
 	if (loading) {
 		return (
 			<div className={styles['settings-panel']}>
-				<div className={styles['settings-panel__loading']}>Loading settings...</div>
+				<div className={styles['settings-panel__loading']}>{t('Loading settings...')}</div>
 			</div>
 		);
 	}
@@ -72,7 +104,7 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 		return (
 			<div className={styles['settings-panel']}>
 				<div className={styles['settings-panel__error']}>
-					Error loading settings: {loadError.message}
+					{t('Error loading settings:')}{' '}{loadError.message}
 				</div>
 			</div>
 		);
@@ -80,7 +112,7 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 
 	return (
 		<div className={styles['settings-panel']}>
-			<h2 className={styles['settings-panel__title']}>Version Control Settings</h2>
+			<h2 className={styles['settings-panel__title']}>{t('Version Control Settings')}</h2>
 
 			{/* Enable/Disable Toggle */}
 			<div className={styles['settings-panel__field']}>
@@ -91,11 +123,10 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 						onChange={(e) => setEnabled(e.target.checked)}
 						className={styles['settings-panel__checkbox']}
 					/>
-					<span className={styles['settings-panel__label-text']}>Enable Version Control</span>
+					<span className={styles['settings-panel__label-text']}>{t('Enable Version Control')}</span>
 				</label>
 				<p className={styles['settings-panel__help']}>
-					When enabled, suggestions that reach the review threshold will appear in the queue for
-					admin approval
+					{t('When enabled, suggestions that reach the review threshold will appear in the queue for admin approval')}
 				</p>
 			</div>
 
@@ -103,7 +134,7 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 			<div className={styles['settings-panel__field']}>
 				<label className={styles['settings-panel__label']}>
 					<span className={styles['settings-panel__label-text']}>
-						Review Threshold: {reviewThreshold}%
+						{t('Review Threshold')}: {reviewThreshold}%
 					</span>
 				</label>
 				<input
@@ -117,7 +148,7 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 					disabled={!enabled}
 				/>
 				<p className={styles['settings-panel__help']}>
-					Suggestions with consensus ≥ {reviewThreshold}% will appear in the review queue
+					{t('Suggestions with consensus ≥')} {reviewThreshold}% {t('will appear in the review queue')}
 				</p>
 			</div>
 
@@ -132,13 +163,29 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 						disabled={!enabled}
 					/>
 					<span className={styles['settings-panel__label-text']}>
-						Allow editing before approval
+						{t('Allow editing before approval')}
 					</span>
 				</label>
 				<p className={styles['settings-panel__help']}>
-					Admins can modify suggestions before applying them to the document
+					{t('Admins can modify suggestions before applying them to the document')}
 				</p>
 			</div>
+
+			{/* Sync Queue Button */}
+			{enabled && (
+				<div className={styles['settings-panel__field']}>
+					<p className={styles['settings-panel__help']}>
+						{t('Scan existing suggestions and add qualifying ones to the review queue')}
+					</p>
+					<button
+						onClick={handleSyncQueue}
+						disabled={isSyncing}
+						className={`${styles['settings-panel__button']} ${styles['settings-panel__button--secondary']}`}
+					>
+						{isSyncing ? t('Syncing...') : t('Sync Queue')}
+					</button>
+				</div>
+			)}
 
 			{/* Save Button */}
 			<div className={styles['settings-panel__actions']}>
@@ -147,7 +194,7 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 					disabled={isSaving}
 					className={styles['settings-panel__button']}
 				>
-					{isSaving ? 'Saving...' : 'Save Settings'}
+					{isSaving ? t('Saving...') : t('Save Settings')}
 				</button>
 			</div>
 
@@ -159,7 +206,12 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 			)}
 			{saveSuccess && (
 				<div className={styles['settings-panel__success']}>
-					Settings saved successfully!
+					{t('Settings saved successfully!')}
+				</div>
+			)}
+			{syncMessage && (
+				<div className={styles['settings-panel__success']}>
+					{syncMessage}
 				</div>
 			)}
 		</div>

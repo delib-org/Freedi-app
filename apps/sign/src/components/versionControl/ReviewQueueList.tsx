@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import { useReplacementQueueStore } from '@/store/replacementQueueStore';
 import { PendingReplacement } from '@freedi/shared-types';
 import { ReviewModal } from './ReviewModal';
@@ -15,6 +16,7 @@ interface ReviewQueueListProps {
  * Displays pending replacement queue items with real-time updates
  */
 export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
+	const { t } = useTranslation();
 	const { pendingReplacements, isLoading, error, subscribeToPendingReplacements, getPendingCount } =
 		useReplacementQueueStore();
 
@@ -42,7 +44,7 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 	if (loading) {
 		return (
 			<div className={styles['queue-list']}>
-				<div className={styles['queue-list__loading']}>Loading queue...</div>
+				<div className={styles['queue-list__loading']}>{t('Loading queue...')}</div>
 			</div>
 		);
 	}
@@ -51,7 +53,7 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 		return (
 			<div className={styles['queue-list']}>
 				<div className={styles['queue-list__error']}>
-					Error loading queue: {loadError.message}
+					{t('Error loading queue:')}{' '}{loadError.message}
 				</div>
 			</div>
 		);
@@ -61,20 +63,20 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 		<div className={styles['queue-list']}>
 			<div className={styles['queue-list__header']}>
 				<h2 className={styles['queue-list__title']}>
-					Pending Reviews ({pendingCount})
+					{t('Pending Reviews')} ({pendingCount})
 				</h2>
 
 				{/* Sort Controls */}
 				<div className={styles['queue-list__sort']}>
-					<label className={styles['queue-list__sort-label']}>Sort by:</label>
+					<label className={styles['queue-list__sort-label']}>{t('Sort by:')}</label>
 					<select
 						value={sortBy}
 						onChange={(e) => setSortBy(e.target.value)}
 						className={styles['queue-list__sort-select']}
 					>
-						<option value="consensus">Consensus (High to Low)</option>
-						<option value="createdAt">Date Added</option>
-						<option value="evaluationCount">Vote Count</option>
+						<option value="consensus">{t('Consensus (High to Low)')}</option>
+						<option value="createdAt">{t('Date Added')}</option>
+						<option value="evaluationCount">{t('Vote Count')}</option>
 					</select>
 				</div>
 			</div>
@@ -82,9 +84,9 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 			{/* Queue Items */}
 			{queue.length === 0 ? (
 				<div className={styles['queue-list__empty']}>
-					<p>No pending reviews</p>
+					<p>{t('No pending reviews')}</p>
 					<p className={styles['queue-list__empty-help']}>
-						Suggestions will appear here when they reach the review threshold
+						{t('Suggestions will appear here when they reach the review threshold')}
 					</p>
 				</div>
 			) : (
@@ -103,13 +105,13 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 									<div className={styles['queue-item__consensus-value']}>
 										{Math.round(item.consensus * 100)}%
 									</div>
-									<div className={styles['queue-item__consensus-label']}>consensus</div>
+									<div className={styles['queue-item__consensus-label']}>{t('consensus')}</div>
 								</div>
 
 								{/* Content Preview */}
 								<div className={styles['queue-item__content']}>
 									<div className={styles['queue-item__current']}>
-										<strong>Current:</strong>
+										<strong>{t('Current:')}</strong>
 										<p className={styles['queue-item__text']}>
 											{item.currentText.substring(0, 100)}
 											{item.currentText.length > 100 ? '...' : ''}
@@ -117,7 +119,7 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 									</div>
 									<div className={styles['queue-item__arrow']}>→</div>
 									<div className={styles['queue-item__proposed']}>
-										<strong>Proposed:</strong>
+										<strong>{t('Proposed:')}</strong>
 										<p className={styles['queue-item__text']}>
 											{item.proposedText.substring(0, 100)}
 											{item.proposedText.length > 100 ? '...' : ''}
@@ -128,14 +130,14 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 								{/* Metadata */}
 								<div className={styles['queue-item__meta']}>
 									<span className={styles['queue-item__meta-item']}>
-										{item.evaluationCount} votes
+										{item.evaluationCount} {t('votes')}
 									</span>
 									<span className={styles['queue-item__meta-item']}>
-										by {item.creatorDisplayName || 'Anonymous'}
+										{t('by')} {item.creatorDisplayName || t('Anonymous')}
 									</span>
 									{isStale && (
 										<span className={styles['queue-item__meta-item--warning']}>
-											Consensus dropped {Math.round(staleness * 100)}%
+											{t('Consensus dropped')} {Math.round(staleness * 100)}%
 										</span>
 									)}
 								</div>
@@ -146,7 +148,7 @@ export function ReviewQueueList({ documentId }: ReviewQueueListProps) {
 										onClick={() => setSelectedItem(item)}
 										className={styles['queue-item__button']}
 									>
-										Review
+										{t('Review')}
 									</button>
 								</div>
 							</div>
