@@ -53,21 +53,19 @@
 }
 
 /* RTL Support */
-:global([data-text-dir="rtl"]),
-[dir="rtl"] {
-  .sortButton {
-    &:not(:first-child) {
-      margin-left: 0;
-      margin-right: -1px;
-    }
+:global([dir="rtl"]) .sortButton,
+:global([data-text-dir="rtl"]) .sortButton {
+  &:not(:first-child) {
+    margin-left: 0;
+    margin-right: -1px;
+  }
 
-    &.first {
-      border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
-    }
+  &.first {
+    border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+  }
 
-    &.last {
-      border-radius: var(--radius-sm, 8px) 0 0 var(--radius-sm, 8px);
-    }
+  &.last {
+    border-radius: var(--radius-sm, 8px) 0 0 var(--radius-sm, 8px);
   }
 }
 
