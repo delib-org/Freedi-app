@@ -132,11 +132,13 @@ export async function getDocumentParagraphs(document: StatementWithParagraphs): 
   if (officialParagraphs.length > 0) {
     console.info(`[Sign Queries] Using ${officialParagraphs.length} official paragraph statements`);
     // Convert Statement[] to Paragraph[] for backward compatibility
+    // Include documentApproval for consensus display
     return officialParagraphs.map((stmt) => ({
       paragraphId: stmt.statementId,
       type: ParagraphType.paragraph, // TODO: Infer from doc field
       content: stmt.statement,
       order: stmt.doc?.order ?? 0,
+      documentApproval: stmt.documentApproval, // Include approval stats for UI display
     }));
   }
 

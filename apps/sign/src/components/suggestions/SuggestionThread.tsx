@@ -3,7 +3,9 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Suggestion as SuggestionType, Statement } from '@freedi/shared-types';
+import { Suggestion as SuggestionType, Statement, Collections } from '@freedi/shared-types';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
@@ -48,6 +50,31 @@ export default function SuggestionThread({
 
   // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
   const suggestionStatements = useParagraphSuggestions(paragraphId);
+
+  // Fetch the official paragraph Statement (the current version)
+  const [officialParagraph, setOfficialParagraph] = useState<Statement | null>(null);
+
+  useEffect(() => {
+    // Real-time listener for the official paragraph Statement
+    // Updates instantly when consensus changes from voting
+    const firestore = getFirebaseFirestore();
+    const statementRef = doc(firestore, Collections.statements, paragraphId);
+
+    const unsubscribe = onSnapshot(
+      statementRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setOfficialParagraph(docSnap.data() as Statement);
+        }
+      },
+      (error) => {
+        console.error('[SuggestionThread] Error listening to official paragraph:', error);
+      }
+    );
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [paragraphId]);
 
   // Convert Statement[] to legacy Suggestion[] format for compatibility
   const suggestions: SuggestionType[] = useMemo(() => {
@@ -106,20 +133,41 @@ export default function SuggestionThread({
 
   const isLoading = false; // Real-time hook handles loading internally
 
-  // Create current paragraph as a pseudo-suggestion (not votable by itself yet)
-  const currentParagraphSuggestion = useMemo((): SuggestionType => ({
-    suggestionId: `current-${paragraphId}`,
-    paragraphId: paragraphId,
-    documentId: documentId,
-    suggestedContent: originalContent,
-    reasoning: '',
-    creatorId: 'official',
-    creatorName: t('Official'),
-    creatorDisplayName: t('Official'),
-    createdAt: Date.now(), // Use current time for now
-    votes: 0,
-    consensus: 0, // TODO: Calculate consensus from evaluations
-  }), [paragraphId, documentId, originalContent, t]);
+  // Convert the official paragraph Statement to a Suggestion for display
+  // This allows users to vote on the current version alongside alternatives
+  const currentParagraphSuggestion = useMemo((): SuggestionType => {
+    if (!officialParagraph) {
+      // Fallback: create pseudo-suggestion if official paragraph not loaded yet
+      return {
+        suggestionId: paragraphId, // Use actual paragraphId (which is the statementId)
+        paragraphId: paragraphId,
+        documentId: documentId,
+        suggestedContent: originalContent,
+        reasoning: '',
+        creatorId: 'official',
+        creatorName: t('Official'),
+        creatorDisplayName: t('Official'),
+        createdAt: Date.now(),
+        votes: 0,
+        consensus: 1.0, // Official paragraphs start with full consensus
+      };
+    }
+
+    // Use the actual official paragraph Statement
+    return {
+      suggestionId: officialParagraph.statementId,
+      paragraphId: paragraphId,
+      documentId: documentId,
+      suggestedContent: officialParagraph.statement,
+      reasoning: '',
+      creatorId: officialParagraph.creatorId,
+      creatorName: officialParagraph.creator?.displayName || t('Official'),
+      creatorDisplayName: officialParagraph.creator?.displayName || t('Official'),
+      createdAt: officialParagraph.createdAt,
+      votes: officialParagraph.evaluation || 0,
+      consensus: officialParagraph.consensus || 1.0,
+    };
+  }, [officialParagraph, paragraphId, documentId, originalContent, t]);
 
   // Check if user already has a suggestion
   const userSuggestion = useMemo(() => {

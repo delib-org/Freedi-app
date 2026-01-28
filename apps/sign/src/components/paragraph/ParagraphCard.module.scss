@@ -522,6 +522,37 @@
   }
 }
 
+// Consensus badge - shows approval statistics
+.consensusBadge {
+  position: absolute;
+  top: calc(var(--spacing-xs) + 28px); // Below heat badge if it exists
+  inset-inline-end: var(--spacing-xs);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-body);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--btn-primary);
+  z-index: 1;
+  animation: fadeIn 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  svg {
+    flex-shrink: 0;
+    color: var(--btn-primary);
+  }
+
+  .voterCount {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    margin-inline-start: 2px;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -656,6 +687,13 @@
     inset-inline-start: var(--spacing-xs);
   }
 
+  .consensusBadge {
+    left: var(--spacing-xs);
+    right: auto;
+    inset-inline-end: auto;
+    inset-inline-start: var(--spacing-xs);
+  }
+
   .tableWrapper {
     table {
       th,
@@ -729,6 +767,13 @@
   }
 
   .heatBadge {
+    right: var(--spacing-xs);
+    left: auto;
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-xs);
+  }
+
+  .consensusBadge {
     right: var(--spacing-xs);
     left: auto;
     inset-inline-start: auto;

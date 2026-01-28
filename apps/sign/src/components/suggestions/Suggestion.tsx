@@ -76,6 +76,10 @@ export default function Suggestion({
 
   // Handle evaluation (vote up/down) with direct Firestore write
   const handleVote = async (vote: number) => {
+    // Prevent voting if:
+    // - Not logged in
+    // - User owns this suggestion
+    // - Currently submitting
     if (!userId || isOwner || isLoading) {
       return;
     }
