@@ -46,23 +46,20 @@ export default function SortControls({
     { value: 'newest', label: t('Newest') },
   ];
 
-  // Reverse button order in RTL so DOM order matches visual order
-  const displayOptions = isRTL ? [...sortOptions].reverse() : sortOptions;
-
   return (
     <div
-      className={styles.sortControls}
+      className={`${styles.sortControls} ${isRTL ? styles.rtl : ''}`}
       role="group"
       aria-label={t('Sort suggestions by')}
     >
-      {displayOptions.map((option, index) => (
+      {sortOptions.map((option, index) => (
         <button
           key={option.value}
           type="button"
           className={`${styles.sortButton} ${
             activeSort === option.value ? styles.active : ''
           } ${index === 0 ? styles.first : ''} ${
-            index === displayOptions.length - 1 ? styles.last : ''
+            index === sortOptions.length - 1 ? styles.last : ''
           }`}
           onClick={() => onSortChange(option.value)}
           disabled={disabled}
