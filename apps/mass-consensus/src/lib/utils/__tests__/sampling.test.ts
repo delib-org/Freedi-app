@@ -259,26 +259,83 @@ describe('sampling utilities', () => {
       });
     });
 
-    describe('near-threshold bonus', () => {
-      it('should give bonus to proposals near zero mean', () => {
-        // Near zero mean with wide confidence interval
-        const nearZero = createMockStatement({
-          sumEvaluations: 0.1 * 10, // mean = 0.1
+    describe('top-mean bonus (percentile-based)', () => {
+      it('should give higher bonus to high percentile proposals', () => {
+        const proposal = createMockStatement({
+          sumEvaluations: 5,
           sumSquaredEvaluations: 5,
           numberOfEvaluators: 10,
         });
-        // Clear positive mean
-        const clearPositive = createMockStatement({
-          sumEvaluations: 8, // mean = 0.8
+
+        const highPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 1.0);
+        const midPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 0.5);
+        const lowPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 0.0);
+
+        expect(highPercentile).toBeGreaterThan(midPercentile);
+        expect(midPercentile).toBeGreaterThan(lowPercentile);
+      });
+
+      it('should combine percentile with uncertainty (SEM)', () => {
+        // High SEM proposal
+        const highSEM = createMockStatement({
+          sumEvaluations: 5,
+          sumSquaredEvaluations: 10, // High variance
+          numberOfEvaluators: 5,
+        });
+        // Low SEM proposal (more evaluations, lower variance)
+        const lowSEM = createMockStatement({
+          sumEvaluations: 15,
+          sumSquaredEvaluations: 8, // Low variance
+          numberOfEvaluators: 30,
+        });
+
+        // Same percentile, but high SEM should get higher top-mean bonus
+        const highSEMPriority = calculatePriority(highSEM, DEFAULT_SAMPLING_CONFIG, 0.8);
+        const lowSEMPriority = calculatePriority(lowSEM, DEFAULT_SAMPLING_CONFIG, 0.8);
+
+        // Note: total priority also includes base priority (eval count) and uncertainty bonus
+        // But for same percentile, the proposal needing validation should score differently
+        expect(highSEMPriority).not.toBe(lowSEMPriority);
+      });
+
+      it('should give zero bonus when no percentile provided', () => {
+        const proposal = createMockStatement({
+          sumEvaluations: 8,
           sumSquaredEvaluations: 7,
           numberOfEvaluators: 10,
         });
 
-        const nearZeroPriority = calculatePriority(nearZero);
-        const clearPriority = calculatePriority(clearPositive);
+        const withPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 1.0);
+        const withoutPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG);
 
-        // Near-zero should get bonus for being near threshold
-        expect(nearZeroPriority).toBeGreaterThan(clearPriority);
+        // With max percentile should be higher than without percentile
+        expect(withPercentile).toBeGreaterThan(withoutPercentile);
+      });
+
+      it('should give zero bonus for proposals without evaluations', () => {
+        const newProposal = createMockStatement();
+
+        // Even with high percentile, no bonus since no evaluations yet
+        const priority = calculatePriority(newProposal, DEFAULT_SAMPLING_CONFIG, 1.0);
+
+        // New proposals still get high priority from base and uncertainty,
+        // just not from top-mean bonus (since no mean to validate)
+        expect(priority).toBeGreaterThan(0.5); // High from other factors
+      });
+
+      it('should give zero bonus for bottom percentile regardless of SEM', () => {
+        const bottomProposal = createMockStatement({
+          sumEvaluations: -5,
+          sumSquaredEvaluations: 10, // High variance
+          numberOfEvaluators: 5,
+        });
+
+        // Bottom percentile (0.0) should get zero top-mean bonus
+        const priorityWithBonus = calculatePriority(bottomProposal, DEFAULT_SAMPLING_CONFIG, 0.0);
+        const priorityNoBonus = calculatePriority(bottomProposal, DEFAULT_SAMPLING_CONFIG);
+
+        // With 0.0 percentile, should be same as no percentile (both get 0 bonus)
+        expect(priorityWithBonus).toBe(priorityNoBonus);
       });
     });
 

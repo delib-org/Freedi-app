@@ -127,14 +127,20 @@ export function getProposalStats(proposal: Statement): ProposalStats {
 /**
  * Calculate priority score for a proposal
  *
- * Formula: Priority = (0.4 * Base) + (0.25 * Uncertainty) + (0.2 * Recency) + (0.15 * Threshold)
+ * Formula: Priority = (0.4 * Base) + (0.25 * Uncertainty) + (0.2 * Recency) + (0.15 * TopMean)
+ *
+ * The TopMean bonus uses percentile rank to prioritize top-performing proposals
+ * that still need validation (high SEM). This ensures leaders are validated
+ * before they stabilize, rather than prioritizing borderline options.
  *
  * @param proposal - The statement to score
  * @param config - Sampling configuration
+ * @param percentileRank - Optional percentile rank (0-1) where 1 = highest mean among all proposals
  */
 export function calculatePriority(
   proposal: Statement,
-  config: SamplingConfig = DEFAULT_SAMPLING_CONFIG
+  config: SamplingConfig = DEFAULT_SAMPLING_CONFIG,
+  percentileRank?: number
 ): number {
   const stats = getProposalStats(proposal);
 
@@ -156,18 +162,20 @@ export function calculatePriority(
     ? 1 - (hoursOld / config.recencyBoostHours)
     : 0;
 
-  // 4. Near-threshold bonus: proposals near 0 (neutral) need more data (15%)
-  // When confidence interval crosses the decision threshold, we need more data
-  const nearThreshold = Math.abs(stats.mean) < stats.sem * 1.96
-    ? Math.min(1, stats.sem / (Math.abs(stats.mean) + 0.1))
-    : 0;
+  // 4. Top-mean bonus: validate top performers relative to other proposals (15%)
+  // Uses percentile rank (comparison to other proposals) combined with uncertainty.
+  // High percentile + high SEM = leader that needs validation.
+  // Low percentile = no bonus regardless of uncertainty (no need to validate losers).
+  const topMeanBonus = stats.evaluationCount > 0 && percentileRank !== undefined
+    ? Math.min(1, percentileRank * (stats.sem / config.targetSEM))
+    : 0; // No bonus if no percentile provided or no evaluations yet
 
   // Combine factors with weights
   const priority =
     (basePriority * 0.4) +
     (uncertaintyBonus * 0.25) +
     (recencyBoost * 0.2) +
-    (nearThreshold * 0.15);
+    (topMeanBonus * 0.15);
 
   return priority;
 }
@@ -242,12 +250,14 @@ export function isStable(
  *
  * @param proposal - The statement to score
  * @param config - Sampling configuration
+ * @param percentileRank - Optional percentile rank (0-1) for top-mean bonus calculation
  */
 export function calculateAdjustedPriority(
   proposal: Statement,
-  config: SamplingConfig = DEFAULT_SAMPLING_CONFIG
+  config: SamplingConfig = DEFAULT_SAMPLING_CONFIG,
+  percentileRank?: number
 ): number {
-  const deterministicPriority = calculatePriority(proposal, config);
+  const deterministicPriority = calculatePriority(proposal, config, percentileRank);
   const explorationSample = thompsonSample(proposal);
 
   // Combine: (1 - weight) * priority + weight * exploration
