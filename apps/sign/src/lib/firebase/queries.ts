@@ -135,9 +135,13 @@ export async function getDocumentParagraphs(document: StatementWithParagraphs): 
     // Include documentApproval for consensus display
     return officialParagraphs.map((stmt) => ({
       paragraphId: stmt.statementId,
-      type: ParagraphType.paragraph, // TODO: Infer from doc field
+      type: stmt.doc?.paragraphType || ParagraphType.paragraph,
       content: stmt.statement,
       order: stmt.doc?.order ?? 0,
+      listType: stmt.doc?.listType,
+      imageUrl: stmt.doc?.imageUrl,
+      imageAlt: stmt.doc?.imageAlt,
+      imageCaption: stmt.doc?.imageCaption,
       documentApproval: stmt.documentApproval, // Include approval stats for UI display
     }));
   }
