@@ -92,6 +92,9 @@ export default function SuggestionThread({
       lastUpdate: statement.lastUpdate || statement.createdAt,
       consensus: statement.consensus || 0,
       hide: statement.hide || false,
+      // Include evaluation counts for vote breakdown display
+      positiveEvaluations: (statement as Statement & { positiveEvaluations?: number }).positiveEvaluations,
+      negativeEvaluations: (statement as Statement & { negativeEvaluations?: number }).negativeEvaluations,
     }));
 
     // Update frozen suggestions when new items arrive (but don't reorder)

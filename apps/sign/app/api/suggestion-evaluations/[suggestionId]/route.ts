@@ -101,8 +101,8 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Get the suggestion to verify it exists and get paragraphId
-    const suggestionRef = await db.collection(Collections.suggestions).doc(suggestionId).get();
+    // Get the suggestion (stored as Statement) to verify it exists and get creatorId
+    const suggestionRef = await db.collection(Collections.statements).doc(suggestionId).get();
 
     if (!suggestionRef.exists) {
       return NextResponse.json(
@@ -165,7 +165,7 @@ export async function POST(
       }
     });
 
-    await db.collection(Collections.suggestions).doc(suggestionId).update({
+    await db.collection(Collections.statements).doc(suggestionId).update({
       consensus: newConsensus,
       positiveEvaluations,
       negativeEvaluations,
@@ -247,7 +247,7 @@ export async function DELETE(
       }
     });
 
-    await db.collection(Collections.suggestions).doc(suggestionId).update({
+    await db.collection(Collections.statements).doc(suggestionId).update({
       consensus: newConsensus,
       positiveEvaluations,
       negativeEvaluations,

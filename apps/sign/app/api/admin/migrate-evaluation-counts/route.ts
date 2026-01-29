@@ -26,12 +26,13 @@ export async function POST(request: NextRequest) {
 
 		const db = getFirestoreAdmin();
 
-		// Get all suggestions
+		// Get all suggestions (stored as statements with statementType option)
 		const suggestionsSnapshot = await db
-			.collection(Collections.suggestions)
+			.collection(Collections.statements)
+			.where('statementType', '==', 'option')
 			.get();
 
-		logger.info(`[Migration] Found ${suggestionsSnapshot.docs.length} suggestions to process`);
+		logger.info(`[Migration] Found ${suggestionsSnapshot.docs.length} suggestion statements to process`);
 
 		let updatedCount = 0;
 		let skippedCount = 0;
