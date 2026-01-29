@@ -64,11 +64,17 @@ export async function POST(request: NextRequest) {
       isAnonymous: false,
     };
 
+    // Create paragraph object
+    const paragraph: Paragraph = {
+      paragraphId: `para_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      content,
+      type: type || ParagraphType.paragraph,
+      order: newOrder,
+    };
+
     // Create the paragraph as a Statement object
     const paragraphStatement = createParagraphStatement(
-      content,
-      type,
-      newOrder,
+      paragraph,
       documentId,
       creator
     );
