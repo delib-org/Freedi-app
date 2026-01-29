@@ -62,3 +62,4 @@ apps/sign/tsconfig.tsbuildinfo
 .worktrees/
 
 functions/freedi-shared-types-1.0.1.tgz
+env/prod-service-account.json

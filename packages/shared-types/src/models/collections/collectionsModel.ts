@@ -68,4 +68,6 @@ export enum Collections {
     documentVersions = 'documentVersions',
     versionChanges = 'versionChanges',
     versioningSettings = 'versioningSettings',
+    paragraphReplacementQueue = 'paragraphReplacementQueue',
+    versionControlAudit = 'versionControlAudit',
 }

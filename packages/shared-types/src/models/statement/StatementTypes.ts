@@ -86,6 +86,22 @@ export const StatementSchema = object({
 		object({
 			isDoc: boolean(),
 			order: number(),
+			isOfficialParagraph: optional(boolean()), // Sign app: marks standing paragraphs (vs suggestions)
+			versionControlSettings: optional(object({
+				// MVP: Manual mode only
+				enabled: boolean(), // default: false (opt-in per document)
+				// Minimum consensus to appear in review queue
+				reviewThreshold: optional(number()), // default: 0.5 (50%)
+				// Admin can edit suggestion before approval
+				allowAdminEdit: optional(boolean()), // default: true
+				// History settings
+				enableVersionHistory: optional(boolean()), // default: true
+				maxRecentVersions: optional(number()), // default: 4 (full storage)
+				maxTotalVersions: optional(number()), // default: 50 (including compressed)
+				// Tracking
+				lastSettingsUpdate: optional(number()),
+				updatedBy: optional(string()), // userId
+			})),
 		})
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
@@ -168,6 +184,21 @@ export const StatementSchema = object({
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
 	randomSeed: optional(number()), // an optional random seed for the statement
+	versionControl: optional(object({
+		// Version info
+		currentVersion: number(), // increments on each replacement (starts at 1)
+		// Applied suggestion tracking
+		appliedSuggestionId: optional(string()), // last suggestion that replaced this
+		appliedAt: optional(number()),
+		// Finalization info (MVP: manual only)
+		finalizedBy: optional(string()), // userId
+		finalizedAt: optional(number()),
+		finalizedReason: optional(string()), // 'manual_approval' | 'rollback' (MVP only)
+		// Admin actions
+		adminEditedContent: optional(string()), // if admin modified before approval
+		adminEditedAt: optional(number()),
+		adminNotes: optional(string()),
+	})),
 });
 
 export type Statement = InferOutput<typeof StatementSchema>;

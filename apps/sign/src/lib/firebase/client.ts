@@ -22,6 +22,16 @@ import {
   FirebaseStorage,
   connectStorageEmulator,
 } from 'firebase/storage';
+import {
+  getDatabase,
+  connectDatabaseEmulator,
+  Database,
+} from 'firebase/database';
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  Firestore,
+} from 'firebase/firestore';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
@@ -38,8 +48,12 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let storage: FirebaseStorage;
+let database: Database;
+let firestore: Firestore;
 let authEmulatorConnected = false;
 let storageEmulatorConnected = false;
+let databaseEmulatorConnected = false;
+let firestoreEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -51,16 +65,7 @@ export function initializeFirebaseClient(): FirebaseApp {
     return app;
   }
 
-  // Debug: Check if env vars are loaded (don't log actual values for security)
-  console.info('[Firebase Client - Sign] Config check:', {
-    hasApiKey: !!firebaseConfig.apiKey,
-    hasAuthDomain: !!firebaseConfig.authDomain,
-    hasProjectId: !!firebaseConfig.projectId,
-    projectId: firebaseConfig.projectId, // Safe to log project ID
-  });
-
   app = initializeApp(firebaseConfig);
-  console.info('[Firebase Client - Sign] Initialized');
 
   return app;
 }
@@ -80,7 +85,6 @@ export function getFirebaseAuth(): Auth {
       try {
         connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
         authEmulatorConnected = true;
-        console.info('[Firebase Client - Sign] Connected to Auth emulator');
       } catch {
         // Already connected or emulator not available
       }
@@ -124,8 +128,6 @@ export async function anonymousLogin(): Promise<User | null> {
   try {
     const authInstance = getFirebaseAuth();
     const result = await signInAnonymously(authInstance);
-
-    console.info('[Firebase Auth] User signed in anonymously', { userId: result.user.uid });
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
@@ -183,16 +185,6 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
 function setCookiesFromUser(user: User): void {
   const maxAge = 60 * 60 * 24 * 30; // 30 days
 
-  // DEBUG: Log what Firebase returns for the user
-  console.info('[DEBUG] setCookiesFromUser - Firebase user data:', {
-    uid: user.uid,
-    email: user.email,
-    emailLower: user.email?.toLowerCase(),
-    displayName: user.displayName,
-    providerId: user.providerId,
-    providerData: user.providerData?.map(p => ({ providerId: p.providerId, email: p.email })),
-  });
-
   document.cookie = `userId=${user.uid}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
   if (user.displayName) {
@@ -200,10 +192,6 @@ function setCookiesFromUser(user: User): void {
   }
 
   if (user.email) {
-    console.info('[DEBUG] setCookiesFromUser - Setting email cookie:', {
-      originalEmail: user.email,
-      encodedEmail: encodeURIComponent(user.email),
-    });
     document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
 }
@@ -305,6 +293,55 @@ export function getFirebaseStorage(): FirebaseStorage {
   }
 
   return storage;
+}
+
+/**
+ * Get Firebase Realtime Database instance
+ */
+export function getFirebaseRealtimeDatabase(): Database {
+  if (!database) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    database = getDatabase(app);
+
+    // Connect to database emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !databaseEmulatorConnected) {
+      try {
+        connectDatabaseEmulator(database, 'localhost', 9000);
+        databaseEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Realtime Database emulator');
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return database;
+}
+
+/**
+ * Get Firebase Firestore instance
+ */
+export function getFirebaseFirestore(): Firestore {
+  if (!firestore) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    firestore = getFirestore(app);
+
+    // Connect to Firestore emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
+      try {
+        connectFirestoreEmulator(firestore, 'localhost', 8081);
+        firestoreEmulatorConnected = true;
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return firestore;
 }
 
 /**

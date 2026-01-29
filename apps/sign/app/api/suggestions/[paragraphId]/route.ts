@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { Collections } from '@freedi/shared-types';
+import { Collections, StatementType, Statement } from '@freedi/shared-types';
+import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { SUGGESTIONS, QUERY_LIMITS } from '@/constants/common';
 
@@ -20,7 +21,7 @@ interface EditSuggestionInput {
 
 /**
  * GET /api/suggestions/[paragraphId]
- * Get suggestions for a paragraph
+ * Get suggestions for a paragraph (as Statement objects)
  */
 export async function GET(
   request: NextRequest,
@@ -31,15 +32,30 @@ export async function GET(
 
     const db = getFirestoreAdmin();
 
+    // Query from statements collection (new system)
     const snapshot = await db
-      .collection(Collections.suggestions)
-      .where('paragraphId', '==', paragraphId)
-      .where('hide', '==', false)
-      .orderBy('createdAt', 'desc')
+      .collection(Collections.statements)
+      .where('parentId', '==', paragraphId)
+      .where('statementType', '==', StatementType.option)
+      .orderBy('consensus', 'desc')
       .limit(QUERY_LIMITS.SUGGESTIONS)
       .get();
 
-    const suggestions = snapshot.docs.map((doc) => doc.data());
+    const statements = snapshot.docs.map((doc) => doc.data() as Statement);
+
+    // Convert Statement[] to legacy format for backward compatibility
+    const suggestions = statements.map((stmt) => ({
+      suggestionId: stmt.statementId,
+      paragraphId: paragraphId,
+      documentId: stmt.topParentId,
+      suggestedContent: stmt.statement,
+      reasoning: '', // TODO: Add reasoning field to Statement if needed
+      creatorId: stmt.creatorId,
+      creatorName: stmt.creator?.displayName || 'Anonymous',
+      createdAt: stmt.createdAt,
+      votes: stmt.evaluation || 0,
+      consensus: stmt.consensus || 0,
+    }));
 
     return NextResponse.json({ suggestions });
   } catch (error) {
@@ -113,12 +129,12 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Check if user already has a suggestion on this paragraph
+    // Check if user already has a suggestion on this paragraph (check statements collection)
     const existingSuggestionSnapshot = await db
-      .collection(Collections.suggestions)
-      .where('paragraphId', '==', paragraphId)
+      .collection(Collections.statements)
+      .where('parentId', '==', paragraphId)
+      .where('statementType', '==', StatementType.option)
       .where('creatorId', '==', userId)
-      .where('hide', '==', false)
       .limit(1)
       .get();
 
@@ -132,30 +148,50 @@ export async function POST(
     // Get display name
     const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
 
-    // Generate unique ID
-    const suggestionId = `${userId}--${Date.now()}--${Math.random().toString(36).substring(2, 9)}`;
+    // Create user object
+    const creator = {
+      uid: userId,
+      displayName: displayName,
+      email: '', // Not available from cookie
+      photoURL: '',
+      isAnonymous: false,
+    };
 
-    const suggestion = {
-      suggestionId,
+    // Create Statement object using utility function
+    const suggestionStatement = createSuggestionStatement(
+      suggestedContent.trim(),
+      paragraphId, // officialParagraphId
+      documentId,
+      creator
+    );
+
+    if (!suggestionStatement) {
+      return NextResponse.json(
+        { error: 'Failed to create suggestion statement' },
+        { status: 500 }
+      );
+    }
+
+    // Write to statements collection (new system)
+    await db.collection(Collections.statements).doc(suggestionStatement.statementId).set(suggestionStatement);
+
+    logger.info(`[Suggestions API] Created suggestion statement: ${suggestionStatement.statementId}`);
+
+    // Return in legacy format for backward compatibility
+    const legacySuggestion = {
+      suggestionId: suggestionStatement.statementId,
       paragraphId,
       documentId,
-      topParentId: documentId,
-      originalContent: originalContent.trim(),
       suggestedContent: suggestedContent.trim(),
       reasoning: reasoning?.trim() || '',
       creatorId: userId,
       creatorDisplayName: displayName,
-      createdAt: Date.now(),
-      lastUpdate: Date.now(),
-      consensus: 0,
-      hide: false,
+      createdAt: suggestionStatement.createdAt,
+      lastUpdate: suggestionStatement.lastUpdate,
+      consensus: suggestionStatement.consensus || 0,
     };
 
-    await db.collection(Collections.suggestions).doc(suggestionId).set(suggestion);
-
-    logger.info(`[Suggestions API] Created suggestion: ${suggestionId}`);
-
-    return NextResponse.json({ success: true, suggestion });
+    return NextResponse.json({ success: true, suggestion: legacySuggestion });
   } catch (error) {
     logger.error('[Suggestions API] POST error:', error);
 
@@ -220,8 +256,8 @@ export async function PUT(
 
     const db = getFirestoreAdmin();
 
-    // Verify ownership
-    const suggestionRef = await db.collection(Collections.suggestions).doc(suggestionId).get();
+    // Verify ownership (check statements collection)
+    const suggestionRef = await db.collection(Collections.statements).doc(suggestionId).get();
     if (!suggestionRef.exists) {
       return NextResponse.json(
         { error: 'Suggestion not found' },
@@ -229,29 +265,34 @@ export async function PUT(
       );
     }
 
-    const suggestion = suggestionRef.data();
-    if (suggestion?.creatorId !== userId) {
+    const statement = suggestionRef.data() as Statement;
+    if (statement?.creatorId !== userId) {
       return NextResponse.json(
         { error: 'Not authorized to edit this suggestion' },
         { status: 403 }
       );
     }
 
-    // Update the suggestion
-    await db.collection(Collections.suggestions).doc(suggestionId).update({
-      suggestedContent: suggestedContent.trim(),
-      reasoning: reasoning?.trim() || '',
+    // Update the suggestion statement
+    await db.collection(Collections.statements).doc(suggestionId).update({
+      statement: suggestedContent.trim(),
       lastUpdate: Date.now(),
     });
 
-    logger.info(`[Suggestions API] Updated suggestion: ${suggestionId}`);
+    logger.info(`[Suggestions API] Updated suggestion statement: ${suggestionId}`);
 
-    // Return updated suggestion
+    // Return in legacy format for backward compatibility
     const updatedSuggestion = {
-      ...suggestion,
+      suggestionId: statement.statementId,
+      paragraphId: statement.parentId,
+      documentId: statement.topParentId,
       suggestedContent: suggestedContent.trim(),
       reasoning: reasoning?.trim() || '',
+      creatorId: statement.creatorId,
+      creatorDisplayName: statement.creator?.displayName || 'Anonymous',
+      createdAt: statement.createdAt,
       lastUpdate: Date.now(),
+      consensus: statement.consensus || 0,
     };
 
     return NextResponse.json({ success: true, suggestion: updatedSuggestion });
@@ -296,8 +337,8 @@ export async function DELETE(
 
     const db = getFirestoreAdmin();
 
-    // Verify ownership
-    const suggestionRef = await db.collection(Collections.suggestions).doc(suggestionId).get();
+    // Verify ownership (check statements collection)
+    const suggestionRef = await db.collection(Collections.statements).doc(suggestionId).get();
     if (!suggestionRef.exists) {
       return NextResponse.json(
         { error: 'Suggestion not found' },
@@ -305,8 +346,8 @@ export async function DELETE(
       );
     }
 
-    const suggestion = suggestionRef.data();
-    if (suggestion?.creatorId !== userId) {
+    const statement = suggestionRef.data() as Statement;
+    if (statement?.creatorId !== userId) {
       return NextResponse.json(
         { error: 'Not authorized to delete this suggestion' },
         { status: 403 }
@@ -314,12 +355,12 @@ export async function DELETE(
     }
 
     // Soft delete by setting hide flag
-    await db.collection(Collections.suggestions).doc(suggestionId).update({
+    await db.collection(Collections.statements).doc(suggestionId).update({
       hide: true,
       lastUpdate: Date.now(),
     });
 
-    logger.info(`[Suggestions API] Deleted suggestion: ${suggestionId}`);
+    logger.info(`[Suggestions API] Deleted suggestion statement: ${suggestionId}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

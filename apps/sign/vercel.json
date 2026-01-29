@@ -55,7 +55,7 @@
   "crons": [],
   "git": {
     "deploymentEnabled": {
-      "main": true
+      "main-sign": true
     }
   }
 }

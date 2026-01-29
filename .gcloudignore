@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+
+# Node modules (will be installed in Docker)
+node_modules
+**/node_modules
+
+# Build outputs
+dist
+.next
+**/.next
+out
+build
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# IDE
+.idea
+.vscode
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage
+**/.coverage
+
+# Firebase
+.firebase
+
+# Misc
+*.tgz
+*.tar.gz
+*.zip
+
+# Other apps (not needed for sign build)
+apps/mass-consensus
+
+# Worktrees
+*.worktrees

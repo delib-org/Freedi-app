@@ -1,12 +1,18 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { Flipper, Flipped } from 'react-flip-toolkit';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Suggestion as SuggestionType } from '@freedi/shared-types';
+import { Suggestion as SuggestionType, Statement, Collections } from '@freedi/shared-types';
+import { doc, onSnapshot } from 'firebase/firestore';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { useUIStore } from '@/store/uiStore';
-import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
+import { API_ROUTES } from '@/constants/common';
+import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
+import { useAutoLogin } from '@/hooks/useAutoLogin';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
+import SortControls, { SortType } from './SortControls';
 import Modal from '../shared/Modal';
 import styles from './SuggestionThread.module.scss';
 
@@ -14,56 +20,178 @@ interface SuggestionThreadProps {
   paragraphId: string;
   documentId: string;
   originalContent: string;
-  userId: string | null;
   onClose: () => void;
+}
+
+// Seeded random for consistent random order during session
+function seededRandom(seed: number): () => number {
+  return function () {
+    seed = (seed * 9301 + 49297) % 233280;
+    return seed / 233280;
+  };
 }
 
 export default function SuggestionThread({
   paragraphId,
   documentId,
   originalContent,
-  userId,
   onClose: _onClose,
 }: SuggestionThreadProps) {
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
+  const user = useAutoLogin(); // Auto-login anonymously if not logged in
 
-  const [suggestions, setSuggestions] = useState<SuggestionType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);
+  const [sortType, setSortType] = useState<SortType>('newest'); // Default to newest
+  const [randomSeed] = useState(() => Date.now());
+  const [isFrozen, setIsFrozen] = useState(false); // Stop real-time reordering
+  const [frozenSuggestions, setFrozenSuggestions] = useState<SuggestionType[]>([]);
+
+  // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
+  const suggestionStatements = useParagraphSuggestions(paragraphId);
+
+  // Fetch the official paragraph Statement (the current version)
+  const [officialParagraph, setOfficialParagraph] = useState<Statement | null>(null);
+
+  useEffect(() => {
+    // Real-time listener for the official paragraph Statement
+    // Updates instantly when consensus changes from voting
+    const firestore = getFirebaseFirestore();
+    const statementRef = doc(firestore, Collections.statements, paragraphId);
+
+    const unsubscribe = onSnapshot(
+      statementRef,
+      (docSnap) => {
+        if (docSnap.exists()) {
+          setOfficialParagraph(docSnap.data() as Statement);
+        }
+      },
+      (error) => {
+        console.error('[SuggestionThread] Error listening to official paragraph:', error);
+      }
+    );
+
+    // Cleanup listener on unmount
+    return () => unsubscribe();
+  }, [paragraphId]);
+
+  // Convert Statement[] to legacy Suggestion[] format for compatibility
+  const suggestions: SuggestionType[] = useMemo(() => {
+    const converted = suggestionStatements.map((statement: Statement) => ({
+      suggestionId: statement.statementId,
+      paragraphId: paragraphId,
+      documentId: documentId,
+      suggestedContent: statement.statement,
+      reasoning: '', // TODO: Add reasoning field to Statement if needed
+      creatorId: statement.creatorId,
+      creatorName: statement.creator?.displayName || 'Anonymous',
+      createdAt: statement.createdAt,
+      votes: statement.evaluation || 0,
+      consensus: statement.consensus || 0,
+    }));
+
+    // Update frozen suggestions when new items arrive (but don't reorder)
+    if (isFrozen) {
+      const existingIds = new Set(frozenSuggestions.map(s => s.suggestionId));
+      const newItems = converted.filter(s => !existingIds.has(s.suggestionId));
+      if (newItems.length > 0) {
+        setFrozenSuggestions(prev => [...newItems, ...prev]); // Add new items at top
+      }
+      return frozenSuggestions;
+    }
+
+    return converted;
+  }, [suggestionStatements, paragraphId, documentId, isFrozen, frozenSuggestions]);
+
+  // Sort suggestions based on selected sort type
+  const sortedSuggestions = useMemo(() => {
+    const sorted = [...suggestions];
+
+    switch (sortType) {
+      case 'consensus':
+        return sorted.sort((a, b) => (b.consensus || 0) - (a.consensus || 0));
+
+      case 'newest':
+        return sorted.sort((a, b) => b.createdAt - a.createdAt);
+
+      case 'random': {
+        const random = seededRandom(randomSeed);
+        return sorted.sort(() => random() - 0.5);
+      }
+
+      default:
+        return sorted;
+    }
+  }, [suggestions, sortType, randomSeed]);
+
+  // Generate flip key from sorted order
+  const flipKey = useMemo(
+    () => sortedSuggestions.map((s) => s.suggestionId).join(','),
+    [sortedSuggestions]
+  );
+
+  const isLoading = false; // Real-time hook handles loading internally
+
+  // Convert the official paragraph Statement to a Suggestion for display
+  // This allows users to vote on the current version alongside alternatives
+  const currentParagraphSuggestion = useMemo((): SuggestionType => {
+    if (!officialParagraph) {
+      // Fallback: create pseudo-suggestion if official paragraph not loaded yet
+      return {
+        suggestionId: paragraphId, // Use actual paragraphId (which is the statementId)
+        paragraphId: paragraphId,
+        documentId: documentId,
+        suggestedContent: originalContent,
+        reasoning: '',
+        creatorId: 'official',
+        creatorName: t('Official'),
+        creatorDisplayName: t('Official'),
+        createdAt: Date.now(),
+        votes: 0,
+        consensus: 1.0, // Official paragraphs start with full consensus
+      };
+    }
+
+    // Use the actual official paragraph Statement
+    return {
+      suggestionId: officialParagraph.statementId,
+      paragraphId: paragraphId,
+      documentId: documentId,
+      suggestedContent: officialParagraph.statement,
+      reasoning: '',
+      creatorId: officialParagraph.creatorId,
+      creatorName: officialParagraph.creator?.displayName || t('Official'),
+      creatorDisplayName: officialParagraph.creator?.displayName || t('Official'),
+      createdAt: officialParagraph.createdAt,
+      votes: officialParagraph.evaluation || 0,
+      consensus: officialParagraph.consensus || 1.0,
+    };
+  }, [officialParagraph, paragraphId, documentId, originalContent, t]);
 
   // Check if user already has a suggestion
   const userSuggestion = useMemo(() => {
-    if (!userId) return null;
+    if (!user) return null;
+    return suggestions.find((s) => s.creatorId === user.uid) || null;
+  }, [suggestions, user]);
 
-    return suggestions.find((s) => s.creatorId === userId) || null;
-  }, [suggestions, userId]);
-
-  // Fetch suggestions
-  const fetchSuggestions = useCallback(async () => {
-    try {
-      const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId));
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data.suggestions || []);
-      }
-    } catch (err) {
-      console.error('Error fetching suggestions:', err);
-    } finally {
-      setIsLoading(false);
+  // Handle sort change
+  const handleSortChange = useCallback((newSort: SortType) => {
+    setSortType(newSort);
+    // Unfreezeif changing sort order
+    if (isFrozen) {
+      setIsFrozen(false);
     }
-  }, [paragraphId]);
+  }, [isFrozen]);
 
-  // Initial fetch and polling for real-time updates
-  useEffect(() => {
-    fetchSuggestions();
-
-    // Poll for updates every 5 seconds
-    const interval = setInterval(fetchSuggestions, SUGGESTIONS.REALTIME_POLL_INTERVAL_MS);
-
-    return () => clearInterval(interval);
-  }, [fetchSuggestions]);
+  // Handle freeze/unfreeze
+  const handleToggleFreeze = useCallback(() => {
+    if (!isFrozen) {
+      // Freeze: Save current sorted order
+      setFrozenSuggestions(sortedSuggestions);
+    }
+    setIsFrozen(!isFrozen);
+  }, [isFrozen, sortedSuggestions]);
 
   // Handle delete
   const handleDelete = async (suggestionId: string) => {
@@ -77,7 +205,7 @@ export default function SuggestionThread({
       });
 
       if (response.ok) {
-        setSuggestions((prev) => prev.filter((s) => s.suggestionId !== suggestionId));
+        // Real-time listener will update suggestions automatically
         decrementSuggestionCount(paragraphId);
       }
     } catch (err) {
@@ -93,34 +221,97 @@ export default function SuggestionThread({
 
   // Handle add/edit success
   const handleModalSuccess = () => {
-    fetchSuggestions();
+    // No need to fetch - real-time listener will update automatically
     setShowAddModal(false);
     setEditingSuggestion(null);
   };
 
   return (
     <div className={styles.container}>
-      <div className={styles.list}>
+      {/* Sort Controls with Stop/Resume Button */}
+      <div className={styles.controls}>
+        <SortControls
+          activeSort={sortType}
+          onSortChange={handleSortChange}
+          disabled={suggestions.length <= 1 || isFrozen}
+        />
+        <button
+          type="button"
+          className={`${styles.freezeButton} ${isFrozen ? styles.frozen : ''}`}
+          onClick={handleToggleFreeze}
+          disabled={suggestions.length === 0}
+          title={isFrozen ? t('Resume live updates') : t('Stop live updates')}
+        >
+          {isFrozen ? (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              {t('Resume')}
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+              </svg>
+              {t('Stop')}
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Current version section */}
+      <div className={styles.currentSection}>
+        <Suggestion
+          suggestion={currentParagraphSuggestion}
+          userId={user?.uid || null}
+          userDisplayName={user?.displayName || null}
+          paragraphId={paragraphId}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          isCurrent={true}
+        />
+      </div>
+
+      {/* Divider between current and alternatives */}
+      {sortedSuggestions.length > 0 && (
+        <div className={styles.sectionDivider}>
+          <span className={styles.dividerLabel}>{t('Suggested Alternatives')}</span>
+        </div>
+      )}
+
+      {/* Animated Suggestion List */}
+      <Flipper
+        flipKey={flipKey}
+        spring={{ stiffness: 300, damping: 30 }}
+        className={styles.list}
+      >
         {isLoading ? (
           <div className={styles.loading}>
             <div className={styles.skeleton} />
             <div className={styles.skeleton} />
           </div>
-        ) : suggestions.length === 0 ? (
+        ) : sortedSuggestions.length === 0 ? (
           <p className={styles.empty}>{t('No suggestions yet')}</p>
         ) : (
-          suggestions.map((suggestion) => (
-            <Suggestion
-              key={suggestion.suggestionId}
-              suggestion={suggestion}
-              userId={userId}
-              paragraphId={paragraphId}
-              onDelete={handleDelete}
-              onEdit={handleEdit}
-            />
+          sortedSuggestions.map((suggestion) => (
+            <Flipped key={suggestion.suggestionId} flipId={suggestion.suggestionId}>
+              <div>
+                <Suggestion
+                  suggestion={suggestion}
+                  userId={user?.uid || null}
+                  userDisplayName={user?.displayName || null}
+                  paragraphId={paragraphId}
+                  onDelete={handleDelete}
+                  onEdit={handleEdit}
+                  isCurrent={false}
+                />
+              </div>
+            </Flipped>
           ))
         )}
-      </div>
+      </Flipper>
 
       {/* Add suggestion button or notice */}
       {userSuggestion ? (
@@ -131,7 +322,7 @@ export default function SuggestionThread({
         <button
           type="button"
           className={styles.addButton}
-          onClick={() => setShowAddModal(true)}
+          onClick={() => user ? setShowAddModal(true) : alert(t('Please sign in to suggest alternatives'))}
         >
           <svg
             width="16"

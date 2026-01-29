@@ -201,6 +201,8 @@ export {
 export {
   createBasicStatement,
   createStatementObject,
+  createParagraphStatement,
+  createSuggestionStatement,
   defaultStatementSettings
 } from "./models/statement/StatementUtils";
 export type { CreateStatementParams } from "./models/statement/StatementUtils";
@@ -416,3 +418,18 @@ export {
   sortChangesByImpact,
   filterSignificantChanges,
 } from "./models/version/versionModel";
+
+// Replacement Queue models (paragraph version control MVP)
+export type {
+  PendingReplacement,
+  VersionControlAudit,
+  VersionArchive,
+} from "./models/version/replacementQueueModel";
+
+export {
+  PendingReplacementSchema,
+  VersionControlAuditSchema,
+  VersionArchiveSchema,
+  ReplacementQueueStatus,
+  AuditAction,
+} from "./models/version/replacementQueueModel";

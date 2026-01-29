@@ -1,47 +1,70 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Suggestion as SuggestionType } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, UIState } from '@/store/uiStore';
-import { API_ROUTES } from '@/constants/common';
+import {
+  setSuggestionEvaluation,
+  removeSuggestionEvaluation,
+  getUserEvaluation,
+} from '@/controllers/db/evaluations/setSuggestionEvaluation';
+import { sanitizeHTML } from '@/lib/utils/sanitize';
+import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
   suggestion: SuggestionType;
   userId: string | null;
+  userDisplayName: string | null;
   paragraphId: string;
   onDelete: (suggestionId: string) => void;
   onEdit: (suggestion: SuggestionType) => void;
+  isCurrent?: boolean; // Mark as current official version
 }
 
 export default function Suggestion({
   suggestion,
   userId,
+  userDisplayName,
   paragraphId,
   onDelete,
   onEdit,
+  isCurrent = false,
 }: SuggestionProps) {
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
-  const [consensus, setConsensus] = useState(suggestion.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sanitize HTML content to prevent XSS attacks
+  // If content contains Markdown syntax, convert it to HTML first
+  const sanitizedContent = useMemo(() => {
+    const content = suggestion.suggestedContent || '';
+
+    // Check if content looks like Markdown (contains ** or * or # or - at line start)
+    const hasMarkdownSyntax = /\*\*|\*|^#{1,6}\s|^[-*+]\s/m.test(content);
+
+    // If it's Markdown, convert to HTML first, then sanitize
+    // If it's already HTML, just sanitize
+    const htmlContent = hasMarkdownSyntax ? markdownToHtml(content) : content;
+
+    return sanitizeHTML(htmlContent);
+  }, [suggestion.suggestedContent]);
 
   // Check if current user owns this suggestion
   const isOwner = userId && suggestion.creatorId === userId;
 
-  // Fetch user's existing evaluation
+  // Fetch user's existing evaluation from Firestore
   const fetchEvaluation = useCallback(async () => {
     if (!userId) return;
 
     try {
-      const response = await fetch(API_ROUTES.SUGGESTION_EVALUATIONS(suggestion.suggestionId));
-      if (response.ok) {
-        const data = await response.json();
-        setUserEvaluation(data.userEvaluation);
-        setConsensus(data.sumEvaluation || 0);
-      }
+      const evaluation = await getUserEvaluation({
+        suggestionId: suggestion.suggestionId,
+        userId,
+      });
+      setUserEvaluation(evaluation);
     } catch (err) {
       console.error('Error fetching suggestion evaluation:', err);
     }
@@ -51,50 +74,45 @@ export default function Suggestion({
     fetchEvaluation();
   }, [fetchEvaluation]);
 
-  // Handle evaluation (vote up/down)
+  // Handle evaluation (vote up/down) with direct Firestore write
   const handleVote = async (vote: number) => {
-    if (!userId || isOwner || isLoading) return;
-
-    // If clicking the same vote, remove it
-    if (userEvaluation === vote) {
-      setIsLoading(true);
-      try {
-        const response = await fetch(API_ROUTES.SUGGESTION_EVALUATIONS(suggestion.suggestionId), {
-          method: 'DELETE',
-        });
-
-        if (response.ok) {
-          setConsensus((prev) => prev - vote);
-          setUserEvaluation(null);
-        }
-      } catch (err) {
-        console.error('Error removing vote:', err);
-      } finally {
-        setIsLoading(false);
-      }
-
+    // Prevent voting if:
+    // - Not logged in
+    // - User owns this suggestion
+    // - Currently submitting
+    if (!userId || isOwner || isLoading) {
       return;
     }
 
     setIsLoading(true);
-    try {
-      const response = await fetch(API_ROUTES.SUGGESTION_EVALUATIONS(suggestion.suggestionId), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ evaluation: vote }),
-      });
 
-      if (response.ok) {
-        const data = await response.json();
-        setConsensus(data.newConsensus);
+    try {
+      // Use 'Anonymous' as default display name for anonymous users
+      const displayName = userDisplayName || 'Anonymous';
+
+      // If clicking the same vote, remove it
+      if (userEvaluation === vote) {
+        await removeSuggestionEvaluation({
+          suggestionId: suggestion.suggestionId,
+          userId,
+        });
+        setUserEvaluation(null);
+      } else {
+        // Create or update evaluation
+        await setSuggestionEvaluation({
+          suggestionId: suggestion.suggestionId,
+          userId,
+          userDisplayName: displayName,
+          evaluation: vote,
+        });
         setUserEvaluation(vote);
         // Mark paragraph as interacted
         addUserInteraction(paragraphId);
       }
+
+      // Note: Consensus will be updated automatically by Firebase Function and real-time listener
     } catch (err) {
-      console.error('Error submitting vote:', err);
+      console.error('[handleVote] Error handling vote:', err);
     } finally {
       setIsLoading(false);
     }
@@ -124,20 +142,31 @@ export default function Suggestion({
   };
 
   return (
-    <article className={styles.suggestion}>
+    <article
+      className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''}`}
+      aria-label={isCurrent ? t('Current official version') : undefined}
+    >
       <header className={styles.header}>
-        <div className={styles.avatar}>
+        <div className={`${styles.avatar} ${isCurrent ? styles['avatar--current'] : ''}`}>
           {suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?'}
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {suggestion.creatorDisplayName || t('Anonymous')}
+            {suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous'))}
           </span>
           <span className={styles.date}>
             {formatDate(suggestion.createdAt)}
           </span>
         </div>
-        {isOwner && (
+        {isCurrent && (
+          <div className={styles.currentBadge}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+            </svg>
+            {t('Current Version')}
+          </div>
+        )}
+        {isOwner && !isCurrent && (
           <div className={styles.ownerActions}>
             <button
               type="button"
@@ -182,7 +211,11 @@ export default function Suggestion({
       </header>
 
       <div className={styles.content}>
-        <p className={styles.suggestedText}>{suggestion.suggestedContent}</p>
+        <div
+          className={styles.suggestedText}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+          suppressHydrationWarning
+        />
         {suggestion.reasoning && (
           <div className={styles.reasoning}>
             <span className={styles.reasoningLabel}>{t('Reasoning')}:</span>
@@ -207,8 +240,8 @@ export default function Suggestion({
             </svg>
           </button>
 
-          <span className={`${styles.voteScore} ${consensus > 0 ? styles.positive : consensus < 0 ? styles.negative : ''}`}>
-            {consensus > 0 ? '+' : ''}{consensus}
+          <span className={`${styles.voteScore} ${(suggestion.consensus || 0) > 0 ? styles.positive : (suggestion.consensus || 0) < 0 ? styles.negative : ''}`}>
+            {(suggestion.consensus || 0) > 0 ? '+' : ''}{(suggestion.consensus || 0).toFixed(2)}
           </span>
 
           <button
@@ -227,10 +260,10 @@ export default function Suggestion({
       )}
 
       {/* Show consensus for suggestion owners */}
-      {isOwner && consensus !== 0 && (
+      {isOwner && (suggestion.consensus || 0) !== 0 && (
         <div className={styles.consensusDisplay}>
-          <span className={`${styles.voteScore} ${consensus > 0 ? styles.positive : styles.negative}`}>
-            {consensus > 0 ? '+' : ''}{consensus}
+          <span className={`${styles.voteScore} ${(suggestion.consensus || 0) > 0 ? styles.positive : styles.negative}`}>
+            {(suggestion.consensus || 0) > 0 ? '+' : ''}{(suggestion.consensus || 0).toFixed(2)}
           </span>
         </div>
       )}

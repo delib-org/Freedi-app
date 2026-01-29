@@ -11,6 +11,11 @@
   padding: var(--spacing-md);
   z-index: 1000;
   animation: fadeIn 0.2s ease;
+
+  @media (max-width: 600px) {
+    padding: var(--spacing-xs); // Reduce padding on mobile (8px)
+    align-items: flex-end; // Align to bottom on mobile for better UX
+  }
 }
 
 @keyframes fadeIn {
@@ -46,6 +51,12 @@
     width: 100%;
     max-width: 800px;
   }
+
+  @media (max-width: 600px) {
+    max-height: 95vh; // Use more screen space on mobile
+    border-bottom-left-radius: 0; // Remove bottom corners when aligned to bottom
+    border-bottom-right-radius: 0;
+  }
 }
 
 @keyframes slideUp {
@@ -65,12 +76,24 @@
   justify-content: space-between;
   padding: var(--spacing-md) var(--spacing-lg);
   border-bottom: 1px solid var(--border-light);
+
+  @media (max-width: 600px) {
+    padding: var(--spacing-sm) var(--spacing-md); // Reduce padding on mobile
+  }
 }
 
 .title {
   font-size: var(--h3-font-size);
   color: var(--text-primary);
   margin: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
+  min-width: 0; // Allow flex item to shrink
+
+  @media (max-width: 600px) {
+    font-size: 1.125rem; // Smaller title on mobile
+  }
 }
 
 .headerButtons {
@@ -102,7 +125,14 @@
 .content {
   padding: var(--spacing-lg);
   overflow-y: auto;
+  overflow-x: hidden; // Prevent horizontal overflow
   flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+
+  @media (max-width: 600px) {
+    padding: var(--spacing-md); // Reduce content padding on mobile (16px)
+  }
 }
 
 /* RTL Support */

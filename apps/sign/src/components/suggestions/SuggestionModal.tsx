@@ -1,10 +1,14 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
+import { useAutoLogin } from '@/hooks/useAutoLogin';
+import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
+import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
+import { htmlToMarkdown, markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
 import styles from './SuggestionModal.module.scss';
 
@@ -29,11 +33,23 @@ export default function SuggestionModal({
 }: SuggestionModalProps) {
   const { t } = useTranslation();
   const { incrementSuggestionCount, addUserInteraction } = useUIStore();
+  const user = useAutoLogin(); // Auto-login anonymously if not logged in
 
   // State
   const [isOriginalExpanded, setIsOriginalExpanded] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Real-time collaborative editing
+  const liveEditingManager = useRef<LiveEditingManager | null>(null);
+  const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Convert HTML original content to Markdown for user-friendly editing
+  const markdownOriginalContent = useMemo(
+    () => htmlToMarkdown(originalContent),
+    [originalContent]
+  );
 
   // Draft handling
   const {
@@ -45,37 +61,125 @@ export default function SuggestionModal({
     hasDraft,
   } = useSuggestionDraft({ paragraphId });
 
-  // Pre-fill if editing existing suggestion
+  // Initialize real-time editing session
+  useEffect(() => {
+    if (!user) return;
+
+    const manager = new LiveEditingManager();
+    liveEditingManager.current = manager;
+
+    // Join editing session for this paragraph
+    manager
+      .joinSession(
+        documentId,
+        paragraphId,
+        user.uid,
+        user.displayName || 'Anonymous',
+        suggestedContent || markdownOriginalContent
+      )
+      .catch((error) => {
+        console.error('Failed to join editing session:', error);
+      });
+
+    // Subscribe to session updates to see other editors
+    const unsubscribe = manager.subscribeToSession((session: LiveEditingSession | null) => {
+      if (session) {
+        const editors = manager.getActiveEditors(session);
+        setActiveEditors(editors);
+
+        // Update draft content from RTDB if it changed from another user
+        if (session.draftContent !== suggestedContent) {
+          setSuggestedContent(session.draftContent);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      manager.cleanup();
+    };
+  }, [user, documentId, paragraphId, markdownOriginalContent, suggestedContent, setSuggestedContent]);
+
+  // Handle textarea changes with real-time sync
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newContent = e.target.value;
+      const cursorPosition = e.target.selectionStart || 0;
+
+      setSuggestedContent(newContent);
+
+      // Update RTDB for real-time collaboration (300ms debounced)
+      if (liveEditingManager.current) {
+        liveEditingManager.current.updateDraft(newContent, cursorPosition);
+      }
+    },
+    [setSuggestedContent]
+  );
+
+  // Pre-fill if editing existing suggestion (convert HTML to Markdown)
   useEffect(() => {
     if (existingSuggestion && !hasDraft) {
-      setSuggestedContent(existingSuggestion.suggestedContent);
+      const markdownContent = htmlToMarkdown(existingSuggestion.suggestedContent);
+      setSuggestedContent(markdownContent);
       setReasoning(existingSuggestion.reasoning || '');
     }
   }, [existingSuggestion, hasDraft, setSuggestedContent, setReasoning]);
+
+  // Initialize with markdown original content for new suggestions
+  useEffect(() => {
+    if (!existingSuggestion && !hasDraft && !suggestedContent) {
+      setSuggestedContent(markdownOriginalContent);
+    }
+  }, [existingSuggestion, hasDraft, suggestedContent, markdownOriginalContent, setSuggestedContent]);
 
   const isEditing = !!existingSuggestion;
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
 
   const handleSubmit = async () => {
-    if (!isValid || submitState === 'submitting') return;
+    console.log('[SuggestionModal] handleSubmit called', {
+      isValid,
+      submitState,
+      hasUser: !!user,
+      userId: user?.uid,
+    });
+
+    if (!isValid || submitState === 'submitting') {
+      console.warn('[SuggestionModal] Submit blocked:', { isValid, submitState });
+      return;
+    }
+
+    if (!user) {
+      console.error('[SuggestionModal] No user - cannot submit');
+      setErrorMessage('Please wait for authentication to complete...');
+      return;
+    }
 
     setSubmitState('submitting');
     setErrorMessage('');
 
     try {
+      // Convert Markdown to HTML before submitting
+      const htmlContent = markdownToHtml(suggestedContent.trim());
+
       const method = isEditing ? 'PUT' : 'POST';
       const body = isEditing
         ? {
             suggestionId: existingSuggestion.suggestionId,
-            suggestedContent: suggestedContent.trim(),
+            suggestedContent: htmlContent,
             reasoning: reasoning.trim(),
           }
         : {
-            suggestedContent: suggestedContent.trim(),
+            suggestedContent: htmlContent,
             reasoning: reasoning.trim(),
             documentId,
             originalContent,
           };
+
+      console.log('[SuggestionModal] Sending request:', {
+        method,
+        url: API_ROUTES.SUGGESTIONS(paragraphId),
+        bodyKeys: Object.keys(body),
+      });
 
       const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId), {
         method,
@@ -85,10 +189,20 @@ export default function SuggestionModal({
         body: JSON.stringify(body),
       });
 
+      console.log('[SuggestionModal] Response:', {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+      });
+
       if (!response.ok) {
         const data = await response.json();
+        console.error('[SuggestionModal] Error response:', data);
         throw new Error(data.error || 'Failed to submit suggestion');
       }
+
+      const responseData = await response.json();
+      console.log('[SuggestionModal] Success:', responseData);
 
       setSubmitState('success');
       clearDraft();
@@ -107,6 +221,7 @@ export default function SuggestionModal({
         onClose();
       }, 500);
     } catch (error) {
+      console.error('[SuggestionModal] Submit error:', error);
       setSubmitState('error');
       setErrorMessage(error instanceof Error ? error.message : t('Failed to submit suggestion'));
     }
@@ -141,13 +256,31 @@ export default function SuggestionModal({
         )}
       </div>
 
-      {/* Suggestion textarea */}
+      {/* Active editors indicator */}
+      {activeEditors.length > 0 && (
+        <div className={styles.activeEditors}>
+          <span className={styles.activeEditorsLabel}>{t('Also editing')}:</span>
+          {activeEditors.map((editor) => (
+            <span
+              key={editor.userId}
+              className={styles.activeEditorBadge}
+              style={{ backgroundColor: editor.color }}
+              title={editor.displayName}
+            >
+              {editor.displayName.charAt(0).toUpperCase()}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Suggestion textarea with real-time collaboration */}
       <div className={styles.field}>
         <label htmlFor="suggested-content">{t('Your Suggested Text')}</label>
         <textarea
+          ref={textareaRef}
           id="suggested-content"
           value={suggestedContent}
-          onChange={(e) => setSuggestedContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder={t('Write your alternative version...')}
           rows={5}
           maxLength={SUGGESTIONS.MAX_LENGTH}

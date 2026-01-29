@@ -3,6 +3,9 @@ const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
 
+  // Standalone output for Docker/Cloud Run deployment
+  output: 'standalone',
+
   // Transpile shared packages
   transpilePackages: ['@freedi/shared-i18n'],
 
