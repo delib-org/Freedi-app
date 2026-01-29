@@ -371,6 +371,113 @@
   justify-content: flex-end;
 }
 
+// Image Upload Section
+.imageUploadSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.fileInput {
+  display: none;
+}
+
+.uploadArea {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-xl);
+  border: 2px dashed var(--border-light);
+  border-radius: var(--radius-md);
+  background: var(--background-alt, #f9f9f9);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: var(--text-secondary);
+
+  &:hover {
+    border-color: var(--btn-primary);
+    background: rgba(91, 136, 229, 0.05);
+    color: var(--btn-primary);
+  }
+
+  svg {
+    opacity: 0.6;
+  }
+
+  span {
+    font-size: 0.95rem;
+  }
+}
+
+.uploadHint {
+  font-size: 0.8rem !important;
+  color: var(--text-caption) !important;
+}
+
+.imagePreviewContainer {
+  position: relative;
+  display: inline-block;
+  align-self: center;
+}
+
+.imagePreview {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
+}
+
+.removeImageButton {
+  position: absolute;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+
+  &:hover {
+    background: var(--disagree);
+  }
+}
+
+.inputLabel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.textInput {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  color: var(--text-body);
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 2px rgba(91, 136, 229, 0.2);
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
 // RTL Support
 :global([data-text-dir="rtl"]) {
   .paragraphItem {

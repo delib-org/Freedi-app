@@ -20,6 +20,10 @@ interface CreateParagraphParams {
     photoURL: string;
     isAnonymous: boolean;
   };
+  // Image-specific fields
+  imageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
 }
 
 /**
@@ -36,6 +40,10 @@ export async function createParagraphStatementToDB(params: CreateParagraphParams
       type: params.type,
       content: params.content,
       order: params.order,
+      // Image-specific fields (only included if provided)
+      ...(params.imageUrl && { imageUrl: params.imageUrl }),
+      ...(params.imageAlt && { imageAlt: params.imageAlt }),
+      ...(params.imageCaption && { imageCaption: params.imageCaption }),
     };
 
     // Create the paragraph statement object
@@ -97,6 +105,83 @@ export async function updateParagraphStatementToDB({
   } catch (error) {
     logError(error, {
       operation: 'controllers.updateParagraphStatementToDB',
+      paragraphId,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Update a document's title (statement field)
+ */
+export async function updateDocumentTitleToDB({
+  documentId,
+  title,
+}: {
+  documentId: string;
+  title: string;
+}): Promise<void> {
+  try {
+    const firestore = getFirebaseFirestore();
+    const statementRef = doc(firestore, Collections.statements, documentId);
+
+    await updateDoc(statementRef, {
+      statement: title,
+      lastUpdate: Date.now(),
+    });
+
+    console.info('[updateDocumentTitleToDB] Document title updated', {
+      documentId,
+    });
+  } catch (error) {
+    logError(error, {
+      operation: 'controllers.updateDocumentTitleToDB',
+      documentId,
+    });
+    throw error;
+  }
+}
+
+/**
+ * Update image-specific fields on a paragraph
+ */
+export async function updateParagraphImageToDB({
+  paragraphId,
+  imageUrl,
+  imageAlt,
+  imageCaption,
+}: {
+  paragraphId: string;
+  imageUrl?: string;
+  imageAlt?: string;
+  imageCaption?: string;
+}): Promise<void> {
+  try {
+    const firestore = getFirebaseFirestore();
+    const statementRef = doc(firestore, Collections.statements, paragraphId);
+
+    const updateData: Record<string, unknown> = {
+      lastUpdate: Date.now(),
+    };
+
+    if (imageUrl !== undefined) {
+      updateData['doc.imageUrl'] = imageUrl;
+    }
+    if (imageAlt !== undefined) {
+      updateData['doc.imageAlt'] = imageAlt;
+    }
+    if (imageCaption !== undefined) {
+      updateData['doc.imageCaption'] = imageCaption;
+    }
+
+    await updateDoc(statementRef, updateData);
+
+    console.info('[updateParagraphImageToDB] Paragraph image fields updated', {
+      paragraphId,
+    });
+  } catch (error) {
+    logError(error, {
+      operation: 'controllers.updateParagraphImageToDB',
       paragraphId,
     });
     throw error;

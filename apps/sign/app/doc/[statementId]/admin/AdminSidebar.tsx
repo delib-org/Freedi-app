@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import LanguageSwitcher from '@/components/admin/LanguageSwitcher';
+import { updateDocumentTitleToDB } from '@/controllers/db/paragraphs/setParagraphStatement';
 import styles from './admin.module.scss';
 
 interface AdminSidebarProps {
@@ -19,6 +21,45 @@ export default function AdminSidebar({
   canCreateViewerLinks,
 }: AdminSidebarProps) {
   const { t } = useTranslation();
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState(documentTitle);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSaveTitle = useCallback(async () => {
+    if (!titleValue.trim()) {
+      setTitleValue(documentTitle);
+      setIsEditingTitle(false);
+      return;
+    }
+
+    if (titleValue === documentTitle) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateDocumentTitleToDB({
+        documentId: statementId,
+        title: titleValue.trim(),
+      });
+      setIsEditingTitle(false);
+    } catch (error) {
+      console.error('Failed to update title:', error);
+      setTitleValue(documentTitle);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [titleValue, documentTitle, statementId]);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveTitle();
+    } else if (e.key === 'Escape') {
+      setTitleValue(documentTitle);
+      setIsEditingTitle(false);
+    }
+  }, [handleSaveTitle, documentTitle]);
 
   return (
     <aside className={styles.sidebar}>
@@ -27,7 +68,34 @@ export default function AdminSidebar({
           <h2 className={styles.sidebarTitle}>{t('adminPanel')}</h2>
           <LanguageSwitcher />
         </div>
-        <p className={styles.documentTitle}>{documentTitle}</p>
+        {canManageSettings && isEditingTitle ? (
+          <div className={styles.titleEditContainer}>
+            <input
+              type="text"
+              value={titleValue}
+              onChange={(e) => setTitleValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onBlur={handleSaveTitle}
+              className={styles.titleInput}
+              autoFocus
+              disabled={isSaving}
+            />
+          </div>
+        ) : (
+          <p
+            className={`${styles.documentTitle} ${canManageSettings ? styles.editable : ''}`}
+            onClick={() => canManageSettings && setIsEditingTitle(true)}
+            title={canManageSettings ? t('Click to edit title') : undefined}
+          >
+            {titleValue}
+            {canManageSettings && (
+              <svg className={styles.editIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            )}
+          </p>
+        )}
       </div>
 
       <nav className={styles.nav}>

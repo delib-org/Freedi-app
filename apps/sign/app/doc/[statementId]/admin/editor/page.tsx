@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { ParagraphType, Collections, Statement } from '@freedi/shared-types';
@@ -17,6 +17,14 @@ import {
   deleteParagraphStatementToDB,
 } from '@/controllers/db/paragraphs/setParagraphStatement';
 import styles from './editor.module.scss';
+
+interface ImageUploadState {
+  file: File | null;
+  preview: string | null;
+  alt: string;
+  caption: string;
+  uploading: boolean;
+}
 
 export default function EditorPage() {
   const params = useParams();
@@ -36,6 +44,14 @@ export default function EditorPage() {
   const [newContent, setNewContent] = useState('');
   const [newType, setNewType] = useState<ParagraphType>(ParagraphType.paragraph);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [imageUpload, setImageUpload] = useState<ImageUploadState>({
+    file: null,
+    preview: null,
+    alt: '',
+    caption: '',
+    uploading: false,
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Real-time listener for paragraphs
   useEffect(() => {
@@ -142,8 +158,72 @@ export default function EditorPage() {
     }
   }, [user, t]);
 
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+    if (!allowedTypes.includes(file.type)) {
+      alert(t('Invalid file type. Allowed: JPEG, PNG, GIF, WebP, SVG'));
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      alert(t('File too large. Maximum size is 5 MB'));
+      return;
+    }
+
+    // Create preview
+    const preview = URL.createObjectURL(file);
+    setImageUpload((prev) => ({ ...prev, file, preview }));
+  }, [t]);
+
+  const resetImageUpload = useCallback(() => {
+    if (imageUpload.preview) {
+      URL.revokeObjectURL(imageUpload.preview);
+    }
+    setImageUpload({
+      file: null,
+      preview: null,
+      alt: '',
+      caption: '',
+      uploading: false,
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [imageUpload.preview]);
+
+  const uploadImage = useCallback(async (): Promise<string | null> => {
+    if (!imageUpload.file) return null;
+
+    const formData = new FormData();
+    formData.append('file', imageUpload.file);
+    formData.append('documentId', statementId);
+
+    const response = await fetch('/api/admin/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || 'Upload failed');
+    }
+
+    return result.url;
+  }, [imageUpload.file, statementId]);
+
   const handleAddParagraph = useCallback(async () => {
-    if (!newContent.trim() && newType !== ParagraphType.image) {
+    // For image type, require a file
+    if (newType === ParagraphType.image) {
+      if (!imageUpload.file) {
+        alert(t('Please select an image'));
+        return;
+      }
+    } else if (!newContent.trim()) {
       alert(t('Content is required'));
       return;
     }
@@ -155,9 +235,21 @@ export default function EditorPage() {
 
     setSaving(true);
     try {
+      let imageUrl: string | undefined;
+
+      // Upload image if it's an image paragraph
+      if (newType === ParagraphType.image && imageUpload.file) {
+        setImageUpload((prev) => ({ ...prev, uploading: true }));
+        const url = await uploadImage();
+        if (!url) {
+          throw new Error('Failed to upload image');
+        }
+        imageUrl = url;
+      }
+
       // Create paragraph using direct Firestore write
       const paragraphId = await createParagraphStatementToDB({
-        content: newContent,
+        content: newType === ParagraphType.image ? '' : newContent,
         type: newType,
         order: paragraphs.length,
         documentId: statementId,
@@ -168,12 +260,17 @@ export default function EditorPage() {
           photoURL: user.photoURL || '',
           isAnonymous: user.isAnonymous,
         },
+        // Image-specific fields
+        imageUrl,
+        imageAlt: imageUpload.alt || undefined,
+        imageCaption: imageUpload.caption || undefined,
       });
 
       // Real-time listener will update UI automatically - no manual state update needed
       setShowAddModal(false);
       setNewContent('');
       setNewType(ParagraphType.paragraph);
+      resetImageUpload();
 
       console.info('[EditorPage] Paragraph created successfully', { paragraphId });
     } catch (error) {
@@ -181,8 +278,9 @@ export default function EditorPage() {
       alert(t('Failed to add'));
     } finally {
       setSaving(false);
+      setImageUpload((prev) => ({ ...prev, uploading: false }));
     }
-  }, [user, statementId, newContent, newType, paragraphs.length, t]);
+  }, [user, statementId, newContent, newType, paragraphs.length, t, imageUpload, uploadImage, resetImageUpload]);
 
   const handleDragStart = useCallback((index: number) => {
     setDraggedIndex(index);
@@ -325,6 +423,7 @@ export default function EditorPage() {
                           <option value={ParagraphType.h5}>{t('Heading')} 5</option>
                           <option value={ParagraphType.h6}>{t('Heading')} 6</option>
                           <option value={ParagraphType.li}>{t('List item')}</option>
+                          <option value={ParagraphType.image}>{t('Image')}</option>
                         </select>
                         <TiptapEditor
                           content={editContent}
@@ -441,7 +540,13 @@ export default function EditorPage() {
                 {t('Type')}
                 <select
                   value={newType}
-                  onChange={(e) => setNewType(e.target.value as ParagraphType)}
+                  onChange={(e) => {
+                    const type = e.target.value as ParagraphType;
+                    setNewType(type);
+                    if (type !== ParagraphType.image) {
+                      resetImageUpload();
+                    }
+                  }}
                   className={styles.typeSelect}
                 >
                   <option value={ParagraphType.paragraph}>{t('Paragraph')}</option>
@@ -452,30 +557,101 @@ export default function EditorPage() {
                   <option value={ParagraphType.h5}>{t('Heading')} 5</option>
                   <option value={ParagraphType.h6}>{t('Heading')} 6</option>
                   <option value={ParagraphType.li}>{t('List item')}</option>
+                  <option value={ParagraphType.image}>{t('Image')}</option>
                 </select>
               </label>
-              <label>
-                {t('Content')}
-                <TiptapEditor
-                  content={newContent}
-                  onChange={setNewContent}
-                  documentId={statementId}
-                  placeholder={t('Enter content...')}
-                />
-              </label>
+
+              {newType === ParagraphType.image ? (
+                <div className={styles.imageUploadSection}>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp,image/svg+xml"
+                    onChange={handleImageSelect}
+                    className={styles.fileInput}
+                    id="image-upload"
+                  />
+                  {!imageUpload.preview ? (
+                    <label htmlFor="image-upload" className={styles.uploadArea}>
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <circle cx="8.5" cy="8.5" r="1.5" />
+                        <path d="M21 15l-5-5L5 21" />
+                      </svg>
+                      <span>{t('Click to upload image')}</span>
+                      <span className={styles.uploadHint}>{t('JPEG, PNG, GIF, WebP, SVG (max 5MB)')}</span>
+                    </label>
+                  ) : (
+                    <div className={styles.imagePreviewContainer}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageUpload.preview}
+                        alt={t('Preview')}
+                        className={styles.imagePreview}
+                      />
+                      <button
+                        type="button"
+                        onClick={resetImageUpload}
+                        className={styles.removeImageButton}
+                        title={t('Remove image')}
+                      >
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <line x1="18" y1="6" x2="6" y2="18" />
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                      </button>
+                    </div>
+                  )}
+
+                  <label className={styles.inputLabel}>
+                    {t('Alt text (for accessibility)')}
+                    <input
+                      type="text"
+                      value={imageUpload.alt}
+                      onChange={(e) => setImageUpload((prev) => ({ ...prev, alt: e.target.value }))}
+                      placeholder={t('Describe the image...')}
+                      className={styles.textInput}
+                    />
+                  </label>
+
+                  <label className={styles.inputLabel}>
+                    {t('Caption (optional)')}
+                    <input
+                      type="text"
+                      value={imageUpload.caption}
+                      onChange={(e) => setImageUpload((prev) => ({ ...prev, caption: e.target.value }))}
+                      placeholder={t('Add a caption...')}
+                      className={styles.textInput}
+                    />
+                  </label>
+                </div>
+              ) : (
+                <label>
+                  {t('Content')}
+                  <TiptapEditor
+                    content={newContent}
+                    onChange={setNewContent}
+                    documentId={statementId}
+                    placeholder={t('Enter content...')}
+                  />
+                </label>
+              )}
             </div>
             <div className={styles.modalActions}>
               <button
                 type="button"
                 onClick={handleAddParagraph}
-                disabled={saving}
+                disabled={saving || imageUpload.uploading}
                 className={styles.saveButton}
               >
-                {saving ? t('Adding...') : t('Add')}
+                {imageUpload.uploading ? t('Uploading...') : saving ? t('Adding...') : t('Add')}
               </button>
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => {
+                  setShowAddModal(false);
+                  resetImageUpload();
+                }}
                 className={styles.cancelButton}
               >
                 {t('Cancel')}
