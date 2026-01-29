@@ -1,18 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, Paragraph, ParagraphType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
-interface UpdateParagraphInput {
+interface UpdateParagraphContentInput {
   documentId: string;
   content: string;
   type: ParagraphType;
 }
 
+interface UpdateParagraphNonInteractiveInput {
+  documentId: string;
+  isNonInteractive: boolean;
+}
+
+type UpdateParagraphInput = UpdateParagraphContentInput | UpdateParagraphNonInteractiveInput;
+
+function isNonInteractiveUpdate(body: UpdateParagraphInput): body is UpdateParagraphNonInteractiveInput {
+  return 'isNonInteractive' in body;
+}
+
 /**
  * PATCH /api/admin/paragraphs/[paragraphId]
- * Update an existing paragraph statement
+ * Update an existing paragraph - supports both content updates and non-interactive toggle
  */
 export async function PATCH(
   request: NextRequest,
@@ -28,13 +40,19 @@ export async function PATCH(
     }
 
     const body: UpdateParagraphInput = await request.json();
-    const { documentId, content, type } = body;
+    const { documentId } = body;
 
-    if (!documentId || !content) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!documentId) {
+      return NextResponse.json({ error: 'Missing documentId' }, { status: 400 });
     }
 
     const db = getFirestoreAdmin();
+
+    // Verify user has admin access to this document
+    const adminAccess = await checkAdminAccess(db, documentId, userId);
+    if (!adminAccess.isAdmin) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
 
     // Verify paragraph exists
     const paragraphRef = db.collection(Collections.statements).doc(paragraphId);
@@ -42,6 +60,27 @@ export async function PATCH(
 
     if (!paragraphSnap.exists) {
       return NextResponse.json({ error: 'Paragraph not found' }, { status: 404 });
+    }
+
+    // Handle non-interactive toggle
+    if (isNonInteractiveUpdate(body)) {
+      const { isNonInteractive } = body;
+
+      await paragraphRef.update({
+        'doc.isNonInteractive': isNonInteractive,
+        lastUpdate: Date.now(),
+      });
+
+      logger.info(`[Paragraphs API] Updated paragraph isNonInteractive: ${paragraphId} -> ${isNonInteractive}`);
+
+      return NextResponse.json({ success: true, isNonInteractive });
+    }
+
+    // Handle content update
+    const { content, type } = body;
+
+    if (!content) {
+      return NextResponse.json({ error: 'Missing content field' }, { status: 400 });
     }
 
     // Update the paragraph statement
