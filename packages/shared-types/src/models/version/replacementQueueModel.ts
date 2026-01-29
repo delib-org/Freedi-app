@@ -39,6 +39,8 @@ export const PendingReplacementSchema = object({
 	consensus: number(), // Updated in real-time as votes change
 	consensusAtCreation: number(), // Snapshot when queued (for staleness detection)
 	evaluationCount: number(),
+	positiveEvaluations: optional(number()), // Votes in favor
+	negativeEvaluations: optional(number()), // Votes against
 	createdAt: number(),
 
 	// Creator info (denormalized for faster notifications)

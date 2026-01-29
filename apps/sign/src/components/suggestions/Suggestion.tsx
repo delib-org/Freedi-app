@@ -232,9 +232,14 @@ export default function Suggestion({
             className={`${styles.voteButton} ${styles.upvote} ${userEvaluation === 1 ? styles.active : ''}`}
             onClick={() => userId ? handleVote(1) : alert(t('Please sign in to vote'))}
             disabled={isLoading}
-            aria-label={t('Vote up')}
+            aria-label={`${t('Vote up')}. ${suggestion.positiveEvaluations || 0} ${t('votes in favor')}`}
             title={userId ? t('Vote up') : t('Sign in to vote')}
           >
+            {(suggestion.positiveEvaluations || 0) > 0 && (
+              <span className={`${styles.voteCount} ${styles['voteCount--positive']}`}>
+                {suggestion.positiveEvaluations}
+              </span>
+            )}
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
             </svg>
@@ -249,12 +254,17 @@ export default function Suggestion({
             className={`${styles.voteButton} ${styles.downvote} ${userEvaluation === -1 ? styles.active : ''}`}
             onClick={() => userId ? handleVote(-1) : alert(t('Please sign in to vote'))}
             disabled={isLoading}
-            aria-label={t('Vote down')}
+            aria-label={`${t('Vote down')}. ${suggestion.negativeEvaluations || 0} ${t('votes against')}`}
             title={userId ? t('Vote down') : t('Sign in to vote')}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
             </svg>
+            {(suggestion.negativeEvaluations || 0) > 0 && (
+              <span className={`${styles.voteCount} ${styles['voteCount--negative']}`}>
+                {suggestion.negativeEvaluations}
+              </span>
+            )}
           </button>
         </div>
       )}

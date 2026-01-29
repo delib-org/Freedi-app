@@ -14,6 +14,9 @@ export const SuggestionSchema = object({
 	lastUpdate: number(),
 	consensus: number(),
 	hide: boolean(),
+	// Evaluation counts for displaying vote breakdown
+	positiveEvaluations: optional(number()),
+	negativeEvaluations: optional(number()),
 });
 
 export type Suggestion = InferOutput<typeof SuggestionSchema>;

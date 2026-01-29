@@ -219,6 +219,16 @@
 		}
 	}
 
+	&__votesFor {
+		color: var(--agree);
+		font-weight: 600;
+	}
+
+	&__votesAgainst {
+		color: var(--disagree);
+		font-weight: 600;
+	}
+
 	// Actions footer
 	&__actions {
 		display: flex;

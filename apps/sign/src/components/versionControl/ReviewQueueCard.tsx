@@ -147,7 +147,18 @@ export function ReviewQueueCard({
 						<path d="M23 21v-2a4 4 0 0 0-3-3.87" />
 						<path d="M16 3.13a4 4 0 0 1 0 7.75" />
 					</svg>
-					<span>{item.evaluationCount} {t('votes')}</span>
+					<span>
+						{item.evaluationCount} {t('votes')}
+						{((item.positiveEvaluations ?? 0) > 0 || (item.negativeEvaluations ?? 0) > 0) && (
+							<>
+								{' ('}
+								<span className={styles['card__votesFor']}>+{item.positiveEvaluations ?? 0}</span>
+								{' / '}
+								<span className={styles['card__votesAgainst']}>-{item.negativeEvaluations ?? 0}</span>
+								{')'}
+							</>
+						)}
+					</span>
 				</div>
 
 				<div className={styles.card__metaItem}>

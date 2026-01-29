@@ -122,9 +122,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  gap: 4px;
+  min-width: 36px;
   height: 28px;
-  padding: 0;
+  padding: 0 6px;
   background: transparent;
   border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
   border-radius: var(--radius-sm);
@@ -142,6 +143,8 @@
   }
 
   &.upvote {
+    flex-direction: row;
+
     &:hover:not(:disabled) {
       background: rgba(76, 175, 80, 0.1);
       border-color: var(--agree);
@@ -152,10 +155,16 @@
       background: var(--agree);
       border-color: var(--agree);
       color: white;
+
+      .voteCount--positive {
+        color: white;
+      }
     }
   }
 
   &.downvote {
+    flex-direction: row;
+
     &:hover:not(:disabled) {
       background: rgba(244, 67, 54, 0.1);
       border-color: var(--disagree);
@@ -166,7 +175,25 @@
       background: var(--disagree);
       border-color: var(--disagree);
       color: white;
+
+      .voteCount--negative {
+        color: white;
+      }
     }
+  }
+}
+
+.voteCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+
+  &--positive {
+    color: var(--agree);
+  }
+
+  &--negative {
+    color: var(--disagree);
   }
 }
 
@@ -261,6 +288,16 @@
     flex-direction: row-reverse;
   }
 
+  .voteButton {
+    &.upvote {
+      flex-direction: row-reverse;
+    }
+
+    &.downvote {
+      flex-direction: row-reverse;
+    }
+  }
+
   .suggestedText {
     text-align: right;
     direction: rtl;
@@ -307,6 +344,16 @@
 
   .votingBar {
     flex-direction: row-reverse;
+  }
+
+  .voteButton {
+    &.upvote {
+      flex-direction: row-reverse;
+    }
+
+    &.downvote {
+      flex-direction: row-reverse;
+    }
   }
 
   .suggestedText {
