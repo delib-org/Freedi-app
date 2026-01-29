@@ -158,6 +158,8 @@ export default function SuggestionThread({
         lastUpdate: Date.now(),
         consensus: 1.0, // Official paragraphs start with full consensus
         hide: false,
+        positiveEvaluations: undefined,
+        negativeEvaluations: undefined,
       };
     }
 
@@ -176,6 +178,9 @@ export default function SuggestionThread({
       lastUpdate: officialParagraph.lastUpdate || officialParagraph.createdAt,
       consensus: officialParagraph.consensus || 1.0,
       hide: officialParagraph.hide || false,
+      // Include evaluation counts for vote breakdown display
+      positiveEvaluations: (officialParagraph as Statement & { positiveEvaluations?: number }).positiveEvaluations,
+      negativeEvaluations: (officialParagraph as Statement & { negativeEvaluations?: number }).negativeEvaluations,
     };
   }, [officialParagraph, paragraphId, documentId, originalContent, t]);
 
