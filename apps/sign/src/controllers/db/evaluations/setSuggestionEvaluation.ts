@@ -1,50 +1,12 @@
 /**
  * Set evaluation for a suggestion statement
- * Direct Firestore write - no API route needed
- * Firebase Function (fn_evaluation.ts) triggers automatically to calculate consensus
- * Also updates positiveEvaluations/negativeEvaluations counts on the statement
+ * Uses API route to bypass Firestore security rules and update vote counts
  */
 
-import { doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
-
-/**
- * Helper to recalculate and update vote counts on a suggestion
- */
-async function updateVoteCounts(suggestionId: string): Promise<void> {
-  const firestore = getFirebaseFirestore();
-
-  // Query all evaluations for this suggestion
-  const evaluationsQuery = query(
-    collection(firestore, Collections.evaluations),
-    where('statementId', '==', suggestionId)
-  );
-
-  const evaluationsSnapshot = await getDocs(evaluationsQuery);
-
-  let positiveEvaluations = 0;
-  let negativeEvaluations = 0;
-
-  evaluationsSnapshot.docs.forEach((evalDoc) => {
-    const evalData = evalDoc.data();
-    const evalValue = evalData.evaluation || 0;
-
-    if (evalValue > 0) {
-      positiveEvaluations++;
-    } else if (evalValue < 0) {
-      negativeEvaluations++;
-    }
-  });
-
-  // Update the suggestion statement with vote counts
-  const suggestionRef = doc(firestore, Collections.statements, suggestionId);
-  await updateDoc(suggestionRef, {
-    positiveEvaluations,
-    negativeEvaluations,
-  });
-}
 
 interface SetSuggestionEvaluationParams {
   suggestionId: string;
@@ -55,64 +17,31 @@ interface SetSuggestionEvaluationParams {
 
 /**
  * Create or update an evaluation for a suggestion
- * Writes directly to Firestore evaluations collection
+ * Uses API route which updates both evaluation and vote counts
  *
  * @returns Promise that resolves when evaluation is saved
  */
 export async function setSuggestionEvaluation({
   suggestionId,
-  userId,
-  userDisplayName,
   evaluation,
 }: SetSuggestionEvaluationParams): Promise<void> {
   try {
-    const firestore = getFirebaseFirestore();
-
-    // Get the suggestion statement to find its parentId
-    const suggestionRef = doc(firestore, Collections.statements, suggestionId);
-    const suggestionSnap = await getDoc(suggestionRef);
-
-    if (!suggestionSnap.exists()) {
-      throw new Error(`Suggestion ${suggestionId} not found`);
-    }
-
-    const suggestionData = suggestionSnap.data() as Statement;
-    const parentId = suggestionData.parentId;
-
-    if (!parentId) {
-      throw new Error(`Suggestion ${suggestionId} has no parentId`);
-    }
-
-    const evaluationId = `${suggestionId}--${userId}`;
-    const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
-    const now = Date.now();
-
-    // Match the Evaluation schema from shared-types
-    const evaluationData = {
-      evaluationId,
-      statementId: suggestionId,
-      parentId, // Required by schema
-      evaluatorId: userId, // Schema uses evaluatorId not userId
-      evaluation,
-      updatedAt: now, // Schema uses updatedAt
-      // Add evaluator object for Firebase Function compatibility
-      evaluator: {
-        uid: userId,
-        displayName: userDisplayName,
-        email: '',
-        photoURL: '',
-        isAnonymous: true,
+    const response = await fetch(`/api/suggestion-evaluations/${suggestionId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    };
+      credentials: 'include',
+      body: JSON.stringify({ evaluation }),
+    });
 
-    await setDoc(evaluationRef, evaluationData, { merge: true });
-
-    // Update vote counts on the suggestion statement
-    await updateVoteCounts(suggestionId);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to set evaluation');
+    }
   } catch (error) {
     logError(error, {
       operation: 'controllers.setSuggestionEvaluation',
-      userId,
       metadata: { suggestionId, evaluation },
     });
     throw error;
@@ -121,30 +50,29 @@ export async function setSuggestionEvaluation({
 
 /**
  * Remove an evaluation for a suggestion
- * Deletes from Firestore evaluations collection
+ * Uses API route which updates vote counts after deletion
  *
  * @returns Promise that resolves when evaluation is deleted
  */
 export async function removeSuggestionEvaluation({
   suggestionId,
-  userId,
 }: {
   suggestionId: string;
   userId: string;
 }): Promise<void> {
   try {
-    const firestore = getFirebaseFirestore();
-    const evaluationId = `${suggestionId}--${userId}`;
-    const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
+    const response = await fetch(`/api/suggestion-evaluations/${suggestionId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
 
-    await deleteDoc(evaluationRef);
-
-    // Update vote counts on the suggestion statement
-    await updateVoteCounts(suggestionId);
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to remove evaluation');
+    }
   } catch (error) {
     logError(error, {
       operation: 'controllers.removeSuggestionEvaluation',
-      userId,
       metadata: { suggestionId },
     });
     throw error;
@@ -169,7 +97,6 @@ export async function getUserEvaluation({
     const evaluationId = `${suggestionId}--${userId}`;
     const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
 
-    const { getDoc } = await import('firebase/firestore');
     const evaluationSnap = await getDoc(evaluationRef);
 
     if (!evaluationSnap.exists()) {
