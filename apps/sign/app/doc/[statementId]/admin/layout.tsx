@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getDocumentForSigning } from '@/lib/firebase/queries';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getUserIdFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess, AdminAccessResult } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { AdminPermissionLevel } from '@freedi/shared-types';
@@ -25,10 +25,15 @@ export default async function AdminLayout({
 }: AdminLayoutProps) {
   const { statementId } = await params;
   const cookieStore = await cookies();
-  const userId = getUserIdFromCookie(cookieStore.toString());
+  // Use proper Next.js cookies API instead of toString()
+  const userId = getUserIdFromCookies(cookieStore);
+
+  // Debug logging for cookie issues
+  logger.info(`[AdminLayout] Cookie check: userId=${userId ? userId.substring(0, 10) + '...' : 'null'}, documentId=${statementId}`);
 
   // Check if user is logged in
   if (!userId) {
+    logger.warn(`[AdminLayout] No userId cookie found, redirecting to login`);
     redirect(`/login?redirect=/doc/${statementId}/admin`);
   }
 
