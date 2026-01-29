@@ -2,12 +2,49 @@
  * Set evaluation for a suggestion statement
  * Direct Firestore write - no API route needed
  * Firebase Function (fn_evaluation.ts) triggers automatically to calculate consensus
+ * Also updates positiveEvaluations/negativeEvaluations counts on the statement
  */
 
-import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, deleteDoc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections, Statement } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
+
+/**
+ * Helper to recalculate and update vote counts on a suggestion
+ */
+async function updateVoteCounts(suggestionId: string): Promise<void> {
+  const firestore = getFirebaseFirestore();
+
+  // Query all evaluations for this suggestion
+  const evaluationsQuery = query(
+    collection(firestore, Collections.evaluations),
+    where('statementId', '==', suggestionId)
+  );
+
+  const evaluationsSnapshot = await getDocs(evaluationsQuery);
+
+  let positiveEvaluations = 0;
+  let negativeEvaluations = 0;
+
+  evaluationsSnapshot.docs.forEach((evalDoc) => {
+    const evalData = evalDoc.data();
+    const evalValue = evalData.evaluation || 0;
+
+    if (evalValue > 0) {
+      positiveEvaluations++;
+    } else if (evalValue < 0) {
+      negativeEvaluations++;
+    }
+  });
+
+  // Update the suggestion statement with vote counts
+  const suggestionRef = doc(firestore, Collections.statements, suggestionId);
+  await updateDoc(suggestionRef, {
+    positiveEvaluations,
+    negativeEvaluations,
+  });
+}
 
 interface SetSuggestionEvaluationParams {
   suggestionId: string;
@@ -69,6 +106,9 @@ export async function setSuggestionEvaluation({
     };
 
     await setDoc(evaluationRef, evaluationData, { merge: true });
+
+    // Update vote counts on the suggestion statement
+    await updateVoteCounts(suggestionId);
   } catch (error) {
     logError(error, {
       operation: 'controllers.setSuggestionEvaluation',
@@ -98,6 +138,9 @@ export async function removeSuggestionEvaluation({
     const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
 
     await deleteDoc(evaluationRef);
+
+    // Update vote counts on the suggestion statement
+    await updateVoteCounts(suggestionId);
   } catch (error) {
     logError(error, {
       operation: 'controllers.removeSuggestionEvaluation',
