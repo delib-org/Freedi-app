@@ -32,12 +32,11 @@
  */
 
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Statement, Suggestion, ParagraphType } from '@freedi/shared-types';
+import { Collections, Statement, Suggestion } from '@freedi/shared-types';
 import { createParagraphStatement, createSuggestionStatement } from '@freedi/shared-types';
 import { checkIfMigrated } from '@/lib/migrations/migrateParagraphsToStatements';
 import { logError } from '@/lib/utils/errorHandling';
 import * as fs from 'fs';
-import * as path from 'path';
 
 const db = getFirestoreAdmin();
 
@@ -142,7 +141,7 @@ function saveLog(stats: MigrationStats): void {
     };
 
     // Append to log file
-    const logs: any[] = [];
+    const logs: Array<MigrationStats & { endTime: number; duration: number; timestamp: string }> = [];
     if (fs.existsSync(CONFIG.LOG_FILE)) {
       const existingLog = fs.readFileSync(CONFIG.LOG_FILE, 'utf-8');
       logs.push(...JSON.parse(existingLog));
@@ -219,7 +218,7 @@ async function migrateComments(
     const commentsSnap = await db
       .collection(Collections.statements)
       .where('topParentId', '==', documentId)
-      .where('statementType', '==', 'statement' as any)
+      .where('statementType', '==', 'statement')
       .get();
 
     if (commentsSnap.empty) {

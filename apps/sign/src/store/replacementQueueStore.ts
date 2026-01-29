@@ -177,8 +177,9 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 		if (subscription) {
 			subscription();
 			set((state) => {
-				const { [documentId]: _, ...remainingSubscriptions } = state.subscriptions;
-				return { subscriptions: remainingSubscriptions };
+				const newSubscriptions = { ...state.subscriptions };
+				delete newSubscriptions[documentId];
+				return { subscriptions: newSubscriptions };
 			});
 		}
 	},

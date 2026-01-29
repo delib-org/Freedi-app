@@ -9,10 +9,20 @@ import { getFirebaseRealtimeDatabase } from '@/lib/firebase/client';
 // Mock Firebase client
 jest.mock('@/lib/firebase/client');
 
+interface MockRef {
+  set: jest.MockedFunction<() => Promise<void>>;
+  update: jest.MockedFunction<() => Promise<void>>;
+  onDisconnect: jest.MockedFunction<() => { remove: jest.MockedFunction<() => Promise<void>> }>;
+}
+
+interface MockDatabase {
+  ref: jest.MockedFunction<() => MockRef>;
+}
+
 describe('LiveEditingManager', () => {
   let manager: LiveEditingManager;
-  let mockRef: any;
-  let mockDatabase: any;
+  let mockRef: MockRef;
+  let mockDatabase: MockDatabase;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -32,7 +42,7 @@ describe('LiveEditingManager', () => {
     };
 
     (getFirebaseRealtimeDatabase as jest.MockedFunction<typeof getFirebaseRealtimeDatabase>).mockReturnValue(
-      mockDatabase as any
+      mockDatabase as unknown as ReturnType<typeof getFirebaseRealtimeDatabase>
     );
 
     manager = new LiveEditingManager();
@@ -252,8 +262,9 @@ describe('LiveEditingManager', () => {
         ttl: Date.now() + 900000,
       };
 
-      // Set current user
-      (manager as any).currentUserId = 'user_789';
+      // Set current user by casting to access private property for testing
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (manager as unknown as { currentUserId: string }).currentUserId = 'user_789';
 
       const activeEditors = manager.getActiveEditors(mockSession);
 

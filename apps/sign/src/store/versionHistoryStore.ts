@@ -147,16 +147,21 @@ export const useVersionHistoryStore = create<VersionHistoryStore>((set, get) => 
 	clearCache: (paragraphId?: string) => {
 		if (paragraphId) {
 			set((state) => {
-				const { [paragraphId]: _, ...remainingHistory } = state.versionHistory;
-				const { [paragraphId]: __, ...remainingLoading } = state.isLoading;
-				const { [paragraphId]: ___, ...remainingError } = state.error;
-				const { [paragraphId]: ____, ...remainingFetchedAt } = state.lastFetchedAt;
+				const newVersionHistory = { ...state.versionHistory };
+				const newIsLoading = { ...state.isLoading };
+				const newError = { ...state.error };
+				const newLastFetchedAt = { ...state.lastFetchedAt };
+
+				delete newVersionHistory[paragraphId];
+				delete newIsLoading[paragraphId];
+				delete newError[paragraphId];
+				delete newLastFetchedAt[paragraphId];
 
 				return {
-					versionHistory: remainingHistory,
-					isLoading: remainingLoading,
-					error: remainingError,
-					lastFetchedAt: remainingFetchedAt,
+					versionHistory: newVersionHistory,
+					isLoading: newIsLoading,
+					error: newError,
+					lastFetchedAt: newLastFetchedAt,
 				};
 			});
 		} else {
