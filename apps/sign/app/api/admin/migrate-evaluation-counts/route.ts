@@ -7,10 +7,12 @@ import { logger } from '@/lib/utils/logger';
 /**
  * POST /api/admin/migrate-evaluation-counts
  *
- * One-time migration to backfill positiveEvaluations and negativeEvaluations
- * for all existing suggestions based on their evaluations.
+ * Paginated migration to backfill positiveEvaluations and negativeEvaluations
+ * for existing suggestions. Process 20 at a time to avoid timeout.
  *
- * This is an admin-only endpoint.
+ * Query params:
+ * - limit: number of suggestions to process (default: 20)
+ * - startAfter: last processed suggestionId for pagination
  */
 export async function POST(request: NextRequest) {
 	try {
@@ -24,24 +26,35 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
+		const { searchParams } = new URL(request.url);
+		const limit = parseInt(searchParams.get('limit') || '20', 10);
+		const startAfter = searchParams.get('startAfter');
+
 		const db = getFirestoreAdmin();
 
-		// Get all suggestions (stored as statements with statementType option)
-		const suggestionsSnapshot = await db
+		// Build query with pagination
+		let query = db
 			.collection(Collections.statements)
 			.where('statementType', '==', 'option')
-			.get();
+			.orderBy('statementId')
+			.limit(limit);
 
-		logger.info(`[Migration] Found ${suggestionsSnapshot.docs.length} suggestion statements to process`);
+		if (startAfter) {
+			query = query.startAfter(startAfter);
+		}
+
+		const suggestionsSnapshot = await query.get();
+
+		logger.info(`[Migration] Processing ${suggestionsSnapshot.docs.length} suggestions (limit: ${limit})`);
 
 		let updatedCount = 0;
 		let skippedCount = 0;
-		const batchSize = 500;
-		let batch = db.batch();
-		let batchCount = 0;
+		let lastId: string | null = null;
+		const batch = db.batch();
 
 		for (const suggestionDoc of suggestionsSnapshot.docs) {
 			const suggestionId = suggestionDoc.id;
+			lastId = suggestionId;
 
 			// Get all evaluations for this suggestion
 			const evaluationsSnapshot = await db
@@ -74,31 +87,25 @@ export async function POST(request: NextRequest) {
 				negativeEvaluations,
 			});
 
-			batchCount++;
 			updatedCount++;
-
-			// Commit batch when reaching limit
-			if (batchCount >= batchSize) {
-				await batch.commit();
-				logger.info(`[Migration] Committed batch of ${batchCount} updates`);
-				batch = db.batch();
-				batchCount = 0;
-			}
 		}
 
-		// Commit remaining updates
-		if (batchCount > 0) {
+		// Commit all updates
+		if (updatedCount > 0) {
 			await batch.commit();
-			logger.info(`[Migration] Committed final batch of ${batchCount} updates`);
 		}
 
-		logger.info(`[Migration] Complete: ${updatedCount} updated, ${skippedCount} skipped (no evaluations)`);
+		const hasMore = suggestionsSnapshot.docs.length === limit;
+
+		logger.info(`[Migration] Batch complete: ${updatedCount} updated, ${skippedCount} skipped, hasMore: ${hasMore}`);
 
 		return NextResponse.json({
 			success: true,
-			message: `Migration complete: ${updatedCount} suggestions updated, ${skippedCount} skipped`,
+			message: `Batch complete: ${updatedCount} updated, ${skippedCount} skipped`,
 			updatedCount,
 			skippedCount,
+			hasMore,
+			lastId,
 		});
 	} catch (error) {
 		logger.error('[Migration] Error during evaluation counts migration:', error);
