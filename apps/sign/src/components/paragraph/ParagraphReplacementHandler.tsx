@@ -133,7 +133,7 @@ export default function ParagraphReplacementHandler({
         operation: 'paragraphReplacementHandler.handleAccept',
         documentId,
         paragraphId: officialParagraph.statementId,
-        suggestionId: winningSuggestion.statementId,
+        metadata: { suggestionId: winningSuggestion.statementId },
       });
     } finally {
       setIsAccepting(false);

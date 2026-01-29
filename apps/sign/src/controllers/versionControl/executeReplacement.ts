@@ -122,8 +122,8 @@ export async function executeReplacement(
 		logError(error, {
 			operation: 'executeReplacement',
 			paragraphId: queueItem.paragraphId,
-			suggestionId: queueItem.suggestionId,
 			userId,
+			metadata: { suggestionId: queueItem.suggestionId },
 		});
 
 		return {

@@ -204,7 +204,7 @@ export class LiveEditingManager {
       logError(error, {
         operation: 'liveEditingSession.performDraftUpdate',
         userId: this.currentUserId,
-        paragraphId: this.currentParagraphId,
+        paragraphId: this.currentParagraphId ?? undefined,
         metadata: { contentLength: content.length },
       });
     }

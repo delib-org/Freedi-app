@@ -113,7 +113,7 @@ export async function createVersionHistory(
 		logError(error, {
 			operation: 'createVersionHistory',
 			paragraphId,
-			versionNumber,
+			metadata: { versionNumber },
 		});
 		throw error; // Re-throw to fail the transaction
 	}

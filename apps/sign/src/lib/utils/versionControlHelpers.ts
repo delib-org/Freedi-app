@@ -122,7 +122,7 @@ export async function logAudit(
 			operation: 'versionControlHelpers.logAudit',
 			documentId: params.documentId,
 			userId: params.userId,
-			action: params.action,
+			metadata: { action: params.action },
 		});
 	}
 }

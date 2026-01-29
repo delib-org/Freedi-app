@@ -109,8 +109,11 @@ export async function finalizeSuggestion(
         lastUpdate: Date.now(),
         consensus: officialParagraph.consensus,
         hide: true, // Hidden history entry
-        replacedBy: suggestionToFinalize.statementId,
-        replacedAt: Date.now(),
+        versionControl: {
+          currentVersion: officialParagraph.versionControl?.currentVersion || 1,
+          replacedBy: suggestionToFinalize.statementId,
+          replacedAt: Date.now(),
+        },
       };
 
       const historyRef = db.collection(Collections.statements).doc(historyEntry.statementId!);
@@ -120,10 +123,11 @@ export async function finalizeSuggestion(
       transaction.update(officialParagraphRef, {
         statement: suggestionToFinalize.statement,
         lastUpdate: Date.now(),
-        appliedSuggestionId: suggestionToFinalize.statementId,
-        appliedAt: Date.now(),
-        finalizedBy: userId,
-        finalizedAt: Date.now(),
+        'versionControl.appliedSuggestionId': suggestionToFinalize.statementId,
+        'versionControl.appliedAt': Date.now(),
+        'versionControl.finalizedBy': userId,
+        'versionControl.finalizedAt': Date.now(),
+        'versionControl.currentVersion': (officialParagraph.versionControl?.currentVersion || 1) + 1,
       });
 
       // 5. Mark suggestion as finalized
@@ -131,9 +135,9 @@ export async function finalizeSuggestion(
         .collection(Collections.statements)
         .doc(suggestionToFinalize.statementId);
       transaction.update(suggestionRef, {
-        finalized: true,
-        finalizedAt: Date.now(),
-        finalizedBy: userId,
+        'versionControl.finalized': true,
+        'versionControl.finalizedAt': Date.now(),
+        'versionControl.finalizedBy': userId,
       });
     });
 
@@ -200,12 +204,11 @@ export async function revertFinalization(
       transaction.update(officialParagraphRef, {
         statement: historyEntry.statement,
         lastUpdate: Date.now(),
-        revertedFrom: officialParagraph.appliedSuggestionId,
-        revertedAt: Date.now(),
-        revertedBy: userId,
-        appliedSuggestionId: null,
-        finalizedBy: null,
-        finalizedAt: null,
+        'versionControl.appliedSuggestionId': null,
+        'versionControl.finalizedBy': userId,
+        'versionControl.finalizedAt': Date.now(),
+        'versionControl.finalizedReason': 'rollback',
+        'versionControl.currentVersion': (officialParagraph.versionControl?.currentVersion || 1) + 1,
       });
     });
 

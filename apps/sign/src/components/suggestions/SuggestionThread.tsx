@@ -82,13 +82,16 @@ export default function SuggestionThread({
       suggestionId: statement.statementId,
       paragraphId: paragraphId,
       documentId: documentId,
+      topParentId: statement.topParentId || documentId,
+      originalContent: originalContent,
       suggestedContent: statement.statement,
-      reasoning: '', // TODO: Add reasoning field to Statement if needed
+      reasoning: '',
       creatorId: statement.creatorId,
-      creatorName: statement.creator?.displayName || 'Anonymous',
+      creatorDisplayName: statement.creator?.displayName || 'Anonymous',
       createdAt: statement.createdAt,
-      votes: statement.evaluation || 0,
+      lastUpdate: statement.lastUpdate || statement.createdAt,
       consensus: statement.consensus || 0,
+      hide: statement.hide || false,
     }));
 
     // Update frozen suggestions when new items arrive (but don't reorder)
@@ -102,7 +105,7 @@ export default function SuggestionThread({
     }
 
     return converted;
-  }, [suggestionStatements, paragraphId, documentId, isFrozen, frozenSuggestions]);
+  }, [suggestionStatements, paragraphId, documentId, originalContent, isFrozen, frozenSuggestions]);
 
   // Sort suggestions based on selected sort type
   const sortedSuggestions = useMemo(() => {
@@ -142,14 +145,16 @@ export default function SuggestionThread({
         suggestionId: paragraphId, // Use actual paragraphId (which is the statementId)
         paragraphId: paragraphId,
         documentId: documentId,
+        topParentId: documentId,
+        originalContent: originalContent,
         suggestedContent: originalContent,
         reasoning: '',
         creatorId: 'official',
-        creatorName: t('Official'),
         creatorDisplayName: t('Official'),
         createdAt: Date.now(),
-        votes: 0,
+        lastUpdate: Date.now(),
         consensus: 1.0, // Official paragraphs start with full consensus
+        hide: false,
       };
     }
 
@@ -158,14 +163,16 @@ export default function SuggestionThread({
       suggestionId: officialParagraph.statementId,
       paragraphId: paragraphId,
       documentId: documentId,
+      topParentId: officialParagraph.topParentId || documentId,
+      originalContent: originalContent,
       suggestedContent: officialParagraph.statement,
       reasoning: '',
       creatorId: officialParagraph.creatorId,
-      creatorName: officialParagraph.creator?.displayName || t('Official'),
       creatorDisplayName: officialParagraph.creator?.displayName || t('Official'),
       createdAt: officialParagraph.createdAt,
-      votes: officialParagraph.evaluation || 0,
+      lastUpdate: officialParagraph.lastUpdate || officialParagraph.createdAt,
       consensus: officialParagraph.consensus || 1.0,
+      hide: officialParagraph.hide || false,
     };
   }, [officialParagraph, paragraphId, documentId, originalContent, t]);
 

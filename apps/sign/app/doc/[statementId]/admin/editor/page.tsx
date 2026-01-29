@@ -60,7 +60,7 @@ export default function EditorPage() {
             paragraphStatements.push({
               paragraphId: statement.statementId,
               content: statement.statement,
-              type: (statement.doc?.type as ParagraphType) || ParagraphType.paragraph,
+              type: statement.doc?.paragraphType || ParagraphType.paragraph,
               order: statement.doc?.order || 0,
             });
           }

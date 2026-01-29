@@ -3,8 +3,19 @@
  * Tracks key events and metrics for the version control system
  */
 
-import { logEvent } from 'firebase/analytics';
-import { analytics } from '@/controllers/db/firebase';
+import { logEvent, Analytics } from 'firebase/analytics';
+import { getAnalyticsInstance, getFirebaseAnalytics } from '@/lib/firebase/client';
+
+// Initialize analytics on first use
+let analyticsInitialized = false;
+async function ensureAnalytics(): Promise<Analytics | null> {
+	if (!analyticsInitialized) {
+		await getFirebaseAnalytics();
+		analyticsInitialized = true;
+	}
+
+	return getAnalyticsInstance();
+}
 
 /**
  * Analytics Event Names
@@ -85,7 +96,8 @@ interface SettingsChangedParams {
 /**
  * Track queue item creation
  */
-export function trackQueueItemCreated(params: QueueItemCreatedParams): void {
+export async function trackQueueItemCreated(params: QueueItemCreatedParams): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.QUEUE_ITEM_CREATED, {
@@ -100,7 +112,8 @@ export function trackQueueItemCreated(params: QueueItemCreatedParams): void {
 /**
  * Track suggestion approval
  */
-export function trackSuggestionApproved(params: SuggestionApprovedParams): void {
+export async function trackSuggestionApproved(params: SuggestionApprovedParams): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.SUGGESTION_APPROVED, {
@@ -116,7 +129,8 @@ export function trackSuggestionApproved(params: SuggestionApprovedParams): void 
 /**
  * Track suggestion rejection
  */
-export function trackSuggestionRejected(params: SuggestionRejectedParams): void {
+export async function trackSuggestionRejected(params: SuggestionRejectedParams): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.SUGGESTION_REJECTED, {
@@ -131,7 +145,8 @@ export function trackSuggestionRejected(params: SuggestionRejectedParams): void 
 /**
  * Track version restoration
  */
-export function trackVersionRestored(params: VersionRestoredParams): void {
+export async function trackVersionRestored(params: VersionRestoredParams): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.VERSION_RESTORED, {
@@ -147,7 +162,8 @@ export function trackVersionRestored(params: VersionRestoredParams): void {
 /**
  * Track settings changes
  */
-export function trackSettingsChanged(params: SettingsChangedParams): void {
+export async function trackSettingsChanged(params: SettingsChangedParams): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.REVIEW_THRESHOLD_CHANGED, {
@@ -165,11 +181,12 @@ export function trackSettingsChanged(params: SettingsChangedParams): void {
 /**
  * Track version control enabled/disabled
  */
-export function trackVersionControlToggled(
+export async function trackVersionControlToggled(
 	documentId: string,
 	enabled: boolean,
 	userId?: string
-): void {
+): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	const event = enabled
@@ -185,11 +202,12 @@ export function trackVersionControlToggled(
 /**
  * Track queue list view
  */
-export function trackQueueListViewed(
+export async function trackQueueListViewed(
 	documentId: string,
 	pendingCount: number,
 	userId?: string
-): void {
+): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.QUEUE_LIST_VIEWED, {
@@ -202,11 +220,12 @@ export function trackQueueListViewed(
 /**
  * Track review modal opened
  */
-export function trackReviewModalOpened(
+export async function trackReviewModalOpened(
 	documentId: string,
 	consensus: number,
 	userId?: string
-): void {
+): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.REVIEW_MODAL_OPENED, {
@@ -219,11 +238,12 @@ export function trackReviewModalOpened(
 /**
  * Track version history viewed
  */
-export function trackVersionHistoryViewed(
+export async function trackVersionHistoryViewed(
 	paragraphId: string,
 	versionCount: number,
 	userId?: string
-): void {
+): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.VERSION_HISTORY_VIEWED, {
@@ -236,10 +256,11 @@ export function trackVersionHistoryViewed(
 /**
  * Track consensus update performance
  */
-export function trackConsensusUpdate(
+export async function trackConsensusUpdate(
 	latencyMs: number,
 	documentId: string
-): void {
+): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.CONSENSUS_UPDATE_RECEIVED, {
@@ -251,11 +272,12 @@ export function trackConsensusUpdate(
 /**
  * Track version decompression performance
  */
-export function trackVersionDecompression(
+export async function trackVersionDecompression(
 	durationMs: number,
 	versionCount: number,
 	paragraphId: string
-): void {
+): Promise<void> {
+	const analytics = await ensureAnalytics();
 	if (!analytics) return;
 
 	logEvent(analytics, VersionControlEvents.VERSION_DECOMPRESSION_PERFORMED, {

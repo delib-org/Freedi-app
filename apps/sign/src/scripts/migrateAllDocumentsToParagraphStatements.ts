@@ -350,12 +350,18 @@ async function migrateSuggestions(
         continue;
       }
 
+      // Create minimal User object from Suggestion data
+      const suggestionCreator = {
+        uid: oldSuggestion.creatorId,
+        displayName: oldSuggestion.creatorDisplayName,
+      };
+
       // Create new suggestion statement
       const suggestionStatement = createSuggestionStatement(
-        oldSuggestion.suggestion,
+        oldSuggestion.suggestedContent,
         newOfficialParagraphId,
         documentId,
-        oldSuggestion.creator
+        suggestionCreator
       );
 
       if (!suggestionStatement) {

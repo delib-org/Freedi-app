@@ -204,6 +204,11 @@ export function createParagraphStatement(
 		isDoc: true,
 		order: paragraph.order,
 		isOfficialParagraph: true,
+		paragraphType: paragraph.type,
+		listType: paragraph.listType,
+		imageUrl: paragraph.imageUrl,
+		imageAlt: paragraph.imageAlt,
+		imageCaption: paragraph.imageCaption,
 	};
 
 	// Preserve paragraph color if it's a header

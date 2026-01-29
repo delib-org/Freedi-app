@@ -32,6 +32,11 @@ import {
   connectFirestoreEmulator,
   Firestore,
 } from 'firebase/firestore';
+import {
+  getAnalytics,
+  isSupported,
+  Analytics,
+} from 'firebase/analytics';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
@@ -50,6 +55,7 @@ let auth: Auth;
 let storage: FirebaseStorage;
 let database: Database;
 let firestore: Firestore;
+let analytics: Analytics | null = null;
 let authEmulatorConnected = false;
 let storageEmulatorConnected = false;
 let databaseEmulatorConnected = false;
@@ -342,6 +348,47 @@ export function getFirebaseFirestore(): Firestore {
   }
 
   return firestore;
+}
+
+/**
+ * Get Firebase Analytics instance
+ * Analytics only works in browser environment
+ */
+export async function getFirebaseAnalytics(): Promise<Analytics | null> {
+  if (analytics) {
+    return analytics;
+  }
+
+  // Analytics only works in browser
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const supported = await isSupported();
+    if (!supported) {
+      return null;
+    }
+
+    if (!app) {
+      initializeFirebaseClient();
+    }
+
+    analytics = getAnalytics(app);
+
+    return analytics;
+  } catch (error) {
+    logError(error, { operation: 'analytics.getFirebaseAnalytics' });
+
+    return null;
+  }
+}
+
+/**
+ * Get analytics instance synchronously (may be null if not initialized)
+ */
+export function getAnalyticsInstance(): Analytics | null {
+  return analytics;
 }
 
 /**

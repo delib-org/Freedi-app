@@ -72,9 +72,8 @@ export async function setSuggestionEvaluation({
   } catch (error) {
     logError(error, {
       operation: 'controllers.setSuggestionEvaluation',
-      suggestionId,
       userId,
-      evaluation,
+      metadata: { suggestionId, evaluation },
     });
     throw error;
   }
@@ -102,8 +101,8 @@ export async function removeSuggestionEvaluation({
   } catch (error) {
     logError(error, {
       operation: 'controllers.removeSuggestionEvaluation',
-      suggestionId,
       userId,
+      metadata: { suggestionId },
     });
     throw error;
   }
@@ -139,8 +138,8 @@ export async function getUserEvaluation({
   } catch (error) {
     logError(error, {
       operation: 'controllers.getUserEvaluation',
-      suggestionId,
       userId,
+      metadata: { suggestionId },
     });
     return null;
   }

@@ -6,7 +6,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { AdminSettingsPanel } from '@/components/versionControl/AdminSettingsPanel';
 import { ReviewQueueListEnhanced } from '@/components/versionControl/ReviewQueueListEnhanced';
 import { ToastNotification } from '@/components/versionControl/ToastNotification';
-import { Statement } from 'delib-npm';
+import { Statement, Paragraph, ParagraphType } from '@freedi/shared-types';
 import styles from './version-control.module.scss';
 
 /**
@@ -21,7 +21,7 @@ export default function VersionControlPage() {
 
 	const [activeTab, setActiveTab] = useState<'settings' | 'queue'>('queue');
 	const [document, setDocument] = useState<Statement | null>(null);
-	const [paragraphs, setParagraphs] = useState<Statement[]>([]);
+	const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
 
 	// Fetch document and paragraphs data
@@ -36,8 +36,19 @@ export default function VersionControlPage() {
 				const response = await fetch(`/api/admin/paragraphs/${documentId}`);
 				if (response.ok) {
 					const data = await response.json();
-					// The API returns { paragraphs: Statement[] }
-					setParagraphs(data.paragraphs || []);
+					// The API returns { paragraphs: Statement[] }, convert to Paragraph[]
+					const statementsArray = data.paragraphs || [];
+					const convertedParagraphs: Paragraph[] = statementsArray.map((stmt: Statement) => ({
+						paragraphId: stmt.statementId,
+						content: stmt.statement,
+						type: stmt.doc?.paragraphType || ParagraphType.paragraph,
+						order: stmt.doc?.order || 0,
+						listType: stmt.doc?.listType,
+						imageUrl: stmt.doc?.imageUrl,
+						imageAlt: stmt.doc?.imageAlt,
+						imageCaption: stmt.doc?.imageCaption,
+					}));
+					setParagraphs(convertedParagraphs);
 
 					// Set a mock document for now (just using documentId as title)
 					// In a real scenario, you'd fetch this separately
