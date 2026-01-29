@@ -2,16 +2,55 @@ import { useMemo } from 'react';
 import { Paragraph, TocItem } from '@/types';
 
 /**
+ * Decodes common HTML entities to their characters
+ */
+function decodeHtmlEntities(text: string): string {
+  const entities: Record<string, string> = {
+    '&quot;': '"',
+    '&amp;': '&',
+    '&lt;': '<',
+    '&gt;': '>',
+    '&nbsp;': ' ',
+    '&#39;': "'",
+    '&apos;': "'",
+    '&ldquo;': '"',
+    '&rdquo;': '"',
+    '&lsquo;': "'",
+    '&rsquo;': "'",
+    '&ndash;': '–',
+    '&mdash;': '—',
+    '&hellip;': '…',
+  };
+
+  let result = text;
+  for (const [entity, char] of Object.entries(entities)) {
+    result = result.split(entity).join(char);
+  }
+
+  // Also handle numeric entities like &#34; for "
+  result = result.replace(/&#(\d+);/g, (_, code) => String.fromCharCode(parseInt(code, 10)));
+  result = result.replace(/&#x([0-9a-fA-F]+);/g, (_, code) => String.fromCharCode(parseInt(code, 16)));
+
+  return result;
+}
+
+/**
  * Strips HTML tags from a string to get plain text
  */
 function stripHtml(html: string): string {
+  let text: string;
+
   // Create a temporary div element to parse HTML
   if (typeof window !== 'undefined') {
     const doc = new DOMParser().parseFromString(html, 'text/html');
-    return doc.body.textContent || '';
+    text = doc.body.textContent || '';
+  } else {
+    // Fallback for SSR - simple regex strip
+    text = html.replace(/<[^>]*>/g, '');
   }
-  // Fallback for SSR - simple regex strip
-  return html.replace(/<[^>]*>/g, '').trim();
+
+  // Decode any remaining HTML entities (handles double-encoding)
+  return decodeHtmlEntities(text).trim();
 }
 
 /**
