@@ -8,7 +8,7 @@
 
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { createParagraphStatement } from '@freedi/shared-types';
-import { User, Statement, Paragraph, Collections } from '@freedi/shared-types';
+import { User, Statement, Collections } from '@freedi/shared-types';
 import { logError, DatabaseError } from '@/lib/utils/errorHandling';
 
 /**

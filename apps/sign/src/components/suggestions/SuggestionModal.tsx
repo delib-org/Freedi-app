@@ -136,7 +136,7 @@ export default function SuggestionModal({
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
 
   const handleSubmit = async () => {
-    console.log('[SuggestionModal] handleSubmit called', {
+    console.info('[SuggestionModal] handleSubmit called', {
       isValid,
       submitState,
       hasUser: !!user,
@@ -144,7 +144,7 @@ export default function SuggestionModal({
     });
 
     if (!isValid || submitState === 'submitting') {
-      console.warn('[SuggestionModal] Submit blocked:', { isValid, submitState });
+      console.info('[SuggestionModal] Submit blocked:', { isValid, submitState });
       return;
     }
 
@@ -175,7 +175,7 @@ export default function SuggestionModal({
             originalContent,
           };
 
-      console.log('[SuggestionModal] Sending request:', {
+      console.info('[SuggestionModal] Sending request:', {
         method,
         url: API_ROUTES.SUGGESTIONS(paragraphId),
         bodyKeys: Object.keys(body),
@@ -189,7 +189,7 @@ export default function SuggestionModal({
         body: JSON.stringify(body),
       });
 
-      console.log('[SuggestionModal] Response:', {
+      console.info('[SuggestionModal] Response:', {
         ok: response.ok,
         status: response.status,
         statusText: response.statusText,
@@ -202,7 +202,7 @@ export default function SuggestionModal({
       }
 
       const responseData = await response.json();
-      console.log('[SuggestionModal] Success:', responseData);
+      console.info('[SuggestionModal] Success:', responseData);
 
       setSubmitState('success');
       clearDraft();

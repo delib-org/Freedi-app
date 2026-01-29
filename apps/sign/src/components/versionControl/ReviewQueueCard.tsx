@@ -43,7 +43,6 @@ export function ReviewQueueCard({
 	const consensusDrop = item.consensusAtCreation - item.consensus;
 	const isStale = consensusDrop > 0.1;
 	const isHighConsensus = item.consensus >= 0.8;
-	const isMediumConsensus = item.consensus >= 0.6 && item.consensus < 0.8;
 
 	// Calculate time since creation
 	const timeAgo = getTimeAgo(item.createdAt, t, tWithParams);

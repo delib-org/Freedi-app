@@ -25,7 +25,7 @@ export function ReviewModal({ queueItem, onClose }: ReviewModalProps) {
 	const [adminNotes, setAdminNotes] = useState('');
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [liveConsensus, setLiveConsensus] = useState(queueItem.consensus);
+	const [liveConsensus] = useState(queueItem.consensus);
 
 	// Track if text was edited
 	const isEdited = editedText !== queueItem.proposedText;

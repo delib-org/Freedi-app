@@ -3,7 +3,7 @@
  * Tests high-concurrency scenarios, large datasets, and system limits
  */
 
-import { describe, it, expect, beforeAll } from '@jest/globals';
+import { describe, it, expect } from '@jest/globals';
 import {
 	createMockDocument,
 	createMockParagraph,
@@ -18,7 +18,7 @@ describe('Version Control - Performance Tests', () => {
 			// Arrange: Suggestion with initial consensus
 			const document = createMockDocument();
 			const paragraph = createMockParagraph(document.statementId);
-			const suggestions = createMultipleSuggestions(
+			createMultipleSuggestions(
 				paragraph.statementId,
 				document.statementId,
 				1,
@@ -27,7 +27,7 @@ describe('Version Control - Performance Tests', () => {
 
 			// Act: Simulate 1000 votes/minute (16-17 votes/second)
 			const votesPerSecond = 17;
-			const testDuration = 1000; // 1 second test
+			// Test duration: 1 second
 
 			const startTime = Date.now();
 
@@ -183,8 +183,7 @@ describe('Version Control - Performance Tests', () => {
 		});
 
 		it('should decompress quickly on low-end devices', async () => {
-			// Arrange: Compressed archive
-			const compressedData = 'base64_compressed_data';
+			// Arrange: Compressed archive (base64 format)
 
 			// Act: Measure decompression time (simulated)
 			const startTime = Date.now();
@@ -202,7 +201,7 @@ describe('Version Control - Performance Tests', () => {
 		it('should sync consensus updates within 1 second', async () => {
 			// Arrange: Queue item with Firebase listener
 			const document = createMockDocument();
-			const paragraph = createMockParagraph(document.statementId);
+			createMockParagraph(document.statementId);
 
 			// Act: Simulate consensus update
 			const startTime = Date.now();
@@ -269,7 +268,7 @@ describe('Version Control - Performance Tests', () => {
 	describe('Edge Case Performance', () => {
 		it('should handle empty queue gracefully', async () => {
 			// Arrange: Document with no pending items
-			const document = createMockDocument();
+			createMockDocument();
 
 			// Act: Query queue
 			const queueItems: unknown[] = [];
@@ -293,13 +292,13 @@ describe('Version Control - Performance Tests', () => {
 
 		it('should handle rapid threshold changes by admin', async () => {
 			// Arrange: Admin changes threshold 5 times in 10 seconds
-			const document = createMockDocument();
+			createMockDocument();
 			const changes = [0.5, 0.6, 0.55, 0.7, 0.65];
 
 			// Act: Simulate rapid updates
 			const startTime = Date.now();
 
-			for (const threshold of changes) {
+			for (let i = 0; i < changes.length; i++) {
 				await simulateNetworkDelay(100);
 				// PUT /api/admin/version-control/[documentId]/settings
 			}
@@ -331,7 +330,7 @@ describe('Version Control - Performance Tests', () => {
 
 		it('should cache decompressed versions for repeat access', async () => {
 			// Arrange: User views version 10 (archived, compressed)
-			const cacheKey = 'para_123_version_10';
+			// Cache key: 'para_123_version_10'
 
 			// Act: First access - decompress
 			const firstAccessTime = Date.now();

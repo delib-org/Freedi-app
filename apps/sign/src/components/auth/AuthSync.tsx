@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 
 /**
@@ -11,9 +11,11 @@ import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
  * need the Firebase Auth client to be authenticated.
  */
 export function AuthSync() {
-	const [isInitialized, setIsInitialized] = useState(false);
+	const isInitialized = useRef(false);
 
 	useEffect(() => {
+		if (isInitialized.current) return;
+
 		const initAuth = async () => {
 			try {
 				const auth = getFirebaseAuth();
@@ -22,7 +24,7 @@ export function AuthSync() {
 				const unsubscribe = auth.onAuthStateChanged(async (user) => {
 					if (user) {
 						// Already signed in, Firestore security rules will work
-						setIsInitialized(true);
+						isInitialized.current = true;
 						unsubscribe();
 					} else {
 						// Check if server knows we're authenticated (via cookies)
@@ -34,13 +36,13 @@ export function AuthSync() {
 							// This gives Firestore security rules the auth context they need
 							try {
 								await anonymousLogin();
-								setIsInitialized(true);
+								isInitialized.current = true;
 							} catch (error) {
 								console.error('[AuthSync] Failed to initialize Firebase Auth:', error);
 							}
 						} else {
 							// No auth on server or client
-							setIsInitialized(true);
+							isInitialized.current = true;
 						}
 
 						unsubscribe();
@@ -48,7 +50,7 @@ export function AuthSync() {
 				});
 			} catch (error) {
 				console.error('[AuthSync] Error initializing auth:', error);
-				setIsInitialized(true);
+				isInitialized.current = true;
 			}
 		};
 

@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { migrateParagraphsToStatements, checkIfMigrated } from '../migrateParagraphsToStatements';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Statement, ParagraphType } from '@freedi/shared-types';
+import { Statement, ParagraphType } from '@freedi/shared-types';
 
 // Mock Firebase Admin
 jest.mock('@/lib/firebase/admin');
@@ -38,10 +38,10 @@ describe('migrateParagraphsToStatements', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getFirestoreAdmin as jest.MockedFunction<typeof getFirestoreAdmin>).mockReturnValue(
-      mockDb as any
+      mockDb as unknown as ReturnType<typeof getFirestoreAdmin>
     );
-    mockDb.collection.mockReturnValue(mockCollectionRef as any);
-    (mockDb as any).batch = jest.fn(() => mockBatch);
+    mockDb.collection.mockReturnValue(mockCollectionRef as unknown as ReturnType<typeof mockDb.collection>);
+    (mockDb as unknown as { batch: jest.Mock }).batch = jest.fn(() => mockBatch);
   });
 
   describe('checkIfMigrated', () => {
@@ -86,7 +86,7 @@ describe('migrateParagraphsToStatements', () => {
     const mockDocument: Statement = {
       statementId: 'doc_123',
       statement: 'Document title',
-      statementType: 'document' as any,
+      statementType: 'document' as Statement['statementType'],
       parentId: 'root',
       topParentId: 'root',
       creatorId: 'user_123',

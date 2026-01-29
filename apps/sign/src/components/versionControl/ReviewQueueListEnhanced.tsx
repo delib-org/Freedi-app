@@ -40,10 +40,9 @@ export function ReviewQueueListEnhanced({
 		isLoading,
 		error,
 		subscribeToPendingReplacements,
-		getPendingCount,
 	} = useReplacementQueueStore();
 
-	const queue = pendingReplacements[documentId] || [];
+	const queue = useMemo(() => pendingReplacements[documentId] || [], [pendingReplacements, documentId]);
 	const loading = isLoading[documentId];
 	const loadError = error[documentId];
 

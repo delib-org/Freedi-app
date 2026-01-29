@@ -14,7 +14,7 @@ interface VersionHistoryListProps {
  * Simple chronological list of versions (MVP - no timeline)
  */
 export function VersionHistoryList({ paragraphId, isAdmin = false }: VersionHistoryListProps) {
-	const { versionHistory, isLoading, error, loadVersionHistory, restoreVersion, getHistory } =
+	const { isLoading, error, loadVersionHistory, restoreVersion, getHistory } =
 		useVersionHistoryStore();
 
 	const history = getHistory(paragraphId);

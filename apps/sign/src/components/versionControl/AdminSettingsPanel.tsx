@@ -15,7 +15,7 @@ interface AdminSettingsPanelProps {
  */
 export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 	const { t } = useTranslation();
-	const { settings, isLoading, error, subscribeToSettings, updateSettings, getSettings } =
+	const { isLoading, error, subscribeToSettings, updateSettings, getSettings } =
 		useVersionControlStore();
 
 	const currentSettings = getSettings(documentId);

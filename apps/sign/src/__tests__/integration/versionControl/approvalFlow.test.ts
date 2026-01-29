@@ -10,8 +10,6 @@ import {
 	createMockSuggestion,
 	createMockAdminUser,
 	simulateNetworkDelay,
-	assertQueueItem,
-	assertVersionControl,
 } from './testHelpers';
 
 describe('Version Control - Approval Flow (E2E)', () => {

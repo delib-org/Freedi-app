@@ -193,7 +193,7 @@ export async function POST(
  * Helper: Send notification to user
  */
 async function notifyUser(
-	db: any,
+	db: FirebaseFirestore.Firestore,
 	userId: string,
 	notification: {
 		type: string;

@@ -11,7 +11,7 @@
 
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { setSuggestionEvaluation } from '@/controllers/db/suggestions/setSuggestionEvaluation';
 import { finalizeSuggestion } from '@/controllers/db/paragraphs/finalizeSuggestion';
 
@@ -66,7 +66,7 @@ describe('Paragraph Replacement Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (getFirestoreAdmin as jest.MockedFunction<typeof getFirestoreAdmin>).mockReturnValue(
-      mockDb as any
+      mockDb as unknown as ReturnType<typeof getFirestoreAdmin>
     );
   });
 
@@ -86,7 +86,7 @@ describe('Paragraph Replacement Integration', () => {
       // Check evaluation was saved
       expect(mockEvaluationRef.set).toHaveBeenCalled();
 
-      const evaluationData = mockEvaluationRef.set.mock.calls[0][0];
+      const evaluationData = mockEvaluationRef.set.mock.calls[0]![0] as { evaluation: number; statementId: string };
       expect(evaluationData.evaluation).toBe(0.9);
       expect(evaluationData.statementId).toBe('suggestion_456');
     });
@@ -210,7 +210,7 @@ describe('Paragraph Replacement Integration', () => {
       const mockDocument = {
         statementId: 'doc_123',
         statement: 'Document',
-        statementType: 'document' as any,
+        statementType: 'document' as Statement['statementType'],
         parentId: 'root',
         topParentId: 'root',
         creatorId: 'admin_123',

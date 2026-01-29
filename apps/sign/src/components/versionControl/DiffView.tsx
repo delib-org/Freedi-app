@@ -157,7 +157,7 @@ export function DiffView({
 function renderCompactDiff(
 	diff: DiffSegment[],
 	maxLines: number | undefined,
-	t: (key: string) => string
+	_t: (key: string) => string
 ): React.ReactNode {
 	// Join text and truncate if needed
 	let totalLength = 0;

@@ -9,7 +9,6 @@ import {
 	createMockParagraph,
 	createVersionHistory,
 	createMockAdminUser,
-	assertVersionControl,
 } from './testHelpers';
 
 describe('Version Control - Version History (E2E)', () => {
@@ -199,7 +198,6 @@ describe('Version Control - Version History (E2E)', () => {
 	describe('Version Restoration (Rollback)', () => {
 		it('should restore to previous version', async () => {
 			// Arrange: Paragraph at version 5, want to restore to version 2
-			const currentVersion = 5;
 			const targetVersion = 2;
 
 			const versions = createVersionHistory(mockParagraph.statementId, 5);
@@ -212,7 +210,7 @@ describe('Version Control - Version History (E2E)', () => {
 			};
 
 			// Assert: Restoration creates new version with old text
-			const expectedNewVersion = currentVersion + 1; // Becomes version 6
+			// New version would be version 6 (current version 5 + 1)
 			expect(restoreRequest.targetVersionNumber).toBe(2);
 			expect(version2.statement).toBeDefined();
 		});
@@ -239,7 +237,7 @@ describe('Version Control - Version History (E2E)', () => {
 		it('should increment version number after rollback', async () => {
 			// Arrange: At version 5, rollback to version 2
 			const currentVersion = 5;
-			const targetVersion = 2;
+			// Target version 2 for rollback
 
 			// Act: Rollback
 			const newVersion = currentVersion + 1; // Becomes version 6
@@ -250,8 +248,7 @@ describe('Version Control - Version History (E2E)', () => {
 		});
 
 		it('should set finalizedReason to "rollback"', async () => {
-			// Arrange: Rollback scenario
-			const targetVersion = 2;
+			// Arrange: Rollback scenario targeting version 2
 
 			// Act: Restore version 2
 			const expectedVersionControl = {
