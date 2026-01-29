@@ -1,15 +1,10 @@
 /**
  * Replacement Queue Store (Zustand)
- * Manages pending replacement queue with real-time Firebase listeners
+ * Manages pending replacement queue via API (to bypass Firestore auth issues)
  */
 
 import { create } from 'zustand';
-import { onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
-import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { Collections, PendingReplacement, ReplacementQueueStatus } from '@freedi/shared-types';
-
-// Initialize Firestore
-const db = getFirebaseFirestore();
+import { PendingReplacement } from '@freedi/shared-types';
 
 /**
  * Replacement Queue Store State
@@ -46,7 +41,7 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 	subscriptions: {},
 
 	/**
-	 * Subscribe to real-time pending replacements
+	 * Subscribe to pending replacements via API polling
 	 * Returns unsubscribe function
 	 */
 	subscribeToPendingReplacements: (documentId: string, sortBy = 'consensus', order: 'asc' | 'desc' = 'desc') => {
@@ -62,21 +57,21 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 			error: { ...state.error, [documentId]: null },
 		}));
 
-		// Create Firebase query
-		const q = query(
-			collection(db, Collections.paragraphReplacementQueue),
-			where('documentId', '==', documentId),
-			where('status', '==', ReplacementQueueStatus.pending),
-			orderBy(sortBy, order)
-		);
-
-		// Create listener
-		const unsubscribe = onSnapshot(
-			q,
-			(snapshot) => {
-				const queue: PendingReplacement[] = snapshot.docs.map(
-					(doc) => doc.data() as PendingReplacement
+		// Fetch function
+		const fetchQueue = async () => {
+			try {
+				const response = await fetch(
+					`/api/admin/version-control/queue/${documentId}?sortBy=${sortBy}&order=${order}`,
+					{ credentials: 'include' }
 				);
+
+				if (!response.ok) {
+					const errorData = await response.json();
+					throw new Error(errorData.error || 'Failed to fetch queue');
+				}
+
+				const data = await response.json();
+				const queue: PendingReplacement[] = data.queue || [];
 
 				set((state) => ({
 					pendingReplacements: { ...state.pendingReplacements, [documentId]: queue },
@@ -84,14 +79,24 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 					error: { ...state.error, [documentId]: null },
 					lastSyncedAt: { ...state.lastSyncedAt, [documentId]: Date.now() },
 				}));
-			},
-			(error) => {
+			} catch (error) {
 				set((state) => ({
 					isLoading: { ...state.isLoading, [documentId]: false },
 					error: { ...state.error, [documentId]: error as Error },
 				}));
 			}
-		);
+		};
+
+		// Initial fetch
+		fetchQueue();
+
+		// Poll every 10 seconds for updates
+		const intervalId = setInterval(fetchQueue, 10000);
+
+		// Unsubscribe function
+		const unsubscribe = () => {
+			clearInterval(intervalId);
+		};
 
 		// Store subscription for cleanup
 		set((state) => ({
