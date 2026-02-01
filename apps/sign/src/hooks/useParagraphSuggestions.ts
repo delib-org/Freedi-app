@@ -285,3 +285,89 @@ export function useRealtimeSuggestionCounts(
     };
   }, [documentId, enabled, setSuggestionCount]);
 }
+
+/**
+ * Hook to listen to official paragraph content updates in real-time
+ * Use this to reflect admin-approved changes to all users immediately
+ *
+ * @param documentId - The document ID
+ * @param initialParagraphs - Initial paragraphs from server
+ * @param enabled - Whether to enable the listener (default: true)
+ * @returns Array of paragraphs with real-time updates
+ *
+ * @example
+ * const paragraphs = useRealtimeParagraphs(documentId, serverParagraphs);
+ */
+export function useRealtimeParagraphs(
+  documentId: string | null,
+  initialParagraphs: Statement[],
+  enabled: boolean = true
+): Statement[] {
+  const [paragraphs, setParagraphs] = useState<Statement[]>(initialParagraphs);
+
+  // Update when initial paragraphs change (e.g., navigation)
+  useEffect(() => {
+    setParagraphs(initialParagraphs);
+  }, [initialParagraphs]);
+
+  useEffect(() => {
+    if (!enabled || !documentId) {
+      return;
+    }
+
+    let unsubscribe: Unsubscribe | null = null;
+
+    try {
+      const firestore = getFirebaseFirestore();
+
+      // Query all official paragraphs for this document
+      const q = query(
+        collection(firestore, Collections.statements),
+        where('parentId', '==', documentId),
+        where('statementType', '==', StatementType.option),
+        orderBy('doc.order', 'asc')
+      );
+
+      unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          const updatedParagraphs: Statement[] = [];
+
+          snapshot.forEach((doc) => {
+            const statement = doc.data() as Statement;
+
+            // Only include official paragraphs (not suggestions) and non-hidden
+            if (statement.doc?.isOfficialParagraph && !statement.hide) {
+              updatedParagraphs.push(statement);
+            }
+          });
+
+          // Sort by order to maintain correct display
+          updatedParagraphs.sort((a, b) => (a.doc?.order || 0) - (b.doc?.order || 0));
+
+          setParagraphs(updatedParagraphs);
+          console.info('[useRealtimeParagraphs] Updated paragraphs:', updatedParagraphs.length);
+        },
+        (error) => {
+          logError(error, {
+            operation: 'hooks.useRealtimeParagraphs',
+            documentId,
+          });
+        }
+      );
+    } catch (error) {
+      logError(error, {
+        operation: 'hooks.useRealtimeParagraphs.setup',
+        documentId,
+      });
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [documentId, enabled]);
+
+  return paragraphs;
+}

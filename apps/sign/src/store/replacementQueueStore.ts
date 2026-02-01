@@ -1,10 +1,12 @@
 /**
  * Replacement Queue Store (Zustand)
- * Manages pending replacement queue via API (to bypass Firestore auth issues)
+ * Real-time Firestore listener for pending replacement queue
  */
 
 import { create } from 'zustand';
-import { PendingReplacement } from '@freedi/shared-types';
+import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { Collections, PendingReplacement, ReplacementQueueStatus } from '@freedi/shared-types';
 
 /**
  * Replacement Queue Store State
@@ -19,7 +21,7 @@ interface ReplacementQueueStore {
 	lastSyncedAt: Record<string, number>;
 
 	// Subscriptions (for cleanup)
-	subscriptions: Record<string, () => void>;
+	subscriptions: Record<string, Unsubscribe>;
 
 	// Actions
 	subscribeToPendingReplacements: (documentId: string, sortBy?: string, order?: 'asc' | 'desc') => () => void;
@@ -41,7 +43,7 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 	subscriptions: {},
 
 	/**
-	 * Subscribe to pending replacements via API polling
+	 * Subscribe to pending replacements via real-time Firestore listener
 	 * Returns unsubscribe function
 	 */
 	subscribeToPendingReplacements: (documentId: string, sortBy = 'consensus', order: 'asc' | 'desc' = 'desc') => {
@@ -57,106 +59,107 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 			error: { ...state.error, [documentId]: null },
 		}));
 
-		// Fetch function
-		const fetchQueue = async () => {
-			try {
-				const response = await fetch(
-					`/api/admin/version-control/${documentId}/queue?sortBy=${sortBy}&order=${order}`,
-					{ credentials: 'include' }
-				);
+		try {
+			const firestore = getFirebaseFirestore();
 
-				if (!response.ok) {
-					const errorData = await response.json();
-					throw new Error(errorData.error || 'Failed to fetch queue');
+			// Query pending replacements for this document
+			const q = query(
+				collection(firestore, Collections.paragraphReplacementQueue),
+				where('documentId', '==', documentId),
+				where('status', '==', ReplacementQueueStatus.pending),
+				orderBy(sortBy, order)
+			);
+
+			// Set up real-time listener
+			const unsubscribe = onSnapshot(
+				q,
+				(snapshot) => {
+					const queue: PendingReplacement[] = [];
+
+					snapshot.forEach((doc) => {
+						queue.push(doc.data() as PendingReplacement);
+					});
+
+					set((state) => ({
+						pendingReplacements: { ...state.pendingReplacements, [documentId]: queue },
+						isLoading: { ...state.isLoading, [documentId]: false },
+						error: { ...state.error, [documentId]: null },
+						lastSyncedAt: { ...state.lastSyncedAt, [documentId]: Date.now() },
+					}));
+
+					console.info('[ReplacementQueueStore] Queue updated:', queue.length, 'items');
+				},
+				(error) => {
+					console.error('[ReplacementQueueStore] Listener error:', error);
+					set((state) => ({
+						isLoading: { ...state.isLoading, [documentId]: false },
+						error: { ...state.error, [documentId]: error as Error },
+					}));
 				}
+			);
 
-				const data = await response.json();
-				const queue: PendingReplacement[] = data.queue || [];
+			// Store subscription for cleanup
+			set((state) => ({
+				subscriptions: { ...state.subscriptions, [documentId]: unsubscribe },
+			}));
 
-				set((state) => ({
-					pendingReplacements: { ...state.pendingReplacements, [documentId]: queue },
-					isLoading: { ...state.isLoading, [documentId]: false },
-					error: { ...state.error, [documentId]: null },
-					lastSyncedAt: { ...state.lastSyncedAt, [documentId]: Date.now() },
-				}));
-			} catch (error) {
-				set((state) => ({
-					isLoading: { ...state.isLoading, [documentId]: false },
-					error: { ...state.error, [documentId]: error as Error },
-				}));
-			}
-		};
+			return unsubscribe;
+		} catch (error) {
+			console.error('[ReplacementQueueStore] Setup error:', error);
+			set((state) => ({
+				isLoading: { ...state.isLoading, [documentId]: false },
+				error: { ...state.error, [documentId]: error as Error },
+			}));
 
-		// Initial fetch
-		fetchQueue();
-
-		// Poll every 10 seconds for updates
-		const intervalId = setInterval(fetchQueue, 10000);
-
-		// Unsubscribe function
-		const unsubscribe = () => {
-			clearInterval(intervalId);
-		};
-
-		// Store subscription for cleanup
-		set((state) => ({
-			subscriptions: { ...state.subscriptions, [documentId]: unsubscribe },
-		}));
-
-		return unsubscribe;
+			return () => {};
+		}
 	},
 
 	/**
 	 * Approve a replacement
 	 */
 	approveReplacement: async (queueId: string, editedText?: string, notes?: string) => {
-		try {
-			const response = await fetch(`/api/admin/version-control/queue/${queueId}/action`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					action: 'approve',
-					adminEditedText: editedText,
-					adminNotes: notes,
-				}),
-			});
+		const response = await fetch(`/api/admin/version-control/queue/${queueId}/action`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({
+				action: 'approve',
+				adminEditedText: editedText,
+				adminNotes: notes,
+			}),
+		});
 
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to approve replacement');
-			}
-
-			// Queue will update automatically via Firebase listener
-			return await response.json();
-		} catch (error) {
-			throw error;
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to approve replacement');
 		}
+
+		// Queue updates automatically via Firestore listener
+		return await response.json();
 	},
 
 	/**
 	 * Reject a replacement
 	 */
 	rejectReplacement: async (queueId: string, reason: string) => {
-		try {
-			const response = await fetch(`/api/admin/version-control/queue/${queueId}/action`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					action: 'reject',
-					adminNotes: reason,
-				}),
-			});
+		const response = await fetch(`/api/admin/version-control/queue/${queueId}/action`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			credentials: 'include',
+			body: JSON.stringify({
+				action: 'reject',
+				adminNotes: reason,
+			}),
+		});
 
-			if (!response.ok) {
-				const error = await response.json();
-				throw new Error(error.error || 'Failed to reject replacement');
-			}
-
-			// Queue will update automatically via Firebase listener
-			return await response.json();
-		} catch (error) {
-			throw error;
+		if (!response.ok) {
+			const error = await response.json();
+			throw new Error(error.error || 'Failed to reject replacement');
 		}
+
+		// Queue updates automatically via Firestore listener
+		return await response.json();
 	},
 
 	/**
