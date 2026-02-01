@@ -2133,6 +2133,11 @@
   "includeTestDataHint": "אם מסומן, תשובות הבדיקה יכללו בייצוא",
   "downloading": "מוריד...",
 
+  "Someone": "מישהו",
+  "{{name}} is writing a suggestion...": "{{name}} כותב/ת הצעה...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} ו-{{name2}} כותבים...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}, {{name2}}, ועוד {{count}} אנשים כותבים...",
+
   "Consensus": "קונצנזוס",
   "Random": "אקראי",
   "Newest": "החדשים",

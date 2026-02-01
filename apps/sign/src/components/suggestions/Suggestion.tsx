@@ -32,6 +32,7 @@ export default function Suggestion({
   onEdit,
   isCurrent = false,
 }: SuggestionProps) {
+  console.info('[Suggestion] Rendering suggestion:', suggestion.suggestionId, 'by', suggestion.creatorDisplayName);
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);

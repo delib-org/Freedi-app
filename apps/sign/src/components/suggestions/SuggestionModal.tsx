@@ -6,6 +6,7 @@ import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
+import { useTypingStatus } from '@/hooks/useTypingStatus';
 import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
 import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
 import { htmlToMarkdown, markdownToHtml } from '@/lib/utils/htmlToMarkdown';
@@ -17,6 +18,7 @@ interface SuggestionModalProps {
   documentId: string;
   originalContent: string;
   existingSuggestion?: Suggestion | null;
+  userId: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -28,6 +30,7 @@ export default function SuggestionModal({
   documentId,
   originalContent,
   existingSuggestion,
+  userId,
   onClose,
   onSuccess,
 }: SuggestionModalProps) {
@@ -44,6 +47,13 @@ export default function SuggestionModal({
   const liveEditingManager = useRef<LiveEditingManager | null>(null);
   const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Typing status - emit when user types, clear on close/submit
+  const { emitTyping, clearTyping } = useTypingStatus({
+    paragraphId,
+    currentUserId: userId,
+    enabled: true,
+  });
 
   // Convert HTML original content to Markdown for user-friendly editing
   const markdownOriginalContent = useMemo(
@@ -107,13 +117,14 @@ export default function SuggestionModal({
       const cursorPosition = e.target.selectionStart || 0;
 
       setSuggestedContent(newContent);
+      emitTyping(); // Emit typing status to other users
 
       // Update RTDB for real-time collaboration (300ms debounced)
       if (liveEditingManager.current) {
         liveEditingManager.current.updateDraft(newContent, cursorPosition);
       }
     },
-    [setSuggestedContent]
+    [setSuggestedContent, emitTyping]
   );
 
   // Pre-fill if editing existing suggestion (convert HTML to Markdown)
@@ -132,8 +143,24 @@ export default function SuggestionModal({
     }
   }, [existingSuggestion, hasDraft, suggestedContent, markdownOriginalContent, setSuggestedContent]);
 
+  // Clear typing status when modal closes
+  useEffect(() => {
+    return () => {
+      clearTyping();
+    };
+  }, [clearTyping]);
+
   const isEditing = !!existingSuggestion;
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
+
+  // Handle reasoning change with typing emission
+  const handleReasoningChange = useCallback(
+    (value: string) => {
+      setReasoning(value);
+      emitTyping(); // Emit typing status to other users
+    },
+    [setReasoning, emitTyping]
+  );
 
   const handleSubmit = async () => {
     console.info('[SuggestionModal] handleSubmit called', {
@@ -153,6 +180,9 @@ export default function SuggestionModal({
       setErrorMessage('Please wait for authentication to complete...');
       return;
     }
+
+    // Clear typing status when submitting
+    clearTyping();
 
     setSubmitState('submitting');
     setErrorMessage('');
@@ -227,6 +257,12 @@ export default function SuggestionModal({
     }
   };
 
+  // Handle close with typing status clear
+  const handleClose = useCallback(() => {
+    clearTyping();
+    onClose();
+  }, [clearTyping, onClose]);
+
   return (
     <div className={styles.container}>
       {/* Collapsible original content section */}
@@ -299,7 +335,7 @@ export default function SuggestionModal({
         <textarea
           id="reasoning"
           value={reasoning}
-          onChange={(e) => setReasoning(e.target.value)}
+          onChange={(e) => handleReasoningChange(e.target.value)}
           placeholder={t('Explain your reasoning...')}
           rows={3}
           maxLength={SUGGESTIONS.MAX_REASONING_LENGTH}
@@ -329,7 +365,7 @@ export default function SuggestionModal({
         <button
           type="button"
           className={styles.cancelButton}
-          onClick={onClose}
+          onClick={handleClose}
           disabled={submitState === 'submitting'}
         >
           {t('Cancel')}

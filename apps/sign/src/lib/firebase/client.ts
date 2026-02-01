@@ -101,6 +101,39 @@ export function getFirebaseAuth(): Auth {
 }
 
 /**
+ * Get Firestore instance for real-time listeners on the client
+ * @deprecated Use getFirebaseFirestore() instead for consistency
+ */
+export function getFirestoreClient(): Firestore {
+  return getFirebaseFirestore();
+}
+
+/**
+ * Get Firebase Firestore instance
+ */
+export function getFirebaseFirestore(): Firestore {
+  if (!firestore) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    firestore = getFirestore(app);
+
+    // Connect to Firestore emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
+      try {
+        connectFirestoreEmulator(firestore, 'localhost', 8081);
+        firestoreEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Firestore emulator at localhost:8081');
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return firestore;
+}
+
+/**
  * Sign in with Google
  */
 export async function googleLogin(): Promise<User | null> {
@@ -324,30 +357,6 @@ export function getFirebaseRealtimeDatabase(): Database {
   }
 
   return database;
-}
-
-/**
- * Get Firebase Firestore instance
- */
-export function getFirebaseFirestore(): Firestore {
-  if (!firestore) {
-    if (!app) {
-      initializeFirebaseClient();
-    }
-    firestore = getFirestore(app);
-
-    // Connect to Firestore emulator in development
-    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
-      try {
-        connectFirestoreEmulator(firestore, 'localhost', 8081);
-        firestoreEmulatorConnected = true;
-      } catch {
-        // Already connected or emulator not available
-      }
-    }
-  }
-
-  return firestore;
 }
 
 /**

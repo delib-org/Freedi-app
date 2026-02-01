@@ -23,6 +23,24 @@
       ]
     },
     {
+      "collectionGroup": "typingStatus",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "paragraphId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isTyping",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "__name__",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "suggestions",
       "queryScope": "COLLECTION",
       "fields": [

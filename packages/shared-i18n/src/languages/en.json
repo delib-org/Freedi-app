@@ -2144,6 +2144,11 @@
   "includeTestDataHint": "If checked, test responses will be included in the export",
   "downloading": "Downloading...",
 
+  "Someone": "Someone",
+  "{{name}} is writing a suggestion...": "{{name}} is writing a suggestion...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} and {{name2}} are writing...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}, {{name2}}, and {{count}} others are writing...",
+
   "Consensus": "Consensus",
   "Random": "Random",
   "Newest": "Newest",

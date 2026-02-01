@@ -42,8 +42,8 @@ export type { Approval } from "./models/approval/Approval";
 export { ApprovalSchema } from "./models/approval/Approval";
 
 // Suggestion models
-export type { Suggestion } from "./models/suggestion/suggestionModel";
-export { SuggestionSchema } from "./models/suggestion/suggestionModel";
+export type { Suggestion, TypingStatus } from "./models/suggestion/suggestionModel";
+export { SuggestionSchema, TypingStatusSchema } from "./models/suggestion/suggestionModel";
 
 // ChoseBy models
 export type {

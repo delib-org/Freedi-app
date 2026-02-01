@@ -1581,6 +1581,11 @@
   "includeTestDataHint": "إذا تم التحديد، سيتم تضمين ردود الاختبار في التصدير",
   "downloading": "جارٍ التحميل...",
 
+  "Someone": "شخص ما",
+  "{{name}} is writing a suggestion...": "{{name}} يكتب اقتراحاً...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} و{{name2}} يكتبان...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}، {{name2}}، و{{count}} آخرون يكتبون...",
+
   "versionControl": "التحكم في الإصدار",
   "Version Control": "التحكم في الإصدار",
   "Document ID not found": "معرّف المستند غير موجود",

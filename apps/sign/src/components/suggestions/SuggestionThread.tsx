@@ -10,9 +10,12 @@ import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
+import { useTypingStatus } from '@/hooks/useTypingStatus';
+import { logError } from '@/lib/utils/errorHandling';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
 import SortControls, { SortType } from './SortControls';
+import TypingIndicator from './TypingIndicator';
 import Modal from '../shared/Modal';
 import styles from './SuggestionThread.module.scss';
 
@@ -50,6 +53,13 @@ export default function SuggestionThread({
 
   // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
   const suggestionStatements = useParagraphSuggestions(paragraphId);
+
+  // Real-time typing status
+  const { typingUsers } = useTypingStatus({
+    paragraphId,
+    currentUserId: user?.uid || null,
+    enabled: true,
+  });
 
   // Fetch the official paragraph Statement (the current version)
   const [officialParagraph, setOfficialParagraph] = useState<Statement | null>(null);
@@ -109,6 +119,15 @@ export default function SuggestionThread({
 
     return converted;
   }, [suggestionStatements, paragraphId, documentId, originalContent, isFrozen, frozenSuggestions]);
+
+  // Log when suggestions change
+  console.info('[SuggestionThread] Render - suggestions:', suggestions.length);
+  if (suggestions.length > 0) {
+    console.info('[SuggestionThread] Suggestions list:', suggestions.map(s => ({
+      id: s.suggestionId,
+      creator: s.creatorDisplayName,
+    })));
+  }
 
   // Sort suggestions based on selected sort type
   const sortedSuggestions = useMemo(() => {
@@ -193,7 +212,7 @@ export default function SuggestionThread({
   // Handle sort change
   const handleSortChange = useCallback((newSort: SortType) => {
     setSortType(newSort);
-    // Unfreezeif changing sort order
+    // Unfreeze if changing sort order
     if (isFrozen) {
       setIsFrozen(false);
     }
@@ -224,7 +243,11 @@ export default function SuggestionThread({
         decrementSuggestionCount(paragraphId);
       }
     } catch (err) {
-      console.error('Error deleting suggestion:', err);
+      logError(err, {
+        operation: 'SuggestionThread.handleDelete',
+        userId: user?.uid || undefined,
+        metadata: { paragraphId, suggestionId },
+      });
     }
   };
 
@@ -328,6 +351,11 @@ export default function SuggestionThread({
         )}
       </Flipper>
 
+      {/* Typing indicator - shows when others are writing */}
+      {typingUsers.length > 0 && (
+        <TypingIndicator typingUsers={typingUsers} currentUserId={user?.uid || null} />
+      )}
+
       {/* Add suggestion button or notice */}
       {userSuggestion ? (
         <div className={styles.hasNotice}>
@@ -368,6 +396,7 @@ export default function SuggestionThread({
             documentId={documentId}
             originalContent={originalContent}
             existingSuggestion={editingSuggestion}
+            userId={user?.uid || null}
             onClose={() => {
               setShowAddModal(false);
               setEditingSuggestion(null);

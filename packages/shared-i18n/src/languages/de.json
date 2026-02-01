@@ -1557,6 +1557,11 @@
   "includeTestDataHint": "Wenn aktiviert, werden Testantworten in den Export einbezogen",
   "downloading": "Wird heruntergeladen...",
 
+  "Someone": "Jemand",
+  "{{name}} is writing a suggestion...": "{{name}} schreibt einen Vorschlag...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} und {{name2}} schreiben...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}, {{name2}} und {{count}} weitere schreiben...",
+
   "versionControl": "Versionskontrolle",
   "Version Control": "Versionskontrolle",
   "Document ID not found": "Dokument-ID nicht gefunden",
