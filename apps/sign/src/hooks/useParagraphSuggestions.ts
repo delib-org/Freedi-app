@@ -286,12 +286,15 @@ export function useRealtimeSuggestionCounts(
   }, [documentId, enabled, setSuggestionCount]);
 }
 
+// Import Paragraph type for conversion
+import { Paragraph, ParagraphType } from '@/types';
+
 /**
  * Hook to listen to official paragraph content updates in real-time
  * Use this to reflect admin-approved changes to all users immediately
  *
  * @param documentId - The document ID
- * @param initialParagraphs - Initial paragraphs from server
+ * @param initialParagraphs - Initial paragraphs from server (Paragraph[])
  * @param enabled - Whether to enable the listener (default: true)
  * @returns Array of paragraphs with real-time updates
  *
@@ -300,10 +303,10 @@ export function useRealtimeSuggestionCounts(
  */
 export function useRealtimeParagraphs(
   documentId: string | null,
-  initialParagraphs: Statement[],
+  initialParagraphs: Paragraph[],
   enabled: boolean = true
-): Statement[] {
-  const [paragraphs, setParagraphs] = useState<Statement[]>(initialParagraphs);
+): Paragraph[] {
+  const [paragraphs, setParagraphs] = useState<Paragraph[]>(initialParagraphs);
 
   // Update when initial paragraphs change (e.g., navigation)
   useEffect(() => {
@@ -320,30 +323,43 @@ export function useRealtimeParagraphs(
     try {
       const firestore = getFirebaseFirestore();
 
-      // Query all official paragraphs for this document
+      // Query official paragraphs - matches getOfficialParagraphs() server query
+      // Uses doc.isOfficialParagraph to get the "standing" paragraphs (sub-statements)
       const q = query(
         collection(firestore, Collections.statements),
         where('parentId', '==', documentId),
-        where('statementType', '==', StatementType.option),
+        where('doc.isOfficialParagraph', '==', true),
         orderBy('doc.order', 'asc')
       );
 
       unsubscribe = onSnapshot(
         q,
         (snapshot) => {
-          const updatedParagraphs: Statement[] = [];
+          const updatedParagraphs: Paragraph[] = [];
 
-          snapshot.forEach((doc) => {
-            const statement = doc.data() as Statement;
+          snapshot.forEach((docSnap) => {
+            const statement = docSnap.data() as Statement;
 
-            // Only include official paragraphs (not suggestions) and non-hidden
-            if (statement.doc?.isOfficialParagraph && !statement.hide) {
-              updatedParagraphs.push(statement);
+            // Filter hidden statements
+            if (!statement.hide) {
+              // Convert Statement (sub-statement) to Paragraph format for component compatibility
+              const paragraph: Paragraph = {
+                paragraphId: statement.statementId,
+                content: statement.statement,
+                type: statement.doc?.paragraphType || ParagraphType.paragraph,
+                order: statement.doc?.order || 0,
+                listType: statement.doc?.listType,
+                imageUrl: statement.doc?.imageUrl,
+                imageAlt: statement.doc?.imageAlt,
+                imageCaption: statement.doc?.imageCaption,
+                isNonInteractive: statement.doc?.isNonInteractive,
+              };
+              updatedParagraphs.push(paragraph);
             }
           });
 
           // Sort by order to maintain correct display
-          updatedParagraphs.sort((a, b) => (a.doc?.order || 0) - (b.doc?.order || 0));
+          updatedParagraphs.sort((a, b) => (a.order || 0) - (b.order || 0));
 
           setParagraphs(updatedParagraphs);
           console.info('[useRealtimeParagraphs] Updated paragraphs:', updatedParagraphs.length);
