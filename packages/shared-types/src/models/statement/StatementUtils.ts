@@ -200,15 +200,16 @@ export function createParagraphStatement(
 	if (!statement) return undefined;
 
 	// Add doc field to mark as official paragraph
+	// Only include optional fields if they have values (Firestore rejects undefined)
 	statement.doc = {
 		isDoc: true,
 		order: paragraph.order,
 		isOfficialParagraph: true,
 		paragraphType: paragraph.type,
-		listType: paragraph.listType,
-		imageUrl: paragraph.imageUrl,
-		imageAlt: paragraph.imageAlt,
-		imageCaption: paragraph.imageCaption,
+		...(paragraph.listType !== undefined && { listType: paragraph.listType }),
+		...(paragraph.imageUrl !== undefined && { imageUrl: paragraph.imageUrl }),
+		...(paragraph.imageAlt !== undefined && { imageAlt: paragraph.imageAlt }),
+		...(paragraph.imageCaption !== undefined && { imageCaption: paragraph.imageCaption }),
 	};
 
 	// Preserve paragraph color if it's a header
