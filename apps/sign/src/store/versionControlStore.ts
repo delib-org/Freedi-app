@@ -145,6 +145,14 @@ export const useVersionControlStore = create<VersionControlStore>((set, get) => 
 	 * Update settings via API
 	 */
 	updateSettings: async (documentId: string, newSettings: Partial<VersionControlSettings>) => {
+		// Optimistic update - apply changes immediately
+		const currentSettings = get().settings[documentId] || DEFAULT_SETTINGS;
+		const optimisticSettings = { ...currentSettings, ...newSettings };
+
+		set((state) => ({
+			settings: { ...state.settings, [documentId]: optimisticSettings },
+		}));
+
 		try {
 			const response = await fetch(`/api/admin/version-control/${documentId}/settings`, {
 				method: 'PUT',
@@ -155,10 +163,14 @@ export const useVersionControlStore = create<VersionControlStore>((set, get) => 
 
 			if (!response.ok) {
 				const error = await response.json();
+				// Revert on error
+				set((state) => ({
+					settings: { ...state.settings, [documentId]: currentSettings },
+				}));
 				throw new Error(error.error || 'Failed to update settings');
 			}
 
-			// Settings will update automatically via Firebase listener
+			// Settings will also update via Firebase listener for confirmation
 		} catch (error) {
 			set((state) => ({
 				error: { ...state.error, [documentId]: error as Error },
