@@ -11,6 +11,33 @@ import {
 	createMockAdminUser,
 } from './testHelpers';
 
+// Local test types for version control
+interface VersionControlSettings {
+	enabled: boolean;
+	reviewThreshold: number;
+	allowAdminEdit: boolean;
+	enableVersionHistory: boolean;
+	maxRecentVersions: number;
+	maxTotalVersions: number;
+}
+
+interface StatementVersionControl {
+	currentVersion: number;
+	finalizedBy?: string;
+	finalizedAt?: number;
+	finalizedReason?: string;
+}
+
+// Helper to access version control on statements
+const getVC = (stmt: unknown): StatementVersionControl | undefined => {
+	return (stmt as { versionControl?: StatementVersionControl }).versionControl;
+};
+
+// Helper to access version control settings on documents
+const getVCSettings = (doc: unknown): VersionControlSettings | undefined => {
+	return (doc as { doc?: { versionControlSettings?: VersionControlSettings } }).doc?.versionControlSettings;
+};
+
 describe('Version Control - Version History (E2E)', () => {
 	let mockDocument: ReturnType<typeof createMockDocument>;
 	let mockParagraph: ReturnType<typeof createMockParagraph>;
@@ -25,7 +52,7 @@ describe('Version Control - Version History (E2E)', () => {
 	describe('Version History Creation', () => {
 		it('should create history entry on first replacement', async () => {
 			// Arrange: Paragraph at version 1 (initial)
-			expect(mockParagraph.versionControl!.currentVersion).toBe(1);
+			expect(getVC(mockParagraph)?.currentVersion).toBe(1);
 
 			// Act: First replacement occurs
 			// createVersionHistory() should be called
@@ -49,7 +76,7 @@ describe('Version Control - Version History (E2E)', () => {
 
 			// Assert: Versions are sequential
 			versions.forEach((version, index) => {
-				expect(version.versionControl!.currentVersion).toBe(index + 1);
+				expect(getVC(version)?.currentVersion).toBe(index + 1);
 			});
 		});
 
@@ -59,11 +86,11 @@ describe('Version Control - Version History (E2E)', () => {
 			const version1 = versions[0];
 
 			// Assert: Metadata present
-			expect(version1.versionControl).toBeDefined();
-			expect(version1.versionControl!.currentVersion).toBe(1);
-			expect(version1.versionControl!.finalizedBy).toBeDefined();
-			expect(version1.versionControl!.finalizedAt).toBeDefined();
-			expect(version1.versionControl!.finalizedReason).toBe('manual_approval');
+			expect(getVC(version1)).toBeDefined();
+			expect(getVC(version1)?.currentVersion).toBe(1);
+			expect(getVC(version1)?.finalizedBy).toBeDefined();
+			expect(getVC(version1)?.finalizedAt).toBeDefined();
+			expect(getVC(version1)?.finalizedReason).toBe('manual_approval');
 		});
 	});
 
@@ -76,7 +103,7 @@ describe('Version Control - Version History (E2E)', () => {
 			recentVersions.forEach(version => {
 				expect(version.hide).toBe(true);
 				expect(version.statement).toBeDefined();
-				expect(version.versionControl).toBeDefined();
+				expect(getVC(version)).toBeDefined();
 			});
 		});
 
@@ -97,7 +124,7 @@ describe('Version Control - Version History (E2E)', () => {
 
 		it('should automatically prune on version creation', async () => {
 			// Arrange: Paragraph with maxRecentVersions = 4
-			expect(mockDocument.doc!.versionControlSettings!.maxRecentVersions).toBe(4);
+			expect(getVCSettings(mockDocument)?.maxRecentVersions).toBe(4);
 
 			// Act: Create 5th version
 			const versions = createVersionHistory(mockParagraph.statementId, 5);
@@ -110,7 +137,7 @@ describe('Version Control - Version History (E2E)', () => {
 
 		it('should enforce maxTotalVersions limit', async () => {
 			// Arrange: Create 60 versions (exceeds maxTotalVersions: 50)
-			const maxTotal = mockDocument.doc!.versionControlSettings!.maxTotalVersions!;
+			const maxTotal = getVCSettings(mockDocument)?.maxTotalVersions ?? 50;
 			const createdCount = maxTotal + 10;
 
 			// Act: Pruning should delete oldest archives
@@ -167,7 +194,7 @@ describe('Version Control - Version History (E2E)', () => {
 			const updatedParagraph = {
 				...mockParagraph,
 				versionControl: {
-					...mockParagraph.versionControl,
+					...getVC(mockParagraph),
 					currentVersion,
 				},
 			};
@@ -177,10 +204,10 @@ describe('Version Control - Version History (E2E)', () => {
 
 			// Assert: Version 5 marked as current
 			const version5 = versions.find(
-				v => v.versionControl!.currentVersion === currentVersion
+				v => getVC(v)?.currentVersion === currentVersion
 			);
 			expect(version5).toBeDefined();
-			expect(updatedParagraph.versionControl!.currentVersion).toBe(currentVersion);
+			expect(updatedParagraph.versionControl?.currentVersion).toBe(currentVersion);
 		});
 
 		it('should display version metadata (who, when, how)', async () => {
@@ -188,9 +215,9 @@ describe('Version Control - Version History (E2E)', () => {
 			const version = createVersionHistory(mockParagraph.statementId, 1)[0];
 
 			// Assert: All metadata present
-			expect(version.versionControl!.finalizedBy).toBe('user_admin');
-			expect(version.versionControl!.finalizedAt).toBeDefined();
-			expect(version.versionControl!.finalizedReason).toBe('manual_approval');
+			expect(getVC(version)?.finalizedBy).toBe('user_admin');
+			expect(getVC(version)?.finalizedAt).toBeDefined();
+			expect(getVC(version)?.finalizedReason).toBe('manual_approval');
 			expect(version.consensus).toBeDefined();
 		});
 	});
@@ -344,7 +371,7 @@ describe('Version Control - Version History (E2E)', () => {
 	describe('Performance with Large History', () => {
 		it('should handle 50+ versions efficiently', async () => {
 			// Arrange: Maximum versions (50)
-			const maxVersions = mockDocument.doc!.versionControlSettings!.maxTotalVersions!;
+			const maxVersions = getVCSettings(mockDocument)?.maxTotalVersions ?? 50;
 			const versions = createVersionHistory(mockParagraph.statementId, maxVersions);
 
 			// Assert: All versions created

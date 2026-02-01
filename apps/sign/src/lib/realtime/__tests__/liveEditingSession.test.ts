@@ -9,14 +9,22 @@ import { getFirebaseRealtimeDatabase } from '@/lib/firebase/client';
 // Mock Firebase client
 jest.mock('@/lib/firebase/client');
 
+// Type for update call data
+interface UpdateCallData {
+  documentId?: string;
+  paragraphId?: string;
+  draftContent?: string;
+  [key: string]: unknown;
+}
+
 interface MockRef {
-  set: jest.MockedFunction<() => Promise<void>>;
-  update: jest.MockedFunction<() => Promise<void>>;
+  set: jest.MockedFunction<(value: unknown) => Promise<void>>;
+  update: jest.MockedFunction<(data: UpdateCallData) => Promise<void>>;
   onDisconnect: jest.MockedFunction<() => { remove: jest.MockedFunction<() => Promise<void>> }>;
 }
 
 interface MockDatabase {
-  ref: jest.MockedFunction<() => MockRef>;
+  ref: jest.MockedFunction<(path: string) => MockRef>;
 }
 
 describe('LiveEditingManager', () => {
@@ -29,16 +37,16 @@ describe('LiveEditingManager', () => {
 
     // Mock RTDB ref
     mockRef = {
-      set: jest.fn(() => Promise.resolve()),
-      update: jest.fn(() => Promise.resolve()),
+      set: jest.fn<(value: unknown) => Promise<void>>().mockResolvedValue(undefined),
+      update: jest.fn<(data: UpdateCallData) => Promise<void>>().mockResolvedValue(undefined),
       onDisconnect: jest.fn(() => ({
-        remove: jest.fn(() => Promise.resolve()),
+        remove: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       })),
     };
 
     // Mock database
     mockDatabase = {
-      ref: jest.fn(() => mockRef),
+      ref: jest.fn<(path: string) => MockRef>().mockReturnValue(mockRef),
     };
 
     (getFirebaseRealtimeDatabase as jest.MockedFunction<typeof getFirebaseRealtimeDatabase>).mockReturnValue(
@@ -61,11 +69,15 @@ describe('LiveEditingManager', () => {
       expect(mockDatabase.ref).toHaveBeenCalledWith('liveEditing/sessions/para_456');
       expect(mockRef.update).toHaveBeenCalled();
 
-      const updateCall = mockRef.update.mock.calls[0][0];
-      expect(updateCall.documentId).toBe('doc_123');
-      expect(updateCall.paragraphId).toBe('para_456');
-      expect(updateCall.draftContent).toBe('Initial content');
-      expect(updateCall['activeEditors/user_789']).toBeDefined();
+      const mockCalls = mockRef.update.mock.calls;
+      const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+      expect(updateCall).toBeDefined();
+      if (updateCall) {
+        expect(updateCall.documentId).toBe('doc_123');
+        expect(updateCall.paragraphId).toBe('para_456');
+        expect(updateCall.draftContent).toBe('Initial content');
+        expect(updateCall['activeEditors/user_789']).toBeDefined();
+      }
     });
 
     it('should set up auto-disconnect cleanup', async () => {
@@ -89,10 +101,13 @@ describe('LiveEditingManager', () => {
         'Initial content'
       );
 
-      const updateCall = mockRef.update.mock.calls[0][0];
-      const editor = updateCall['activeEditors/user_789'];
-
-      expect(editor.color).toMatch(/^#[0-9a-f]{6}$/i);
+      const mockCalls = mockRef.update.mock.calls;
+      const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+      expect(updateCall).toBeDefined();
+      if (updateCall) {
+        const editor = updateCall['activeEditors/user_789'] as { color: string } | undefined;
+        expect(editor?.color).toMatch(/^#[0-9a-f]{6}$/i);
+      }
     });
 
     it('should handle errors gracefully', async () => {
@@ -129,8 +144,9 @@ describe('LiveEditingManager', () => {
         // Should only call once with last value
         expect(mockRef.update).toHaveBeenCalledTimes(1);
 
-        const updateCall = mockRef.update.mock.calls[0][0];
-        expect(updateCall.draftContent).toBe('New text 3');
+        const mockCalls = mockRef.update.mock.calls;
+        const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+        expect(updateCall?.draftContent).toBe('New text 3');
         done();
       }, 350);
     });
@@ -139,8 +155,9 @@ describe('LiveEditingManager', () => {
       manager.updateDraft('New text', 5);
 
       setTimeout(() => {
-        const updateCall = mockRef.update.mock.calls[0][0];
-        expect(updateCall['activeEditors/user_789/cursorPosition']).toBe(5);
+        const mockCalls = mockRef.update.mock.calls;
+        const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+        expect(updateCall?.['activeEditors/user_789/cursorPosition']).toBe(5);
         done();
       }, 350);
     });
@@ -151,8 +168,9 @@ describe('LiveEditingManager', () => {
       manager.updateDraft('New text', 0);
 
       setTimeout(() => {
-        const updateCall = mockRef.update.mock.calls[0][0];
-        const lastActive = updateCall['activeEditors/user_789/lastActive'];
+        const mockCalls = mockRef.update.mock.calls;
+        const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+        const lastActive = updateCall?.['activeEditors/user_789/lastActive'] as number | undefined;
 
         expect(lastActive).toBeGreaterThanOrEqual(beforeTime);
         done();

@@ -12,6 +12,25 @@ import {
 	simulateNetworkDelay,
 } from '../integration/versionControl/testHelpers';
 
+// Local test types for version control
+interface VersionControlSettings {
+	maxTotalVersions?: number;
+}
+
+interface StatementVersionControl {
+	currentVersion: number;
+}
+
+// Helper to access version control on statements
+const getVC = (stmt: unknown): StatementVersionControl | undefined => {
+	return (stmt as { versionControl?: StatementVersionControl }).versionControl;
+};
+
+// Helper to access version control settings on documents
+const getVCSettings = (doc: unknown): VersionControlSettings | undefined => {
+	return (doc as { doc?: { versionControlSettings?: VersionControlSettings } }).doc?.versionControlSettings;
+};
+
 describe('Version Control - Performance Tests', () => {
 	describe('High-Concurrency Voting', () => {
 		it('should handle 1000 votes per minute', async () => {
@@ -124,7 +143,7 @@ describe('Version Control - Performance Tests', () => {
 			// Arrange: Paragraph with maximum versions
 			const document = createMockDocument();
 			const paragraph = createMockParagraph(document.statementId);
-			const maxVersions = document.doc!.versionControlSettings!.maxTotalVersions!;
+			const maxVersions = getVCSettings(document)?.maxTotalVersions ?? 50;
 
 			const versions = createVersionHistory(paragraph.statementId, maxVersions);
 
@@ -287,7 +306,7 @@ describe('Version Control - Performance Tests', () => {
 
 			// Assert: Only current version exists
 			expect(versions.length).toBe(0);
-			expect(paragraph.versionControl!.currentVersion).toBe(1);
+			expect(getVC(paragraph)?.currentVersion).toBe(1);
 		});
 
 		it('should handle rapid threshold changes by admin', async () => {

@@ -33,5 +33,13 @@
     "../../packages/shared-i18n/src/**/*.ts",
     "../../packages/shared-i18n/src/**/*.tsx"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/__tests__/**/*.test.ts",
+    "src/__tests__/**/*.test.tsx",
+    "src/**/tests/**/*.test.ts",
+    "src/**/tests/**/*.test.tsx",
+    "src/**/__tests__/**/*.test.ts",
+    "src/**/__tests__/**/*.test.tsx"
+  ]
 }

@@ -11,49 +11,55 @@ import { Statement, ParagraphType } from '@freedi/shared-types';
 jest.mock('@/lib/firebase/admin');
 
 describe('migrateParagraphsToStatements', () => {
-  const mockDb = {
-    collection: jest.fn(),
-  };
-
-  const mockDocRef = {
-    get: jest.fn(),
-  };
-
-  const mockCollectionRef = {
-    doc: jest.fn(() => mockDocRef),
-    where: jest.fn(() => ({
-      where: jest.fn(() => ({
-        limit: jest.fn(() => ({
-          get: jest.fn(),
-        })),
-      })),
-    })),
-  };
-
-  const mockBatch = {
-    set: jest.fn(),
-    commit: jest.fn(() => Promise.resolve()),
-  };
+  // Use relaxed typing for mocks since strict typing causes conflicts
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockDocRef: { get: jest.Mock<any> };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockCollectionRef: { doc: jest.Mock<any>; where: jest.Mock<any> };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockBatch: { set: jest.Mock<any>; commit: jest.Mock<any> };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let mockDb: { collection: jest.Mock<any>; batch: jest.Mock<any> };
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    mockDocRef = {
+      get: jest.fn(),
+    };
+
+    mockCollectionRef = {
+      doc: jest.fn(() => mockDocRef),
+      where: jest.fn(() => ({
+        where: jest.fn(() => ({
+          limit: jest.fn(() => ({
+            get: jest.fn(),
+          })),
+        })),
+      })),
+    };
+
+    mockBatch = {
+      set: jest.fn(),
+      commit: jest.fn().mockResolvedValue(undefined),
+    };
+
+    mockDb = {
+      collection: jest.fn(() => mockCollectionRef),
+      batch: jest.fn(() => mockBatch),
+    };
+
     (getFirestoreAdmin as jest.MockedFunction<typeof getFirestoreAdmin>).mockReturnValue(
       mockDb as unknown as ReturnType<typeof getFirestoreAdmin>
     );
-    mockDb.collection.mockReturnValue(mockCollectionRef as unknown as ReturnType<typeof mockDb.collection>);
-    (mockDb as unknown as { batch: jest.Mock }).batch = jest.fn(() => mockBatch);
   });
 
   describe('checkIfMigrated', () => {
     it('should return true if official paragraphs exist', async () => {
-      const mockSnapshot = {
-        empty: false,
-      };
-
       mockCollectionRef.where.mockReturnValue({
         where: jest.fn().mockReturnValue({
           limit: jest.fn().mockReturnValue({
-            get: jest.fn().mockResolvedValue(mockSnapshot),
+            get: jest.fn().mockResolvedValue({ empty: false }),
           }),
         }),
       });
@@ -64,14 +70,10 @@ describe('migrateParagraphsToStatements', () => {
     });
 
     it('should return false if no official paragraphs exist', async () => {
-      const mockSnapshot = {
-        empty: true,
-      };
-
       mockCollectionRef.where.mockReturnValue({
         where: jest.fn().mockReturnValue({
           limit: jest.fn().mockReturnValue({
-            get: jest.fn().mockResolvedValue(mockSnapshot),
+            get: jest.fn().mockResolvedValue({ empty: true }),
           }),
         }),
       });
@@ -231,14 +233,14 @@ describe('migrateParagraphsToStatements', () => {
       await migrateParagraphsToStatements('doc_123', 'user_123');
 
       // Check that paragraphs maintain order
-      const calls = mockBatch.set.mock.calls;
+      const calls = mockBatch.set.mock.calls as Array<[unknown, Statement]>;
       expect(calls.length).toBe(2);
 
-      const firstParagraph = calls[0][1] as Statement;
-      const secondParagraph = calls[1][1] as Statement;
+      const firstParagraph = calls[0]?.[1];
+      const secondParagraph = calls[1]?.[1];
 
-      expect(firstParagraph.doc?.order).toBe(0);
-      expect(secondParagraph.doc?.order).toBe(1);
+      expect(firstParagraph?.doc?.order).toBe(0);
+      expect(secondParagraph?.doc?.order).toBe(1);
     });
 
     it('should mark paragraphs as official', async () => {
@@ -264,11 +266,11 @@ describe('migrateParagraphsToStatements', () => {
 
       await migrateParagraphsToStatements('doc_123', 'user_123');
 
-      const calls = mockBatch.set.mock.calls;
+      const calls = mockBatch.set.mock.calls as Array<[unknown, Statement]>;
 
       calls.forEach((call) => {
-        const statement = call[1] as Statement;
-        expect(statement.doc?.isOfficialParagraph).toBe(true);
+        const statement = call[1];
+        expect(statement?.doc?.isOfficialParagraph).toBe(true);
       });
     });
   });

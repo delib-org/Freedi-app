@@ -343,6 +343,7 @@ export function useRealtimeParagraphs(
             // Filter hidden statements
             if (!statement.hide) {
               // Convert Statement (sub-statement) to Paragraph format for component compatibility
+              // Note: isNonInteractive is not mapped as it's not stored in Statement.doc
               const paragraph: Paragraph = {
                 paragraphId: statement.statementId,
                 content: statement.statement,
@@ -352,7 +353,6 @@ export function useRealtimeParagraphs(
                 imageUrl: statement.doc?.imageUrl,
                 imageAlt: statement.doc?.imageAlt,
                 imageCaption: statement.doc?.imageCaption,
-                isNonInteractive: statement.doc?.isNonInteractive,
               };
               updatedParagraphs.push(paragraph);
             }

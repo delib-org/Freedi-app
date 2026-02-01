@@ -287,19 +287,29 @@ export function assertQueueItem(
 	});
 }
 
+// Local type for version control (not exported from shared-types)
+interface StatementVersionControl {
+	currentVersion: number;
+	finalizedBy?: string;
+	finalizedAt?: number;
+	finalizedReason?: string;
+	appliedSuggestionId?: string;
+}
+
 /**
  * Asserts version control state
  */
 export function assertVersionControl(
 	statement: Statement,
-	expected: Partial<Statement['versionControl']>
+	expected: Partial<StatementVersionControl>
 ): void {
-	if (!statement.versionControl) {
+	const statementWithVC = statement as unknown as { versionControl?: StatementVersionControl };
+	if (!statementWithVC.versionControl) {
 		throw new Error('Statement has no version control data');
 	}
 
 	Object.entries(expected).forEach(([key, value]) => {
-		const actualValue = statement.versionControl![key as keyof typeof statement.versionControl];
+		const actualValue = statementWithVC.versionControl![key as keyof StatementVersionControl];
 		if (actualValue !== value) {
 			throw new Error(
 				`Version control ${key} mismatch: expected ${value}, got ${actualValue}`

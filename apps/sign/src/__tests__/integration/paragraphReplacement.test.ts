@@ -18,8 +18,15 @@ import { finalizeSuggestion } from '@/controllers/db/paragraphs/finalizeSuggesti
 // Mock Firebase Admin
 jest.mock('@/lib/firebase/admin');
 
+// Type for mock evaluation data
+interface MockEvaluationData {
+  evaluation: number;
+  statementId: string;
+}
+
 describe('Paragraph Replacement Integration', () => {
-  const mockDb = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mockDb: { collection: jest.Mock<any>; runTransaction: jest.Mock<any> } = {
     collection: jest.fn(),
     runTransaction: jest.fn(),
   };
@@ -73,7 +80,7 @@ describe('Paragraph Replacement Integration', () => {
   describe('Auto Mode - Real-time replacement', () => {
     it('should update official paragraph when suggestion has higher consensus', async () => {
       const mockEvaluationRef = {
-        set: jest.fn(() => Promise.resolve()),
+        set: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
       };
 
       mockDb.collection.mockReturnValue({
@@ -86,9 +93,13 @@ describe('Paragraph Replacement Integration', () => {
       // Check evaluation was saved
       expect(mockEvaluationRef.set).toHaveBeenCalled();
 
-      const evaluationData = mockEvaluationRef.set.mock.calls[0]![0] as { evaluation: number; statementId: string };
-      expect(evaluationData.evaluation).toBe(0.9);
-      expect(evaluationData.statementId).toBe('suggestion_456');
+      const mockCalls = mockEvaluationRef.set.mock.calls;
+      const evaluationData = (mockCalls.length > 0 ? mockCalls[0] : undefined) as unknown as [MockEvaluationData] | undefined;
+      expect(evaluationData).toBeDefined();
+      if (evaluationData) {
+        expect(evaluationData[0].evaluation).toBe(0.9);
+        expect(evaluationData[0].statementId).toBe('suggestion_456');
+      }
     });
 
     it('should preserve old text as history entry', async () => {
@@ -118,8 +129,8 @@ describe('Paragraph Replacement Integration', () => {
       };
 
       // Mock Firestore transaction
-      mockDb.runTransaction.mockImplementation(async (callback) => {
-        return callback(mockTransaction);
+      mockDb.runTransaction.mockImplementation(async (callback: unknown) => {
+        return (callback as (t: typeof mockTransaction) => Promise<unknown>)(mockTransaction);
       });
 
       // Mock getting official paragraph
@@ -177,8 +188,8 @@ describe('Paragraph Replacement Integration', () => {
         update: jest.fn(),
       };
 
-      mockDb.runTransaction.mockImplementation(async (callback) => {
-        return callback(mockTransaction);
+      mockDb.runTransaction.mockImplementation(async (callback: unknown) => {
+        return (callback as (t: typeof mockTransaction) => Promise<unknown>)(mockTransaction);
       });
 
       mockTransaction.get.mockResolvedValueOnce({
