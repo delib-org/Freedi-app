@@ -22,6 +22,7 @@ export default function Suggestion({
   onDelete,
   onEdit,
 }: SuggestionProps) {
+  console.info('[Suggestion] Rendering suggestion:', suggestion.suggestionId, 'by', suggestion.creatorDisplayName);
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
   const [consensus, setConsensus] = useState(suggestion.consensus || 0);

@@ -1577,5 +1577,10 @@
   "exportSurveyData": "تصدير بيانات الاستبيان",
   "includeTestData": "تضمين بيانات الاختبار",
   "includeTestDataHint": "إذا تم التحديد، سيتم تضمين ردود الاختبار في التصدير",
-  "downloading": "جارٍ التحميل..."
+  "downloading": "جارٍ التحميل...",
+
+  "Someone": "شخص ما",
+  "{{name}} is writing a suggestion...": "{{name}} يكتب اقتراحاً...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} و{{name2}} يكتبان...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}، {{name2}}، و{{count}} آخرون يكتبون..."
 }

@@ -17,3 +17,17 @@ export const SuggestionSchema = object({
 });
 
 export type Suggestion = InferOutput<typeof SuggestionSchema>;
+
+/**
+ * Schema for tracking typing status in real-time
+ * Stored in 'typingStatus' collection with document ID: `${paragraphId}--${userId}`
+ */
+export const TypingStatusSchema = object({
+	paragraphId: string(),
+	userId: string(),
+	displayName: optional(string()),
+	isTyping: boolean(),
+	lastUpdate: number(),
+});
+
+export type TypingStatus = InferOutput<typeof TypingStatusSchema>;

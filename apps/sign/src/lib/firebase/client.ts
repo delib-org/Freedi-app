@@ -22,6 +22,11 @@ import {
   FirebaseStorage,
   connectStorageEmulator,
 } from 'firebase/storage';
+import {
+  getFirestore,
+  Firestore,
+  connectFirestoreEmulator,
+} from 'firebase/firestore';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
@@ -38,8 +43,10 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let storage: FirebaseStorage;
+let firestore: Firestore;
 let authEmulatorConnected = false;
 let storageEmulatorConnected = false;
+let firestoreEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -88,6 +95,34 @@ export function getFirebaseAuth(): Auth {
   }
 
   return auth;
+}
+
+/**
+ * Get Firestore instance for real-time listeners on the client
+ */
+export function getFirestoreClient(): Firestore {
+  if (!firestore) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    firestore = getFirestore(app);
+
+    // Connect to Firestore emulator in development mode
+    // Uses the same pattern as Auth emulator connection
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
+      try {
+        // Default to localhost:8081 which matches firebase.json config
+        connectFirestoreEmulator(firestore, 'localhost', 8081);
+        firestoreEmulatorConnected = true;
+        console.info('[Firebase Client - Sign] Connected to Firestore emulator at localhost:8081');
+      } catch (err) {
+        console.error('[Firebase Client - Sign] Failed to connect to Firestore emulator:', err);
+        // Continue without emulator - will use production
+      }
+    }
+  }
+
+  return firestore;
 }
 
 /**

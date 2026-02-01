@@ -1553,5 +1553,10 @@
   "exportSurveyData": "Enquêtegegevens exporteren",
   "includeTestData": "Testgegevens opnemen",
   "includeTestDataHint": "Indien aangevinkt, worden testantwoorden opgenomen in de export",
-  "downloading": "Downloaden..."
+  "downloading": "Downloaden...",
+
+  "Someone": "Iemand",
+  "{{name}} is writing a suggestion...": "{{name}} schrijft een suggestie...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} en {{name2}} schrijven...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}, {{name2}} en {{count}} anderen schrijven..."
 }

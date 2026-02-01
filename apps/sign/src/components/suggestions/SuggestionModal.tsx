@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
+import { useTypingStatus } from '@/hooks/useTypingStatus';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
 import styles from './SuggestionModal.module.scss';
 
@@ -13,6 +14,7 @@ interface SuggestionModalProps {
   documentId: string;
   originalContent: string;
   existingSuggestion?: Suggestion | null;
+  userId: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -24,6 +26,7 @@ export default function SuggestionModal({
   documentId,
   originalContent,
   existingSuggestion,
+  userId,
   onClose,
   onSuccess,
 }: SuggestionModalProps) {
@@ -45,6 +48,13 @@ export default function SuggestionModal({
     hasDraft,
   } = useSuggestionDraft({ paragraphId });
 
+  // Typing status - emit when user types, clear on close/submit
+  const { emitTyping, clearTyping } = useTypingStatus({
+    paragraphId,
+    currentUserId: userId,
+    enabled: true,
+  });
+
   // Pre-fill if editing existing suggestion
   useEffect(() => {
     if (existingSuggestion && !hasDraft) {
@@ -53,11 +63,39 @@ export default function SuggestionModal({
     }
   }, [existingSuggestion, hasDraft, setSuggestedContent, setReasoning]);
 
+  // Clear typing status when modal closes
+  useEffect(() => {
+    return () => {
+      clearTyping();
+    };
+  }, [clearTyping]);
+
   const isEditing = !!existingSuggestion;
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
 
+  // Handle content change with typing emission
+  const handleContentChange = useCallback(
+    (value: string) => {
+      setSuggestedContent(value);
+      emitTyping(); // Emit typing status to other users
+    },
+    [setSuggestedContent, emitTyping]
+  );
+
+  // Handle reasoning change with typing emission
+  const handleReasoningChange = useCallback(
+    (value: string) => {
+      setReasoning(value);
+      emitTyping(); // Emit typing status to other users
+    },
+    [setReasoning, emitTyping]
+  );
+
   const handleSubmit = async () => {
     if (!isValid || submitState === 'submitting') return;
+
+    // Clear typing status when submitting
+    clearTyping();
 
     setSubmitState('submitting');
     setErrorMessage('');
@@ -112,6 +150,12 @@ export default function SuggestionModal({
     }
   };
 
+  // Handle close with typing status clear
+  const handleClose = useCallback(() => {
+    clearTyping();
+    onClose();
+  }, [clearTyping, onClose]);
+
   return (
     <div className={styles.container}>
       {/* Collapsible original content section */}
@@ -147,7 +191,7 @@ export default function SuggestionModal({
         <textarea
           id="suggested-content"
           value={suggestedContent}
-          onChange={(e) => setSuggestedContent(e.target.value)}
+          onChange={(e) => handleContentChange(e.target.value)}
           placeholder={t('Write your alternative version...')}
           rows={5}
           maxLength={SUGGESTIONS.MAX_LENGTH}
@@ -166,7 +210,7 @@ export default function SuggestionModal({
         <textarea
           id="reasoning"
           value={reasoning}
-          onChange={(e) => setReasoning(e.target.value)}
+          onChange={(e) => handleReasoningChange(e.target.value)}
           placeholder={t('Explain your reasoning...')}
           rows={3}
           maxLength={SUGGESTIONS.MAX_REASONING_LENGTH}
@@ -196,7 +240,7 @@ export default function SuggestionModal({
         <button
           type="button"
           className={styles.cancelButton}
-          onClick={onClose}
+          onClick={handleClose}
           disabled={submitState === 'submitting'}
         >
           {t('Cancel')}

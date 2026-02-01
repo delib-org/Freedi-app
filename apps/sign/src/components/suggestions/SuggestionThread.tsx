@@ -1,12 +1,16 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion as SuggestionType } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
-import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
+import { API_ROUTES } from '@/constants/common';
+import { useRealtimeSuggestions } from '@/hooks/useRealtimeSuggestions';
+import { useTypingStatus } from '@/hooks/useTypingStatus';
+import { logError } from '@/lib/utils/errorHandling';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
+import TypingIndicator from './TypingIndicator';
 import Modal from '../shared/Modal';
 import styles from './SuggestionThread.module.scss';
 
@@ -28,10 +32,30 @@ export default function SuggestionThread({
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
 
-  const [suggestions, setSuggestions] = useState<SuggestionType[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSuggestion, setEditingSuggestion] = useState<SuggestionType | null>(null);
+
+  // Real-time suggestions listener (replaces polling)
+  const { suggestions, isLoading } = useRealtimeSuggestions({
+    paragraphId,
+    enabled: true,
+  });
+
+  // Log when suggestions change
+  console.info('[SuggestionThread] Render - suggestions:', suggestions.length, 'isLoading:', isLoading);
+  if (suggestions.length > 0) {
+    console.info('[SuggestionThread] Suggestions list:', suggestions.map(s => ({
+      id: s.suggestionId,
+      creator: s.creatorDisplayName,
+    })));
+  }
+
+  // Real-time typing status
+  const { typingUsers } = useTypingStatus({
+    paragraphId,
+    currentUserId: userId,
+    enabled: true,
+  });
 
   // Check if user already has a suggestion
   const userSuggestion = useMemo(() => {
@@ -39,31 +63,6 @@ export default function SuggestionThread({
 
     return suggestions.find((s) => s.creatorId === userId) || null;
   }, [suggestions, userId]);
-
-  // Fetch suggestions
-  const fetchSuggestions = useCallback(async () => {
-    try {
-      const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId));
-      if (response.ok) {
-        const data = await response.json();
-        setSuggestions(data.suggestions || []);
-      }
-    } catch (err) {
-      console.error('Error fetching suggestions:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [paragraphId]);
-
-  // Initial fetch and polling for real-time updates
-  useEffect(() => {
-    fetchSuggestions();
-
-    // Poll for updates every 5 seconds
-    const interval = setInterval(fetchSuggestions, SUGGESTIONS.REALTIME_POLL_INTERVAL_MS);
-
-    return () => clearInterval(interval);
-  }, [fetchSuggestions]);
 
   // Handle delete
   const handleDelete = async (suggestionId: string) => {
@@ -77,11 +76,15 @@ export default function SuggestionThread({
       });
 
       if (response.ok) {
-        setSuggestions((prev) => prev.filter((s) => s.suggestionId !== suggestionId));
         decrementSuggestionCount(paragraphId);
+        // Note: Real-time listener will automatically remove the suggestion from the list
       }
     } catch (err) {
-      console.error('Error deleting suggestion:', err);
+      logError(err, {
+        operation: 'SuggestionThread.handleDelete',
+        userId: userId || undefined,
+        metadata: { paragraphId, suggestionId },
+      });
     }
   };
 
@@ -93,7 +96,7 @@ export default function SuggestionThread({
 
   // Handle add/edit success
   const handleModalSuccess = () => {
-    fetchSuggestions();
+    // Real-time listener will automatically update the list
     setShowAddModal(false);
     setEditingSuggestion(null);
   };
@@ -121,6 +124,11 @@ export default function SuggestionThread({
           ))
         )}
       </div>
+
+      {/* Typing indicator - shows when others are writing */}
+      {typingUsers.length > 0 && (
+        <TypingIndicator typingUsers={typingUsers} currentUserId={userId} />
+      )}
 
       {/* Add suggestion button or notice */}
       {userSuggestion ? (
@@ -162,6 +170,7 @@ export default function SuggestionThread({
             documentId={documentId}
             originalContent={originalContent}
             existingSuggestion={editingSuggestion}
+            userId={userId}
             onClose={() => {
               setShowAddModal(false);
               setEditingSuggestion(null);

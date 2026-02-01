@@ -1553,5 +1553,10 @@
   "exportSurveyData": "Exportar datos de la encuesta",
   "includeTestData": "Incluir datos de prueba",
   "includeTestDataHint": "Si está marcado, las respuestas de prueba se incluirán en la exportación",
-  "downloading": "Descargando..."
+  "downloading": "Descargando...",
+
+  "Someone": "Alguien",
+  "{{name}} is writing a suggestion...": "{{name}} está escribiendo una sugerencia...",
+  "{{name1}} and {{name2}} are writing...": "{{name1}} y {{name2}} están escribiendo...",
+  "{{name1}}, {{name2}}, and {{count}} others are writing...": "{{name1}}, {{name2}} y {{count}} otros están escribiendo..."
 }
