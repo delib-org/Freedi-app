@@ -18,6 +18,7 @@ import RejectionFeedbackModal from './RejectionFeedbackModal';
 import Toast from '../shared/Toast';
 import { DemographicSurveyModal } from '../demographics';
 import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
+import { useRealtimeSuggestionCounts } from '@/hooks/useParagraphSuggestions';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -334,6 +335,9 @@ export default function DocumentClient({
       initializeSuggestionCounts(suggestionCounts);
     }
   }, [suggestionCounts, enableSuggestions, initializeSuggestionCounts]);
+
+  // Real-time suggestion count updates
+  useRealtimeSuggestionCounts(documentId, enableSuggestions);
 
   // Get current paragraph content for suggestions modal
   const currentParagraph = useMemo(() => {
