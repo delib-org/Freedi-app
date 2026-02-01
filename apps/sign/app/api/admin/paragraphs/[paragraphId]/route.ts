@@ -2,8 +2,59 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import { Collections, Paragraph, ParagraphType } from '@freedi/shared-types';
+import { Collections, Paragraph, ParagraphType, Statement, StatementType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+
+/**
+ * GET /api/admin/paragraphs/[documentId]
+ * Get all paragraphs for a document (for version control page)
+ * Note: The param is named paragraphId but for GET it's used as documentId
+ */
+export async function GET(
+  request: NextRequest,
+  { params }: { params: Promise<{ paragraphId: string }> }
+) {
+  try {
+    // For GET, we treat the param as documentId
+    const { paragraphId: documentId } = await params;
+    const cookieHeader = request.headers.get('cookie');
+    const userId = getUserIdFromCookie(cookieHeader);
+
+    if (!userId) {
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
+    }
+
+    const db = getFirestoreAdmin();
+
+    // Verify user has admin access to this document
+    const adminAccess = await checkAdminAccess(db, documentId, userId);
+    if (!adminAccess.isAdmin) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    // Query paragraphs for this document
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', documentId)
+      .where('statementType', '==', StatementType.option)
+      .orderBy('doc.order', 'asc')
+      .get();
+
+    const paragraphs: Statement[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data() as Statement;
+      // Only include official paragraphs (not suggestions)
+      if (data.doc?.isOfficialParagraph && !data.hide) {
+        paragraphs.push(data);
+      }
+    });
+
+    return NextResponse.json({ paragraphs });
+  } catch (error) {
+    logger.error('[Paragraphs API] GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
 
 interface UpdateParagraphContentInput {
   documentId: string;

@@ -61,7 +61,7 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 		const fetchQueue = async () => {
 			try {
 				const response = await fetch(
-					`/api/admin/version-control/queue/${documentId}?sortBy=${sortBy}&order=${order}`,
+					`/api/admin/version-control/${documentId}/queue?sortBy=${sortBy}&order=${order}`,
 					{ credentials: 'include' }
 				);
 
