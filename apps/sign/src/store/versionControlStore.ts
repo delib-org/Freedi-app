@@ -150,6 +150,7 @@ export const useVersionControlStore = create<VersionControlStore>((set, get) => 
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(newSettings),
+				credentials: 'include',
 			});
 
 			if (!response.ok) {
