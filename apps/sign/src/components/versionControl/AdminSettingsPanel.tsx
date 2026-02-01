@@ -72,6 +72,7 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 		try {
 			const response = await fetch(`/api/admin/version-control/${documentId}/sync`, {
 				method: 'POST',
+				credentials: 'include',
 			});
 
 			if (!response.ok) {
