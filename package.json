@@ -20,7 +20,7 @@
     "dev": "npm run env:dev && vite --open",
     "dev:h": "npm run env:dev && vite --host",
     "devf": "npm run env:dev && cd functions && npm run dev",
-    "deve": "npm run env:dev && firebase use dev && firebase emulators:start --only hosting:dev,firestore,auth,functions,storage",
+    "deve": "npm run env:dev && firebase use dev && firebase emulators:start --only hosting:dev,firestore,auth,functions,storage,database",
     "build": "tsc && vite build",
     "build:dev": "tsc && vite build --mode development",
     "build:test": "tsc && vite build --mode testing",

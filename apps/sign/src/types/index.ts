@@ -12,11 +12,17 @@ export type { Suggestion } from '@freedi/shared-types';
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 
 /**
- * Sign app extension of Paragraph with isNonInteractive property
- * Used for explanatory text that users cannot interact with (no approve/reject/comment)
+ * Sign app extension of Paragraph with additional properties
+ * - isNonInteractive: For explanatory text that users cannot interact with
+ * - documentApproval: Approval statistics for this paragraph (for statement-based paragraphs)
  */
 export interface Paragraph extends SharedParagraph {
   isNonInteractive?: boolean;
+  documentApproval?: {
+    approved: number;
+    totalVoters: number;
+    averageApproval: number;
+  };
 }
 
 /**

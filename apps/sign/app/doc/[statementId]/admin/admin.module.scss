@@ -41,6 +41,59 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+
+  &.editable {
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:hover {
+      color: var(--text-primary);
+
+      .editIcon {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+.editIcon {
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  flex-shrink: 0;
+  margin-inline-start: var(--spacing-xs);
+}
+
+.documentTitle.editable:hover .editIcon {
+  opacity: 1;
+}
+
+.titleEditContainer {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.titleInput {
+  flex: 1;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--btn-primary);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  background: var(--card-default);
+  font-family: inherit;
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(91, 136, 229, 0.2);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
 }
 
 .nav {

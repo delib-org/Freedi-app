@@ -675,5 +675,37 @@ service cloud.firestore {
     // Room Assignment Rules are defined above in the simple rules section
     // (rooms, roomsSettings, roomParticipants at lines 343-356)
     // Cloud functions handle authorization for writes
+
+    // Version Control - Paragraph Replacement Queue
+    match /paragraphReplacementQueue/{queueId} {
+      // Allow queries for authenticated users
+      // AuthSync component ensures Firebase Auth is initialized on client
+      allow list: if request.auth != null;
+
+      // For single document reads, verify admin access
+      allow get: if request.auth != null &&
+                    resource.data.documentId != null &&
+                    exists(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))) &&
+                    get(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))).data.role == 'admin';
+
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
+
+    // Version Control - Audit Trail
+    match /versionControlAudit/{auditId} {
+      // Allow queries for authenticated users
+      // AuthSync component ensures Firebase Auth is initialized on client
+      allow list: if request.auth != null;
+
+      // For single document reads, verify admin access
+      allow get: if request.auth != null &&
+                    resource.data.documentId != null &&
+                    exists(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))) &&
+                    get(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))).data.role == 'admin';
+
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
   }
 }

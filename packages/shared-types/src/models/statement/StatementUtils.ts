@@ -164,3 +164,92 @@ export function createBasicStatement({
 		stageSelectionType,
 	});
 }
+
+/**
+ * Creates an official "standing" paragraph statement for Sign app
+ * This represents the current official text at a specific document position
+ *
+ * @param paragraph - The paragraph data to convert to a statement
+ * @param documentId - The parent document ID
+ * @param creator - The user creating this paragraph (typically document creator or system)
+ * @returns A Statement object marked as an official paragraph
+ *
+ * @example
+ * const officialParagraph = createParagraphStatement(
+ *   { paragraphId: 'p_123', type: ParagraphType.paragraph, content: 'Official text', order: 0 },
+ *   'doc_456',
+ *   systemUser
+ * );
+ */
+export function createParagraphStatement(
+	paragraph: Paragraph,
+	documentId: string,
+	creator: User
+): Statement | undefined {
+	const statement = createStatementObject({
+		statement: paragraph.content,
+		statementType: StatementType.option,
+		parentId: documentId,
+		topParentId: documentId,
+		creatorId: creator.uid,
+		creator,
+		statementId: paragraph.paragraphId,
+		consensus: 1.0, // Official paragraphs start with full consensus
+	});
+
+	if (!statement) return undefined;
+
+	// Add doc field to mark as official paragraph
+	statement.doc = {
+		isDoc: true,
+		order: paragraph.order,
+		isOfficialParagraph: true,
+		paragraphType: paragraph.type,
+		listType: paragraph.listType,
+		imageUrl: paragraph.imageUrl,
+		imageAlt: paragraph.imageAlt,
+		imageCaption: paragraph.imageCaption,
+	};
+
+	// Preserve paragraph color if it's a header
+	if (paragraph.type.startsWith('h') && 'color' in paragraph) {
+		statement.color = (paragraph as { color?: string }).color;
+	}
+
+	return statement;
+}
+
+/**
+ * Creates a suggestion statement as a child of an official paragraph
+ * Users create these to suggest alternative text for a paragraph
+ *
+ * @param suggestedText - The alternative text being suggested
+ * @param officialParagraphId - The ID of the official paragraph being suggested for
+ * @param documentId - The top-level document ID
+ * @param creator - The user creating this suggestion
+ * @returns A Statement object representing the suggestion
+ *
+ * @example
+ * const suggestion = createSuggestionStatement(
+ *   'Alternative wording here',
+ *   'p_123',
+ *   'doc_456',
+ *   user
+ * );
+ */
+export function createSuggestionStatement(
+	suggestedText: string,
+	officialParagraphId: string,
+	documentId: string,
+	creator: User
+): Statement | undefined {
+	return createStatementObject({
+		statement: suggestedText,
+		statementType: StatementType.option,
+		parentId: officialParagraphId, // Child of the official paragraph
+		topParentId: documentId,
+		creatorId: creator.uid,
+		creator,
+		consensus: 0, // Suggestions start with zero consensus
+	});
+}

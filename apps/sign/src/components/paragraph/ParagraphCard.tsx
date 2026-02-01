@@ -224,34 +224,35 @@ export default function ParagraphCard({
   // Sanitize content to prevent XSS attacks
   // Memoized to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(
-    () => sanitizeHTML(paragraph.content),
+    () => sanitizeHTML(paragraph.content || ''),
     [paragraph.content]
   );
 
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
+  // Always render an element (never null) to maintain consistent structure between SSR and client
   const renderContent = () => {
     // Style object for headers with custom color
     const headerStyle = headerColor ? { color: headerColor } : undefined;
 
     switch (paragraphType) {
       case ParagraphType.h1:
-        return <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h2:
-        return <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h3:
-        return <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h4:
-        return <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h5:
-        return <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.h6:
-        return <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
           </div>
         );
       case ParagraphType.table:
@@ -259,6 +260,7 @@ export default function ParagraphCard({
           <div
             className={styles.tableWrapper}
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            suppressHydrationWarning
           />
         );
       case ParagraphType.image: {
@@ -301,7 +303,7 @@ export default function ParagraphCard({
         );
       }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
     }
   };
 
@@ -336,7 +338,29 @@ export default function ParagraphCard({
         </div>
       )}
 
-      <div className={styles.contentWrapper}>
+      {/* Consensus badge - show approval statistics if available */}
+      {paragraph.documentApproval && paragraph.documentApproval.totalVoters > 0 && (
+        <div
+          className={styles.consensusBadge}
+          aria-label={t('Approval statistics')}
+          title={`${paragraph.documentApproval.approved} ${t('of')} ${paragraph.documentApproval.totalVoters} ${t('voters approved')} (${Math.round(paragraph.documentApproval.averageApproval * 100)}%)`}
+        >
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+          </svg>
+          <span>{Math.round(paragraph.documentApproval.averageApproval * 100)}%</span>
+          <span className={styles.voterCount}>({paragraph.documentApproval.totalVoters})</span>
+        </div>
+      )}
+
+      <div className={styles.contentWrapper} suppressHydrationWarning>
         {renderContent()}
       </div>
 

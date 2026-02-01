@@ -5,10 +5,16 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
 import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { SignUser } from '@/lib/utils/user';
+import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import DocumentClient from './DocumentClient';
-import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
+
+// Import ParagraphCard dynamically to prevent SSR hydration mismatches
+const ParagraphCard = dynamic(() => import('../paragraph/ParagraphCard'), {
+  ssr: false,
+  loading: () => <div style={{ minHeight: '100px', background: 'var(--card-default, #f5f5f5)', borderRadius: '8px', margin: '1rem 0' }} />,
+});
 import RejectButton from './RejectButton';
 import ExplanationButton from './ExplanationButton';
 import ExplanationVideoOverlay from './ExplanationVideoOverlay';

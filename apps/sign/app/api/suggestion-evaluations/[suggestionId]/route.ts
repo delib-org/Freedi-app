@@ -30,11 +30,20 @@ export async function GET(
       .get();
 
     let sumEvaluation = 0;
+    let positiveEvaluations = 0;
+    let negativeEvaluations = 0;
     let userEvaluation: number | null = null;
 
     snapshot.docs.forEach((doc) => {
       const evalData = doc.data();
-      sumEvaluation += evalData.evaluation || 0;
+      const evalValue = evalData.evaluation || 0;
+      sumEvaluation += evalValue;
+
+      if (evalValue > 0) {
+        positiveEvaluations++;
+      } else if (evalValue < 0) {
+        negativeEvaluations++;
+      }
 
       // Check if this is the current user's evaluation
       if (userId && evalData.evaluatorId === userId) {
@@ -46,6 +55,8 @@ export async function GET(
       sumEvaluation,
       userEvaluation,
       evaluationCount: snapshot.docs.length,
+      positiveEvaluations,
+      negativeEvaluations,
     });
   } catch (error) {
     logger.error('[Suggestion Evaluations API] GET error:', error);
@@ -90,8 +101,8 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Get the suggestion to verify it exists and get paragraphId
-    const suggestionRef = await db.collection(Collections.suggestions).doc(suggestionId).get();
+    // Get the suggestion (stored as Statement) to verify it exists and get creatorId
+    const suggestionRef = await db.collection(Collections.statements).doc(suggestionId).get();
 
     if (!suggestionRef.exists) {
       return NextResponse.json(
@@ -132,20 +143,32 @@ export async function POST(
 
     await db.collection(Collections.evaluations).doc(evaluationId).set(evaluationData);
 
-    // Recalculate consensus from all evaluations (more reliable than incremental updates)
+    // Recalculate consensus and vote counts from all evaluations (more reliable than incremental updates)
     const allEvaluationsSnapshot = await db
       .collection(Collections.evaluations)
       .where('statementId', '==', suggestionId)
       .get();
 
     let newConsensus = 0;
+    let positiveEvaluations = 0;
+    let negativeEvaluations = 0;
+
     allEvaluationsSnapshot.docs.forEach((doc) => {
       const evalData = doc.data();
-      newConsensus += evalData.evaluation || 0;
+      const evalValue = evalData.evaluation || 0;
+      newConsensus += evalValue;
+
+      if (evalValue > 0) {
+        positiveEvaluations++;
+      } else if (evalValue < 0) {
+        negativeEvaluations++;
+      }
     });
 
-    await db.collection(Collections.suggestions).doc(suggestionId).update({
+    await db.collection(Collections.statements).doc(suggestionId).update({
       consensus: newConsensus,
+      positiveEvaluations,
+      negativeEvaluations,
       lastUpdate: Date.now(),
     });
 
@@ -202,20 +225,32 @@ export async function DELETE(
     // Delete the evaluation
     await db.collection(Collections.evaluations).doc(evaluationId).delete();
 
-    // Recalculate consensus from remaining evaluations
+    // Recalculate consensus and vote counts from remaining evaluations
     const remainingEvaluationsSnapshot = await db
       .collection(Collections.evaluations)
       .where('statementId', '==', suggestionId)
       .get();
 
     let newConsensus = 0;
+    let positiveEvaluations = 0;
+    let negativeEvaluations = 0;
+
     remainingEvaluationsSnapshot.docs.forEach((doc) => {
       const evalData = doc.data();
-      newConsensus += evalData.evaluation || 0;
+      const evalValue = evalData.evaluation || 0;
+      newConsensus += evalValue;
+
+      if (evalValue > 0) {
+        positiveEvaluations++;
+      } else if (evalValue < 0) {
+        negativeEvaluations++;
+      }
     });
 
-    await db.collection(Collections.suggestions).doc(suggestionId).update({
+    await db.collection(Collections.statements).doc(suggestionId).update({
       consensus: newConsensus,
+      positiveEvaluations,
+      negativeEvaluations,
       lastUpdate: Date.now(),
     });
 

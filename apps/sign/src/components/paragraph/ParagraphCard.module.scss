@@ -8,6 +8,9 @@
   cursor: pointer;
   border-radius: var(--radius-sm);
   overflow: visible; // Allow comment badge to overflow
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 
   // Hover effect to indicate interactivity (desktop) - more visible for accessibility
   @media (hover: hover) {
@@ -62,6 +65,10 @@
   font-size: var(--p-font-size);
   user-select: text; // Allow text selection
   cursor: text; // Show text cursor when hovering over content
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+  max-width: 100%;
 
   // Inline formatting styles from Google Docs import
   strong {
@@ -106,6 +113,9 @@
     max-height 0.2s ease,
     margin-top 0.2s ease;
   pointer-events: none;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 
   // Enhanced visibility mode - show ghosted buttons always (admin-controlled per document)
   &.alwaysVisible {
@@ -512,6 +522,37 @@
   }
 }
 
+// Consensus badge - shows approval statistics
+.consensusBadge {
+  position: absolute;
+  top: calc(var(--spacing-xs) + 28px); // Below heat badge if it exists
+  inset-inline-end: var(--spacing-xs);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-body);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--btn-primary);
+  z-index: 1;
+  animation: fadeIn 0.2s ease-out;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  svg {
+    flex-shrink: 0;
+    color: var(--btn-primary);
+  }
+
+  .voterCount {
+    font-size: 0.65rem;
+    opacity: 0.7;
+    margin-inline-start: 2px;
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -539,7 +580,7 @@
 // Responsive adjustments
 @media (max-width: 600px) {
   .card {
-    padding-inline-start: 0.75rem; // Keep space for wider state indicator
+    padding-inline-start: 1rem; // Increased space for state indicator on mobile (16px)
   }
 
   .type-h1 .content {
@@ -646,6 +687,13 @@
     inset-inline-start: var(--spacing-xs);
   }
 
+  .consensusBadge {
+    left: var(--spacing-xs);
+    right: auto;
+    inset-inline-end: auto;
+    inset-inline-start: var(--spacing-xs);
+  }
+
   .tableWrapper {
     table {
       th,
@@ -661,8 +709,8 @@
 
   @media (max-width: 600px) {
     .card {
-      padding-inline-end: 0.625rem;
-      padding-inline-start: 0;
+      padding-inline-end: 0; // Left side in RTL
+      padding-inline-start: 1rem; // Right side in RTL - where the indicator is (16px)
     }
   }
 }
@@ -725,6 +773,13 @@
     inset-inline-end: var(--spacing-xs);
   }
 
+  .consensusBadge {
+    right: var(--spacing-xs);
+    left: auto;
+    inset-inline-start: auto;
+    inset-inline-end: var(--spacing-xs);
+  }
+
   .tableWrapper {
     table {
       th,
@@ -740,7 +795,7 @@
 
   @media (max-width: 600px) {
     .card {
-      padding-inline-start: 0.625rem;
+      padding-inline-start: 1rem; // Increased to prevent overlap (16px)
       padding-inline-end: 0;
     }
   }

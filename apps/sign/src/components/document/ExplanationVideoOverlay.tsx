@@ -65,11 +65,11 @@ export default function ExplanationVideoOverlay({
     }
   }, [hasDismissed, onDismiss]);
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     markAsDismissed();
     setIsVisible(false);
     onDismiss();
-  };
+  }, [markAsDismissed, onDismiss]);
 
   // Handle ESC key to dismiss
   useEffect(() => {
@@ -89,7 +89,7 @@ export default function ExplanationVideoOverlay({
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = '';
     };
-  }, [isVisible]);
+  }, [isVisible, handleDismiss]);
 
   if (!isVisible || !videoUrl) {
     return null;
