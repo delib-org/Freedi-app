@@ -13,22 +13,46 @@
  * 5. All clients receive update via Firestore listeners (real-time)
  */
 
-import * as functions from 'firebase-functions';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { logger } from 'firebase-functions/v1';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { Statement, Collections } from '@freedi/shared-types';
 
 const db = getFirestore();
 
 /**
+ * Extended Statement type with suggestionSettings for auto-mode documents
+ */
+interface StatementWithSuggestionSettings extends Statement {
+  doc?: Statement['doc'] & {
+    suggestionSettings?: {
+      mode: 'auto' | 'manual' | 'deadline';
+      votingDeadline?: number;
+      finalized?: boolean;
+      finalizedAt?: number;
+    };
+  };
+}
+
+/**
  * Firestore trigger: Runs when statement consensus field updates
  * Only processes suggestions (not official paragraphs)
  */
-export const fn_updateOfficialParagraphText = functions.firestore
-  .document(`${Collections.statements}/{statementId}`)
-  .onUpdate(async (change, context) => {
-    const statementId = context.params.statementId;
-    const beforeData = change.before.data() as Statement;
-    const afterData = change.after.data() as Statement;
+export const fn_updateOfficialParagraphText = onDocumentUpdated(
+  {
+    document: `${Collections.statements}/{statementId}`,
+    memory: '256MiB',
+  },
+  async (event) => {
+    const statementId = event.params.statementId;
+    const beforeData = event.data?.before.data() as Statement | undefined;
+    const afterData = event.data?.after.data() as Statement | undefined;
+
+    if (!beforeData || !afterData) {
+      logger.warn('[fn_updateOfficialParagraphText] Missing data', { statementId });
+
+      return null;
+    }
 
     try {
       // Only process if consensus changed
@@ -52,10 +76,11 @@ export const fn_updateOfficialParagraphText = functions.firestore
       const officialParagraphSnap = await officialParagraphRef.get();
 
       if (!officialParagraphSnap.exists) {
-        console.warn('[fn_updateOfficialParagraphText] Official paragraph not found', {
+        logger.warn('[fn_updateOfficialParagraphText] Official paragraph not found', {
           officialParagraphId,
           suggestionId: statementId,
         });
+
         return null;
       }
 
@@ -67,13 +92,14 @@ export const fn_updateOfficialParagraphText = functions.firestore
       const documentSnap = await documentRef.get();
 
       if (!documentSnap.exists) {
-        console.warn('[fn_updateOfficialParagraphText] Document not found', {
+        logger.warn('[fn_updateOfficialParagraphText] Document not found', {
           documentId,
         });
+
         return null;
       }
 
-      const document = documentSnap.data() as Statement;
+      const document = documentSnap.data() as StatementWithSuggestionSettings;
 
       // Check suggestion settings mode
       const suggestionSettings = document.doc?.suggestionSettings;
@@ -81,10 +107,11 @@ export const fn_updateOfficialParagraphText = functions.firestore
 
       // Only proceed if mode is 'auto'
       if (mode !== 'auto') {
-        console.info('[fn_updateOfficialParagraphText] Skipping - not auto mode', {
+        logger.info('[fn_updateOfficialParagraphText] Skipping - not auto mode', {
           mode,
           documentId,
         });
+
         return null;
       }
 
@@ -105,10 +132,11 @@ export const fn_updateOfficialParagraphText = functions.firestore
 
       // Only update if winning suggestion has higher consensus than official
       if (winningSuggestion.consensus <= officialParagraph.consensus) {
-        console.info('[fn_updateOfficialParagraphText] Winning suggestion not higher', {
+        logger.info('[fn_updateOfficialParagraphText] Winning suggestion not higher', {
           winningConsensus: winningSuggestion.consensus,
           officialConsensus: officialParagraph.consensus,
         });
+
         return null;
       }
 
@@ -121,7 +149,7 @@ export const fn_updateOfficialParagraphText = functions.firestore
         appliedAt: FieldValue.serverTimestamp(),
       });
 
-      console.info('[fn_updateOfficialParagraphText] Updated official paragraph text', {
+      logger.info('[fn_updateOfficialParagraphText] Updated official paragraph text', {
         officialParagraphId,
         winningSuggestionId: winningSuggestion.statementId,
         newText: winningSuggestion.statement,
@@ -150,9 +178,11 @@ export const fn_updateOfficialParagraphText = functions.firestore
 
       return null;
     } catch (error) {
-      console.error('[fn_updateOfficialParagraphText] Error', error, {
+      logger.error('[fn_updateOfficialParagraphText] Error', error, {
         statementId,
       });
+
       return null;
     }
-  });
+  }
+);
