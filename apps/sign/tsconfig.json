@@ -35,11 +35,10 @@
   ],
   "exclude": [
     "node_modules",
-    "src/__tests__/**/*.test.ts",
-    "src/__tests__/**/*.test.tsx",
-    "src/**/tests/**/*.test.ts",
-    "src/**/tests/**/*.test.tsx",
-    "src/**/__tests__/**/*.test.ts",
-    "src/**/__tests__/**/*.test.tsx"
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx"
   ]
 }

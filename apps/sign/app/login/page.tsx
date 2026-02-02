@@ -13,7 +13,14 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const redirectUrl = searchParams.get('redirect') || '/';
+  // Try to get redirect URL from:
+  // 1. URL parameter (?redirect=/doc/...)
+  // 2. Referrer (where user came from)
+  // 3. Default to home
+  const redirectUrl = searchParams.get('redirect') ||
+    (typeof window !== 'undefined' && document.referrer ? new URL(document.referrer).pathname : '/');
+
+  console.info('[Login] Redirect URL:', redirectUrl);
 
   const handleLogin = useCallback(
     async (loginFn: typeof googleLogin | typeof anonymousLogin, method: string) => {

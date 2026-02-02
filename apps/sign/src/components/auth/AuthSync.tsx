@@ -19,12 +19,20 @@ import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 export function AuthSync() {
 	const isInitialized = useRef(false);
 	const previousUserId = useRef<string | null>(null);
+	const hasAttemptedAnonymousLogin = useRef(false);
+	const authRestoreTimeout = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
 		const auth = getFirebaseAuth();
 
 		// Subscribe to auth state changes (don't unsubscribe - keep monitoring)
 		const unsubscribe = auth.onAuthStateChanged(async (user) => {
+			// Clear any pending auth restore timeout
+			if (authRestoreTimeout.current) {
+				clearTimeout(authRestoreTimeout.current);
+				authRestoreTimeout.current = null;
+			}
+
 			if (user) {
 				// User is signed in - ensure cookies are up to date
 				const currentCookieUserId = getCookie('userId');
@@ -33,13 +41,13 @@ export function AuthSync() {
 				// Update cookies to keep them fresh
 				setCookiesFromUser(user);
 
-				// If cookies were missing or wrong, refresh the page to update server-side data
-				// This ensures admin status is properly checked on the server
-				if (needsRefresh) {
-					console.info('[AuthSync] Cookies out of sync with auth state, refreshing page', {
-						cookieUserId: currentCookieUserId?.substring(0, 10),
-						authUserId: user.uid.substring(0, 10) + '...',
-					});
+				// IMPORTANT: Only reload for authenticated (non-anonymous) users
+				// Anonymous users don't need server-side admin checks, so no reload needed
+				// Admins (Google users) need reload so server can check permissions
+				// EXCEPTION: Don't reload on login page - it handles its own redirect
+				const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+
+				if (needsRefresh && !user.isAnonymous && !isOnLoginPage) {
 					// Small delay to ensure cookies are set
 					setTimeout(() => {
 						window.location.reload();
@@ -54,13 +62,45 @@ export function AuthSync() {
 				// No user signed in
 				const userId = getCookie('userId');
 
+				// SMART DETECTION: Differentiate between new visitors and returning admins
+
 				if (userId && !isInitialized.current) {
-					// Server has auth but client doesn't - sync them
-					console.info('[AuthSync] Server has auth but client doesnt, signing in anonymously');
+					// Cookie exists but no user yet - this is a RETURNING USER
+					// Firebase Auth might still be restoring the session
+					// WAIT for auth to restore before creating anonymous user
+
+					// Give auth 2 seconds to restore
+					// If auth doesn't restore in 2 seconds, cookie is stale → create anonymous
+					authRestoreTimeout.current = setTimeout(async () => {
+						if (!auth.currentUser && !hasAttemptedAnonymousLogin.current) {
+							hasAttemptedAnonymousLogin.current = true;
+							try {
+								await anonymousLogin();
+							} catch (error) {
+								console.error('[AuthSync] Failed to create anonymous session after timeout:', error);
+							}
+						}
+					}, 2000);
+
+					isInitialized.current = true;
+				} else if (!userId && !isInitialized.current && !hasAttemptedAnonymousLogin.current) {
+					// NO cookie and first auth check - this is a NEW VISITOR
+					// Create anonymous user IMMEDIATELY (no need to wait)
+					hasAttemptedAnonymousLogin.current = true;
 					try {
 						await anonymousLogin();
 					} catch (error) {
-						console.error('[AuthSync] Failed to initialize Firebase Auth:', error);
+						console.error('[AuthSync] Failed to create anonymous session:', error);
+					}
+					isInitialized.current = true;
+				} else if (isInitialized.current && !userId && previousUserId.current && !hasAttemptedAnonymousLogin.current) {
+					// User WAS logged in (previousUserId exists) but now isn't (no cookie, no user)
+					// This means they logged out - create new anonymous session
+					hasAttemptedAnonymousLogin.current = true;
+					try {
+						await anonymousLogin();
+					} catch (error) {
+						console.error('[AuthSync] Failed to create anonymous session after logout:', error);
 					}
 				}
 
@@ -74,7 +114,6 @@ export function AuthSync() {
 		const cookieRefreshInterval = setInterval(() => {
 			const user = auth.currentUser;
 			if (user) {
-				console.info('[AuthSync] Periodic cookie refresh');
 				setCookiesFromUser(user);
 			}
 		}, 6 * 60 * 60 * 1000); // 6 hours
@@ -83,6 +122,9 @@ export function AuthSync() {
 		return () => {
 			unsubscribe();
 			clearInterval(cookieRefreshInterval);
+			if (authRestoreTimeout.current) {
+				clearTimeout(authRestoreTimeout.current);
+			}
 		};
 	}, []);
 
@@ -105,12 +147,6 @@ function setCookiesFromUser(user: { uid: string; displayName?: string | null; em
 	if (user.email) {
 		document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
 	}
-
-	console.info('[AuthSync] Updated cookies for user', {
-		userId: user.uid.substring(0, 10) + '...',
-		hasDisplayName: !!user.displayName,
-		hasEmail: !!user.email,
-	});
 }
 
 /**

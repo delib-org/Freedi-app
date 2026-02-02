@@ -2,12 +2,66 @@
  * Tests for LiveEditingSession
  */
 
+// Polyfill fetch and related globals for Node.js environment (required by Firebase Auth)
+class MockResponse {
+  ok = true;
+  status = 200;
+  async json() {
+    return {};
+  }
+  async text() {
+    return '';
+  }
+}
+
+class MockRequest {
+  url: string;
+  constructor(url: string) {
+    this.url = url;
+  }
+}
+
+class MockHeaders {
+  private headers = new Map();
+  set(key: string, value: string) {
+    this.headers.set(key, value);
+  }
+  get(key: string) {
+    return this.headers.get(key);
+  }
+}
+
+global.fetch = jest.fn(() => Promise.resolve(new MockResponse())) as jest.Mock;
+global.Response = MockResponse as unknown as typeof Response;
+global.Request = MockRequest as unknown as typeof Request;
+global.Headers = MockHeaders as unknown as typeof Headers;
+
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
-import { LiveEditingManager } from '../liveEditingSession';
-import { getFirebaseRealtimeDatabase } from '@/lib/firebase/client';
+
+// Mock Firebase Database SDK functions before importing the manager
+const mockRef = jest.fn();
+const mockUpdate = jest.fn();
+const mockSet = jest.fn();
+const mockOnValue = jest.fn();
+const mockOnDisconnect = jest.fn(() => ({
+  remove: jest.fn().mockResolvedValue(undefined),
+}));
+const mockOff = jest.fn();
+
+jest.mock('firebase/database', () => ({
+  ref: mockRef,
+  update: mockUpdate,
+  set: mockSet,
+  onValue: mockOnValue,
+  onDisconnect: mockOnDisconnect,
+  off: mockOff,
+}));
 
 // Mock Firebase client
 jest.mock('@/lib/firebase/client');
+
+import { LiveEditingManager } from '../liveEditingSession';
+import { getFirebaseRealtimeDatabase } from '@/lib/firebase/client';
 
 // Type for update call data
 interface UpdateCallData {
@@ -29,28 +83,24 @@ interface MockDatabase {
 
 describe('LiveEditingManager', () => {
   let manager: LiveEditingManager;
-  let mockRef: MockRef;
-  let mockDatabase: MockDatabase;
+  let mockDatabase: unknown;
 
   beforeEach(() => {
     jest.clearAllMocks();
 
-    // Mock RTDB ref
-    mockRef = {
-      set: jest.fn<(value: unknown) => Promise<void>>().mockResolvedValue(undefined),
-      update: jest.fn<(data: UpdateCallData) => Promise<void>>().mockResolvedValue(undefined),
-      onDisconnect: jest.fn(() => ({
-        remove: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
-      })),
-    };
+    // Reset mock implementations
+    mockRef.mockReturnValue({ path: 'mock-ref' });
+    mockUpdate.mockResolvedValue(undefined);
+    mockSet.mockResolvedValue(undefined);
+    mockOnValue.mockReturnValue(jest.fn());
+    mockOnDisconnect.mockReturnValue({
+      remove: jest.fn().mockResolvedValue(undefined),
+    });
 
-    // Mock database
-    mockDatabase = {
-      ref: jest.fn<(path: string) => MockRef>().mockReturnValue(mockRef),
-    };
-
+    // Mock database instance
+    mockDatabase = {};
     (getFirebaseRealtimeDatabase as jest.MockedFunction<typeof getFirebaseRealtimeDatabase>).mockReturnValue(
-      mockDatabase as unknown as ReturnType<typeof getFirebaseRealtimeDatabase>
+      mockDatabase as ReturnType<typeof getFirebaseRealtimeDatabase>
     );
 
     manager = new LiveEditingManager();
@@ -66,11 +116,12 @@ describe('LiveEditingManager', () => {
         'Initial content'
       );
 
-      expect(mockDatabase.ref).toHaveBeenCalledWith('liveEditing/sessions/para_456');
-      expect(mockRef.update).toHaveBeenCalled();
+      expect(mockRef).toHaveBeenCalledWith(mockDatabase, 'liveEditing/sessions/para_456');
+      expect(mockUpdate).toHaveBeenCalled();
 
-      const mockCalls = mockRef.update.mock.calls;
-      const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+      const mockCalls = mockUpdate.mock.calls;
+      // Second parameter of update() is the data object
+      const updateCall = mockCalls.length > 0 ? mockCalls[0][1] as UpdateCallData : undefined;
       expect(updateCall).toBeDefined();
       if (updateCall) {
         expect(updateCall.documentId).toBe('doc_123');
@@ -89,7 +140,7 @@ describe('LiveEditingManager', () => {
         'Initial content'
       );
 
-      expect(mockRef.onDisconnect).toHaveBeenCalled();
+      expect(mockOnDisconnect).toHaveBeenCalled();
     });
 
     it('should assign unique color to user', async () => {
@@ -101,8 +152,8 @@ describe('LiveEditingManager', () => {
         'Initial content'
       );
 
-      const mockCalls = mockRef.update.mock.calls;
-      const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+      const mockCalls = mockUpdate.mock.calls;
+      const updateCall = mockCalls.length > 0 ? mockCalls[0][1] as UpdateCallData : undefined;
       expect(updateCall).toBeDefined();
       if (updateCall) {
         const editor = updateCall['activeEditors/user_789'] as { color: string } | undefined;
@@ -111,7 +162,7 @@ describe('LiveEditingManager', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockRef.update.mockRejectedValue(new Error('Network error'));
+      mockUpdate.mockRejectedValue(new Error('Network error'));
 
       await expect(
         manager.joinSession('doc_123', 'para_456', 'user_789', 'Test User', 'Initial content')
@@ -137,15 +188,15 @@ describe('LiveEditingManager', () => {
       manager.updateDraft('New text 3', 10);
 
       // Should not call update immediately
-      expect(mockRef.update).not.toHaveBeenCalled();
+      expect(mockUpdate).not.toHaveBeenCalled();
 
       // Wait for debounce
       setTimeout(() => {
         // Should only call once with last value
-        expect(mockRef.update).toHaveBeenCalledTimes(1);
+        expect(mockUpdate).toHaveBeenCalledTimes(1);
 
-        const mockCalls = mockRef.update.mock.calls;
-        const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+        const mockCalls = mockUpdate.mock.calls;
+        const updateCall = mockCalls.length > 0 ? mockCalls[0][1] as UpdateCallData : undefined;
         expect(updateCall?.draftContent).toBe('New text 3');
         done();
       }, 350);
@@ -155,8 +206,8 @@ describe('LiveEditingManager', () => {
       manager.updateDraft('New text', 5);
 
       setTimeout(() => {
-        const mockCalls = mockRef.update.mock.calls;
-        const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+        const mockCalls = mockUpdate.mock.calls;
+        const updateCall = mockCalls.length > 0 ? mockCalls[0][1] as UpdateCallData : undefined;
         expect(updateCall?.['activeEditors/user_789/cursorPosition']).toBe(5);
         done();
       }, 350);
@@ -168,8 +219,8 @@ describe('LiveEditingManager', () => {
       manager.updateDraft('New text', 0);
 
       setTimeout(() => {
-        const mockCalls = mockRef.update.mock.calls;
-        const updateCall = mockCalls.length > 0 ? mockCalls[0][0] : undefined;
+        const mockCalls = mockUpdate.mock.calls;
+        const updateCall = mockCalls.length > 0 ? mockCalls[0][1] as UpdateCallData : undefined;
         const lastActive = updateCall?.['activeEditors/user_789/lastActive'] as number | undefined;
 
         expect(lastActive).toBeGreaterThanOrEqual(beforeTime);
@@ -227,7 +278,10 @@ describe('LiveEditingManager', () => {
 
       await manager.leaveSession();
 
-      expect(mockRef.set).toHaveBeenCalledWith(null);
+      expect(mockSet).toHaveBeenCalled();
+      const mockCalls = mockSet.mock.calls;
+      const setCall = mockCalls.length > 0 ? mockCalls[0][1] : undefined;
+      expect(setCall).toBeNull();
     });
 
     it('should clear debounce timer', async () => {
@@ -239,6 +293,9 @@ describe('LiveEditingManager', () => {
         'Initial content'
       );
 
+      // Clear mocks after join to only track updates from updateDraft
+      jest.clearAllMocks();
+
       // Start an update
       manager.updateDraft('New text', 0);
 
@@ -249,7 +306,7 @@ describe('LiveEditingManager', () => {
       await new Promise((resolve) => setTimeout(resolve, 350));
 
       // Should not have called update after leaving
-      const updateCalls = mockRef.update.mock.calls;
+      const updateCalls = mockUpdate.mock.calls;
       expect(updateCalls.length).toBe(0);
     });
   });

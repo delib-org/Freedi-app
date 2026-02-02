@@ -139,6 +139,11 @@ describe('Paragraph Replacement Integration', () => {
         data: () => mockOfficialParagraph,
       });
 
+      // Mock document references
+      const mockOfficialRef = { id: 'para_official' };
+      const mockSuggestionRef = { id: 'suggestion_456' };
+      const mockHistoryRef = { id: 'history_123' };
+
       // Mock getting winning suggestion
       mockDb.collection.mockReturnValue({
         where: jest.fn().mockReturnValue({
@@ -153,7 +158,11 @@ describe('Paragraph Replacement Integration', () => {
             }),
           }),
         }),
-        doc: jest.fn(),
+        doc: jest.fn((id: string) => {
+          if (id === 'para_official') return mockOfficialRef;
+          if (id === 'suggestion_456') return mockSuggestionRef;
+          return mockHistoryRef; // For history entries
+        }),
       });
 
       await finalizeSuggestion('para_official', null, 'admin_123');
@@ -163,20 +172,20 @@ describe('Paragraph Replacement Integration', () => {
 
       // Check official paragraph was updated
       expect(mockTransaction.update).toHaveBeenCalledWith(
-        expect.anything(),
+        mockOfficialRef,
         expect.objectContaining({
           statement: 'Improved suggestion text',
-          appliedSuggestionId: 'suggestion_456',
-          finalizedBy: 'admin_123',
+          'versionControl.appliedSuggestionId': 'suggestion_456',
+          'versionControl.finalizedBy': 'admin_123',
         })
       );
 
       // Check suggestion was marked as finalized
       expect(mockTransaction.update).toHaveBeenCalledWith(
-        expect.anything(),
+        mockSuggestionRef,
         expect.objectContaining({
-          finalized: true,
-          finalizedBy: 'admin_123',
+          'versionControl.finalized': true,
+          'versionControl.finalizedBy': 'admin_123',
         })
       );
     });

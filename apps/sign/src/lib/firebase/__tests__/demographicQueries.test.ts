@@ -167,7 +167,7 @@ describe('demographicQueries', () => {
 			mockGet
 				.mockResolvedValueOnce({
 					docs: [
-						{ data: () => ({ userQuestionId: 'q1', question: 'Q1' }) },
+						{ data: () => ({ userQuestionId: 'q1', question: 'Q1', required: true }) },
 					],
 				})
 				.mockResolvedValueOnce({ docs: [] })
@@ -175,6 +175,10 @@ describe('demographicQueries', () => {
 				.mockResolvedValueOnce({
 					exists: true,
 					data: () => ({ answer: 'My answer' }),
+				})
+				// Mock checkSurveyAcknowledgement
+				.mockResolvedValueOnce({
+					exists: true,
 				});
 
 			const result = await checkSurveyCompletion(
@@ -193,10 +197,13 @@ describe('demographicQueries', () => {
 			mockGet
 				.mockResolvedValueOnce({
 					docs: [
-						{ data: () => ({ userQuestionId: 'q1', question: 'Q1' }) },
+						{ data: () => ({ userQuestionId: 'q1', question: 'Q1', required: true }) },
 					],
 				})
 				.mockResolvedValueOnce({ docs: [] })
+				// Mock answer lookup - not found
+				.mockResolvedValueOnce({ exists: false })
+				// Mock checkSurveyAcknowledgement
 				.mockResolvedValueOnce({ exists: false });
 
 			const result = await checkSurveyCompletion(
