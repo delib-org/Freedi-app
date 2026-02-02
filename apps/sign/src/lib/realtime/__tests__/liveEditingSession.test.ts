@@ -2,6 +2,14 @@
  * Tests for LiveEditingSession
  */
 
+// Polyfill fetch for Node.js environment (required by Firebase Auth)
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: async () => ({}),
+  })
+) as jest.Mock;
+
 import { describe, it, expect, beforeEach, jest } from '@jest/globals';
 import { LiveEditingManager } from '../liveEditingSession';
 import { getFirebaseRealtimeDatabase } from '@/lib/firebase/client';

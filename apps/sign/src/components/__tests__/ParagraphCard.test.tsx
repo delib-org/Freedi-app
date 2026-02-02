@@ -52,6 +52,7 @@ jest.mock('@/store/uiStore', () => ({
 			approvals: mockApprovals,
 			commentCounts: mockCommentCounts,
 			userInteractions: mockUserInteractions,
+			suggestionCounts: {},
 		};
 		return selector(state);
 	},

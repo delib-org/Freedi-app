@@ -166,8 +166,8 @@ describe('Paragraph Replacement Integration', () => {
         expect.anything(),
         expect.objectContaining({
           statement: 'Improved suggestion text',
-          appliedSuggestionId: 'suggestion_456',
-          finalizedBy: 'admin_123',
+          'versionControl.appliedSuggestionId': 'suggestion_456',
+          'versionControl.finalizedBy': 'admin_123',
         })
       );
 
@@ -175,8 +175,8 @@ describe('Paragraph Replacement Integration', () => {
       expect(mockTransaction.update).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({
-          finalized: true,
-          finalizedBy: 'admin_123',
+          'versionControl.finalized': true,
+          'versionControl.finalizedBy': 'admin_123',
         })
       );
     });

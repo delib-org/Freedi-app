@@ -53,6 +53,8 @@ interface DocumentViewProps {
   headerColors?: HeaderColors;
   /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
   nonInteractiveNormalStyle?: boolean;
+  /** When true, headings (h1-h6) will display automatic numbering */
+  enableHeadingNumbering?: boolean;
 }
 
 export default function DocumentView({
@@ -76,6 +78,8 @@ export default function DocumentView({
   allowHeaderReactions = false,
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
+  // TODO: Implement heading numbering feature
+  enableHeadingNumbering: _enableHeadingNumbering = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
