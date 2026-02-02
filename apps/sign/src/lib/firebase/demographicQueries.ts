@@ -319,7 +319,8 @@ export async function saveDemographicQuestion(
       scope: SIGN_SCOPE as 'group' | 'statement',
       order: question.order || 0,
       required: question.required || false,
-      displayType: question.displayType, // For radio questions: 'radio' or 'dropdown'
+      // Only include displayType if it's defined (Firestore doesn't allow undefined values)
+      ...(question.displayType !== undefined && { displayType: question.displayType }),
     } as SignDemographicQuestion;
 
     await db
