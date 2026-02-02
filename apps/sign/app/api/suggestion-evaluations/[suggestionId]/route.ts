@@ -165,8 +165,12 @@ export async function POST(
       }
     });
 
+    // Calculate normalized consensus score (-1 to +1 range)
+    const totalEvaluations = positiveEvaluations + negativeEvaluations;
+    const consensusScore = totalEvaluations > 0 ? newConsensus / totalEvaluations : 0;
+
     await db.collection(Collections.statements).doc(suggestionId).update({
-      consensus: newConsensus,
+      consensus: consensusScore,
       positiveEvaluations,
       negativeEvaluations,
       lastUpdate: Date.now(),
@@ -177,7 +181,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       evaluation: evaluationData,
-      newConsensus,
+      newConsensus: consensusScore,
     });
   } catch (error) {
     logger.error('[Suggestion Evaluations API] POST error:', error);
@@ -247,8 +251,12 @@ export async function DELETE(
       }
     });
 
+    // Calculate normalized consensus score (-1 to +1 range)
+    const totalEvaluations = positiveEvaluations + negativeEvaluations;
+    const consensusScore = totalEvaluations > 0 ? newConsensus / totalEvaluations : 0;
+
     await db.collection(Collections.statements).doc(suggestionId).update({
-      consensus: newConsensus,
+      consensus: consensusScore,
       positiveEvaluations,
       negativeEvaluations,
       lastUpdate: Date.now(),
@@ -256,7 +264,7 @@ export async function DELETE(
 
     logger.info(`[Suggestion Evaluations API] Deleted evaluation: ${evaluationId}`);
 
-    return NextResponse.json({ success: true, newConsensus });
+    return NextResponse.json({ success: true, newConsensus: consensusScore });
   } catch (error) {
     logger.error('[Suggestion Evaluations API] DELETE error:', error);
 
