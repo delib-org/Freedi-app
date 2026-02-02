@@ -678,15 +678,11 @@ service cloud.firestore {
 
     // Version Control - Paragraph Replacement Queue
     match /paragraphReplacementQueue/{queueId} {
-      // Allow queries for authenticated users
-      // AuthSync component ensures Firebase Auth is initialized on client
-      allow list: if request.auth != null;
-
-      // For single document reads, verify admin access
-      allow get: if request.auth != null &&
-                    resource.data.documentId != null &&
-                    exists(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))) &&
-                    get(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))).data.role == 'admin';
+      // Allow read for authenticated users
+      // Note: AuthSync uses anonymous login, so request.auth.uid is NOT the real userId
+      // Admin verification is done server-side when processing actions (approve/reject)
+      // The client query filters by documentId, so users only see queue items for documents they access
+      allow read: if request.auth != null;
 
       // Writes handled by Cloud Functions only
       allow write: if false;

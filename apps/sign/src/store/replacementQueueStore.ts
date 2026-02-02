@@ -5,7 +5,8 @@
 
 import { create } from 'zustand';
 import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from 'firebase/firestore';
-import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getFirebaseFirestore, getFirebaseAuth } from '@/lib/firebase/client';
 import { Collections, PendingReplacement, ReplacementQueueStatus } from '@freedi/shared-types';
 
 /**
@@ -59,51 +60,88 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 			error: { ...state.error, [documentId]: null },
 		}));
 
+		// Create a wrapper unsubscribe function that can be returned immediately
+		// It will hold references to the actual unsubscribers
+		let authUnsubscribe: Unsubscribe | null = null;
+		let firestoreUnsubscribe: Unsubscribe | null = null;
+
 		try {
-			const firestore = getFirebaseFirestore();
+			const auth = getFirebaseAuth();
 
-			// Query pending replacements for this document
-			const q = query(
-				collection(firestore, Collections.paragraphReplacementQueue),
-				where('documentId', '==', documentId),
-				where('status', '==', ReplacementQueueStatus.pending),
-				orderBy(sortBy, order)
-			);
+			// Listen for auth state changes to ensure we only query when authenticated
+			authUnsubscribe = onAuthStateChanged(auth, (user) => {
+				// If user is not logged in, we can't listen to this collection (requires auth)
+				if (!user) {
+					// If we were listening, stop
+					if (firestoreUnsubscribe) {
+						firestoreUnsubscribe();
+						firestoreUnsubscribe = null;
+					}
+					return;
+				}
 
-			// Set up real-time listener
-			const unsubscribe = onSnapshot(
-				q,
-				(snapshot) => {
-					const queue: PendingReplacement[] = [];
+				// If already listening, do nothing (or could re-setup if needed)
+				if (firestoreUnsubscribe) return;
 
-					snapshot.forEach((doc) => {
-						queue.push(doc.data() as PendingReplacement);
-					});
+				try {
+					const firestore = getFirebaseFirestore();
 
-					set((state) => ({
-						pendingReplacements: { ...state.pendingReplacements, [documentId]: queue },
-						isLoading: { ...state.isLoading, [documentId]: false },
-						error: { ...state.error, [documentId]: null },
-						lastSyncedAt: { ...state.lastSyncedAt, [documentId]: Date.now() },
-					}));
+					// Query pending replacements for this document
+					const q = query(
+						collection(firestore, Collections.paragraphReplacementQueue),
+						where('documentId', '==', documentId),
+						where('status', '==', ReplacementQueueStatus.pending),
+						orderBy(sortBy, order)
+					);
 
-					console.info('[ReplacementQueueStore] Queue updated:', queue.length, 'items');
-				},
-				(error) => {
-					console.error('[ReplacementQueueStore] Listener error:', error);
+					// Set up real-time listener
+					firestoreUnsubscribe = onSnapshot(
+						q,
+						(snapshot) => {
+							const queue: PendingReplacement[] = [];
+
+							snapshot.forEach((doc) => {
+								queue.push(doc.data() as PendingReplacement);
+							});
+
+							set((state) => ({
+								pendingReplacements: { ...state.pendingReplacements, [documentId]: queue },
+								isLoading: { ...state.isLoading, [documentId]: false },
+								error: { ...state.error, [documentId]: null },
+								lastSyncedAt: { ...state.lastSyncedAt, [documentId]: Date.now() },
+							}));
+
+							console.info('[ReplacementQueueStore] Queue updated:', queue.length, 'items');
+						},
+						(error) => {
+							console.error('[ReplacementQueueStore] Listener error:', error);
+							set((state) => ({
+								isLoading: { ...state.isLoading, [documentId]: false },
+								error: { ...state.error, [documentId]: error as Error },
+							}));
+						}
+					);
+				} catch (error) {
+					console.error('[ReplacementQueueStore] Setup error:', error);
 					set((state) => ({
 						isLoading: { ...state.isLoading, [documentId]: false },
 						error: { ...state.error, [documentId]: error as Error },
 					}));
 				}
-			);
+			});
+
+			// finalUnsubscribe function to clean up everything
+			const finalUnsubscribe = () => {
+				if (authUnsubscribe) authUnsubscribe();
+				if (firestoreUnsubscribe) firestoreUnsubscribe();
+			};
 
 			// Store subscription for cleanup
 			set((state) => ({
-				subscriptions: { ...state.subscriptions, [documentId]: unsubscribe },
+				subscriptions: { ...state.subscriptions, [documentId]: finalUnsubscribe },
 			}));
 
-			return unsubscribe;
+			return finalUnsubscribe;
 		} catch (error) {
 			console.error('[ReplacementQueueStore] Setup error:', error);
 			set((state) => ({
