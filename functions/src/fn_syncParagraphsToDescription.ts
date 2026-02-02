@@ -14,9 +14,11 @@
  * 6. All clients receive update via Firestore listeners (real-time)
  */
 
-import * as functions from 'firebase-functions';
+import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
+import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions/v1';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { Statement, Collections, ParagraphType } from '@freedi/shared-types';
+import { Statement, Collections } from '@freedi/shared-types';
 
 const db = getFirestore();
 
@@ -29,12 +31,21 @@ const MAX_DESCRIPTION_LENGTH = 5000;
 /**
  * Firestore trigger: Runs when official paragraph statement field updates
  */
-export const fn_syncParagraphsToDescription = functions.firestore
-  .document(`${Collections.statements}/{statementId}`)
-  .onUpdate(async (change, context) => {
-    const statementId = context.params.statementId;
-    const beforeData = change.before.data() as Statement;
-    const afterData = change.after.data() as Statement;
+export const fn_syncParagraphsToDescription = onDocumentUpdated(
+  {
+    document: `${Collections.statements}/{statementId}`,
+    memory: '256MiB',
+  },
+  async (event) => {
+    const statementId = event.params.statementId;
+    const beforeData = event.data?.before.data() as Statement | undefined;
+    const afterData = event.data?.after.data() as Statement | undefined;
+
+    if (!beforeData || !afterData) {
+      logger.warn('[fn_syncParagraphsToDescription] Missing data', { statementId });
+
+      return null;
+    }
 
     try {
       // Only process if statement text changed
@@ -61,9 +72,10 @@ export const fn_syncParagraphsToDescription = functions.firestore
         .get();
 
       if (officialParagraphsSnap.empty) {
-        console.warn('[fn_syncParagraphsToDescription] No official paragraphs found', {
+        logger.warn('[fn_syncParagraphsToDescription] No official paragraphs found', {
           documentId,
         });
+
         return null;
       }
 
@@ -101,7 +113,7 @@ export const fn_syncParagraphsToDescription = functions.firestore
         paragraphCount: officialParagraphsSnap.size,
       });
 
-      console.info('[fn_syncParagraphsToDescription] Synced paragraphs to description', {
+      logger.info('[fn_syncParagraphsToDescription] Synced paragraphs to description', {
         documentId,
         paragraphCount: officialParagraphsSnap.size,
         descriptionLength: description.length,
@@ -109,12 +121,14 @@ export const fn_syncParagraphsToDescription = functions.firestore
 
       return null;
     } catch (error) {
-      console.error('[fn_syncParagraphsToDescription] Error', error, {
+      logger.error('[fn_syncParagraphsToDescription] Error', error, {
         statementId,
       });
+
       return null;
     }
-  });
+  }
+);
 
 /**
  * Format paragraph text based on type (headers, lists, etc.)
@@ -136,69 +150,78 @@ function formatParagraphText(paragraph: Statement): string {
   return text;
 }
 
+interface TriggerParagraphSyncData {
+  documentId: string;
+}
+
 /**
  * Helper function to manually trigger sync for a document
  * Useful for admin tools or bulk operations
  */
-export const triggerParagraphSync = functions.https.onCall(async (data, context) => {
-  const { documentId } = data;
+export const triggerParagraphSync = onCall(
+  {
+    memory: '256MiB',
+  },
+  async (request: CallableRequest<TriggerParagraphSyncData>) => {
+    const { documentId } = request.data;
 
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-
-  if (!documentId) {
-    throw new functions.https.HttpsError('invalid-argument', 'documentId is required');
-  }
-
-  try {
-    // Get all official paragraphs
-    const officialParagraphsSnap = await db
-      .collection(Collections.statements)
-      .where('parentId', '==', documentId)
-      .where('doc.isOfficialParagraph', '==', true)
-      .orderBy('doc.order', 'asc')
-      .get();
-
-    if (officialParagraphsSnap.empty) {
-      return { success: false, message: 'No official paragraphs found' };
+    if (!request.auth) {
+      throw new HttpsError('unauthenticated', 'User must be authenticated');
     }
 
-    const paragraphTexts: string[] = [];
-    let totalLength = 0;
+    if (!documentId) {
+      throw new HttpsError('invalid-argument', 'documentId is required');
+    }
 
-    for (const doc of officialParagraphsSnap.docs) {
-      const paragraph = doc.data() as Statement;
-      const formatted = formatParagraphText(paragraph);
+    try {
+      // Get all official paragraphs
+      const officialParagraphsSnap = await db
+        .collection(Collections.statements)
+        .where('parentId', '==', documentId)
+        .where('doc.isOfficialParagraph', '==', true)
+        .orderBy('doc.order', 'asc')
+        .get();
 
-      if (totalLength + formatted.length > MAX_DESCRIPTION_LENGTH) {
-        paragraphTexts.push('...[truncated]');
-        break;
+      if (officialParagraphsSnap.empty) {
+        return { success: false, message: 'No official paragraphs found' };
       }
 
-      paragraphTexts.push(formatted);
-      totalLength += formatted.length;
+      const paragraphTexts: string[] = [];
+      let totalLength = 0;
+
+      for (const doc of officialParagraphsSnap.docs) {
+        const paragraph = doc.data() as Statement;
+        const formatted = formatParagraphText(paragraph);
+
+        if (totalLength + formatted.length > MAX_DESCRIPTION_LENGTH) {
+          paragraphTexts.push('...[truncated]');
+          break;
+        }
+
+        paragraphTexts.push(formatted);
+        totalLength += formatted.length;
+      }
+
+      const description = paragraphTexts.join('\n\n');
+
+      // Update document
+      const documentRef = db.collection(Collections.statements).doc(documentId);
+      await documentRef.update({
+        statement: description,
+        lastUpdate: FieldValue.serverTimestamp(),
+        syncedFromParagraphs: true,
+        syncedAt: FieldValue.serverTimestamp(),
+        paragraphCount: officialParagraphsSnap.size,
+      });
+
+      return {
+        success: true,
+        paragraphCount: officialParagraphsSnap.size,
+        descriptionLength: description.length,
+      };
+    } catch (error) {
+      logger.error('[triggerParagraphSync] Error', error, { documentId });
+      throw new HttpsError('internal', 'Failed to sync paragraphs');
     }
-
-    const description = paragraphTexts.join('\n\n');
-
-    // Update document
-    const documentRef = db.collection(Collections.statements).doc(documentId);
-    await documentRef.update({
-      statement: description,
-      lastUpdate: FieldValue.serverTimestamp(),
-      syncedFromParagraphs: true,
-      syncedAt: FieldValue.serverTimestamp(),
-      paragraphCount: officialParagraphsSnap.size,
-    });
-
-    return {
-      success: true,
-      paragraphCount: officialParagraphsSnap.size,
-      descriptionLength: description.length,
-    };
-  } catch (error) {
-    console.error('[triggerParagraphSync] Error', error, { documentId });
-    throw new functions.https.HttpsError('internal', 'Failed to sync paragraphs');
   }
-});
+);

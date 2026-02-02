@@ -340,6 +340,14 @@ export {
   DEMOGRAPHIC_CONSTANTS,
 } from "./utils/madCalculation";
 
+// Consensus Calculation utilities
+export {
+  FLOOR_STD_DEV,
+  calcStandardError,
+  calcAgreement,
+  calcBinaryConsensus,
+} from "./utils/consensusCalculation";
+
 // Framing models
 export type {
   Framing,

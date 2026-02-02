@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { Collections } from '@freedi/shared-types';
+import { Collections, calcBinaryConsensus } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
 interface EvaluationInput {
@@ -149,14 +149,12 @@ export async function POST(
       .where('statementId', '==', suggestionId)
       .get();
 
-    let newConsensus = 0;
     let positiveEvaluations = 0;
     let negativeEvaluations = 0;
 
     allEvaluationsSnapshot.docs.forEach((doc) => {
       const evalData = doc.data();
       const evalValue = evalData.evaluation || 0;
-      newConsensus += evalValue;
 
       if (evalValue > 0) {
         positiveEvaluations++;
@@ -165,8 +163,11 @@ export async function POST(
       }
     });
 
+    // Calculate consensus score using Mean - SEM formula with uncertainty floor
+    const consensusScore = calcBinaryConsensus(positiveEvaluations, negativeEvaluations);
+
     await db.collection(Collections.statements).doc(suggestionId).update({
-      consensus: newConsensus,
+      consensus: consensusScore,
       positiveEvaluations,
       negativeEvaluations,
       lastUpdate: Date.now(),
@@ -177,7 +178,7 @@ export async function POST(
     return NextResponse.json({
       success: true,
       evaluation: evaluationData,
-      newConsensus,
+      newConsensus: consensusScore,
     });
   } catch (error) {
     logger.error('[Suggestion Evaluations API] POST error:', error);
@@ -231,14 +232,12 @@ export async function DELETE(
       .where('statementId', '==', suggestionId)
       .get();
 
-    let newConsensus = 0;
     let positiveEvaluations = 0;
     let negativeEvaluations = 0;
 
     remainingEvaluationsSnapshot.docs.forEach((doc) => {
       const evalData = doc.data();
       const evalValue = evalData.evaluation || 0;
-      newConsensus += evalValue;
 
       if (evalValue > 0) {
         positiveEvaluations++;
@@ -247,8 +246,11 @@ export async function DELETE(
       }
     });
 
+    // Calculate consensus score using Mean - SEM formula with uncertainty floor
+    const consensusScore = calcBinaryConsensus(positiveEvaluations, negativeEvaluations);
+
     await db.collection(Collections.statements).doc(suggestionId).update({
-      consensus: newConsensus,
+      consensus: consensusScore,
       positiveEvaluations,
       negativeEvaluations,
       lastUpdate: Date.now(),
@@ -256,7 +258,7 @@ export async function DELETE(
 
     logger.info(`[Suggestion Evaluations API] Deleted evaluation: ${evaluationId}`);
 
-    return NextResponse.json({ success: true, newConsensus });
+    return NextResponse.json({ success: true, newConsensus: consensusScore });
   } catch (error) {
     logger.error('[Suggestion Evaluations API] DELETE error:', error);
 
