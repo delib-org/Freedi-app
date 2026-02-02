@@ -94,7 +94,7 @@ export async function getUserEvaluation({
 }): Promise<number | null> {
   try {
     const firestore = getFirebaseFirestore();
-    const evaluationId = `${suggestionId}--${userId}`;
+    const evaluationId = `${userId}--${suggestionId}`;
     const evaluationRef = doc(firestore, Collections.evaluations, evaluationId);
 
     const evaluationSnap = await getDoc(evaluationRef);

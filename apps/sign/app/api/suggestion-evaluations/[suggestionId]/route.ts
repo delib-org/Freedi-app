@@ -149,14 +149,12 @@ export async function POST(
       .where('statementId', '==', suggestionId)
       .get();
 
-    let newConsensus = 0;
     let positiveEvaluations = 0;
     let negativeEvaluations = 0;
 
     allEvaluationsSnapshot.docs.forEach((doc) => {
       const evalData = doc.data();
       const evalValue = evalData.evaluation || 0;
-      newConsensus += evalValue;
 
       if (evalValue > 0) {
         positiveEvaluations++;
@@ -234,14 +232,12 @@ export async function DELETE(
       .where('statementId', '==', suggestionId)
       .get();
 
-    let newConsensus = 0;
     let positiveEvaluations = 0;
     let negativeEvaluations = 0;
 
     remainingEvaluationsSnapshot.docs.forEach((doc) => {
       const evalData = doc.data();
       const evalValue = evalData.evaluation || 0;
-      newConsensus += evalValue;
 
       if (evalValue > 0) {
         positiveEvaluations++;
