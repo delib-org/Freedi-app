@@ -54,20 +54,7 @@ export const useAuthentication = (): AuthState => {
 	// Main auth effect - only manages state, no navigation
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (user) => {
-			console.error('====================================');
-			console.error('🔄 MAIN APP - AUTH STATE CHANGED');
-			console.error('====================================');
-
 			if (user) {
-				// LOG FULL USER ID IN BROWSER CONSOLE
-				console.error('====================================');
-				console.error('✅ MAIN APP - USER IS SIGNED IN:');
-				console.error('🔑 USER ID (FULL):', user.uid);
-				console.error('📧 EMAIL:', user.email);
-				console.error('👤 DISPLAY NAME:', user.displayName);
-				console.error('🆔 IS ANONYMOUS:', user.isAnonymous);
-				console.error('====================================');
-
 				// User is authenticated
 				const creator = convertFirebaseUserToCreator(user);
 
@@ -86,11 +73,6 @@ export const useAuthentication = (): AuthState => {
 					setUserToDB(creator);
 				}
 			} else {
-				// LOG WHEN USER IS NULL
-				console.error('====================================');
-				console.error('❌ MAIN APP - NO USER SIGNED IN (user = null)');
-				console.error('====================================');
-
 				// User is not authenticated
 				userSetRef.current = null; // Reset the ref when user logs out
 

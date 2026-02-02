@@ -261,8 +261,6 @@ export function useRealtimeSuggestionCounts(
           Object.entries(countMap).forEach(([paragraphId, count]) => {
             setSuggestionCount(paragraphId, count);
           });
-
-          console.info('[useRealtimeSuggestionCounts] Updated counts:', countMap);
         },
         (error) => {
           logError(error, {
@@ -362,7 +360,6 @@ export function useRealtimeParagraphs(
           updatedParagraphs.sort((a, b) => (a.order || 0) - (b.order || 0));
 
           setParagraphs(updatedParagraphs);
-          console.info('[useRealtimeParagraphs] Updated paragraphs:', updatedParagraphs.length);
         },
         (error) => {
           logError(error, {

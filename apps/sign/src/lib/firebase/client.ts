@@ -123,7 +123,6 @@ export function getFirebaseFirestore(): Firestore {
       try {
         connectFirestoreEmulator(firestore, 'localhost', 8081);
         firestoreEmulatorConnected = true;
-        console.info('[Firebase Client - Sign] Connected to Firestore emulator at localhost:8081');
       } catch {
         // Already connected or emulator not available
       }
@@ -141,8 +140,6 @@ export async function googleLogin(): Promise<User | null> {
     const authInstance = getFirebaseAuth();
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(authInstance, provider);
-
-    console.info('[Firebase Auth] User signed in with Google', { userId: result.user.uid });
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
@@ -190,8 +187,6 @@ export async function logout(): Promise<void> {
     document.cookie = 'userId=; path=/; max-age=0';
     document.cookie = 'userDisplayName=; path=/; max-age=0';
     document.cookie = 'userEmail=; path=/; max-age=0';
-
-    console.info('[Firebase Auth] User logged out');
   } catch (error) {
     logError(error, { operation: 'auth.logout' });
     throw error;
@@ -252,18 +247,14 @@ function triggerAutoAcceptInvitations(): void {
   try {
     // sendBeacon survives page unload/navigation
     const success = navigator.sendBeacon('/api/auth/accept-pending-invitations');
-    if (success) {
-      console.info('[Firebase Auth] Triggered auto-accept invitations via sendBeacon');
-    } else {
+    if (!success) {
       // Fallback to fetch if sendBeacon fails
-      console.info('[Firebase Auth] sendBeacon failed, falling back to fetch');
       acceptPendingInvitations().catch((error) => {
         logError(error, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
       });
     }
   } catch {
     // Fallback to fetch if sendBeacon throws
-    console.info('[Firebase Auth] sendBeacon not available, falling back to fetch');
     acceptPendingInvitations().catch((err) => {
       logError(err, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
     });
@@ -292,13 +283,6 @@ export async function acceptPendingInvitations(): Promise<{
 
     const data = await response.json();
 
-    if (data.acceptedCount > 0) {
-      console.info('[Firebase Auth] Auto-accepted invitations', {
-        count: data.acceptedCount,
-        documents: data.acceptedInvitations?.map((inv: { documentId: string }) => inv.documentId),
-      });
-    }
-
     return {
       acceptedCount: data.acceptedCount || 0,
       acceptedInvitations: data.acceptedInvitations || [],
@@ -324,7 +308,6 @@ export function getFirebaseStorage(): FirebaseStorage {
       try {
         connectStorageEmulator(storage, 'localhost', 9199);
         storageEmulatorConnected = true;
-        console.info('[Firebase Client - Sign] Connected to Storage emulator');
       } catch {
         // Already connected or emulator not available
       }
@@ -349,7 +332,6 @@ export function getFirebaseRealtimeDatabase(): Database {
       try {
         connectDatabaseEmulator(database, 'localhost', 9000);
         databaseEmulatorConnected = true;
-        console.info('[Firebase Client - Sign] Connected to Realtime Database emulator');
       } catch {
         // Already connected or emulator not available
       }
@@ -430,7 +412,6 @@ export async function uploadFile(
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.info('[Firebase Storage] Upload complete', { path });
           resolve(downloadURL);
         } catch (error) {
           logError(error, { operation: 'storage.uploadFile.getDownloadURL', metadata: { path } });
