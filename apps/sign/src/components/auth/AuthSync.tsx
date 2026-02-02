@@ -44,7 +44,10 @@ export function AuthSync() {
 				// IMPORTANT: Only reload for authenticated (non-anonymous) users
 				// Anonymous users don't need server-side admin checks, so no reload needed
 				// Admins (Google users) need reload so server can check permissions
-				if (needsRefresh && !user.isAnonymous) {
+				// EXCEPTION: Don't reload on login page - it handles its own redirect
+				const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+
+				if (needsRefresh && !user.isAnonymous && !isOnLoginPage) {
 					// Small delay to ensure cookies are set
 					setTimeout(() => {
 						window.location.reload();
