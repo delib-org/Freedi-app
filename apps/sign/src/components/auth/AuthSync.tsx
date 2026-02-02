@@ -6,59 +6,111 @@ import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 /**
  * AuthSync Component
  *
- * Ensures Firebase Auth client is initialized when user has server-side auth (cookies).
+ * Ensures Firebase Auth client is initialized and cookies are kept in sync.
  * This is needed because Next.js uses cookies for SSR, but Firestore security rules
  * need the Firebase Auth client to be authenticated.
+ *
+ * Key features:
+ * - Continuously monitors Firebase Auth state changes
+ * - Updates cookies whenever auth state changes
+ * - Syncs client auth with server cookies
+ * - Refreshes page when user authenticates to update admin status
  */
 export function AuthSync() {
 	const isInitialized = useRef(false);
+	const previousUserId = useRef<string | null>(null);
 
 	useEffect(() => {
-		if (isInitialized.current) return;
+		const auth = getFirebaseAuth();
 
-		const initAuth = async () => {
-			try {
-				const auth = getFirebaseAuth();
+		// Subscribe to auth state changes (don't unsubscribe - keep monitoring)
+		const unsubscribe = auth.onAuthStateChanged(async (user) => {
+			if (user) {
+				// User is signed in - ensure cookies are up to date
+				const currentCookieUserId = getCookie('userId');
+				const needsRefresh = currentCookieUserId !== user.uid;
 
-				// Wait for auth state to be determined
-				const unsubscribe = auth.onAuthStateChanged(async (user) => {
-					if (user) {
-						// Already signed in, Firestore security rules will work
-						isInitialized.current = true;
-						unsubscribe();
-					} else {
-						// Check if server knows we're authenticated (via cookies)
-						const userId = getCookie('userId');
+				// Update cookies to keep them fresh
+				setCookiesFromUser(user);
 
-						if (userId) {
-							// Server has auth but client doesn't - sync them
-							// Sign in anonymously to Firebase Auth
-							// This gives Firestore security rules the auth context they need
-							try {
-								await anonymousLogin();
-								isInitialized.current = true;
-							} catch (error) {
-								console.error('[AuthSync] Failed to initialize Firebase Auth:', error);
-							}
-						} else {
-							// No auth on server or client
-							isInitialized.current = true;
-						}
+				// If cookies were missing or wrong, refresh the page to update server-side data
+				// This ensures admin status is properly checked on the server
+				if (needsRefresh) {
+					console.info('[AuthSync] Cookies out of sync with auth state, refreshing page', {
+						cookieUserId: currentCookieUserId?.substring(0, 10),
+						authUserId: user.uid.substring(0, 10) + '...',
+					});
+					// Small delay to ensure cookies are set
+					setTimeout(() => {
+						window.location.reload();
+					}, 100);
 
-						unsubscribe();
+					return; // Don't continue - page will reload
+				}
+
+				previousUserId.current = user.uid;
+				isInitialized.current = true;
+			} else {
+				// No user signed in
+				const userId = getCookie('userId');
+
+				if (userId && !isInitialized.current) {
+					// Server has auth but client doesn't - sync them
+					console.info('[AuthSync] Server has auth but client doesnt, signing in anonymously');
+					try {
+						await anonymousLogin();
+					} catch (error) {
+						console.error('[AuthSync] Failed to initialize Firebase Auth:', error);
 					}
-				});
-			} catch (error) {
-				console.error('[AuthSync] Error initializing auth:', error);
+				}
+
+				previousUserId.current = null;
 				isInitialized.current = true;
 			}
-		};
+		});
 
-		initAuth();
+		// Periodically refresh cookies for authenticated users to prevent expiration
+		// Check every 6 hours and refresh cookies if user is still authenticated
+		const cookieRefreshInterval = setInterval(() => {
+			const user = auth.currentUser;
+			if (user) {
+				console.info('[AuthSync] Periodic cookie refresh');
+				setCookiesFromUser(user);
+			}
+		}, 6 * 60 * 60 * 1000); // 6 hours
+
+		// Cleanup subscription and interval on unmount
+		return () => {
+			unsubscribe();
+			clearInterval(cookieRefreshInterval);
+		};
 	}, []);
 
 	// This component doesn't render anything
 	return null;
+}
+
+/**
+ * Set cookies from Firebase user for server-side access
+ */
+function setCookiesFromUser(user: { uid: string; displayName?: string | null; email?: string | null }): void {
+	const maxAge = 60 * 60 * 24 * 30; // 30 days
+
+	document.cookie = `userId=${user.uid}; path=/; max-age=${maxAge}; SameSite=Lax`;
+
+	if (user.displayName) {
+		document.cookie = `userDisplayName=${encodeURIComponent(user.displayName)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+	}
+
+	if (user.email) {
+		document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+	}
+
+	console.info('[AuthSync] Updated cookies for user', {
+		userId: user.uid.substring(0, 10) + '...',
+		hasDisplayName: !!user.displayName,
+		hasEmail: !!user.email,
+	});
 }
 
 /**
