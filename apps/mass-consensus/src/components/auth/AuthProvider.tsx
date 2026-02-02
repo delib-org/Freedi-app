@@ -34,6 +34,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Subscribe to auth state changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
+      console.error('====================================');
+      console.error('🔄 MAIN APP - AUTH STATE CHANGED');
+      console.error('====================================');
+
+      if (firebaseUser) {
+        console.error('====================================');
+        console.error('✅ MAIN APP - USER IS SIGNED IN:');
+        console.error('🔑 USER ID (FULL):', firebaseUser.uid);
+        console.error('📧 EMAIL:', firebaseUser.email);
+        console.error('👤 DISPLAY NAME:', firebaseUser.displayName);
+        console.error('🆔 IS ANONYMOUS:', firebaseUser.isAnonymous);
+        console.error('====================================');
+      } else {
+        console.error('====================================');
+        console.error('❌ MAIN APP - NO USER SIGNED IN (user = null)');
+        console.error('====================================');
+      }
+
       console.info('[AuthProvider] onAuthChange fired, user:', firebaseUser ? firebaseUser.email : 'null');
       setUser(firebaseUser);
 

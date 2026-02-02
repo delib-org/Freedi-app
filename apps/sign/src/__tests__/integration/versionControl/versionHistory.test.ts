@@ -346,15 +346,11 @@ describe('Version Control - Version History (E2E)', () => {
 			const targetVersion = 5; // Same as current
 
 			// Act & Assert: Should reject
-			if (targetVersion === currentVersion) {
-				throw new Error('Cannot restore to current version');
-			}
-
 			expect(() => {
 				if (targetVersion === currentVersion) {
 					throw new Error('Cannot restore to current version');
 				}
-			}).toThrow();
+			}).toThrow('Cannot restore to current version');
 		});
 
 		it('should handle rollback to non-existent version', async () => {

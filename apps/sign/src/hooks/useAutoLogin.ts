@@ -1,28 +1,33 @@
 /**
  * Auto-login hook for Sign app
- * Automatically logs users into Firebase Auth anonymously if not already logged in
+ *
+ * This hook simply returns the current user from Firebase Auth.
+ * The actual anonymous login logic is handled by AuthSync in the root layout.
+ *
+ * AuthSync handles:
+ * - New visitors: Creates anonymous user IMMEDIATELY
+ * - Returning admins: Waits for auth to restore before creating anonymous
+ * - Logged out users: Creates new anonymous session
+ *
+ * This hook is just a convenience wrapper around useUser() for components
+ * that need to ensure a user exists (like suggestion features).
  */
 
-import { useEffect } from 'react';
 import { useUser } from './useUser';
-import { anonymousLogin } from '@/lib/firebase/client';
 
 /**
- * Automatically logs user into Firebase Auth anonymously if not logged in
- * This enables real-time features like voting and collaborative editing
+ * Returns the current Firebase Auth user
+ *
+ * AuthSync (in root layout) ensures users are logged in:
+ * - New visitors get anonymous login immediately
+ * - Returning users wait for session restore
+ * - No race conditions with admin sessions
+ *
+ * @returns Current user or null if auth is still initializing
  */
 export function useAutoLogin() {
   const user = useUser();
 
-  useEffect(() => {
-    // If no Firebase Auth user, auto-login anonymously
-    if (!user) {
-      anonymousLogin()
-        .catch((error) => {
-          console.error('[useAutoLogin] Failed to login anonymously:', error);
-        });
-    }
-  }, [user]);
-
+  // Just return the user - AuthSync handles all login logic
   return user;
 }

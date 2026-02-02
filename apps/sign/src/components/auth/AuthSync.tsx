@@ -19,13 +19,37 @@ import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 export function AuthSync() {
 	const isInitialized = useRef(false);
 	const previousUserId = useRef<string | null>(null);
+	const hasAttemptedAnonymousLogin = useRef(false);
+	const authRestoreTimeout = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
 		const auth = getFirebaseAuth();
 
+		console.error('====================================');
+		console.error('🚀 AuthSync STARTED');
+		console.error('====================================');
+
 		// Subscribe to auth state changes (don't unsubscribe - keep monitoring)
 		const unsubscribe = auth.onAuthStateChanged(async (user) => {
+			console.error('====================================');
+			console.error('🔄 AUTH STATE CHANGED');
+			console.error('====================================');
+
+			// Clear any pending auth restore timeout
+			if (authRestoreTimeout.current) {
+				clearTimeout(authRestoreTimeout.current);
+				authRestoreTimeout.current = null;
+			}
+
 			if (user) {
+				// LOG FULL USER ID IN BROWSER CONSOLE
+				console.error('====================================');
+				console.error('✅ USER IS SIGNED IN:');
+				console.error('🔑 USER ID (FULL):', user.uid);
+				console.error('📧 EMAIL:', user.email);
+				console.error('👤 DISPLAY NAME:', user.displayName);
+				console.error('🆔 IS ANONYMOUS:', user.isAnonymous);
+				console.error('====================================');
 				// User is signed in - ensure cookies are up to date
 				const currentCookieUserId = getCookie('userId');
 				const needsRefresh = currentCookieUserId !== user.uid;
@@ -33,12 +57,14 @@ export function AuthSync() {
 				// Update cookies to keep them fresh
 				setCookiesFromUser(user);
 
-				// If cookies were missing or wrong, refresh the page to update server-side data
-				// This ensures admin status is properly checked on the server
-				if (needsRefresh) {
-					console.info('[AuthSync] Cookies out of sync with auth state, refreshing page', {
-						cookieUserId: currentCookieUserId?.substring(0, 10),
+				// IMPORTANT: Only reload for authenticated (non-anonymous) users
+				// Anonymous users don't need server-side admin checks, so no reload needed
+				// Admins (Google users) need reload so server can check permissions
+				if (needsRefresh && !user.isAnonymous) {
+					console.info('[AuthSync] Authenticated user cookies out of sync, refreshing to sync server permissions', {
+						cookieUserId: currentCookieUserId?.substring(0, 10) || 'none',
 						authUserId: user.uid.substring(0, 10) + '...',
+						isFirstLogin: !isInitialized.current,
 					});
 					// Small delay to ensure cookies are set
 					setTimeout(() => {
@@ -46,21 +72,67 @@ export function AuthSync() {
 					}, 100);
 
 					return; // Don't continue - page will reload
+				} else if (needsRefresh && user.isAnonymous) {
+					console.info('[AuthSync] Anonymous user logged in, cookies updated (no reload needed)', {
+						userId: user.uid.substring(0, 10) + '...'
+					});
 				}
 
 				previousUserId.current = user.uid;
 				isInitialized.current = true;
 			} else {
 				// No user signed in
+				console.error('====================================');
+				console.error('❌ NO USER SIGNED IN (user = null)');
 				const userId = getCookie('userId');
+				console.error('🍪 COOKIE USER ID:', userId);
+				console.error('====================================');
+
+				// SMART DETECTION: Differentiate between new visitors and returning admins
 
 				if (userId && !isInitialized.current) {
-					// Server has auth but client doesn't - sync them
-					console.info('[AuthSync] Server has auth but client doesnt, signing in anonymously');
+					// Cookie exists but no user yet - this is a RETURNING USER
+					// Firebase Auth might still be restoring the session
+					// WAIT for auth to restore before creating anonymous user
+					console.info('[AuthSync] Cookie detected - waiting for auth to restore session...', {
+						cookieUserId: userId.substring(0, 10) + '...'
+					});
+
+					// Give auth 2 seconds to restore
+					// If auth doesn't restore in 2 seconds, cookie is stale → create anonymous
+					authRestoreTimeout.current = setTimeout(async () => {
+						if (!auth.currentUser && !hasAttemptedAnonymousLogin.current) {
+							console.info('[AuthSync] Auth did not restore after 2s - cookie is stale, creating anonymous user');
+							hasAttemptedAnonymousLogin.current = true;
+							try {
+								await anonymousLogin();
+							} catch (error) {
+								console.error('[AuthSync] Failed to create anonymous session after timeout:', error);
+							}
+						}
+					}, 2000);
+
+					isInitialized.current = true;
+				} else if (!userId && !isInitialized.current && !hasAttemptedAnonymousLogin.current) {
+					// NO cookie and first auth check - this is a NEW VISITOR
+					// Create anonymous user IMMEDIATELY (no need to wait)
+					console.info('[AuthSync] No cookie detected - new visitor, creating anonymous session immediately');
+					hasAttemptedAnonymousLogin.current = true;
 					try {
 						await anonymousLogin();
 					} catch (error) {
-						console.error('[AuthSync] Failed to initialize Firebase Auth:', error);
+						console.error('[AuthSync] Failed to create anonymous session:', error);
+					}
+					isInitialized.current = true;
+				} else if (isInitialized.current && !userId && previousUserId.current && !hasAttemptedAnonymousLogin.current) {
+					// User WAS logged in (previousUserId exists) but now isn't (no cookie, no user)
+					// This means they logged out - create new anonymous session
+					console.info('[AuthSync] User logged out, creating new anonymous session');
+					hasAttemptedAnonymousLogin.current = true;
+					try {
+						await anonymousLogin();
+					} catch (error) {
+						console.error('[AuthSync] Failed to create anonymous session after logout:', error);
 					}
 				}
 
@@ -68,6 +140,14 @@ export function AuthSync() {
 				isInitialized.current = true;
 			}
 		});
+
+		// Cleanup
+		return () => {
+			unsubscribe();
+			if (authRestoreTimeout.current) {
+				clearTimeout(authRestoreTimeout.current);
+			}
+		};
 
 		// Periodically refresh cookies for authenticated users to prevent expiration
 		// Check every 6 hours and refresh cookies if user is still authenticated

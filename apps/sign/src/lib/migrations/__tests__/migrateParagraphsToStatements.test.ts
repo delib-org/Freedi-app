@@ -223,11 +223,16 @@ describe('migrateParagraphsToStatements', () => {
         data: () => mockDocument,
       });
 
-      mockCollectionRef.doc.mockReturnValue({
-        get: jest.fn().mockResolvedValue({
-          exists: true,
-          data: () => mockDocument.creator,
-        }),
+      mockCollectionRef.doc.mockImplementation((id: string) => {
+        if (id === 'user_123') {
+          return {
+            get: jest.fn().mockResolvedValue({
+              exists: true,
+              data: () => mockDocument.creator,
+            }),
+          };
+        }
+        return mockDocRef;
       });
 
       await migrateParagraphsToStatements('doc_123', 'user_123');
