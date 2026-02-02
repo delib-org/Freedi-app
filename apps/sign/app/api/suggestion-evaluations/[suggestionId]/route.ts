@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
-import { Collections } from '@freedi/shared-types';
+import { Collections, calcBinaryConsensus } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
 interface EvaluationInput {
@@ -165,9 +165,8 @@ export async function POST(
       }
     });
 
-    // Calculate normalized consensus score (-1 to +1 range)
-    const totalEvaluations = positiveEvaluations + negativeEvaluations;
-    const consensusScore = totalEvaluations > 0 ? newConsensus / totalEvaluations : 0;
+    // Calculate consensus score using Mean - SEM formula with uncertainty floor
+    const consensusScore = calcBinaryConsensus(positiveEvaluations, negativeEvaluations);
 
     await db.collection(Collections.statements).doc(suggestionId).update({
       consensus: consensusScore,
@@ -251,9 +250,8 @@ export async function DELETE(
       }
     });
 
-    // Calculate normalized consensus score (-1 to +1 range)
-    const totalEvaluations = positiveEvaluations + negativeEvaluations;
-    const consensusScore = totalEvaluations > 0 ? newConsensus / totalEvaluations : 0;
+    // Calculate consensus score using Mean - SEM formula with uncertainty floor
+    const consensusScore = calcBinaryConsensus(positiveEvaluations, negativeEvaluations);
 
     await db.collection(Collections.statements).doc(suggestionId).update({
       consensus: consensusScore,
