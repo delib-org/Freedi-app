@@ -1909,6 +1909,8 @@
   "Up to H4": "עד H4",
   "Up to H5": "עד H5",
   "Up to H6": "עד H6",
+  "Enable Heading Numbering": "הפעל מספור כותרות",
+  "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "מספר כותרות אוטומטי בצורה היררכית (1, 1.1, 1.1.1 וכו')",
   "Accessibility": "נגישות",
   "Enhanced Visibility": "נראות משופרת",
   "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "הצג כפתורי אינטראקציה כרמזים גלויים בכל עת. מועיל למשתמשים מבוגרים שעלולים לא לגלות אינטראקציות ריחוף/הקשה.",

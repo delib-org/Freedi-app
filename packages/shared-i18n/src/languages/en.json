@@ -1887,6 +1887,8 @@
   "Up to H4": "Up to H4",
   "Up to H5": "Up to H5",
   "Up to H6": "Up to H6",
+  "Enable Heading Numbering": "Enable Heading Numbering",
+  "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)",
   "Accessibility": "Accessibility",
   "Enhanced Visibility": "Enhanced Visibility",
   "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.": "Show interaction buttons as visible hints at all times. Helpful for elderly users who may not discover hover/tap interactions.",

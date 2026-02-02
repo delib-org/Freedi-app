@@ -66,11 +66,13 @@ function getHeadingLevel(type: string): number | null {
  *
  * @param paragraphs - Array of paragraphs to extract headings from
  * @param maxLevel - Maximum heading level to include (1-6)
+ * @param headingNumbers - Optional map of paragraphId to heading number (e.g., "1.2.1")
  * @returns Array of TOC items with id, text, and level
  */
 export function useTocItems(
   paragraphs: Paragraph[],
-  maxLevel: number = 2
+  maxLevel: number = 2,
+  headingNumbers?: Map<string, string>
 ): TocItem[] {
   return useMemo(() => {
     if (!paragraphs || paragraphs.length === 0) {
@@ -85,12 +87,14 @@ export function useTocItems(
       // Only include headings within the max level
       if (level !== null && level <= maxLevel) {
         const text = stripHtml(paragraph.content);
+        const headingNumber = headingNumbers?.get(paragraph.paragraphId);
+        const displayText = headingNumber ? `${headingNumber}. ${text}` : text;
 
         // Skip empty headings
-        if (text.trim()) {
+        if (displayText.trim()) {
           tocItems.push({
             id: paragraph.paragraphId,
-            text: text.trim(),
+            text: displayText.trim(),
             level,
           });
         }
@@ -98,7 +102,7 @@ export function useTocItems(
     }
 
     return tocItems;
-  }, [paragraphs, maxLevel]);
+  }, [paragraphs, maxLevel, headingNumbers]);
 }
 
 /**
