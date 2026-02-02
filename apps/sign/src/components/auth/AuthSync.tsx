@@ -19,13 +19,30 @@ import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
 export function AuthSync() {
 	const isInitialized = useRef(false);
 	const previousUserId = useRef<string | null>(null);
+	const hasAttemptedAnonymousLogin = useRef(false);
 
 	useEffect(() => {
 		const auth = getFirebaseAuth();
 
+		console.error('====================================');
+		console.error('🚀 AuthSync STARTED');
+		console.error('====================================');
+
 		// Subscribe to auth state changes (don't unsubscribe - keep monitoring)
 		const unsubscribe = auth.onAuthStateChanged(async (user) => {
+			console.error('====================================');
+			console.error('🔄 AUTH STATE CHANGED');
+			console.error('====================================');
+
 			if (user) {
+				// LOG FULL USER ID IN BROWSER CONSOLE
+				console.error('====================================');
+				console.error('✅ USER IS SIGNED IN:');
+				console.error('🔑 USER ID (FULL):', user.uid);
+				console.error('📧 EMAIL:', user.email);
+				console.error('👤 DISPLAY NAME:', user.displayName);
+				console.error('🆔 IS ANONYMOUS:', user.isAnonymous);
+				console.error('====================================');
 				// User is signed in - ensure cookies are up to date
 				const currentCookieUserId = getCookie('userId');
 				const needsRefresh = currentCookieUserId !== user.uid;
@@ -37,8 +54,9 @@ export function AuthSync() {
 				// This ensures admin status is properly checked on the server
 				if (needsRefresh) {
 					console.info('[AuthSync] Cookies out of sync with auth state, refreshing page', {
-						cookieUserId: currentCookieUserId?.substring(0, 10),
+						cookieUserId: currentCookieUserId?.substring(0, 10) || 'none',
 						authUserId: user.uid.substring(0, 10) + '...',
+						isFirstLogin: !isInitialized.current,
 					});
 					// Small delay to ensure cookies are set
 					setTimeout(() => {
@@ -52,15 +70,42 @@ export function AuthSync() {
 				isInitialized.current = true;
 			} else {
 				// No user signed in
+				console.error('====================================');
+				console.error('❌ NO USER SIGNED IN (user = null)');
 				const userId = getCookie('userId');
+				console.error('🍪 COOKIE USER ID:', userId);
+				console.error('====================================');
+
+				// CRITICAL FIX: Only create anonymous user if:
+				// 1. We're fully initialized (not first auth check)
+				// 2. There's no cookie suggesting an admin session
+				// 3. We haven't already attempted anonymous login
+				// This prevents race condition where anonymous login overwrites admin session
 
 				if (userId && !isInitialized.current) {
-					// Server has auth but client doesn't - sync them
-					console.info('[AuthSync] Server has auth but client doesnt, signing in anonymously');
+					// Server has auth (cookie) but Client (SDK) is unauthenticated.
+					// This often happens during page load while the SDK is still initializing or if the user is an Admin.
+					// CRITICAL: Do NOT force anonymous login here, as it would overwrite the valid Admin cookie
+					// and effectively log the user out.
+					console.info('[AuthSync] Server has auth (cookie) but client is unauthenticated. Preserving cookie session and waiting for auth to initialize.');
+					isInitialized.current = true; // Mark as initialized to prevent anonymous login on next cycle
+				} else if (!isInitialized.current && !userId && !hasAttemptedAnonymousLogin.current) {
+					// Only create anonymous user on FIRST initialization if there's truly no session
+					console.info('[AuthSync] No session detected on server or client, signing in anonymously');
+					hasAttemptedAnonymousLogin.current = true;
 					try {
 						await anonymousLogin();
 					} catch (error) {
 						console.error('[AuthSync] Failed to initialize Firebase Auth:', error);
+					}
+				} else if (isInitialized.current && !userId && !previousUserId.current && !hasAttemptedAnonymousLogin.current) {
+					// User explicitly logged out - create new anonymous session
+					console.info('[AuthSync] User logged out, creating new anonymous session');
+					hasAttemptedAnonymousLogin.current = true;
+					try {
+						await anonymousLogin();
+					} catch (error) {
+						console.error('[AuthSync] Failed to create anonymous session:', error);
 					}
 				}
 
