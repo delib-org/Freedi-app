@@ -21,6 +21,7 @@ export interface SwipeCardProps {
   onSwipe: (rating: number) => void;
   totalCards: number;
   currentIndex: number;
+  programmaticThrow?: { rating: number; direction: 'left' | 'right' } | null;
 }
 
 export default function SwipeCard({
@@ -28,6 +29,7 @@ export default function SwipeCard({
   onSwipe,
   totalCards,
   currentIndex,
+  programmaticThrow,
 }: SwipeCardProps) {
   const { t } = useTranslation();
 
@@ -66,6 +68,24 @@ export default function SwipeCard({
 
     return () => clearTimeout(timer);
   }, [statement.statementId]);
+
+  // Handle programmatic throw (from button clicks)
+  useEffect(() => {
+    if (programmaticThrow && !isThrowing && !isEntering) {
+      const { rating, direction } = programmaticThrow;
+
+      setThrowDirection(direction);
+      setIsThrowing(true);
+      setIsDragging(false);
+      setDragStart(null);
+
+      playWhooshSound();
+
+      setTimeout(() => {
+        onSwipe(rating);
+      }, SWIPE.SWIPE_DURATION);
+    }
+  }, [programmaticThrow, isThrowing, isEntering, onSwipe]);
 
   const handleDragStart = useCallback((clientX: number, isTouch: boolean) => {
     if (isThrowing || isEntering) return;

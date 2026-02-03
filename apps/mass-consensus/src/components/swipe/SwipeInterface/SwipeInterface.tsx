@@ -64,6 +64,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const isLoading = useSelector(selectIsLoading);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
+  const [programmaticThrow, setProgrammaticThrow] = useState<{ rating: number; direction: 'left' | 'right' } | null>(null);
 
   // Initialize cards on mount
   useEffect(() => {
@@ -97,21 +98,37 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const handleSwipe = async (rating: RatingValue) => {
     if (!currentCard) return;
 
-    try {
-      // Save rating to Firebase
-      await submitRating(currentCard.statementId, rating, userId);
+    // Determine throw direction based on rating
+    // Negative ratings (HATE=-2, DISLIKE=-1) go left
+    // Positive ratings (LIKE=1, LOVE=2) go right
+    // Neutral (0) goes right by default
+    const direction = rating < 0 ? 'left' : 'right';
 
-      // Update Redux state
-      dispatch(cardEvaluated({ statementId: currentCard.statementId, rating }));
+    // Trigger throw animation
+    setProgrammaticThrow({ rating, direction });
 
-      // Dispatch custom event for SurveyQuestionWrapper to track progress
-      window.dispatchEvent(new CustomEvent('solution-evaluated', {
-        detail: { questionId: question.statementId }
-      }));
-    } catch (err) {
-      console.error('Failed to submit rating:', err);
-      dispatch(setError('Failed to submit rating. Please try again.'));
-    }
+    // Wait for animation to complete, then submit
+    setTimeout(async () => {
+      try {
+        // Save rating to Firebase
+        await submitRating(currentCard.statementId, rating, userId);
+
+        // Update Redux state
+        dispatch(cardEvaluated({ statementId: currentCard.statementId, rating }));
+
+        // Dispatch custom event for SurveyQuestionWrapper to track progress
+        window.dispatchEvent(new CustomEvent('solution-evaluated', {
+          detail: { questionId: question.statementId }
+        }));
+
+        // Reset programmaticThrow for next card
+        setProgrammaticThrow(null);
+      } catch (err) {
+        console.error('Failed to submit rating:', err);
+        dispatch(setError('Failed to submit rating. Please try again.'));
+        setProgrammaticThrow(null);
+      }
+    }, 300); // Wait for animation to complete
   };
 
   const handleProposalSubmit = async (proposalText: string) => {
@@ -178,6 +195,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
               onSwipe={handleSwipe}
               totalCards={totalCount}
               currentIndex={evaluatedCount}
+              programmaticThrow={programmaticThrow}
             />
           </div>
 
