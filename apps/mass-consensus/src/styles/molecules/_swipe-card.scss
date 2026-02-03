@@ -23,12 +23,11 @@
 
   // States
   &--dragging {
-    cursor: grabbing;
     will-change: transform;
   }
 
   &--idle {
-    cursor: grab;
+    cursor: default; // Normal cursor - no manual swiping
   }
 
   &--throwing {
