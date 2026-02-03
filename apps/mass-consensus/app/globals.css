@@ -6,48 +6,79 @@
 }
 
 :root {
-  /* Primary Colors */
-  --btn-primary: #1B2650; /* Navy blue for primary CTA */
-  --btn-primary-hover: #2A3760;
-  --btn-secondary: #e0e0e0;
-  --text-primary: #1B2650; /* Dark navy for headings */
-  --text-body: #3d4d71;
-  --text-secondary: #707a93;
-  --background: #F8F9FA; /* Light gray background */
+  /* Primary Colors - Updated Pastel Palette */
+  --btn-primary: #7C9EB2; /* Soft teal-blue for primary CTA */
+  --btn-primary-hover: #6B8FA3;
+  --btn-secondary: #e5e7eb;
+  --text-primary: #334155; /* Slate for headings */
+  --text-body: #475569;
+  --text-secondary: #64748b;
+  --background: linear-gradient(180deg, rgba(184, 212, 227, 0.25), rgba(242, 226, 210, 0.25)); /* Soft gradient */
+  --background-solid: #F8FAFB;
 
-  /* Card Colors - Soft Pastels */
+  /* New Pastel Color Palette */
+  --color-primary: #7C9EB2;
+  --color-secondary: #B8D4E3;
+  --color-accent: #F2E2D2;
+  --color-warm: #E8D5C4;
+  --color-soft: #D4E6D7;
+  --color-lavender: #D9D4E7;
+  --color-peach: #F5DDD6;
+  --color-mint: #C9E4DE;
+
+  /* Card Colors - Updated Soft Pastels */
   --card-default: #ffffff;
-  --card-blue: #E3F2FD; /* Light blue */
-  --card-orange: #FFE4D6; /* Peach/orange */
-  --card-pink: #FFE1E9; /* Soft pink */
-  --card-purple: #F3E5F5; /* Soft purple */
-  --card-green: #E8F5E9; /* Soft green */
+  --card-blue: #B8D4E340; /* Soft blue with transparency */
+  --card-orange: #F5DDD640; /* Peach */
+  --card-pink: #F5DDD6; /* Soft peach-pink */
+  --card-purple: #D9D4E7; /* Lavender */
+  --card-green: #C9E4DE; /* Mint */
+  --card-mint: #C9E4DE;
+  --card-lavender: #D9D4E7;
+  --card-peach: #F5DDD6;
 
   /* Priority Badge Colors */
-  --priority-high: #4FC3F7; /* Bright blue */
-  --priority-medium: #FF6B8A; /* Coral pink */
-  --priority-low: #FFD54F; /* Yellow */
+  --priority-high: #7C9EB2; /* Updated to match palette */
+  --priority-medium: #D9D4E7; /* Lavender */
+  --priority-low: #C9E4DE; /* Mint */
 
-  /* Feedback Colors */
-  --agree: #4caf50;
-  --agree-light: #81c784;
-  --disagree: #f44336;
-  --disagree-light: #e57373;
-  --approve: #4caf50;
-  --reject: #f44336;
-  --option: #FFD54F;
-  --option-text: #5D4600;
+  /* Feedback Colors - Softer tones */
+  --agree: #10b981; /* Emerald green */
+  --agree-light: #6ee7b7;
+  --disagree: #f87171; /* Soft red */
+  --disagree-light: #fca5a5;
+  --approve: #10b981;
+  --reject: #ef4444;
+  --option: #C9E4DE;
+  --option-text: #4A7C6F;
+
+  /* Rating Button Colors */
+  --rating-love: #ffe4e6;
+  --rating-love-border: #fda4af;
+  --rating-love-text: #e11d48;
+  --rating-like: #d1fae5;
+  --rating-like-border: #6ee7b7;
+  --rating-like-text: #059669;
+  --rating-neutral: #f1f5f9;
+  --rating-neutral-border: #cbd5e1;
+  --rating-neutral-text: #64748b;
+  --rating-dislike: #fef3c7;
+  --rating-dislike-border: #fcd34d;
+  --rating-dislike-text: #d97706;
+  --rating-hate: #fee2e2;
+  --rating-hate-border: #fca5a5;
+  --rating-hate-text: #dc2626;
 
   /* Consensus Range Colors */
-  --range-objections-100: #D32F2F;
-  --range-objections-60: #E57373;
-  --range-objections-30: #FFCDD2;
-  --range-conflict-100: #FFA000;
-  --range-conflict-60: #FFB74D;
-  --range-conflict-30: #FFE0B2;
-  --range-positive-30: #C8E6C9;
-  --range-positive-60: #81C784;
-  --range-positive-100: #388E3C;
+  --range-objections-100: #f87171;
+  --range-objections-60: #fca5a5;
+  --range-objections-30: #fecaca;
+  --range-conflict-100: #fbbf24;
+  --range-conflict-60: #fcd34d;
+  --range-conflict-30: #fef3c7;
+  --range-positive-30: #d1fae5;
+  --range-positive-60: #6ee7b7;
+  --range-positive-100: #10b981;
 
   /* Spacing - 8px grid system */
   --spacing-xs: 0.5rem; /* 8px */
@@ -144,6 +175,51 @@ button:disabled {
     background-position: -200% 0;
   }
 }
+
+/* Swipe Card Animations */
+@keyframes throw-right {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateX(150vw) rotate(30deg); opacity: 0; }
+}
+
+@keyframes throw-left {
+  0% { transform: translateX(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateX(-150vw) rotate(-30deg); opacity: 0; }
+}
+
+@keyframes card-enter {
+  0% { transform: scale(0.9); opacity: 0.5; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes bounce-in {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+  70% { transform: translate(-50%, -50%) scale(1.05); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+@keyframes pulse-soft {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.animate-throw-right { animation: throw-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-throw-left { animation: throw-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
+.animate-card-enter { animation: card-enter 0.3s ease-out forwards; }
+.animate-slide-up { animation: slide-up 0.3s ease-out forwards; }
+.animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
+.animate-bounce-in { animation: bounce-in 0.4s ease-out forwards; }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
 
 /* Badge/Pill components - inspired by mobile design */
 .badge {
