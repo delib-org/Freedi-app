@@ -1,0 +1,127 @@
+@use '../mixins' as *;
+
+// Swipe Card - Tinder-style card component
+// Based on prototype, refactored for production use
+
+.swipe-card {
+  // Base styles
+  position: relative;
+  width: 90%;
+  max-width: 400px;
+  height: clamp(300px, 50vh, 500px);
+  max-height: 60vh;
+  background: var(--card-default);
+  border-radius: 16px;
+  padding: clamp(1rem, 4vw, 1.5rem);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  will-change: auto;
+
+  // States
+  &--dragging {
+    cursor: grabbing;
+    will-change: transform;
+  }
+
+  &--idle {
+    cursor: grab;
+  }
+
+  &--throwing {
+    will-change: transform, opacity;
+  }
+
+  &--entering {
+    will-change: transform, opacity;
+  }
+
+  // Elements
+  &__overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  &__content {
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--text-body);
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  &__author {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+
+    img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  // Overlay states
+  &--like-active &__overlay,
+  &--dislike-active &__overlay {
+    opacity: 1;
+  }
+
+  // Accessibility
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    will-change: auto;
+
+    &__overlay {
+      transition: none;
+    }
+  }
+
+  // Mobile
+  @include mobile {
+    &__content {
+      font-size: 1rem;
+    }
+  }
+}
+
+// Animations
+@keyframes swipe-card-throw-right {
+  to {
+    transform: translateX(1000px) rotate(30deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-card-throw-left {
+  to {
+    transform: translateX(-1000px) rotate(-30deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-card-enter {
+  from {
+    transform: translateX(0) rotate(0) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}

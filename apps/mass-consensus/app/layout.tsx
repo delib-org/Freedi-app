@@ -10,7 +10,11 @@ import { COOKIE_KEY } from '@freedi/shared-i18n';
 import { AuthProvider } from '@/components/auth/AuthProvider';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
 import ConnectionLostHandler from '@/components/shared/ConnectionLostHandler';
+import { ReduxProvider } from '@/components/providers/ReduxProvider';
+import { ToastProvider } from '@/components/shared/Toast';
 import './globals.css';
+import '@/styles/atoms/_index.scss';
+import '@/styles/molecules/_index.scss';
 
 export const metadata: Metadata = {
   title: 'WizCol: Mass Consensus',
@@ -60,11 +64,15 @@ export default async function RootLayout({
           initialLanguage={language}
           initialDictionary={dictionary}
         >
-          <AuthProvider>
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            {children as any}
-          </AuthProvider>
-          <ConnectionLostHandler />
+          <ReduxProvider>
+            <AuthProvider>
+              <ToastProvider>
+                {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+                {children as any}
+              </ToastProvider>
+            </AuthProvider>
+            <ConnectionLostHandler />
+          </ReduxProvider>
         </NextTranslationProvider>
         <GoogleAnalytics />
         <Analytics />

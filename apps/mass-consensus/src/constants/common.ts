@@ -35,6 +35,8 @@ export const VALIDATION = {
   MIN_SOLUTION_LENGTH: 3,
   MAX_SOLUTION_LENGTH: 500,
   MAX_SIMILAR_SOLUTIONS_DISPLAY: 3,
+  MIN_STATEMENT_LENGTH: 10, // Minimum length for proposals/statements
+  MAX_STATEMENT_LENGTH: 500, // Maximum length for proposals/statements
 } as const;
 
 /**
@@ -77,6 +79,50 @@ export const PROGRESS = {
 export const API = {
   REQUEST_TIMEOUT: 30 * TIME.SECOND,
   MAX_DURATION_MESSAGE: 'This may take up to 30 seconds',
+} as const;
+
+/**
+ * Swipe interaction constants
+ */
+export const SWIPE = {
+  // Thresholds (in pixels)
+  LIKE_THRESHOLD: 100, // px - threshold for "like" swipe
+  LOVE_THRESHOLD: 200, // px - threshold for "love" swipe
+  DISLIKE_THRESHOLD: -100, // px
+  HATE_THRESHOLD: -200, // px
+  ROTATION_FACTOR: 20, // degrees per 100px
+
+  // Animation (in milliseconds)
+  SWIPE_DURATION: 300, // ms
+  CARD_ENTER_DURATION: 400, // ms
+  CARD_STACK_OFFSET: 10, // px between stacked cards
+
+  // UX Flow
+  PROPOSAL_PROMPT_INTERVAL: 7, // Show "propose idea" after N cards
+  BATCH_SIZE: 10, // Load N cards at a time
+  PRELOAD_AHEAD: 3, // Preload next N cards
+} as const;
+
+/**
+ * Rating values (-2 to +2 scale)
+ */
+export const RATING = {
+  HATE: -2,
+  DISLIKE: -1,
+  NEUTRAL: 0,
+  LIKE: 1,
+  LOVE: 2,
+} as const;
+
+/**
+ * Email notification constants
+ */
+export const EMAIL_NOTIFICATIONS = {
+  TOKEN_LENGTH: 32, // bytes (64 hex chars)
+  CONFIRMATION_EXPIRY: 7 * TIME.DAY,
+  DIGEST_SEND_HOUR: 9, // 9 AM
+  MIN_ACTIVITY_FOR_DIGEST: 1,
+  RATE_LIMIT_PER_HOUR: 5,
 } as const;
 
 /**
