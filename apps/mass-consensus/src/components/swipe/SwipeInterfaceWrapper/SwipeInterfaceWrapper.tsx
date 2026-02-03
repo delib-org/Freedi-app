@@ -25,6 +25,19 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
 
+  // Generate or retrieve anonymous user ID from localStorage
+  const getAnonymousUserId = (): string => {
+    const key = 'anonymous_user_id';
+    let anonId = localStorage.getItem(key);
+
+    if (!anonId) {
+      anonId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem(key, anonId);
+    }
+
+    return anonId;
+  };
+
   // Show loading state
   if (isLoading) {
     return (
@@ -41,31 +54,16 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
     );
   }
 
-  // Handle no auth - show login prompt or use anonymous mode
-  if (!user) {
-    return (
-      <div
-        style={{
-          textAlign: 'center',
-          padding: '3rem 1rem',
-          background: 'var(--card-default)',
-          borderRadius: '16px',
-        }}
-      >
-        <h3>{t('Authentication Required')}</h3>
-        <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
-          {t('Please sign in to participate in this survey.')}
-        </p>
-      </div>
-    );
-  }
+  // Use authenticated user or anonymous user ID
+  const userId = user?.uid || getAnonymousUserId();
+  const userName = user?.displayName || 'Anonymous';
 
   return (
     <SwipeInterface
       question={question}
       initialSolutions={initialSolutions}
-      userId={user.uid}
-      userName={user.displayName || 'Anonymous'}
+      userId={userId}
+      userName={userName}
       onComplete={onComplete}
     />
   );

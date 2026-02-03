@@ -165,14 +165,14 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   return (
     <div className="swipe-interface">
       {/* Progress indicator */}
-      <div style={{ marginBottom: '1rem' }}>
+      <div className="swipe-interface__progress">
         <SurveyProgress current={evaluatedCount} total={totalCount} />
       </div>
 
       {/* Current card or completion message */}
       {currentCard ? (
         <>
-          <div style={{ marginBottom: '1rem' }}>
+          <div className="swipe-interface__card">
             <SwipeCard
               statement={currentCard}
               onSwipe={handleSwipe}
@@ -182,15 +182,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           </div>
 
           {/* Rating buttons */}
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-              gap: '12px',
-              marginTop: '1rem',
-              flexWrap: 'wrap',
-            }}
-          >
+          <div className="swipe-interface__rating-buttons">
             <RatingButton rating={RATING.HATE} onClick={handleSwipe} />
             <RatingButton rating={RATING.DISLIKE} onClick={handleSwipe} />
             <RatingButton rating={RATING.NEUTRAL} onClick={handleSwipe} />
@@ -199,32 +191,15 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           </div>
         </>
       ) : (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '3rem 1rem',
-            background: 'var(--card-default)',
-            borderRadius: '16px',
-          }}
-        >
-          <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🎉</div>
-          <h2>{t('All done!')}</h2>
-          <p style={{ color: 'var(--text-muted)', marginTop: '0.5rem' }}>
+        <div className="swipe-interface__completion">
+          <div className="swipe-interface__completion-emoji">🎉</div>
+          <h2 className="swipe-interface__completion-title">{t('All done!')}</h2>
+          <p className="swipe-interface__completion-message">
             {t("You've evaluated all proposals.")}
           </p>
           <button
+            className="swipe-interface__completion-button"
             onClick={() => setShowProposalModal(true)}
-            style={{
-              marginTop: '1.5rem',
-              padding: '12px 24px',
-              background: 'var(--btn-primary)',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 600,
-            }}
           >
             {t('Submit Your Own Idea')}
           </button>

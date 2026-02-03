@@ -20,11 +20,93 @@
   align-items: center;
   gap: 1rem;
 
-  // Ensure child divs also clip overflow
-  > div {
+  // Progress section
+  &__progress {
     width: 100%;
+    margin-bottom: 1rem;
     display: flex;
     justify-content: center;
-    overflow: hidden; // Clip cards that fly off
+    overflow: hidden;
+  }
+
+  // Card section - contains the swipe card
+  &__card {
+    width: 100%;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: center;
+    overflow: hidden; // Clip cards that fly off during animation
+  }
+
+  // Rating buttons container - spreads buttons horizontally
+  &__rating-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 1rem;
+    padding: 0 0.5rem;
+    gap: 0.5rem;
+
+    // On larger screens, use space-evenly for better visual balance
+    @include desktop {
+      justify-content: space-evenly;
+      padding: 0;
+    }
+
+    // On tablet, slight padding adjustment
+    @include tablet {
+      justify-content: space-evenly;
+      padding: 0 1rem;
+    }
+  }
+
+  // Completion state
+  &__completion {
+    text-align: center;
+    padding: 3rem 1rem;
+    background: var(--card-default);
+    border-radius: 16px;
+    width: 100%;
+
+    &-emoji {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    &-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: var(--text-heading);
+    }
+
+    &-message {
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+    }
+
+    &-button {
+      margin-top: 1.5rem;
+      padding: 12px 24px;
+      background: var(--btn-primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.2s;
+
+      &:hover {
+        background: var(--btn-primary-hover, var(--btn-primary));
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
   }
 }
