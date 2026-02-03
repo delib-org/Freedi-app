@@ -90,8 +90,8 @@
     }
   }
 
-  // Tablet and Mobile - emoji-only for clarity
-  @media (max-width: 900px) {
+  // Tablet - emoji-only for clarity
+  @include tablet {
     padding: 0.75rem;
     border-radius: 50%;
     gap: 0;
@@ -104,6 +104,23 @@
 
     .rating-button__label {
       display: none; // Hide labels, emojis are clear: ❤️ 👍 😐 👎 ❌
+    }
+  }
+
+  // Mobile - emoji-only
+  @include mobile {
+    padding: 0.75rem;
+    border-radius: 50%;
+    gap: 0;
+    min-width: 52px;
+    min-height: 52px;
+
+    .rating-button__emoji {
+      font-size: 1.5rem;
+    }
+
+    .rating-button__label {
+      display: none;
     }
   }
 
