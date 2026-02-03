@@ -31,11 +31,13 @@
 		"googleapis": "^168.0.0",
 		"nodemailer": "^7.0.6",
 		"openai": "^6.15.0",
+		"pako": "^2.1.0",
 		"typescript": "^5.6.3",
 		"valibot": "^1.0.0-rc.1"
 	},
 	"devDependencies": {
 		"@types/jest": "^29.5.14",
+		"@types/pako": "^2.0.4",
 		"@types/parse5": "^6.0.3",
 		"firebase-functions-test": "^3.4.1",
 		"jest": "^29.7.0",

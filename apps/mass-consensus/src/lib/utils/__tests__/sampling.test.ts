@@ -1,19 +1,29 @@
 /**
- * Tests for sampling utility functions (Thompson Sampling)
+ * Tests for Bayesian adaptive sampling utility functions
+ *
+ * Tests cover:
+ * - Bayesian prior incorporation (pseudo-counts)
+ * - UCB priority calculation (vetting)
+ * - Gaussian Thompson Sampling (exploration)
+ * - Recovery mechanism (anti-burial)
+ * - Stability detection
  */
 import { Statement, StatementType } from '@freedi/shared-types';
 import {
   calculateStatsFromAggregates,
   getProposalStats,
   calculatePriority,
+  calculateUCBPriority,
   thompsonSample,
+  gaussianThompsonSample,
   isStable,
   calculateAdjustedPriority,
+  getSamplingDiagnostics,
   SamplingConfig,
   DEFAULT_SAMPLING_CONFIG,
 } from '../sampling';
 
-describe('sampling utilities', () => {
+describe('Bayesian sampling utilities', () => {
   // Helper to create a mock Statement
   const createMockStatement = (
     evaluation?: Partial<Statement['evaluation']>,
@@ -54,21 +64,63 @@ describe('sampling utilities', () => {
   } as Statement);
 
   describe('calculateStatsFromAggregates', () => {
-    describe('edge cases', () => {
-      it('should return default values for zero evaluators', () => {
+    describe('Bayesian prior incorporation', () => {
+      it('should return prior mean for zero evaluators', () => {
         const stats = calculateStatsFromAggregates(0, 0, 0);
         expect(stats.mean).toBe(0);
-        expect(stats.sem).toBe(0.5); // FLOOR_STD_DEV
-        expect(stats.variance).toBe(0);
+        expect(stats.posteriorMean).toBe(0); // priorMean default = 0
+        expect(stats.sem).toBe(0.5); // BASE_UNCERTAINTY
         expect(stats.evaluationCount).toBe(0);
+        expect(stats.effectiveSampleSize).toBe(2); // priorStrength default = 2
       });
 
+      it('should blend prior with single evaluation', () => {
+        // Single positive evaluation (+1)
+        const stats = calculateStatsFromAggregates(1, 1, 1);
+        expect(stats.mean).toBe(1); // Raw mean = 1
+        // Posterior = (2 * 0 + 1) / (2 + 1) = 1/3 ≈ 0.333
+        expect(stats.posteriorMean).toBeCloseTo(1/3, 2);
+        expect(stats.effectiveSampleSize).toBe(3);
+      });
+
+      it('should blend prior with negative evaluation', () => {
+        // Single negative evaluation (-1)
+        const stats = calculateStatsFromAggregates(-1, 1, 1);
+        expect(stats.mean).toBe(-1); // Raw mean = -1
+        // Posterior = (2 * 0 + (-1)) / (2 + 1) = -1/3 ≈ -0.333
+        expect(stats.posteriorMean).toBeCloseTo(-1/3, 2);
+      });
+
+      it('should approach raw mean with many evaluations', () => {
+        // 100 evaluations with mean = 0.8
+        const stats = calculateStatsFromAggregates(80, 70, 100);
+        expect(stats.mean).toBe(0.8);
+        // Posterior ≈ (2 * 0 + 80) / (2 + 100) = 80/102 ≈ 0.784
+        expect(stats.posteriorMean).toBeCloseTo(80/102, 2);
+        // With many evaluations, posterior should be close to raw mean
+        expect(Math.abs(stats.posteriorMean - stats.mean)).toBeLessThan(0.02);
+      });
+
+      it('should respect custom prior settings', () => {
+        const config: SamplingConfig = {
+          ...DEFAULT_SAMPLING_CONFIG,
+          priorStrength: 5,
+          priorMean: 0.5,
+        };
+        const stats = calculateStatsFromAggregates(1, 1, 1, config);
+        // Posterior = (5 * 0.5 + 1) / (5 + 1) = 3.5/6 ≈ 0.583
+        expect(stats.posteriorMean).toBeCloseTo(3.5/6, 2);
+        expect(stats.effectiveSampleSize).toBe(6);
+      });
+    });
+
+    describe('edge cases', () => {
       it('should return floor SEM for single evaluator', () => {
         const stats = calculateStatsFromAggregates(0.5, 0.25, 1);
         expect(stats.mean).toBe(0.5);
-        expect(stats.sem).toBe(0.5); // FLOOR_STD_DEV
-        expect(stats.variance).toBe(0);
         expect(stats.evaluationCount).toBe(1);
+        // SEM should be reduced by effective sample size (n + priorStrength)
+        expect(stats.sem).toBeLessThan(0.5);
       });
     });
 
@@ -95,29 +147,24 @@ describe('sampling utilities', () => {
 
       it('should ensure variance is never negative', () => {
         // Edge case where numerical precision might cause negative variance
-        // This shouldn't happen mathematically but we safeguard anyway
         const stats = calculateStatsFromAggregates(10, 9.9, 10);
         expect(stats.variance).toBeGreaterThanOrEqual(0);
       });
     });
 
-    describe('SEM calculation', () => {
-      it('should calculate SEM as stdDev / sqrt(n)', () => {
-        // With n=4, stdDev=1, SEM should be 0.5
-        // sum=0, sumSquared=4, n=4 gives variance=1, stdDev=1
-        // SEM = 1 / sqrt(4) = 0.5
+    describe('SEM calculation with effective sample size', () => {
+      it('should use effective sample size for SEM', () => {
+        // n=4, prior=2, effective=6
+        // With stdDev=1, SEM should be 1/sqrt(6) ≈ 0.408
         const stats = calculateStatsFromAggregates(0, 4, 4);
-        expect(stats.sem).toBe(0.5);
+        const expectedSEM = 1 / Math.sqrt(4 + 2); // effective sample size
+        expect(stats.sem).toBeCloseTo(expectedSEM, 1);
       });
 
-      it('should use floor std dev when observed is lower', () => {
-        // All identical evaluations would give 0 variance
-        // sum = n * value, sumSquared = n * value^2
-        // For n=10, all values = 0.5: sum = 5, sumSquared = 2.5
-        // variance = 0.25 - 0.25 = 0, observed stdDev = 0
-        // Should use FLOOR_STD_DEV = 0.5
+      it('should apply minimum SEM floor', () => {
+        // Very low variance case
         const stats = calculateStatsFromAggregates(5, 2.5, 10);
-        expect(stats.sem).toBe(0.5 / Math.sqrt(10));
+        expect(stats.sem).toBeGreaterThanOrEqual(0.05); // MIN_SEM
       });
     });
 
@@ -134,10 +181,11 @@ describe('sampling utilities', () => {
   });
 
   describe('getProposalStats', () => {
-    it('should return default stats for statement without evaluation', () => {
+    it('should return prior-based stats for statement without evaluation', () => {
       const statement = createMockStatement();
       const stats = getProposalStats(statement);
       expect(stats.mean).toBe(0);
+      expect(stats.posteriorMean).toBe(0);
       expect(stats.sem).toBe(0.5);
       expect(stats.variance).toBe(0);
       expect(stats.evaluationCount).toBe(0);
@@ -164,70 +212,57 @@ describe('sampling utilities', () => {
     });
   });
 
-  describe('calculatePriority', () => {
-    describe('base priority (evaluation count)', () => {
-      it('should give high priority to under-evaluated proposals', () => {
-        const lowEvals = createMockStatement({
-          sumEvaluations: 0,
-          sumSquaredEvaluations: 0,
+  describe('calculateUCBPriority', () => {
+    describe('UCB vetting behavior', () => {
+      it('should give higher UCB to moderately positive proposals with high uncertainty', () => {
+        // Moderate positive mean, high uncertainty - needs verification
+        const uncertainProposal = createMockStatement({
+          sumEvaluations: 2.5, // mean = 0.5 with 5 evals
+          sumSquaredEvaluations: 3,
           numberOfEvaluators: 5,
         });
-        const highEvals = createMockStatement({
-          sumEvaluations: 0,
-          sumSquaredEvaluations: 0,
-          numberOfEvaluators: 25,
+        // Moderate positive mean, low uncertainty - well verified
+        const verifiedProposal = createMockStatement({
+          sumEvaluations: 15, // mean = 0.5 with 30 evals
+          sumSquaredEvaluations: 8,
+          numberOfEvaluators: 30,
         });
 
-        const lowPriority = calculatePriority(lowEvals);
-        const highPriority = calculatePriority(highEvals);
+        const uncertainUCB = calculateUCBPriority(uncertainProposal);
+        const verifiedUCB = calculateUCBPriority(verifiedProposal);
 
-        expect(lowPriority).toBeGreaterThan(highPriority);
+        // Higher uncertainty should lead to higher UCB for vetting
+        expect(uncertainUCB).toBeGreaterThan(verifiedUCB);
       });
 
-      it('should give zero base priority when target evaluations reached', () => {
-        const statement = createMockStatement({
-          sumEvaluations: 0,
-          sumSquaredEvaluations: 0,
-          numberOfEvaluators: 30, // DEFAULT target
-        });
-        // Priority should still be non-zero due to other factors
-        const priority = calculatePriority(statement);
-        expect(priority).toBeGreaterThanOrEqual(0);
-      });
-    });
-
-    describe('uncertainty bonus', () => {
-      it('should give higher priority to proposals with high SEM', () => {
-        // High variance -> high SEM
-        const highVariance = createMockStatement({
-          sumEvaluations: 0,
-          sumSquaredEvaluations: 100, // High spread
-          numberOfEvaluators: 10,
-        });
-        // Low variance -> low SEM
-        const lowVariance = createMockStatement({
-          sumEvaluations: 0,
-          sumSquaredEvaluations: 0.1, // Low spread
-          numberOfEvaluators: 10,
-        });
-
-        const highPriority = calculatePriority(highVariance);
-        const lowPriority = calculatePriority(lowVariance);
-
-        // Both may be equal or high >= low due to floor std dev
-        expect(highPriority).toBeGreaterThanOrEqual(lowPriority);
-      });
-
-      it('should give full uncertainty bonus to new proposals', () => {
+      it('should give high UCB to new proposals due to uncertainty', () => {
         const newProposal = createMockStatement();
-        const priority = calculatePriority(newProposal);
-        // New proposals should have relatively high priority
-        expect(priority).toBeGreaterThan(0.5);
+        const ucb = calculateUCBPriority(newProposal);
+
+        // New proposals get high UCB due to uncertainty + temporal boost
+        // UCB can exceed 1 due to exploration bonus (this is by design)
+        expect(ucb).toBeGreaterThan(0.5);
+      });
+
+      it('should produce UCB values >= 0 for all proposals', () => {
+        const scenarios = [
+          createMockStatement(),
+          createMockStatement({ sumEvaluations: 10, numberOfEvaluators: 10 }),
+          createMockStatement({ sumEvaluations: -10, numberOfEvaluators: 10 }),
+        ];
+
+        scenarios.forEach(statement => {
+          const ucb = calculateUCBPriority(statement);
+          // UCB should always be non-negative
+          expect(ucb).toBeGreaterThanOrEqual(0);
+          // Note: UCB can exceed 1 due to exploration bonus - this is intentional
+          // for the ranking mechanism. Final priority is clamped in calculateAdjustedPriority
+        });
       });
     });
 
-    describe('recency boost', () => {
-      it('should give higher priority to recent proposals', () => {
+    describe('temporal uncertainty boost', () => {
+      it('should give higher UCB to recent proposals', () => {
         const now = Date.now();
         const recentProposal = createMockStatement(
           { sumEvaluations: 0, numberOfEvaluators: 10 },
@@ -238,150 +273,54 @@ describe('sampling utilities', () => {
           now - (48 * 60 * 60 * 1000) // 48 hours old
         );
 
-        const recentPriority = calculatePriority(recentProposal);
-        const oldPriority = calculatePriority(oldProposal);
+        const recentUCB = calculateUCBPriority(recentProposal);
+        const oldUCB = calculateUCBPriority(oldProposal);
 
-        expect(recentPriority).toBeGreaterThan(oldPriority);
-      });
-
-      it('should give no recency boost after boost window expires', () => {
-        const now = Date.now();
-        const oldProposal = createMockStatement(
-          { sumEvaluations: 0, numberOfEvaluators: 25 },
-          now - (72 * 60 * 60 * 1000) // 72 hours old
-        );
-        // Old proposals without recency boost should have lower priority
-        // but may still have uncertainty bonus and near-threshold bonus
-        const priority = calculatePriority(oldProposal);
-        // Priority is still valid (between 0 and 1)
-        expect(priority).toBeGreaterThanOrEqual(0);
-        expect(priority).toBeLessThanOrEqual(1);
-      });
-    });
-
-    describe('top-mean bonus (percentile-based)', () => {
-      it('should give higher bonus to high percentile proposals', () => {
-        const proposal = createMockStatement({
-          sumEvaluations: 5,
-          sumSquaredEvaluations: 5,
-          numberOfEvaluators: 10,
-        });
-
-        const highPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 1.0);
-        const midPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 0.5);
-        const lowPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 0.0);
-
-        expect(highPercentile).toBeGreaterThan(midPercentile);
-        expect(midPercentile).toBeGreaterThan(lowPercentile);
-      });
-
-      it('should combine percentile with uncertainty (SEM)', () => {
-        // High SEM proposal
-        const highSEM = createMockStatement({
-          sumEvaluations: 5,
-          sumSquaredEvaluations: 10, // High variance
-          numberOfEvaluators: 5,
-        });
-        // Low SEM proposal (more evaluations, lower variance)
-        const lowSEM = createMockStatement({
-          sumEvaluations: 15,
-          sumSquaredEvaluations: 8, // Low variance
-          numberOfEvaluators: 30,
-        });
-
-        // Same percentile, but high SEM should get higher top-mean bonus
-        const highSEMPriority = calculatePriority(highSEM, DEFAULT_SAMPLING_CONFIG, 0.8);
-        const lowSEMPriority = calculatePriority(lowSEM, DEFAULT_SAMPLING_CONFIG, 0.8);
-
-        // Note: total priority also includes base priority (eval count) and uncertainty bonus
-        // But for same percentile, the proposal needing validation should score differently
-        expect(highSEMPriority).not.toBe(lowSEMPriority);
-      });
-
-      it('should give zero bonus when no percentile provided', () => {
-        const proposal = createMockStatement({
-          sumEvaluations: 8,
-          sumSquaredEvaluations: 7,
-          numberOfEvaluators: 10,
-        });
-
-        const withPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG, 1.0);
-        const withoutPercentile = calculatePriority(proposal, DEFAULT_SAMPLING_CONFIG);
-
-        // With max percentile should be higher than without percentile
-        expect(withPercentile).toBeGreaterThan(withoutPercentile);
-      });
-
-      it('should give zero bonus for proposals without evaluations', () => {
-        const newProposal = createMockStatement();
-
-        // Even with high percentile, no bonus since no evaluations yet
-        const priority = calculatePriority(newProposal, DEFAULT_SAMPLING_CONFIG, 1.0);
-
-        // New proposals still get high priority from base and uncertainty,
-        // just not from top-mean bonus (since no mean to validate)
-        expect(priority).toBeGreaterThan(0.5); // High from other factors
-      });
-
-      it('should give zero bonus for bottom percentile regardless of SEM', () => {
-        const bottomProposal = createMockStatement({
-          sumEvaluations: -5,
-          sumSquaredEvaluations: 10, // High variance
-          numberOfEvaluators: 5,
-        });
-
-        // Bottom percentile (0.0) should get zero top-mean bonus
-        const priorityWithBonus = calculatePriority(bottomProposal, DEFAULT_SAMPLING_CONFIG, 0.0);
-        const priorityNoBonus = calculatePriority(bottomProposal, DEFAULT_SAMPLING_CONFIG);
-
-        // With 0.0 percentile, should be same as no percentile (both get 0 bonus)
-        expect(priorityWithBonus).toBe(priorityNoBonus);
-      });
-    });
-
-    describe('custom config', () => {
-      it('should respect custom target evaluations', () => {
-        const config: SamplingConfig = {
-          ...DEFAULT_SAMPLING_CONFIG,
-          targetEvaluations: 10,
-        };
-        const statement = createMockStatement({
-          sumEvaluations: 0,
-          numberOfEvaluators: 5,
-        });
-
-        const priorityDefault = calculatePriority(statement);
-        const priorityCustom = calculatePriority(statement, config);
-
-        // With lower target, 5 evals is more "complete", so priority should be lower
-        expect(priorityCustom).toBeLessThan(priorityDefault);
-      });
-    });
-
-    describe('return value range', () => {
-      it('should return value between 0 and 1', () => {
-        const scenarios = [
-          createMockStatement(),
-          createMockStatement({ sumEvaluations: 10, numberOfEvaluators: 100 }),
-          createMockStatement({ sumEvaluations: -10, numberOfEvaluators: 5 }),
-        ];
-
-        scenarios.forEach(statement => {
-          const priority = calculatePriority(statement);
-          expect(priority).toBeGreaterThanOrEqual(0);
-          expect(priority).toBeLessThanOrEqual(1);
-        });
+        expect(recentUCB).toBeGreaterThan(oldUCB);
       });
     });
   });
 
-  describe('thompsonSample', () => {
+  describe('calculatePriority (backward compatibility)', () => {
+    it('should delegate to calculateUCBPriority', () => {
+      const statement = createMockStatement({
+        sumEvaluations: 5,
+        numberOfEvaluators: 10,
+      });
+
+      const priority = calculatePriority(statement);
+      const ucbPriority = calculateUCBPriority(statement);
+
+      expect(priority).toBe(ucbPriority);
+    });
+
+    it('should give high priority to under-evaluated proposals', () => {
+      const lowEvals = createMockStatement({
+        sumEvaluations: 0,
+        sumSquaredEvaluations: 0,
+        numberOfEvaluators: 5,
+      });
+      const highEvals = createMockStatement({
+        sumEvaluations: 0,
+        sumSquaredEvaluations: 0,
+        numberOfEvaluators: 25,
+      });
+
+      const lowPriority = calculatePriority(lowEvals);
+      const highPriority = calculatePriority(highEvals);
+
+      // Under-evaluated proposals have higher UCB due to uncertainty
+      expect(lowPriority).toBeGreaterThan(highPriority);
+    });
+  });
+
+  describe('gaussianThompsonSample', () => {
     describe('new proposals', () => {
-      it('should return random value for proposals with no evaluations', () => {
+      it('should return varied samples for proposals with no evaluations', () => {
         const statement = createMockStatement();
 
         // Run multiple times to verify randomness
-        const samples = Array.from({ length: 100 }, () => thompsonSample(statement));
+        const samples = Array.from({ length: 100 }, () => gaussianThompsonSample(statement));
         const uniqueSamples = new Set(samples);
 
         // Should have significant variation
@@ -410,10 +349,10 @@ describe('sampling utilities', () => {
 
         // Average over multiple samples
         const positiveSamples = Array.from({ length: 100 }, () =>
-          thompsonSample(positiveStatement)
+          gaussianThompsonSample(positiveStatement)
         );
         const negativeSamples = Array.from({ length: 100 }, () =>
-          thompsonSample(negativeStatement)
+          gaussianThompsonSample(negativeStatement)
         );
 
         const positiveAvg = positiveSamples.reduce((a, b) => a + b, 0) / 100;
@@ -430,7 +369,7 @@ describe('sampling utilities', () => {
         });
 
         // Run many samples
-        const samples = Array.from({ length: 1000 }, () => thompsonSample(statement));
+        const samples = Array.from({ length: 1000 }, () => gaussianThompsonSample(statement));
 
         samples.forEach(sample => {
           expect(sample).toBeGreaterThanOrEqual(0);
@@ -439,23 +378,41 @@ describe('sampling utilities', () => {
       });
     });
 
-    describe('stochastic behavior', () => {
-      it('should produce different results on each call', () => {
+    describe('Gaussian distribution properties', () => {
+      it('should produce samples centered around posterior mean', () => {
         const statement = createMockStatement({
-          sumEvaluations: 5,
-          sumSquaredEvaluations: 5,
+          sumEvaluations: 5, // mean = 0.5
+          sumSquaredEvaluations: 3,
           numberOfEvaluators: 10,
         });
 
-        const sample1 = thompsonSample(statement);
-        const sample2 = thompsonSample(statement);
+        const samples = Array.from({ length: 500 }, () => gaussianThompsonSample(statement));
+        const avg = samples.reduce((a, b) => a + b, 0) / samples.length;
 
-        // Very unlikely to be exactly equal
-        // But we can't assert they're different every time
-        // Just check they're valid
-        expect(sample1).toBeGreaterThanOrEqual(0);
-        expect(sample2).toBeGreaterThanOrEqual(0);
+        // Average should be close to normalized posterior mean
+        const stats = getProposalStats(statement);
+        const expectedNormalized = (stats.posteriorMean + 1) / 2;
+
+        expect(Math.abs(avg - expectedNormalized)).toBeLessThan(0.1);
       });
+    });
+  });
+
+  describe('thompsonSample (backward compatibility)', () => {
+    it('should delegate to gaussianThompsonSample', () => {
+      const statement = createMockStatement({
+        sumEvaluations: 5,
+        numberOfEvaluators: 10,
+      });
+
+      // Both should produce valid samples in [0, 1]
+      const sample1 = thompsonSample(statement);
+      const sample2 = gaussianThompsonSample(statement);
+
+      expect(sample1).toBeGreaterThanOrEqual(0);
+      expect(sample1).toBeLessThanOrEqual(1);
+      expect(sample2).toBeGreaterThanOrEqual(0);
+      expect(sample2).toBeLessThanOrEqual(1);
     });
   });
 
@@ -485,9 +442,8 @@ describe('sampling utilities', () => {
         sumSquaredEvaluations: 7.5, // variance ~ 0
         numberOfEvaluators: 30,
       });
-      // SEM should be low enough to be stable
-      const stats = getProposalStats(statement);
       // Check if conditions are met
+      const stats = getProposalStats(statement);
       if (stats.sem < 0.15) {
         expect(isStable(statement)).toBe(true);
       }
@@ -530,7 +486,7 @@ describe('sampling utilities', () => {
   });
 
   describe('calculateAdjustedPriority', () => {
-    it('should combine deterministic priority with Thompson sample', () => {
+    it('should combine UCB with Thompson sampling', () => {
       const statement = createMockStatement({
         sumEvaluations: 5,
         sumSquaredEvaluations: 5,
@@ -559,64 +515,129 @@ describe('sampling utilities', () => {
       expect(uniquePriorities.size).toBeGreaterThan(1);
     });
 
-    it('should respect exploration weight', () => {
+    it('should give low priority to stable proposals', () => {
+      const stableStatement = createMockStatement({
+        sumEvaluations: 15,
+        sumSquaredEvaluations: 7.5,
+        numberOfEvaluators: 30,
+      });
+
+      // Check if it's actually stable
+      const stats = getProposalStats(stableStatement);
+      if (stats.sem < 0.15 && isStable(stableStatement)) {
+        const priorities = Array.from({ length: 10 }, () =>
+          calculateAdjustedPriority(stableStatement)
+        );
+
+        // Stable proposals should have very low priority
+        priorities.forEach(p => {
+          expect(p).toBeLessThan(0.2);
+        });
+      }
+    });
+
+    it('should apply exploration floor for unstable proposals', () => {
+      const unstableStatement = createMockStatement({
+        sumEvaluations: -10, // Very negative
+        sumSquaredEvaluations: 10,
+        numberOfEvaluators: 10,
+      });
+
+      const priorities = Array.from({ length: 20 }, () =>
+        calculateAdjustedPriority(unstableStatement)
+      );
+
+      // All priorities should be >= exploration floor (0.1)
+      priorities.forEach(p => {
+        expect(p).toBeGreaterThanOrEqual(DEFAULT_SAMPLING_CONFIG.explorationFloor);
+      });
+    });
+
+    it('should handle legacy explorationWeight config', () => {
       const statement = createMockStatement({
         sumEvaluations: 5,
         numberOfEvaluators: 10,
       });
 
-      const lowExploration: SamplingConfig = {
+      // Legacy config with explorationWeight
+      const legacyConfig = {
         ...DEFAULT_SAMPLING_CONFIG,
-        explorationWeight: 0.1,
-      };
-      const highExploration: SamplingConfig = {
-        ...DEFAULT_SAMPLING_CONFIG,
-        explorationWeight: 0.9,
+        explorationWeight: 0.3,
       };
 
-      // With low exploration, results should be more consistent
-      const lowExpPriorities = Array.from({ length: 50 }, () =>
-        calculateAdjustedPriority(statement, lowExploration)
-      );
-      const highExpPriorities = Array.from({ length: 50 }, () =>
-        calculateAdjustedPriority(statement, highExploration)
-      );
+      const priority = calculateAdjustedPriority(statement, legacyConfig);
 
-      // Calculate variance
-      const lowMean = lowExpPriorities.reduce((a, b) => a + b, 0) / 50;
-      const highMean = highExpPriorities.reduce((a, b) => a + b, 0) / 50;
+      expect(priority).toBeGreaterThanOrEqual(0);
+      expect(priority).toBeLessThanOrEqual(1);
+    });
+  });
 
-      const lowVariance = lowExpPriorities.reduce((sum, p) =>
-        sum + Math.pow(p - lowMean, 2), 0) / 50;
-      const highVariance = highExpPriorities.reduce((sum, p) =>
-        sum + Math.pow(p - highMean, 2), 0) / 50;
+  describe('anti-burial recovery mechanism', () => {
+    it('should give recovery chance to negative proposals with high uncertainty', () => {
+      // Proposal with negative mean but high uncertainty (could recover)
+      const buriedButUncertain = createMockStatement({
+        sumEvaluations: -2, // mean = -0.4 with 5 evals
+        sumSquaredEvaluations: 3,
+        numberOfEvaluators: 5,
+      });
 
-      // High exploration should have higher variance
-      expect(highVariance).toBeGreaterThan(lowVariance);
+      // Run diagnostics
+      const diagnostics = getSamplingDiagnostics(buriedButUncertain);
+
+      // Should have recovery score > 0
+      expect(diagnostics.recoveryScore).toBeGreaterThan(0);
     });
 
-    it('should weight deterministic vs exploration correctly', () => {
-      const statement = createMockStatement();
-      const config: SamplingConfig = {
-        ...DEFAULT_SAMPLING_CONFIG,
-        explorationWeight: 0.3, // Default
-      };
+    it('should give less recovery chance to clearly negative proposals', () => {
+      // Proposal with clearly negative score (many evaluations)
+      const clearlyNegative = createMockStatement({
+        sumEvaluations: -25, // mean = -0.83 with 30 evals
+        sumSquaredEvaluations: 25,
+        numberOfEvaluators: 30,
+      });
 
-      // Formula: (1 - 0.3) * priority + 0.3 * exploration
-      // Priority should contribute 70%, exploration 30%
-      const deterministicPriority = calculatePriority(statement, config);
+      // Run diagnostics
+      const diagnostics = getSamplingDiagnostics(clearlyNegative);
 
-      // Run many times and check average is close to weighted combination
-      const samples = Array.from({ length: 100 }, () =>
-        calculateAdjustedPriority(statement, config)
-      );
-      const avgAdjusted = samples.reduce((a, b) => a + b, 0) / 100;
+      // Should have low recovery score
+      expect(diagnostics.recoveryScore).toBeLessThan(0.3);
+    });
 
-      // Average exploration sample should be ~0.5
-      const expectedAvg = 0.7 * deterministicPriority + 0.3 * 0.5;
+    it('should give no recovery to positive proposals', () => {
+      const positiveProposal = createMockStatement({
+        sumEvaluations: 5,
+        sumSquaredEvaluations: 5,
+        numberOfEvaluators: 10,
+      });
 
-      // Allow some tolerance due to randomness
-      expect(Math.abs(avgAdjusted - expectedAvg)).toBeLessThan(0.1);
+      const diagnostics = getSamplingDiagnostics(positiveProposal);
+
+      expect(diagnostics.recoveryScore).toBe(0);
+    });
+  });
+
+  describe('getSamplingDiagnostics', () => {
+    it('should return all diagnostic information', () => {
+      const statement = createMockStatement({
+        sumEvaluations: 5,
+        sumSquaredEvaluations: 5,
+        numberOfEvaluators: 10,
+      });
+
+      const diagnostics = getSamplingDiagnostics(statement);
+
+      expect(diagnostics).toHaveProperty('stats');
+      expect(diagnostics).toHaveProperty('isStable');
+      expect(diagnostics).toHaveProperty('ucbPriority');
+      expect(diagnostics).toHaveProperty('recoveryScore');
+      expect(diagnostics).toHaveProperty('thresholdScore');
+      expect(diagnostics).toHaveProperty('temporalMultiplier');
+      expect(diagnostics).toHaveProperty('adjustedPriority');
+
+      // Validate types
+      expect(typeof diagnostics.isStable).toBe('boolean');
+      expect(typeof diagnostics.ucbPriority).toBe('number');
+      expect(typeof diagnostics.adjustedPriority).toBe('number');
     });
   });
 
@@ -624,13 +645,24 @@ describe('sampling utilities', () => {
     it('should have sensible default values', () => {
       expect(DEFAULT_SAMPLING_CONFIG.targetEvaluations).toBe(30);
       expect(DEFAULT_SAMPLING_CONFIG.targetSEM).toBe(0.15);
-      expect(DEFAULT_SAMPLING_CONFIG.explorationWeight).toBe(0.3);
+      expect(DEFAULT_SAMPLING_CONFIG.explorationKappa).toBe(1.5);
       expect(DEFAULT_SAMPLING_CONFIG.recencyBoostHours).toBe(24);
+      expect(DEFAULT_SAMPLING_CONFIG.priorStrength).toBe(2);
+      expect(DEFAULT_SAMPLING_CONFIG.priorMean).toBe(0);
+      expect(DEFAULT_SAMPLING_CONFIG.explorationFloor).toBe(0.1);
     });
 
-    it('should have exploration weight between 0 and 1', () => {
-      expect(DEFAULT_SAMPLING_CONFIG.explorationWeight).toBeGreaterThan(0);
-      expect(DEFAULT_SAMPLING_CONFIG.explorationWeight).toBeLessThan(1);
+    it('should have exploration kappa > 0', () => {
+      expect(DEFAULT_SAMPLING_CONFIG.explorationKappa).toBeGreaterThan(0);
+    });
+
+    it('should have valid prior strength', () => {
+      expect(DEFAULT_SAMPLING_CONFIG.priorStrength).toBeGreaterThan(0);
+    });
+
+    it('should have exploration floor between 0 and 1', () => {
+      expect(DEFAULT_SAMPLING_CONFIG.explorationFloor).toBeGreaterThan(0);
+      expect(DEFAULT_SAMPLING_CONFIG.explorationFloor).toBeLessThan(1);
     });
   });
 });

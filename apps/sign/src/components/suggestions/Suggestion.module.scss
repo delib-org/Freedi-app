@@ -122,26 +122,33 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
+  gap: 4px;
+  min-width: 36px;
   height: 28px;
-  padding: 0;
+  padding: 0 6px;
   background: transparent;
   border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
   border-radius: var(--radius-sm);
   color: var(--text-caption);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 
   &:hover:not(:disabled) {
     transform: scale(1.05);
   }
 
   &:disabled {
-    opacity: 0.5;
     cursor: not-allowed;
   }
 
+  // Voting state - subtle feedback while request is in flight
+  &.voting {
+    opacity: 0.7;
+  }
+
   &.upvote {
+    flex-direction: row;
+
     &:hover:not(:disabled) {
       background: rgba(76, 175, 80, 0.1);
       border-color: var(--agree);
@@ -152,10 +159,18 @@
       background: var(--agree);
       border-color: var(--agree);
       color: white;
+      // Instant visual feedback with subtle pulse
+      animation: voteActivate 0.2s ease-out;
+
+      .voteCount--positive {
+        color: white;
+      }
     }
   }
 
   &.downvote {
+    flex-direction: row;
+
     &:hover:not(:disabled) {
       background: rgba(244, 67, 54, 0.1);
       border-color: var(--disagree);
@@ -166,16 +181,50 @@
       background: var(--disagree);
       border-color: var(--disagree);
       color: white;
+      // Instant visual feedback with subtle pulse
+      animation: voteActivate 0.2s ease-out;
+
+      .voteCount--negative {
+        color: white;
+      }
     }
+  }
+}
+
+// Subtle activation animation for instant feedback
+@keyframes voteActivate {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.voteCount {
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+
+  &--positive {
+    color: var(--agree);
+  }
+
+  &--negative {
+    color: var(--disagree);
   }
 }
 
 .voteScore {
   font-size: 0.8125rem;
   font-weight: 600;
-  min-width: 24px;
+  min-width: 40px;
   text-align: center;
   color: var(--text-caption);
+  transition: opacity 0.2s ease;
 
   &.positive {
     color: var(--agree);
@@ -183,6 +232,46 @@
 
   &.negative {
     color: var(--disagree);
+  }
+
+  // Loading state - show dots while consensus is being recalculated
+  &.loading {
+    opacity: 0.7;
+  }
+}
+
+// Consensus loading indicator - three animated dots
+.consensusLoader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+
+.dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background-color: var(--text-caption);
+  animation: consensusPulse 1s ease-in-out infinite;
+
+  &:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+}
+
+@keyframes consensusPulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
   }
 }
 
@@ -195,11 +284,54 @@
   gap: var(--spacing-xs);
 }
 
+/* Current paragraph variant - "Standing Champion" styling */
+.suggestion--current {
+  border-left-color: var(--btn-primary, #1B2650);
+  background: rgba(27, 38, 80, 0.02);
+  position: relative;
+}
+
+.currentBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px var(--spacing-xs);
+  background: var(--btn-primary, #1B2650);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.currentBadge svg {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.avatar--current {
+  background: var(--btn-primary, #1B2650);
+}
+
 /* RTL Support - using data-text-dir attribute for document-specific direction */
 :global([data-text-dir="rtl"]) {
   .suggestion {
     border-left: none;
     border-right: 3px solid var(--warning, #f0ad4e);
+  }
+
+  .suggestion--current {
+    border-left: none;
+    border-right-color: var(--btn-primary, #1B2650);
+  }
+
+  .currentBadge {
+    margin-left: 0;
+    margin-right: auto;
   }
 
   .header {
@@ -216,6 +348,16 @@
 
   .votingBar {
     flex-direction: row-reverse;
+  }
+
+  .voteButton {
+    &.upvote {
+      flex-direction: row-reverse;
+    }
+
+    &.downvote {
+      flex-direction: row-reverse;
+    }
   }
 
   .suggestedText {
@@ -240,6 +382,16 @@
     border-right: 3px solid var(--warning, #f0ad4e);
   }
 
+  .suggestion--current {
+    border-left: none;
+    border-right-color: var(--btn-primary, #1B2650);
+  }
+
+  .currentBadge {
+    margin-left: 0;
+    margin-right: auto;
+  }
+
   .header {
     flex-direction: row-reverse;
   }
@@ -254,6 +406,16 @@
 
   .votingBar {
     flex-direction: row-reverse;
+  }
+
+  .voteButton {
+    &.upvote {
+      flex-direction: row-reverse;
+    }
+
+    &.downvote {
+      flex-direction: row-reverse;
+    }
   }
 
   .suggestedText {

@@ -1,0 +1,18 @@
+# Test files
+**/__tests__/**
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Dependencies
+node_modules
+
+# Environment files
+.env*

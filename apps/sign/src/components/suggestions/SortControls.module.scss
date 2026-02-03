@@ -1,0 +1,93 @@
+.sortControls {
+  display: flex;
+  margin-bottom: var(--spacing-md, 1rem);
+
+  // RTL mode: reverse the visual order using flex-direction
+  &.rtl {
+    flex-direction: row-reverse;
+  }
+}
+
+.sortButton {
+  flex: 1;
+  padding: var(--spacing-xs, 0.5rem) var(--spacing-sm, 0.75rem);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-caption, #6b7280);
+  background: transparent;
+  border: 1px solid var(--border-light, #e5e7eb);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  // Remove border overlap between buttons (LTR)
+  &:not(:first-child) {
+    margin-left: -1px;
+  }
+
+  // First button: rounded left corners (LTR)
+  &.first {
+    border-radius: var(--radius-sm, 8px) 0 0 var(--radius-sm, 8px);
+  }
+
+  // Last button: rounded right corners (LTR)
+  &.last {
+    border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+  }
+
+  // RTL mode: reverse margins and border-radius
+  .rtl & {
+    &:not(:first-child) {
+      margin-left: 0;
+      margin-right: -1px;
+    }
+
+    // First button in DOM: rounded right corners (RTL visual order)
+    &.first {
+      border-radius: 0 var(--radius-sm, 8px) var(--radius-sm, 8px) 0;
+    }
+
+    // Last button in DOM: rounded left corners (RTL visual order)
+    &.last {
+      border-radius: var(--radius-sm, 8px) 0 0 var(--radius-sm, 8px);
+    }
+  }
+
+  &:hover:not(:disabled):not(.active) {
+    background: var(--background, #f9fafb);
+    border-color: var(--text-caption, #6b7280);
+    z-index: 1;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #3b82f6);
+    outline-offset: 2px;
+    z-index: 2;
+  }
+
+  &.active {
+    background: var(--btn-primary, #3b82f6);
+    border-color: var(--btn-primary, #3b82f6);
+    color: white;
+    z-index: 1;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 600px) {
+  .sortButton {
+    padding: var(--spacing-xs, 0.5rem);
+    font-size: 0.75rem;
+  }
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .sortButton {
+    transition: none;
+  }
+}

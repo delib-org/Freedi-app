@@ -1,14 +1,22 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
 import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { SignUser } from '@/lib/utils/user';
+import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
+import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
+import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import DocumentClient from './DocumentClient';
-import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
+
+// Import ParagraphCard dynamically to prevent SSR hydration mismatches
+const ParagraphCard = dynamic(() => import('../paragraph/ParagraphCard'), {
+  ssr: false,
+  loading: () => <div style={{ minHeight: '100px', background: 'var(--card-default, #f5f5f5)', borderRadius: '8px', margin: '1rem 0' }} />,
+});
 import RejectButton from './RejectButton';
 import ExplanationButton from './ExplanationButton';
 import ExplanationVideoOverlay from './ExplanationVideoOverlay';
@@ -46,11 +54,13 @@ interface DocumentViewProps {
   headerColors?: HeaderColors;
   /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
   nonInteractiveNormalStyle?: boolean;
+  /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
+  enableHeadingNumbering?: boolean;
 }
 
 export default function DocumentView({
   document,
-  paragraphs,
+  paragraphs: initialParagraphs,
   user,
   userSignature,
   userApprovals,
@@ -69,11 +79,15 @@ export default function DocumentView({
   allowHeaderReactions = false,
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
+  enableHeadingNumbering = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
   // State to track if blocking video overlay has been dismissed
   const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
+
+  // Real-time paragraph updates - listens for admin-approved changes
+  const paragraphs = useRealtimeParagraphs(document.statementId, initialParagraphs);
 
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
@@ -82,8 +96,14 @@ export default function DocumentView({
   const paragraphContents = paragraphs.map((p) => p.content);
   const resolvedDirection = resolveTextDirection(textDirection, paragraphContents);
 
+  // Calculate heading numbers if enabled
+  const headingNumbers = useMemo(
+    () => enableHeadingNumbering ? calculateHeadingNumbers(paragraphs) : new Map(),
+    [paragraphs, enableHeadingNumbering]
+  );
+
   // Extract TOC items from paragraphs
-  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2);
+  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2, headingNumbers);
 
   // Determine if TOC should be shown
   const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
@@ -189,6 +209,7 @@ export default function DocumentView({
                 allowHeaderReactions={allowHeaderReactions}
                 headerColors={headerColors}
                 nonInteractiveNormalStyle={nonInteractiveNormalStyle}
+                headingNumber={headingNumbers.get(paragraph.paragraphId)}
               />
             ))
           )}

@@ -34,7 +34,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Subscribe to auth state changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
-      console.info('[AuthProvider] onAuthChange fired, user:', firebaseUser ? firebaseUser.email : 'null');
       setUser(firebaseUser);
 
       // Refresh token if user is logged in
@@ -42,7 +41,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const token = await firebaseUser.getIdToken();
           localStorage.setItem('firebase_token', token);
-          console.info('[AuthProvider] Token saved to localStorage');
         } catch (error) {
           console.error('[AuthProvider] Error refreshing token:', error);
         }

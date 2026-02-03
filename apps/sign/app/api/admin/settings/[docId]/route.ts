@@ -34,6 +34,8 @@ export interface DocumentSettings {
   allowHeaderReactions: boolean;
   /** Custom colors for each heading level */
   headerColors: HeaderColors;
+  /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
+  enableHeadingNumbering: boolean;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -60,6 +62,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   enhancedVisibility: false,
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
+  enableHeadingNumbering: false,
 };
 
 /**
@@ -131,6 +134,7 @@ export async function GET(
       enhancedVisibility: document?.signSettings?.enhancedVisibility ?? DEFAULT_SETTINGS.enhancedVisibility,
       allowHeaderReactions: document?.signSettings?.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions,
       headerColors: document?.signSettings?.headerColors ?? DEFAULT_SETTINGS.headerColors,
+      enableHeadingNumbering: document?.signSettings?.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering,
     };
 
     return NextResponse.json(settings);
@@ -279,6 +283,7 @@ export async function PUT(
       enhancedVisibility: body.enhancedVisibility !== undefined ? Boolean(body.enhancedVisibility) : (existingSettings.enhancedVisibility ?? DEFAULT_SETTINGS.enhancedVisibility),
       allowHeaderReactions: body.allowHeaderReactions !== undefined ? Boolean(body.allowHeaderReactions) : (existingSettings.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions),
       headerColors,
+      enableHeadingNumbering: body.enableHeadingNumbering !== undefined ? Boolean(body.enableHeadingNumbering) : (existingSettings.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering),
     };
 
     // Update document with new settings

@@ -4,6 +4,59 @@
   gap: var(--spacing-md);
 }
 
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm, 0.75rem);
+}
+
+.freezeButton {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs, 0.5rem);
+  padding: var(--spacing-xs, 0.5rem) var(--spacing-sm, 0.75rem);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  background: var(--background, #f9fafb);
+  color: var(--text-caption, #6b7280);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary, #3b82f6);
+    color: white;
+    border-color: var(--btn-primary, #3b82f6);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #3b82f6);
+    outline-offset: 2px;
+  }
+
+  &.frozen {
+    background: var(--success, #10b981);
+    color: white;
+    border-color: var(--success, #10b981);
+
+    &:hover:not(:disabled) {
+      background: var(--success-dark, #059669);
+      border-color: var(--success-dark, #059669);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -68,6 +121,45 @@
   margin: 0;
 }
 
+/* Current version section */
+.currentSection {
+  margin-bottom: var(--spacing-sm);
+}
+
+.sectionLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--spacing-xs);
+}
+
+/* Divider between sections */
+.sectionDivider {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin: var(--spacing-md) 0 var(--spacing-sm);
+}
+
+.sectionDivider::before,
+.sectionDivider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-light, #e5e7eb);
+}
+
+.dividerLabel {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-caption);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
 .hasNotice {
   padding: var(--spacing-sm);
   background: rgba(240, 173, 78, 0.1);
@@ -130,6 +222,10 @@
   .empty {
     text-align: right;
   }
+
+  .sectionLabel {
+    text-align: right;
+  }
 }
 
 /* Also support standard dir="rtl" attribute */
@@ -149,6 +245,10 @@
   }
 
   .empty {
+    text-align: right;
+  }
+
+  .sectionLabel {
     text-align: right;
   }
 }

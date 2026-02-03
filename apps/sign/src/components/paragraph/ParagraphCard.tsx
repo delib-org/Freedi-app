@@ -35,6 +35,8 @@ interface ParagraphCardProps {
   headerColors?: HeaderColors;
   /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
   nonInteractiveNormalStyle?: boolean;
+  /** Optional heading number to display (e.g., "1.2.1") */
+  headingNumber?: string;
 }
 
 export default function ParagraphCard({
@@ -54,6 +56,7 @@ export default function ParagraphCard({
   allowHeaderReactions = false,
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
+  headingNumber,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -224,34 +227,65 @@ export default function ParagraphCard({
   // Sanitize content to prevent XSS attacks
   // Memoized to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(
-    () => sanitizeHTML(paragraph.content),
+    () => sanitizeHTML(paragraph.content || ''),
     [paragraph.content]
   );
 
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
+  // Always render an element (never null) to maintain consistent structure between SSR and client
   const renderContent = () => {
     // Style object for headers with custom color
     const headerStyle = headerColor ? { color: headerColor } : undefined;
 
     switch (paragraphType) {
       case ParagraphType.h1:
-        return <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h2:
-        return <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h3:
-        return <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h4:
-        return <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h5:
-        return <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h6:
-        return <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
           </div>
         );
       case ParagraphType.table:
@@ -259,6 +293,7 @@ export default function ParagraphCard({
           <div
             className={styles.tableWrapper}
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            suppressHydrationWarning
           />
         );
       case ParagraphType.image: {
@@ -301,7 +336,7 @@ export default function ParagraphCard({
         );
       }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
     }
   };
 
@@ -336,7 +371,7 @@ export default function ParagraphCard({
         </div>
       )}
 
-      <div className={styles.contentWrapper}>
+      <div className={styles.contentWrapper} suppressHydrationWarning>
         {renderContent()}
       </div>
 
