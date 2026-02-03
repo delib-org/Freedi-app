@@ -87,7 +87,7 @@ describe('swipeSlice', () => {
 
       const state = reducer(
         stateWithCards,
-        cardEvaluated({ statementId: 'stmt1', rating: RATING.LIKE })
+        cardEvaluated({ statementId: 'stmt1', rating: RATING.AGREE })
       );
 
       expect(state.evaluatedCardIds).toContain('stmt1');
@@ -106,7 +106,7 @@ describe('swipeSlice', () => {
       for (let i = 0; i < SWIPE.PROPOSAL_PROMPT_INTERVAL; i++) {
         state = reducer(
           state,
-          cardEvaluated({ statementId: `stmt${i}`, rating: RATING.LIKE })
+          cardEvaluated({ statementId: `stmt${i}`, rating: RATING.AGREE })
         );
       }
 
@@ -122,13 +122,13 @@ describe('swipeSlice', () => {
 
       const state = reducer(
         offlineState,
-        cardEvaluated({ statementId: 'stmt1', rating: RATING.LIKE })
+        cardEvaluated({ statementId: 'stmt1', rating: RATING.AGREE })
       );
 
       expect(state.pendingEvaluations).toHaveLength(1);
       expect(state.pendingEvaluations[0]).toMatchObject({
         statementId: 'stmt1',
-        rating: RATING.LIKE,
+        rating: RATING.AGREE,
       });
     });
   });
@@ -165,7 +165,7 @@ describe('swipeSlice', () => {
       const stateWithPending = {
         ...initialState,
         pendingEvaluations: [
-          { statementId: 'stmt1', rating: RATING.LIKE, timestamp: Date.now() },
+          { statementId: 'stmt1', rating: RATING.AGREE, timestamp: Date.now() },
         ],
       };
 
@@ -228,7 +228,7 @@ describe('swipeSlice', () => {
         userProposalCount: 5,
         showProposalPrompt: true,
         pendingEvaluations: [
-          { statementId: 'stmt3', rating: RATING.LIKE, timestamp: Date.now() },
+          { statementId: 'stmt3', rating: RATING.AGREE, timestamp: Date.now() },
         ],
         isOnline: false,
         syncError: 'Error',

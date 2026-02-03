@@ -21,7 +21,7 @@ describe('swipeController', () => {
   describe('submitRating', () => {
     it('should accept valid rating', async () => {
       await expect(
-        submitRating('stmt1', RATING.LIKE, 'user1')
+        submitRating('stmt1', RATING.AGREE, 'user1')
       ).resolves.not.toThrow();
     });
 
@@ -33,23 +33,23 @@ describe('swipeController', () => {
 
     it('should throw ValidationError for missing statementId', async () => {
       await expect(
-        submitRating('', RATING.LIKE, 'user1')
+        submitRating('', RATING.AGREE, 'user1')
       ).rejects.toThrow(ValidationError);
     });
 
     it('should throw ValidationError for missing userId', async () => {
       await expect(
-        submitRating('stmt1', RATING.LIKE, '')
+        submitRating('stmt1', RATING.AGREE, '')
       ).rejects.toThrow(ValidationError);
     });
 
     it('should accept all valid rating values', async () => {
       const validRatings = [
-        RATING.HATE,
-        RATING.DISLIKE,
+        RATING.STRONGLY_DISAGREE,
+        RATING.DISAGREE,
         RATING.NEUTRAL,
-        RATING.LIKE,
-        RATING.LOVE,
+        RATING.AGREE,
+        RATING.STRONGLY_AGREE,
       ];
 
       for (const rating of validRatings) {
@@ -93,8 +93,8 @@ describe('swipeController', () => {
 
     it('should sync multiple evaluations', async () => {
       const pending = [
-        { statementId: 'stmt1', rating: RATING.LIKE, timestamp: Date.now() },
-        { statementId: 'stmt2', rating: RATING.LOVE, timestamp: Date.now() },
+        { statementId: 'stmt1', rating: RATING.AGREE, timestamp: Date.now() },
+        { statementId: 'stmt2', rating: RATING.STRONGLY_AGREE, timestamp: Date.now() },
       ];
 
       await expect(
@@ -104,8 +104,8 @@ describe('swipeController', () => {
 
     it('should continue on individual failures', async () => {
       const pending = [
-        { statementId: '', rating: RATING.LIKE, timestamp: Date.now() }, // Invalid - will fail
-        { statementId: 'stmt2', rating: RATING.LOVE, timestamp: Date.now() }, // Valid
+        { statementId: '', rating: RATING.AGREE, timestamp: Date.now() }, // Invalid - will fail
+        { statementId: 'stmt2', rating: RATING.STRONGLY_AGREE, timestamp: Date.now() }, // Valid
       ];
 
       // Should not throw even though first evaluation fails

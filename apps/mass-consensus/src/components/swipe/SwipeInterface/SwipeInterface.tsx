@@ -2,7 +2,13 @@
 
 /**
  * SwipeInterface - Main swipe interaction component
- * Integrates all swipe components into a cohesive interface
+ *
+ * Integrates all swipe components into a cohesive interface.
+ * Uses button-only interaction for precise 5-level agreement ratings.
+ *
+ * Rating Scale: -1 (Strongly Disagree) to +1 (Strongly Agree)
+ * - Negative ratings throw cards left
+ * - Neutral and positive ratings throw cards right
  */
 
 import React, { useEffect, useState } from 'react';
@@ -17,7 +23,6 @@ import {
   cardEvaluated,
   proposalSubmitted,
   dismissProposalPrompt,
-  setLoading,
   setError,
 } from '@/store/slices/swipeSlice';
 import {
@@ -25,11 +30,10 @@ import {
   selectEvaluatedCardsCount,
   selectTotalCardsCount,
   selectShowProposalPrompt,
-  selectIsLoading,
 } from '@/store/slices/swipeSelectors';
 import { submitRating } from '@/controllers/swipeController';
 import { submitProposal } from '@/controllers/proposalController';
-import { RATING } from '@/constants/common';
+import { RATING, RATING_CONFIG } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useToast } from '@/components/shared/Toast';
@@ -61,22 +65,26 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
   const showProposalPrompt = useSelector(selectShowProposalPrompt);
-  const isLoading = useSelector(selectIsLoading);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
-  const [programmaticThrow, setProgrammaticThrow] = useState<{ rating: number; direction: 'left' | 'right' } | null>(null);
+  const [programmaticThrow, setProgrammaticThrow] = useState<{
+    rating: RatingValue;
+    direction: 'left' | 'right';
+  } | null>(null);
 
   // Initialize cards on mount
   useEffect(() => {
     dispatch(setCardStack(initialSolutions));
 
     // Dispatch event to notify wrapper of available solutions count
-    window.dispatchEvent(new CustomEvent('solutions-loaded', {
-      detail: {
-        count: initialSolutions.length,
-        questionId: question.statementId
-      }
-    }));
+    window.dispatchEvent(
+      new CustomEvent('solutions-loaded', {
+        detail: {
+          count: initialSolutions.length,
+          questionId: question.statementId,
+        },
+      })
+    );
   }, [initialSolutions, dispatch, question.statementId]);
 
   // Handle showing proposal prompt
@@ -98,11 +106,9 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const handleSwipe = async (rating: RatingValue) => {
     if (!currentCard) return;
 
-    // Determine throw direction based on rating
-    // Negative ratings (HATE=-2, DISLIKE=-1) go left
-    // Positive ratings (LIKE=1, LOVE=2) go right
-    // Neutral (0) goes right by default
-    const direction = rating < 0 ? 'left' : 'right';
+    // Get throw direction from rating config
+    const config = RATING_CONFIG[rating];
+    const direction = config?.direction || 'right';
 
     // Trigger throw animation
     setProgrammaticThrow({ rating, direction });
@@ -114,12 +120,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         await submitRating(currentCard.statementId, rating, userId);
 
         // Update Redux state
-        dispatch(cardEvaluated({ statementId: currentCard.statementId, rating }));
+        dispatch(
+          cardEvaluated({ statementId: currentCard.statementId, rating })
+        );
 
         // Dispatch custom event for SurveyQuestionWrapper to track progress
-        window.dispatchEvent(new CustomEvent('solution-evaluated', {
-          detail: { questionId: question.statementId }
-        }));
+        window.dispatchEvent(
+          new CustomEvent('solution-evaluated', {
+            detail: { questionId: question.statementId },
+          })
+        );
 
         // Reset programmaticThrow for next card
         setProgrammaticThrow(null);
@@ -199,13 +209,20 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
             />
           </div>
 
-          {/* Rating buttons */}
+          {/* Rating buttons - ordered from negative to positive (left to right)
+              This matches natural reading direction and intuitive mapping:
+              - Left side = negative (disagree)
+              - Right side = positive (agree)
+          */}
           <div className="swipe-interface__rating-buttons">
-            <RatingButton rating={RATING.HATE} onClick={handleSwipe} />
-            <RatingButton rating={RATING.DISLIKE} onClick={handleSwipe} />
+            <RatingButton
+              rating={RATING.STRONGLY_DISAGREE}
+              onClick={handleSwipe}
+            />
+            <RatingButton rating={RATING.DISAGREE} onClick={handleSwipe} />
             <RatingButton rating={RATING.NEUTRAL} onClick={handleSwipe} />
-            <RatingButton rating={RATING.LIKE} onClick={handleSwipe} />
-            <RatingButton rating={RATING.LOVE} onClick={handleSwipe} />
+            <RatingButton rating={RATING.AGREE} onClick={handleSwipe} />
+            <RatingButton rating={RATING.STRONGLY_AGREE} onClick={handleSwipe} />
           </div>
         </>
       ) : (

@@ -240,9 +240,9 @@ export default function TestSwipePage() {
 
         {/* Main content - only show if we have a question */}
         {questionId && !isLoading && (
-
-        {/* Show intro or swipe interface */}
-        {showIntro ? (
+          <>
+            {/* Show intro or swipe interface */}
+            {showIntro ? (
           <div style={{ marginBottom: '2rem' }}>
             <QuestionIntro question={mockQuestion} onStart={handleStart} />
           </div>
@@ -276,11 +276,11 @@ export default function TestSwipePage() {
                     }}
                   >
                     <RatingButton
-                      rating={RATING.HATE}
+                      rating={RATING.STRONGLY_DISAGREE}
                       onClick={handleSwipe}
                     />
                     <RatingButton
-                      rating={RATING.DISLIKE}
+                      rating={RATING.DISAGREE}
                       onClick={handleSwipe}
                     />
                     <RatingButton
@@ -288,11 +288,11 @@ export default function TestSwipePage() {
                       onClick={handleSwipe}
                     />
                     <RatingButton
-                      rating={RATING.LIKE}
+                      rating={RATING.AGREE}
                       onClick={handleSwipe}
                     />
                     <RatingButton
-                      rating={RATING.LOVE}
+                      rating={RATING.STRONGLY_AGREE}
                       onClick={handleSwipe}
                     />
                   </div>
@@ -352,12 +352,13 @@ export default function TestSwipePage() {
           </div>
         )}
 
-        {/* Proposal Modal */}
-        <ProposalModal
-          isOpen={showProposalModal}
-          onClose={() => setShowProposalModal(false)}
-          onSubmit={handleProposalSubmit}
-        />
+            {/* Proposal Modal */}
+            <ProposalModal
+              isOpen={showProposalModal}
+              onClose={() => setShowProposalModal(false)}
+              onSubmit={handleProposalSubmit}
+            />
+          </>
         )}
       </div>
     </div>

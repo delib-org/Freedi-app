@@ -1,19 +1,45 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { RATING } from '@/constants/common';
+import { RATING, RATING_CONFIG } from '@/constants/common';
 import { playClickSound } from './soundEffects';
 
 interface RatingButtonsProps {
   onRate: (rating: number) => void;
 }
 
+// Build ratings array from RATING_CONFIG for consistent display
 const RATINGS = [
-  { value: RATING.HATE, emoji: '❌', label: 'Strongly dislike', color: 'var(--rating-hate)' },
-  { value: RATING.DISLIKE, emoji: '👎', label: 'Dislike', color: 'var(--rating-dislike)' },
-  { value: RATING.NEUTRAL, emoji: '😐', label: 'Neutral', color: 'var(--rating-neutral)' },
-  { value: RATING.LIKE, emoji: '👍', label: 'Like', color: 'var(--rating-like)' },
-  { value: RATING.LOVE, emoji: '❤️', label: 'Love it', color: 'var(--rating-love)' },
+  {
+    value: RATING.STRONGLY_DISAGREE,
+    emoji: RATING_CONFIG[RATING.STRONGLY_DISAGREE].emoji,
+    label: RATING_CONFIG[RATING.STRONGLY_DISAGREE].labelKey,
+    color: 'var(--rating-strongly-disagree)',
+  },
+  {
+    value: RATING.DISAGREE,
+    emoji: RATING_CONFIG[RATING.DISAGREE].emoji,
+    label: RATING_CONFIG[RATING.DISAGREE].labelKey,
+    color: 'var(--rating-disagree)',
+  },
+  {
+    value: RATING.NEUTRAL,
+    emoji: RATING_CONFIG[RATING.NEUTRAL].emoji,
+    label: RATING_CONFIG[RATING.NEUTRAL].labelKey,
+    color: 'var(--rating-neutral)',
+  },
+  {
+    value: RATING.AGREE,
+    emoji: RATING_CONFIG[RATING.AGREE].emoji,
+    label: RATING_CONFIG[RATING.AGREE].labelKey,
+    color: 'var(--rating-agree)',
+  },
+  {
+    value: RATING.STRONGLY_AGREE,
+    emoji: RATING_CONFIG[RATING.STRONGLY_AGREE].emoji,
+    label: RATING_CONFIG[RATING.STRONGLY_AGREE].labelKey,
+    color: 'var(--rating-strongly-agree)',
+  },
 ];
 
 /**

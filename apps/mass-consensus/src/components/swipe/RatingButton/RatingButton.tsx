@@ -1,17 +1,25 @@
 'use client';
 
 /**
- * Production RatingButton Component
- * Following CLAUDE.md guidelines
+ * RatingButton Component
+ *
+ * Displays a single rating option with emoji and accessible label.
+ * Uses the new -1 to +1 scale with 0.5 increments for precise agreement measurement.
+ *
+ * Design principles:
+ * - Emoji-only display for universal clarity
+ * - Color-coded backgrounds indicate sentiment intensity
+ * - Circular buttons for consistent tap targets
+ * - Scale effect on interaction for tactile feedback
  */
 
 import React from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
-import { RATING } from '@/constants/common';
+import { RATING, RATING_CONFIG } from '@/constants/common';
 import { playClickSound } from '../SwipeCard/soundEffects';
 
-export type RatingValue = typeof RATING[keyof typeof RATING];
+export type RatingValue = (typeof RATING)[keyof typeof RATING];
 
 export interface RatingButtonProps {
   rating: RatingValue;
@@ -20,14 +28,6 @@ export interface RatingButtonProps {
   size?: 'small' | 'medium' | 'large';
   className?: string;
 }
-
-const RATING_CONFIG = {
-  [RATING.LOVE]: { emoji: '❤️', labelKey: 'Love it', variant: 'love' },
-  [RATING.LIKE]: { emoji: '👍', labelKey: 'Like', variant: 'like' },
-  [RATING.NEUTRAL]: { emoji: '😐', labelKey: 'Neutral', variant: 'neutral' },
-  [RATING.DISLIKE]: { emoji: '👎', labelKey: 'Dislike', variant: 'dislike' },
-  [RATING.HATE]: { emoji: '❌', labelKey: 'Strongly dislike', variant: 'hate' },
-} as const;
 
 export default function RatingButton({
   rating,
@@ -60,9 +60,10 @@ export default function RatingButton({
       onClick={handleClick}
       disabled={disabled}
       aria-label={t(config.labelKey)}
+      title={t(config.labelKey)}
     >
       <span className="rating-button__emoji">{config.emoji}</span>
-      <span className="rating-button__label">{t(config.labelKey)}</span>
+      <span className="rating-button__label">{t(config.shortLabelKey)}</span>
     </button>
   );
 }

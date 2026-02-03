@@ -104,14 +104,64 @@ export const SWIPE = {
 } as const;
 
 /**
- * Rating values (-2 to +2 scale)
+ * Rating values (-1 to +1 scale with 0.5 increments)
+ * Designed for precise agreement measurement in consensus building
+ *
+ * Scale mapping:
+ * -1.0 = Strongly Disagree (clear opposition)
+ * -0.5 = Disagree (mild opposition)
+ *  0.0 = Neutral (no strong opinion)
+ * +0.5 = Agree (mild support)
+ * +1.0 = Strongly Agree (clear support)
  */
 export const RATING = {
-  HATE: -2,
-  DISLIKE: -1,
+  STRONGLY_DISAGREE: -1,
+  DISAGREE: -0.5,
   NEUTRAL: 0,
-  LIKE: 1,
-  LOVE: 2,
+  AGREE: 0.5,
+  STRONGLY_AGREE: 1,
+} as const;
+
+/**
+ * Rating display configuration
+ * Maps rating values to their visual representation
+ */
+export const RATING_CONFIG = {
+  [RATING.STRONGLY_AGREE]: {
+    emoji: '🎉',
+    labelKey: 'Strongly Agree',
+    shortLabelKey: 'Strong Yes',
+    variant: 'strongly-agree',
+    direction: 'right' as const,
+  },
+  [RATING.AGREE]: {
+    emoji: '👍',
+    labelKey: 'Agree',
+    shortLabelKey: 'Yes',
+    variant: 'agree',
+    direction: 'right' as const,
+  },
+  [RATING.NEUTRAL]: {
+    emoji: '🤔',
+    labelKey: 'Neutral',
+    shortLabelKey: 'Unsure',
+    variant: 'neutral',
+    direction: 'right' as const, // Neutral defaults to right (skip forward)
+  },
+  [RATING.DISAGREE]: {
+    emoji: '👎',
+    labelKey: 'Disagree',
+    shortLabelKey: 'No',
+    variant: 'disagree',
+    direction: 'left' as const,
+  },
+  [RATING.STRONGLY_DISAGREE]: {
+    emoji: '🚫',
+    labelKey: 'Strongly Disagree',
+    shortLabelKey: 'Strong No',
+    variant: 'strongly-disagree',
+    direction: 'left' as const,
+  },
 } as const;
 
 /**
