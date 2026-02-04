@@ -209,21 +209,20 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
             />
           </div>
 
-          {/* Rating buttons - ordered for RTL layout (positive to negative, left to right)
-              In RTL reading (right to left), this creates:
-              - Right side = positive (strongly agree)
-              - Left side = negative (strongly disagree)
+          {/* Rating buttons - universal layout (negative to positive, left to right)
+              - Left side = negative (strongly disagree, red)
+              - Right side = positive (strongly agree, green)
               Matches the zone strip colors on the card
           */}
           <div className="swipe-interface__rating-buttons">
-            <RatingButton rating={RATING.STRONGLY_AGREE} onClick={handleSwipe} />
-            <RatingButton rating={RATING.AGREE} onClick={handleSwipe} />
-            <RatingButton rating={RATING.NEUTRAL} onClick={handleSwipe} />
-            <RatingButton rating={RATING.DISAGREE} onClick={handleSwipe} />
             <RatingButton
               rating={RATING.STRONGLY_DISAGREE}
               onClick={handleSwipe}
             />
+            <RatingButton rating={RATING.DISAGREE} onClick={handleSwipe} />
+            <RatingButton rating={RATING.NEUTRAL} onClick={handleSwipe} />
+            <RatingButton rating={RATING.AGREE} onClick={handleSwipe} />
+            <RatingButton rating={RATING.STRONGLY_AGREE} onClick={handleSwipe} />
           </div>
         </>
       ) : (

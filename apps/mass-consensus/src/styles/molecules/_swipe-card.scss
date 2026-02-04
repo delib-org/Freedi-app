@@ -60,12 +60,12 @@
     opacity: 0.45; // Idle opacity - clearly visible
     transition: opacity 0.2s ease-out;
 
-    // Zone colors (RTL: right to left, positive to negative)
-    &--zone-0 { background: var(--rating-strongly-agree); }
-    &--zone-1 { background: var(--rating-agree); }
-    &--zone-2 { background: var(--rating-neutral); }
-    &--zone-3 { background: var(--rating-disagree); }
-    &--zone-4 { background: var(--rating-strongly-disagree); }
+    // Zone colors (Universal: left to right, negative to positive)
+    &--zone-0 { background: var(--rating-strongly-disagree); } // Red (left)
+    &--zone-1 { background: var(--rating-disagree); } // Orange
+    &--zone-2 { background: var(--rating-neutral); } // Yellow (center)
+    &--zone-3 { background: var(--rating-agree); } // Light green
+    &--zone-4 { background: var(--rating-strongly-agree); } // Green (right)
 
     // Highlighted state
     &--active {

@@ -47,9 +47,9 @@ function calculateCurrentZone(
   const zonesCrossed = Math.floor(Math.abs(dragX) / zoneWidth);
   const direction = dragX > 0 ? 1 : -1;
 
-  // In RTL, positive dragX (right) should decrease zone index, negative (left) should increase
-  const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
-  const zoneChange = isRTL ? -direction * zonesCrossed : direction * zonesCrossed;
+  // Universal: positive dragX (right) increases zone (toward 4/positive)
+  // negative dragX (left) decreases zone (toward 0/negative)
+  const zoneChange = direction * zonesCrossed;
 
   // Calculate new zone, clamped to valid range
   let newZone = startZone + zoneChange;
@@ -67,13 +67,8 @@ function calculateInitialZone(clientX: number, cardElement: HTMLDivElement | nul
   let zoneIndex = Math.floor(offsetX / zoneWidth);
   zoneIndex = Math.max(0, Math.min(ZONES.TOTAL_ZONES - 1, zoneIndex));
 
-  // In RTL layout, DOM order is reversed (4,3,2,1,0) so visual position matches correctly
-  // Map visual position to logical zone index
-  const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
-  if (isRTL) {
-    zoneIndex = ZONES.TOTAL_ZONES - 1 - zoneIndex;
-  }
-
+  // Universal layout: zone 0 (red) on left, zone 4 (green) on right
+  // Visual position directly maps to zone index
   return zoneIndex;
 }
 
@@ -206,17 +201,13 @@ export default function SwipeCard({
         // NORMAL: Horizontal drag with directional lock
         const deltaX = clientX - dragStart;
 
-        // Determine allowed direction based on grabbed zone
-        const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
-
+        // Universal directional lock based on zone position
         if (dragStartZone < ZONES.CENTER_ZONE_INDEX) {
-          // Positive zones (0, 1) - only allow movement toward more positive (rightward in RTL)
-          const constrainedDeltaX = isRTL ? Math.max(0, deltaX) : Math.max(0, deltaX);
-          setDragX(constrainedDeltaX);
+          // Negative zones (0, 1 - left side) - only allow leftward movement
+          setDragX(Math.min(0, deltaX));
         } else if (dragStartZone > ZONES.CENTER_ZONE_INDEX) {
-          // Negative zones (3, 4) - only allow movement toward more negative (leftward in RTL)
-          const constrainedDeltaX = isRTL ? Math.min(0, deltaX) : Math.min(0, deltaX);
-          setDragX(constrainedDeltaX);
+          // Positive zones (3, 4 - right side) - only allow rightward movement
+          setDragX(Math.max(0, deltaX));
         } else {
           // Center zone shouldn't reach here (isVerticalDrag handles it)
           setDragX(0);
@@ -275,8 +266,8 @@ export default function SwipeCard({
         // Sufficient horizontal swipe - evaluate rating using the initially grabbed zone
         const config = ZONE_CONFIG[dragStartZone];
         const rating = config.rating;
-        // Positive zones (0, 1) throw right, negative zones (3, 4) throw left
-        const direction = dragStartZone < ZONES.CENTER_ZONE_INDEX ? 'right' : 'left';
+        // Negative zones (0, 1 - left side) throw left, positive zones (3, 4 - right side) throw right
+        const direction = dragStartZone < ZONES.CENTER_ZONE_INDEX ? 'left' : 'right';
 
         if (isLearningMode) {
           // Show confirmation in learning mode
@@ -429,26 +420,19 @@ export default function SwipeCard({
     >
       {/* Zone strips (always visible) */}
       <div className="swipe-card__zones">
-        {(() => {
-          // Reverse zone order for RTL so visually: zone 0 on right, zone 4 on left
-          const isRTL = typeof document !== 'undefined' &&
-                       (document.dir === 'rtl' || document.documentElement.dir === 'rtl');
-          const zones = isRTL ? [...ZONE_CONFIG].reverse() : ZONE_CONFIG;
-
-          return zones.map((zone) => (
-            <div
-              key={zone.index}
-              className={clsx(
-                'swipe-card__zone',
-                `swipe-card__zone--zone-${zone.index}`,
-                highlightedZone === zone.index && 'swipe-card__zone--active'
-              )}
-              aria-hidden="true"
-            >
-              <span className="swipe-card__zone-emoji">{zone.emoji}</span>
-            </div>
-          ));
-        })()}
+        {ZONE_CONFIG.map((zone) => (
+          <div
+            key={zone.index}
+            className={clsx(
+              'swipe-card__zone',
+              `swipe-card__zone--zone-${zone.index}`,
+              highlightedZone === zone.index && 'swipe-card__zone--active'
+            )}
+            aria-hidden="true"
+          >
+            <span className="swipe-card__zone-emoji">{zone.emoji}</span>
+          </div>
+        ))}
       </div>
 
       {/* Content wrapper (above zones) */}

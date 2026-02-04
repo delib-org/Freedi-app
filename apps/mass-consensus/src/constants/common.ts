@@ -142,14 +142,14 @@ export const ZONES = {
 /**
  * Zone configuration for zone-based swipe system
  * Maps zone indices to ratings and visual elements
- * RTL layout: Positive (right) to Negative (left)
+ * Universal layout: Negative (left/red) to Positive (right/green)
  */
 export const ZONE_CONFIG = [
-  { index: 0, rating: RATING.STRONGLY_AGREE, emoji: '🎉' },
-  { index: 1, rating: RATING.AGREE, emoji: '👍' },
+  { index: 0, rating: RATING.STRONGLY_DISAGREE, emoji: '🚫' },
+  { index: 1, rating: RATING.DISAGREE, emoji: '👎' },
   { index: 2, rating: RATING.NEUTRAL, emoji: '↑' },
-  { index: 3, rating: RATING.DISAGREE, emoji: '👎' },
-  { index: 4, rating: RATING.STRONGLY_DISAGREE, emoji: '🚫' },
+  { index: 3, rating: RATING.AGREE, emoji: '👍' },
+  { index: 4, rating: RATING.STRONGLY_AGREE, emoji: '🎉' },
 ] as const;
 
 /**
