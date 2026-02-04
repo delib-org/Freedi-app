@@ -1,7 +1,7 @@
 @use '../mixins' as *;
 
 // Swipe Card - Tinder-style card component
-// Based on prototype, refactored for production use
+// Full-color zones with readable text overlay
 
 .swipe-card {
   // Base styles
@@ -12,15 +12,16 @@
   max-height: 60vh;
   background: var(--card-default);
   border-radius: 16px;
-  padding: clamp(1rem, 4vw, 1.5rem);
+  padding: clamp(1.5rem, 4vw, 2rem);
   box-shadow: var(--shadow-md);
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   touch-action: none;
   user-select: none;
   will-change: auto;
-  overflow: hidden; // Clip zone strips to card border
+  overflow: hidden;
 
   // States
   &--dragging {
@@ -29,7 +30,7 @@
   }
 
   &--idle {
-    cursor: grab; // Grab cursor indicates swipeable card
+    cursor: grab;
   }
 
   &--throwing {
@@ -42,12 +43,12 @@
 
   // Elements
 
-  // Zone strips container (behind content)
+  // Zone strips - full card background
   &__zones {
     position: absolute;
     inset: 0;
     display: flex;
-    flex-direction: row; // Always left-to-right
+    flex-direction: row;
     direction: ltr; // Force LTR to prevent RTL reversal
     pointer-events: none;
     z-index: 0;
@@ -55,23 +56,23 @@
     overflow: hidden;
   }
 
-  // Individual zone strip
+  // Individual zone strip - full height
   &__zone {
-    flex: 1; // Equal width (20% each)
+    flex: 1;
     position: relative;
-    opacity: 0.45; // Idle opacity - clearly visible
+    opacity: 0.55; // Visible but allows text readability
     transition: opacity 0.2s ease-out;
 
     // Zone colors (Universal: left to right, negative to positive)
-    &--zone-0 { background: var(--rating-strongly-disagree); } // Red (left)
-    &--zone-1 { background: var(--rating-disagree); } // Orange
-    &--zone-2 { background: var(--rating-neutral); } // Yellow (center)
-    &--zone-3 { background: var(--rating-agree); } // Light green
-    &--zone-4 { background: var(--rating-strongly-agree); } // Green (right)
+    &--zone-0 { background: var(--rating-strongly-disagree); }
+    &--zone-1 { background: var(--rating-disagree); }
+    &--zone-2 { background: var(--rating-neutral); }
+    &--zone-3 { background: var(--rating-agree); }
+    &--zone-4 { background: var(--rating-strongly-agree); }
 
     // Highlighted state
     &--active {
-      opacity: 0.9;
+      opacity: 0.85;
 
       .swipe-card__zone-emoji {
         opacity: 1;
@@ -79,29 +80,45 @@
     }
   }
 
-  // When dragging, make all strips more visible
+  // When dragging, emphasize zones
   &--dragging &__zone {
     opacity: 0.7;
 
-    // Active zone stays brighter
     &--active {
       opacity: 0.9;
     }
   }
 
-  // Emoji on strip (hidden by default)
+  // Emoji on strip (centered)
   &__zone-emoji {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 3rem;
+    font-size: 2.5rem;
     opacity: 0;
     transition: opacity 0.2s;
     pointer-events: none;
   }
 
-  // Content wrapper (above zones)
+  // Suggestion number badge (top corner)
+  &__number {
+    position: absolute;
+    top: var(--spacing-md);
+    z-index: 2;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    // LTR: top-left, RTL: top-right (handled by logical property)
+    inset-inline-start: var(--spacing-md);
+  }
+
+  // Content wrapper - NO background, text sits directly on colors
   &__content-wrapper {
     position: relative;
     z-index: 1;
@@ -109,9 +126,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    width: 100%;
+    max-width: 100%;
+    padding: var(--spacing-xl) var(--spacing-lg);
     transition: opacity 0.2s;
-    pointer-events: none; // Allow touches to pass through to card
+    pointer-events: none;
+    // No background - unified with card colors
   }
 
   // Dim content during drag
@@ -149,28 +169,23 @@
   }
 
   &__content {
-    font-size: 1.125rem;
-    line-height: 1.6;
-    color: var(--text-body);
+    font-size: 1.5rem; // 24px - prominent and readable
+    line-height: 1.45;
+    color: #1e293b; // Dark slate for maximum contrast
     text-align: center;
     word-wrap: break-word;
     overflow-wrap: break-word;
-  }
+    font-weight: 600; // Semi-bold for better readability on colors
+    letter-spacing: -0.01em;
+    max-width: 100%;
+    padding: 0 var(--spacing-sm);
 
-  &__author {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 16px;
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-
-    img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      object-fit: cover;
-    }
+    // Multi-layer text shadow for readability on any colored background
+    text-shadow:
+      0 0 20px rgba(255, 255, 255, 0.95),
+      0 0 40px rgba(255, 255, 255, 0.8),
+      0 1px 2px rgba(255, 255, 255, 0.9),
+      0 0 60px rgba(255, 255, 255, 0.6);
   }
 
   // Overlay states (legacy - kept for compatibility)
@@ -304,8 +319,21 @@
 
   // Mobile
   @include mobile {
+    &__zone-emoji {
+      font-size: 2rem;
+    }
+
+    &__number {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.625rem;
+    }
+
+    &__content-wrapper {
+      padding: var(--spacing-lg) var(--spacing-md);
+    }
+
     &__content {
-      font-size: 1rem;
+      font-size: 1.25rem;
     }
 
     &__confirmation-modal {

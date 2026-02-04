@@ -435,18 +435,14 @@ export default function SwipeCard({
         ))}
       </div>
 
+      {/* Suggestion number badge */}
+      <div className="swipe-card__number">
+        #{currentIndex + 1}
+      </div>
+
       {/* Content wrapper (above zones) */}
       <div className="swipe-card__content-wrapper">
         <div className="swipe-card__content">{statement.statement}</div>
-
-        {statement.creator && (
-          <div className="swipe-card__author">
-            {statement.creator.photoURL && (
-              <img src={statement.creator.photoURL} alt="" loading="lazy" />
-            )}
-            <span>{statement.creator.displayName}</span>
-          </div>
-        )}
       </div>
 
       {/* Vertical indicator for center zone */}
