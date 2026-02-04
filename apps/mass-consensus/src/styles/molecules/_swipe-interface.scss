@@ -1,7 +1,7 @@
 @use '../mixins' as *;
 
 // Swipe Interface - Container for swipe cards
-// Prevents overflow when cards are thrown off-screen
+// Cards can swipe freely without clipping
 
 .swipe-interface {
   // Base container
@@ -10,11 +10,11 @@
   margin: 0 auto;
   padding: 1rem;
 
-  // Prevent cards from causing page overflow when thrown
-  overflow: hidden;
+  // Allow cards to move freely during swipe animations
+  overflow: visible;
   position: relative;
 
-  // Card container - centers the card and provides clipping
+  // Card container - centers the card
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -35,7 +35,7 @@
     margin-bottom: 1rem;
     display: flex;
     justify-content: center;
-    overflow: hidden; // Clip cards that fly off during animation
+    overflow: visible; // Allow cards to swipe freely off-screen
   }
 
   // Rating buttons container - spreads emoji buttons horizontally
