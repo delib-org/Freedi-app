@@ -23,11 +23,12 @@
 
   // States
   &--dragging {
+    cursor: grabbing;
     will-change: transform;
   }
 
   &--idle {
-    cursor: default; // Normal cursor - no manual swiping
+    cursor: grab; // Grab cursor indicates swipeable card
   }
 
   &--throwing {

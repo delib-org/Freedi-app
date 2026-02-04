@@ -85,11 +85,12 @@ export const API = {
  * Swipe interaction constants
  */
 export const SWIPE = {
-  // Thresholds (in pixels)
-  LIKE_THRESHOLD: 100, // px - threshold for "like" swipe
-  LOVE_THRESHOLD: 200, // px - threshold for "love" swipe
-  DISLIKE_THRESHOLD: -100, // px
-  HATE_THRESHOLD: -200, // px
+  // Swipe distance thresholds (in pixels) for new rating scale
+  // Maps swipe distance to agreement levels (-1 to +1)
+  AGREE_THRESHOLD: 80, // px - threshold for "agree" (+0.5)
+  STRONGLY_AGREE_THRESHOLD: 160, // px - threshold for "strongly agree" (+1)
+  DISAGREE_THRESHOLD: -80, // px - threshold for "disagree" (-0.5)
+  STRONGLY_DISAGREE_THRESHOLD: -160, // px - threshold for "strongly disagree" (-1)
   ROTATION_FACTOR: 20, // degrees per 100px
 
   // Animation (in milliseconds)
