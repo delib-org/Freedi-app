@@ -41,6 +41,8 @@
   // Rating buttons container - spreads emoji buttons horizontally
   &__rating-buttons {
     display: flex;
+    flex-direction: row; // Always left-to-right
+    direction: ltr; // Force LTR to prevent RTL reversal
     justify-content: space-evenly; // Even spacing for circular buttons
     align-items: center;
     width: 100%;
