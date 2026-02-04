@@ -21,25 +21,31 @@ describe('swipeController', () => {
   describe('submitRating', () => {
     it('should accept valid rating', async () => {
       await expect(
-        submitRating('stmt1', RATING.AGREE, 'user1')
+        submitRating('parent1', 'stmt1', RATING.AGREE, 'user1')
       ).resolves.not.toThrow();
     });
 
     it('should throw ValidationError for invalid rating', async () => {
       await expect(
-        submitRating('stmt1', 999, 'user1')
+        submitRating('parent1', 'stmt1', 999, 'user1')
+      ).rejects.toThrow(ValidationError);
+    });
+
+    it('should throw ValidationError for missing parentId', async () => {
+      await expect(
+        submitRating('', 'stmt1', RATING.AGREE, 'user1')
       ).rejects.toThrow(ValidationError);
     });
 
     it('should throw ValidationError for missing statementId', async () => {
       await expect(
-        submitRating('', RATING.AGREE, 'user1')
+        submitRating('parent1', '', RATING.AGREE, 'user1')
       ).rejects.toThrow(ValidationError);
     });
 
     it('should throw ValidationError for missing userId', async () => {
       await expect(
-        submitRating('stmt1', RATING.AGREE, '')
+        submitRating('parent1', 'stmt1', RATING.AGREE, '')
       ).rejects.toThrow(ValidationError);
     });
 
@@ -54,7 +60,7 @@ describe('swipeController', () => {
 
       for (const rating of validRatings) {
         await expect(
-          submitRating('stmt1', rating, 'user1')
+          submitRating('parent1', 'stmt1', rating, 'user1')
         ).resolves.not.toThrow();
       }
     });
@@ -87,7 +93,7 @@ describe('swipeController', () => {
   describe('syncPendingEvaluations', () => {
     it('should handle empty array', async () => {
       await expect(
-        syncPendingEvaluations([], 'user1')
+        syncPendingEvaluations('parent1', [], 'user1')
       ).resolves.not.toThrow();
     });
 
@@ -98,7 +104,7 @@ describe('swipeController', () => {
       ];
 
       await expect(
-        syncPendingEvaluations(pending, 'user1')
+        syncPendingEvaluations('parent1', pending, 'user1')
       ).resolves.not.toThrow();
     });
 
@@ -110,7 +116,7 @@ describe('swipeController', () => {
 
       // Should not throw even though first evaluation fails
       await expect(
-        syncPendingEvaluations(pending, 'user1')
+        syncPendingEvaluations('parent1', pending, 'user1')
       ).resolves.not.toThrow();
     });
   });

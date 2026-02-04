@@ -161,7 +161,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     setTimeout(async () => {
       try {
         // Save rating to Firebase
-        await submitRating(currentCard.statementId, rating, userId);
+        await submitRating(question.statementId, currentCard.statementId, rating, userId);
 
         // Update Redux state
         dispatch(

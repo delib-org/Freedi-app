@@ -140,11 +140,11 @@ export default function TestSwipePage() {
   };
 
   const handleSwipe = async (rating: RatingValue) => {
-    if (!currentCard) return;
+    if (!currentCard || !currentQuestion) return;
 
     try {
       // Save rating to Firebase
-      await submitRating(currentCard.statementId, rating, mockUser.uid);
+      await submitRating(currentQuestion.statementId, currentCard.statementId, rating, mockUser.uid);
 
       // Add to evaluated in Redux
       dispatch(cardEvaluated({ statementId: currentCard.statementId, rating }));
@@ -242,9 +242,9 @@ export default function TestSwipePage() {
         {questionId && !isLoading && (
           <>
             {/* Show intro or swipe interface */}
-            {showIntro ? (
+            {showIntro && currentQuestion ? (
           <div style={{ marginBottom: '2rem' }}>
-            <QuestionIntro question={mockQuestion} onStart={handleStart} />
+            <QuestionIntro question={currentQuestion} onStart={handleStart} />
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: '20px' }}>

@@ -16,11 +16,13 @@ import { RATING, SWIPE } from '@/constants/common';
 
 /**
  * Submit a rating for a statement
+ * @param parentId - ID of the parent question
  * @param statementId - ID of the statement being rated
  * @param rating - Rating value (-2 to +2)
  * @param userId - ID of the user submitting the rating
  */
 export async function submitRating(
+  parentId: string,
   statementId: string,
   rating: number,
   userId: string
@@ -36,8 +38,9 @@ export async function submitRating(
     }
 
     // Validate IDs
-    if (!statementId || !userId) {
+    if (!parentId || !statementId || !userId) {
       throw new ValidationError('Missing required IDs', {
+        parentId,
         statementId,
         userId,
       });
@@ -46,27 +49,28 @@ export async function submitRating(
     // Create evaluation document
     const evaluationId = `eval_${userId}_${statementId}_${Date.now()}`;
     const evaluationRef = doc(db, Collections.evaluations, evaluationId);
-    const createdAt = Date.now();
+    const updatedAt = Date.now();
 
-    const evaluation: Partial<Evaluation> = {
+    const evaluation: Evaluation = {
       evaluationId,
+      parentId,
       statementId,
-      userId,
+      evaluatorId: userId,
       evaluation: rating,
-      createdAt,
+      updatedAt,
     };
 
     // Save to Firestore
     await setDoc(evaluationRef, evaluation);
 
-    console.info('Rating submitted to Firestore:', { statementId, rating, userId });
+    console.info('Rating submitted to Firestore:', { parentId, statementId, rating, userId });
 
   } catch (error) {
     logError(error, {
       operation: 'swipeController.submitRating',
       statementId,
       userId,
-      metadata: { rating },
+      metadata: { rating, parentId },
     });
     throw error;
   }
@@ -126,10 +130,12 @@ export async function loadCardBatch(
 
 /**
  * Sync pending evaluations (offline support)
+ * @param parentId - ID of the parent question
  * @param pendingEvaluations - Array of evaluations to sync
  * @param userId - Current user ID
  */
 export async function syncPendingEvaluations(
+  parentId: string,
   pendingEvaluations: Array<{ statementId: string; rating: number; timestamp: number }>,
   userId: string
 ): Promise<void> {
@@ -141,12 +147,13 @@ export async function syncPendingEvaluations(
     console.info('Syncing pending evaluations:', {
       count: pendingEvaluations.length,
       userId,
+      parentId,
     });
 
     // Sync each evaluation
     for (const evaluation of pendingEvaluations) {
       try {
-        await submitRating(evaluation.statementId, evaluation.rating, userId);
+        await submitRating(parentId, evaluation.statementId, evaluation.rating, userId);
       } catch (error) {
         logError(error, {
           operation: 'swipeController.syncPendingEvaluations',
@@ -155,6 +162,7 @@ export async function syncPendingEvaluations(
           metadata: {
             rating: evaluation.rating,
             timestamp: evaluation.timestamp,
+            parentId,
           },
         });
         // Continue with next evaluation even if one fails
@@ -165,7 +173,7 @@ export async function syncPendingEvaluations(
     logError(error, {
       operation: 'swipeController.syncPendingEvaluations',
       userId,
-      metadata: { count: pendingEvaluations.length },
+      metadata: { count: pendingEvaluations.length, parentId },
     });
     throw error;
   }
