@@ -384,7 +384,7 @@ export default function SwipeCard({
       tabIndex={0}
       style={{
         transform: isThrowing
-          ? (isVerticalDrag
+          ? (throwDirection === 'up'
               ? `translateY(-1000px) rotate(0deg) scale(0.8)`
               : `translateX(${throwDirection === 'right' ? 1000 : -1000}px) rotate(${rotation}deg) scale(1)`)
           : isEntering

@@ -69,10 +69,10 @@
   --rating-agree-hover: #a7f3d0;
 
   /* Neutral (0) - Yellow */
-  --rating-neutral: #fef08a;
-  --rating-neutral-border: #facc15;
-  --rating-neutral-text: #854d0e;
-  --rating-neutral-hover: #fde047;
+  --rating-neutral: #fde68a;
+  --rating-neutral-border: #fbbf24;
+  --rating-neutral-text: #92400e;
+  --rating-neutral-hover: #fcd34d;
 
   /* Disagree (-0.5) - Orange */
   --rating-disagree: #fed7aa;

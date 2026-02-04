@@ -176,7 +176,7 @@ export const RATING_CONFIG = {
     labelKey: 'Neutral',
     shortLabelKey: 'Unsure',
     variant: 'neutral',
-    direction: 'right' as const, // Neutral defaults to right (skip forward)
+    direction: 'up' as const, // Neutral swipes upward
   },
   [RATING.DISAGREE]: {
     emoji: '👎',
