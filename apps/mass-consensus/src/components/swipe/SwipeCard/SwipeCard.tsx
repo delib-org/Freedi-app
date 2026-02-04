@@ -67,7 +67,8 @@ function calculateInitialZone(clientX: number, cardElement: HTMLDivElement | nul
   let zoneIndex = Math.floor(offsetX / zoneWidth);
   zoneIndex = Math.max(0, Math.min(ZONES.TOTAL_ZONES - 1, zoneIndex));
 
-  // In RTL layout, flex reverses the visual order, so reverse the index
+  // In RTL layout, DOM order is reversed (4,3,2,1,0) so visual position matches correctly
+  // Map visual position to logical zone index
   const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
   if (isRTL) {
     zoneIndex = ZONES.TOTAL_ZONES - 1 - zoneIndex;
@@ -428,19 +429,26 @@ export default function SwipeCard({
     >
       {/* Zone strips (always visible) */}
       <div className="swipe-card__zones">
-        {ZONE_CONFIG.map((zone) => (
-          <div
-            key={zone.index}
-            className={clsx(
-              'swipe-card__zone',
-              `swipe-card__zone--zone-${zone.index}`,
-              highlightedZone === zone.index && 'swipe-card__zone--active'
-            )}
-            aria-hidden="true"
-          >
-            <span className="swipe-card__zone-emoji">{zone.emoji}</span>
-          </div>
-        ))}
+        {(() => {
+          // Reverse zone order for RTL so visually: zone 0 on right, zone 4 on left
+          const isRTL = typeof document !== 'undefined' &&
+                       (document.dir === 'rtl' || document.documentElement.dir === 'rtl');
+          const zones = isRTL ? [...ZONE_CONFIG].reverse() : ZONE_CONFIG;
+
+          return zones.map((zone) => (
+            <div
+              key={zone.index}
+              className={clsx(
+                'swipe-card__zone',
+                `swipe-card__zone--zone-${zone.index}`,
+                highlightedZone === zone.index && 'swipe-card__zone--active'
+              )}
+              aria-hidden="true"
+            >
+              <span className="swipe-card__zone-emoji">{zone.emoji}</span>
+            </div>
+          ));
+        })()}
       </div>
 
       {/* Content wrapper (above zones) */}
