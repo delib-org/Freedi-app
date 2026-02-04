@@ -26,6 +26,10 @@ interface SolutionPromptModalProps {
   questionText?: string;
   /** Controls UX friction when adding new suggestions vs merging */
   suggestionMode?: SuggestionMode;
+  /** When true, shows "Add your answer later" instead of "Cancel" */
+  requiresSolution?: boolean;
+  hasCheckedUserSolutions?: boolean;
+  userName?: string;
 }
 
 const MAX_ROWS = 8;
@@ -40,6 +44,9 @@ export default function SolutionPromptModal({
   title = 'Add Your Solution',
   questionText,
   suggestionMode = SuggestionMode.encourage,
+  requiresSolution = false,
+  hasCheckedUserSolutions = false,
+  userName,
 }: SolutionPromptModalProps) {
   const { t } = useTranslation();
   const [text, setText] = useState('');
@@ -404,10 +411,19 @@ export default function SolutionPromptModal({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title={flowState.step === 'input' && !questionText ? title : undefined}>
+    <Modal isOpen={isOpen} onClose={handleClose} title={flowState.step === 'input' && !questionText ? (requiresSolution ? t('Share Your Perspective First') : title) : undefined}>
       <div className={styles.content}>
         {flowState.step === 'input' && (
           <>
+            {/* Explanatory Context for "Add Solution First" Feature */}
+            {requiresSolution && (
+              <div className={styles.questionContext}>
+                <p className={styles.questionText}>
+                  {t('We value your independent thinking. Share your perspective before seeing others\' ideas to help generate more diverse and creative solutions.')}
+                </p>
+              </div>
+            )}
+
             {/* Question Context Banner */}
             {questionText && (
               <div className={styles.questionContext}>
@@ -431,7 +447,7 @@ export default function SolutionPromptModal({
               ref={textareaRef}
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder={t('Type your answer here...')}
+              placeholder={requiresSolution ? t('What\'s your idea?') : t('Type your answer here...')}
               className={styles.textarea}
               rows={2}
               maxLength={VALIDATION.MAX_SOLUTION_LENGTH}
@@ -454,14 +470,16 @@ export default function SolutionPromptModal({
                 className={styles.cancelButton}
                 onClick={handleClose}
               >
-                {t('Cancel')}
+                {requiresSolution
+                  ? t('Skip for now')
+                  : t('Cancel')}
               </button>
               <button
                 className={styles.primaryButton}
                 onClick={handleCheckSimilar}
                 disabled={!isValid}
               >
-                {t('Submit')}
+                {requiresSolution ? t('Share My Idea') : t('Submit')}
               </button>
             </div>
           </>

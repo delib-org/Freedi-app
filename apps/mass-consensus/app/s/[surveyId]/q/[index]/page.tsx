@@ -185,6 +185,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
               <SwipeInterfaceWrapper
                 question={question}
                 initialSolutions={initialBatch}
+                mergedSettings={mergedSettings}
               />
             </Suspense>
           </SurveyQuestionWrapper>

@@ -10,16 +10,19 @@ import { Statement } from '@freedi/shared-types';
 import SwipeInterface from '../SwipeInterface';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 
 export interface SwipeInterfaceWrapperProps {
   question: Statement;
   initialSolutions: Statement[];
+  mergedSettings?: MergedQuestionSettings;
   onComplete?: () => void;
 }
 
 const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   question,
   initialSolutions,
+  mergedSettings,
   onComplete,
 }) => {
   const { t } = useTranslation();
@@ -64,6 +67,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
       initialSolutions={initialSolutions}
       userId={userId}
       userName={userName}
+      mergedSettings={mergedSettings}
       onComplete={onComplete}
     />
   );

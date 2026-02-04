@@ -18,6 +18,8 @@ import SwipeCard from '../SwipeCard';
 import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import ProposalModal from '../ProposalModal';
+import SolutionPromptModal from '@/components/question/SolutionPromptModal';
+import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import {
   setCardStack,
   cardEvaluated,
@@ -48,6 +50,7 @@ export interface SwipeInterfaceProps {
   initialSolutions: Statement[];
   userId: string;
   userName: string;
+  mergedSettings?: MergedQuestionSettings;
   onComplete?: () => void;
 }
 
@@ -56,6 +59,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   initialSolutions,
   userId,
   userName,
+  mergedSettings,
   onComplete,
 }) => {
   const { t } = useTranslation();
@@ -71,6 +75,46 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     rating: RatingValue;
     direction: 'left' | 'right';
   } | null>(null);
+
+  // Check if user must add solution first
+  const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ?? true;
+  const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
+  const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
+  const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
+
+  console.info('[SwipeInterface Debug] Settings check:', {
+    mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
+    finalRequiresSolution: requiresSolution
+  });
+
+  // Check if user has submitted solutions (for "add solution first" feature)
+  useEffect(() => {
+    if (!userId || hasCheckedUserSolutions) return;
+
+    const checkUserSolutions = async () => {
+      try {
+        console.info('[SwipeInterface Debug] Checking user solutions for questionId:', question.statementId);
+        const response = await fetch(`/api/user-solutions/${question.statementId}?userId=${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.info('[SwipeInterface Debug] API response:', data);
+          setHasSubmittedSolution(data.hasSubmitted);
+
+          const shouldShowModal = !data.hasSubmitted && requiresSolution;
+          console.info('[SwipeInterface Debug] Should show modal?', shouldShowModal, '(hasSubmitted:', data.hasSubmitted, 'requiresSolution:', requiresSolution, ')');
+          if (shouldShowModal) {
+            setShowSolutionPrompt(true);
+          }
+        }
+        setHasCheckedUserSolutions(true);
+      } catch (error) {
+        console.error('Failed to check user solutions:', error);
+        setHasCheckedUserSolutions(true);
+      }
+    };
+
+    checkUserSolutions();
+  }, [userId, question.statementId, requiresSolution, hasCheckedUserSolutions]);
 
   // Initialize cards on mount
   useEffect(() => {
@@ -246,6 +290,22 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         isOpen={showProposalModal}
         onClose={handleProposalDismiss}
         onSubmit={handleProposalSubmit}
+      />
+
+      {/* Solution Prompt Modal - "Add solution first" feature */}
+      <SolutionPromptModal
+        isOpen={showSolutionPrompt}
+        onClose={() => setShowSolutionPrompt(false)}
+        onSubmitSuccess={() => {
+          setShowSolutionPrompt(false);
+          setHasSubmittedSolution(true);
+        }}
+        questionId={question.statementId}
+        questionText={question.statement}
+        userId={userId}
+        userName={userName}
+        requiresSolution={requiresSolution}
+        hasCheckedUserSolutions={hasCheckedUserSolutions}
       />
     </div>
   );
