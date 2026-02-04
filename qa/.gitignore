@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Test results
+test-results/
+playwright-report/
+.playwright/
+
+# Screenshots and videos
+screenshots/
+videos/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local

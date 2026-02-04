@@ -1,0 +1,34 @@
+{
+  "name": "freedi-qa",
+  "version": "1.0.0",
+  "description": "QA Testing Suite for Freedi Apps (Freedi, Mass Consensus, Sign)",
+  "scripts": {
+    "test": "playwright test",
+    "test:freedi": "playwright test --project=freedi-chromium",
+    "test:mc": "playwright test --project=mass-consensus-chromium",
+    "test:sign": "playwright test --project=sign-chromium",
+    "test:all-browsers": "playwright test",
+    "test:chromium": "playwright test --grep @chromium",
+    "test:firefox": "playwright test --grep @firefox",
+    "test:mobile": "playwright test --project=freedi-mobile --project=mass-consensus-mobile --project=sign-mobile",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:headed": "playwright test --headed",
+    "report": "playwright show-report test-results/html-report",
+    "report:open": "npx playwright show-report test-results/html-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "qa",
+    "testing",
+    "playwright",
+    "e2e",
+    "freedi"
+  ],
+  "author": "Freedi Team",
+  "license": "MIT"
+}
