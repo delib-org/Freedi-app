@@ -53,38 +53,38 @@
   --option-text: #4A7C6F;
 
   /* Rating Button Colors - 5-level agreement scale (-1 to +1)
-     Colors progress from red (disagree) through yellow (neutral) to green (agree)
+     Colors progress from red (disagree) through orange, yellow to light green, green (agree)
      This creates an intuitive visual spectrum for agreement levels */
 
-  /* Strongly Agree (+1) - Emphatic green */
-  --rating-strongly-agree: #dcfce7;
+  /* Strongly Agree (+1) - Green */
+  --rating-strongly-agree: #a7f3d0; /* Stronger, more saturated green */
   --rating-strongly-agree-border: #22c55e;
   --rating-strongly-agree-text: #166534;
-  --rating-strongly-agree-hover: #bbf7d0;
+  --rating-strongly-agree-hover: #6ee7b7;
 
-  /* Agree (+0.5) - Soft green */
+  /* Agree (+0.5) - Light green */
   --rating-agree: #d1fae5;
   --rating-agree-border: #6ee7b7;
   --rating-agree-text: #059669;
   --rating-agree-hover: #a7f3d0;
 
-  /* Neutral (0) - Gray/thinking */
-  --rating-neutral: #f1f5f9;
-  --rating-neutral-border: #cbd5e1;
-  --rating-neutral-text: #64748b;
-  --rating-neutral-hover: #e2e8f0;
+  /* Neutral (0) - Yellow */
+  --rating-neutral: #fef08a;
+  --rating-neutral-border: #facc15;
+  --rating-neutral-text: #854d0e;
+  --rating-neutral-hover: #fde047;
 
-  /* Disagree (-0.5) - Soft orange/yellow */
-  --rating-disagree: #fef3c7;
-  --rating-disagree-border: #fcd34d;
-  --rating-disagree-text: #d97706;
-  --rating-disagree-hover: #fde68a;
+  /* Disagree (-0.5) - Orange */
+  --rating-disagree: #fed7aa;
+  --rating-disagree-border: #fb923c;
+  --rating-disagree-text: #c2410c;
+  --rating-disagree-hover: #fdba74;
 
   /* Strongly Disagree (-1) - Red */
-  --rating-strongly-disagree: #fee2e2;
+  --rating-strongly-disagree: #fecaca;
   --rating-strongly-disagree-border: #f87171;
   --rating-strongly-disagree-text: #dc2626;
-  --rating-strongly-disagree-hover: #fecaca;
+  --rating-strongly-disagree-hover: #fca5a5;
 
   /* Legacy rating colors (for backward compatibility) */
   --rating-love: var(--rating-strongly-agree);

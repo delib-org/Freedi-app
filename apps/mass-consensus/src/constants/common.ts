@@ -124,6 +124,35 @@ export const RATING = {
 } as const;
 
 /**
+ * Zone-based swipe interaction constants
+ * For zone-based rating system (5 vertical strips)
+ */
+export const ZONES = {
+  TOTAL_ZONES: 5,
+  CENTER_ZONE_INDEX: 2,
+  ZONE_WIDTH_PERCENT: 20,
+  STRIP_IDLE_OPACITY: 0.45, // Visible zone strips for clear UX
+  STRIP_DRAGGING_OPACITY: 0.7, // All strips during drag
+  STRIP_ACTIVE_OPACITY: 0.9, // Active zone during drag
+  CARD_DIM_OPACITY: 0.4,
+  VERTICAL_SWIPE_THRESHOLD: 100, // px upward for neutral
+  HORIZONTAL_SWIPE_THRESHOLD: 60, // px horizontal minimum to commit rating
+} as const;
+
+/**
+ * Zone configuration for zone-based swipe system
+ * Maps zone indices to ratings and visual elements
+ * RTL layout: Positive (right) to Negative (left)
+ */
+export const ZONE_CONFIG = [
+  { index: 0, rating: RATING.STRONGLY_AGREE, emoji: '🎉' },
+  { index: 1, rating: RATING.AGREE, emoji: '👍' },
+  { index: 2, rating: RATING.NEUTRAL, emoji: '↑' },
+  { index: 3, rating: RATING.DISAGREE, emoji: '👎' },
+  { index: 4, rating: RATING.STRONGLY_DISAGREE, emoji: '🚫' },
+] as const;
+
+/**
  * Rating display configuration
  * Maps rating values to their visual representation
  */

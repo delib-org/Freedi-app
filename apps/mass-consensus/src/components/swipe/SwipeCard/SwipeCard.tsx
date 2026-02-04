@@ -20,7 +20,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
-import { SWIPE, RATING_CONFIG, RATING } from '@/constants/common';
+import { SWIPE, RATING_CONFIG, RATING, ZONES, ZONE_CONFIG } from '@/constants/common';
 import { playWhooshSound } from './soundEffects';
 import type { RatingValue } from '../RatingButton';
 
@@ -32,7 +32,56 @@ export interface SwipeCardProps {
   programmaticThrow?: { rating: RatingValue; direction: 'left' | 'right' } | null;
 }
 
-// Get overlay emoji based on throw direction
+// Calculate which zone based on drag position relative to starting zone
+function calculateCurrentZone(
+  dragX: number,
+  startZone: number | null,
+  cardElement: HTMLDivElement | null
+): number | null {
+  if (!cardElement || startZone === null) return startZone;
+
+  const cardWidth = cardElement.offsetWidth;
+  const zoneWidth = cardWidth / ZONES.TOTAL_ZONES;
+
+  // Calculate how many zones crossed based on drag distance
+  const zonesCrossed = Math.floor(Math.abs(dragX) / zoneWidth);
+  const direction = dragX > 0 ? 1 : -1;
+
+  // In RTL, positive dragX (right) should decrease zone index, negative (left) should increase
+  const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
+  const zoneChange = isRTL ? -direction * zonesCrossed : direction * zonesCrossed;
+
+  // Calculate new zone, clamped to valid range
+  let newZone = startZone + zoneChange;
+  newZone = Math.max(0, Math.min(ZONES.TOTAL_ZONES - 1, newZone));
+
+  return newZone;
+}
+
+// Calculate initial zone from touch/click position
+function calculateInitialZone(clientX: number, cardElement: HTMLDivElement | null): number | null {
+  if (!cardElement) return null;
+  const rect = cardElement.getBoundingClientRect();
+  const zoneWidth = rect.width / ZONES.TOTAL_ZONES;
+  const offsetX = clientX - rect.left;
+  let zoneIndex = Math.floor(offsetX / zoneWidth);
+  zoneIndex = Math.max(0, Math.min(ZONES.TOTAL_ZONES - 1, zoneIndex));
+
+  // In RTL layout, flex reverses the visual order, so reverse the index
+  const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
+  if (isRTL) {
+    zoneIndex = ZONES.TOTAL_ZONES - 1 - zoneIndex;
+  }
+
+  return zoneIndex;
+}
+
+// Check if vertical swipe meets threshold
+function isVerticalSwipeComplete(dragY: number): boolean {
+  return dragY <= -ZONES.VERTICAL_SWIPE_THRESHOLD; // Negative = upward
+}
+
+// Get overlay emoji based on throw direction (legacy)
 function getOverlayEmoji(direction: 'left' | 'right' | null): string {
   if (direction === 'right') {
     return RATING_CONFIG[RATING.STRONGLY_AGREE].emoji;
@@ -56,14 +105,33 @@ export default function SwipeCard({
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isThrowing, setIsThrowing] = useState(false);
-  const [throwDirection, setThrowDirection] = useState<'left' | 'right' | null>(
+  const [throwDirection, setThrowDirection] = useState<'left' | 'right' | 'up' | null>(
     null
   );
   const [isEntering, setIsEntering] = useState(true);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+  // Zone tracking
+  const [currentZone, setCurrentZone] = useState<number | null>(null);
+  const [dragStartZone, setDragStartZone] = useState<number | null>(null);
+  const [isVerticalDrag, setIsVerticalDrag] = useState(false);
+  const [highlightedZone, setHighlightedZone] = useState<number | null>(null);
+
+  // Vertical tracking
+  const [dragY, setDragY] = useState(0);
+  const [dragStartY, setDragStartY] = useState<number | null>(null);
+
+  // Confirmation for first few swipes (learning mode)
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [pendingRating, setPendingRating] = useState<RatingValue | null>(null);
+  const [pendingDirection, setPendingDirection] = useState<'left' | 'right' | 'up' | null>(null);
+
   const cardRef = useRef<HTMLDivElement>(null);
   const animationFrameRef = useRef<number | null>(null);
+
+  // Show confirmation for first 3 evaluations
+  const LEARNING_MODE_COUNT = 3;
+  const isLearningMode = currentIndex < LEARNING_MODE_COUNT;
 
   // Cleanup RAF on unmount
   useEffect(() => {
@@ -77,11 +145,17 @@ export default function SwipeCard({
   // Reset state when statement changes (new card)
   useEffect(() => {
     setDragX(0);
+    setDragY(0);
     setDragStart(null);
+    setDragStartY(null);
     setIsDragging(false);
     setIsThrowing(false);
     setThrowDirection(null);
     setIsEntering(true);
+    setCurrentZone(null);
+    setDragStartZone(null);
+    setIsVerticalDrag(false);
+    setHighlightedZone(null);
 
     const timer = setTimeout(() => {
       setIsEntering(false);
@@ -91,65 +165,77 @@ export default function SwipeCard({
   }, [statement.statementId]);
 
   // Handle drag start (touch/mouse)
-  const handleDragStart = useCallback((clientX: number, isTouch: boolean) => {
+  const handleDragStart = useCallback((clientX: number, clientY: number, isTouch: boolean) => {
     if (isThrowing || isEntering) return;
     setIsTouchDevice(isTouch);
     setDragStart(clientX);
+    setDragStartY(clientY);
     setIsDragging(true);
+
+    // Calculate starting zone
+    const initialZone = calculateInitialZone(clientX, cardRef.current);
+    setDragStartZone(initialZone);
+    setCurrentZone(initialZone); // Set current zone immediately
+    setHighlightedZone(initialZone); // Show emoji on touched zone immediately
+
+    // Check if center zone (special vertical-only behavior)
+    if (initialZone === ZONES.CENTER_ZONE_INDEX) {
+      setIsVerticalDrag(true);
+    } else {
+      setIsVerticalDrag(false);
+    }
   }, [isThrowing, isEntering]);
 
   // Handle drag move
-  const handleDragMove = useCallback((clientX: number) => {
-    if (dragStart === null || isThrowing) return;
+  const handleDragMove = useCallback((clientX: number, clientY: number) => {
+    if (dragStart === null || dragStartY === null || isThrowing || dragStartZone === null) return;
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
     }
 
     animationFrameRef.current = requestAnimationFrame(() => {
-      const delta = clientX - dragStart;
-      setDragX(delta);
+      if (isVerticalDrag) {
+        // CENTER ZONE: Vertical only (upward)
+        const deltaY = clientY - dragStartY;
+        // Only allow upward movement (negative deltaY)
+        setDragY(Math.min(0, deltaY));
+        setDragX(0); // Lock horizontal
+      } else {
+        // NORMAL: Horizontal drag with directional lock
+        const deltaX = clientX - dragStart;
 
-      // Auto-throw when threshold reached
-      if (Math.abs(delta) >= SWIPE.AGREE_THRESHOLD && !isThrowing) {
-        handleAutoThrow(delta);
+        // Determine allowed direction based on grabbed zone
+        const isRTL = document.dir === 'rtl' || document.documentElement.dir === 'rtl';
+
+        if (dragStartZone < ZONES.CENTER_ZONE_INDEX) {
+          // Positive zones (0, 1) - only allow movement toward more positive (rightward in RTL)
+          const constrainedDeltaX = isRTL ? Math.max(0, deltaX) : Math.max(0, deltaX);
+          setDragX(constrainedDeltaX);
+        } else if (dragStartZone > ZONES.CENTER_ZONE_INDEX) {
+          // Negative zones (3, 4) - only allow movement toward more negative (leftward in RTL)
+          const constrainedDeltaX = isRTL ? Math.min(0, deltaX) : Math.min(0, deltaX);
+          setDragX(constrainedDeltaX);
+        } else {
+          // Center zone shouldn't reach here (isVerticalDrag handles it)
+          setDragX(0);
+        }
       }
     });
-  }, [dragStart, isThrowing]);
+  }, [dragStart, dragStartY, dragStartZone, isThrowing, isVerticalDrag]);
 
-  // Handle auto-throw based on swipe distance
-  const handleAutoThrow = useCallback((delta: number) => {
-    if (animationFrameRef.current) {
-      cancelAnimationFrame(animationFrameRef.current);
-    }
-
-    let rating: RatingValue;
-    const direction = delta > 0 ? 'right' : 'left';
-
-    // Map swipe distance to rating value
-    if (delta >= SWIPE.STRONGLY_AGREE_THRESHOLD) {
-      rating = RATING.STRONGLY_AGREE; // +1
-    } else if (delta >= SWIPE.AGREE_THRESHOLD) {
-      rating = RATING.AGREE; // +0.5
-    } else if (delta <= SWIPE.STRONGLY_DISAGREE_THRESHOLD) {
-      rating = RATING.STRONGLY_DISAGREE; // -1
-    } else if (delta <= SWIPE.DISAGREE_THRESHOLD) {
-      rating = RATING.DISAGREE; // -0.5
-    } else {
-      return; // Don't throw if below threshold
-    }
-
-    setThrowDirection(direction);
-    setIsThrowing(true);
-    setIsDragging(false);
+  // Reset drag state helper
+  const resetDragState = useCallback(() => {
+    setDragX(0);
+    setDragY(0);
     setDragStart(null);
-
-    playWhooshSound();
-
-    setTimeout(() => {
-      onSwipe(rating);
-    }, SWIPE.SWIPE_DURATION);
-  }, [onSwipe]);
+    setDragStartY(null);
+    setIsDragging(false);
+    setCurrentZone(null);
+    setHighlightedZone(null);
+    setDragStartZone(null);
+    setIsVerticalDrag(false);
+  }, []);
 
   // Handle drag end
   const handleDragEnd = useCallback(() => {
@@ -159,10 +245,80 @@ export default function SwipeCard({
       cancelAnimationFrame(animationFrameRef.current);
     }
 
-    setDragX(0);
-    setDragStart(null);
-    setIsDragging(false);
-  }, [dragStart, isThrowing]);
+    if (isVerticalDrag) {
+      // CENTER ZONE: Check vertical threshold
+      if (isVerticalSwipeComplete(dragY)) {
+        const rating = RATING.NEUTRAL;
+
+        if (isLearningMode) {
+          // Show confirmation in learning mode
+          setPendingRating(rating);
+          setPendingDirection('up');
+          setShowConfirmation(true);
+          resetDragState(); // Reset card position while showing confirmation
+        } else {
+          // Direct throw without confirmation
+          setIsThrowing(true);
+          setThrowDirection('up');
+          playWhooshSound();
+          setTimeout(() => onSwipe(rating), SWIPE.SWIPE_DURATION);
+        }
+      } else {
+        resetDragState(); // Insufficient swipe
+      }
+    } else {
+      // NORMAL: Check if horizontal drag meets minimum threshold
+      const dragDistance = Math.abs(dragX);
+
+      if (dragDistance >= ZONES.HORIZONTAL_SWIPE_THRESHOLD && dragStartZone !== null) {
+        // Sufficient horizontal swipe - evaluate rating using the initially grabbed zone
+        const config = ZONE_CONFIG[dragStartZone];
+        const rating = config.rating;
+        // Positive zones (0, 1) throw right, negative zones (3, 4) throw left
+        const direction = dragStartZone < ZONES.CENTER_ZONE_INDEX ? 'right' : 'left';
+
+        if (isLearningMode) {
+          // Show confirmation in learning mode
+          setPendingRating(rating);
+          setPendingDirection(direction);
+          setShowConfirmation(true);
+          resetDragState(); // Reset card position while showing confirmation
+        } else {
+          // Direct throw without confirmation
+          setIsThrowing(true);
+          setThrowDirection(direction);
+          playWhooshSound();
+          setTimeout(() => onSwipe(rating), SWIPE.SWIPE_DURATION);
+        }
+      } else {
+        // Insufficient swipe - return card to center
+        resetDragState();
+      }
+    }
+  }, [dragStart, dragY, dragX, dragStartZone, isVerticalDrag, isThrowing, onSwipe, resetDragState, isLearningMode]);
+
+  // Handle confirmation - user confirms their rating
+  const handleConfirm = useCallback(() => {
+    if (pendingRating === null || pendingDirection === null) return;
+
+    setShowConfirmation(false);
+    setIsThrowing(true);
+    setThrowDirection(pendingDirection);
+    playWhooshSound();
+    setTimeout(() => {
+      onSwipe(pendingRating);
+      setPendingRating(null);
+      setPendingDirection(null);
+    }, SWIPE.SWIPE_DURATION);
+  }, [pendingRating, pendingDirection, onSwipe]);
+
+  // Handle cancel - user wants to change their mind
+  const handleCancel = useCallback(() => {
+    setShowConfirmation(false);
+    setPendingRating(null);
+    setPendingDirection(null);
+    // Card already reset by resetDragState in handleDragEnd
+  }, []);
 
   // Handle programmatic throw (from button clicks)
   useEffect(() => {
@@ -186,10 +342,10 @@ export default function SwipeCard({
     if (!card) return;
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (dragStart !== null) {
+      if (dragStart !== null && dragStartY !== null) {
         e.preventDefault(); // Prevent scrolling while swiping
         const touch = e.touches[0];
-        handleDragMove(touch.clientX);
+        handleDragMove(touch.clientX, touch.clientY);
       }
     };
 
@@ -199,16 +355,16 @@ export default function SwipeCard({
     return () => {
       card.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [dragStart, handleDragMove]);
+  }, [dragStart, dragStartY, handleDragMove]);
 
   // Calculate rotation based on drag or throw
   const rotation = isThrowing
-    ? (throwDirection === 'right' ? 30 : -30)
+    ? (throwDirection === 'right' ? 30 : throwDirection === 'left' ? -30 : 0)
     : Math.max(-30, Math.min(30, (dragX / 100) * SWIPE.ROTATION_FACTOR));
 
-  // Show overlay during drag or throw
-  const showOverlay = Math.abs(dragX) > 50 || isThrowing;
-  const overlayEmoji = getOverlayEmoji(isThrowing ? throwDirection : (dragX > 0 ? 'right' : 'left'));
+  // Show overlay during drag or throw (legacy)
+  const showOverlay = false; // Disabled in zone-based system
+  const overlayEmoji = getOverlayEmoji(isThrowing ? (throwDirection === 'up' ? null : throwDirection) : (dragX > 0 ? 'right' : 'left'));
 
   // CSS classes
   const cardClasses = clsx('swipe-card', {
@@ -216,8 +372,7 @@ export default function SwipeCard({
     'swipe-card--throwing': isThrowing,
     'swipe-card--entering': isEntering,
     'swipe-card--idle': !isDragging && !isThrowing && !isEntering,
-    'swipe-card--like-active': showOverlay && (dragX > 0 || throwDirection === 'right'),
-    'swipe-card--dislike-active': showOverlay && (dragX < 0 || throwDirection === 'left'),
+    'swipe-card--vertical-drag': isVerticalDrag,
   });
 
   return (
@@ -229,10 +384,14 @@ export default function SwipeCard({
       tabIndex={0}
       style={{
         transform: isThrowing
-          ? `translateX(${throwDirection === 'right' ? 1000 : -1000}px) rotate(${rotation}deg) scale(1)`
+          ? (isVerticalDrag
+              ? `translateY(-1000px) rotate(0deg) scale(0.8)`
+              : `translateX(${throwDirection === 'right' ? 1000 : -1000}px) rotate(${rotation}deg) scale(1)`)
           : isEntering
             ? `translateX(0) rotate(0) scale(0.8)`
-            : `translateX(${dragX}px) rotate(${rotation}deg) scale(1)`,
+            : isVerticalDrag
+              ? `translateY(${dragY}px) rotate(0deg) scale(1)`
+              : `translateX(${dragX}px) rotate(${rotation}deg) scale(1)`,
         opacity: isThrowing || isEntering ? 0 : 1,
         transition: isThrowing
           ? `transform ${SWIPE.SWIPE_DURATION}ms ease-out, opacity ${SWIPE.SWIPE_DURATION}ms ease-out`
@@ -242,18 +401,18 @@ export default function SwipeCard({
       }}
       onTouchStart={(e) => {
         const touch = e.touches[0];
-        handleDragStart(touch.clientX, true);
+        handleDragStart(touch.clientX, touch.clientY, true);
       }}
       onTouchEnd={handleDragEnd}
       onTouchCancel={handleDragEnd}
       onMouseDown={(e) => {
         if (!isTouchDevice) {
-          handleDragStart(e.clientX, false);
+          handleDragStart(e.clientX, e.clientY, false);
         }
       }}
       onMouseMove={(e) => {
         if (!isTouchDevice && isDragging) {
-          handleDragMove(e.clientX);
+          handleDragMove(e.clientX, e.clientY);
         }
       }}
       onMouseUp={() => {
@@ -267,26 +426,87 @@ export default function SwipeCard({
         }
       }}
     >
-      {/* Overlay emoji during throw */}
-      {showOverlay && <div className="swipe-card__overlay">{overlayEmoji}</div>}
+      {/* Zone strips (always visible) */}
+      <div className="swipe-card__zones">
+        {ZONE_CONFIG.map((zone) => (
+          <div
+            key={zone.index}
+            className={clsx(
+              'swipe-card__zone',
+              `swipe-card__zone--zone-${zone.index}`,
+              highlightedZone === zone.index && 'swipe-card__zone--active'
+            )}
+            aria-hidden="true"
+          >
+            <span className="swipe-card__zone-emoji">{zone.emoji}</span>
+          </div>
+        ))}
+      </div>
 
-      {/* Card content */}
-      <div className="swipe-card__content">{statement.statement}</div>
+      {/* Content wrapper (above zones) */}
+      <div className="swipe-card__content-wrapper">
+        <div className="swipe-card__content">{statement.statement}</div>
 
-      {/* Author info */}
-      {statement.creator && (
-        <div className="swipe-card__author">
-          {statement.creator.photoURL && (
-            <img src={statement.creator.photoURL} alt="" loading="lazy" />
-          )}
-          <span>{statement.creator.displayName}</span>
-        </div>
+        {statement.creator && (
+          <div className="swipe-card__author">
+            {statement.creator.photoURL && (
+              <img src={statement.creator.photoURL} alt="" loading="lazy" />
+            )}
+            <span>{statement.creator.displayName}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Vertical indicator for center zone */}
+      {isVerticalDrag && (
+        <div className="swipe-card__vertical-indicator">↑</div>
       )}
 
       {/* Screen reader announcements */}
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {currentIndex + 1} {t('of')} {totalCards}
       </div>
+
+      {/* Confirmation modal for learning mode */}
+      {showConfirmation && pendingRating !== null && (
+        <div className="swipe-card__confirmation-overlay">
+          <div
+            className={clsx(
+              'swipe-card__confirmation-modal',
+              `swipe-card__confirmation-modal--${RATING_CONFIG[pendingRating].variant}`
+            )}
+          >
+            <div className="swipe-card__confirmation-emoji">
+              {RATING_CONFIG[pendingRating].emoji}
+            </div>
+            <h3 className="swipe-card__confirmation-title">
+              {t('You have rated it as')}
+            </h3>
+            <p className="swipe-card__confirmation-rating">
+              {t(RATING_CONFIG[pendingRating].labelKey)}
+            </p>
+            <p className="swipe-card__confirmation-question">
+              {t('Are you sure?')}
+            </p>
+            <div className="swipe-card__confirmation-buttons">
+              <button
+                className="swipe-card__confirmation-button swipe-card__confirmation-button--cancel"
+                onClick={handleCancel}
+                type="button"
+              >
+                {t('No, go back')}
+              </button>
+              <button
+                className="swipe-card__confirmation-button swipe-card__confirmation-button--confirm"
+                onClick={handleConfirm}
+                type="button"
+              >
+                {t('Yes, confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

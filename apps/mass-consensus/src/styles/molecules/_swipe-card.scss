@@ -20,6 +20,7 @@
   touch-action: none;
   user-select: none;
   will-change: auto;
+  overflow: hidden; // Clip zone strips to card border
 
   // States
   &--dragging {
@@ -40,6 +41,99 @@
   }
 
   // Elements
+
+  // Zone strips container (behind content)
+  &__zones {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+
+  // Individual zone strip
+  &__zone {
+    flex: 1; // Equal width (20% each)
+    position: relative;
+    opacity: 0.45; // Idle opacity - clearly visible
+    transition: opacity 0.2s ease-out;
+
+    // Zone colors (RTL: right to left, positive to negative)
+    &--zone-0 { background: var(--rating-strongly-agree); }
+    &--zone-1 { background: var(--rating-agree); }
+    &--zone-2 { background: var(--rating-neutral); }
+    &--zone-3 { background: var(--rating-disagree); }
+    &--zone-4 { background: var(--rating-strongly-disagree); }
+
+    // Highlighted state
+    &--active {
+      opacity: 0.9;
+
+      .swipe-card__zone-emoji {
+        opacity: 1;
+      }
+    }
+  }
+
+  // When dragging, make all strips more visible
+  &--dragging &__zone {
+    opacity: 0.7;
+
+    // Active zone stays brighter
+    &--active {
+      opacity: 0.9;
+    }
+  }
+
+  // Emoji on strip (hidden by default)
+  &__zone-emoji {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  // Content wrapper (above zones)
+  &__content-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    transition: opacity 0.2s;
+    pointer-events: none; // Allow touches to pass through to card
+  }
+
+  // Dim content during drag
+  &--dragging &__content-wrapper {
+    opacity: 0.4;
+  }
+
+  // Vertical swipe indicator (center zone)
+  &__vertical-indicator {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 2;
+  }
+
+  // Show indicator during vertical drag
+  &--vertical-drag &__vertical-indicator {
+    opacity: 1;
+  }
+
   &__overlay {
     position: absolute;
     top: 50%;
@@ -49,6 +143,7 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.2s;
+    display: none; // Hidden in zone-based system
   }
 
   &__content {
@@ -76,10 +171,118 @@
     }
   }
 
-  // Overlay states
+  // Overlay states (legacy - kept for compatibility)
   &--like-active &__overlay,
   &--dislike-active &__overlay {
-    opacity: 1;
+    opacity: 0; // Disabled in zone-based system
+  }
+
+  // Confirmation modal (learning mode)
+  &__confirmation-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  &__confirmation-modal {
+    background: var(--card-default);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease-out;
+
+    // Rating variant colors
+    &--strongly-agree {
+      background: var(--rating-strongly-agree);
+      border: 2px solid var(--rating-strongly-agree-border);
+    }
+
+    &--agree {
+      background: var(--rating-agree);
+      border: 2px solid var(--rating-agree-border);
+    }
+
+    &--neutral {
+      background: var(--rating-neutral);
+      border: 2px solid var(--rating-neutral-border);
+    }
+
+    &--disagree {
+      background: var(--rating-disagree);
+      border: 2px solid var(--rating-disagree-border);
+    }
+
+    &--strongly-disagree {
+      background: var(--rating-strongly-disagree);
+      border: 2px solid var(--rating-strongly-disagree-border);
+    }
+  }
+
+  &__confirmation-emoji {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  &__confirmation-title {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  &__confirmation-rating {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  &__confirmation-question {
+    font-size: 1rem;
+    color: var(--text-body);
+    margin-bottom: 1.5rem;
+  }
+
+  &__confirmation-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  &__confirmation-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+
+    &--cancel {
+      background: var(--btn-secondary);
+      color: var(--text-primary);
+
+      &:hover {
+        background: #d1d5db;
+      }
+    }
+
+    &--confirm {
+      background: var(--btn-primary);
+      color: white;
+
+      &:hover {
+        background: var(--btn-primary-hover);
+      }
+    }
   }
 
   // Accessibility
@@ -90,12 +293,25 @@
     &__overlay {
       transition: none;
     }
+
+    &__confirmation-overlay,
+    &__confirmation-modal {
+      animation: none;
+    }
   }
 
   // Mobile
   @include mobile {
     &__content {
       font-size: 1rem;
+    }
+
+    &__confirmation-modal {
+      padding: 1.5rem;
+    }
+
+    &__confirmation-buttons {
+      flex-direction: column;
     }
   }
 }
@@ -123,5 +339,25 @@
   to {
     transform: translateX(0) rotate(0) scale(1);
     opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
