@@ -15,6 +15,7 @@ import { ToastProvider } from '@/components/shared/Toast';
 import './globals.css';
 import '@/styles/atoms/_index.scss';
 import '@/styles/molecules/_index.scss';
+import '@/styles/organisms/_index.scss';
 
 export const metadata: Metadata = {
   title: 'WizCol: Mass Consensus',
