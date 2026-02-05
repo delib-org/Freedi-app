@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useTranslation } from '@freedi/shared-i18n/react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import type { Survey, SurveyLogo } from '@freedi/shared-types';
 import { OpeningSlideEditor } from './OpeningSlideEditor';
 
