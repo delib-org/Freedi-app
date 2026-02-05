@@ -7,7 +7,7 @@ import { deleteSurveyLogo } from '@/lib/firebase/storage';
 import type { UpdateLogoRequest } from '@/types/survey';
 
 /**
- * DELETE /api/surveys/[surveyId]/logos/[logoId]
+ * DELETE /api/surveys/[id]/logos/[logoId]
  * Delete a logo from a survey
  */
 export async function DELETE(
@@ -70,14 +70,14 @@ export async function DELETE(
       );
     }
 
-    logger.info('[DELETE /api/surveys/[surveyId]/logos/[logoId]] Logo deleted:', logoId);
+    logger.info('[DELETE /api/surveys/[id]/logos/[logoId]] Logo deleted:', logoId);
 
     return NextResponse.json({
       message: 'Logo deleted successfully',
     });
 
   } catch (error) {
-    logger.error('[DELETE /api/surveys/[surveyId]/logos/[logoId]] Error:', error);
+    logger.error('[DELETE /api/surveys/[id]/logos/[logoId]] Error:', error);
     return NextResponse.json(
       { error: 'Failed to delete logo' },
       { status: 500 }
@@ -86,7 +86,7 @@ export async function DELETE(
 }
 
 /**
- * PATCH /api/surveys/[surveyId]/logos/[logoId]
+ * PATCH /api/surveys/[id]/logos/[logoId]
  * Update logo metadata (alt text, order, dimensions)
  */
 export async function PATCH(
@@ -143,7 +143,7 @@ export async function PATCH(
     // Find updated logo
     const updatedLogo = updatedSurvey.logos?.find((l) => l.logoId === logoId);
 
-    logger.info('[PATCH /api/surveys/[surveyId]/logos/[logoId]] Logo updated:', logoId);
+    logger.info('[PATCH /api/surveys/[id]/logos/[logoId]] Logo updated:', logoId);
 
     return NextResponse.json({
       logo: updatedLogo,
@@ -151,7 +151,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    logger.error('[PATCH /api/surveys/[surveyId]/logos/[logoId]] Error:', error);
+    logger.error('[PATCH /api/surveys/[id]/logos/[logoId]] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update logo' },
       { status: 500 }

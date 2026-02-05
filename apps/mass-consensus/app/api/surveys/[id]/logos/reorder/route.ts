@@ -6,12 +6,12 @@ import { getSurveyById, reorderSurveyLogos } from '@/lib/firebase/surveys';
 import type { ReorderLogosRequest } from '@/types/survey';
 
 /**
- * POST /api/surveys/[surveyId]/logos/reorder
+ * POST /api/surveys/[id]/logos/reorder
  * Reorder logos in a survey
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { surveyId: string } }
+  { params }: { params: { id: string } }
 ) {
   // Rate limit check
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
@@ -20,7 +20,7 @@ export async function POST(
   }
 
   try {
-    const { surveyId } = params;
+    const surveyId = params.id;
 
     // Check authentication
     const userId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -67,7 +67,7 @@ export async function POST(
       );
     }
 
-    logger.info('[POST /api/surveys/[surveyId]/logos/reorder] Logos reordered for survey:', surveyId);
+    logger.info('[POST /api/surveys/[id]/logos/reorder] Logos reordered for survey:', surveyId);
 
     return NextResponse.json({
       logos: updatedSurvey.logos || [],
@@ -75,7 +75,7 @@ export async function POST(
     });
 
   } catch (error) {
-    logger.error('[POST /api/surveys/[surveyId]/logos/reorder] Error:', error);
+    logger.error('[POST /api/surveys/[id]/logos/reorder] Error:', error);
     return NextResponse.json(
       { error: 'Failed to reorder logos' },
       { status: 500 }

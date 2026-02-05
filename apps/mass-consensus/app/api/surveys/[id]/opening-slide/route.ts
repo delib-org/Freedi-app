@@ -5,15 +5,15 @@ import { logger } from '@/lib/utils/logger';
 import { getSurveyById, updateSurveyOpeningSlide } from '@/lib/firebase/surveys';
 
 /**
- * GET /api/surveys/[surveyId]/opening-slide
+ * GET /api/surveys/[id]/opening-slide
  * Get opening slide configuration for a survey
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { surveyId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { surveyId } = params;
+    const surveyId = params.id;
 
     const survey = await getSurveyById(surveyId);
     if (!survey) {
@@ -29,7 +29,7 @@ export async function GET(
       logos: survey.logos || [],
     });
   } catch (error) {
-    logger.error('[GET /api/surveys/[surveyId]/opening-slide] Error:', error);
+    logger.error('[GET /api/surveys/[id]/opening-slide] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch opening slide' },
       { status: 500 }
@@ -38,12 +38,12 @@ export async function GET(
 }
 
 /**
- * PATCH /api/surveys/[surveyId]/opening-slide
+ * PATCH /api/surveys/[id]/opening-slide
  * Update opening slide configuration
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { surveyId: string } }
+  { params }: { params: { id: string } }
 ) {
   // Rate limit check
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
@@ -52,7 +52,7 @@ export async function PATCH(
   }
 
   try {
-    const { surveyId } = params;
+    const surveyId = params.id;
 
     // Check authentication
     const userId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -103,7 +103,7 @@ export async function PATCH(
       );
     }
 
-    logger.info('[PATCH /api/surveys/[surveyId]/opening-slide] Opening slide updated:', surveyId);
+    logger.info('[PATCH /api/surveys/[id]/opening-slide] Opening slide updated:', surveyId);
 
     return NextResponse.json({
       showOpeningSlide: updatedSurvey.showOpeningSlide,
@@ -112,7 +112,7 @@ export async function PATCH(
     });
 
   } catch (error) {
-    logger.error('[PATCH /api/surveys/[surveyId]/opening-slide] Error:', error);
+    logger.error('[PATCH /api/surveys/[id]/opening-slide] Error:', error);
     return NextResponse.json(
       { error: 'Failed to update opening slide' },
       { status: 500 }

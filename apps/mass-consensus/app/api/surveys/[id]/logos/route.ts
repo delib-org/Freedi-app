@@ -4,18 +4,17 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, addLogoToSurvey } from '@/lib/firebase/surveys';
 import { uploadSurveyLogo } from '@/lib/firebase/storage';
-import type { UploadLogoRequest } from '@/types/survey';
 
 /**
- * GET /api/surveys/[surveyId]/logos
+ * GET /api/surveys/[id]/logos
  * Get all logos for a survey
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { surveyId: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { surveyId } = params;
+    const surveyId = params.id;
 
     const survey = await getSurveyById(surveyId);
     if (!survey) {
@@ -29,7 +28,7 @@ export async function GET(
       logos: survey.logos || [],
     });
   } catch (error) {
-    logger.error('[GET /api/surveys/[surveyId]/logos] Error:', error);
+    logger.error('[GET /api/surveys/[id]/logos] Error:', error);
     return NextResponse.json(
       { error: 'Failed to fetch logos' },
       { status: 500 }
@@ -38,12 +37,12 @@ export async function GET(
 }
 
 /**
- * POST /api/surveys/[surveyId]/logos
+ * POST /api/surveys/[id]/logos
  * Upload a new logo for a survey
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { surveyId: string } }
+  { params }: { params: { id: string } }
 ) {
   // Rate limit check
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
@@ -52,7 +51,7 @@ export async function POST(
   }
 
   try {
-    const { surveyId } = params;
+    const surveyId = params.id;
 
     // Check authentication
     const userId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -109,7 +108,7 @@ export async function POST(
       );
     }
 
-    logger.info('[POST /api/surveys/[surveyId]/logos] Logo uploaded:', logo.logoId);
+    logger.info('[POST /api/surveys/[id]/logos] Logo uploaded:', logo.logoId);
 
     return NextResponse.json({
       logo,
@@ -117,7 +116,7 @@ export async function POST(
     }, { status: 201 });
 
   } catch (error) {
-    logger.error('[POST /api/surveys/[surveyId]/logos] Error:', error);
+    logger.error('[POST /api/surveys/[id]/logos] Error:', error);
 
     // Handle specific error types
     if (error instanceof Error) {
