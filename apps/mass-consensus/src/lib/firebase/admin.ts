@@ -48,6 +48,7 @@ return app;
           privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         }),
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
       console.info('[Firebase Admin] Initialized with explicit credentials');
     } else if (hasServiceAccountFile) {
@@ -58,12 +59,14 @@ return app;
       app = initializeApp({
         credential: cert(serviceAccount),
         projectId: serviceAccount.project_id,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
       console.info('[Firebase Admin] Initialized with service account file');
     } else {
       // Use default credentials (works in Firebase Functions, Cloud Run, etc.)
       app = initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
       console.info('[Firebase Admin] Initialized with default credentials');
     }
