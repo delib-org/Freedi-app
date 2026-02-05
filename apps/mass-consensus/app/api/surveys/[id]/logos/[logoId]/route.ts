@@ -3,7 +3,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, removeLogoFromSurvey, updateLogoInSurvey } from '@/lib/firebase/surveys';
-import { deleteSurveyLogo } from '@/lib/firebase/storage';
+import { deleteSurveyLogoAdmin } from '@/lib/firebase/storageAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, Role } from 'delib-npm';
 import type { UpdateLogoRequest } from '@/types/survey';
@@ -78,8 +78,8 @@ export async function DELETE(
       );
     }
 
-    // Delete from Firebase Storage
-    await deleteSurveyLogo(logo.storageUrl);
+    // Delete from Firebase Storage using Admin SDK
+    await deleteSurveyLogoAdmin(logo.storageUrl);
 
     // Remove from survey document
     const updatedSurvey = await removeLogoFromSurvey(surveyId, logoId);

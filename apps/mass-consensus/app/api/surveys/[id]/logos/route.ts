@@ -3,7 +3,7 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, addLogoToSurvey } from '@/lib/firebase/surveys';
-import { uploadSurveyLogo } from '@/lib/firebase/storage';
+import { uploadSurveyLogoAdmin } from '@/lib/firebase/storageAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, Role } from 'delib-npm';
 
@@ -77,6 +77,13 @@ export async function POST(
     const isCreator = survey.creatorId === userId;
     let isAdmin = false;
 
+    logger.info('[POST /api/surveys/[id]/logos] Authorization check:', {
+      userId,
+      creatorId: survey.creatorId,
+      isCreator,
+      surveyId
+    });
+
     if (!isCreator) {
       // Check if user has admin subscription to this survey
       const db = getFirestoreAdmin();
@@ -89,9 +96,19 @@ export async function POST(
         .get();
 
       isAdmin = !adminSubscription.empty;
+      logger.info('[POST /api/surveys/[id]/logos] Admin check:', {
+        isAdmin,
+        subscriptionCount: adminSubscription.size
+      });
     }
 
     if (!isCreator && !isAdmin) {
+      logger.error('[POST /api/surveys/[id]/logos] Authorization failed:', {
+        userId,
+        creatorId: survey.creatorId,
+        isCreator,
+        isAdmin
+      });
       return NextResponse.json(
         { error: 'Only survey creator or admin can upload logos' },
         { status: 403 }
@@ -115,8 +132,8 @@ export async function POST(
     const currentLogos = survey.logos || [];
     const order = orderStr ? parseInt(orderStr, 10) : currentLogos.length;
 
-    // Upload to Firebase Storage
-    const logo = await uploadSurveyLogo(surveyId, file, altText, order);
+    // Upload to Firebase Storage using Admin SDK
+    const logo = await uploadSurveyLogoAdmin(surveyId, file, altText, order);
 
     // Add to survey document
     const updatedSurvey = await addLogoToSurvey(surveyId, logo);
