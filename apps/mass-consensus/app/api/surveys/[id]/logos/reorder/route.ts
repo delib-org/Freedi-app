@@ -3,6 +3,8 @@ import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, reorderSurveyLogos } from '@/lib/firebase/surveys';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { Collections, Role } from 'delib-npm';
 import type { ReorderLogosRequest } from '@/types/survey';
 
 /**
@@ -31,7 +33,7 @@ export async function POST(
       );
     }
 
-    // Verify survey exists and user is creator
+    // Verify survey exists
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json(
@@ -40,9 +42,27 @@ export async function POST(
       );
     }
 
-    if (survey.creatorId !== userId) {
+    // Check if user is creator or has admin role
+    const isCreator = survey.creatorId === userId;
+    let isAdmin = false;
+
+    if (!isCreator) {
+      // Check if user has admin subscription to this survey
+      const db = getFirestoreAdmin();
+      const adminSubscription = await db
+        .collection(Collections.statementsSubscribe)
+        .where('statementId', '==', surveyId)
+        .where('userId', '==', userId)
+        .where('role', '==', Role.admin)
+        .limit(1)
+        .get();
+
+      isAdmin = !adminSubscription.empty;
+    }
+
+    if (!isCreator && !isAdmin) {
       return NextResponse.json(
-        { error: 'Only survey creator can reorder logos' },
+        { error: 'Only survey creator or admin can reorder logos' },
         { status: 403 }
       );
     }

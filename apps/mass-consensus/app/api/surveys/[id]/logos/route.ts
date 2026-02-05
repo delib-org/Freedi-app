@@ -4,6 +4,8 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, addLogoToSurvey } from '@/lib/firebase/surveys';
 import { uploadSurveyLogo } from '@/lib/firebase/storage';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { Collections, Role } from 'delib-npm';
 
 /**
  * GET /api/surveys/[id]/logos
@@ -62,7 +64,7 @@ export async function POST(
       );
     }
 
-    // Verify survey exists and user is creator
+    // Verify survey exists
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json(
@@ -71,9 +73,27 @@ export async function POST(
       );
     }
 
-    if (survey.creatorId !== userId) {
+    // Check if user is creator or has admin role
+    const isCreator = survey.creatorId === userId;
+    let isAdmin = false;
+
+    if (!isCreator) {
+      // Check if user has admin subscription to this survey
+      const db = getFirestoreAdmin();
+      const adminSubscription = await db
+        .collection(Collections.statementsSubscribe)
+        .where('statementId', '==', surveyId)
+        .where('userId', '==', userId)
+        .where('role', '==', Role.admin)
+        .limit(1)
+        .get();
+
+      isAdmin = !adminSubscription.empty;
+    }
+
+    if (!isCreator && !isAdmin) {
       return NextResponse.json(
-        { error: 'Only survey creator can upload logos' },
+        { error: 'Only survey creator or admin can upload logos' },
         { status: 403 }
       );
     }

@@ -4,6 +4,8 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, removeLogoFromSurvey, updateLogoInSurvey } from '@/lib/firebase/surveys';
 import { deleteSurveyLogo } from '@/lib/firebase/storage';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { Collections, Role } from 'delib-npm';
 import type { UpdateLogoRequest } from '@/types/survey';
 
 /**
@@ -12,7 +14,7 @@ import type { UpdateLogoRequest } from '@/types/survey';
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { surveyId: string; logoId: string } }
+  { params }: { params: { id: string; logoId: string } }
 ) {
   // Rate limit check
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
@@ -21,7 +23,8 @@ export async function DELETE(
   }
 
   try {
-    const { surveyId, logoId } = params;
+    const surveyId = params.id;
+    const { logoId } = params;
 
     // Check authentication
     const userId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -32,7 +35,7 @@ export async function DELETE(
       );
     }
 
-    // Verify survey exists and user is creator
+    // Verify survey exists
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json(
@@ -41,9 +44,27 @@ export async function DELETE(
       );
     }
 
-    if (survey.creatorId !== userId) {
+    // Check if user is creator or has admin role
+    const isCreator = survey.creatorId === userId;
+    let isAdmin = false;
+
+    if (!isCreator) {
+      // Check if user has admin subscription to this survey
+      const db = getFirestoreAdmin();
+      const adminSubscription = await db
+        .collection(Collections.statementsSubscribe)
+        .where('statementId', '==', surveyId)
+        .where('userId', '==', userId)
+        .where('role', '==', Role.admin)
+        .limit(1)
+        .get();
+
+      isAdmin = !adminSubscription.empty;
+    }
+
+    if (!isCreator && !isAdmin) {
       return NextResponse.json(
-        { error: 'Only survey creator can delete logos' },
+        { error: 'Only survey creator or admin can delete logos' },
         { status: 403 }
       );
     }
@@ -91,7 +112,7 @@ export async function DELETE(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { surveyId: string; logoId: string } }
+  { params }: { params: { id: string; logoId: string } }
 ) {
   // Rate limit check
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
@@ -100,7 +121,8 @@ export async function PATCH(
   }
 
   try {
-    const { surveyId, logoId } = params;
+    const surveyId = params.id;
+    const { logoId } = params;
 
     // Check authentication
     const userId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -111,7 +133,7 @@ export async function PATCH(
       );
     }
 
-    // Verify survey exists and user is creator
+    // Verify survey exists
     const survey = await getSurveyById(surveyId);
     if (!survey) {
       return NextResponse.json(
@@ -120,9 +142,27 @@ export async function PATCH(
       );
     }
 
-    if (survey.creatorId !== userId) {
+    // Check if user is creator or has admin role
+    const isCreator = survey.creatorId === userId;
+    let isAdmin = false;
+
+    if (!isCreator) {
+      // Check if user has admin subscription to this survey
+      const db = getFirestoreAdmin();
+      const adminSubscription = await db
+        .collection(Collections.statementsSubscribe)
+        .where('statementId', '==', surveyId)
+        .where('userId', '==', userId)
+        .where('role', '==', Role.admin)
+        .limit(1)
+        .get();
+
+      isAdmin = !adminSubscription.empty;
+    }
+
+    if (!isCreator && !isAdmin) {
       return NextResponse.json(
-        { error: 'Only survey creator can update logos' },
+        { error: 'Only survey creator or admin can update logos' },
         { status: 403 }
       );
     }
