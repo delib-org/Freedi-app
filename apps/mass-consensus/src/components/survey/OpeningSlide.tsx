@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { useTranslation } from '@freedi/shared-i18n/react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import ReactMarkdown from 'react-markdown';
 import type { Survey } from '@freedi/shared-types';
 import clsx from 'clsx';

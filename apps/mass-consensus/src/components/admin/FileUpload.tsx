@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useState } from 'react';
-import { useTranslation } from '@freedi/shared-i18n/react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 
 export interface FileUploadProps {
