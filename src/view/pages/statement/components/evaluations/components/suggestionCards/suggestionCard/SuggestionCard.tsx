@@ -8,10 +8,8 @@ import CreateStatementModal from '../../../../createStatementModal/CreateStateme
 import Evaluation from '../../evaluation/Evaluation';
 import SolutionMenu from '../../solutionMenu/SolutionMenu';
 import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
-import EyeIcon from '@/assets/icons/eye.svg?react';
-import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
-import { updateStatementText, updateStatementMainImage, toggleStatementHide } from '@/controllers/db/statements/setStatements';
+import { updateStatementText, updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor, {
@@ -279,11 +277,6 @@ const SuggestionCard: FC<Props> = ({
 	// Border: Green if in results (evaluation winner), otherwise use statement type color (yellow for options)
 	const selectedOptionIndicator = `8px solid ${isInResults ? 'var(--approve)' : statementColor.backgroundColor || 'white'}`;
 
-	function handleToggleHide(e: React.MouseEvent) {
-		e.stopPropagation();
-		toggleStatementHide(statement.statementId);
-	}
-
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
@@ -306,46 +299,6 @@ const SuggestionCard: FC<Props> = ({
 			ref={elementRef}
 			id={statement.statementId}
 		>
-			{/* Hidden badge - visible when card is hidden, clickable for admins */}
-			{statement.hide && (
-				<button
-					type="button"
-					className={`${styles.hiddenBadge} ${isAuthorized ? styles['hiddenBadge--clickable'] : ''}`}
-					onClick={isAuthorized ? handleToggleHide : undefined}
-					title={isAuthorized ? t('Click to unhide') : t('Hidden from participants')}
-					aria-label={isAuthorized ? t('Unhide this card') : t('This card is hidden')}
-				>
-					<EyeCrossIcon />
-					<span>{t('Hidden')}</span>
-				</button>
-			)}
-
-			{/* Quick unhide button - appears on hover for admins on hidden cards */}
-			{statement.hide && isAuthorized && (
-				<button
-					type="button"
-					className={styles.quickUnhideBtn}
-					onClick={handleToggleHide}
-					title={t('Unhide')}
-					aria-label={t('Unhide this card')}
-				>
-					<EyeIcon />
-				</button>
-			)}
-
-			{/* Quick hide button - appears on hover for admins on visible cards */}
-			{!statement.hide && isAuthorized && (
-				<button
-					type="button"
-					className={styles.quickHideBtn}
-					onClick={handleToggleHide}
-					title={t('Hide')}
-					aria-label={t('Hide this card from participants')}
-				>
-					<EyeCrossIcon />
-				</button>
-			)}
-
 			{/* Loader overlay when improving */}
 			{isImproving && (
 				<div className={styles.loaderOverlay}>
