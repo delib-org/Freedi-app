@@ -189,6 +189,41 @@ export async function updateParagraphImageToDB({
 }
 
 /**
+ * Bulk delete (hide) multiple paragraph statements using batched writes
+ */
+export async function bulkDeleteParagraphStatementsToDB(paragraphIds: string[]): Promise<void> {
+  try {
+    const firestore = getFirebaseFirestore();
+    const now = Date.now();
+    const { writeBatch } = await import('firebase/firestore');
+
+    // Firestore batch limit is 500
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < paragraphIds.length; i += BATCH_SIZE) {
+      const chunk = paragraphIds.slice(i, i + BATCH_SIZE);
+      const batch = writeBatch(firestore);
+
+      for (const id of chunk) {
+        const ref = doc(firestore, Collections.statements, id);
+        batch.update(ref, { hide: true, lastUpdate: now });
+      }
+
+      await batch.commit();
+    }
+
+    console.info('[bulkDeleteParagraphStatementsToDB] Bulk deleted paragraphs', {
+      count: paragraphIds.length,
+    });
+  } catch (error) {
+    logError(error, {
+      operation: 'controllers.bulkDeleteParagraphStatementsToDB',
+      metadata: { count: paragraphIds.length },
+    });
+    throw error;
+  }
+}
+
+/**
  * Delete (hide) a paragraph statement
  */
 export async function deleteParagraphStatementToDB(paragraphId: string): Promise<void> {
