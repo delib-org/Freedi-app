@@ -95,7 +95,7 @@ export async function updateParagraphStatementToDB({
 
     await updateDoc(statementRef, {
       statement: content,
-      'doc.type': type,
+      'doc.paragraphType': type,
       lastUpdate: Date.now(),
     });
 
