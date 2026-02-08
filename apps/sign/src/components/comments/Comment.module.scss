@@ -80,6 +80,31 @@
   line-height: 1.5;
   color: var(--text-body);
   word-wrap: break-word;
+
+  p {
+    margin: 0 0 0.5em 0;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong, b {
+    font-weight: 600;
+  }
+
+  em, i {
+    font-style: italic;
+  }
+
+  ul, ol {
+    margin: 0.25em 0;
+    padding-left: 1.5em;
+  }
+
+  li {
+    margin-bottom: 0.15em;
+  }
 }
 
 /* Edit form */
