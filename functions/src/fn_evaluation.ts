@@ -19,7 +19,7 @@ import {
 	CutoffBy,
 	defaultResultsSettings
 } from '@freedi/shared-types';
-import type { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
+import type { PopperHebbianScore } from '@freedi/shared-types';
 
 // Extend Statement type to include popperHebbianScore (it exists but TypeScript doesn't see it during compilation)
 type StatementWithPopper = Statement & { popperHebbianScore?: PopperHebbianScore };

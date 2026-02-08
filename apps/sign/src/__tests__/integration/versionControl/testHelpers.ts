@@ -3,7 +3,7 @@
  * Utilities for setting up test data and scenarios
  */
 
-import { Statement, Role, StatementType } from 'delib-npm';
+import { Statement, Role, StatementType } from '@freedi/shared-types';
 import { PendingReplacement } from '@freedi/shared-types';
 
 /**

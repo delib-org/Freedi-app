@@ -444,3 +444,7 @@ export {
 
 // Evidence models
 export { EvidenceType } from "./models/evidence/evidenceModel";
+
+// Popper Hebbian models
+export type { PopperHebbianScore } from "./models/popper/popperTypes";
+export { PopperHebbianScoreSchema } from "./models/popper/popperTypes";
