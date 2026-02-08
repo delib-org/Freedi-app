@@ -59,6 +59,14 @@ const Suggestion = memo(function Suggestion({
 }: SuggestionProps) {
   const { t } = useTranslation();
 
+  // Debug: Log suggestion data
+  console.info('[Suggestion] Rendering suggestion:', {
+    id: suggestion.suggestionId,
+    hasReasoning: !!suggestion.reasoning,
+    reasoning: suggestion.reasoning,
+    reasoningLength: suggestion.reasoning?.length || 0,
+  });
+
   // Check if current user owns this suggestion
   const isOwner = Boolean(userId && suggestion.creatorId === userId);
 
@@ -94,6 +102,14 @@ const Suggestion = memo(function Suggestion({
 
     return sanitizeHTML(htmlContent);
   }, [suggestion.suggestedContent]);
+
+  // Convert reasoning text: preserve newlines as paragraphs and support markdown
+  const sanitizedReasoning = useMemo(() => {
+    if (!suggestion.reasoning) return '';
+    const htmlContent = markdownToHtml(suggestion.reasoning);
+
+    return sanitizeHTML(htmlContent);
+  }, [suggestion.reasoning]);
 
   // Memoize formatted date
   const formattedDate = useMemo(
@@ -191,7 +207,11 @@ const Suggestion = memo(function Suggestion({
         {suggestion.reasoning && (
           <div className={styles.reasoning}>
             <span className={styles.reasoningLabel}>{t('Reasoning')}:</span>
-            <p>{suggestion.reasoning}</p>
+            <div
+              className={styles.reasoningText}
+              dangerouslySetInnerHTML={{ __html: sanitizedReasoning }}
+              suppressHydrationWarning
+            />
           </div>
         )}
       </div>

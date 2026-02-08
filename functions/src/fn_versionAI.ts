@@ -220,7 +220,8 @@ async function callGemini(
   }
 
   const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  
+return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
 }
 
 /**
@@ -365,7 +366,8 @@ async function analyzeParagraph(
       `[analyzeParagraph] Error for paragraph ${paragraph.paragraphId}:`,
       error
     );
-    return {
+    
+return {
       proposedContent: paragraph.content || "",
       reasoning:
         "AI analysis encountered an error. The original content has been preserved.",
@@ -384,14 +386,16 @@ export async function processVersionAI(
   try {
     if (req.method !== "POST") {
       res.status(405).json({ error: "Method not allowed" });
-      return;
+      
+return;
     }
 
     const { versionId, documentId } = req.body;
 
     if (!versionId || !documentId) {
       res.status(400).json({ error: "versionId and documentId are required" });
-      return;
+      
+return;
     }
 
     console.info(`[processVersionAI] Starting for version ${versionId}`);
@@ -402,19 +406,22 @@ export async function processVersionAI(
 
     if (!versionSnap.exists) {
       res.status(404).json({ error: "Version not found" });
-      return;
+      
+return;
     }
 
     const version = versionSnap.data() as DocumentVersion;
 
     if (version.documentId !== documentId) {
       res.status(400).json({ error: "Version does not belong to this document" });
-      return;
+      
+return;
     }
 
     if (version.status !== VersionStatus.draft) {
       res.status(400).json({ error: "Only draft versions can be processed" });
-      return;
+      
+return;
     }
 
     // Get changes
@@ -427,14 +434,16 @@ export async function processVersionAI(
 
     if (changes.length === 0) {
       res.status(400).json({ error: "No changes found for this version" });
-      return;
+      
+return;
     }
 
     const paragraphs: Paragraph[] = version.paragraphs || [];
 
     if (paragraphs.length === 0) {
       res.status(400).json({ error: "Version has no paragraphs" });
-      return;
+      
+return;
     }
 
     // Log all changes for debugging
@@ -460,7 +469,8 @@ export async function processVersionAI(
         totalChanges: changes.length,
         message: "No paragraphs had feedback requiring AI processing",
       });
-      return;
+      
+return;
     }
 
     // Process all paragraphs in parallel
@@ -505,7 +515,8 @@ export async function processVersionAI(
       if (analysis) {
         return { ...p, content: analysis.result.proposedContent };
       }
-      return p;
+      
+return p;
     });
 
     batch.update(versionRef, {

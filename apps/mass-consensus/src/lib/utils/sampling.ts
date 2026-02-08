@@ -445,6 +445,7 @@ function calculateThresholdProximityScore(
  *
  * @param proposal - The statement to score
  * @param config - Sampling configuration
+ * @param percentileRank - Optional percentile rank (0-1) for top-mean bonus calculation
  */
 export function calculateAdjustedPriority(
   proposal: Statement,

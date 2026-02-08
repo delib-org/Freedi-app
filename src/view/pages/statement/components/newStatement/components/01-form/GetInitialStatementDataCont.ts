@@ -1,5 +1,5 @@
 import { similarOptionsEndPoint } from "@/services/similarOptions";
-import { Statement } from "delib-npm";
+import { Statement } from '@freedi/shared-types';
 
 export async function getSimilarOptions(statementId: string, userInput: string, creatorId: string, setError: (error: string) => void): Promise<{ similarStatements: Statement[], similarTexts: string[], userText: string | null } | null> {
 	try {

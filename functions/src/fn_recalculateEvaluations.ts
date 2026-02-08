@@ -10,7 +10,7 @@ import {
 	functionConfig,
 } from "@freedi/shared-types";
 import { calculateConsensusValid } from "./helpers/consensusValidCalculator";
-import type { PopperHebbianScore } from "delib-npm/dist/models/popper/popperTypes";
+import type { PopperHebbianScore } from '@freedi/shared-types';
 
 // Uncertainty floor for Mean - SEM calculation
 const FLOOR_STD_DEV = 0.5;

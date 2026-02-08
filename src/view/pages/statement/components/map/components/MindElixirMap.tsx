@@ -225,7 +225,8 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				// Check if this node can have children
 				if (!canHaveChildren(currentStatement.statementType)) {
 					console.info('Options cannot have children');
-					return;
+					
+return;
 				}
 
 				const newStatement = await createMindMapChild({
@@ -255,7 +256,8 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 				if (!parentStatement) {
 					console.info('Cannot create sibling for root node');
-					return;
+					
+return;
 				}
 
 				const newStatement = await createMindMapSibling({

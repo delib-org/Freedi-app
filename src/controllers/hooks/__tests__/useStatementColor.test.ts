@@ -3,7 +3,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import { Statement, StatementType } from 'delib-npm';
+import { Statement, StatementType } from '@freedi/shared-types';
 import useStatementColor from '../useStatementColor';
 
 describe('useStatementColor', () => {

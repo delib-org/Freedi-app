@@ -1,7 +1,7 @@
 import { FC } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useSelector } from "react-redux";
-import { Role, Screen, Statement } from "delib-npm";
+import { Role, Screen, Statement } from '@freedi/shared-types';
 
 // Constants
 import { LANGUAGES } from "@/constants/Languages";

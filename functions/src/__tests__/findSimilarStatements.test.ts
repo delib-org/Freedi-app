@@ -1,5 +1,5 @@
 import { Request, Response } from "firebase-functions/v1";
-import { Statement } from "delib-npm";
+import { Statement } from '@freedi/shared-types';
 import { findSimilarStatements } from "../fn_findSimilarStatements";
 import * as aiService from "../services/ai-service";
 import * as cachedStatementService from "../services/cached-statement-service";

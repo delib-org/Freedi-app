@@ -6,7 +6,7 @@ import {
 	PendingReplacement,
 	StatementType,
 } from '@freedi/shared-types';
-import { Role } from 'delib-npm';
+import { Role } from '@freedi/shared-types';
 
 /**
  * Cloud Function: Notify Admin Replacement Pending
@@ -27,7 +27,8 @@ export const fn_notifyAdminReplacementPending = onDocumentCreated(
 
 			if (!queueEntry) {
 				logger.warn('[fn_notifyAdminReplacementPending] No queue data');
-				return null;
+				
+return null;
 			}
 
 			logger.info('[fn_notifyAdminReplacementPending] Processing queue item', {
@@ -48,7 +49,8 @@ export const fn_notifyAdminReplacementPending = onDocumentCreated(
 				logger.warn('[fn_notifyAdminReplacementPending] No admins found', {
 					documentId: queueEntry.documentId,
 				});
-				return null;
+				
+return null;
 			}
 
 			logger.info('[fn_notifyAdminReplacementPending] Found admins', {
@@ -116,6 +118,7 @@ export const fn_notifyAdminReplacementPending = onDocumentCreated(
 				stack: error instanceof Error ? error.stack : undefined,
 			});
 			// Don't throw - this is a notification trigger
+
 			return null;
 		}
 	}

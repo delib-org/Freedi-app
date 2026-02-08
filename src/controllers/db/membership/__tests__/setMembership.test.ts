@@ -2,8 +2,8 @@
  * Tests for setMembership controller
  */
 
-// Mock delib-npm before import to prevent valibot loading
-jest.mock('delib-npm', () => ({
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
 	Role: {
 		admin: 'admin',
 		member: 'member',

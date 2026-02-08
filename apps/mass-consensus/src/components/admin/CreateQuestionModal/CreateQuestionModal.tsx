@@ -239,6 +239,7 @@ export default function CreateQuestionModal({
         <div className={styles.modalHeader}>
           <h2 className={styles.modalTitle}>{t('createQuestion') || 'Create Question'}</h2>
           <button
+            type="button"
             className={styles.closeButton}
             onClick={onClose}
             aria-label={t('close') || 'Close'}
@@ -337,7 +338,7 @@ export default function CreateQuestionModal({
               ) : groupsError ? (
                 <div className={styles.emptyState}>
                   <p>{groupsError}</p>
-                  <button className={styles.createGroupButton} onClick={fetchGroups}>
+                  <button type="button" className={styles.createGroupButton} onClick={fetchGroups}>
                     {t('retry') || 'Retry'}
                   </button>
                 </div>
@@ -349,6 +350,7 @@ export default function CreateQuestionModal({
                       'Create your first group to start adding questions.'}
                   </p>
                   <button
+                    type="button"
                     className={styles.createGroupButton}
                     onClick={() => setIsCreatingGroup(true)}
                   >
@@ -365,6 +367,11 @@ export default function CreateQuestionModal({
                         placeholder={t('searchGroups') || 'Search groups...'}
                         value={groupSearchQuery}
                         onChange={(e) => setGroupSearchQuery(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                          }
+                        }}
                       />
 
                       <div className={styles.groupList}>
@@ -400,6 +407,7 @@ export default function CreateQuestionModal({
                     <>
                       <div className={styles.divider}>{t('or') || 'OR'}</div>
                       <button
+                        type="button"
                         className={styles.createGroupButton}
                         onClick={() => setIsCreatingGroup(true)}
                       >
@@ -416,10 +424,17 @@ export default function CreateQuestionModal({
                         placeholder={t('groupNamePlaceholder') || 'Enter group name...'}
                         value={newGroupName}
                         onChange={(e) => setNewGroupName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleCreateGroup();
+                          }
+                        }}
                         autoFocus
                       />
                       <div className={styles.createGroupActions}>
                         <button
+                          type="button"
                           className={styles.backButton}
                           onClick={() => {
                             setIsCreatingGroup(false);
@@ -430,6 +445,7 @@ export default function CreateQuestionModal({
                           {t('cancel') || 'Cancel'}
                         </button>
                         <button
+                          type="button"
                           className={styles.continueButton}
                           onClick={handleCreateGroup}
                           disabled={creatingGroup || newGroupName.trim().length < 3}
@@ -463,6 +479,14 @@ export default function CreateQuestionModal({
                   placeholder={t('questionTextPlaceholder') || 'What should be our top priority?'}
                   value={questionText}
                   onChange={(e) => setQuestionText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (questionText.trim().length >= 3) {
+                        handleNext();
+                      }
+                    }
+                  }}
                   autoFocus
                 />
                 {questionText.length > 0 && questionText.length < 3 && (
@@ -525,6 +549,11 @@ export default function CreateQuestionModal({
                             value={maxVotes}
                             onChange={(e) => setMaxVotes(parseInt(e.target.value) || 3)}
                             onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                              }
+                            }}
                           />
                         </div>
                       )}
@@ -594,6 +623,13 @@ export default function CreateQuestionModal({
                 }
                 value={solutionsText}
                 onChange={(e) => setSolutionsText(e.target.value)}
+                onKeyDown={(e) => {
+                  // Allow Enter in textarea for new lines, but prevent if Ctrl/Cmd+Enter
+                  if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    handleCreateQuestion();
+                  }
+                }}
                 disabled={skipSolutions}
               />
 
@@ -642,6 +678,7 @@ export default function CreateQuestionModal({
         {/* Footer */}
         <div className={styles.modalFooter}>
           <button
+            type="button"
             className={styles.backButton}
             onClick={currentStep === 1 ? onClose : handleBack}
             disabled={isSubmitting}
@@ -651,6 +688,7 @@ export default function CreateQuestionModal({
 
           {currentStep < 3 ? (
             <button
+              type="button"
               className={styles.continueButton}
               onClick={handleNext}
               disabled={
@@ -662,6 +700,7 @@ export default function CreateQuestionModal({
             </button>
           ) : (
             <button
+              type="button"
               className={styles.createButton}
               onClick={handleCreateQuestion}
               disabled={!canCreate || isSubmitting}

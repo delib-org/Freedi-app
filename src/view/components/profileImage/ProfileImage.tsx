@@ -1,5 +1,5 @@
 import { FC } from "react";
-import { Creator, Statement } from "delib-npm";
+import { Creator, Statement } from '@freedi/shared-types';
 import styles from './ProfileImage.module.scss';
 import DefaultAvatar from '@/assets/images/avatar.jpg';
 

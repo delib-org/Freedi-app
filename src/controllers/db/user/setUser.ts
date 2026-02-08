@@ -2,7 +2,7 @@ import { setUserAdvanceUser } from "@/redux/creator/creatorSlice";
 import { store } from "@/redux/store";
 import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { DB } from "../config";
-import { Creator } from "delib-npm";
+import { Creator } from '@freedi/shared-types';
 
 export async function setUserAdvanceUserToDB(advanceUser: boolean) {
 	try {

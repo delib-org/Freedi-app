@@ -1,4 +1,4 @@
-import { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
+import { PopperHebbianScore } from '@freedi/shared-types';
 
 /**
  * Configuration for consensusValid calculation

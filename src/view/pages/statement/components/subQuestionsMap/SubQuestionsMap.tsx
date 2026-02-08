@@ -1,4 +1,4 @@
-import { Results, Statement, StatementType } from "delib-npm";
+import { Results, Statement, StatementType } from '@freedi/shared-types';
 import { type JSX, useState, useEffect } from "react";
 import { useParams, useLocation } from "react-router";
 import { useMindMap } from "../map/MindMapMV";
