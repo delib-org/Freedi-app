@@ -336,7 +336,12 @@ export default function ParagraphCard({
         );
       }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
     }
   };
 
