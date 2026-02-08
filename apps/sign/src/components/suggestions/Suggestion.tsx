@@ -95,6 +95,14 @@ const Suggestion = memo(function Suggestion({
     return sanitizeHTML(htmlContent);
   }, [suggestion.suggestedContent]);
 
+  // Convert reasoning text: preserve newlines as paragraphs and support markdown
+  const sanitizedReasoning = useMemo(() => {
+    if (!suggestion.reasoning) return '';
+    const htmlContent = markdownToHtml(suggestion.reasoning);
+
+    return sanitizeHTML(htmlContent);
+  }, [suggestion.reasoning]);
+
   // Memoize formatted date
   const formattedDate = useMemo(
     () => formatDate(suggestion.createdAt, t),
@@ -191,7 +199,11 @@ const Suggestion = memo(function Suggestion({
         {suggestion.reasoning && (
           <div className={styles.reasoning}>
             <span className={styles.reasoningLabel}>{t('Reasoning')}:</span>
-            <p>{suggestion.reasoning}</p>
+            <div
+              className={styles.reasoningText}
+              dangerouslySetInnerHTML={{ __html: sanitizedReasoning }}
+              suppressHydrationWarning
+            />
           </div>
         )}
       </div>
