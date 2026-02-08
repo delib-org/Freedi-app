@@ -74,6 +74,7 @@ export const fn_updateQueueConsensus = onDocumentUpdated(
 				stack: error instanceof Error ? error.stack : undefined,
 			});
 			// Don't throw - this is non-critical real-time update
+
 			return null;
 		}
 	}
