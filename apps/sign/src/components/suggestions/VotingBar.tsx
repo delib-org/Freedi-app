@@ -13,6 +13,7 @@ interface VotingBarProps {
   isVoting: boolean;
   userId: string | null;
   onVote: (vote: number) => void;
+  disabled?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ const VotingBar = memo(function VotingBar({
   isVoting,
   userId,
   onVote,
+  disabled = false,
 }: VotingBarProps) {
   const { t } = useTranslation();
 
@@ -60,15 +62,13 @@ const VotingBar = memo(function VotingBar({
           userEvaluation === 1 ? styles.active : ''
         } ${isVoting && userEvaluation !== 1 ? styles.voting : ''}`}
         onClick={handleUpvote}
-        disabled={isVoting}
+        disabled={isVoting || disabled}
         aria-label={`${t('Vote up')}. ${positiveCount} ${t('votes in favor')}`}
-        title={userId ? t('Vote up') : t('Sign in to vote')}
+        title={disabled ? t('You cannot vote on your own suggestion') : userId ? t('Vote up') : t('Sign in to vote')}
       >
-        {positiveCount > 0 && (
-          <span className={`${styles.voteCount} ${styles['voteCount--positive']}`}>
-            {positiveCount}
-          </span>
-        )}
+        <span className={`${styles.voteCount} ${styles['voteCount--positive']}`}>
+          {positiveCount}
+        </span>
         <svg
           width="14"
           height="14"
@@ -105,9 +105,9 @@ const VotingBar = memo(function VotingBar({
           userEvaluation === -1 ? styles.active : ''
         } ${isVoting && userEvaluation !== -1 ? styles.voting : ''}`}
         onClick={handleDownvote}
-        disabled={isVoting}
+        disabled={isVoting || disabled}
         aria-label={`${t('Vote down')}. ${negativeCount} ${t('votes against')}`}
-        title={userId ? t('Vote down') : t('Sign in to vote')}
+        title={disabled ? t('You cannot vote on your own suggestion') : userId ? t('Vote down') : t('Sign in to vote')}
       >
         <svg
           width="14"
@@ -119,11 +119,9 @@ const VotingBar = memo(function VotingBar({
         >
           <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17" />
         </svg>
-        {negativeCount > 0 && (
-          <span className={`${styles.voteCount} ${styles['voteCount--negative']}`}>
-            {negativeCount}
-          </span>
-        )}
+        <span className={`${styles.voteCount} ${styles['voteCount--negative']}`}>
+          {negativeCount}
+        </span>
       </button>
     </div>
   );

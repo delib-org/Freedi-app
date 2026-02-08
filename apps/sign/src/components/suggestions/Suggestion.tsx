@@ -216,33 +216,18 @@ const Suggestion = memo(function Suggestion({
         )}
       </div>
 
-      {/* Voting bar - show for all users except owner */}
-      {!isOwner && (
-        <VotingBar
-          userEvaluation={userEvaluation}
-          positiveCount={positiveCount}
-          negativeCount={negativeCount}
-          consensus={suggestion.consensus || 0}
-          isConsensusLoading={isConsensusLoading}
-          isVoting={isVoting}
-          userId={userId}
-          onVote={handleVote}
-        />
-      )}
-
-      {/* Show consensus for suggestion owners */}
-      {isOwner && (suggestion.consensus || 0) !== 0 && (
-        <div className={styles.consensusDisplay}>
-          <span
-            className={`${styles.voteScore} ${
-              (suggestion.consensus || 0) > 0 ? styles.positive : styles.negative
-            }`}
-          >
-            {(suggestion.consensus || 0) > 0 ? '+' : ''}
-            {(suggestion.consensus || 0).toFixed(2)}
-          </span>
-        </div>
-      )}
+      {/* Voting bar - show for all users, disabled for owners */}
+      <VotingBar
+        userEvaluation={userEvaluation}
+        positiveCount={positiveCount}
+        negativeCount={negativeCount}
+        consensus={suggestion.consensus || 0}
+        isConsensusLoading={isConsensusLoading}
+        isVoting={isVoting}
+        userId={userId}
+        onVote={handleVote}
+        disabled={isOwner}
+      />
     </article>
   );
 });

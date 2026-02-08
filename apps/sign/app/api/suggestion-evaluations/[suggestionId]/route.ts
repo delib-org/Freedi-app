@@ -139,6 +139,7 @@ export async function POST(
         displayName,
         uid: userId,
       },
+      source: 'sign',
     };
 
     await db.collection(Collections.evaluations).doc(evaluationId).set(evaluationData);
