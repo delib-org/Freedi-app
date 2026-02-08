@@ -441,3 +441,6 @@ export {
   ReplacementQueueStatus,
   AuditAction,
 } from "./models/version/replacementQueueModel";
+
+// Evidence models
+export { EvidenceType } from "./models/evidence/evidenceModel";

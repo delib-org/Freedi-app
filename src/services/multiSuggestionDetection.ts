@@ -1,5 +1,5 @@
 import firebaseConfig from '@/controllers/db/configKey';
-import { functionConfig } from 'delib-npm';
+import { functionConfig } from '@freedi/shared-types';
 import { logError, NetworkError } from '@/utils/errorHandling';
 
 /**

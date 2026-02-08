@@ -1,4 +1,4 @@
-import { Collections, ResultsSettings, ResultsSettingsSchema } from "delib-npm";
+import { Collections, ResultsSettings, ResultsSettingsSchema } from '@freedi/shared-types';
 import { doc, updateDoc } from "firebase/firestore";
 import { DB } from "../config";
 import { parse } from "valibot";

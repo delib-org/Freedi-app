@@ -9,7 +9,7 @@ import { listenToSubStatements } from "@/controllers/db/statements/listenToState
 import { useAppSelector } from "@/controllers/hooks/reduxHooks";
 import { statementSubsSelector } from "@/redux/statements/statementsSlice";
 import Description from "../evaluations/components/description/Description";
-import { Statement } from "delib-npm";
+import { Statement } from '@freedi/shared-types';
 import { hasParagraphsContent } from "@/utils/paragraphUtils";
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 import { useNotificationActions } from "@/controllers/hooks/useNotificationActions";

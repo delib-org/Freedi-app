@@ -6,7 +6,7 @@ import ChatInput from "../input/ChatInput";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
-import { NotificationType } from "delib-npm";
+import { NotificationType } from '@freedi/shared-types';
 import { creatorSelector } from "@/redux/creator/creatorSlice";
 import { useSwipe } from "@/controllers/hooks/useSwipe";
 import { usePanelState } from "@/controllers/hooks/usePanelState";

@@ -1,6 +1,6 @@
 import { doc, runTransaction, collection, query, where, getDocs } from "firebase/firestore";
 import { DB } from "../config";
-import { Collections, Creator } from "delib-npm";
+import { Collections, Creator } from '@freedi/shared-types';
 import { Statement, StatementType } from "@freedi/shared-types";
 import { store } from "@/redux/store";
 import { logError } from "@/utils/errorHandling";

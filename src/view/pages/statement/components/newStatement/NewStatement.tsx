@@ -5,7 +5,7 @@ import styles from './newStatement.module.scss';
 import GetInitialStatementData from './components/01-form/GetInitialStatementData';
 
 import { NewStatementContext, SimilaritySteps } from './NewStatementCont';
-import { Statement } from 'delib-npm/dist/models/statement/StatementTypes';
+import { Statement } from '@freedi/shared-types';
 import SimilarStatements from './components/SimilarStatements';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';

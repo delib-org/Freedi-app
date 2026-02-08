@@ -10,7 +10,7 @@ import EditableStatement from "@/view/components/edit/EditableStatement";
 import CreateStatementModal from "@/view/pages/statement/components/createStatementModal/CreateStatementModal";
 import styles from "./ChatMessageCard.module.scss";
 import UploadImage from "@/view/components/uploadImage/UploadImage";
-import { StatementType, Statement } from "delib-npm";
+import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthentication } from "@/controllers/hooks/useAuthentication";
 import ChatMessageMenu from "./ChatMessageMenu";
 
