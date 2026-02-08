@@ -337,10 +337,10 @@ export default function ParagraphCard({
       }
       default:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <p className={styles.content} suppressHydrationWarning>
+            {headingNumber && <span className={styles.paragraphNumber}>{headingNumber}. </span>}
+            <span dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+          </p>
         );
     }
   };
