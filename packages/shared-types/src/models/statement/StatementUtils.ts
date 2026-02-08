@@ -53,6 +53,8 @@ export interface CreateStatementParams {
 	hide?: boolean;
 	/** Optional color */
 	color?: string;
+	/** Optional reasoning/explanation for the statement */
+	reasoning?: string;
 }
 
 /**
@@ -114,6 +116,7 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 
 			// Optional fields without defaults (only include if provided)
 			...(params.color && { color: params.color }),
+			...(params.reasoning && { reasoning: params.reasoning }),
 		};
 
 		// Validate against schema
@@ -228,6 +231,7 @@ export function createParagraphStatement(
  * @param officialParagraphId - The ID of the official paragraph being suggested for
  * @param documentId - The top-level document ID
  * @param creator - The user creating this suggestion
+ * @param reasoning - Optional explanation for why this suggestion is better
  * @returns A Statement object representing the suggestion
  *
  * @example
@@ -235,14 +239,16 @@ export function createParagraphStatement(
  *   'Alternative wording here',
  *   'p_123',
  *   'doc_456',
- *   user
+ *   user,
+ *   'This version is clearer and more concise'
  * );
  */
 export function createSuggestionStatement(
 	suggestedText: string,
 	officialParagraphId: string,
 	documentId: string,
-	creator: User
+	creator: User,
+	reasoning?: string
 ): Statement | undefined {
 	return createStatementObject({
 		statement: suggestedText,
@@ -252,5 +258,6 @@ export function createSuggestionStatement(
 		creatorId: creator.uid,
 		creator,
 		consensus: 0, // Suggestions start with zero consensus
+		...(reasoning && { reasoning }), // Include reasoning if provided
 	});
 }

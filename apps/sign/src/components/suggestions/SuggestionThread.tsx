@@ -88,24 +88,33 @@ export default function SuggestionThread({
 
   // Convert Statement[] to legacy Suggestion[] format for compatibility
   const suggestions: SuggestionType[] = useMemo(() => {
-    const converted = suggestionStatements.map((statement: Statement) => ({
-      suggestionId: statement.statementId,
-      paragraphId: paragraphId,
-      documentId: documentId,
-      topParentId: statement.topParentId || documentId,
-      originalContent: originalContent,
-      suggestedContent: statement.statement,
-      reasoning: '',
-      creatorId: statement.creatorId,
-      creatorDisplayName: statement.creator?.displayName || 'Anonymous',
-      createdAt: statement.createdAt,
-      lastUpdate: statement.lastUpdate || statement.createdAt,
-      consensus: statement.consensus || 0,
-      hide: statement.hide || false,
-      // Include evaluation counts for vote breakdown display
-      positiveEvaluations: (statement as Statement & { positiveEvaluations?: number }).positiveEvaluations,
-      negativeEvaluations: (statement as Statement & { negativeEvaluations?: number }).negativeEvaluations,
-    }));
+    const converted = suggestionStatements.map((statement: Statement) => {
+      console.info('[SuggestionThread] Converting statement:', {
+        id: statement.statementId,
+        hasReasoning: !!statement.reasoning,
+        reasoning: statement.reasoning,
+        creator: statement.creator?.displayName,
+      });
+
+      return {
+        suggestionId: statement.statementId,
+        paragraphId: paragraphId,
+        documentId: documentId,
+        topParentId: statement.topParentId || documentId,
+        originalContent: originalContent,
+        suggestedContent: statement.statement,
+        reasoning: statement.reasoning || '',
+        creatorId: statement.creatorId,
+        creatorDisplayName: statement.creator?.displayName || 'Anonymous',
+        createdAt: statement.createdAt,
+        lastUpdate: statement.lastUpdate || statement.createdAt,
+        consensus: statement.consensus || 0,
+        hide: statement.hide || false,
+        // Include evaluation counts for vote breakdown display
+        positiveEvaluations: (statement as Statement & { positiveEvaluations?: number }).positiveEvaluations,
+        negativeEvaluations: (statement as Statement & { negativeEvaluations?: number }).negativeEvaluations,
+      };
+    });
 
     // Update frozen suggestions when new items arrive (but don't reorder)
     if (isFrozen) {
@@ -190,7 +199,7 @@ export default function SuggestionThread({
       topParentId: officialParagraph.topParentId || documentId,
       originalContent: originalContent,
       suggestedContent: officialParagraph.statement,
-      reasoning: '',
+      reasoning: officialParagraph.reasoning || '',
       creatorId: officialParagraph.creatorId,
       creatorDisplayName: officialParagraph.creator?.displayName || t('Official'),
       createdAt: officialParagraph.createdAt,
