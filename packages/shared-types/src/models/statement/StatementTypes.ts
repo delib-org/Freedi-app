@@ -51,6 +51,7 @@ export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
+	reasoning: optional(string()), // explanation/reasoning for the statement (used in suggestions)
 	statementId: string(), // the id of the statement
 	creatorId: string(), // the id of the creator of the statement
 	creator: UserSchema, // the creator of the statement

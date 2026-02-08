@@ -49,7 +49,7 @@ export async function GET(
       paragraphId: paragraphId,
       documentId: stmt.topParentId,
       suggestedContent: stmt.statement,
-      reasoning: '', // TODO: Add reasoning field to Statement if needed
+      reasoning: stmt.reasoning || '', // Return actual reasoning from Statement
       creatorId: stmt.creatorId,
       creatorName: stmt.creator?.displayName || 'Anonymous',
       createdAt: stmt.createdAt,
@@ -90,6 +90,14 @@ export async function POST(
 
     const body: SuggestionInput = await request.json();
     const { suggestedContent, reasoning, documentId, originalContent } = body;
+
+    // Debug: Log received data
+    logger.info('[Suggestions API] POST - Received data:', {
+      hasReasoning: !!reasoning,
+      reasoning: reasoning,
+      reasoningLength: reasoning?.length || 0,
+      userId,
+    });
 
     // Validate input
     if (!suggestedContent || suggestedContent.trim().length < SUGGESTIONS.MIN_LENGTH) {
@@ -162,8 +170,16 @@ export async function POST(
       suggestedContent.trim(),
       paragraphId, // officialParagraphId
       documentId,
-      creator
+      creator,
+      reasoning?.trim() // Pass reasoning to be saved in Statement
     );
+
+    // Debug: Log created statement
+    logger.info('[Suggestions API] POST - Created statement:', {
+      statementId: suggestionStatement?.statementId,
+      hasReasoning: !!suggestionStatement?.reasoning,
+      reasoning: suggestionStatement?.reasoning,
+    });
 
     if (!suggestionStatement) {
       return NextResponse.json(
@@ -276,6 +292,7 @@ export async function PUT(
     // Update the suggestion statement
     await db.collection(Collections.statements).doc(suggestionId).update({
       statement: suggestedContent.trim(),
+      reasoning: reasoning?.trim() || null, // Update reasoning (null removes it if empty)
       lastUpdate: Date.now(),
     });
 

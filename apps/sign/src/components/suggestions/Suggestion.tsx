@@ -59,6 +59,14 @@ const Suggestion = memo(function Suggestion({
 }: SuggestionProps) {
   const { t } = useTranslation();
 
+  // Debug: Log suggestion data
+  console.info('[Suggestion] Rendering suggestion:', {
+    id: suggestion.suggestionId,
+    hasReasoning: !!suggestion.reasoning,
+    reasoning: suggestion.reasoning,
+    reasoningLength: suggestion.reasoning?.length || 0,
+  });
+
   // Check if current user owns this suggestion
   const isOwner = Boolean(userId && suggestion.creatorId === userId);
 
