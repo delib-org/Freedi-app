@@ -14,6 +14,7 @@ import { getUserFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
+import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 
@@ -140,6 +141,9 @@ export default async function DocumentPage({ params }: PageProps) {
     headerColors?: HeaderColors;
     nonInteractiveNormalStyle?: boolean;
     enableHeadingNumbering?: boolean;
+    isPublic?: boolean;
+    requireGoogleLogin?: boolean;
+    hideUserIdentity?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -173,6 +177,23 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Heading numbering setting
   const enableHeadingNumbering = signSettings?.enableHeadingNumbering ?? false;
+
+  // Visibility and access settings
+  const isPublic = signSettings?.isPublic ?? true;
+  const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
+  const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
+
+  // Enforce isPublic: non-admin users cannot view private documents
+  if (!isPublic && !isAdmin) {
+    return (
+      <LanguageOverrideProvider
+        adminLanguage={defaultLanguage}
+        forceLanguage={forceLanguage}
+      >
+        <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} />
+      </LanguageOverrideProvider>
+    );
+  }
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -215,6 +236,8 @@ export default async function DocumentPage({ params }: PageProps) {
         headerColors={headerColors}
         nonInteractiveNormalStyle={nonInteractiveNormalStyle}
         enableHeadingNumbering={enableHeadingNumbering}
+        requireGoogleLogin={requireGoogleLogin}
+        hideUserIdentity={hideUserIdentity}
       />
     </LanguageOverrideProvider>
   );

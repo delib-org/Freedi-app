@@ -17,6 +17,8 @@ interface SuggestionProps {
   onDelete: (suggestionId: string) => void;
   onEdit: (suggestion: SuggestionType) => void;
   isCurrent?: boolean; // Mark as current official version
+  /** When true, hide display names and show generic "Contributor" */
+  hideUserIdentity?: boolean;
 }
 
 /**
@@ -56,6 +58,7 @@ const Suggestion = memo(function Suggestion({
   onDelete,
   onEdit,
   isCurrent = false,
+  hideUserIdentity = false,
 }: SuggestionProps) {
   const { t } = useTranslation();
 
@@ -129,9 +132,10 @@ const Suggestion = memo(function Suggestion({
     onEdit(suggestion);
   }, [onEdit, suggestion]);
 
-  // Get display name for avatar
-  const avatarLetter = suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?';
-  const displayName = suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous'));
+  // Get display name for avatar (skip identity hiding for "current version" entries)
+  const shouldHideIdentity = hideUserIdentity && !isCurrent;
+  const avatarLetter = shouldHideIdentity ? 'C' : (suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?');
+  const displayName = shouldHideIdentity ? t('Contributor') : (suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous')));
 
   return (
     <article

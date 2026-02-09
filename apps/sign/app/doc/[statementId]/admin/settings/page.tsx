@@ -35,7 +35,8 @@ interface Settings {
   allowComments: boolean;
   allowApprovals: boolean;
   enableSuggestions: boolean;
-  requireLogin: boolean;
+  requireGoogleLogin: boolean;
+  hideUserIdentity: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
@@ -77,7 +78,8 @@ export default function AdminSettingsPage() {
     allowComments: true,
     allowApprovals: true,
     enableSuggestions: false,
-    requireLogin: false,
+    requireGoogleLogin: false,
+    hideUserIdentity: true,
     showHeatMap: true,
     showViewCounts: true,
     isPublic: true,
@@ -214,16 +216,31 @@ export default function AdminSettingsPage() {
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
-            <p className={styles.settingLabel}>{t('Require Login')}</p>
+            <p className={styles.settingLabel}>{t('Require Google Login')}</p>
             <p className={styles.settingDescription}>
-              {t('Users must be logged in to view and interact')}
+              {t('Users must sign in with Google to view and interact')}
             </p>
           </div>
           <button
             type="button"
-            className={`${styles.toggle} ${settings.requireLogin ? styles.active : ''}`}
-            onClick={() => handleToggle('requireLogin')}
-            aria-pressed={settings.requireLogin}
+            className={`${styles.toggle} ${settings.requireGoogleLogin ? styles.active : ''}`}
+            onClick={() => handleToggle('requireGoogleLogin')}
+            aria-pressed={settings.requireGoogleLogin}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Hide User Identity')}</p>
+            <p className={styles.settingDescription}>
+              {t('Hide display names in comments, suggestions, and interactions')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.hideUserIdentity ? styles.active : ''}`}
+            onClick={() => handleToggle('hideUserIdentity')}
+            aria-pressed={settings.hideUserIdentity}
           />
         </div>
       </section>

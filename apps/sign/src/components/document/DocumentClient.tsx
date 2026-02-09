@@ -40,6 +40,10 @@ interface DocumentClientProps {
   enableSuggestions?: boolean;
   paragraphs?: Paragraph[];
   textDirection?: 'ltr' | 'rtl';
+  /** When true, users must sign in with Google to view and interact */
+  requireGoogleLogin?: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity?: boolean;
   children: React.ReactNode;
 }
 
@@ -54,6 +58,8 @@ export default function DocumentClient({
   enableSuggestions = false,
   paragraphs = [],
   textDirection = 'ltr',
+  requireGoogleLogin = false,
+  hideUserIdentity = true,
   children,
 }: DocumentClientProps) {
   const { t } = useTranslation();
@@ -362,13 +368,14 @@ export default function DocumentClient({
   useEffect(() => {
     if (documentId) {
       // Create anonymous user if none exists (sets cookie for API calls)
-      if (!user) {
+      // Skip anonymous user creation when Google login is required
+      if (!user && !requireGoogleLogin) {
         getOrCreateAnonymousUser();
       }
       // Fetch demographic status (cookie is already set synchronously)
       fetchStatus(documentId);
     }
-  }, [documentId, user, fetchStatus]);
+  }, [documentId, user, fetchStatus, requireGoogleLogin]);
 
   // Auto-open survey modal only if viewing is blocked (before_viewing mode)
   // For on_interaction mode, modal opens when user attempts to interact
@@ -462,6 +469,7 @@ export default function DocumentClient({
             enableSuggestions={enableSuggestions}
             originalContent={currentParagraph?.content || ''}
             onOpenSuggestions={handleOpenSuggestions}
+            hideUserIdentity={hideUserIdentity}
           />
         </Modal>
       )}
@@ -481,6 +489,7 @@ export default function DocumentClient({
             documentId={documentId}
             originalContent={currentParagraph?.content || ''}
             onClose={closeModal}
+            hideUserIdentity={hideUserIdentity}
           />
         </Modal>
       )}
@@ -500,6 +509,13 @@ export default function DocumentClient({
         <Modal title="Confirm Signature" onClose={closeModal}>
           <p>Are you sure you want to sign this document?</p>
           {/* TODO: Add confirmation buttons */}
+        </Modal>
+      )}
+
+      {/* Blocking Login Modal for requireGoogleLogin */}
+      {requireGoogleLogin && !user && (
+        <Modal title={t('Sign In Required')} onClose={() => { /* non-dismissible */ }}>
+          <LoginModal onClose={() => { /* non-dismissible */ }} hideGuestOption />
         </Modal>
       )}
 
