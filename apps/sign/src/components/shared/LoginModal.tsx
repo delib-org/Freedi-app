@@ -8,9 +8,11 @@ import styles from './LoginModal.module.scss';
 interface LoginModalProps {
   onClose: () => void;
   redirectUrl?: string;
+  /** When true, hides the "Continue as guest" option and forces Google login */
+  hideGuestOption?: boolean;
 }
 
-export default function LoginModal({ onClose: _onClose, redirectUrl }: LoginModalProps) {
+export default function LoginModal({ onClose: _onClose, redirectUrl, hideGuestOption = false }: LoginModalProps) {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function LoginModal({ onClose: _onClose, redirectUrl }: LoginModa
   return (
     <div className={styles.content}>
       <p className={styles.subtitle}>
-        {t('Sign in to add comments')}
+        {hideGuestOption ? t('Sign in with Google to continue') : t('Sign in to add comments')}
       </p>
 
       {error && <p className={styles.error}>{error}</p>}
@@ -88,18 +90,22 @@ export default function LoginModal({ onClose: _onClose, redirectUrl }: LoginModa
           {isLoading ? t('Signing in...') : t('Sign in with Google')}
         </button>
 
-        <div className={styles.divider}>
-          <span>{t('or')}</span>
-        </div>
+        {!hideGuestOption && (
+          <>
+            <div className={styles.divider}>
+              <span>{t('or')}</span>
+            </div>
 
-        <button
-          type="button"
-          className={styles.anonymousButton}
-          onClick={handleAnonymousLogin}
-          disabled={isLoading}
-        >
-          {isLoading ? t('Signing in...') : t('Continue as guest')}
-        </button>
+            <button
+              type="button"
+              className={styles.anonymousButton}
+              onClick={handleAnonymousLogin}
+              disabled={isLoading}
+            >
+              {isLoading ? t('Signing in...') : t('Continue as guest')}
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

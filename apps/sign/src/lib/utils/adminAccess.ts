@@ -237,6 +237,50 @@ export async function getDocumentViewerLinks(
 }
 
 /**
+ * Check if a user has access to a private document.
+ * Checks admin/collaborator access AND statementsSubscribe (main app group membership).
+ *
+ * @param db - Firestore instance
+ * @param documentId - Document ID to check
+ * @param userId - User ID to check
+ * @returns true if the user has access to the document
+ */
+export async function checkDocumentAccess(
+	db: Firestore,
+	documentId: string,
+	userId: string
+): Promise<boolean> {
+	try {
+		// 1. Check admin/collaborator access (owner, collaborator, viewer)
+		const adminAccess = await checkAdminAccess(db, documentId, userId);
+		if (adminAccess.isAdmin) return true;
+
+		// 2. Check statementsSubscribe (main app group membership)
+		const subscriptionId = `${userId}--${documentId}`;
+		const subRef = db.collection(Collections.statementsSubscribe).doc(subscriptionId);
+		const subSnap = await subRef.get();
+
+		if (subSnap.exists) {
+			const data = subSnap.data();
+			const role = data?.role;
+			if (role === 'member' || role === 'admin' || role === 'statement-creator') {
+				return true;
+			}
+		}
+
+		return false;
+	} catch (error) {
+		logError(error, {
+			operation: 'adminAccess.checkDocumentAccess',
+			documentId,
+			userId,
+		});
+
+		return false;
+	}
+}
+
+/**
  * Generate a cryptographically secure token
  * Used for invitation and viewer link tokens
  */

@@ -37,6 +37,10 @@ interface ParagraphCardProps {
   nonInteractiveNormalStyle?: boolean;
   /** Optional heading number to display (e.g., "1.2.1") */
   headingNumber?: string;
+  /** When true, users must sign in with Google to interact */
+  requireGoogleLogin?: boolean;
+  /** Whether the current user is anonymous */
+  isAnonymous?: boolean;
 }
 
 export default function ParagraphCard({
@@ -57,6 +61,8 @@ export default function ParagraphCard({
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
   headingNumber,
+  requireGoogleLogin = false,
+  isAnonymous = false,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -336,7 +342,12 @@ export default function ParagraphCard({
         );
       }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
+        return (
+          <p className={styles.content} suppressHydrationWarning>
+            {headingNumber && <span className={styles.paragraphNumber}>{headingNumber}. </span>}
+            <span dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+          </p>
+        );
     }
   };
 
@@ -389,6 +400,8 @@ export default function ParagraphCard({
             commentCount={commentCount}
             suggestionCount={suggestionCount}
             enableSuggestions={enableSuggestions}
+            requireGoogleLogin={requireGoogleLogin}
+            isAnonymous={isAnonymous}
           />
         </div>
       )}

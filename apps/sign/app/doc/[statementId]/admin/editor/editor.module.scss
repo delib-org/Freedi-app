@@ -407,6 +407,87 @@
   }
 }
 
+// Select mode
+.paragraphCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  cursor: pointer;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--btn-primary);
+    cursor: pointer;
+  }
+}
+
+.paragraphItemSelected {
+  border-color: rgba(244, 67, 54, 0.4);
+  background: rgba(244, 67, 54, 0.03);
+}
+
+.bulkDeleteBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--card-default);
+  border-top: 1px solid var(--border-light);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  padding: var(--spacing-md) var(--spacing-lg);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.bulkDeleteBarContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.bulkDeleteCount {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.bulkDeleteButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--disagree, #f44336);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+  font-family: inherit;
+
+  &:hover:not(:disabled) {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
 // Responsive
 @media (max-width: 600px) {
   .container {

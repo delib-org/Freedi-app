@@ -19,6 +19,8 @@ interface CommentThreadProps {
   enableSuggestions?: boolean;
   originalContent?: string;
   onOpenSuggestions?: () => void;
+  /** When true, hide display names in comments */
+  hideUserIdentity?: boolean;
 }
 
 export default function CommentThread({
@@ -30,6 +32,7 @@ export default function CommentThread({
   enableSuggestions = false,
   originalContent: _originalContent = '',
   onOpenSuggestions,
+  hideUserIdentity = false,
 }: CommentThreadProps) {
   const { t } = useTranslation();
   const { incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
@@ -190,6 +193,7 @@ export default function CommentThread({
               paragraphId={paragraphId}
               onDelete={handleDelete}
               onUpdate={handleUpdate}
+              hideUserIdentity={hideUserIdentity}
             />
           ))
         )}

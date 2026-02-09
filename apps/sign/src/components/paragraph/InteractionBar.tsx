@@ -15,6 +15,10 @@ interface InteractionBarProps {
   commentCount: number;
   suggestionCount?: number;
   enableSuggestions?: boolean;
+  /** When true, users must sign in with Google to interact */
+  requireGoogleLogin?: boolean;
+  /** Whether the current user is anonymous */
+  isAnonymous?: boolean;
 }
 
 export default function InteractionBar({
@@ -25,6 +29,8 @@ export default function InteractionBar({
   commentCount,
   suggestionCount = 0,
   enableSuggestions = false,
+  requireGoogleLogin = false,
+  isAnonymous = false,
 }: InteractionBarProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,8 +46,18 @@ export default function InteractionBar({
     }
   }, [paragraphId, isApproved, setApproval]);
 
+  // Whether interaction is blocked by requireGoogleLogin
+  const isGoogleLoginRequired = requireGoogleLogin && isAnonymous;
+
   const handleApproval = useCallback(
     async (approved: boolean) => {
+      // Check if Google login is required for interactions
+      if (isGoogleLoginRequired) {
+        openModal('login', {});
+
+        return;
+      }
+
       // Check if blocked by demographic survey
       if (isInteractionBlocked) {
         openSurveyModal();
@@ -85,10 +101,17 @@ export default function InteractionBar({
         setIsSubmitting(false);
       }
     },
-    [paragraphId, documentId, isLoggedIn, isApproved, setApproval, isInteractionBlocked, openSurveyModal]
+    [paragraphId, documentId, isLoggedIn, isApproved, setApproval, isInteractionBlocked, openSurveyModal, isGoogleLoginRequired, openModal]
   );
 
   const handleOpenComments = () => {
+    // Check if Google login is required for interactions
+    if (isGoogleLoginRequired) {
+      openModal('login', {});
+
+      return;
+    }
+
     // Check if blocked by demographic survey
     if (isInteractionBlocked) {
       openSurveyModal();
@@ -100,6 +123,13 @@ export default function InteractionBar({
   };
 
   const handleOpenSuggestions = () => {
+    // Check if Google login is required for interactions
+    if (isGoogleLoginRequired) {
+      openModal('login', {});
+
+      return;
+    }
+
     // Check if blocked by demographic survey
     if (isInteractionBlocked) {
       openSurveyModal();
@@ -111,9 +141,11 @@ export default function InteractionBar({
   };
 
   // Tooltip text when blocked
-  const blockedTitle = isInteractionBlocked
-    ? t('Complete survey to interact')
-    : undefined;
+  const blockedTitle = isGoogleLoginRequired
+    ? t('Sign in with Google to interact')
+    : isInteractionBlocked
+      ? t('Complete survey to interact')
+      : undefined;
 
   // Use local state if available, otherwise use prop
   const currentApproval = localApproval !== undefined ? localApproval : isApproved;
@@ -129,7 +161,7 @@ export default function InteractionBar({
       <div className={styles.approvalButtons}>
         <button
           type="button"
-          className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
+          className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
           onClick={(e) => handleButtonClick(e, () => handleApproval(true))}
           disabled={isSubmitting}
           aria-pressed={currentApproval === true}
@@ -150,7 +182,7 @@ export default function InteractionBar({
 
         <button
           type="button"
-          className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
+          className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
           onClick={(e) => handleButtonClick(e, () => handleApproval(false))}
           disabled={isSubmitting}
           aria-pressed={currentApproval === false}
@@ -173,7 +205,7 @@ export default function InteractionBar({
 
       <button
         type="button"
-        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked ? styles.blocked : ''}`}
+        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
         onClick={(e) => handleButtonClick(e, handleOpenComments)}
         title={blockedTitle || t('Comments')}
       >
@@ -197,7 +229,7 @@ export default function InteractionBar({
       {enableSuggestions && (
         <button
           type="button"
-          className={`${styles.button} ${styles.suggestButton} ${isInteractionBlocked ? styles.blocked : ''}`}
+          className={`${styles.button} ${styles.suggestButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
           onClick={(e) => handleButtonClick(e, handleOpenSuggestions)}
           title={blockedTitle || t('Suggest Alternative')}
         >

@@ -7,6 +7,7 @@ import { useUIStore, UIState } from '@/store/uiStore';
 import { getVisitorId } from '@/lib/utils/visitor';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
+import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -15,9 +16,11 @@ interface CommentProps {
   paragraphId: string;
   onDelete: (commentId: string) => void;
   onUpdate: (commentId: string, newStatement: string) => void;
+  /** When true, hide display names and show generic "Contributor" */
+  hideUserIdentity?: boolean;
 }
 
-export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate }: CommentProps) {
+export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate, hideUserIdentity = false }: CommentProps) {
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
   const [consensus, setConsensus] = useState(comment.consensus || 0);
@@ -188,11 +191,13 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
     <article className={styles.comment}>
       <header className={styles.header}>
         <div className={styles.avatar}>
-          {comment.creator?.displayName?.charAt(0).toUpperCase() || '?'}
+          {hideUserIdentity
+            ? getPseudoName(comment.creatorId).charAt(0).toUpperCase()
+            : (comment.creator?.displayName?.charAt(0).toUpperCase() || '?')}
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {comment.creator?.displayName || t('Anonymous')}
+            {hideUserIdentity ? getPseudoName(comment.creatorId) : (comment.creator?.displayName || t('Anonymous'))}
           </span>
           <span className={styles.date}>
             {formatDate(comment.createdAt)}
