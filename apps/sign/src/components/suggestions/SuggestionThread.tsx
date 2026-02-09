@@ -114,8 +114,8 @@ export default function SuggestionThread({
         consensus: statement.consensus || 0,
         hide: statement.hide || false,
         // Include evaluation counts for vote breakdown display
-        positiveEvaluations: (statement as Statement & { positiveEvaluations?: number }).positiveEvaluations,
-        negativeEvaluations: (statement as Statement & { negativeEvaluations?: number }).negativeEvaluations,
+        positiveEvaluations: statement.evaluation?.numberOfProEvaluators || 0,
+        negativeEvaluations: statement.evaluation?.numberOfConEvaluators || 0,
       };
     });
 
@@ -210,8 +210,8 @@ export default function SuggestionThread({
       consensus: officialParagraph.consensus || 1.0,
       hide: officialParagraph.hide || false,
       // Include evaluation counts for vote breakdown display
-      positiveEvaluations: (officialParagraph as Statement & { positiveEvaluations?: number }).positiveEvaluations,
-      negativeEvaluations: (officialParagraph as Statement & { negativeEvaluations?: number }).negativeEvaluations,
+      positiveEvaluations: officialParagraph.evaluation?.numberOfProEvaluators || 0,
+      negativeEvaluations: officialParagraph.evaluation?.numberOfConEvaluators || 0,
     };
   }, [officialParagraph, paragraphId, documentId, originalContent, t]);
 

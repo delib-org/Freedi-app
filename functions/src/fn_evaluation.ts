@@ -112,20 +112,13 @@ return;
 		}
 		markEventAsProcessed(eventId);
 
-		const evaluation = event.data.data() as Evaluation & { migratedAt?: number; source?: string };
+		const evaluation = event.data.data() as Evaluation & { migratedAt?: number };
 		const { statementId, parentId } = evaluation;
 		const userId = evaluation.evaluator?.uid;
 
 		// Skip processing for migrated evaluations - the migration function handles the statement update
 		if (evaluation.migratedAt) {
 			logger.info(`Skipping trigger for migrated evaluation ${event.data.id}`);
-
-return;
-		}
-
-		// Skip processing for Sign app evaluations - the Sign API route handles consensus updates directly
-		if (evaluation.source === 'sign') {
-			logger.info(`Skipping trigger for Sign app evaluation ${event.data.id}`);
 
 return;
 		}
@@ -189,16 +182,9 @@ return;
 		}
 		markEventAsProcessed(eventId);
 
-		const evaluation = event.data.data() as Evaluation & { source?: string };
+		const evaluation = event.data.data() as Evaluation;
 		const { statementId, evaluation: evaluationValue } = evaluation;
 		const userId = evaluation.evaluator?.uid;
-
-		// Skip processing for Sign app evaluations - the Sign API route handles consensus updates directly
-		if (evaluation.source === 'sign') {
-			logger.info(`Skipping delete trigger for Sign app evaluation ${event.data.id}`);
-
-return;
-		}
 
 		if (!statementId) {
 			throw new Error('statementId is required');
@@ -239,14 +225,7 @@ return;
 		markEventAsProcessed(eventId);
 
 		const before = event.data.before.data() as Evaluation;
-		const after = event.data.after.data() as Evaluation & { source?: string };
-
-		// Skip processing for Sign app evaluations - the Sign API route handles consensus updates directly
-		if (after.source === 'sign') {
-			logger.info(`Skipping update trigger for Sign app evaluation ${event.data.after.id}`);
-
-return;
-		}
+		const after = event.data.after.data() as Evaluation;
 
 		const evaluationDiff = after.evaluation - before.evaluation;
 		const userId = after.evaluator?.uid;
