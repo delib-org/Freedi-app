@@ -218,7 +218,7 @@ export default function AdminSettingsPage() {
           <div className={styles.settingInfo}>
             <p className={styles.settingLabel}>{t('Require Google Login')}</p>
             <p className={styles.settingDescription}>
-              {t('Users must sign in with Google to view and interact')}
+              {t('Users must sign in with Google to comment, suggest, or approve')}
             </p>
           </div>
           <button

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from 'rea
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, selectToasts } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
-import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { SignUser, getOrCreateAnonymousUser, isAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import { trackDocumentSign, trackDocumentReject, trackDocumentView } from '@/lib/analytics';
 import { Paragraph } from '@/types';
@@ -40,7 +40,7 @@ interface DocumentClientProps {
   enableSuggestions?: boolean;
   paragraphs?: Paragraph[];
   textDirection?: 'ltr' | 'rtl';
-  /** When true, users must sign in with Google to view and interact */
+  /** When true, users must sign in with Google to interact (comment, suggest, approve, sign) */
   requireGoogleLogin?: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity?: boolean;
@@ -199,6 +199,13 @@ export default function DocumentClient({
         return;
       }
 
+      // Check if Google login is required for interactions
+      if (requireGoogleLogin && (!user || isAnonymousUser(user.uid))) {
+        openModal('login', {});
+
+        return;
+      }
+
       // Ensure user has an ID (create anonymous user if needed)
       // This is synchronous and sets the cookie immediately
       if (!user) {
@@ -325,6 +332,8 @@ export default function DocumentClient({
       isDemographicLoading,
       demographicStatus.isLoaded,
       openSurveyModal,
+      requireGoogleLogin,
+      openModal,
       showToast,
       t,
     ]
@@ -367,9 +376,8 @@ export default function DocumentClient({
   // Ensure user has ID and fetch demographic status on mount
   useEffect(() => {
     if (documentId) {
-      // Create anonymous user if none exists (sets cookie for API calls)
-      // Skip anonymous user creation when Google login is required
-      if (!user && !requireGoogleLogin) {
+      // Create anonymous user if none exists (sets cookie for API calls and view tracking)
+      if (!user) {
         getOrCreateAnonymousUser();
       }
       // Fetch demographic status (cookie is already set synchronously)
@@ -512,17 +520,13 @@ export default function DocumentClient({
         </Modal>
       )}
 
-      {/* Blocking Login Modal for requireGoogleLogin */}
-      {requireGoogleLogin && !user && (
-        <Modal title={t('Sign In Required')} onClose={() => { /* non-dismissible */ }}>
-          <LoginModal onClose={() => { /* non-dismissible */ }} hideGuestOption />
-        </Modal>
-      )}
-
-      {/* Login Modal */}
+      {/* Login Modal (also used for requireGoogleLogin interaction gating) */}
       {activeModal === 'login' && (
-        <Modal title="Sign In" onClose={closeModal}>
-          <LoginModal onClose={closeModal} />
+        <Modal title={t('Sign In Required')} onClose={closeModal}>
+          <LoginModal
+            onClose={closeModal}
+            hideGuestOption={requireGoogleLogin}
+          />
         </Modal>
       )}
 

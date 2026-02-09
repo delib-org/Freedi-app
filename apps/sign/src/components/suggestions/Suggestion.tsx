@@ -7,6 +7,7 @@ import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { useOptimisticVote } from '@/hooks/useOptimisticVote';
 import VotingBar from './VotingBar';
+import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
@@ -134,8 +135,9 @@ const Suggestion = memo(function Suggestion({
 
   // Get display name for avatar (skip identity hiding for "current version" entries)
   const shouldHideIdentity = hideUserIdentity && !isCurrent;
-  const avatarLetter = shouldHideIdentity ? 'C' : (suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?');
-  const displayName = shouldHideIdentity ? t('Contributor') : (suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous')));
+  const pseudoName = shouldHideIdentity ? getPseudoName(suggestion.creatorId) : '';
+  const avatarLetter = shouldHideIdentity ? pseudoName.charAt(0).toUpperCase() : (suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?');
+  const displayName = shouldHideIdentity ? pseudoName : (suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous')));
 
   return (
     <article

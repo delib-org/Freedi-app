@@ -11,7 +11,8 @@ import {
   getSuggestionCountsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { checkAdminAccess, checkDocumentAccess } from '@/lib/utils/adminAccess';
+import { isAnonymousUser } from '@/lib/utils/user';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
@@ -183,16 +184,33 @@ export default async function DocumentPage({ params }: PageProps) {
   const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
   const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
 
-  // Enforce isPublic: non-admin users cannot view private documents
+  // Enforce isPublic: private document access control
   if (!isPublic && !isAdmin) {
-    return (
-      <LanguageOverrideProvider
-        adminLanguage={defaultLanguage}
-        forceLanguage={forceLanguage}
-      >
-        <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} />
-      </LanguageOverrideProvider>
-    );
+    // No user or anonymous user → show login prompt (Google-only)
+    if (!user || isAnonymousUser(user.uid)) {
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={defaultLanguage}
+          forceLanguage={forceLanguage}
+        >
+          <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} showLoginPrompt />
+        </LanguageOverrideProvider>
+      );
+    }
+
+    // Google-authenticated user → check document access (collaborator or subscriber)
+    const { db } = getFirebaseAdmin();
+    const hasAccess = await checkDocumentAccess(db, statementId, user.uid);
+    if (!hasAccess) {
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={defaultLanguage}
+          forceLanguage={forceLanguage}
+        >
+          <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} />
+        </LanguageOverrideProvider>
+      );
+    }
   }
 
   // Fetch suggestion counts if feature is enabled

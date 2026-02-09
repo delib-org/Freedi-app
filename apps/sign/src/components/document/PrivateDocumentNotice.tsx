@@ -2,16 +2,21 @@
 
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import LoginModal from '../shared/LoginModal';
+import Modal from '../shared/Modal';
 import styles from './PrivateDocumentNotice.module.scss';
 
 interface PrivateDocumentNoticeProps {
   logoUrl?: string;
   brandName?: string;
+  /** When true, show a login prompt instead of access denied */
+  showLoginPrompt?: boolean;
 }
 
 export default function PrivateDocumentNotice({
   logoUrl = DEFAULT_LOGO_URL,
   brandName = DEFAULT_BRAND_NAME,
+  showLoginPrompt = false,
 }: PrivateDocumentNoticeProps) {
   const { t } = useTranslation();
 
@@ -29,11 +34,23 @@ export default function PrivateDocumentNotice({
       </svg>
       <h1 className={styles.title}>{t('This document is private')}</h1>
       <p className={styles.description}>
-        {t('This document is not available for public viewing. Please contact the document owner for access.')}
+        {showLoginPrompt
+          ? t('Please sign in with Google to access this document.')
+          : t('This document is not available for public viewing. Please contact the document owner for access.')}
       </p>
-      <a href="/" className={styles.homeLink}>
-        {t('Go to Home')}
-      </a>
+
+      {showLoginPrompt ? (
+        <div className={styles.loginWrapper}>
+          <Modal title={t('Sign In Required')} onClose={() => { /* non-dismissible */ }}>
+            <LoginModal onClose={() => { /* non-dismissible */ }} hideGuestOption />
+          </Modal>
+        </div>
+      ) : (
+        <a href="/" className={styles.homeLink}>
+          {t('Go to Home')}
+        </a>
+      )}
+
       <div className={styles.branding}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoUrl} alt={brandName} className={styles.logo} />

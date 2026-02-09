@@ -7,6 +7,7 @@ import { useUIStore, UIState } from '@/store/uiStore';
 import { getVisitorId } from '@/lib/utils/visitor';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
+import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -190,11 +191,13 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
     <article className={styles.comment}>
       <header className={styles.header}>
         <div className={styles.avatar}>
-          {hideUserIdentity ? 'C' : (comment.creator?.displayName?.charAt(0).toUpperCase() || '?')}
+          {hideUserIdentity
+            ? getPseudoName(comment.creatorId).charAt(0).toUpperCase()
+            : (comment.creator?.displayName?.charAt(0).toUpperCase() || '?')}
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {hideUserIdentity ? t('Contributor') : (comment.creator?.displayName || t('Anonymous'))}
+            {hideUserIdentity ? getPseudoName(comment.creatorId) : (comment.creator?.displayName || t('Anonymous'))}
           </span>
           <span className={styles.date}>
             {formatDate(comment.createdAt)}
