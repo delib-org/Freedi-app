@@ -164,6 +164,8 @@ export async function POST(
 					consensus: topSuggestion.consensus,
 					consensusAtCreation: topSuggestion.consensus,
 					evaluationCount: topSuggestion.totalEvaluators || 0,
+					positiveEvaluations: topSuggestion.evaluation?.numberOfProEvaluators || 0,
+					negativeEvaluations: topSuggestion.evaluation?.numberOfConEvaluators || 0,
 					createdAt: Date.now(),
 					status: ReplacementQueueStatus.pending,
 					creatorId: topSuggestion.creatorId,
