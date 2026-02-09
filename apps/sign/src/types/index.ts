@@ -140,7 +140,12 @@ export interface DocumentSettings {
   enableLikes: boolean;
   enableSuggestions: boolean;
   showScores: boolean;
-  requireLogin: boolean;
+  /** @deprecated Use requireGoogleLogin instead */
+  requireLogin?: boolean;
+  /** When true, users must sign in with Google to view and interact */
+  requireGoogleLogin: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity: boolean;
   isHidden: boolean;
   heatMapMode: HeatMapMode;
   // Demographic survey settings
@@ -184,7 +189,8 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   enableLikes: true,
   enableSuggestions: false,
   showScores: false,
-  requireLogin: false,
+  requireGoogleLogin: false,
+  hideUserIdentity: true,
   isHidden: false,
   heatMapMode: 'none',
   demographicMode: 'disabled',

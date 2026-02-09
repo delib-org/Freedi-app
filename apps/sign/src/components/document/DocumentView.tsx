@@ -56,6 +56,10 @@ interface DocumentViewProps {
   nonInteractiveNormalStyle?: boolean;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering?: boolean;
+  /** When true, users must sign in with Google to interact (comment, suggest, approve, sign) */
+  requireGoogleLogin?: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity?: boolean;
 }
 
 export default function DocumentView({
@@ -80,6 +84,8 @@ export default function DocumentView({
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
   enableHeadingNumbering = false,
+  requireGoogleLogin = false,
+  hideUserIdentity = true,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -120,6 +126,8 @@ export default function DocumentView({
         enableSuggestions={enableSuggestions}
         paragraphs={paragraphs}
         textDirection={resolvedDirection}
+        requireGoogleLogin={requireGoogleLogin}
+        hideUserIdentity={hideUserIdentity}
       >
         <div
           className={`${styles.pageLayout} ${showToc ? styles.pageLayoutWithToc : ''}`}
@@ -210,6 +218,8 @@ export default function DocumentView({
                 headerColors={headerColors}
                 nonInteractiveNormalStyle={nonInteractiveNormalStyle}
                 headingNumber={headingNumbers.get(paragraph.paragraphId)}
+                requireGoogleLogin={requireGoogleLogin}
+                isAnonymous={!user || user.isAnonymous}
               />
             ))
           )}

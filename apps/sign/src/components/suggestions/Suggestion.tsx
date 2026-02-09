@@ -7,6 +7,7 @@ import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { useOptimisticVote } from '@/hooks/useOptimisticVote';
 import VotingBar from './VotingBar';
+import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
@@ -17,6 +18,8 @@ interface SuggestionProps {
   onDelete: (suggestionId: string) => void;
   onEdit: (suggestion: SuggestionType) => void;
   isCurrent?: boolean; // Mark as current official version
+  /** When true, hide display names and show generic "Contributor" */
+  hideUserIdentity?: boolean;
 }
 
 /**
@@ -56,6 +59,7 @@ const Suggestion = memo(function Suggestion({
   onDelete,
   onEdit,
   isCurrent = false,
+  hideUserIdentity = false,
 }: SuggestionProps) {
   const { t } = useTranslation();
 
@@ -129,9 +133,11 @@ const Suggestion = memo(function Suggestion({
     onEdit(suggestion);
   }, [onEdit, suggestion]);
 
-  // Get display name for avatar
-  const avatarLetter = suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?';
-  const displayName = suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous'));
+  // Get display name for avatar (skip identity hiding for "current version" entries)
+  const shouldHideIdentity = hideUserIdentity && !isCurrent;
+  const pseudoName = shouldHideIdentity ? getPseudoName(suggestion.creatorId) : '';
+  const avatarLetter = shouldHideIdentity ? pseudoName.charAt(0).toUpperCase() : (suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?');
+  const displayName = shouldHideIdentity ? pseudoName : (suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous')));
 
   return (
     <article

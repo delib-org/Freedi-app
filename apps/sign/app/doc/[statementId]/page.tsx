@@ -11,9 +11,11 @@ import {
   getSuggestionCountsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { checkAdminAccess, checkDocumentAccess } from '@/lib/utils/adminAccess';
+import { isAnonymousUser } from '@/lib/utils/user';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
+import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 
@@ -140,6 +142,9 @@ export default async function DocumentPage({ params }: PageProps) {
     headerColors?: HeaderColors;
     nonInteractiveNormalStyle?: boolean;
     enableHeadingNumbering?: boolean;
+    isPublic?: boolean;
+    requireGoogleLogin?: boolean;
+    hideUserIdentity?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -173,6 +178,40 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Heading numbering setting
   const enableHeadingNumbering = signSettings?.enableHeadingNumbering ?? false;
+
+  // Visibility and access settings
+  const isPublic = signSettings?.isPublic ?? true;
+  const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
+  const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
+
+  // Enforce isPublic: private document access control
+  if (!isPublic && !isAdmin) {
+    // No user or anonymous user → show login prompt (Google-only)
+    if (!user || isAnonymousUser(user.uid)) {
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={defaultLanguage}
+          forceLanguage={forceLanguage}
+        >
+          <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} showLoginPrompt />
+        </LanguageOverrideProvider>
+      );
+    }
+
+    // Google-authenticated user → check document access (collaborator or subscriber)
+    const { db } = getFirebaseAdmin();
+    const hasAccess = await checkDocumentAccess(db, statementId, user.uid);
+    if (!hasAccess) {
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={defaultLanguage}
+          forceLanguage={forceLanguage}
+        >
+          <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} />
+        </LanguageOverrideProvider>
+      );
+    }
+  }
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -215,6 +254,8 @@ export default async function DocumentPage({ params }: PageProps) {
         headerColors={headerColors}
         nonInteractiveNormalStyle={nonInteractiveNormalStyle}
         enableHeadingNumbering={enableHeadingNumbering}
+        requireGoogleLogin={requireGoogleLogin}
+        hideUserIdentity={hideUserIdentity}
       />
     </LanguageOverrideProvider>
   );

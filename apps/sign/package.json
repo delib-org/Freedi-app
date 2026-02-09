@@ -21,6 +21,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@freedi/shared-types": "file:../../packages/shared-types",
+    "@sentry/nextjs": "^10.38.0",
     "@tiptap/extension-image": "^3.14.0",
     "@tiptap/extension-placeholder": "^3.13.0",
     "@tiptap/extension-underline": "^3.14.0",
