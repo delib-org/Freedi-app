@@ -118,6 +118,41 @@
     inset-inline-start: var(--spacing-md);
   }
 
+  // Comment button (bottom corner)
+  &__comment-btn {
+    position: absolute;
+    bottom: var(--spacing-md);
+    inset-inline-end: var(--spacing-md);
+    z-index: 3;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  // Hide comment button during drag
+  &--dragging &__comment-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
   // Content wrapper - NO background, text sits directly on colors
   &__content-wrapper {
     position: relative;

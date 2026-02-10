@@ -30,6 +30,7 @@ export interface SwipeCardProps {
   totalCards: number;
   currentIndex: number;
   programmaticThrow?: { rating: RatingValue; direction: 'left' | 'right' } | null;
+  onCommentClick?: () => void;
 }
 
 // Calculate which zone based on drag position relative to starting zone
@@ -94,6 +95,7 @@ export default function SwipeCard({
   totalCards,
   currentIndex,
   programmaticThrow,
+  onCommentClick,
 }: SwipeCardProps) {
   const { t, tWithParams } = useTranslation();
 
@@ -448,6 +450,20 @@ export default function SwipeCard({
       {/* Vertical indicator for center zone */}
       {isVerticalDrag && (
         <div className="swipe-card__vertical-indicator">↑</div>
+      )}
+
+      {/* Comment button */}
+      {onCommentClick && !isThrowing && !isEntering && (
+        <button
+          className="swipe-card__comment-btn"
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onCommentClick(); }}
+          onTouchStart={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          aria-label={t('Add comment')}
+        >
+          💬
+        </button>
       )}
 
       {/* Screen reader announcements */}

@@ -18,6 +18,7 @@ import SwipeCard from '../SwipeCard';
 import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
 import ProposalModal from '../ProposalModal';
+import CommentModal from '../CommentModal';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import {
@@ -35,6 +36,7 @@ import {
 } from '@/store/slices/swipeSelectors';
 import { submitRating } from '@/controllers/swipeController';
 import { submitProposal } from '@/controllers/proposalController';
+import { submitComment } from '@/controllers/commentController';
 import { RATING, RATING_CONFIG } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
@@ -71,6 +73,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   const showProposalPrompt = useSelector(selectShowProposalPrompt);
 
   const [showProposalModal, setShowProposalModal] = useState(false);
+  const [showCommentModal, setShowCommentModal] = useState(false);
   const [programmaticThrow, setProgrammaticThrow] = useState<{
     rating: RatingValue;
     direction: 'left' | 'right';
@@ -233,6 +236,42 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     trackProposalPromptDismissed(question.statementId, userId);
   };
 
+  const handleOpenComment = () => {
+    setShowCommentModal(true);
+  };
+
+  const handleCommentSubmit = async (originalText: string, rewrittenText: string) => {
+    if (!currentCard) return;
+
+    try {
+      const reasoning = rewrittenText !== originalText ? rewrittenText : undefined;
+      await submitComment({
+        commentText: rewrittenText,
+        suggestionStatement: currentCard,
+        userId,
+        userName,
+        reasoning,
+      });
+
+      showToast({
+        type: 'success',
+        title: t('Comment submitted'),
+        message: t('Thank you for your feedback!'),
+        duration: 4000,
+      });
+
+      setShowCommentModal(false);
+    } catch {
+      showToast({
+        type: 'error',
+        title: t('Submission Failed'),
+        message: t('Failed to submit comment. Please try again.'),
+        duration: 5000,
+      });
+      throw new Error('Comment submission failed');
+    }
+  };
+
   return (
     <div className="swipe-interface">
       {/* Progress indicator */}
@@ -250,6 +289,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
               totalCards={totalCount}
               currentIndex={evaluatedCount}
               programmaticThrow={programmaticThrow}
+              onCommentClick={handleOpenComment}
             />
           </div>
 
@@ -291,6 +331,17 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         onClose={handleProposalDismiss}
         onSubmit={handleProposalSubmit}
       />
+
+      {/* Comment Modal */}
+      {currentCard && (
+        <CommentModal
+          isOpen={showCommentModal}
+          onClose={() => setShowCommentModal(false)}
+          suggestionText={currentCard.statement}
+          questionText={question.statement}
+          onSubmit={handleCommentSubmit}
+        />
+      )}
 
       {/* Solution Prompt Modal - "Add solution first" feature */}
       <SolutionPromptModal

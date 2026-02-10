@@ -206,6 +206,14 @@ export const EMAIL_NOTIFICATIONS = {
 } as const;
 
 /**
+ * Comment constants
+ */
+export const COMMENT = {
+  MIN_LENGTH: 3,
+  MAX_LENGTH: 200,
+} as const;
+
+/**
  * Error messages
  */
 export const ERROR_MESSAGES = {
