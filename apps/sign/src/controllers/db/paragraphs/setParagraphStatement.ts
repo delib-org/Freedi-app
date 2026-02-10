@@ -224,6 +224,42 @@ export async function bulkDeleteParagraphStatementsToDB(paragraphIds: string[]):
 }
 
 /**
+ * Batch-update paragraph order values in Firestore
+ */
+export async function reorderParagraphsToDB(
+  paragraphOrders: Array<{ paragraphId: string; order: number }>
+): Promise<void> {
+  try {
+    const firestore = getFirebaseFirestore();
+    const { writeBatch } = await import('firebase/firestore');
+    const now = Date.now();
+
+    const BATCH_SIZE = 500;
+    for (let i = 0; i < paragraphOrders.length; i += BATCH_SIZE) {
+      const chunk = paragraphOrders.slice(i, i + BATCH_SIZE);
+      const batch = writeBatch(firestore);
+
+      for (const { paragraphId, order } of chunk) {
+        const ref = doc(firestore, Collections.statements, paragraphId);
+        batch.update(ref, { 'doc.order': order, lastUpdate: now });
+      }
+
+      await batch.commit();
+    }
+
+    console.info('[reorderParagraphsToDB] Paragraphs reordered', {
+      count: paragraphOrders.length,
+    });
+  } catch (error) {
+    logError(error, {
+      operation: 'controllers.reorderParagraphsToDB',
+      metadata: { count: paragraphOrders.length },
+    });
+    throw error;
+  }
+}
+
+/**
  * Delete (hide) a paragraph statement
  */
 export async function deleteParagraphStatementToDB(paragraphId: string): Promise<void> {

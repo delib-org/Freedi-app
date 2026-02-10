@@ -238,6 +238,15 @@ export default function ParagraphCard({
     [paragraph.content]
   );
 
+  // Build content HTML with inline number prefix when needed
+  // Uses LRM (\u200E) characters to ensure correct LTR rendering of numbers in RTL
+  const numberedContent = useMemo(() => {
+    if (!headingNumber) return sanitizedContent;
+    const LRM = '\u200E';
+
+    return `<span class="${styles.inlineNumber}">${LRM}${headingNumber}.${LRM}</span> ${sanitizedContent}`;
+  }, [headingNumber, sanitizedContent]);
+
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
   // Always render an element (never null) to maintain consistent structure between SSR and client
@@ -248,51 +257,33 @@ export default function ParagraphCard({
     switch (paragraphType) {
       case ParagraphType.h1:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h2:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h3:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h4:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h5:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h6:
         return (
-          <>
-            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
-            <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
-          </>
+          <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
           </div>
         );
       case ParagraphType.table:
@@ -344,10 +335,7 @@ export default function ParagraphCard({
       }
       default:
         return (
-          <p className={styles.content} suppressHydrationWarning>
-            {headingNumber && <span className={styles.paragraphNumber}>{headingNumber}. </span>}
-            <span dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
-          </p>
+          <p className={styles.content} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
         );
     }
   };
