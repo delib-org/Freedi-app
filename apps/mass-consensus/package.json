@@ -4,9 +4,9 @@
   "private": true,
   "scripts": {
     "env:dev": "cd ../.. && npm run env:dev",
-    "dev": "npm run env:dev && next dev -p 3001",
+    "dev": "npm run env:dev && next dev -p 3003",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "next start -p 3003",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
