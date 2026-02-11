@@ -12,7 +12,11 @@ interface FeedbackThreadProps {
   totalComments: number;
 }
 
-function getRelativeTime(timestamp: number, t: (key: string, options?: Record<string, unknown>) => string): string {
+function getRelativeTime(
+  timestamp: number,
+  t: (key: string) => string,
+  tWithParams: (key: string, params: Record<string, string | number>) => string
+): string {
   const now = Date.now();
   const diff = now - timestamp;
   const minutes = Math.floor(diff / 60000);
@@ -20,10 +24,10 @@ function getRelativeTime(timestamp: number, t: (key: string, options?: Record<st
   const days = Math.floor(diff / 86400000);
 
   if (minutes < 1) return t('justNow');
-  if (minutes < 60) return t('{{count}} min ago', { count: minutes });
-  if (hours < 24) return t('{{count}} hours ago', { count: hours });
+  if (minutes < 60) return tWithParams('{{count}} min ago', { count: minutes });
+  if (hours < 24) return tWithParams('{{count}} hours ago', { count: hours });
 
-  return t('{{count}} days ago', { count: days });
+  return tWithParams('{{count}} days ago', { count: days });
 }
 
 function getInitials(name?: string): string {
@@ -37,7 +41,7 @@ function getInitials(name?: string): string {
 }
 
 export default function FeedbackThread({ statementId, initialComments, totalComments }: FeedbackThreadProps) {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
   const [comments, setComments] = useState<CommentData[]>(initialComments);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -96,7 +100,7 @@ export default function FeedbackThread({ statementId, initialComments, totalComm
                 {comment.creator?.displayName || t('anonymous')}
               </span>
               <span className={styles.bubbleDate}>
-                {getRelativeTime(comment.createdAt, t)}
+                {getRelativeTime(comment.createdAt, t, tWithParams)}
               </span>
             </div>
             <p className={styles.bubbleText} dir="auto">
@@ -114,7 +118,7 @@ export default function FeedbackThread({ statementId, initialComments, totalComm
         >
           {isLoading
             ? '...'
-            : t('showMoreComments', { count: remainingCount })}
+            : tWithParams('showMoreComments', { count: remainingCount })}
         </button>
       )}
 

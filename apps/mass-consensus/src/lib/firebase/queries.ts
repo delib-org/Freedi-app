@@ -373,6 +373,7 @@ export async function getUserSuggestionsForSurvey(
     const results = await Promise.all(
       questionIds.map(async (questionId) => {
         const solutions = await getUserSolutions(questionId, userId);
+
         return { questionId, solutions };
       })
     );
