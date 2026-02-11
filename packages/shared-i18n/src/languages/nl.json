@@ -1622,5 +1622,11 @@
   "anonymous": "Anoniem",
   "{{count}} min ago": "{{count}} min geleden",
   "{{count}} hours ago": "{{count}} uur geleden",
-  "{{count}} days ago": "{{count}} dagen geleden"
+  "{{count}} days ago": "{{count}} dagen geleden",
+  "Community Voice": "Stem van de gemeenschap",
+  "I closely relate to this": "Ik voel me hier sterk mee verbonden",
+  "I hear this perspective": "Ik hoor dit perspectief",
+  "I partly relate": "Ik voel me hier gedeeltelijk mee verbonden",
+  "Respectful 4-level resonance scale": "Respectvolle resonantieschaal van 4 niveaus",
+  "This echoes my community's voice": "Dit weerspiegelt de stem van mijn gemeenschap"
 }

@@ -1624,5 +1624,11 @@
   "anonymous": "Anónimo",
   "{{count}} min ago": "hace {{count}} min",
   "{{count}} hours ago": "hace {{count}} horas",
-  "{{count}} days ago": "hace {{count}} días"
+  "{{count}} days ago": "hace {{count}} días",
+  "Community Voice": "Voz comunitaria",
+  "I closely relate to this": "Me identifico mucho con esto",
+  "I hear this perspective": "Escucho esta perspectiva",
+  "I partly relate": "Me identifico parcialmente",
+  "Respectful 4-level resonance scale": "Escala respetuosa de resonancia de 4 niveles",
+  "This echoes my community's voice": "Esto refleja la voz de mi comunidad"
 }

@@ -1622,5 +1622,11 @@
   "anonymous": "Anonym",
   "{{count}} min ago": "vor {{count}} Min.",
   "{{count}} hours ago": "vor {{count}} Std.",
-  "{{count}} days ago": "vor {{count}} Tagen"
+  "{{count}} days ago": "vor {{count}} Tagen",
+  "Community Voice": "Stimme der Gemeinschaft",
+  "I closely relate to this": "Ich kann mich sehr damit identifizieren",
+  "I hear this perspective": "Ich höre diese Perspektive",
+  "I partly relate": "Ich kann mich teilweise damit identifizieren",
+  "Respectful 4-level resonance scale": "Respektvolle 4-stufige Resonanzskala",
+  "This echoes my community's voice": "Das spiegelt die Stimme meiner Gemeinschaft wider"
 }

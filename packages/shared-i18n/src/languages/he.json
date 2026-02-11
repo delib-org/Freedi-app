@@ -2346,5 +2346,11 @@
   "averageScore": "ציון ממוצע",
   "questionNumber": "ש{{number}}",
   "justNow": "עכשיו",
-  "anonymous": "אנונימי"
+  "anonymous": "אנונימי",
+  "Community Voice": "קול הקהילה",
+  "I closely relate to this": "אני מתחבר לזה מאוד",
+  "I hear this perspective": "אני שומע את הנקודה הזו",
+  "I partly relate": "אני מתחבר לזה חלקית",
+  "Respectful 4-level resonance scale": "סולם הדהוד מכבד בן 4 רמות",
+  "This echoes my community's voice": "זה מהדהד את קול הקהילה שלי"
 }

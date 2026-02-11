@@ -1,0 +1,147 @@
+.evaluation {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+
+	.community-voice {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+
+		@media screen and (max-width: 500px) {
+			display: flex;
+			flex-direction: column;
+			width: fit-content;
+			margin: auto;
+			margin-top: 1rem;
+		}
+
+		.voice-options {
+			display: flex;
+			flex-direction: row-reverse;
+			gap: 0.5rem;
+
+			.voice-option {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 0.25rem;
+				transition: transform 0.15s ease-out, opacity 0.15s ease-out,
+					background-color 0.1s ease-out;
+				border-radius: 3rem;
+				justify-content: center;
+				min-width: 1.8rem;
+				min-height: 1.8rem;
+				cursor: pointer;
+				user-select: none;
+				opacity: 0.8;
+				border: none;
+				-webkit-tap-highlight-color: transparent;
+				transform: scale(1);
+				padding: 0.25rem;
+				background: transparent;
+
+				&:active:not(:disabled) {
+					transform: scale(0.95);
+				}
+
+				&.active {
+					transform: scale(1.2);
+					z-index: 0;
+					opacity: 1;
+				}
+
+				&.pending {
+					animation: pulse 0.6s ease-in-out infinite;
+				}
+
+				&:disabled {
+					cursor: not-allowed;
+				}
+
+				&.disabled {
+					opacity: 0.6;
+					cursor: not-allowed;
+					pointer-events: none;
+					filter: grayscale(30%);
+				}
+
+				img {
+					pointer-events: none;
+					width: 24px;
+					height: 24px;
+				}
+
+				.voice-label {
+					font-size: 0.6rem;
+					font-weight: 300;
+					color: var(--text-label, rgba(0, 0, 0, 0.5));
+					text-align: center;
+					max-width: 5rem;
+					line-height: 1.2;
+				}
+			}
+		}
+
+		.evaluation-bar {
+			background-color: transparent;
+			width: 100%;
+			height: 0.3rem;
+			position: relative;
+			border-radius: 3px;
+
+			&__indicator {
+				height: 100%;
+				position: absolute;
+				border-radius: 3px;
+				transition: right 0.3s ease, background-color 0.3s ease;
+			}
+		}
+	}
+
+	.evaluation-score {
+		display: flex;
+		gap: 0.2rem;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-body);
+	}
+
+	.total-evaluators {
+		direction: ltr;
+		opacity: 0.8;
+		transition: opacity 0.2s ease;
+		color: var(--text-label);
+
+		&:hover {
+			opacity: 1;
+		}
+	}
+}
+
+.active {
+	transform: scale(1.1);
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		opacity: 0.8;
+	}
+	50% {
+		opacity: 0.5;
+	}
+}
+
+@media screen and (max-width: 500px) {
+	.community-voice {
+		.voice-options {
+			.voice-option {
+				.voice-label {
+					font-size: 0.5rem;
+					max-width: 4rem;
+				}
+			}
+		}
+	}
+}

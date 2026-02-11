@@ -14,6 +14,7 @@ export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
 	singleLike = 'single-like',
+	communityVoice = 'community-voice',
 }
 
 

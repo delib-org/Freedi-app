@@ -7,6 +7,7 @@ import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SwipeCard from './SwipeCard';
 import EvaluationButtons from './EvaluationButtons';
+import CommunityVoiceButtons from './CommunityVoiceButtons';
 import SocialFeed from './SocialFeed';
 import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
@@ -70,6 +71,9 @@ export default function SolutionFeedClient({
 
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;
+
+  // Check evaluation type for community voice
+  const isCommunityVoice = question.statementSettings?.evaluationType === 'community-voice';
 
   // Check if solutions array is empty
   const hasNoSolutions = solutions.length === 0;
@@ -560,10 +564,17 @@ export default function SolutionFeedClient({
             {/* Evaluation buttons - only show when there's a current card */}
             {hasMoreCards && currentSolution && !throwDirection && (
               <div className={styles.evaluationArea}>
-                <EvaluationButtons
-                  onEvaluate={handleButtonRate}
-                  currentScore={evaluationScores.get(currentSolution.statementId)}
-                />
+                {isCommunityVoice ? (
+                  <CommunityVoiceButtons
+                    onEvaluate={handleButtonRate}
+                    currentScore={evaluationScores.get(currentSolution.statementId)}
+                  />
+                ) : (
+                  <EvaluationButtons
+                    onEvaluate={handleButtonRate}
+                    currentScore={evaluationScores.get(currentSolution.statementId)}
+                  />
+                )}
                 <p className={styles.swipeHint}>
                   {t('Swipe or tap to rate')}
                 </p>

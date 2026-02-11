@@ -1646,5 +1646,11 @@
   "anonymous": "مجهول",
   "{{count}} min ago": "قبل {{count}} دقيقة",
   "{{count}} hours ago": "قبل {{count}} ساعات",
-  "{{count}} days ago": "قبل {{count}} أيام"
+  "{{count}} days ago": "قبل {{count}} أيام",
+  "Community Voice": "صوت المجتمع",
+  "I closely relate to this": "أتفهم هذا بشكل كبير",
+  "I hear this perspective": "أسمع هذا المنظور",
+  "I partly relate": "أتفهم هذا جزئياً",
+  "Respectful 4-level resonance scale": "مقياس صدى محترم من 4 مستويات",
+  "This echoes my community's voice": "هذا يعكس صوت مجتمعي"
 }
