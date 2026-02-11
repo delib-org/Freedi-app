@@ -73,7 +73,8 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       throwCard: (rating: number) => {
         // Get direction from RATING_CONFIG
         const config = RATING_CONFIG[rating as keyof typeof RATING_CONFIG];
-        const direction = config?.direction || (rating > 0 ? 'right' : 'left');
+        const rawDirection = config?.direction || (rating > 0 ? 'right' : 'left');
+        const direction: 'left' | 'right' = rawDirection === 'up' ? 'right' : rawDirection;
         setThrowDirection(direction);
         setIsThrowing(true);
 
@@ -108,7 +109,7 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
         setDragX(delta);
 
         // Auto-throw when threshold reached during drag
-        if (Math.abs(delta) >= SWIPE.LIKE_THRESHOLD && !isThrowing) {
+        if (Math.abs(delta) >= SWIPE.AGREE_THRESHOLD && !isThrowing) {
           handleAutoThrow(delta);
         }
       });
@@ -127,13 +128,13 @@ const SwipeCard = forwardRef<SwipeCardHandle, SwipeCardProps>(
       const direction = delta > 0 ? 'right' : 'left';
 
       // Map swipe distance to new rating scale (-1 to +1)
-      if (delta >= SWIPE.LOVE_THRESHOLD) {
+      if (delta >= SWIPE.STRONGLY_AGREE_THRESHOLD) {
         rating = RATING.STRONGLY_AGREE; // +1
-      } else if (delta >= SWIPE.LIKE_THRESHOLD) {
+      } else if (delta >= SWIPE.AGREE_THRESHOLD) {
         rating = RATING.AGREE; // +0.5
-      } else if (delta <= SWIPE.HATE_THRESHOLD) {
+      } else if (delta <= SWIPE.STRONGLY_DISAGREE_THRESHOLD) {
         rating = RATING.STRONGLY_DISAGREE; // -1
-      } else if (delta <= SWIPE.DISLIKE_THRESHOLD) {
+      } else if (delta <= SWIPE.DISAGREE_THRESHOLD) {
         rating = RATING.DISAGREE; // -0.5
       } else {
         return; // Shouldn't happen

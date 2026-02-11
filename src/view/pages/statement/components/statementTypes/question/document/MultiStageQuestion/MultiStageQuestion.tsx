@@ -20,7 +20,7 @@ import { DragGhostItem } from './components/DragGhostItem';
 
 // Styles
 import styles from "./MultiStageQuestion.module.scss";
-import { StatementType } from "delib-npm";
+import { StatementType } from "@freedi/shared-types";
 import { getParagraphsText, hasParagraphsContent } from "@/utils/paragraphUtils";
 
 const MultiStageQuestion: FC = () => {

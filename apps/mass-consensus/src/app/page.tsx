@@ -2,32 +2,34 @@
 
 import React, { useState } from 'react';
 import SwipeCard from '@/components/swipe/SwipeCard';
-import { Statement } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 
 export default function Home() {
   const [ratings, setRatings] = useState<number[]>([]);
 
   // Mock statement for testing
-  const mockStatement: Statement = {
+  const mockStatement = {
     statementId: 'test-1',
     statement: 'Should we implement universal basic income?',
     creatorId: 'user-1',
     creator: {
       displayName: 'Test User',
       photoURL: 'https://via.placeholder.com/32',
+      uid: 'user-1',
     },
-    statementType: 'question' as const,
+    statementType: StatementType.question,
     parentId: 'root',
     topParentId: 'root',
     createdAt: Date.now(),
     lastUpdate: Date.now(),
     hasChildren: false,
     allowAnonymousLogin: false,
-  };
+    consensus: 0,
+  } as Statement;
 
   const handleSwipe = (rating: number) => {
     setRatings([...ratings, rating]);
-    console.log('Swiped with rating:', rating);
+    console.info('Swiped with rating:', rating);
   };
 
   return (

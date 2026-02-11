@@ -24,7 +24,7 @@ import {
 	Timestamp,
 	arrayUnion,
 } from 'firebase/firestore';
-import { Collections } from 'delib-npm';
+import { Collections } from '@freedi/shared-types';
 import { DB } from '@/controllers/db/config';
 import { removeTokenFromSubscription, addTokenToSubscription } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getDeviceInfo } from './platformService';

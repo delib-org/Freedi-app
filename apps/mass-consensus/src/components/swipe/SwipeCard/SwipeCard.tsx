@@ -33,32 +33,6 @@ export interface SwipeCardProps {
   onCommentClick?: () => void;
 }
 
-// Calculate which zone based on drag position relative to starting zone
-function calculateCurrentZone(
-  dragX: number,
-  startZone: number | null,
-  cardElement: HTMLDivElement | null
-): number | null {
-  if (!cardElement || startZone === null) return startZone;
-
-  const cardWidth = cardElement.offsetWidth;
-  const zoneWidth = cardWidth / ZONES.TOTAL_ZONES;
-
-  // Calculate how many zones crossed based on drag distance
-  const zonesCrossed = Math.floor(Math.abs(dragX) / zoneWidth);
-  const direction = dragX > 0 ? 1 : -1;
-
-  // Universal: positive dragX (right) increases zone (toward 4/positive)
-  // negative dragX (left) decreases zone (toward 0/negative)
-  const zoneChange = direction * zonesCrossed;
-
-  // Calculate new zone, clamped to valid range
-  let newZone = startZone + zoneChange;
-  newZone = Math.max(0, Math.min(ZONES.TOTAL_ZONES - 1, newZone));
-
-  return newZone;
-}
-
 // Calculate initial zone from touch/click position
 function calculateInitialZone(clientX: number, cardElement: HTMLDivElement | null): number | null {
   if (!cardElement) return null;
@@ -76,17 +50,6 @@ function calculateInitialZone(clientX: number, cardElement: HTMLDivElement | nul
 // Check if vertical swipe meets threshold
 function isVerticalSwipeComplete(dragY: number): boolean {
   return dragY <= -ZONES.VERTICAL_SWIPE_THRESHOLD; // Negative = upward
-}
-
-// Get overlay emoji based on throw direction (legacy)
-function getOverlayEmoji(direction: 'left' | 'right' | null): string {
-  if (direction === 'right') {
-    return RATING_CONFIG[RATING.STRONGLY_AGREE].emoji;
-  }
-  if (direction === 'left') {
-    return RATING_CONFIG[RATING.STRONGLY_DISAGREE].emoji;
-  }
-  return '';
 }
 
 export default function SwipeCard({
@@ -110,7 +73,7 @@ export default function SwipeCard({
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
   // Zone tracking
-  const [currentZone, setCurrentZone] = useState<number | null>(null);
+  const [, setCurrentZone] = useState<number | null>(null);
   const [dragStartZone, setDragStartZone] = useState<number | null>(null);
   const [isVerticalDrag, setIsVerticalDrag] = useState(false);
   const [highlightedZone, setHighlightedZone] = useState<number | null>(null);
@@ -355,10 +318,6 @@ export default function SwipeCard({
   const rotation = isThrowing
     ? (throwDirection === 'right' ? 30 : throwDirection === 'left' ? -30 : 0)
     : Math.max(-30, Math.min(30, (dragX / 100) * SWIPE.ROTATION_FACTOR));
-
-  // Show overlay during drag or throw (legacy)
-  const showOverlay = false; // Disabled in zone-based system
-  const overlayEmoji = getOverlayEmoji(isThrowing ? (throwDirection === 'up' ? null : throwDirection) : (dragX > 0 ? 'right' : 'left'));
 
   // CSS classes
   const cardClasses = clsx('swipe-card', {

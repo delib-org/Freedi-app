@@ -449,7 +449,8 @@ function calculateThresholdProximityScore(
  */
 export function calculateAdjustedPriority(
   proposal: Statement,
-  config: SamplingConfig | LegacySamplingConfig = DEFAULT_SAMPLING_CONFIG
+  config: SamplingConfig | LegacySamplingConfig = DEFAULT_SAMPLING_CONFIG,
+  _percentileRank?: number
 ): number {
   const normalizedConfig = normalizeConfig(config as LegacySamplingConfig);
   const stable = isStable(proposal, normalizedConfig);

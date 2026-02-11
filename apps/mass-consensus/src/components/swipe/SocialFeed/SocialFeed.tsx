@@ -27,7 +27,7 @@ const SocialFeed: React.FC<SocialFeedProps> = ({
   maxItems = 20,
   className,
 }) => {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
 
   // Limit activities to maxItems
   const displayedActivities = activities.slice(0, maxItems);
@@ -44,11 +44,11 @@ const SocialFeed: React.FC<SocialFeedProps> = ({
     if (seconds < 60) {
       return t('just now');
     } else if (minutes < 60) {
-      return t('{{count}} minutes ago', { count: minutes });
+      return tWithParams('{{count}} minutes ago', { count: minutes });
     } else if (hours < 24) {
-      return t('{{count}} hours ago', { count: hours });
+      return tWithParams('{{count}} hours ago', { count: hours });
     } else {
-      return t('{{count}} days ago', { count: Math.floor(hours / 24) });
+      return tWithParams('{{count}} days ago', { count: Math.floor(hours / 24) });
     }
   };
 

@@ -29,7 +29,6 @@ import {
   selectCurrentCard,
   selectEvaluatedCardsCount,
   selectTotalCardsCount,
-  selectShowProposalPrompt,
   selectSocialActivities,
   selectIsLoading,
   selectError,
@@ -45,7 +44,6 @@ export default function TestSwipePage() {
   const currentCard = useSelector(selectCurrentCard);
   const evaluatedCount = useSelector(selectEvaluatedCardsCount);
   const totalCount = useSelector(selectTotalCardsCount);
-  const showProposalPrompt = useSelector(selectShowProposalPrompt);
   const socialActivities = useSelector(selectSocialActivities);
   const isLoading = useSelector(selectIsLoading);
   const error = useSelector(selectError);
@@ -89,13 +87,19 @@ export default function TestSwipePage() {
       try {
         // In a real app, you'd load the question from Firebase
         // For now, create a mock question with the ID
-        const question: Statement = {
+        const question = {
           statementId: questionId,
           statement: `Question: ${questionId}`,
           description: 'Loaded from Firebase',
-          createdBy: 'admin',
+          creatorId: 'admin',
+          creator: { displayName: 'Admin', uid: 'admin' },
+          statementType: 'question',
+          parentId: 'root',
+          topParentId: 'root',
           createdAt: Date.now(),
           lastUpdate: Date.now(),
+          consensus: 0,
+          hasChildren: false,
         } as Statement;
 
         setCurrentQuestionState(question);
@@ -307,7 +311,7 @@ export default function TestSwipePage() {
                   }}
                 >
                   <h2>🎉 All done!</h2>
-                  <p>You've evaluated all proposals.</p>
+                  <p>You&apos;ve evaluated all proposals.</p>
                   <button
                     onClick={() => setShowProposalModal(true)}
                     style={{

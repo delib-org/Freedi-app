@@ -1,4 +1,4 @@
-import { Statement, Role, StatementType, Screen } from "delib-npm";
+import { Statement, Role, StatementType, Screen } from "@freedi/shared-types";
 import { ReactNode, useEffect, lazy, Suspense } from "react";
 import GroupPage from "../statementTypes/group/GroupPage";
 import QuestionPage from "../statementTypes/question/QuestionPage";

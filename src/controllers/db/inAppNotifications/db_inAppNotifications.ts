@@ -1,7 +1,7 @@
 import { store } from "@/redux/store";
 import { collection, deleteDoc, getDocs, limit, onSnapshot, orderBy, query, Unsubscribe, where, doc, updateDoc, writeBatch } from "firebase/firestore";
 import { DB } from "../config";
-import { Collections, NotificationType } from "delib-npm";
+import { Collections, NotificationType } from "@freedi/shared-types";
 import { setInAppNotificationsAll, markNotificationAsRead, markNotificationsAsRead, markStatementNotificationsAsRead } from "@/redux/notificationsSlice/notificationsSlice";
 
 export function listenToInAppNotifications(): Unsubscribe {

@@ -10,7 +10,7 @@
 
 import { setDoc, query, where, getDocs, limit as firestoreLimit, orderBy, collection, doc } from 'firebase/firestore';
 import { Statement, Evaluation, Collections } from '@freedi/shared-types';
-import { logError, DatabaseError, ValidationError } from '@/lib/utils/errorHandling';
+import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { db } from '@/lib/firebase/client';
 import { RATING, SWIPE } from '@/constants/common';
 
@@ -29,7 +29,7 @@ export async function submitRating(
 ): Promise<void> {
   try {
     // Validate rating
-    const validRatings = Object.values(RATING);
+    const validRatings: readonly number[] = Object.values(RATING);
     if (!validRatings.includes(rating)) {
       throw new ValidationError('Invalid rating value', {
         rating,

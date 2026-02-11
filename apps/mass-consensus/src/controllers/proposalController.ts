@@ -65,7 +65,7 @@ export async function submitProposal(
       statement: trimmedText,
       parentId: questionId,
       statementType: StatementType.option,
-      createdBy: userId,
+      creatorId: userId,
       creator: {
         displayName: userName,
         uid: userId,

@@ -1,4 +1,4 @@
-import { StatementType, Statement } from "delib-npm";
+import { StatementType, Statement } from "@freedi/shared-types";
 import { useEffect, useState } from "react";
 
 export interface StyleProps {

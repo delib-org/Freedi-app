@@ -82,7 +82,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   // Check if user must add solution first
   const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ?? true;
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
-  const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
+  const [, setHasSubmittedSolution] = useState(false);
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
 
   console.info('[SwipeInterface Debug] Settings check:', {
@@ -155,7 +155,8 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
     // Get throw direction from rating config
     const config = RATING_CONFIG[rating];
-    const direction = config?.direction || 'right';
+    const rawDirection = config?.direction || 'right';
+    const direction: 'left' | 'right' = rawDirection === 'up' ? 'right' : rawDirection;
 
     // Trigger throw animation
     setProgrammaticThrow({ rating, direction });

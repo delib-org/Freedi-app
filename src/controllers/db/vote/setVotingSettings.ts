@@ -1,4 +1,4 @@
-import { Collections, VotingSettings, VotingSettingsSchema } from "delib-npm";
+import { Collections, VotingSettings, VotingSettingsSchema } from "@freedi/shared-types";
 import { doc, updateDoc } from "firebase/firestore";
 import { DB } from "../config";
 import { safeParse } from "valibot";

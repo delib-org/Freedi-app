@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, StatementType } from '@freedi/shared-types';
-import { logError, ValidationError } from '@/lib/utils/errorHandling';
+import { logError } from '@/lib/utils/errorHandling';
 import { COMMENT } from '@/constants/common';
 
 /**

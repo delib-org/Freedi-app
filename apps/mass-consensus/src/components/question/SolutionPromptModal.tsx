@@ -45,8 +45,8 @@ export default function SolutionPromptModal({
   questionText,
   suggestionMode = SuggestionMode.encourage,
   requiresSolution = false,
-  hasCheckedUserSolutions = false,
-  userName,
+  hasCheckedUserSolutions: _hasCheckedUserSolutions = false,
+  userName: _userName,
 }: SolutionPromptModalProps) {
   const { t } = useTranslation();
   const [text, setText] = useState('');

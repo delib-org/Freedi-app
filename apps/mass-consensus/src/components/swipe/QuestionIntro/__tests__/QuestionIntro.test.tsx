@@ -15,7 +15,7 @@ jest.mock('@freedi/shared-i18n/react', () => ({
 
 // Mock Button component
 jest.mock('@/components/atomic/atoms/Button', () => ({
-  Button: ({ text, onClick, className }: any) => (
+  Button: ({ text, onClick, className }: { text: string; onClick: () => void; className?: string }) => (
     <button onClick={onClick} className={className}>
       {text}
     </button>

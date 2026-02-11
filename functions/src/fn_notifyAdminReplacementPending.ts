@@ -6,7 +6,7 @@ import {
 	PendingReplacement,
 	StatementType,
 } from '@freedi/shared-types';
-import { Role } from 'delib-npm';
+import { Role } from '@freedi/shared-types';
 
 /**
  * Cloud Function: Notify Admin Replacement Pending

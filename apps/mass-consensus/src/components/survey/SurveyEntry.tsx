@@ -2,13 +2,13 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Survey } from '@freedi/shared-types';
 import { OpeningSlide } from './OpeningSlide';
 import SurveyWelcome from './SurveyWelcome';
 import { getUserIdFromCookie } from '@/lib/utils/user';
+import { SurveyWithQuestions } from '@/types/survey';
 
 interface SurveyEntryProps {
-  survey: Survey;
+  survey: SurveyWithQuestions;
 }
 
 /**

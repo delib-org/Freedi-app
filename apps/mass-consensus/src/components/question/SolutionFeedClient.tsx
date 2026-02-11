@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
@@ -83,7 +83,6 @@ export default function SolutionFeedClient({
 
   // Current solution to display
   const currentSolution = solutions[currentIndex];
-  const isLastCard = currentIndex >= solutions.length - 1;
   const hasMoreCards = currentIndex < solutions.length;
 
   // Check if user has submitted solutions
@@ -453,11 +452,6 @@ export default function SolutionFeedClient({
     setShowCompletionScreen(true);
   };
 
-  // Calculate progress
-  const evaluatedInBatch = useMemo(() => {
-    return solutions.filter(s => allEvaluatedIds.has(s.statementId)).length;
-  }, [solutions, allEvaluatedIds]);
-
   return (
     <ToastProvider>
       <div className={styles.feed}>
@@ -523,7 +517,7 @@ export default function SolutionFeedClient({
                       isTop={idx === 0}
                       throwDirection={idx === 0 ? throwDirection : null}
                       onThrowComplete={handleThrowComplete}
-                      totalVotes={solution.numberOfEvaluators || 0}
+                      totalVotes={solution.evaluation?.numberOfEvaluators || 0}
                       approvalRate={solution.consensus !== undefined ? Math.round((solution.consensus + 1) * 50) : undefined}
                     />
                   ))}

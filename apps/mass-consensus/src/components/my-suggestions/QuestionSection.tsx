@@ -38,7 +38,7 @@ function calculateTotalParticipants(data: QuestionSuggestionsData): number {
 }
 
 export default function QuestionSection({ data, collapsible, defaultExpanded = true }: QuestionSectionProps) {
-  const { t, tWithParams } = useTranslation();
+  const { tWithParams } = useTranslation();
   const [expanded, setExpanded] = useState(defaultExpanded);
   const totalParticipants = calculateTotalParticipants(data);
 

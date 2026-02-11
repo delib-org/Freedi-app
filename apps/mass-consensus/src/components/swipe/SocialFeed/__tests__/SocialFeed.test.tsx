@@ -8,7 +8,7 @@ import SocialFeed, { SocialActivity } from '../SocialFeed';
 // Mock i18n
 jest.mock('@freedi/shared-i18n/react', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: any) => {
+    t: (key: string, options?: Record<string, string | number>) => {
       if (key === 'just now') return 'just now';
       if (key === '{{count}} minutes ago') return `${options?.count} minutes ago`;
       if (key === '{{count}} hours ago') return `${options?.count} hours ago`;

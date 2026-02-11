@@ -11,7 +11,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Import collection constants
-import { Collections, functionConfig } from "delib-npm";
+import { Collections, functionConfig } from "@freedi/shared-types";
 
 // Import function modules
 import {
