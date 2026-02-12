@@ -20,11 +20,6 @@ interface CommunityVoiceEvaluationProps {
 	enableEvaluation?: boolean;
 }
 
-interface EvaluationBarConfig {
-	leftLabel: string;
-	rightLabel: string;
-}
-
 const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
