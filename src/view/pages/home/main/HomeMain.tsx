@@ -53,14 +53,20 @@ const HomeMain = () => {
 	);
 
 	useEffect(() => {
-		setTimeout(() => {
-			setLoading(false);
-		}, 3000);
-
-		if (topSubscriptions.length > 0) {
+		if (topSubscriptions.length > 0 || latestDecisions.length > 0) {
 			setLoading(false);
 		}
-	}, [topSubscriptions]);
+	}, [topSubscriptions, latestDecisions]);
+
+	// Fallback: stop loading after a short timeout if no data arrives
+	// (e.g. new user with no subscriptions)
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setLoading(false);
+		}, 1500);
+
+		return () => clearTimeout(timer);
+	}, []);
 
 	useEffect(() => {
 		if (userId && user.advanceUser) {

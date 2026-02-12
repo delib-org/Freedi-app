@@ -680,6 +680,60 @@ export interface SurveyStatsResult {
 }
 
 /**
+ * Get stats for multiple surveys in a single batch query
+ * Much more efficient than calling getSurveyStats for each survey individually
+ */
+export async function getBatchSurveyStats(
+  surveyIds: string[],
+  options: SurveyStatsOptions = {}
+): Promise<Record<string, SurveyStatsResult>> {
+  if (surveyIds.length === 0) return {};
+
+  const { includeTestData = false } = options;
+  const db = getFirestoreAdmin();
+  const results: Record<string, SurveyStatsResult> = {};
+
+  // Initialize empty results for all survey IDs
+  for (const id of surveyIds) {
+    results[id] = { responseCount: 0, completionCount: 0, completionRate: 0 };
+  }
+
+  // Firestore 'in' query limit is 30, so batch the queries
+  const batchSize = 30;
+  for (let i = 0; i < surveyIds.length; i += batchSize) {
+    const batch = surveyIds.slice(i, i + batchSize);
+    const progressSnapshot = await db
+      .collection(SURVEY_PROGRESS_COLLECTION)
+      .where('surveyId', 'in', batch)
+      .get();
+
+    // Group documents by surveyId
+    for (const doc of progressSnapshot.docs) {
+      const data = doc.data();
+      const sid = data.surveyId as string;
+      const isTest = data.isTestData === true;
+
+      if (!includeTestData && isTest) continue;
+
+      results[sid].responseCount++;
+      if (data.isCompleted === true) {
+        results[sid].completionCount++;
+      }
+    }
+  }
+
+  // Calculate completion rates
+  for (const id of surveyIds) {
+    const r = results[id];
+    r.completionRate = r.responseCount > 0
+      ? Math.round((r.completionCount / r.responseCount) * 100)
+      : 0;
+  }
+
+  return results;
+}
+
+/**
  * Get survey statistics (response and completion counts)
  * By default, excludes test data from counts
  */

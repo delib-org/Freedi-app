@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus } from '@/types/survey';
-import SurveyCard from './SurveyCard';
+import SurveyCard, { SurveyStats } from './SurveyCard';
 import styles from './Admin.module.scss';
 
 /**
@@ -17,6 +17,7 @@ export default function SurveyList() {
   const router = useRouter();
   const { refreshToken } = useAuth();
   const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [statsMap, setStatsMap] = useState<Record<string, SurveyStats>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,6 +48,9 @@ export default function SurveyList() {
 
       const data = await response.json();
       setSurveys(data.surveys);
+      if (data.stats) {
+        setStatsMap(data.stats);
+      }
     } catch (err) {
       console.error('[SurveyList] Error:', err);
       setError(err instanceof Error ? err.message : 'Failed to load surveys');
@@ -163,6 +167,7 @@ export default function SurveyList() {
             <SurveyCard
               key={survey.surveyId}
               survey={survey}
+              stats={statsMap[survey.surveyId] || null}
               onDelete={handleDelete}
               onStatusChange={handleStatusChange}
             />
