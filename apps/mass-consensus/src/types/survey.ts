@@ -7,10 +7,9 @@ export type {
   SurveyProgress,
   QuestionOverrideSettings,
   SurveyDemographicPage,
-  SurveyDemographicQuestion,
-  SurveyDemographicAnswer,
   SurveyExplanationPage,
   SurveyLogo,
+  UserDemographicQuestion,
 } from '@freedi/shared-types';
 
 export {
@@ -19,8 +18,6 @@ export {
   DEFAULT_SURVEY_SETTINGS,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
   SurveyDemographicPageSchema,
-  SurveyDemographicQuestionSchema,
-  SurveyDemographicAnswerSchema,
   SurveyExplanationPageSchema,
 } from '@freedi/shared-types';
 

@@ -75,6 +75,7 @@ const QuestionTypeDisplay: React.FC<QuestionTypeDisplayProps> = ({
 		[UserDemographicQuestionType.textarea]: t('Text Area'),
 		[UserDemographicQuestionType.radio]: t('Single Choice'),
 		[UserDemographicQuestionType.checkbox]: t('Multiple Choice'),
+		[UserDemographicQuestionType.dropdown]: t('Dropdown'),
 		[UserDemographicQuestionType.range]: t('Range'),
 		[UserDemographicQuestionType.number]: t('Number'),
 	};

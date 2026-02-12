@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Statement, QuestionOverrideSettings, SurveyDemographicPage, SurveyDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
+import { Statement, QuestionOverrideSettings, SurveyDemographicPage, UserDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode } from '@/types/survey';
@@ -42,7 +42,7 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   const [explanationPages, setExplanationPages] = useState<SurveyExplanationPage[]>(
     existingSurvey?.explanationPages || []
   );
-  const [customDemographicQuestions, setCustomDemographicQuestions] = useState<SurveyDemographicQuestion[]>([]);
+  const [customDemographicQuestions, setCustomDemographicQuestions] = useState<UserDemographicQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -196,8 +196,8 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
               demographicPages,
               questions: customDemographicQuestions.map((q) => ({
                 // Pass temp ID for new questions so API can map them
-                questionId: q.questionId.startsWith('demo-q-') ? undefined : q.questionId,
-                tempId: q.questionId.startsWith('demo-q-') ? q.questionId : undefined,
+                questionId: (q.userQuestionId || '').startsWith('demo-q-') ? undefined : q.userQuestionId,
+                tempId: (q.userQuestionId || '').startsWith('demo-q-') ? q.userQuestionId : undefined,
                 question: q.question,
                 type: q.type,
                 options: q.options,

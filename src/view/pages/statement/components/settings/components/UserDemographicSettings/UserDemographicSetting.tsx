@@ -62,6 +62,9 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 	const [options, setOptions] = useState<Option[]>(defaultOptions);
 	const [selectedQuestionType, setSelectedQuestionType] = useState<UserDemographicQuestionType>(UserDemographicQuestionType.text);
 	const [applyToGroup, setApplyToGroup] = useState(true);
+	const [showBulkPaste, setShowBulkPaste] = useState(false);
+	const [bulkPasteText, setBulkPasteText] = useState('');
+	const [allowOther, setAllowOther] = useState(false);
 
 	// Check if this is the top parent (group level)
 	const isTopParent = statement.parentId === 'top';
@@ -117,6 +120,10 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 		// Determine the scope based on user selection
 		const isGroupLevel = applyToGroup;
 
+		const isMultiOptionType =
+			newQuestionType === UserDemographicQuestionType.checkbox ||
+			newQuestionType === UserDemographicQuestionType.radio ||
+			newQuestionType === UserDemographicQuestionType.dropdown;
 		const newQuestionObj: UserDemographicQuestion = {
 			userQuestionId: getRandomUID(),
 			question: newQuestion.trim(),
@@ -124,11 +131,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			statementId: statement.statementId,
 			topParentId: statement.topParentId || statement.statementId,
 			scope: isGroupLevel ? DEMOGRAPHIC_SCOPE_GROUP : DEMOGRAPHIC_SCOPE_STATEMENT,
-			options:
-				newQuestionType === UserDemographicQuestionType.checkbox ||
-				newQuestionType === UserDemographicQuestionType.radio
-					? options
-					: [],
+			options: isMultiOptionType ? options : [],
+			allowOther: isMultiOptionType ? allowOther : undefined,
 		};
 
 		dispatch(setUserDemographicQuestion(newQuestionObj));
@@ -141,6 +145,9 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 				color: getRandomColor(),
 			}))
 		);
+		setAllowOther(false);
+		setBulkPasteText('');
+		setShowBulkPaste(false);
 		setUserDemographicQuestionDB(statement, newQuestionObj);
 	};
 
@@ -171,6 +178,20 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 			dispatch(setUserDemographicQuestion(updatedQuestionObj));
 			setUserDemographicQuestionDB(statement, updatedQuestionObj);
 		}
+	};
+	const handleBulkPaste = () => {
+		const lines = bulkPasteText
+			.split('\n')
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0);
+		if (lines.length === 0) return;
+		const newOptions: Option[] = lines.map((line) => ({
+			option: line,
+			color: getRandomColor(),
+		}));
+		setOptions([...options, ...newOptions]);
+		setBulkPasteText('');
+		setShowBulkPaste(false);
 	};
 	const createNewOption = () => {
 		setOptions([...options, { option: '', color: getRandomColor() }]);
@@ -308,6 +329,9 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									<option value={UserDemographicQuestionType.checkbox}>
 										☑️ {t('Multiple Choice (Checkbox)')}
 									</option>
+									<option value={UserDemographicQuestionType.dropdown}>
+										{t('Dropdown')}
+									</option>
 								</select>
 							</div>
 							<div className={styles.scopeToggle}>
@@ -327,7 +351,8 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 								</p>
 							</div>
 							{(selectedQuestionType === UserDemographicQuestionType.radio ||
-							  selectedQuestionType === UserDemographicQuestionType.checkbox) && (
+							  selectedQuestionType === UserDemographicQuestionType.checkbox ||
+							  selectedQuestionType === UserDemographicQuestionType.dropdown) && (
 								<div className={styles.addOptionContainer}>
 									{options.map((option, indx) => (
 										<div className={styles.option} key={indx}>
@@ -377,6 +402,49 @@ const UserDataSetting: FC<Props> = ({ statement }) => {
 									>
 										<h4>{t('add more options')}</h4>
 									</div>
+										<button
+											type='button'
+											className={styles.bulkPasteToggle}
+											onClick={() => setShowBulkPaste(!showBulkPaste)}
+										>
+											{showBulkPaste ? '▲' : '▼'} {t('Bulk Paste Options')}
+										</button>
+										{showBulkPaste && (
+											<div className={styles.bulkPasteSection}>
+												<textarea
+													className={styles.bulkPasteTextarea}
+													value={bulkPasteText}
+													onChange={(e) => setBulkPasteText(e.target.value)}
+													placeholder={t('Paste options, one per line')}
+													rows={6}
+												/>
+												<div className={styles.bulkPasteActions}>
+													{bulkPasteText.split('\n').filter((l) => l.trim()).length > 0 && (
+														<span className={styles.bulkPasteCount}>
+															{bulkPasteText.split('\n').filter((l) => l.trim()).length} {t('options')}
+														</span>
+													)}
+													<button
+														type='button'
+														className='btn btn--secondary btn--small'
+														onClick={handleBulkPaste}
+														disabled={bulkPasteText.split('\n').filter((l) => l.trim()).length === 0}
+													>
+														{t('Add Pasted Options')}
+													</button>
+												</div>
+											</div>
+										)}
+										<div className={styles.allowOtherToggle}>
+											<label className={styles.allowOtherLabel}>
+												<input
+													type='checkbox'
+													checked={allowOther}
+													onChange={(e) => setAllowOther(e.target.checked)}
+												/>
+												<span>{t('Allow "Other" option')}</span>
+											</label>
+										</div>
 								</div>
 							)}
 
