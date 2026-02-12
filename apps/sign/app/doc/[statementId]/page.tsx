@@ -68,6 +68,12 @@ export default async function DocumentPage({ params }: PageProps) {
     user: user ? { uid: user.uid.substring(0, 10) + '...', displayName: user.displayName } : null,
   });
 
+  // LOG FULL USER ID FOR DEBUGGING
+  console.error('====================================');
+  console.error('CURRENT USER ID (FULL):', user?.uid);
+  console.error('COOKIE USER ID (FULL):', userIdCookie?.value);
+  console.error('====================================');
+
   // Fetch comment counts for all paragraphs (for all users, not just logged in)
   const commentStart = Date.now();
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
@@ -132,6 +138,8 @@ export default async function DocumentPage({ params }: PageProps) {
     explanationVideoMode?: ExplanationVideoMode;
     allowHeaderReactions?: boolean;
     headerColors?: HeaderColors;
+    nonInteractiveNormalStyle?: boolean;
+    enableHeadingNumbering?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -159,6 +167,12 @@ export default async function DocumentPage({ params }: PageProps) {
   // Header customization settings
   const allowHeaderReactions = signSettings?.allowHeaderReactions ?? false;
   const headerColors: HeaderColors = signSettings?.headerColors ?? DEFAULT_HEADER_COLORS;
+
+  // Non-interactive element styling
+  const nonInteractiveNormalStyle = signSettings?.nonInteractiveNormalStyle ?? false;
+
+  // Heading numbering setting
+  const enableHeadingNumbering = signSettings?.enableHeadingNumbering ?? false;
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -199,6 +213,8 @@ export default async function DocumentPage({ params }: PageProps) {
         explanationVideoMode={explanationVideoMode}
         allowHeaderReactions={allowHeaderReactions}
         headerColors={headerColors}
+        nonInteractiveNormalStyle={nonInteractiveNormalStyle}
+        enableHeadingNumbering={enableHeadingNumbering}
       />
     </LanguageOverrideProvider>
   );

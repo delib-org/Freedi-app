@@ -474,11 +474,27 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
                         icon={MessageCircle}
                         badge="recommended"
                       />
+                      {settings.hasChat !== false && (
+                        <ToggleSwitch
+                          isChecked={settings.enableChatPanel ?? true}
+                          onChange={(checked) => handleSettingChange('enableChatPanel', checked)}
+                          label={t('Show Chat Side Panel')}
+                          description={t('Display the collapsible chat panel alongside the main content')}
+                          icon={MessageCircle}
+                        />
+                      )}
                       <ToggleSwitch
                         isChecked={settings.hasChildren ?? false}
                         onChange={(checked) => handleSettingChange('hasChildren', checked)}
                         label={t('Enable Sub-Conversations')}
                         description={t('Allow nested discussions and sub-topics')}
+                        icon={GitBranch}
+                      />
+                      <ToggleSwitch
+                        isChecked={settings.enableSubQuestionsMap ?? true}
+                        onChange={(checked) => handleSettingChange('enableSubQuestionsMap', checked)}
+                        label={t('Show Sub-Questions Map')}
+                        description={t('Display the navigational tree of sub-questions alongside the main content')}
                         icon={GitBranch}
                       />
                     </>

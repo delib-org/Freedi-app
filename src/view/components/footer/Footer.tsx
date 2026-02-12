@@ -6,7 +6,7 @@ import GroupIcon from "@/assets/icons/group.svg?react";
 import TargetIcon from "@/assets/icons/target.svg?react";
 import styles from "./Footer.module.scss";
 import { useTranslation } from "@/controllers/hooks/useTranslation";
-import { NotificationType, StatementType } from "delib-npm";
+import { NotificationType, StatementType } from "@freedi/shared-types";
 import { useDispatch, useSelector } from "react-redux";
 import { inAppNotificationsSelector } from "@/redux/notificationsSlice/notificationsSlice";
 import { creatorSelector } from "@/redux/creator/creatorSlice";

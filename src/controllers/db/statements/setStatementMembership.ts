@@ -1,4 +1,4 @@
-import { Access, Collections, Statement } from "delib-npm";
+import { Access, Collections, Statement } from "@freedi/shared-types";
 import { doc, updateDoc, deleteField } from "firebase/firestore";
 import { DB } from "../config";
 

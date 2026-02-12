@@ -39,10 +39,10 @@ const HomeMain = () => {
 	const topSubscriptions = useMemo(
 		() => allTopSubscriptions.filter(
 			(sub) =>
-				sub.user?.uid === user?.uid &&
+				sub.userId === userId &&
 				sub.statement.statementType === StatementType.group
 		),
-		[allTopSubscriptions, user?.uid]
+		[allTopSubscriptions, userId]
 	);
 
 	const latestDecisions = useMemo(

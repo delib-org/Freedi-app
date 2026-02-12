@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
+import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import styles from './Survey.module.scss';
 
 interface SurveyCompleteProps {
@@ -25,6 +26,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [hasSuggestions, setHasSuggestions] = useState(false);
   const [stats, setStats] = useState<SurveyStats>({
     questionsCompleted: 0,
     totalQuestions: survey.questions.length,
@@ -50,6 +52,32 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     // Clear progress after showing stats
     // localStorage.removeItem(storageKey);
   }, [survey.surveyId, survey.questions.length]);
+
+  // Check if user has submitted suggestions
+  useEffect(() => {
+    const checkSuggestions = async () => {
+      try {
+        const userId = getOrCreateAnonymousUser();
+        const results = await Promise.all(
+          survey.questionIds.map((questionId) =>
+            fetch(`/api/user-solutions/${questionId}?userId=${encodeURIComponent(userId)}`)
+              .then((res) => res.ok ? res.json() : { solutionCount: 0 })
+              .catch(() => ({ solutionCount: 0 }))
+          )
+        );
+
+        const total = results.reduce(
+          (sum: number, r: { solutionCount?: number }) => sum + (r.solutionCount || 0),
+          0
+        );
+        setHasSuggestions(total > 0);
+      } catch {
+        // Silently fail - button won't show
+      }
+    };
+
+    checkSuggestions();
+  }, [survey.questionIds]);
 
   const handleEmailSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -79,6 +107,10 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
 
   const handleViewQuestions = () => {
     router.push(`/s/${survey.surveyId}/q/0`);
+  };
+
+  const handleViewMySuggestions = () => {
+    router.push(`/my-suggestions?surveyId=${survey.surveyId}`);
   };
 
   return (
@@ -132,6 +164,14 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
       )}
 
       <div className={styles.completeActions}>
+        {hasSuggestions && (
+          <button
+            className={`${styles.actionButton} ${styles.primary}`}
+            onClick={handleViewMySuggestions}
+          >
+            {t('viewMySuggestions')}
+          </button>
+        )}
         <button
           className={`${styles.actionButton} ${styles.secondary}`}
           onClick={handleViewQuestions}

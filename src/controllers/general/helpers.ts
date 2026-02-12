@@ -138,7 +138,8 @@ export const TYPE_RESTRICTIONS: Record<StatementType, {
 	[StatementType.statement]: {},
 	[StatementType.question]: {},
 	[StatementType.document]: {},
-	[StatementType.comment]: {}
+	[StatementType.comment]: {},
+	[StatementType.paragraph]: {}
 };
 
 export function isStatementTypeAllowedAsChildren(

@@ -1,6 +1,6 @@
 import { listenToEvaluation } from "@/controllers/db/evaluation/getEvaluation";
 import { evaluationSelector } from "@/redux/evaluations/evaluationsSlice";
-import { Statement } from "delib-npm";
+import { Statement } from "@freedi/shared-types";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 

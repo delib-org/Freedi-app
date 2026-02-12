@@ -2,6 +2,7 @@ import { FC } from 'react';
 import EnhancedEvaluation from './enhancedEvaluation/EnhancedEvaluation';
 import SimpleEvaluation from './simpleEvaluation/SimpleEvaluation';
 import SingleLikeEvaluation from './singleLikeEvaluation/SingleLikeEvaluation';
+import CommunityVoiceEvaluation from './communityVoiceEvaluation/CommunityVoiceEvaluation';
 import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
 
@@ -43,6 +44,13 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 				case 'range':
 					return (
 						<EnhancedEvaluation
+							statement={statement}
+							enableEvaluation={enableEvaluation}
+						/>
+					);
+				case 'community-voice':
+					return (
+						<CommunityVoiceEvaluation
 							statement={statement}
 							enableEvaluation={enableEvaluation}
 						/>

@@ -1,0 +1,13 @@
+{
+  "rules": {
+    "liveEditing": {
+      "sessions": {
+        "$sessionId": {
+          ".read": "auth != null",
+          ".write": "auth != null",
+          ".indexOn": ["lastUpdate", "ttl"]
+        }
+      }
+    }
+  }
+}

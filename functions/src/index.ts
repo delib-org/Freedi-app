@@ -11,7 +11,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Import collection constants
-import { Collections, functionConfig } from "delib-npm";
+import { Collections, functionConfig } from "@freedi/shared-types";
 
 // Import function modules
 import {
@@ -139,6 +139,12 @@ import { importGoogleDoc } from "./fn_importGoogleDocs";
 
 // Document Version AI Processing
 import { processVersionAI } from "./fn_versionAI";
+
+// Paragraph Version Control (MVP)
+import { fn_createReplacementQueueItem } from "./fn_createReplacementQueueItem";
+import { fn_updateQueueConsensus } from "./fn_updateQueueConsensus";
+import { fn_pruneVersionHistory } from "./fn_pruneVersionHistory";
+import { fn_notifyAdminReplacementPending } from "./fn_notifyAdminReplacementPending";
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
@@ -662,6 +668,12 @@ return;
     res.json(result);
   }
 );
+
+// Paragraph Version Control (MVP) - Sign app
+exports.fn_createReplacementQueueItem = fn_createReplacementQueueItem;
+exports.fn_updateQueueConsensus = fn_updateQueueConsensus;
+exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
+exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

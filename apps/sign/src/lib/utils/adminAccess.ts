@@ -28,18 +28,21 @@ export interface AdminAccessResult {
 /**
  * Check if a user has admin access to a document
  * Checks both document ownership and collaborator records
+ * Includes retry logic for cold start resilience
  *
  * @param db - Firestore instance
  * @param documentId - Document ID to check
  * @param userId - User ID to check
+ * @param retryCount - Number of retries on transient failures (default: 2)
  * @returns Admin access result with permission level
  */
 export async function checkAdminAccess(
 	db: Firestore,
 	documentId: string,
-	userId: string
+	userId: string,
+	retryCount: number = 2
 ): Promise<AdminAccessResult> {
-	try {
+	const attemptCheck = async (): Promise<AdminAccessResult> => {
 		// Get the document to check ownership
 		const docRef = db.collection(Collections.statements).doc(documentId);
 		const docSnap = await docRef.get();
@@ -92,15 +95,36 @@ export async function checkAdminAccess(
 			isOwner: false,
 			isViewer: false,
 		};
-	} catch (error) {
-		logError(error, { operation: 'adminAccess.checkAdminAccess', documentId, userId });
-		return {
-			isAdmin: false,
-			permissionLevel: null,
-			isOwner: false,
-			isViewer: false,
-		};
+	};
+
+	// Retry logic for cold start resilience
+	for (let attempt = 0; attempt <= retryCount; attempt++) {
+		try {
+			return await attemptCheck();
+		} catch (error) {
+			const isLastAttempt = attempt === retryCount;
+
+			// Log error only on final failure
+			if (isLastAttempt) {
+				logError(error, {
+					operation: 'adminAccess.checkAdminAccess',
+					documentId,
+					userId,
+					metadata: { attempt: attempt + 1, totalAttempts: retryCount + 1 }
+				});
+			} else {
+				// Short delay before retry (100ms, 200ms)
+				await new Promise(resolve => setTimeout(resolve, 100 * (attempt + 1)));
+			}
+		}
 	}
+
+	return {
+		isAdmin: false,
+		permissionLevel: null,
+		isOwner: false,
+		isViewer: false,
+	};
 }
 
 /**

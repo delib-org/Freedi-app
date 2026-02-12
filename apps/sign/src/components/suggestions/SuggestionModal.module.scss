@@ -2,6 +2,9 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .originalSection {
@@ -41,12 +44,17 @@
   padding: var(--spacing-sm);
   border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
   background: var(--background);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 
   p {
     margin: 0;
     font-size: 0.875rem;
     color: var(--text-body);
     line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 }
 
@@ -54,15 +62,19 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+  max-width: 100%;
 
   label {
     font-size: 0.875rem;
     font-weight: 500;
     color: var(--text-primary);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   textarea {
     width: 100%;
+    max-width: 100%;
     padding: var(--spacing-sm);
     border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12));
     border-radius: var(--radius-sm);
@@ -71,6 +83,9 @@
     line-height: 1.5;
     resize: vertical;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
 
     &:focus {
       outline: none;
@@ -266,6 +281,37 @@
   .actions {
     flex-direction: row-reverse;
   }
+}
+
+/* Active editors indicator */
+.activeEditors {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: var(--text-body);
+}
+
+.activeEditorsLabel {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.activeEditorBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 /* Mobile responsiveness */

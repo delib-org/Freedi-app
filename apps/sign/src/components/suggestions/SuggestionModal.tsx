@@ -1,10 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { useSuggestionDraft } from '@/hooks/useSuggestionDraft';
+import { useAutoLogin } from '@/hooks/useAutoLogin';
+import { useTypingStatus } from '@/hooks/useTypingStatus';
+import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
+import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
+import { htmlToMarkdown, markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
 import styles from './SuggestionModal.module.scss';
 
@@ -13,6 +18,7 @@ interface SuggestionModalProps {
   documentId: string;
   originalContent: string;
   existingSuggestion?: Suggestion | null;
+  userId: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
@@ -24,16 +30,36 @@ export default function SuggestionModal({
   documentId,
   originalContent,
   existingSuggestion,
+  userId,
   onClose,
   onSuccess,
 }: SuggestionModalProps) {
   const { t } = useTranslation();
   const { incrementSuggestionCount, addUserInteraction } = useUIStore();
+  const user = useAutoLogin(); // Auto-login anonymously if not logged in
 
   // State
   const [isOriginalExpanded, setIsOriginalExpanded] = useState(false);
   const [submitState, setSubmitState] = useState<SubmitState>('idle');
   const [errorMessage, setErrorMessage] = useState('');
+
+  // Real-time collaborative editing
+  const liveEditingManager = useRef<LiveEditingManager | null>(null);
+  const [activeEditors, setActiveEditors] = useState<ActiveEditor[]>([]);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Typing status - emit when user types, clear on close/submit
+  const { emitTyping, clearTyping } = useTypingStatus({
+    paragraphId,
+    currentUserId: userId,
+    enabled: true,
+  });
+
+  // Convert HTML original content to Markdown for user-friendly editing
+  const markdownOriginalContent = useMemo(
+    () => htmlToMarkdown(originalContent),
+    [originalContent]
+  );
 
   // Draft handling
   const {
@@ -45,37 +71,145 @@ export default function SuggestionModal({
     hasDraft,
   } = useSuggestionDraft({ paragraphId });
 
-  // Pre-fill if editing existing suggestion
+  // Initialize real-time editing session
+  useEffect(() => {
+    if (!user) return;
+
+    const manager = new LiveEditingManager();
+    liveEditingManager.current = manager;
+
+    // Join editing session for this paragraph
+    manager
+      .joinSession(
+        documentId,
+        paragraphId,
+        user.uid,
+        user.displayName || 'Anonymous',
+        suggestedContent || markdownOriginalContent
+      )
+      .catch((error) => {
+        console.error('Failed to join editing session:', error);
+      });
+
+    // Subscribe to session updates to see other editors
+    const unsubscribe = manager.subscribeToSession((session: LiveEditingSession | null) => {
+      if (session) {
+        const editors = manager.getActiveEditors(session);
+        setActiveEditors(editors);
+
+        // Update draft content from RTDB if it changed from another user
+        if (session.draftContent !== suggestedContent) {
+          setSuggestedContent(session.draftContent);
+        }
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      manager.cleanup();
+    };
+  }, [user, documentId, paragraphId, markdownOriginalContent, suggestedContent, setSuggestedContent]);
+
+  // Handle textarea changes with real-time sync
+  const handleContentChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newContent = e.target.value;
+      const cursorPosition = e.target.selectionStart || 0;
+
+      setSuggestedContent(newContent);
+      emitTyping(); // Emit typing status to other users
+
+      // Update RTDB for real-time collaboration (300ms debounced)
+      if (liveEditingManager.current) {
+        liveEditingManager.current.updateDraft(newContent, cursorPosition);
+      }
+    },
+    [setSuggestedContent, emitTyping]
+  );
+
+  // Pre-fill if editing existing suggestion (convert HTML to Markdown)
   useEffect(() => {
     if (existingSuggestion && !hasDraft) {
-      setSuggestedContent(existingSuggestion.suggestedContent);
+      const markdownContent = htmlToMarkdown(existingSuggestion.suggestedContent);
+      setSuggestedContent(markdownContent);
       setReasoning(existingSuggestion.reasoning || '');
     }
   }, [existingSuggestion, hasDraft, setSuggestedContent, setReasoning]);
 
+  // Initialize with markdown original content for new suggestions
+  useEffect(() => {
+    if (!existingSuggestion && !hasDraft && !suggestedContent) {
+      setSuggestedContent(markdownOriginalContent);
+    }
+  }, [existingSuggestion, hasDraft, suggestedContent, markdownOriginalContent, setSuggestedContent]);
+
+  // Clear typing status when modal closes
+  useEffect(() => {
+    return () => {
+      clearTyping();
+    };
+  }, [clearTyping]);
+
   const isEditing = !!existingSuggestion;
   const isValid = suggestedContent.trim().length >= SUGGESTIONS.MIN_LENGTH;
 
+  // Handle reasoning change with typing emission
+  const handleReasoningChange = useCallback(
+    (value: string) => {
+      setReasoning(value);
+      emitTyping(); // Emit typing status to other users
+    },
+    [setReasoning, emitTyping]
+  );
+
   const handleSubmit = async () => {
-    if (!isValid || submitState === 'submitting') return;
+    console.info('[SuggestionModal] handleSubmit called', {
+      isValid,
+      submitState,
+      hasUser: !!user,
+      userId: user?.uid,
+    });
+
+    if (!isValid || submitState === 'submitting') {
+      console.info('[SuggestionModal] Submit blocked:', { isValid, submitState });
+      return;
+    }
+
+    if (!user) {
+      console.error('[SuggestionModal] No user - cannot submit');
+      setErrorMessage('Please wait for authentication to complete...');
+      return;
+    }
+
+    // Clear typing status when submitting
+    clearTyping();
 
     setSubmitState('submitting');
     setErrorMessage('');
 
     try {
+      // Convert Markdown to HTML before submitting
+      const htmlContent = markdownToHtml(suggestedContent.trim());
+
       const method = isEditing ? 'PUT' : 'POST';
       const body = isEditing
         ? {
             suggestionId: existingSuggestion.suggestionId,
-            suggestedContent: suggestedContent.trim(),
+            suggestedContent: htmlContent,
             reasoning: reasoning.trim(),
           }
         : {
-            suggestedContent: suggestedContent.trim(),
+            suggestedContent: htmlContent,
             reasoning: reasoning.trim(),
             documentId,
             originalContent,
           };
+
+      console.info('[SuggestionModal] Sending request:', {
+        method,
+        url: API_ROUTES.SUGGESTIONS(paragraphId),
+        bodyKeys: Object.keys(body),
+      });
 
       const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId), {
         method,
@@ -85,10 +219,20 @@ export default function SuggestionModal({
         body: JSON.stringify(body),
       });
 
+      console.info('[SuggestionModal] Response:', {
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+      });
+
       if (!response.ok) {
         const data = await response.json();
+        console.error('[SuggestionModal] Error response:', data);
         throw new Error(data.error || 'Failed to submit suggestion');
       }
+
+      const responseData = await response.json();
+      console.info('[SuggestionModal] Success:', responseData);
 
       setSubmitState('success');
       clearDraft();
@@ -107,10 +251,17 @@ export default function SuggestionModal({
         onClose();
       }, 500);
     } catch (error) {
+      console.error('[SuggestionModal] Submit error:', error);
       setSubmitState('error');
       setErrorMessage(error instanceof Error ? error.message : t('Failed to submit suggestion'));
     }
   };
+
+  // Handle close with typing status clear
+  const handleClose = useCallback(() => {
+    clearTyping();
+    onClose();
+  }, [clearTyping, onClose]);
 
   return (
     <div className={styles.container}>
@@ -141,13 +292,31 @@ export default function SuggestionModal({
         )}
       </div>
 
-      {/* Suggestion textarea */}
+      {/* Active editors indicator */}
+      {activeEditors.length > 0 && (
+        <div className={styles.activeEditors}>
+          <span className={styles.activeEditorsLabel}>{t('Also editing')}:</span>
+          {activeEditors.map((editor) => (
+            <span
+              key={editor.userId}
+              className={styles.activeEditorBadge}
+              style={{ backgroundColor: editor.color }}
+              title={editor.displayName}
+            >
+              {editor.displayName.charAt(0).toUpperCase()}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Suggestion textarea with real-time collaboration */}
       <div className={styles.field}>
         <label htmlFor="suggested-content">{t('Your Suggested Text')}</label>
         <textarea
+          ref={textareaRef}
           id="suggested-content"
           value={suggestedContent}
-          onChange={(e) => setSuggestedContent(e.target.value)}
+          onChange={handleContentChange}
           placeholder={t('Write your alternative version...')}
           rows={5}
           maxLength={SUGGESTIONS.MAX_LENGTH}
@@ -166,7 +335,7 @@ export default function SuggestionModal({
         <textarea
           id="reasoning"
           value={reasoning}
-          onChange={(e) => setReasoning(e.target.value)}
+          onChange={(e) => handleReasoningChange(e.target.value)}
           placeholder={t('Explain your reasoning...')}
           rows={3}
           maxLength={SUGGESTIONS.MAX_REASONING_LENGTH}
@@ -196,7 +365,7 @@ export default function SuggestionModal({
         <button
           type="button"
           className={styles.cancelButton}
-          onClick={onClose}
+          onClick={handleClose}
           disabled={submitState === 'submitting'}
         >
           {t('Cancel')}

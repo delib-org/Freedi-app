@@ -2,7 +2,7 @@ import { useContext,  useState } from "react";
 
 import { StatementContext } from "../../StatementCont";
 import styles from "./Switch.module.scss";
-import { Role } from "delib-npm";
+import { Role } from "@freedi/shared-types";
 import SwitchScreen from "./SwitchScreen";
 import { updateStatementText } from "@/controllers/db/statements/setStatements";
 import { useAuthorization } from "@/controllers/hooks/useAuthorization";
@@ -57,8 +57,13 @@ const Switch = () => {
       )}
 
       <OnlineUsers statementId={statement?.statementId} />
-      {statement && <SubQuestionsMap statement={statement} />}
-      <ChatPanel />
+      {statement && statement.statementSettings?.enableSubQuestionsMap !== false && (
+        <SubQuestionsMap statement={statement} />
+      )}
+      {statement?.statementSettings?.hasChat !== false &&
+        statement?.statementSettings?.enableChatPanel !== false && (
+        <ChatPanel />
+      )}
       <SwitchScreen statement={statement} role={role} />
     </main>
   );

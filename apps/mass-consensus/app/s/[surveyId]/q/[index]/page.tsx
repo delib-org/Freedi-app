@@ -5,7 +5,7 @@ import { getSurveyWithQuestions, getSurveyDemographicQuestions } from '@/lib/fir
 import { SurveyStatus, buildSurveyFlow, isQuestionFlowItem, isDemographicFlowItem, isExplanationFlowItem, getTotalFlowLength } from '@/types/survey';
 import { getAdaptiveBatch } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
-import SolutionFeed from '@/components/question/SolutionFeed';
+import SwipeInterfaceWrapper from '@/components/swipe/SwipeInterfaceWrapper';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import SurveyQuestionWrapper from '@/components/survey/SurveyQuestionWrapper';
@@ -180,9 +180,9 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             {/* Question Header */}
             <QuestionHeader question={question} />
 
-            {/* Solution Feed with Suspense */}
+            {/* Swipe Interface - Tinder-style evaluation */}
             <Suspense fallback={<SkeletonLoader count={3} />}>
-              <SolutionFeed
+              <SwipeInterfaceWrapper
                 question={question}
                 initialSolutions={initialBatch}
                 mergedSettings={mergedSettings}

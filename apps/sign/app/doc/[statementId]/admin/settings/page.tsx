@@ -60,6 +60,10 @@ interface Settings {
   allowHeaderReactions: boolean;
   /** Custom colors for each heading level */
   headerColors: HeaderColors;
+  /** When true, non-interactive elements use normal text color instead of dimmed styling */
+  nonInteractiveNormalStyle: boolean;
+  /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
+  enableHeadingNumbering: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -93,6 +97,8 @@ export default function AdminSettingsPage() {
     explanationVideoMode: 'optional',
     allowHeaderReactions: false,
     headerColors: DEFAULT_HEADER_COLORS,
+    nonInteractiveNormalStyle: false,
+    enableHeadingNumbering: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -370,6 +376,21 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.showViewCounts}
           />
         </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Non-Interactive Normal Style')}</p>
+            <p className={styles.settingDescription}>
+              {t('Display non-interactive paragraphs with normal text color instead of dimmed/disabled styling')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.nonInteractiveNormalStyle ? styles.active : ''}`}
+            onClick={() => handleToggle('nonInteractiveNormalStyle')}
+            aria-pressed={settings.nonInteractiveNormalStyle}
+          />
+        </div>
       </section>
 
       {/* Accessibility Settings */}
@@ -436,6 +457,29 @@ export default function AdminSettingsPage() {
             </select>
           </div>
         )}
+
+        {/* Enable Heading Numbering */}
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <label htmlFor="enableHeadingNumbering" className={styles.settingLabel}>
+              {t('settings.enableHeadingNumbering.label') || 'Enable Heading Numbering'}
+            </label>
+            <p className={styles.settingDescription}>
+              {t('settings.enableHeadingNumbering.description') ||
+               'Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)'}
+            </p>
+          </div>
+          <button
+            type="button"
+            id="enableHeadingNumbering"
+            className={`${styles.toggle} ${settings.enableHeadingNumbering ? styles.active : ''}`}
+            onClick={() => handleToggle('enableHeadingNumbering')}
+            aria-pressed={settings.enableHeadingNumbering}
+            aria-label={t('settings.enableHeadingNumbering.label') || 'Enable Heading Numbering'}
+          >
+            <span className={styles.toggleSlider} />
+          </button>
+        </div>
       </section>
 
       {/* Language Settings */}

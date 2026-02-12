@@ -1,0 +1,342 @@
+/**
+ * Document Context Panel Styles
+ * BEM naming convention
+ *
+ * Shows paragraph location within document
+ * with surrounding context
+ */
+
+.context {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+
+	// Header
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+	}
+
+	&__title {
+		font-size: var(--h5-font-size);
+		font-weight: 600;
+		color: var(--text-primary);
+		margin: 0;
+	}
+
+	&__position {
+		display: inline-flex;
+		padding: var(--spacing-xs) var(--spacing-sm);
+		background: rgba(27, 38, 80, 0.1);
+		color: var(--btn-primary);
+		font-size: 0.75rem;
+		font-weight: 600;
+		border-radius: var(--radius-full);
+	}
+
+	// Explanation text
+	&__explanation {
+		font-size: 0.875rem;
+		color: var(--text-secondary);
+		line-height: 1.5;
+		margin: 0;
+		padding: var(--spacing-sm);
+		background: var(--background);
+		border-radius: var(--radius-sm);
+		border-left: 3px solid var(--btn-primary);
+	}
+
+	// Preview area
+	&__preview {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-md);
+		background: var(--background);
+		border-radius: var(--radius-md);
+		border: 1px solid var(--border-light);
+	}
+
+	// Individual paragraph
+	&__paragraph {
+		padding: var(--spacing-md);
+		background: var(--card-default);
+		border-radius: var(--radius-sm);
+		border: 1px solid var(--border-light);
+		transition: all 0.2s ease;
+
+		&--highlighted {
+			border-color: var(--agree);
+			background: rgba(76, 175, 80, 0.05);
+			box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.1);
+		}
+	}
+
+	&__paragraphHeader {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: var(--spacing-sm);
+	}
+
+	&__paragraphLabel {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-secondary);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	&__paragraphType {
+		display: inline-flex;
+		padding: 2px 6px;
+		background: var(--background);
+		color: var(--text-caption);
+		font-size: 0.625rem;
+		font-weight: 500;
+		border-radius: var(--radius-sm);
+		text-transform: uppercase;
+	}
+
+	&__paragraphContent {
+		font-size: 0.875rem;
+		line-height: 1.6;
+		color: var(--text-body);
+
+		// Heading styles
+		&--h1 {
+			font-size: 1.5rem;
+			font-weight: 700;
+			color: var(--text-primary);
+		}
+
+		&--h2 {
+			font-size: 1.25rem;
+			font-weight: 600;
+			color: var(--text-primary);
+		}
+
+		&--h3 {
+			font-size: 1.125rem;
+			font-weight: 600;
+			color: var(--text-primary);
+		}
+
+		&--h4,
+		&--h5,
+		&--h6 {
+			font-weight: 600;
+			color: var(--text-primary);
+		}
+
+		&--li {
+			padding-left: var(--spacing-md);
+			position: relative;
+
+			&::before {
+				content: '•';
+				position: absolute;
+				left: 0;
+				color: var(--btn-primary);
+			}
+		}
+	}
+
+	// Empty paragraph state
+	&__emptyParagraph {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+		padding: var(--spacing-md);
+		background: var(--card-default);
+		border-radius: var(--radius-sm);
+		border: 1px dashed var(--border-light);
+		text-align: center;
+	}
+
+	&__emptyLabel {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-caption);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	&__emptyText {
+		font-size: 0.875rem;
+		color: var(--text-caption);
+		font-style: italic;
+	}
+
+	// Current section (highlighted)
+	&__currentSection {
+		padding: var(--spacing-md);
+		background: linear-gradient(to right, rgba(27, 38, 80, 0.03), rgba(27, 38, 80, 0.08));
+		border-radius: var(--radius-sm);
+		border: 2px solid var(--btn-primary);
+	}
+
+	&__currentHeader {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: var(--spacing-md);
+		flex-wrap: wrap;
+		gap: var(--spacing-sm);
+	}
+
+	&__currentLabel {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--btn-primary);
+	}
+
+	&__viewButton {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: var(--spacing-xs) var(--spacing-sm);
+		background: transparent;
+		border: 1px solid var(--btn-primary);
+		border-radius: var(--radius-sm);
+		font-size: 0.75rem;
+		font-weight: 500;
+		color: var(--btn-primary);
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&:hover {
+			background: var(--btn-primary);
+			color: white;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
+		}
+
+		svg {
+			flex-shrink: 0;
+		}
+	}
+
+	// Before/After Comparison
+	&__comparison {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		gap: var(--spacing-md);
+		align-items: center;
+
+		@media (max-width: 768px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__comparisonColumn {
+		display: flex;
+		flex-direction: column;
+		gap: var(--spacing-xs);
+	}
+
+	&__comparisonLabel {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #c62828;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+
+		&--proposed {
+			color: #2e7d32;
+		}
+	}
+
+	&__arrow {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--text-caption);
+
+		@media (max-width: 768px) {
+			transform: rotate(90deg);
+		}
+	}
+
+	// Flow indicator (visual document flow)
+	&__flowIndicator {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-sm) 0;
+	}
+
+	&__flowLine {
+		flex: 1;
+		height: 2px;
+		background: linear-gradient(
+			to right,
+			transparent,
+			var(--border-light),
+			transparent
+		);
+	}
+
+	&__flowDots {
+		display: flex;
+		gap: var(--spacing-sm);
+	}
+
+	&__flowDot {
+		width: 8px;
+		height: 8px;
+		border-radius: 50%;
+		background: var(--border-light);
+
+		&--active {
+			background: var(--btn-primary);
+			box-shadow: 0 0 0 3px rgba(27, 38, 80, 0.2);
+		}
+	}
+}
+
+// RTL Support
+[dir="rtl"] {
+	.context {
+		&__paragraphContent {
+			&--li {
+				padding-left: 0;
+				padding-right: var(--spacing-md);
+
+				&::before {
+					left: auto;
+					right: 0;
+				}
+			}
+		}
+
+		&__explanation {
+			border-left: none;
+			border-right: 3px solid var(--btn-primary);
+		}
+	}
+}
+
+// Responsive
+@media (max-width: 768px) {
+	.context {
+		&__preview {
+			padding: var(--spacing-sm);
+		}
+
+		&__paragraph {
+			padding: var(--spacing-sm);
+		}
+
+		&__currentSection {
+			padding: var(--spacing-sm);
+		}
+	}
+}

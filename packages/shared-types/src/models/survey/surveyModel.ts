@@ -27,6 +27,30 @@ export enum SurveyStatus {
 export const SurveyStatusSchema = enum_(SurveyStatus);
 
 // ============================================
+// Survey Logo Schema
+// ============================================
+export const SurveyLogoSchema = object({
+  /** Unique logo identifier */
+  logoId: string(),
+  /** Firebase Storage path (e.g., surveys/{surveyId}/logos/{filename}) */
+  storageUrl: string(),
+  /** Public URL for displaying the logo */
+  publicUrl: string(),
+  /** Alt text for accessibility */
+  altText: string(),
+  /** Display order (lower numbers first) */
+  order: number(),
+  /** Optional width constraint in pixels */
+  width: optional(number()),
+  /** Optional height constraint in pixels */
+  height: optional(number()),
+  /** Timestamp when logo was uploaded */
+  uploadedAt: number(),
+});
+
+export type SurveyLogo = InferOutput<typeof SurveyLogoSchema>;
+
+// ============================================
 // Suggestion Mode Enum
 // Controls UX friction when adding new suggestions vs merging
 // ============================================
@@ -217,6 +241,12 @@ export const SurveySchema = object({
   showIntro: optional(boolean()),
   /** Whether the survey is currently in test mode - responses collected in test mode are flagged */
   isTestMode: optional(boolean()),
+  /** Array of logos to display on opening slide */
+  logos: optional(array(SurveyLogoSchema)),
+  /** Markdown content for opening slide (headings, lists, links, images) */
+  openingSlideContent: optional(string()),
+  /** Whether to show custom opening slide (false = skip to questions directly) */
+  showOpeningSlide: optional(boolean()),
   createdAt: number(),
   lastUpdate: number(),
 });
@@ -249,6 +279,8 @@ export const SurveyProgressSchema = object({
   isTestData: optional(boolean()),
   /** Timestamp when this data was retroactively marked as test data (if applicable) */
   markedAsTestAt: optional(number()),
+  /** Whether user has viewed the opening slide (to avoid showing it again) */
+  hasViewedOpeningSlide: optional(boolean()),
 });
 
 export type SurveyProgress = InferOutput<typeof SurveyProgressSchema>;

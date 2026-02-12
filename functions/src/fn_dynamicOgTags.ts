@@ -1,6 +1,6 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
-import { Collections, Statement, functionConfig } from "delib-npm";
+import { Collections, Statement, functionConfig } from "@freedi/shared-types";
 
 const db = getFirestore();
 
@@ -188,7 +188,7 @@ export const serveOgTags = onRequest(
 
       // Use statement title as the OG title, with WizCol as site name
       const title = statement.statement || defaultTitle;
-      const description = statement.description || defaultDescription;
+      const description = (statement as Statement & { description?: string }).description || defaultDescription;
 
       // Use statement image if available, otherwise default logo
       const imageUrl = defaultImageUrl;

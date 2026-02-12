@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useLocation } from "react-router";
 import styles from "./SubQuestionNode.module.scss";
 import React, { FC, useEffect, useRef, useState, memo } from "react";
-import { Statement } from "delib-npm";
+import { Statement } from "@freedi/shared-types";
 import { renderInlineMarkdown } from "@/helpers/inlineMarkdownHelpers";
 
 interface SubQuestionNodeProps {

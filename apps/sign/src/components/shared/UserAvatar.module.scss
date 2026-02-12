@@ -46,9 +46,10 @@
 .dropdown {
   position: absolute;
   top: calc(100% + 8px);
-  // Use physical right positioning - avatar is always on right side of topBar
-  // regardless of text direction, so menu should always extend left
-  right: 0;
+  // Use inset-inline-end for proper RTL support
+  // In LTR: aligns to right edge, extends left
+  // In RTL: aligns to left edge (logical end), extends right
+  inset-inline-end: 0;
   min-width: 200px;
   background: white;
   border-radius: var(--radius-md);
@@ -58,10 +59,12 @@
   overflow: hidden;
   animation: dropdownFadeIn 0.15s ease;
 
-  // Mobile: limit width to prevent overflow
+  // Ensure dropdown doesn't overflow viewport
+  max-width: calc(100vw - 32px);
+
+  // Mobile: smaller minimum width
   @media (max-width: 600px) {
     min-width: 180px;
-    max-width: calc(100vw - 32px);
   }
 }
 

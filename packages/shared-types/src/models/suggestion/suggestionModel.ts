@@ -14,6 +14,23 @@ export const SuggestionSchema = object({
 	lastUpdate: number(),
 	consensus: number(),
 	hide: boolean(),
+	// Evaluation counts for displaying vote breakdown
+	positiveEvaluations: optional(number()),
+	negativeEvaluations: optional(number()),
 });
 
 export type Suggestion = InferOutput<typeof SuggestionSchema>;
+
+/**
+ * Schema for tracking typing status in real-time
+ * Stored in 'typingStatus' collection with document ID: `${paragraphId}--${userId}`
+ */
+export const TypingStatusSchema = object({
+	paragraphId: string(),
+	userId: string(),
+	displayName: optional(string()),
+	isTyping: boolean(),
+	lastUpdate: number(),
+});
+
+export type TypingStatus = InferOutput<typeof TypingStatusSchema>;

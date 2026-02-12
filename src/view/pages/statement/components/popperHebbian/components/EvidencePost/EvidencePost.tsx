@@ -1,6 +1,6 @@
 import React, { FC, useState, useEffect } from 'react';
 import { Statement } from '@freedi/shared-types';
-import { EvidenceType } from 'delib-npm/dist/models/evidence/evidenceModel';
+import { EvidenceType } from '@freedi/shared-types';
 import { getCorroborationLabel, getCorroborationColor } from '../../popperHebbianHelpers';
 import { submitVote, removeVote, getUserVote } from '@/controllers/db/popperHebbian/evidenceController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';

@@ -34,7 +34,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Subscribe to auth state changes
     const unsubscribe = onAuthChange(async (firebaseUser) => {
-      console.info('[AuthProvider] onAuthChange fired, user:', firebaseUser ? firebaseUser.email : 'null');
       setUser(firebaseUser);
 
       // Refresh token if user is logged in
@@ -42,10 +41,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const token = await firebaseUser.getIdToken();
           localStorage.setItem('firebase_token', token);
-          console.info('[AuthProvider] Token saved to localStorage');
+
+          // Update userId cookie with real user ID (not anonymous)
+          if (!firebaseUser.isAnonymous) {
+            document.cookie = `userId=${firebaseUser.uid}; path=/; max-age=31536000; SameSite=Lax`;
+          }
         } catch (error) {
           console.error('[AuthProvider] Error refreshing token:', error);
         }
+      } else {
+        // Clear userId cookie on sign out
+        document.cookie = 'userId=; path=/; max-age=0';
       }
 
       setIsLoading(false);
@@ -84,7 +90,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const value: AuthContextType = {
     user,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !user.isAnonymous,
     signIn,
     signOut,
     refreshToken,

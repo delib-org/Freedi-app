@@ -28,6 +28,7 @@ import { QuestionnaireSchema } from '../questionnaire/questionnaireModel';
 import { FairDivisionSelectionSchema } from './fairDivision';
 import { VotingSettingsSchema } from '../vote/votingModel';
 import { EvidenceType } from '../evidence/evidenceModel';
+import { ParagraphType, ListTypeSchema } from '../paragraph/paragraphModel';
 import { PopperHebbianScoreSchema } from '../popper/popperTypes';
 import { ParagraphSchema } from '../paragraph/paragraphModel';
 
@@ -50,6 +51,7 @@ export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
+	reasoning: optional(string()), // explanation/reasoning for the statement (used in suggestions)
 	statementId: string(), // the id of the statement
 	creatorId: string(), // the id of the creator of the statement
 	creator: UserSchema, // the creator of the statement
@@ -86,6 +88,28 @@ export const StatementSchema = object({
 		object({
 			isDoc: boolean(),
 			order: number(),
+			isOfficialParagraph: optional(boolean()), // Sign app: marks standing paragraphs (vs suggestions)
+			// Paragraph type info (for official paragraphs converted from embedded array)
+			paragraphType: optional(enum_(ParagraphType)), // h1, h2, paragraph, li, etc.
+			listType: optional(ListTypeSchema), // ul or ol (for list items)
+			imageUrl: optional(string()), // Firebase Storage URL for image paragraphs
+			imageAlt: optional(string()), // Alt text for accessibility
+			imageCaption: optional(string()), // Optional caption for images
+			versionControlSettings: optional(object({
+				// MVP: Manual mode only
+				enabled: boolean(), // default: false (opt-in per document)
+				// Minimum consensus to appear in review queue
+				reviewThreshold: optional(number()), // default: 0.5 (50%)
+				// Admin can edit suggestion before approval
+				allowAdminEdit: optional(boolean()), // default: true
+				// History settings
+				enableVersionHistory: optional(boolean()), // default: true
+				maxRecentVersions: optional(number()), // default: 4 (full storage)
+				maxTotalVersions: optional(number()), // default: 50 (including compressed)
+				// Tracking
+				lastSettingsUpdate: optional(number()),
+				updatedBy: optional(string()), // userId
+			})),
 		})
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
@@ -168,6 +192,25 @@ export const StatementSchema = object({
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
 	randomSeed: optional(number()), // an optional random seed for the statement
+	versionControl: optional(object({
+		// Version info
+		currentVersion: number(), // increments on each replacement (starts at 1)
+		// Applied suggestion tracking
+		appliedSuggestionId: optional(string()), // last suggestion that replaced this
+		appliedAt: optional(number()),
+		// History entry tracking (for archived versions)
+		replacedBy: optional(string()), // statementId of the suggestion that replaced this
+		replacedAt: optional(number()), // timestamp when replaced
+		// Finalization info (MVP: manual only)
+		finalizedBy: optional(string()), // userId
+		finalizedAt: optional(number()),
+		finalizedReason: optional(string()), // 'manual_approval' | 'rollback' (MVP only)
+		finalized: optional(boolean()), // true if this suggestion was finalized
+		// Admin actions
+		adminEditedContent: optional(string()), // if admin modified before approval
+		adminEditedAt: optional(number()),
+		adminNotes: optional(string()),
+	})),
 });
 
 export type Statement = InferOutput<typeof StatementSchema>;
