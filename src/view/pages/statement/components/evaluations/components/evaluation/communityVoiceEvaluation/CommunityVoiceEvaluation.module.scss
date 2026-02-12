@@ -20,6 +20,7 @@
 			display: flex;
 			flex-direction: row-reverse;
 			gap: 1.2rem;
+			align-items: flex-end;
 
 			.voice-option-wrapper {
 				display: flex;
@@ -27,6 +28,27 @@
 				align-items: center;
 				gap: 0.5rem;
 				user-select: none;
+			}
+
+			// ===== SIZE SCALE: 0.7 to 1.0 based on evaluation value =====
+			// nth-child(1) = evaluation 1.0 (rightmost visually)
+			.voice-option-wrapper:nth-child(1) {
+				transform: scale(1);
+			}
+
+			// nth-child(2) = evaluation 0.75
+			.voice-option-wrapper:nth-child(2) {
+				transform: scale(0.9);
+			}
+
+			// nth-child(3) = evaluation 0.5
+			.voice-option-wrapper:nth-child(3) {
+				transform: scale(0.8);
+			}
+
+			// nth-child(4) = evaluation 0.25 (leftmost visually)
+			.voice-option-wrapper:nth-child(4) {
+				transform: scale(0.7);
 			}
 
 			// ===== UNPRESSED STATES: LINEAR GRAY SCALE (0.1 to 0.2) =====
@@ -119,41 +141,13 @@
 				}
 			}
 
-			// ===== PRESSED STATES: AGREE SHADES (0 to 3) =====
-			// Wrapper 1 (nth-child 1): Agree 3 (darkest)
-			.voice-option-wrapper:nth-child(1) .voice-option.active {
+			// ===== PRESSED STATES: All use strongest agree shade =====
+			.voice-option-wrapper .voice-option.active {
 				background-color: var(--agree3);
 				border-color: var(--agree3-border);
 				border-width: 3px;
 				color: var(--agree3-text);
 				box-shadow: 0 4px 14px rgba(87, 198, 178, 0.4);
-			}
-
-			// Wrapper 2 (nth-child 2): Agree 1
-			.voice-option-wrapper:nth-child(2) .voice-option.active {
-				background-color: var(--agree1);
-				border-color: var(--agree1-border);
-				border-width: 3px;
-				color: var(--agree1-text);
-				box-shadow: 0 4px 12px rgba(87, 198, 178, 0.3);
-			}
-
-			// Wrapper 3 (nth-child 3): Agree 2
-			.voice-option-wrapper:nth-child(3) .voice-option.active {
-				background-color: var(--agree2);
-				border-color: var(--agree2-border);
-				border-width: 3px;
-				color: var(--agree2-text);
-				box-shadow: 0 4px 12px rgba(87, 198, 178, 0.35);
-			}
-
-			// Wrapper 4 (nth-child 4): Agree 0 (lightest)
-			.voice-option-wrapper:nth-child(4) .voice-option.active {
-				background-color: var(--agree0);
-				border-color: var(--agree0-border);
-				border-width: 3px;
-				color: var(--agree0-text);
-				box-shadow: 0 4px 12px rgba(87, 198, 178, 0.2);
 			}
 
 			.voice-label {
