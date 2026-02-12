@@ -20,11 +20,16 @@ interface CommunityVoiceEvaluationProps {
 	enableEvaluation?: boolean;
 }
 
+interface EvaluationBarConfig {
+	leftLabel: string;
+	rightLabel: string;
+}
+
 const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 	statement,
 	enableEvaluation = true,
 }) => {
-	const { t } = useUserConfig();
+	const { t, learning } = useUserConfig();
 
 	const parentStatement = useSelector(
 		statementSelectorById(statement.parentId)
@@ -56,6 +61,14 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 						/>
 					))}
 				</div>
+				{learning.evaluation > 0 && (
+					<div className={styles.explain}>
+						<div className={`${styles['evaluation-explain']}`}>
+							<span>{t('Less related')}</span>
+							<span>{t('More related')}</span>
+						</div>
+					</div>
+				)}
 			</div>
 			<div className={styles['evaluation-score']}>
 				{showEvaluation &&

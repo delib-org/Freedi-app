@@ -86,7 +86,7 @@
   --gray0-2-border: hsl(0, 0%, 75%);
   --gray0-2-text: #2a2a2a;
 
-  // High contrast mode
+  // High contrast mode variables (for media query override)
   --gray0-1-high-contrast: hsl(0, 0%, 75%);
   --gray0-1-border-high-contrast: hsl(0, 0%, 60%);
   --gray0-1-text-high-contrast: #000000;
@@ -102,6 +102,41 @@
   --gray0-2-high-contrast: hsl(0, 0%, 50%);
   --gray0-2-border-high-contrast: hsl(0, 0%, 30%);
   --gray0-2-text-high-contrast: #ffffff;
+
+  // --- COMMUNITY VOICE AGREE SHADES (Selected States) ---
+  // Normal mode - Agree intensity from 0.1 to 0.4
+  --agree0: #d8f0ed;
+  --agree0-border: #b8e8e2;
+  --agree0-text: #1a1a1a;
+
+  --agree1: #b8e8e2;
+  --agree1-border: #7ed8cf;
+  --agree1-text: #1a1a1a;
+
+  --agree2: #7ed8cf;
+  --agree2-border: #57c6b2;
+  --agree2-text: #1a1a1a;
+
+  --agree3: #57c6b2;
+  --agree3-border: #3a9d8e;
+  --agree3-text: #ffffff;
+
+  // High contrast mode - Darker agree
+  --agree0-high-contrast: #a8ddd5;
+  --agree0-border-high-contrast: #7ed8cf;
+  --agree0-text-high-contrast: #000000;
+
+  --agree1-high-contrast: #7ed8cf;
+  --agree1-border-high-contrast: #57c6b2;
+  --agree1-text-high-contrast: #000000;
+
+  --agree2-high-contrast: #57c6b2;
+  --agree2-border-high-contrast: #3a9d8e;
+  --agree2-text-high-contrast: #ffffff;
+
+  --agree3-high-contrast: #3a9d8e;
+  --agree3-border-high-contrast: #1e7068;
+  --agree3-text-high-contrast: #ffffff;
 
   //shadow
   --shadow: rgba(181, 197, 232, 0.486);
@@ -133,29 +168,6 @@
   --link-contrast: darkblue;
 
   --info-text-padding: 15px;
-}
-
-// High contrast accessibility mode
-@media (prefers-contrast: more) {
-  :root {
-    // Gray scale high contrast overrides
-    --gray0-1: var(--gray0-1-high-contrast);
-    --gray0-1-border: var(--gray0-1-border-high-contrast);
-    --gray0-1-text: var(--gray0-1-text-high-contrast);
-
-    --gray0-125: var(--gray0-125-high-contrast);
-    --gray0-125-border: var(--gray0-125-border-high-contrast);
-    --gray0-125-text: var(--gray0-125-text-high-contrast);
-
-    --gray0-15: var(--gray0-15-high-contrast);
-    --gray0-15-border: var(--gray0-15-border-high-contrast);
-    --gray0-15-text: var(--gray0-15-text-high-contrast);
-
-    --gray0-2: var(--gray0-2-high-contrast);
-    --gray0-2-border: var(--gray0-2-border-high-contrast);
-    --gray0-2-text: var(--gray0-2-text-high-contrast);
-  }
-}
 
   //wights
   --wight-medium: 400;
@@ -677,6 +689,28 @@
   --wrapper: 75ch;
   --wrapper-max-width: 75ch;
   --wrapper: 75ch;
+}
+
+// High contrast accessibility mode
+@media (prefers-contrast: more) {
+  :root {
+    // Gray scale high contrast overrides
+    --gray0-1: var(--gray0-1-high-contrast);
+    --gray0-1-border: var(--gray0-1-border-high-contrast);
+    --gray0-1-text: var(--gray0-1-text-high-contrast);
+
+    --gray0-125: var(--gray0-125-high-contrast);
+    --gray0-125-border: var(--gray0-125-border-high-contrast);
+    --gray0-125-text: var(--gray0-125-text-high-contrast);
+
+    --gray0-15: var(--gray0-15-high-contrast);
+    --gray0-15-border: var(--gray0-15-border-high-contrast);
+    --gray0-15-text: var(--gray0-15-text-high-contrast);
+
+    --gray0-2: var(--gray0-2-high-contrast);
+    --gray0-2-border: var(--gray0-2-border-high-contrast);
+    --gray0-2-text: var(--gray0-2-text-high-contrast);
+  }
 }
 
 * {

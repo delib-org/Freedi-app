@@ -86,54 +86,13 @@
 					transform: scale(0.98);
 				}
 
-				// ===== PRESSED STATES: AGREE BLUE SHADES =====
-				// Wrapper 1: Light Blue (first option)
-				.voice-option-wrapper:nth-child(4) & {
-					&.active {
-						background-color: #b8d9f0;
-						border-color: #8ac0e0;
-						color: #1a1a1a;
-						box-shadow: 0 4px 12px rgba(95, 136, 229, 0.25);
-					}
-				}
-
-				// Wrapper 2: Medium-light Blue
-				.voice-option-wrapper:nth-child(3) & {
-					&.active {
-						background-color: #7bb5e0;
-						border-color: #5a9ed0;
-						color: #ffffff;
-						box-shadow: 0 4px 12px rgba(95, 136, 229, 0.35);
-					}
-				}
-
-				// Wrapper 3: Medium-dark Blue
-				.voice-option-wrapper:nth-child(2) & {
-					&.active {
-						background-color: #4585c8;
-						border-color: #3570b8;
-						color: #ffffff;
-						box-shadow: 0 4px 12px rgba(95, 136, 229, 0.4);
-					}
-				}
-
-				// Wrapper 4: Deep Blue (darkest)
-				.voice-option-wrapper:nth-child(1) & {
-					&.active {
-						background-color: #2d5c99;
-						border-color: #1f4680;
-						color: #ffffff;
-						box-shadow: 0 4px 14px rgba(95, 136, 229, 0.5);
-					}
-				}
-
 				&.active {
-					transform: scale(1);
+					transform: scale(1.1);
 					z-index: 0;
 					opacity: 1;
 
 					&:hover {
-						transform: translateY(-2px);
+						transform: scale(1.1) translateY(-2px);
 					}
 				}
 
@@ -160,6 +119,43 @@
 				}
 			}
 
+			// ===== PRESSED STATES: AGREE SHADES (0 to 3) =====
+			// Wrapper 1 (nth-child 1): Agree 3 (darkest)
+			.voice-option-wrapper:nth-child(1) .voice-option.active {
+				background-color: var(--agree3);
+				border-color: var(--agree3-border);
+				border-width: 3px;
+				color: var(--agree3-text);
+				box-shadow: 0 4px 14px rgba(87, 198, 178, 0.4);
+			}
+
+			// Wrapper 2 (nth-child 2): Agree 1
+			.voice-option-wrapper:nth-child(2) .voice-option.active {
+				background-color: var(--agree1);
+				border-color: var(--agree1-border);
+				border-width: 3px;
+				color: var(--agree1-text);
+				box-shadow: 0 4px 12px rgba(87, 198, 178, 0.3);
+			}
+
+			// Wrapper 3 (nth-child 3): Agree 2
+			.voice-option-wrapper:nth-child(3) .voice-option.active {
+				background-color: var(--agree2);
+				border-color: var(--agree2-border);
+				border-width: 3px;
+				color: var(--agree2-text);
+				box-shadow: 0 4px 12px rgba(87, 198, 178, 0.35);
+			}
+
+			// Wrapper 4 (nth-child 4): Agree 0 (lightest)
+			.voice-option-wrapper:nth-child(4) .voice-option.active {
+				background-color: var(--agree0);
+				border-color: var(--agree0-border);
+				border-width: 3px;
+				color: var(--agree0-text);
+				box-shadow: 0 4px 12px rgba(87, 198, 178, 0.2);
+			}
+
 			.voice-label {
 				font-size: 0.75rem;
 				font-weight: 500;
@@ -184,6 +180,25 @@
 				border-radius: 3px;
 				transition: right 0.3s ease, background-color 0.3s ease;
 			}
+		}
+
+		.explain {
+			justify-content: space-between;
+			color: var(--text-label);
+
+			&--ltr {
+				flex-direction: row-reverse;
+			}
+		}
+
+		.evaluation-explain {
+			display: flex;
+			justify-content: space-between;
+			font-weight: 300;
+			font-size: 0.8rem;
+			color: rgba(0, 0, 0, 0.711);
+			text-align: center;
+			width: 100%;
 		}
 	}
 
