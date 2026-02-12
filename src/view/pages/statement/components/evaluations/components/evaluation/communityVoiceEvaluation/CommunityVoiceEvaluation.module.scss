@@ -19,36 +19,122 @@
 		.voice-options {
 			display: flex;
 			flex-direction: row-reverse;
-			gap: 0.5rem;
+			gap: 1.2rem;
 
-			.voice-option {
+			.voice-option-wrapper {
 				display: flex;
 				flex-direction: column;
 				align-items: center;
-				gap: 0.25rem;
-				transition: transform 0.15s ease-out, opacity 0.15s ease-out,
-					background-color 0.1s ease-out;
-				border-radius: 3rem;
+				gap: 0.5rem;
+				user-select: none;
+			}
+
+			// ===== UNPRESSED STATES: LINEAR GRAY SCALE (0.1 to 0.2) =====
+			// Wrapper 1: 0.1 gray
+			.voice-option-wrapper:nth-child(4) .voice-option:not(.active) {
+				background-color: var(--gray0-1);
+				border-color: var(--gray0-1-border);
+				color: var(--gray0-1-text);
+				border-width: 2px;
+			}
+
+			// Wrapper 2: 0.125 gray
+			.voice-option-wrapper:nth-child(3) .voice-option:not(.active) {
+				background-color: var(--gray0-125);
+				border-color: var(--gray0-125-border);
+				color: var(--gray0-125-text);
+				border-width: 2px;
+			}
+
+			// Wrapper 3: 0.15 gray
+			.voice-option-wrapper:nth-child(2) .voice-option:not(.active) {
+				background-color: var(--gray0-15);
+				border-color: var(--gray0-15-border);
+				color: var(--gray0-15-text);
+				border-width: 2px;
+			}
+
+			// Wrapper 4: 0.2 gray
+			.voice-option-wrapper:nth-child(1) .voice-option:not(.active) {
+				background-color: var(--gray0-2);
+				border-color: var(--gray0-2-border);
+				color: var(--gray0-2-text);
+				border-width: 2px;
+			}
+
+			.voice-option {
+				display: flex;
+				align-items: center;
 				justify-content: center;
-				min-width: 1.8rem;
-				min-height: 1.8rem;
+				transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+				border-radius: 50%;
 				cursor: pointer;
 				user-select: none;
-				opacity: 0.8;
-				border: none;
+				border: 2px solid;
+				padding: 0.75rem;
+				width: 56px;
+				height: 56px;
 				-webkit-tap-highlight-color: transparent;
 				transform: scale(1);
-				padding: 0.25rem;
-				background: transparent;
+
+				&:hover:not(.active):not(:disabled) {
+					transform: translateY(-2px);
+					box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+				}
 
 				&:active:not(:disabled) {
-					transform: scale(0.95);
+					transform: scale(0.98);
+				}
+
+				// ===== PRESSED STATES: AGREE BLUE SHADES =====
+				// Wrapper 1: Light Blue (first option)
+				.voice-option-wrapper:nth-child(4) & {
+					&.active {
+						background-color: #b8d9f0;
+						border-color: #8ac0e0;
+						color: #1a1a1a;
+						box-shadow: 0 4px 12px rgba(95, 136, 229, 0.25);
+					}
+				}
+
+				// Wrapper 2: Medium-light Blue
+				.voice-option-wrapper:nth-child(3) & {
+					&.active {
+						background-color: #7bb5e0;
+						border-color: #5a9ed0;
+						color: #ffffff;
+						box-shadow: 0 4px 12px rgba(95, 136, 229, 0.35);
+					}
+				}
+
+				// Wrapper 3: Medium-dark Blue
+				.voice-option-wrapper:nth-child(2) & {
+					&.active {
+						background-color: #4585c8;
+						border-color: #3570b8;
+						color: #ffffff;
+						box-shadow: 0 4px 12px rgba(95, 136, 229, 0.4);
+					}
+				}
+
+				// Wrapper 4: Deep Blue (darkest)
+				.voice-option-wrapper:nth-child(1) & {
+					&.active {
+						background-color: #2d5c99;
+						border-color: #1f4680;
+						color: #ffffff;
+						box-shadow: 0 4px 14px rgba(95, 136, 229, 0.5);
+					}
 				}
 
 				&.active {
-					transform: scale(1.2);
+					transform: scale(1);
 					z-index: 0;
 					opacity: 1;
+
+					&:hover {
+						transform: translateY(-2px);
+					}
 				}
 
 				&.pending {
@@ -60,26 +146,28 @@
 				}
 
 				&.disabled {
-					opacity: 0.6;
+					opacity: 0.5;
 					cursor: not-allowed;
 					pointer-events: none;
-					filter: grayscale(30%);
+					filter: grayscale(50%);
 				}
 
 				img {
 					pointer-events: none;
-					width: 24px;
-					height: 24px;
+					width: 28px;
+					height: 28px;
+					object-fit: contain;
 				}
+			}
 
-				.voice-label {
-					font-size: 0.6rem;
-					font-weight: 300;
-					color: var(--text-label, rgba(0, 0, 0, 0.5));
-					text-align: center;
-					max-width: 5rem;
-					line-height: 1.2;
-				}
+			.voice-label {
+				font-size: 0.75rem;
+				font-weight: 500;
+				text-align: center;
+				max-width: 70px;
+				line-height: 1.3;
+				color: var(--text-label, rgba(0, 0, 0, 0.7));
+				padding: 0;
 			}
 		}
 

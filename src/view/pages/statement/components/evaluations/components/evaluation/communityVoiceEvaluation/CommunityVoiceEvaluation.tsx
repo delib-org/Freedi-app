@@ -104,11 +104,18 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 		setIsPending(false);
 	}, [evaluationScore]);
 
+	const isActive =
+		optimisticScore !== undefined &&
+		optimisticScore === option.evaluation;
+
 	const handleSetEvaluation = (): void => {
-		setOptimisticScore(option.evaluation);
+		// Toggle: if already selected, deselect (set to 0), otherwise select
+		const newScore = isActive ? 0 : option.evaluation;
+
+		setOptimisticScore(newScore === 0 ? undefined : newScore);
 		setIsPending(true);
 
-		setEvaluationToDB(statement, creator, option.evaluation).finally(
+		setEvaluationToDB(statement, creator, newScore).finally(
 			() => {
 				setIsPending(false);
 			}
@@ -119,32 +126,25 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 		});
 	};
 
-	const isActive =
-		optimisticScore !== undefined &&
-		optimisticScore === option.evaluation;
-
 	const button = (
-		<button
-			className={`${styles['voice-option']} ${isActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
-			style={{
-				backgroundColor: isActive
-					? option.colorSelected
-					: option.color,
-			}}
-			onClick={enableEvaluation ? handleSetEvaluation : undefined}
-			disabled={isPending || !enableEvaluation}
-			aria-disabled={!enableEvaluation}
-			aria-label={
-				enableEvaluation
-					? t(option.labelKey)
-					: t('Voting disabled - view only')
-			}
-		>
-			<img src={option.svg} alt={t(option.alt)} />
+		<div className={styles['voice-option-wrapper']}>
+			<button
+				className={`${styles['voice-option']} ${isActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
+				onClick={enableEvaluation ? handleSetEvaluation : undefined}
+				disabled={isPending || !enableEvaluation}
+				aria-disabled={!enableEvaluation}
+				aria-label={
+					enableEvaluation
+						? t(option.labelKey)
+						: t('Voting disabled - view only')
+				}
+			>
+				<img src={option.svg} alt={t(option.alt)} />
+			</button>
 			<span className={styles['voice-label']}>
 				{t(option.labelKey)}
 			</span>
-		</button>
+		</div>
 	);
 
 	if (!enableEvaluation) {
