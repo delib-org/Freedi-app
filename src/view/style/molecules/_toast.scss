@@ -105,7 +105,7 @@
 
   // Type variants
   &--success {
-    background-color: #f0fdf4;
+    background-color: var(--bg-success-light);
     border-left: 4px solid var(--agree);
     color: var(--agree);
 
@@ -115,7 +115,7 @@
   }
 
   &--error {
-    background-color: #fff5f5;
+    background-color: var(--bg-error-light);
     border-left: 4px solid var(--text-error);
     color: var(--text-error);
 
@@ -125,7 +125,7 @@
   }
 
   &--warning {
-    background-color: #fffbeb;
+    background-color: var(--bg-warning-light);
     border-left: 4px solid var(--text-warning);
     color: var(--text-warning);
 
@@ -135,7 +135,7 @@
   }
 
   &--info {
-    background-color: #eff6ff;
+    background-color: var(--bg-info-light);
     border-left: 4px solid var(--btn-primary);
     color: var(--btn-primary);
 

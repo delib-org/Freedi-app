@@ -5,14 +5,40 @@
 // RESPONSIVE MIXINS
 // ============================================================================
 
+// Breakpoint variables (for reference):
+// small-mobile: 480px   — small phones
+// mobile:       600px   — phones (standard)
+// tablet-small: 768px   — small tablets / large phones in landscape
+// tablet:       1024px  — tablets
+// desktop:      1025px+ — desktop screens
+// large-desktop: 1440px — wide screens
+
+@mixin small-mobile {
+  @media (max-width: 480px) {
+    @content;
+  }
+}
+
 @mixin mobile {
   @media (max-width: 600px) {
     @content;
   }
 }
 
+@mixin tablet-small {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
 @mixin tablet {
   @media (min-width: 601px) and (max-width: 1024px) {
+    @content;
+  }
+}
+
+@mixin tablet-and-below {
+  @media (max-width: 1024px) {
     @content;
   }
 }

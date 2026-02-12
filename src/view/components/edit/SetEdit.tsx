@@ -14,19 +14,13 @@ const SetEdit: FC<Props> = ({ isAuthorized, setEdit, edit, text }) => {
 	return (
 		<>
 			{text && (
-				<span
+				<button
+					type="button"
 					className="clickable"
 					onClick={() => setEdit(!edit)}
-					role="button"
-					tabIndex={0}
-					onKeyDown={(e) => {
-						if (e.key === "Enter" || e.key === " ") {
-							setEdit(!edit);
-						}
-					}}
 				>
 					{text}
-				</span>
+				</button>
 			)}
 			<div>
 				{isAuthorized && (

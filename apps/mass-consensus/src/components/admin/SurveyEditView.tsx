@@ -6,12 +6,13 @@ import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyForm from './SurveyForm';
 import SurveyShare from './SurveyShare';
 import SurveyStatusManager from './SurveyStatusManager';
+import OpeningSlideManager from './OpeningSlideManager';
 
 interface SurveyEditViewProps {
   survey: Survey;
 }
 
-type Tab = 'share' | 'status' | 'edit';
+type Tab = 'share' | 'status' | 'edit' | 'opening-slide';
 
 /**
  * Survey edit view with tabs for sharing, status, and editing
@@ -65,7 +66,7 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
         </span>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
         <button
           onClick={() => setActiveTab('share')}
           style={tabButtonStyle(activeTab === 'share')}
@@ -84,6 +85,12 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
         >
           {t('editSurvey')}
         </button>
+        <button
+          onClick={() => setActiveTab('opening-slide')}
+          style={tabButtonStyle(activeTab === 'opening-slide')}
+        >
+          {t('openingSlide')}
+        </button>
       </div>
 
       {activeTab === 'share' && <SurveyShare survey={survey} />}
@@ -91,6 +98,9 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
         <SurveyStatusManager survey={survey} onStatusChange={handleStatusChange} />
       )}
       {activeTab === 'edit' && <SurveyForm existingSurvey={survey} />}
+      {activeTab === 'opening-slide' && (
+        <OpeningSlideManager survey={survey} onUpdate={setSurvey} />
+      )}
     </div>
   );
 }

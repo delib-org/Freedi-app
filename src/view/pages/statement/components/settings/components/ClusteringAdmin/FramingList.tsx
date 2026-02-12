@@ -55,7 +55,8 @@ const FramingList: FC<FramingListProps> = ({
 			<h4 className={styles.listTitle}>{t('Available Framings')}</h4>
 			<div className={styles.framingItems}>
 				{framings.map(framing => (
-					<div
+					<button
+						type="button"
 						key={framing.framingId}
 						className={`${styles.framingItem} ${
 							selectedFraming?.framingId === framing.framingId
@@ -63,13 +64,6 @@ const FramingList: FC<FramingListProps> = ({
 								: ''
 						}`}
 						onClick={() => onSelectFraming(framing)}
-						role="button"
-						tabIndex={0}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								onSelectFraming(framing);
-							}
-						}}
 					>
 						<div className={styles.framingInfo}>
 							<span className={styles.framingName}>{framing.name}</span>
@@ -95,7 +89,7 @@ const FramingList: FC<FramingListProps> = ({
 						>
 							{deletingId === framing.framingId ? '...' : '×'}
 						</button>
-					</div>
+					</button>
 				))}
 			</div>
 		</div>

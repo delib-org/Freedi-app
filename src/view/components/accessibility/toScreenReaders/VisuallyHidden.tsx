@@ -1,4 +1,5 @@
 import { FC } from "react";
+import styles from "./VisuallyHidden.module.scss";
 
 interface VisuallyHiddenProps {
   labelName: string;
@@ -6,18 +7,7 @@ interface VisuallyHiddenProps {
 
 const VisuallyHidden: FC<VisuallyHiddenProps> = ({ labelName }) => {
 	return (
-		<span
-			style={{
-				position: "absolute",
-				width: "1px",
-				height: "1px",
-				margin: "-1px",
-				padding: "0",
-				overflow: "hidden",
-				clip: "rect(0, 0, 0, 0)",
-				border: "0",
-			}}
-		>
+		<span className={styles.visuallyHidden}>
 			{labelName}
 		</span>
 	);

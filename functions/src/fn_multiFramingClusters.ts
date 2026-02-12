@@ -5,7 +5,7 @@ import {
   Statement,
   StatementSchema,
   StatementType,
-} from '@freedi/shared-types';
+} from "@freedi/shared-types";
 import {
   Framing,
   FramingRequest,

@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
 import SwipeCard from './SwipeCard';
 import EvaluationButtons from './EvaluationButtons';
+import CommunityVoiceButtons from './CommunityVoiceButtons';
 import SocialFeed from './SocialFeed';
 import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
@@ -62,8 +63,17 @@ export default function SolutionFeedClient({
   const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ??
     questionSettingsLegacy?.askUserForASolutionBeforeEvaluation ?? true;
 
+  console.info('[SolutionFeed Debug] Settings check:', {
+    mergedSettings: mergedSettings?.askUserForASolutionBeforeEvaluation,
+    questionSettingsLegacy: questionSettingsLegacy?.askUserForASolutionBeforeEvaluation,
+    finalRequiresSolution: requiresSolution
+  });
+
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;
+
+  // Check evaluation type for community voice
+  const isCommunityVoice = question.statementSettings?.evaluationType === 'community-voice';
 
   // Check if solutions array is empty
   const hasNoSolutions = solutions.length === 0;
@@ -73,18 +83,20 @@ export default function SolutionFeedClient({
 
   // Current solution to display
   const currentSolution = solutions[currentIndex];
-  const isLastCard = currentIndex >= solutions.length - 1;
   const hasMoreCards = currentIndex < solutions.length;
 
   // Check if user has submitted solutions
   useEffect(() => {
+    console.info('[SolutionFeed Debug] Effect triggered:', { userId, hasCheckedUserSolutions, requiresSolution });
     if (!userId || hasCheckedUserSolutions) return;
 
     const checkUserSolutions = async () => {
       try {
+        console.info('[SolutionFeed Debug] Checking user solutions for questionId:', questionId);
         const response = await fetch(`/api/user-solutions/${questionId}?userId=${userId}`);
         if (response.ok) {
           const data = await response.json();
+          console.info('[SolutionFeed Debug] API response:', data);
           setHasSubmittedSolution(data.hasSubmitted);
           setUserSolutionCount(data.solutionCount || 0);
 
@@ -94,7 +106,9 @@ export default function SolutionFeedClient({
             }));
           }
 
-          if (!data.hasSubmitted && requiresSolution) {
+          const shouldShowModal = !data.hasSubmitted && requiresSolution;
+          console.info('[SolutionFeed Debug] Should show modal?', shouldShowModal, '(hasSubmitted:', data.hasSubmitted, 'requiresSolution:', requiresSolution, ')');
+          if (shouldShowModal) {
             setShowSolutionPrompt(true);
           }
         }
@@ -438,11 +452,6 @@ export default function SolutionFeedClient({
     setShowCompletionScreen(true);
   };
 
-  // Calculate progress
-  const evaluatedInBatch = useMemo(() => {
-    return solutions.filter(s => allEvaluatedIds.has(s.statementId)).length;
-  }, [solutions, allEvaluatedIds]);
-
   return (
     <ToastProvider>
       <div className={styles.feed}>
@@ -508,7 +517,7 @@ export default function SolutionFeedClient({
                       isTop={idx === 0}
                       throwDirection={idx === 0 ? throwDirection : null}
                       onThrowComplete={handleThrowComplete}
-                      totalVotes={solution.numberOfEvaluators || 0}
+                      totalVotes={solution.evaluation?.numberOfEvaluators || 0}
                       approvalRate={solution.consensus !== undefined ? Math.round((solution.consensus + 1) * 50) : undefined}
                     />
                   ))}
@@ -549,10 +558,17 @@ export default function SolutionFeedClient({
             {/* Evaluation buttons - only show when there's a current card */}
             {hasMoreCards && currentSolution && !throwDirection && (
               <div className={styles.evaluationArea}>
-                <EvaluationButtons
-                  onEvaluate={handleButtonRate}
-                  currentScore={evaluationScores.get(currentSolution.statementId)}
-                />
+                {isCommunityVoice ? (
+                  <CommunityVoiceButtons
+                    onEvaluate={handleButtonRate}
+                    currentScore={evaluationScores.get(currentSolution.statementId)}
+                  />
+                ) : (
+                  <EvaluationButtons
+                    onEvaluate={handleButtonRate}
+                    currentScore={evaluationScores.get(currentSolution.statementId)}
+                  />
+                )}
                 <p className={styles.swipeHint}>
                   {t('Swipe or tap to rate')}
                 </p>

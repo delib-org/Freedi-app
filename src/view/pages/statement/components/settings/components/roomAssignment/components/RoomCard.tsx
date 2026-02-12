@@ -17,18 +17,11 @@ const RoomCard: FC<RoomCardProps> = ({ room, participants }) => {
 
 	return (
 		<div className={styles.roomCard}>
-			<div
+			<button
+				type="button"
 				className={styles.roomCard__header}
 				onClick={() => setIsExpanded(!isExpanded)}
-				role="button"
 				aria-expanded={isExpanded}
-				tabIndex={0}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						setIsExpanded(!isExpanded);
-					}
-				}}
 			>
 				<div className={styles.roomCard__title}>
 					<RoomIcon />
@@ -42,7 +35,7 @@ const RoomCard: FC<RoomCardProps> = ({ room, participants }) => {
 				>
 					<ArrowDownIcon />
 				</div>
-			</div>
+			</button>
 
 			{isExpanded && (
 				<div className={styles.roomCard__participants}>

@@ -306,6 +306,7 @@ export type {
   Survey,
   SurveySettings,
   SurveyProgress,
+  SurveyLogo,
   QuestionOverrideSettings,
   SurveyDemographicPage,
   SurveyDemographicQuestion,
@@ -316,6 +317,7 @@ export {
   SurveySchema,
   SurveySettingsSchema,
   SurveyProgressSchema,
+  SurveyLogoSchema,
   SurveyStatus,
   SurveyStatusSchema,
   SuggestionMode,
@@ -426,6 +428,13 @@ export {
   sortChangesByImpact,
   filterSignificantChanges,
 } from "./models/version/versionModel";
+
+// Evidence models
+export { EvidenceType } from "./models/evidence/evidenceModel";
+
+// Popper Hebbian models
+export type { PopperHebbianScore } from "./models/popper/popperTypes";
+export { PopperHebbianScoreSchema } from "./models/popper/popperTypes";
 
 // Replacement Queue models (paragraph version control MVP)
 export type {

@@ -37,15 +37,18 @@ const Input: React.FC<SearchInputProps> = ({
 		onChange?.('');
 	};
 
+	const inputId = `input-${name}`;
+
 	return (
 		<div className={styles.container}>
-			<div
+			<label
+				htmlFor={inputId}
 				className={`${styles.label} ${dir === 'ltr' ? styles['label--ltr'] : styles['label--rtl']
 					}`}
 				style={{ backgroundColor: backgroundColor }}
 			>
 				{label}
-			</div>
+			</label>
 			<div className={styles.inputContainer}>
 				{image && (
 					<img
@@ -57,6 +60,7 @@ const Input: React.FC<SearchInputProps> = ({
 					/>
 				)}
 				<input
+					id={inputId}
 					name={name}
 					type='text'
 					value={inputValue}

@@ -11,6 +11,10 @@ import evaluation2 from '@/assets/icons/evaluation/evaluation2.svg';
 import evaluation3 from '@/assets/icons/evaluation/evaluation3.svg';
 import evaluation4 from '@/assets/icons/evaluation/evaluation4.svg';
 import evaluation5 from '@/assets/icons/evaluation/evaluation5.svg';
+import communityVoice1 from '@/assets/icons/evaluation/communityVoice1.svg';
+import communityVoice2 from '@/assets/icons/evaluation/communityVoice2.svg';
+import communityVoice3 from '@/assets/icons/evaluation/communityVoice3.svg';
+import communityVoice4 from '@/assets/icons/evaluation/communityVoice4.svg';
 
 interface EvaluationTypeSelectorProps {
 	currentType: evaluationType;
@@ -70,6 +74,19 @@ const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
 						<SmileIcon className={`${styles.thumbIcon} ${styles.active}`} />
 					</div>
 					<span className={styles.likeCount}>42</span>
+				</div>
+			),
+		},
+		{
+			type: evaluationType.communityVoice,
+			title: t('Community Voice'),
+			description: t('Respectful 4-level resonance scale'),
+			preview: (
+				<div className={styles.previewEmojis}>
+					<img src={communityVoice1} alt={t('I hear this perspective')} className={styles.emojiPreview} />
+					<img src={communityVoice2} alt={t('I partly relate')} className={styles.emojiPreview} />
+					<img src={communityVoice3} alt={t('I closely relate to this')} className={styles.emojiPreview} />
+					<img src={communityVoice4} alt={t('This echoes my community\'s voice')} className={`${styles.emojiPreview} ${styles.active}`} />
 				</div>
 			),
 		},

@@ -1,4 +1,4 @@
-import { Statement } from '@freedi/shared-types';
+import { Statement } from "@freedi/shared-types";
 import Chat from '@/assets/icons/chatTop.svg?react';
 
 interface NavigationButtonsProps {

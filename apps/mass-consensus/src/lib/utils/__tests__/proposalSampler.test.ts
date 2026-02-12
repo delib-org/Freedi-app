@@ -2,7 +2,7 @@
  * Tests for ProposalSampler class
  */
 import { Statement, StatementType } from '@freedi/shared-types';
-import { ProposalSampler, createSampler, ScoredProposal } from '../proposalSampler';
+import { createSampler } from '../proposalSampler';
 import { DEFAULT_SAMPLING_CONFIG } from '../sampling';
 
 describe('ProposalSampler', () => {

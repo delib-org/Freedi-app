@@ -2,8 +2,6 @@ import { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './SummarizeModal.module.scss';
-import '@/view/style/buttons.scss';
-import '@/view/style/input.scss';
 
 interface SummarizeModalProps {
 	isOpen: boolean;
@@ -49,7 +47,7 @@ const SummarizeModal: FC<SummarizeModalProps> = ({
 					</label>
 					<textarea
 						id="summary-prompt"
-						className="inputGeneral"
+						className={styles.textarea}
 						value={customPrompt}
 						onChange={(e) => setCustomPrompt(e.target.value)}
 						placeholder={t('e.g., Focus on practical solutions, highlight consensus points...')}
@@ -61,16 +59,16 @@ const SummarizeModal: FC<SummarizeModalProps> = ({
 					</p>
 				</div>
 
-				<div className="btns btns--end">
+				<div className={styles.btns}>
 					<button
-						className="btn btn--secondary"
+						className={styles.btnSecondary}
 						onClick={handleClose}
 						disabled={isLoading}
 					>
 						{t('Cancel')}
 					</button>
 					<button
-						className={`btn btn--primary ${isLoading ? 'btn--disabled' : ''}`}
+						className={`${styles.btnPrimary} ${isLoading ? styles.btnDisabled : ''}`}
 						onClick={handleGenerate}
 						disabled={isLoading}
 					>

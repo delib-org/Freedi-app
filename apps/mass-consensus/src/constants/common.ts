@@ -35,6 +35,8 @@ export const VALIDATION = {
   MIN_SOLUTION_LENGTH: 3,
   MAX_SOLUTION_LENGTH: 500,
   MAX_SIMILAR_SOLUTIONS_DISPLAY: 3,
+  MIN_STATEMENT_LENGTH: 10, // Minimum length for proposals/statements
+  MAX_STATEMENT_LENGTH: 500, // Maximum length for proposals/statements
 } as const;
 
 /**
@@ -77,6 +79,138 @@ export const PROGRESS = {
 export const API = {
   REQUEST_TIMEOUT: 30 * TIME.SECOND,
   MAX_DURATION_MESSAGE: 'This may take up to 30 seconds',
+} as const;
+
+/**
+ * Swipe interaction constants
+ */
+export const SWIPE = {
+  // Swipe distance thresholds (in pixels) for new rating scale
+  // Maps swipe distance to agreement levels (-1 to +1)
+  AGREE_THRESHOLD: 80, // px - threshold for "agree" (+0.5)
+  STRONGLY_AGREE_THRESHOLD: 160, // px - threshold for "strongly agree" (+1)
+  DISAGREE_THRESHOLD: -80, // px - threshold for "disagree" (-0.5)
+  STRONGLY_DISAGREE_THRESHOLD: -160, // px - threshold for "strongly disagree" (-1)
+  ROTATION_FACTOR: 20, // degrees per 100px
+
+  // Animation (in milliseconds)
+  SWIPE_DURATION: 300, // ms
+  CARD_ENTER_DURATION: 400, // ms
+  CARD_STACK_OFFSET: 10, // px between stacked cards
+
+  // UX Flow
+  PROPOSAL_PROMPT_INTERVAL: 7, // Show "propose idea" after N cards
+  BATCH_SIZE: 10, // Load N cards at a time
+  PRELOAD_AHEAD: 3, // Preload next N cards
+} as const;
+
+/**
+ * Rating values (-1 to +1 scale with 0.5 increments)
+ * Designed for precise agreement measurement in consensus building
+ *
+ * Scale mapping:
+ * -1.0 = Strongly Disagree (clear opposition)
+ * -0.5 = Disagree (mild opposition)
+ *  0.0 = Neutral (no strong opinion)
+ * +0.5 = Agree (mild support)
+ * +1.0 = Strongly Agree (clear support)
+ */
+export const RATING = {
+  STRONGLY_DISAGREE: -1,
+  DISAGREE: -0.5,
+  NEUTRAL: 0,
+  AGREE: 0.5,
+  STRONGLY_AGREE: 1,
+} as const;
+
+/**
+ * Zone-based swipe interaction constants
+ * For zone-based rating system (5 vertical strips)
+ */
+export const ZONES = {
+  TOTAL_ZONES: 5,
+  CENTER_ZONE_INDEX: 2,
+  ZONE_WIDTH_PERCENT: 20,
+  STRIP_IDLE_OPACITY: 0.45, // Visible zone strips for clear UX
+  STRIP_DRAGGING_OPACITY: 0.7, // All strips during drag
+  STRIP_ACTIVE_OPACITY: 0.9, // Active zone during drag
+  CARD_DIM_OPACITY: 0.4,
+  VERTICAL_SWIPE_THRESHOLD: 100, // px upward for neutral
+  HORIZONTAL_SWIPE_THRESHOLD: 60, // px horizontal minimum to commit rating
+} as const;
+
+/**
+ * Zone configuration for zone-based swipe system
+ * Maps zone indices to ratings and visual elements
+ * Universal layout: Negative (left/red) to Positive (right/green)
+ */
+export const ZONE_CONFIG = [
+  { index: 0, rating: RATING.STRONGLY_DISAGREE, emoji: '🚫' },
+  { index: 1, rating: RATING.DISAGREE, emoji: '👎' },
+  { index: 2, rating: RATING.NEUTRAL, emoji: '↑' },
+  { index: 3, rating: RATING.AGREE, emoji: '👍' },
+  { index: 4, rating: RATING.STRONGLY_AGREE, emoji: '🎉' },
+] as const;
+
+/**
+ * Rating display configuration
+ * Maps rating values to their visual representation
+ */
+export const RATING_CONFIG = {
+  [RATING.STRONGLY_AGREE]: {
+    emoji: '🎉',
+    labelKey: 'Strongly Agree',
+    shortLabelKey: 'Strong Yes',
+    variant: 'strongly-agree',
+    direction: 'right' as const,
+  },
+  [RATING.AGREE]: {
+    emoji: '👍',
+    labelKey: 'Agree',
+    shortLabelKey: 'Yes',
+    variant: 'agree',
+    direction: 'right' as const,
+  },
+  [RATING.NEUTRAL]: {
+    emoji: '🤔',
+    labelKey: 'Neutral',
+    shortLabelKey: 'Unsure',
+    variant: 'neutral',
+    direction: 'up' as const, // Neutral swipes upward
+  },
+  [RATING.DISAGREE]: {
+    emoji: '👎',
+    labelKey: 'Disagree',
+    shortLabelKey: 'No',
+    variant: 'disagree',
+    direction: 'left' as const,
+  },
+  [RATING.STRONGLY_DISAGREE]: {
+    emoji: '🚫',
+    labelKey: 'Strongly Disagree',
+    shortLabelKey: 'Strong No',
+    variant: 'strongly-disagree',
+    direction: 'left' as const,
+  },
+} as const;
+
+/**
+ * Email notification constants
+ */
+export const EMAIL_NOTIFICATIONS = {
+  TOKEN_LENGTH: 32, // bytes (64 hex chars)
+  CONFIRMATION_EXPIRY: 7 * TIME.DAY,
+  DIGEST_SEND_HOUR: 9, // 9 AM
+  MIN_ACTIVITY_FOR_DIGEST: 1,
+  RATE_LIMIT_PER_HOUR: 5,
+} as const;
+
+/**
+ * Comment constants
+ */
+export const COMMENT = {
+  MIN_LENGTH: 3,
+  MAX_LENGTH: 200,
 } as const;
 
 /**

@@ -11,6 +11,7 @@ import {
   connectAuthEmulator,
 } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+import { getStorage, connectStorageEmulator } from 'firebase/storage';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -30,6 +31,9 @@ const auth = getAuth(app);
 
 // Get Firestore instance for client-side operations
 const db = getFirestore(app);
+
+// Get Storage instance for client-side operations
+const storage = getStorage(app);
 
 // Connect to emulators in development
 // Check if we're on localhost (development mode)
@@ -52,6 +56,14 @@ if (isLocalhost) {
     console.info('[Firebase Client] Connected to Firestore emulator on localhost:8081');
   } catch (error) {
     console.error('[Firebase Client] Firestore emulator connection error:', error);
+  }
+
+  // Connect to Storage emulator
+  try {
+    connectStorageEmulator(storage, 'localhost', 9199);
+    console.info('[Firebase Client] Connected to Storage emulator on localhost:9199');
+  } catch (error) {
+    console.error('[Firebase Client] Storage emulator connection error:', error);
   }
 }
 
@@ -130,5 +142,5 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   return onAuthStateChanged(auth, callback);
 }
 
-export { auth, app, db };
+export { auth, app, db, storage };
 export type { User };

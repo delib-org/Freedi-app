@@ -6,13 +6,15 @@ export function useDecreaseLearningRemain() {
 	return function decreaseLearning({
 		evaluation,
 		addOption,
+		communityVoiceLabel,
 	}: {
 		evaluation?: boolean;
 		addOption?: boolean;
+		communityVoiceLabel?: boolean;
 	}): boolean {
 		try {
-			if (!evaluation && !addOption) {
-				throw new Error('evaluation or addOption is required');
+			if (!evaluation && !addOption && !communityVoiceLabel) {
+				throw new Error('evaluation, addOption, or communityVoiceLabel is required');
 			}
 
 			// Update local state
@@ -22,6 +24,10 @@ export function useDecreaseLearningRemain() {
 
 			if (addOption && learning.addOptions > 0) {
 				decrementLearning('addOptions');
+			}
+
+			if (communityVoiceLabel && learning.communityVoiceLabels > 0) {
+				decrementLearning('communityVoiceLabels');
 			}
 
 			return true;

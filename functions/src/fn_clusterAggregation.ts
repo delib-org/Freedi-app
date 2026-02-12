@@ -1,4 +1,4 @@
-import { Collections, Evaluation, Statement } from '@freedi/shared-types';
+import { Collections, Evaluation, Statement } from "@freedi/shared-types";
 import {
   Framing,
   ClusterAggregatedEvaluation,

@@ -164,21 +164,14 @@ const StatementChatMore: FC<Props> = ({
 			{content}
 		</button>
 	) : (
-		<div
+		<button
+			type="button"
 			className={styles.statementChatMore}
 			onClick={handleClick}
-			role="button"
-			tabIndex={0}
-			onKeyDown={(e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					handleClick();
-				}
-			}}
 			aria-label={ariaLabel}
 		>
 			{content}
-		</div>
+		</button>
 	);
 };
 

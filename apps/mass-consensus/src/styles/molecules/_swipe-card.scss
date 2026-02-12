@@ -1,0 +1,428 @@
+@use '../mixins' as *;
+
+// Swipe Card - Tinder-style card component
+// Full-color zones with readable text overlay
+
+.swipe-card {
+  // Base styles
+  position: relative;
+  width: 90%;
+  max-width: 400px;
+  height: clamp(300px, 50vh, 500px);
+  max-height: 60vh;
+  background: var(--card-default);
+  border-radius: 16px;
+  padding: clamp(1.5rem, 4vw, 2rem);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+  user-select: none;
+  will-change: auto;
+  overflow: hidden;
+
+  // States
+  &--dragging {
+    cursor: grabbing;
+    will-change: transform;
+  }
+
+  &--idle {
+    cursor: grab;
+  }
+
+  &--throwing {
+    will-change: transform, opacity;
+  }
+
+  &--entering {
+    will-change: transform, opacity;
+  }
+
+  // Elements
+
+  // Zone strips - full card background
+  &__zones {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: row;
+    direction: ltr; // Force LTR to prevent RTL reversal
+    pointer-events: none;
+    z-index: 0;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+
+  // Individual zone strip - full height
+  &__zone {
+    flex: 1;
+    position: relative;
+    opacity: 0.55; // Visible but allows text readability
+    transition: opacity 0.2s ease-out;
+
+    // Zone colors (Universal: left to right, negative to positive)
+    &--zone-0 { background: var(--rating-strongly-disagree); }
+    &--zone-1 { background: var(--rating-disagree); }
+    &--zone-2 { background: var(--rating-neutral); }
+    &--zone-3 { background: var(--rating-agree); }
+    &--zone-4 { background: var(--rating-strongly-agree); }
+
+    // Highlighted state
+    &--active {
+      opacity: 0.85;
+
+      .swipe-card__zone-emoji {
+        opacity: 1;
+      }
+    }
+  }
+
+  // When dragging, emphasize zones
+  &--dragging &__zone {
+    opacity: 0.7;
+
+    &--active {
+      opacity: 0.9;
+    }
+  }
+
+  // Emoji on strip (centered)
+  &__zone-emoji {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2.5rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+
+  // Suggestion number badge (top corner)
+  &__number {
+    position: absolute;
+    top: var(--spacing-md);
+    z-index: 2;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.92);
+    padding: 0.3rem 0.75rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+
+    // LTR: top-left, RTL: top-right (handled by logical property)
+    inset-inline-start: var(--spacing-md);
+  }
+
+  // Comment button (bottom corner)
+  &__comment-btn {
+    position: absolute;
+    bottom: var(--spacing-md);
+    inset-inline-end: var(--spacing-md);
+    z-index: 3;
+    pointer-events: auto;
+    background: rgba(255, 255, 255, 0.92);
+    border: none;
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: transform 0.2s;
+
+    &:hover {
+      transform: scale(1.1);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+
+  // Hide comment button during drag
+  &--dragging &__comment-btn {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  // Content wrapper - NO background, text sits directly on colors
+  &__content-wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 100%;
+    padding: var(--spacing-xl) var(--spacing-lg);
+    transition: opacity 0.2s;
+    pointer-events: none;
+    // No background - unified with card colors
+  }
+
+  // Dim content during drag
+  &--dragging &__content-wrapper {
+    opacity: 0.4;
+  }
+
+  // Vertical swipe indicator (center zone)
+  &__vertical-indicator {
+    position: absolute;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 2rem;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 2;
+  }
+
+  // Show indicator during vertical drag
+  &--vertical-drag &__vertical-indicator {
+    opacity: 1;
+  }
+
+  &__overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 4rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    display: none; // Hidden in zone-based system
+  }
+
+  &__content {
+    font-size: 1.5rem; // 24px - prominent and readable
+    line-height: 1.45;
+    color: #1e293b; // Dark slate for maximum contrast
+    text-align: center;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    font-weight: 600; // Semi-bold for better readability on colors
+    letter-spacing: -0.01em;
+    max-width: 100%;
+    padding: 0 var(--spacing-sm);
+
+    // Multi-layer text shadow for readability on any colored background
+    text-shadow:
+      0 0 20px rgba(255, 255, 255, 0.95),
+      0 0 40px rgba(255, 255, 255, 0.8),
+      0 1px 2px rgba(255, 255, 255, 0.9),
+      0 0 60px rgba(255, 255, 255, 0.6);
+  }
+
+  // Overlay states (legacy - kept for compatibility)
+  &--like-active &__overlay,
+  &--dislike-active &__overlay {
+    opacity: 0; // Disabled in zone-based system
+  }
+
+  // Confirmation modal (learning mode)
+  &__confirmation-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  &__confirmation-modal {
+    background: var(--card-default);
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.3s ease-out;
+
+    // Rating variant colors
+    &--strongly-agree {
+      background: var(--rating-strongly-agree);
+      border: 2px solid var(--rating-strongly-agree-border);
+    }
+
+    &--agree {
+      background: var(--rating-agree);
+      border: 2px solid var(--rating-agree-border);
+    }
+
+    &--neutral {
+      background: var(--rating-neutral);
+      border: 2px solid var(--rating-neutral-border);
+    }
+
+    &--disagree {
+      background: var(--rating-disagree);
+      border: 2px solid var(--rating-disagree-border);
+    }
+
+    &--strongly-disagree {
+      background: var(--rating-strongly-disagree);
+      border: 2px solid var(--rating-strongly-disagree-border);
+    }
+  }
+
+  &__confirmation-emoji {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+
+  &__confirmation-title {
+    font-size: 1.125rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+  }
+
+  &__confirmation-rating {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+  }
+
+  &__confirmation-question {
+    font-size: 1rem;
+    color: var(--text-body);
+    margin-bottom: 1.5rem;
+  }
+
+  &__confirmation-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  &__confirmation-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+
+    &--cancel {
+      background: var(--btn-secondary);
+      color: var(--text-primary);
+
+      &:hover {
+        background: #d1d5db;
+      }
+    }
+
+    &--confirm {
+      background: var(--btn-primary);
+      color: white;
+
+      &:hover {
+        background: var(--btn-primary-hover);
+      }
+    }
+  }
+
+  // Accessibility
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    will-change: auto;
+
+    &__overlay {
+      transition: none;
+    }
+
+    &__confirmation-overlay,
+    &__confirmation-modal {
+      animation: none;
+    }
+  }
+
+  // Mobile
+  @include mobile {
+    &__zone-emoji {
+      font-size: 2rem;
+    }
+
+    &__number {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.625rem;
+    }
+
+    &__content-wrapper {
+      padding: var(--spacing-lg) var(--spacing-md);
+    }
+
+    &__content {
+      font-size: 1.25rem;
+    }
+
+    &__confirmation-modal {
+      padding: 1.5rem;
+    }
+
+    &__confirmation-buttons {
+      flex-direction: column;
+    }
+  }
+}
+
+// Animations
+@keyframes swipe-card-throw-right {
+  to {
+    transform: translateX(1000px) rotate(30deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-card-throw-left {
+  to {
+    transform: translateX(-1000px) rotate(-30deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes swipe-card-enter {
+  from {
+    transform: translateX(0) rotate(0) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) rotate(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

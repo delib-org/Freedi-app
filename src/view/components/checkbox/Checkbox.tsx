@@ -58,11 +58,7 @@ const Checkbox: FC<CheckboxProps> = ({
 				checked={checkedValue}
 				onChange={handleChange}
 				tabIndex={-1}
-				style={{
-					position: 'absolute',
-					opacity: 0,
-					pointerEvents: 'none',
-				}}
+				className={styles.hiddenInput}
 			/>
 			<div className={styles.checkboxLabel}>{t(label)}</div>
 		</div>

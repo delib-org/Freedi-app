@@ -1,6 +1,6 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { getFirestore } from "firebase-admin/firestore";
-import { Collections, Statement, functionConfig } from '@freedi/shared-types';
+import { Collections, Statement, functionConfig } from "@freedi/shared-types";
 
 const db = getFirestore();
 

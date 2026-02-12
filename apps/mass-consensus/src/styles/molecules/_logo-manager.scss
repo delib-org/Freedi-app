@@ -1,0 +1,143 @@
+@use '../mixins' as *;
+
+// Logo Manager - Manage and reorder uploaded logos
+
+.logo-manager {
+  // List of logos
+  &__list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  // Individual logo item
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: var(--padding);
+    background: var(--card-default);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--card-hover);
+      border-color: var(--btn-primary);
+    }
+
+    &--dragging {
+      opacity: 0.5;
+      box-shadow: var(--shadow-lg);
+    }
+
+    &--drag-over {
+      border-color: var(--btn-primary);
+      background: var(--card-hover);
+    }
+  }
+
+  // Drag handle
+  &__drag-handle {
+    cursor: grab;
+    color: var(--text-secondary);
+    font-size: 1.25rem;
+    padding: 0.25rem;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:hover {
+      color: var(--text-body);
+    }
+  }
+
+  // Logo thumbnail
+  &__thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    border-radius: 4px;
+    background: var(--card-hover);
+    padding: 0.5rem;
+  }
+
+  // Logo info section
+  &__info {
+    flex: 1;
+    min-width: 0; // Allow text truncation
+  }
+
+  // Alt text input
+  &__alt-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-default);
+    color: var(--text-body);
+    font-size: 0.875rem;
+    transition: border-color 0.2s ease;
+
+    &:focus {
+      outline: none;
+      border-color: var(--btn-primary);
+    }
+  }
+
+  // Logo metadata
+  &__metadata {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+  }
+
+  // Actions section
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  // Delete button
+  &__delete-btn {
+    @include button-base;
+    background: transparent;
+    color: var(--disagree);
+    padding: 0.5rem;
+    min-height: auto;
+
+    &:hover {
+      background: rgba(var(--disagree-rgb), 0.1);
+    }
+  }
+
+  // Empty state
+  &__empty {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  // Responsive
+  @include mobile {
+    &__item {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    &__thumbnail {
+      width: 100%;
+      height: auto;
+      max-height: 120px;
+    }
+
+    &__actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
+}

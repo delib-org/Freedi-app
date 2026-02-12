@@ -3,6 +3,34 @@ interface ColorMappings {
 }
 
 export const colorMappings: ColorMappings = {
+	// Community Voice gray scale
+	"--gray0-1": "--gray0-1-high-contrast",
+	"--gray0-1-border": "--gray0-1-border-high-contrast",
+	"--gray0-1-text": "--gray0-1-text-high-contrast",
+	"--gray0-125": "--gray0-125-high-contrast",
+	"--gray0-125-border": "--gray0-125-border-high-contrast",
+	"--gray0-125-text": "--gray0-125-text-high-contrast",
+	"--gray0-15": "--gray0-15-high-contrast",
+	"--gray0-15-border": "--gray0-15-border-high-contrast",
+	"--gray0-15-text": "--gray0-15-text-high-contrast",
+	"--gray0-2": "--gray0-2-high-contrast",
+	"--gray0-2-border": "--gray0-2-border-high-contrast",
+	"--gray0-2-text": "--gray0-2-text-high-contrast",
+
+	// Community Voice agree scale (selected states)
+	"--agree0": "--agree0-high-contrast",
+	"--agree0-border": "--agree0-border-high-contrast",
+	"--agree0-text": "--agree0-text-high-contrast",
+	"--agree1": "--agree1-high-contrast",
+	"--agree1-border": "--agree1-border-high-contrast",
+	"--agree1-text": "--agree1-text-high-contrast",
+	"--agree2": "--agree2-high-contrast",
+	"--agree2-border": "--agree2-border-high-contrast",
+	"--agree2-text": "--agree2-text-high-contrast",
+	"--agree3": "--agree3-high-contrast",
+	"--agree3-border": "--agree3-border-high-contrast",
+	"--agree3-text": "--agree3-text-high-contrast",
+
 	// Agreement range
 	"--range-positive-100": "--range-positive-100-contrast",
 	"--range-positive-60": "--range-positive-60-contrast",

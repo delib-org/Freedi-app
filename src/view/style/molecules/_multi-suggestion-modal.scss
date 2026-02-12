@@ -1,6 +1,8 @@
 // Multi-Suggestion Detection Modal
 // BEM naming convention
 
+@use '../mixins' as *;
+
 .multi-suggestion-modal {
   position: fixed;
   top: 50%;
@@ -96,7 +98,7 @@
     padding-top: 1rem;
     border-top: 1px solid var(--border-light, #e0e0e0);
 
-    @media (max-width: 480px) {
+    @include small-mobile {
       flex-direction: column-reverse;
     }
   }

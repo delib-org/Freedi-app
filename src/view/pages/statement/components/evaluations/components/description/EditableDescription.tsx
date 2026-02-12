@@ -43,16 +43,10 @@ const EditableDescription: FC = () => {
 
 	return (
 		<>
-			<div
+			<button
+				type="button"
 				className={containerClass}
 				onClick={() => setIsEditorOpen(true)}
-				role="button"
-				tabIndex={0}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						setIsEditorOpen(true);
-					}
-				}}
 			>
 				<div className={styles.descriptionHeader}>
 					<button
@@ -77,7 +71,7 @@ const EditableDescription: FC = () => {
 						<p className={styles.placeholder}>{t('Add a description...')}</p>
 					)}
 				</div>
-			</div>
+			</button>
 
 			{isEditorOpen && (
 				<DocumentEditModal

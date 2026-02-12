@@ -27,6 +27,7 @@ export type { Direction, RowDirection } from "@freedi/shared-i18n";
 export interface LearningSettings {
   evaluation: number;
   addOptions: number;
+  communityVoiceLabels: number;
 }
 
 export interface UserConfig {
@@ -47,7 +48,7 @@ export type UserConfigContextType = {
   colorContrast: boolean;
   setColorContrast: (value: boolean) => void;
   learning: LearningSettings;
-  decrementLearning: (type: "evaluation" | "addOptions") => void;
+  decrementLearning: (type: "evaluation" | "addOptions" | "communityVoiceLabels") => void;
 };
 
 type UserConfigProviderProps = {
@@ -63,6 +64,7 @@ export const DEFAULT_COLOR_CONTRAST = false;
 export const DEFAULT_LEARNING_SETTINGS: LearningSettings = {
   evaluation: 7, // Adjust as needed
   addOptions: 3, // Adjust as needed
+  communityVoiceLabels: 5, // Separate counter for community voice button labels
 };
 
 export const DEFAULT_CONFIG: UserConfig = {
@@ -111,6 +113,9 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
             addOptions:
               parsedConfig.learning?.addOptions ??
               DEFAULT_LEARNING_SETTINGS.addOptions,
+            communityVoiceLabels:
+              parsedConfig.learning?.communityVoiceLabels ??
+              DEFAULT_LEARNING_SETTINGS.communityVoiceLabels,
           },
         };
       }
@@ -173,7 +178,7 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({
   }, []);
 
   // Learning decrement handler
-  const decrementLearning = useCallback((type: "evaluation" | "addOptions") => {
+  const decrementLearning = useCallback((type: "evaluation" | "addOptions" | "communityVoiceLabels") => {
     setConfig((prev) => {
       const learning = { ...prev.learning };
 

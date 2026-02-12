@@ -1,6 +1,7 @@
 import { Statement } from '@freedi/shared-types';
 import AIFeedbackButton from './AIFeedbackButton';
 import InlineMarkdown from '../shared/InlineMarkdown';
+import CommentsList from './CommentsList';
 import styles from './ResultsList.module.css';
 
 interface ResultsListProps {
@@ -51,6 +52,9 @@ export default function ResultsList({
                   {new Date(solution.createdAt).toLocaleDateString()}
                 </span>
               </div>
+
+              {/* Comments - auth check handled inside CommentsList */}
+              <CommentsList statementId={solution.statementId} />
             </div>
           </div>
         ))}

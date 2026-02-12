@@ -95,3 +95,26 @@
   margin: 2.5rem 0 0 0.5rem;
   flex-direction: row-reverse;
 }
+
+.closeBtn {
+  align-self: center;
+  margin: 2rem 0 1rem 0;
+  width: 89px;
+  height: 44px;
+  color: var(--btn-primary-selected);
+  border: 1px solid var(--btn-primary-selected);
+  border-radius: 20px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  background: transparent;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(40, 94, 220, 0.1);
+  }
+}

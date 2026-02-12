@@ -1,4 +1,4 @@
-import { Statement } from '@freedi/shared-types';
+import { Statement } from "@freedi/shared-types";
 import { cache } from "./cache-service";
 import {
   getParentStatement,

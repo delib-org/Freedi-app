@@ -3,6 +3,7 @@ import { getFirestoreAdmin } from './admin';
 import { logger } from '@/lib/utils/logger';
 import { ProposalSampler, BatchResult } from '@/lib/utils/proposalSampler';
 import { SamplingConfig } from '@/lib/utils/sampling';
+import { CommentData } from '@/types/api';
 
 /**
  * Helper to log query errors with context
@@ -356,6 +357,120 @@ export async function getUserEvaluation(
   }
 
   return docSnapshot.data() as Evaluation;
+}
+
+/**
+ * Get user's suggestions across multiple questions (for survey mode)
+ * @param questionIds - Array of question IDs to query
+ * @param userId - User ID
+ * @returns Map of questionId -> user's suggestions
+ */
+export async function getUserSuggestionsForSurvey(
+  questionIds: string[],
+  userId: string
+): Promise<Map<string, Statement[]>> {
+  try {
+    const results = await Promise.all(
+      questionIds.map(async (questionId) => {
+        const solutions = await getUserSolutions(questionId, userId);
+
+        return { questionId, solutions };
+      })
+    );
+
+    const map = new Map<string, Statement[]>();
+    for (const { questionId, solutions } of results) {
+      if (solutions.length > 0) {
+        map.set(questionId, solutions);
+      }
+    }
+
+    logger.info('[getUserSuggestionsForSurvey] Found suggestions for', map.size, 'questions, user:', userId);
+
+    return map;
+  } catch (error) {
+    logQueryError('getUserSuggestionsForSurvey', error, { questionIds, userId });
+    throw error;
+  }
+}
+
+/**
+ * Get comments for multiple statements (batch query)
+ * Pre-fetches first N comments per statement for SSR
+ * @param statementIds - Array of statement IDs to fetch comments for
+ * @param limitPerStatement - Max comments per statement (default 2 for SSR)
+ * @returns Map of statementId -> comments
+ */
+export async function getCommentsForStatements(
+  statementIds: string[],
+  limitPerStatement = 2
+): Promise<Map<string, { comments: CommentData[]; total: number }>> {
+  try {
+    const db = getFirestoreAdmin();
+    const result = new Map<string, { comments: CommentData[]; total: number }>();
+
+    if (statementIds.length === 0) return result;
+
+    // Query in batches of 30 (Firestore 'in' limit)
+    const batchSize = 30;
+    for (let i = 0; i < statementIds.length; i += batchSize) {
+      const batch = statementIds.slice(i, i + batchSize);
+
+      const snapshot = await db
+        .collection(Collections.statements)
+        .where('parentId', 'in', batch)
+        .where('statementType', '==', StatementType.comment)
+        .orderBy('createdAt', 'desc')
+        .get();
+
+      // Group by parentId
+      const grouped = new Map<string, CommentData[]>();
+      for (const doc of snapshot.docs) {
+        const data = doc.data() as Statement;
+        const parentId = data.parentId;
+        if (!parentId) continue;
+
+        const comment: CommentData = {
+          statementId: data.statementId,
+          statement: data.statement,
+          reasoning: data.reasoning,
+          createdAt: data.createdAt,
+          creator: data.creator,
+          creatorId: data.creatorId,
+        };
+
+        const existing = grouped.get(parentId) || [];
+        existing.push(comment);
+        grouped.set(parentId, existing);
+      }
+
+      // Apply limit per statement
+      for (const [parentId, comments] of grouped) {
+        result.set(parentId, {
+          comments: comments.slice(0, limitPerStatement),
+          total: comments.length,
+        });
+      }
+    }
+
+    // Ensure all requested statement IDs have entries
+    for (const id of statementIds) {
+      if (!result.has(id)) {
+        result.set(id, { comments: [], total: 0 });
+      }
+    }
+
+    logger.info(
+      '[getCommentsForStatements] Fetched comments for',
+      result.size,
+      'statements'
+    );
+
+    return result;
+  } catch (error) {
+    logQueryError('getCommentsForStatements', error, { statementIds: statementIds.length });
+    throw error;
+  }
 }
 
 /**

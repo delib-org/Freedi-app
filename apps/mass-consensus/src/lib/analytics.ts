@@ -26,6 +26,11 @@ export enum AnalyticsEvent {
 
   // Email
   EMAIL_SUBSCRIBED = 'mc_email_subscribed',
+
+  // Proposals
+  PROPOSAL_SUBMITTED = 'mc_proposal_submitted',
+  PROPOSAL_PROMPT_SHOWN = 'mc_proposal_prompt_shown',
+  PROPOSAL_PROMPT_DISMISSED = 'mc_proposal_prompt_dismissed',
 }
 
 /**
@@ -124,6 +129,33 @@ export function trackQrCodeDownloaded(statementId: string, userId?: string): voi
 export function trackEmailSubscribed(statementId: string, userId?: string): void {
   trackEvent(AnalyticsEvent.EMAIL_SUBSCRIBED, {
     statement_id: statementId,
+    user_id: userId,
+  });
+}
+
+export function trackProposalSubmitted(
+  questionId: string,
+  userId?: string,
+  proposalLength?: number
+): void {
+  trackEvent(AnalyticsEvent.PROPOSAL_SUBMITTED, {
+    question_id: questionId,
+    user_id: userId,
+    proposal_length: proposalLength,
+  });
+}
+
+export function trackProposalPromptShown(questionId: string, userId?: string, cardCount?: number): void {
+  trackEvent(AnalyticsEvent.PROPOSAL_PROMPT_SHOWN, {
+    question_id: questionId,
+    user_id: userId,
+    card_count: cardCount,
+  });
+}
+
+export function trackProposalPromptDismissed(questionId: string, userId?: string): void {
+  trackEvent(AnalyticsEvent.PROPOSAL_PROMPT_DISMISSED, {
+    question_id: questionId,
     user_id: userId,
   });
 }

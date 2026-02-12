@@ -54,13 +54,13 @@ export default function Home() {
 				// Set up first listener
 				unsubscribe = listenToStatementSubscriptions(user.uid, 100);
 
-				// Wait before setting up next listener (iOS Safari needs breathing room)
-				await new Promise(resolve => setTimeout(resolve, 300));
+				// Brief pause between listeners for iOS Safari IndexedDB compatibility
+				await new Promise(resolve => setTimeout(resolve, 100));
 
 				updatesUnsubscribe = getNewStatementsFromSubscriptions(user.uid);
 
-				// Wait before final listener
-				await new Promise(resolve => setTimeout(resolve, 300));
+				// Brief pause before final listener
+				await new Promise(resolve => setTimeout(resolve, 100));
 
 				unsubscribeInAppNotifications = listenToInAppNotifications();
 			} catch (error) {

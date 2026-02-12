@@ -1,5 +1,5 @@
 import firebaseConfig from "@/controllers/db/configKey";
-import { functionConfig } from '@freedi/shared-types';
+import { functionConfig } from "@freedi/shared-types";
 
 // Helper to get environment variables
 // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env

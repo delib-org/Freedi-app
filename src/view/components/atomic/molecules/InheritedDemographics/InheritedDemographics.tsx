@@ -154,17 +154,10 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 	return (
 		<div className={containerClasses}>
 			{/* Header */}
-			<div
+			<button
+				type="button"
 				className="inherited-demographics__header"
 				onClick={() => setIsExpanded(!isExpanded)}
-				role="button"
-				tabIndex={0}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						e.preventDefault();
-						setIsExpanded(!isExpanded);
-					}
-				}}
 				aria-expanded={isExpanded}
 				aria-controls="inherited-demographics-content"
 			>
@@ -181,7 +174,7 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 					{enabledCount}/{totalCount}
 				</span>
 				<ArrowDownIcon className="inherited-demographics__expand-icon" />
-			</div>
+			</button>
 
 			{/* Content */}
 			<div
