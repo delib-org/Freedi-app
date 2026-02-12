@@ -11,7 +11,7 @@ import ReactFlow, {
 	useReactFlow,
 	ReactFlowInstance,
 } from 'reactflow';
-import '../mapHelpers/reactFlow.scss';
+import '../mapHelpers/reactFlow.module.scss';
 import 'reactflow/dist/style.css';
 
 // icons and components

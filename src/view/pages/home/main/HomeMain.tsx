@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import '@/view/style/homePage.scss';
 import styles from './HomeMain.module.scss';
 
 // Redux store

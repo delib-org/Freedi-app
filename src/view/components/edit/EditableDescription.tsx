@@ -48,16 +48,10 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 
 	return (
 		<>
-			<div
+			<button
+				type="button"
 				className={containerClass}
 				onClick={() => setIsEditorOpen(true)}
-				role="button"
-				tabIndex={0}
-				onKeyDown={(e) => {
-					if (e.key === 'Enter' || e.key === ' ') {
-						setIsEditorOpen(true);
-					}
-				}}
 			>
 				<div className={styles.editButton}>
 					<EditIcon />
@@ -71,7 +65,7 @@ const EditableDescription: FC<EditableDescriptionProps> = ({
 						<p className={styles.placeholder}>{t(placeholder)}</p>
 					)}
 				</div>
-			</div>
+			</button>
 
 			{isEditorOpen && (
 				<DocumentEditModal

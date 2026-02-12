@@ -11,6 +11,12 @@
         display: none;
     }
 
+    .hiddenInput {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
     .checkboxIcon {
         min-width: 24px;
 

@@ -1,0 +1,654 @@
+// =============================================================================
+// CSS Custom Properties (Variables)
+// All :root variable definitions for the Freedi design system
+// =============================================================================
+
+:root {
+  writing-mode: horizontal-tb;
+  direction: ltr;
+  text-orientation: mixed;
+
+  // --- MAIN COLORS ---
+  --mainBackground: #1f5895;
+  --statementBackground: #f2f6ff;
+  --inputBackground: #f5fcff;
+  --mainBackgroundError: #ff0000;
+
+  --text-primary: rgba(33, 36, 48, 1);
+  --text-primary-contrast: rgba(33, 36, 48, 1);
+
+  --text-secondary: rgba(56, 62, 84, 1);
+  --text-secondary-contrast: rgb(35, 39, 54);
+
+  --text-tertiary: rgba(85, 87, 116, 1);
+  --text-tertiary-contrast: rgb(49, 51, 68);
+
+  --lighter: rgba(137, 140, 167, 1);
+  --lighter-contrast: rgb(93, 95, 113);
+
+  // --- COMMUNITY VOICE GRAY SCALE (0.1 to 0.2) ---
+  // Normal mode
+  --gray0-1: hsl(0, 0%, 90%);
+  --gray0-1-border: hsl(0, 0%, 85%);
+  --gray0-1-text: #2a2a2a;
+
+  --gray0-125: hsl(0, 0%, 87.5%);
+  --gray0-125-border: hsl(0, 0%, 82.5%);
+  --gray0-125-text: #2a2a2a;
+
+  --gray0-15: hsl(0, 0%, 85%);
+  --gray0-15-border: hsl(0, 0%, 80%);
+  --gray0-15-text: #2a2a2a;
+
+  --gray0-2: hsl(0, 0%, 80%);
+  --gray0-2-border: hsl(0, 0%, 75%);
+  --gray0-2-text: #2a2a2a;
+
+  // High contrast mode variables (for media query override)
+  --gray0-1-high-contrast: hsl(0, 0%, 75%);
+  --gray0-1-border-high-contrast: hsl(0, 0%, 60%);
+  --gray0-1-text-high-contrast: #000000;
+
+  --gray0-125-high-contrast: hsl(0, 0%, 70%);
+  --gray0-125-border-high-contrast: hsl(0, 0%, 55%);
+  --gray0-125-text-high-contrast: #000000;
+
+  --gray0-15-high-contrast: hsl(0, 0%, 65%);
+  --gray0-15-border-high-contrast: hsl(0, 0%, 50%);
+  --gray0-15-text-high-contrast: #ffffff;
+
+  --gray0-2-high-contrast: hsl(0, 0%, 50%);
+  --gray0-2-border-high-contrast: hsl(0, 0%, 30%);
+  --gray0-2-text-high-contrast: #ffffff;
+
+  // --- COMMUNITY VOICE AGREE SHADES (Selected States) ---
+  // Normal mode - Agree intensity from 0.1 to 0.4
+  --agree0: #d8f0ed;
+  --agree0-border: #b8e8e2;
+  --agree0-text: #1a1a1a;
+
+  --agree1: #b8e8e2;
+  --agree1-border: #7ed8cf;
+  --agree1-text: #1a1a1a;
+
+  --agree2: #7ed8cf;
+  --agree2-border: #57c6b2;
+  --agree2-text: #1a1a1a;
+
+  --agree3: #57c6b2;
+  --agree3-border: #3a9d8e;
+  --agree3-text: #ffffff;
+
+  // High contrast mode - Darker agree
+  --agree0-high-contrast: #a8ddd5;
+  --agree0-border-high-contrast: #7ed8cf;
+  --agree0-text-high-contrast: #000000;
+
+  --agree1-high-contrast: #7ed8cf;
+  --agree1-border-high-contrast: #57c6b2;
+  --agree1-text-high-contrast: #000000;
+
+  --agree2-high-contrast: #57c6b2;
+  --agree2-border-high-contrast: #3a9d8e;
+  --agree2-text-high-contrast: #ffffff;
+
+  --agree3-high-contrast: #3a9d8e;
+  --agree3-border-high-contrast: #1e7068;
+  --agree3-text-high-contrast: #ffffff;
+
+  // Alerts
+  --alert: #dd90b6;
+  --notify: #d98ff3;
+  --tooltip: #6db0f9;
+
+  // Option
+  --option: #e7d080;
+  --option-text: #3b4f7d;
+
+  // Results
+  --result: #a9adf4;
+  --result-text: rgb(90, 87, 87);
+
+  // Question
+  --question: #47b4ef;
+  --question-text: white;
+  --question-contrast: #1093fd;
+
+  // Group
+  --group: #b893e7;
+  --group-text: white;
+  --group-contrast: #a080e0;
+
+  // Evaluation
+  --agree: #57c6b2;
+  --disagree: #fe6ba2;
+  --approve: #57c6b2;
+  --reject: #fe6ba2;
+
+  // Shadow & radius
+  --shadow: rgba(181, 197, 232, 0.486);
+  --radius: 5px;
+
+  // Buttons (inactive)
+  --inactive: rgb(207, 207, 207);
+  --inactive-text: #acacac;
+
+  // Tooltip & accent
+  --accent: #7cacf8;
+
+  // --- SIZES ---
+  --padding: 1rem;
+
+  // Fonts
+  --h1-font-size: 2rem;
+  --h2-font-size: 1.7rem;
+  --h3-font-size: 1.5rem;
+  --h4-font-size: 1.3rem;
+  --h5-font-size: 1.2rem;
+  --h6-font-size: 1.1rem;
+  --p-font-size: 1rem;
+
+  --white: white;
+  --red: #e8749e;
+  --placeHolder: #93b6da;
+  --link: #4848df;
+  --link-contrast: darkblue;
+
+  --info-text-padding: 15px;
+
+  // Font weights
+  --weight-medium: 400;
+
+  // --- FIGMA LIBRARY COLORS ---
+
+  // Agreement range
+  --range-positive-100: #3a7e71;
+  --range-positive-60: #76c0b3;
+  --range-positive-30: #abd8d0;
+
+  --range-conflict-100: #ff8401;
+  --range-conflict-60: #ef7550;
+  --range-conflict-30: #f9c8b9;
+
+  --range-objections-100: #ae2891;
+  --range-objections-60: #e281cd;
+  --range-objections-30: #f4cdeb;
+
+  // Agreement range contrast
+  --range-positive-100-contrast: #3a7e71;
+  --range-positive-60-contrast: #00bd9a;
+  --range-positive-30-contrast: #24ffd7;
+
+  --range-conflict-100-contrast: #b92504;
+  --range-conflict-60-contrast: #fb6340;
+  --range-conflict-30-contrast: #fdc2b4;
+
+  --range-objections-100-contrast: #b50881;
+  --range-objections-60-contrast: #f746c2;
+  --range-objections-30-contrast: #fcb6e7;
+
+  // Buttons
+  --btn-primary: #5f88e5;
+  --btn-primary-default: #5f88e5;
+  --btn-primary-hover: #80a0ea;
+  --btn-primary-selected: #285edc;
+  --btn-primary-disabled: #c6cddc;
+
+  --btn-secondary: #5f88e5;
+  --btn-secondary-default: #5f88e5;
+  --btn-secondary-hover: #80a0ea;
+  --btn-secondary-selected-border: #285edc;
+  --btn-secondary-selected-fill: #e5edff;
+  --btn-secondary-disabled: #7484a9;
+
+  --btn-white-default: #ffffff;
+  --btn-white-hover: #f2f6ff;
+  --btn-white-selected: #b4e0f8;
+  --btn-white-disabled: #ffffff;
+
+  --btn-orange-default: #ef7550;
+  --btn-orange-hover: #f29173;
+  --btn-orange-selected: #ea4715;
+
+  --add-btn: #275ddb;
+
+  // Buttons contrast
+  --btn-primary-contrast: #165bfa;
+  --btn-primary-default-contrast: #165bfa;
+  --btn-primary-hover-contrast: #467cfb;
+  --btn-primary-selected-contrast: #0544d7;
+  --btn-primary-disabled-contrast: #dce0ea;
+
+  --btn-secondary-contrast: #165bfa;
+  --btn-secondary-default-contrast: #165bfa;
+  --btn-secondary-hover-contrast: #467cfb;
+  --btn-secondary-selected-border-contrast: #0544d7;
+  --btn-secondary-selected-fill-contrast: #e5edff;
+  --btn-secondary-disabled-contrast: #424e6c;
+
+  --btn-purple-default: #a879e1;
+  --btn-purple-hover: #b893e7;
+  --btn-purple-selected: #823fd4;
+  --btn-purple-disable: #dcc9f3;
+
+  --btn-purple-default-contrast: #8a62d8;
+  --btn-purple-hover-contrast: #a080e0;
+  --btn-purple-selected-contrast: #6432c8;
+  --btn-purple-disable-contrast: #d1c2f0;
+
+  --btn-white-default-contrast: #ffffff;
+  --btn-white-hover-contrast: #a9e0fe;
+  --btn-white-selected-contrast: #7cd0fe;
+  --btn-white-disabled-contrast: #dce0ea;
+
+  --btn-orange-default-contrast: #fb6340;
+  --btn-orange-hover-contrast: #fc8064;
+  --btn-orange-selected-contrast: #f53105;
+
+  --add-btn-contrast: #0443d6;
+  --btn-disabled-contrast: #93a0bd;
+
+  // Accessibility buttons
+  --btn-accessibility-icons: #5f88e5;
+  --btn-accessibility-light-contrast: #f5f8ff;
+  --btn-accessibility-light-contrast-text: #191e29;
+  --btn-accessibility-light-contrast-icons: #5f88e5;
+
+  --btn-accessibility-icons-contrast: #17349c;
+  --btn-accessibility-light-contrast-contrast: #165bfa;
+  --btn-accessibility-light-contrast-text-contrast: #ffffff;
+  --btn-accessibility-light-contrast-icons-contrast: #ffffff;
+
+  // Card
+  --card-default: #ffffff;
+  --card-needs-surface: #c7e5e0;
+  --card-needs-top: #93cdc2;
+  --card-suggestion-added: #fdffe0;
+  --card-question-added: #d9f0fc;
+  --card-other-message: #faf6f0;
+
+  // Card contrast
+  --card-default-contrast: #ffffff;
+  --card-needs-surface-contrast: #24ffd7;
+  --card-needs-top-contrast: #00bd9a;
+  --card-suggestion-added-contrast: #fffed1;
+  --card-question-added-contrast: #7cd0fe;
+
+  // Chips
+  --chips-default: #ffffff;
+  --chips-active: #ffe16a;
+  --chips-default-contrast: #ffffff;
+  --chips-active-contrast: #fefa0e;
+
+  // Cluster progress
+  --cluster-progress-bar-level-1: #4ec0fd;
+  --cluster-progress-bar-level-2: #165bfa;
+  --cluster-progress-bar-level-1-contrast: #24b1fd;
+  --cluster-progress-bar-level-2-contrast: #0544d7;
+
+  // Document tabs
+  --doc-tabs-info: #ffd324;
+  --doc-tabs-research: #5f88e5;
+  --doc-tabs-needs: #ef7550;
+  --doc-tabs-suggestions: #76c0b3;
+  --doc-tabs-voting: #e281cd;
+  --doc-tabs-summary: #f86d6f;
+
+  // Document tabs contrast
+  --doc-tabs-info-contrast: #fefa0e;
+  --doc-tabs-research-contrast: #165bfa;
+  --doc-tabs-needs-contrast: #f53105;
+  --doc-tabs-suggestions-contrast: #00eec4;
+  --doc-tabs-voting-contrast: #f746c2;
+  --doc-tabs-summary-contrast: #ff0207;
+
+  // Dropdowns
+  --dropdown-cluster-active: #ffffff;
+  --dropdown-cluster-active-contrast: #165bfa;
+  --dropdown-option-active: #ffffff;
+  --dropdown-option-active-contrast: #165bfa;
+  --dropdown-rooms-active: #ffffff;
+  --dropdown-rooms-active-contrast: #165bfa;
+  --dropdown-step-default: #f2f6ff;
+  --dropdown-step-active: #ffffff;
+  --dropdown-step-default-contrast: #ffffff;
+  --dropdown-step-active-contrast: #165bfa;
+  --dropdown-step-activity-active: #f2f6ff;
+  --dropdown-step-activity-contrast: #165bfa;
+
+  // Emojis
+  --emoji-happy: #80a0ea;
+  --emoji-smiley: #93cdc2;
+  --emoji-neutral: #ffd324;
+  --emoji-thinking: #f29173;
+  --emoji-sad: #f86d6f;
+
+  --emoji-happy-inactive: #909ebc;
+  --emoji-smiley-inactive: #adb7cd;
+  --emoji-neutral-inactive: #c6cddc;
+  --emoji-thinking-inactive: #adb7cd;
+  --emoji-sad-inactive: #909ebc;
+
+  // Emojis contrast
+  --emoji-happy-contrast: #149ce6;
+  --emoji-smiley-contrast: #00bd9a;
+  --emoji-neutral-contrast: #d5d201;
+  --emoji-thinking-contrast: #fb6340;
+  --emoji-sad-contrast: #f40b0f;
+
+  --emoji-happy-inactive-contrast: #212736;
+  --emoji-smiley-inactive-contrast: #424e6c;
+  --emoji-neutral-inactive-contrast: #93a0bd;
+  --emoji-thinking-inactive-contrast: #424e6c;
+  --emoji-sad-inactive-contrast: #212736;
+
+  // Headers
+  --header-home: #5f88e5;
+  --header-question: #47b4ef;
+  --header-chosen: #76c0b3;
+  --header-not-chosen: #ffe16a;
+  --header-group: #b9a1e8;
+
+  // Headers contrast
+  --header-home-contrast: #165bfa;
+  --header-question-contrast: #1093fd;
+  --header-chosen-contrast: #24ffd7;
+  --header-not-chosen-contrast: #ffd324;
+  --header-group-contrast: #8a62d8;
+
+  // Icons
+  --icons-blue: #5f88e5;
+  --icons-primary: #3a60d6;
+  --icons-blue-dark: #1b45a7;
+  --icons-white: #ffffff;
+  --icons-red: #f74a4d;
+  --icons-green: #4fab9a;
+  --icons-disabled: #adb7cd;
+  --icons-disabled-dark: #909ebc;
+
+  // Icons contrast
+  --icons-blue-contrast: #165bfa;
+  --icons-blue-dark-contrast: #0332a0;
+  --icons-white-contrast: #ffffff;
+  --icons-red-contrast: #ff0207;
+  --icons-green-contrast: #00bd9a;
+  --icons-disabled-contrast: #93a0bd;
+  --icons-disabled-dark-contrast: #6d7ea6;
+
+  // Input
+  --input-active: #ffffff;
+  --input-active-contrast: #ffffff;
+
+  // Map
+  --map-statement: #ffffff;
+  --map-question: #6ec4f2;
+  --map-suggestion: #abd8d0;
+  --map-statement-current: #ffe16a;
+  --map-question-current: #149ce6;
+  --map-suggestion-current: #4fab9a;
+
+  // Map contrast
+  --map-statement-contrast: #ffffff;
+  --map-question-contrast: #4ec0fd;
+  --map-suggestion-contrast: #00eec4;
+  --map-statement-current-contrast: #fefc71;
+  --map-question-current-contrast: #1093fd;
+  --map-suggestion-current-contrast: #00bd9a;
+
+  // Member
+  --member-awaiting: #b4e0f8;
+  --member-voter: #e7def7;
+  --member-evaluator: #c7e5e0;
+  --member-participant: #8ed1f5;
+  --member-blocked: #f74a4d;
+
+  // Member contrast
+  --member-awaiting-contrast: #ffffff;
+  --member-voter-contrast: #a080e0;
+  --member-evaluator-contrast: #5cffe1;
+  --member-participant-contrast: #165bfa;
+  --member-blocked-contrast: #ff3336;
+
+  // Menu
+  --menu-default: #ffffff;
+  --menu-active: #f2f6ff;
+  --menu-default-contrast: #ffffff;
+  --menu-active-contrast: #165bfa;
+
+  // Off-canvas
+  --off-canvas-background: #f2f6ff;
+  --off-canvas-header: #5f88e5;
+  --off-canvas-footer: #5f88e5;
+  --off-canvas-background-contrast: #ffffff;
+  --off-canvas-header-contrast: #165bfa;
+  --off-canvas-footer-contrast: #165bfa;
+
+  // Popup
+  --popup-default: #f2f6ff;
+  --popup-default-contrast: #ffffff;
+
+  // Snackbar
+  --snackbar-default: #5f88e5;
+  --snackbar-default-contrast: #165bfa;
+
+  // Stepper
+  --stepper-default: #ffffff;
+  --stepper-default-contrast: #ffffff;
+
+  // Surface
+  --surface-background: #f2f6ff;
+  --surface-overlay: #01113766;
+  --surface-edit: #f2f6ff;
+  --surface-Surface-60: #ffffff99;
+  --Surface-tabSys-background-level-1: #f2f6ff00;
+  --Surface-tabSys-background-level-2: #f2f6ff;
+
+  // Surface contrast
+  --surface-background-contrast: #ffffff;
+  --surface-overlay-contrast: #011137cc;
+  --surface-edit-contrast: #165bfa;
+  --surface-Surface-60-contrast: #f2f6ff;
+  --Surface-tabSys-background-level-1-contrast: #ffffff00;
+  --Surface-tabSys-background-level-2-contrast: #ffffff;
+
+  // Border
+  --border-primary: #C6D8F7;
+
+  // Text
+  --text-title: #191e29;
+  --text-subtitle: #2a3346;
+  --text-body: #3d4d71;
+  --text-caption: #7484a9;
+  --text-label: #7484a9;
+  --text-negative: #ffffff;
+  --text-disabled: #909ebc;
+  --text-blue: #285edc;
+  --text-success: #4fab9a;
+  --text-error: #f74a4d;
+  --text-warning: #ef7550;
+
+  // Text contrast
+  --text-title-contrast: #08090d;
+  --text-subtitle-contrast: #11151d;
+  --text-body-contrast: #212736;
+  --text-caption-contrast: #424e6c;
+  --text-Label-contrast: #424e6c;
+  --text-negative-contrast: #ffffff;
+  --text-disabled-contrast: #6d7ea6;
+  --text-blue-contrast: #0544d7;
+  --text-success-contrast: #008f75;
+  --text-error-contrast: #ff0207;
+  --text-warning-contrast: #fb6340;
+
+  // Toggle
+  --toggle-background: #e0e8fa;
+  --toggle-disabled: #f74a4d;
+  --toggle-enabled: #76c0b3;
+  --toggle-background-contrast: #d2dffe;
+  --toggle-disabled-contrast: #ff3336;
+  --toggle-enabled-contrast: #00eec4;
+
+  // Triangle dots
+  --triangle-dots-agreement-100: #4fab9a;
+  --triangle-dots-agreement-100-disinterest: #abd8d0;
+  --triangle-dots-agreement-50: #ffe16a;
+  --triangle-dots-agreement-50-disinterest: #fff3c2;
+  --triangle-dots-agreement-0: #ef7550;
+  --triangle-dots-agreement-0-disinterest: #f9c8b9;
+  --triangle-dots-objections-50: #d549b7;
+  --triangle-dots-objections-50-disinterest: #eeb4e1;
+  --triangle-dots-objections-100: #7a0507;
+  --triangle-dots-objections-100-disinterest: #8f7200;
+  --triangle-dots-avoidance: #c6cddc;
+
+  // Triangle dots contrast
+  --triangle-dots-agreement-100-contrast: #4fab9a;
+  --triangle-dots-agreement-100-disinterest-contrast: #abd8d0;
+  --triangle-dots-agreement-50-contrast: #ffe16a;
+  --triangle-dots-agreement-50-disinterest-contrast: #fff3c2;
+  --triangle-dots-agreement-0-contrast: #ef7550;
+  --triangle-dots-agreement-0-disinterest-contrast: #f9c8b9;
+  --triangle-dots-objections-50-contrast: #d549b7;
+  --triangle-dots-objections-50-disinterest-contrast: #eeb4e1;
+  --triangle-dots-objections-100-contrast: #7a0507;
+  --triangle-dots-objections-100-disinterest-contrast: #8f7200;
+  --triangle-dots-avoidance-contrast: #c6cddc;
+
+  // Voting palette
+  --voting-palette-pair-1-light: #fc8c9b;
+  --voting-palette-pair-1-dark: #f57c8c;
+  --voting-palette-pair-2-light: #f4978d;
+  --voting-palette-pair-2-dark: #ec8b81;
+  --voting-palette-pair-3-light: #feb69f;
+  --voting-palette-pair-3-dark: #efa38a;
+  --voting-palette-pair-4-light: #f1d075;
+  --voting-palette-pair-4-dark: #ebbd3d;
+  --voting-palette-pair-5-light: #85d697;
+  --voting-palette-pair-5-dark: #5fc976;
+  --voting-palette-pair-6-light: #a1d3a5;
+  --voting-palette-pair-6-dark: #97c99b;
+  --voting-palette-pair-7-light: #b4ccb9;
+  --voting-palette-pair-7-dark: #9bbaa2;
+  --voting-palette-pair-8-light: #b6d89c;
+  --voting-palette-pair-8-dark: #9bca78;
+  --voting-palette-pair-9-light: #95d7fe;
+  --voting-palette-pair-9-dark: #73c6f1;
+  --voting-palette-pair-10-light: #75c2fa;
+  --voting-palette-pair-10-dark: #4eb1f9;
+  --voting-palette-pair-11-light: #98bfff;
+  --voting-palette-pair-11-dark: #83adf3;
+  --voting-palette-pair-12-light: #a4dddf;
+  --voting-palette-pair-12-dark: #82c7ca;
+  --voting-palette-pair-13-light: #76d4d0;
+  --voting-palette-pair-13-dark: #64c8c4;
+  --voting-palette-pair-14-light: #bbb0f7;
+  --voting-palette-pair-14-dark: #a89be9;
+  --voting-palette-pair-15-light: #bda3ed;
+  --voting-palette-pair-15-dark: #a992d4;
+  --voting-palette-pair-16-light: #d99fec;
+  --voting-palette-pair-16-dark: #c38fd4;
+  --voting-palette-pair-17-light: #ffb8d1;
+  --voting-palette-pair-17-dark: #fc9cbe;
+  --voting-palette-pair-18-light: #ffa3c4;
+  --voting-palette-pair-18-dark: #fb84ae;
+  --voting-palette-pair-19-light: #dd90b6;
+  --voting-palette-pair-19-dark: #d578a6;
+
+  // Voting palette contrast
+  --voting-palette-pair-1-light-contrast: #ff6b7f;
+  --voting-palette-pair-1-dark-contrast: #ff4760;
+  --voting-palette-pair-2-light-contrast: #ff7f7a;
+  --voting-palette-pair-2-dark-contrast: #ff6661;
+  --voting-palette-pair-3-light-contrast: #ffac8e;
+  --voting-palette-pair-3-dark-contrast: #ff875c;
+  --voting-palette-pair-4-light-contrast: #f7eb6a;
+  --voting-palette-pair-4-dark-contrast: #edda0d;
+  --voting-palette-pair-5-light-contrast: #63eb82;
+  --voting-palette-pair-5-dark-contrast: #34e55d;
+  --voting-palette-pair-6-light-contrast: #a8f26f;
+  --voting-palette-pair-6-dark-contrast: #6fe515;
+  --voting-palette-pair-7-light-contrast: #5fdd79;
+  --voting-palette-pair-7-dark-contrast: #35d455;
+  --voting-palette-pair-8-light-contrast: #7fe7c2;
+  --voting-palette-pair-8-dark-contrast: #42dca5;
+  --voting-palette-pair-9-light-contrast: #8acaff;
+  --voting-palette-pair-9-dark-contrast: #70beff;
+  --voting-palette-pair-10-light-contrast: #66bfff;
+  --voting-palette-pair-10-dark-contrast: #33a9ff;
+  --voting-palette-pair-11-light-contrast: #8acaff;
+  --voting-palette-pair-11-dark-contrast: #57b3ff;
+  --voting-palette-pair-12-light-contrast: #7bdee5;
+  --voting-palette-pair-12-dark-contrast: #50d4dc;
+  --voting-palette-pair-13-light-contrast: #28e2da;
+  --voting-palette-pair-13-dark-contrast: #1edcd4;
+  --voting-palette-pair-14-light-contrast: #aa99ff;
+  --voting-palette-pair-14-dark-contrast: #9480ff;
+  --voting-palette-pair-15-light-contrast: #b891ff;
+  --voting-palette-pair-15-dark-contrast: #a270ff;
+  --voting-palette-pair-16-light-contrast: #bf75d9;
+  --voting-palette-pair-16-dark-contrast: #b652d9;
+  --voting-palette-pair-17-light-contrast: #fa86b0;
+  --voting-palette-pair-17-dark-contrast: #ed6697;
+  --voting-palette-pair-18-light-contrast: #fa86b0;
+  --voting-palette-pair-18-dark-contrast: #ed6697;
+  --voting-palette-pair-19-light-contrast: #ff6eb6;
+  --voting-palette-pair-19-dark-contrast: #ff3d9d;
+
+  // Buttons (disabled)
+  --btn-disabled: #c6d2de;
+  --btn-disabled-text: #88919b;
+
+  // Layout
+  --wrapper-max-width: 75ch;
+  --wrapper: 75ch;
+
+  // Border
+  --border-light: #e0e8fa;
+
+  // Backgrounds
+  --bg-hover: #f2f6ff;
+  --bg-disabled: #f0f2f5;
+  --bg-selected: #e5edff;
+  --bg-main: #f2f6ff;
+
+  // Button aliases
+  --button-blue: #5f88e5;
+  --icon-blue: #5f88e5;
+  --btn-fab: #275ddb;
+
+  // Heading colors
+  --h2Color: #3d4d71;
+  --h3Color: #3d4d71;
+  --h4Color: #3d4d71;
+  --h5Color: #3d4d71;
+
+  // Text aliases
+  --text-paragraph: #3d4d71;
+  --text-headline: #191e29;
+  --text-description: #7484a9;
+
+  // Header
+  --header: #5f88e5;
+
+  // Semantic background colors (for card/toast variants)
+  --bg-success-light: #f0fdf4;
+  --bg-error-light: #fff5f5;
+  --bg-warning-light: #fffbeb;
+  --bg-info-light: #eff6ff;
+
+  // Button hover/active states (used in atomic button)
+  --agree-hover: #4bb5a0;
+  --agree-active: #3d9a87;
+  --disagree-hover: #fe8ab7;
+  --disagree-active: #fe4c8d;
+  --approve-hover: #37756a;
+  --approve-active: #2d5f56;
+  --reject-hover: #be3b3d;
+  --add-btn-hover: #1f4eb8;
+  --red-hover: #d93636;
+  --icon-blue-hover: #2563c7;
+
+  // Skeleton loading colors
+  --skeleton-base: #e0e0e0;
+  --skeleton-shine: #f0f0f0;
+}
