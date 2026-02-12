@@ -69,7 +69,7 @@ Without intervention, options submitted earlier accumulate more evaluations simp
 The system calculates a **priority score** for each option to ensure fair distribution:
 
 ```
-Priority = (0.4 × Base) + (0.25 × Uncertainty) + (0.2 × Recency) + (0.15 × Threshold)
+Priority = (0.4 × Base) + (0.25 × Uncertainty) + (0.2 × Recency) + (0.15 × TopMean)
 ```
 
 ### The Four Fairness Factors
@@ -122,16 +122,26 @@ Recency Boost = 1 - (hoursOld / boostWindow)
 
 **Effect**: New submissions can catch up to older ones quickly.
 
-#### 4. Near-Threshold Bonus (15% weight) - Decision Clarity
+#### 4. Top-Mean Bonus (15% weight) - Validate Leaders
 
-Options near the neutral point (score ≈ 0) need more data to determine if they're good or bad:
+Top-performing options (relative to other proposals) need validation before being declared winners:
 
 ```
-If |mean| < SEM × 1.96:  → Bonus based on uncertainty
-If |mean| >= SEM × 1.96: → No bonus (clear decision)
+TopMean Bonus = percentileRank × (SEM / targetSEM)
 ```
 
-**Effect**: Borderline options get extra evaluations to clarify their status.
+Where:
+- **percentileRank**: 0.0 (lowest mean) to 1.0 (highest mean) among all proposals
+- **SEM / targetSEM**: Uncertainty factor (high = needs validation)
+
+| Proposal | Mean | Percentile | SEM | Bonus |
+|----------|------|------------|-----|-------|
+| A (top)  | +0.8 | 1.0 | 0.30 | **1.0** (leader needs validation) |
+| B        | +0.5 | 0.67 | 0.15 | **0.67** |
+| C        | +0.2 | 0.33 | 0.30 | **0.66** |
+| D (bottom) | -0.3 | 0.0 | 0.30 | **0.0** (no need to validate losers) |
+
+**Effect**: Top performers get extra evaluations to confirm they're truly the best. Bottom performers don't waste evaluation resources.
 
 ---
 
@@ -246,7 +256,7 @@ Deleted or merged options are filtered out.
 | No temporal bias | Recency boost for new submissions |
 | Statistical significance | SEM-based uncertainty tracking |
 | No small-group dominance | Uncertainty floor (min std dev = 0.5) |
-| Borderline clarification | Near-threshold bonus |
+| Leader validation | Top-mean bonus (percentile-based) |
 | Discovery of good options | Thompson sampling exploration |
 
 ---

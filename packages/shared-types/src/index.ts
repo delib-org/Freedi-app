@@ -42,8 +42,8 @@ export type { Approval } from "./models/approval/Approval";
 export { ApprovalSchema } from "./models/approval/Approval";
 
 // Suggestion models
-export type { Suggestion } from "./models/suggestion/suggestionModel";
-export { SuggestionSchema } from "./models/suggestion/suggestionModel";
+export type { Suggestion, TypingStatus } from "./models/suggestion/suggestionModel";
+export { SuggestionSchema, TypingStatusSchema } from "./models/suggestion/suggestionModel";
 
 // ChoseBy models
 export type {
@@ -201,6 +201,8 @@ export {
 export {
   createBasicStatement,
   createStatementObject,
+  createParagraphStatement,
+  createSuggestionStatement,
   defaultStatementSettings
 } from "./models/statement/StatementUtils";
 export type { CreateStatementParams } from "./models/statement/StatementUtils";
@@ -304,6 +306,7 @@ export type {
   Survey,
   SurveySettings,
   SurveyProgress,
+  SurveyLogo,
   QuestionOverrideSettings,
   SurveyDemographicPage,
   SurveyDemographicQuestion,
@@ -314,6 +317,7 @@ export {
   SurveySchema,
   SurveySettingsSchema,
   SurveyProgressSchema,
+  SurveyLogoSchema,
   SurveyStatus,
   SurveyStatusSchema,
   SuggestionMode,
@@ -337,6 +341,14 @@ export {
   interpretDCI,
   DEMOGRAPHIC_CONSTANTS,
 } from "./utils/madCalculation";
+
+// Consensus Calculation utilities
+export {
+  FLOOR_STD_DEV,
+  calcStandardError,
+  calcAgreement,
+  calcBinaryConsensus,
+} from "./utils/consensusCalculation";
 
 // Framing models
 export type {
@@ -416,3 +428,25 @@ export {
   sortChangesByImpact,
   filterSignificantChanges,
 } from "./models/version/versionModel";
+
+// Evidence models
+export { EvidenceType } from "./models/evidence/evidenceModel";
+
+// Popper Hebbian models
+export type { PopperHebbianScore } from "./models/popper/popperTypes";
+export { PopperHebbianScoreSchema } from "./models/popper/popperTypes";
+
+// Replacement Queue models (paragraph version control MVP)
+export type {
+  PendingReplacement,
+  VersionControlAudit,
+  VersionArchive,
+} from "./models/version/replacementQueueModel";
+
+export {
+  PendingReplacementSchema,
+  VersionControlAuditSchema,
+  VersionArchiveSchema,
+  ReplacementQueueStatus,
+  AuditAction,
+} from "./models/version/replacementQueueModel";

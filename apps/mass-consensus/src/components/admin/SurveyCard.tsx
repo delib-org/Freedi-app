@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
@@ -9,57 +9,30 @@ import { Survey, SurveyStatus } from '@/types/survey';
 import ExportModal from './ExportModal';
 import styles from './Admin.module.scss';
 
-interface SurveyCardProps {
-  survey: Survey;
-  onDelete: (surveyId: string) => void;
-  onStatusChange?: (surveyId: string, newStatus: SurveyStatus) => void;
-}
-
-interface SurveyStats {
+export interface SurveyStats {
   responseCount: number;
   completionCount: number;
   completionRate: number;
 }
 
+interface SurveyCardProps {
+  survey: Survey;
+  stats: SurveyStats | null;
+  onDelete: (surveyId: string) => void;
+  onStatusChange?: (surveyId: string, newStatus: SurveyStatus) => void;
+}
+
 /**
  * Enhanced survey card with stats display
  * Shows title, status, question count, response stats, and quick actions
+ * Stats are passed from parent (batch-fetched) to avoid N+1 API calls
  */
-export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyCardProps) {
+export default function SurveyCard({ survey, stats, onDelete, onStatusChange }: SurveyCardProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const { refreshToken } = useAuth();
-  const [stats, setStats] = useState<SurveyStats | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
   const [isActivating, setIsActivating] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
-
-  const fetchStats = useCallback(async () => {
-    try {
-      const token = await refreshToken();
-      if (!token) {
-        router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
-        return;
-      }
-
-      const response = await fetch(`/api/surveys/${survey.surveyId}/stats`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
-      setStatsLoading(false);
-    }
-  }, [survey.surveyId, refreshToken, router]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
 
   const getStatusBadgeClass = () => {
     switch (survey.status) {
@@ -146,11 +119,7 @@ export default function SurveyCard({ survey, onDelete, onStatusChange }: SurveyC
 
       {/* Stats section */}
       <div className={styles.cardStats}>
-        {statsLoading ? (
-          <div className={styles.statsLoading}>
-            <div className={styles.miniSpinner} />
-          </div>
-        ) : stats ? (
+        {stats ? (
           <>
             <div className={styles.statsRow}>
               <span className={styles.statValue}>{stats.responseCount}</span>

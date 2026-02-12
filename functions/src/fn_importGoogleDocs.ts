@@ -4,7 +4,7 @@
 
 import { Request, Response } from "firebase-functions/v1";
 import { google, docs_v1 } from "googleapis";
-import { Collections } from "delib-npm";
+import { Collections } from "@freedi/shared-types";
 import { db } from "./index";
 
 /**

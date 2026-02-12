@@ -87,12 +87,13 @@ export async function POST(
     const db = getFirestoreAdmin();
     const approvalId = `${userId}--${paragraphId}`;
 
-    // For embedded paragraphs, the topParentId is the documentId itself
-    // We no longer look up individual paragraph documents since they're embedded
+    // For statement-based paragraphs:
+    // - paragraphId IS the statementId (each paragraph is a Statement document)
+    // - This allows the Firebase function (fn_approval.ts) to update the paragraph's documentApproval field
     const approvalData = {
       approvalId,
-      statementId: documentId, // Reference to parent document
-      paragraphId, // Reference to embedded paragraph
+      statementId: paragraphId, // For statement-based paragraphs, paragraphId IS the statementId
+      paragraphId, // Keep for backward compatibility and clarity
       documentId,
       topParentId: documentId,
       userId,

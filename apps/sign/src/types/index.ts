@@ -12,11 +12,17 @@ export type { Suggestion } from '@freedi/shared-types';
 export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 
 /**
- * Sign app extension of Paragraph with isNonInteractive property
- * Used for explanatory text that users cannot interact with (no approve/reject/comment)
+ * Sign app extension of Paragraph with additional properties
+ * - isNonInteractive: For explanatory text that users cannot interact with
+ * - documentApproval: Approval statistics for this paragraph (for statement-based paragraphs)
  */
 export interface Paragraph extends SharedParagraph {
   isNonInteractive?: boolean;
+  documentApproval?: {
+    approved: number;
+    totalVoters: number;
+    averageApproval: number;
+  };
 }
 
 /**
@@ -160,6 +166,9 @@ export interface DocumentSettings {
   allowHeaderReactions?: boolean;
   /** Custom colors for each heading level */
   headerColors?: HeaderColors;
+  // Non-interactive element styling
+  /** When true, non-interactive elements use normal text color instead of dimmed/disabled styling */
+  nonInteractiveNormalStyle?: boolean;
 }
 
 // Default branding constants
@@ -189,4 +198,5 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   enhancedVisibility: false,
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
+  nonInteractiveNormalStyle: false,
 };

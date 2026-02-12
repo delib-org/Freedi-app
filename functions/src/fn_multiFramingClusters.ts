@@ -5,7 +5,7 @@ import {
   Statement,
   StatementSchema,
   StatementType,
-} from "delib-npm";
+} from "@freedi/shared-types";
 import {
   Framing,
   FramingRequest,

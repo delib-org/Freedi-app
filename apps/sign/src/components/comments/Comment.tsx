@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, UIState } from '@/store/uiStore';
 import { getVisitorId } from '@/lib/utils/visitor';
+import { sanitizeHTML } from '@/lib/utils/sanitize';
+import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -24,6 +26,14 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.statement);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Convert comment text: preserve newlines as paragraphs and support markdown
+  const sanitizedContent = useMemo(() => {
+    const content = comment.statement || '';
+    const htmlContent = markdownToHtml(content);
+
+    return sanitizeHTML(htmlContent);
+  }, [comment.statement]);
 
   // Get effective ID - use userId if logged in, otherwise use visitorId for anonymous
   const visitorId = getVisitorId();
@@ -262,7 +272,11 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
           </div>
         </div>
       ) : (
-        <p className={styles.content}>{comment.statement}</p>
+        <div
+          className={styles.content}
+          dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+          suppressHydrationWarning
+        />
       )}
 
       {/* Evaluation section - show for all users (including anonymous) except owners */}

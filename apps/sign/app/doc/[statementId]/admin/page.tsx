@@ -1,6 +1,6 @@
 import { cookies, headers } from 'next/headers';
 import { getDocumentStats } from '@/lib/firebase/queries';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getUserIdFromCookies } from '@/lib/utils/user';
 import { getTranslations, detectLanguage, COOKIE_KEY } from '@freedi/shared-i18n/next';
 import ParagraphsTable from '@/components/admin/ParagraphsTable';
 import QuickActions from './QuickActions';
@@ -14,7 +14,8 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
   const { statementId } = await params;
   const cookieStore = await cookies();
   const headersList = await headers();
-  const userId = getUserIdFromCookie(cookieStore.toString());
+  // Use proper Next.js cookies API instead of toString()
+  const userId = getUserIdFromCookies(cookieStore);
 
   // Get translations
   const cookieValue = cookieStore.get(COOKIE_KEY)?.value;

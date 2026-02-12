@@ -1,0 +1,248 @@
+/**
+ * DiffView Component Styles
+ * BEM naming convention
+ *
+ * Color coding follows GitHub conventions:
+ * - Green for additions
+ * - Red for removals
+ * - Neutral for unchanged
+ */
+
+.diff {
+	font-family: inherit;
+	font-size: 0.875rem;
+	line-height: 1.6;
+
+	// Identical state
+	&__identical {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-sm);
+		padding: var(--spacing-md);
+		background: rgba(76, 175, 80, 0.1);
+		border-radius: var(--radius-sm);
+		color: var(--agree);
+		font-weight: 500;
+	}
+
+	// Summary stats
+	&__summary {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-md);
+		margin-bottom: var(--spacing-sm);
+		padding-bottom: var(--spacing-sm);
+		border-bottom: 1px solid var(--border-light);
+	}
+
+	&__stats {
+		display: flex;
+		gap: var(--spacing-md);
+		margin-top: var(--spacing-sm);
+		padding-top: var(--spacing-sm);
+		border-top: 1px solid var(--border-light);
+		font-size: 0.75rem;
+	}
+
+	&__statAdded {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		color: #2e7d32;
+		font-weight: 600;
+
+		svg {
+			flex-shrink: 0;
+		}
+	}
+
+	&__statRemoved {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		color: #c62828;
+		font-weight: 600;
+
+		svg {
+			flex-shrink: 0;
+		}
+	}
+
+	&__statPercent {
+		color: var(--text-secondary);
+	}
+
+	// Inline mode
+	&__inline {
+		padding: var(--spacing-md);
+		background: var(--background);
+		border-radius: var(--radius-sm);
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	// Compact mode
+	&__compact {
+		padding: var(--spacing-sm) var(--spacing-md);
+		background: var(--background);
+		border-radius: var(--radius-sm);
+		white-space: pre-wrap;
+		word-break: break-word;
+		max-height: 100px;
+		overflow: hidden;
+		position: relative;
+
+		&::after {
+			content: '';
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 30px;
+			background: linear-gradient(transparent, var(--background));
+			pointer-events: none;
+		}
+	}
+
+	// Side by side mode
+	&--sideBySide {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: var(--spacing-md);
+
+		@media (max-width: 768px) {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	&__column {
+		display: flex;
+		flex-direction: column;
+	}
+
+	&__columnHeader {
+		padding: var(--spacing-sm) var(--spacing-md);
+		font-size: 0.75rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		margin: 0;
+		border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+
+		&--removed {
+			background: rgba(244, 67, 54, 0.1);
+			color: #c62828;
+		}
+
+		&--added {
+			background: rgba(76, 175, 80, 0.1);
+			color: #2e7d32;
+		}
+	}
+
+	&__content {
+		flex: 1;
+		padding: var(--spacing-md);
+		background: var(--background);
+		border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+		border: 1px solid var(--border-light);
+		border-top: none;
+		min-height: 100px;
+	}
+
+	&__text {
+		white-space: pre-wrap;
+		word-break: break-word;
+	}
+
+	&__lineNumber {
+		display: inline-block;
+		width: 2rem;
+		color: var(--text-caption);
+		user-select: none;
+		text-align: right;
+		padding-right: var(--spacing-sm);
+		margin-right: var(--spacing-sm);
+		border-right: 1px solid var(--border-light);
+	}
+
+	// Segment styling
+	&__segment {
+		&--unchanged {
+			color: var(--text-body);
+		}
+
+		&--added {
+			background: rgba(76, 175, 80, 0.2);
+			color: #1b5e20;
+			border-radius: 2px;
+			padding: 0 2px;
+			text-decoration: none;
+
+			// Accessibility: underline for non-color indicators
+			&::before {
+				content: '';
+			}
+		}
+
+		&--removed {
+			background: rgba(244, 67, 54, 0.2);
+			color: #b71c1c;
+			border-radius: 2px;
+			padding: 0 2px;
+			text-decoration: line-through;
+		}
+	}
+}
+
+// High contrast mode
+body.a11y-contrast-light,
+body.a11y-contrast-dark {
+	.diff {
+		&__segment {
+			&--added {
+				background: #006600;
+				color: white;
+				font-weight: 600;
+			}
+
+			&--removed {
+				background: #cc0000;
+				color: white;
+				font-weight: 600;
+			}
+		}
+	}
+}
+
+// RTL support
+[dir="rtl"] {
+	.diff {
+		&__lineNumber {
+			text-align: left;
+			padding-left: var(--spacing-sm);
+			padding-right: 0;
+			margin-left: var(--spacing-sm);
+			margin-right: 0;
+			border-left: 1px solid var(--border-light);
+			border-right: none;
+		}
+	}
+}
+
+// Print styles
+@media print {
+	.diff {
+		&__segment {
+			&--added {
+				border: 1px solid #2e7d32;
+				background: none;
+			}
+
+			&--removed {
+				border: 1px solid #c62828;
+				background: none;
+			}
+		}
+	}
+}

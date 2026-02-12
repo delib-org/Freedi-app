@@ -5,6 +5,7 @@ export enum StatementType {
 	document = 'document',
 	group = 'group',
 	comment = 'comment',
+	paragraph = 'paragraph',
 }
 
 

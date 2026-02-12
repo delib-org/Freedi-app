@@ -1,4 +1,4 @@
-import { Results, Statement } from "delib-npm";
+import { Results, Statement } from "@freedi/shared-types";
 import dagre from "@dagrejs/dagre";
 import { Edge, Node, Position } from "reactflow";
 import { statementTitleToDisplay } from "@/controllers/general/helpers";

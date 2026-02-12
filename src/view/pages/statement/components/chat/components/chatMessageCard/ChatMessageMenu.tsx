@@ -10,7 +10,7 @@ import { validateStatementTypeHierarchy } from "@/controllers/general/helpers";
 import { useTranslation } from "@/controllers/hooks/useTranslation";
 import Menu from "@/view/components/menu/Menu";
 import MenuOption from "@/view/components/menu/MenuOption";
-import { Statement, StatementType } from "delib-npm";
+import { Statement, StatementType } from "@freedi/shared-types";
 
 interface ChatMessageMenuProps {
   statement: Statement;

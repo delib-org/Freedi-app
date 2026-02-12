@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, selectToasts } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
@@ -18,6 +18,7 @@ import RejectionFeedbackModal from './RejectionFeedbackModal';
 import Toast from '../shared/Toast';
 import { DemographicSurveyModal } from '../demographics';
 import { HeatMapProvider, HeatMapToolbar, HeatMapLegend, DemographicFilter } from '../heatMap';
+import { useRealtimeSuggestionCounts } from '@/hooks/useParagraphSuggestions';
 
 // Animation timing constants
 const ANIMATION_DURATION = {
@@ -335,6 +336,9 @@ export default function DocumentClient({
     }
   }, [suggestionCounts, enableSuggestions, initializeSuggestionCounts]);
 
+  // Real-time suggestion count updates
+  useRealtimeSuggestionCounts(documentId, enableSuggestions);
+
   // Get current paragraph content for suggestions modal
   const currentParagraph = useMemo(() => {
     if (!modalContext?.paragraphId) return null;
@@ -434,7 +438,11 @@ export default function DocumentClient({
       <HeatMapLegend />
 
       {/* Demographic Filter - admin only for privacy */}
-      {isAdmin && <DemographicFilter documentId={documentId} />}
+      {isAdmin && (
+        <Suspense fallback={null}>
+          <DemographicFilter documentId={documentId} />
+        </Suspense>
+      )}
 
       {/* Comments Modal */}
       {activeModal === 'comments' && modalContext?.paragraphId && !isModalMinimized && (
@@ -472,7 +480,6 @@ export default function DocumentClient({
             paragraphId={modalContext.paragraphId}
             documentId={documentId}
             originalContent={currentParagraph?.content || ''}
-            userId={user?.uid || null}
             onClose={closeModal}
           />
         </Modal>

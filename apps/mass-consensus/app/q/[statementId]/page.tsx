@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { getQuestionFromFirebase, getRandomOptions } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
-import SolutionFeed from '@/components/question/SolutionFeed';
+import SwipeInterfaceWrapper from '@/components/swipe/SwipeInterfaceWrapper';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { notFound } from 'next/navigation';
@@ -64,7 +64,7 @@ export default async function QuestionPage({ params }: PageProps) {
 
           {/* Suspense boundary for streaming */}
           <Suspense fallback={<SkeletonLoader count={3} />}>
-            <SolutionFeed
+            <SwipeInterfaceWrapper
               question={question}
               initialSolutions={initialBatch}
             />

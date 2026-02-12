@@ -1,6 +1,6 @@
 import { collection, query, Unsubscribe, where, getDocs, limit, orderBy, startAfter, DocumentSnapshot, QueryConstraint } from "firebase/firestore";
 import { DB, FireStore } from "../config";
-import { Collections, WaitingMember, StatementSubscription, Role, StatementType } from "delib-npm";
+import { Collections, WaitingMember, StatementSubscription, Role, StatementType } from "@freedi/shared-types";
 import { store } from "@/redux/store";
 import { removeWaitingMember, setWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
 import { createManagedCollectionListener, generateListenerKey } from "@/controllers/utils/firestoreListenerHelpers";

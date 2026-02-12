@@ -142,12 +142,10 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 
 	return (
 		<div className={styles.suggestionComment}>
-			<div
+			<button
+				type="button"
 				className={styles.commentHeader}
 				onClick={toggleAccordion}
-				onKeyDown={(e) => { if (e.key === 'Enter') toggleAccordion(); }}
-				tabIndex={0}
-				role="button"
 				aria-expanded={isOpen}
 			>
 				<div className={styles.commentCard}>
@@ -161,7 +159,7 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 				<span className={`${styles.accordionIcon} ${isOpen ? styles.open : ''}`}>
 					<Arrow />
 				</span>
-			</div>
+			</button>
 			{isOpen && (
 
 				<div ref={commentsRef} className={styles.subComments}>

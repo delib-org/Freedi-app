@@ -1,0 +1,134 @@
+// =============================================================================
+// Utility Classes
+// Global utility/helper classes used across the application
+// =============================================================================
+
+@use './mixins' as *;
+
+.wrapperAll {
+  position: relative;
+  margin: auto;
+  max-width: var(--maxWidthOnPC);
+  min-width: 75ch;
+  padding: 10px;
+}
+
+.simple-wrapper {
+  width: var(--wrapper);
+  margin: auto;
+}
+
+.wrapper {
+  flex: auto;
+  width: 100%;
+  height: fit-content;
+  max-width: var(--wrapper-max-width);
+  gap: 1rem;
+  position: relative;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 100px;
+
+  @include tablet-small {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  // Mobile: more compact spacing
+  @include mobile {
+    gap: 0.5rem;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-bottom: 80px;
+  }
+}
+
+.legacy-card {
+  color: var(--card-menu);
+  border-radius: 3px;
+  direction: rtl;
+  padding: 10px;
+  margin: 5px;
+  box-sizing: border-box;
+  cursor: pointer;
+  user-select: none;
+
+  h2 {
+    color: var(--black);
+    font-size: var(--size15);
+  }
+
+  p {
+    color: var(--text-paragraph);
+    font-size: var(--size13);
+  }
+}
+
+.hand {
+  font-family: "Patrick Hand", cursive;
+}
+
+.hidden {
+  display: none;
+}
+
+.scroll {
+  overflow-y: auto;
+}
+
+.icon {
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  margin: 0.5rem 0.7rem 0px 0px;
+}
+
+.center {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.clickable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.draggable {
+  cursor: grab;
+}
+
+.href {
+  &--undecorated {
+    text-decoration: none;
+    color: inherit;
+  }
+}
+
+.notificationsCircle {
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 2rem;
+  background-color: var(--icons-blue-dark);
+  color: white;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.description {
+  font-size: 1.1rem;
+  font-weight: 400;
+  margin: 1.8rem 36px 1rem 36px;
+  color: var(--text-body);
+
+  p {
+    line-height: 1.5rem;
+    margin-bottom: 1rem;
+  }
+}

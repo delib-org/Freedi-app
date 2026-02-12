@@ -40,7 +40,8 @@ export default function DemographicFilter({ documentId, className }: Demographic
   useEffect(() => {
     console.info('[DemographicFilter] Loading demographics for document:', documentId);
     loadAvailableDemographics(documentId);
-  }, [documentId, loadAvailableDemographics]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [documentId]);
 
   // Debug: Log available demographics
   useEffect(() => {

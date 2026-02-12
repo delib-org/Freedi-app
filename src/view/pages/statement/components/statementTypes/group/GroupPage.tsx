@@ -5,7 +5,7 @@ import { StatementContext } from '../../../StatementCont';
 import styles from './GroupPage.module.scss';
 import AddButton from '../../addButton/AddButton';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
-import { Role, StatementType } from "delib-npm"
+import { Role, StatementType } from "@freedi/shared-types"
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { hasParagraphsContent, getParagraphsText } from '@/utils/paragraphUtils';
 

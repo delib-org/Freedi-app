@@ -12,7 +12,7 @@ import ReactFlow, {
 	ReactFlowInstance,
 	useViewport,
 } from 'reactflow';
-import '../mapHelpers/reactFlow.scss';
+import '../mapHelpers/reactFlow.module.scss';
 import 'reactflow/dist/style.css';
 
 // Custom imports

@@ -1,3 +1,5 @@
+@use './mixins' as *;
+
 .roomsCards {
     &__admin {
         max-width: 75ch;
@@ -15,15 +17,10 @@
         padding: 1.2rem;
         box-sizing: border-box;
 
-        //on mobile
-        @media (max-width: 768px) {
+        @include tablet-small {
             grid-template-columns: repeat(2, 1fr);
             grid-auto-rows: 100px;
             width: 100%;
         }
-
-   
     }
-
-
 }
