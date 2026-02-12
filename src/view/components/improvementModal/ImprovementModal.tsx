@@ -2,8 +2,6 @@ import React, { FC, useState } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import styles from './ImprovementModal.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import '@/view/style/buttons.scss';
-import '@/view/style/input.scss';
 
 interface ImprovementModalProps {
 	isOpen: boolean;
@@ -49,7 +47,7 @@ const ImprovementModal: FC<ImprovementModalProps> = ({
 					</label>
 					<textarea
 						id="improvement-instructions"
-						className="inputGeneral"
+						className={styles.textarea}
 						value={instructions}
 						onChange={(e) => setInstructions(e.target.value)}
 						placeholder={t('Enter improvement instructions (optional)')}
@@ -61,16 +59,16 @@ const ImprovementModal: FC<ImprovementModalProps> = ({
 					</p>
 				</div>
 
-				<div className="btns btns--end">
+				<div className={styles.btns}>
 					<button
-						className="btn btn--secondary"
+						className={styles.btnSecondary}
 						onClick={handleClose}
 						disabled={isLoading}
 					>
 						{t('Cancel')}
 					</button>
 					<button
-						className={`btn btn--primary ${isLoading ? 'btn--disabled' : ''}`}
+						className={`${styles.btnPrimary} ${isLoading ? styles.btnDisabled : ''}`}
 						onClick={handleImprove}
 						disabled={isLoading}
 					>

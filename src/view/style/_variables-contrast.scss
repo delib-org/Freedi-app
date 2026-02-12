@@ -1,0 +1,25 @@
+// =============================================================================
+// High Contrast Accessibility Overrides
+// Applied when user has prefers-contrast: more enabled
+// =============================================================================
+
+@media (prefers-contrast: more) {
+  :root {
+    // Gray scale high contrast overrides
+    --gray0-1: var(--gray0-1-high-contrast);
+    --gray0-1-border: var(--gray0-1-border-high-contrast);
+    --gray0-1-text: var(--gray0-1-text-high-contrast);
+
+    --gray0-125: var(--gray0-125-high-contrast);
+    --gray0-125-border: var(--gray0-125-border-high-contrast);
+    --gray0-125-text: var(--gray0-125-text-high-contrast);
+
+    --gray0-15: var(--gray0-15-high-contrast);
+    --gray0-15-border: var(--gray0-15-border-high-contrast);
+    --gray0-15-text: var(--gray0-15-text-high-contrast);
+
+    --gray0-2: var(--gray0-2-high-contrast);
+    --gray0-2-border: var(--gray0-2-border-high-contrast);
+    --gray0-2-text: var(--gray0-2-text-high-contrast);
+  }
+}
