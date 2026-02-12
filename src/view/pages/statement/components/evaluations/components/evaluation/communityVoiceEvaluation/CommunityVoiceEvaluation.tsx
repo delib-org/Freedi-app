@@ -58,17 +58,10 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 							evaluationScore={evaluationScore}
 							statement={statement}
 							enableEvaluation={enableEvaluation}
+							showLabels={learning.communityVoiceLabels > 0}
 						/>
 					))}
 				</div>
-				{learning.evaluation > 0 && (
-					<div className={styles.explain}>
-						<div className={`${styles['evaluation-explain']}`}>
-							<span>{t('Less related')}</span>
-							<span>{t('More related')}</span>
-						</div>
-					</div>
-				)}
 			</div>
 			<div className={styles['evaluation-score']}>
 				{showEvaluation &&
@@ -96,6 +89,7 @@ interface VoiceOptionButtonProps {
 	evaluationScore: number | undefined;
 	option: CommunityVoiceOption;
 	enableEvaluation?: boolean;
+	showLabels: boolean;
 }
 
 const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
@@ -103,6 +97,7 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 	evaluationScore,
 	statement,
 	enableEvaluation = true,
+	showLabels,
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useUserConfig();
@@ -135,7 +130,7 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 		);
 
 		decreaseLearning({
-			evaluation: true,
+			communityVoiceLabel: true,
 		});
 	};
 
@@ -154,9 +149,11 @@ const VoiceOptionButton: FC<VoiceOptionButtonProps> = ({
 			>
 				<img src={option.svg} alt={t(option.alt)} />
 			</button>
-			<span className={styles['voice-label']}>
-				{t(option.labelKey)}
-			</span>
+			{showLabels && (
+				<span className={styles['voice-label']}>
+					{t(option.labelKey)}
+				</span>
+			)}
 		</div>
 	);
 
