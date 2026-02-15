@@ -13,6 +13,7 @@ import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import {
   trackPageView,
   trackEvaluation,
@@ -613,6 +614,7 @@ export default function SolutionFeedClient({
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
           questionText={question.statement}
+          questionDescription={getParagraphsText(question.paragraphs)}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
         />
 

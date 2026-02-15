@@ -38,6 +38,7 @@ import { submitComment } from '@/controllers/commentController';
 import { RATING, RATING_CONFIG } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import { useToast } from '@/components/shared/Toast';
 import {
   trackProposalPromptShown,
@@ -390,6 +391,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         onSubmitSuccess={handleProposalSuccess}
         questionId={question.statementId}
         questionText={question.statement}
+        questionDescription={getParagraphsText(question.paragraphs)}
         userId={userId}
         userName={userName}
       />
@@ -415,6 +417,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         }}
         questionId={question.statementId}
         questionText={question.statement}
+        questionDescription={getParagraphsText(question.paragraphs)}
         userId={userId}
         userName={userName}
         requiresSolution={requiresSolution}

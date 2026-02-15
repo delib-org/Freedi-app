@@ -24,6 +24,8 @@ interface SolutionPromptModalProps {
   onSubmitSuccess: () => void;
   title?: string;
   questionText?: string;
+  /** Additional description/context for the question (from paragraphs) */
+  questionDescription?: string;
   /** Controls UX friction when adding new suggestions vs merging */
   suggestionMode?: SuggestionMode;
   /** When true, shows "Add your answer later" instead of "Cancel" */
@@ -43,6 +45,7 @@ export default function SolutionPromptModal({
   onSubmitSuccess,
   title = 'Add Your Solution',
   questionText,
+  questionDescription,
   suggestionMode = SuggestionMode.encourage,
   requiresSolution = false,
   hasCheckedUserSolutions: _hasCheckedUserSolutions = false,
@@ -436,7 +439,12 @@ export default function SolutionPromptModal({
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
                   <InlineMarkdown text={questionText} />
                 </p>
-                {questionText.length > 150 && (
+                {questionDescription && (
+                  <p className={`${styles.questionDescription} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
+                    <InlineMarkdown text={questionDescription} />
+                  </p>
+                )}
+                {(questionText.length > 150 || questionDescription) && (
                   <button
                     type="button"
                     className={styles.expandButton}
