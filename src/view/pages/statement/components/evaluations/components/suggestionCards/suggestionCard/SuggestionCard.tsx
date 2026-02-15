@@ -333,18 +333,6 @@ const SuggestionCard: FC<Props> = ({
 				</button>
 			)}
 
-			{/* Quick hide button - appears on hover for admins on visible cards */}
-			{!statement.hide && isAuthorized && (
-				<button
-					type="button"
-					className={styles.quickHideBtn}
-					onClick={handleToggleHide}
-					title={t('Hide')}
-					aria-label={t('Hide this card from participants')}
-				>
-					<EyeCrossIcon />
-				</button>
-			)}
 
 			{/* Loader overlay when improving */}
 			{isImproving && (
