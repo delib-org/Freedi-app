@@ -2436,5 +2436,17 @@
   "Failed to load new solutions. Please try again.": "טעינת פתרונות חדשים נכשלה. אנא נסה שוב.",
   "No solutions yet heading": "אין פתרונות עדיין",
   "Innovator": "חדשן",
-  "Team Player": "שחקן צוות"
+  "Team Player": "שחקן צוות",
+  "displayMode": "מצב תצוגה",
+  "displayModeDescription": "בחר כיצד המשתתפים רואים ומעריכים הצעות",
+  "displayModeSwipe": "החלקה (סגנון טינדר)",
+  "displayModeSwipeDesc": "כרטיס אחד בכל פעם. משתמשים מחליקים או לוחצים כפתורים כדי לדרג כל הצעה.",
+  "displayModeClassic": "קלאסי (ערימת כרטיסים)",
+  "displayModeClassicDesc": "ערימת כרטיסים עם החלקה שמאלה/ימינה. מציג התקדמות ותצוגה מקדימה של הערימה.",
+  "Swipe or tap to rate": "החלק או הקש כדי לדרג",
+  "All Done!": "סיימת!",
+  "Batch Complete!": "סבב הושלם!",
+  "View Results": "צפה בתוצאות",
+  "Get More Suggestions": "קבל עוד הצעות",
+  "View Progress": "צפה בהתקדמות"
 }

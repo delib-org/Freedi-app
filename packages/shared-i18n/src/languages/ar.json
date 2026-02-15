@@ -1734,5 +1734,17 @@
   "Failed to load new solutions. Please try again.": "فشل تحميل حلول جديدة. يرجى المحاولة مرة أخرى.",
   "No solutions yet heading": "لا توجد حلول بعد",
   "Innovator": "مبتكر",
-  "Team Player": "لاعب فريق"
+  "Team Player": "لاعب فريق",
+  "displayMode": "وضع العرض",
+  "displayModeDescription": "اختر كيف يرى المشاركون ويقيّمون الاقتراحات",
+  "displayModeSwipe": "تمرير (نمط تيندر)",
+  "displayModeSwipeDesc": "بطاقة واحدة في كل مرة. يمرر المستخدمون أو ينقرون الأزرار لتقييم كل اقتراح.",
+  "displayModeClassic": "كلاسيكي (رزمة بطاقات)",
+  "displayModeClassicDesc": "رزمة بطاقات مع تمرير يسار/يمين. يعرض تقدم الدفعة ومعاينة الرزمة.",
+  "Swipe or tap to rate": "مرر أو انقر للتقييم",
+  "All Done!": "انتهيت!",
+  "Batch Complete!": "اكتملت الدفعة!",
+  "View Results": "عرض النتائج",
+  "Get More Suggestions": "احصل على المزيد من الاقتراحات",
+  "View Progress": "عرض التقدم"
 }

@@ -2,10 +2,11 @@ import { Suspense } from 'react';
 import { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { getSurveyWithQuestions, getSurveyDemographicQuestions } from '@/lib/firebase/surveys';
-import { SurveyStatus, buildSurveyFlow, isQuestionFlowItem, isDemographicFlowItem, isExplanationFlowItem, getTotalFlowLength } from '@/types/survey';
+import { SurveyStatus, DisplayMode, buildSurveyFlow, isQuestionFlowItem, isDemographicFlowItem, isExplanationFlowItem, getTotalFlowLength } from '@/types/survey';
 import { getAdaptiveBatch } from '@/lib/firebase/queries';
 import QuestionHeader from '@/components/question/QuestionHeader';
 import SwipeInterfaceWrapper from '@/components/swipe/SwipeInterfaceWrapper';
+import SolutionFeedClient from '@/components/question/SolutionFeedClient';
 import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import SurveyQuestionWrapper from '@/components/survey/SurveyQuestionWrapper';
@@ -180,13 +181,21 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             {/* Question Header */}
             <QuestionHeader question={question} />
 
-            {/* Swipe Interface - Tinder-style evaluation */}
+            {/* Evaluation Interface - Swipe (zone-based) or Classic (card stack) */}
             <Suspense fallback={<SkeletonLoader count={3} />}>
-              <SwipeInterfaceWrapper
-                question={question}
-                initialSolutions={initialBatch}
-                mergedSettings={mergedSettings}
-              />
+              {mergedSettings.displayMode === DisplayMode.classic ? (
+                <SolutionFeedClient
+                  question={question}
+                  initialSolutions={initialBatch}
+                  mergedSettings={mergedSettings}
+                />
+              ) : (
+                <SwipeInterfaceWrapper
+                  question={question}
+                  initialSolutions={initialBatch}
+                  mergedSettings={mergedSettings}
+                />
+              )}
             </Suspense>
           </SurveyQuestionWrapper>
         </LanguageOverrideProvider>

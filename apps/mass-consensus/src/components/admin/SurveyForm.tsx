@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Statement, QuestionOverrideSettings, SurveyDemographicPage, UserDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode } from '@/types/survey';
+import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode, DisplayMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
@@ -517,6 +517,49 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
                 <span className={styles.radioLabel}>{t('suggestionModeRestrict') || 'Encourage Merging'}</span>
                 <span className={styles.radioDescription}>
                   {t('suggestionModeRestrictDesc') || '"Merge" is primary with confirmation for new. Consolidates similar ideas.'}
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Display Mode Toggle */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('displayMode') || 'Display Mode'}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('displayModeDescription') || 'Choose how participants see and evaluate suggestions'}
+        </p>
+
+        <div className={styles.formGroup}>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="displayMode"
+                value={DisplayMode.swipe}
+                checked={(settings.displayMode === DisplayMode.swipe) || !settings.displayMode}
+                onChange={() => setSettings({ ...settings, displayMode: DisplayMode.swipe })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('displayModeSwipe') || 'Swipe (Tinder-style)'}</span>
+                <span className={styles.radioDescription}>
+                  {t('displayModeSwipeDesc') || 'One card at a time. Users swipe or tap buttons to rate each suggestion.'}
+                </span>
+              </div>
+            </label>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="displayMode"
+                value={DisplayMode.classic}
+                checked={settings.displayMode === DisplayMode.classic}
+                onChange={() => setSettings({ ...settings, displayMode: DisplayMode.classic })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('displayModeClassic') || 'Classic (Multi-card)'}</span>
+                <span className={styles.radioDescription}>
+                  {t('displayModeClassicDesc') || 'Card stack with swipe left/right. Shows batch progress and card stack preview.'}
                 </span>
               </div>
             </label>

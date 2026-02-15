@@ -1,4 +1,4 @@
-import { SurveySettings, QuestionOverrideSettings, SuggestionMode } from '@/types/survey';
+import { SurveySettings, QuestionOverrideSettings, SuggestionMode, DisplayMode } from '@/types/survey';
 
 /**
  * Merged settings that apply to a specific question
@@ -12,6 +12,8 @@ export interface MergedQuestionSettings {
   randomizeOptions: boolean;
   /** Controls UX friction when adding new suggestions vs merging */
   suggestionMode: SuggestionMode;
+  /** Display mode: swipe for tinder-style, classic for multi-card */
+  displayMode: DisplayMode;
 }
 
 /**
@@ -61,6 +63,9 @@ export function getMergedSettings(
       questionOverrides?.suggestionMode ??
       surveySettings.suggestionMode ??
       SuggestionMode.restrict, // Backward compatible: existing surveys use restrict (current behavior)
+
+    // Display mode (survey-level only, no per-question override)
+    displayMode: surveySettings.displayMode ?? DisplayMode.swipe,
   };
 }
 

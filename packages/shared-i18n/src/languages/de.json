@@ -1710,5 +1710,17 @@
   "Failed to load new solutions. Please try again.": "Neue Lösungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",
   "No solutions yet heading": "Noch keine Lösungen",
   "Innovator": "Innovator",
-  "Team Player": "Teamplayer"
+  "Team Player": "Teamplayer",
+  "displayMode": "Anzeigemodus",
+  "displayModeDescription": "Wählen Sie, wie Teilnehmer Vorschläge sehen und bewerten",
+  "displayModeSwipe": "Wischen (Tinder-Stil)",
+  "displayModeSwipeDesc": "Eine Karte nach der anderen. Benutzer wischen oder tippen auf Schaltflächen, um jeden Vorschlag zu bewerten.",
+  "displayModeClassic": "Klassisch (Kartenstapel)",
+  "displayModeClassicDesc": "Kartenstapel mit Wischen nach links/rechts. Zeigt Stapelfortschritt und Kartenvorschau.",
+  "Swipe or tap to rate": "Wischen oder tippen zum Bewerten",
+  "All Done!": "Alles erledigt!",
+  "Batch Complete!": "Stapel abgeschlossen!",
+  "View Results": "Ergebnisse anzeigen",
+  "Get More Suggestions": "Mehr Vorschläge erhalten",
+  "View Progress": "Fortschritt anzeigen"
 }

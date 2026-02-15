@@ -15,6 +15,7 @@ export type {
 export {
   SurveyStatus,
   SuggestionMode,
+  DisplayMode,
   DEFAULT_SURVEY_SETTINGS,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
   SurveyDemographicPageSchema,

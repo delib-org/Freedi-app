@@ -2449,5 +2449,17 @@
   "Failed to load new solutions. Please try again.": "Failed to load new solutions. Please try again.",
   "No solutions yet heading": "No solutions yet",
   "Innovator": "Innovator",
-  "Team Player": "Team Player"
+  "Team Player": "Team Player",
+  "displayMode": "Display Mode",
+  "displayModeDescription": "Choose how participants see and evaluate suggestions",
+  "displayModeSwipe": "Swipe (Tinder-style)",
+  "displayModeSwipeDesc": "One card at a time. Users swipe or tap buttons to rate each suggestion.",
+  "displayModeClassic": "Classic (Card stack)",
+  "displayModeClassicDesc": "Card stack with swipe left/right. Shows batch progress and card stack preview.",
+  "Swipe or tap to rate": "Swipe or tap to rate",
+  "All Done!": "All Done!",
+  "Batch Complete!": "Batch Complete!",
+  "View Results": "View Results",
+  "Get More Suggestions": "Get More Suggestions",
+  "View Progress": "View Progress"
 }

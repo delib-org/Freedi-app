@@ -1710,5 +1710,17 @@
   "Failed to load new solutions. Please try again.": "Nieuwe oplossingen konden niet worden geladen. Probeer het opnieuw.",
   "No solutions yet heading": "Nog geen oplossingen",
   "Innovator": "Innovator",
-  "Team Player": "Teamspeler"
+  "Team Player": "Teamspeler",
+  "displayMode": "Weergavemodus",
+  "displayModeDescription": "Kies hoe deelnemers suggesties zien en beoordelen",
+  "displayModeSwipe": "Vegen (Tinder-stijl)",
+  "displayModeSwipeDesc": "Eén kaart tegelijk. Gebruikers vegen of tikken op knoppen om elke suggestie te beoordelen.",
+  "displayModeClassic": "Klassiek (kaartstapel)",
+  "displayModeClassicDesc": "Kaartstapel met vegen links/rechts. Toont stapelvoortgang en kaartvoorbeeld.",
+  "Swipe or tap to rate": "Veeg of tik om te beoordelen",
+  "All Done!": "Helemaal klaar!",
+  "Batch Complete!": "Stapel voltooid!",
+  "View Results": "Resultaten bekijken",
+  "Get More Suggestions": "Meer suggesties ophalen",
+  "View Progress": "Voortgang bekijken"
 }

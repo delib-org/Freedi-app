@@ -1712,5 +1712,17 @@
   "Failed to load new solutions. Please try again.": "No se pudieron cargar nuevas soluciones. Por favor, inténtalo de nuevo.",
   "No solutions yet heading": "Aún no hay soluciones",
   "Innovator": "Innovador",
-  "Team Player": "Jugador de equipo"
+  "Team Player": "Jugador de equipo",
+  "displayMode": "Modo de visualización",
+  "displayModeDescription": "Elige cómo los participantes ven y evalúan las sugerencias",
+  "displayModeSwipe": "Deslizar (estilo Tinder)",
+  "displayModeSwipeDesc": "Una tarjeta a la vez. Los usuarios deslizan o tocan botones para calificar cada sugerencia.",
+  "displayModeClassic": "Clásico (pila de tarjetas)",
+  "displayModeClassicDesc": "Pila de tarjetas con deslizamiento izquierda/derecha. Muestra progreso del lote y vista previa de la pila.",
+  "Swipe or tap to rate": "Desliza o toca para calificar",
+  "All Done!": "¡Todo listo!",
+  "Batch Complete!": "¡Lote completado!",
+  "View Results": "Ver resultados",
+  "Get More Suggestions": "Obtener más sugerencias",
+  "View Progress": "Ver progreso"
 }
