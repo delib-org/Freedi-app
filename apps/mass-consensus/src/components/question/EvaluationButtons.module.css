@@ -109,7 +109,7 @@
 }
 
 .button.selected .emoji {
-  filter: grayscale(1) brightness(2);
+  color: white;
   transform: scale(1.1);
 }
 

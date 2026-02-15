@@ -39,6 +39,29 @@
     cursor: not-allowed;
   }
 
+  // Selected state - indicates user's previous vote
+  &--selected {
+    box-shadow: 0 0 0 3px var(--btn-primary, #5f88e5);
+    transform: scale(1.08);
+
+    &::after {
+      content: '\2713'; // checkmark
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--btn-primary, #5f88e5);
+      color: #fff;
+      font-size: 0.7rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+  }
+
   // Focus state for accessibility
   &:focus-visible {
     outline: 3px solid var(--btn-primary);

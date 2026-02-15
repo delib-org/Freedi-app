@@ -1,31 +1,34 @@
 /**
  * Swipe Controller
- * Handles swipe interactions with Firestore
+ * Handles swipe interactions via API routes
  * Following CLAUDE.md guidelines:
  * - Proper error handling with logError()
- * - Firebase utilities (no manual refs)
  * - Named constants
  * - Types from @freedi/shared-types
  */
 
-import { setDoc, query, where, getDocs, limit as firestoreLimit, orderBy, collection, doc } from 'firebase/firestore';
-import { Statement, Evaluation, Collections } from '@freedi/shared-types';
+import { query, where, getDocs, limit as firestoreLimit, orderBy, collection } from 'firebase/firestore';
+import { Statement } from '@freedi/shared-types';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { db } from '@/lib/firebase/client';
 import { RATING, SWIPE } from '@/constants/common';
+import { Collections } from '@freedi/shared-types';
 
 /**
- * Submit a rating for a statement
+ * Submit a rating for a statement via API route
+ * Uses deterministic evaluation IDs (userId--statementId) to prevent duplicates
  * @param parentId - ID of the parent question
  * @param statementId - ID of the statement being rated
- * @param rating - Rating value (-2 to +2)
+ * @param rating - Rating value (-1 to +1)
  * @param userId - ID of the user submitting the rating
+ * @param userName - Display name of the user
  */
 export async function submitRating(
   parentId: string,
   statementId: string,
   rating: number,
-  userId: string
+  userId: string,
+  userName?: string
 ): Promise<void> {
   try {
     // Validate rating
@@ -46,24 +49,23 @@ export async function submitRating(
       });
     }
 
-    // Create evaluation document
-    const evaluationId = `eval_${userId}_${statementId}_${Date.now()}`;
-    const evaluationRef = doc(db, Collections.evaluations, evaluationId);
-    const updatedAt = Date.now();
+    // Call API route which uses deterministic evaluation IDs
+    const response = await fetch(`/api/evaluations/${statementId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        evaluation: rating,
+        userId,
+        userName,
+      }),
+    });
 
-    const evaluation: Evaluation = {
-      evaluationId,
-      parentId,
-      statementId,
-      evaluatorId: userId,
-      evaluation: rating,
-      updatedAt,
-    };
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to submit rating');
+    }
 
-    // Save to Firestore
-    await setDoc(evaluationRef, evaluation);
-
-    console.info('Rating submitted to Firestore:', { parentId, statementId, rating, userId });
+    console.info('Rating submitted via API:', { parentId, statementId, rating, userId });
 
   } catch (error) {
     logError(error, {
@@ -133,11 +135,13 @@ export async function loadCardBatch(
  * @param parentId - ID of the parent question
  * @param pendingEvaluations - Array of evaluations to sync
  * @param userId - Current user ID
+ * @param userName - Display name of the user
  */
 export async function syncPendingEvaluations(
   parentId: string,
   pendingEvaluations: Array<{ statementId: string; rating: number; timestamp: number }>,
-  userId: string
+  userId: string,
+  userName?: string
 ): Promise<void> {
   try {
     if (pendingEvaluations.length === 0) {
@@ -153,7 +157,7 @@ export async function syncPendingEvaluations(
     // Sync each evaluation
     for (const evaluation of pendingEvaluations) {
       try {
-        await submitRating(parentId, evaluation.statementId, evaluation.rating, userId);
+        await submitRating(parentId, evaluation.statementId, evaluation.rating, userId, userName);
       } catch (error) {
         logError(error, {
           operation: 'swipeController.syncPendingEvaluations',
@@ -177,4 +181,46 @@ export async function syncPendingEvaluations(
     });
     throw error;
   }
+}
+
+/**
+ * Fetch previous evaluation scores for a set of statements
+ * @param statementIds - Array of statement IDs to fetch evaluations for
+ * @param userId - User ID
+ * @returns Map of statementId → rating value
+ */
+export async function fetchPreviousEvaluations(
+  statementIds: string[],
+  userId: string
+): Promise<Map<string, number>> {
+  const evaluationMap = new Map<string, number>();
+
+  try {
+    // Fetch evaluations in parallel
+    const fetches = statementIds.map(async (statementId) => {
+      try {
+        const response = await fetch(
+          `/api/evaluations/${statementId}?userId=${encodeURIComponent(userId)}`
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (data.evaluation?.evaluation !== null && data.evaluation?.evaluation !== undefined) {
+            evaluationMap.set(statementId, data.evaluation.evaluation);
+          }
+        }
+      } catch {
+        // Silently skip individual fetch failures
+      }
+    });
+
+    await Promise.all(fetches);
+  } catch (error) {
+    logError(error, {
+      operation: 'swipeController.fetchPreviousEvaluations',
+      userId,
+      metadata: { statementCount: statementIds.length },
+    });
+  }
+
+  return evaluationMap;
 }

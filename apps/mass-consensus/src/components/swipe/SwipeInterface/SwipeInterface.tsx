@@ -33,7 +33,7 @@ import {
   selectTotalCardsCount,
   selectShowProposalPrompt,
 } from '@/store/slices/swipeSelectors';
-import { submitRating } from '@/controllers/swipeController';
+import { submitRating, fetchPreviousEvaluations } from '@/controllers/swipeController';
 import { submitComment } from '@/controllers/commentController';
 import { RATING, RATING_CONFIG } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
@@ -75,6 +75,9 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     rating: RatingValue;
     direction: 'left' | 'right';
   } | null>(null);
+
+  // Previous evaluation scores: statementId → rating value
+  const [previousEvaluations, setPreviousEvaluations] = useState<Map<string, number>>(new Map());
 
   // Check if user must add solution first
   const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ?? true;
@@ -143,6 +146,45 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     );
   }, [initialSolutions, dispatch, question.statementId]);
 
+  // Load previous evaluations for the initial solutions
+  useEffect(() => {
+    if (!userId || initialSolutions.length === 0) return;
+
+    const loadPreviousEvaluations = async () => {
+      try {
+        // First check which statements the user has already evaluated
+        const response = await fetch(
+          `/api/user-evaluations/${question.statementId}?userId=${encodeURIComponent(userId)}`
+        );
+        if (!response.ok) return;
+
+        const data = await response.json();
+        const evaluatedIds: string[] = data.evaluatedOptionsIds || [];
+
+        if (evaluatedIds.length === 0) return;
+
+        // Only fetch scores for statements that are in our initial solutions
+        const relevantIds = evaluatedIds.filter((id: string) =>
+          initialSolutions.some((s) => s.statementId === id)
+        );
+
+        if (relevantIds.length === 0) return;
+
+        const evaluationMap = await fetchPreviousEvaluations(relevantIds, userId);
+        setPreviousEvaluations(evaluationMap);
+
+        console.info('Loaded previous evaluations:', {
+          questionId: question.statementId,
+          count: evaluationMap.size,
+        });
+      } catch (error) {
+        console.error('Failed to load previous evaluations:', error);
+      }
+    };
+
+    loadPreviousEvaluations();
+  }, [userId, question.statementId, initialSolutions]);
+
   // Handle showing proposal prompt
   useEffect(() => {
     if (showProposalPrompt) {
@@ -173,8 +215,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     // Wait for animation to complete, then submit
     setTimeout(async () => {
       try {
-        // Save rating to Firebase
-        await submitRating(question.statementId, currentCard.statementId, rating, userId);
+        // Save rating via API (deterministic ID prevents duplicates)
+        await submitRating(question.statementId, currentCard.statementId, rating, userId, userName);
+
+        // Update local previous evaluations map
+        setPreviousEvaluations((prev) => {
+          const next = new Map(prev);
+          next.set(currentCard.statementId, rating);
+
+          return next;
+        });
 
         // Update Redux state
         dispatch(
@@ -279,16 +329,42 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
               - Left side = negative (strongly disagree, red)
               - Right side = positive (strongly agree, green)
               Matches the zone strip colors on the card
+              isSelected highlights the user's previous vote for this card
           */}
           <div className="swipe-interface__rating-buttons">
-            <RatingButton
-              rating={RATING.STRONGLY_DISAGREE}
-              onClick={handleSwipe}
-            />
-            <RatingButton rating={RATING.DISAGREE} onClick={handleSwipe} />
-            <RatingButton rating={RATING.NEUTRAL} onClick={handleSwipe} />
-            <RatingButton rating={RATING.AGREE} onClick={handleSwipe} />
-            <RatingButton rating={RATING.STRONGLY_AGREE} onClick={handleSwipe} />
+            {(() => {
+              const prevRating = currentCard ? previousEvaluations.get(currentCard.statementId) : undefined;
+
+              return (
+                <>
+                  <RatingButton
+                    rating={RATING.STRONGLY_DISAGREE}
+                    onClick={handleSwipe}
+                    isSelected={prevRating === RATING.STRONGLY_DISAGREE}
+                  />
+                  <RatingButton
+                    rating={RATING.DISAGREE}
+                    onClick={handleSwipe}
+                    isSelected={prevRating === RATING.DISAGREE}
+                  />
+                  <RatingButton
+                    rating={RATING.NEUTRAL}
+                    onClick={handleSwipe}
+                    isSelected={prevRating === RATING.NEUTRAL}
+                  />
+                  <RatingButton
+                    rating={RATING.AGREE}
+                    onClick={handleSwipe}
+                    isSelected={prevRating === RATING.AGREE}
+                  />
+                  <RatingButton
+                    rating={RATING.STRONGLY_AGREE}
+                    onClick={handleSwipe}
+                    isSelected={prevRating === RATING.STRONGLY_AGREE}
+                  />
+                </>
+              );
+            })()}
           </div>
         </>
       ) : (

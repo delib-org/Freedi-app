@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './EvaluationButtons.module.css';
+import RatingIcon from '@/components/icons/RatingIcon';
 
 interface EvaluationButtonsProps {
   onEvaluate: (score: number, direction?: 'left' | 'right') => void;
@@ -13,11 +14,11 @@ interface EvaluationButtonsProps {
 
 // Evaluation scale: -1, -0.5, 0, 0.5, 1
 const EVALUATION_SCORES = [
-  { score: -1, labelKey: 'Strongly disagree', emoji: '😠', direction: 'left' as const, colorClass: 'hate' },
-  { score: -0.5, labelKey: 'Disagree', emoji: '👎', direction: 'left' as const, colorClass: 'dislike' },
-  { score: 0, labelKey: 'Neutral', emoji: '🤷', direction: null, colorClass: 'neutral' },
-  { score: 0.5, labelKey: 'Agree', emoji: '👍', direction: 'right' as const, colorClass: 'like' },
-  { score: 1, labelKey: 'Strongly agree', emoji: '😍', direction: 'right' as const, colorClass: 'love' },
+  { score: -1, labelKey: 'Strongly disagree', direction: 'left' as const, colorClass: 'hate' },
+  { score: -0.5, labelKey: 'Disagree', direction: 'left' as const, colorClass: 'dislike' },
+  { score: 0, labelKey: 'Neutral', direction: null, colorClass: 'neutral' },
+  { score: 0.5, labelKey: 'Agree', direction: 'right' as const, colorClass: 'like' },
+  { score: 1, labelKey: 'Strongly agree', direction: 'right' as const, colorClass: 'love' },
 ];
 
 /**
@@ -56,7 +57,7 @@ export default function EvaluationButtons({
 
   return (
     <div className={`${styles.buttons} ${compact ? styles.compact : ''}`}>
-      {evaluationOptions.map(({ score, label, emoji, direction, colorClass }) => (
+      {evaluationOptions.map(({ score, label, direction, colorClass }) => (
         <button
           key={score}
           onClick={() => handleClick(score, direction)}
@@ -66,7 +67,7 @@ export default function EvaluationButtons({
           title={label}
           aria-label={label}
         >
-          <span className={styles.emoji}>{emoji}</span>
+          <span className={styles.emoji}><RatingIcon rating={score} /></span>
           {showLabels && <span className={styles.label}>{label}</span>}
           {!showLabels && !compact && (
             <span className={styles.score}>{score > 0 ? '+' : ''}{score}</span>

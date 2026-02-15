@@ -24,6 +24,7 @@ import clsx from 'clsx';
 import { SWIPE, RATING_CONFIG, RATING, ZONES, ZONE_CONFIG } from '@/constants/common';
 import { playWhooshSound } from './soundEffects';
 import type { RatingValue } from '../RatingButton';
+import RatingIcon from '@/components/icons/RatingIcon';
 
 export interface SwipeCardProps {
   statement: Statement;
@@ -392,7 +393,7 @@ export default function SwipeCard({
             )}
             aria-hidden="true"
           >
-            <span className="swipe-card__zone-emoji">{zone.emoji}</span>
+            <span className="swipe-card__zone-emoji"><RatingIcon rating={zone.rating} /></span>
           </div>
         ))}
       </div>
@@ -441,7 +442,7 @@ export default function SwipeCard({
             )}
           >
             <div className="swipe-card__confirmation-emoji">
-              {RATING_CONFIG[pendingRating].emoji}
+              <RatingIcon rating={pendingRating} />
             </div>
             <h3 className="swipe-card__confirmation-title">
               {t('You have rated it as')}

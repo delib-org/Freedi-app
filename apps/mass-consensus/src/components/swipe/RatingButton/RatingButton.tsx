@@ -18,6 +18,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { RATING, RATING_CONFIG } from '@/constants/common';
 import { playClickSound } from '../SwipeCard/soundEffects';
+import RatingIcon from '@/components/icons/RatingIcon';
 
 export type RatingValue = (typeof RATING)[keyof typeof RATING];
 
@@ -26,6 +27,7 @@ export interface RatingButtonProps {
   onClick: (rating: RatingValue) => void;
   disabled?: boolean;
   size?: 'small' | 'medium' | 'large';
+  isSelected?: boolean;
   className?: string;
 }
 
@@ -34,6 +36,7 @@ export default function RatingButton({
   onClick,
   disabled = false,
   size = 'medium',
+  isSelected = false,
   className,
 }: RatingButtonProps) {
   const { t } = useTranslation();
@@ -50,6 +53,7 @@ export default function RatingButton({
     `rating-button--${config.variant}`,
     size !== 'medium' && `rating-button--${size}`,
     disabled && 'rating-button--disabled',
+    isSelected && 'rating-button--selected',
     className
   );
 
@@ -62,7 +66,7 @@ export default function RatingButton({
       aria-label={t(config.labelKey)}
       title={t(config.labelKey)}
     >
-      <span className="rating-button__emoji">{config.emoji}</span>
+      <span className="rating-button__emoji"><RatingIcon rating={rating} /></span>
       <span className="rating-button__label">{t(config.shortLabelKey)}</span>
     </button>
   );
