@@ -17,7 +17,6 @@ import { Statement } from '@freedi/shared-types';
 import SwipeCard from '../SwipeCard';
 import RatingButton from '../RatingButton';
 import SurveyProgress from '../SurveyProgress';
-import ProposalModal from '../ProposalModal';
 import CommentModal from '../CommentModal';
 import SolutionPromptModal from '@/components/question/SolutionPromptModal';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
@@ -35,14 +34,12 @@ import {
   selectShowProposalPrompt,
 } from '@/store/slices/swipeSelectors';
 import { submitRating } from '@/controllers/swipeController';
-import { submitProposal } from '@/controllers/proposalController';
 import { submitComment } from '@/controllers/commentController';
-import { RATING, RATING_CONFIG, ERROR_MESSAGES } from '@/constants/common';
+import { RATING, RATING_CONFIG } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useToast } from '@/components/shared/Toast';
 import {
-  trackProposalSubmitted,
   trackProposalPromptShown,
   trackProposalPromptDismissed,
 } from '@/lib/analytics';
@@ -201,69 +198,16 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     }, 300); // Wait for animation to complete
   };
 
-  const handleProposalSubmit = async (proposalText: string) => {
-    try {
-      // Run AI content moderation check before saving
-      const checkResponse = await fetch(
-        `/api/statements/${question.statementId}/check-similar`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userInput: proposalText.trim(),
-            userId,
-          }),
-        }
-      );
+  const handleProposalSuccess = () => {
+    dispatch(proposalSubmitted());
+    setShowProposalModal(false);
 
-      if (checkResponse.status === 400) {
-        const data = await checkResponse.json();
-        const errorMessage = data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
-        showToast({
-          type: 'error',
-          title: t('Submission Failed'),
-          message: t(errorMessage),
-          duration: 5000,
-        });
-        throw new Error(errorMessage);
-      }
-
-      // Save proposal to Firebase
-      await submitProposal(
-        proposalText,
-        question.statementId,
-        userId,
-        userName
-      );
-
-      // Track analytics
-      trackProposalSubmitted(question.statementId, userId, proposalText.length);
-
-      // Update Redux state
-      dispatch(proposalSubmitted());
-      setShowProposalModal(false);
-
-      // Show success toast
-      showToast({
-        type: 'success',
-        title: t('Proposal Submitted!'),
-        message: t('Thank you for sharing your idea with the community.'),
-        duration: 5000,
-      });
-    } catch (err) {
-      console.error('Failed to submit proposal:', err);
-      dispatch(setError(t('Failed to submit proposal. Please try again.')));
-
-      // Show error toast
-      showToast({
-        type: 'error',
-        title: t('Submission Failed'),
-        message: t('Failed to submit proposal. Please try again.'),
-        duration: 5000,
-      });
-
-      throw err; // Re-throw to keep modal open
-    }
+    showToast({
+      type: 'success',
+      title: t('Proposal Submitted!'),
+      message: t('Thank you for sharing your idea with the community.'),
+      duration: 5000,
+    });
   };
 
   const handleProposalDismiss = () => {
@@ -363,11 +307,15 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         </div>
       )}
 
-      {/* Proposal Modal */}
-      <ProposalModal
+      {/* Proposal Modal - uses SolutionPromptModal for full AI check + similarity search */}
+      <SolutionPromptModal
         isOpen={showProposalModal}
         onClose={handleProposalDismiss}
-        onSubmit={handleProposalSubmit}
+        onSubmitSuccess={handleProposalSuccess}
+        questionId={question.statementId}
+        questionText={question.statement}
+        userId={userId}
+        userName={userName}
       />
 
       {/* Comment Modal */}
