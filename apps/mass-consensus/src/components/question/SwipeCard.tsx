@@ -113,6 +113,15 @@ export default function SwipeCard({
         }
       }}
     >
+      {/* Zone color strips */}
+      <div className={styles.zones}>
+        <div className={`${styles.zone} ${styles.zone0}`} />
+        <div className={`${styles.zone} ${styles.zone1}`} />
+        <div className={`${styles.zone} ${styles.zone2}`} />
+        <div className={`${styles.zone} ${styles.zone3}`} />
+        <div className={`${styles.zone} ${styles.zone4}`} />
+      </div>
+
       {/* Like Overlay */}
       <div className={`${styles.overlay} ${styles.likeOverlay} ${showLikeOverlay ? styles.visible : ''}`}>
         <div className={styles.overlayStamp}>

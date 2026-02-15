@@ -11,7 +11,32 @@
   cursor: grab;
   user-select: none;
   transition: box-shadow 0.3s ease;
+  overflow: hidden;
 }
+
+/* Zone color strips - 5-zone background behind card content */
+.zones {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: row;
+  direction: ltr;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: inherit;
+  overflow: hidden;
+}
+
+.zone {
+  flex: 1;
+  opacity: 0.45;
+}
+
+.zone0 { background: var(--rating-strongly-disagree, #fecaca); }
+.zone1 { background: var(--rating-disagree, #fef3c7); }
+.zone2 { background: var(--rating-neutral, #f1f5f9); }
+.zone3 { background: var(--rating-agree, #d1fae5); }
+.zone4 { background: var(--rating-strongly-agree, #dcfce7); }
 
 .card:active {
   cursor: grabbing;

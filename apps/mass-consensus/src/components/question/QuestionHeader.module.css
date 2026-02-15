@@ -37,23 +37,23 @@
 
 @media (max-width: 768px) {
   .header {
-    margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-xs);
   }
 
   .title {
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-sm);
+    font-size: 1.125rem;
+    margin-bottom: var(--spacing-xs);
   }
 
   .description {
-    font-size: 0.9375rem;
-    margin-bottom: var(--spacing-sm);
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-xs);
   }
 
   .meta {
     flex-direction: row;
     gap: var(--spacing-sm);
-    font-size: 0.8125rem;
+    font-size: 0.75rem;
   }
 }
