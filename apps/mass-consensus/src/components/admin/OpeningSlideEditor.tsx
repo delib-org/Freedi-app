@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
 import type { Survey, SurveyLogo } from '@freedi/shared-types';
 import { FileUpload } from './FileUpload';
 import { LogoManager } from './LogoManager';
@@ -178,7 +178,7 @@ export const OpeningSlideEditor: React.FC<OpeningSlideEditorProps> = ({
             ) : (
               <div className="opening-slide-editor__preview">
                 {content.trim().length > 0 ? (
-                  <ReactMarkdown>{content}</ReactMarkdown>
+                  <MarkdownRenderer content={content} />
                 ) : (
                   <p className="opening-slide-editor__preview-empty">
                     {t('noContentToPreview')}

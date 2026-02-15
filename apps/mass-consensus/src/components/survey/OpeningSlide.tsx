@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import ReactMarkdown from 'react-markdown';
+import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
 import type { Survey } from '@freedi/shared-types';
 import clsx from 'clsx';
 
@@ -75,7 +75,7 @@ export const OpeningSlide: React.FC<OpeningSlideProps> = ({
 
       {hasContent && (
         <div className="opening-slide__content">
-          <ReactMarkdown>{survey.openingSlideContent || ''}</ReactMarkdown>
+          <MarkdownRenderer content={survey.openingSlideContent || ''} />
         </div>
       )}
 
