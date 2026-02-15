@@ -1663,5 +1663,26 @@
   "questionsInSurvey": "الأسئلة في الاستبيان",
   "results": "النتائج",
   "totalResponses": "إجمالي الإجابات",
-  "viewInMainApp": "عرض في التطبيق"
+  "viewInMainApp": "عرض في التطبيق",
+
+  "openingSlide": "شريحة الافتتاح",
+  "showOpeningSlide": "عرض شريحة الافتتاح",
+  "openingSlideEnabledHint": "سيرى المشاركون شريحة الافتتاح قبل الاستبيان",
+  "openingSlideDisabledHint": "لن يتم عرض شريحة افتتاح",
+  "openingSlideContent": "محتوى شريحة الافتتاح",
+  "openingSlideContentPlaceholder": "اكتب محتوى شريحة الافتتاح هنا باستخدام Markdown...",
+  "noContentToPreview": "لا يوجد محتوى للمعاينة",
+  "openingSlideUpdated": "تم تحديث شريحة الافتتاح بنجاح",
+  "failedToUpdateOpeningSlide": "فشل تحديث شريحة الافتتاح",
+  "logos": "الشعارات",
+  "logoUploadError": "فشل رفع الشعار",
+  "logoUploadSuccess": "تم رفع الشعار بنجاح",
+  "failedToDeleteLogo": "فشل حذف الشعار",
+  "logoDeleted": "تم حذف الشعار بنجاح",
+  "failedToUpdateLogo": "فشل تحديث الشعار",
+  "failedToReorderLogos": "فشل إعادة ترتيب الشعارات",
+  "unknownError": "حدث خطأ غير معروف",
+  "save": "حفظ",
+  "getStarted": "لنبدأ",
+  "welcomeToSurvey": "مرحبًا! أنت على وشك المشاركة في استبيان."
 }

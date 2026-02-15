@@ -220,6 +220,15 @@ export async function updateSurvey(
   if (data.customIntroText !== undefined) {
     updates.customIntroText = data.customIntroText;
   }
+  if (data.showOpeningSlide !== undefined) {
+    updates.showOpeningSlide = data.showOpeningSlide;
+  }
+  if (data.openingSlideContent !== undefined) {
+    updates.openingSlideContent = data.openingSlideContent;
+  }
+  if (data.logos !== undefined) {
+    updates.logos = data.logos;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
 

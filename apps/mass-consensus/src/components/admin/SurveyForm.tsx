@@ -11,16 +11,18 @@ import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
+import OpeningSlideManager from './OpeningSlideManager';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
   existingSurvey?: Survey;
+  onSurveyUpdate?: (survey: Survey) => void;
 }
 
 /**
  * Form for creating or editing a survey
  */
-export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
+export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFormProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const { refreshToken } = useAuth();
@@ -34,8 +36,6 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
-  const [showIntro, setShowIntro] = useState(existingSurvey?.showIntro ?? true);
-  const [customIntroText, setCustomIntroText] = useState(existingSurvey?.customIntroText || '');
   const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
     existingSurvey?.demographicPages || []
   );
@@ -156,8 +156,6 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         forceLanguage: forceLanguage || undefined,
         demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
         explanationPages: explanationPages.length > 0 ? explanationPages : undefined,
-        showIntro,
-        customIntroText: showIntro && customIntroText.trim() ? customIntroText.trim() : undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -329,35 +327,11 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
           />
         </div>
 
-        {/* Introduction Text Settings */}
-        <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={showIntro}
-              onChange={(e) => setShowIntro(e.target.checked)}
-            />
-            {' '}{t('showIntroText') || 'Show introduction text'}
-          </label>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
-            {t('showIntroTextDescription') || 'Display an introductory message to participants on the welcome screen'}
-          </p>
-        </div>
-
-        {showIntro && (
+        {/* Opening Slide Settings */}
+        {existingSurvey && onSurveyUpdate && (
           <div className={styles.formGroup}>
-            <label htmlFor="customIntroText">{t('customIntroText') || 'Custom introduction text'}</label>
-            <textarea
-              id="customIntroText"
-              className={styles.textArea}
-              value={customIntroText}
-              onChange={(e) => setCustomIntroText(e.target.value)}
-              placeholder={t('customIntroTextPlaceholder') || 'Leave empty to use the default introduction text'}
-              rows={4}
-            />
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-              {t('customIntroTextNote') || 'If left empty, the default system introduction will be shown'}
-            </p>
+            <h3 style={{ marginBottom: '0.5rem' }}>{t('openingSlide')}</h3>
+            <OpeningSlideManager survey={existingSurvey} onUpdate={onSurveyUpdate} />
           </div>
         )}
       </div>

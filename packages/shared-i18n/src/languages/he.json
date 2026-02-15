@@ -2365,5 +2365,26 @@
   "questionsInSurvey": "שאלות בסקר",
   "results": "תוצאות",
   "totalResponses": "סה\"כ תשובות",
-  "viewInMainApp": "צפה באפליקציה"
+  "viewInMainApp": "צפה באפליקציה",
+
+  "openingSlide": "שקופית פתיחה",
+  "showOpeningSlide": "הצג שקופית פתיחה",
+  "openingSlideEnabledHint": "המשתתפים יראו את שקופית הפתיחה לפני הסקר",
+  "openingSlideDisabledHint": "לא תוצג שקופית פתיחה",
+  "openingSlideContent": "תוכן שקופית הפתיחה",
+  "openingSlideContentPlaceholder": "כתוב את תוכן שקופית הפתיחה כאן באמצעות Markdown...",
+  "noContentToPreview": "אין תוכן לתצוגה מקדימה",
+  "openingSlideUpdated": "שקופית הפתיחה עודכנה בהצלחה",
+  "failedToUpdateOpeningSlide": "עדכון שקופית הפתיחה נכשל",
+  "logos": "לוגואים",
+  "logoUploadError": "העלאת הלוגו נכשלה",
+  "logoUploadSuccess": "הלוגו הועלה בהצלחה",
+  "failedToDeleteLogo": "מחיקת הלוגו נכשלה",
+  "logoDeleted": "הלוגו נמחק בהצלחה",
+  "failedToUpdateLogo": "עדכון הלוגו נכשל",
+  "failedToReorderLogos": "סידור הלוגואים מחדש נכשל",
+  "unknownError": "אירעה שגיאה לא ידועה",
+  "save": "שמור",
+  "getStarted": "בואו נתחיל",
+  "welcomeToSurvey": "ברוכים הבאים! אתם עומדים להשתתף בסקר."
 }

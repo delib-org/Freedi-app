@@ -33,7 +33,7 @@ export const OpeningSlide: React.FC<OpeningSlideProps> = ({
 
   if (isEmpty) {
     return (
-      <div className={clsx('opening-slide', className)}>
+      <div className={clsx('opening-slide', className)} aria-label={t('openingSlide')}>
         <div className="opening-slide__empty">
           <h2>{survey.title}</h2>
           <p>{t('welcomeToSurvey')}</p>
@@ -52,20 +52,21 @@ export const OpeningSlide: React.FC<OpeningSlideProps> = ({
   }
 
   return (
-    <div className={clsx('opening-slide', className)}>
+    <div className={clsx('opening-slide', className)} aria-label={t('openingSlide')}>
       {hasLogos && (
         <div className="opening-slide__header">
           <div className="opening-slide__logos">
-            {sortedLogos.map((logo) => (
+            {sortedLogos.map((logo, index) => (
               <img
                 key={logo.logoId}
                 src={logo.publicUrl}
                 alt={logo.altText}
                 className="opening-slide__logo"
                 style={{
+                  '--logo-index': index,
                   ...(logo.width && { width: `${logo.width}px` }),
                   ...(logo.height && { height: `${logo.height}px` }),
-                }}
+                } as React.CSSProperties}
               />
             ))}
           </div>

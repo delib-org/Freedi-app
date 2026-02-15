@@ -1,90 +1,138 @@
 @use '../mixins' as *;
 
-// Opening Slide - Custom branded survey opening screen
+// Opening Slide - Branded survey welcome screen
+// Animations
+@keyframes openingSlide-logoFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes openingSlide-contentReveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes openingSlide-ctaAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes openingSlide-accentLine {
+  from {
+    width: 0;
+  }
+  to {
+    width: 48px;
+  }
+}
 
 .opening-slide {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: var(--padding);
-  background: var(--bg-primary);
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
 
-  // Header section
+  // Header / Logos zone
   &__header {
-    padding: 2rem 0;
+    padding: 2.5rem 1.5rem 1.5rem;
+    width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 1.5rem;
   }
 
-  // Logos container
   &__logos {
     display: flex;
     flex-wrap: wrap;
-    gap: 2rem;
+    gap: 2.5rem;
     justify-content: center;
     align-items: center;
-    margin-bottom: 2rem;
   }
 
-  // Individual logo
   &__logo {
-    max-width: 150px;
-    max-height: 80px;
+    max-width: 180px;
+    max-height: 72px;
     object-fit: contain;
-
-    @include mobile {
-      max-width: 100px;
-      max-height: 60px;
-    }
+    animation: openingSlide-logoFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    animation-delay: calc(var(--logo-index, 0) * 0.1s);
   }
 
-  // Content section
+  // Content zone - elevated card
   &__content {
-    flex: 1;
-    max-width: 800px;
+    max-width: 720px;
     width: 100%;
     margin: 0 auto;
-    padding: 2rem 0;
+    padding: 2rem 2.5rem;
+    background: var(--card-default);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    animation: openingSlide-contentReveal 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
 
-    // Markdown content styles
+    // Markdown typography
     h1, h2, h3, h4, h5, h6 {
-      color: var(--text-heading);
-      margin-top: 1.5rem;
-      margin-bottom: 1rem;
-      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.75rem;
+      font-weight: 700;
+
+      &:first-child {
+        margin-top: 0;
+      }
     }
 
     h1 {
-      font-size: 2rem;
-
-      @include mobile {
-        font-size: 1.5rem;
-      }
+      font-size: 1.75rem;
+      margin-top: 1.5rem;
     }
 
     h2 {
-      font-size: 1.5rem;
-
-      @include mobile {
-        font-size: 1.25rem;
-      }
+      font-size: 1.375rem;
+      margin-top: 1.25rem;
     }
 
     h3 {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-top: 1rem;
     }
 
     p {
       color: var(--text-body);
-      line-height: 1.6;
+      font-size: 1.0625rem;
+      line-height: 1.7;
       margin-bottom: 1rem;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
 
     ul, ol {
       color: var(--text-body);
       margin-bottom: 1rem;
-      padding-left: 1.5rem;
+      padding-inline-start: 1.5rem;
 
       li {
         margin-bottom: 0.5rem;
+        line-height: 1.6;
       }
     }
 
@@ -105,7 +153,7 @@
     }
 
     code {
-      background: var(--card-hover);
+      background: var(--card-hover, rgba(0, 0, 0, 0.04));
       padding: 0.2rem 0.4rem;
       border-radius: 4px;
       font-family: monospace;
@@ -113,7 +161,7 @@
     }
 
     pre {
-      background: var(--card-hover);
+      background: var(--card-hover, rgba(0, 0, 0, 0.04));
       padding: 1rem;
       border-radius: 8px;
       overflow-x: auto;
@@ -126,19 +174,27 @@
     }
 
     blockquote {
-      border-left: 4px solid var(--btn-primary);
-      padding-left: 1rem;
+      border-inline-start: 4px solid var(--btn-primary);
+      background: rgba(124, 158, 178, 0.06);
+      padding: 0.75rem 1rem;
+      border-radius: 0 8px 8px 0;
       margin: 1rem 0;
       color: var(--text-secondary);
       font-style: italic;
     }
+
+    hr {
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      margin: 1.5rem 0;
+    }
   }
 
-  // Call-to-action section
+  // CTA zone
   &__cta {
     text-align: center;
-    padding: 2rem 0;
-    margin-top: auto;
+    padding: 2rem 1rem;
+    animation: openingSlide-ctaAppear 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.5s both;
   }
 
   // Get started button
@@ -146,24 +202,29 @@
     @include button-base;
     background: var(--btn-primary);
     color: white;
-    padding: 1rem 2rem;
-    font-size: 1rem;
-    min-width: 200px;
+    padding: 1rem 3rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    border-radius: var(--radius-full);
+    min-width: 220px;
+    box-shadow: 0 4px 16px rgba(124, 158, 178, 0.3);
+    letter-spacing: 0.01em;
+    transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
     &:hover {
       background: var(--btn-primary-hover);
       transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
+      box-shadow: 0 6px 20px rgba(124, 158, 178, 0.4);
     }
 
     &:active {
       transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(124, 158, 178, 0.3);
     }
 
-    @include mobile {
-      min-width: auto;
-      width: 100%;
-      max-width: 300px;
+    &:focus-visible {
+      outline: 3px solid rgba(124, 158, 178, 0.5);
+      outline-offset: 3px;
     }
   }
 
@@ -173,45 +234,146 @@
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    font-size: 1rem;
-    color: var(--text-secondary);
+
+    &::after {
+      content: '';
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--bg-muted, rgba(0, 0, 0, 0.08));
+      border-top-color: var(--btn-primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
   }
 
-  // Empty state (no content, no logos)
+  // Empty state
   &__empty {
     text-align: center;
-    padding: 4rem 2rem;
+    padding: 3rem 2rem;
+    max-width: 500px;
+    margin: 0 auto;
+    animation: openingSlide-contentReveal 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+
+    // Accent line
+    &::before {
+      content: '';
+      display: block;
+      height: 3px;
+      background: var(--btn-primary);
+      border-radius: 2px;
+      margin: 0 auto 2rem;
+      animation: openingSlide-accentLine 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s both;
+    }
 
     h2 {
-      color: var(--text-heading);
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
+      color: var(--text-primary);
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
     }
 
     p {
       color: var(--text-secondary);
+      font-size: 1.0625rem;
+      line-height: 1.6;
       margin-bottom: 2rem;
     }
   }
 
-  // Responsive
+  // Responsive - Mobile
   @include mobile {
     padding: 1rem;
 
     &__header {
-      padding: 1rem 0;
+      padding: 1.5rem 1rem 1rem;
+      margin-bottom: 1rem;
     }
 
     &__logos {
-      gap: 1rem;
+      gap: 1.5rem;
+    }
+
+    &__logo {
+      max-width: 120px;
+      max-height: 56px;
     }
 
     &__content {
-      padding: 1rem 0;
+      padding: 1.5rem 1rem;
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-sm);
+
+      h1 {
+        font-size: 1.375rem;
+      }
+
+      h2 {
+        font-size: 1.125rem;
+      }
+
+      h3 {
+        font-size: 1rem;
+      }
     }
 
     &__cta {
-      padding: 1rem 0;
+      padding: 1.5rem 1rem;
     }
+
+    &__button {
+      min-width: auto;
+      width: 100%;
+      max-width: 320px;
+      font-size: 1rem;
+      padding: 0.875rem 2.5rem;
+    }
+
+    &__empty {
+      padding: 2rem 1rem;
+
+      h2 {
+        font-size: 1.5rem;
+      }
+    }
+  }
+
+  // Responsive - Tablet
+  @include tablet {
+    padding: 1.5rem;
+
+    &__content {
+      padding: 1.5rem 2rem;
+    }
+
+    &__logo {
+      max-height: 64px;
+    }
+  }
+
+  // Reduced motion
+  @media (prefers-reduced-motion: reduce) {
+    &__logo,
+    &__content,
+    &__cta,
+    &__empty {
+      animation: none;
+      opacity: 1;
+      transform: none;
+    }
+
+    &__empty::before {
+      animation: none;
+      width: 48px;
+    }
+
+    &__button {
+      transition: background 0.2s, box-shadow 0.2s;
+    }
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
   }
 }

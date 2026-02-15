@@ -1639,5 +1639,26 @@
   "questionsInSurvey": "Fragen in der Umfrage",
   "results": "Ergebnisse",
   "totalResponses": "Gesamtantworten",
-  "viewInMainApp": "In der App anzeigen"
+  "viewInMainApp": "In der App anzeigen",
+
+  "openingSlide": "Eröffnungsfolie",
+  "showOpeningSlide": "Eröffnungsfolie anzeigen",
+  "openingSlideEnabledHint": "Teilnehmer sehen die Eröffnungsfolie vor der Umfrage",
+  "openingSlideDisabledHint": "Es wird keine Eröffnungsfolie angezeigt",
+  "openingSlideContent": "Inhalt der Eröffnungsfolie",
+  "openingSlideContentPlaceholder": "Schreiben Sie hier den Inhalt der Eröffnungsfolie mit Markdown...",
+  "noContentToPreview": "Kein Inhalt zur Vorschau",
+  "openingSlideUpdated": "Eröffnungsfolie erfolgreich aktualisiert",
+  "failedToUpdateOpeningSlide": "Aktualisierung der Eröffnungsfolie fehlgeschlagen",
+  "logos": "Logos",
+  "logoUploadError": "Logo-Upload fehlgeschlagen",
+  "logoUploadSuccess": "Logo erfolgreich hochgeladen",
+  "failedToDeleteLogo": "Löschen des Logos fehlgeschlagen",
+  "logoDeleted": "Logo erfolgreich gelöscht",
+  "failedToUpdateLogo": "Aktualisierung des Logos fehlgeschlagen",
+  "failedToReorderLogos": "Neuordnung der Logos fehlgeschlagen",
+  "unknownError": "Ein unbekannter Fehler ist aufgetreten",
+  "save": "Speichern",
+  "getStarted": "Los geht's",
+  "welcomeToSurvey": "Willkommen! Sie sind dabei, an einer Umfrage teilzunehmen."
 }

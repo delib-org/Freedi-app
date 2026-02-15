@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { Survey, SurveyLogo } from '@freedi/shared-types';
 import { OpeningSlideEditor } from './OpeningSlideEditor';
+import { useAuth } from '@/components/auth/AuthProvider';
 
 interface OpeningSlideManagerProps {
   survey: Survey;
@@ -15,8 +16,19 @@ interface OpeningSlideManagerProps {
  */
 export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideManagerProps) {
   const { t } = useTranslation();
+  const { refreshToken } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const token = await refreshToken();
+    if (!token) throw new Error('Authentication required');
+
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+  };
 
   const handleSave = async (data: {
     show: boolean;
@@ -27,11 +39,10 @@ export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideMa
       setError(null);
       setSuccess(null);
 
+      const headers = await getAuthHeaders();
       const response = await fetch(`/api/surveys/${survey.surveyId}/opening-slide`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           show: data.show,
           content: data.content,
@@ -65,6 +76,9 @@ export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideMa
     try {
       setError(null);
 
+      const token = await refreshToken();
+      if (!token) throw new Error('Authentication required');
+
       const formData = new FormData();
       formData.append('file', file);
       formData.append('altText', altText);
@@ -72,6 +86,7 @@ export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideMa
 
       const response = await fetch(`/api/surveys/${survey.surveyId}/logos`, {
         method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -102,8 +117,10 @@ export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideMa
     try {
       setError(null);
 
+      const headers = await getAuthHeaders();
       const response = await fetch(`/api/surveys/${survey.surveyId}/logos/${logoId}`, {
         method: 'DELETE',
+        headers,
       });
 
       if (!response.ok) {
@@ -126,11 +143,10 @@ export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideMa
 
   const handleLogoUpdate = async (logoId: string, altText: string): Promise<void> => {
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch(`/api/surveys/${survey.surveyId}/logos/${logoId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ altText }),
       });
 
@@ -155,11 +171,10 @@ export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideMa
 
   const handleLogosReorder = async (logoIds: string[]): Promise<void> => {
     try {
+      const headers = await getAuthHeaders();
       const response = await fetch(`/api/surveys/${survey.surveyId}/logos/reorder`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ logoIds }),
       });
 

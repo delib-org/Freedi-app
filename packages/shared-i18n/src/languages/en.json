@@ -2378,5 +2378,26 @@
   "questionsInSurvey": "Questions in Survey",
   "results": "Results",
   "totalResponses": "Total responses",
-  "viewInMainApp": "View in app"
+  "viewInMainApp": "View in app",
+
+  "openingSlide": "Opening Slide",
+  "showOpeningSlide": "Show opening slide",
+  "openingSlideEnabledHint": "Participants will see the opening slide before the survey",
+  "openingSlideDisabledHint": "No opening slide will be shown",
+  "openingSlideContent": "Opening Slide Content",
+  "openingSlideContentPlaceholder": "Write your opening slide content here using Markdown...",
+  "noContentToPreview": "No content to preview",
+  "openingSlideUpdated": "Opening slide updated successfully",
+  "failedToUpdateOpeningSlide": "Failed to update opening slide",
+  "logos": "Logos",
+  "logoUploadError": "Failed to upload logo",
+  "logoUploadSuccess": "Logo uploaded successfully",
+  "failedToDeleteLogo": "Failed to delete logo",
+  "logoDeleted": "Logo deleted successfully",
+  "failedToUpdateLogo": "Failed to update logo",
+  "failedToReorderLogos": "Failed to reorder logos",
+  "unknownError": "An unknown error occurred",
+  "save": "Save",
+  "getStarted": "Get Started",
+  "welcomeToSurvey": "Welcome! You are about to participate in a survey."
 }

@@ -1641,5 +1641,26 @@
   "questionsInSurvey": "Preguntas en la encuesta",
   "results": "Resultados",
   "totalResponses": "Total de respuestas",
-  "viewInMainApp": "Ver en la app"
+  "viewInMainApp": "Ver en la app",
+
+  "openingSlide": "Diapositiva de apertura",
+  "showOpeningSlide": "Mostrar diapositiva de apertura",
+  "openingSlideEnabledHint": "Los participantes verán la diapositiva de apertura antes de la encuesta",
+  "openingSlideDisabledHint": "No se mostrará diapositiva de apertura",
+  "openingSlideContent": "Contenido de la diapositiva de apertura",
+  "openingSlideContentPlaceholder": "Escribe el contenido de la diapositiva de apertura aquí usando Markdown...",
+  "noContentToPreview": "No hay contenido para previsualizar",
+  "openingSlideUpdated": "Diapositiva de apertura actualizada exitosamente",
+  "failedToUpdateOpeningSlide": "Error al actualizar la diapositiva de apertura",
+  "logos": "Logos",
+  "logoUploadError": "Error al subir el logo",
+  "logoUploadSuccess": "Logo subido exitosamente",
+  "failedToDeleteLogo": "Error al eliminar el logo",
+  "logoDeleted": "Logo eliminado exitosamente",
+  "failedToUpdateLogo": "Error al actualizar el logo",
+  "failedToReorderLogos": "Error al reordenar los logos",
+  "unknownError": "Ocurrió un error desconocido",
+  "save": "Guardar",
+  "getStarted": "Comenzar",
+  "welcomeToSurvey": "Bienvenido! Estás a punto de participar en una encuesta."
 }

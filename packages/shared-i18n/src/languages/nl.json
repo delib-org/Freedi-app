@@ -1639,5 +1639,26 @@
   "questionsInSurvey": "Vragen in de enquête",
   "results": "Resultaten",
   "totalResponses": "Totaal aantal reacties",
-  "viewInMainApp": "Bekijk in de app"
+  "viewInMainApp": "Bekijk in de app",
+
+  "openingSlide": "Openingsdia",
+  "showOpeningSlide": "Openingsdia tonen",
+  "openingSlideEnabledHint": "Deelnemers zien de openingsdia voor de enquête",
+  "openingSlideDisabledHint": "Er wordt geen openingsdia getoond",
+  "openingSlideContent": "Inhoud van de openingsdia",
+  "openingSlideContentPlaceholder": "Schrijf hier de inhoud van de openingsdia met Markdown...",
+  "noContentToPreview": "Geen inhoud om te bekijken",
+  "openingSlideUpdated": "Openingsdia succesvol bijgewerkt",
+  "failedToUpdateOpeningSlide": "Bijwerken van openingsdia mislukt",
+  "logos": "Logo's",
+  "logoUploadError": "Logo uploaden mislukt",
+  "logoUploadSuccess": "Logo succesvol geüpload",
+  "failedToDeleteLogo": "Verwijderen van logo mislukt",
+  "logoDeleted": "Logo succesvol verwijderd",
+  "failedToUpdateLogo": "Bijwerken van logo mislukt",
+  "failedToReorderLogos": "Herordenen van logo's mislukt",
+  "unknownError": "Er is een onbekende fout opgetreden",
+  "save": "Opslaan",
+  "getStarted": "Aan de slag",
+  "welcomeToSurvey": "Welkom! U staat op het punt deel te nemen aan een enquête."
 }
