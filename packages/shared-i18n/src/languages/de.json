@@ -1722,5 +1722,11 @@
   "Batch Complete!": "Stapel abgeschlossen!",
   "View Results": "Ergebnisse anzeigen",
   "Get More Suggestions": "Mehr Vorschläge erhalten",
-  "View Progress": "Fortschritt anzeigen"
+  "View Progress": "Fortschritt anzeigen",
+  "Strongly Agree": "Stimme voll zu",
+  "Strongly Disagree": "Stimme überhaupt nicht zu",
+  "You have rated it as": "Sie haben es bewertet als",
+  "Are you sure?": "Sind Sie sicher?",
+  "No, go back": "Nein, zurück",
+  "Yes, confirm": "Ja, bestätigen"
 }

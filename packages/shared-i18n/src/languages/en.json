@@ -2461,5 +2461,11 @@
   "Batch Complete!": "Batch Complete!",
   "View Results": "View Results",
   "Get More Suggestions": "Get More Suggestions",
-  "View Progress": "View Progress"
+  "View Progress": "View Progress",
+  "Strongly Agree": "Strongly Agree",
+  "Strongly Disagree": "Strongly Disagree",
+  "You have rated it as": "You have rated it as",
+  "Are you sure?": "Are you sure?",
+  "No, go back": "No, go back",
+  "Yes, confirm": "Yes, confirm"
 }

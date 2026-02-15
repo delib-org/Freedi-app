@@ -1746,5 +1746,11 @@
   "Batch Complete!": "اكتملت الدفعة!",
   "View Results": "عرض النتائج",
   "Get More Suggestions": "احصل على المزيد من الاقتراحات",
-  "View Progress": "عرض التقدم"
+  "View Progress": "عرض التقدم",
+  "Strongly Agree": "أوافق بشدة",
+  "Strongly Disagree": "أعارض بشدة",
+  "You have rated it as": "لقد قيّمته كـ",
+  "Are you sure?": "هل أنت متأكد؟",
+  "No, go back": "لا، ارجع",
+  "Yes, confirm": "نعم، تأكيد"
 }

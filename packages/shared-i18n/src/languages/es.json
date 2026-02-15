@@ -1724,5 +1724,11 @@
   "Batch Complete!": "¡Lote completado!",
   "View Results": "Ver resultados",
   "Get More Suggestions": "Obtener más sugerencias",
-  "View Progress": "Ver progreso"
+  "View Progress": "Ver progreso",
+  "Strongly Agree": "Muy de acuerdo",
+  "Strongly Disagree": "Muy en desacuerdo",
+  "You have rated it as": "Lo has calificado como",
+  "Are you sure?": "¿Estás seguro?",
+  "No, go back": "No, volver",
+  "Yes, confirm": "Sí, confirmar"
 }
