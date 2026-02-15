@@ -183,7 +183,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         setProgrammaticThrow(null);
       } catch (err) {
         console.error('Failed to submit rating:', err);
-        dispatch(setError('Failed to submit rating. Please try again.'));
+        dispatch(setError(t('Failed to submit rating. Please try again.')));
         setProgrammaticThrow(null);
       }
     }, 300); // Wait for animation to complete
@@ -215,7 +215,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
       });
     } catch (err) {
       console.error('Failed to submit proposal:', err);
-      dispatch(setError('Failed to submit proposal. Please try again.'));
+      dispatch(setError(t('Failed to submit proposal. Please try again.')));
 
       // Show error toast
       showToast({

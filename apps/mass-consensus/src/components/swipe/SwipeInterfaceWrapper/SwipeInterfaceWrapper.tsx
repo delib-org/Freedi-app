@@ -59,7 +59,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
 
   // Use authenticated user or anonymous user ID
   const userId = user?.uid || getAnonymousUserId();
-  const userName = user?.displayName || 'Anonymous';
+  const userName = user?.displayName || t('Anonymous');
 
   return (
     <SwipeInterface

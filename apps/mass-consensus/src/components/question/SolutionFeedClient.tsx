@@ -332,7 +332,7 @@ export default function SolutionFeedClient({
           return newSet;
         });
       }
-      setError('Failed to save your evaluation. Please try again.');
+      setError(t('Failed to save your evaluation. Please try again.'));
     }
   };
 
@@ -397,7 +397,7 @@ export default function SolutionFeedClient({
       }
     } catch (error) {
       console.error('Batch fetch error:', error);
-      setError('Failed to load new solutions. Please try again.');
+      setError(t('Failed to load new solutions. Please try again.'));
     } finally {
       setIsLoadingBatch(false);
     }
@@ -459,7 +459,7 @@ export default function SolutionFeedClient({
         {error && (
           <div className={styles.error}>
             <p>{error}</p>
-            <button onClick={() => setError(null)}>Dismiss</button>
+            <button onClick={() => setError(null)}>{t('Dismiss')}</button>
           </div>
         )}
 
@@ -493,7 +493,7 @@ export default function SolutionFeedClient({
                   {currentIndex + 1} / {solutions.length}
                 </span>
                 {batchCount > 1 && (
-                  <span className={styles.batchBadge}>Batch {batchCount}</span>
+                  <span className={styles.batchBadge}>{t('Batch')} {batchCount}</span>
                 )}
               </div>
               <div className={styles.progressTrack}>

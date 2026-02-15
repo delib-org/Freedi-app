@@ -1,5 +1,6 @@
 'use client';
 
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './AchievementBadge.module.scss';
 
 export type BadgeType =
@@ -10,35 +11,35 @@ export type BadgeType =
 
 interface BadgeConfig {
   icon: string;
-  label: string;
+  labelKey: string;
   color: string;
-  description: string;
+  descriptionKey: string;
 }
 
 const BADGE_CONFIG: Record<BadgeType, BadgeConfig> = {
   'early-contributor': {
     icon: '🌟',
-    label: 'Early Bird',
+    labelKey: 'Early Bird',
     color: '#FFD700',
-    description: 'Among the first 50 participants',
+    descriptionKey: 'Among the first 50 participants',
   },
   'thoughtful-evaluator': {
     icon: '🧠',
-    label: 'Deep Thinker',
+    labelKey: 'Deep Thinker',
     color: '#9C27B0',
-    description: 'Evaluated 5+ solutions',
+    descriptionKey: 'Evaluated 5+ solutions',
   },
   'solution-creator': {
     icon: '💡',
-    label: 'Innovator',
+    labelKey: 'Innovator',
     color: '#FF9800',
-    description: 'Submitted your own solution',
+    descriptionKey: 'Submitted your own solution',
   },
   'consensus-participant': {
     icon: '🤝',
-    label: 'Team Player',
+    labelKey: 'Team Player',
     color: '#4CAF50',
-    description: 'Completed the full consensus flow',
+    descriptionKey: 'Completed the full consensus flow',
   },
 };
 
@@ -51,18 +52,19 @@ export default function AchievementBadge({
   type,
   showDescription = false,
 }: AchievementBadgeProps) {
+  const { t } = useTranslation();
   const config = BADGE_CONFIG[type];
 
   return (
     <div
       className={styles.badge}
       style={{ '--badge-color': config.color } as React.CSSProperties}
-      title={config.description}
+      title={t(config.descriptionKey)}
     >
       <span className={styles.icon}>{config.icon}</span>
-      <span className={styles.label}>{config.label}</span>
+      <span className={styles.label}>{t(config.labelKey)}</span>
       {showDescription && (
-        <span className={styles.description}>{config.description}</span>
+        <span className={styles.description}>{t(config.descriptionKey)}</span>
       )}
     </div>
   );
