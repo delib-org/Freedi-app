@@ -1755,5 +1755,9 @@
   "Yes, confirm": "نعم، تأكيد",
   "Have a suggestion to improve this topic? Share your idea with the community!": "هل لديك اقتراح لتحسين هذا الموضوع؟ شارك فكرتك مع المجتمع!",
   "Type your proposal here...": "اكتب اقتراحك هنا...",
-  "Submit Proposal": "إرسال الاقتراح"
+  "Submit Proposal": "إرسال الاقتراح",
+  "of": "من",
+  "All done!": "انتهيت!",
+  "You've evaluated all proposals.": "لقد قيّمت جميع الاقتراحات.",
+  "Submit Your Own Idea": "أرسل فكرتك الخاصة"
 }
