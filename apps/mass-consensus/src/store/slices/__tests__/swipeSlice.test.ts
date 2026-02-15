@@ -20,14 +20,27 @@ import reducer, {
   setError,
   resetSwipeState,
 } from '../swipeSlice';
-import { Statement } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { SWIPE, RATING } from '@/constants/common';
+
+const mockCreator = {
+  uid: 'user1',
+  displayName: 'Test User',
+  email: '',
+  photoURL: '',
+  isAnonymous: false,
+};
 
 describe('swipeSlice', () => {
   const mockStatement1: Statement = {
     statementId: 'stmt1',
     statement: 'Test statement 1',
-    createdBy: 'user1',
+    creatorId: 'user1',
+    creator: mockCreator,
+    statementType: StatementType.option,
+    parentId: 'q1',
+    topParentId: 'q1',
+    consensus: 0,
     createdAt: Date.now(),
     lastUpdate: Date.now(),
   } as Statement;
@@ -35,7 +48,12 @@ describe('swipeSlice', () => {
   const mockStatement2: Statement = {
     statementId: 'stmt2',
     statement: 'Test statement 2',
-    createdBy: 'user1',
+    creatorId: 'user1',
+    creator: mockCreator,
+    statementType: StatementType.option,
+    parentId: 'q1',
+    topParentId: 'q1',
+    consensus: 0,
     createdAt: Date.now(),
     lastUpdate: Date.now(),
   } as Statement;

@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * SurveyProgress Component Tests
  */
 
@@ -6,7 +10,7 @@ import { render, screen } from '@testing-library/react';
 import SurveyProgress from '../SurveyProgress';
 
 // Mock i18n
-jest.mock('@freedi/shared-i18n/react', () => ({
+jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
@@ -25,8 +29,8 @@ describe('SurveyProgress', () => {
   it('should display correct count text', () => {
     render(<SurveyProgress current={3} total={7} />);
 
-    expect(screen.getByText(/3/)).toBeInTheDocument();
-    expect(screen.getByText(/7/)).toBeInTheDocument();
+    // The component renders "3 of 7" so match the full count span
+    expect(screen.getByText(/3 of 7/)).toBeInTheDocument();
   });
 
   it('should display correct percentage', () => {

@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * ProposalModal Component Tests
  */
 
@@ -6,8 +10,15 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import ProposalModal from '../ProposalModal';
 import { VALIDATION } from '@/constants/common';
 
+// Mock EnhancedLoader to avoid SCSS import
+jest.mock('@/components/question/EnhancedLoader', () => {
+  return function MockEnhancedLoader() {
+    return <div data-testid="enhanced-loader">Loading...</div>;
+  };
+});
+
 // Mock i18n
-jest.mock('@freedi/shared-i18n/react', () => ({
+jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
@@ -307,7 +318,8 @@ describe('ProposalModal', () => {
     const submitButton = screen.getByText('Submit Proposal');
     fireEvent.click(submitButton);
 
-    expect(screen.getByText('Submitting...')).toBeInTheDocument();
+    // When submitting, EnhancedLoader is shown (mocked as "Loading...")
+    expect(screen.getByTestId('enhanced-loader')).toBeInTheDocument();
 
     resolveSubmit!();
     await waitFor(() => {
@@ -336,8 +348,10 @@ describe('ProposalModal', () => {
     const submitButton = screen.getByText('Submit Proposal');
     fireEvent.click(submitButton);
 
-    expect(screen.getByText('Cancel')).toBeDisabled();
-    expect(screen.getByLabelText('Close')).toBeDisabled();
+    // When submitting, EnhancedLoader replaces the form content
+    // so Cancel/Close buttons are not in the DOM
+    expect(screen.queryByText('Cancel')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Close')).not.toBeInTheDocument();
 
     resolveSubmit!();
     await waitFor(() => {

@@ -3,6 +3,18 @@
  * Following CLAUDE.md - 80%+ coverage required
  */
 
+// Mock Firebase client before importing controller
+jest.mock('@/lib/firebase/client', () => ({
+  db: {},
+  auth: {},
+}));
+
+// Mock Firestore functions
+jest.mock('firebase/firestore', () => ({
+  setDoc: jest.fn().mockResolvedValue(undefined),
+  doc: jest.fn().mockReturnValue({}),
+}));
+
 import { submitProposal, validateProposal } from '../proposalController';
 import { VALIDATION } from '@/constants/common';
 import { ValidationError } from '@/lib/utils/errorHandling';
@@ -158,7 +170,10 @@ describe('proposalController', () => {
     });
 
     it('should accept text at maximum valid length', () => {
-      const maxText = 'A'.repeat(VALIDATION.MAX_STATEMENT_LENGTH);
+      // Use varied text to avoid triggering the repeated characters check
+      const base = 'This is a valid proposal sentence. ';
+      const maxText = base.repeat(Math.ceil(VALIDATION.MAX_STATEMENT_LENGTH / base.length))
+        .slice(0, VALIDATION.MAX_STATEMENT_LENGTH);
       const result = validateProposal(maxText);
 
       expect(result.isValid).toBe(true);
