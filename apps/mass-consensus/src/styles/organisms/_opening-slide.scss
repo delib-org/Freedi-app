@@ -69,8 +69,8 @@
   }
 
   &__logo {
-    max-width: 180px;
-    max-height: 72px;
+    max-width: 240px;
+    max-height: 100px;
     object-fit: contain;
     animation: openingSlide-logoFadeIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
     animation-delay: calc(var(--logo-index, 0) * 0.1s);
@@ -294,8 +294,8 @@
     }
 
     &__logo {
-      max-width: 120px;
-      max-height: 56px;
+      max-width: 180px;
+      max-height: 80px;
     }
 
     &__content {
@@ -346,7 +346,7 @@
     }
 
     &__logo {
-      max-height: 64px;
+      max-height: 88px;
     }
   }
 
