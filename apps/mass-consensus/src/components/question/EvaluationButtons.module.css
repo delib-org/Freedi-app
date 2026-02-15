@@ -3,6 +3,7 @@
   gap: var(--spacing-sm);
   justify-content: center;
   flex-wrap: wrap;
+  direction: ltr; /* Match zone strip order: negative (left) to positive (right) */
 }
 
 .buttons.compact {

@@ -64,13 +64,16 @@ export default function SwipeCard({
   const handleEnd = () => {
     if (throwDirection) return;
     setIsDragging(false);
-    if (Math.abs(dragX) > 100) {
+    const absDrag = Math.abs(dragX);
+    if (absDrag > 80) {
       if (dragX > 0) {
-        // Swipe right = like (score 0.5)
-        onRate(solution.statementId, 0.5, 'right');
+        // Swipe right: strong (>160px) = +1, moderate = +0.5
+        const score = absDrag > 160 ? 1 : 0.5;
+        onRate(solution.statementId, score, 'right');
       } else {
-        // Swipe left = dislike (score -0.5)
-        onRate(solution.statementId, -0.5, 'left');
+        // Swipe left: strong (>160px) = -1, moderate = -0.5
+        const score = absDrag > 160 ? -1 : -0.5;
+        onRate(solution.statementId, score, 'left');
       }
     }
     setDragX(0);
