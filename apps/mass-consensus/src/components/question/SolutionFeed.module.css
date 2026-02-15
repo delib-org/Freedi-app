@@ -523,3 +523,143 @@
     font-size: 3rem;
   }
 }
+
+/* ============================================ */
+/* RATING CONFIRMATION MODAL (Learning Mode)   */
+/* ============================================ */
+
+.confirmationOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+  padding: 1rem;
+}
+
+.confirmationModal {
+  background: var(--card-default, #fff);
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 90%;
+  text-align: center;
+  box-shadow: var(--shadow-lg, 0 20px 60px rgba(0, 0, 0, 0.3));
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Variant colors for the confirmation modal */
+.confirmation_strongly-agree {
+  background: var(--rating-strongly-agree, #dcfce7);
+  border: 2px solid #22c55e;
+}
+
+.confirmation_agree {
+  background: var(--rating-agree, #d1fae5);
+  border: 2px solid #6ee7b7;
+}
+
+.confirmation_neutral {
+  background: var(--rating-neutral, #f1f5f9);
+  border: 2px solid #cbd5e1;
+}
+
+.confirmation_disagree {
+  background: var(--rating-disagree, #fef3c7);
+  border: 2px solid #fcd34d;
+}
+
+.confirmation_strongly-disagree {
+  background: var(--rating-strongly-disagree, #fecaca);
+  border: 2px solid #f87171;
+}
+
+.confirmationEmoji {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.confirmationTitle {
+  font-size: 1.125rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0 0 0.5rem;
+  font-weight: 500;
+}
+
+.confirmationRating {
+  font-size: 1.5rem;
+  color: var(--text-primary, #1e293b);
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.confirmationQuestion {
+  font-size: 1rem;
+  color: var(--text-body, #475569);
+  margin: 0 0 1.5rem;
+}
+
+.confirmationButtons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.confirmationButton {
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.confirmationCancel {
+  background: var(--btn-secondary, #e2e8f0);
+  color: var(--text-primary, #1e293b);
+}
+
+.confirmationCancel:hover {
+  background: #d1d5db;
+}
+
+.confirmationConfirm {
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+}
+
+.confirmationConfirm:hover {
+  background: var(--btn-primary-hover, #4a6fc4);
+}
+
+@media (max-width: 768px) {
+  .confirmationModal {
+    padding: 1.25rem;
+  }
+
+  .confirmationEmoji {
+    font-size: 3rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .confirmationTitle {
+    font-size: 1rem;
+  }
+
+  .confirmationRating {
+    font-size: 1.25rem;
+  }
+
+  .confirmationButtons {
+    gap: 0.75rem;
+  }
+
+  .confirmationButton {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+}
