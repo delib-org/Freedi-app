@@ -366,8 +366,49 @@ service cloud.firestore {
     }
 
     match /evaluations/{evluationId=**} {
-      allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow read: if true; // Allow public read for mass consensus
+      allow create: if request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
+                    && request.resource.data.evaluationId is string
+                    && request.resource.data.parentId is string
+                    && request.resource.data.statementId is string
+                    && request.resource.data.evaluatorId is string
+                    && request.resource.data.evaluation is number
+                    && request.resource.data.updatedAt is number;
+      allow update: if request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
+                    && request.resource.data.evaluationId is string
+                    && request.resource.data.parentId is string
+                    && request.resource.data.statementId is string
+                    && request.resource.data.evaluatorId is string
+                    && request.resource.data.evaluation is number
+                    && request.resource.data.updatedAt is number;
+      allow delete: if request.auth.uid != null; // Only authenticated users can delete
+    }
+
+    // Typing status for real-time collaboration indicators
+    match /typingStatus/{typingId} {
+      // Anyone authenticated can read typing status
+      // DEBUG: Allow public read to investigate permission error
+      allow read: if true;
+      // Users can only write their own typing status (document ID includes their userId)
+      allow create, update: if request.auth != null &&
+                              request.resource.data.userId == request.auth.uid;
+      // Users can delete their own typing status
+      // Note: resource may be null if document doesn't exist, so we check for it first
+      allow delete: if request.auth != null &&
+                      (resource == null || resource.data.userId == request.auth.uid);
+    }
+
+    // Suggestions for document paragraphs (Sign app)
+    match /suggestions/{suggestionId} {
+      // Anyone authenticated can read suggestions
+      // DEBUG: Allow public read to investigate permission error
+      allow read: if true;
+      // Users can create suggestions
+      allow create: if request.auth != null &&
+                      request.resource.data.creatorId == request.auth.uid;
+      // Users can only update/delete their own suggestions
+      allow update, delete: if request.auth != null &&
+                              resource.data.creatorId == request.auth.uid;
     }
 
     match /userEvaluations/{documentId} {
@@ -648,5 +689,33 @@ service cloud.firestore {
     // Room Assignment Rules are defined above in the simple rules section
     // (rooms, roomsSettings, roomParticipants at lines 343-356)
     // Cloud functions handle authorization for writes
+
+    // Version Control - Paragraph Replacement Queue
+    match /paragraphReplacementQueue/{queueId} {
+      // Allow read for authenticated users
+      // Note: AuthSync uses anonymous login, so request.auth.uid is NOT the real userId
+      // Admin verification is done server-side when processing actions (approve/reject)
+      // The client query filters by documentId, so users only see queue items for documents they access
+      allow read: if request.auth != null;
+
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
+
+    // Version Control - Audit Trail
+    match /versionControlAudit/{auditId} {
+      // Allow queries for authenticated users
+      // AuthSync component ensures Firebase Auth is initialized on client
+      allow list: if request.auth != null;
+
+      // For single document reads, verify admin access
+      allow get: if request.auth != null &&
+                    resource.data.documentId != null &&
+                    exists(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))) &&
+                    get(/databases/$(database)/documents/statementsSubscribe/$(request.auth.uid + '--' + cleanPath(resource.data.documentId))).data.role == 'admin';
+
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
   }
 }

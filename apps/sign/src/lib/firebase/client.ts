@@ -22,6 +22,21 @@ import {
   FirebaseStorage,
   connectStorageEmulator,
 } from 'firebase/storage';
+import {
+  getDatabase,
+  connectDatabaseEmulator,
+  Database,
+} from 'firebase/database';
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  Firestore,
+} from 'firebase/firestore';
+import {
+  getAnalytics,
+  isSupported,
+  Analytics,
+} from 'firebase/analytics';
 import { logError } from '@/lib/utils/errorHandling';
 
 // Firebase config - should match main app
@@ -38,8 +53,13 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let auth: Auth;
 let storage: FirebaseStorage;
+let database: Database;
+let firestore: Firestore;
+let analytics: Analytics | null = null;
 let authEmulatorConnected = false;
 let storageEmulatorConnected = false;
+let databaseEmulatorConnected = false;
+let firestoreEmulatorConnected = false;
 
 /**
  * Initialize Firebase client SDK
@@ -51,16 +71,7 @@ export function initializeFirebaseClient(): FirebaseApp {
     return app;
   }
 
-  // Debug: Check if env vars are loaded (don't log actual values for security)
-  console.info('[Firebase Client - Sign] Config check:', {
-    hasApiKey: !!firebaseConfig.apiKey,
-    hasAuthDomain: !!firebaseConfig.authDomain,
-    hasProjectId: !!firebaseConfig.projectId,
-    projectId: firebaseConfig.projectId, // Safe to log project ID
-  });
-
   app = initializeApp(firebaseConfig);
-  console.info('[Firebase Client - Sign] Initialized');
 
   return app;
 }
@@ -80,7 +91,6 @@ export function getFirebaseAuth(): Auth {
       try {
         connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
         authEmulatorConnected = true;
-        console.info('[Firebase Client - Sign] Connected to Auth emulator');
       } catch {
         // Already connected or emulator not available
       }
@@ -88,6 +98,38 @@ export function getFirebaseAuth(): Auth {
   }
 
   return auth;
+}
+
+/**
+ * Get Firestore instance for real-time listeners on the client
+ * @deprecated Use getFirebaseFirestore() instead for consistency
+ */
+export function getFirestoreClient(): Firestore {
+  return getFirebaseFirestore();
+}
+
+/**
+ * Get Firebase Firestore instance
+ */
+export function getFirebaseFirestore(): Firestore {
+  if (!firestore) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    firestore = getFirestore(app);
+
+    // Connect to Firestore emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !firestoreEmulatorConnected) {
+      try {
+        connectFirestoreEmulator(firestore, 'localhost', 8081);
+        firestoreEmulatorConnected = true;
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return firestore;
 }
 
 /**
@@ -99,17 +141,13 @@ export async function googleLogin(): Promise<User | null> {
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(authInstance, provider);
 
-    console.info('[Firebase Auth] User signed in with Google', { userId: result.user.uid });
-
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
 
     // Auto-accept any pending invitations for this user's email
+    // Use sendBeacon to survive page navigation/refresh after login
     if (result.user.email) {
-      acceptPendingInvitations().catch((error) => {
-        // Don't fail login if invitation acceptance fails
-        logError(error, { operation: 'auth.googleLogin.acceptInvitations', userId: result.user.uid });
-      });
+      triggerAutoAcceptInvitations();
     }
 
     return result.user;
@@ -126,8 +164,6 @@ export async function anonymousLogin(): Promise<User | null> {
   try {
     const authInstance = getFirebaseAuth();
     const result = await signInAnonymously(authInstance);
-
-    console.info('[Firebase Auth] User signed in anonymously', { userId: result.user.uid });
 
     // Set cookie for server-side access
     setCookiesFromUser(result.user);
@@ -151,8 +187,6 @@ export async function logout(): Promise<void> {
     document.cookie = 'userId=; path=/; max-age=0';
     document.cookie = 'userDisplayName=; path=/; max-age=0';
     document.cookie = 'userEmail=; path=/; max-age=0';
-
-    console.info('[Firebase Auth] User logged out');
   } catch (error) {
     logError(error, { operation: 'auth.logout' });
     throw error;
@@ -170,10 +204,9 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
       setCookiesFromUser(user);
 
       // Auto-accept pending invitations when user has email (Google login)
+      // Use sendBeacon to survive page navigation/refresh
       if (user.email) {
-        acceptPendingInvitations().catch((error) => {
-          logError(error, { operation: 'auth.onAuthStateChanged.acceptInvitations', userId: user.uid });
-        });
+        triggerAutoAcceptInvitations();
       }
     }
     callback(user);
@@ -207,6 +240,28 @@ export function getCurrentUser(): User | null {
 }
 
 /**
+ * Trigger auto-accept using sendBeacon (fire-and-forget)
+ * This survives page navigation/refresh after login
+ */
+function triggerAutoAcceptInvitations(): void {
+  try {
+    // sendBeacon survives page unload/navigation
+    const success = navigator.sendBeacon('/api/auth/accept-pending-invitations');
+    if (!success) {
+      // Fallback to fetch if sendBeacon fails
+      acceptPendingInvitations().catch((error) => {
+        logError(error, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
+      });
+    }
+  } catch {
+    // Fallback to fetch if sendBeacon throws
+    acceptPendingInvitations().catch((err) => {
+      logError(err, { operation: 'auth.triggerAutoAcceptInvitations.fallback' });
+    });
+  }
+}
+
+/**
  * Auto-accept pending invitations for the current user's email
  * Called automatically after Google login
  */
@@ -227,13 +282,6 @@ export async function acceptPendingInvitations(): Promise<{
     }
 
     const data = await response.json();
-
-    if (data.acceptedCount > 0) {
-      console.info('[Firebase Auth] Auto-accepted invitations', {
-        count: data.acceptedCount,
-        documents: data.acceptedInvitations?.map((inv: { documentId: string }) => inv.documentId),
-      });
-    }
 
     return {
       acceptedCount: data.acceptedCount || 0,
@@ -260,7 +308,6 @@ export function getFirebaseStorage(): FirebaseStorage {
       try {
         connectStorageEmulator(storage, 'localhost', 9199);
         storageEmulatorConnected = true;
-        console.info('[Firebase Client - Sign] Connected to Storage emulator');
       } catch {
         // Already connected or emulator not available
       }
@@ -268,6 +315,71 @@ export function getFirebaseStorage(): FirebaseStorage {
   }
 
   return storage;
+}
+
+/**
+ * Get Firebase Realtime Database instance
+ */
+export function getFirebaseRealtimeDatabase(): Database {
+  if (!database) {
+    if (!app) {
+      initializeFirebaseClient();
+    }
+    database = getDatabase(app);
+
+    // Connect to database emulator in development
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && !databaseEmulatorConnected) {
+      try {
+        connectDatabaseEmulator(database, 'localhost', 9000);
+        databaseEmulatorConnected = true;
+      } catch {
+        // Already connected or emulator not available
+      }
+    }
+  }
+
+  return database;
+}
+
+/**
+ * Get Firebase Analytics instance
+ * Analytics only works in browser environment
+ */
+export async function getFirebaseAnalytics(): Promise<Analytics | null> {
+  if (analytics) {
+    return analytics;
+  }
+
+  // Analytics only works in browser
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  try {
+    const supported = await isSupported();
+    if (!supported) {
+      return null;
+    }
+
+    if (!app) {
+      initializeFirebaseClient();
+    }
+
+    analytics = getAnalytics(app);
+
+    return analytics;
+  } catch (error) {
+    logError(error, { operation: 'analytics.getFirebaseAnalytics' });
+
+    return null;
+  }
+}
+
+/**
+ * Get analytics instance synchronously (may be null if not initialized)
+ */
+export function getAnalyticsInstance(): Analytics | null {
+  return analytics;
 }
 
 /**
@@ -300,7 +412,6 @@ export async function uploadFile(
       async () => {
         try {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-          console.info('[Firebase Storage] Upload complete', { path });
           resolve(downloadURL);
         } catch (error) {
           logError(error, { operation: 'storage.uploadFile.getDownloadURL', metadata: { path } });

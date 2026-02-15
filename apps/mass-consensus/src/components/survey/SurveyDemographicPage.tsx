@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import type { SurveyDemographicPage, SurveyDemographicQuestion, SurveyDemographicAnswer } from '@freedi/shared-types';
+import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/shared-types';
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
@@ -42,9 +42,9 @@ function ButtonSpinner() {
 interface SurveyDemographicPageProps {
   survey: SurveyWithQuestions;
   demographicPage: SurveyDemographicPage;
-  questions: SurveyDemographicQuestion[];
+  questions: UserDemographicQuestion[];
   currentFlowIndex: number;
-  existingAnswers?: SurveyDemographicAnswer[];
+  existingAnswers?: UserDemographicQuestion[];
 }
 
 interface FormAnswers {
@@ -70,7 +70,8 @@ export default function SurveyDemographicPage({
   // Initialize answers from existing data
   const initialAnswers: FormAnswers = {};
   existingAnswers.forEach((answer) => {
-    initialAnswers[answer.questionId] = {
+    const qId = answer.userQuestionId || '';
+    initialAnswers[qId] = {
       answer: answer.answer,
       answerOptions: answer.answerOptions,
     };
@@ -164,7 +165,7 @@ export default function SurveyDemographicPage({
     const newErrors: Record<string, string> = {};
 
     questions.forEach((question) => {
-      const answer = answers[question.questionId];
+      const answer = answers[question.userQuestionId || ''];
       const hasTextAnswer = answer?.answer && answer.answer.trim() !== '';
       const hasCheckboxAnswer = answer?.answerOptions && answer.answerOptions.length > 0;
 
@@ -174,14 +175,14 @@ export default function SurveyDemographicPage({
           question.type === UserDemographicQuestionType.checkbox &&
           !hasCheckboxAnswer
         ) {
-          newErrors[question.questionId] = t('requiredField') || 'This field is required';
+          newErrors[question.userQuestionId || ''] = t('requiredField') || 'This field is required';
 
           return;
         } else if (
           question.type !== UserDemographicQuestionType.checkbox &&
           !hasTextAnswer
         ) {
-          newErrors[question.questionId] = t('requiredField') || 'This field is required';
+          newErrors[question.userQuestionId || ''] = t('requiredField') || 'This field is required';
 
           return;
         }
@@ -196,13 +197,13 @@ export default function SurveyDemographicPage({
         const numValue = parseFloat(answer?.answer || '');
 
         if (isNaN(numValue)) {
-          newErrors[question.questionId] = t('invalidNumber') || 'Please enter a valid number';
+          newErrors[question.userQuestionId || ''] = t('invalidNumber') || 'Please enter a valid number';
 
           return;
         }
 
         if (question.min !== undefined && numValue < question.min) {
-          newErrors[question.questionId] =
+          newErrors[question.userQuestionId || ''] =
             tWithParams('valueTooLow', { min: question.min }) ||
             `Value must be at least ${question.min}`;
 
@@ -210,7 +211,7 @@ export default function SurveyDemographicPage({
         }
 
         if (question.max !== undefined && numValue > question.max) {
-          newErrors[question.questionId] =
+          newErrors[question.userQuestionId || ''] =
             tWithParams('valueTooHigh', { max: question.max }) ||
             `Value must be at most ${question.max}`;
 
@@ -314,12 +315,12 @@ export default function SurveyDemographicPage({
     }
   }, [isNavigating, currentFlowIndex, survey.settings.allowReturning, router, survey.surveyId]);
 
-  const renderQuestion = (question: SurveyDemographicQuestion) => {
-    const answer = answers[question.questionId];
-    const error = errors[question.questionId];
+  const renderQuestion = (question: UserDemographicQuestion) => {
+    const answer = answers[question.userQuestionId || ''];
+    const error = errors[question.userQuestionId || ''];
 
     return (
-      <div key={question.questionId} className={styles.demographicQuestion}>
+      <div key={question.userQuestionId || ''} className={styles.demographicQuestion}>
         <label className={styles.questionLabel}>
           <InlineMarkdown text={question.question} />
           {question.required && <span className={styles.required}>*</span>}
@@ -330,7 +331,7 @@ export default function SurveyDemographicPage({
             type="text"
             className={`${styles.questionInput} ${error ? styles.inputError : ''}`}
             value={answer?.answer || ''}
-            onChange={(e) => handleTextChange(question.questionId, e.target.value)}
+            onChange={(e) => handleTextChange(question.userQuestionId || '', e.target.value)}
             placeholder={t('enterAnswer') || 'Enter your answer'}
           />
         )}
@@ -339,7 +340,7 @@ export default function SurveyDemographicPage({
           <textarea
             className={`${styles.questionTextarea} ${error ? styles.inputError : ''}`}
             value={answer?.answer || ''}
-            onChange={(e) => handleTextChange(question.questionId, e.target.value)}
+            onChange={(e) => handleTextChange(question.userQuestionId || '', e.target.value)}
             placeholder={t('enterAnswer') || 'Enter your answer'}
             rows={3}
           />
@@ -351,10 +352,10 @@ export default function SurveyDemographicPage({
               <label key={idx} className={styles.radioLabel}>
                 <input
                   type="radio"
-                  name={question.questionId}
+                  name={question.userQuestionId || ''}
                   value={option.option}
                   checked={answer?.answer === option.option}
-                  onChange={() => handleRadioChange(question.questionId, option.option)}
+                  onChange={() => handleRadioChange(question.userQuestionId || '', option.option)}
                 />
                 <span
                   className={styles.optionText}
@@ -376,7 +377,7 @@ export default function SurveyDemographicPage({
                   value={option.option}
                   checked={(answer?.answerOptions || []).includes(option.option)}
                   onChange={(e) =>
-                    handleCheckboxChange(question.questionId, option.option, e.target.checked)
+                    handleCheckboxChange(question.userQuestionId || '', option.option, e.target.checked)
                   }
                 />
                 <span
@@ -408,7 +409,7 @@ export default function SurveyDemographicPage({
                 max={question.max ?? 10}
                 step={question.step ?? 1}
                 value={answer?.answer || question.min || 1}
-                onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
+                onChange={(e) => handleNumberChange(question.userQuestionId || '', e.target.value)}
               />
               <span className={styles.rangeMaxLabel}>
                 {question.maxLabel || question.max || 10}
@@ -425,7 +426,7 @@ export default function SurveyDemographicPage({
             max={question.max ?? undefined}
             step={question.step ?? 1}
             value={answer?.answer || ''}
-            onChange={(e) => handleNumberChange(question.questionId, e.target.value)}
+            onChange={(e) => handleNumberChange(question.userQuestionId || '', e.target.value)}
             placeholder={t('enterNumber') || 'Enter a number'}
           />
         )}

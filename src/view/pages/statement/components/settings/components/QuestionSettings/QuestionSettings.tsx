@@ -22,6 +22,7 @@ import EvaluationsIcon from '@/assets/icons/evaluationsIcon.svg?react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
+import RatingScaleButtons from './RatingScaleButtons/RatingScaleButtons';
 import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
 import VotingSettings from './votingSettings/VotingSettings';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
@@ -335,25 +336,35 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				{isVoting && <VotingSettings />}
 
 				<SectionTitle title={t('Rating Scale')} />
-				<MultiSwitch
+				<RatingScaleButtons
 					options={[
 						{
 							label: t('5-Point Scale'),
 							value: evaluationType.range,
 							icon: <SuggestionsIcon />,
-							toolTip: t('5 emoji faces from negative to positive')
+							toolTip: t('5 emoji faces from negative to positive'),
+							score: 0
 						},
 						{
 							label: t('Simple Scale'),
 							value: evaluationType.likeDislike,
 							icon: <EvaluationsIcon />,
-							toolTip: t('Thumbs up or down')
+							toolTip: t('Thumbs up or down'),
+							score: 1
 						},
 						{
 							label: t('Like Only'),
 							value: evaluationType.singleLike,
 							icon: <LikeIcon />,
-							toolTip: t('Only positive feedback')
+							toolTip: t('Only positive feedback'),
+							score: 2
+						},
+						{
+							label: t('Community Voice'),
+							value: evaluationType.communityVoice,
+							icon: <UsersIcon />,
+							toolTip: t('Respectful 4-level resonance scale'),
+							score: 3
 						},
 					]}
 					onClick={(value) => { handleRatingScaleChange(value as evaluationType); }}

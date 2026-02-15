@@ -2,6 +2,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 import styles from './MarkdownRenderer.module.scss';
 
 interface MarkdownRendererProps {
@@ -16,7 +17,7 @@ interface MarkdownRendererProps {
 export default function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   return (
     <div className={`${styles.markdown} ${className || ''}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{content}</ReactMarkdown>
     </div>
   );
 }

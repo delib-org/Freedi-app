@@ -7,7 +7,6 @@ import Checkbox from "../checkbox/Checkbox";
 import ApproveMember from "./approveMember/WaitingMember";
 import waitingStyles from "./approveMember/WaitingMember.module.scss";
 import styles from "./WaitingList.module.scss";
-import "@/view/style/buttons.scss";
 import { useApproveMembership } from "./WaitingListVM";
 
 const WaitingList = () => {
@@ -72,10 +71,10 @@ const WaitingList = () => {
 
 					{selectedIds.length === waitingList.length && (
 						<div className={waitingStyles.actions}>
-							<button className="btn--approve" onClick={handleApproveAll}>
+							<button className={waitingStyles.approveBtn} onClick={handleApproveAll}>
 								{t("Approve All")}
 							</button>
-							<button className="btn--reject" onClick={handleDenyAll}>
+							<button className={waitingStyles.rejectBtn} onClick={handleDenyAll}>
 								{t("Deny All")}
 							</button>
 						</div>
@@ -96,7 +95,7 @@ const WaitingList = () => {
 						/>
 					))}
 
-					<button className="btn--Close" onClick={() => setShow(false)}>
+					<button className={styles.closeBtn} onClick={() => setShow(false)}>
 						{t("Close")}
 					</button>
 				</div>

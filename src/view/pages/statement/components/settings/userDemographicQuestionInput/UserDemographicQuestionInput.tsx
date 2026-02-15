@@ -34,6 +34,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 			case UserDemographicQuestionType.text:
 			case UserDemographicQuestionType.textarea:
 			case UserDemographicQuestionType.radio:
+			case UserDemographicQuestionType.dropdown:
 				if (
 					!inputValue ||
 					(typeof inputValue === 'string' && inputValue.trim() === '')
@@ -195,6 +196,35 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 							);
 						})}
 					</div>
+				);
+
+
+			case UserDemographicQuestionType.dropdown:
+				return (
+					<select
+						value={typeof value === 'string' ? value : ''}
+						onChange={(e) => {
+							const newValue = e.target.value;
+							validateInput(newValue);
+							onChange(newValue);
+						}}
+						className={styles.dropdownSelect}
+						required={required}
+						aria-required={required}
+						aria-invalid={!!validationError}
+						aria-describedby={
+							validationError
+								? `${question.userQuestionId}-error`
+								: undefined
+						}
+					>
+						<option value=''>{t('Select an option')}</option>
+						{question.options?.map((option, index) => (
+							<option key={index} value={option.option}>
+								{option.option}
+							</option>
+						))}
+					</select>
 				);
 
 			default:

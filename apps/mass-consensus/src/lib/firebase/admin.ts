@@ -1,5 +1,6 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import { getStorage, Storage } from 'firebase-admin/storage';
 
 // Handle emulator configuration BEFORE any Firebase initialization
 // Firebase Admin SDK automatically uses emulators if FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST are set
@@ -17,6 +18,7 @@ if (process.env.USE_FIREBASE_EMULATOR === 'true') {
 
 let app: App;
 let firestore: Firestore;
+let storage: Storage;
 
 /**
  * Initialize Firebase Admin SDK
@@ -46,6 +48,7 @@ return app;
           privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
         }),
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
       console.info('[Firebase Admin] Initialized with explicit credentials');
     } else if (hasServiceAccountFile) {
@@ -56,12 +59,14 @@ return app;
       app = initializeApp({
         credential: cert(serviceAccount),
         projectId: serviceAccount.project_id,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
       console.info('[Firebase Admin] Initialized with service account file');
     } else {
       // Use default credentials (works in Firebase Functions, Cloud Run, etc.)
       app = initializeApp({
         projectId: process.env.FIREBASE_PROJECT_ID,
+        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
       });
       console.info('[Firebase Admin] Initialized with default credentials');
     }
@@ -92,13 +97,37 @@ export function getFirestoreAdmin(): Firestore {
       console.info('[Firebase Admin] Connected to production Firestore');
     }
   }
-  
+
 return firestore;
+}
+
+/**
+ * Get Storage instance
+ * Lazy initialization - emulator connection is automatic via FIREBASE_STORAGE_EMULATOR_HOST env var
+ */
+export function getStorageAdmin(): Storage {
+  if (!storage) {
+    if (!app) {
+      initializeFirebaseAdmin();
+    }
+
+    storage = getStorage(app);
+
+    const emulatorHost = process.env.FIREBASE_STORAGE_EMULATOR_HOST;
+    if (emulatorHost) {
+      console.info('[Firebase Admin] Connected to Storage emulator:', emulatorHost);
+    } else {
+      console.info('[Firebase Admin] Connected to production Storage');
+    }
+  }
+
+return storage;
 }
 
 // Export singleton instance
 export const admin = {
   firestore: getFirestoreAdmin,
+  storage: getStorageAdmin,
   app: () => app || initializeFirebaseAdmin(),
 };
 

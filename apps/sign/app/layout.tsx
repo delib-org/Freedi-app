@@ -1,5 +1,4 @@
 import { Metadata, Viewport } from 'next';
-import { Analytics } from '@vercel/analytics/react';
 import { cookies, headers } from 'next/headers';
 import {
   getTranslations,
@@ -8,6 +7,7 @@ import {
 } from '@freedi/shared-i18n/next';
 import { COOKIE_KEY } from '@freedi/shared-i18n';
 import { GoogleAnalytics } from '@/components/analytics/GoogleAnalytics';
+import { AuthSync } from '@/components/auth/AuthSync';
 import './globals.scss';
 
 export const metadata: Metadata = {
@@ -54,6 +54,7 @@ export default async function RootLayout({
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" />
       </head>
       <body suppressHydrationWarning>
+        <AuthSync />
         <NextTranslationProvider
           initialLanguage={language}
           initialDictionary={dictionary}
@@ -62,7 +63,6 @@ export default async function RootLayout({
           {children as any}
         </NextTranslationProvider>
         <GoogleAnalytics />
-        <Analytics />
       </body>
     </html>
   );

@@ -1,0 +1,218 @@
+/**
+ * Accessibility Statement Page Styles
+ */
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: var(--spacing-xl, 32px) var(--spacing-lg, 24px);
+  font-family: var(--font-family-base, sans-serif);
+}
+
+.header {
+  text-align: center;
+  margin-bottom: var(--spacing-xl, 32px);
+  padding-bottom: var(--spacing-lg, 24px);
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.title {
+  margin: 0 0 var(--spacing-sm, 8px);
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-title, #1a202c);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 1.125rem;
+  color: var(--text-secondary, #718096);
+}
+
+.content {
+  line-height: 1.7;
+  color: var(--text-body, #4a5568);
+}
+
+.section {
+  margin-bottom: var(--spacing-xl, 32px);
+
+  p {
+    margin: 0 0 var(--spacing-md, 16px);
+  }
+}
+
+.sectionTitle {
+  margin: 0 0 var(--spacing-md, 16px);
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--text-title, #1a202c);
+}
+
+// Compliance badge
+.complianceBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm, 8px);
+  margin-top: var(--spacing-sm, 8px);
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+  background: var(--bg-secondary, #f7fafc);
+  border-radius: 8px;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.badgeLabel {
+  font-weight: 600;
+  color: var(--text-title, #1a202c);
+}
+
+.badgeLevel {
+  padding: 2px 8px;
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+// Measures list
+.measuresList {
+  margin: 0;
+  padding-left: var(--spacing-lg, 24px);
+
+  li {
+    margin-bottom: var(--spacing-sm, 8px);
+    padding-left: var(--spacing-sm, 8px);
+
+    &::marker {
+      color: var(--btn-primary, #5f88e5);
+    }
+  }
+}
+
+// Features grid
+.featuresGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--spacing-md, 16px);
+  margin-top: var(--spacing-md, 16px);
+}
+
+.featureCard {
+  padding: var(--spacing-md, 16px);
+  background: var(--bg-secondary, #f7fafc);
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  text-align: center;
+
+  h3 {
+    margin: var(--spacing-sm, 8px) 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-title, #1a202c);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #718096);
+  }
+}
+
+.featureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 50%;
+  color: var(--btn-primary, #5f88e5);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+// Contact info
+.contactInfo {
+  margin: var(--spacing-md, 16px) 0;
+  padding: var(--spacing-md, 16px);
+  background: var(--bg-secondary, #f7fafc);
+  border-radius: 8px;
+  border-left: 4px solid var(--btn-primary, #5f88e5);
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: var(--btn-primary, #5f88e5);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+.responseTime {
+  font-size: 0.875rem;
+  font-style: italic;
+  color: var(--text-secondary, #718096);
+}
+
+// Footer
+.footer {
+  margin-top: var(--spacing-xl, 32px);
+  padding-top: var(--spacing-lg, 24px);
+  border-top: 1px solid var(--border-color, #e2e8f0);
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary, #718096);
+  }
+}
+
+// Back link
+.backLink {
+  margin-top: var(--spacing-xl, 32px);
+  text-align: center;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm, 8px);
+    padding: var(--spacing-sm, 8px) var(--spacing-md, 16px);
+    color: var(--btn-primary, #5f88e5);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: var(--bg-secondary, #f7fafc);
+    }
+
+    &:focus {
+      outline: 2px solid var(--focus-color, #4a90d9);
+      outline-offset: 2px;
+    }
+  }
+}
+
+// RTL support
+[dir='rtl'] {
+  .measuresList {
+    padding-left: 0;
+    padding-right: var(--spacing-lg, 24px);
+
+    li {
+      padding-left: 0;
+      padding-right: var(--spacing-sm, 8px);
+    }
+  }
+
+  .contactInfo {
+    border-left: none;
+    border-right: 4px solid var(--btn-primary, #5f88e5);
+  }
+}

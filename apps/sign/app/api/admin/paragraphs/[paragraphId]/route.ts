@@ -1,241 +1,163 @@
-/**
- * API endpoint for managing paragraph settings
- * PATCH /api/admin/paragraphs/[paragraphId] - Update paragraph
- * DELETE /api/admin/paragraphs/[paragraphId] - Delete paragraph
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import { Collections, ParagraphType } from '@freedi/shared-types';
-import { getFirebaseAdmin } from '@/lib/firebase/admin';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
+import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import { Paragraph } from '@/types';
+import { Collections, Paragraph, ParagraphType, Statement, StatementType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
-interface PatchRequest {
-  documentId: string;
-  content?: string;
-  type?: ParagraphType;
-  order?: number;
-  imageUrl?: string;
-  imageAlt?: string;
-  imageCaption?: string;
-  isNonInteractive?: boolean;
-  listType?: 'ul' | 'ol';
-}
-
-interface PatchResponse {
-  success: boolean;
-  paragraph?: Paragraph;
-  error?: string;
-}
-
-interface DeleteRequest {
-  documentId: string;
-}
-
-interface DeleteResponse {
-  success: boolean;
-  error?: string;
-}
-
-export async function PATCH(
+/**
+ * GET /api/admin/paragraphs/[documentId]
+ * Get all paragraphs for a document (for version control page)
+ * Note: The param is named paragraphId but for GET it's used as documentId
+ */
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ paragraphId: string }> }
-): Promise<NextResponse<PatchResponse>> {
+) {
   try {
-    const { paragraphId } = await params;
-
-    // Get user from cookies
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    // For GET, we treat the param as documentId
+    const { paragraphId: documentId } = await params;
+    const cookieHeader = request.headers.get('cookie');
+    const userId = getUserIdFromCookie(cookieHeader);
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    // Parse request body
-    const body = await request.json() as PatchRequest;
-    const { documentId, content, type, order, imageUrl, imageAlt, imageCaption, isNonInteractive, listType } = body;
+    const db = getFirestoreAdmin();
 
-    if (!documentId) {
-      return NextResponse.json(
-        { success: false, error: 'Document ID is required' },
-        { status: 400 }
-      );
+    // Verify user has admin access to this document
+    const adminAccess = await checkAdminAccess(db, documentId, userId);
+    if (!adminAccess.isAdmin) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // Get document and verify admin
-    const { db } = getFirebaseAdmin();
-    const docRef = db.collection(Collections.statements).doc(documentId);
-    const docSnap = await docRef.get();
+    // Query paragraphs for this document
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', documentId)
+      .where('statementType', '==', StatementType.option)
+      .orderBy('doc.order', 'asc')
+      .get();
 
-    if (!docSnap.exists) {
-      return NextResponse.json(
-        { success: false, error: 'Document not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check admin access (owner or collaborator)
-    const accessResult = await checkAdminAccess(db, documentId, userId);
-
-    if (!accessResult.isAdmin || accessResult.isViewer) {
-      return NextResponse.json(
-        { success: false, error: 'You do not have permission to modify this document' },
-        { status: 403 }
-      );
-    }
-
-    const docData = docSnap.data();
-
-    // Get paragraphs and update the specific one
-    const paragraphs: Paragraph[] = docData?.paragraphs || [];
-    const paragraphIndex = paragraphs.findIndex(p => p.paragraphId === paragraphId);
-
-    if (paragraphIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Paragraph not found' },
-        { status: 404 }
-      );
-    }
-
-    // Build updated paragraph
-    const updatedParagraph: Paragraph = {
-      ...paragraphs[paragraphIndex],
-    };
-
-    // Update fields if provided
-    if (content !== undefined) {
-      updatedParagraph.content = content;
-    }
-    if (type !== undefined) {
-      updatedParagraph.type = type;
-    }
-    if (order !== undefined) {
-      updatedParagraph.order = order;
-    }
-    if (imageUrl !== undefined) {
-      updatedParagraph.imageUrl = imageUrl;
-    }
-    if (imageAlt !== undefined) {
-      updatedParagraph.imageAlt = imageAlt;
-    }
-    if (imageCaption !== undefined) {
-      updatedParagraph.imageCaption = imageCaption;
-    }
-    if (isNonInteractive !== undefined) {
-      updatedParagraph.isNonInteractive = isNonInteractive;
-    }
-    if (listType !== undefined) {
-      updatedParagraph.listType = listType;
-    }
-
-    paragraphs[paragraphIndex] = updatedParagraph;
-
-    // Save to Firestore
-    await docRef.update({
-      paragraphs,
-      lastUpdate: Date.now(),
+    const paragraphs: Statement[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data() as Statement;
+      // Only include official paragraphs (not suggestions)
+      if (data.doc?.isOfficialParagraph && !data.hide) {
+        paragraphs.push(data);
+      }
     });
 
-    return NextResponse.json({ success: true, paragraph: updatedParagraph });
+    return NextResponse.json({ paragraphs });
   } catch (error) {
-    logger.error('Error updating paragraph:', error);
-
-    return NextResponse.json(
-      { success: false, error: 'Failed to update paragraph' },
-      { status: 500 }
-    );
+    logger.error('[Paragraphs API] GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-export async function DELETE(
+interface UpdateParagraphContentInput {
+  documentId: string;
+  content: string;
+  type: ParagraphType;
+}
+
+interface UpdateParagraphNonInteractiveInput {
+  documentId: string;
+  isNonInteractive: boolean;
+}
+
+type UpdateParagraphInput = UpdateParagraphContentInput | UpdateParagraphNonInteractiveInput;
+
+function isNonInteractiveUpdate(body: UpdateParagraphInput): body is UpdateParagraphNonInteractiveInput {
+  return 'isNonInteractive' in body;
+}
+
+/**
+ * PATCH /api/admin/paragraphs/[paragraphId]
+ * Update an existing paragraph - supports both content updates and non-interactive toggle
+ */
+export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ paragraphId: string }> }
-): Promise<NextResponse<DeleteResponse>> {
+) {
   try {
     const { paragraphId } = await params;
-
-    // Get user from cookies
-    const cookieStore = await cookies();
-    const userId = cookieStore.get('userId')?.value;
+    const cookieHeader = request.headers.get('cookie');
+    const userId = getUserIdFromCookie(cookieHeader);
 
     if (!userId) {
-      return NextResponse.json(
-        { success: false, error: 'Authentication required' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'User not authenticated' }, { status: 401 });
     }
 
-    // Parse request body
-    const body = await request.json() as DeleteRequest;
+    const body: UpdateParagraphInput = await request.json();
     const { documentId } = body;
 
     if (!documentId) {
-      return NextResponse.json(
-        { success: false, error: 'Document ID is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing documentId' }, { status: 400 });
     }
 
-    // Get document and verify admin
-    const { db } = getFirebaseAdmin();
-    const docRef = db.collection(Collections.statements).doc(documentId);
-    const docSnap = await docRef.get();
+    const db = getFirestoreAdmin();
 
-    if (!docSnap.exists) {
-      return NextResponse.json(
-        { success: false, error: 'Document not found' },
-        { status: 404 }
-      );
+    // Verify user has admin access to this document
+    const adminAccess = await checkAdminAccess(db, documentId, userId);
+    if (!adminAccess.isAdmin) {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // Check admin access
-    const accessResult = await checkAdminAccess(db, documentId, userId);
+    // Verify paragraph exists
+    const paragraphRef = db.collection(Collections.statements).doc(paragraphId);
+    const paragraphSnap = await paragraphRef.get();
 
-    if (!accessResult.isAdmin || accessResult.isViewer) {
-      return NextResponse.json(
-        { success: false, error: 'You do not have permission to modify this document' },
-        { status: 403 }
-      );
+    if (!paragraphSnap.exists) {
+      return NextResponse.json({ error: 'Paragraph not found' }, { status: 404 });
     }
 
-    const docData = docSnap.data();
+    // Handle non-interactive toggle
+    if (isNonInteractiveUpdate(body)) {
+      const { isNonInteractive } = body;
 
-    // Get paragraphs and remove the specific one
-    let paragraphs: Paragraph[] = docData?.paragraphs || [];
-    const paragraphIndex = paragraphs.findIndex(p => p.paragraphId === paragraphId);
+      await paragraphRef.update({
+        'doc.isNonInteractive': isNonInteractive,
+        lastUpdate: Date.now(),
+      });
 
-    if (paragraphIndex === -1) {
-      return NextResponse.json(
-        { success: false, error: 'Paragraph not found' },
-        { status: 404 }
-      );
+      logger.info(`[Paragraphs API] Updated paragraph isNonInteractive: ${paragraphId} -> ${isNonInteractive}`);
+
+      return NextResponse.json({ success: true, isNonInteractive });
     }
 
-    // Remove the paragraph
-    paragraphs.splice(paragraphIndex, 1);
+    // Handle content update
+    const { content, type } = body;
 
-    // Reorder remaining paragraphs
-    paragraphs = paragraphs.map((p, i) => ({ ...p, order: i }));
+    if (!content) {
+      return NextResponse.json({ error: 'Missing content field' }, { status: 400 });
+    }
 
-    // Save to Firestore
-    await docRef.update({
-      paragraphs,
+    // Update the paragraph statement
+    await paragraphRef.update({
+      statement: content,
+      'doc.type': type,
       lastUpdate: Date.now(),
     });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    logger.error('Error deleting paragraph:', error);
+    logger.info(`[Paragraphs API] Updated paragraph statement: ${paragraphId}`);
 
-    return NextResponse.json(
-      { success: false, error: 'Failed to delete paragraph' },
-      { status: 500 }
-    );
+    // Get updated data for response
+    const updated = await paragraphRef.get();
+    const data = updated.data();
+
+    // Return in legacy Paragraph format for admin panel compatibility
+    const legacyParagraph: Paragraph = {
+      paragraphId: paragraphId,
+      content: content,
+      type: type,
+      order: data?.doc?.order || 0,
+    };
+
+    return NextResponse.json({ success: true, paragraph: legacyParagraph });
+  } catch (error) {
+    logger.error('[Paragraphs API] PATCH error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

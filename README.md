@@ -1,30 +1,75 @@
-# Freedi - Open Source Deliberative Democracy Platform
+# Freedi: Scalable Deliberative Democracy Platform
 
-**Freedi** is an open-source platform for scalable deliberative democracy. It implements a novel consensus-building framework that enables meaningful participation at scale through continuous preference expression, open proposal generation, and real-time consensus measurement.
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE.md)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-18-61dafb)](https://react.dev/)
+[![Firebase](https://img.shields.io/badge/Firebase-Firestore-orange)](https://firebase.google.com/)
+[![GitHub stars](https://img.shields.io/github/stars/delib-org/Freedi-app)](https://github.com/delib-org/Freedi-app/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/delib-org/Freedi-app)](https://github.com/delib-org/Freedi-app/network)
 
-## The Problem: Scale vs. Participation
+Freedi is an open-source platform revolutionizing collective decision-making. It enables groups of any size to collaborate, evaluate ideas, and build consensus through continuous feedback—without the pitfalls of traditional voting. Powered by a novel algorithm and real-time tools, Freedi turns chaotic discussions into structured, inclusive deliberations.
 
-As groups grow in size, the complexity of collective decision-making increases exponentially. This forces societies to concentrate authority in small hierarchical subgroups. While this enables coordination at scale, it systematically underrepresents the interests of broader populations and limits collective learning.
+Whether you're drafting policies, brainstorming in teams, or running public consultations, Freedi helps discover better solutions faster. Built for scalability and accessibility, it's already proven in real-world scenarios from quick naming decisions to complex social charters.
 
-Traditional voting mechanisms exacerbate these problems:
+**[Try the Demo](https://freedi.tech/demo)** | **[Live App](https://freedi.tech)** | **[Join the Community](https://github.com/delib-org/Freedi-app/discussions)**
+
+---
+
+## Table of Contents
+
+- [Why Freedi?](#why-freedi)
+- [How It Works](#how-it-works)
+- [The Consensus Algorithm](#the-consensus-algorithm)
+- [Key Features](#key-features)
+- [Sub-Apps](#sub-apps)
+- [Real-World Impact](#real-world-impact)
+- [Technical Overview](#technical-overview)
+- [Getting Started](#getting-started)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
+- [Limitations and Future Work](#limitations-and-future-work)
+- [For Researchers](#for-researchers)
+- [License](#license)
+
+---
+
+## Why Freedi?
+
+In large groups, decision-making often favors hierarchies or simple votes, leading to underrepresented voices, polarization, and suboptimal outcomes. Traditional voting mechanisms exacerbate these problems:
+
 - **Binary choices** reduce complex preferences to yes/no
 - **Fixed option sets** prevent discovery of better solutions
 - **Winner-take-all outcomes** incentivize polarization rather than consensus-seeking
 
-Freedi offers an alternative approach grounded in deliberative democracy research.
+Freedi addresses this by drawing from deliberative democracy principles:
 
-## The Solution: A New Deliberative Framework
+| Principle | Traditional Voting | Freedi Approach |
+|-----------|-------------------|-----------------|
+| **Participation** | Fixed options only | Anyone can propose ideas anytime |
+| **Expression** | Binary yes/no | Continuous scale capturing intensity |
+| **Feedback** | Results after voting closes | Real-time consensus guides iteration |
+| **Outcome** | Winner takes all | Broad agreement emerges naturally |
 
-Freedi combines three core innovations:
+This creates adaptive, inclusive processes that scale from 10 to 10,000+ participants, reducing bias and fostering collective wisdom.
 
-### 1. Open and Continuous Proposal Generation
-Participants are not limited to a predefined list of alternatives. Anyone may introduce new proposals at any point during the process. When existing options are inadequate, participants can articulate revised or entirely new alternatives, keeping the solution space open and responsive.
+## How It Works
 
-### 2. Continuous Expression of Preferences
-Rather than binary choices, participants evaluate each proposal using a continuous scale from strong opposition (-1) to strong support (+1). This captures both direction and intensity of preference, distinguishing proposals with mild support and strong opposition from those with moderate but broadly distributed approval.
+Freedi's core is a unified "statement" model for hierarchical discussions (groups > questions > options > details). The process:
 
-### 3. Real-Time Aggregation with the Consensus Algorithm
-Each proposal receives an aggregate score derived from all evaluations, updated continuously and made visible to participants. This dynamic feedback loop transforms decision-making from a static event into an iterative, adaptive system.
+```
+┌─────────────┐     ┌─────────────┐     ┌─────────────┐     ┌─────────────┐
+│   PROPOSE   │ --> │  EVALUATE   │ --> │  AGGREGATE  │ --> │   ITERATE   │
+│             │     │             │     │             │     │             │
+│ Create open │     │ Rate -1 to  │     │  Algorithm  │     │ Rankings    │
+│ statements  │     │ +1 scale    │     │  computes   │     │ inspire new │
+│ or refine   │     │ (updatable) │     │  consensus  │     │ proposals   │
+└─────────────┘     └─────────────┘     └─────────────┘     └─────────────┘
+```
+
+1. **Propose**: Create open statements or refinements—no fixed options
+2. **Evaluate**: Rate each proposal on a -1 (oppose) to +1 (support) scale—one vote per person, updateable anytime
+3. **Aggregate**: The consensus algorithm computes a score visible to all participants in real-time
+4. **Iterate**: Live rankings inspire better proposals until consensus emerges
 
 ## The Consensus Algorithm
 
@@ -33,20 +78,20 @@ At the core of Freedi lies the **Consensus Algorithm**—a scoring mechanism tha
 ### The Formula
 
 ```
-Consensus Score = Mean − SEM
+Consensus Score = Mean - SEM
 ```
 
 Where:
-- **Mean** = average of all evaluations (range: −1 to +1)
-- **SEM** (Standard Error of the Mean) = σ / √n
-- **σ** = sample standard deviation
+- **Mean** = average of all evaluations (range: -1 to +1)
+- **SEM** (Standard Error of the Mean) = σ_adjusted / √n
+- **σ_adjusted** = max(observed standard deviation, 0.5) — the uncertainty floor
 - **n** = number of unique evaluators
 
 ### Why This Formula?
 
 The algorithm resolves a fundamental tension in preference aggregation:
 
-| Problem | Simple Mean | Sum/Count | **Mean − SEM** |
+| Problem | Simple Mean | Sum/Count | **Mean - SEM** |
 |---------|-------------|-----------|----------------|
 | Small group with perfect agreement | Overvalued | Invisible | Appropriately uncertain |
 | Large group with moderate agreement | Undervalued | Dominates | Fairly weighted |
@@ -61,83 +106,81 @@ The algorithm resolves a fundamental tension in preference aggregation:
 
 ### The Uncertainty Floor
 
-To prevent manipulation by small unanimous groups (the "Zero Variance Loophole"), an uncertainty floor is applied:
+To prevent manipulation by small unanimous groups (the "Zero Variance Loophole"):
 
 ```
 σ_adjusted = max(observed standard deviation, 0.5)
 ```
 
-This ensures that small samples with zero variance are treated as having uncertain consensus, while large samples with genuine agreement naturally exceed the floor.
+This ensures small samples with zero variance are treated as uncertain, while large samples with genuine agreement naturally exceed the floor.
 
-### One Evaluator, One Vote
+> **Deep Dive**: See [Consensus Scoring Details](./docs/features/CONSENSUS_SCORING_UPDATE.md) for full implementation.
 
-Each participant may submit only one evaluation per proposal (though they may update it at any time). This prevents manipulation through repeated voting.
+## Key Features
 
-## Proof of Concept: Real-World Applications
+### Core Deliberation Tools
 
-### Case 1: Rapid Collective Decision (5 minutes)
-- **Context**: Selecting a name for a political organization
-- **Participants**: 53 active participants from ~70 attendees
-- **Proposals**: 26 distinct name proposals generated by participants
-- **Outcome**: Clear convergence on "Kol HaAm" ("Voice of the People") within approximately 5 minutes
-- **Validation**: Result confirmed through secondary voting mechanism
+| Feature | Description |
+|---------|-------------|
+| **Real-time collaboration** | WebSocket updates for synced voting and edits |
+| **AI assistance** | Gemini/OpenAI for proposal refinement and summaries |
+| **Hierarchical nesting** | Unlimited depth with full ancestry tracking |
+| **Multi-stage processes** | Structured deliberation phases with chat integration |
+| **Similar idea detection** | Vector search prevents duplicate proposals |
 
-### Case 2: Complex Normative Deliberation (5 hours)
-- **Context**: Developing a social charter on religion-state relations
-- **Participants**: 40 participants representing secular and religious perspectives
-- **Process**: Two facilitated sessions (2.5 hours each) with structured deliberation phases
-- **Method**: Breakout groups (5-6 people), equal speaking time, iterative proposal refinement
-- **Outcome**: Proposals achieving >60% consensus threshold were synthesized into a draft charter using AI
-- **Reception**: Positive feedback and requests for wider dissemination
+### Visualization & Insights
 
-These cases demonstrate the system's ability to support both rapid convergence on simple decisions and sustained deliberation on complex, value-laden issues among heterogeneous groups
+| Feature | Description |
+|---------|-------------|
+| **Interactive mind maps** | Visual hierarchy of discussions |
+| **Consensus charts** | Real-time trend visualization |
+| **Polarization tracking** | Identify divisive proposals |
+| **Demographic filters** | Analyze consensus across groups |
+| **Export options** | JSON, SVG, PNG for reports |
 
-## Platform Features
+### Platform-Wide
 
-### Unified Statement Model
-Everything in Freedi is a "Statement" with semantic types:
-- **Groups**: Top-level containers for organizing deliberations
-- **Questions**: Discussion topics that prompt proposals and options
-- **Options**: Proposed solutions or choices under questions
-- **Statements**: Chat messages and discussions within the hierarchy
+| Feature | Description |
+|---------|-------------|
+| **Progressive Web App** | Install on any device with offline support |
+| **Accessibility** | WCAG AA, screen readers, keyboard nav |
+| **RTL Support** | Full Hebrew and Arabic support |
+| **Notifications** | Grouped, customizable, with quiet hours |
+| **Security** | Role-based access, anti-spam tools |
 
-This hierarchical model enables unlimited nesting depth with full ancestry tracking
+## Sub-Apps
 
-### Core Capabilities
+Freedi is a monorepo with specialized sub-apps that extend the main deliberation platform. These build on shared components while addressing specific use cases.
 
-| Category | Features |
-|----------|----------|
-| **Collaboration** | Real-time WebSocket updates, synchronized voting, instant notifications |
-| **Evaluation** | Multi-type evaluations, consensus visualization, polarization tracking |
-| **Deliberation** | Multi-stage processes, integrated chat, similar statement detection |
-| **AI Integration** | Proposal improvement suggestions, discussion summarization, semantic search |
-| **Visualization** | Interactive mind maps, hierarchical views, export (JSON/SVG/PNG) |
-| **Accessibility** | WCAG AA compliance, screen reader support, keyboard navigation, RTL support |
-| **Platform** | Progressive Web App, offline support, multi-language internationalization |
+### Mass Consensus (`/apps/mass-consensus`)
 
-### Monorepo Applications
+A Next.js-based sub-app for quick, anonymous consensus gathering at scale.
 
-| Application | Technology | Description |
-|-------------|------------|-------------|
-| **Main App** (`/src`) | Vite + React 18 | Core deliberation platform with full feature set |
-| **Mass Consensus** (`/apps/mass-consensus`) | Next.js 14 | Fast anonymous consensus voting with SSR/ISR |
-| **Freedi Sign** (`/apps/sign`) | Next.js 14 | Document signing with paragraph-level engagement |
+**How it fits**: Simplifies the core deliberation process using a 5-point scale (instead of continuous -1 to +1) with AI-generated suggestions for rapid input. Ideal when deep hierarchy is overkill—like public polls or event feedback.
 
-#### Mass Consensus
-High-performance anonymous participation for crowdsourced evaluation:
-- Server-side rendering for near-instant page loads
-- No login required—immediate evaluation and submission
-- Real-time voting on a 5-point scale
-- AI-powered improvement suggestions via Google Gemini
-- Performance targets: FCP < 0.8s, LCP < 1.2s, TTI < 2.0s
+| Feature | Description |
+|---------|-------------|
+| Server-side rendering | Near-instant page loads (FCP < 0.8s) |
+| No login required | Immediate anonymous participation |
+| AI suggestions | Gemini-powered proposal improvements |
+| Results integration | Feed back into main app discussions |
 
-#### Freedi Sign
-Collaborative document review with granular feedback:
-- Paragraph-level approve/reject with comment threads
-- Heat map visualization of engagement patterns
-- Demographic analysis and filtering
-- Admin dashboard with real-time statistics
-- Google Docs import and configurable branding
+**Use Case**: A community uses the main app for in-depth policy drafting, then deploys Mass Consensus for a quick vote on final options.
+
+### Freedi Sign (`/apps/sign`)
+
+A Next.js-based sub-app for collaborative document signing with paragraph-level feedback.
+
+**How it fits**: Applies the statement model to documents, treating paragraphs as evaluable "statements" for suggestions, votes, and consensus-driven revisions. Turns deliberations into actionable outputs.
+
+| Feature | Description |
+|---------|-------------|
+| Paragraph-level feedback | Approve/reject with comment threads |
+| Version control | Manual, auto, or timer-based modes |
+| Heat maps | Visualize engagement patterns |
+| Google Docs import | Bring existing documents easily |
+
+**Use Case**: After consensus in the main app, export to Sign for public endorsement with crowd-sourced improvements.
 
 ### Shared Packages (`/packages`)
 
@@ -146,28 +189,33 @@ Collaborative document review with granular feedback:
 | `@freedi/shared-types` | TypeScript types for cross-app consistency |
 | `@freedi/shared-i18n` | Internationalization utilities |
 
-## Technical Architecture
+## Real-World Impact
 
-### Stack Overview
+### Case 1: Rapid Decision (5 minutes)
+- **Context**: Naming a political organization
+- **Scale**: 53 participants, 26 proposals
+- **Outcome**: Clear convergence on "Kol HaAm" ("Voice of the People")
+- **Validation**: Confirmed through secondary voting mechanism
 
-**Frontend**
-- React 18 with TypeScript (strict mode, no `any` types)
-- Redux Toolkit for state management
-- Vite with SWC for fast builds
-- SCSS modules with Atomic Design System (BEM methodology)
-- Progressive Web App with service workers
+### Case 2: Complex Deliberation (5 hours)
+- **Context**: Religion-state charter development
+- **Scale**: 40 participants (secular and religious representatives)
+- **Process**: Two 2.5-hour facilitated sessions with breakout groups
+- **Outcome**: Proposals achieving >60% consensus synthesized into draft charter
+- **Reception**: Positive feedback, requests for wider dissemination
 
-**Backend**
-- Firebase Firestore (real-time database)
-- Firebase Auth (multi-provider authentication)
-- Firebase Cloud Functions (50+ serverless functions)
-- Firebase Cloud Messaging (push notifications)
+These cases demonstrate versatility for both fast/simple and complex/value-driven decisions.
 
-**Development & Quality**
-- TypeScript strict mode throughout
-- ESLint + Prettier for code quality
-- Jest + React Testing Library for testing
-- Sentry for error monitoring
+## Technical Overview
+
+### Stack
+
+| Layer | Technologies |
+|-------|-------------|
+| **Frontend** | React 18 + TypeScript (strict), Redux Toolkit, Vite/SWC, SCSS (BEM/Atomic) |
+| **Backend** | Firebase (Firestore, Auth, Functions, Messaging) |
+| **AI/ML** | OpenAI embeddings, Google Gemini, Firestore Vector Search |
+| **Quality** | ESLint/Prettier, Jest/RTL, Sentry, Playwright E2E |
 
 ### Code Architecture
 
@@ -175,7 +223,7 @@ Collaborative document review with granular feedback:
 src/
 ├── view/          # React components (presentation)
 ├── controllers/   # Business logic and data operations
-├── services/      # External integrations (FCM, analytics)
+├── services/      # External integrations (AI, Firebase)
 ├── redux/         # State management (15+ slices)
 ├── utils/         # Utility functions
 ├── helpers/       # Pure helper functions
@@ -187,13 +235,13 @@ src/
 - `errorHandling.ts` - Structured error logging with custom types
 - `firebaseUtils.ts` - Reference factories and batch operations
 - `selectorFactories.ts` - Reusable Redux selector patterns
-- `common.ts` - Application constants (TIME, FIREBASE, UI, VALIDATION)
 
 See [CLAUDE.md](./CLAUDE.md) for comprehensive development guidelines.
 
 ## Getting Started
 
 ### Prerequisites
+
 - Node.js 18+
 - Java JDK 17+ (for Firebase emulator)
 - Firebase CLI: `npm install -g firebase-tools`
@@ -203,56 +251,61 @@ See [CLAUDE.md](./CLAUDE.md) for comprehensive development guidelines.
 ```bash
 git clone https://github.com/delib-org/Freedi-app.git
 cd Freedi-app
-npm run setup:all
+npm run setup:all  # Guides through Firebase config
 ```
-
-This automated script guides you through Firebase project creation and configuration.
 
 ### Development
 
 ```bash
-npm run dev:all    # Start all apps + emulator
+npm run dev:all    # Launches main app (5173), sub-apps (3001/3002), emulator
 ```
 
-**Access Points:**
-- Main App: http://localhost:5173
-- Mass Consensus: http://localhost:3001
-- Freedi Sign: http://localhost:3002
-- Firebase Emulators: http://localhost:5002
+### Key Commands
 
-### Commands
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start main app only |
+| `npm run build` | Production build |
+| `npm run test` | Run tests |
+| `npm run lint` | Code quality check |
+| `npm run check-all` | Full validation suite |
+| `npm run deploy prod` | Deploy to production |
 
-```bash
-npm run dev           # Start main app
-npm run build         # Production build
-npm run lint          # ESLint validation
-npm run typecheck     # TypeScript checking
-npm run test          # Run tests
-npm run check-all     # Full validation suite
-npm run deploy prod   # Deploy to production
-```
+For detailed setup: [Firebase Guide](./docs/setup/FIREBASE_SETUP.md)
 
-## Deployment
+## Documentation
 
-Unified deployment with automatic environment management:
+Comprehensive docs in [`/docs/`](./docs/):
 
-```bash
-npm run deploy <target> [options]
-```
-
-| Target | Description |
+| Folder | Description |
 |--------|-------------|
-| `dev` | Local development with emulator |
-| `test` | Testing new features |
-| `prod` | Production deployment |
+| [`setup/`](./docs/setup/) | Firebase, email, deployment guides |
+| [`guides/`](./docs/guides/) | Coding style, contributing, testing |
+| [`features/`](./docs/features/) | Feature implementations (consensus, etc.) |
+| [`architecture/`](./docs/architecture/) | System design documents |
 
-Options: `--hosting`, `--functions`, `--rules`, `--skip-build`, `--dry-run`
+**Quick Links:**
+- [Firebase Setup](./docs/setup/FIREBASE_SETUP.md)
+- [Coding Style Guide](./docs/guides/CODING_STYLE_GUIDE.md)
+- [Contributing Guide](./docs/guides/CONTRIBUTING.md)
+- [Full Documentation Index](./docs/INDEX.md)
+
+## Contributing
+
+We welcome contributions! From bug fixes to new features:
+
+1. **Fork** and branch: `git checkout -b feat/my-feature`
+2. **Follow** [Coding Style Guide](./docs/guides/CODING_STYLE_GUIDE.md)
+3. **Test**: `npm run check-all`
+4. **PR** with clear description
+
+See [Contributing Guide](./docs/guides/CONTRIBUTING.md) for details. Join [discussions](https://github.com/delib-org/Freedi-app/discussions) or [report issues](https://github.com/delib-org/Freedi-app/issues)!
 
 ## Limitations and Future Work
 
 We acknowledge several important limitations:
 
-1. **Manipulation Resistance**: The system is not yet robust against coordinated voting, preference misrepresentation, or fake accounts. Current implementations assume good-faith participation.
+1. **Manipulation Resistance**: Not yet robust against coordinated voting, preference misrepresentation, or fake accounts. Current implementations assume good-faith participation.
 
 2. **Scale Testing**: Empirical evidence is limited to 40-70 active participants. Whether the framework maintains its properties at mass scale remains an open question.
 
@@ -260,91 +313,63 @@ We acknowledge several important limitations:
 
 4. **Facilitation Dependency**: Current success cases relied on structured facilitation. The system cannot yet substitute for facilitation quality and institutional context.
 
-These limitations position Freedi as a research direction rather than a replacement for existing democratic institutions. Considerable work remains before deployment in contexts with substantial social, political, or economic consequences.
+These limitations position Freedi as a research direction rather than a replacement for existing democratic institutions. Considerable work remains before deployment in contexts with substantial consequences.
 
-## Research Collaboration
+## For Researchers
 
-We invite researchers and practitioners to help advance deliberative democracy:
+Explore the code for deliberative tech insights. We're open to collaborations on scaling consensus algorithms.
 
-### Contribution Areas
-- Test methodologies across contexts and cultures
-- Improve consensus algorithms
-- Conduct empirical studies on effectiveness
-- Develop features for specific deliberative needs
-- Explore scaling to thousands of participants
+### Getting Started (No Programming Required)
 
-### How to Contribute
+AI assistants can explore the codebase for you:
 
-1. **Review the codebase** using AI assistants (Claude, GitHub Copilot)
-2. **Document findings** covering strengths, concerns, and proposed improvements
-3. **Contact maintainers** via [GitHub Issues](https://github.com/delib-org/Freedi-app/issues)
-4. **Discuss implementation** before writing code
-5. **Submit pull requests** following our [contribution guidelines](./CONTRIBUTING.md)
+```bash
+git clone https://github.com/delib-org/Freedi-app.git
+```
 
-See the "For Researchers" section below for detailed guidance.
-
-## For Researchers: Exploring the Code
-
-**No programming experience required.** AI assistants can explore the codebase for you.
-
-### Getting Started
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/delib-org/Freedi-app.git
-   ```
-   Or use [GitHub Desktop](https://desktop.github.com/) for a visual experience.
-
-2. Use an AI assistant:
-   - **Claude.ai** - Upload files and ask questions
-   - **Claude Code CLI** - `npm install -g @anthropic-ai/claude-code && claude`
+Use **Claude.ai** (upload files) or **Claude Code CLI** (`npm install -g @anthropic-ai/claude-code && claude`).
 
 ### Questions to Ask
 
 - *"How does the consensus algorithm work? Is it fair to minority opinions?"*
-- *"Show me where evaluations are calculated and explain the process"*
-- *"How are participants' voices weighted in the final decision?"*
-- *"What mechanisms protect minority viewpoints from being drowned out?"*
-- *"Where are the consensus scoring functions implemented?"*
+- *"Where are evaluations calculated and what's the process?"*
+- *"What mechanisms protect minority viewpoints?"*
 
-### Key Files to Investigate
+### Key Files
 
 | Area | Location |
 |------|----------|
 | Consensus calculation | `functions/src/fn_evaluation.ts` |
-| Frontend state | `src/redux/evaluations/` |
 | Algorithm helpers | `functions/src/helpers/consensusValidCalculator.ts` |
 | Tests | `functions/src/__tests__/consensus-scoring.test.ts` |
 
-## Theoretical Foundation
+### Research Collaboration Areas
 
-Freedi draws on research from:
-- **Deliberative Democracy**: Habermas, Fishkin, Mansbridge et al.
-- **Social Choice Theory**: Arrow, Sen, Moulin
-- **Collective Intelligence**: Page, Surowiecki, Malone
-- **Computer-Mediated Communication**: Walther, Herring, Sproull & Kiesler
-
-The framework addresses structural limitations identified in political science literature regarding hierarchical decision-making, coordination complexity, and the polarization dynamics of traditional voting systems.
-
-## Documentation
-
-- [CLAUDE.md](./CLAUDE.md) - Development guidelines
-- [CONTRIBUTING.md](./CONTRIBUTING.md) - Contribution process
-- [ATOMIC-DESIGN-SYSTEM.md](./ATOMIC-DESIGN-SYSTEM.md) - Component architecture
-- [docs/design-guide.md](./docs/design-guide.md) - UI/UX patterns
-- [docs/FREEDI_ARCHITECTURE.md](./docs/FREEDI_ARCHITECTURE.md) - System architecture
-- [FIREBASE_SETUP.md](./FIREBASE_SETUP.md) - Firebase configuration
+- Test methodologies across contexts and cultures
+- Improve consensus algorithms
+- Conduct empirical studies on effectiveness
+- Explore scaling to thousands of participants
 
 ## License
 
-This project is licensed under the terms specified in [LICENSE.md](./LICENSE.md).
+**GPL-3.0** with attribution requirement. When creating your own instance, include prominent attribution to the [Deliberative Democracy Institute](https://delib.org).
 
-## Citation
+See [LICENSE.md](./LICENSE.md) for full details.
 
-If you use Freedi in academic research, please cite:
+### Citation
 
-> Yaron, T. (2025). The Consensus Algorithm: A Deliberative Framework for Scalable Collective Decision-Making. *Working Paper*.
+If you use Freedi in academic research:
+
+> Yaron, T. (2026). A Confidence-Adjusted Consensus Mechanism for Scalable Deliberative Decision-Making. *SocArXiv*. https://doi.org/10.31235/osf.io/u4phy_v1
 
 ---
 
+<div align="center">
+
 **Freedi** - Enabling meaningful democratic participation at scale through open-source deliberative technology.
+
+Built by the [Deliberative Democracy Institute](https://delib.org)
+
+[Website](https://freedi.tech) | [Documentation](./docs/INDEX.md) | [Issues](https://github.com/delib-org/Freedi-app/issues) | [Discussions](https://github.com/delib-org/Freedi-app/discussions) | [Twitter/X](https://twitter.com/delib_org)
+
+</div>

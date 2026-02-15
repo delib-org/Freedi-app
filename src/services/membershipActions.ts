@@ -1,5 +1,5 @@
 import { approveMembership } from "@/controllers/db/membership/setMembership";
-import { WaitingMember } from "delib-npm";
+import { WaitingMember } from "@freedi/shared-types";
 
 export function approveSingle(wait: WaitingMember, onComplete: () => void) {
   approveMembership(wait, true);

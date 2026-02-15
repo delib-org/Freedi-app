@@ -65,4 +65,9 @@ export enum Collections {
     clusterAggregations = 'clusterAggregations',
     framingSnapshots = 'framingSnapshots',
     suggestions = 'suggestions',
+    documentVersions = 'documentVersions',
+    versionChanges = 'versionChanges',
+    versioningSettings = 'versioningSettings',
+    paragraphReplacementQueue = 'paragraphReplacementQueue',
+    versionControlAudit = 'versionControlAudit',
 }

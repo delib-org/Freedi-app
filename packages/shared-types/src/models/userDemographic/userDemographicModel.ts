@@ -16,6 +16,7 @@ export enum UserDemographicQuestionType {
     radio = 'radio',
     range = 'range',
     number = 'number',
+    dropdown = 'dropdown',
 }
 
 //scope
@@ -48,6 +49,13 @@ export const UserDemographicQuestionSchema = object({
     userQuestionId: optional(string()),
     topParentId: optional(string()),  // Group identifier
     scope: optional(DemographicQuestionScopeSchema),  // 'group' | 'statement'
+    allowOther: optional(boolean()),
+    otherText: optional(string()),
+    min: optional(number()),
+    max: optional(number()),
+    step: optional(number()),
+    minLabel: optional(string()),
+    maxLabel: optional(string()),
 });
 
 export type UserDemographicQuestion = InferOutput<typeof UserDemographicQuestionSchema>;

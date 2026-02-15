@@ -2,15 +2,15 @@
 
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import type { SurveyDemographicQuestion, DemographicOption } from '@freedi/shared-types';
+import type { UserDemographicQuestion, DemographicOption } from '@freedi/shared-types';
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Admin.module.scss';
 
 interface DemographicQuestionEditorProps {
-  question: SurveyDemographicQuestion;
+  question: UserDemographicQuestion;
   index: number;
-  onUpdate: (updates: Partial<SurveyDemographicQuestion>) => void;
+  onUpdate: (updates: Partial<UserDemographicQuestion>) => void;
   onRemove: () => void;
 }
 
@@ -80,7 +80,7 @@ export default function DemographicQuestionEditor({
 
   const handleTypeChange = (newType: string) => {
     const type = newType as UserDemographicQuestionType;
-    const updates: Partial<SurveyDemographicQuestion> = { type };
+    const updates: Partial<UserDemographicQuestion> = { type };
 
     // Initialize options if switching to radio/checkbox
     if (

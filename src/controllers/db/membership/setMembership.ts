@@ -1,4 +1,4 @@
-import { WaitingMember, WaitingMemberSchema, Collections, Role } from "delib-npm";
+import { WaitingMember, WaitingMemberSchema, Collections, Role } from "@freedi/shared-types";
 import { parse } from "valibot";
 import { DB } from "../config";
 import { doc, updateDoc, writeBatch } from "firebase/firestore";

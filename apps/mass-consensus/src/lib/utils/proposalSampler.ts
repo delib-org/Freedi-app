@@ -69,15 +69,58 @@ export class ProposalSampler {
   }
 
   /**
+   * Calculate percentile ranks for all proposals based on their mean scores.
+   * Returns a map of statementId -> percentile (0-1, where 1 = highest mean).
+   *
+   * Only proposals with at least one evaluation are included in ranking.
+   * Proposals without evaluations will not be in the returned map.
+   *
+   * @param proposals - Array of proposals to rank
+   * @returns Map of statementId to percentile rank
+   */
+  private calculatePercentileRanks(proposals: Statement[]): Map<string, number> {
+    // Get means for all proposals with evaluations
+    const proposalsWithMeans = proposals
+      .filter(p => (p.evaluation?.numberOfEvaluators || 0) > 0)
+      .map(p => ({
+        id: p.statementId,
+        mean: getProposalStats(p).mean,
+      }));
+
+    // Handle edge case: no proposals with evaluations
+    if (proposalsWithMeans.length === 0) {
+      return new Map();
+    }
+
+    // Sort by mean ascending (lowest = 0, highest = 1)
+    const sorted = [...proposalsWithMeans].sort((a, b) => a.mean - b.mean);
+
+    // Assign percentile ranks
+    const percentileMap = new Map<string, number>();
+    sorted.forEach((item, index) => {
+      const percentile = sorted.length > 1
+        ? index / (sorted.length - 1)
+        : 0.5; // Single proposal gets middle rank
+      percentileMap.set(item.id, percentile);
+    });
+
+    return percentileMap;
+  }
+
+  /**
    * Score all proposals by priority
    *
    * @param proposals - Array of proposals to score
    * @returns Sorted array of scored proposals (highest priority first)
    */
   scoreProposals(proposals: Statement[]): ScoredProposal[] {
+    // Calculate percentile ranks for top-mean bonus
+    const percentileRanks = this.calculatePercentileRanks(proposals);
+
     const scored = proposals.map((proposal) => {
       const stats = getProposalStats(proposal);
-      const priority = calculateAdjustedPriority(proposal, this.config);
+      const percentileRank = percentileRanks.get(proposal.statementId);
+      const priority = calculateAdjustedPriority(proposal, this.config, percentileRank);
       const stable = isStable(proposal, this.config);
 
       return {

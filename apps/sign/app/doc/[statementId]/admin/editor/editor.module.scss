@@ -6,18 +6,12 @@
 
 .header {
   margin-bottom: var(--spacing-lg);
+}
 
-  h1 {
-    font-size: var(--h2-font-size);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-xs);
-  }
-
-  p {
-    color: var(--text-secondary);
-    margin: 0;
-  }
+.subtitle {
+  color: var(--text-secondary);
+  margin: var(--spacing-sm) 0 0 0;
+  font-size: 0.9375rem;
 }
 
 .loading {
@@ -26,20 +20,76 @@
   color: var(--text-secondary);
 }
 
+// Import Section - Collapsible
 .importSection {
   margin-bottom: var(--spacing-lg);
+  background: var(--card-default);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  overflow: hidden;
 }
 
+.importToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: var(--spacing-md);
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: start;
+
+  &:hover {
+    background: var(--background);
+    color: var(--text-primary);
+  }
+}
+
+.toggleIcon {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+
+  &.open {
+    transform: rotate(180deg);
+  }
+}
+
+.importContent {
+  padding: 0 var(--spacing-md) var(--spacing-md);
+  border-top: 1px solid var(--border-light);
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Paragraphs List
 .paragraphsList {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
 }
 
+// Empty State
 .empty {
   text-align: center;
-  padding: var(--spacing-xl);
-  background: var(--background-alt, #f9f9f9);
+  padding: var(--spacing-2xl) var(--spacing-xl);
+  background: var(--card-default);
+  border: 2px dashed var(--border-light);
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   display: flex;
@@ -48,22 +98,15 @@
   gap: var(--spacing-md);
 }
 
-.emptyAddButton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  padding: var(--spacing-sm) var(--spacing-lg);
-  background: var(--btn-primary);
-  color: white;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
+.emptyIcon {
+  opacity: 0.4;
+  color: var(--text-caption);
+}
 
-  &:hover {
-    background: var(--btn-primary-hover, #4a73d0);
-  }
+.emptyHint {
+  font-size: 0.875rem;
+  color: var(--text-caption);
+  margin: 0;
 }
 
 // Insert trigger between paragraphs (Notion-style)
@@ -77,8 +120,17 @@
   transition: opacity 0.15s ease;
   cursor: pointer;
 
-  &:hover {
+  &:hover,
+  &:focus-visible {
     opacity: 1;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    .insertIcon {
+      box-shadow: 0 0 0 2px var(--btn-primary);
+    }
   }
 }
 
@@ -107,7 +159,7 @@
   }
 }
 
-// Bottom "Add Paragraph" button
+// Bottom "Add Content" button
 .addToEndButton {
   display: flex;
   align-items: center;
@@ -121,13 +173,20 @@
   border-radius: var(--radius-md);
   color: var(--text-secondary);
   font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
+  font-family: inherit;
 
   &:hover {
     border-color: var(--btn-primary);
     color: var(--btn-primary);
     background: rgba(27, 38, 80, 0.02);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
   }
 
   svg {
@@ -136,12 +195,13 @@
   }
 }
 
+// Paragraph Item
 .paragraphItem {
   display: flex;
   align-items: flex-start;
   gap: var(--spacing-sm);
   padding: var(--spacing-md);
-  background: var(--card-default, #fff);
+  background: var(--card-default);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   transition: box-shadow 0.15s ease, opacity 0.15s ease;
@@ -185,19 +245,18 @@
 .typeLabel {
   display: inline-block;
   padding: 2px 8px;
-  background: var(--background-alt, #f0f0f0);
+  background: var(--background);
   border-radius: var(--radius-sm);
   font-size: 0.7rem;
   color: var(--text-caption);
   text-transform: uppercase;
   font-weight: 500;
+  width: fit-content;
 }
 
 .preview {
   line-height: 1.6;
   color: var(--text-body);
-
-  // Truncate long content
   max-height: 100px;
   overflow: hidden;
   position: relative;
@@ -209,7 +268,7 @@
     left: 0;
     right: 0;
     height: 30px;
-    background: linear-gradient(transparent, var(--card-default, #fff));
+    background: linear-gradient(transparent, var(--card-default));
   }
 }
 
@@ -230,11 +289,12 @@
   padding: var(--spacing-xs) var(--spacing-sm);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
-  background: var(--card-default, #fff);
+  background: var(--card-default);
   color: var(--text-body);
   font-size: 0.875rem;
   cursor: pointer;
   width: fit-content;
+  font-family: inherit;
 
   &:hover {
     border-color: var(--btn-primary);
@@ -258,8 +318,10 @@
   border: none;
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.15s ease;
+  font-family: inherit;
 
   &:hover:not(:disabled) {
     background: var(--agree-dark, #1a7f37);
@@ -273,13 +335,14 @@
 
 .cancelButton {
   padding: var(--spacing-xs) var(--spacing-md);
-  background: var(--background-alt, #f0f0f0);
+  background: var(--background);
   color: var(--text-body);
   border: 1px solid var(--border-light);
   border-radius: var(--radius-sm);
   font-size: 0.875rem;
   cursor: pointer;
   transition: background-color 0.15s ease;
+  font-family: inherit;
 
   &:hover {
     background: var(--border-light);
@@ -308,77 +371,39 @@
   transition: background-color 0.15s ease, color 0.15s ease;
 
   &:hover {
-    background: var(--background-alt, #f0f0f0);
+    background: var(--background);
     color: var(--text-body);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 1px;
   }
 }
 
 .deleteButton:hover {
-  background: var(--disagree-light, #fce8e8);
+  background: rgba(244, 67, 54, 0.1);
   color: var(--disagree);
 }
 
-// Modal
-.modalOverlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: var(--spacing-md);
-}
-
-.modal {
-  background: var(--card-default, #fff);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-lg);
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-
-  h2 {
-    font-size: var(--h3-font-size);
-    font-weight: 600;
-    color: var(--text-primary);
-    margin: 0 0 var(--spacing-md);
-  }
-}
-
-.modalContent {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-
-  label {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-  }
-}
-
-.modalActions {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-top: var(--spacing-lg);
-  justify-content: flex-end;
-}
-
 // RTL Support
+:global([dir="rtl"]),
 :global([data-text-dir="rtl"]) {
   .paragraphItem {
     direction: rtl;
   }
 
-  .modalActions {
-    justify-content: flex-start;
+  .editActions {
+    flex-direction: row-reverse;
+  }
+
+  .itemActions {
+    flex-direction: row-reverse;
+  }
+
+  .importToggle {
+    flex-direction: row-reverse;
+    text-align: end;
   }
 }
 
@@ -394,7 +419,7 @@
   }
 
   .dragHandle {
-    display: none; // Hide drag on mobile, touch drag is complex
+    display: none;
   }
 
   .itemActions {
@@ -404,10 +429,9 @@
     border-top: 1px solid var(--border-light);
   }
 
-  // On mobile, show insert triggers as always-visible but subtle
   .insertTrigger {
     opacity: 0.4;
-    height: 32px; // Larger touch target
+    height: 32px;
 
     &:hover,
     &:active {
@@ -418,9 +442,5 @@
   .addToEndButton {
     padding: var(--spacing-lg);
     font-size: 1rem;
-  }
-
-  .modal {
-    padding: var(--spacing-md);
   }
 }

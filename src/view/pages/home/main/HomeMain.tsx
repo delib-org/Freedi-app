@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import '@/view/style/homePage.scss';
 import styles from './HomeMain.module.scss';
 
 // Redux store
@@ -40,10 +39,10 @@ const HomeMain = () => {
 	const topSubscriptions = useMemo(
 		() => allTopSubscriptions.filter(
 			(sub) =>
-				sub.user?.uid === user?.uid &&
+				sub.userId === userId &&
 				sub.statement.statementType === StatementType.group
 		),
-		[allTopSubscriptions, user?.uid]
+		[allTopSubscriptions, userId]
 	);
 
 	const latestDecisions = useMemo(
@@ -54,14 +53,20 @@ const HomeMain = () => {
 	);
 
 	useEffect(() => {
-		setTimeout(() => {
-			setLoading(false);
-		}, 3000);
-
-		if (topSubscriptions.length > 0) {
+		if (topSubscriptions.length > 0 || latestDecisions.length > 0) {
 			setLoading(false);
 		}
-	}, [topSubscriptions]);
+	}, [topSubscriptions, latestDecisions]);
+
+	// Fallback: stop loading after a short timeout if no data arrives
+	// (e.g. new user with no subscriptions)
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setLoading(false);
+		}, 1500);
+
+		return () => clearTimeout(timer);
+	}, []);
 
 	useEffect(() => {
 		if (userId && user.advanceUser) {

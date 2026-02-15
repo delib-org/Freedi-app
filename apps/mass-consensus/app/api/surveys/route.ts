@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSurvey, getSurveysByCreator } from '@/lib/firebase/surveys';
+import { createSurvey, getSurveysByCreator, getBatchSurveyStats } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { CreateSurveyRequest } from '@/types/survey';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
@@ -36,8 +36,13 @@ export async function GET(request: NextRequest) {
 
     const surveys = await getSurveysByCreator(userId);
 
+    // Batch-fetch stats for all surveys in a single query (avoids N+1 problem)
+    const surveyIds = surveys.map((s) => s.surveyId);
+    const stats = await getBatchSurveyStats(surveyIds);
+
     return NextResponse.json({
       surveys,
+      stats,
       total: surveys.length,
     });
   } catch (error) {

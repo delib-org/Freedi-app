@@ -6,6 +6,7 @@ import { SuggestionMode } from '@freedi/shared-types';
 import { logError, NetworkError, ValidationError } from '@/lib/utils/errorHandling';
 import { ERROR_MESSAGES } from '@/constants/common';
 import { useToast } from '@/components/shared/Toast';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import AddSolutionForm from './AddSolutionForm';
 import EnhancedLoader from './EnhancedLoader';
 import SimilarSolutions from './SimilarSolutions';
@@ -33,6 +34,7 @@ export default function AddSolutionFlow({
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [userInput, setUserInput] = useState('');
   const { showToast } = useToast();
+  const { t } = useTranslation();
 
   // Step 1: Check for multi-suggestions AND similar solutions in parallel
   const handleCheckSimilar = async (solutionText: string) => {
@@ -94,7 +96,7 @@ export default function AddSolutionFlow({
           const errorMessage = similarData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
           showToast({
             type: 'error',
-            title: 'Invalid Content',
+            title: t('Invalid Content'),
             message: errorMessage,
           });
           setFlowState({ step: 'input' });
@@ -112,7 +114,7 @@ export default function AddSolutionFlow({
           const errorMessage = similarData.error || ERROR_MESSAGES.LIMIT_REACHED;
           showToast({
             type: 'warning',
-            title: 'Limit Reached',
+            title: t('Limit Reached'),
             message: errorMessage,
           });
           setFlowState({ step: 'input' });
@@ -200,7 +202,7 @@ export default function AddSolutionFlow({
       // On error, reset to input form
       showToast({
         type: 'error',
-        title: 'Check Failed',
+        title: t('Check Failed'),
         message: ERROR_MESSAGES.CHECK_SIMILAR_FAILED,
       });
       setFlowState({ step: 'input' });
@@ -255,7 +257,7 @@ export default function AddSolutionFlow({
         error instanceof Error ? error.message : ERROR_MESSAGES.SUBMIT_FAILED;
       showToast({
         type: 'error',
-        title: 'Submission Failed',
+        title: t('Submission Failed'),
         message: errorMessage,
       });
       setFlowState({ step: 'input' });
@@ -294,7 +296,7 @@ export default function AddSolutionFlow({
 
       showToast({
         type: 'error',
-        title: 'Submission Failed',
+        title: t('Submission Failed'),
         message: ERROR_MESSAGES.SUBMIT_FAILED,
       });
       setFlowState({ step: 'input' });

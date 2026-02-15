@@ -73,6 +73,7 @@ export interface UIState {
   // Suggestion counts (for real-time updates)
   suggestionCounts: Record<string, number>;
   initializeSuggestionCounts: (counts: Record<string, number>) => void;
+  setSuggestionCount: (paragraphId: string, count: number) => void;
   incrementSuggestionCount: (paragraphId: string) => void;
   decrementSuggestionCount: (paragraphId: string) => void;
 
@@ -160,6 +161,13 @@ export const useUIStore = create<UIState>((set, get) => ({
   // Suggestion counts
   suggestionCounts: {},
   initializeSuggestionCounts: (counts) => set({ suggestionCounts: counts }),
+  setSuggestionCount: (paragraphId, count) =>
+    set((state) => ({
+      suggestionCounts: {
+        ...state.suggestionCounts,
+        [paragraphId]: count,
+      },
+    })),
   incrementSuggestionCount: (paragraphId) =>
     set((state) => ({
       suggestionCounts: {

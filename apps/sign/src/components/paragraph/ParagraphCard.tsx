@@ -2,10 +2,11 @@
 
 import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { ParagraphType } from '@/types';
+import { ParagraphType, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import clsx from 'clsx';
 import { Paragraph } from '@/types';
 import { useUIStore, UIState } from '@/store/uiStore';
+import { useAccessibilityStore } from '@/store/accessibilityStore';
 import { useParagraphHeatValue } from '@/hooks/useHeatMap';
 import { useViewportTracking } from '@/hooks/useViewportTracking';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
@@ -28,6 +29,14 @@ interface ParagraphCardProps {
   onNonInteractiveToggle?: (paragraphId: string, isNonInteractive: boolean) => void;
   /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
   enhancedVisibility?: boolean;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions?: boolean;
+  /** Custom colors for each heading level */
+  headerColors?: HeaderColors;
+  /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
+  nonInteractiveNormalStyle?: boolean;
+  /** Optional heading number to display (e.g., "1.2.1") */
+  headingNumber?: string;
 }
 
 export default function ParagraphCard({
@@ -44,6 +53,10 @@ export default function ParagraphCard({
   hasInteracted: initialHasInteracted = false,
   onNonInteractiveToggle,
   enhancedVisibility = false,
+  allowHeaderReactions = false,
+  headerColors = DEFAULT_HEADER_COLORS,
+  nonInteractiveNormalStyle = false,
+  headingNumber,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -51,6 +64,29 @@ export default function ParagraphCard({
   const [isTogglingNonInteractive, setIsTogglingNonInteractive] = useState(false);
   const cardRef = useRef<HTMLElement>(null);
   const paragraphType = paragraph.type || ParagraphType.paragraph;
+
+  // Check if this is a header element
+  const isHeader = [
+    ParagraphType.h1,
+    ParagraphType.h2,
+    ParagraphType.h3,
+    ParagraphType.h4,
+    ParagraphType.h5,
+    ParagraphType.h6,
+  ].includes(paragraphType);
+
+  // Headers are non-interactive unless allowHeaderReactions is true
+  // Non-interactive state is: manually set OR (is header AND header reactions not allowed)
+  const effectiveNonInteractive = isNonInteractive || (isHeader && !allowHeaderReactions);
+
+  // Check if high contrast mode is active
+  const contrastMode = useAccessibilityStore((state) => state.contrastMode);
+  const isHighContrast = contrastMode !== 'default';
+
+  // Get header color for this paragraph type (disabled in high contrast mode)
+  const headerColor = isHeader && headerColors && !isHighContrast
+    ? headerColors[paragraphType as keyof HeaderColors]
+    : undefined;
 
   // Heat map integration
   const heatValue = useParagraphHeatValue(paragraph.paragraphId);
@@ -177,7 +213,9 @@ export default function ParagraphCard({
   const cardClasses = clsx(
     styles.card,
     styles[`type-${paragraphType}`],
-    isNonInteractive ? styles.nonInteractive : styles[approvalState],
+    effectiveNonInteractive ? styles.nonInteractive : styles[approvalState],
+    // Normal style override for non-interactive paragraphs (admin setting)
+    effectiveNonInteractive && nonInteractiveNormalStyle && styles.nonInteractiveNormal,
     // Legacy heat level prop
     heatLevel && styles[`heat-${heatLevel}`],
     // New heat map integration
@@ -189,31 +227,65 @@ export default function ParagraphCard({
   // Sanitize content to prevent XSS attacks
   // Memoized to avoid re-sanitizing on every render
   const sanitizedContent = useMemo(
-    () => sanitizeHTML(paragraph.content),
+    () => sanitizeHTML(paragraph.content || ''),
     [paragraph.content]
   );
 
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
+  // Always render an element (never null) to maintain consistent structure between SSR and client
   const renderContent = () => {
+    // Style object for headers with custom color
+    const headerStyle = headerColor ? { color: headerColor } : undefined;
+
     switch (paragraphType) {
       case ParagraphType.h1:
-        return <h1 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h2:
-        return <h2 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h3:
-        return <h3 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h4:
-        return <h4 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h5:
-        return <h5 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.h6:
-        return <h6 className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return (
+          <>
+            {headingNumber && <span className={styles.headingNumber}>{headingNumber}. </span>}
+            <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
+          </>
+        );
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
           </div>
         );
       case ParagraphType.table:
@@ -221,9 +293,11 @@ export default function ParagraphCard({
           <div
             className={styles.tableWrapper}
             dangerouslySetInnerHTML={{ __html: sanitizedContent }}
+            suppressHydrationWarning
           />
         );
-      case ParagraphType.image:
+      case ParagraphType.image: {
+        const isMissingAlt = !paragraph.imageAlt || paragraph.imageAlt.trim() === '';
         return (
           <figure className={styles.imageWrapper}>
             {paragraph.imageUrl && (
@@ -240,10 +314,29 @@ export default function ParagraphCard({
                 {paragraph.imageCaption}
               </figcaption>
             )}
+            {/* Warning for missing alt text (admin only) */}
+            {isAdmin && isMissingAlt && (
+              <div className={styles.altWarning} title={t('Alt text is required for accessibility')}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
+                <span>{t('Missing alt text')}</span>
+              </div>
+            )}
           </figure>
         );
+      }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} />;
+        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
     }
   };
 
@@ -278,12 +371,12 @@ export default function ParagraphCard({
         </div>
       )}
 
-      <div className={styles.contentWrapper}>
+      <div className={styles.contentWrapper} suppressHydrationWarning>
         {renderContent()}
       </div>
 
       {/* Show interaction bar only when paragraph is interactive */}
-      {!isNonInteractive && (
+      {!effectiveNonInteractive && (
         <div className={clsx(
           styles.interactionWrapper,
           enhancedVisibility && styles.alwaysVisible
@@ -300,7 +393,7 @@ export default function ParagraphCard({
         </div>
       )}
 
-      {/* Non-interactive label for regular users */}
+      {/* Non-interactive label for regular users (only show if manually marked non-interactive, not just because it's a header) */}
       {isNonInteractive && !isAdmin && (
         <div className={styles.nonInteractiveLabel}>
           <svg
@@ -322,46 +415,48 @@ export default function ParagraphCard({
       {/* Admin controls section */}
       {isAdmin && (
         <div className={styles.adminControls}>
-          {/* Non-interactive toggle */}
-          <button
-            type="button"
-            className={clsx(
-              styles.adminToggle,
-              isNonInteractive && styles.active,
-              isTogglingNonInteractive && styles.loading
-            )}
-            onClick={handleToggleNonInteractive}
-            disabled={isTogglingNonInteractive}
-            title={isNonInteractive ? t('Enable interactions') : t('Disable interactions')}
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              {isNonInteractive ? (
-                // Eye-off icon (interactions disabled)
-                <>
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </>
-              ) : (
-                // Hand/touch icon (interactions enabled)
-                <>
-                  <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
-                  <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
-                  <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
-                  <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
-                </>
+          {/* Non-interactive toggle - only show for non-headers, or headers when allowHeaderReactions is true */}
+          {(!isHeader || allowHeaderReactions) && (
+            <button
+              type="button"
+              className={clsx(
+                styles.adminToggle,
+                isNonInteractive && styles.active,
+                isTogglingNonInteractive && styles.loading
               )}
-            </svg>
-            <span className={styles.adminToggleText}>
-              {isNonInteractive ? t('Info only') : t('Interactive')}
-            </span>
-          </button>
+              onClick={handleToggleNonInteractive}
+              disabled={isTogglingNonInteractive}
+              title={isNonInteractive ? t('Enable interactions') : t('Disable interactions')}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                {isNonInteractive ? (
+                  // Eye-off icon (interactions disabled)
+                  <>
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                    <line x1="1" y1="1" x2="23" y2="23" />
+                  </>
+                ) : (
+                  // Hand/touch icon (interactions enabled)
+                  <>
+                    <path d="M18 11V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v0" />
+                    <path d="M14 10V4a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v2" />
+                    <path d="M10 10.5V6a2 2 0 0 0-2-2v0a2 2 0 0 0-2 2v8" />
+                    <path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15" />
+                  </>
+                )}
+              </svg>
+              <span className={styles.adminToggleText}>
+                {isNonInteractive ? t('Info only') : t('Interactive')}
+              </span>
+            </button>
+          )}
 
           {/* View count badge */}
           {viewCount !== undefined && (

@@ -41,6 +41,13 @@ export async function POST(
 		const { db } = getFirebaseAdmin();
 		const normalizedEmail = userEmail.toLowerCase();
 
+		// DEBUG: Log email being used for query
+		logger.info('[DEBUG] Auto-accept - Searching for invitations:', {
+			userEmail: userEmail,
+			normalizedEmail: normalizedEmail,
+			userId: userId,
+		});
+
 		// Find all pending invitations for this email
 		const invitationsRef = db.collection(Collections.adminInvitations);
 		const querySnapshot = await invitationsRef
@@ -48,7 +55,29 @@ export async function POST(
 			.where('status', '==', AdminInvitationStatus.pending)
 			.get();
 
+		// DEBUG: Log query results
+		logger.info('[DEBUG] Auto-accept - Query results:', {
+			foundInvitations: querySnapshot.size,
+			normalizedEmail: normalizedEmail,
+		});
+
 		if (querySnapshot.empty) {
+			// DEBUG: Query for ALL pending invitations to see what emails exist
+			const allPendingSnapshot = await invitationsRef
+				.where('status', '==', AdminInvitationStatus.pending)
+				.limit(20)
+				.get();
+
+			const pendingEmails = allPendingSnapshot.docs.map(doc => {
+				const data = doc.data() as AdminInvitation;
+				return { invitedEmail: data.invitedEmail, documentId: data.documentId };
+			});
+
+			logger.info('[DEBUG] Auto-accept - No match. All pending invitation emails:', {
+				userEmailSearched: normalizedEmail,
+				pendingInvitations: pendingEmails,
+			});
+
 			return NextResponse.json({
 				success: true,
 				message: 'No pending invitations found',

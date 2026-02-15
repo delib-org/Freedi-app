@@ -2332,3 +2332,239 @@
   color: var(--text-muted, #718096);
   line-height: 1.4;
 }
+
+// ============================================
+// SURVEY RESULTS
+// ============================================
+
+.resultsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 800px;
+}
+
+.resultsSection {
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.resultsSectionTitle {
+  font-size: 1.25rem;
+  color: var(--text-heading, #1a1a2e);
+  margin-bottom: 1.25rem;
+}
+
+.resultsQuestionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.resultsQuestionCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+  transition: background 0.2s;
+
+  &:hover {
+    background: var(--border-light, #e2e8f0);
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.resultsQuestionInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.resultsQuestionNumber {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.resultsQuestionText {
+  font-size: 0.95rem;
+  color: var(--text-body, #4a5568);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resultsViewLink {
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--btn-primary, #5f88e5);
+  background: rgba(95, 136, 229, 0.1);
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.2s;
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.2);
+  }
+}
+
+.resultsEmpty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-muted, #718096);
+  font-size: 0.9rem;
+}
+
+.resultsDemographicsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.resultsDemographicCard {
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+}
+
+.resultsDemographicHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.resultsDemographicQuestion {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-heading, #1a1a2e);
+  flex: 1;
+}
+
+.resultsDemographicType {
+  font-size: 0.75rem;
+  color: var(--text-muted, #718096);
+  background: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-transform: capitalize;
+}
+
+.resultsDemographicMeta {
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  margin-bottom: 0.75rem;
+}
+
+.resultsBarChart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.resultsBarRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.resultsBarLabel {
+  width: 120px;
+  font-size: 0.8rem;
+  color: var(--text-body, #4a5568);
+  text-align: right;
+  flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  @media (max-width: 500px) {
+    width: 80px;
+    font-size: 0.75rem;
+  }
+}
+
+.resultsBarTrack {
+  flex: 1;
+  height: 20px;
+  background: var(--border-light, #e2e8f0);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.resultsBarFill {
+  height: 100%;
+  background: var(--btn-primary, #5f88e5);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+  min-width: 2px;
+}
+
+.resultsBarValue {
+  width: 80px;
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  flex-shrink: 0;
+
+  @media (max-width: 500px) {
+    width: 60px;
+    font-size: 0.75rem;
+  }
+}
+
+.resultsNumericStats {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+}
+
+.resultsNumericItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.resultsNumericLabel {
+  font-size: 0.7rem;
+  color: var(--text-muted, #718096);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.resultsNumericValue {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--btn-primary, #5f88e5);
+}
+
+.resultsTextCount {
+  font-size: 0.85rem;
+  color: var(--text-muted, #718096);
+  padding: 0.5rem 0.75rem;
+  background: white;
+  border-radius: 6px;
+}

@@ -1,0 +1,237 @@
+'use client';
+
+import React, { useState } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
+import type { Survey, SurveyLogo } from '@freedi/shared-types';
+import { OpeningSlideEditor } from './OpeningSlideEditor';
+import { useAuth } from '@/components/auth/AuthProvider';
+
+interface OpeningSlideManagerProps {
+  survey: Survey;
+  onUpdate: (survey: Survey) => void;
+}
+
+/**
+ * Container component that handles API calls for OpeningSlideEditor
+ */
+export default function OpeningSlideManager({ survey, onUpdate }: OpeningSlideManagerProps) {
+  const { t } = useTranslation();
+  const { refreshToken } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const getAuthHeaders = async (): Promise<Record<string, string>> => {
+    const token = await refreshToken();
+    if (!token) throw new Error('Authentication required');
+
+    return {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    };
+  };
+
+  const handleSave = async (data: {
+    show: boolean;
+    content: string;
+    logos: SurveyLogo[];
+  }): Promise<void> => {
+    try {
+      setError(null);
+      setSuccess(null);
+
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/surveys/${survey.surveyId}/opening-slide`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({
+          show: data.show,
+          content: data.content,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(t('failedToUpdateOpeningSlide'));
+      }
+
+      const result = await response.json();
+
+      // Update survey state
+      onUpdate({
+        ...survey,
+        showOpeningSlide: result.showOpeningSlide,
+        openingSlideContent: result.openingSlideContent,
+        logos: data.logos,
+      });
+
+      setSuccess(t('openingSlideUpdated'));
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('unknownError'));
+    }
+  };
+
+  const handleLogoUpload = async (file: File, altText: string): Promise<SurveyLogo> => {
+    try {
+      setError(null);
+
+      const token = await refreshToken();
+      if (!token) throw new Error('Authentication required');
+
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('altText', altText);
+      formData.append('order', String(survey.logos?.length || 0));
+
+      const response = await fetch(`/api/surveys/${survey.surveyId}/logos`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t('logoUploadError'));
+      }
+
+      const result = await response.json();
+
+      // Update survey state
+      const updatedLogos = [...(survey.logos || []), result.logo];
+      onUpdate({
+        ...survey,
+        logos: updatedLogos,
+      });
+
+      setSuccess(t('logoUploadSuccess'));
+      setTimeout(() => setSuccess(null), 3000);
+
+      return result.logo;
+    } catch (err) {
+      throw err; // Re-throw so FileUpload can display the error
+    }
+  };
+
+  const handleLogoDelete = async (logoId: string): Promise<void> => {
+    try {
+      setError(null);
+
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/surveys/${survey.surveyId}/logos/${logoId}`, {
+        method: 'DELETE',
+        headers,
+      });
+
+      if (!response.ok) {
+        throw new Error(t('failedToDeleteLogo'));
+      }
+
+      // Update survey state
+      const updatedLogos = (survey.logos || []).filter((logo) => logo.logoId !== logoId);
+      onUpdate({
+        ...survey,
+        logos: updatedLogos,
+      });
+
+      setSuccess(t('logoDeleted'));
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('unknownError'));
+    }
+  };
+
+  const handleLogoUpdate = async (logoId: string, altText: string): Promise<void> => {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/surveys/${survey.surveyId}/logos/${logoId}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ altText }),
+      });
+
+      if (!response.ok) {
+        throw new Error(t('failedToUpdateLogo'));
+      }
+
+      const result = await response.json();
+
+      // Update survey state
+      const updatedLogos = (survey.logos || []).map((logo) =>
+        logo.logoId === logoId ? result.logo : logo
+      );
+      onUpdate({
+        ...survey,
+        logos: updatedLogos,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('unknownError'));
+    }
+  };
+
+  const handleLogosReorder = async (logoIds: string[]): Promise<void> => {
+    try {
+      const headers = await getAuthHeaders();
+      const response = await fetch(`/api/surveys/${survey.surveyId}/logos/reorder`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ logoIds }),
+      });
+
+      if (!response.ok) {
+        throw new Error(t('failedToReorderLogos'));
+      }
+
+      const result = await response.json();
+
+      // Update survey state
+      onUpdate({
+        ...survey,
+        logos: result.logos,
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('unknownError'));
+    }
+  };
+
+  return (
+    <div>
+      {error && (
+        <div
+          style={{
+            padding: '1rem',
+            marginBottom: '1rem',
+            background: 'rgba(var(--disagree-rgb), 0.1)',
+            color: 'var(--disagree)',
+            borderRadius: '8px',
+          }}
+        >
+          {error}
+        </div>
+      )}
+
+      {success && (
+        <div
+          style={{
+            padding: '1rem',
+            marginBottom: '1rem',
+            background: 'rgba(var(--agree-rgb), 0.1)',
+            color: 'var(--agree)',
+            borderRadius: '8px',
+          }}
+        >
+          {success}
+        </div>
+      )}
+
+      <OpeningSlideEditor
+        survey={survey}
+        onSave={handleSave}
+        onLogoUpload={handleLogoUpload}
+        onLogoDelete={handleLogoDelete}
+        onLogoUpdate={handleLogoUpdate}
+        onLogosReorder={handleLogosReorder}
+      />
+    </div>
+  );
+}

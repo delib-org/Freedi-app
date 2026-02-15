@@ -122,6 +122,12 @@
   --border-light: #e5e7eb;
 }
 
+html, body {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -267,5 +273,119 @@ button:disabled {
   &--neutral {
     background: #e5e7eb;
     color: var(--text-body);
+  }
+}
+
+/* =============================================
+   Accessibility Styles (IS 5568 Compliance)
+   ============================================= */
+
+/* Text Size Levels - applied to html for rem units to work */
+html.a11y-text-large {
+  font-size: 115%;
+}
+
+html.a11y-text-larger {
+  font-size: 130%;
+}
+
+html.a11y-text-largest {
+  font-size: 150%;
+}
+
+/* High Contrast - Light Mode */
+body.a11y-contrast-light {
+  --background: #ffffff;
+  --card-default: #ffffff;
+  --text-primary: #000000;
+  --text-body: #000000;
+  --text-secondary: #333333;
+  --text-caption: #333333;
+  --btn-primary: #0000cc;
+  --btn-primary-hover: #0000aa;
+  --border-light: #000000;
+  --agree: #006600;
+  --disagree: #cc0000;
+}
+
+body.a11y-contrast-light a {
+  color: #0000cc;
+  text-decoration: underline;
+}
+
+body.a11y-contrast-light button:focus,
+body.a11y-contrast-light a:focus,
+body.a11y-contrast-light [tabindex]:focus {
+  outline: 3px solid #000000;
+  outline-offset: 2px;
+}
+
+/* High Contrast - Dark Mode */
+body.a11y-contrast-dark {
+  --background: #000000;
+  --card-default: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-body: #ffffff;
+  --text-secondary: #e0e0e0;
+  --text-caption: #e0e0e0;
+  --btn-primary: #66b3ff;
+  --btn-primary-hover: #99ccff;
+  --border-light: #ffffff;
+  --agree: #66ff66;
+  --disagree: #ff6666;
+}
+
+body.a11y-contrast-dark a {
+  color: #66b3ff;
+  text-decoration: underline;
+}
+
+body.a11y-contrast-dark button:focus,
+body.a11y-contrast-dark a:focus,
+body.a11y-contrast-dark [tabindex]:focus {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+}
+
+/* Reduce Motion */
+body.a11y-reduce-motion,
+body.a11y-reduce-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* Respect system preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+:focus-visible {
+  outline: 2px solid var(--btn-primary);
+  outline-offset: 2px;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--btn-primary);
+  color: white;
+  border-radius: var(--radius-sm);
+  z-index: 10000;
+  transition: top 0.2s ease;
+
+  &:focus {
+    top: var(--spacing-md);
   }
 }

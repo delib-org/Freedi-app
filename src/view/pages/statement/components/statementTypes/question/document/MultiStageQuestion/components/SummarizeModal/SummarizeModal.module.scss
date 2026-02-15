@@ -45,6 +45,58 @@
 	}
 }
 
+.textarea {
+	width: 100%;
+	padding: 0.5rem;
+	border: none;
+	outline: none;
+	background-color: var(--white);
+	border-radius: 3px;
+	font-family: 'Open Sans', sans-serif;
+	resize: none;
+}
+
+.btns {
+	display: flex;
+	justify-content: flex-end;
+	gap: 1rem;
+	width: 100%;
+	flex-wrap: wrap;
+}
+
+.btnPrimary {
+	padding: 0.4rem 1rem;
+	background-color: var(--btn-primary);
+	color: var(--white);
+	cursor: pointer;
+	border-radius: 20px;
+	border: 1px solid var(--btn-primary);
+	text-align: center;
+	box-shadow:
+		0px 3px 6px 0px rgba(115, 138, 191, 0.1),
+		0px 11px 11px 0px rgba(115, 138, 191, 0.09);
+}
+
+.btnSecondary {
+	padding: 0.4rem 1rem;
+	background-color: var(--white);
+	color: var(--btn-secondary);
+	cursor: pointer;
+	border-radius: 20px;
+	border: 1px solid var(--btn-secondary);
+	text-align: center;
+	box-shadow:
+		0px 3px 6px 0px rgba(115, 138, 191, 0.1),
+		0px 11px 11px 0px rgba(115, 138, 191, 0.09);
+}
+
+.btnDisabled {
+	background-color: var(--btn-disabled);
+	color: var(--btn-disabled-text);
+	cursor: not-allowed;
+	border: 1px solid var(--btn-disabled);
+}
+
 // RTL support
 [dir="rtl"] {
 	.summarizeModalBody {

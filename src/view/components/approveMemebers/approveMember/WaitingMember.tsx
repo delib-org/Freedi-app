@@ -7,7 +7,6 @@ import { WaitingMember } from '@freedi/shared-types'
 import { FC, useState } from 'react'
 import Checkbox from '../../checkbox/Checkbox'
 import styles from './WaitingMember.module.scss'
-import "@/view/style/buttons.scss";
 
 interface Props {
 	wait: WaitingMember
@@ -70,10 +69,10 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 					</div>
 
 					<div className={styles.actions}>
-						<button className="btn--approve" onClick={handleApprove}>
+						<button className={styles.approveBtn} onClick={handleApprove}>
 							{t("Approve")}
 						</button>
-						<button className="btn--reject" onClick={handleReject}>
+						<button className={styles.rejectBtn} onClick={handleReject}>
 							{t("Deny")}
 						</button>
 					</div>

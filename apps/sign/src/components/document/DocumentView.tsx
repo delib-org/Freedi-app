@@ -1,20 +1,30 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
-import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL } from '@/types';
+import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import { SignUser } from '@/lib/utils/user';
+import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
+import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
+import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import DocumentClient from './DocumentClient';
-import ParagraphCard from '../paragraph/ParagraphCard';
 import SignButton from './SignButton';
+
+// Import ParagraphCard dynamically to prevent SSR hydration mismatches
+const ParagraphCard = dynamic(() => import('../paragraph/ParagraphCard'), {
+  ssr: false,
+  loading: () => <div style={{ minHeight: '100px', background: 'var(--card-default, #f5f5f5)', borderRadius: '8px', margin: '1rem 0' }} />,
+});
 import RejectButton from './RejectButton';
 import ExplanationButton from './ExplanationButton';
 import ExplanationVideoOverlay from './ExplanationVideoOverlay';
 import ProgressBar from './ProgressBar';
 import UserAvatar from '../shared/UserAvatar';
 import { TableOfContents, TocMobileMenu, useTocItems } from '../toc';
+import VersionSelector from '../versions/VersionSelector';
+import { AccessibilityWidget } from '../accessibility';
 import styles from './DocumentView.module.scss';
 
 interface DocumentViewProps {
@@ -38,11 +48,19 @@ interface DocumentViewProps {
   explanationVideoUrl?: string;
   /** Video display mode: 'optional' (button only) or 'before_viewing' (blocking overlay) */
   explanationVideoMode?: ExplanationVideoMode;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions?: boolean;
+  /** Custom colors for each heading level */
+  headerColors?: HeaderColors;
+  /** When true, non-interactive paragraphs use normal text color instead of dimmed/disabled styling */
+  nonInteractiveNormalStyle?: boolean;
+  /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
+  enableHeadingNumbering?: boolean;
 }
 
 export default function DocumentView({
   document,
-  paragraphs,
+  paragraphs: initialParagraphs,
   user,
   userSignature,
   userApprovals,
@@ -58,11 +76,18 @@ export default function DocumentView({
   enhancedVisibility = false,
   explanationVideoUrl = '',
   explanationVideoMode = 'optional',
+  allowHeaderReactions = false,
+  headerColors = DEFAULT_HEADER_COLORS,
+  nonInteractiveNormalStyle = false,
+  enableHeadingNumbering = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
   // State to track if blocking video overlay has been dismissed
   const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
+
+  // Real-time paragraph updates - listens for admin-approved changes
+  const paragraphs = useRealtimeParagraphs(document.statementId, initialParagraphs);
 
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
@@ -71,8 +96,14 @@ export default function DocumentView({
   const paragraphContents = paragraphs.map((p) => p.content);
   const resolvedDirection = resolveTextDirection(textDirection, paragraphContents);
 
+  // Calculate heading numbers if enabled
+  const headingNumbers = useMemo(
+    () => enableHeadingNumbering ? calculateHeadingNumbers(paragraphs) : new Map(),
+    [paragraphs, enableHeadingNumbering]
+  );
+
   // Extract TOC items from paragraphs
-  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2);
+  const tocItems = useTocItems(paragraphs, tocSettings?.tocMaxLevel ?? 2, headingNumbers);
 
   // Determine if TOC should be shown
   const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
@@ -90,53 +121,61 @@ export default function DocumentView({
         paragraphs={paragraphs}
         textDirection={resolvedDirection}
       >
-        <div className={styles.container} dir={resolvedDirection} data-text-dir={resolvedDirection}>
-        {/* Top Bar with Logo and User Avatar */}
-        <div className={styles.topBar}>
-          {/* Mobile TOC hamburger menu */}
+        <div
+          className={`${styles.pageLayout} ${showToc ? styles.pageLayoutWithToc : ''}`}
+          dir={resolvedDirection}
+          data-text-dir={resolvedDirection}
+        >
+          {/* Desktop Table of Contents sidebar */}
           {showToc && (
-            <TocMobileMenu
+            <TableOfContents
               items={tocItems}
               textDirection={resolvedDirection}
             />
           )}
-          <a href={`/doc/${document.statementId}`} className={styles.logo}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logoUrl}
-              alt={brandName}
-              className={styles.logoImage}
-            />
-          </a>
-          <div className={styles.topBarActions}>
-            {isAdmin && (
-              <a href={`/doc/${document.statementId}/admin`} className={styles.adminButton}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
-                </svg>
-                {t('admin') || 'Admin'}
+
+          <div className={styles.container}>
+            {/* Top Bar with Logo and User Avatar */}
+            <div className={styles.topBar}>
+              {/* Mobile TOC hamburger menu */}
+              {showToc && (
+                <TocMobileMenu
+                  items={tocItems}
+                  textDirection={resolvedDirection}
+                />
+              )}
+              <a href={`/doc/${document.statementId}`} className={styles.logo}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={logoUrl}
+                  alt={brandName}
+                  className={styles.logoImage}
+                />
               </a>
-            )}
-            <UserAvatar
-              user={user}
-              documentId={document.statementId}
-              isAdmin={isAdmin}
-            />
+              <div className={styles.topBarActions}>
+                {isAdmin && (
+                  <a href={`/doc/${document.statementId}/admin`} className={styles.adminButton}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+                    </svg>
+                    {t('admin') || 'Admin'}
+                  </a>
+                )}
+                <UserAvatar
+                  user={user}
+                  documentId={document.statementId}
+                  isAdmin={isAdmin}
+                />
+              </div>
+            </div>
+
+            {/* Document Header */}
+            <header className={styles.header}>
+          <div className={styles.titleRow}>
+            <h1 className={styles.title}>{document.statement}</h1>
+            <VersionSelector documentId={document.statementId} />
           </div>
-        </div>
-
-        {/* Desktop Table of Contents sidebar */}
-        {showToc && (
-          <TableOfContents
-            items={tocItems}
-            textDirection={resolvedDirection}
-          />
-        )}
-
-        {/* Document Header */}
-        <header className={styles.header}>
-          <h1 className={styles.title}>{document.statement}</h1>
 
           {/* Progress indicator */}
           {user && paragraphs.length > 0 && (
@@ -167,76 +206,84 @@ export default function DocumentView({
                 enableSuggestions={enableSuggestions}
                 hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
                 enhancedVisibility={enhancedVisibility}
+                allowHeaderReactions={allowHeaderReactions}
+                headerColors={headerColors}
+                nonInteractiveNormalStyle={nonInteractiveNormalStyle}
+                headingNumber={headingNumbers.get(paragraph.paragraphId)}
               />
             ))
           )}
-        </main>
+            </main>
 
-        {/* Sign/Reject buttons at bottom */}
-        {paragraphs.length > 0 && (
-          <footer className={styles.footer}>
-            <div className={styles.signatureStatus}>
-              {!user ? (
-                <p className={styles.unsignedStatus}>
-                  {t('signInToReview') || 'Sign in to review and sign this document'}
-                </p>
-              ) : userSignature ? (
-                <p className={styles.signedStatus}>
-                  {userSignature.signed === 'signed' && (t('youHaveSigned') || 'You have signed this document')}
-                  {userSignature.signed === 'rejected' && (t('youHaveRejected') || 'You have rejected this document')}
-                  {userSignature.signed === 'viewed' && (t('youHaveViewed') || 'You have viewed this document')}
-                </p>
-              ) : (
-                <p className={styles.unsignedStatus}>
-                  {t('reviewAndSign') || 'Review all paragraphs and sign or reject the document'}
-                </p>
-              )}
+            {/* Sign/Reject buttons at bottom */}
+            {paragraphs.length > 0 && (
+              <footer className={styles.footer}>
+                <div className={styles.signatureStatus}>
+                  {!user ? (
+                    <p className={styles.unsignedStatus}>
+                      {t('signInToReview') || 'Sign in to review and sign this document'}
+                    </p>
+                  ) : userSignature ? (
+                    <p className={styles.signedStatus}>
+                      {userSignature.signed === 'signed' && (t('youHaveSigned') || 'You have signed this document')}
+                      {userSignature.signed === 'rejected' && (t('youHaveRejected') || 'You have rejected this document')}
+                      {userSignature.signed === 'viewed' && (t('youHaveViewed') || 'You have viewed this document')}
+                    </p>
+                  ) : (
+                    <p className={styles.unsignedStatus}>
+                      {t('reviewAndSign') || 'Review all paragraphs and sign or reject the document'}
+                    </p>
+                  )}
+                </div>
+
+                <div className={styles.signatureActions}>
+                  {!user ? (
+                    <a
+                      href={`/login?redirect=/doc/${document.statementId}`}
+                      className={styles.signButton}
+                      style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                      {t('signInToSign') || 'Sign In to Sign'}
+                    </a>
+                  ) : (
+                    <>
+                      <RejectButton isRejected={userSignature?.signed === 'rejected'} />
+                      <SignButton isSigned={userSignature?.signed === 'signed'} />
+                    </>
+                  )}
+                </div>
+              </footer>
+            )}
+
+            {/* Developed by credit */}
+            <div className={styles.developedBy}>
+              {t('developedBy') || 'Developed by'}{' '}
+              <a href={DEVELOPED_BY_URL} target="_blank" rel="noopener noreferrer">
+                WizCol
+              </a>
             </div>
 
-            <div className={styles.signatureActions}>
-              {!user ? (
-                <a
-                  href={`/login?redirect=/doc/${document.statementId}`}
-                  className={styles.signButton}
-                  style={{ textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  {t('signInToSign') || 'Sign In to Sign'}
-                </a>
-              ) : (
-                <>
-                  <RejectButton isRejected={userSignature?.signed === 'rejected'} />
-                  <SignButton isSigned={userSignature?.signed === 'signed'} />
-                </>
-              )}
-            </div>
-          </footer>
-        )}
+            {/* Floating Explanation Video Button (optional mode only) */}
+            {explanationVideoUrl && explanationVideoMode === 'optional' && (
+              <ExplanationButton
+                videoUrl={explanationVideoUrl}
+                documentId={document.statementId}
+              />
+            )}
 
-        {/* Developed by credit */}
-        <div className={styles.developedBy}>
-          {t('developedBy') || 'Developed by'}{' '}
-          <a href={DEVELOPED_BY_URL} target="_blank" rel="noopener noreferrer">
-            WizCol
-          </a>
+            {/* Blocking Video Overlay (before_viewing mode) */}
+            {explanationVideoUrl && explanationVideoMode === 'before_viewing' && !videoOverlayDismissed && (
+              <ExplanationVideoOverlay
+                videoUrl={explanationVideoUrl}
+                documentId={document.statementId}
+                onDismiss={() => setVideoOverlayDismissed(true)}
+              />
+            )}
+
+            {/* Accessibility Widget (IS 5568 compliance) */}
+            <AccessibilityWidget documentId={document.statementId} />
+          </div>
         </div>
-
-        {/* Floating Explanation Video Button (optional mode only) */}
-        {explanationVideoUrl && explanationVideoMode === 'optional' && (
-          <ExplanationButton
-            videoUrl={explanationVideoUrl}
-            documentId={document.statementId}
-          />
-        )}
-
-        {/* Blocking Video Overlay (before_viewing mode) */}
-        {explanationVideoUrl && explanationVideoMode === 'before_viewing' && !videoOverlayDismissed && (
-          <ExplanationVideoOverlay
-            videoUrl={explanationVideoUrl}
-            documentId={document.statementId}
-            onDismiss={() => setVideoOverlayDismissed(true)}
-          />
-        )}
-      </div>
       </DocumentClient>
   );
 }

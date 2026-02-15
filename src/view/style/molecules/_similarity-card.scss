@@ -1,6 +1,8 @@
 // Similarity Card Molecule
 // Used for displaying similar statements in the "add new option" flow
 
+@use '../mixins' as *;
+
 .similarity-card {
   position: relative;
   background: var(--white);
@@ -213,7 +215,7 @@
 }
 
 // Responsive
-@media (max-width: 768px) {
+@include tablet-small {
   .similarity-card {
     padding: 1rem;
 

@@ -1,6 +1,6 @@
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { FireStore } from "../config";
-import { Collections, PolarizationIndex } from "delib-npm";
+import { Collections, PolarizationIndex } from "@freedi/shared-types";
 import { store } from "@/redux/store";
 import { deletePolarizationIndex, setPolarizationIndexes } from "@/redux/userDemographic/userDemographicSlice";
 

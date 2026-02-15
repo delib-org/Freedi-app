@@ -8,7 +8,7 @@ import { DemographicSettings } from '@/components/admin/demographics';
 import LogoUpload from '@/components/admin/LogoUpload';
 import LanguageSelector from '@/components/admin/LanguageSelector';
 import { DemographicMode, SurveyTriggerMode } from '@/types/demographics';
-import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME } from '@/types';
+import { TextDirection, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
 import styles from '../admin.module.scss';
@@ -56,6 +56,14 @@ interface Settings {
   explanationVideoUrl: string;
   /** Video display mode: 'optional' = button only, 'before_viewing' = must watch before viewing */
   explanationVideoMode: ExplanationVideoMode;
+  /** When true, headers (h1-h6) will show interaction buttons like other paragraphs */
+  allowHeaderReactions: boolean;
+  /** Custom colors for each heading level */
+  headerColors: HeaderColors;
+  /** When true, non-interactive elements use normal text color instead of dimmed styling */
+  nonInteractiveNormalStyle: boolean;
+  /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
+  enableHeadingNumbering: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -87,6 +95,10 @@ export default function AdminSettingsPage() {
     enhancedVisibility: false,
     explanationVideoUrl: '',
     explanationVideoMode: 'optional',
+    allowHeaderReactions: false,
+    headerColors: DEFAULT_HEADER_COLORS,
+    nonInteractiveNormalStyle: false,
+    enableHeadingNumbering: false,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -264,6 +276,71 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.enableSuggestions}
           />
         </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Allow Header Reactions')}</p>
+            <p className={styles.settingDescription}>
+              {t('Enable users to react (approve/reject) to headings')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.allowHeaderReactions ? styles.active : ''}`}
+            onClick={() => handleToggle('allowHeaderReactions')}
+            aria-pressed={settings.allowHeaderReactions}
+          />
+        </div>
+      </section>
+
+      {/* Header Styling Settings */}
+      <section className={styles.settingsSection}>
+        <h2 className={styles.settingsSectionTitle}>{t('Header Styling')}</h2>
+        <p className={styles.settingDescription} style={{ marginBottom: 'var(--spacing-md)' }}>
+          {t('Customize header colors')}
+        </p>
+
+        {(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const).map((level) => (
+          <div key={level} className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>{level.toUpperCase()} {t('Color')}</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <input
+                type="color"
+                value={settings.headerColors[level] || DEFAULT_HEADER_COLORS[level]}
+                onChange={(e) => {
+                  setSettings(prev => ({
+                    ...prev,
+                    headerColors: {
+                      ...prev.headerColors,
+                      [level]: e.target.value,
+                    },
+                  }));
+                  setSaved(false);
+                }}
+                style={{ width: '40px', height: '32px', cursor: 'pointer', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSettings(prev => ({
+                    ...prev,
+                    headerColors: {
+                      ...prev.headerColors,
+                      [level]: DEFAULT_HEADER_COLORS[level],
+                    },
+                  }));
+                  setSaved(false);
+                }}
+                style={{ padding: '4px 8px', fontSize: '12px', cursor: 'pointer', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '4px' }}
+                title={t('Reset to default')}
+              >
+                {t('Reset')}
+              </button>
+            </div>
+          </div>
+        ))}
       </section>
 
       {/* Display Settings */}
@@ -297,6 +374,21 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.showViewCounts ? styles.active : ''}`}
             onClick={() => handleToggle('showViewCounts')}
             aria-pressed={settings.showViewCounts}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Non-Interactive Normal Style')}</p>
+            <p className={styles.settingDescription}>
+              {t('Display non-interactive paragraphs with normal text color instead of dimmed/disabled styling')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.nonInteractiveNormalStyle ? styles.active : ''}`}
+            onClick={() => handleToggle('nonInteractiveNormalStyle')}
+            aria-pressed={settings.nonInteractiveNormalStyle}
           />
         </div>
       </section>
@@ -365,6 +457,29 @@ export default function AdminSettingsPage() {
             </select>
           </div>
         )}
+
+        {/* Enable Heading Numbering */}
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <label htmlFor="enableHeadingNumbering" className={styles.settingLabel}>
+              {t('settings.enableHeadingNumbering.label') || 'Enable Heading Numbering'}
+            </label>
+            <p className={styles.settingDescription}>
+              {t('settings.enableHeadingNumbering.description') ||
+               'Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)'}
+            </p>
+          </div>
+          <button
+            type="button"
+            id="enableHeadingNumbering"
+            className={`${styles.toggle} ${settings.enableHeadingNumbering ? styles.active : ''}`}
+            onClick={() => handleToggle('enableHeadingNumbering')}
+            aria-pressed={settings.enableHeadingNumbering}
+            aria-label={t('settings.enableHeadingNumbering.label') || 'Enable Heading Numbering'}
+          >
+            <span className={styles.toggleSlider} />
+          </button>
+        </div>
       </section>
 
       {/* Language Settings */}

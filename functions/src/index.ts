@@ -11,7 +11,7 @@ import { initializeApp, getApps } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
 // Import collection constants
-import { Collections, functionConfig } from "delib-npm";
+import { Collections, functionConfig } from "@freedi/shared-types";
 
 // Import function modules
 import {
@@ -137,6 +137,15 @@ import { findSimilarForIntegration, executeIntegration } from "./fn_integrateSim
 // Google Docs Import
 import { importGoogleDoc } from "./fn_importGoogleDocs";
 
+// Document Version AI Processing
+import { processVersionAI } from "./fn_versionAI";
+
+// Paragraph Version Control (MVP)
+import { fn_createReplacementQueueItem } from "./fn_createReplacementQueueItem";
+import { fn_updateQueueConsensus } from "./fn_updateQueueConsensus";
+import { fn_pruneVersionHistory } from "./fn_pruneVersionHistory";
+import { fn_notifyAdminReplacementPending } from "./fn_notifyAdminReplacementPending";
+
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from "./fn_dynamicOgTags";
 import {
@@ -182,6 +191,7 @@ const corsConfig = isProduction
       "https://delib-5.web.app",
       "https://wizcol-app.web.app",
       "https://app.wizcol.com",
+      "https://sign.wizcol.com",
     ]
   : [
       "http://localhost:5173",
@@ -211,6 +221,42 @@ const wrapHttpFunction = (
       const startTimestamp = getTimestamp();
       const functionName = handler.name || 'HTTP function';
       console.info(`[${startTimestamp}] ▶ Starting ${functionName}`);
+
+      try {
+        await handler(req, res);
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
+      } catch (error) {
+        const duration = Date.now() - startTime;
+        const endTimestamp = getTimestamp();
+        console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
+        res.status(500).send("Internal Server Error");
+      }
+    }
+  );
+};
+
+/**
+ * Creates a wrapper for memory-intensive HTTP functions (AI, embeddings, etc.)
+ * Uses 1GB memory instead of default 256MB
+ * @param {Function} handler - The function handler to wrap
+ * @returns {Function} - Wrapped function with error handling and increased memory
+ */
+const wrapMemoryIntensiveHttpFunction = (
+  handler: (req: Request, res: Response) => Promise<void>
+) => {
+  return onRequest(
+    {
+      ...functionConfig,
+      cors: corsConfig,
+      memory: "1GiB",
+    },
+    async (req, res) => {
+      const startTime = Date.now();
+      const startTimestamp = getTimestamp();
+      const functionName = handler.name || 'HTTP function';
+      console.info(`[${startTimestamp}] ▶ Starting ${functionName} (memory-intensive)`);
 
       try {
         await handler(req, res);
@@ -285,7 +331,7 @@ function createFirestoreFunction<T>(
 exports.getRandomStatements = wrapHttpFunction(getRandomStatements);
 exports.getTopStatements = wrapHttpFunction(getTopStatements);
 exports.getUserOptions = wrapHttpFunction(getUserOptions);
-exports.findSimilarStatements = wrapHttpFunction(findSimilarStatements);
+exports.findSimilarStatements = wrapMemoryIntensiveHttpFunction(findSimilarStatements);
 exports.massConsensusGetInitialData = wrapHttpFunction(getInitialMCData);
 exports.getQuestionOptions = wrapHttpFunction(getQuestionOptions);
 exports.massConsensusAddMember = wrapHttpFunction(addMassConsensusMember);
@@ -301,9 +347,9 @@ exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
 exports.fixClusterIntegration = fixClusterIntegration;
-exports.improveSuggestion = wrapHttpFunction(handleImproveSuggestion);
-exports.detectMultipleSuggestions = wrapHttpFunction(detectMultipleSuggestions);
-exports.mergeStatements = wrapHttpFunction(mergeStatements);
+exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
+exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
+exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
 
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
@@ -556,6 +602,9 @@ exports.serveOgTags = serveOgTags;
 // Google Docs Import
 exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 
+// Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
+exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
+
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
@@ -619,6 +668,12 @@ return;
     res.json(result);
   }
 );
+
+// Paragraph Version Control (MVP) - Sign app
+exports.fn_createReplacementQueueItem = fn_createReplacementQueueItem;
+exports.fn_updateQueueConsensus = fn_updateQueueConsensus;
+exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
+exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

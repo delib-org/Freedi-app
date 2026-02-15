@@ -1,5 +1,5 @@
 import { db } from ".."; // Import db from your index file
-import { Collections, Statement } from "delib-npm";
+import { Collections, Statement } from "@freedi/shared-types";
 import { StatementSimple } from "../types/statement-types";
 import { logger } from "firebase-functions";
 

@@ -19,7 +19,7 @@ import {
 	CutoffBy,
 	defaultResultsSettings
 } from '@freedi/shared-types';
-import type { PopperHebbianScore } from 'delib-npm/dist/models/popper/popperTypes';
+import type { PopperHebbianScore } from '@freedi/shared-types';
 
 // Extend Statement type to include popperHebbianScore (it exists but TypeScript doesn't see it during compilation)
 type StatementWithPopper = Statement & { popperHebbianScore?: PopperHebbianScore };
@@ -128,6 +128,14 @@ return;
 		}
 
 		if (!userId) {
+			// Log detailed info to help debug missing evaluator data
+			logger.error('Missing userId in evaluation', {
+				evaluationId: event.data.id,
+				statementId,
+				parentId,
+				hasEvaluator: !!evaluation.evaluator,
+				evaluatorKeys: evaluation.evaluator ? Object.keys(evaluation.evaluator) : [],
+			});
 			throw new Error('User ID is required');
 		}
 

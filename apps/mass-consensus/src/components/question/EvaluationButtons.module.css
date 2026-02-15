@@ -1,8 +1,12 @@
 .buttons {
   display: flex;
-  gap: var(--spacing-xs);
+  gap: var(--spacing-sm);
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.buttons.compact {
+  gap: var(--spacing-xs);
 }
 
 .button {
@@ -11,26 +15,107 @@
   align-items: center;
   gap: var(--spacing-xs);
   padding: var(--spacing-sm) var(--spacing-md);
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: var(--radius-md);
-  min-width: 60px;
-  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  border-radius: 16px;
+  min-width: 64px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
 }
 
+/* Color variants - pastel backgrounds */
+.button.hate {
+  background: var(--rating-hate, #fee2e2);
+  border-color: #fecaca;
+}
+
+.button.dislike {
+  background: var(--rating-dislike, #fef3c7);
+  border-color: #fde68a;
+}
+
+.button.neutral {
+  background: var(--rating-neutral, #f1f5f9);
+  border-color: #e2e8f0;
+}
+
+.button.like {
+  background: var(--rating-like, #d1fae5);
+  border-color: #a7f3d0;
+}
+
+.button.love {
+  background: var(--rating-love, #ffe4e6);
+  border-color: #fecdd3;
+}
+
+/* Hover states */
 .button:hover:not(.disabled) {
-  border-color: var(--btn-primary);
-  transform: translateY(-3px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
+.button.hate:hover:not(.disabled) {
+  border-color: #ef4444;
+}
+
+.button.dislike:hover:not(.disabled) {
+  border-color: #f59e0b;
+}
+
+.button.neutral:hover:not(.disabled) {
+  border-color: #94a3b8;
+}
+
+.button.like:hover:not(.disabled) {
+  border-color: #10b981;
+}
+
+.button.love:hover:not(.disabled) {
+  border-color: #ec4899;
+}
+
+/* Selected states */
 .button.selected {
-  border-color: var(--btn-primary);
-  background: var(--btn-primary);
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.button.hate.selected {
+  background: #ef4444;
+  border-color: #ef4444;
+}
+
+.button.dislike.selected {
+  background: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.button.neutral.selected {
+  background: #64748b;
+  border-color: #64748b;
+}
+
+.button.like.selected {
+  background: #10b981;
+  border-color: #10b981;
+}
+
+.button.love.selected {
+  background: #ec4899;
+  border-color: #ec4899;
+}
+
+.button.selected .emoji {
   color: white;
-  box-shadow: var(--shadow-md);
+  transform: scale(1.1);
+}
+
+.button.selected .score,
+.button.selected .label {
+  color: white;
 }
 
 .button.disabled {
@@ -39,30 +124,80 @@
 }
 
 .emoji {
-  font-size: 1.5rem;
+  font-size: 1.75rem;
   line-height: 1;
+  transition: transform 0.2s ease, filter 0.2s ease;
 }
 
 .score {
   font-size: 0.75rem;
   font-weight: 600;
+  color: var(--text-secondary, #64748b);
+  transition: color 0.2s ease;
 }
 
-.button.selected .score {
-  color: white;
+.label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary, #64748b);
+  text-align: center;
+  max-width: 60px;
+  transition: color 0.2s ease;
 }
 
+/* Ripple animation on click */
+.button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, white 10%, transparent 10.01%);
+  opacity: 0;
+  transform: scale(10, 10);
+  transition: transform 0.5s, opacity 1s;
+}
+
+.button:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Mobile responsive */
 @media (max-width: 768px) {
   .buttons {
     flex-wrap: nowrap;
-    gap: 4px;
+    gap: 6px;
     width: 100%;
   }
 
   .button {
     flex: 1;
     min-width: 0;
-    padding: var(--spacing-xs) 4px;
+    padding: var(--spacing-sm) var(--spacing-xs);
+    border-radius: 12px;
+  }
+
+  .emoji {
+    font-size: 1.5rem;
+  }
+
+  .score {
+    font-size: 0.625rem;
+  }
+
+  .label {
+    display: none;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  .buttons {
+    gap: 4px;
+  }
+
+  .button {
+    padding: var(--spacing-xs);
   }
 
   .emoji {
@@ -70,25 +205,21 @@
   }
 
   .score {
-    font-size: 0.625rem;
+    display: none;
   }
 }
 
-/* Extra small screens - hide score numbers, show only emojis */
-@media (max-width: 380px) {
-  .buttons {
-    gap: 3px;
-  }
+/* Compact mode */
+.buttons.compact .button {
+  min-width: 48px;
+  padding: var(--spacing-xs);
+  border-radius: 12px;
+}
 
-  .button {
-    padding: var(--spacing-xs) 2px;
-  }
+.buttons.compact .emoji {
+  font-size: 1.25rem;
+}
 
-  .emoji {
-    font-size: 1.1rem;
-  }
-
-  .score {
-    display: none;
-  }
+.buttons.compact .score {
+  display: none;
 }

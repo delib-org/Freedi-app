@@ -1,0 +1,215 @@
+/**
+ * ImageAltWarning component styles
+ */
+
+.warning {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-md, 12px);
+  padding: var(--spacing-md, 16px);
+  margin-bottom: var(--spacing-lg, 24px);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm, 12px);
+  margin-bottom: var(--spacing-sm, 12px);
+}
+
+.iconWrapper {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffedd5;
+  border-radius: 50%;
+  color: #c2410c;
+}
+
+.headerText {
+  flex: 1;
+}
+
+.title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #9a3412;
+}
+
+.subtitle {
+  margin: var(--spacing-xs, 4px) 0 0;
+  font-size: 0.875rem;
+  color: #c2410c;
+}
+
+.description {
+  margin: 0 0 var(--spacing-md, 16px);
+  font-size: 0.875rem;
+  color: #9a3412;
+  line-height: 1.5;
+}
+
+.imageList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.imageItem {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm, 12px);
+  padding: var(--spacing-sm, 12px);
+  background: white;
+  border-radius: var(--radius-sm, 8px);
+  margin-bottom: var(--spacing-sm, 8px);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.imagePreview {
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-sm, 8px);
+  overflow: hidden;
+  background: #f7fafc;
+}
+
+.thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imageInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.imageCaption {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-title, #1a202c);
+  margin-bottom: var(--spacing-xs, 8px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.addButton {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  padding: var(--spacing-xs, 6px) var(--spacing-sm, 12px);
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.813rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--btn-primary-hover, #4a7ad4);
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary, #5f88e5);
+    outline-offset: 2px;
+  }
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs, 8px);
+}
+
+.altInput {
+  width: 100%;
+  padding: var(--spacing-xs, 8px) var(--spacing-sm, 12px);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary, #5f88e5);
+  }
+
+  &:disabled {
+    background: #f7fafc;
+    cursor: not-allowed;
+  }
+
+  &::placeholder {
+    color: var(--text-caption, #9aa3b8);
+  }
+}
+
+.editActions {
+  display: flex;
+  gap: var(--spacing-xs, 8px);
+}
+
+.saveButton {
+  padding: var(--spacing-xs, 6px) var(--spacing-sm, 12px);
+  background: var(--agree, #4caf50);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.813rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #43a047;
+  }
+
+  &:focus {
+    outline: 2px solid var(--agree, #4caf50);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.cancelButton {
+  padding: var(--spacing-xs, 6px) var(--spacing-sm, 12px);
+  background: var(--bg-secondary, #f7fafc);
+  color: var(--text-body, #4a5568);
+  border: 1px solid var(--border-light, #e5e7eb);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.813rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: #edf2f7;
+  }
+
+  &:focus {
+    outline: 2px solid var(--btn-primary, #5f88e5);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

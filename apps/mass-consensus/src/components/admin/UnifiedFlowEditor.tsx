@@ -5,7 +5,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import type {
   Statement,
   SurveyDemographicPage,
-  SurveyDemographicQuestion,
+  UserDemographicQuestion,
   SurveyExplanationPage,
   SurveySettings,
   QuestionOverrideSettings,
@@ -37,13 +37,13 @@ interface UnifiedFlowEditorProps {
   questions: Statement[];
   demographicPages: SurveyDemographicPage[];
   explanationPages: SurveyExplanationPage[];
-  customDemographicQuestions: SurveyDemographicQuestion[];
+  customDemographicQuestions: UserDemographicQuestion[];
   surveySettings: SurveySettings;
   questionSettings: Record<string, QuestionOverrideSettings>;
   onQuestionsChange: (questions: Statement[]) => void;
   onDemographicPagesChange: (pages: SurveyDemographicPage[]) => void;
   onExplanationPagesChange: (pages: SurveyExplanationPage[]) => void;
-  onCustomDemographicQuestionsChange: (questions: SurveyDemographicQuestion[]) => void;
+  onCustomDemographicQuestionsChange: (questions: UserDemographicQuestion[]) => void;
   onQuestionSettingsChange: (questionId: string, settings: QuestionOverrideSettings) => void;
   onQuestionTextChange: (questionId: string, newText: string) => void;
   onRemoveQuestion: (questionId: string) => void;
@@ -158,10 +158,10 @@ interface SortableFlowItemProps {
   onQuestionSettingsChange?: (settings: QuestionOverrideSettings) => void;
   onQuestionTextChange?: (newText: string) => void;
   // For demographics
-  customQuestions?: SurveyDemographicQuestion[];
+  customQuestions?: UserDemographicQuestion[];
   onDemographicUpdate?: (updates: Partial<SurveyDemographicPage>) => void;
   onAddDemographicQuestion?: () => void;
-  onUpdateDemographicQuestion?: (questionId: string, updates: Partial<SurveyDemographicQuestion>) => void;
+  onUpdateDemographicQuestion?: (questionId: string, updates: Partial<UserDemographicQuestion>) => void;
   onRemoveDemographicQuestion?: (questionId: string) => void;
   // For explanations
   onExplanationUpdate?: (updates: Partial<SurveyExplanationPage>) => void;
@@ -274,7 +274,7 @@ function SortableFlowItem({
             <DemographicPagePanel
               page={item.page}
               customQuestions={(customQuestions || []).filter((q) =>
-                item.page.customQuestionIds.includes(q.questionId)
+                item.page.customQuestionIds.includes(q.userQuestionId || '')
               )}
               onUpdate={onDemographicUpdate}
               onAddQuestion={onAddDemographicQuestion || (() => {})}
@@ -437,10 +437,10 @@ function QuestionSettingsPanel({
 
 interface DemographicPagePanelProps {
   page: SurveyDemographicPage;
-  customQuestions: SurveyDemographicQuestion[];
+  customQuestions: UserDemographicQuestion[];
   onUpdate: (updates: Partial<SurveyDemographicPage>) => void;
   onAddQuestion: () => void;
-  onUpdateQuestion: (questionId: string, updates: Partial<SurveyDemographicQuestion>) => void;
+  onUpdateQuestion: (questionId: string, updates: Partial<UserDemographicQuestion>) => void;
   onRemoveQuestion: (questionId: string) => void;
 }
 
@@ -495,11 +495,11 @@ function DemographicPagePanel({
           <div className={styles.questionsList}>
             {customQuestions.map((question, index) => (
               <DemographicQuestionEditor
-                key={question.questionId}
+                key={question.userQuestionId}
                 question={question}
                 index={index}
-                onUpdate={(updates) => onUpdateQuestion(question.questionId, updates)}
-                onRemove={() => onRemoveQuestion(question.questionId)}
+                onUpdate={(updates) => onUpdateQuestion(question.userQuestionId || '', updates)}
+                onRemove={() => onRemoveQuestion(question.userQuestionId || '')}
               />
             ))}
           </div>
@@ -599,7 +599,7 @@ export default function UnifiedFlowEditor({
       const page = demographicPages.find((p) => p.demographicPageId === item.id);
       if (page) {
         onCustomDemographicQuestionsChange(
-          customDemographicQuestions.filter((q) => !page.customQuestionIds.includes(q.questionId))
+          customDemographicQuestions.filter((q) => !page.customQuestionIds.includes(q.userQuestionId || ''))
         );
       }
     } else if (item.type === 'explanation') {
@@ -611,24 +611,22 @@ export default function UnifiedFlowEditor({
   };
 
   const handleAddDemographicQuestion = (pageId: string) => {
-    const newQuestion: SurveyDemographicQuestion = {
-      questionId: `demo-q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      surveyId: '',
+    const questionId = `demo-q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newQuestion: UserDemographicQuestion = {
+      userQuestionId: questionId,
+      statementId: '', // Will be set when saving to Firestore
       question: '',
       type: UserDemographicQuestionType.text,
       options: [],
       order: customDemographicQuestions.filter((q) =>
-        demographicPages.find((p) => p.demographicPageId === pageId)?.customQuestionIds.includes(q.questionId)
+        demographicPages.find((p) => p.demographicPageId === pageId)?.customQuestionIds.includes(q.userQuestionId || '')
       ).length,
-      required: true,
-      createdAt: Date.now(),
-      lastUpdate: Date.now(),
     };
     onCustomDemographicQuestionsChange([...customDemographicQuestions, newQuestion]);
     onDemographicPagesChange(
       demographicPages.map((p) =>
         p.demographicPageId === pageId
-          ? { ...p, customQuestionIds: [...p.customQuestionIds, newQuestion.questionId] }
+          ? { ...p, customQuestionIds: [...p.customQuestionIds, questionId] }
           : p
       )
     );
@@ -637,18 +635,18 @@ export default function UnifiedFlowEditor({
   const handleUpdateDemographicQuestion = (
     pageId: string,
     questionId: string,
-    updates: Partial<SurveyDemographicQuestion>
+    updates: Partial<UserDemographicQuestion>
   ) => {
     onCustomDemographicQuestionsChange(
       customDemographicQuestions.map((q) =>
-        q.questionId === questionId ? { ...q, ...updates, lastUpdate: Date.now() } : q
+        q.userQuestionId === questionId ? { ...q, ...updates } : q
       )
     );
   };
 
   const handleRemoveDemographicQuestion = (pageId: string, questionId: string) => {
     onCustomDemographicQuestionsChange(
-      customDemographicQuestions.filter((q) => q.questionId !== questionId)
+      customDemographicQuestions.filter((q) => q.userQuestionId !== questionId)
     );
     onDemographicPagesChange(
       demographicPages.map((p) =>

@@ -1,4 +1,4 @@
-import { Collections, Evaluation, Statement } from "delib-npm";
+import { Collections, Evaluation, Statement } from "@freedi/shared-types";
 import {
   Framing,
   ClusterAggregatedEvaluation,

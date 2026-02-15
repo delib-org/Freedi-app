@@ -16,6 +16,7 @@ interface SaveAnswersRequest {
     questionId: string;
     answer?: string;
     answerOptions?: string[];
+    otherText?: string;
   }>;
 }
 

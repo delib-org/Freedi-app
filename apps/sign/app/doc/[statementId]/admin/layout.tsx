@@ -1,13 +1,18 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getDocumentForSigning } from '@/lib/firebase/queries';
-import { getUserIdFromCookie } from '@/lib/utils/user';
+import { getUserIdFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess, AdminAccessResult } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { AdminPermissionLevel } from '@freedi/shared-types';
 import { AdminProvider } from './AdminContext';
 import AdminSidebar from './AdminSidebar';
 import styles from './admin.module.scss';
+import { logger } from '@/lib/utils/logger';
+
+// Next.js route segment config - prevent caching for fresh permission checks
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -20,10 +25,15 @@ export default async function AdminLayout({
 }: AdminLayoutProps) {
   const { statementId } = await params;
   const cookieStore = await cookies();
-  const userId = getUserIdFromCookie(cookieStore.toString());
+  // Use proper Next.js cookies API instead of toString()
+  const userId = getUserIdFromCookies(cookieStore);
+
+  // Debug logging for cookie issues
+  logger.info(`[AdminLayout] Cookie check: userId=${userId ? userId.substring(0, 10) + '...' : 'null'}, documentId=${statementId}`);
 
   // Check if user is logged in
   if (!userId) {
+    logger.warn(`[AdminLayout] No userId cookie found, redirecting to login`);
     redirect(`/login?redirect=/doc/${statementId}/admin`);
   }
 
@@ -38,7 +48,10 @@ export default async function AdminLayout({
   const { db } = getFirebaseAdmin();
   const accessResult: AdminAccessResult = await checkAdminAccess(db, statementId, userId);
 
+  logger.info(`[AdminLayout] Access check for userId=${userId}, documentId=${statementId}: isAdmin=${accessResult.isAdmin}, permissionLevel=${accessResult.permissionLevel}, isOwner=${accessResult.isOwner}`);
+
   if (!accessResult.isAdmin) {
+    logger.warn(`[AdminLayout] Access denied for userId=${userId} on document=${statementId}. Redirecting to document view.`);
     redirect(`/doc/${statementId}`);
   }
 
