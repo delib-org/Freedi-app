@@ -22,6 +22,8 @@ const config = {
     '^@/(.*)$': '<rootDir>/src/$1',
     '^@freedi/shared-types$': '<rootDir>/../../packages/shared-types/src/index.ts',
     '\\.(css|scss)$': '<rootDir>/src/__mocks__/styleMock.js',
+    '^react$': '<rootDir>/node_modules/react',
+    '^react-dom$': '<rootDir>/node_modules/react-dom',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
   collectCoverageFrom: [

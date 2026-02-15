@@ -211,8 +211,9 @@ describe('ProposalModal', () => {
     const submitButton = screen.getByText('Submit Proposal');
     fireEvent.click(submitButton);
 
+    // Wait for submission to complete (onClose is called after text is cleared)
     await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalled();
+      expect(mockOnClose).toHaveBeenCalled();
     });
 
     // Reopen modal
@@ -232,7 +233,9 @@ describe('ProposalModal', () => {
       />
     );
 
-    expect(textarea.value).toBe('');
+    // After reopening, get fresh textarea reference
+    const newTextarea = screen.getByPlaceholderText('Type your proposal here...') as HTMLTextAreaElement;
+    expect(newTextarea.value).toBe('');
   });
 
   it('should call onClose when close button clicked', () => {
