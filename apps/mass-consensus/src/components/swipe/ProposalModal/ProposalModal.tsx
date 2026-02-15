@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { VALIDATION } from '@/constants/common';
+import EnhancedLoader from '@/components/question/EnhancedLoader';
 
 export interface ProposalModalProps {
   isOpen: boolean;
@@ -136,67 +137,68 @@ const ProposalModal: React.FC<ProposalModalProps> = ({
       aria-modal="true"
       aria-labelledby="proposal-modal-title"
     >
-      <div className="proposal-modal__content" ref={modalRef}>
-        <div className="proposal-modal__header">
-          <h2 id="proposal-modal-title" className="proposal-modal__title">
-            {t('Share Your Idea')}
-          </h2>
-          <button
-            type="button"
-            className="proposal-modal__close"
-            onClick={onClose}
-            disabled={isSubmitting}
-            aria-label={t('Close')}
+      {isSubmitting ? (
+        <EnhancedLoader onCancel={() => setIsSubmitting(false)} />
+      ) : (
+        <div className="proposal-modal__content" ref={modalRef}>
+          <div className="proposal-modal__header">
+            <h2 id="proposal-modal-title" className="proposal-modal__title">
+              {t('Share Your Idea')}
+            </h2>
+            <button
+              type="button"
+              className="proposal-modal__close"
+              onClick={onClose}
+              aria-label={t('Close')}
+            >
+              ×
+            </button>
+          </div>
+
+          <p className="proposal-modal__description">
+            {t('Have a suggestion to improve this topic? Share your idea with the community!')}
+          </p>
+
+          <textarea
+            ref={inputRef}
+            className="proposal-modal__input"
+            value={proposalText}
+            onChange={(e) => setProposalText(e.target.value)}
+            placeholder={t('Type your proposal here...')}
+            maxLength={maxLength}
+            aria-label={t('Proposal text')}
+            aria-describedby="char-count"
+          />
+
+          <div
+            id="char-count"
+            className={clsx('proposal-modal__char-count', {
+              'proposal-modal__char-count--warning': isNearMax && !isOverMax,
+              'proposal-modal__char-count--error': isOverMax,
+            })}
           >
-            ×
-          </button>
+            {charCount} / {maxLength} {t('characters')}
+          </div>
+
+          <div className="proposal-modal__actions">
+            <button
+              type="button"
+              className="proposal-modal__button proposal-modal__button--secondary"
+              onClick={onClose}
+            >
+              {t('Cancel')}
+            </button>
+            <button
+              type="button"
+              className="proposal-modal__button proposal-modal__button--primary"
+              onClick={handleSubmit}
+              disabled={!isValid}
+            >
+              {t('Submit Proposal')}
+            </button>
+          </div>
         </div>
-
-        <p className="proposal-modal__description">
-          {t('Have a suggestion to improve this topic? Share your idea with the community!')}
-        </p>
-
-        <textarea
-          ref={inputRef}
-          className="proposal-modal__input"
-          value={proposalText}
-          onChange={(e) => setProposalText(e.target.value)}
-          placeholder={t('Type your proposal here...')}
-          disabled={isSubmitting}
-          maxLength={maxLength}
-          aria-label={t('Proposal text')}
-          aria-describedby="char-count"
-        />
-
-        <div
-          id="char-count"
-          className={clsx('proposal-modal__char-count', {
-            'proposal-modal__char-count--warning': isNearMax && !isOverMax,
-            'proposal-modal__char-count--error': isOverMax,
-          })}
-        >
-          {charCount} / {maxLength} {t('characters')}
-        </div>
-
-        <div className="proposal-modal__actions">
-          <button
-            type="button"
-            className="proposal-modal__button proposal-modal__button--secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            {t('Cancel')}
-          </button>
-          <button
-            type="button"
-            className="proposal-modal__button proposal-modal__button--primary"
-            onClick={handleSubmit}
-            disabled={!isValid || isSubmitting}
-          >
-            {isSubmitting ? t('Submitting...') : t('Submit Proposal')}
-          </button>
-        </div>
-      </div>
+      )}
     </div>
   );
 };

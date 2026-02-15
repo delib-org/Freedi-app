@@ -37,7 +37,7 @@ import {
 import { submitRating } from '@/controllers/swipeController';
 import { submitProposal } from '@/controllers/proposalController';
 import { submitComment } from '@/controllers/commentController';
-import { RATING, RATING_CONFIG } from '@/constants/common';
+import { RATING, RATING_CONFIG, ERROR_MESSAGES } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useToast } from '@/components/shared/Toast';
@@ -119,6 +119,18 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     checkUserSolutions();
   }, [userId, question.statementId, requiresSolution, hasCheckedUserSolutions]);
 
+  // Listen for footer "add suggestion" button event
+  useEffect(() => {
+    const handleTriggerAdd = () => {
+      setShowProposalModal(true);
+    };
+
+    window.addEventListener('trigger-add-suggestion', handleTriggerAdd);
+    return () => {
+      window.removeEventListener('trigger-add-suggestion', handleTriggerAdd);
+    };
+  }, []);
+
   // Initialize cards on mount
   useEffect(() => {
     dispatch(setCardStack(initialSolutions));
@@ -191,6 +203,31 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
   const handleProposalSubmit = async (proposalText: string) => {
     try {
+      // Run AI content moderation check before saving
+      const checkResponse = await fetch(
+        `/api/statements/${question.statementId}/check-similar`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userInput: proposalText.trim(),
+            userId,
+          }),
+        }
+      );
+
+      if (checkResponse.status === 400) {
+        const data = await checkResponse.json();
+        const errorMessage = data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+        showToast({
+          type: 'error',
+          title: t('Submission Failed'),
+          message: t(errorMessage),
+          duration: 5000,
+        });
+        throw new Error(errorMessage);
+      }
+
       // Save proposal to Firebase
       await submitProposal(
         proposalText,
