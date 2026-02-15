@@ -1656,5 +1656,12 @@
   "I hear this perspective": "أسمع هذا المنظور",
   "I partly relate": "أتفهم هذا جزئياً",
   "Respectful 4-level resonance scale": "مقياس صدى محترم من 4 مستويات",
-  "This echoes my community's voice": "هذا يعكس صوت مجتمعي"
+  "This echoes my community's voice": "هذا يعكس صوت مجتمعي",
+  "average": "المعدل",
+  "demographicResults": "النتائج الديموغرافية",
+  "noResponsesYet": "لا توجد إجابات بعد",
+  "questionsInSurvey": "الأسئلة في الاستبيان",
+  "results": "النتائج",
+  "totalResponses": "إجمالي الإجابات",
+  "viewInMainApp": "عرض في التطبيق"
 }

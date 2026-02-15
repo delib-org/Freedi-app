@@ -7,12 +7,13 @@ import SurveyForm from './SurveyForm';
 import SurveyShare from './SurveyShare';
 import SurveyStatusManager from './SurveyStatusManager';
 import OpeningSlideManager from './OpeningSlideManager';
+import SurveyResults from './SurveyResults';
 
 interface SurveyEditViewProps {
   survey: Survey;
 }
 
-type Tab = 'share' | 'status' | 'edit' | 'opening-slide';
+type Tab = 'share' | 'status' | 'edit' | 'opening-slide' | 'results';
 
 /**
  * Survey edit view with tabs for sharing, status, and editing
@@ -91,6 +92,12 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
         >
           {t('openingSlide')}
         </button>
+        <button
+          onClick={() => setActiveTab('results')}
+          style={tabButtonStyle(activeTab === 'results')}
+        >
+          {t('results')}
+        </button>
       </div>
 
       {activeTab === 'share' && <SurveyShare survey={survey} />}
@@ -101,6 +108,7 @@ export default function SurveyEditView({ survey: initialSurvey }: SurveyEditView
       {activeTab === 'opening-slide' && (
         <OpeningSlideManager survey={survey} onUpdate={setSurvey} />
       )}
+      {activeTab === 'results' && <SurveyResults survey={survey} />}
     </div>
   );
 }
