@@ -6,9 +6,8 @@
 
 .questionSection {
 	margin-bottom: 1.25rem;
-	max-height: 70vh;
-	overflow-y: auto;
-	-webkit-overflow-scrolling: touch;
+	// No max-height here -- the page-level container handles scrolling.
+	// Individual questions flow naturally within the full-page scroll.
 }
 
 .questionTitle {
