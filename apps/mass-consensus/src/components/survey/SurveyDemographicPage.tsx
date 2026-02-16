@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/shared-types';
@@ -10,6 +10,8 @@ import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import SurveyProgressBar from './SurveyProgress';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Survey.module.scss';
+
+const OTHER_SENTINEL = '__other__';
 
 /**
  * Small spinner for use inside buttons during loading state
@@ -51,6 +53,7 @@ interface FormAnswers {
   [questionId: string]: {
     answer?: string;
     answerOptions?: string[];
+    otherText?: string;
   };
 }
 
@@ -78,10 +81,12 @@ export default function SurveyDemographicPage({
   });
 
   const [answers, setAnswers] = useState<FormAnswers>(initialAnswers);
+  const [otherTexts, setOtherTexts] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isNavigatingBack, setIsNavigatingBack] = useState(false);
   const [isSkipping, setIsSkipping] = useState(false);
+  const otherInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const isNavigating = isSubmitting || isNavigatingBack || isSkipping;
 
@@ -112,8 +117,15 @@ export default function SurveyDemographicPage({
   const handleRadioChange = useCallback((questionId: string, value: string) => {
     setAnswers((prev) => ({
       ...prev,
-      [questionId]: { answer: value },
+      [questionId]: { answer: value, otherText: undefined },
     }));
+    // Clear otherText when selecting a predefined option
+    setOtherTexts((prev) => {
+      const updated = { ...prev };
+      delete updated[questionId];
+
+      return updated;
+    });
     if (errors[questionId]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
@@ -161,6 +173,80 @@ export default function SurveyDemographicPage({
     }
   }, [errors]);
 
+  const handleOtherTextChange = useCallback((questionId: string, text: string) => {
+    setOtherTexts((prev) => ({ ...prev, [questionId]: text }));
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: { ...prev[questionId], otherText: text },
+    }));
+    if (errors[questionId]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[questionId];
+
+        return newErrors;
+      });
+    }
+  }, [errors]);
+
+  const handleOtherRadioSelect = useCallback((questionId: string) => {
+    setAnswers((prev) => ({
+      ...prev,
+      [questionId]: { answer: OTHER_SENTINEL, otherText: otherTexts[questionId] || '' },
+    }));
+    if (errors[questionId]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[questionId];
+
+        return newErrors;
+      });
+    }
+    setTimeout(() => {
+      otherInputRefs.current[questionId]?.focus();
+      otherInputRefs.current[questionId]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 50);
+  }, [errors, otherTexts]);
+
+  const handleOtherCheckboxToggle = useCallback((questionId: string, checked: boolean) => {
+    setAnswers((prev) => {
+      const currentOptions = prev[questionId]?.answerOptions || [];
+      const newOptions = checked
+        ? [...currentOptions, OTHER_SENTINEL]
+        : currentOptions.filter((opt) => opt !== OTHER_SENTINEL);
+
+      return {
+        ...prev,
+        [questionId]: {
+          answerOptions: newOptions,
+          otherText: checked ? (otherTexts[questionId] || '') : undefined,
+        },
+      };
+    });
+    if (!checked) {
+      setOtherTexts((prev) => {
+        const updated = { ...prev };
+        delete updated[questionId];
+
+        return updated;
+      });
+    }
+    if (errors[questionId]) {
+      setErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[questionId];
+
+        return newErrors;
+      });
+    }
+    if (checked) {
+      setTimeout(() => {
+        otherInputRefs.current[questionId]?.focus();
+        otherInputRefs.current[questionId]?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 50);
+    }
+  }, [errors, otherTexts]);
+
   const validateAnswers = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -185,6 +271,33 @@ export default function SurveyDemographicPage({
           newErrors[question.userQuestionId || ''] = t('requiredField') || 'This field is required';
 
           return;
+        }
+      }
+
+      // Validate "Other" text when Other is selected
+      if (question.allowOther) {
+        const qId = question.userQuestionId || '';
+        if (
+          question.type === UserDemographicQuestionType.radio &&
+          answer?.answer === OTHER_SENTINEL
+        ) {
+          const text = otherTexts[qId] || '';
+          if (!text.trim()) {
+            newErrors[qId] = t('Please specify your answer') || 'Please specify your answer';
+
+            return;
+          }
+        }
+        if (
+          question.type === UserDemographicQuestionType.checkbox &&
+          answer?.answerOptions?.includes(OTHER_SENTINEL)
+        ) {
+          const text = otherTexts[qId] || '';
+          if (!text.trim()) {
+            newErrors[qId] = t('Please specify your answer') || 'Please specify your answer';
+
+            return;
+          }
         }
       }
 
@@ -239,6 +352,7 @@ export default function SurveyDemographicPage({
         questionId,
         answer: data.answer,
         answerOptions: data.answerOptions,
+        otherText: data.otherText || otherTexts[questionId] || undefined,
       }));
 
       // Save answers to the API
@@ -365,6 +479,45 @@ export default function SurveyDemographicPage({
                 </span>
               </label>
             ))}
+            {question.allowOther && (() => {
+              const qId = question.userQuestionId || '';
+              const isOtherSelected = answer?.answer === OTHER_SENTINEL;
+              const showOtherError = isOtherSelected && question.required && !(otherTexts[qId] || '').trim();
+
+              return (
+                <div className={styles.otherOptionWrapper}>
+                  <label className={`${styles.radioLabel} ${styles.otherRadioLabel} ${isOtherSelected ? styles.otherSelected : ''}`}>
+                    <input
+                      type="radio"
+                      name={qId}
+                      value={OTHER_SENTINEL}
+                      checked={isOtherSelected}
+                      onChange={() => handleOtherRadioSelect(qId)}
+                    />
+                    <span className={styles.optionText}>
+                      {t('Other') || 'Other'}
+                    </span>
+                  </label>
+                  <div className={`${styles.otherInputWrapper} ${isOtherSelected ? styles.otherInputVisible : ''}`}>
+                    <input
+                      ref={(el) => { otherInputRefs.current[qId] = el; }}
+                      type="text"
+                      value={otherTexts[qId] || ''}
+                      onChange={(e) => handleOtherTextChange(qId, e.target.value)}
+                      placeholder={t('Please specify...') || 'Please specify...'}
+                      className={`${styles.otherTextInput} ${showOtherError ? styles.otherTextInputError : ''}`}
+                      aria-label={t('Please specify your answer') || 'Please specify your answer'}
+                      tabIndex={isOtherSelected ? 0 : -1}
+                    />
+                    {showOtherError && (
+                      <span className={styles.otherErrorMessage}>
+                        {t('Please specify your answer') || 'Please specify your answer'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
@@ -388,6 +541,44 @@ export default function SurveyDemographicPage({
                 </span>
               </label>
             ))}
+            {question.allowOther && (() => {
+              const qId = question.userQuestionId || '';
+              const isOtherChecked = (answer?.answerOptions || []).includes(OTHER_SENTINEL);
+              const showOtherError = isOtherChecked && question.required && !(otherTexts[qId] || '').trim();
+
+              return (
+                <div className={styles.otherOptionWrapper}>
+                  <label className={`${styles.checkboxLabel} ${styles.otherCheckboxLabel} ${isOtherChecked ? styles.otherSelected : ''}`}>
+                    <input
+                      type="checkbox"
+                      value={OTHER_SENTINEL}
+                      checked={isOtherChecked}
+                      onChange={(e) => handleOtherCheckboxToggle(qId, e.target.checked)}
+                    />
+                    <span className={styles.optionText}>
+                      {t('Other') || 'Other'}
+                    </span>
+                  </label>
+                  <div className={`${styles.otherInputWrapper} ${isOtherChecked ? styles.otherInputVisible : ''}`}>
+                    <input
+                      ref={(el) => { otherInputRefs.current[qId] = el; }}
+                      type="text"
+                      value={otherTexts[qId] || ''}
+                      onChange={(e) => handleOtherTextChange(qId, e.target.value)}
+                      placeholder={t('Please specify...') || 'Please specify...'}
+                      className={`${styles.otherTextInput} ${showOtherError ? styles.otherTextInputError : ''}`}
+                      aria-label={t('Please specify your answer') || 'Please specify your answer'}
+                      tabIndex={isOtherChecked ? 0 : -1}
+                    />
+                    {showOtherError && (
+                      <span className={styles.otherErrorMessage}>
+                        {t('Please specify your answer') || 'Please specify your answer'}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
