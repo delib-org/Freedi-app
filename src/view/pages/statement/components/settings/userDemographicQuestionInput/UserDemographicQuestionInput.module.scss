@@ -6,6 +6,9 @@
 
 .questionSection {
 	margin-bottom: 1.25rem;
+	max-height: 70vh;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
 }
 
 .questionTitle {
