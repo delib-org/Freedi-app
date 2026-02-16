@@ -406,6 +406,26 @@ const UserQuestionComp = ({
 				</div>
 			)}
 
+			{/* Allow Other toggle - only for radio/checkbox */}
+			{isMultiOptions && (
+				<div className={styles.allowOtherToggle}>
+					<label className={styles.allowOtherLabel}>
+						<input
+							type='checkbox'
+							checked={userQuestions.allowOther ?? false}
+							onChange={(e) => {
+								if (onUpdateQuestion) {
+									onUpdateQuestion(questionIndex, {
+										allowOther: e.target.checked,
+									});
+								}
+							}}
+						/>
+						<span>{t('Allow "Other" option')}</span>
+					</label>
+				</div>
+			)}
+
 			{/* Scope Toggle - Show for all statements */}
 			<div className={styles.scopeToggle}>
 				<label className={styles.scopeLabel}>
