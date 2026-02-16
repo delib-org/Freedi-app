@@ -1347,6 +1347,8 @@
   "Display approval ratings as color indicators": "Genehmigungsbewertungen als Farbindikatoren anzeigen",
   "Show View Counts": "Anzahl der Aufrufe anzeigen",
   "Display how many users have viewed each section": "Anzeigen, wie viele Benutzer jeden Abschnitt angesehen haben",
+  "Show Signature Counts": "Unterschriftenzählung anzeigen",
+  "Show signed and rejected counts to all users": "Anzahl der Unterzeichner und Ablehnenden für alle Benutzer anzeigen",
   "Table of Contents": "Inhaltsverzeichnis",
   "Enable Table of Contents": "Inhaltsverzeichnis aktivieren",
   "Show a navigation menu for document sections": "Navigationsmenü für Dokumentabschnitte anzeigen",

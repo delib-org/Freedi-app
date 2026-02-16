@@ -140,6 +140,7 @@ export default async function DocumentPage({ params }: PageProps) {
     headerColors?: HeaderColors;
     nonInteractiveNormalStyle?: boolean;
     enableHeadingNumbering?: boolean;
+    showSignatureCounts?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -173,6 +174,9 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Heading numbering setting
   const enableHeadingNumbering = signSettings?.enableHeadingNumbering ?? false;
+
+  // Signature counts setting (default: true)
+  const showSignatureCounts = signSettings?.showSignatureCounts ?? true;
 
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
@@ -215,6 +219,7 @@ export default async function DocumentPage({ params }: PageProps) {
         headerColors={headerColors}
         nonInteractiveNormalStyle={nonInteractiveNormalStyle}
         enableHeadingNumbering={enableHeadingNumbering}
+        showSignatureCounts={showSignatureCounts}
       />
     </LanguageOverrideProvider>
   );

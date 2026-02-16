@@ -1371,6 +1371,8 @@
   "Display approval ratings as color indicators": "عرض تقييمات الموافقة كمؤشرات لونية",
   "Show View Counts": "عرض عدد المشاهدات",
   "Display how many users have viewed each section": "عرض عدد المستخدمين الذين شاهدوا كل قسم",
+  "Show Signature Counts": "عرض عدد التوقيعات",
+  "Show signed and rejected counts to all users": "عرض عدد الموقعين والرافضين لجميع المستخدمين",
   "Table of Contents": "جدول المحتويات",
   "Enable Table of Contents": "تفعيل جدول المحتويات",
   "Show a navigation menu for document sections": "عرض قائمة تنقل لأقسام المستند",

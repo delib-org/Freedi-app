@@ -1347,6 +1347,8 @@
   "Display approval ratings as color indicators": "Mostrar calificaciones de aprobación como indicadores de color",
   "Show View Counts": "Mostrar Conteo de Vistas",
   "Display how many users have viewed each section": "Mostrar cuántos usuarios han visto cada sección",
+  "Show Signature Counts": "Mostrar Conteo de Firmas",
+  "Show signed and rejected counts to all users": "Mostrar el conteo de firmados y rechazados a todos los usuarios",
   "Table of Contents": "Tabla de Contenidos",
   "Enable Table of Contents": "Habilitar Tabla de Contenidos",
   "Show a navigation menu for document sections": "Mostrar un menú de navegación para las secciones del documento",

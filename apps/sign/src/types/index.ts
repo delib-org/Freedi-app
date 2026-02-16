@@ -169,6 +169,8 @@ export interface DocumentSettings {
   // Non-interactive element styling
   /** When true, non-interactive elements use normal text color instead of dimmed/disabled styling */
   nonInteractiveNormalStyle?: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts?: boolean;
 }
 
 // Default branding constants
@@ -199,4 +201,5 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle: false,
+  showSignatureCounts: true,
 };

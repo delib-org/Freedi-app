@@ -1347,6 +1347,8 @@
   "Display approval ratings as color indicators": "Goedkeuringsbeoordelingen weergeven als kleurindicatoren",
   "Show View Counts": "Weergavetelling Tonen",
   "Display how many users have viewed each section": "Tonen hoeveel gebruikers elke sectie hebben bekeken",
+  "Show Signature Counts": "Handtekeningentelling Tonen",
+  "Show signed and rejected counts to all users": "Toon het aantal ondertekenaars en afwijzingen aan alle gebruikers",
   "Table of Contents": "Inhoudsopgave",
   "Enable Table of Contents": "Inhoudsopgave inschakelen",
   "Show a navigation menu for document sections": "Een navigatiemenu voor documentsecties weergeven",

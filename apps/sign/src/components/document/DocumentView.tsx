@@ -10,6 +10,7 @@ import { resolveTextDirection } from '@/lib/utils/textDirection';
 import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import DocumentClient from './DocumentClient';
+import SignatureStats from './SignatureStats';
 import SignButton from './SignButton';
 
 // Import ParagraphCard dynamically to prevent SSR hydration mismatches
@@ -56,6 +57,8 @@ interface DocumentViewProps {
   nonInteractiveNormalStyle?: boolean;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering?: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts?: boolean;
 }
 
 export default function DocumentView({
@@ -80,6 +83,7 @@ export default function DocumentView({
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
   enableHeadingNumbering = false,
+  showSignatureCounts = true,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -218,6 +222,10 @@ export default function DocumentView({
             {/* Sign/Reject buttons at bottom */}
             {paragraphs.length > 0 && (
               <footer className={styles.footer}>
+                {showSignatureCounts && (
+                  <SignatureStats documentId={document.statementId} />
+                )}
+                <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
                   {!user ? (
                     <p className={styles.unsignedStatus}>
@@ -251,6 +259,7 @@ export default function DocumentView({
                       <SignButton isSigned={userSignature?.signed === 'signed'} />
                     </>
                   )}
+                </div>
                 </div>
               </footer>
             )}
