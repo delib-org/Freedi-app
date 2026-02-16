@@ -58,22 +58,20 @@ const UserProfilePopover: React.FC<UserProfilePopoverProps> = ({
 		'user-profile-popover', // Block
 		visible && 'user-profile-popover--visible', // Modifier: visible
 		position !== 'bottom' && `user-profile-popover--position-${position}`, // Modifier: position
-		className // Additional classes
+		className, // Additional classes
 	);
 
 	const avatarClasses = clsx(
-		user.photoURL
-			? 'user-profile-popover__avatar'
-			: 'user-profile-popover__avatar-default',
+		user.photoURL ? 'user-profile-popover__avatar' : 'user-profile-popover__avatar-default',
 		isActive &&
 			(user.photoURL
 				? 'user-profile-popover__avatar--active'
-				: 'user-profile-popover__avatar-default--active')
+				: 'user-profile-popover__avatar-default--active'),
 	);
 
 	const statusIndicatorClasses = clsx(
 		'user-profile-popover__status-indicator',
-		isActive && 'user-profile-popover__status-indicator--active'
+		isActive && 'user-profile-popover__status-indicator--active',
 	);
 
 	const getInitial = (): string => {
@@ -86,16 +84,10 @@ const UserProfilePopover: React.FC<UserProfilePopoverProps> = ({
 
 			<div className="user-profile-popover__avatar-container">
 				{user.photoURL ? (
-					<img
-						src={user.photoURL}
-						alt={user.displayName}
-						className={avatarClasses}
-					/>
+					<img src={user.photoURL} alt={user.displayName} className={avatarClasses} />
 				) : (
 					<div className={avatarClasses}>
-						<span className="user-profile-popover__initial">
-							{getInitial()}
-						</span>
+						<span className="user-profile-popover__initial">{getInitial()}</span>
 					</div>
 				)}
 			</div>

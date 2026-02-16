@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
 import { SurveyStatus } from '@/types/survey';
-import SurveyWelcome from '@/components/survey/SurveyWelcome';
+import SurveyEntry from '@/components/survey/SurveyEntry';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 
 interface PageProps {
@@ -87,7 +87,7 @@ export default async function SurveyPage({ params }: PageProps) {
         forceLanguage={survey.forceLanguage ?? true}
       >
         <div className="page">
-          <SurveyWelcome survey={survey} />
+          <SurveyEntry survey={survey} />
         </div>
       </LanguageOverrideProvider>
     );

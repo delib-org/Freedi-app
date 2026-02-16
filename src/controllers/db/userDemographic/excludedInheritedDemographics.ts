@@ -10,7 +10,7 @@ import { logError } from '@/utils/errorHandling';
  */
 export async function setExcludedInheritedDemographics(
 	statementId: string,
-	excludedIds: string[]
+	excludedIds: string[],
 ): Promise<void> {
 	try {
 		if (!statementId) {
@@ -26,7 +26,7 @@ export async function setExcludedInheritedDemographics(
 		console.info(
 			`Updated excluded inherited demographics for statement ${statementId}:`,
 			excludedIds.length,
-			'questions excluded'
+			'questions excluded',
 		);
 	} catch (error) {
 		logError(error, {
@@ -43,9 +43,7 @@ export async function setExcludedInheritedDemographics(
  * @param statementId - The statement ID to fetch
  * @returns Array of excluded demographic question IDs
  */
-export async function getExcludedInheritedDemographics(
-	statementId: string
-): Promise<string[]> {
+export async function getExcludedInheritedDemographics(statementId: string): Promise<string[]> {
 	try {
 		if (!statementId) {
 			throw new Error('Statement ID is required');
@@ -78,7 +76,7 @@ export async function getExcludedInheritedDemographics(
  * @returns Map of statementId to excluded question IDs
  */
 export async function getExcludedInheritedDemographicsBatch(
-	statementIds: string[]
+	statementIds: string[],
 ): Promise<Map<string, string[]>> {
 	const result = new Map<string, string[]>();
 

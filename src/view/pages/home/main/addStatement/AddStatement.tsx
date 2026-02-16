@@ -22,7 +22,7 @@ export const AddStatement = () => {
 								to={'/home'}
 								state={{ from: window.location.pathname }}
 								className="app-header-back-button"
-								aria-label='Back to Home page'
+								aria-label="Back to Home page"
 							>
 								<BackArrowIcon className="back-arrow-icon" />
 							</Link>
@@ -33,7 +33,7 @@ export const AddStatement = () => {
 								to={'/home'}
 								state={{ from: window.location.pathname }}
 								className="app-header-back-button"
-								aria-label='Back to Home page'
+								aria-label="Back to Home page"
 							>
 								<BackArrowIcon className="back-arrow-icon" />
 							</Link>

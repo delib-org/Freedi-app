@@ -6,18 +6,9 @@ const preloadFunctions = {
 	home: () => import('@/view/pages/home/Home'),
 	my: () => import('@/view/pages/my/My'),
 	mySuggestions: () => import('@/view/pages/my-suggestions/MySuggestions'),
-	settings: () =>
-		import(
-			'@/view/pages/statement/components/settings/StatementSettings'
-		),
-	mindMap: () =>
-		import(
-			'@/view/pages/statement/components/map/MindMap'
-		),
-	chat: () =>
-		import(
-			'@/view/pages/statement/components/chat/Chat'
-		),
+	settings: () => import('@/view/pages/statement/components/settings/StatementSettings'),
+	mindMap: () => import('@/view/pages/statement/components/map/MindMap'),
+	chat: () => import('@/view/pages/statement/components/chat/Chat'),
 } as const;
 
 type PreloadKey = keyof typeof preloadFunctions;
@@ -52,7 +43,7 @@ export function usePreload() {
 			onMouseEnter: () => preload(key),
 			onFocus: () => preload(key),
 		}),
-		[preload]
+		[preload],
 	);
 
 	return {

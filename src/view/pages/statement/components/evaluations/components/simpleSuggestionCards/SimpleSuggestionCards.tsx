@@ -21,9 +21,7 @@ interface Props {
 	subStatements?: Statement[];
 }
 
-const SimpleSuggestionCards: FC<Props> = ({
-	subStatements: propSubStatements,
-}) => {
+const SimpleSuggestionCards: FC<Props> = ({ subStatements: propSubStatements }) => {
 	const { statementId } = useParams();
 	const dispatch = useDispatch();
 	const statement = useSelector(statementSelector(statementId));
@@ -36,16 +34,17 @@ const SimpleSuggestionCards: FC<Props> = ({
 		parentSubscription?.role === Role.admin;
 
 	// Filter statements based on visibility and permissions
-	const visibleStatements = propSubStatements?.filter(st =>
-		st.hide !== true || st.creatorId === creator?.uid || isAdmin
-	) || [];
+	const visibleStatements =
+		propSubStatements?.filter(
+			(st) => st.hide !== true || st.creatorId === creator?.uid || isAdmin,
+		) || [];
 
 	const subStatements = visibleStatements;
 
 	useEffect(() => {
 		if (!statement && statementId)
 			getStatementFromDB(statementId).then((statement: Statement) =>
-				dispatch(setStatement(statement))
+				dispatch(setStatement(statement)),
 			);
 	}, [statement, statementId, dispatch]);
 
@@ -63,9 +62,7 @@ const SimpleSuggestionCards: FC<Props> = ({
 	}, [statementId]);
 
 	if (!subStatements || subStatements.length === 0) {
-		return (
-			<EmptyScreen statement={statement}/>
-		);
+		return <EmptyScreen statement={statement} />;
 	}
 
 	if (!statement) return null;

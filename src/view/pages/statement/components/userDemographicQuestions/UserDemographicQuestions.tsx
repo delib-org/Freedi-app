@@ -19,7 +19,12 @@ interface Props {
 	role?: Role; // User role to determine admin permissions
 }
 
-const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true, role }) => {
+const UserDemographicQuestions: FC<Props> = ({
+	questions,
+	closeModal,
+	isMandatory = true,
+	role,
+}) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useTranslation();
@@ -30,8 +35,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 
 	// Separate questions by scope (group vs statement)
 	const { groupQuestions, statementQuestions } = useMemo(() => {
-		const groupQ = questions.filter(q => q.scope === DEMOGRAPHIC_SCOPE_GROUP);
-		const statementQ = questions.filter(q => q.scope !== DEMOGRAPHIC_SCOPE_GROUP);
+		const groupQ = questions.filter((q) => q.scope === DEMOGRAPHIC_SCOPE_GROUP);
+		const statementQ = questions.filter((q) => q.scope !== DEMOGRAPHIC_SCOPE_GROUP);
 
 		return { groupQuestions: groupQ, statementQuestions: statementQ };
 	}, [questions]);
@@ -40,30 +45,24 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const answeredCount = userDemographic.length;
 	const totalCount = questions.length;
 	const progressPercent = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
-	const handleQuestionChange = (
-		question: UserDemographicQuestion,
-		value: string | string[]
-	) => {
+	const handleQuestionChange = (question: UserDemographicQuestion, value: string | string[]) => {
 		// Update the statement with the new user demographic
 		if (
 			question.type === UserDemographicQuestionType.text ||
 			question.type === UserDemographicQuestionType.textarea ||
-			question.type === UserDemographicQuestionType.radio
+			question.type === UserDemographicQuestionType.radio ||
+			question.type === UserDemographicQuestionType.dropdown
 		) {
 			setUserDemographic((prevData) => {
-				const currentQuestion = prevData.find(
-					(q) => q.userQuestionId === question.userQuestionId
-				);
+				const currentQuestion = prevData.find((q) => q.userQuestionId === question.userQuestionId);
 				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
 							? {
 									...q,
-									answer: Array.isArray(value)
-										? value.join(',')
-										: value,
+									answer: Array.isArray(value) ? value.join(',') : value,
 								}
-							: q
+							: q,
 					);
 				}
 
@@ -77,22 +76,17 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 			});
 		} else if (question.type === UserDemographicQuestionType.checkbox) {
 			setUserDemographic((prevData) => {
-				const currentQuestion = prevData.find(
-					(q) => q.userQuestionId === question.userQuestionId
-				);
+				const currentQuestion = prevData.find((q) => q.userQuestionId === question.userQuestionId);
 
 				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
 							? { ...q, answerOptions: value as string[] }
-							: q
+							: q,
 					);
 				}
 
-				return [
-					...prevData,
-					{ ...question, answerOptions: value as string[] },
-				];
+				return [...prevData, { ...question, answerOptions: value as string[] }];
 			});
 		}
 	};
@@ -100,9 +94,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const validateForm = (): boolean => {
 		// Check if all questions have been answered
 		for (const question of questions) {
-			const userAnswer = userDemographic.find(
-				(q) => q.userQuestionId === question.userQuestionId
-			);
+			const userAnswer = userDemographic.find((q) => q.userQuestionId === question.userQuestionId);
 
 			if (!userAnswer) {
 				return false;
@@ -112,16 +104,14 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 			if (
 				question.type === UserDemographicQuestionType.text ||
 				question.type === UserDemographicQuestionType.textarea ||
-				question.type === UserDemographicQuestionType.radio
+				question.type === UserDemographicQuestionType.radio ||
+				question.type === UserDemographicQuestionType.dropdown
 			) {
 				if (!userAnswer.answer || userAnswer.answer.trim() === '') {
 					return false;
 				}
 			} else if (question.type === UserDemographicQuestionType.checkbox) {
-				if (
-					!userAnswer.answerOptions ||
-					userAnswer.answerOptions.length === 0
-				) {
+				if (!userAnswer.answerOptions || userAnswer.answerOptions.length === 0) {
 					return false;
 				}
 			}
@@ -160,9 +150,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 		<div className={styles.userDemographicContainer}>
 			<div className={styles.surveyBody}>
 				<div className={styles.topNavSurvey}>
-					{!isMandatory && (
-						<BackToMenuArrow onClick={() => navigate('/')} />
-					)}
+					{!isMandatory && <BackToMenuArrow onClick={() => navigate('/')} />}
 					{((!isMandatory && closeModal) || (isAdmin && closeModal)) && (
 						<X className={styles.XBtn} onClick={isAdmin ? handleAdminClose : closeModal} />
 					)}
@@ -178,10 +166,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 				{questions.length > 1 && (
 					<div className={styles.progressContainer}>
 						<div className={styles.progressBar}>
-							<div
-								className={styles.progressFill}
-								style={{ width: `${progressPercent}%` }}
-							/>
+							<div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
 						</div>
 						<span className={styles.progressText}>
 							{answeredCount} / {totalCount} {t('completed')}
@@ -199,7 +184,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 							</p>
 							{groupQuestions.map((question: UserDemographicQuestion) => {
 								const currentAnswer = userDemographic.find(
-									(q) => q.userQuestionId === question.userQuestionId
+									(q) => q.userQuestionId === question.userQuestionId,
 								);
 								let value: string | string[] = '';
 
@@ -215,9 +200,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 										question={question}
 										value={value}
 										options={question.options || []}
-										onChange={(val) =>
-											handleQuestionChange(question, val)
-										}
+										onChange={(val) => handleQuestionChange(question, val)}
 										required={true}
 									/>
 								);
@@ -238,7 +221,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 							)}
 							{statementQuestions.map((question: UserDemographicQuestion) => {
 								const currentAnswer = userDemographic.find(
-									(q) => q.userQuestionId === question.userQuestionId
+									(q) => q.userQuestionId === question.userQuestionId,
 								);
 								let value: string | string[] = '';
 
@@ -254,9 +237,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 										question={question}
 										value={value}
 										options={question.options || []}
-										onChange={(val) =>
-											handleQuestionChange(question, val)
-										}
+										onChange={(val) => handleQuestionChange(question, val)}
 										required={true}
 									/>
 								);
@@ -266,9 +247,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 
 					<div className={styles.button}>
 						<Button
-							text={
-								isSubmitting ? t('Submitting...') : t('Submit Survey')
-							}
+							text={isSubmitting ? t('Submitting...') : t('Submit Survey')}
 							buttonType={ButtonType.PRIMARY}
 							disabled={isSubmitting || !validateForm()}
 						></Button>

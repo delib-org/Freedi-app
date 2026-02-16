@@ -33,11 +33,11 @@ const InitialIdeaModal: FC<InitialIdeaModalProps> = ({ onSubmit, onClose }) => {
 						<span className={styles.iconEmoji}>💡</span>
 					</div>
 					<div className={styles.headerContent}>
-						<h2 className={styles.modalTitle}>
-							{t('Share Your Idea')}
-						</h2>
+						<h2 className={styles.modalTitle}>{t('Share Your Idea')}</h2>
 						<p className={styles.modalSubtitle}>
-							{t('Tell us your initial idea or solution. The AI will help you refine it into a clear, testable proposal.')}
+							{t(
+								'Tell us your initial idea or solution. The AI will help you refine it into a clear, testable proposal.',
+							)}
 						</p>
 					</div>
 				</div>

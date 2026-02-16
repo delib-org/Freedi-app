@@ -18,8 +18,8 @@ export class RequestValidator {
 				message: `${fieldName} is required and must be a string`,
 			});
 		}
-		
-return this;
+
+		return this;
 	}
 
 	/**
@@ -36,8 +36,8 @@ return this;
 				field: fieldName,
 				message: `${fieldName} must be a valid number`,
 			});
-			
-return defaultValue;
+
+			return defaultValue;
 		}
 
 		if (max !== undefined && num > max) {
@@ -65,7 +65,7 @@ return defaultValue;
 	 * Get error message
 	 */
 	getErrorMessage(): string {
-		return this.errors.map(e => e.message).join(', ');
+		return this.errors.map((e) => e.message).join(', ');
 	}
 }
 

@@ -1,8 +1,4 @@
-import {
-	GoogleAuthProvider,
-	signInWithPopup,
-	signInAnonymously,
-} from 'firebase/auth';
+import { GoogleAuthProvider, signInWithPopup, signInAnonymously } from 'firebase/auth';
 import { auth } from './config';
 import { notificationService } from '@/services/notificationService';
 import { analyticsService } from '@/services/analytics';
@@ -13,7 +9,7 @@ export function googleLogin() {
 	signInWithPopup(auth, provider)
 		.then((result) => {
 			logger.info('User signed in with Google', { userId: result.user.uid });
-			
+
 			// Track login or signup
 			const isNewUser = result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
 			if (isNewUser) {
@@ -32,15 +28,15 @@ export const logOut = async () => {
 	try {
 		// Track logout before cleaning up
 		analyticsService.trackUserLogout();
-		
+
 		// Sign out from Firebase Auth immediately for better UX
 		await auth.signOut();
-		
+
 		// Clean up notifications in the background (non-blocking)
 		notificationService.cleanup().catch((error) => {
 			logger.error('Error cleaning up notifications', error);
 		});
-		
+
 		logger.info('User logged out successfully');
 	} catch (error) {
 		logger.error('Error during logout', error);

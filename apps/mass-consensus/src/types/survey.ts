@@ -7,19 +7,18 @@ export type {
   SurveyProgress,
   QuestionOverrideSettings,
   SurveyDemographicPage,
-  SurveyDemographicQuestion,
-  SurveyDemographicAnswer,
   SurveyExplanationPage,
+  SurveyLogo,
+  UserDemographicQuestion,
 } from '@freedi/shared-types';
 
 export {
   SurveyStatus,
   SuggestionMode,
+  DisplayMode,
   DEFAULT_SURVEY_SETTINGS,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,
   SurveyDemographicPageSchema,
-  SurveyDemographicQuestionSchema,
-  SurveyDemographicAnswerSchema,
   SurveyExplanationPageSchema,
 } from '@freedi/shared-types';
 
@@ -110,6 +109,37 @@ export interface UpdateSurveyRequest {
   showIntro?: boolean;
   /** Toggle test mode - when enabled, new responses are marked as test data */
   isTestMode?: boolean;
+  /** Array of logos to display on opening slide */
+  logos?: import('@freedi/shared-types').SurveyLogo[];
+  /** Markdown content for opening slide */
+  openingSlideContent?: string;
+  /** Whether to show custom opening slide */
+  showOpeningSlide?: boolean;
+}
+
+/**
+ * Request body for uploading a logo
+ */
+export interface UploadLogoRequest {
+  altText: string;
+  order?: number;
+}
+
+/**
+ * Request body for updating logo metadata
+ */
+export interface UpdateLogoRequest {
+  altText?: string;
+  order?: number;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Request body for reordering logos
+ */
+export interface ReorderLogosRequest {
+  logoIds: string[];
 }
 
 /**

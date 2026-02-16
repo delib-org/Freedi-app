@@ -32,9 +32,7 @@ const Start = () => {
 		<div className={styles.splashPage}>
 			<div className={styles.mainLogo}>
 				<LogoStart />
-				<span className={styles.mainLogo__slogan}>
-					{t('Fostering Collaborations')}
-				</span>
+				<span className={styles.mainLogo__slogan}>{t('Fostering Collaborations')}</span>
 			</div>
 			<div className={styles.version}>v: {AppVersion}</div>
 			<div className={styles.interactionComponents}>
@@ -42,34 +40,23 @@ const Start = () => {
 
 				<button
 					style={{ flexDirection: rowDirection }}
-					data-cy='anonymous-login'
+					data-cy="anonymous-login"
 					className={`${styles.startBtn} ${styles.anonymous} ${rowDirection === 'row' ? styles.ltr : styles.rtl}`}
 					onClick={() => setShouldShowNameModal((prev) => !prev)}
 				>
 					{rowDirection === 'row-reverse' ? <MoreLeft /> : null}
-					{t('Login with a temporary name')}{' '}
-					{rowDirection === 'row' ? <MoreRight /> : null}
+					{t('Login with a temporary name')} {rowDirection === 'row' ? <MoreRight /> : null}
 				</button>
 
 				<GoogleLoginButton />
 			</div>
 
-			<img
-				src={StartPageImage}
-				alt=''
-				className={styles.StartPageImage}
-			/>
-			<a href='http://delib.org' target='_blank' className={styles.ddi}>
-				<footer>
-					{t('From the Institute for Deliberative Democracy')}
-				</footer>
+			<img src={StartPageImage} alt="" className={styles.StartPageImage} />
+			<a href="http://delib.org" target="_blank" className={styles.ddi}>
+				<footer>{t('From the Institute for Deliberative Democracy')}</footer>
 			</a>
 
-			{shouldShowNameModal && (
-				<EnterNameModal
-					closeModal={() => setShouldShowNameModal(false)}
-				/>
-			)}
+			{shouldShowNameModal && <EnterNameModal closeModal={() => setShouldShowNameModal(false)} />}
 		</div>
 	);
 };

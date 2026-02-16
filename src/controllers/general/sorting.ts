@@ -32,16 +32,9 @@ export function sortStatementsByHierarchy(statements: Statement[]): Results[] {
 			const statement = _statements[0];
 
 			//find top parent statement
-			const parentStatement = findMostTopStatement(
-				statement,
-				_statements
-			);
+			const parentStatement = findMostTopStatement(statement, _statements);
 
-			const { result, ids: _ids } = createResultLevel(
-				parentStatement,
-				_statements,
-				ids
-			);
+			const { result, ids: _ids } = createResultLevel(parentStatement, _statements, ids);
 			_statements = _statements.filter((s) => !_ids.has(s.statementId));
 
 			//add result to results
@@ -60,7 +53,7 @@ export function sortStatementsByHierarchy(statements: Statement[]): Results[] {
 function findMostTopStatement(
 	statement: Statement,
 	statements: Statement[],
-	maxLevels = 10
+	maxLevels = 10,
 ): Statement {
 	try {
 		if (!statement) throw new Error('statement is undefined');
@@ -69,9 +62,7 @@ function findMostTopStatement(
 
 		if (statement.parentId === 'top') return statement;
 		while (counter < maxLevels) {
-			parentStatement = statements.find(
-				(s) => s.statementId === statement.parentId
-			);
+			parentStatement = statements.find((s) => s.statementId === statement.parentId);
 
 			if (!parentStatement) return statement;
 			statement = parentStatement;
@@ -89,7 +80,7 @@ function findMostTopStatement(
 function createResultLevel(
 	statement: Statement,
 	statements: Statement[],
-	ids: Set<string>
+	ids: Set<string>,
 ): ResultLevel {
 	try {
 		const _statements = [...statements];
@@ -99,9 +90,7 @@ function createResultLevel(
 		const subs = _statements
 			.filter((s) => s.parentId === statement.statementId)
 			.sort((b, a) => b.lastUpdate - a.lastUpdate);
-		const results: ResultLevel[] = subs.map((sub) =>
-			createResultLevel(sub, statements, ids)
-		);
+		const results: ResultLevel[] = subs.map((sub) => createResultLevel(sub, statements, ids));
 
 		return {
 			result: { top: statement, sub: results.map((r) => r.result) },
@@ -123,11 +112,7 @@ export function filterByStatementType(filter: FilterType): Filter {
 		switch (filter) {
 			case FilterType.all:
 				return {
-					types: [
-						DeliberativeElement.option,
-						DeliberativeElement.research,
-						'result',
-					],
+					types: [DeliberativeElement.option, DeliberativeElement.research, 'result'],
 				};
 			case FilterType.questionsResults:
 				return {
@@ -135,11 +120,7 @@ export function filterByStatementType(filter: FilterType): Filter {
 				};
 			case FilterType.questionsResultsOptions:
 				return {
-					types: [
-						DeliberativeElement.option,
-						DeliberativeElement.research,
-						'result',
-					],
+					types: [DeliberativeElement.option, DeliberativeElement.research, 'result'],
 				};
 			case FilterType.questions:
 				return {
@@ -147,22 +128,14 @@ export function filterByStatementType(filter: FilterType): Filter {
 				};
 			default:
 				return {
-					types: [
-						DeliberativeElement.option,
-						DeliberativeElement.research,
-						'result',
-					],
+					types: [DeliberativeElement.option, DeliberativeElement.research, 'result'],
 				};
 		}
 	} catch (error) {
 		console.error(error);
 
 		return {
-			types: [
-				DeliberativeElement.option,
-				DeliberativeElement.research,
-				'result',
-			],
+			types: [DeliberativeElement.option, DeliberativeElement.research, 'result'],
 		};
 	}
 }

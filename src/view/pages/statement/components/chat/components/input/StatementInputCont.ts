@@ -1,21 +1,14 @@
 import { StatementType, Statement, ParagraphType } from '@freedi/shared-types';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
-import {
-	createStatement,
-	setStatementToDB,
-} from '@/controllers/db/statements/setStatements';
+import { createStatement, setStatementToDB } from '@/controllers/db/statements/setStatements';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 
-export function handleAddStatement(
-	message: string,
-	statement: Statement,
-) {
+export function handleAddStatement(message: string, statement: Statement) {
 	try {
-
 		//remove white spaces and \n
 		const lines = message.split('\n');
 		const title = lines[0];
-		const bodyLines = lines.slice(1).filter(line => line.trim());
+		const bodyLines = lines.slice(1).filter((line) => line.trim());
 
 		if (!title) throw new Error('No value');
 

@@ -21,14 +21,14 @@ import { logError } from '@/utils/errorHandling';
  */
 export async function getUserRoomAssignment(
 	statementId: string,
-	userId: string
+	userId: string,
 ): Promise<RoomParticipant | null> {
 	try {
 		const participantsRef = collection(FireStore, 'roomParticipants');
 		const q = query(
 			participantsRef,
 			where('statementId', '==', statementId),
-			where('userId', '==', userId)
+			where('userId', '==', userId),
 		);
 
 		const snapshot = await getDocs(q);
@@ -58,29 +58,33 @@ export async function getUserRoomAssignment(
 export function listenToUserRoomAssignment(
 	statementId: string,
 	userId: string,
-	callback: (assignment: RoomParticipant | null) => void
+	callback: (assignment: RoomParticipant | null) => void,
 ): () => void {
 	try {
 		const participantsRef = collection(FireStore, 'roomParticipants');
 		const q = query(
 			participantsRef,
 			where('statementId', '==', statementId),
-			where('userId', '==', userId)
+			where('userId', '==', userId),
 		);
 
-		return onSnapshot(q, (snapshot) => {
-			if (snapshot.empty) {
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				if (snapshot.empty) {
+					callback(null);
+
+					return;
+				}
+
+				const doc = snapshot.docs[0];
+				callback(doc.data() as RoomParticipant);
+			},
+			(error) => {
+				console.error('Error listening to room assignment:', error);
 				callback(null);
-
-				return;
-			}
-
-			const doc = snapshot.docs[0];
-			callback(doc.data() as RoomParticipant);
-		}, (error) => {
-			console.error('Error listening to room assignment:', error);
-			callback(null);
-		});
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up room assignment listener:', error);
 
@@ -106,25 +110,26 @@ export const getMyRoomAssignmentFromDB = getUserRoomAssignment;
  */
 export function listenToRoomSettingsByStatement(
 	statementId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): () => void {
 	try {
 		const settingsRef = collection(FireStore, 'roomsSettings');
-		const q = query(
-			settingsRef,
-			where('statementId', '==', statementId)
-		);
+		const q = query(settingsRef, where('statementId', '==', statementId));
 
-		return onSnapshot(q, (snapshot) => {
-			const settings: RoomSettings[] = [];
-			snapshot.forEach((doc) => {
-				settings.push(doc.data() as RoomSettings);
-			});
-			dispatch(setRoomSettingsArray(settings));
-		}, (error) => {
-			console.error('Error listening to room settings:', error);
-			dispatch(setRoomSettingsArray([]));
-		});
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const settings: RoomSettings[] = [];
+				snapshot.forEach((doc) => {
+					settings.push(doc.data() as RoomSettings);
+				});
+				dispatch(setRoomSettingsArray(settings));
+			},
+			(error) => {
+				console.error('Error listening to room settings:', error);
+				dispatch(setRoomSettingsArray([]));
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up room settings listener:', error);
 
@@ -141,25 +146,26 @@ export function listenToRoomSettingsByStatement(
  */
 export function listenToRoomSettingsByTopParent(
 	topParentId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): () => void {
 	try {
 		const settingsRef = collection(FireStore, 'roomsSettings');
-		const q = query(
-			settingsRef,
-			where('topParentId', '==', topParentId)
-		);
+		const q = query(settingsRef, where('topParentId', '==', topParentId));
 
-		return onSnapshot(q, (snapshot) => {
-			const settings: RoomSettings[] = [];
-			snapshot.forEach((doc) => {
-				settings.push(doc.data() as RoomSettings);
-			});
-			dispatch(setRoomSettingsArray(settings));
-		}, (error) => {
-			console.error('Error listening to room settings by top parent:', error);
-			dispatch(setRoomSettingsArray([]));
-		});
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const settings: RoomSettings[] = [];
+				snapshot.forEach((doc) => {
+					settings.push(doc.data() as RoomSettings);
+				});
+				dispatch(setRoomSettingsArray(settings));
+			},
+			(error) => {
+				console.error('Error listening to room settings by top parent:', error);
+				dispatch(setRoomSettingsArray([]));
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up room settings listener:', error);
 
@@ -174,29 +180,27 @@ export function listenToRoomSettingsByTopParent(
  * @param dispatch - Redux dispatch function
  * @returns Unsubscribe function
  */
-export function listenToRoomsBySettingsId(
-	settingsId: string,
-	dispatch: AppDispatch
-): () => void {
+export function listenToRoomsBySettingsId(settingsId: string, dispatch: AppDispatch): () => void {
 	try {
 		const roomsRef = collection(FireStore, 'rooms');
-		const q = query(
-			roomsRef,
-			where('settingsId', '==', settingsId)
-		);
+		const q = query(roomsRef, where('settingsId', '==', settingsId));
 
-		return onSnapshot(q, (snapshot) => {
-			const rooms: Room[] = [];
-			snapshot.forEach((doc) => {
-				rooms.push(doc.data() as Room);
-			});
-			// Sort by room number
-			rooms.sort((a, b) => a.roomNumber - b.roomNumber);
-			dispatch(setRoomsArray(rooms));
-		}, (error) => {
-			console.error('Error listening to rooms:', error);
-			dispatch(setRoomsArray([]));
-		});
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const rooms: Room[] = [];
+				snapshot.forEach((doc) => {
+					rooms.push(doc.data() as Room);
+				});
+				// Sort by room number
+				rooms.sort((a, b) => a.roomNumber - b.roomNumber);
+				dispatch(setRoomsArray(rooms));
+			},
+			(error) => {
+				console.error('Error listening to rooms:', error);
+				dispatch(setRoomsArray([]));
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up rooms listener:', error);
 
@@ -213,27 +217,28 @@ export function listenToRoomsBySettingsId(
  */
 export function listenToRoomsBySettingsIdMerge(
 	settingsId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): () => void {
 	try {
 		const roomsRef = collection(FireStore, 'rooms');
-		const q = query(
-			roomsRef,
-			where('settingsId', '==', settingsId)
-		);
+		const q = query(roomsRef, where('settingsId', '==', settingsId));
 
-		return onSnapshot(q, (snapshot) => {
-			const rooms: Room[] = [];
-			snapshot.forEach((doc) => {
-				rooms.push(doc.data() as Room);
-			});
-			// Sort by room number
-			rooms.sort((a, b) => a.roomNumber - b.roomNumber);
-			dispatch(mergeRoomsBySettingsId({ settingsId, rooms }));
-		}, (error) => {
-			console.error('Error listening to rooms:', error);
-			dispatch(mergeRoomsBySettingsId({ settingsId, rooms: [] }));
-		});
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const rooms: Room[] = [];
+				snapshot.forEach((doc) => {
+					rooms.push(doc.data() as Room);
+				});
+				// Sort by room number
+				rooms.sort((a, b) => a.roomNumber - b.roomNumber);
+				dispatch(mergeRoomsBySettingsId({ settingsId, rooms }));
+			},
+			(error) => {
+				console.error('Error listening to rooms:', error);
+				dispatch(mergeRoomsBySettingsId({ settingsId, rooms: [] }));
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up rooms listener:', error);
 
@@ -250,25 +255,26 @@ export function listenToRoomsBySettingsIdMerge(
  */
 export function listenToParticipantsBySettingsId(
 	settingsId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): () => void {
 	try {
 		const participantsRef = collection(FireStore, 'roomParticipants');
-		const q = query(
-			participantsRef,
-			where('settingsId', '==', settingsId)
-		);
+		const q = query(participantsRef, where('settingsId', '==', settingsId));
 
-		return onSnapshot(q, (snapshot) => {
-			const participants: RoomParticipant[] = [];
-			snapshot.forEach((doc) => {
-				participants.push(doc.data() as RoomParticipant);
-			});
-			dispatch(setParticipantsArray(participants));
-		}, (error) => {
-			console.error('Error listening to participants:', error);
-			dispatch(setParticipantsArray([]));
-		});
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const participants: RoomParticipant[] = [];
+				snapshot.forEach((doc) => {
+					participants.push(doc.data() as RoomParticipant);
+				});
+				dispatch(setParticipantsArray(participants));
+			},
+			(error) => {
+				console.error('Error listening to participants:', error);
+				dispatch(setParticipantsArray([]));
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up participants listener:', error);
 
@@ -285,25 +291,26 @@ export function listenToParticipantsBySettingsId(
  */
 export function listenToParticipantsBySettingsIdMerge(
 	settingsId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): () => void {
 	try {
 		const participantsRef = collection(FireStore, 'roomParticipants');
-		const q = query(
-			participantsRef,
-			where('settingsId', '==', settingsId)
-		);
+		const q = query(participantsRef, where('settingsId', '==', settingsId));
 
-		return onSnapshot(q, (snapshot) => {
-			const participants: RoomParticipant[] = [];
-			snapshot.forEach((doc) => {
-				participants.push(doc.data() as RoomParticipant);
-			});
-			dispatch(mergeParticipantsBySettingsId({ settingsId, participants }));
-		}, (error) => {
-			console.error('Error listening to participants:', error);
-			dispatch(mergeParticipantsBySettingsId({ settingsId, participants: [] }));
-		});
+		return onSnapshot(
+			q,
+			(snapshot) => {
+				const participants: RoomParticipant[] = [];
+				snapshot.forEach((doc) => {
+					participants.push(doc.data() as RoomParticipant);
+				});
+				dispatch(mergeParticipantsBySettingsId({ settingsId, participants }));
+			},
+			(error) => {
+				console.error('Error listening to participants:', error);
+				dispatch(mergeParticipantsBySettingsId({ settingsId, participants: [] }));
+			},
+		);
 	} catch (error) {
 		console.error('Error setting up participants listener:', error);
 
@@ -319,17 +326,14 @@ export function listenToParticipantsBySettingsIdMerge(
  */
 export async function getRoomAssignmentDataForAdmin(
 	statementId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): Promise<void> {
 	try {
 		dispatch(setLoading(true));
 
 		// Fetch room settings for the statement
 		const settingsRef = collection(FireStore, 'roomsSettings');
-		const settingsQuery = query(
-			settingsRef,
-			where('statementId', '==', statementId)
-		);
+		const settingsQuery = query(settingsRef, where('statementId', '==', statementId));
 		const settingsSnapshot = await getDocs(settingsQuery);
 		const settings: RoomSettings[] = [];
 		settingsSnapshot.forEach((doc) => {
@@ -344,10 +348,7 @@ export async function getRoomAssignmentDataForAdmin(
 
 			// Fetch rooms
 			const roomsRef = collection(FireStore, 'rooms');
-			const roomsQuery = query(
-				roomsRef,
-				where('settingsId', '==', settingsId)
-			);
+			const roomsQuery = query(roomsRef, where('settingsId', '==', settingsId));
 			const roomsSnapshot = await getDocs(roomsQuery);
 			const rooms: Room[] = [];
 			roomsSnapshot.forEach((doc) => {
@@ -358,10 +359,7 @@ export async function getRoomAssignmentDataForAdmin(
 
 			// Fetch participants
 			const participantsRef = collection(FireStore, 'roomParticipants');
-			const participantsQuery = query(
-				participantsRef,
-				where('settingsId', '==', settingsId)
-			);
+			const participantsQuery = query(participantsRef, where('settingsId', '==', settingsId));
 			const participantsSnapshot = await getDocs(participantsQuery);
 			const participants: RoomParticipant[] = [];
 			participantsSnapshot.forEach((doc) => {
@@ -393,7 +391,7 @@ export async function getRoomAssignmentDataForAdmin(
 export function listenToMyRoomAssignmentWithDispatch(
 	statementId: string,
 	userId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): () => void {
 	return listenToUserRoomAssignment(statementId, userId, (assignment) => {
 		dispatch(setMyAssignment(assignment));

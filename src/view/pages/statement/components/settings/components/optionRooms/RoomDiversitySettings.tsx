@@ -27,17 +27,17 @@ const RoomDiversitySettings: FC<RoomDiversitySettingsProps> = ({
 	// Get demographic questions from Redux
 	const questionsByStatement = useAppSelector(
 		selectUserDemographicQuestionsByStatementId(statementId),
-		shallowEqual
+		shallowEqual,
 	);
 	const questionsByTopParent = useAppSelector(
 		selectUserDemographicQuestionsByStatementId(topParentId || ''),
-		shallowEqual
+		shallowEqual,
 	);
 
 	// Combine and deduplicate by userQuestionId
 	const demographicQuestions = useMemo(() => {
 		const combined = [...questionsByStatement, ...questionsByTopParent];
-		const uniqueMap = new Map(combined.map(q => [q.userQuestionId, q]));
+		const uniqueMap = new Map(combined.map((q) => [q.userQuestionId, q]));
 
 		return Array.from(uniqueMap.values());
 	}, [questionsByStatement, questionsByTopParent]);
@@ -47,15 +47,13 @@ const RoomDiversitySettings: FC<RoomDiversitySettingsProps> = ({
 		return demographicQuestions.filter(
 			(q) =>
 				q.type === UserDemographicQuestionType.radio ||
-				q.type === UserDemographicQuestionType.checkbox
+				q.type === UserDemographicQuestionType.checkbox,
 		);
 	}, [demographicQuestions]);
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>
-				{t('Room Diversity')}
-			</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('Room Diversity')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
 				{t('When splitting, rooms will be composed for maximum demographic diversity')}
 			</p>

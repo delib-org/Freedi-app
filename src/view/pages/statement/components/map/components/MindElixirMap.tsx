@@ -8,10 +8,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { updateStatementParents } from '@/controllers/db/statements/setStatements';
 import Modal from '@/view/components/modal/Modal';
-import {
-	toMindElixirData,
-	canHaveChildren,
-} from '../mapHelpers/mindElixirTransform';
+import { toMindElixirData, canHaveChildren } from '../mapHelpers/mindElixirTransform';
 import {
 	createMindMapChild,
 	createMindMapSibling,
@@ -89,9 +86,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	// Apply filter if needed
 	const filteredDescendants =
-		filterBy === FilterType.questionsResults
-			? filterDescendants(descendants)
-			: descendants;
+		filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
 
 	const data = filteredDescendants ? toMindElixirData(filteredDescendants) : null;
 
@@ -225,8 +220,8 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				// Check if this node can have children
 				if (!canHaveChildren(currentStatement.statementType)) {
 					console.info('Options cannot have children');
-					
-return;
+
+					return;
 				}
 
 				const newStatement = await createMindMapChild({
@@ -256,8 +251,8 @@ return;
 
 				if (!parentStatement) {
 					console.info('Cannot create sibling for root node');
-					
-return;
+
+					return;
 				}
 
 				const newStatement = await createMindMapSibling({
@@ -397,10 +392,7 @@ return;
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>
 				{!isButtonVisible ? (
-					<button
-						className={styles.mainButton}
-						onClick={() => setIsButtonVisible(true)}
-					>
+					<button className={styles.mainButton} onClick={() => setIsButtonVisible(true)}>
 						<img src={MapHamburgerIcon} alt={t('Menu')} />
 					</button>
 				) : (
@@ -408,16 +400,10 @@ return;
 						<button onClick={() => setIsButtonVisible(false)}>
 							<img src={MapCancelIcon} alt={t('Close')} />
 						</button>
-						<button
-							onClick={() => handleLayoutChange('SIDE')}
-							title={t('Side layout')}
-						>
+						<button onClick={() => handleLayoutChange('SIDE')} title={t('Side layout')}>
 							<img src={MapVerticalLayoutIcon} alt={t('Side layout')} />
 						</button>
-						<button
-							onClick={() => handleLayoutChange('LEFT')}
-							title={t('Left layout')}
-						>
+						<button onClick={() => handleLayoutChange('LEFT')} title={t('Left layout')}>
 							<img src={MapHorizontalLayoutIcon} alt={t('Left layout')} />
 						</button>
 						<button onClick={handleRestore} title={t('Restore')}>
@@ -436,10 +422,7 @@ return;
 					<div className={styles.moveModal}>
 						<h1>{t('Are you sure you want to move statement here?')}</h1>
 						<div className={styles.btnBox}>
-							<button
-								onClick={() => handleMoveStatement(true)}
-								className="btn btn--large btn--add"
-							>
+							<button onClick={() => handleMoveStatement(true)} className="btn btn--large btn--add">
 								{t('Yes')}
 							</button>
 							<button

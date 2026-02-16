@@ -6,7 +6,7 @@
     "env:dev": "cd ../.. && npm run env:dev",
     "dev": "npm run env:dev && next dev -p 3001",
     "build": "next build",
-    "start": "next start -p 3001",
+    "start": "next start -p 3003",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
@@ -31,6 +31,7 @@
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-markdown": "^10.1.0",
+    "remark-breaks": "^4.0.0",
     "remark-gfm": "^4.0.1"
   },
   "devDependencies": {

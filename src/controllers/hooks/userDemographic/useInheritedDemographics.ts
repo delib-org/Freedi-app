@@ -64,17 +64,14 @@ export function useInheritedDemographics({
 }: UseInheritedDemographicsOptions): UseInheritedDemographicsResult {
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [excludedQuestionIds, setExcludedQuestionIds] =
-		useState<string[]>(initialExcludedIds);
+	const [excludedQuestionIds, setExcludedQuestionIds] = useState<string[]>(initialExcludedIds);
 
 	// Get all statements from the store for building the parent chain
-	const allStatements = useSelector(
-		(state: RootState) => state.statements.statements
-	);
+	const allStatements = useSelector((state: RootState) => state.statements.statements);
 
 	// Get user demographic questions from the store
 	const allDemographicQuestions = useSelector(
-		(state: RootState) => state.userDemographic.userDemographicQuestions
+		(state: RootState) => state.userDemographic.userDemographicQuestions,
 	);
 
 	// Build the parent chain for this statement
@@ -84,9 +81,7 @@ export function useInheritedDemographics({
 
 		// Walk up the hierarchy
 		while (currentParentId && currentParentId !== 'top') {
-			const parent = allStatements.find(
-				(s) => s.statementId === currentParentId
-			);
+			const parent = allStatements.find((s) => s.statementId === currentParentId);
 			if (parent) {
 				chain.push(parent);
 				currentParentId = parent.parentId;
@@ -108,8 +103,7 @@ export function useInheritedDemographics({
 				// Get questions defined on this parent
 				const parentQuestions = allDemographicQuestions.filter(
 					(q) =>
-						q.statementId === parentStatement.statementId &&
-						q.scope === DEMOGRAPHIC_SCOPE_GROUP // Only include group-scoped questions
+						q.statementId === parentStatement.statementId && q.scope === DEMOGRAPHIC_SCOPE_GROUP, // Only include group-scoped questions
 				);
 
 				// Transform to InheritedQuestion format
@@ -121,11 +115,8 @@ export function useInheritedDemographics({
 							sourceStatementTitle:
 								parentStatement.statement.substring(0, 50) +
 								(parentStatement.statement.length > 50 ? '...' : ''),
-							sourceType:
-								parentStatement.parentId === 'top' ? 'group' : 'discussion',
-							isEnabled: !excludedQuestionIds.includes(
-								question.userQuestionId
-							),
+							sourceType: parentStatement.parentId === 'top' ? 'group' : 'discussion',
+							isEnabled: !excludedQuestionIds.includes(question.userQuestionId),
 						});
 					}
 				});
@@ -137,20 +128,16 @@ export function useInheritedDemographics({
 					(q) =>
 						q.topParentId === statement.topParentId &&
 						q.scope === DEMOGRAPHIC_SCOPE_GROUP &&
-						!parentChain.some((p) => p.statementId === q.statementId) // Avoid duplicates
+						!parentChain.some((p) => p.statementId === q.statementId), // Avoid duplicates
 				);
 
-				const topParent = allStatements.find(
-					(s) => s.statementId === statement.topParentId
-				);
+				const topParent = allStatements.find((s) => s.statementId === statement.topParentId);
 
 				if (topParent) {
 					topParentQuestions.forEach((question) => {
 						if (
 							question.userQuestionId &&
-							!inherited.some(
-								(i) => i.userQuestionId === question.userQuestionId
-							)
+							!inherited.some((i) => i.userQuestionId === question.userQuestionId)
 						) {
 							inherited.push({
 								...question,
@@ -159,9 +146,7 @@ export function useInheritedDemographics({
 									topParent.statement.substring(0, 50) +
 									(topParent.statement.length > 50 ? '...' : ''),
 								sourceType: 'group',
-								isEnabled: !excludedQuestionIds.includes(
-									question.userQuestionId
-								),
+								isEnabled: !excludedQuestionIds.includes(question.userQuestionId),
 							});
 						}
 					});
@@ -203,7 +188,7 @@ export function useInheritedDemographics({
 				return newExcluded;
 			});
 		},
-		[onExcludedIdsChange]
+		[onExcludedIdsChange],
 	);
 
 	// Enable all inherited questions

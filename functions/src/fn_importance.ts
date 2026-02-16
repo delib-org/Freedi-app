@@ -7,20 +7,14 @@ import { FirestoreEvent } from 'firebase-functions/firestore';
 import { DocumentSnapshot } from 'firebase-functions/v1/firestore';
 
 export async function setImportanceToStatement(
-	event: FirestoreEvent<Change<DocumentSnapshot> | undefined> | undefined
+	event: FirestoreEvent<Change<DocumentSnapshot> | undefined> | undefined,
 ) {
 	if (!event?.data) return;
 
 	try {
-		const importanceBeforeData = event.data.before.data() as
-			| Importance
-			| undefined;
-		const importanceAfterData = event.data.after.data() as
-			| Importance
-			| undefined;
-		const statementId =
-			importanceBeforeData?.statementId ||
-			importanceAfterData?.statementId;
+		const importanceBeforeData = event.data.before.data() as Importance | undefined;
+		const importanceAfterData = event.data.after.data() as Importance | undefined;
+		const statementId = importanceBeforeData?.statementId || importanceAfterData?.statementId;
 		if (!statementId) throw new Error('No statement id found');
 
 		const diffNumberOfUsers = (() => {
@@ -33,14 +27,11 @@ export async function setImportanceToStatement(
 
 		let importanceBefore = 0;
 		let importanceAfter = 0;
-		if (importanceBeforeData)
-			importanceBefore = importanceBeforeData.importance;
-		if (importanceAfterData)
-			importanceAfter = importanceAfterData.importance;
+		if (importanceBeforeData) importanceBefore = importanceBeforeData.importance;
+		if (importanceAfterData) importanceAfter = importanceAfterData.importance;
 
 		//get section id
-		const sectionId =
-			importanceBeforeData?.parentId || importanceAfterData?.parentId;
+		const sectionId = importanceBeforeData?.parentId || importanceAfterData?.parentId;
 		if (!sectionId) throw new Error('No section id found');
 
 		// TODO: This is not used
@@ -58,9 +49,7 @@ export async function setImportanceToStatement(
 		const diffImportance = importanceAfter - importanceBefore;
 
 		//update statement importance
-		const statementRef = db
-			.collection(Collections.statements)
-			.doc(statementId);
+		const statementRef = db.collection(Collections.statements).doc(statementId);
 
 		//get previous statement data
 		const statement = await statementRef.get();
@@ -69,8 +58,7 @@ export async function setImportanceToStatement(
 		const currentSumImportance = documentImportance?.sumImportance || 0;
 		const currentNumberOfUsers = documentImportance?.numberOfUsers || 0;
 		const averageImportance =
-			(currentSumImportance + diffImportance) /
-			(currentNumberOfUsers + diffNumberOfUsers);
+			(currentSumImportance + diffImportance) / (currentNumberOfUsers + diffNumberOfUsers);
 
 		await statementRef.set(
 			{
@@ -80,7 +68,7 @@ export async function setImportanceToStatement(
 					averageImportance,
 				},
 			},
-			{ merge: true }
+			{ merge: true },
 		);
 
 		return;

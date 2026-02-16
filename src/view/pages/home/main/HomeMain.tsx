@@ -1,5 +1,4 @@
 import { useEffect, useState, useMemo } from 'react';
-import '@/view/style/homePage.scss';
 import styles from './HomeMain.module.scss';
 
 // Redux store
@@ -27,9 +26,7 @@ const HomeMain = () => {
 	const showNewStatementModal = useAppSelector(selectNewStatementShowModal);
 	const [loading, setLoading] = useState(true);
 	const [subPage, setSubPage] = useState<'decisions' | 'groups'>('groups');
-	const [subPageTitle, setSubPageTitle] = useState<'Decisions' | 'Groups'>(
-		'Decisions'
-	);
+	const [subPageTitle, setSubPageTitle] = useState<'Decisions' | 'Groups'>('Decisions');
 	const user = useSelector(creatorSelector);
 	const { t } = useTranslation();
 	const userId = user?.uid || '';
@@ -38,30 +35,36 @@ const HomeMain = () => {
 	const allStatementsSubscriptions = useAppSelector(statementsSubscriptionsSelector);
 
 	const topSubscriptions = useMemo(
-		() => allTopSubscriptions.filter(
-			(sub) =>
-				sub.userId === userId &&
-				sub.statement.statementType === StatementType.group
-		),
-		[allTopSubscriptions, userId]
+		() =>
+			allTopSubscriptions.filter(
+				(sub) => sub.userId === userId && sub.statement.statementType === StatementType.group,
+			),
+		[allTopSubscriptions, userId],
 	);
 
 	const latestDecisions = useMemo(
-		() => allStatementsSubscriptions.filter(
-			(sub) => sub.statement.statementType === StatementType.question
-		),
-		[allStatementsSubscriptions]
+		() =>
+			allStatementsSubscriptions.filter(
+				(sub) => sub.statement.statementType === StatementType.question,
+			),
+		[allStatementsSubscriptions],
 	);
 
 	useEffect(() => {
-		setTimeout(() => {
-			setLoading(false);
-		}, 3000);
-
-		if (topSubscriptions.length > 0) {
+		if (topSubscriptions.length > 0 || latestDecisions.length > 0) {
 			setLoading(false);
 		}
-	}, [topSubscriptions]);
+	}, [topSubscriptions, latestDecisions]);
+
+	// Fallback: stop loading after a short timeout if no data arrives
+	// (e.g. new user with no subscriptions)
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setLoading(false);
+		}, 1500);
+
+		return () => clearTimeout(timer);
+	}, []);
 
 	useEffect(() => {
 		if (userId && user.advanceUser) {
@@ -76,19 +79,14 @@ const HomeMain = () => {
 	}, [subPage]);
 
 	return (
-		<main className='home-page__main slide-in'>
-			<div className='heroImg'></div>
-			<img
-				className='bikeImg'
-				alt='Three-Characters-on-a-bicycle'
-				src={bike}
-			/>
+		<main className="home-page__main slide-in">
+			<div className="heroImg"></div>
+			<img className="bikeImg" alt="Three-Characters-on-a-bicycle" src={bike} />
 
 			<div
-				className='wrapper main-wrap'
+				className="wrapper main-wrap"
 				style={{
-					justifyContent:
-						topSubscriptions.length > 0 ? 'start' : 'center',
+					justifyContent: topSubscriptions.length > 0 ? 'start' : 'center',
 				}}
 			>
 				{showNewStatementModal && (
@@ -100,29 +98,20 @@ const HomeMain = () => {
 				{(() => {
 					if (loading) {
 						return (
-							<div className='peopleLoadingScreen'>
+							<div className="peopleLoadingScreen">
 								<PeopleLoader />
 							</div>
 						);
 					}
 
-					const itemsToRender =
-						subPage === 'groups'
-							? topSubscriptions
-							: latestDecisions;
+					const itemsToRender = subPage === 'groups' ? topSubscriptions : latestDecisions;
 
 					return itemsToRender.map((sub) =>
 						subPage === 'groups' ? (
-							<MainCard
-								key={sub.statementId}
-								subscription={sub}
-							/>
+							<MainCard key={sub.statementId} subscription={sub} />
 						) : (
-							<MainQuestionCard
-								key={sub.statementId}
-								simpleStatement={sub.statement}
-							/>
-						)
+							<MainQuestionCard key={sub.statementId} simpleStatement={sub.statement} />
+						),
 					);
 				})()}
 			</div>

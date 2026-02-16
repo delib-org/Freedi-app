@@ -24,7 +24,7 @@ const MemberReviewCard: FC<Props> = ({
 	onApprove,
 	onFlag,
 	onBan,
-	canBan
+	canBan,
 }) => {
 	const { t } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
@@ -57,25 +57,25 @@ const MemberReviewCard: FC<Props> = ({
 		const flags: string[] = [];
 
 		// Check for very short answers
-		const shortAnswers = member.responses.filter(r =>
-			typeof r.answer === 'string' && r.answer.length < 3
+		const shortAnswers = member.responses.filter(
+			(r) => typeof r.answer === 'string' && r.answer.length < 3,
 		);
 		if (shortAnswers.length > 0) {
 			flags.push(t('Very short answers'));
 		}
 
 		// Check for all identical answers
-		const answers = member.responses.map(r => r.answer);
-		const uniqueAnswers = new Set(answers.map(a =>
-			typeof a === 'string' ? a : JSON.stringify(a)
-		));
+		const answers = member.responses.map((r) => r.answer);
+		const uniqueAnswers = new Set(
+			answers.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))),
+		);
 		if (uniqueAnswers.size === 1 && member.responses.length > 1) {
 			flags.push(t('Identical answers'));
 		}
 
 		// Check for missing required fields
-		const emptyAnswers = member.responses.filter(r =>
-			!r.answer || (typeof r.answer === 'string' && r.answer.trim() === '')
+		const emptyAnswers = member.responses.filter(
+			(r) => !r.answer || (typeof r.answer === 'string' && r.answer.trim() === ''),
 		);
 		if (emptyAnswers.length > 0) {
 			flags.push(t('Missing answers'));
@@ -89,7 +89,11 @@ const MemberReviewCard: FC<Props> = ({
 	// Generate a brief identifier from user responses
 	const getUserIdentifier = () => {
 		// If user has a display name that's not "Anonymous", prefer to use it
-		if (member.user.displayName && member.user.displayName !== 'Anonymous' && member.user.displayName !== 'Guest') {
+		if (
+			member.user.displayName &&
+			member.user.displayName !== 'Anonymous' &&
+			member.user.displayName !== 'Guest'
+		) {
 			return member.user.displayName;
 		}
 
@@ -102,16 +106,13 @@ const MemberReviewCard: FC<Props> = ({
 
 			if (typeof response.answer === 'string' && response.answer.trim().length > 0) {
 				// Truncate long answers
-				const truncated = response.answer.length > 40
-					? response.answer.substring(0, 40) + '...'
-					: response.answer;
+				const truncated =
+					response.answer.length > 40 ? response.answer.substring(0, 40) + '...' : response.answer;
 				meaningfulAnswers.push(truncated);
 			} else if (Array.isArray(response.answer) && response.answer.length > 0) {
 				// For checkbox responses, show selections
 				const selections = response.answer.slice(0, 3).join(', ');
-				const truncated = selections.length > 40
-					? selections.substring(0, 40) + '...'
-					: selections;
+				const truncated = selections.length > 40 ? selections.substring(0, 40) + '...' : selections;
 				meaningfulAnswers.push(truncated);
 			}
 		}
@@ -144,9 +145,7 @@ const MemberReviewCard: FC<Props> = ({
 							{getRoleBadge()}
 							{getStatusBadge()}
 						</div>
-						{member.user.email && (
-							<span className={styles.email}>{member.user.email}</span>
-						)}
+						{member.user.email && <span className={styles.email}>{member.user.email}</span>}
 						{member.joinedAt && (
 							<span className={styles.joinDate}>
 								{t('Joined')}: {new Date(member.joinedAt).toLocaleDateString()}
@@ -165,10 +164,7 @@ const MemberReviewCard: FC<Props> = ({
 					</div>
 				)}
 
-				<button
-					className={styles.expandBtn}
-					onClick={() => setExpanded(!expanded)}
-				>
+				<button className={styles.expandBtn} onClick={() => setExpanded(!expanded)}>
 					{expanded ? '▼' : '▶'}
 				</button>
 			</div>
@@ -183,8 +179,7 @@ const MemberReviewCard: FC<Props> = ({
 								<div className={styles.answer}>
 									{Array.isArray(response.answer)
 										? response.answer.join(', ')
-										: response.answer || t('No answer')
-									}
+										: response.answer || t('No answer')}
 								</div>
 							</div>
 						))}
@@ -193,18 +188,12 @@ const MemberReviewCard: FC<Props> = ({
 					{member.status !== 'banned' && (
 						<div className={styles.actions}>
 							{member.status !== 'approved' && (
-								<button
-									className="btn btn--small btn--primary"
-									onClick={onApprove}
-								>
+								<button className="btn btn--small btn--primary" onClick={onApprove}>
 									✓ {t('Approve')}
 								</button>
 							)}
 							{member.status !== 'flagged' && (
-								<button
-									className="btn btn--small btn--secondary"
-									onClick={onFlag}
-								>
+								<button className="btn btn--small btn--secondary" onClick={onFlag}>
 									🔍 {t('Flag for Review')}
 								</button>
 							)}
@@ -212,7 +201,9 @@ const MemberReviewCard: FC<Props> = ({
 								className="btn btn--small btn--error"
 								onClick={onBan}
 								disabled={!canBan}
-								title={!canBan ? getBanDisabledReason(member.role, member.userId, statement) || '' : ''}
+								title={
+									!canBan ? getBanDisabledReason(member.role, member.userId, statement) || '' : ''
+								}
 							>
 								🚫 {t('Remove/Ban')}
 							</button>

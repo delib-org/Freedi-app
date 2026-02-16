@@ -1,12 +1,4 @@
-import {
-	addDoc,
-	collection,
-	getDocs,
-	limit,
-	orderBy,
-	query,
-	where,
-} from 'firebase/firestore';
+import { addDoc, collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Invitation } from '@freedi/shared-types';
 
@@ -28,13 +20,9 @@ export async function setInvitationToDB({
 		const invitationsRef = collection(FireStore, Collections.invitations);
 		const q = query(
 			invitationsRef,
-			where(
-				'lastUpdate',
-				'>',
-				new Date().getTime() - 24 * 60 * 60 * 1000
-			),
+			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
 			orderBy('number', 'desc'),
-			limit(1)
+			limit(1),
 		);
 		const numbers = await getDocs(q);
 
@@ -61,13 +49,9 @@ export async function setInvitationToDB({
 		const q2 = query(
 			invitationsRef,
 			where('statementId', '==', statementId),
-			where(
-				'lastUpdate',
-				'>',
-				new Date().getTime() - 24 * 60 * 60 * 1000
-			),
+			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
 			orderBy('number', 'desc'),
-			limit(1)
+			limit(1),
 		);
 		const statementInvitations = await getDocs(q2);
 		let lastNumber2 = 1;

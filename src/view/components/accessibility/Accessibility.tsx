@@ -10,8 +10,7 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { colorMappings } from './colorContrast';
 
 export default function Accessibility() {
-	const { fontSize, changeFontSize, colorContrast, setColorContrast, t } =
-		useUserConfig();
+	const { fontSize, changeFontSize, colorContrast, setColorContrast, t } = useUserConfig();
 	const { isOpen, handleOpen } = useAutoClose(10000);
 
 	const handleClickOutside = useCallback(() => {
@@ -22,10 +21,7 @@ export default function Accessibility() {
 
 	useEffect(() => {
 		Object.entries(colorMappings).forEach(([key, contrastKey]) => {
-			document.documentElement.style.setProperty(
-				key,
-				colorContrast ? `var(${contrastKey})` : ''
-			);
+			document.documentElement.style.setProperty(key, colorContrast ? `var(${contrastKey})` : '');
 		});
 	}, [colorContrast]);
 
@@ -37,10 +33,8 @@ export default function Accessibility() {
 	const buttonRef = useRef(null);
 
 	const handleMove = useCallback((event) => {
-		const clientX =
-			'touches' in event ? event.touches[0].clientX : event.clientX;
-		const clientY =
-			'touches' in event ? event.touches[0].clientY : event.clientY;
+		const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+		const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 
 		const deltaX = clientX - startPos.current.x;
 		const deltaY = clientY - startPos.current.y;
@@ -54,10 +48,7 @@ export default function Accessibility() {
 
 		startPos.current = { x: clientX, y: clientY };
 		setPosition((prev) => ({
-			top: Math.min(
-				Math.max(prev.top + deltaY, 0),
-				window.innerHeight - 100
-			),
+			top: Math.min(Math.max(prev.top + deltaY, 0), window.innerHeight - 100),
 		}));
 	}, []);
 
@@ -70,14 +61,11 @@ export default function Accessibility() {
 
 			const isTouchEvent = event && event.type === 'touchend';
 
-			if (
-				(!isTouchEvent && !isDragging.current) ||
-				(isTouchEvent && !touchMoved.current)
-			) {
+			if ((!isTouchEvent && !isDragging.current) || (isTouchEvent && !touchMoved.current)) {
 				handleOpen();
 			}
 		},
-		[handleMove, handleOpen]
+		[handleMove, handleOpen],
 	);
 
 	const handleStart = useCallback(
@@ -85,10 +73,8 @@ export default function Accessibility() {
 			if ('touches' in event) {
 				event.preventDefault();
 			}
-			const clientX =
-				'touches' in event ? event.touches[0].clientX : event.clientX;
-			const clientY =
-				'touches' in event ? event.touches[0].clientY : event.clientY;
+			const clientX = 'touches' in event ? event.touches[0].clientX : event.clientX;
+			const clientY = 'touches' in event ? event.touches[0].clientY : event.clientY;
 			startPos.current = { x: clientX, y: clientY };
 			isDragging.current = false;
 
@@ -103,7 +89,7 @@ export default function Accessibility() {
 			});
 			document.addEventListener('touchend', handleEnd);
 		},
-		[handleMove, handleEnd]
+		[handleMove, handleEnd],
 	);
 
 	useEffect(() => {
@@ -156,16 +142,10 @@ export default function Accessibility() {
 					</IconButton>
 				</div>
 				<div className={styles.accessibilityPanel__contrast}>
-					<button
-						onClick={() => setColorContrast(true)}
-						className={styles.highContrast}
-					>
+					<button onClick={() => setColorContrast(true)} className={styles.highContrast}>
 						<HighContrastIcon /> {t('High contrast')}
 					</button>
-					<button
-						onClick={() => setColorContrast(false)}
-						className={styles.lightContrast}
-					>
+					<button onClick={() => setColorContrast(false)} className={styles.lightContrast}>
 						<LightContrastIcon /> {t('Light contrast')}
 					</button>
 				</div>

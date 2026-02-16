@@ -99,7 +99,7 @@ const HEADING_STYLE_MAP: Record<string, ParagraphType> = {
  */
 export function convertGoogleDocsToParagraphs(
 	document: GoogleDocsDocument,
-	lists?: GoogleDocsLists
+	lists?: GoogleDocsLists,
 ): Paragraph[] {
 	const paragraphs: Paragraph[] = [];
 	let order = 0;
@@ -135,7 +135,7 @@ export function convertGoogleDocsToParagraphs(
 function convertParagraphElement(
 	paragraph: GoogleDocsParagraph,
 	order: number,
-	lists?: GoogleDocsLists
+	lists?: GoogleDocsLists,
 ): Paragraph | null {
 	// Extract text content
 	const content = extractTextContent(paragraph.elements);
@@ -202,8 +202,8 @@ function extractTextContent(elements?: GoogleDocsParagraphElement[]): string {
 			if (element.textRun?.content) {
 				return element.textRun.content;
 			}
-			
-return '';
+
+			return '';
 		})
 		.join('')
 		.replace(/\n$/, ''); // Remove trailing newline
@@ -212,10 +212,7 @@ return '';
 /**
  * Convert a table element to an HTML table paragraph
  */
-function convertTableElement(
-	table: GoogleDocsTable,
-	order: number
-): Paragraph | null {
+function convertTableElement(table: GoogleDocsTable, order: number): Paragraph | null {
 	if (!table.tableRows || table.tableRows.length === 0) {
 		return null;
 	}
@@ -255,8 +252,8 @@ function extractCellContent(cell: GoogleDocsTableCell): string {
 			if (element.paragraph) {
 				return extractTextContent(element.paragraph.elements);
 			}
-			
-return '';
+
+			return '';
 		})
 		.join('\n')
 		.trim();

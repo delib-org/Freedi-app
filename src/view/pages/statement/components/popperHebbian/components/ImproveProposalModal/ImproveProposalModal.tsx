@@ -6,12 +6,12 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getParagraphsText } from '@/utils/paragraphUtils';
 import {
 	requestProposalImprovement,
-	applyImprovement
+	applyImprovement,
 } from '@/controllers/db/popperHebbian/improveProposalController';
 import {
 	ImproveProposalModalState,
 	StatementVersion,
-	getLoadingMessages
+	getLoadingMessages,
 } from '@/models/popperHebbian';
 import DiffView from './DiffView';
 import VersionHistory from './VersionHistory';
@@ -23,16 +23,12 @@ interface ImproveProposalModalProps {
 	onSuccess?: () => void;
 }
 
-const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
-	statement,
-	onClose,
-	onSuccess
-}) => {
+const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClose, onSuccess }) => {
 	const { user } = useAuthentication();
 	const { t, currentLanguage } = useTranslation();
 
 	const [modalState, setModalState] = useState<ImproveProposalModalState>({
-		status: 'idle'
+		status: 'idle',
 	});
 	const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
 	const [showVersionHistory, setShowVersionHistory] = useState(false);
@@ -44,7 +40,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 		if (modalState.status !== 'loading') return;
 
 		const interval = setInterval(() => {
-			setLoadingMessageIndex(prev => (prev + 1) % loadingMessages.length);
+			setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
 		}, 2500);
 
 		return () => clearInterval(interval);
@@ -55,20 +51,17 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 		const fetchImprovement = async (): Promise<void> => {
 			setModalState({
 				status: 'loading',
-				message: loadingMessages[0]
+				message: loadingMessages[0],
 			});
 
 			try {
-				const response = await requestProposalImprovement(
-					statement.statementId,
-					currentLanguage
-				);
+				const response = await requestProposalImprovement(statement.statementId, currentLanguage);
 				setModalState({ status: 'preview', data: response });
 			} catch (error) {
 				console.error('Failed to get AI improvement:', error);
 				setModalState({
 					status: 'error',
-					error: t('Failed to generate improvement. Please try again.')
+					error: t('Failed to generate improvement. Please try again.'),
 				});
 			}
 		};
@@ -79,10 +72,13 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 	// Update loading message when index changes
 	useEffect(() => {
 		if (modalState.status === 'loading') {
-			setModalState(prev => ({
-				...prev,
-				message: loadingMessages[loadingMessageIndex]
-			} as ImproveProposalModalState));
+			setModalState(
+				(prev) =>
+					({
+						...prev,
+						message: loadingMessages[loadingMessageIndex],
+					}) as ImproveProposalModalState,
+			);
 		}
 	}, [loadingMessageIndex, loadingMessages, modalState.status]);
 
@@ -100,7 +96,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 				modalState.data.improvedTitle,
 				modalState.data.improvedDescription,
 				modalState.data.improvementSummary,
-				statement.currentVersion || 0
+				statement.currentVersion || 0,
 			);
 
 			setModalState({ status: 'success' });
@@ -112,7 +108,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 			console.error('Failed to apply improvement:', error);
 			setModalState({
 				status: 'error',
-				error: t('Failed to apply improvement. Please try again.')
+				error: t('Failed to apply improvement. Please try again.'),
 			});
 		}
 	}, [modalState, user, statement, onSuccess, onClose, t]);
@@ -120,21 +116,18 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 	const handleRetry = useCallback(async (): Promise<void> => {
 		setModalState({
 			status: 'loading',
-			message: loadingMessages[0]
+			message: loadingMessages[0],
 		});
 		setLoadingMessageIndex(0);
 
 		try {
-			const response = await requestProposalImprovement(
-				statement.statementId,
-				currentLanguage
-			);
+			const response = await requestProposalImprovement(statement.statementId, currentLanguage);
 			setModalState({ status: 'preview', data: response });
 		} catch (error) {
 			console.error('Failed to get AI improvement:', error);
 			setModalState({
 				status: 'error',
-				error: t('Failed to generate improvement. Please try again.')
+				error: t('Failed to generate improvement. Please try again.'),
 			});
 		}
 	}, [statement.statementId, currentLanguage, loadingMessages, t]);
@@ -183,9 +176,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 						</div>
 
 						<div className={styles.changesSection}>
-							<h4 className={styles.changesSectionTitle}>
-								{t('What Changed')}
-							</h4>
+							<h4 className={styles.changesSectionTitle}>{t('What Changed')}</h4>
 							<ul className={styles.changesList}>
 								{modalState.data.changesHighlight.map((change, index) => (
 									<li key={index} className={styles.changeItem}>
@@ -193,12 +184,13 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 									</li>
 								))}
 							</ul>
-							<p className={styles.summary}>
-								{modalState.data.improvementSummary}
-							</p>
+							<p className={styles.summary}>{modalState.data.improvementSummary}</p>
 							<div className={styles.metadata}>
 								<span className={styles.evidenceCount}>
-									{t('Based on {{count}} comments').replace('{{count}}', String(modalState.data.evidenceConsidered))}
+									{t('Based on {{count}} comments').replace(
+										'{{count}}',
+										String(modalState.data.evidenceConsidered),
+									)}
 								</span>
 								<span className={styles.confidence}>
 									{t('Confidence')}: {Math.round(modalState.data.confidence * 100)}%
@@ -236,41 +228,26 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({
 			<div className={styles.modalContainer}>
 				<div className={styles.modalHeader}>
 					<h2 className={styles.modalTitle}>{t('AI-Improved Version')}</h2>
-					<button
-						className={styles.closeButton}
-						onClick={onClose}
-						aria-label={t('Close modal')}
-					>
+					<button className={styles.closeButton} onClick={onClose} aria-label={t('Close modal')}>
 						&times;
 					</button>
 				</div>
 
-				<div className={styles.modalBody}>
-					{renderContent()}
-				</div>
+				<div className={styles.modalBody}>{renderContent()}</div>
 
 				{showFooterButtons && (
 					<div className={styles.modalFooter}>
-						<button
-							className={styles.discardButton}
-							onClick={onClose}
-						>
+						<button className={styles.discardButton} onClick={onClose}>
 							{t('Discard')}
 						</button>
 
 						{statement.versions && statement.versions.length > 0 && (
-							<button
-								className={styles.historyButton}
-								onClick={() => setShowVersionHistory(true)}
-							>
+							<button className={styles.historyButton} onClick={() => setShowVersionHistory(true)}>
 								{t('Version History')}
 							</button>
 						)}
 
-						<button
-							className={styles.applyButton}
-							onClick={handleApply}
-						>
+						<button className={styles.applyButton} onClick={handleApply}>
 							{t('Apply Improvement')}
 						</button>
 					</div>

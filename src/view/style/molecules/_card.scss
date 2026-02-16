@@ -157,22 +157,22 @@
   }
 
   &--error {
-    background-color: #fff5f5;
+    background-color: var(--bg-error-light);
     border-left: 4px solid var(--text-error);
   }
 
   &--success {
-    background-color: #f0fdf4;
+    background-color: var(--bg-success-light);
     border-left: 4px solid var(--agree);
   }
 
   &--warning {
-    background-color: #fffbeb;
+    background-color: var(--bg-warning-light);
     border-left: 4px solid var(--text-warning);
   }
 
   &--info {
-    background-color: #eff6ff;
+    background-color: var(--bg-info-light);
     border-left: 4px solid var(--accent);
   }
 
@@ -415,7 +415,7 @@
   }
 
   &--other {
-    background-color: #dcf8c6;
+    background-color: var(--bg-success-light);
     align-self: flex-start;
     border-bottom-left-radius: 4px;
 

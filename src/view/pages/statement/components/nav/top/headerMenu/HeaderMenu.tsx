@@ -19,125 +19,125 @@ import ChangeLanguage from '@/view/components/changeLanguage/ChangeLanguage';
 import styles from './HeaderMenu.module.scss';
 
 interface HeaderMenuProps {
-  statement: Statement;
-  isMenuOpen: boolean;
-  setIsMenuOpen: (value: boolean) => void;
-  headerStyle: { color: string; backgroundColor: string };
-  isAdmin: boolean;
-  currentLabel: string | undefined;
-  t: (key: string) => string;
-  onShare: () => void;
-  onLogout: () => void;
-  onFollowMe: () => void;
-  onInvitePanel: () => void;
-  onNavigateToSettings: () => void;
+	statement: Statement;
+	isMenuOpen: boolean;
+	setIsMenuOpen: (value: boolean) => void;
+	headerStyle: { color: string; backgroundColor: string };
+	isAdmin: boolean;
+	currentLabel: string | undefined;
+	t: (key: string) => string;
+	onShare: () => void;
+	onLogout: () => void;
+	onFollowMe: () => void;
+	onInvitePanel: () => void;
+	onNavigateToSettings: () => void;
 }
 
 const HeaderMenu: FC<HeaderMenuProps> = ({
-  statement,
-  isMenuOpen,
-  setIsMenuOpen,
-  headerStyle,
-  isAdmin,
-  currentLabel,
-  t,
-  onShare,
-  onLogout,
-  onFollowMe,
-  onInvitePanel,
-  onNavigateToSettings,
+	statement,
+	isMenuOpen,
+	setIsMenuOpen,
+	headerStyle,
+	isAdmin,
+	currentLabel,
+	t,
+	onShare,
+	onLogout,
+	onFollowMe,
+	onInvitePanel,
+	onNavigateToSettings,
 }) => {
-  const [showLanguageModal, setShowLanguageModal] = useState(false);
+	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
-  const menuIconStyle = {
-    color: headerStyle.backgroundColor,
-    width: '24px',
-  };
+	const menuIconStyle = {
+		color: headerStyle.backgroundColor,
+		width: '24px',
+	};
 
-  const menuHeaderStyle = {
-    backgroundColor: headerStyle.backgroundColor,
-    color: headerStyle.color,
-  };
+	const menuHeaderStyle = {
+		backgroundColor: headerStyle.backgroundColor,
+		color: headerStyle.color,
+	};
 
-  return (
-    <div className={styles.headerMenu} style={menuHeaderStyle}>
-      <Menu
-        statement={statement}
-        setIsOpen={setIsMenuOpen}
-        isMenuOpen={isMenuOpen}
-        iconColor={headerStyle.color}
-        isHamburger={true}
-        footer={
-          <div className={styles.menuFooter}>
-            <MenuOption
-              label={t('Disconnect')}
-              icon={<DisconnectIcon />}
-              onOptionClick={onLogout}
-              style={{ color: 'white' }}
-            />
-          </div>
-        }
-      >
-        <MenuOption
-          label={t('Share')}
-          icon={<ShareIcon style={menuIconStyle} />}
-          onOptionClick={onShare}
-        />
-        
-        {!isAdmin && (
-          <MenuOption
-            label={currentLabel}
-            icon={<LanguagesIcon style={menuIconStyle} />}
-            onOptionClick={() => {
-              setIsMenuOpen(false);
-              setShowLanguageModal(true);
-            }}
-          />
-        )}
+	return (
+		<div className={styles.headerMenu} style={menuHeaderStyle}>
+			<Menu
+				statement={statement}
+				setIsOpen={setIsMenuOpen}
+				isMenuOpen={isMenuOpen}
+				iconColor={headerStyle.color}
+				isHamburger={true}
+				footer={
+					<div className={styles.menuFooter}>
+						<MenuOption
+							label={t('Disconnect')}
+							icon={<DisconnectIcon />}
+							onOptionClick={onLogout}
+							style={{ color: 'white' }}
+						/>
+					</div>
+				}
+			>
+				<MenuOption
+					label={t('Share')}
+					icon={<ShareIcon style={menuIconStyle} />}
+					onOptionClick={onShare}
+				/>
 
-        {isAdmin && (
-          <>
-            <MenuOption
-              label={t('Follow Me')}
-              icon={<FollowMe style={menuIconStyle} />}
-              onOptionClick={onFollowMe}
-            />
-            <MenuOption
-              label={t('Invite with PIN number')}
-              icon={<InvitationIcon style={menuIconStyle} />}
-              onOptionClick={onInvitePanel}
-            />
-            <MenuOption
-              label={currentLabel}
-              icon={<LanguagesIcon style={menuIconStyle} />}
-              onOptionClick={() => {
-                setIsMenuOpen(false);
-                setShowLanguageModal(true);
-              }}
-            />
-            <MenuOption
-              label={t('Settings')}
-              icon={<SettingsIcon style={menuIconStyle} />}
-              onOptionClick={onNavigateToSettings}
-            />
-          </>
-        )}
-      </Menu>
-      
-      {showLanguageModal && (
-        <Modal>
-          <ChangeLanguage
-            sameDirMenu={true}
-            background
-            setShowModal={() => {
-              setShowLanguageModal(false);
-              setIsMenuOpen(false);
-            }}
-          />
-        </Modal>
-      )}
-    </div>
-  );
+				{!isAdmin && (
+					<MenuOption
+						label={currentLabel}
+						icon={<LanguagesIcon style={menuIconStyle} />}
+						onOptionClick={() => {
+							setIsMenuOpen(false);
+							setShowLanguageModal(true);
+						}}
+					/>
+				)}
+
+				{isAdmin && (
+					<>
+						<MenuOption
+							label={t('Follow Me')}
+							icon={<FollowMe style={menuIconStyle} />}
+							onOptionClick={onFollowMe}
+						/>
+						<MenuOption
+							label={t('Invite with PIN number')}
+							icon={<InvitationIcon style={menuIconStyle} />}
+							onOptionClick={onInvitePanel}
+						/>
+						<MenuOption
+							label={currentLabel}
+							icon={<LanguagesIcon style={menuIconStyle} />}
+							onOptionClick={() => {
+								setIsMenuOpen(false);
+								setShowLanguageModal(true);
+							}}
+						/>
+						<MenuOption
+							label={t('Settings')}
+							icon={<SettingsIcon style={menuIconStyle} />}
+							onOptionClick={onNavigateToSettings}
+						/>
+					</>
+				)}
+			</Menu>
+
+			{showLanguageModal && (
+				<Modal>
+					<ChangeLanguage
+						sameDirMenu={true}
+						background
+						setShowModal={() => {
+							setShowLanguageModal(false);
+							setIsMenuOpen(false);
+						}}
+					/>
+				</Modal>
+			)}
+		</div>
+	);
 };
 
 export default HeaderMenu;

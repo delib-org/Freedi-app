@@ -31,11 +31,11 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	// * Redux * //
 	const dispatch = useAppDispatch();
 	const vote = useAppSelector(parentVoteSelector(option.parentId));
-	
+
 	// * Optimistic UI State * //
 	const [isVotePending, setIsVotePending] = useState(false);
 	const [optimisticVoteId, setOptimisticVoteId] = useState(vote?.statementId);
-	
+
 	useEffect(() => {
 		setOptimisticVoteId(vote?.statementId);
 		setIsVotePending(false);
@@ -47,7 +47,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	const baseSelections: number = getSelections(statement, option);
 	const selections = (() => {
 		if (!isVotePending) return baseSelections;
-		
+
 		// If we're switching to this option
 		if (optimisticVoteId === option.statementId && vote?.statementId !== option.statementId) {
 			return baseSelections + 1;
@@ -56,7 +56,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 		if (vote?.statementId === option.statementId && optimisticVoteId !== option.statementId) {
 			return Math.max(0, baseSelections - 1);
 		}
-		
+
 		return baseSelections;
 	})();
 
@@ -68,14 +68,10 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 	const padding = 40;
 	const { shortVersion } = statementTitleToDisplay(option.statement, 30);
 	const barHeight =
-		selections > 0 && totalVotes > 0
-			? Math.round((selections / totalVotes) * 100)
-			: 0;
+		selections > 0 && totalVotes > 0 ? Math.round((selections / totalVotes) * 100) : 0;
 	const handleVotePress = useCallback(async () => {
 		// Optimistic update - immediately update UI
-		const newVoteId = optimisticVoteId === option.statementId
-			? 'none'
-			: option.statementId;
+		const newVoteId = optimisticVoteId === option.statementId ? 'none' : option.statementId;
 
 		setOptimisticVoteId(newVoteId);
 		setIsVotePending(true);
@@ -90,7 +86,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 			setIsVotePending(false);
 		}
 	}, [optimisticVoteId, option, dispatch, creator]);
-	
+
 	const isOptionSelected = optimisticVoteId === option.statementId;
 
 	const containerInset = `${(_optionOrder - order) * barWidth}px`;
@@ -118,9 +114,7 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 			style={containerStyle}
 		>
 			<div className={styles.column} style={{ width: `${barWidth}px` }}>
-				{shouldShowStat && (
-					<div className={styles.percentageText}>{barHeight}%</div>
-				)}
+				{shouldShowStat && <div className={styles.percentageText}>{barHeight}%</div>}
 				<div className={`${styles.bar} ${styles.dropShadow}`} style={barStyle}>
 					<div className={styles.numberOfSelections}>{selections}</div>
 				</div>
@@ -128,29 +122,23 @@ const OptionBarComponent: FC<OptionBarProps> = ({
 			<div className={`${styles.voteButtonContainer} ${styles.dropShadow}`}>
 				<button
 					onClick={handleVotePress}
-					aria-label='Vote button'
+					aria-label="Vote button"
 					style={voteButtonStyle}
 					className={`${styles.voteButton} ${isOptionSelected ? styles.selected : ''} ${isVotePending ? styles.pending : ''}`}
 					disabled={isVotePending}
 				>
-					{isOptionSelected ? (
-						<LikeIcon />
-					) : (
-						<HandIcon style={{ color: option.color }} />
-					)}
+					{isOptionSelected ? <LikeIcon /> : <HandIcon style={{ color: option.color }} />}
 				</button>
 			</div>
 			<button
 				className={styles.infoIcon}
-				aria-label='Info button'
+				aria-label="Info button"
 				onClick={() => {
 					setStatementInfo(option);
 					setShowInfo(true);
 				}}
 			>
-				<InfoIcon
-					style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }}
-				/>
+				<InfoIcon style={{ color: barHeight > 10 ? 'white' : '#6E8AA6' }} />
 			</button>
 			<div className={`${styles.title} ${barWidth < 90 ? styles.isBarSmall : ''}`}>
 				{shortVersion}

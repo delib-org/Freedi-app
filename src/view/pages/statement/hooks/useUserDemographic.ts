@@ -1,8 +1,6 @@
 import { useMemo, useCallback } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
-import {
-	selectEffectiveQuestions,
-} from '@/redux/userDemographic/userDemographicSlice';
+import { selectEffectiveQuestions } from '@/redux/userDemographic/userDemographicSlice';
 import { RootState } from '@/redux/types';
 
 // Use string literal for scope until delib-npm exports the enum value
@@ -15,7 +13,7 @@ export const useUserDemographic = (statementId: string, topParentId?: string) =>
 	// Memoize the selector to prevent creating new selector on each render
 	const questionsSelector = useMemo(
 		() => selectEffectiveQuestions(statementId, effectiveTopParentId),
-		[statementId, effectiveTopParentId]
+		[statementId, effectiveTopParentId],
 	);
 
 	const userDemographicQuestions = useSelector(questionsSelector, shallowEqual);
@@ -28,12 +26,14 @@ export const useUserDemographic = (statementId: string, topParentId?: string) =>
 			// Filter answers that match either:
 			// 1. Group-level answers for this topParentId
 			// 2. Statement-level answers for this statementId
-			return allAnswers.filter(answer =>
-				(answer.topParentId === effectiveTopParentId && answer.scope === DEMOGRAPHIC_SCOPE_GROUP) ||
-				(answer.statementId === statementId && answer.scope !== DEMOGRAPHIC_SCOPE_GROUP)
+			return allAnswers.filter(
+				(answer) =>
+					(answer.topParentId === effectiveTopParentId &&
+						answer.scope === DEMOGRAPHIC_SCOPE_GROUP) ||
+					(answer.statementId === statementId && answer.scope !== DEMOGRAPHIC_SCOPE_GROUP),
 			);
 		},
-		[statementId, effectiveTopParentId]
+		[statementId, effectiveTopParentId],
 	);
 
 	const userDemographic = useSelector(userDemographicSelector, shallowEqual);
@@ -44,17 +44,20 @@ export const useUserDemographic = (statementId: string, topParentId?: string) =>
 		if (!hasQuestions) return false;
 
 		// Check if there are unanswered questions by comparing question IDs
-		const answeredQuestionIds = new Set(userDemographic.map(a => a.userQuestionId));
+		const answeredQuestionIds = new Set(userDemographic.map((a) => a.userQuestionId));
 		const hasUnansweredQuestions = userDemographicQuestions.some(
-			q => !answeredQuestionIds.has(q.userQuestionId)
+			(q) => !answeredQuestionIds.has(q.userQuestionId),
 		);
 
 		return hasUnansweredQuestions;
 	}, [userDemographicQuestions, userDemographic]);
 
-	return useMemo(() => ({
-		userDemographicQuestions,
-		userDemographic,
-		showUserDemographicQuestions
-	}), [userDemographicQuestions, userDemographic, showUserDemographicQuestions]);
+	return useMemo(
+		() => ({
+			userDemographicQuestions,
+			userDemographic,
+			showUserDemographicQuestions,
+		}),
+		[userDemographicQuestions, userDemographic, showUserDemographicQuestions],
+	);
 };

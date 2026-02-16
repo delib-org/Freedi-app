@@ -1,10 +1,7 @@
 import { FC, useRef, useEffect, useState } from 'react';
 import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
 import styles from './EnhancedEvaluation.module.scss';
-import {
-	enhancedEvaluationsThumbs,
-	EnhancedEvaluationThumb,
-} from './EnhancedEvaluationModel';
+import { enhancedEvaluationsThumbs, EnhancedEvaluationThumb } from './EnhancedEvaluationModel';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
@@ -23,7 +20,10 @@ interface EnhancedEvaluationProps {
 
 const indicatorWidth = 32; // Width of the bar in pixels, used for calculations
 
-const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEvaluation = true }) => {
+const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
+	statement,
+	enableEvaluation = true,
+}) => {
 	const { t, learning, dir } = useUserConfig();
 	const [barWidth, setBarWidth] = useState<number>(0);
 
@@ -33,9 +33,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEval
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators || 0;
 
-	const evaluationScore = useAppSelector(
-		evaluationSelector(statement.statementId)
-	);
+	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 	const { consensus: _consensus } = statement;
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
@@ -43,9 +41,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEval
 		numberOfEvaluators: 0,
 	};
 	const avg =
-		numberOfEvaluators !== 0
-			? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100
-			: 0;
+		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
 	const consensus = Math.round(_consensus * 100) / 100;
 
 	useEffect(() => {
@@ -56,8 +52,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEval
 	}, []);
 
 	function barPosition(width: number, avg: number): number {
-		const normalizedPosition =
-			((avg + 1) / 2) * ((width - indicatorWidth) / width) * width;
+		const normalizedPosition = ((avg + 1) / 2) * ((width - indicatorWidth) / width) * width;
 
 		if (dir === 'ltr') {
 			return width - indicatorWidth - normalizedPosition;
@@ -67,9 +62,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEval
 	}
 
 	function barColor(avg: number): string {
-		const colors = enhancedEvaluationsThumbs.map(
-			(thumb) => thumb.colorSelected
-		);
+		const colors = enhancedEvaluationsThumbs.map((thumb) => thumb.colorSelected);
 		const index = Math.round((1 - (avg + 1) / 2) * (colors.length - 1));
 
 		return colors[index] || colors[0];
@@ -90,14 +83,8 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEval
 					))}
 				</div>
 				{showEvaluation && (
-					<Tooltip
-						content={`${t('Average score')}: ${avg}`}
-						position='top'
-					>
-						<div
-							className={styles['evaluation-bar']}
-							ref={evaluationBarRef}
-						>
+					<Tooltip content={`${t('Average score')}: ${avg}`} position="top">
+						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
 							<div
 								className={styles['evaluation-bar__indicator']}
 								style={{
@@ -121,13 +108,10 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({ statement, enableEval
 			<div
 				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
 			>
-				{showEvaluation &&
-				totalEvaluators &&
-				numberOfEvaluators &&
-				numberOfEvaluators > 0 ? (
+				{showEvaluation && totalEvaluators && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<Tooltip
 						content={`${t('Number of evaluators for this option / all evaluators')}. ${t('Consensus')}: ${consensus}`}
-						position='bottom'
+						position="bottom"
 					>
 						<span className={styles['total-evaluators']}>
 							{' '}
@@ -172,13 +156,12 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 		// Immediate optimistic update
 		setOptimisticScore(evaluationThumb.evaluation);
 		setIsPending(true);
-		
+
 		// Database update
-		setEvaluationToDB(statement, creator, evaluationThumb.evaluation)
-			.finally(() => {
-				setIsPending(false);
-			});
-			
+		setEvaluationToDB(statement, creator, evaluationThumb.evaluation).finally(() => {
+			setIsPending(false);
+		});
+
 		decreaseLearning({
 			evaluation: true,
 		});
@@ -193,9 +176,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 		<button
 			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
 			style={{
-				backgroundColor: isThumbActive
-					? evaluationThumb.colorSelected
-					: evaluationThumb.color,
+				backgroundColor: isThumbActive ? evaluationThumb.colorSelected : evaluationThumb.color,
 			}}
 			onClick={enableEvaluation ? handleSetEvaluation : undefined}
 			disabled={isPending || !enableEvaluation}
@@ -208,10 +189,7 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 
 	if (!enableEvaluation) {
 		return (
-			<Tooltip
-				content={t('Voting is currently disabled by the moderator')}
-				position='top'
-			>
+			<Tooltip content={t('Voting is currently disabled by the moderator')} position="top">
 				{button}
 			</Tooltip>
 		);

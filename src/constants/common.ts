@@ -165,7 +165,8 @@ export const PWA = {
  */
 export const PWA_MESSAGES = {
 	TITLE: 'Install FreeDi',
-	DESCRIPTION: 'Install FreeDi on your device for a better experience. Get quick access and work offline!',
+	DESCRIPTION:
+		'Install FreeDi on your device for a better experience. Get quick access and work offline!',
 	INSTALL_BUTTON: 'Install',
 	CANCEL_BUTTON: 'Not now',
 	SUCCESS: 'FreeDi installed successfully!',

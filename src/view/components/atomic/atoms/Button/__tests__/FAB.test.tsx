@@ -21,7 +21,11 @@ describe('FAB', () => {
 		});
 
 		it('should render children in fab__inner wrapper', () => {
-			const { container } = render(<FAB ariaLabel="Add item"><span data-testid="icon">+</span></FAB>);
+			const { container } = render(
+				<FAB ariaLabel="Add item">
+					<span data-testid="icon">+</span>
+				</FAB>,
+			);
 
 			const inner = container.querySelector('.fab__inner');
 			expect(inner).toBeInTheDocument();
@@ -37,43 +41,71 @@ describe('FAB', () => {
 
 	describe('modifiers', () => {
 		it('should apply blink class when blink is true', () => {
-			render(<FAB ariaLabel="Add item" blink>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" blink>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).toHaveClass('fab--blink');
 		});
 
 		it('should not apply blink class when blink is false', () => {
-			render(<FAB ariaLabel="Add item" blink={false}>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" blink={false}>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).not.toHaveClass('fab--blink');
 		});
 
 		it('should apply fixed class when fixed is true', () => {
-			render(<FAB ariaLabel="Add item" fixed>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" fixed>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).toHaveClass('fab--fixed');
 		});
 
 		it('should not apply fixed class when fixed is false', () => {
-			render(<FAB ariaLabel="Add item" fixed={false}>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" fixed={false}>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).not.toHaveClass('fab--fixed');
 		});
 
 		it('should apply up class when up is true', () => {
-			render(<FAB ariaLabel="Add item" up>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" up>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).toHaveClass('fab--up');
 		});
 
 		it('should not apply up class when up is false', () => {
-			render(<FAB ariaLabel="Add item" up={false}>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" up={false}>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).not.toHaveClass('fab--up');
 		});
 
 		it('should apply multiple modifiers', () => {
-			render(<FAB ariaLabel="Add item" blink fixed up>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" blink fixed up>
+					+
+				</FAB>,
+			);
 
 			const button = screen.getByRole('button');
 			expect(button).toHaveClass('fab--blink');
@@ -85,7 +117,11 @@ describe('FAB', () => {
 	describe('interactions', () => {
 		it('should call onClick when clicked', () => {
 			const handleClick = jest.fn();
-			render(<FAB ariaLabel="Add item" onClick={handleClick}>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" onClick={handleClick}>
+					+
+				</FAB>,
+			);
 
 			fireEvent.click(screen.getByRole('button'));
 
@@ -94,7 +130,11 @@ describe('FAB', () => {
 
 		it('should pass event to onClick handler', () => {
 			const handleClick = jest.fn();
-			render(<FAB ariaLabel="Add item" onClick={handleClick}>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" onClick={handleClick}>
+					+
+				</FAB>,
+			);
 
 			fireEvent.click(screen.getByRole('button'));
 
@@ -130,7 +170,11 @@ describe('FAB', () => {
 		});
 
 		it('should apply custom tabIndex', () => {
-			render(<FAB ariaLabel="Add item" tabIndex={-1}>+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" tabIndex={-1}>
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).toHaveAttribute('tabindex', '-1');
 		});
@@ -138,13 +182,21 @@ describe('FAB', () => {
 
 	describe('additional props', () => {
 		it('should apply custom className', () => {
-			render(<FAB ariaLabel="Add item" className="custom-fab">+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" className="custom-fab">
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).toHaveClass('custom-fab');
 		});
 
 		it('should preserve fab class with custom className', () => {
-			render(<FAB ariaLabel="Add item" className="custom-fab">+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" className="custom-fab">
+					+
+				</FAB>,
+			);
 
 			const button = screen.getByRole('button');
 			expect(button).toHaveClass('fab');
@@ -152,7 +204,11 @@ describe('FAB', () => {
 		});
 
 		it('should apply id attribute', () => {
-			render(<FAB ariaLabel="Add item" id="my-fab">+</FAB>);
+			render(
+				<FAB ariaLabel="Add item" id="my-fab">
+					+
+				</FAB>,
+			);
 
 			expect(screen.getByRole('button')).toHaveAttribute('id', 'my-fab');
 		});
@@ -168,8 +224,10 @@ describe('FAB', () => {
 		it('should render icon components as children', () => {
 			render(
 				<FAB ariaLabel="Add item">
-					<svg data-testid="icon-svg"><path /></svg>
-				</FAB>
+					<svg data-testid="icon-svg">
+						<path />
+					</svg>
+				</FAB>,
 			);
 
 			expect(screen.getByTestId('icon-svg')).toBeInTheDocument();
@@ -181,7 +239,7 @@ describe('FAB', () => {
 					<span className="icon">
 						<img src="icon.svg" alt="icon" />
 					</span>
-				</FAB>
+				</FAB>,
 			);
 
 			expect(screen.getByRole('img')).toBeInTheDocument();

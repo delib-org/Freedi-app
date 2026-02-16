@@ -56,7 +56,7 @@ export function createParagraph(
 	type: ParagraphType,
 	content: string,
 	order: number,
-	listType?: 'ul' | 'ol'
+	listType?: 'ul' | 'ol',
 ): Paragraph {
 	const paragraph: Paragraph = {
 		paragraphId: generateParagraphId(),
@@ -92,7 +92,7 @@ export function sortParagraphs(paragraphs: Paragraph[]): Paragraph[] {
 export function reorderParagraphs(
 	paragraphs: Paragraph[],
 	fromIndex: number,
-	toIndex: number
+	toIndex: number,
 ): Paragraph[] {
 	const sorted = sortParagraphs(paragraphs);
 	const result = [...sorted];
@@ -114,7 +114,7 @@ export function reorderParagraphs(
  */
 export function findParagraphById(
 	paragraphs: Paragraph[],
-	paragraphId: string
+	paragraphId: string,
 ): Paragraph | undefined {
 	return paragraphs.find((p) => p.paragraphId === paragraphId);
 }
@@ -129,11 +129,9 @@ export function findParagraphById(
 export function updateParagraph(
 	paragraphs: Paragraph[],
 	paragraphId: string,
-	updates: Partial<Omit<Paragraph, 'paragraphId'>>
+	updates: Partial<Omit<Paragraph, 'paragraphId'>>,
 ): Paragraph[] {
-	return paragraphs.map((p) =>
-		p.paragraphId === paragraphId ? { ...p, ...updates } : p
-	);
+	return paragraphs.map((p) => (p.paragraphId === paragraphId ? { ...p, ...updates } : p));
 }
 
 /**
@@ -142,10 +140,7 @@ export function updateParagraph(
  * @param paragraphId - ID of paragraph to delete
  * @returns New array without the deleted paragraph, with orders updated
  */
-export function deleteParagraph(
-	paragraphs: Paragraph[],
-	paragraphId: string
-): Paragraph[] {
+export function deleteParagraph(paragraphs: Paragraph[], paragraphId: string): Paragraph[] {
 	const filtered = paragraphs.filter((p) => p.paragraphId !== paragraphId);
 
 	// Re-order remaining paragraphs
@@ -165,7 +160,7 @@ export function deleteParagraph(
 export function insertParagraph(
 	paragraphs: Paragraph[],
 	newParagraph: Omit<Paragraph, 'order'>,
-	atIndex?: number
+	atIndex?: number,
 ): Paragraph[] {
 	const sorted = sortParagraphs(paragraphs);
 	const insertIndex = atIndex ?? sorted.length;
@@ -210,10 +205,7 @@ export function extractTitleAndParagraphs(allParagraphs: Paragraph[]): {
  * @param paragraphs - Body paragraphs array
  * @returns Full paragraphs array with title as first paragraph
  */
-export function combineTitleAndParagraphs(
-	title: string,
-	paragraphs: Paragraph[]
-): Paragraph[] {
+export function combineTitleAndParagraphs(title: string, paragraphs: Paragraph[]): Paragraph[] {
 	const titleParagraph: Paragraph = {
 		paragraphId: generateParagraphId(),
 		type: ParagraphType.paragraph,

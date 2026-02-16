@@ -18,7 +18,7 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 	currentVersion,
 	statementId,
 	onClose,
-	onRevert
+	onRevert,
 }) => {
 	const { t } = useTranslation();
 	const [selectedVersion, setSelectedVersion] = useState<number | null>(null);
@@ -44,7 +44,7 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 			month: 'short',
 			day: 'numeric',
 			hour: '2-digit',
-			minute: '2-digit'
+			minute: '2-digit',
 		});
 	};
 
@@ -56,11 +56,7 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 			<div className={styles.versionHistoryContainer}>
 				<div className={styles.modalHeader}>
 					<h2 className={styles.modalTitle}>{t('Version History')}</h2>
-					<button
-						className={styles.closeButton}
-						onClick={onClose}
-						aria-label={t('Close')}
-					>
+					<button className={styles.closeButton} onClick={onClose} aria-label={t('Close')}>
 						&times;
 					</button>
 				</div>
@@ -78,25 +74,17 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 								<span className={styles.versionNumber}>
 									{t('Version')} {version.version}
 									{version.version === currentVersion && (
-										<span className={styles.currentBadge}>
-											{t('Current')}
-										</span>
+										<span className={styles.currentBadge}>{t('Current')}</span>
 									)}
 								</span>
-								<span className={styles.versionDate}>
-									{formatDate(version.timestamp)}
-								</span>
+								<span className={styles.versionDate}>{formatDate(version.timestamp)}</span>
 							</div>
 							<div className={styles.versionMeta}>
 								<span className={`${styles.changeType} ${styles[version.changeType]}`}>
-									{version.changeType === 'ai-improved'
-										? t('AI improved')
-										: t('Manual')}
+									{version.changeType === 'ai-improved' ? t('AI improved') : t('Manual')}
 								</span>
 								{version.improvementSummary && (
-									<span className={styles.versionSummary}>
-										{version.improvementSummary}
-									</span>
+									<span className={styles.versionSummary}>{version.improvementSummary}</span>
 								)}
 							</div>
 							<p className={styles.versionText}>
@@ -121,15 +109,9 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 					<button
 						className={styles.revertButton}
 						onClick={handleRevert}
-						disabled={
-							selectedVersion === null ||
-							selectedVersion === currentVersion ||
-							isReverting
-						}
+						disabled={selectedVersion === null || selectedVersion === currentVersion || isReverting}
 					>
-						{isReverting
-							? t('Reverting...')
-							: t('Revert to this version')}
+						{isReverting ? t('Reverting...') : t('Revert to this version')}
 					</button>
 				</div>
 			</div>

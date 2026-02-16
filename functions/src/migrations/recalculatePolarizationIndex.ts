@@ -61,7 +61,7 @@ async function getAncestorStatementIds(statementId: string): Promise<string[]> {
 async function fetchUserDemographicData(
 	userId: string,
 	topParentId: string,
-	ancestorIds: string[]
+	ancestorIds: string[],
 ): Promise<UserDemographicQuestion[]> {
 	const answerMap = new Map<string, UserDemographicQuestion>();
 
@@ -110,7 +110,7 @@ async function fetchUserDemographicData(
  */
 async function getDemographicQuestions(
 	topParentId: string,
-	ancestorIds: string[]
+	ancestorIds: string[],
 ): Promise<UserDemographicQuestion[]> {
 	const questionsMap = new Map<string, UserDemographicQuestion>();
 
@@ -173,7 +173,7 @@ function buildDemographicSummary(demographicData: UserDemographicQuestion[]) {
  * Recalculate polarization index for a single statement
  */
 export async function recalculatePolarizationIndexForStatement(
-	statementId: string
+	statementId: string,
 ): Promise<{ success: boolean; message: string }> {
 	try {
 		logger.info(`Recalculating polarization index for statement: ${statementId}`);
@@ -205,7 +205,8 @@ export async function recalculatePolarizationIndexForStatement(
 		}
 
 		// Get excluded demographic IDs for this statement
-		const excludedDemographicIds = statement.statementSettings?.excludedInheritedDemographicIds || [];
+		const excludedDemographicIds =
+			statement.statementSettings?.excludedInheritedDemographicIds || [];
 
 		// Get all evaluations for this statement
 		const evaluationsSnapshot = await db
@@ -236,7 +237,7 @@ export async function recalculatePolarizationIndexForStatement(
 			// Filter out excluded demographics
 			if (excludedDemographicIds.length > 0) {
 				demographicData = demographicData.filter(
-					(q) => !q.userQuestionId || !excludedDemographicIds.includes(q.userQuestionId)
+					(q) => !q.userQuestionId || !excludedDemographicIds.includes(q.userQuestionId),
 				);
 			}
 
@@ -304,25 +305,28 @@ export async function recalculatePolarizationIndexForStatement(
 		};
 
 		// Save polarization index
-		await db.collection(Collections.polarizationIndex).doc(statementId).set(polarizationIndex, { merge: true });
+		await db
+			.collection(Collections.polarizationIndex)
+			.doc(statementId)
+			.set(polarizationIndex, { merge: true });
 
 		logger.info(`Successfully recalculated polarization index for ${statementId}`);
-		
-return {
+
+		return {
 			success: true,
 			message: `Recalculated with ${usersDemographicEvaluations.length} users, ${axes.length} axes`,
 		};
 	} catch (error) {
 		logger.error(`Error recalculating polarization index for ${statementId}:`, error);
-		
-return { success: false, message: `Error: ${error}` };
+
+		return { success: false, message: `Error: ${error}` };
 	}
 }
 
 function createAxes(
 	usersDemographicEvaluations: UserDemographicEvaluation[],
 	userDemographicData: UserDemographicQuestion[],
-	statementId: string
+	statementId: string,
 ): AxesItem[] {
 	const axesSet = new Set<string>();
 	usersDemographicEvaluations.forEach((evaluation) => {
@@ -332,7 +336,9 @@ function createAxes(
 	});
 
 	const axes: AxesItem[] = Array.from(axesSet).map((axId) => {
-		const axisDemographic = userDemographicData.find((demographic) => demographic.userQuestionId === axId);
+		const axisDemographic = userDemographicData.find(
+			(demographic) => demographic.userQuestionId === axId,
+		);
 
 		return {
 			axId,
@@ -347,8 +353,8 @@ function createAxes(
 									(evl) =>
 										evaluation.statementId === statementId &&
 										evl.userQuestionId === axId &&
-										evl.answer === option.option
-								).length > 0
+										evl.answer === option.option,
+								).length > 0,
 						)
 						.map((evaluation) => evaluation.evaluation);
 
@@ -381,7 +387,7 @@ function createAxes(
  * Recalculate polarization index for all statements under a parent
  */
 export async function recalculatePolarizationIndexForParent(
-	parentId: string
+	parentId: string,
 ): Promise<{ success: boolean; processed: number; errors: number }> {
 	try {
 		logger.info(`Recalculating polarization index for all statements under parent: ${parentId}`);
@@ -406,12 +412,12 @@ export async function recalculatePolarizationIndexForParent(
 		}
 
 		logger.info(`Completed: processed ${processed}, errors ${errors}`);
-		
-return { success: true, processed, errors };
+
+		return { success: true, processed, errors };
 	} catch (error) {
 		logger.error('Error in recalculatePolarizationIndexForParent:', error);
-		
-return { success: false, processed: 0, errors: 1 };
+
+		return { success: false, processed: 0, errors: 1 };
 	}
 }
 
@@ -419,7 +425,7 @@ return { success: false, processed: 0, errors: 1 };
  * Recalculate polarization index for all statements under a top parent (entire group)
  */
 export async function recalculatePolarizationIndexForGroup(
-	topParentId: string
+	topParentId: string,
 ): Promise<{ success: boolean; processed: number; errors: number }> {
 	try {
 		logger.info(`Recalculating polarization index for all statements in group: ${topParentId}`);
@@ -447,11 +453,11 @@ export async function recalculatePolarizationIndexForGroup(
 		}
 
 		logger.info(`Completed group recalculation: processed ${processed}, errors/skipped ${errors}`);
-		
-return { success: true, processed, errors };
+
+		return { success: true, processed, errors };
 	} catch (error) {
 		logger.error('Error in recalculatePolarizationIndexForGroup:', error);
-		
-return { success: false, processed: 0, errors: 1 };
+
+		return { success: false, processed: 0, errors: 1 };
 	}
 }

@@ -1,5 +1,11 @@
 import { db } from '../index';
-import { Collections, StatementType, QuestionType, evaluationType, EvaluationUI } from '@freedi/shared-types';
+import {
+	Collections,
+	StatementType,
+	QuestionType,
+	evaluationType,
+	EvaluationUI,
+} from '@freedi/shared-types';
 import { logger } from 'firebase-functions/v1';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 
@@ -30,7 +36,8 @@ export async function migrateBackfillEvaluationType(): Promise<{
 
 		while (true) {
 			// Query for Mass Consensus questions
-			let query = db.collection(Collections.statements)
+			let query = db
+				.collection(Collections.statements)
 				.where('statementType', '==', StatementType.question)
 				.where('questionSettings.questionType', '==', QuestionType.massConsensus)
 				.orderBy('__name__')
@@ -43,7 +50,9 @@ export async function migrateBackfillEvaluationType(): Promise<{
 			const snapshot = await query.get();
 
 			if (snapshot.empty) {
-				logger.info(`Migration complete. Processed: ${totalProcessed}, Updated: ${totalUpdated}, Skipped: ${totalSkipped}`);
+				logger.info(
+					`Migration complete. Processed: ${totalProcessed}, Updated: ${totalUpdated}, Skipped: ${totalSkipped}`,
+				);
 				break;
 			}
 
@@ -80,13 +89,17 @@ export async function migrateBackfillEvaluationType(): Promise<{
 				batchCount++;
 				totalUpdated++;
 
-				logger.info(`Updating question ${doc.id}: evaluationUI=${evalUI} → evaluationType=${evalType}`);
+				logger.info(
+					`Updating question ${doc.id}: evaluationUI=${evalUI} → evaluationType=${evalType}`,
+				);
 			}
 
 			// Commit the batch if there are updates
 			if (batchCount > 0) {
 				await batch.commit();
-				logger.info(`Batch updated: ${batchCount} documents. Total updated so far: ${totalUpdated}`);
+				logger.info(
+					`Batch updated: ${batchCount} documents. Total updated so far: ${totalUpdated}`,
+				);
 			}
 
 			// Get the last document for pagination
@@ -96,7 +109,7 @@ export async function migrateBackfillEvaluationType(): Promise<{
 		logger.info('Migration completed successfully', {
 			totalProcessed,
 			totalUpdated,
-			totalSkipped
+			totalSkipped,
 		});
 
 		return { totalProcessed, totalUpdated, totalSkipped };
@@ -117,7 +130,8 @@ export async function getEvaluationTypeStats(): Promise<{
 }> {
 	try {
 		// Count total MC questions
-		const totalSnapshot = await db.collection(Collections.statements)
+		const totalSnapshot = await db
+			.collection(Collections.statements)
 			.where('statementType', '==', StatementType.question)
 			.where('questionSettings.questionType', '==', QuestionType.massConsensus)
 			.count()
@@ -130,7 +144,8 @@ export async function getEvaluationTypeStats(): Promise<{
 		let lastDoc: DocumentSnapshot | undefined;
 
 		while (true) {
-			let query = db.collection(Collections.statements)
+			let query = db
+				.collection(Collections.statements)
 				.where('statementType', '==', StatementType.question)
 				.where('questionSettings.questionType', '==', QuestionType.massConsensus)
 				.orderBy('__name__')
@@ -155,15 +170,14 @@ export async function getEvaluationTypeStats(): Promise<{
 		}
 
 		const withoutEvaluationType = totalMCQuestions - withEvaluationType;
-		const coveragePercent = totalMCQuestions > 0
-			? Math.round((withEvaluationType / totalMCQuestions) * 100)
-			: 100;
+		const coveragePercent =
+			totalMCQuestions > 0 ? Math.round((withEvaluationType / totalMCQuestions) * 100) : 100;
 
 		return {
 			totalMCQuestions,
 			withEvaluationType,
 			withoutEvaluationType,
-			coveragePercent
+			coveragePercent,
 		};
 	} catch (error) {
 		logger.error('Error getting evaluationType stats:', error);

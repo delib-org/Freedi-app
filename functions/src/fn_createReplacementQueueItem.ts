@@ -13,8 +13,8 @@ import {
  */
 function stripHtml(html: string): string {
 	if (!html) return '';
-	
-return html
+
+	return html
 		.replace(/<[^>]*>/g, '') // Remove HTML tags
 		.replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
 		.replace(/&amp;/g, '&') // Replace &amp; with &
@@ -48,8 +48,8 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 				logger.warn('[fn_createReplacementQueueItem] Missing before/after data', {
 					suggestionId: event.params.suggestionId,
 				});
-				
-return null;
+
+				return null;
 			}
 
 			// Only process suggestions (not official paragraphs)
@@ -71,8 +71,8 @@ return null;
 					suggestionId: event.params.suggestionId,
 					documentId: after.topParentId,
 				});
-				
-return null;
+
+				return null;
 			}
 
 			const document = documentSnap.data() as Statement;
@@ -102,8 +102,8 @@ return null;
 						suggestionId: event.params.suggestionId,
 						paragraphId: after.parentId,
 					});
-					
-return null;
+
+					return null;
 				}
 
 				const paragraph = paragraphSnap.data() as Statement;
@@ -173,5 +173,5 @@ return null;
 
 			return null;
 		}
-	}
+	},
 );

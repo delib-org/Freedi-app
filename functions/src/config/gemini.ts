@@ -21,7 +21,7 @@ export function getGeminiModel() {
 	const genAI = new GoogleGenerativeAI(apiKey);
 
 	return genAI.getGenerativeModel({
-		model: GEMINI_MODEL
+		model: GEMINI_MODEL,
 	});
 }
 
@@ -36,7 +36,7 @@ export function getEmbeddingModel() {
 	const genAI = new GoogleGenerativeAI(apiKey);
 
 	return genAI.getGenerativeModel({
-		model: EMBEDDING_MODEL
+		model: EMBEDDING_MODEL,
 	});
 }
 
@@ -46,6 +46,6 @@ export function getGenAI() {
 	if (!apiKey) {
 		throw new Error('Gemini API key not configured. Please set GEMINI_API_KEY in .env');
 	}
-	
-return new GoogleGenerativeAI(apiKey);
+
+	return new GoogleGenerativeAI(apiKey);
 }

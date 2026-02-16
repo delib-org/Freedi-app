@@ -1,8 +1,5 @@
 import { Statement } from '@freedi/shared-types';
-import {
-	setSelectionsToOptions,
-	sortOptionsIndex,
-} from '../../statementVoteCont';
+import { setSelectionsToOptions, sortOptionsIndex } from '../../statementVoteCont';
 
 export function isVerticalOptionBar(width: number, optionsCount: number) {
 	if (width < 350 && optionsCount >= 4) {
@@ -27,10 +24,7 @@ export const getSortedVotingOptions = ({
 	subStatements,
 	sort,
 }: GetVotingOptionsParams): Statement[] => {
-	const optionsWithSelections = setSelectionsToOptions(
-		statement,
-		subStatements
-	);
+	const optionsWithSelections = setSelectionsToOptions(statement, subStatements);
 
 	return sortOptionsIndex(optionsWithSelections, sort);
 };

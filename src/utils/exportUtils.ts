@@ -62,13 +62,11 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 	},
 	consensus: {
 		type: 'number',
-		description:
-			'Consensus score ranging from -1 (full disagreement) to 1 (full agreement)',
+		description: 'Consensus score ranging from -1 (full disagreement) to 1 (full agreement)',
 	},
 	consensusValid: {
 		type: 'number',
-		description:
-			'Combined consensus and validity score weighted by participation',
+		description: 'Combined consensus and validity score weighted by participation',
 	},
 	PopperHebbianScore: {
 		type: 'object',
@@ -105,7 +103,8 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 	},
 	results: {
 		type: 'AnonymizedSimpleStatement[]',
-		description: 'Array of result statements (top performers in evaluation, anonymized - no creator info)',
+		description:
+			'Array of result statements (top performers in evaluation, anonymized - no creator info)',
 	},
 	totalEvaluators: {
 		type: 'number',
@@ -151,18 +150,14 @@ export const PROPERTY_DOCUMENTATION: PropertyDocumentation = {
 	},
 	anchored: {
 		type: 'boolean',
-		description:
-			'Whether statement is anchored for guaranteed inclusion in evaluations',
+		description: 'Whether statement is anchored for guaranteed inclusion in evaluations',
 	},
 };
 
 /**
  * Create JSON export with schema documentation (NOT flattened - keeps nested structure)
  */
-export function createJSONExport(
-	mainStatement: Statement,
-	subStatements: Statement[]
-): string {
+export function createJSONExport(mainStatement: Statement, subStatements: Statement[]): string {
 	const exportData: ExportData = {
 		_schema: PROPERTY_DOCUMENTATION,
 		exportMetadata: {
@@ -183,7 +178,7 @@ export function createJSONExport(
  */
 export function flattenObject(
 	obj: Record<string, unknown>,
-	prefix = ''
+	prefix = '',
 ): Record<string, string | number | boolean | null> {
 	const result: Record<string, string | number | boolean | null> = {};
 
@@ -195,10 +190,7 @@ export function flattenObject(
 		} else if (Array.isArray(value)) {
 			result[newKey] = JSON.stringify(value);
 		} else if (typeof value === 'object') {
-			Object.assign(
-				result,
-				flattenObject(value as Record<string, unknown>, newKey)
-			);
+			Object.assign(result, flattenObject(value as Record<string, unknown>, newKey));
 		} else {
 			result[newKey] = value as string | number | boolean;
 		}
@@ -217,11 +209,7 @@ function escapeCSVValue(value: string | number | boolean | null): string {
 
 	const stringValue = String(value);
 
-	if (
-		stringValue.includes(',') ||
-		stringValue.includes('"') ||
-		stringValue.includes('\n')
-	) {
+	if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
 		return `"${stringValue.replace(/"/g, '""')}"`;
 	}
 
@@ -246,7 +234,7 @@ function generateCSVCommentHeader(): string {
 
 	lines.push('#');
 	lines.push(
-		'# NOTE: Nested objects are flattened with dot notation (e.g., evaluation.sumEvaluations)'
+		'# NOTE: Nested objects are flattened with dot notation (e.g., evaluation.sumEvaluations)',
 	);
 	lines.push('# Arrays are serialized as JSON strings');
 	lines.push('#');
@@ -257,16 +245,11 @@ function generateCSVCommentHeader(): string {
 /**
  * Create CSV export with comment header documentation
  */
-export function createCSVExport(
-	mainStatement: Statement,
-	subStatements: Statement[]
-): string {
+export function createCSVExport(mainStatement: Statement, subStatements: Statement[]): string {
 	try {
 		const allStatements = [mainStatement, ...subStatements];
 		const flattenedData = allStatements.map((stmt) =>
-			flattenObject(
-				extractExportableData(stmt) as unknown as Record<string, unknown>
-			)
+			flattenObject(extractExportableData(stmt) as unknown as Record<string, unknown>),
 		);
 
 		// Get all unique keys
@@ -280,7 +263,7 @@ export function createCSVExport(
 		const commentHeader = generateCSVCommentHeader();
 		const headerRow = headers.map(escapeCSVValue).join(',');
 		const dataRows = flattenedData.map((row) =>
-			headers.map((header) => escapeCSVValue(row[header])).join(',')
+			headers.map((header) => escapeCSVValue(row[header])).join(','),
 		);
 
 		return [commentHeader, headerRow, ...dataRows].join('\n');
@@ -296,11 +279,7 @@ export function createCSVExport(
 /**
  * Trigger file download in browser
  */
-export function downloadFile(
-	content: string,
-	filename: string,
-	mimeType: string
-): void {
+export function downloadFile(content: string, filename: string, mimeType: string): void {
 	const blob = new Blob([content], { type: mimeType });
 	const url = URL.createObjectURL(blob);
 
@@ -319,28 +298,18 @@ export function downloadFile(
 export async function exportStatementData(
 	mainStatement: Statement,
 	subStatements: Statement[],
-	format: ExportFormat
+	format: ExportFormat,
 ): Promise<void> {
 	try {
 		const timestamp = new Date().toISOString().split('T')[0];
-		const safeTitle = mainStatement.statement
-			.slice(0, 30)
-			.replace(/[^a-zA-Z0-9]/g, '_');
+		const safeTitle = mainStatement.statement.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
 
 		if (format === 'json') {
 			const content = createJSONExport(mainStatement, subStatements);
-			downloadFile(
-				content,
-				`freedi_export_${safeTitle}_${timestamp}.json`,
-				'application/json'
-			);
+			downloadFile(content, `freedi_export_${safeTitle}_${timestamp}.json`, 'application/json');
 		} else {
 			const content = createCSVExport(mainStatement, subStatements);
-			downloadFile(
-				content,
-				`freedi_export_${safeTitle}_${timestamp}.csv`,
-				'text/csv'
-			);
+			downloadFile(content, `freedi_export_${safeTitle}_${timestamp}.csv`, 'text/csv');
 		}
 	} catch (error) {
 		logError(error, {

@@ -7,7 +7,7 @@ import { logError } from '@/utils/errorHandling';
  */
 export function useOnlineStatus() {
 	const [isOnline, setIsOnline] = useState<boolean>(
-		typeof navigator !== 'undefined' ? navigator.onLine : true
+		typeof navigator !== 'undefined' ? navigator.onLine : true,
 	);
 	const [wasOffline, setWasOffline] = useState<boolean>(false);
 
@@ -25,7 +25,7 @@ export function useOnlineStatus() {
 				}, 5000);
 			} catch (error) {
 				logError(error, {
-					operation: 'useOnlineStatus.handleOnline'
+					operation: 'useOnlineStatus.handleOnline',
 				});
 			}
 		};
@@ -37,7 +37,7 @@ export function useOnlineStatus() {
 				setIsOnline(false);
 			} catch (error) {
 				logError(error, {
-					operation: 'useOnlineStatus.handleOffline'
+					operation: 'useOnlineStatus.handleOffline',
 				});
 			}
 		};

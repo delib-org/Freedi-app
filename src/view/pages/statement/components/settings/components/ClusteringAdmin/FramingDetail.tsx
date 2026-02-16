@@ -12,27 +12,22 @@ interface FramingDetailProps {
 	onRefresh: () => void;
 }
 
-const FramingDetail: FC<FramingDetailProps> = ({
-	framing,
-	aggregations,
-	isLoading,
-	onRefresh,
-}) => {
+const FramingDetail: FC<FramingDetailProps> = ({ framing, aggregations, isLoading, onRefresh }) => {
 	const { t } = useTranslation();
 
 	// Calculate summary stats
 	const totalUniqueEvaluators = aggregations.reduce(
 		(max, agg) => Math.max(max, agg.uniqueEvaluatorCount),
-		0
+		0,
 	);
 
 	const averageConsensus =
 		aggregations.length > 0
 			? aggregations.reduce((sum, agg) => sum + agg.averageClusterConsensus, 0) /
-			  aggregations.length
+				aggregations.length
 			: 0;
 
-	const hasStaleData = aggregations.some(agg => agg.isStale);
+	const hasStaleData = aggregations.some((agg) => agg.isStale);
 
 	return (
 		<div className={styles.framingDetail}>
@@ -64,9 +59,7 @@ const FramingDetail: FC<FramingDetailProps> = ({
 					<span className={styles.statLabel}>{t('Unique Evaluators')}</span>
 				</div>
 				<div className={styles.stat}>
-					<span className={styles.statValue}>
-						{averageConsensus.toFixed(1)}%
-					</span>
+					<span className={styles.statValue}>{averageConsensus.toFixed(1)}%</span>
 					<span className={styles.statLabel}>{t('Avg Consensus')}</span>
 				</div>
 				{hasStaleData && (
@@ -96,11 +89,8 @@ const FramingDetail: FC<FramingDetailProps> = ({
 						<p>{t('No cluster data available yet')}</p>
 					</div>
 				) : (
-					aggregations.map(aggregation => (
-						<ClusterCard
-							key={aggregation.clusterId}
-							aggregation={aggregation}
-						/>
+					aggregations.map((aggregation) => (
+						<ClusterCard key={aggregation.clusterId} aggregation={aggregation} />
 					))
 				)}
 			</div>

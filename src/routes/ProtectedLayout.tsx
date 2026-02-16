@@ -25,8 +25,7 @@ export default function ProtectedLayout() {
 			getStatementFromDB(statementId).then((fetchedStatement) => {
 				if (fetchedStatement) {
 					dispatch(setStatement(fetchedStatement));
-				}
-				else navigate("/404")
+				} else navigate('/404');
 			});
 		}
 	}, [statementId, statement, dispatch, navigate, isCheckingAccess]);
@@ -34,7 +33,7 @@ export default function ProtectedLayout() {
 	useEffect(() => {
 		// Don't redirect to 401 if we're still checking access
 		if (!isAuthorized && !loading && !error && !isWaitingForApproval && !isCheckingAccess) {
-			navigate("/401");
+			navigate('/401');
 		}
 	}, [isAuthorized, loading, error, isWaitingForApproval, isCheckingAccess, navigate]);
 

@@ -20,11 +20,7 @@ const Page404 = () => {
 	};
 
 	return (
-		<main
-			className={styles.page404}
-			role="main"
-			aria-labelledby="error-title"
-		>
+		<main className={styles.page404} role="main" aria-labelledby="error-title">
 			{/* Background Clouds */}
 			<div className={styles.page404__clouds} aria-hidden="true">
 				<img
@@ -47,11 +43,7 @@ const Page404 = () => {
 			{/* Main Content */}
 			<div className={styles.page404__content}>
 				{/* 404 Number */}
-				<img
-					className={styles.page404__number}
-					src={img404}
-					alt="404"
-				/>
+				<img className={styles.page404__number} src={img404} alt="404" />
 
 				{/* Dog & Cable Illustration */}
 				<div className={styles.page404__illustration}>
@@ -60,12 +52,7 @@ const Page404 = () => {
 						src={cableDog}
 						alt={t('Friendly dog holding an unplugged cable')}
 					/>
-					<img
-						className={styles.page404__cable}
-						src={cable}
-						alt=""
-						aria-hidden="true"
-					/>
+					<img className={styles.page404__cable} src={cable} alt="" aria-hidden="true" />
 				</div>
 
 				{/* Message */}
@@ -73,9 +60,7 @@ const Page404 = () => {
 					{t('Looks like this page got unplugged')}
 				</h1>
 
-				<p className={styles.page404__hint}>
-					{t("Don't worry, our friendly pup is on the case!")}
-				</p>
+				<p className={styles.page404__hint}>{t("Don't worry, our friendly pup is on the case!")}</p>
 
 				{/* Home Button */}
 				<button

@@ -26,7 +26,7 @@ import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notificatio
  * This replaces multiple separate functions to reduce the number of triggers.
  */
 export async function onStatementCreated(
-	event: FirestoreEvent<QueryDocumentSnapshot | undefined, { statementId: string }>
+	event: FirestoreEvent<QueryDocumentSnapshot | undefined, { statementId: string }>,
 ): Promise<void> {
 	if (!event.data) return;
 
@@ -56,9 +56,11 @@ export async function onStatementCreated(
 			tasks.push(updateParentForNewChild(statement));
 
 			// Also update top-level parent subscriptions if different from direct parent
-			if (statement.topParentId &&
+			if (
+				statement.topParentId &&
 				statement.topParentId !== statement.parentId &&
-				statement.topParentId !== 'top') {
+				statement.topParentId !== 'top'
+			) {
 				tasks.push(updateTopParentSubscriptions(statement.topParentId));
 			}
 		}
@@ -107,7 +109,7 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				.where('role', '==', Role.admin)
 				.get();
 
-			topAdminsDB.docs.forEach(doc => {
+			topAdminsDB.docs.forEach((doc) => {
 				const adminSub = parse(StatementSubscriptionSchema, doc.data());
 				adminsToAdd.add(adminSub.user.uid);
 			});
@@ -122,7 +124,7 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				.where('role', '==', Role.admin)
 				.get();
 
-			parentAdminsDB.docs.forEach(doc => {
+			parentAdminsDB.docs.forEach((doc) => {
 				const adminSub = parse(StatementSubscriptionSchema, doc.data());
 				adminsToAdd.add(adminSub.user.uid);
 			});
@@ -144,13 +146,15 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 
 		if (creatorSubscription?.statementsSubscribeId) {
 			batch.set(
-				db.collection(Collections.statementsSubscribe).doc(creatorSubscription.statementsSubscribeId),
-				creatorSubscription
+				db
+					.collection(Collections.statementsSubscribe)
+					.doc(creatorSubscription.statementsSubscribeId),
+				creatorSubscription,
 			);
 		}
 
 		// Add other admin subscriptions
-		const otherAdminIds = adminUserIds.filter(uid => uid !== statement.creator.uid);
+		const otherAdminIds = adminUserIds.filter((uid) => uid !== statement.creator.uid);
 		if (otherAdminIds.length > 0) {
 			// Get user data from existing subscriptions
 			const existingSubscriptions = await db
@@ -160,19 +164,16 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				.get();
 
 			const userMap = new Map();
-			existingSubscriptions.docs.forEach(doc => {
+			existingSubscriptions.docs.forEach((doc) => {
 				const sub = doc.data() as StatementSubscription;
 				userMap.set(sub.user.uid, sub.user);
 			});
 
-			otherAdminIds.forEach(adminId => {
+			otherAdminIds.forEach((adminId) => {
 				const user = userMap.get(adminId);
 				if (!user) return;
 
-				const statementsSubscribeId = getStatementSubscriptionId(
-					statement.statementId,
-					user
-				);
+				const statementsSubscribeId = getStatementSubscriptionId(statement.statementId, user);
 
 				if (!statementsSubscribeId) return;
 
@@ -188,7 +189,7 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 				if (newSubscription) {
 					batch.set(
 						db.collection(Collections.statementsSubscribe).doc(statementsSubscribeId),
-						newSubscription
+						newSubscription,
 					);
 				}
 			});
@@ -229,8 +230,8 @@ async function updateParentForNewChild(statement: Statement): Promise<void> {
 		// Skip if parentId is 'top' since it's not a real document
 		if (parentId === 'top') {
 			logger.info('Skipping update for "top" parent - not a real document');
-			
-return;
+
+			return;
 		}
 
 		const parentRef = db.collection(Collections.statements).doc(parentId);
@@ -244,10 +245,10 @@ return;
 			.get();
 
 		// Convert to SimpleStatement array
-		const lastSubStatements: SimpleStatement[] = subStatementsQuery.docs.map(doc => {
+		const lastSubStatements: SimpleStatement[] = subStatementsQuery.docs.map((doc) => {
 			const stmt = doc.data() as Statement;
-			
-return statementToSimpleStatement(stmt);
+
+			return statementToSimpleStatement(stmt);
 		});
 
 		const timestamp = Date.now();
@@ -272,7 +273,6 @@ return statementToSimpleStatement(stmt);
 
 		// Update all subscriptions to the parent statement
 		await updateParentSubscriptions(parentId, timestamp, lastSubStatements);
-
 	} catch (error) {
 		logger.error('Error in updateParentForNewChild:', error);
 		throw error;
@@ -286,7 +286,7 @@ return statementToSimpleStatement(stmt);
 async function updateParentSubscriptions(
 	statementId: string,
 	timestamp: number,
-	lastSubStatements: SimpleStatement[]
+	lastSubStatements: SimpleStatement[],
 ): Promise<void> {
 	try {
 		const LIMIT = 500; // Safety limit to prevent runaway updates
@@ -300,19 +300,21 @@ async function updateParentSubscriptions(
 
 		if (subscriptionsQuery.empty) {
 			logger.info(`No subscriptions found for statement ${statementId}`);
-			
-return;
+
+			return;
 		}
 
 		if (subscriptionsQuery.size >= LIMIT) {
-			logger.warn(`Found more than ${LIMIT} subscriptions for statement ${statementId}, consider batching updates`);
+			logger.warn(
+				`Found more than ${LIMIT} subscriptions for statement ${statementId}, consider batching updates`,
+			);
 		}
 
 		logger.info(`Updating ${subscriptionsQuery.size} subscriptions for statement ${statementId}`);
 
 		// Batch update for efficiency
 		const batch = db.batch();
-		subscriptionsQuery.docs.forEach(doc => {
+		subscriptionsQuery.docs.forEach((doc) => {
 			batch.update(doc.ref, {
 				lastUpdate: timestamp,
 				lastSubStatements: lastSubStatements,
@@ -321,7 +323,6 @@ return;
 
 		await batch.commit();
 		logger.info(`Successfully updated ${subscriptionsQuery.size} subscriptions`);
-
 	} catch (error) {
 		logger.error(`Error updating subscriptions for statement ${statementId}:`, error);
 	}
@@ -344,11 +345,11 @@ async function addStatementToMassConsensus(statement: Statement): Promise<void> 
 			const parentData = parentDoc.data();
 			if (parentData && parentData.suggestions !== undefined) {
 				transaction.update(parentRef, {
-					suggestions: FieldValue.increment(1)
+					suggestions: FieldValue.increment(1),
 				});
 			} else {
 				transaction.update(parentRef, {
-					suggestions: 1
+					suggestions: 1,
 				});
 			}
 		});
@@ -369,11 +370,13 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 		// Get parent statement and subscribers
 		const [parentStatementDB, subscribersDB, pushSubscribersDB] = await Promise.all([
 			db.doc(`${Collections.statements}/${statement.parentId}`).get(),
-			db.collection(Collections.statementsSubscribe)
+			db
+				.collection(Collections.statementsSubscribe)
 				.where('statementId', '==', statement.parentId)
 				.where('getInAppNotification', '==', true)
 				.get(),
-			db.collection(Collections.statementsSubscribe)
+			db
+				.collection(Collections.statementsSubscribe)
 				.where('statementId', '==', statement.parentId)
 				.where('getPushNotification', '==', true)
 				.get(),
@@ -383,7 +386,7 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 		if (!parentStatementDB.exists) {
 			logger.error(`Parent statement ${statement.parentId} not found`);
 
-return;
+			return;
 		}
 
 		const parentData = parentStatementDB.data();
@@ -392,11 +395,9 @@ return;
 			parentData.topParentId = parentData.parentId || statement.parentId;
 		}
 		const parentStatement = parse(StatementSchema, parentData);
-		const subscribers = subscribersDB.docs.map(
-			doc => doc.data() as StatementSubscription
-		);
+		const subscribers = subscribersDB.docs.map((doc) => doc.data() as StatementSubscription);
 		const pushSubscribers = pushSubscribersDB.docs.map(
-			doc => doc.data() as StatementSubscription
+			(doc) => doc.data() as StatementSubscription,
 		);
 
 		// Update last message in parent
@@ -455,10 +456,7 @@ return;
 				}
 			});
 
-			const sendResult = await processFcmNotificationsImproved(
-				fcmSubscribers,
-				statement
-			);
+			const sendResult = await processFcmNotificationsImproved(fcmSubscribers, statement);
 
 			logger.info('Push notifications processed', {
 				statementId: statement.statementId,
@@ -483,8 +481,8 @@ async function updateTopParentSubscriptions(topParentId: string): Promise<void> 
 		// Skip if topParentId is 'top' since it's not a real document
 		if (topParentId === 'top') {
 			logger.info('Skipping subscription update for "top" parent - not a real document');
-			
-return;
+
+			return;
 		}
 
 		const LIMIT = 500; // Safety limit to prevent runaway updates
@@ -497,8 +495,8 @@ return;
 		const topParentDoc = await topParentRef.get();
 		if (!topParentDoc.exists) {
 			logger.warn(`Top-level statement ${topParentId} not found`);
-			
-return;
+
+			return;
 		}
 
 		const currentData = topParentDoc.data() as Statement;
@@ -507,8 +505,8 @@ return;
 		// Skip if this was updated within the last second (prevents rapid cascading)
 		if (timestamp - lastUpdateTime < 1000) {
 			logger.info(`Skipping update for ${topParentId} - was recently updated`);
-			
-return;
+
+			return;
 		}
 
 		// Update the statement's lastUpdate field
@@ -526,19 +524,23 @@ return;
 
 		if (subscriptionsQuery.empty) {
 			logger.info(`No subscriptions found for top-level statement ${topParentId}`);
-			
-return;
+
+			return;
 		}
 
 		if (subscriptionsQuery.size >= LIMIT) {
-			logger.warn(`Found more than ${LIMIT} subscriptions for top-level statement ${topParentId}, consider batching updates`);
+			logger.warn(
+				`Found more than ${LIMIT} subscriptions for top-level statement ${topParentId}, consider batching updates`,
+			);
 		}
 
-		logger.info(`Updating ${subscriptionsQuery.size} subscriptions for top-level statement ${topParentId}`);
+		logger.info(
+			`Updating ${subscriptionsQuery.size} subscriptions for top-level statement ${topParentId}`,
+		);
 
 		// Batch update for efficiency - only update lastUpdate timestamp
 		const batch = db.batch();
-		subscriptionsQuery.docs.forEach(doc => {
+		subscriptionsQuery.docs.forEach((doc) => {
 			batch.update(doc.ref, {
 				lastUpdate: timestamp,
 			});
@@ -546,7 +548,6 @@ return;
 
 		await batch.commit();
 		logger.info(`Successfully updated ${subscriptionsQuery.size} top-level subscriptions`);
-
 	} catch (error) {
 		logger.error(`Error updating top-level subscriptions for statement ${topParentId}:`, error);
 	}
@@ -561,27 +562,24 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		// Only generate embeddings for options with valid text
 		if (!statement.statement || statement.statement.trim().length < 3) {
 			logger.info(`Skipping embedding for statement ${statement.statementId} - text too short`);
-			
-return;
+
+			return;
 		}
 
 		// Get parent statement for context
 		const parentId = statement.parentId;
 		if (!parentId || parentId === 'top') {
 			logger.info(`Skipping embedding for statement ${statement.statementId} - no parent context`);
-			
-return;
+
+			return;
 		}
 
-		const parentDoc = await db
-			.collection(Collections.statements)
-			.doc(parentId)
-			.get();
+		const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
 
 		if (!parentDoc.exists) {
 			logger.warn(`Parent statement ${parentId} not found for embedding context`);
-			
-return;
+
+			return;
 		}
 
 		const parentStatement = parentDoc.data() as Statement;
@@ -589,17 +587,10 @@ return;
 
 		// Generate context-aware embedding
 		const startTime = Date.now();
-		const result = await embeddingService.generateEmbeddingWithRetry(
-			statement.statement,
-			context
-		);
+		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
 
 		// Save embedding to the statement document
-		await embeddingCache.saveEmbedding(
-			statement.statementId,
-			result.embedding,
-			context
-		);
+		await embeddingCache.saveEmbedding(statement.statementId, result.embedding, context);
 
 		const duration = Date.now() - startTime;
 		logger.info(`Generated embedding for statement ${statement.statementId}`, {
@@ -607,7 +598,6 @@ return;
 			dimensions: result.dimensions,
 			hasContext: Boolean(context),
 		});
-
 	} catch (error) {
 		// Log but don't fail the trigger - embedding generation is non-critical
 		logger.error(`Failed to generate embedding for statement ${statement.statementId}:`, error);

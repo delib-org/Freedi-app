@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import styles from './ShareButton.module.scss';
-import LinkIcon from "@/assets/icons/shareIcon.svg?react";
+import LinkIcon from '@/assets/icons/shareIcon.svg?react';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 
 interface ShareButtonProps {
@@ -25,14 +25,10 @@ function ShareButton({ title, text, url }: ShareButtonProps) {
 	return (
 		<>
 			<button onClick={handleOpenModal} className={styles.shareButton}>
-				<LinkIcon />{text}
+				<LinkIcon />
+				{text}
 			</button>
-			<ShareModal
-				isOpen={isModalOpen}
-				onClose={handleCloseModal}
-				url={shareUrl}
-				title={title}
-			/>
+			<ShareModal isOpen={isModalOpen} onClose={handleCloseModal} url={shareUrl} title={title} />
 		</>
 	);
 }

@@ -10,11 +10,7 @@ interface SummarizeButtonProps {
 	isLoading: boolean;
 }
 
-const SummarizeButton: FC<SummarizeButtonProps> = ({
-	statement,
-	onOpenModal,
-	isLoading
-}) => {
+const SummarizeButton: FC<SummarizeButtonProps> = ({ statement, onOpenModal, isLoading }) => {
 	const { isAdmin } = useEditPermission(statement);
 	const { t } = useTranslation();
 

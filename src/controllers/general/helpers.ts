@@ -15,7 +15,7 @@ export function isAuthorized(
 	statement: Statement | undefined,
 	statementSubscription: StatementSubscription | undefined,
 	parentStatementCreatorId?: string | undefined,
-	authorizedRoles?: Array<Role>
+	authorizedRoles?: Array<Role>,
 ) {
 	try {
 		if (!statement) throw new Error('No statement');
@@ -23,14 +23,7 @@ export function isAuthorized(
 		const { user } = useAuthentication();
 		if (!user) return false;
 
-		if (
-			isUserCreator(
-				user.uid,
-				statement,
-				parentStatementCreatorId,
-				statementSubscription
-			)
-		) {
+		if (isUserCreator(user.uid, statement, parentStatementCreatorId, statementSubscription)) {
 			return true;
 		}
 
@@ -53,7 +46,7 @@ function isUserCreator(
 	userId: string,
 	statement: Statement,
 	parentStatementCreatorId?: string,
-	statementSubscription?: StatementSubscription
+	statementSubscription?: StatementSubscription,
 ): boolean {
 	return (
 		statement.creator?.uid === userId ||
@@ -71,10 +64,7 @@ export function isMassConsensus(questionType: QuestionType): boolean {
 
 	return false;
 }
-function isUserAuthorizedByRole(
-	role: Role,
-	authorizedRoles?: Array<Role>
-): boolean {
+function isUserAuthorizedByRole(role: Role, authorizedRoles?: Array<Role>): boolean {
 	return role === Role.admin || (authorizedRoles?.includes(role) ?? false);
 }
 
@@ -116,35 +106,36 @@ export function generateRandomLightColor(uuid: string) {
 	const randomValue = (seed * 9301 + 49297) % 233280;
 
 	// Convert the random number to a hexadecimal color code
-	const hexColor = `#${((randomValue & 0x00ffffff) | 0xc0c0c0)
-		.toString(16)
-		.toUpperCase()}`;
+	const hexColor = `#${((randomValue & 0x00ffffff) | 0xc0c0c0).toString(16).toUpperCase()}`;
 
 	return hexColor;
 }
 // Type restriction configuration for statement hierarchy
-export const TYPE_RESTRICTIONS: Record<StatementType, {
-	disallowedChildren?: StatementType[];
-	reason?: string;
-}> = {
+export const TYPE_RESTRICTIONS: Record<
+	StatementType,
+	{
+		disallowedChildren?: StatementType[];
+		reason?: string;
+	}
+> = {
 	[StatementType.option]: {
 		disallowedChildren: [StatementType.option],
-		reason: "Options cannot contain other options"
+		reason: 'Options cannot contain other options',
 	},
 	[StatementType.group]: {
 		disallowedChildren: [StatementType.option],
-		reason: "Groups cannot contain options"
+		reason: 'Groups cannot contain options',
 	},
 	[StatementType.statement]: {},
 	[StatementType.question]: {},
 	[StatementType.document]: {},
 	[StatementType.comment]: {},
-	[StatementType.paragraph]: {}
+	[StatementType.paragraph]: {},
 };
 
 export function isStatementTypeAllowedAsChildren(
 	parentStatement: string | { statementType: StatementType },
-	childType: StatementType
+	childType: StatementType,
 ): boolean {
 	// Handle null/undefined gracefully
 	if (!parentStatement) {
@@ -162,10 +153,10 @@ export function isStatementTypeAllowedAsChildren(
 	if (restrictions?.disallowedChildren?.includes(childType)) {
 		// Log the restriction for debugging
 		console.info(
-			`Type restriction: Cannot create ${childType} under ${parentType}. ${restrictions.reason || ''}`
+			`Type restriction: Cannot create ${childType} under ${parentType}. ${restrictions.reason || ''}`,
 		);
-		
-return false;
+
+		return false;
 	}
 
 	return true;
@@ -174,7 +165,7 @@ return false;
 // Enhanced validation function with detailed error messages
 export function validateStatementTypeHierarchy(
 	parentStatement: string | { statementType: StatementType },
-	childType: StatementType
+	childType: StatementType,
 ): { allowed: boolean; reason?: string } {
 	// Handle 'top' case and string case
 	if (parentStatement === 'top' || typeof parentStatement === 'string') {
@@ -187,23 +178,17 @@ export function validateStatementTypeHierarchy(
 	if (restrictions?.disallowedChildren?.includes(childType)) {
 		return {
 			allowed: false,
-			reason: restrictions.reason || `Cannot create ${childType} under ${parentType}`
+			reason: restrictions.reason || `Cannot create ${childType} under ${parentType}`,
 		};
 	}
 
 	return { allowed: true };
 }
-export const statementTitleToDisplay = (
-	statement: string,
-	titleLength: number
-) => {
-	const _title =
-		statement.split('\n')[0].replace(/\*/g, '') || statement.replace(/\*/g, '');
+export const statementTitleToDisplay = (statement: string, titleLength: number) => {
+	const _title = statement.split('\n')[0].replace(/\*/g, '') || statement.replace(/\*/g, '');
 
 	const titleToSet =
-		_title.length > titleLength - 3
-			? _title.substring(0, titleLength) + '...'
-			: _title;
+		_title.length > titleLength - 3 ? _title.substring(0, titleLength) + '...' : _title;
 
 	return { shortVersion: titleToSet, fullVersion: _title };
 };
@@ -220,10 +205,7 @@ export function calculateFontSize(text: string, maxSize = 6, minSize = 14) {
 	const fontSizeMultiplier = 0.2;
 
 	// Calculate the font size based on the length of the text
-	const fontSize = Math.max(
-		baseFontSize - fontSizeMultiplier * text.length,
-		maxSize
-	);
+	const fontSize = Math.max(baseFontSize - fontSizeMultiplier * text.length, maxSize);
 
 	return `${fontSize}px`;
 }
@@ -260,17 +242,13 @@ export function getSetTimerId(statementId: string, order: number) {
 	return `${statementId}--${order}`;
 }
 
-export function getRoomTimerId(
-	statementId: string,
-	roomNumber: number,
-	order: number
-) {
+export function getRoomTimerId(statementId: string, roomNumber: number, order: number) {
 	return `${statementId}--${roomNumber}--${order}`;
 }
 
 export function getStatementSubscriptionId(
 	statementId: string,
-	userId: string
+	userId: string,
 ): string | undefined {
 	try {
 		if (!statementId) throw new Error('No statementId');
@@ -310,13 +288,11 @@ export function isProduction(): boolean {
 	if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
 		return false;
 	}
-	
-return window.location.hostname !== 'localhost';
+
+	return window.location.hostname !== 'localhost';
 }
 
-export const handleCloseInviteModal = (
-	setShowModal: (show: boolean) => void
-) => {
+export const handleCloseInviteModal = (setShowModal: (show: boolean) => void) => {
 	const inviteModal = document.querySelector('.inviteModal');
 	inviteModal.classList.add('closing');
 
@@ -325,10 +301,7 @@ export const handleCloseInviteModal = (
 	}, 400);
 };
 
-export function getLastElements(
-	array: Array<unknown>,
-	number: number
-): Array<unknown> {
+export function getLastElements(array: Array<unknown>, number: number): Array<unknown> {
 	return array.slice(Math.max(array.length - number, 1));
 }
 
@@ -348,17 +321,9 @@ export function getTime(time: number): string {
 
 	if (currentYear !== timeYear) {
 		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
-	} else if (
-		currentDay !== timeDay &&
-		currentMonth === timeMonth &&
-		currentYear === timeYear
-	) {
+	} else if (currentDay !== timeDay && currentMonth === timeMonth && currentYear === timeYear) {
 		return `${timeDay}/${timeMonth} ${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
-	} else if (
-		currentDay === timeDay &&
-		currentMonth === timeMonth &&
-		currentYear === timeYear
-	) {
+	} else if (currentDay === timeDay && currentMonth === timeMonth && currentYear === timeYear) {
 		return `${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
 	}
 
@@ -376,10 +341,8 @@ export function getLatestUpdateStatements(statements: Statement[]): number {
 
 	return statements.reduce(
 		(latestUpdate, statement) =>
-			statement.lastUpdate > latestUpdate
-				? statement.lastUpdate
-				: latestUpdate,
-		0
+			statement.lastUpdate > latestUpdate ? statement.lastUpdate : latestUpdate,
+		0,
 	);
 }
 
@@ -423,10 +386,7 @@ export const emojiTransformer = (text: string): string => {
  * @param {number} targetValue - The value to find the closest match for (-1 to 1)
  * @returns {Object} - The object with the closest evaluation value
  */
-export function findClosestEvaluation(
-	array: EnhancedEvaluationThumb[],
-	targetValue = 0
-) {
+export function findClosestEvaluation(array: EnhancedEvaluationThumb[], targetValue = 0) {
 	// Validate input
 	if (!Array.isArray(array) || array.length === 0) {
 		throw new Error('Input must be a non-empty array');

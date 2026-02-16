@@ -7,12 +7,7 @@ export default function SendIcon({ color }: { color: string }) {
 			viewBox="0 0 19 18"
 			fill="none"
 		>
-			<path
-				d="M17 1.5L8.75 9.75"
-				stroke={color}
-				strokeLinecap="round"
-				strokeLinejoin="round"
-			/>
+			<path d="M17 1.5L8.75 9.75" stroke={color} strokeLinecap="round" strokeLinejoin="round" />
 			<path
 				d="M17 1.5L11.75 16.5L8.75 9.75L2 6.75L17 1.5Z"
 				stroke={color}

@@ -34,10 +34,8 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 			case UserDemographicQuestionType.text:
 			case UserDemographicQuestionType.textarea:
 			case UserDemographicQuestionType.radio:
-				if (
-					!inputValue ||
-					(typeof inputValue === 'string' && inputValue.trim() === '')
-				) {
+			case UserDemographicQuestionType.dropdown:
+				if (!inputValue || (typeof inputValue === 'string' && inputValue.trim() === '')) {
 					setValidationError(`- ${t('This field is required')}`);
 
 					return false;
@@ -75,7 +73,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 			case UserDemographicQuestionType.text:
 				return (
 					<input
-						type='text'
+						type="text"
 						value={typeof value === 'string' ? value : ''}
 						onChange={(e) => {
 							const newValue = e.target.value;
@@ -87,11 +85,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 						required={required}
 						aria-required={required}
 						aria-invalid={!!validationError}
-						aria-describedby={
-							validationError
-								? `${question.userQuestionId}-error`
-								: undefined
-						}
+						aria-describedby={validationError ? `${question.userQuestionId}-error` : undefined}
 					/>
 				);
 
@@ -110,21 +104,13 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 						required={required}
 						aria-required={required}
 						aria-invalid={!!validationError}
-						aria-describedby={
-							validationError
-								? `${question.userQuestionId}-error`
-								: undefined
-						}
+						aria-describedby={validationError ? `${question.userQuestionId}-error` : undefined}
 					/>
 				);
 
 			case UserDemographicQuestionType.checkbox:
 				return (
-					<div
-						className={styles.optionsContainer}
-						role='group'
-						aria-required={required}
-					>
+					<div className={styles.optionsContainer} role="group" aria-required={required}>
 						{question.options?.map((option, index) => {
 							const isChecked = Array.isArray(value) && value.includes(option.option);
 
@@ -134,7 +120,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 									className={`${styles.optionLabel} ${isChecked ? styles.optionLabelSelected : ''}`}
 								>
 									<input
-										type='checkbox'
+										type="checkbox"
 										name={`checkbox-${question.userQuestionId}`}
 										value={option.option}
 										checked={isChecked}
@@ -144,7 +130,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 													? [...value, option.option]
 													: [option.option]
 												: Array.isArray(value)
-													? value.filter(v => v !== option.option)
+													? value.filter((v) => v !== option.option)
 													: [];
 											validateInput(newValue);
 											onChange(newValue);
@@ -162,11 +148,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 
 			case UserDemographicQuestionType.radio:
 				return (
-					<div
-						className={styles.optionsContainer}
-						role='radiogroup'
-						aria-required={required}
-					>
+					<div className={styles.optionsContainer} role="radiogroup" aria-required={required}>
 						{question.options?.map((option, index) => {
 							const isSelected = value === option.option;
 
@@ -176,13 +158,11 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 									className={`${styles.optionLabel} ${isSelected ? styles.optionLabelSelected : ''}`}
 								>
 									<input
-										type='radio'
+										type="radio"
 										name={`radio-${question.userQuestionId}`}
 										value={option.option}
 										checked={isSelected}
-										onChange={() =>
-											handleRadioChange(option.option, index)
-										}
+										onChange={() => handleRadioChange(option.option, index)}
 										className={styles.radioInput}
 										required={required}
 									/>
@@ -195,6 +175,30 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 							);
 						})}
 					</div>
+				);
+
+			case UserDemographicQuestionType.dropdown:
+				return (
+					<select
+						value={typeof value === 'string' ? value : ''}
+						onChange={(e) => {
+							const newValue = e.target.value;
+							validateInput(newValue);
+							onChange(newValue);
+						}}
+						className={styles.dropdownSelect}
+						required={required}
+						aria-required={required}
+						aria-invalid={!!validationError}
+						aria-describedby={validationError ? `${question.userQuestionId}-error` : undefined}
+					>
+						<option value="">{t('Select an option')}</option>
+						{question.options?.map((option, index) => (
+							<option key={index} value={option.option}>
+								{option.option}
+							</option>
+						))}
+					</select>
 				);
 
 			default:
@@ -214,8 +218,8 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 					<div
 						id={`${question.userQuestionId}-error`}
 						className={styles.errorMessage}
-						role='alert'
-						aria-live='polite'
+						role="alert"
+						aria-live="polite"
 					>
 						{validationError}
 					</div>

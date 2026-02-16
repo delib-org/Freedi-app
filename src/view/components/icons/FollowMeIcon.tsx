@@ -1,18 +1,12 @@
-import { FC } from "react";
+import { FC } from 'react';
 
 interface Props {
-    color: string;
+	color: string;
 }
 
-const FollowMeIcon: FC<Props> = ({ color = "#4E88C7" }) => {
+const FollowMeIcon: FC<Props> = ({ color = '#4E88C7' }) => {
 	return (
-		<svg
-			width="24"
-			height="24"
-			viewBox="0 0 24 24"
-			fill="none"
-			xmlns="http://www.w3.org/2000/svg"
-		>
+		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
 			<path
 				d="M12.8203 17.9133L14.3383 19.4313L12.8203 20.9492"
 				stroke={color}

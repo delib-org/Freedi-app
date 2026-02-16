@@ -178,7 +178,7 @@ describe('Skeleton', () => {
 	describe('custom style', () => {
 		it('should apply custom style object', () => {
 			const { container } = render(
-				<Skeleton style={{ backgroundColor: 'red', borderRadius: '8px' }} />
+				<Skeleton style={{ backgroundColor: 'red', borderRadius: '8px' }} />,
 			);
 
 			const skeleton = container.querySelector('.skeleton');
@@ -190,7 +190,7 @@ describe('Skeleton', () => {
 
 		it('should merge custom style with dimension styles', () => {
 			const { container } = render(
-				<Skeleton width={100} height={50} style={{ backgroundColor: 'blue' }} />
+				<Skeleton width={100} height={50} style={{ backgroundColor: 'blue' }} />,
 			);
 
 			const skeleton = container.querySelector('.skeleton');
@@ -204,9 +204,7 @@ describe('Skeleton', () => {
 		});
 
 		it('should allow dimension props to override style dimensions', () => {
-			const { container } = render(
-				<Skeleton width={200} style={{ width: '100px' }} />
-			);
+			const { container } = render(<Skeleton width={200} style={{ width: '100px' }} />);
 
 			// Width prop should take precedence (it's applied after style spread)
 			const skeleton = container.querySelector('.skeleton');

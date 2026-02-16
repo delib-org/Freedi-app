@@ -11,7 +11,7 @@ interface AllStatementsOverviewProps {
 export const AllStatementsOverview: React.FC<AllStatementsOverviewProps> = ({
 	polarizationIndexes,
 	selectedStatementIndex,
-	onStatementSelect
+	onStatementSelect,
 }) => {
 	return (
 		<div className={styles.groupsListContainer} style={{ marginTop: '20px' }}>
@@ -24,7 +24,8 @@ export const AllStatementsOverview: React.FC<AllStatementsOverviewProps> = ({
 						className={`${styles.groupCard} ${selectedStatementIndex === index ? styles.groupCardSelected : ''}`}
 						style={{
 							borderColor: statement.color || '#666',
-							backgroundColor: selectedStatementIndex === index ? `${statement.color || '#666'}15` : undefined
+							backgroundColor:
+								selectedStatementIndex === index ? `${statement.color || '#666'}15` : undefined,
 						}}
 					>
 						<div className={styles.groupCardHeader}>
@@ -38,9 +39,15 @@ export const AllStatementsOverview: React.FC<AllStatementsOverviewProps> = ({
 							<div style={{ marginBottom: '8px', fontSize: '13px', color: '#333' }}>
 								{statement.statement || 'No description available'}
 							</div>
-							<div><strong>Agreement:</strong> {(statement.averageAgreement || 0).toFixed(3)}</div>
-							<div><strong>Polarization:</strong> {(statement.overallMAD || 0).toFixed(3)}</div>
-							<div><strong>Evaluators:</strong> {statement.totalEvaluators || 0}</div>
+							<div>
+								<strong>Agreement:</strong> {(statement.averageAgreement || 0).toFixed(3)}
+							</div>
+							<div>
+								<strong>Polarization:</strong> {(statement.overallMAD || 0).toFixed(3)}
+							</div>
+							<div>
+								<strong>Evaluators:</strong> {statement.totalEvaluators || 0}
+							</div>
 						</div>
 					</div>
 				))}

@@ -15,10 +15,7 @@ interface AgreementProviderProps {
 	user: User | null;
 }
 
-export const AgreementProvider: FC<AgreementProviderProps> = ({
-	children,
-	user,
-}) => {
+export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }) => {
 	const { t } = useTranslation();
 	const [showSignAgreement, setShowSignAgreement] = useState(false);
 	const [agreement, setAgreement] = useState<string>('');
@@ -34,9 +31,7 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({
 
 			try {
 				// Check if user has accepted latest terms
-				const latestAcceptance = await getLatestTermsAcceptance(
-					user.uid
-				);
+				const latestAcceptance = await getLatestTermsAcceptance(user.uid);
 
 				if (latestAcceptance) {
 					setShowSignAgreement(false);
@@ -88,12 +83,7 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({
 	return (
 		<>
 			{children}
-			{showSignAgreement && (
-				<TermsOfUse
-					handleAgreement={handleAgreement}
-					agreement={agreement}
-				/>
-			)}
+			{showSignAgreement && <TermsOfUse handleAgreement={handleAgreement} agreement={agreement} />}
 		</>
 	);
 };

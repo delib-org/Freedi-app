@@ -5,7 +5,16 @@ import styles from './IntegrateSuggestions.module.scss';
 
 // Icon components for visual indicators
 const UsersIcon: FC = () => (
-	<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+	<svg
+		width="14"
+		height="14"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
 		<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
 		<circle cx="9" cy="7" r="4" />
 		<path d="M23 21v-2a4 4 0 0 0-3-3.87" />
@@ -24,7 +33,7 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 	// Check if a statement is selected
 	const isSelected = useCallback(
 		(statementId: string) => selectedIds.includes(statementId),
-		[selectedIds]
+		[selectedIds],
 	);
 
 	// Toggle statement selection
@@ -34,17 +43,17 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 			if (isSource) return;
 
 			if (isSelected(statementId)) {
-				onSelectionChange(selectedIds.filter(id => id !== statementId));
+				onSelectionChange(selectedIds.filter((id) => id !== statementId));
 			} else {
 				onSelectionChange([...selectedIds, statementId]);
 			}
 		},
-		[selectedIds, onSelectionChange, isSelected]
+		[selectedIds, onSelectionChange, isSelected],
 	);
 
 	// Select all similar statements
 	const selectAll = useCallback(() => {
-		const allIds = [sourceStatement.statementId, ...similarStatements.map(s => s.statementId)];
+		const allIds = [sourceStatement.statementId, ...similarStatements.map((s) => s.statementId)];
 		onSelectionChange(allIds);
 	}, [sourceStatement, similarStatements, onSelectionChange]);
 
@@ -66,8 +75,10 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 		const itemClasses = [
 			styles.selector__item,
 			selected ? styles['selector__item--selected'] : '',
-			isSource ? styles['selector__item--source'] : ''
-		].filter(Boolean).join(' ');
+			isSource ? styles['selector__item--source'] : '',
+		]
+			.filter(Boolean)
+			.join(' ');
 
 		return (
 			<div
@@ -86,18 +97,12 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 				tabIndex={0}
 			>
 				<div className={styles.selector__checkbox}>
-					{selected && (
-						<span className={styles.selector__checkmark}>&#10003;</span>
-					)}
+					{selected && <span className={styles.selector__checkmark}>&#10003;</span>}
 				</div>
 				<div className={styles.selector__content}>
 					<div className={styles.selector__titleRow}>
-						<span className={styles.selector__itemTitle}>
-							{statement.statement}
-						</span>
-						{isSource && (
-							<span className={styles.selector__badge}>{t('Source')}</span>
-						)}
+						<span className={styles.selector__itemTitle}>{statement.statement}</span>
+						{isSource && <span className={styles.selector__badge}>{t('Source')}</span>}
 					</div>
 					{statement.description && (
 						<p className={styles.selector__description}>{statement.description}</p>
@@ -107,9 +112,7 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 							<span className={styles.selector__metaIcon}>
 								<UsersIcon />
 							</span>
-							<span className={styles.selector__metaValue}>
-								{statement.numberOfEvaluators}
-							</span>
+							<span className={styles.selector__metaValue}>{statement.numberOfEvaluators}</span>
 							<span>{t('evaluators')}</span>
 						</div>
 						<div className={styles.selector__consensus}>
@@ -132,16 +135,14 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 
 	// Count of selected similar statements (excluding source)
 	const selectedSimilarCount = selectedIds.filter(
-		id => id !== sourceStatement.statementId
+		(id) => id !== sourceStatement.statementId,
 	).length;
 
 	return (
 		<div className={styles.selector}>
 			{/* Header with quick actions */}
 			<div className={styles.selector__header}>
-				<h3 className={styles.selector__title}>
-					{t('Choose suggestions to merge')}
-				</h3>
+				<h3 className={styles.selector__title}>{t('Choose suggestions to merge')}</h3>
 				<div className={styles.selector__actions}>
 					<button
 						type="button"
@@ -180,7 +181,7 @@ const SimilarGroupSelector: FC<SimilarGroupSelectorProps> = ({
 				</div>
 				{similarStatements.length > 0 ? (
 					<div className={styles.selector__list}>
-						{similarStatements.map(statement => renderStatementItem(statement, false))}
+						{similarStatements.map((statement) => renderStatementItem(statement, false))}
 					</div>
 				) : (
 					<div className={styles.selector__empty}>

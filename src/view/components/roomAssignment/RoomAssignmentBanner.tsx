@@ -61,20 +61,19 @@ const RoomAssignmentBanner: FC<RoomAssignmentBannerProps> = ({ statementId }) =>
 					<RoomIcon />
 				</div>
 				<div className={styles.banner__content}>
-					<div className={styles.banner__title}>
-						{t('You are assigned to a room')}
-					</div>
+					<div className={styles.banner__title}>{t('You are assigned to a room')}</div>
 					<div className={styles.banner__subtitle}>
 						{t('Join your designated room for the discussion')}
 					</div>
 				</div>
-				<div className={styles.banner__roomNumber}>
-					{myAssignment.roomNumber}
-				</div>
+				<div className={styles.banner__roomNumber}>{myAssignment.roomNumber}</div>
 			</div>
 
 			<Snackbar
-				message={t('You have been assigned to Room {{roomNumber}}').replace('{{roomNumber}}', String(myAssignment.roomNumber))}
+				message={t('You have been assigned to Room {{roomNumber}}').replace(
+					'{{roomNumber}}',
+					String(myAssignment.roomNumber),
+				)}
 				subMessage={t('Check the banner above for details')}
 				isVisible={showSnackbar}
 				type="success"

@@ -11,10 +11,7 @@
  */
 
 import type { MessagePayload } from 'firebase/messaging';
-import {
-	PlatformService,
-	isBrowserNotificationsSupported,
-} from './platformService';
+import { PlatformService, isBrowserNotificationsSupported } from './platformService';
 import {
 	PushService,
 	waitForServiceWorker,
@@ -132,7 +129,7 @@ export class NotificationService {
 				}
 			} else {
 				console.info(
-					'[NotificationService] Initialized without FCM token - browser notifications only'
+					'[NotificationService] Initialized without FCM token - browser notifications only',
 				);
 			}
 		} catch (error) {
@@ -152,9 +149,12 @@ export class NotificationService {
 		this.checkTokenFreshness(userId);
 
 		// Set up periodic refresh check (every 24 hours)
-		this.tokenRefreshTimer = setInterval(() => {
-			this.checkTokenFreshness(userId);
-		}, 24 * 60 * 60 * 1000);
+		this.tokenRefreshTimer = setInterval(
+			() => {
+				this.checkTokenFreshness(userId);
+			},
+			24 * 60 * 60 * 1000,
+		);
 	}
 
 	/**
@@ -188,7 +188,7 @@ export class NotificationService {
 	 */
 	public async getOrRefreshToken(
 		userId: string,
-		forceRefresh: boolean = false
+		forceRefresh: boolean = false,
 	): Promise<string | null> {
 		try {
 			const currentToken = await getOrRefreshToken(forceRefresh);
@@ -223,7 +223,7 @@ export class NotificationService {
 	public async registerForStatementNotifications(
 		userId: string,
 		token: string | null,
-		statementId: string
+		statementId: string,
 	): Promise<boolean> {
 		if (!this.isSupported()) {
 			return false;
@@ -306,7 +306,7 @@ export class NotificationService {
 						if (!error?.message?.includes('Null value error')) {
 							console.error('Error removing token from subscriptions:', error);
 						}
-					})
+					}),
 				);
 			}
 

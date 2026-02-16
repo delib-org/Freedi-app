@@ -1,58 +1,51 @@
-import { onRequest } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
+import { onRequest } from 'firebase-functions/v2/https';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 
 const db = getFirestore();
 
 // Bot user agents that need OG tags
 const BOT_USER_AGENTS = [
-  "facebookexternalhit",
-  "Facebot",
-  "Twitterbot",
-  "WhatsApp",
-  "LinkedInBot",
-  "Pinterest",
-  "Slackbot",
-  "TelegramBot",
-  "Discordbot",
-  "Googlebot",
-  "bingbot",
+	'facebookexternalhit',
+	'Facebot',
+	'Twitterbot',
+	'WhatsApp',
+	'LinkedInBot',
+	'Pinterest',
+	'Slackbot',
+	'TelegramBot',
+	'Discordbot',
+	'Googlebot',
+	'bingbot',
 ];
 
 /**
  * Checks if the request is from a social media crawler/bot
  */
 function isSocialMediaBot(userAgent: string): boolean {
-  if (!userAgent) return false;
+	if (!userAgent) return false;
 
-  return BOT_USER_AGENTS.some((bot) =>
-    userAgent.toLowerCase().includes(bot.toLowerCase())
-  );
+	return BOT_USER_AGENTS.some((bot) => userAgent.toLowerCase().includes(bot.toLowerCase()));
 }
 
 /**
  * Generates HTML with OG meta tags for social media sharing
  */
-function generateOgHtml(
-  title: string,
-  description: string,
-  url: string,
-  imageUrl: string
-): string {
-  // Escape HTML entities to prevent XSS
-  const escapeHtml = (str: string): string => {
-    return str
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
-  };
+function generateOgHtml(title: string, description: string, url: string, imageUrl: string): string {
+	// Escape HTML entities to prevent XSS
+	const escapeHtml = (str: string): string => {
+		return str
+			.replace(/&/g, '&amp;')
+			.replace(/</g, '&lt;')
+			.replace(/>/g, '&gt;')
+			.replace(/"/g, '&quot;')
+			.replace(/'/g, '&#039;');
+	};
 
-  const safeTitle = escapeHtml(title);
-  const safeDescription = escapeHtml(description);
+	const safeTitle = escapeHtml(title);
+	const safeDescription = escapeHtml(description);
 
-  return `<!DOCTYPE html>
+	return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -88,24 +81,21 @@ function generateOgHtml(
  * Extracts statement ID from various URL patterns
  */
 function extractStatementId(path: string): string | null {
-  // Match patterns like:
-  // /statement/STATEMENT_ID
-  // /statement/STATEMENT_ID/...
-  // /statement-an/STATEMENT_ID
-  // /home/STATEMENT_ID
-  const patterns = [
-    /\/statement(?:-an)?\/([a-zA-Z0-9_-]+)/,
-    /\/home\/([a-zA-Z0-9_-]+)/,
-  ];
+	// Match patterns like:
+	// /statement/STATEMENT_ID
+	// /statement/STATEMENT_ID/...
+	// /statement-an/STATEMENT_ID
+	// /home/STATEMENT_ID
+	const patterns = [/\/statement(?:-an)?\/([a-zA-Z0-9_-]+)/, /\/home\/([a-zA-Z0-9_-]+)/];
 
-  for (const pattern of patterns) {
-    const match = path.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
+	for (const pattern of patterns) {
+		const match = path.match(pattern);
+		if (match && match[1]) {
+			return match[1];
+		}
+	}
 
-  return null;
+	return null;
 }
 
 /**
@@ -114,28 +104,28 @@ function extractStatementId(path: string): string | null {
  * HTML with the correct OG tags based on the statement being shared.
  */
 export const serveOgTags = onRequest(
-  {
-    ...functionConfig,
-    // Note: CORS only affects browser-based requests.
-    // Social media bots (Facebook, WhatsApp, etc.) don't use CORS.
-    cors: true
-  },
-  async (req, res) => {
-    const userAgent = req.headers["user-agent"] || "";
-    const path = req.path || req.url || "";
-    const host = req.headers.host || "wizcol.com";
-    const protocol = req.headers["x-forwarded-proto"] || "https";
-    const fullUrl = `${protocol}://${host}${path}`;
-    const defaultImageUrl = `${protocol}://${host}/icons/logo-512px.png`;
+	{
+		...functionConfig,
+		// Note: CORS only affects browser-based requests.
+		// Social media bots (Facebook, WhatsApp, etc.) don't use CORS.
+		cors: true,
+	},
+	async (req, res) => {
+		const userAgent = req.headers['user-agent'] || '';
+		const path = req.path || req.url || '';
+		const host = req.headers.host || 'wizcol.com';
+		const protocol = req.headers['x-forwarded-proto'] || 'https';
+		const fullUrl = `${protocol}://${host}${path}`;
+		const defaultImageUrl = `${protocol}://${host}/icons/logo-512px.png`;
 
-    // Default values
-    const defaultTitle = "WizCol";
-    const defaultDescription = "WizCol: fostering collaboration";
+		// Default values
+		const defaultTitle = 'WizCol';
+		const defaultDescription = 'WizCol: fostering collaboration';
 
-    // If not a social media bot, serve a minimal HTML that loads the SPA
-    // This avoids fetching index.html which can cause timeouts
-    if (!isSocialMediaBot(userAgent)) {
-      const spaHtml = `<!DOCTYPE html>
+		// If not a social media bot, serve a minimal HTML that loads the SPA
+		// This avoids fetching index.html which can cause timeouts
+		if (!isSocialMediaBot(userAgent)) {
+			const spaHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -148,61 +138,53 @@ export const serveOgTags = onRequest(
   <p>Loading...</p>
 </body>
 </html>`;
-      res.set("Content-Type", "text/html");
-      res.send(spaHtml);
+			res.set('Content-Type', 'text/html');
+			res.send(spaHtml);
 
-      return;
-    }
+			return;
+		}
 
-    // Extract statement ID from path
-    const statementId = extractStatementId(path);
+		// Extract statement ID from path
+		const statementId = extractStatementId(path);
 
-    if (!statementId) {
-      // No statement ID found, serve default OG tags
-      res.set("Content-Type", "text/html");
-      res.send(
-        generateOgHtml(defaultTitle, defaultDescription, fullUrl, defaultImageUrl)
-      );
+		if (!statementId) {
+			// No statement ID found, serve default OG tags
+			res.set('Content-Type', 'text/html');
+			res.send(generateOgHtml(defaultTitle, defaultDescription, fullUrl, defaultImageUrl));
 
-      return;
-    }
+			return;
+		}
 
-    try {
-      // Fetch statement from Firestore
-      const statementDoc = await db
-        .collection(Collections.statements)
-        .doc(statementId)
-        .get();
+		try {
+			// Fetch statement from Firestore
+			const statementDoc = await db.collection(Collections.statements).doc(statementId).get();
 
-      if (!statementDoc.exists) {
-        // Statement not found, serve default OG tags
-        res.set("Content-Type", "text/html");
-        res.send(
-          generateOgHtml(defaultTitle, defaultDescription, fullUrl, defaultImageUrl)
-        );
+			if (!statementDoc.exists) {
+				// Statement not found, serve default OG tags
+				res.set('Content-Type', 'text/html');
+				res.send(generateOgHtml(defaultTitle, defaultDescription, fullUrl, defaultImageUrl));
 
-        return;
-      }
+				return;
+			}
 
-      const statement = statementDoc.data() as Statement;
+			const statement = statementDoc.data() as Statement;
 
-      // Use statement title as the OG title, with WizCol as site name
-      const title = statement.statement || defaultTitle;
-      const description = (statement as Statement & { description?: string }).description || defaultDescription;
+			// Use statement title as the OG title, with WizCol as site name
+			const title = statement.statement || defaultTitle;
+			const description =
+				(statement as Statement & { description?: string }).description || defaultDescription;
 
-      // Use statement image if available, otherwise default logo
-      const imageUrl = defaultImageUrl;
+			// Use statement image if available, otherwise default logo
+			const imageUrl = defaultImageUrl;
 
-      res.set("Content-Type", "text/html");
-      res.send(generateOgHtml(title, description, fullUrl, imageUrl));
-    } catch (error) {
-      console.error("Error fetching statement for OG tags:", error);
+			res.set('Content-Type', 'text/html');
+			res.send(generateOgHtml(title, description, fullUrl, imageUrl));
+		} catch (error) {
+			console.error('Error fetching statement for OG tags:', error);
 
-      // On error, serve default OG tags
-      res.set("Content-Type", "text/html");
-      res.send(
-        generateOgHtml(defaultTitle, defaultDescription, fullUrl, defaultImageUrl)
-      );
-    }
-  }
+			// On error, serve default OG tags
+			res.set('Content-Type', 'text/html');
+			res.send(generateOgHtml(defaultTitle, defaultDescription, fullUrl, defaultImageUrl));
+		}
+	},
 );

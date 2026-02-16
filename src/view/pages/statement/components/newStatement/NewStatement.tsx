@@ -29,21 +29,33 @@ function CurrentScreen(currentStep: SimilaritySteps) {
 }
 
 export default function NewStatement() {
-
 	const { statementId } = useParams<{ statementId: string }>();
 
 	const statement = useSelector(statementSelectorById(statementId || ''));
-	const defaultLookForSimilarities = statement?.statementSettings?.defaultLookForSimilarities || false;
+	const defaultLookForSimilarities =
+		statement?.statementSettings?.defaultLookForSimilarities || false;
 
 	const [title, setTitle] = useState<string>('');
 	const [description, setDescription] = useState<string>('');
-	const [lookingForSimilarStatements, setLookingForSimilarStatements] = useState<boolean>(defaultLookForSimilarities);
+	const [lookingForSimilarStatements, setLookingForSimilarStatements] = useState<boolean>(
+		defaultLookForSimilarities,
+	);
 	const [currentStep, setCurrentStep] = useState<SimilaritySteps>(SimilaritySteps.FORM);
 	const [similarStatements, setSimilarStatements] = useState<Statement[]>([]);
 
 	const contextValue = useMemo(
-		() => ({ title, setTitle, description, setDescription, setCurrentStep, lookingForSimilarStatements, setLookingForSimilarStatements, similarStatements, setSimilarStatements }),
-		[title, description, lookingForSimilarStatements, similarStatements]
+		() => ({
+			title,
+			setTitle,
+			description,
+			setDescription,
+			setCurrentStep,
+			lookingForSimilarStatements,
+			setLookingForSimilarStatements,
+			similarStatements,
+			setSimilarStatements,
+		}),
+		[title, description, lookingForSimilarStatements, similarStatements],
 	);
 
 	return (
@@ -51,5 +63,4 @@ export default function NewStatement() {
 			<div className={styles.newStatement}>{CurrentScreen(currentStep)}</div>
 		</NewStatementContext.Provider>
 	);
-
 }

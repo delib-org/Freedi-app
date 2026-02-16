@@ -1,6 +1,6 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { logger } from "firebase-functions/v1";
-import { db } from "./index";
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions/v1';
+import { db } from './index';
 import {
 	Collections,
 	Statement,
@@ -8,8 +8,8 @@ import {
 	StatementType,
 	StatementEvaluation,
 	functionConfig,
-} from "@freedi/shared-types";
-import { calculateConsensusValid } from "./helpers/consensusValidCalculator";
+} from '@freedi/shared-types';
+import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 import type { PopperHebbianScore } from '@freedi/shared-types';
 
 // Uncertainty floor for Mean - SEM calculation
@@ -53,7 +53,7 @@ interface RecalculateResult {
 function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
 
@@ -93,7 +93,7 @@ interface UserEvaluationData {
 async function recalculateClusterOptionEvaluations(
 	statementId: string,
 	statement: Statement & { integratedOptions?: string[]; popperHebbianScore?: PopperHebbianScore },
-	dryRun: boolean = false
+	dryRun: boolean = false,
 ): Promise<StatementFix | null> {
 	let sourceIds = statement.integratedOptions || [];
 
@@ -101,20 +101,22 @@ async function recalculateClusterOptionEvaluations(
 	if (sourceIds.length === 0) {
 		const sourcesSnapshot = await db
 			.collection(Collections.statements)
-			.where("integratedInto", "==", statementId)
+			.where('integratedInto', '==', statementId)
 			.get();
 
-		sourceIds = sourcesSnapshot.docs.map(doc => doc.id);
+		sourceIds = sourcesSnapshot.docs.map((doc) => doc.id);
 
 		if (sourceIds.length > 0) {
-			logger.info(`Found ${sourceIds.length} sources via integratedInto for cluster ${statementId}`);
+			logger.info(
+				`Found ${sourceIds.length} sources via integratedInto for cluster ${statementId}`,
+			);
 		}
 	}
 
 	if (sourceIds.length === 0) {
 		logger.info(`No sources found for cluster ${statementId} - skipping recalculation`);
-		
-return null;
+
+		return null;
 	}
 
 	const userEvaluations = new Map<string, UserEvaluationData>();
@@ -123,7 +125,7 @@ return null;
 	for (const sourceId of sourceIds) {
 		const sourceEvals = await db
 			.collection(Collections.evaluations)
-			.where("statementId", "==", sourceId)
+			.where('statementId', '==', sourceId)
 			.get();
 
 		for (const doc of sourceEvals.docs) {
@@ -151,7 +153,7 @@ return null;
 	// 2. Collect DIRECT evaluations on cluster-option (migratedAt is null/undefined) - these OVERWRITE
 	const clusterEvals = await db
 		.collection(Collections.evaluations)
-		.where("statementId", "==", statementId)
+		.where('statementId', '==', statementId)
 		.get();
 
 	for (const doc of clusterEvals.docs) {
@@ -217,7 +219,10 @@ return null;
 	// Calculate correct metrics
 	const averageEvaluation = totalEvaluators > 0 ? sumEvaluations / totalEvaluators : 0;
 	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalEvaluators);
-	const consensusValid = calculateConsensusValid(agreement, statement.popperHebbianScore ?? undefined);
+	const consensusValid = calculateConsensusValid(
+		agreement,
+		statement.popperHebbianScore ?? undefined,
+	);
 
 	// Build updated evaluation object
 	const updatedEvaluation: StatementEvaluation = {
@@ -263,11 +268,11 @@ return null;
 
 		logger.info(
 			`Recalculated cluster-option ${statementId}: ${userEvaluations.size} unique users ` +
-			`(${sourceIds.length} sources, direct evaluations took priority)`
+				`(${sourceIds.length} sources, direct evaluations took priority)`,
 		);
 	} else {
 		logger.info(
-			`[DRY RUN] Would recalculate cluster-option ${statementId}: ${userEvaluations.size} unique users`
+			`[DRY RUN] Would recalculate cluster-option ${statementId}: ${userEvaluations.size} unique users`,
 		);
 	}
 
@@ -285,15 +290,15 @@ return null;
  */
 async function recalculateSingleStatementEvaluations(
 	statementId: string,
-	dryRun: boolean = false
+	dryRun: boolean = false,
 ): Promise<StatementFix | null> {
 	const statementRef = db.collection(Collections.statements).doc(statementId);
 	const statementDoc = await statementRef.get();
 
 	if (!statementDoc.exists) {
 		logger.warn(`Statement ${statementId} not found`);
-		
-return null;
+
+		return null;
 	}
 
 	const statement = statementDoc.data() as Statement & {
@@ -314,7 +319,7 @@ return null;
 	// Get all actual evaluations for this statement
 	const evaluationsSnapshot = await db
 		.collection(Collections.evaluations)
-		.where("statementId", "==", statementId)
+		.where('statementId', '==', statementId)
 		.get();
 
 	// Calculate actual counts from evaluation documents
@@ -377,7 +382,10 @@ return null;
 	// Calculate correct metrics
 	const averageEvaluation = totalWithNonZeroEval > 0 ? sumEvaluations / totalWithNonZeroEval : 0;
 	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalWithNonZeroEval);
-	const consensusValid = calculateConsensusValid(agreement, statement.popperHebbianScore ?? undefined);
+	const consensusValid = calculateConsensusValid(
+		agreement,
+		statement.popperHebbianScore ?? undefined,
+	);
 
 	// Build updated evaluation object
 	const updatedEvaluation: StatementEvaluation = {
@@ -435,10 +443,13 @@ return null;
 /**
  * Update parent's total evaluators count based on unique evaluators
  */
-async function updateParentTotalEvaluators(parentId: string, dryRun: boolean = false): Promise<number> {
+async function updateParentTotalEvaluators(
+	parentId: string,
+	dryRun: boolean = false,
+): Promise<number> {
 	const evaluationsSnapshot = await db
 		.collection(Collections.evaluations)
-		.where("parentId", "==", parentId)
+		.where('parentId', '==', parentId)
 		.get();
 
 	const uniqueEvaluators = new Set<string>();
@@ -478,7 +489,9 @@ async function updateParentTotalEvaluators(parentId: string, dryRun: boolean = f
 			lastUpdate: Date.now(),
 		});
 	} else if (dryRun) {
-		logger.info(`[DRY RUN] Would update parent ${parentId} totalEvaluators to ${totalUniqueEvaluators}`);
+		logger.info(
+			`[DRY RUN] Would update parent ${parentId} totalEvaluators to ${totalUniqueEvaluators}`,
+		);
 	}
 
 	return totalUniqueEvaluators;
@@ -493,12 +506,12 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 		const { statementId, dryRun = false } = request.data;
 
 		if (!statementId) {
-			throw new HttpsError("invalid-argument", "statementId is required");
+			throw new HttpsError('invalid-argument', 'statementId is required');
 		}
 
 		// Check if user is authenticated
 		if (!request.auth) {
-			throw new HttpsError("unauthenticated", "User must be authenticated");
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
 		const userId = request.auth.uid;
@@ -507,7 +520,7 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 		const statementDoc = await db.collection(Collections.statements).doc(statementId).get();
 
 		if (!statementDoc.exists) {
-			throw new HttpsError("not-found", "Statement not found");
+			throw new HttpsError('not-found', 'Statement not found');
 		}
 
 		const statement = statementDoc.data() as Statement;
@@ -523,17 +536,25 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 				.get();
 
 			if (!adminDoc.exists) {
-				throw new HttpsError("permission-denied", "User is not authorized to recalculate this statement");
+				throw new HttpsError(
+					'permission-denied',
+					'User is not authorized to recalculate this statement',
+				);
 			}
 
 			const adminData = adminDoc.data();
-			if (adminData?.role !== "admin") {
-				throw new HttpsError("permission-denied", "User must be an admin to recalculate evaluations");
+			if (adminData?.role !== 'admin') {
+				throw new HttpsError(
+					'permission-denied',
+					'User must be an admin to recalculate evaluations',
+				);
 			}
 		}
 
-		const modeLabel = dryRun ? "[DRY RUN] " : "";
-		logger.info(`${modeLabel}Starting recalculation for statement ${statementId} by user ${userId}`);
+		const modeLabel = dryRun ? '[DRY RUN] ' : '';
+		logger.info(
+			`${modeLabel}Starting recalculation for statement ${statementId} by user ${userId}`,
+		);
 
 		const result: RecalculateResult = {
 			success: true,
@@ -548,8 +569,8 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 			// Get all option statements under this parent
 			const optionsSnapshot = await db
 				.collection(Collections.statements)
-				.where("parentId", "==", statementId)
-				.where("statementType", "==", StatementType.option)
+				.where('parentId', '==', statementId)
+				.where('statementType', '==', StatementType.option)
 				.get();
 
 			logger.info(`${modeLabel}Found ${optionsSnapshot.size} options to process`);
@@ -563,13 +584,13 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 						result.statementsFixed++;
 						result.fixes.push(fix);
 						logger.info(
-							`${modeLabel}${fix.isClusterOption ? "Cluster " : ""}${doc.id}: ` +
-							`pro ${fix.before.numberOfProEvaluators} -> ${fix.after.numberOfProEvaluators}, ` +
-							`con ${fix.before.numberOfConEvaluators} -> ${fix.after.numberOfConEvaluators}`
+							`${modeLabel}${fix.isClusterOption ? 'Cluster ' : ''}${doc.id}: ` +
+								`pro ${fix.before.numberOfProEvaluators} -> ${fix.after.numberOfProEvaluators}, ` +
+								`con ${fix.before.numberOfConEvaluators} -> ${fix.after.numberOfConEvaluators}`,
 						);
 					}
 				} catch (error) {
-					const errorMsg = `Failed to process ${doc.id}: ${error instanceof Error ? error.message : "Unknown error"}`;
+					const errorMsg = `Failed to process ${doc.id}: ${error instanceof Error ? error.message : 'Unknown error'}`;
 					result.errors.push(errorMsg);
 					logger.error(errorMsg);
 				}
@@ -580,16 +601,16 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 
 			logger.info(
 				`${modeLabel}Recalculation complete: ${result.statementsProcessed} processed, ` +
-				`${result.statementsFixed} ${dryRun ? "would be fixed" : "fixed"}`
+					`${result.statementsFixed} ${dryRun ? 'would be fixed' : 'fixed'}`,
 			);
 
 			return result;
 		} catch (error) {
 			logger.error(`${modeLabel}Recalculation failed:`, error);
 			throw new HttpsError(
-				"internal",
-				`Recalculation failed: ${error instanceof Error ? error.message : "Unknown error"}`
+				'internal',
+				`Recalculation failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
 			);
 		}
-	}
+	},
 );

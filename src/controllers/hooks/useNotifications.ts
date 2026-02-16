@@ -24,12 +24,13 @@ export const useNotifications = (statementId?: string) => {
 		token: string | null;
 		serviceWorkerSupported: boolean;
 	}>({
-		permission: isNotificationSupported() && isServiceWorkerSupported() 
-			? notificationService.safeGetPermission() 
-			: 'unsupported',
+		permission:
+			isNotificationSupported() && isServiceWorkerSupported()
+				? notificationService.safeGetPermission()
+				: 'unsupported',
 		loading: false,
 		token: null,
-		serviceWorkerSupported: isServiceWorkerSupported()
+		serviceWorkerSupported: isServiceWorkerSupported(),
 	});
 
 	const params = useParams();
@@ -44,7 +45,7 @@ export const useNotifications = (statementId?: string) => {
 		if (!notificationService.isSupported()) {
 			console.info('Service Workers or Notifications not supported in this browser mode');
 
-			return () => { }; // Empty cleanup function
+			return () => {}; // Empty cleanup function
 		}
 
 		const auth = getAuth();
@@ -52,7 +53,7 @@ export const useNotifications = (statementId?: string) => {
 		const unsubscribe = onAuthStateChanged(auth, async (user) => {
 			if (user) {
 				// User is signed in, initialize notification service
-				setPermissionState(prev => ({ ...prev, loading: true }));
+				setPermissionState((prev) => ({ ...prev, loading: true }));
 				try {
 					await notificationService.initialize(user.uid);
 					const token = notificationService.getToken();
@@ -61,11 +62,11 @@ export const useNotifications = (statementId?: string) => {
 						permission: notificationService.safeGetPermission(),
 						loading: false,
 						token,
-						serviceWorkerSupported: true
+						serviceWorkerSupported: true,
 					});
 				} catch (error) {
 					console.error('Error initializing notifications:', error);
-					setPermissionState(prev => ({ ...prev, loading: false }));
+					setPermissionState((prev) => ({ ...prev, loading: false }));
 				}
 			} else {
 				// User is signed out
@@ -73,7 +74,7 @@ export const useNotifications = (statementId?: string) => {
 					permission: notificationService.safeGetPermission(),
 					loading: false,
 					token: null,
-					serviceWorkerSupported: true
+					serviceWorkerSupported: true,
 				});
 			}
 		});
@@ -110,7 +111,7 @@ export const useNotifications = (statementId?: string) => {
 			return 'unsupported';
 		}
 
-		setPermissionState(prev => ({ ...prev, loading: true }));
+		setPermissionState((prev) => ({ ...prev, loading: true }));
 
 		try {
 			const result = await Notification.requestPermission();
@@ -125,13 +126,13 @@ export const useNotifications = (statementId?: string) => {
 						permission: result,
 						loading: false,
 						token,
-						serviceWorkerSupported: true
+						serviceWorkerSupported: true,
 					});
-					
+
 					// Track notification enabled
 					logger.info('Notifications enabled', { userId: auth.currentUser.uid });
 					analyticsService.logEvent(AnalyticsEvents.NOTIFICATION_ENABLED, {
-						notificationType: 'all'
+						notificationType: 'all',
 					});
 				}
 			} else {
@@ -139,16 +140,16 @@ export const useNotifications = (statementId?: string) => {
 					permission: result,
 					loading: false,
 					token: null,
-					serviceWorkerSupported: true
+					serviceWorkerSupported: true,
 				});
-				
+
 				logger.info('Notification permission denied', { result });
 			}
 
 			return result;
 		} catch (error) {
 			logger.error('Error requesting notification permission', error);
-			setPermissionState(prev => ({ ...prev, loading: false }));
+			setPermissionState((prev) => ({ ...prev, loading: false }));
 
 			return 'denied';
 		}
@@ -179,7 +180,7 @@ export const useNotifications = (statementId?: string) => {
 			return;
 		}
 
-		navigator.serviceWorker.ready.then(registration => {
+		navigator.serviceWorker.ready.then((registration) => {
 			registration.showNotification('FreeDi App', {
 				body: 'This is a test notification',
 				icon: '/icons/logo-192px.png',
@@ -189,10 +190,10 @@ export const useNotifications = (statementId?: string) => {
 				actions: [
 					{
 						action: 'open',
-						title: 'Open'
-					}
+						title: 'Open',
+					},
 				],
-				requireInteraction: true
+				requireInteraction: true,
 			});
 
 			playNotificationSound();
@@ -207,15 +208,15 @@ export const useNotifications = (statementId?: string) => {
 			return;
 		}
 
-		navigator.serviceWorker.ready.then(registration => {
-			registration.getNotifications().then(notifications => {
-				notifications.forEach(notification => notification.close());
+		navigator.serviceWorker.ready.then((registration) => {
+			registration.getNotifications().then((notifications) => {
+				notifications.forEach((notification) => notification.close());
 			});
 
 			// Send message to service worker to clear any background notifications
 			if (navigator.serviceWorker.controller) {
 				navigator.serviceWorker.controller.postMessage({
-					type: 'CLEAR_NOTIFICATIONS'
+					type: 'CLEAR_NOTIFICATIONS',
 				});
 			}
 		});
@@ -226,7 +227,7 @@ export const useNotifications = (statementId?: string) => {
 		requestPermission,
 		sendTestNotification,
 		clearNotifications,
-		hasToken
+		hasToken,
 	};
 };
 

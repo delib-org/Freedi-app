@@ -18,7 +18,7 @@ export const useDocumentTitle = ({ statement }: UseDocumentTitleProps) => {
 		try {
 			const { shortVersion } = statementTitleToDisplay(
 				statement.statement,
-				APP_CONSTANTS.TITLE_MAX_LENGTH
+				APP_CONSTANTS.TITLE_MAX_LENGTH,
 			);
 			document.title = `${APP_CONSTANTS.DOCUMENT_TITLE_PREFIX} - ${shortVersion}`;
 		} catch (error) {

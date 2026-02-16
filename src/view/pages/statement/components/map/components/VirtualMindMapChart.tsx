@@ -12,7 +12,7 @@ import ReactFlow, {
 	ReactFlowInstance,
 	useViewport,
 } from 'reactflow';
-import '../mapHelpers/reactFlow.scss';
+import '../mapHelpers/reactFlow.module.scss';
 import 'reactflow/dist/style.css';
 
 // Custom imports
@@ -20,10 +20,7 @@ import { getStatementFromDB } from '../../../../../../controllers/db/statements/
 import { updateStatementParents } from '../../../../../../controllers/db/statements/setStatements';
 import { useMapContext } from '../../../../../../controllers/hooks/useMap';
 import Modal from '../../../../../components/modal/Modal';
-import {
-	createInitialNodesAndEdges,
-	getLayoutElements,
-} from '../mapHelpers/customNodeCont';
+import { createInitialNodesAndEdges, getLayoutElements } from '../mapHelpers/customNodeCont';
 import CustomNode from './CustomNode';
 import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
 import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
@@ -81,7 +78,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 		};
 
 		// Filter nodes within viewport bounds
-		return nodes.filter(node => {
+		return nodes.filter((node) => {
 			if (!node.position) return false;
 
 			const nodeRight = node.position.x + (node.width || 150);
@@ -118,7 +115,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				visibleNodes: visibleCount,
 				hiddenNodes: hiddenCount,
 				virtualizationEnabled: isVirtualized,
-				renderEfficiency: ((visibleCount / nodeCount) * 100).toFixed(1) + '%'
+				renderEfficiency: ((visibleCount / nodeCount) * 100).toFixed(1) + '%',
 			});
 		}
 	}, [nodes.length, visibleNodes.length, isVirtualized]);
@@ -142,12 +139,11 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			const startTime = performance.now();
 
 			// Get initial nodes and edges
-			const { nodes: initialNodes, edges: initialEdges } = createInitialNodesAndEdges(
-				descendants
-			);
+			const { nodes: initialNodes, edges: initialEdges } = createInitialNodesAndEdges(descendants);
 
 			// Check if we should virtualize
-			const shouldVirtualize = initialNodes.length > MINDMAP_CONFIG.PERFORMANCE.VIRTUALIZATION_THRESHOLD;
+			const shouldVirtualize =
+				initialNodes.length > MINDMAP_CONFIG.PERFORMANCE.VIRTUALIZATION_THRESHOLD;
 			setIsVirtualized(shouldVirtualize);
 
 			// Layout calculation
@@ -156,7 +152,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				initialEdges,
 				mapContext.nodeHeight,
 				mapContext.nodeWidth,
-				mapContext.direction
+				mapContext.direction,
 			);
 
 			// Batch node processing for better performance
@@ -165,13 +161,15 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 
 			for (let i = 0; i < layoutedNodes.length; i += batchSize) {
 				const batch = layoutedNodes.slice(i, i + batchSize);
-				processedNodes.push(...batch.map((node) => ({
-					...node,
-					data: {
-						...node.data,
-						animate: false, // Disable animation for large datasets
-					},
-				})));
+				processedNodes.push(
+					...batch.map((node) => ({
+						...node,
+						data: {
+							...node.data,
+							animate: false, // Disable animation for large datasets
+						},
+					})),
+				);
 			}
 
 			setNodes(processedNodes);
@@ -179,15 +177,16 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			setTempEdges(layoutedEdges);
 
 			const endTime = performance.now();
-			console.info(`[VirtualMindMapChart] Layout completed in ${(endTime - startTime).toFixed(2)}ms for ${processedNodes.length} nodes`);
-
+			console.info(
+				`[VirtualMindMapChart] Layout completed in ${(endTime - startTime).toFixed(2)}ms for ${processedNodes.length} nodes`,
+			);
 		} catch (error) {
 			logError(error, {
 				operation: 'VirtualMindMapChart.initialize',
 				metadata: {
 					descendantsCount: descendants?.sub?.length,
-					filterBy
-				}
+					filterBy,
+				},
 			});
 		}
 	}, [descendants, filterBy]);
@@ -215,21 +214,20 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 						edges,
 						height,
 						width,
-						direction
+						direction,
 					);
 
 					setNodes([...layoutedNodes]);
 					setEdges([...layoutedEdges]);
 				});
-
 			} catch (error) {
 				logError(error, {
 					operation: 'VirtualMindMapChart.onLayout',
-					metadata: { direction }
+					metadata: { direction },
 				});
 			}
 		},
-		[nodes, edges, setEdges, setMapContext, setNodes]
+		[nodes, edges, setEdges, setMapContext, setNodes],
 	);
 
 	// Optimized node drag handlers
@@ -244,7 +242,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 		} catch (error) {
 			logError(error, {
 				operation: 'VirtualMindMapChart.onNodeDragStop',
-				metadata: { nodeId: node.id }
+				metadata: { nodeId: node.id },
 			});
 		}
 	};
@@ -261,10 +259,10 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				ns.map((n) => ({
 					...n,
 					className: intersection?.id === n.id ? 'highlight' : '',
-				}))
+				})),
 			);
 		},
-		[getIntersectingNodes, setEdges, setNodes, edges.length]
+		[getIntersectingNodes, setEdges, setNodes, edges.length],
 	);
 
 	// Optimized save/restore with compression for large datasets
@@ -277,17 +275,17 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				if (flow.nodes.length > 100) {
 					// Store only essential data for large flows
 					const compressedFlow = {
-						nodes: flow.nodes.map(n => ({
+						nodes: flow.nodes.map((n) => ({
 							id: n.id,
 							position: n.position,
-							data: { label: n.data?.label }
+							data: { label: n.data?.label },
 						})),
-						edges: flow.edges.map(e => ({
+						edges: flow.edges.map((e) => ({
 							id: e.id,
 							source: e.source,
-							target: e.target
+							target: e.target,
 						})),
-						viewport: flow.viewport
+						viewport: flow.viewport,
 					};
 					localStorage.setItem('flowKey_compressed', JSON.stringify(compressedFlow));
 				} else {
@@ -298,7 +296,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			} catch (error) {
 				logError(error, {
 					operation: 'VirtualMindMapChart.onSave',
-					metadata: { nodeCount: nodes.length }
+					metadata: { nodeCount: nodes.length },
 				});
 			}
 		}
@@ -323,7 +321,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				}
 			} catch (error) {
 				logError(error, {
-					operation: 'VirtualMindMapChart.onRestore'
+					operation: 'VirtualMindMapChart.onRestore',
 				});
 			}
 		};
@@ -342,16 +340,13 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 					throw new Error('Statement not found');
 				}
 
-				await updateStatementParents(
-					draggedStatement,
-					newDraggedStatementParent
-				);
+				await updateStatementParents(draggedStatement, newDraggedStatementParent);
 
 				console.info('[VirtualMindMapChart] Statement moved successfully');
 			} catch (error) {
 				logError(error, {
 					operation: 'VirtualMindMapChart.handleMoveStatement',
-					metadata: { draggedNodeId, intersectedNodeId }
+					metadata: { draggedNodeId, intersectedNodeId },
 				});
 			}
 		}
@@ -382,37 +377,29 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 				// Virtual rendering optimization
 				onlyRenderVisibleElements={isVirtualized}
 			>
-				<Panel position='top-left'>
-					<div className='map-control'>
+				<Panel position="top-left">
+					<div className="map-control">
 						{isAdmin && (
 							<>
 								<button
-									className='map-control__button'
+									className="map-control__button"
 									onClick={() => onLayout('TB')}
-									title='Vertical Layout'
+									title="Vertical Layout"
 								>
-									<img src={MapVerticalLayoutIcon} alt='Vertical Layout' />
+									<img src={MapVerticalLayoutIcon} alt="Vertical Layout" />
 								</button>
 								<button
-									className='map-control__button'
+									className="map-control__button"
 									onClick={() => onLayout('LR')}
-									title='Horizontal Layout'
+									title="Horizontal Layout"
 								>
-									<img src={MapHorizontalLayoutIcon} alt='Horizontal Layout' />
+									<img src={MapHorizontalLayoutIcon} alt="Horizontal Layout" />
 								</button>
-								<button
-									className='map-control__button'
-									onClick={onSave}
-									title='Save Layout'
-								>
-									<img src={MapSaveIcon} alt='Save' />
+								<button className="map-control__button" onClick={onSave} title="Save Layout">
+									<img src={MapSaveIcon} alt="Save" />
 								</button>
-								<button
-									className='map-control__button'
-									onClick={onRestore}
-									title='Restore Layout'
-								>
-									<img src={MapRestoreIcon} alt='Restore' />
+								<button className="map-control__button" onClick={onRestore} title="Restore Layout">
+									<img src={MapRestoreIcon} alt="Restore" />
 								</button>
 							</>
 						)}
@@ -422,14 +409,16 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 
 				{/* Performance indicator */}
 				{isVirtualized && (
-					<Panel position='bottom-left'>
-						<div style={{
-							background: 'rgba(255, 255, 255, 0.9)',
-							padding: '8px',
-							borderRadius: '4px',
-							fontSize: '12px',
-							color: '#666'
-						}}>
+					<Panel position="bottom-left">
+						<div
+							style={{
+								background: 'rgba(255, 255, 255, 0.9)',
+								padding: '8px',
+								borderRadius: '4px',
+								fontSize: '12px',
+								color: '#666',
+							}}
+						>
 							Virtual Rendering: {visibleNodes.length}/{nodes.length} nodes
 						</div>
 					</Panel>
@@ -439,7 +428,7 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 			{mapContext.moveStatementModal && (
 				<Modal>
 					<div
-						className='modal__content'
+						className="modal__content"
 						style={{
 							width: '90vw',
 							maxWidth: '25rem',
@@ -450,19 +439,13 @@ function VirtualMindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>
 					>
 						<h3>Move Statement?</h3>
 						<p>Are you sure you want to move this statement to a new parent?</p>
-						<div className='modal__buttons'>
-							<button
-								className='btn btn--secondary'
-								onClick={() => handleMoveStatement(false)}
-							>
-								<img src={MapCancelIcon} alt='Cancel' />
+						<div className="modal__buttons">
+							<button className="btn btn--secondary" onClick={() => handleMoveStatement(false)}>
+								<img src={MapCancelIcon} alt="Cancel" />
 								Cancel
 							</button>
-							<button
-								className='btn btn--primary'
-								onClick={() => handleMoveStatement(true)}
-							>
-								<img src={MapHamburgerIcon} alt='Move' />
+							<button className="btn btn--primary" onClick={() => handleMoveStatement(true)}>
+								<img src={MapHamburgerIcon} alt="Move" />
 								Move
 							</button>
 						</div>

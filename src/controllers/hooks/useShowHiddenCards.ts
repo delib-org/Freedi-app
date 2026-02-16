@@ -36,9 +36,7 @@ export function useShowHiddenCards(): UseShowHiddenCardsReturn {
 		try {
 			localStorage.setItem(SHOW_HIDDEN_CARDS_KEY, JSON.stringify(value));
 			// Dispatch custom event for other components to listen
-			window.dispatchEvent(
-				new CustomEvent(SHOW_HIDDEN_CARDS_CHANGE_EVENT, { detail: value })
-			);
+			window.dispatchEvent(new CustomEvent(SHOW_HIDDEN_CARDS_CHANGE_EVENT, { detail: value }));
 		} catch (error) {
 			console.error('Failed to save showHiddenCards preference:', error);
 		}
@@ -55,15 +53,12 @@ export function useShowHiddenCards(): UseShowHiddenCardsReturn {
 			setShowHiddenCardsState(event.detail);
 		};
 
-		window.addEventListener(
-			SHOW_HIDDEN_CARDS_CHANGE_EVENT,
-			handleStorageChange as EventListener
-		);
+		window.addEventListener(SHOW_HIDDEN_CARDS_CHANGE_EVENT, handleStorageChange as EventListener);
 
 		return () => {
 			window.removeEventListener(
 				SHOW_HIDDEN_CARDS_CHANGE_EVENT,
-				handleStorageChange as EventListener
+				handleStorageChange as EventListener,
 			);
 		};
 	}, []);

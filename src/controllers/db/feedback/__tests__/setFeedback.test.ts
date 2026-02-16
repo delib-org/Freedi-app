@@ -49,29 +49,19 @@ describe('setFeedback', () => {
 		it('should save feedback to database', async () => {
 			await setFeedbackToDB(mockFeedback);
 
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				mockFeedback
-			);
+			expect(mockSetDoc).toHaveBeenCalledWith(expect.anything(), mockFeedback);
 		});
 
 		it('should log success message', async () => {
 			await setFeedbackToDB(mockFeedback);
 
-			expect(console.info).toHaveBeenCalledWith(
-				'Feedback saved successfully:',
-				'feedback-123'
-			);
+			expect(console.info).toHaveBeenCalledWith('Feedback saved successfully:', 'feedback-123');
 		});
 
 		it('should create document reference with correct collection and id', async () => {
 			await setFeedbackToDB(mockFeedback);
 
-			expect(mockDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				'feedback',
-				'feedback-123'
-			);
+			expect(mockDoc).toHaveBeenCalledWith(expect.anything(), 'feedback', 'feedback-123');
 		});
 	});
 
@@ -80,7 +70,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, feedbackId: '' };
 
 			await expect(setFeedbackToDB(invalidFeedback as Feedback)).rejects.toThrow(
-				'Feedback ID is required'
+				'Feedback ID is required',
 			);
 		});
 
@@ -88,7 +78,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, feedbackId: undefined };
 
 			await expect(setFeedbackToDB(invalidFeedback as unknown as Feedback)).rejects.toThrow(
-				'Feedback ID is required'
+				'Feedback ID is required',
 			);
 		});
 
@@ -96,7 +86,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, statementId: '' };
 
 			await expect(setFeedbackToDB(invalidFeedback as Feedback)).rejects.toThrow(
-				'Statement ID is required'
+				'Statement ID is required',
 			);
 		});
 
@@ -104,7 +94,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, statementId: undefined };
 
 			await expect(setFeedbackToDB(invalidFeedback as unknown as Feedback)).rejects.toThrow(
-				'Statement ID is required'
+				'Statement ID is required',
 			);
 		});
 
@@ -112,7 +102,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, feedbackText: '' };
 
 			await expect(setFeedbackToDB(invalidFeedback as Feedback)).rejects.toThrow(
-				'Feedback text is required'
+				'Feedback text is required',
 			);
 		});
 
@@ -120,7 +110,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, feedbackText: '   ' };
 
 			await expect(setFeedbackToDB(invalidFeedback as Feedback)).rejects.toThrow(
-				'Feedback text is required'
+				'Feedback text is required',
 			);
 		});
 
@@ -128,7 +118,7 @@ describe('setFeedback', () => {
 			const invalidFeedback = { ...mockFeedback, feedbackText: undefined };
 
 			await expect(setFeedbackToDB(invalidFeedback as unknown as Feedback)).rejects.toThrow(
-				'Feedback text is required'
+				'Feedback text is required',
 			);
 		});
 	});
@@ -151,10 +141,7 @@ describe('setFeedback', () => {
 				// Expected to throw
 			}
 
-			expect(console.error).toHaveBeenCalledWith(
-				'Error saving feedback to database:',
-				dbError
-			);
+			expect(console.error).toHaveBeenCalledWith('Error saving feedback to database:', dbError);
 		});
 	});
 
@@ -185,10 +172,7 @@ describe('setFeedback', () => {
 
 			await setFeedbackToDB(longFeedback);
 
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				longFeedback
-			);
+			expect(mockSetDoc).toHaveBeenCalledWith(expect.anything(), longFeedback);
 		});
 
 		it('should handle feedback with special characters', async () => {
@@ -199,10 +183,7 @@ describe('setFeedback', () => {
 
 			await setFeedbackToDB(specialFeedback);
 
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				specialFeedback
-			);
+			expect(mockSetDoc).toHaveBeenCalledWith(expect.anything(), specialFeedback);
 		});
 
 		it('should handle feedback with unicode characters', async () => {
@@ -213,10 +194,7 @@ describe('setFeedback', () => {
 
 			await setFeedbackToDB(unicodeFeedback);
 
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				unicodeFeedback
-			);
+			expect(mockSetDoc).toHaveBeenCalledWith(expect.anything(), unicodeFeedback);
 		});
 	});
 

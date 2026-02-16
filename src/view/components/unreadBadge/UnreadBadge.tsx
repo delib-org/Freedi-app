@@ -38,13 +38,14 @@ const UnreadBadge: FC<UnreadBadgeProps> = ({
 	maxDisplay = 9,
 	size = 'medium',
 	position = 'relative',
-	ariaLabel
+	ariaLabel,
 }) => {
 	// Don't render if count is 0 or negative
 	if (count <= 0) return null;
 
 	const displayText = count > maxDisplay ? `${maxDisplay}+` : count.toString();
-	const accessibleLabel = ariaLabel || `${count} unread ${count === 1 ? 'notification' : 'notifications'}`;
+	const accessibleLabel =
+		ariaLabel || `${count} unread ${count === 1 ? 'notification' : 'notifications'}`;
 
 	return (
 		<div

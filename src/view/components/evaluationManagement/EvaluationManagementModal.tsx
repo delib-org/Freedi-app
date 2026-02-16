@@ -25,7 +25,7 @@ const EvaluationManagementModal: FC<Props> = ({
 	const { t } = useTranslation();
 
 	const votedStatementIds = useAppSelector(
-		userVotedStatementsInParentSelector(parentStatement.statementId)
+		userVotedStatementsInParentSelector(parentStatement.statementId),
 	);
 
 	const allStatements = useAppSelector(statementsSelector);
@@ -41,7 +41,7 @@ const EvaluationManagementModal: FC<Props> = ({
 			uid: user.uid,
 		};
 
-		const statement = allStatements.find(s => s.statementId === statementId);
+		const statement = allStatements.find((s) => s.statementId === statementId);
 		if (!statement) return;
 
 		try {
@@ -65,35 +65,32 @@ const EvaluationManagementModal: FC<Props> = ({
 			<div className={styles.modal} onClick={(e) => e.stopPropagation()}>
 				<div className={styles.header}>
 					<h2>{t('Manage Your Votes')}</h2>
-					<button
-						className={styles.closeButton}
-						onClick={onClose}
-						aria-label="Close modal"
-					>
+					<button className={styles.closeButton} onClick={onClose} aria-label="Close modal">
 						<CloseIcon />
 					</button>
 				</div>
 
 				<div className={styles.content}>
 					<p className={styles.message}>
-						{t("You've reached the maximum of")} {maxVotes} {maxVotes !== 1 ? t('votes') : t('vote')}.
+						{t("You've reached the maximum of")} {maxVotes}{' '}
+						{maxVotes !== 1 ? t('votes') : t('vote')}.
 						{t('Please remove a vote from another option to vote for this one')}.
 					</p>
 
 					<div className={styles.votesList}>
-						<h3>{t('Your Current Votes')} ({votedStatementIds.length}/{maxVotes})</h3>
+						<h3>
+							{t('Your Current Votes')} ({votedStatementIds.length}/{maxVotes})
+						</h3>
 						{votedStatementIds.length === 0 ? (
 							<p className={styles.noVotes}>{t('No votes yet')}</p>
 						) : (
 							<ul>
 								{votedStatementIds.map((statementId) => {
-									const statement = allStatements.find(s => s.statementId === statementId);
+									const statement = allStatements.find((s) => s.statementId === statementId);
 
-return statement ? (
+									return statement ? (
 										<li key={statementId} className={styles.voteItem}>
-											<span className={styles.statementText}>
-												{statement.statement}
-											</span>
+											<span className={styles.statementText}>{statement.statement}</span>
 											<button
 												className={styles.removeButton}
 												onClick={() => handleRemoveVote(statementId)}

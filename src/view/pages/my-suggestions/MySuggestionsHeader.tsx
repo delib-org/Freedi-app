@@ -24,8 +24,9 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 
 			return;
 		}
-		
-		const isMassConsensus = statement.statementType === StatementType.question && 
+
+		const isMassConsensus =
+			statement.statementType === StatementType.question &&
 			statement.questionSettings?.questionType === QuestionType.massConsensus;
 		const isAdmin = subscription?.role === Role.admin;
 
@@ -49,7 +50,7 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 						<div className="app-header-title">
 							<span>My Suggestions</span>
 						</div>
-						<button 
+						<button
 							className="app-header-back-button no-rotate"
 							onClick={handleBackToStatement}
 							aria-label="Back to statement"
@@ -59,7 +60,7 @@ const MySuggestionsHeader: FC<Props> = ({ statement }) => {
 					</>
 				) : (
 					<>
-						<button 
+						<button
 							className="app-header-back-button no-rotate"
 							onClick={handleBackToStatement}
 							aria-label="Back to statement"

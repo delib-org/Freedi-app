@@ -23,7 +23,7 @@ const creatorSlice = createSlice({
 		},
 		removeCreator: (state) => {
 			state.creator = null;
-		}
+		},
 	},
 });
 

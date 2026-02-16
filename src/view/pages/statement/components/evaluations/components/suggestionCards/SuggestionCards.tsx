@@ -32,7 +32,7 @@ function sortStatements(
 	statements: Statement[],
 	sort: string | undefined,
 	randomSeed: number,
-	parentStatement?: Statement
+	parentStatement?: Statement,
 ): Statement[] {
 	const sorted = [...statements];
 
@@ -52,21 +52,29 @@ function sortStatements(
 				});
 			}
 
-			return sorted.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0));
+			return sorted.sort(
+				(a, b) =>
+					(b.evaluation?.agreement ?? b.consensus ?? 0) -
+					(a.evaluation?.agreement ?? a.consensus ?? 0),
+			);
 		}
 		case SortType.newest:
 			return sorted.sort((a, b) => b.createdAt - a.createdAt);
 		case SortType.random:
 			if (randomSeed) {
 				return sorted.sort((a, b) => {
-					const hashA = `${randomSeed}-${a.statementId}`.split('').reduce(
-						(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
-						0
-					);
-					const hashB = `${randomSeed}-${b.statementId}`.split('').reduce(
-						(acc, char, index) => acc + char.charCodeAt(0) * (index + 1) * randomSeed % 10000,
-						0
-					);
+					const hashA = `${randomSeed}-${a.statementId}`
+						.split('')
+						.reduce(
+							(acc, char, index) => acc + ((char.charCodeAt(0) * (index + 1) * randomSeed) % 10000),
+							0,
+						);
+					const hashB = `${randomSeed}-${b.statementId}`
+						.split('')
+						.reduce(
+							(acc, char, index) => acc + ((char.charCodeAt(0) * (index + 1) * randomSeed) % 10000),
+							0,
+						);
 
 					return hashA - hashB;
 				});
@@ -102,9 +110,7 @@ const SuggestionCards: FC<Props> = ({
 
 	const [randomSeed, setRandomSeed] = useState(Date.now());
 
-	const statementsFromStore = useSelector(
-		statementOptionsSelector(statement?.statementId)
-	);
+	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId));
 
 	// Check if user is admin
 	const isAdmin =
@@ -119,54 +125,55 @@ const SuggestionCards: FC<Props> = ({
 	// - Non-hidden cards are always visible
 	// - For admins: hidden cards visibility is controlled by the showHiddenCards toggle
 	// - For non-admins: they can see their own hidden cards only
-	const visibleStatements = useMemo(() =>
-		statementsFromStore.filter(st => {
-			// Non-hidden cards are always visible
-			if (st.hide !== true) return true;
+	const visibleStatements = useMemo(
+		() =>
+			statementsFromStore.filter((st) => {
+				// Non-hidden cards are always visible
+				if (st.hide !== true) return true;
 
-			// For admins: hidden cards visibility depends entirely on the toggle
-			if (isAdmin) {
-				return showHiddenCards;
-			}
+				// For admins: hidden cards visibility depends entirely on the toggle
+				if (isAdmin) {
+					return showHiddenCards;
+				}
 
-			// For non-admins: they can see their own hidden cards
-			if (st.creatorId === creator?.uid) return true;
+				// For non-admins: they can see their own hidden cards
+				if (st.creatorId === creator?.uid) return true;
 
-			// Otherwise, hidden cards are not visible
-			return false;
-		}),
-		[statementsFromStore, creator?.uid, isAdmin, showHiddenCards]
+				// Otherwise, hidden cards are not visible
+				return false;
+			}),
+		[statementsFromStore, creator?.uid, isAdmin, showHiddenCards],
 	);
 
 	// Memoize subStatements to prevent unnecessary recalculations
-	const filteredStatements = useMemo(() =>
-		propSubStatements ||
-		(selectionFunction
-			? visibleStatements.filter(
-				(sub: Statement) =>
-					sub.evaluation.selectionFunction === selectionFunction
-			)
-			: visibleStatements),
-		[propSubStatements, selectionFunction, visibleStatements]
+	const filteredStatements = useMemo(
+		() =>
+			propSubStatements ||
+			(selectionFunction
+				? visibleStatements.filter(
+						(sub: Statement) => sub.evaluation.selectionFunction === selectionFunction,
+					)
+				: visibleStatements),
+		[propSubStatements, selectionFunction, visibleStatements],
 	);
 
 	// Sort statements - memoized to prevent unnecessary re-sorts
-	const sortedStatements = useMemo(() =>
-		sortStatements(filteredStatements, sort, randomSeed, statement),
-		[filteredStatements, sort, randomSeed, statement]
+	const sortedStatements = useMemo(
+		() => sortStatements(filteredStatements, sort, randomSeed, statement),
+		[filteredStatements, sort, randomSeed, statement],
 	);
 
 	// Create a flip key based on the order of statements
 	// This triggers FLIP animation when order changes
-	const flipKey = useMemo(() =>
-		sortedStatements.map(s => s.statementId).join(','),
-		[sortedStatements]
+	const flipKey = useMemo(
+		() => sortedStatements.map((s) => s.statementId).join(','),
+		[sortedStatements],
 	);
 
 	useEffect(() => {
 		if (!statement && statementId)
 			getStatementFromDB(statementId).then((statement: Statement) =>
-				dispatch(setStatement(statement))
+				dispatch(setStatement(statement)),
 			);
 	}, [statement, statementId, dispatch]);
 
@@ -195,9 +202,7 @@ const SuggestionCards: FC<Props> = ({
 	}, [sort, location.search]);
 
 	if ((!sortedStatements || sortedStatements.length === 0) && isQuestion) {
-		return (
-			<EmptyScreen statement={statement} />
-		);
+		return <EmptyScreen statement={statement} />;
 	}
 
 	if (!statement) return null;
@@ -218,20 +223,14 @@ const SuggestionCards: FC<Props> = ({
 				{sortedStatements.map((statementSub: Statement) => (
 					<Flipped key={statementSub.statementId} flipId={statementSub.statementId}>
 						<div className={styles['card-wrapper']}>
-							<SuggestionCard
-								parentStatement={statement}
-								statement={statementSub}
-							/>
+							<SuggestionCard parentStatement={statement} statement={statementSub} />
 						</div>
 					</Flipped>
 				))}
 			</Flipper>
 			{isSubmitMode && (
 				<div className={styles.submitButtonContainer}>
-					<button
-						onClick={handleSubmit}
-						className={styles.submitButton}
-					>
+					<button onClick={handleSubmit} className={styles.submitButton}>
 						{t('Submit your vote')}
 					</button>
 				</div>

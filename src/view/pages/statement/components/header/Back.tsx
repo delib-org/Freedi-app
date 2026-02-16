@@ -53,15 +53,15 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 
 	return (
 		<button
-			className='app-header-back-button'
-			aria-label='Back Button'
+			className="app-header-back-button"
+			aria-label="Back Button"
 			onClick={handleBack}
-			data-cy='back-icon-header'
+			data-cy="back-icon-header"
 		>
 			<BackArrowIcon
-				className='back-arrow-icon'
+				className="back-arrow-icon"
 				style={{
-					color: headerColor?.color || "white",
+					color: headerColor?.color || 'white',
 				}}
 			/>
 		</button>

@@ -43,54 +43,42 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 			{/* Heading buttons */}
 			<div className={styles.toolbarGroup}>
 				<ToolbarButton
-					onClick={() =>
-						editor.chain().focus().toggleHeading({ level: 1 }).run()
-					}
+					onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
 					isActive={editor.isActive('heading', { level: 1 })}
 					title="Heading 1"
 				>
 					H1
 				</ToolbarButton>
 				<ToolbarButton
-					onClick={() =>
-						editor.chain().focus().toggleHeading({ level: 2 }).run()
-					}
+					onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
 					isActive={editor.isActive('heading', { level: 2 })}
 					title="Heading 2"
 				>
 					H2
 				</ToolbarButton>
 				<ToolbarButton
-					onClick={() =>
-						editor.chain().focus().toggleHeading({ level: 3 }).run()
-					}
+					onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
 					isActive={editor.isActive('heading', { level: 3 })}
 					title="Heading 3"
 				>
 					H3
 				</ToolbarButton>
 				<ToolbarButton
-					onClick={() =>
-						editor.chain().focus().toggleHeading({ level: 4 }).run()
-					}
+					onClick={() => editor.chain().focus().toggleHeading({ level: 4 }).run()}
 					isActive={editor.isActive('heading', { level: 4 })}
 					title="Heading 4"
 				>
 					H4
 				</ToolbarButton>
 				<ToolbarButton
-					onClick={() =>
-						editor.chain().focus().toggleHeading({ level: 5 }).run()
-					}
+					onClick={() => editor.chain().focus().toggleHeading({ level: 5 }).run()}
 					isActive={editor.isActive('heading', { level: 5 })}
 					title="Heading 5"
 				>
 					H5
 				</ToolbarButton>
 				<ToolbarButton
-					onClick={() =>
-						editor.chain().focus().toggleHeading({ level: 6 }).run()
-					}
+					onClick={() => editor.chain().focus().toggleHeading({ level: 6 }).run()}
 					isActive={editor.isActive('heading', { level: 6 })}
 					title="Heading 6"
 				>
@@ -148,31 +136,13 @@ const EditorToolbar: React.FC<EditorToolbarProps> = ({ editor }) => {
 						<line x1="10" y1="6" x2="21" y2="6" />
 						<line x1="10" y1="12" x2="21" y2="12" />
 						<line x1="10" y1="18" x2="21" y2="18" />
-						<text
-							x="4"
-							y="7"
-							fontSize="6"
-							fill="currentColor"
-							stroke="none"
-						>
+						<text x="4" y="7" fontSize="6" fill="currentColor" stroke="none">
 							1
 						</text>
-						<text
-							x="4"
-							y="13"
-							fontSize="6"
-							fill="currentColor"
-							stroke="none"
-						>
+						<text x="4" y="13" fontSize="6" fill="currentColor" stroke="none">
 							2
 						</text>
-						<text
-							x="4"
-							y="19"
-							fontSize="6"
-							fill="currentColor"
-							stroke="none"
-						>
+						<text x="4" y="19" fontSize="6" fill="currentColor" stroke="none">
 							3
 						</text>
 					</svg>

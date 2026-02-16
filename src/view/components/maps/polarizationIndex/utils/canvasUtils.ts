@@ -1,14 +1,18 @@
 import type { ChartDimensions, CanvasPoint } from '../types';
 
 // Transform data coordinates to canvas coordinates
-export const dataToCanvas = (dataX: number, dataY: number, dimensions: ChartDimensions): CanvasPoint => {
+export const dataToCanvas = (
+	dataX: number,
+	dataY: number,
+	dimensions: ChartDimensions,
+): CanvasPoint => {
 	const isMobile = window.innerWidth <= 768;
 	const margin = isMobile ? 40 : 60;
 	const plotWidth = dimensions.width - 2 * margin;
 	const plotHeight = dimensions.height - 2 * margin;
 
 	const canvasX = margin + ((dataX + 1) / 2) * plotWidth;
-	const canvasY = dimensions.height - margin - (dataY * plotHeight);
+	const canvasY = dimensions.height - margin - dataY * plotHeight;
 
 	return { x: canvasX, y: canvasY };
 };

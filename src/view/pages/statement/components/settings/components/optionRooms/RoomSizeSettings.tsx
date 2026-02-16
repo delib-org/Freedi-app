@@ -35,18 +35,14 @@ const RoomSizeSettings: FC<RoomSizeSettingsProps> = ({
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>
-				{t('Room Size')}
-			</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('Room Size')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
 				{t('When an option exceeds the maximum, it will be split into smaller rooms')}
 			</p>
 
 			<div className={styles.optionRooms__sizeInputs}>
 				<div className={styles.optionRooms__sizeInput}>
-					<label className={styles.optionRooms__inputLabel}>
-						{t('Minimum members per room')}
-					</label>
+					<label className={styles.optionRooms__inputLabel}>{t('Minimum members per room')}</label>
 					<input
 						type="number"
 						min={1}
@@ -58,9 +54,7 @@ const RoomSizeSettings: FC<RoomSizeSettingsProps> = ({
 					/>
 				</div>
 				<div className={styles.optionRooms__sizeInput}>
-					<label className={styles.optionRooms__inputLabel}>
-						{t('Maximum members per room')}
-					</label>
+					<label className={styles.optionRooms__inputLabel}>{t('Maximum members per room')}</label>
 					<input
 						type="number"
 						min={minMembers}

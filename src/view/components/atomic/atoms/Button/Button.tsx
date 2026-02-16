@@ -102,7 +102,7 @@ const Button: React.FC<ButtonProps> = ({
 		loading && 'button--loading', // Modifier: loading
 		disabled && 'button--disabled', // Modifier: disabled
 		image && 'button--with-image', // Modifier: with-image
-		className // Additional classes
+		className, // Additional classes
 	);
 
 	const isDisabled = disabled || loading;

@@ -6,28 +6,23 @@ export async function getResults(
 	statement: Statement,
 	subStatements: Statement[],
 	resultsBy: ResultsBy,
-	numberOfResults: number
+	numberOfResults: number,
 ): Promise<Results> {
 	try {
 		const result: Results = { top: statement, sub: [] };
 
 		if (resultsBy === ResultsBy.consensus) {
-			result.sub = [
-				...getResultsByOptions(subStatements, numberOfResults),
-			];
+			result.sub = [...getResultsByOptions(subStatements, numberOfResults)];
 		} else {
 			result.sub = [];
 		}
 
-		const subResultsPromises = result.sub.map(
-			async (subResult: Results) => {
-				const subStatement = subResult.top;
-				const subResults: Statement[] =
-					await getResultsDB(subStatement);
+		const subResultsPromises = result.sub.map(async (subResult: Results) => {
+			const subStatement = subResult.top;
+			const subResults: Statement[] = await getResultsDB(subStatement);
 
-				return subResults;
-			}
-		);
+			return subResults;
+		});
 
 		const resultsStatements = await Promise.all(subResultsPromises);
 
@@ -48,8 +43,8 @@ export async function getResults(
 			statementId: statement?.statementId,
 			metadata: {
 				resultsBy,
-				numberOfResults
-			}
+				numberOfResults,
+			},
 		});
 
 		return { top: statement, sub: [] };
@@ -57,11 +52,10 @@ export async function getResults(
 }
 export function getResultsByOptions(
 	subStatements: Statement[],
-	numberOfResults: number
+	numberOfResults: number,
 ): Results[] {
 	try {
-		const maxOptions: Statement[] = subStatements
-			.slice(0, numberOfResults || 1);
+		const maxOptions: Statement[] = subStatements.slice(0, numberOfResults || 1);
 
 		const _maxOptions = maxOptions.map((topStatement: Statement) => ({
 			top: topStatement,
@@ -74,8 +68,8 @@ export function getResultsByOptions(
 			operation: 'mapCont.getResultsByOptions',
 			metadata: {
 				numberOfResults,
-				subStatementsCount: subStatements?.length
-			}
+				subStatementsCount: subStatements?.length,
+			},
 		});
 
 		return [];
@@ -94,7 +88,7 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		// Build parent-child map in single pass O(n)
 		const childrenMap = new Map<string, Statement[]>();
 
-		subStatements.forEach(statement => {
+		subStatements.forEach((statement) => {
 			if (statement.parentId) {
 				const siblings = childrenMap.get(statement.parentId) || [];
 				siblings.push(statement);
@@ -105,10 +99,10 @@ export function resultsByParentId(parentStatement: Statement, subStatements: Sta
 		// Build tree recursively using map (no filtering needed)
 		function buildNode(statement: Statement): Results {
 			const children = childrenMap.get(statement.statementId) || [];
-			
-return {
+
+			return {
 				top: statement,
-				sub: children.map(child => buildNode(child))
+				sub: children.map((child) => buildNode(child)),
 			};
 		}
 
@@ -118,8 +112,8 @@ return {
 			operation: 'mapCont.resultsByParentId',
 			metadata: {
 				parentStatementId: parentStatement?.statementId,
-				subStatementsCount: subStatements?.length
-			}
+				subStatementsCount: subStatements?.length,
+			},
 		});
 
 		// Return a minimal valid result instead of undefined

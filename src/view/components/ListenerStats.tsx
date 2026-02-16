@@ -4,7 +4,9 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import styles from './ListenerStats.module.scss';
 
 export const ListenerStats: React.FC = () => {
-	const [stats, setStats] = useState<ReturnType<typeof listenerManager.getOverallStats> | null>(null);
+	const [stats, setStats] = useState<ReturnType<typeof listenerManager.getOverallStats> | null>(
+		null,
+	);
 	const [isExpanded, setIsExpanded] = useState(false);
 	const [isVisible, setIsVisible] = useState(true);
 	const user = useAppSelector((state) => state.creator.creator);
@@ -20,7 +22,7 @@ export const ListenerStats: React.FC = () => {
 		const handleKeyPress = (e: KeyboardEvent) => {
 			if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'L') {
 				e.preventDefault();
-				setIsVisible(prev => !prev);
+				setIsVisible((prev) => !prev);
 			}
 		};
 
@@ -34,7 +36,8 @@ export const ListenerStats: React.FC = () => {
 
 	// Enable/disable debug mode based on visibility and authorization
 	useEffect(() => {
-		const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+		const isLocalDevelopment =
+			window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 		const isAuthorizedUser = user?.email === 'tal.yaron@gmail.com';
 
 		if ((isLocalDevelopment || isAuthorizedUser) && isVisible) {
@@ -68,7 +71,8 @@ export const ListenerStats: React.FC = () => {
 	if (!stats || !isVisible) return null;
 
 	// Only show for tal.yaron@gmail.com or in local development
-	const isLocalDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+	const isLocalDevelopment =
+		window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 	const isAuthorizedUser = user?.email === 'tal.yaron@gmail.com';
 
 	if (!isLocalDevelopment && !isAuthorizedUser) {
@@ -76,7 +80,9 @@ export const ListenerStats: React.FC = () => {
 	}
 
 	return (
-		<div className={`${styles['listener-stats']} ${isExpanded ? styles['listener-stats--expanded'] : ''}`}>
+		<div
+			className={`${styles['listener-stats']} ${isExpanded ? styles['listener-stats--expanded'] : ''}`}
+		>
 			<button
 				className={styles['listener-stats__close']}
 				onClick={handleClose}
@@ -85,13 +91,8 @@ export const ListenerStats: React.FC = () => {
 			>
 				×
 			</button>
-			<div
-				className={styles['listener-stats__header']}
-				onClick={() => setIsExpanded(!isExpanded)}
-			>
-				<div className={styles['listener-stats__title']}>
-					📊 Listeners: {stats.activeListeners}
-				</div>
+			<div className={styles['listener-stats__header']} onClick={() => setIsExpanded(!isExpanded)}>
+				<div className={styles['listener-stats__title']}>📊 Listeners: {stats.activeListeners}</div>
 				<div className={styles['listener-stats__summary']}>
 					Docs: {stats.totalDocumentsFetched} | Updates: {stats.totalUpdates}
 				</div>
@@ -108,7 +109,9 @@ export const ListenerStats: React.FC = () => {
 							</div>
 							<div className={styles['listener-stats__item']}>
 								<span className={styles['listener-stats__label']}>Total Documents:</span>
-								<span className={styles['listener-stats__value']}>{stats.totalDocumentsFetched}</span>
+								<span className={styles['listener-stats__value']}>
+									{stats.totalDocumentsFetched}
+								</span>
 							</div>
 							<div className={styles['listener-stats__item']}>
 								<span className={styles['listener-stats__label']}>Total Updates:</span>
@@ -116,7 +119,9 @@ export const ListenerStats: React.FC = () => {
 							</div>
 							<div className={styles['listener-stats__item']}>
 								<span className={styles['listener-stats__label']}>Avg Docs/Update:</span>
-								<span className={styles['listener-stats__value']}>{stats.averageDocsPerUpdate}</span>
+								<span className={styles['listener-stats__value']}>
+									{stats.averageDocsPerUpdate}
+								</span>
 							</div>
 						</div>
 					</div>
@@ -160,10 +165,7 @@ export const ListenerStats: React.FC = () => {
 					)}
 
 					<div className={styles['listener-stats__actions']}>
-						<button
-							className={styles['listener-stats__button']}
-							onClick={handleLogStats}
-						>
+						<button className={styles['listener-stats__button']} onClick={handleLogStats}>
 							Log to Console
 						</button>
 						<button

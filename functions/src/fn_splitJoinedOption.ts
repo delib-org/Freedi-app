@@ -56,8 +56,8 @@ function shuffleArray<T>(array: T[]): T[] {
  * Creates a demographic key from participant's answers to selected questions
  */
 function createDemographicKey(tags: DemographicTag[], questionIds: string[]): string {
-	const answers = questionIds.map(qId => {
-		const tag = tags.find(t => t.questionId === qId);
+	const answers = questionIds.map((qId) => {
+		const tag = tags.find((t) => t.questionId === qId);
 
 		return tag?.answer || 'unknown';
 	});
@@ -80,7 +80,7 @@ async function getActiveSettingsIdsForParent(parentStatementId: string): Promise
 		return ['__none__']; // Return dummy value for 'in' query (Firestore requires non-empty array)
 	}
 
-	return settingsSnapshot.docs.map(doc => doc.id);
+	return settingsSnapshot.docs.map((doc) => doc.id);
 }
 
 /**
@@ -89,7 +89,7 @@ async function getActiveSettingsIdsForParent(parentStatementId: string): Promise
  */
 function scrambleIntoRooms(
 	participants: ParticipantWithDemographics[],
-	roomSize: number
+	roomSize: number,
 ): ScrambleResult {
 	if (participants.length === 0) {
 		return {
@@ -104,8 +104,8 @@ function scrambleIntoRooms(
 	const totalRooms = Math.ceil(participants.length / roomSize);
 
 	// Separate complete and incomplete demographic profiles
-	const completeProfiles = participants.filter(p => p.hasCompleteDemographics);
-	const incompleteProfiles = participants.filter(p => !p.hasCompleteDemographics);
+	const completeProfiles = participants.filter((p) => p.hasCompleteDemographics);
+	const incompleteProfiles = participants.filter((p) => !p.hasCompleteDemographics);
 
 	// Group participants by demographic combination
 	const demographicGroups = new Map<string, ParticipantWithDemographics[]>();
@@ -136,7 +136,7 @@ function scrambleIntoRooms(
 		for (const participant of group) {
 			// Find room with fewest participants
 			const targetRoom = rooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min
+				room.participants.length < min.participants.length ? room : min,
 			);
 			targetRoom.participants.push(participant);
 		}
@@ -146,16 +146,16 @@ function scrambleIntoRooms(
 	const shuffledIncomplete = shuffleArray(incompleteProfiles);
 	for (const participant of shuffledIncomplete) {
 		// Find room with fewest participants that isn't full
-		const availableRooms = rooms.filter(r => r.participants.length < roomSize);
+		const availableRooms = rooms.filter((r) => r.participants.length < roomSize);
 		if (availableRooms.length > 0) {
 			const targetRoom = availableRooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min
+				room.participants.length < min.participants.length ? room : min,
 			);
 			targetRoom.participants.push(participant);
 		} else {
 			// All rooms at capacity, add to room with fewest
 			const targetRoom = rooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min
+				room.participants.length < min.participants.length ? room : min,
 			);
 			targetRoom.participants.push(participant);
 		}
@@ -178,18 +178,18 @@ function scrambleIntoRooms(
  */
 function calculateBalanceScore(
 	rooms: Array<{ roomNumber: number; participants: ParticipantWithDemographics[] }>,
-	numDemographicGroups: number
+	numDemographicGroups: number,
 ): number {
 	if (rooms.length <= 1 || numDemographicGroups <= 1) return 1;
 
 	// Calculate variance in room sizes
-	const sizes = rooms.map(r => r.participants.length);
+	const sizes = rooms.map((r) => r.participants.length);
 	const avgSize = sizes.reduce((a, b) => a + b, 0) / sizes.length;
 	const variance = sizes.reduce((sum, size) => sum + Math.pow(size - avgSize, 2), 0) / sizes.length;
 
 	// Normalize variance to a 0-1 score (lower variance = higher score)
 	const maxVariance = Math.pow(avgSize, 2);
-	const sizeScore = maxVariance > 0 ? 1 - (variance / maxVariance) : 1;
+	const sizeScore = maxVariance > 0 ? 1 - variance / maxVariance : 1;
 
 	return Math.max(0, Math.min(1, sizeScore));
 }
@@ -211,7 +211,11 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 		// Validate input
 		if (!optionStatementId || !parentStatementId || !roomSize || !adminId) {
-			res.status(400).json({ error: 'Missing required fields: optionStatementId, parentStatementId, roomSize, adminId' });
+			res
+				.status(400)
+				.json({
+					error: 'Missing required fields: optionStatementId, parentStatementId, roomSize, adminId',
+				});
 
 			return;
 		}
@@ -225,7 +229,9 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 		const questionsToScramble = scrambleByQuestions || [];
 		const useRandomAssignment = questionsToScramble.length === 0;
 
-		logger.info(`Splitting joined option ${optionStatementId} with room size ${roomSize}${useRandomAssignment ? ' (random assignment)' : ''}`);
+		logger.info(
+			`Splitting joined option ${optionStatementId} with room size ${roomSize}${useRandomAssignment ? ' (random assignment)' : ''}`,
+		);
 
 		// 1. Get the option statement to access joined[] array
 		const optionDoc = await db.collection(Collections.statements).doc(optionStatementId).get();
@@ -246,7 +252,11 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 		}
 
 		if (joinedMembers.length < roomSize) {
-			res.status(400).json({ error: `Not enough members to split. Need at least ${roomSize} members, have ${joinedMembers.length}` });
+			res
+				.status(400)
+				.json({
+					error: `Not enough members to split. Need at least ${roomSize} members, have ${joinedMembers.length}`,
+				});
 
 			return;
 		}
@@ -272,10 +282,10 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 				.where('userQuestionId', 'in', questionsToScramble)
 				.get();
 
-			const questions = questionsSnapshot.docs.map(doc => doc.data() as UserDemographicQuestion);
+			const questions = questionsSnapshot.docs.map((doc) => doc.data() as UserDemographicQuestion);
 
 			// 3. Get demographic answers for all joined members
-			const participantIds = joinedMembers.map(m => m.uid);
+			const participantIds = joinedMembers.map((m) => m.uid);
 
 			// Query in batches of 30 (Firestore limit for 'in' queries)
 			const userAnswersMap = new Map<string, UserDemographicQuestion[]>();
@@ -312,11 +322,11 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 				let hasAllAnswers = true;
 
 				for (const questionId of questionsToScramble) {
-					const answer = userAnswers.find(a => a.userQuestionId === questionId);
-					const question = questions.find(q => q.userQuestionId === questionId);
+					const answer = userAnswers.find((a) => a.userQuestionId === questionId);
+					const question = questions.find((q) => q.userQuestionId === questionId);
 
 					if (answer?.answer) {
-						const option = question?.options?.find(o => o.option === answer.answer);
+						const option = question?.options?.find((o) => o.option === answer.answer);
 						demographicTags.push({
 							questionId,
 							questionText: question?.question || '',
@@ -335,7 +345,8 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 					userName,
 					demographicKey,
 					demographicTags,
-					hasCompleteDemographics: hasAllAnswers && demographicTags.length === questionsToScramble.length,
+					hasCompleteDemographics:
+						hasAllAnswers && demographicTags.length === questionsToScramble.length,
 				});
 			}
 		}
@@ -364,7 +375,7 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 			.get();
 
 		let maxRoomNumber = 0;
-		allRoomsSnapshot.docs.forEach(doc => {
+		allRoomsSnapshot.docs.forEach((doc) => {
 			const roomNum = doc.data().roomNumber || 0;
 			if (roomNum > maxRoomNumber) {
 				maxRoomNumber = roomNum;
@@ -404,7 +415,8 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 		// Create room documents and participant documents
 		// Apply global room number offset so room numbers continue across all options
-		const roomsCreated: Array<{ roomId: string; roomNumber: number; participantCount: number }> = [];
+		const roomsCreated: Array<{ roomId: string; roomNumber: number; participantCount: number }> =
+			[];
 
 		for (const room of scrambleResult.rooms) {
 			const globalRoomNumber = room.roomNumber + maxRoomNumber; // Apply offset for global numbering
@@ -414,7 +426,7 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 				settingsId,
 				statementId: optionStatementId,
 				roomNumber: globalRoomNumber,
-				participants: room.participants.map(p => p.userId),
+				participants: room.participants.map((p) => p.userId),
 				createdAt: now,
 			};
 
@@ -448,7 +460,9 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 		await batch.commit();
 
-		logger.info(`Created ${scrambleResult.totalRooms} rooms for ${scrambleResult.totalParticipants} joined members of option ${optionStatementId}`);
+		logger.info(
+			`Created ${scrambleResult.totalRooms} rooms for ${scrambleResult.totalParticipants} joined members of option ${optionStatementId}`,
+		);
 
 		res.status(200).json({
 			success: true,
@@ -496,7 +510,7 @@ export async function getOptionsExceedingMax(req: Request, res: Response): Promi
 			res.status(200).json({
 				hasMaxLimit: false,
 				message: 'No maximum members limit set on parent statement',
-				options: []
+				options: [],
 			});
 
 			return;
@@ -587,7 +601,7 @@ export async function getAllOptionsWithMembers(req: Request, res: Response): Pro
 			.get();
 
 		const optionsWithActiveRooms = new Set<string>();
-		settingsSnapshot.docs.forEach(doc => {
+		settingsSnapshot.docs.forEach((doc) => {
 			optionsWithActiveRooms.add(doc.data().statementId);
 		});
 
@@ -665,7 +679,7 @@ export async function clearAllRoomsForParent(req: Request, res: Response): Promi
 			return;
 		}
 
-		const settingsIds = settingsSnapshot.docs.map(doc => doc.id);
+		const settingsIds = settingsSnapshot.docs.map((doc) => doc.id);
 		logger.info(`Found ${settingsIds.length} room settings to clear`);
 
 		// 2. Delete all rooms for these settings
@@ -677,7 +691,7 @@ export async function clearAllRoomsForParent(req: Request, res: Response): Promi
 				.get();
 
 			const batch = db.batch();
-			roomsSnapshot.docs.forEach(doc => {
+			roomsSnapshot.docs.forEach((doc) => {
 				batch.delete(doc.ref);
 				deletedRooms++;
 			});
@@ -696,7 +710,7 @@ export async function clearAllRoomsForParent(req: Request, res: Response): Promi
 				.get();
 
 			const batch = db.batch();
-			participantsSnapshot.docs.forEach(doc => {
+			participantsSnapshot.docs.forEach((doc) => {
 				batch.delete(doc.ref);
 				deletedParticipants++;
 			});
@@ -708,12 +722,14 @@ export async function clearAllRoomsForParent(req: Request, res: Response): Promi
 
 		// 4. Delete all room settings
 		const settingsBatch = db.batch();
-		settingsSnapshot.docs.forEach(doc => {
+		settingsSnapshot.docs.forEach((doc) => {
 			settingsBatch.delete(doc.ref);
 		});
 		await settingsBatch.commit();
 
-		logger.info(`Cleared: ${settingsSnapshot.size} settings, ${deletedRooms} rooms, ${deletedParticipants} participants`);
+		logger.info(
+			`Cleared: ${settingsSnapshot.size} settings, ${deletedRooms} rooms, ${deletedParticipants} participants`,
+		);
 
 		res.status(200).json({
 			success: true,
@@ -737,8 +753,8 @@ export async function cleanupDuplicateRoomSettings(req: Request, res: Response):
 
 		if (!topParentId) {
 			res.status(400).json({ error: 'Missing topParentId' });
-			
-return;
+
+			return;
 		}
 
 		logger.info(`Cleaning up duplicate room settings for topParentId: ${topParentId}`);
@@ -751,12 +767,15 @@ return;
 
 		if (settingsSnapshot.empty) {
 			res.status(200).json({ message: 'No room settings found', cleaned: 0 });
-			
-return;
+
+			return;
 		}
 
 		// Group by option (statementId) and find duplicates
-		const settingsByOption = new Map<string, Array<{ id: string; createdAt: number; status: string }>>();
+		const settingsByOption = new Map<
+			string,
+			Array<{ id: string; createdAt: number; status: string }>
+		>();
 
 		for (const doc of settingsSnapshot.docs) {
 			const data = doc.data();

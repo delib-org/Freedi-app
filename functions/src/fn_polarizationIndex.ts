@@ -2,11 +2,16 @@
 // POLARIZATION INDEX HELPERS
 // ============================================================================
 
-import { Statement } from "@freedi/shared-types";
-import { AxesItem, Collections, PolarizationIndex, UserDemographicQuestion } from '@freedi/shared-types';
-import { getRandomColor } from "./helpers";
-import { db } from ".";
-import { logger } from "firebase-functions/v1";
+import { Statement } from '@freedi/shared-types';
+import {
+	AxesItem,
+	Collections,
+	PolarizationIndex,
+	UserDemographicQuestion,
+} from '@freedi/shared-types';
+import { getRandomColor } from './helpers';
+import { db } from '.';
+import { logger } from 'firebase-functions/v1';
 
 // Use string literal for scope until delib-npm exports the enum value
 const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
@@ -50,8 +55,10 @@ interface UserDemographicEvaluation {
 	}>;
 }
 
-export async function updateUserDemographicEvaluation(statement: Statement, userEvalData: { userId: string, evaluation: number }): Promise<void> {
-
+export async function updateUserDemographicEvaluation(
+	statement: Statement,
+	userEvalData: { userId: string; evaluation: number },
+): Promise<void> {
 	try {
 		const { userId, evaluation } = userEvalData;
 		const parentId = statement.parentId;
@@ -74,19 +81,23 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 		// Check for group-level questions
 		const groupDemographicSettings = topParentId
-			? await db.collection(Collections.userDemographicQuestions)
-				.where('topParentId', '==', topParentId)
-				.where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
-				.limit(1).get()
+			? await db
+					.collection(Collections.userDemographicQuestions)
+					.where('topParentId', '==', topParentId)
+					.where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
+					.limit(1)
+					.get()
 			: { empty: true };
 
 		// Check for statement-level questions across all ancestors
 		let statementDemographicSettings = { empty: true };
 		for (const ancestorId of ancestorIds) {
-			const ancestorQuestions = await db.collection(Collections.userDemographicQuestions)
+			const ancestorQuestions = await db
+				.collection(Collections.userDemographicQuestions)
 				.where('statementId', '==', ancestorId)
 				.where('scope', '==', DEMOGRAPHIC_SCOPE_STATEMENT)
-				.limit(1).get();
+				.limit(1)
+				.get();
 
 			if (!ancestorQuestions.empty) {
 				statementDemographicSettings = ancestorQuestions;
@@ -97,17 +108,27 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 		if (groupDemographicSettings.empty && statementDemographicSettings.empty) return;
 
 		// Get excluded inherited demographic IDs for this statement
-		const excludedDemographicIds = statement.statementSettings?.excludedInheritedDemographicIds || [];
+		const excludedDemographicIds =
+			statement.statementSettings?.excludedInheritedDemographicIds || [];
 
-		const { usersDemographicData, usersDemographicEvaluations } = await getUserDemographicData(userId, parentId, evaluation, statement, ancestorIds, excludedDemographicIds);
+		const { usersDemographicData, usersDemographicEvaluations } = await getUserDemographicData(
+			userId,
+			parentId,
+			evaluation,
+			statement,
+			ancestorIds,
+			excludedDemographicIds,
+		);
 
 		if (!usersDemographicEvaluations || usersDemographicEvaluations.length === 0) {
-			console.info(`No demographic evaluation found for user ${userId} on statement ${parentId} - skipping evaluation update`);
+			console.info(
+				`No demographic evaluation found for user ${userId} on statement ${parentId} - skipping evaluation update`,
+			);
 
 			return;
 		}
 
-		const values = usersDemographicEvaluations.map(evaluation => evaluation.evaluation);
+		const values = usersDemographicEvaluations.map((evaluation) => evaluation.evaluation);
 		const { mad: overallMAD, mean: overallMean, n: overallN } = calcMadAndMean(values);
 
 		const axes: AxesItem[] = createAxes(usersDemographicEvaluations, usersDemographicData);
@@ -123,52 +144,65 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 			lastUpdated: Date.now(),
 			axes,
 			color: statement.color || getRandomColor(),
-		}
+		};
 
-		await db.collection(Collections.polarizationIndex).doc(statement.statementId).set(PolarizationIndex, { merge: true });
-
+		await db
+			.collection(Collections.polarizationIndex)
+			.doc(statement.statementId)
+			.set(PolarizationIndex, { merge: true });
 	} catch (error) {
 		logger.error('Error updating user demographic evaluation:', error);
-
 	}
 
-	function createAxes(usersDemographicEvaluations: UserDemographicEvaluation[], userDemographicData: UserDemographicQuestion[]): AxesItem[] {
+	function createAxes(
+		usersDemographicEvaluations: UserDemographicEvaluation[],
+		userDemographicData: UserDemographicQuestion[],
+	): AxesItem[] {
 		const axesSet = new Set<string>();
-		usersDemographicEvaluations.forEach(evaluation => {
-			evaluation.demographic.forEach(demographic => {
+		usersDemographicEvaluations.forEach((evaluation) => {
+			evaluation.demographic.forEach((demographic) => {
 				axesSet.add(demographic.userQuestionId);
 			});
 		});
 
-		const axes: AxesItem[] = Array.from(axesSet).map(axId => {
-			const axisDemographic = userDemographicData.find(demographic => demographic.userQuestionId === axId);
+		const axes: AxesItem[] = Array.from(axesSet).map((axId) => {
+			const axisDemographic = userDemographicData.find(
+				(demographic) => demographic.userQuestionId === axId,
+			);
 
 			return {
 				axId,
 				question: axisDemographic?.question || '',
 				groupsMAD: 0,
-				groups: axisDemographic?.options?.map(option => {
+				groups:
+					axisDemographic?.options?.map((option) => {
+						const values = usersDemographicEvaluations
+							.filter(
+								(evaluation) =>
+									evaluation.demographic.filter(
+										(evl) =>
+											evaluation.statementId === statement.statementId &&
+											evl.userQuestionId === axId &&
+											evl.answer === option.option,
+									).length > 0,
+							)
+							.map((evaluation) => evaluation.evaluation);
 
-					const values = usersDemographicEvaluations
-						.filter(evaluation => evaluation.demographic.filter(evl => evaluation.statementId === statement.statementId && evl.userQuestionId === axId && evl.answer === option.option).length > 0)
-						.map(evaluation => evaluation.evaluation);
+						const { mad, mean, n } = calcMadAndMean(values);
 
-					const { mad, mean, n } = calcMadAndMean(values);
-
-					return {
-						option,
-						mad,
-						mean,
-						n,
-					};
-				}) || []
+						return {
+							option,
+							mad,
+							mean,
+							n,
+						};
+					}) || [],
 			};
-
 		});
 
 		axes.forEach((ax: AxesItem) => {
 			const values: number[] = [];
-			ax.groups?.forEach((group: { mean: number; }) => {
+			ax.groups?.forEach((group: { mean: number }) => {
 				values.push(group.mean);
 			});
 			const { mad: groupMAD } = calcMadAndMean(values);
@@ -192,7 +226,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 		evaluation: number,
 		statement: Statement,
 		ancestorIds: string[],
-		excludedDemographicIds: string[]
+		excludedDemographicIds: string[],
 	): Promise<DemographicResult> {
 		try {
 			// Fetch user's demographic data
@@ -201,7 +235,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 			// Filter out excluded inherited demographics
 			if (excludedDemographicIds.length > 0) {
 				demographicData = demographicData.filter(
-					(q) => !q.userQuestionId || !excludedDemographicIds.includes(q.userQuestionId)
+					(q) => !q.userQuestionId || !excludedDemographicIds.includes(q.userQuestionId),
 				);
 			}
 
@@ -224,9 +258,8 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 			return {
 				usersDemographicData: demographicData,
-				usersDemographicEvaluations: allEvaluations
+				usersDemographicEvaluations: allEvaluations,
 			};
-
 		} catch (error) {
 			logger.error('Error in getUserDemographicData:', error);
 
@@ -236,7 +269,11 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 	// Helper functions for better separation of concerns
 
-	async function fetchUserDemographicData(userId: string, parentId: string, ancestorIds: string[]): Promise<UserDemographicQuestion[]> {
+	async function fetchUserDemographicData(
+		userId: string,
+		parentId: string,
+		ancestorIds: string[],
+	): Promise<UserDemographicQuestion[]> {
 		const topParentId = statement.topParentId;
 
 		// Merge answers: group-level first, then statement-level across all ancestors
@@ -244,14 +281,15 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 		// 1. Fetch group-level answers (scope = 'group')
 		if (topParentId) {
-			const groupSnapshot = await db.collection(Collections.usersData)
+			const groupSnapshot = await db
+				.collection(Collections.usersData)
 				.where('userId', '==', userId)
 				.where('topParentId', '==', topParentId)
 				.where('scope', '==', DEMOGRAPHIC_SCOPE_GROUP)
 				.get();
 
 			if (!groupSnapshot.empty) {
-				groupSnapshot.docs.forEach(doc => {
+				groupSnapshot.docs.forEach((doc) => {
 					const data = doc.data() as UserDemographicQuestion;
 					if (data.userQuestionId) {
 						answerMap.set(data.userQuestionId, data);
@@ -262,13 +300,14 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 		// 2. Fetch statement-level answers across all ancestors (including immediate parent)
 		for (const ancestorId of ancestorIds) {
-			const statementSnapshot = await db.collection(Collections.usersData)
+			const statementSnapshot = await db
+				.collection(Collections.usersData)
 				.where('userId', '==', userId)
 				.where('statementId', '==', ancestorId)
 				.get();
 
 			if (!statementSnapshot.empty) {
-				statementSnapshot.docs.forEach(doc => {
+				statementSnapshot.docs.forEach((doc) => {
 					const data = doc.data() as UserDemographicQuestion;
 					// Only add if not already present (higher priority answers stay)
 					if (data.userQuestionId && !answerMap.has(data.userQuestionId)) {
@@ -285,7 +324,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 		userId: string,
 		statement: Statement,
 		evaluation: number,
-		demographicData: UserDemographicQuestion[]
+		demographicData: UserDemographicQuestion[],
 	): Promise<void> {
 		const evaluationRef = db
 			.collection(Collections.userDemographicEvaluations)
@@ -296,7 +335,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 			statementId: statement.statementId,
 			parentId: statement.parentId,
 			evaluation: evaluation || 0,
-			demographic: buildDemographicSummary(demographicData)
+			demographic: buildDemographicSummary(demographicData),
 		};
 
 		await evaluationRef.set(evaluationData, { merge: true });
@@ -304,7 +343,7 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 
 	async function fetchAllDemographicEvaluations(
 		statementId: string,
-		parentId: string
+		parentId: string,
 	): Promise<UserDemographicEvaluation[]> {
 		const snapshot = await db
 			.collection(Collections.userDemographicEvaluations)
@@ -312,29 +351,30 @@ export async function updateUserDemographicEvaluation(statement: Statement, user
 			.where('parentId', '==', parentId)
 			.get();
 
-		return snapshot.empty ? [] : snapshot.docs.map(doc => doc.data() as UserDemographicEvaluation);
+		return snapshot.empty
+			? []
+			: snapshot.docs.map((doc) => doc.data() as UserDemographicEvaluation);
 	}
 
 	function buildDemographicSummary(demographicData: UserDemographicQuestion[]) {
 		return demographicData
-			.filter(item => item.answer && item.userQuestionId)
-			.map(item => ({
+			.filter((item) => item.answer && item.userQuestionId)
+			.map((item) => ({
 				question: item.question,
 				answer: item.answer!,
-				userQuestionId: item.userQuestionId!
+				userQuestionId: item.userQuestionId!,
 			}));
 	}
 
 	function createEmptyResult(): DemographicResult {
 		return {
 			usersDemographicData: [],
-			usersDemographicEvaluations: []
+			usersDemographicEvaluations: [],
 		};
 	}
-
 }
 
-function calcMadAndMean(values: number[]): { mad: number, mean: number, n: number } {
+function calcMadAndMean(values: number[]): { mad: number; mean: number; n: number } {
 	// Placeholder for MAD calculation logic
 	if (values.length === 0) return { mad: 0, mean: 0, n: 0 };
 	if (values.length === 1) return { mad: 0, mean: values[0], n: 1 };

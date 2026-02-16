@@ -64,7 +64,7 @@ interface NotificationAnalyticsParams {
  */
 export function logNotificationEvent(
 	eventType: NotificationEventType,
-	params?: NotificationAnalyticsParams
+	params?: NotificationAnalyticsParams,
 ): void {
 	try {
 		if (!analytics) {
@@ -181,7 +181,7 @@ export function trackPushDisabled(userId: string, statementId: string): void {
 export function trackNotificationReceived(
 	userId: string,
 	statementId?: string,
-	source?: 'foreground' | 'background'
+	source?: 'foreground' | 'background',
 ): void {
 	logNotificationEvent(NotificationEventType.NOTIFICATION_RECEIVED, {
 		userId,

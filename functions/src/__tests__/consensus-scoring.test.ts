@@ -16,12 +16,12 @@ describe('Consensus Scoring Algorithm (Mean - SEM)', () => {
 	function calcStandardError(
 		sumEvaluations: number,
 		sumSquaredEvaluations: number,
-		numberOfEvaluators: number
+		numberOfEvaluators: number,
 	): number {
 		if (numberOfEvaluators <= 1) return 0;
 
 		const mean = sumEvaluations / numberOfEvaluators;
-		const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
+		const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
 		const safeVariance = Math.max(0, variance);
 		const standardDeviation = Math.sqrt(safeVariance);
 		const sem = standardDeviation / Math.sqrt(numberOfEvaluators);
@@ -36,7 +36,7 @@ describe('Consensus Scoring Algorithm (Mean - SEM)', () => {
 	function calcAgreement(
 		sumEvaluations: number,
 		sumSquaredEvaluations: number,
-		numberOfEvaluators: number
+		numberOfEvaluators: number,
 	): number {
 		if (numberOfEvaluators === 0) return 0;
 
@@ -52,15 +52,15 @@ describe('Consensus Scoring Algorithm (Mean - SEM)', () => {
 	function oldCalcAgreement(sumEvaluations: number, numberOfEvaluators: number): number {
 		if (numberOfEvaluators === 0) return 0;
 		const mean = sumEvaluations / numberOfEvaluators;
-		
-return mean * Math.sqrt(numberOfEvaluators);
+
+		return mean * Math.sqrt(numberOfEvaluators);
 	}
 
 	/**
 	 * Helper to calculate sum of squared evaluations from individual values
 	 */
 	function calcSumSquared(evaluations: number[]): number {
-		return evaluations.reduce((sum, val) => sum + (val * val), 0);
+		return evaluations.reduce((sum, val) => sum + val * val, 0);
 	}
 
 	describe('calcStandardError', () => {
@@ -90,7 +90,7 @@ return mean * Math.sqrt(numberOfEvaluators);
 			// Example from white paper: mean=0.80, σ=0.1, n=10
 			// Variance = 0.01, so sum of squares = n*(variance + mean²) = 10*(0.01 + 0.64) = 6.5
 			const n = 10;
-			const mean = 0.80;
+			const mean = 0.8;
 			const variance = 0.01;
 			const sumEval = mean * n;
 			const sumSquared = n * (variance + mean * mean);
@@ -131,7 +131,7 @@ return mean * Math.sqrt(numberOfEvaluators);
 		it('should penalize uncertainty with small sample size', () => {
 			// Small sample: 10 evaluators, mean=0.80, σ=0.1
 			const n1 = 10;
-			const mean = 0.80;
+			const mean = 0.8;
 			const variance = 0.01;
 			const sumEval = mean * n1;
 			const sumSquared = n1 * (variance + mean * mean);
@@ -158,28 +158,28 @@ return mean * Math.sqrt(numberOfEvaluators);
 
 		it('should match example from white paper (n=10, mean=0.80, σ=0.1)', () => {
 			const n = 10;
-			const mean = 0.80;
+			const mean = 0.8;
 			const variance = 0.01; // σ² = 0.01, so σ = 0.1
 			const sumEval = mean * n;
 			const sumSquared = n * (variance + mean * mean);
 
 			const score = calcAgreement(sumEval, sumSquared, n);
 			const expectedSEM = 0.1 / Math.sqrt(10); // ≈ 0.0316
-			const expectedScore = 0.80 - expectedSEM; // ≈ 0.768
+			const expectedScore = 0.8 - expectedSEM; // ≈ 0.768
 
 			expect(score).toBeCloseTo(expectedScore, 3);
 		});
 
 		it('should match example from white paper (n=100, mean=0.80, σ=0.1)', () => {
 			const n = 100;
-			const mean = 0.80;
+			const mean = 0.8;
 			const variance = 0.01;
 			const sumEval = mean * n;
 			const sumSquared = n * (variance + mean * mean);
 
 			const score = calcAgreement(sumEval, sumSquared, n);
 			const expectedSEM = 0.1 / Math.sqrt(100); // = 0.01
-			const expectedScore = 0.80 - expectedSEM; // = 0.790
+			const expectedScore = 0.8 - expectedSEM; // = 0.790
 
 			expect(score).toBeCloseTo(expectedScore, 3);
 		});
@@ -250,7 +250,7 @@ return mean * Math.sqrt(numberOfEvaluators);
 			const sumSquaredA = nA * (variance + meanA * meanA);
 
 			const nB = 100;
-			const meanB = 0.80;
+			const meanB = 0.8;
 			const sumEvalB = meanB * nB;
 			const sumSquaredB = nB * (variance + meanB * meanB);
 

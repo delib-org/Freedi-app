@@ -5,9 +5,7 @@ import { store } from '@/redux/store';
 import { Statement, StatementSchema, functionConfig } from '@freedi/shared-types';
 import firebaseConfig from '../configKey';
 
-export async function getFirstEvaluationOptions(
-	statement: Statement | undefined
-): Promise<void> {
+export async function getFirstEvaluationOptions(statement: Statement | undefined): Promise<void> {
 	try {
 		if (!statement) return;
 		const dispatch = store.dispatch;
@@ -17,9 +15,7 @@ export async function getFirstEvaluationOptions(
 				? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getRandomStatements`
 				: import.meta.env.VITE_APP_RANDOM_STATEMENTS_ENDPOINT;
 
-		const response = await fetch(
-			`${endPoint}?parentId=${statement.statementId}&limit=6`
-		);
+		const response = await fetch(`${endPoint}?parentId=${statement.statementId}&limit=6`);
 		const { randomStatements, error } = await response.json();
 		if (error) throw new Error(error);
 		v.parse(randomStatements, v.array(StatementSchema));
@@ -30,9 +26,7 @@ export async function getFirstEvaluationOptions(
 	}
 }
 
-export async function getSecondEvaluationOptions(
-	statement: Statement | undefined
-): Promise<void> {
+export async function getSecondEvaluationOptions(statement: Statement | undefined): Promise<void> {
 	try {
 		if (!statement) return;
 		const dispatch = store.dispatch;
@@ -41,9 +35,7 @@ export async function getSecondEvaluationOptions(
 			? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/getTopStatements`
 			: import.meta.env.VITE_APP_TOP_STATEMENTS_ENDPOINT;
 
-		const response = await fetch(
-			`${endPoint}?parentId=${statement.statementId}&limit=10`
-		);
+		const response = await fetch(`${endPoint}?parentId=${statement.statementId}&limit=10`);
 		const { topSolutions, error } = await response.json();
 		if (error) throw new Error(error);
 

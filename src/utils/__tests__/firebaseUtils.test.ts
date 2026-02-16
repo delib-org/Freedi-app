@@ -82,8 +82,14 @@ describe('Firebase Utilities', () => {
 	describe('executeBatchUpdates', () => {
 		it('should execute batch updates for small batches', async () => {
 			const updates = [
-				{ ref: { collection: 'test', id: '1' } as unknown as ReturnType<typeof createDocRef>, data: { value: 1 } },
-				{ ref: { collection: 'test', id: '2' } as unknown as ReturnType<typeof createDocRef>, data: { value: 2 } },
+				{
+					ref: { collection: 'test', id: '1' } as unknown as ReturnType<typeof createDocRef>,
+					data: { value: 1 },
+				},
+				{
+					ref: { collection: 'test', id: '2' } as unknown as ReturnType<typeof createDocRef>,
+					data: { value: 2 },
+				},
 			];
 
 			await executeBatchUpdates(updates);

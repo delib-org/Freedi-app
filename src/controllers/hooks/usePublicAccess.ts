@@ -12,67 +12,67 @@ import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 interface UsePublicAccessResult {
-  isCheckingAccess: boolean;
-  effectiveAccess: Access | null;
+	isCheckingAccess: boolean;
+	effectiveAccess: Access | null;
 }
 
 export function usePublicAccess(statementId?: string): UsePublicAccessResult {
-  const [isCheckingAccess, setIsCheckingAccess] = useState(true);
-  const [effectiveAccess, setEffectiveAccess] = useState<Access | null>(null);
-  const creator = useSelector(creatorSelector);
+	const [isCheckingAccess, setIsCheckingAccess] = useState(true);
+	const [effectiveAccess, setEffectiveAccess] = useState<Access | null>(null);
+	const creator = useSelector(creatorSelector);
 
-  useEffect(() => {
-    const checkPublicAccess = async () => {
-      // If no statementId, nothing to check
-      if (!statementId) {
-        setIsCheckingAccess(false);
-        
-        return;
-      }
+	useEffect(() => {
+		const checkPublicAccess = async () => {
+			// If no statementId, nothing to check
+			if (!statementId) {
+				setIsCheckingAccess(false);
 
-      // If user is already authenticated, no need to auto-auth
-      if (creator?.uid) {
-        setIsCheckingAccess(false);
+				return;
+			}
 
-        return;
-      }
+			// If user is already authenticated, no need to auto-auth
+			if (creator?.uid) {
+				setIsCheckingAccess(false);
 
-      try {
-        // Auto-authenticate FIRST before fetching any data
-        // This ensures the user has a valid auth token for Firestore
-        console.info('User not authenticated, initiating auto-authentication');
-        await handlePublicAutoAuth();
+				return;
+			}
 
-        // Now fetch the statement with valid auth
-        const statement = await getStatementFromDB(statementId);
+			try {
+				// Auto-authenticate FIRST before fetching any data
+				// This ensures the user has a valid auth token for Firestore
+				console.info('User not authenticated, initiating auto-authentication');
+				await handlePublicAutoAuth();
 
-        if (!statement) {
-          setIsCheckingAccess(false);
+				// Now fetch the statement with valid auth
+				const statement = await getStatementFromDB(statementId);
 
-          return;
-        }
+				if (!statement) {
+					setIsCheckingAccess(false);
 
-        // Get the top parent statement if needed
-        let topParentStatement = null;
-        if (statement.topParentId && statement.topParentId !== statementId) {
-          topParentStatement = await getStatementFromDB(statement.topParentId);
-        }
+					return;
+				}
 
-        // Determine effective access - statement override or topParent
-        const access = statement?.membership?.access || topParentStatement?.membership?.access;
-        setEffectiveAccess(access || null);
-      } catch (error) {
-        console.error('Error checking public access:', error);
-      } finally {
-        setIsCheckingAccess(false);
-      }
-    };
+				// Get the top parent statement if needed
+				let topParentStatement = null;
+				if (statement.topParentId && statement.topParentId !== statementId) {
+					topParentStatement = await getStatementFromDB(statement.topParentId);
+				}
 
-    checkPublicAccess();
-  }, [statementId, creator?.uid]);
+				// Determine effective access - statement override or topParent
+				const access = statement?.membership?.access || topParentStatement?.membership?.access;
+				setEffectiveAccess(access || null);
+			} catch (error) {
+				console.error('Error checking public access:', error);
+			} finally {
+				setIsCheckingAccess(false);
+			}
+		};
 
-  return {
-    isCheckingAccess,
-    effectiveAccess
-  };
+		checkPublicAccess();
+	}, [statementId, creator?.uid]);
+
+	return {
+		isCheckingAccess,
+		effectiveAccess,
+	};
 }

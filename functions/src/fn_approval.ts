@@ -11,7 +11,7 @@ export async function updateApprovalResults(
 		{
 			approvalId: string;
 		}
-	>
+	>,
 ) {
 	if (!event.data) return;
 
@@ -62,17 +62,13 @@ export async function updateApprovalResults(
 		//update paragraph
 		db.runTransaction(async (transaction) => {
 			try {
-				const statementRef = db
-					.collection(Collections.statements)
-					.doc(statementId);
+				const statementRef = db.collection(Collections.statements).doc(statementId);
 				const statementDB = await transaction.get(statementRef);
 				const { documentApproval } = statementDB.data() as Statement;
 
 				if (!documentApproval) {
 					const averageApproval = getAverageApproval(
-						approvingUserDiff !== 0
-							? approvedDiff / approvingUserDiff
-							: 0
+						approvingUserDiff !== 0 ? approvedDiff / approvingUserDiff : 0,
 					);
 					const newApprovalResults = {
 						approved: approvedDiff,
@@ -80,21 +76,16 @@ export async function updateApprovalResults(
 						averageApproval,
 					};
 
-					transaction.set(
-						statementRef,
-						{ documentApproval: newApprovalResults },
-						{ merge: true }
-					);
+					transaction.set(statementRef, { documentApproval: newApprovalResults }, { merge: true });
 
 					return;
 				}
 
 				const newApproved = documentApproval.approved + approvedDiff;
-				const totalVoters =
-					documentApproval.totalVoters + approvingUserDiff;
+				const totalVoters = documentApproval.totalVoters + approvingUserDiff;
 
 				const averageApproval = getAverageApproval(
-					totalVoters !== 0 ? newApproved / totalVoters : 0
+					totalVoters !== 0 ? newApproved / totalVoters : 0,
 				);
 				const newApprovalResults = {
 					approved: newApproved,
@@ -102,11 +93,7 @@ export async function updateApprovalResults(
 					averageApproval,
 				};
 
-				transaction.set(
-					statementRef,
-					{ documentApproval: newApprovalResults },
-					{ merge: true }
-				);
+				transaction.set(statementRef, { documentApproval: newApprovalResults }, { merge: true });
 
 				return;
 			} catch (error) {
@@ -129,9 +116,7 @@ export async function updateApprovalResults(
 		//update document
 		db.runTransaction(async (transaction) => {
 			try {
-				const statementRef = db
-					.collection(Collections.statements)
-					.doc(documentId);
+				const statementRef = db.collection(Collections.statements).doc(documentId);
 				const statementDB = await transaction.get(statementRef);
 				const { documentApproval } = statementDB.data() as Statement;
 
@@ -141,8 +126,7 @@ export async function updateApprovalResults(
 					.where('userId', '==', userId)
 					.get();
 				const numberOfUserApprovals = userApprovalsDB.size;
-				const addUser =
-					numberOfUserApprovals === 1 && action === 'create' ? 1 : 0;
+				const addUser = numberOfUserApprovals === 1 && action === 'create' ? 1 : 0;
 
 				/**
 				 * Represents the results of a document approval.
@@ -154,13 +138,11 @@ export async function updateApprovalResults(
 				};
 
 				if (documentApproval) {
-					const newApproved =
-						documentApproval.approved + approvedDiff;
-					const newTotalVoters =
-						documentApproval.totalVoters + addUser;
+					const newApproved = documentApproval.approved + approvedDiff;
+					const newTotalVoters = documentApproval.totalVoters + addUser;
 
 					const averageApproval = getAverageApproval(
-						newTotalVoters !== 0 ? newApproved / newTotalVoters : 0
+						newTotalVoters !== 0 ? newApproved / newTotalVoters : 0,
 					);
 					newApprovalResults = {
 						approved: newApproved,
@@ -195,25 +177,18 @@ export function getAction(
 		{
 			approvalId: string;
 		}
-	>
+	>,
 ): Action | undefined {
 	if (!event.data) return;
 
 	try {
-		if (!event.data.after && !event.data.before)
-			throw new Error('No data before or after');
+		if (!event.data.after && !event.data.before) throw new Error('No data before or after');
 
 		if (event.data.after.data() && event.data.before.data()) {
 			return Action.update;
-		} else if (
-			event.data.after.data() &&
-			event.data.before.data() === undefined
-		) {
+		} else if (event.data.after.data() && event.data.before.data() === undefined) {
 			return Action.create;
-		} else if (
-			event.data.after.data() === undefined &&
-			event.data.before.data()
-		) {
+		} else if (event.data.after.data() === undefined && event.data.before.data()) {
 			return Action.delete;
 		}
 

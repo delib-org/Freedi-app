@@ -34,14 +34,12 @@ export default function UploadImage({
 				setProgress(0);
 				setShowSuccess(false);
 			}, 3000); // Hide success message after 3 seconds
-			
+
 			return () => clearTimeout(timer);
 		}
 	}, [progress]);
 
-	const handleFileChange = async (
-		event: React.ChangeEvent<HTMLInputElement>
-	) => {
+	const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
 		try {
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
@@ -70,7 +68,7 @@ export default function UploadImage({
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
 				console.error('Unauthorized: Only admins can upload images');
-				
+
 				return;
 			}
 
@@ -82,7 +80,8 @@ export default function UploadImage({
 		}
 	};
 
-	const variantClass = variant === 'inline' ? styles.inline : variant === 'compact' ? styles.compact : '';
+	const variantClass =
+		variant === 'inline' ? styles.inline : variant === 'compact' ? styles.compact : '';
 
 	return (
 		<label
@@ -90,7 +89,7 @@ export default function UploadImage({
 			style={{
 				border: image === '' ? '2px dashed #ccc' : 'none',
 				cursor: !isAdmin ? 'default' : 'pointer',
-				pointerEvents: !isAdmin && image ? 'none' : 'auto'
+				pointerEvents: !isAdmin && image ? 'none' : 'auto',
 			}}
 			onDragEnter={isAdmin ? handleDragEnter : undefined}
 			onDragLeave={isAdmin ? handleDragLeave : undefined}
@@ -99,8 +98,8 @@ export default function UploadImage({
 		>
 			<input
 				ref={fileInputRef}
-				type='file'
-				accept='image/*'
+				type="file"
+				accept="image/*"
 				onChange={handleFileChange}
 				className={styles.fileInput}
 				disabled={!isAdmin}
@@ -121,18 +120,13 @@ export default function UploadImage({
 				</div>
 			)}
 
-			{!image && progress === 0 && (
-				<p>Drag and drop an image here or click to upload</p>
-			)}
+			{!image && progress === 0 && <p>Drag and drop an image here or click to upload</p>}
 
 			{progress > 0 && progress < 50 && !image && (
 				<div className={styles.progressContainer}>
 					<p>Compressing: {(progress * 2).toFixed(0)}%</p>
 					<div className={styles.progressBar}>
-						<div 
-							className={styles.progressFill}
-							style={{ width: `${progress * 2}%` }}
-						/>
+						<div className={styles.progressFill} style={{ width: `${progress * 2}%` }} />
 					</div>
 				</div>
 			)}
@@ -141,10 +135,7 @@ export default function UploadImage({
 				<div className={styles.progressContainer}>
 					<p>Uploading: {((progress - 50) * 2).toFixed(0)}%</p>
 					<div className={styles.progressBar}>
-						<div 
-							className={styles.progressFill}
-							style={{ width: `${(progress - 50) * 2}%` }}
-						/>
+						<div className={styles.progressFill} style={{ width: `${(progress - 50) * 2}%` }} />
 					</div>
 				</div>
 			)}

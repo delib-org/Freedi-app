@@ -16,7 +16,7 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 	const results = {
 		updated: 0,
 		processed: 0,
-		errors: [] as string[]
+		errors: [] as string[],
 	};
 
 	try {
@@ -49,7 +49,7 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 				let sumCon = 0;
 				let numberOfEvaluators = 0;
 
-				evaluationsSnapshot.docs.forEach(evalDoc => {
+				evaluationsSnapshot.docs.forEach((evalDoc) => {
 					const evaluation = evalDoc.data() as Evaluation;
 					const value = evaluation.evaluation || 0;
 
@@ -67,9 +67,7 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 				});
 
 				// Calculate averageEvaluation
-				const averageEvaluation = numberOfEvaluators > 0
-					? sumEvaluations / numberOfEvaluators
-					: 0;
+				const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
 
 				// Calculate consensus using Mean - SEM with floor
 				const consensus = calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
@@ -83,14 +81,15 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 					'evaluation.numberOfEvaluators': numberOfEvaluators,
 					'evaluation.averageEvaluation': averageEvaluation,
 					'evaluation.agreement': consensus,
-					'consensus': consensus,
-					'totalEvaluators': numberOfEvaluators,
-					'lastUpdate': Date.now()
+					consensus: consensus,
+					totalEvaluators: numberOfEvaluators,
+					lastUpdate: Date.now(),
 				});
 
 				results.updated++;
-				logger.info(`Updated option ${statement.statementId}: evaluators=${numberOfEvaluators}, avg=${averageEvaluation.toFixed(3)}, consensus=${consensus.toFixed(3)}`);
-
+				logger.info(
+					`Updated option ${statement.statementId}: evaluators=${numberOfEvaluators}, avg=${averageEvaluation.toFixed(3)}, consensus=${consensus.toFixed(3)}`,
+				);
 			} catch (error) {
 				const errorMsg = `Error processing option ${statement.statementId}: ${error}`;
 				logger.error(errorMsg);
@@ -98,16 +97,17 @@ export async function recalculateOptionsEvaluations(parentId: string): Promise<{
 			}
 		}
 
-		logger.info(`Recalculation complete. Processed: ${results.processed}, Updated: ${results.updated}`);
-		
-return results;
+		logger.info(
+			`Recalculation complete. Processed: ${results.processed}, Updated: ${results.updated}`,
+		);
 
+		return results;
 	} catch (error) {
 		const errorMessage = `Error in recalculateOptionsEvaluations: ${error}`;
 		logger.error(errorMessage);
 		results.errors.push(errorMessage);
-		
-return results;
+
+		return results;
 	}
 }
 
@@ -117,7 +117,7 @@ return results;
 function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
 
@@ -133,12 +133,12 @@ function calcAgreement(
 function calcStandardError(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
 
 	const mean = sumEvaluations / numberOfEvaluators;
-	const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
+	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
 	const safeVariance = Math.max(0, variance);
 	const observedStdDev = Math.sqrt(safeVariance);
 	const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);

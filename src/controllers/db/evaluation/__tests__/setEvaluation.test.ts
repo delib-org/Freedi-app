@@ -129,8 +129,8 @@ jest.mock('valibot', () => ({
 		if (schema === 'number-schema' && typeof value !== 'number') {
 			throw new Error('Invalid number');
 		}
-		
-return value;
+
+		return value;
 	}),
 }));
 
@@ -190,7 +190,7 @@ describe('setEvaluation', () => {
 			expect(mockDoc).toHaveBeenCalledWith(
 				expect.anything(),
 				Collections.evaluations,
-				`${mockUser.uid}--${mockStatement.statementId}`
+				`${mockUser.uid}--${mockStatement.statementId}`,
 			);
 			expect(mockSetDoc).toHaveBeenCalled();
 		});
@@ -199,11 +199,7 @@ describe('setEvaluation', () => {
 			await setEvaluationToDB(mockStatement, mockUser, 0.5);
 
 			const expectedId = `${mockUser.uid}--${mockStatement.statementId}`;
-			expect(mockDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				Collections.evaluations,
-				expectedId
-			);
+			expect(mockDoc).toHaveBeenCalledWith(expect.anything(), Collections.evaluations, expectedId);
 		});
 
 		it('should accept evaluation value of 1', async () => {
@@ -234,7 +230,7 @@ describe('setEvaluation', () => {
 				expect.any(Error),
 				expect.objectContaining({
 					statementId: mockStatement.statementId,
-				})
+				}),
 			);
 		});
 
@@ -248,7 +244,7 @@ describe('setEvaluation', () => {
 				expect.any(Error),
 				expect.objectContaining({
 					statementId: mockStatement.statementId,
-				})
+				}),
 			);
 		});
 
@@ -269,7 +265,7 @@ describe('setEvaluation', () => {
 			expect(analyticsService.trackStatementVote).toHaveBeenCalledWith(
 				mockStatement.statementId,
 				0.5,
-				'button'
+				'button',
 			);
 		});
 
@@ -284,7 +280,7 @@ describe('setEvaluation', () => {
 					statementId: mockStatement.statementId,
 					evaluation: 0.5,
 					userId: mockUser.uid,
-				})
+				}),
 			);
 		});
 	});
@@ -293,15 +289,10 @@ describe('setEvaluation', () => {
 		it('should update evaluation UI type', () => {
 			setEvaluationUIType('stmt-123', EvaluationUI.voting);
 
-			expect(mockDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				Collections.statements,
-				'stmt-123'
-			);
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				{ evaluationSettings: { evaluationUI: EvaluationUI.voting } }
-			);
+			expect(mockDoc).toHaveBeenCalledWith(expect.anything(), Collections.statements, 'stmt-123');
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				evaluationSettings: { evaluationUI: EvaluationUI.voting },
+			});
 		});
 
 		it('should return reference', () => {
@@ -324,10 +315,9 @@ describe('setEvaluation', () => {
 		it('should update anchored settings', async () => {
 			await setAnchoredEvaluationSettings('stmt-123', anchoredSettings);
 
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				{ 'evaluationSettings.anchored': anchoredSettings }
-			);
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.anchored': anchoredSettings,
+			});
 		});
 
 		it('should log info on success', async () => {
@@ -341,7 +331,7 @@ describe('setEvaluation', () => {
 					statementId: 'stmt-123',
 					enabled: true,
 					numberOfAnchored: 3,
-				})
+				}),
 			);
 		});
 
@@ -350,14 +340,14 @@ describe('setEvaluation', () => {
 			mockUpdateDoc.mockRejectedValueOnce(error);
 			const { logger } = require('@/services/logger');
 
-			await expect(
-				setAnchoredEvaluationSettings('stmt-123', anchoredSettings)
-			).rejects.toThrow('Update failed');
+			await expect(setAnchoredEvaluationSettings('stmt-123', anchoredSettings)).rejects.toThrow(
+				'Update failed',
+			);
 
 			expect(logger.error).toHaveBeenCalledWith(
 				'Error updating anchored evaluation settings',
 				error,
-				expect.objectContaining({ statementId: 'stmt-123' })
+				expect.objectContaining({ statementId: 'stmt-123' }),
 			);
 		});
 	});
@@ -366,19 +356,17 @@ describe('setEvaluation', () => {
 		it('should update max votes setting', async () => {
 			await setMaxVotesPerUser('stmt-123', 5);
 
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				{ 'evaluationSettings.axVotesPerUser': 5 }
-			);
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.axVotesPerUser': 5,
+			});
 		});
 
 		it('should set to null when maxVotes is undefined', async () => {
 			await setMaxVotesPerUser('stmt-123', undefined);
 
-			expect(mockUpdateDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				{ 'evaluationSettings.axVotesPerUser': null }
-			);
+			expect(mockUpdateDoc).toHaveBeenCalledWith(expect.anything(), {
+				'evaluationSettings.axVotesPerUser': null,
+			});
 		});
 
 		it('should log info with max votes value', async () => {
@@ -391,7 +379,7 @@ describe('setEvaluation', () => {
 				expect.objectContaining({
 					statementId: 'stmt-123',
 					maxVotes: 10,
-				})
+				}),
 			);
 		});
 
@@ -404,7 +392,7 @@ describe('setEvaluation', () => {
 				'Max Votes Per User Setting Changed',
 				expect.objectContaining({
 					maxVotes: 'unlimited',
-				})
+				}),
 			);
 		});
 

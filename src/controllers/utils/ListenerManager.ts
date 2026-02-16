@@ -70,8 +70,8 @@ export class ListenerManager {
 		const existingListener = this.listeners.get(key);
 		if (existingListener) {
 			existingListener.refCount++;
-			
-return false; // Listener already exists, no need to set up
+
+			return false; // Listener already exists, no need to set up
 		}
 
 		// Check if being set up by another caller
@@ -81,8 +81,8 @@ return false; // Listener already exists, no need to set up
 
 		// Mark as pending immediately to prevent race conditions
 		this.pendingListeners.add(key);
-		
-return true; // Caller should proceed with setup
+
+		return true; // Caller should proceed with setup
 	}
 
 	/**
@@ -97,7 +97,7 @@ return true; // Caller should proceed with setup
 		setupFn: (onDocumentCount?: (count: number) => void) => (() => void) | Promise<() => void>,
 		options?: {
 			type?: 'collection' | 'document' | 'query';
-		}
+		},
 	): Promise<boolean> {
 		// Check if we should set up this listener
 		// This check is now done synchronously via registerListenerIntent
@@ -109,7 +109,7 @@ return true; // Caller should proceed with setup
 			const stats: ListenerStats = {
 				documentCount: 0,
 				lastUpdate: Date.now(),
-				updateCount: 0
+				updateCount: 0,
 			};
 
 			// Document count callback
@@ -133,7 +133,7 @@ return true; // Caller should proceed with setup
 				unsubscribe,
 				stats,
 				type: options?.type,
-				refCount: 1
+				refCount: 1,
 			});
 
 			// Remove from pending
@@ -190,9 +190,7 @@ return true; // Caller should proceed with setup
 	 */
 	public removeMatchingListeners(pattern: string | RegExp): number {
 		let removed = 0;
-		const regex = typeof pattern === 'string'
-			? new RegExp(`^${pattern}`)
-			: pattern;
+		const regex = typeof pattern === 'string' ? new RegExp(`^${pattern}`) : pattern;
 
 		for (const [key] of this.listeners) {
 			if (regex.test(key)) {
@@ -243,15 +241,15 @@ return true; // Caller should proceed with setup
 				type: info.type,
 				documentCount: info.stats.documentCount,
 				updateCount: info.stats.updateCount,
-				recreationCount: this.listenerRecreationCount.get(key) || 0
+				recreationCount: this.listenerRecreationCount.get(key) || 0,
 			}))
 			.sort((a, b) => b.documentCount - a.documentCount);
 
 		sortedListeners.forEach((listener, index) => {
 			console.info(
 				`  ${index + 1}. ${listener.key}:\n` +
-				`     Type: ${listener.type || 'unknown'}, RefCount: ${listener.refCount}\n` +
-				`     Docs: ${listener.documentCount}, Updates: ${listener.updateCount}, Recreations: ${listener.recreationCount}`
+					`     Type: ${listener.type || 'unknown'}, RefCount: ${listener.refCount}\n` +
+					`     Docs: ${listener.documentCount}, Updates: ${listener.updateCount}, Recreations: ${listener.recreationCount}`,
 			);
 		});
 		console.info('==============================');
@@ -294,8 +292,8 @@ return true; // Caller should proceed with setup
 	 */
 	public getListenerStats(key: string): ListenerStats | null {
 		const listener = this.listeners.get(key);
-		
-return listener ? { ...listener.stats } : null;
+
+		return listener ? { ...listener.stats } : null;
 	}
 
 	/**
@@ -306,21 +304,20 @@ return listener ? { ...listener.stats } : null;
 			activeListeners: this.listeners.size,
 			totalDocumentsFetched: this.totalDocumentsFetched,
 			totalUpdates: this.totalUpdates,
-			averageDocsPerUpdate: this.totalUpdates > 0
-				? Math.round(this.totalDocumentsFetched / this.totalUpdates)
-				: 0,
+			averageDocsPerUpdate:
+				this.totalUpdates > 0 ? Math.round(this.totalDocumentsFetched / this.totalUpdates) : 0,
 			listenerBreakdown: {
 				collection: 0,
 				document: 0,
 				query: 0,
-				unknown: 0
+				unknown: 0,
 			},
 			topListeners: [] as Array<{
 				key: string;
 				documentCount: number;
 				updateCount: number;
 				type?: string;
-			}>
+			}>,
 		};
 
 		// Calculate breakdown and collect listener details
@@ -339,7 +336,7 @@ return listener ? { ...listener.stats } : null;
 				key,
 				documentCount: info.stats.documentCount,
 				updateCount: info.stats.updateCount,
-				type: info.type
+				type: info.type,
 			});
 		}
 
@@ -361,7 +358,9 @@ return listener ? { ...listener.stats } : null;
 		console.info(`New Documents (excluding initial loads): ${stats.totalDocumentsFetched}`);
 		console.info(`Total Updates: ${stats.totalUpdates}`);
 		console.info(`Average New Docs/Update: ${stats.averageDocsPerUpdate}`);
-		console.info(`Breakdown: Collections: ${stats.listenerBreakdown.collection}, Documents: ${stats.listenerBreakdown.document}, Queries: ${stats.listenerBreakdown.query}`);
+		console.info(
+			`Breakdown: Collections: ${stats.listenerBreakdown.collection}, Documents: ${stats.listenerBreakdown.document}, Queries: ${stats.listenerBreakdown.query}`,
+		);
 		console.info(`Note: Counts only NEW documents after listener creation, not initial data loads`);
 
 		// Get ALL listeners sorted by document count
@@ -370,20 +369,23 @@ return listener ? { ...listener.stats } : null;
 				key,
 				documentCount: info.stats.documentCount,
 				updateCount: info.stats.updateCount,
-				type: info.type
+				type: info.type,
 			}))
 			.sort((a, b) => b.documentCount - a.documentCount);
 
 		if (allListeners.length > 0) {
 			console.info('ALL Listeners by Document Count:');
 			allListeners.forEach((listener, index) => {
-				console.info(`  ${index + 1}. ${listener.key}: ${listener.documentCount} docs in ${listener.updateCount} updates (${listener.type || 'unknown'})`);
+				console.info(
+					`  ${index + 1}. ${listener.key}: ${listener.documentCount} docs in ${listener.updateCount} updates (${listener.type || 'unknown'})`,
+				);
 			});
 		}
 
 		// Log recreation stats
-		const recreations = Array.from(this.listenerRecreationCount.entries())
-			.sort((a, b) => b[1] - a[1]);
+		const recreations = Array.from(this.listenerRecreationCount.entries()).sort(
+			(a, b) => b[1] - a[1],
+		);
 
 		if (recreations.length > 0) {
 			console.info('ALL Listener Recreations:');

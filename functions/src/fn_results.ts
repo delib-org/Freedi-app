@@ -7,7 +7,7 @@ import {
 	Statement,
 	StatementSchema,
 	ResultsSettingsSchema,
-	Collections
+	Collections,
 } from '@freedi/shared-types';
 
 export async function updateResultsSettings(
@@ -16,15 +16,12 @@ export async function updateResultsSettings(
 		{
 			statementId: string;
 		}
-	>
+	>,
 ): Promise<Statement[] | undefined> {
 	if (!ev.data) return;
 	try {
 		//get results
-		const { resultsBy } = parse(
-			ResultsSettingsSchema,
-			ev.data.after.data()
-		);
+		const { resultsBy } = parse(ResultsSettingsSchema, ev.data.after.data());
 		const { statementId } = ev.params;
 
 		if (!statementId) throw new Error('statementId is required');
@@ -54,14 +51,16 @@ async function resultsByTopOptions(statementId: string): Promise<Statement[]> {
 			.where('parentId', '==', statementId)
 			.get();
 
-		const topOptions = topOptionsDB.docs.map((doc) =>
-			parse(StatementSchema, doc.data())
-		);
+		const topOptions = topOptionsDB.docs.map((doc) => parse(StatementSchema, doc.data()));
 
 		// Sort by evaluation.agreement (falling back to consensus for legacy data)
 		// and return top 5
 		return topOptions
-			.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0))
+			.sort(
+				(a, b) =>
+					(b.evaluation?.agreement ?? b.consensus ?? 0) -
+					(a.evaluation?.agreement ?? a.consensus ?? 0),
+			)
 			.slice(0, 5);
 	} catch (error) {
 		logger.error(error);

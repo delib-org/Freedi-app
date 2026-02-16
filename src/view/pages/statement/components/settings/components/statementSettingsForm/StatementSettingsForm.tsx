@@ -70,14 +70,11 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			(state: RootState) => state.statements.statementMembership,
 			(memberships) =>
 				memberships.filter(
-					(membership: StatementSubscription) =>
-						membership.statementId === statementId
-				)
+					(membership: StatementSubscription) => membership.statementId === statementId,
+				),
 		);
 
-	const members: StatementSubscription[] = useAppSelector(
-		statementMembershipSelector(statementId)
-	);
+	const members: StatementSubscription[] = useAppSelector(statementMembershipSelector(statementId));
 
 	try {
 		const joinedMembers = members
@@ -122,12 +119,9 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 				<form
 					onSubmit={handleSubmit}
 					className={styles.statementSettingsForm}
-					data-cy='statement-settings-form'
+					data-cy="statement-settings-form"
 				>
-					<TitleAndDescription
-						statement={statement}
-						setStatementToEdit={setStatementToEdit}
-					/>
+					<TitleAndDescription statement={statement} setStatementToEdit={setStatementToEdit} />
 					<UploadImage
 						statement={statementSettingsProps.statement}
 						image={image}
@@ -148,10 +142,10 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 						</SettingsSection>
 					)}
 					<button
-						type='submit'
+						type="submit"
 						className={`${!isNewStatement && styles.submitButton} btn btn--primary`}
-						aria-label='Submit button'
-						data-cy='settings-statement-submit-btn'
+						aria-label="Submit button"
+						data-cy="settings-statement-submit-btn"
 					>
 						{t('Save')}
 					</button>
@@ -262,10 +256,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							tooltip={t('Access voter and evaluator data')}
 						>
 							<section className={styles.getMembersArea}>
-								<GetVoters
-									statementId={statementId}
-									joinedMembers={joinedMembers}
-								/>
+								<GetVoters statementId={statementId} joinedMembers={joinedMembers} />
 							</section>
 							<section className={styles.getMembersArea}>
 								<GetEvaluators statementId={statementId} />

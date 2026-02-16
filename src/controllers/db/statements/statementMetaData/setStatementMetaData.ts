@@ -19,11 +19,7 @@ export async function setQuestionStage({
 }: SetStatementStageParams) {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
 		const questionSettings: QuestionSettings = {
 			currentStep: step,
 			questionType: getDefaultQuestionType(),
@@ -47,11 +43,7 @@ export async function setQuestionType({
 }: SetStatementTypeProps) {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
 		const questionSettings: QuestionSettings = {
 			currentStage: stage,
 			questionType: type,

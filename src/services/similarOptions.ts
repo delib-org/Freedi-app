@@ -1,4 +1,4 @@
-import firebaseConfig from "@/controllers/db/configKey";
+import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig } from '@freedi/shared-types';
 
 export const similarOptionsEndPoint =

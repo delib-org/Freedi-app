@@ -5,10 +5,7 @@ export function logBase(x: number, b: number) {
 }
 
 //get top selections from selections
-export function getTopSelectionKeys(
-	selections: { [key: string]: number },
-	limit = 1,
-): string[] {
+export function getTopSelectionKeys(selections: { [key: string]: number }, limit = 1): string[] {
 	const sortedSelections = Object.entries(selections)
 		.sort((a, b) => b[1] - a[1])
 		.slice(0, limit);
@@ -18,7 +15,7 @@ export function getTopSelectionKeys(
 
 export const isEqualObjects = (objA: object | undefined, objB: object | undefined) => {
 	return JSON.stringify(objA) === JSON.stringify(objB);
-}
+};
 
 export function getRandomColor() {
 	//let them be dark colors
@@ -46,7 +43,7 @@ export function getParagraphsText(paragraphs: Paragraph[] | undefined): string {
 
 	return [...paragraphs]
 		.sort((a, b) => a.order - b.order)
-		.map(p => p.content)
+		.map((p) => p.content)
 		.join('\n');
 }
 
@@ -56,7 +53,7 @@ export function getParagraphsText(paragraphs: Paragraph[] | undefined): string {
 export function hasParagraphsContent(paragraphs: Paragraph[] | undefined): boolean {
 	if (!paragraphs || paragraphs.length === 0) return false;
 
-	return paragraphs.some(p => p.content && p.content.trim().length > 0);
+	return paragraphs.some((p) => p.content && p.content.trim().length > 0);
 }
 
 /**
@@ -65,7 +62,7 @@ export function hasParagraphsContent(paragraphs: Paragraph[] | undefined): boole
 export function textToParagraphs(text: string): Paragraph[] | undefined {
 	if (!text || !text.trim()) return undefined;
 
-	const lines = text.split('\n').filter(line => line.trim());
+	const lines = text.split('\n').filter((line) => line.trim());
 
 	return lines.map((line, index) => ({
 		paragraphId: `p-${Date.now()}-${index}`,

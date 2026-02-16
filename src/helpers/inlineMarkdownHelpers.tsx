@@ -102,5 +102,7 @@ export function renderInlineMarkdown(text: string | undefined | null): ReactNode
 export function hasInlineMarkdown(text: string | undefined | null): boolean {
 	if (!text) return false;
 
-	return /\*\*\*[^*]+\*\*\*|___[^_]+___|\*\*[^*]+\*\*|__[^_]+__|(?<!\*)\*[^*]+\*(?!\*)|(?<!_)_[^_]+_(?!_)/.test(text);
+	return /\*\*\*[^*]+\*\*\*|___[^_]+___|\*\*[^*]+\*\*|__[^_]+__|(?<!\*)\*[^*]+\*(?!\*)|(?<!_)_[^_]+_(?!_)/.test(
+		text,
+	);
 }

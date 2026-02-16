@@ -1,0 +1,36 @@
+// =============================================================================
+// Global Resets
+// Base element resets applied to all pages
+// =============================================================================
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", sans-serif;
+}
+
+html {
+  margin: 0px;
+  height: fit-content;
+  font-size: 17px;
+}
+
+body {
+  width: 100svw;
+  height: 100svh;
+  margin: 0px;
+  font-family: "Open Sans", sans-serif;
+  font-size: 1.0625rem;
+  line-height: 150%;
+  background: var(--statementBackground);
+  overflow: hidden;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

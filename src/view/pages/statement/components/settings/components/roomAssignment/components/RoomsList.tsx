@@ -15,12 +15,7 @@ interface RoomsListProps {
 	onReassign: () => void;
 }
 
-const RoomsList: FC<RoomsListProps> = ({
-	settings,
-	rooms,
-	participants,
-	onReassign,
-}) => {
+const RoomsList: FC<RoomsListProps> = ({ settings, rooms, participants, onReassign }) => {
 	const { t } = useTranslation();
 	const dispatch = useAppDispatch();
 
@@ -34,14 +29,17 @@ const RoomsList: FC<RoomsListProps> = ({
 	}>({ visible: false, message: '', type: 'info' });
 
 	// Group participants by room
-	const participantsByRoom = participants.reduce((acc, participant) => {
-		if (!acc[participant.roomId]) {
-			acc[participant.roomId] = [];
-		}
-		acc[participant.roomId].push(participant);
+	const participantsByRoom = participants.reduce(
+		(acc, participant) => {
+			if (!acc[participant.roomId]) {
+				acc[participant.roomId] = [];
+			}
+			acc[participant.roomId].push(participant);
 
-		return acc;
-	}, {} as Record<string, RoomParticipant[]>);
+			return acc;
+		},
+		{} as Record<string, RoomParticipant[]>,
+	);
 
 	const handleNotify = async () => {
 		setIsNotifying(true);
@@ -50,7 +48,10 @@ const RoomsList: FC<RoomsListProps> = ({
 			if (result?.success) {
 				setSnackbar({
 					visible: true,
-					message: t('Notifications sent to {{count}} participants').replace('{{count}}', String(result.notified)),
+					message: t('Notifications sent to {{count}} participants').replace(
+						'{{count}}',
+						String(result.notified),
+					),
 					type: 'success',
 				});
 			} else if (result?.message) {
@@ -97,7 +98,10 @@ const RoomsList: FC<RoomsListProps> = ({
 					</span>
 					{settings.notificationSent && (
 						<span>
-							{t('Notified')}: <strong>{notifiedCount}/{participants.length}</strong>
+							{t('Notified')}:{' '}
+							<strong>
+								{notifiedCount}/{participants.length}
+							</strong>
 						</span>
 					)}
 				</div>
@@ -109,11 +113,7 @@ const RoomsList: FC<RoomsListProps> = ({
 						onClick={handleNotify}
 						disabled={isNotifying || allNotified}
 					/>
-					<Button
-						text={t('Reassign')}
-						buttonType={ButtonType.SECONDARY}
-						onClick={onReassign}
-					/>
+					<Button text={t('Reassign')} buttonType={ButtonType.SECONDARY} onClick={onReassign} />
 					<Button
 						text={isDeleting ? t('Deleting...') : t('Delete')}
 						buttonType={ButtonType.SECONDARY}
@@ -138,11 +138,11 @@ const RoomsList: FC<RoomsListProps> = ({
 			{showDeleteConfirm && (
 				<div className={styles.confirmModal}>
 					<div className={styles.confirmModal__content}>
-						<h3 className={styles.confirmModal__title}>
-							{t('Delete Room Assignments?')}
-						</h3>
+						<h3 className={styles.confirmModal__title}>{t('Delete Room Assignments?')}</h3>
 						<p className={styles.confirmModal__message}>
-							{t('This will permanently delete all room assignments. This action cannot be undone.')}
+							{t(
+								'This will permanently delete all room assignments. This action cannot be undone.',
+							)}
 						</p>
 						<div className={styles.confirmModal__actions}>
 							<Button
@@ -150,11 +150,7 @@ const RoomsList: FC<RoomsListProps> = ({
 								buttonType={ButtonType.SECONDARY}
 								onClick={() => setShowDeleteConfirm(false)}
 							/>
-							<Button
-								text={t('Delete')}
-								buttonType={ButtonType.PRIMARY}
-								onClick={handleDelete}
-							/>
+							<Button text={t('Delete')} buttonType={ButtonType.PRIMARY} onClick={handleDelete} />
 						</div>
 					</div>
 				</div>

@@ -1,12 +1,10 @@
 import { logger } from 'firebase-functions';
 
-import {
-	FieldValue,
-	QueryDocumentSnapshot,
-} from 'firebase-admin/firestore';
+import { FieldValue, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { db } from './index';
 import {
-	Collections, StatementType,
+	Collections,
+	StatementType,
 	Statement,
 	StatementSchema,
 	LastMessage,
@@ -21,12 +19,12 @@ export async function updateNumberOfNewSubStatements(
 		{
 			statementId: string;
 		}
-	>
+	>,
 ) {
 	if (!e.data) return;
 	try {
 		//get parentId
-		const _statement:Statement = parse(StatementSchema, e.data.data());
+		const _statement: Statement = parse(StatementSchema, e.data.data());
 		const { parentId, topParentId, statementId } = _statement;
 
 		if (parentId === 'top') return;
@@ -37,11 +35,11 @@ export async function updateNumberOfNewSubStatements(
 		const parentRef = db.doc(`${Collections.statements}/${parentId}`);
 
 		//update parent
-		const lastMessage:LastMessage = {
+		const lastMessage: LastMessage = {
 			message: _statement.statement,
-			creator: _statement.creator.displayName || "Anonymous",
+			creator: _statement.creator.displayName || 'Anonymous',
 			createdAt: Date.now(),
-		}
+		};
 		const lastUpdate = Date.now();
 		parentRef.update({
 			lastMessage,
@@ -52,17 +50,13 @@ export async function updateNumberOfNewSubStatements(
 		//update topParent
 		if (!topParentId) throw new Error('topParentId not found');
 		if (topParentId === 'top')
-			throw new Error(
-				'topParentId is top, and it is an error in the client logic'
-			);
+			throw new Error('topParentId is top, and it is an error in the client logic');
 
 		const topParentRef = db.doc(`${Collections.statements}/${topParentId}`);
 		topParentRef.update({ lastChildUpdate: lastUpdate, lastUpdate });
 
 		//create statement metadata
-		const statementMetaRef = db.doc(
-			`${Collections.statementsMetaData}/${statementId}`
-		);
+		const statementMetaRef = db.doc(`${Collections.statementsMetaData}/${statementId}`);
 		await statementMetaRef.set({ statementId }, { merge: true });
 
 		return;

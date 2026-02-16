@@ -11,149 +11,142 @@ import FilteredMembersList from '../FilteredMembersList/FilteredMembersList';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 
 interface MembersManagementProps {
-  statement: Statement;
+	statement: Statement;
 }
 
 const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
-  const { statementId } = useParams();
-  const { t } = useTranslation();
+	const { statementId } = useParams();
+	const { t } = useTranslation();
 
-  // State for filters
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
+	// State for filters
+	const [searchTerm, setSearchTerm] = useState('');
+	const [roleFilter, setRoleFilter] = useState<Role | 'all'>('all');
 
-  // Selector for statement memberships
-  const statementMembershipSelector = useMemo(
-    () =>
-      createSelector(
-        (state: RootState) => state.statements.statementMembership,
-        (memberships) =>
-          memberships.filter(
-            (membership: StatementSubscription) =>
-              membership.statementId === statementId
-          )
-      ),
-    [statementId]
-  );
+	// Selector for statement memberships
+	const statementMembershipSelector = useMemo(
+		() =>
+			createSelector(
+				(state: RootState) => state.statements.statementMembership,
+				(memberships) =>
+					memberships.filter(
+						(membership: StatementSubscription) => membership.statementId === statementId,
+					),
+			),
+		[statementId],
+	);
 
-  const members: StatementSubscription[] = useAppSelector(
-    statementMembershipSelector
-  );
+	const members: StatementSubscription[] = useAppSelector(statementMembershipSelector);
 
-  // Calculate member counts by role
-  const memberCounts = useMemo(() => {
-    const counts = {
-      all: members.length,
-      admin: 0,
-      member: 0,
-      banned: 0
-    };
+	// Calculate member counts by role
+	const memberCounts = useMemo(() => {
+		const counts = {
+			all: members.length,
+			admin: 0,
+			member: 0,
+			banned: 0,
+		};
 
-    members.forEach(member => {
-      if (member.role === Role.admin) counts.admin++;
-      else if (member.role === Role.banned) counts.banned++;
-      else if (member.role === Role.member) counts.member++;
-    });
+		members.forEach((member) => {
+			if (member.role === Role.admin) counts.admin++;
+			else if (member.role === Role.banned) counts.banned++;
+			else if (member.role === Role.member) counts.member++;
+		});
 
-    return counts;
-  }, [members]);
+		return counts;
+	}, [members]);
 
-  // Handle search change
-  const handleSearchChange = useCallback((term: string) => {
-    setSearchTerm(term);
-  }, []);
+	// Handle search change
+	const handleSearchChange = useCallback((term: string) => {
+		setSearchTerm(term);
+	}, []);
 
-  // Handle role filter change
-  const handleRoleFilterChange = useCallback((role: Role | 'all') => {
-    setRoleFilter(role);
-  }, []);
+	// Handle role filter change
+	const handleRoleFilterChange = useCallback((role: Role | 'all') => {
+		setRoleFilter(role);
+	}, []);
 
-  // Handle share functionality
-  const handleShare = useCallback(() => {
-    const baseUrl = window.location.origin;
-    const shareData = {
-      title: t('FreeDi: Empowering Agreements'),
-      text: t('Invited:') + ' ' + statement?.statement,
-      url: `${baseUrl}/statement-an/true/${statement?.statementId}/options`
-    };
+	// Handle share functionality
+	const handleShare = useCallback(() => {
+		const baseUrl = window.location.origin;
+		const shareData = {
+			title: t('FreeDi: Empowering Agreements'),
+			text: t('Invited:') + ' ' + statement?.statement,
+			url: `${baseUrl}/statement-an/true/${statement?.statementId}/options`,
+		};
 
-    if (navigator.share) {
-      navigator.share(shareData).catch(error => {
-        console.error('Error sharing:', error);
-      });
-    } else {
-      // Fallback: Copy to clipboard
-      navigator.clipboard.writeText(shareData.url).then(
-        () => {
-          // You could show a toast notification here
-          console.info('Link copied to clipboard');
-        },
-        error => {
-          console.error('Failed to copy link:', error);
-        }
-      );
-    }
-  }, [statement, t]);
+		if (navigator.share) {
+			navigator.share(shareData).catch((error) => {
+				console.error('Error sharing:', error);
+			});
+		} else {
+			// Fallback: Copy to clipboard
+			navigator.clipboard.writeText(shareData.url).then(
+				() => {
+					// You could show a toast notification here
+					console.info('Link copied to clipboard');
+				},
+				(error) => {
+					console.error('Failed to copy link:', error);
+				},
+			);
+		}
+	}, [statement, t]);
 
-  if (!members) return null;
+	if (!members) return null;
 
-  return (
-    <div className={styles.membersManagement}>
-      {/* Header Section */}
-      <div className={styles.header}>
-        <div className={styles.headerInfo}>
-          <h2 className={styles.title}>
-            {t('Member Management')}
-          </h2>
-          <p className={styles.memberCount}>
-            {`${members.length} ${t('total members')}`}
-          </p>
-        </div>
+	return (
+		<div className={styles.membersManagement}>
+			{/* Header Section */}
+			<div className={styles.header}>
+				<div className={styles.headerInfo}>
+					<h2 className={styles.title}>{t('Member Management')}</h2>
+					<p className={styles.memberCount}>{`${members.length} ${t('total members')}`}</p>
+				</div>
 
-        <button
-          className={styles.shareButton}
-          onClick={handleShare}
-          aria-label={t('Share invitation link')}
-        >
-          <ShareIcon />
-          <span>{t('Invite')}</span>
-        </button>
-      </div>
+				<button
+					className={styles.shareButton}
+					onClick={handleShare}
+					aria-label={t('Share invitation link')}
+				>
+					<ShareIcon />
+					<span>{t('Invite')}</span>
+				</button>
+			</div>
 
-      {/* Stats Cards */}
-      <div className={styles.statsCards}>
-        <div className={styles.statCard}>
-          <div className={styles.statNumber}>{memberCounts.admin}</div>
-          <div className={styles.statLabel}>{t('Admins')}</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statNumber}>{memberCounts.member}</div>
-          <div className={styles.statLabel}>{t('Members')}</div>
-        </div>
-        <div className={styles.statCard}>
-          <div className={styles.statNumber}>{memberCounts.banned}</div>
-          <div className={styles.statLabel}>{t('Banned')}</div>
-        </div>
-      </div>
+			{/* Stats Cards */}
+			<div className={styles.statsCards}>
+				<div className={styles.statCard}>
+					<div className={styles.statNumber}>{memberCounts.admin}</div>
+					<div className={styles.statLabel}>{t('Admins')}</div>
+				</div>
+				<div className={styles.statCard}>
+					<div className={styles.statNumber}>{memberCounts.member}</div>
+					<div className={styles.statLabel}>{t('Members')}</div>
+				</div>
+				<div className={styles.statCard}>
+					<div className={styles.statNumber}>{memberCounts.banned}</div>
+					<div className={styles.statLabel}>{t('Banned')}</div>
+				</div>
+			</div>
 
-      {/* Filters Section */}
-      <MemberFilters
-        onSearchChange={handleSearchChange}
-        onRoleFilterChange={handleRoleFilterChange}
-        memberCounts={memberCounts}
-        activeFilter={roleFilter}
-      />
+			{/* Filters Section */}
+			<MemberFilters
+				onSearchChange={handleSearchChange}
+				onRoleFilterChange={handleRoleFilterChange}
+				memberCounts={memberCounts}
+				activeFilter={roleFilter}
+			/>
 
-      {/* Members List */}
-      <FilteredMembersList
-        members={members}
-        searchTerm={searchTerm}
-        roleFilter={roleFilter}
-        initialLoadCount={10}
-        loadMoreCount={20}
-      />
-    </div>
-  );
+			{/* Members List */}
+			<FilteredMembersList
+				members={members}
+				searchTerm={searchTerm}
+				roleFilter={roleFilter}
+				initialLoadCount={10}
+				loadMoreCount={20}
+			/>
+		</div>
+	);
 };
 
 export default MembersManagement;

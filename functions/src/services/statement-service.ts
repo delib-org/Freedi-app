@@ -1,13 +1,12 @@
-import { db } from ".."; // Import db from your index file
+import { db } from '..'; // Import db from your index file
 import { Collections, Statement } from '@freedi/shared-types';
-import { StatementSimple } from "../types/statement-types";
-import { logger } from "firebase-functions";
+import { StatementSimple } from '../types/statement-types';
+import { logger } from 'firebase-functions';
 
 /**
  * Fetches a parent statement by ID
  */
 export async function getParentStatement(statementId: string): Promise<Statement | null> {
-
 	const ref = db.collection(Collections.statements);
 	const parentDoc = await ref.doc(statementId).get();
 
@@ -23,7 +22,7 @@ export async function getParentStatement(statementId: string): Promise<Statement
  */
 export async function getSubStatements(parentId: string): Promise<Statement[]> {
 	const ref = db.collection(Collections.statements);
-	const query = ref.where("parentId", "==", parentId);
+	const query = ref.where('parentId', '==', parentId);
 	const subStatementsDB = await query.get();
 
 	return subStatementsDB.docs.map((doc) => doc.data()) as Statement[];
@@ -53,9 +52,9 @@ function normalizeForComparison(text: string): string {
 	return text
 		.trim()
 		.toLowerCase()
-		.replace(/\s+/g, ' ')  // Normalize whitespace
-		.replace(/[""'']/g, '"')  // Normalize quotes
-		.replace(/[…]/g, '...');  // Normalize ellipsis
+		.replace(/\s+/g, ' ') // Normalize whitespace
+		.replace(/[""'']/g, '"') // Normalize quotes
+		.replace(/[…]/g, '...'); // Normalize ellipsis
 }
 
 /**
@@ -77,14 +76,15 @@ function isTextMatch(aiText: string, statementText: string): boolean {
 	}
 
 	// Check for high similarity (at least 90% of words match)
-	const aiWords = normalizedAI.split(' ').filter(w => w.length > 2);
-	const statementWords = normalizedStatement.split(' ').filter(w => w.length > 2);
+	const aiWords = normalizedAI.split(' ').filter((w) => w.length > 2);
+	const statementWords = normalizedStatement.split(' ').filter((w) => w.length > 2);
 
 	if (aiWords.length > 0 && statementWords.length > 0) {
-		const matchingWords = aiWords.filter(word => statementWords.includes(word));
+		const matchingWords = aiWords.filter((word) => statementWords.includes(word));
 		const matchRatio = matchingWords.length / Math.max(aiWords.length, statementWords.length);
 
-		if (matchRatio >= 0.8) {  // 80% word match
+		if (matchRatio >= 0.8) {
+			// 80% word match
 			return true;
 		}
 	}
@@ -99,19 +99,23 @@ function isTextMatch(aiText: string, statementText: string): boolean {
 export function getStatementsFromTexts(
 	statementSimple: StatementSimple[],
 	similarStatementsAI: string[],
-	subStatements: Statement[]
+	subStatements: Statement[],
 ): Statement[] {
-	logger.info("=== getStatementsFromTexts DEBUG ===");
-	logger.info(`AI returned ${similarStatementsAI.length} similar texts:`,
-		similarStatementsAI.map(t => t.substring(0, 50)));
+	logger.info('=== getStatementsFromTexts DEBUG ===');
+	logger.info(
+		`AI returned ${similarStatementsAI.length} similar texts:`,
+		similarStatementsAI.map((t) => t.substring(0, 50)),
+	);
 	logger.info(`Existing statements to match against: ${statementSimple.length}`);
 
 	const similarStatementsIds = statementSimple
 		.filter((subStatement) => {
-			const matches = similarStatementsAI.some(aiText => {
+			const matches = similarStatementsAI.some((aiText) => {
 				const isMatch = isTextMatch(aiText, subStatement.statement);
 				if (isMatch) {
-					logger.info(`MATCH FOUND: AI text "${aiText.substring(0, 30)}..." matches statement "${subStatement.statement.substring(0, 30)}..."`);
+					logger.info(
+						`MATCH FOUND: AI text "${aiText.substring(0, 30)}..." matches statement "${subStatement.statement.substring(0, 30)}..."`,
+					);
 				}
 
 				return isMatch;
@@ -124,9 +128,7 @@ export function getStatementsFromTexts(
 	logger.info(`Found ${similarStatementsIds.length} matching statement IDs`);
 
 	const statements = similarStatementsIds
-		.map((id) =>
-			subStatements.find((subStatement) => subStatement.statementId === id)
-		)
+		.map((id) => subStatements.find((subStatement) => subStatement.statementId === id))
 		.filter((s) => s !== undefined) as Statement[];
 
 	logger.info(`Returning ${statements.length} similar statements`);
@@ -139,10 +141,10 @@ export function getStatementsFromTexts(
  */
 export function getStatementsByIds(
 	statementIds: string[],
-	allStatements: Statement[]
+	allStatements: Statement[],
 ): Statement[] {
 	return statementIds
-		.map(id => allStatements.find(s => s.statementId === id))
+		.map((id) => allStatements.find((s) => s.statementId === id))
 		.filter((s): s is Statement => s !== undefined);
 }
 
@@ -153,12 +155,12 @@ export function getStatementsByIds(
  */
 export function removeDuplicateStatement(
 	statements: Statement[],
-	userInput: string
+	userInput: string,
 ): { statements: Statement[]; duplicateStatement: Statement | undefined } {
 	// Find exact match (case-insensitive)
 	const normalizedInput = userInput.toLowerCase().trim();
 	const duplicateStatement = statements.find(
-		(stat) => stat.statement.toLowerCase().trim() === normalizedInput
+		(stat) => stat.statement.toLowerCase().trim() === normalizedInput,
 	);
 
 	if (duplicateStatement) {
@@ -177,9 +179,6 @@ export function removeDuplicateStatement(
 /**
  * Checks if user has reached the maximum allowed statements
  */
-export function hasReachedMaxStatements(
-	userStatements: Statement[],
-	maxAllowed: number
-): boolean {
+export function hasReachedMaxStatements(userStatements: Statement[], maxAllowed: number): boolean {
 	return userStatements.length >= maxAllowed;
 }

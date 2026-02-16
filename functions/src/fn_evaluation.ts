@@ -1,10 +1,6 @@
 import { Change, logger } from 'firebase-functions/v1';
 import { db } from './index';
-import {
-	DocumentSnapshot,
-	FieldValue,
-	getFirestore,
-} from 'firebase-admin/firestore';
+import { DocumentSnapshot, FieldValue, getFirestore } from 'firebase-admin/firestore';
 import type { FirestoreEvent } from 'firebase-functions/v2/firestore';
 import {
 	Evaluation,
@@ -17,7 +13,7 @@ import {
 	ResultsSettings,
 	ResultsBy,
 	CutoffBy,
-	defaultResultsSettings
+	defaultResultsSettings,
 } from '@freedi/shared-types';
 import type { PopperHebbianScore } from '@freedi/shared-types';
 
@@ -78,8 +74,8 @@ function isEventAlreadyProcessed(eventId: string): boolean {
 		// Clean up expired entry
 		processedEvents.delete(eventId);
 	}
-	
-return false;
+
+	return false;
 }
 
 function markEventAsProcessed(eventId: string): void {
@@ -107,8 +103,8 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Check for duplicate event processing
 		if (isEventAlreadyProcessed(eventId)) {
 			logger.info(`Skipping duplicate event ${eventId} for evaluation ${event.data.id}`);
-			
-return;
+
+			return;
 		}
 		markEventAsProcessed(eventId);
 
@@ -120,14 +116,14 @@ return;
 		if (evaluation.migratedAt) {
 			logger.info(`Skipping trigger for migrated evaluation ${event.data.id}`);
 
-return;
+			return;
 		}
 
 		// Skip processing for Sign app evaluations - the Sign API route handles consensus updates directly
 		if (evaluation.source === 'sign') {
 			logger.info(`Skipping trigger for Sign app evaluation ${event.data.id}`);
 
-return;
+			return;
 		}
 
 		if (!statementId) {
@@ -156,7 +152,7 @@ return;
 			newEvaluation: evaluation.evaluation,
 			oldEvaluation: 0,
 			userId,
-			parentId
+			parentId,
 		});
 
 		if (!statement) {
@@ -169,9 +165,8 @@ return;
 		const userEvalData = {
 			userId,
 			evaluation: evaluation.evaluation || 0,
-		}
-		updateUserDemographicEvaluation(statement, userEvalData)
-
+		};
+		updateUserDemographicEvaluation(statement, userEvalData);
 	} catch (error) {
 		logger.error('Error in newEvaluation:', error);
 	}
@@ -184,8 +179,8 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		// Check for duplicate event processing
 		if (isEventAlreadyProcessed(eventId)) {
 			logger.info(`Skipping duplicate delete event ${eventId}`);
-			
-return;
+
+			return;
 		}
 		markEventAsProcessed(eventId);
 
@@ -197,7 +192,7 @@ return;
 		if (evaluation.source === 'sign') {
 			logger.info(`Skipping delete trigger for Sign app evaluation ${event.data.id}`);
 
-return;
+			return;
 		}
 
 		if (!statementId) {
@@ -220,21 +215,22 @@ return;
 		}
 
 		await updateParentStatementWithChosenOptions(statement.parentId);
-
 	} catch (error) {
 		logger.error('Error in deleteEvaluation:', error);
 	}
 }
 
-export async function updateEvaluation(event: FirestoreEvent<Change<DocumentSnapshot>>): Promise<void> {
+export async function updateEvaluation(
+	event: FirestoreEvent<Change<DocumentSnapshot>>,
+): Promise<void> {
 	try {
 		const eventId = event.id;
 
 		// Check for duplicate event processing
 		if (isEventAlreadyProcessed(eventId)) {
 			logger.info(`Skipping duplicate update event ${eventId}`);
-			
-return;
+
+			return;
 		}
 		markEventAsProcessed(eventId);
 
@@ -245,7 +241,7 @@ return;
 		if (after.source === 'sign') {
 			logger.info(`Skipping update trigger for Sign app evaluation ${event.data.after.id}`);
 
-return;
+			return;
 		}
 
 		const evaluationDiff = after.evaluation - before.evaluation;
@@ -279,9 +275,8 @@ return;
 		const userEvalData = {
 			userId,
 			evaluation: after.evaluation || 0,
-		}
-		updateUserDemographicEvaluation(statement, userEvalData)
-
+		};
+		updateUserDemographicEvaluation(statement, userEvalData);
 	} catch (error) {
 		logger.error('Error in updateEvaluation:', error);
 	}
@@ -291,7 +286,9 @@ return;
 // CORE BUSINESS LOGIC
 // ============================================================================
 
-async function updateStatementEvaluation(props: UpdateStatementEvaluationProps): Promise<Statement | undefined> {
+async function updateStatementEvaluation(
+	props: UpdateStatementEvaluationProps,
+): Promise<Statement | undefined> {
 	const { statementId, evaluationDiff, action, newEvaluation, oldEvaluation } = props;
 
 	try {
@@ -329,7 +326,7 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 			evaluationDiff,
 			actualAddEvaluator,
 			proConDiff,
-			squaredEvaluationDiff
+			squaredEvaluationDiff,
 		);
 
 		// Return updated statement
@@ -337,7 +334,6 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 		const updatedStatement = await statementRef.get();
 
 		return updatedStatement.data() as Statement;
-
 	} catch (error) {
 		logger.error('Error in updateStatementEvaluation:', error);
 
@@ -352,7 +348,8 @@ async function updateStatementEvaluation(props: UpdateStatementEvaluationProps):
 async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<void> {
 	try {
 		// Get all options under this parent
-		const optionsSnapshot = await db.collection(Collections.statements)
+		const optionsSnapshot = await db
+			.collection(Collections.statements)
 			.where('parentId', '==', parentId)
 			.where('statementType', '==', StatementType.option)
 			.get();
@@ -364,7 +361,7 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 		const batch = db.batch();
 		let needsUpdate = false;
 
-		optionsSnapshot.docs.forEach(doc => {
+		optionsSnapshot.docs.forEach((doc) => {
 			const data = doc.data();
 
 			// Check if evaluation exists and has averageEvaluation
@@ -387,20 +384,23 @@ async function ensureAverageEvaluationForAllOptions(parentId: string): Promise<v
 				};
 
 				// Ensure averageEvaluation is calculated
-				evaluation.averageEvaluation = evaluation.numberOfEvaluators > 0
-					? evaluation.sumEvaluations / evaluation.numberOfEvaluators
-					: 0;
+				evaluation.averageEvaluation =
+					evaluation.numberOfEvaluators > 0
+						? evaluation.sumEvaluations / evaluation.numberOfEvaluators
+						: 0;
 
 				batch.update(doc.ref, {
 					evaluation,
-					lastUpdate: Date.now()
+					lastUpdate: Date.now(),
 				});
 			}
 		});
 
 		if (needsUpdate) {
 			await batch.commit();
-			logger.info(`Fixed averageEvaluation for ${optionsSnapshot.size} options under parent ${parentId}`);
+			logger.info(
+				`Fixed averageEvaluation for ${optionsSnapshot.size} options under parent ${parentId}`,
+			);
 		}
 	} catch (error) {
 		logger.error('Error fixing averageEvaluation for options:', error);
@@ -412,7 +412,7 @@ async function updateStatementInTransaction(
 	evaluationDiff: number,
 	addEvaluator: number,
 	proConDiff: CalcDiff,
-	squaredEvaluationDiff: number
+	squaredEvaluationDiff: number,
 ): Promise<void> {
 	await db.runTransaction(async (transaction) => {
 		const statementRef = db.collection(Collections.statements).doc(statementId);
@@ -424,11 +424,14 @@ async function updateStatementInTransaction(
 		}
 
 		// Check if this statement is missing averageEvaluation
-		if (statementData.statementType === StatementType.option &&
-			(!statementData.evaluation || statementData.evaluation.averageEvaluation === undefined)) {
-
+		if (
+			statementData.statementType === StatementType.option &&
+			(!statementData.evaluation || statementData.evaluation.averageEvaluation === undefined)
+		) {
 			// Log that we detected a missing field
-			logger.info(`Detected missing averageEvaluation for option ${statementId}, will fix all siblings under parent ${statementData.parentId}`);
+			logger.info(
+				`Detected missing averageEvaluation for option ${statementId}, will fix all siblings under parent ${statementData.parentId}`,
+			);
 
 			// Schedule the fix after transaction completes to avoid conflicts
 			setImmediate(() => {
@@ -452,9 +455,10 @@ async function updateStatementInTransaction(
 				} as StatementEvaluation;
 			} else {
 				// Calculate based on existing data
-				statementData.evaluation.averageEvaluation = statementData.evaluation.numberOfEvaluators > 0
-					? statementData.evaluation.sumEvaluations / statementData.evaluation.numberOfEvaluators
-					: 0;
+				statementData.evaluation.averageEvaluation =
+					statementData.evaluation.numberOfEvaluators > 0
+						? statementData.evaluation.sumEvaluations / statementData.evaluation.numberOfEvaluators
+						: 0;
 			}
 		}
 
@@ -470,11 +474,14 @@ async function updateStatementInTransaction(
 			proConDiff,
 			evaluationDiff,
 			addEvaluator,
-			squaredEvaluationDiff
+			squaredEvaluationDiff,
 		);
 
 		// Calculate consensusValid by combining consensus with corroborationLevel
-		const consensusValid = calculateConsensusValid(agreement, statement.popperHebbianScore ?? undefined);
+		const consensusValid = calculateConsensusValid(
+			agreement,
+			statement.popperHebbianScore ?? undefined,
+		);
 
 		// Use atomic increments for ALL counting fields to prevent race conditions
 		// when Firebase triggers fire multiple times for the same event
@@ -506,7 +513,7 @@ async function updateStatementInTransaction(
  * This is used to efficiently track Σxi² for standard deviation calculation
  */
 function calcSquaredDiff(newEvaluation: number, oldEvaluation: number): number {
-	return (newEvaluation * newEvaluation) - (oldEvaluation * oldEvaluation);
+	return newEvaluation * newEvaluation - oldEvaluation * oldEvaluation;
 }
 
 function calculateEvaluation(
@@ -514,7 +521,7 @@ function calculateEvaluation(
 	proConDiff: CalcDiff,
 	evaluationDiff: number,
 	addEvaluator: number,
-	squaredEvaluationDiff: number
+	squaredEvaluationDiff: number,
 ) {
 	const evaluation: StatementEvaluation = statement.evaluation || {
 		agreement: statement.consensus || 0,
@@ -536,10 +543,13 @@ function calculateEvaluation(
 		evaluation.sumPro = (evaluation.sumPro || 0) + proConDiff.proDiff;
 		evaluation.sumCon = (evaluation.sumCon || 0) + proConDiff.conDiff;
 		// Track pro/con evaluator counts
-		evaluation.numberOfProEvaluators = (evaluation.numberOfProEvaluators || 0) + proConDiff.proEvaluatorsDiff;
-		evaluation.numberOfConEvaluators = (evaluation.numberOfConEvaluators || 0) + proConDiff.conEvaluatorsDiff;
+		evaluation.numberOfProEvaluators =
+			(evaluation.numberOfProEvaluators || 0) + proConDiff.proEvaluatorsDiff;
+		evaluation.numberOfConEvaluators =
+			(evaluation.numberOfConEvaluators || 0) + proConDiff.conEvaluatorsDiff;
 		// Track sum of squared evaluations for standard deviation calculation
-		evaluation.sumSquaredEvaluations = (evaluation.sumSquaredEvaluations || 0) + squaredEvaluationDiff;
+		evaluation.sumSquaredEvaluations =
+			(evaluation.sumSquaredEvaluations || 0) + squaredEvaluationDiff;
 		// Ensure averageEvaluation exists even for old data
 		evaluation.averageEvaluation = evaluation.averageEvaluation ?? 0;
 	} else {
@@ -560,15 +570,16 @@ function calculateEvaluation(
 	evaluation.numberOfConEvaluators = Math.max(0, evaluation.numberOfConEvaluators || 0);
 
 	// Calculate average evaluation
-	evaluation.averageEvaluation = evaluation.numberOfEvaluators > 0
-		? evaluation.sumEvaluations / evaluation.numberOfEvaluators
-		: 0;
+	evaluation.averageEvaluation =
+		evaluation.numberOfEvaluators > 0
+			? evaluation.sumEvaluations / evaluation.numberOfEvaluators
+			: 0;
 
 	// Calculate consensus using new Mean - SEM formula
 	const agreement = calcAgreement(
 		evaluation.sumEvaluations,
 		evaluation.sumSquaredEvaluations || 0,
-		evaluation.numberOfEvaluators
+		evaluation.numberOfEvaluators,
 	);
 	evaluation.agreement = agreement;
 
@@ -700,7 +711,7 @@ const FLOOR_STD_DEV = 0.5;
 function calcStandardError(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV; // Return floor for n=1 to ensure penalty
 
@@ -708,7 +719,7 @@ function calcStandardError(
 	const mean = sumEvaluations / numberOfEvaluators;
 
 	// Calculate variance using: Var = (Σxi² / n) - μ²
-	const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
+	const variance = sumSquaredEvaluations / numberOfEvaluators - mean * mean;
 
 	// Ensure variance is non-negative (floating point errors can cause small negative values)
 	const safeVariance = Math.max(0, variance);
@@ -756,7 +767,7 @@ function calcStandardError(
 function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	try {
 		parse(number(), sumEvaluations);
@@ -787,7 +798,11 @@ function calcAgreement(
 	}
 }
 
-function calcDiffEvaluation({ action, newEvaluation, oldEvaluation }: {
+function calcDiffEvaluation({
+	action,
+	newEvaluation,
+	oldEvaluation,
+}: {
 	action: ActionTypes;
 	newEvaluation: number;
 	oldEvaluation: number;
@@ -849,7 +864,9 @@ function calcDiffEvaluation({ action, newEvaluation, oldEvaluation }: {
 // PARENT STATEMENT UPDATE LOGIC
 // ============================================================================
 
-export async function updateChosenOptions(event: FirestoreEvent<Change<DocumentSnapshot> | DocumentSnapshot | undefined>): Promise<void> {
+export async function updateChosenOptions(
+	event: FirestoreEvent<Change<DocumentSnapshot> | DocumentSnapshot | undefined>,
+): Promise<void> {
 	try {
 		const snapshot = getSnapshotFromEvent(event);
 		if (!snapshot?.exists) return;
@@ -869,7 +886,9 @@ export async function updateChosenOptions(event: FirestoreEvent<Change<DocumentS
 	}
 }
 
-function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | DocumentSnapshot | undefined>): DocumentSnapshot | undefined {
+function getSnapshotFromEvent(
+	event: FirestoreEvent<Change<DocumentSnapshot> | DocumentSnapshot | undefined>,
+): DocumentSnapshot | undefined {
 	if (!event.data) return undefined;
 
 	if ('after' in event.data) {
@@ -887,25 +906,33 @@ function getSnapshotFromEvent(event: FirestoreEvent<Change<DocumentSnapshot> | D
 async function updateParentStatementWithChosenOptions(parentId: string | undefined): Promise<void> {
 	if (!parentId) {
 		logger.warn('updateParentStatementWithChosenOptions: parentId is undefined');
-		
-return;
+
+		return;
 	}
 
 	try {
 		logger.info(`updateParentStatementWithChosenOptions: Starting for parent ${parentId}`);
 
 		const parentStatement = await getParentStatement(parentId);
-		logger.info(`updateParentStatementWithChosenOptions: Parent statement found, resultsSettings: ${JSON.stringify(parentStatement.resultsSettings)}`);
+		logger.info(
+			`updateParentStatementWithChosenOptions: Parent statement found, resultsSettings: ${JSON.stringify(parentStatement.resultsSettings)}`,
+		);
 
 		// Use defaultResultsSettings if parent has no resultsSettings configured
 		const resultsSettings = parentStatement.resultsSettings || defaultResultsSettings;
-		logger.info(`updateParentStatementWithChosenOptions: Using resultsSettings: ${JSON.stringify(resultsSettings)}`);
+		logger.info(
+			`updateParentStatementWithChosenOptions: Using resultsSettings: ${JSON.stringify(resultsSettings)}`,
+		);
 
 		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
-		logger.info(`updateParentStatementWithChosenOptions: Found ${chosenOptions.length} chosen options`);
+		logger.info(
+			`updateParentStatementWithChosenOptions: Found ${chosenOptions.length} chosen options`,
+		);
 
 		if (chosenOptions.length > 0) {
-			logger.info(`updateParentStatementWithChosenOptions: Updating parent with ${chosenOptions.length} results`);
+			logger.info(
+				`updateParentStatementWithChosenOptions: Updating parent with ${chosenOptions.length} results`,
+			);
 			await updateParentWithResults(parentId, chosenOptions);
 			logger.info(`updateParentStatementWithChosenOptions: Parent updated successfully`);
 		} else {
@@ -930,7 +957,7 @@ async function updateParentTotalEvaluators(parentId: string): Promise<void> {
 
 		// Count unique evaluators (users who have evaluated at least one option)
 		const uniqueEvaluators = new Set<string>();
-		evaluationsSnapshot.forEach(doc => {
+		evaluationsSnapshot.forEach((doc) => {
 			const evaluation = doc.data() as Evaluation;
 			// Only count evaluators with non-zero evaluations
 			if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
@@ -946,8 +973,8 @@ async function updateParentTotalEvaluators(parentId: string): Promise<void> {
 
 		if (!parentDoc.exists) {
 			logger.warn(`Parent statement ${parentId} not found`);
-			
-return;
+
+			return;
 		}
 
 		const parentData = parentDoc.data() as Statement;
@@ -971,7 +998,7 @@ return;
 		await parentRef.update({
 			evaluation: parentEvaluation,
 			totalEvaluators: totalUniqueEvaluators, // Also update the legacy field for compatibility
-			lastUpdate: Date.now()
+			lastUpdate: Date.now(),
 		});
 
 		logger.info(`Updated parent ${parentId} with ${totalUniqueEvaluators} total unique evaluators`);
@@ -992,13 +1019,22 @@ async function getParentStatement(parentId: string): Promise<Statement> {
 	return parentStatement;
 }
 
-async function updateParentWithResults(parentId: string, chosenOptions: Statement[]): Promise<void> {
-	logger.info(`updateParentWithResults: Starting update for parent ${parentId} with ${chosenOptions.length} options`);
+async function updateParentWithResults(
+	parentId: string,
+	chosenOptions: Statement[],
+): Promise<void> {
+	logger.info(
+		`updateParentWithResults: Starting update for parent ${parentId} with ${chosenOptions.length} options`,
+	);
 
 	const childStatementsSimple = chosenOptions.map(statementToSimpleStatement);
 
-	logger.info(`updateParentWithResults: Converted to ${childStatementsSimple.length} simple statements`);
-	logger.info(`updateParentWithResults: Results data: ${JSON.stringify(childStatementsSimple.map(s => ({ id: s.statementId, statement: s.statement?.substring(0, 30) })))}`);
+	logger.info(
+		`updateParentWithResults: Converted to ${childStatementsSimple.length} simple statements`,
+	);
+	logger.info(
+		`updateParentWithResults: Results data: ${JSON.stringify(childStatementsSimple.map((s) => ({ id: s.statementId, statement: s.statement?.substring(0, 30) })))}`,
+	);
 
 	try {
 		await db.collection(Collections.statements).doc(parentId).update({
@@ -1016,7 +1052,10 @@ async function updateParentWithResults(parentId: string, chosenOptions: Statemen
 // OPTION SELECTION LOGIC
 // ============================================================================
 
-async function choseTopOptions(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[]> {
+async function choseTopOptions(
+	parentId: string,
+	resultsSettings: ResultsSettings,
+): Promise<Statement[]> {
 	try {
 		await clearPreviousChosenOptions(parentId);
 
@@ -1024,8 +1063,8 @@ async function choseTopOptions(parentId: string, resultsSettings: ResultsSetting
 		if (!chosenOptions?.length) {
 			// No options found is a valid state, not an error
 			logger.info(`No options found for parent ${parentId}`);
-			
-return [];
+
+			return [];
 		}
 
 		const sortedOptions = getSortedOptions(chosenOptions, resultsSettings);
@@ -1034,8 +1073,8 @@ return [];
 		return sortedOptions;
 	} catch (error) {
 		logger.error('Error choosing top options:', error);
-		
-return [];
+
+		return [];
 	}
 }
 
@@ -1044,7 +1083,10 @@ async function clearPreviousChosenOptions(parentId: string | undefined): Promise
 		if (!parentId) throw new Error('Parent ID is required');
 
 		const statementsRef = db.collection(Collections.statements);
-		const previousChosenDocs = await statementsRef.where('parentId', '==', parentId).where('isChosen', '==', true).get();
+		const previousChosenDocs = await statementsRef
+			.where('parentId', '==', parentId)
+			.where('isChosen', '==', true)
+			.get();
 
 		const batch = db.batch();
 		previousChosenDocs.forEach((doc) => {
@@ -1055,7 +1097,6 @@ async function clearPreviousChosenOptions(parentId: string | undefined): Promise
 	} catch (error) {
 		console.error('Error clearing previous chosen options:', error);
 	}
-
 }
 
 async function markOptionsAsChosen(statements: Statement[]): Promise<void> {
@@ -1073,19 +1114,28 @@ function getSortedOptions(statements: Statement[], resultsSettings: ResultsSetti
 	const { resultsBy } = resultsSettings;
 
 	const sortComparisons = {
-		[ResultsBy.consensus]: (a: Statement, b: Statement) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0),
-		[ResultsBy.mostLiked]: (a: Statement, b: Statement) => (b.evaluation?.sumPro ?? 0) - (a.evaluation?.sumPro ?? 0),
-		[ResultsBy.averageLikesDislikes]: (a: Statement, b: Statement) => (b.evaluation?.sumEvaluations ?? 0) - (a.evaluation?.sumEvaluations ?? 0),
-		[ResultsBy.topOptions]: (a: Statement, b: Statement) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0),
+		[ResultsBy.consensus]: (a: Statement, b: Statement) =>
+			(b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0),
+		[ResultsBy.mostLiked]: (a: Statement, b: Statement) =>
+			(b.evaluation?.sumPro ?? 0) - (a.evaluation?.sumPro ?? 0),
+		[ResultsBy.averageLikesDislikes]: (a: Statement, b: Statement) =>
+			(b.evaluation?.sumEvaluations ?? 0) - (a.evaluation?.sumEvaluations ?? 0),
+		[ResultsBy.topOptions]: (a: Statement, b: Statement) =>
+			(b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0),
 	};
 
 	return statements.sort(sortComparisons[resultsBy] || sortComparisons[ResultsBy.consensus]);
 }
 
-async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsSettings): Promise<Statement[] | undefined> {
+async function getOptionsUsingMethod(
+	parentId: string,
+	resultsSettings: ResultsSettings,
+): Promise<Statement[] | undefined> {
 	const { numberOfResults, resultsBy, cutoffBy, cutoffNumber } = resultsSettings;
 
-	logger.info(`getOptionsUsingMethod: parentId=${parentId}, numberOfResults=${numberOfResults}, resultsBy=${resultsBy}, cutoffBy=${cutoffBy}, cutoffNumber=${cutoffNumber}`);
+	logger.info(
+		`getOptionsUsingMethod: parentId=${parentId}, numberOfResults=${numberOfResults}, resultsBy=${resultsBy}, cutoffBy=${cutoffBy}, cutoffNumber=${cutoffNumber}`,
+	);
 
 	// cutoffNumber serves as the minimum threshold (default to 0, meaning no minimum)
 	const effectiveCutoffNumber = cutoffNumber ?? 0;
@@ -1098,7 +1148,9 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 	// Default to topOptions if cutoffBy is not specified
 	const effectiveCutoffBy = cutoffBy || CutoffBy.topOptions;
 
-	logger.info(`getOptionsUsingMethod: effectiveCutoffBy=${effectiveCutoffBy}, effectiveCutoffNumber=${effectiveCutoffNumber}`);
+	logger.info(
+		`getOptionsUsingMethod: effectiveCutoffBy=${effectiveCutoffBy}, effectiveCutoffNumber=${effectiveCutoffNumber}`,
+	);
 
 	if (effectiveCutoffBy === CutoffBy.topOptions) {
 		const effectiveNumberOfResults = numberOfResults || 5; // Default to 5 results
@@ -1111,52 +1163,62 @@ async function getOptionsUsingMethod(parentId: string, resultsSettings: ResultsS
 
 		if (snapshot.empty) {
 			logger.info(`getOptionsUsingMethod: No options found for parent ${parentId}`);
-			
-return [];
+
+			return [];
 		}
 
 		const options = snapshot.docs
-			.map(doc => {
+			.map((doc) => {
 				const data = doc.data() as Statement;
-				logger.info(`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}, hide=${data.hide}`);
-				
-return data;
+				logger.info(
+					`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}, hide=${data.hide}`,
+				);
+
+				return data;
 			})
 			// Filter out hidden statements (e.g., merged source statements)
-			.filter(opt => !opt.hide);
+			.filter((opt) => !opt.hide);
 
 		// Sort by the appropriate field, treating undefined as lowest priority
 		const sortedOptions = sortOptionsByResultsBy(options, resultsBy);
 
 		// Return top N results (no cutoff filtering in topOptions mode)
 		const result = sortedOptions.slice(0, Math.ceil(Number(effectiveNumberOfResults)));
-		logger.info(`getOptionsUsingMethod (topOptions): Returning top ${result.length} options (limit: ${effectiveNumberOfResults})`);
-		
-return result;
+		logger.info(
+			`getOptionsUsingMethod (topOptions): Returning top ${result.length} options (limit: ${effectiveNumberOfResults})`,
+		);
+
+		return result;
 	}
 
 	if (effectiveCutoffBy === CutoffBy.aboveThreshold) {
 		// Get all options and filter in memory to handle undefined fields
 		const snapshot = await baseQuery.get();
 
-		logger.info(`getOptionsUsingMethod (aboveThreshold): Query returned ${snapshot.size} documents`);
+		logger.info(
+			`getOptionsUsingMethod (aboveThreshold): Query returned ${snapshot.size} documents`,
+		);
 
 		if (snapshot.empty) {
 			return [];
 		}
 
-		const options = snapshot.docs.map(doc => doc.data() as Statement);
+		const options = snapshot.docs.map((doc) => doc.data() as Statement);
 
 		// Filter options above the threshold
-		const filtered = options.filter(opt => getEvaluationValue(opt, resultsBy) > effectiveCutoffNumber);
-		logger.info(`getOptionsUsingMethod (aboveThreshold): After filtering, ${filtered.length} options remain`);
-		
-return filtered;
+		const filtered = options.filter(
+			(opt) => getEvaluationValue(opt, resultsBy) > effectiveCutoffNumber,
+		);
+		logger.info(
+			`getOptionsUsingMethod (aboveThreshold): After filtering, ${filtered.length} options remain`,
+		);
+
+		return filtered;
 	}
 
 	logger.warn(`getOptionsUsingMethod: Unknown cutoffBy value: ${effectiveCutoffBy}`);
-	
-return undefined;
+
+	return undefined;
 }
 
 function getEvaluationValue(statement: Statement, resultsBy: ResultsBy): number {
@@ -1177,8 +1239,8 @@ function sortOptionsByResultsBy(options: Statement[], resultsBy: ResultsBy): Sta
 	return [...options].sort((a, b) => {
 		const aValue = getEvaluationValue(a, resultsBy);
 		const bValue = getEvaluationValue(b, resultsBy);
-		
-return bValue - aValue; // Descending order
+
+		return bValue - aValue; // Descending order
 	});
 }
 
@@ -1216,7 +1278,7 @@ interface MigrationResult {
 export async function migrateEvaluationsToNewStatement(
 	sourceStatementIds: string[],
 	targetStatementId: string,
-	parentId: string
+	parentId: string,
 ): Promise<MigrationResult> {
 	const result: MigrationResult = {
 		migratedCount: 0,
@@ -1240,12 +1302,15 @@ export async function migrateEvaluationsToNewStatement(
 	try {
 		// 1. Fetch all evaluations from source statements
 		// Track all evaluations per user so we can average them
-		const evaluationsByUser = new Map<string, { evaluations: number[]; evaluator: Evaluation["evaluator"] }>();
+		const evaluationsByUser = new Map<
+			string,
+			{ evaluations: number[]; evaluator: Evaluation['evaluator'] }
+		>();
 
 		for (const sourceId of sourceStatementIds) {
 			const evaluationsSnapshot = await db
 				.collection(Collections.evaluations)
-				.where("statementId", "==", sourceId)
+				.where('statementId', '==', sourceId)
 				.get();
 
 			evaluationsSnapshot.forEach((doc) => {
@@ -1269,7 +1334,9 @@ export async function migrateEvaluationsToNewStatement(
 			});
 		}
 
-		logger.info(`Found ${evaluationsByUser.size} unique evaluators across ${sourceStatementIds.length} statements`);
+		logger.info(
+			`Found ${evaluationsByUser.size} unique evaluators across ${sourceStatementIds.length} statements`,
+		);
 
 		// 2. Create new evaluations for the target statement
 		const batch = db.batch();
@@ -1286,7 +1353,8 @@ export async function migrateEvaluationsToNewStatement(
 
 		for (const [userId, data] of evaluationsByUser) {
 			// Calculate average of user's evaluations across source statements
-			const avgEvaluation = data.evaluations.reduce((sum, val) => sum + val, 0) / data.evaluations.length;
+			const avgEvaluation =
+				data.evaluations.reduce((sum, val) => sum + val, 0) / data.evaluations.length;
 
 			const newEvaluationId = `${userId}--${targetStatementId}`;
 			const evaluationRef = db.collection(Collections.evaluations).doc(newEvaluationId);
@@ -1319,17 +1387,25 @@ export async function migrateEvaluationsToNewStatement(
 
 			// Log if user had multiple evaluations that were averaged
 			if (data.evaluations.length > 1) {
-				logger.info(`User ${userId} had ${data.evaluations.length} evaluations [${data.evaluations.join(", ")}], averaged to ${avgEvaluation.toFixed(3)}`);
+				logger.info(
+					`User ${userId} had ${data.evaluations.length} evaluations [${data.evaluations.join(', ')}], averaged to ${avgEvaluation.toFixed(3)}`,
+				);
 			}
 		}
 
 		// 3. Commit the batch
 		await batch.commit();
-		logger.info(`Created ${result.migratedCount} new evaluations for target statement ${targetStatementId}`);
+		logger.info(
+			`Created ${result.migratedCount} new evaluations for target statement ${targetStatementId}`,
+		);
 
 		// 4. Calculate agreement (consensus) using Mean - SEM with floor
 		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
-		const agreement = calcMigrationAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+		const agreement = calcMigrationAgreement(
+			sumEvaluations,
+			sumSquaredEvaluations,
+			numberOfEvaluators,
+		);
 
 		result.newEvaluationMetrics = {
 			sumEvaluations,
@@ -1346,28 +1422,30 @@ export async function migrateEvaluationsToNewStatement(
 		// 5. Update the target statement with the new metrics
 		const targetRef = db.collection(Collections.statements).doc(targetStatementId);
 		await targetRef.update({
-			"evaluation.sumEvaluations": sumEvaluations,
-			"evaluation.numberOfEvaluators": numberOfEvaluators,
-			"evaluation.sumPro": sumPro,
-			"evaluation.sumCon": sumCon,
-			"evaluation.numberOfProEvaluators": numberOfProEvaluators,
-			"evaluation.numberOfConEvaluators": numberOfConEvaluators,
-			"evaluation.sumSquaredEvaluations": sumSquaredEvaluations,
-			"evaluation.averageEvaluation": averageEvaluation,
-			"evaluation.agreement": agreement,
+			'evaluation.sumEvaluations': sumEvaluations,
+			'evaluation.numberOfEvaluators': numberOfEvaluators,
+			'evaluation.sumPro': sumPro,
+			'evaluation.sumCon': sumCon,
+			'evaluation.numberOfProEvaluators': numberOfProEvaluators,
+			'evaluation.numberOfConEvaluators': numberOfConEvaluators,
+			'evaluation.sumSquaredEvaluations': sumSquaredEvaluations,
+			'evaluation.averageEvaluation': averageEvaluation,
+			'evaluation.agreement': agreement,
 			consensus: agreement,
 			totalEvaluators: numberOfEvaluators,
 			lastUpdate: now,
 		});
 
-		logger.info(`Updated target statement ${targetStatementId} with consensus: ${agreement.toFixed(3)}, evaluators: ${numberOfEvaluators}`);
+		logger.info(
+			`Updated target statement ${targetStatementId} with consensus: ${agreement.toFixed(3)}, evaluators: ${numberOfEvaluators}`,
+		);
 
 		// Update parent's total evaluator count to reflect the changes
 		await updateParentTotalEvaluators(parentId);
 
 		return result;
 	} catch (error) {
-		logger.error("Error migrating evaluations:", error);
+		logger.error('Error migrating evaluations:', error);
 		throw error;
 	}
 }
@@ -1378,7 +1456,7 @@ export async function migrateEvaluationsToNewStatement(
 function calcMigrationAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
 
@@ -1399,7 +1477,7 @@ function calcMigrationAgreement(
 function calcMigrationStandardError(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
 

@@ -6,8 +6,8 @@ export const APP_CONSTANTS = {
 	SCREEN_TYPES: {
 		MAIN: 'main',
 		MIND_MAP: 'mind-map',
-		SETTINGS: 'settings'
-	}
+		SETTINGS: 'settings',
+	},
 } as const;
 
 // Error messages
@@ -15,7 +15,7 @@ export const ERROR_MESSAGES = {
 	NOTIFICATION_SETUP: 'Failed to set up notifications',
 	LISTENER_SETUP: 'Failed to set up listeners',
 	UNSUBSCRIBE: 'Failed to clean up listeners',
-	GENERIC: 'An unexpected error occurred'
+	GENERIC: 'An unexpected error occurred',
 } as const;
 
 // Component states
@@ -25,7 +25,7 @@ export const COMPONENT_STATES = {
 	NOT_FOUND: 'not_found',
 	UNAUTHORIZED: 'unauthorized',
 	WAITING_APPROVAL: 'waiting_approval',
-	AUTHORIZED: 'authorized'
+	AUTHORIZED: 'authorized',
 } as const;
 
-export type ComponentState = typeof COMPONENT_STATES[keyof typeof COMPONENT_STATES];
+export type ComponentState = (typeof COMPONENT_STATES)[keyof typeof COMPONENT_STATES];

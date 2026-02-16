@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zone-Based Swipe Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(180deg, rgba(184, 212, 227, 0.25), rgba(242, 226, 210, 0.25));
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    h1 {
+      margin-bottom: 2rem;
+      color: #334155;
+    }
+
+    .card-container {
+      position: relative;
+      width: 90%;
+      max-width: 400px;
+      height: 500px;
+    }
+
+    .swipe-card {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      transition: transform 0.2s;
+    }
+
+    .swipe-card.dragging {
+      cursor: grabbing;
+      transition: none;
+    }
+
+    /* Zone strips container */
+    .zones {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Individual zone strip */
+    .zone {
+      flex: 1;
+      position: relative;
+      opacity: 0.15;
+      transition: opacity 0.2s ease-out;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zone.active {
+      opacity: 0.9;
+    }
+
+    .zone.active .zone-emoji {
+      opacity: 1;
+    }
+
+    /* Zone colors */
+    .zone-0 { background: #fee2e2; } /* Strongly disagree - red */
+    .zone-1 { background: #fef3c7; } /* Disagree - yellow */
+    .zone-2 { background: #f1f5f9; } /* Neutral - gray */
+    .zone-3 { background: #d1fae5; } /* Agree - light green */
+    .zone-4 { background: #dcfce7; } /* Strongly agree - green */
+
+    /* Emoji on strip */
+    .zone-emoji {
+      font-size: 3rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    /* Content wrapper */
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      padding: 2rem;
+      transition: opacity 0.2s;
+    }
+
+    .swipe-card.dragging .content-wrapper {
+      opacity: 0.4;
+    }
+
+    .content {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      color: #475569;
+      text-align: center;
+    }
+
+    /* Vertical indicator */
+    .vertical-indicator {
+      position: absolute;
+      bottom: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 2rem;
+      opacity: 0;
+      transition: opacity 0.2s;
+      z-index: 2;
+    }
+
+    .swipe-card.vertical-drag .vertical-indicator {
+      opacity: 1;
+    }
+
+    .info {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .info p {
+      margin: 0.5rem 0;
+      color: #475569;
+    }
+
+    .info strong {
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <h1>Zone-Based Swipe Test</h1>
+
+  <div class="card-container">
+    <div class="swipe-card" id="card">
+      <!-- Zone strips (always visible) -->
+      <div class="zones">
+        <div class="zone zone-0" data-zone="0">
+          <span class="zone-emoji">🚫</span>
+        </div>
+        <div class="zone zone-1" data-zone="1">
+          <span class="zone-emoji">👎</span>
+        </div>
+        <div class="zone zone-2" data-zone="2">
+          <span class="zone-emoji">↑</span>
+        </div>
+        <div class="zone zone-3" data-zone="3">
+          <span class="zone-emoji">👍</span>
+        </div>
+        <div class="zone zone-4" data-zone="4">
+          <span class="zone-emoji">🎉</span>
+        </div>
+      </div>
+
+      <!-- Content wrapper -->
+      <div class="content-wrapper">
+        <div class="content">
+          Should we implement universal basic income?
+        </div>
+      </div>
+
+      <!-- Vertical indicator -->
+      <div class="vertical-indicator">↑</div>
+    </div>
+  </div>
+
+  <div class="info">
+    <p><strong>Instructions:</strong></p>
+    <p>Drag the card horizontally or click on a zone strip</p>
+    <p>Center zone (yellow): Drag vertically upward for neutral rating</p>
+    <p id="status">Current zone: None</p>
+    <p id="position">Position: x=0, y=0</p>
+  </div>
+
+  <script>
+    const card = document.getElementById('card');
+    const zones = document.querySelectorAll('.zone');
+    const statusText = document.getElementById('status');
+    const positionText = document.getElementById('position');
+
+    let dragStart = null;
+    let dragStartY = null;
+    let dragStartZone = null;
+    let isVerticalDrag = false;
+    let isDragging = false;
+
+    const TOTAL_ZONES = 5;
+    const CENTER_ZONE = 2;
+
+    function calculateZone(clientX) {
+      const rect = card.getBoundingClientRect();
+      const zoneWidth = rect.width / TOTAL_ZONES;
+      const offsetX = clientX - rect.left;
+      const zoneIndex = Math.floor(offsetX / zoneWidth);
+      return Math.max(0, Math.min(TOTAL_ZONES - 1, zoneIndex));
+    }
+
+    function calculateCurrentZone(dragX) {
+      const cardWidth = card.offsetWidth;
+      const zoneWidth = cardWidth / TOTAL_ZONES;
+      const offset = dragX + (cardWidth / 2);
+      const zoneIndex = Math.floor(offset / zoneWidth);
+      return Math.max(0, Math.min(TOTAL_ZONES - 1, zoneIndex));
+    }
+
+    function setActiveZone(zoneIndex) {
+      zones.forEach((zone, i) => {
+        zone.classList.toggle('active', i === zoneIndex);
+      });
+
+      const zoneNames = ['Strongly Disagree (-1)', 'Disagree (-0.5)', 'Neutral (0)', 'Agree (+0.5)', 'Strongly Agree (+1)'];
+      statusText.textContent = `Current zone: ${zoneNames[zoneIndex]}`;
+    }
+
+    function clearActiveZones() {
+      zones.forEach(zone => zone.classList.remove('active'));
+      statusText.textContent = 'Current zone: None';
+    }
+
+    function handleDragStart(clientX, clientY) {
+      isDragging = true;
+      dragStart = clientX;
+      dragStartY = clientY;
+      card.classList.add('dragging');
+
+      const initialZone = calculateZone(clientX);
+      dragStartZone = initialZone;
+
+      if (initialZone === CENTER_ZONE) {
+        isVerticalDrag = true;
+        card.classList.add('vertical-drag');
+      } else {
+        isVerticalDrag = false;
+      }
+
+      setActiveZone(initialZone);
+    }
+
+    function handleDragMove(clientX, clientY) {
+      if (!isDragging || dragStart === null) return;
+
+      if (isVerticalDrag) {
+        const deltaY = clientY - dragStartY;
+        card.style.transform = `translateY(${deltaY}px)`;
+        positionText.textContent = `Position: x=0, y=${Math.round(deltaY)}`;
+        setActiveZone(CENTER_ZONE);
+      } else {
+        const deltaX = clientX - dragStart;
+        card.style.transform = `translateX(${deltaX}px)`;
+        positionText.textContent = `Position: x=${Math.round(deltaX)}, y=0`;
+
+        const currentZone = calculateCurrentZone(deltaX);
+        setActiveZone(currentZone);
+      }
+    }
+
+    function handleDragEnd() {
+      if (!isDragging) return;
+
+      isDragging = false;
+      dragStart = null;
+      dragStartY = null;
+      dragStartZone = null;
+      isVerticalDrag = false;
+
+      card.style.transform = '';
+      card.classList.remove('dragging', 'vertical-drag');
+      clearActiveZones();
+      positionText.textContent = 'Position: x=0, y=0';
+    }
+
+    // Mouse events
+    card.addEventListener('mousedown', (e) => {
+      handleDragStart(e.clientX, e.clientY);
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (isDragging) {
+        handleDragMove(e.clientX, e.clientY);
+      }
+    });
+
+    document.addEventListener('mouseup', () => {
+      handleDragEnd();
+    });
+
+    // Touch events
+    card.addEventListener('touchstart', (e) => {
+      const touch = e.touches[0];
+      handleDragStart(touch.clientX, touch.clientY);
+    });
+
+    card.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleDragMove(touch.clientX, touch.clientY);
+    }, { passive: false });
+
+    card.addEventListener('touchend', () => {
+      handleDragEnd();
+    });
+  </script>
+</body>
+</html>

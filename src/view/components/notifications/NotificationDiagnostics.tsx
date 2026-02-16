@@ -44,11 +44,11 @@ export const NotificationDiagnostics: React.FC = () => {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					'Authorization': `Bearer ${await auth.currentUser?.getIdToken()}`
+					Authorization: `Bearer ${await auth.currentUser?.getIdToken()}`,
 				},
 				body: JSON.stringify({
-					token: notificationService.getToken()
-				})
+					token: notificationService.getToken(),
+				}),
 			});
 
 			if (response.ok) {
@@ -67,8 +67,8 @@ export const NotificationDiagnostics: React.FC = () => {
 	const handleRefreshToken = async () => {
 		if (!auth.currentUser) {
 			alert('Please sign in first');
-			
-return;
+
+			return;
 		}
 
 		setRefreshing(true);
@@ -103,25 +103,27 @@ return;
 
 	const formatTokenAge = (ageMs: number | null): string => {
 		if (!ageMs) return 'Unknown';
-		
+
 		const days = Math.floor(ageMs / (1000 * 60 * 60 * 24));
 		const hours = Math.floor((ageMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		
+
 		if (days > 0) {
 			return `${days} day${days > 1 ? 's' : ''}, ${hours} hour${hours > 1 ? 's' : ''} ago`;
 		}
-		
-return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+
+		return `${hours} hour${hours > 1 ? 's' : ''} ago`;
 	};
 
 	const getStatusIcon = (status: boolean | 'warning') => {
 		if (status === 'warning') {
 			return <AlertCircle className="w-5 h-5 text-yellow-500" />;
 		}
-		
-return status ? 
-			<CheckCircle2 className="w-5 h-5 text-green-500" /> : 
-			<XCircle className="w-5 h-5 text-red-500" />;
+
+		return status ? (
+			<CheckCircle2 className="w-5 h-5 text-green-500" />
+		) : (
+			<XCircle className="w-5 h-5 text-red-500" />
+		);
 	};
 
 	if (isLoading) {
@@ -179,9 +181,7 @@ return status ?
 						<span className="font-medium">Permission</span>
 					</div>
 					<div className={styles.diagnosticActions}>
-						<span className={styles.diagnosticValue}>
-							{diagnostics.permission}
-						</span>
+						<span className={styles.diagnosticValue}>{diagnostics.permission}</span>
 						{diagnostics.permission === 'default' && (
 							<Button
 								text="Request Permission"
@@ -234,9 +234,7 @@ return status ?
 							{getStatusIcon(tokenAgeWarning ? 'warning' : true)}
 							<span className="font-medium">Token Age</span>
 						</div>
-						<span className={styles.diagnosticValue}>
-							{formatTokenAge(diagnostics.tokenAge)}
-						</span>
+						<span className={styles.diagnosticValue}>{formatTokenAge(diagnostics.tokenAge)}</span>
 					</div>
 				)}
 
@@ -259,7 +257,13 @@ return status ?
 						disabled={!diagnostics.hasToken || testSending}
 						buttonType={ButtonType.PRIMARY}
 						className={styles.fullButton}
-						icon={testSending ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+						icon={
+							testSending ? (
+								<RefreshCw className="w-4 h-4 animate-spin" />
+							) : (
+								<Bell className="w-4 h-4" />
+							)
+						}
 					/>
 
 					<Button
@@ -279,7 +283,7 @@ return status ?
 							<div>
 								<p className={styles.warningTitle}>Safari Browser Detected</p>
 								<p className={styles.warningText}>
-									Push notifications are not fully supported in Safari. For the best experience, 
+									Push notifications are not fully supported in Safari. For the best experience,
 									please use Chrome, Firefox, or Edge browsers.
 								</p>
 							</div>
@@ -298,7 +302,10 @@ return status ?
 									<li>Your browser doesn't support notifications. Try Chrome, Firefox, or Edge.</li>
 								)}
 								{diagnostics.permission === 'denied' && (
-									<li>Notifications are blocked. Check your browser settings to allow notifications for this site.</li>
+									<li>
+										Notifications are blocked. Check your browser settings to allow notifications
+										for this site.
+									</li>
 								)}
 								{!diagnostics.serviceWorkerReady && (
 									<li>Service worker not ready. Try refreshing the page.</li>
@@ -306,9 +313,7 @@ return status ?
 								{!diagnostics.hasToken && diagnostics.permission === 'granted' && (
 									<li>No FCM token. Try signing out and signing back in.</li>
 								)}
-								{tokenAgeWarning && (
-									<li>Your token is old. Click "Refresh" to update it.</li>
-								)}
+								{tokenAgeWarning && <li>Your token is old. Click "Refresh" to update it.</li>}
 							</ul>
 						</div>
 					</div>

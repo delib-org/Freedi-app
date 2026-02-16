@@ -1,9 +1,7 @@
-import { Statement } from '@freedi/shared-types';
+import { Statement, UserDemographicQuestion } from '@freedi/shared-types';
 import {
   Survey,
   SurveyProgress,
-  SurveyDemographicQuestion,
-  SurveyDemographicAnswer,
 } from './survey';
 
 /**
@@ -43,13 +41,13 @@ export interface SurveyExportData {
   /** All questions with their options */
   questions: QuestionExportData[];
   /** Custom demographic questions for this survey */
-  demographicQuestions: SurveyDemographicQuestion[];
+  demographicQuestions: UserDemographicQuestion[];
   /** User response data */
   responses: {
     /** Survey progress records for all users */
     progress: SurveyProgress[];
     /** Demographic answers from all users */
-    demographicAnswers: SurveyDemographicAnswer[];
+    demographicAnswers: UserDemographicQuestion[];
   };
   /** Aggregated statistics */
   stats: ExportStats;

@@ -12,11 +12,7 @@ interface AddSolutionPromptProps {
 	statement: Statement;
 }
 
-const AddSolutionPrompt: FC<AddSolutionPromptProps> = ({
-	show,
-	onClose,
-	statement,
-}) => {
+const AddSolutionPrompt: FC<AddSolutionPromptProps> = ({ show, onClose, statement }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 
@@ -38,16 +34,8 @@ const AddSolutionPrompt: FC<AddSolutionPromptProps> = ({
 				title={t('Add Your Solution First')}
 				footer={
 					<div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-						<Button
-							text={t('Cancel')}
-							variant="secondary"
-							onClick={onClose}
-						/>
-						<Button
-							text={t('Add Solution')}
-							variant="primary"
-							onClick={handleAddSolution}
-						/>
+						<Button text={t('Cancel')} variant="secondary" onClick={onClose} />
+						<Button text={t('Add Solution')} variant="primary" onClick={handleAddSolution} />
 					</div>
 				}
 			>

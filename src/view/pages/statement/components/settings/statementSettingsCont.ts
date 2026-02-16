@@ -24,7 +24,7 @@ import { Dispatch, SetStateAction } from 'react';
 export async function handleGetVoters(
 	parentId: string | undefined,
 	setVoters: Dispatch<SetStateAction<Vote[]>>,
-	setClicked: Dispatch<SetStateAction<boolean>>
+	setClicked: Dispatch<SetStateAction<boolean>>,
 ) {
 	if (!parentId) return;
 	const voters = await getVoters(parentId);
@@ -36,7 +36,7 @@ export async function handleGetVoters(
 export async function handleGetNonVoters(
 	parentId: string | undefined,
 	setNonVoters: Dispatch<SetStateAction<Vote[]>>,
-	setClicked: Dispatch<SetStateAction<boolean>>
+	setClicked: Dispatch<SetStateAction<boolean>>,
 ) {
 	if (!parentId) return;
 
@@ -58,7 +58,7 @@ export async function handleGetNonVoters(
 export async function handleGetEvaluators(
 	parentId: string | undefined,
 	setEvaluators: Dispatch<SetStateAction<Evaluation[]>>,
-	setClicked: Dispatch<SetStateAction<boolean>>
+	setClicked: Dispatch<SetStateAction<boolean>>,
 ) {
 	if (!parentId) return;
 	const evaluators = await getEvaluations(parentId);
@@ -112,8 +112,7 @@ export async function setNewStatement({
 				membership,
 			});
 
-			if (!newStatement)
-				throw new Error('newStatement had error in creating');
+			if (!newStatement) throw new Error('newStatement had error in creating');
 
 			await setStatementToDB({
 				parentStatement: 'top',
@@ -141,8 +140,7 @@ export async function setNewStatement({
 				showEvaluation,
 				membership,
 			});
-			if (!newStatement)
-				throw new Error('newStatement had not been updated');
+			if (!newStatement) throw new Error('newStatement had not been updated');
 
 			await setStatementToDB({
 				parentStatement,
@@ -163,46 +161,29 @@ export const getStatementSettings = (statement: Statement) => {
 		statement.statementSettings ?? defaultStatementSettings;
 
 	return {
-		enableAddEvaluationOption: Boolean(
-			statementSettings.enableAddEvaluationOption
-		),
-		defaultLookForSimilarities: Boolean(
-			statementSettings.defaultLookForSimilarities
-		),
+		enableAddEvaluationOption: Boolean(statementSettings.enableAddEvaluationOption),
+		defaultLookForSimilarities: Boolean(statementSettings.defaultLookForSimilarities),
 		enableAddVotingOption: Boolean(statementSettings.enableAddVotingOption),
 		enhancedEvaluation: Boolean(statementSettings.enhancedEvaluation),
 		evaluationType: statementSettings.evaluationType, // Add this field
 		showEvaluation: Boolean(statementSettings.showEvaluation),
 		subScreens: statementSettings.subScreens ?? [],
-		inVotingGetOnlyResults: Boolean(
-			statementSettings.inVotingGetOnlyResults
-		),
-		enableSimilaritiesSearch: Boolean(
-			statementSettings.enableSimilaritiesSearch
-		),
-		enableNavigationalElements: Boolean(
-			statementSettings.enableNavigationalElements
-		),
+		inVotingGetOnlyResults: Boolean(statementSettings.inVotingGetOnlyResults),
+		enableSimilaritiesSearch: Boolean(statementSettings.enableSimilaritiesSearch),
+		enableNavigationalElements: Boolean(statementSettings.enableNavigationalElements),
 		hasChat: Boolean(statementSettings.hasChat),
 		hasChildren: Boolean(statementSettings.hasChildren),
 		joiningEnabled: Boolean(statementSettings.joiningEnabled),
-		enableAddNewSubQuestionsButton: Boolean(
-			statementSettings.enableAddNewSubQuestionsButton
-		),
+		enableAddNewSubQuestionsButton: Boolean(statementSettings.enableAddNewSubQuestionsButton),
 		enableAIImprovement: Boolean(statementSettings.enableAIImprovement),
-		isSubmitMode: Boolean(statementSettings.isSubmitMode)
+		isSubmitMode: Boolean(statementSettings.isSubmitMode),
 	};
 };
 
 const getSetStatementData = (statement: Statement) => {
-	const { resultsBy, numberOfResults } =
-		statement.resultsSettings ?? resultsSettingsDefault;
-	const {
-		enableAddEvaluationOption,
-		enableAddVotingOption,
-		enhancedEvaluation,
-		showEvaluation,
-	} = getStatementSettings(statement);
+	const { resultsBy, numberOfResults } = statement.resultsSettings ?? resultsSettingsDefault;
+	const { enableAddEvaluationOption, enableAddVotingOption, enhancedEvaluation, showEvaluation } =
+		getStatementSettings(statement);
 
 	return {
 		hasChildren: Boolean(statement.hasChildren),
@@ -222,9 +203,7 @@ interface ToggleSubScreenParams {
 	statement: Statement;
 }
 
-export const toggleSubScreen = ({
-	statement,
-}: ToggleSubScreenParams): Statement => {
+export const toggleSubScreen = ({ statement }: ToggleSubScreenParams): Statement => {
 	return {
 		...statement,
 	};
@@ -263,14 +242,12 @@ export async function createStatementFromModal({
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement:
-				parentStatement === 'top' ? 'top' : parentStatement,
+			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 		});
 
 		await setStatementToDB({
 			statement: newStatement,
-			parentStatement:
-				parentStatement === 'top' ? 'top' : parentStatement,
+			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 		});
 	} catch (error) {
 		console.error(error);

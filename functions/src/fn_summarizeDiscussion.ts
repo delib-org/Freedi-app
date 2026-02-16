@@ -29,13 +29,13 @@ interface SelectedSolution {
 }
 
 const LANGUAGE_NAMES: Record<string, string> = {
-	'he': 'Hebrew',
-	'ar': 'Arabic',
-	'en': 'English',
-	'es': 'Spanish',
-	'fr': 'French',
-	'de': 'German',
-	'nl': 'Dutch'
+	he: 'Hebrew',
+	ar: 'Arabic',
+	en: 'English',
+	es: 'Spanish',
+	fr: 'French',
+	de: 'German',
+	nl: 'Dutch',
 };
 
 /**
@@ -57,7 +57,7 @@ function detectLanguage(text: string): string {
 export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 	{
 		region: functionConfig.region,
-		cors: [...ALLOWED_ORIGINS]
+		cors: [...ALLOWED_ORIGINS],
 	},
 	async (request): Promise<SummarizeDiscussionResponse> => {
 		const { statementId, adminPrompt, language } = request.data;
@@ -95,10 +95,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		isAdmin = !membersSnapshot.empty;
 
 		if (!isCreator && !isAdmin) {
-			throw new HttpsError(
-				'permission-denied',
-				'Only admins can generate summaries'
-			);
+			throw new HttpsError('permission-denied', 'Only admins can generate summaries');
 		}
 
 		// 3. Get total participants from parent evaluation
@@ -115,23 +112,27 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 		if (selectedSnapshot.empty) {
 			throw new HttpsError(
 				'failed-precondition',
-				'No selected solutions to summarize. Please configure cutoff settings first.'
+				'No selected solutions to summarize. Please configure cutoff settings first.',
 			);
 		}
 
 		// Sort by evaluation.agreement (fallback to consensus for legacy data)
 		const sortedDocs = selectedSnapshot.docs
-			.map(doc => doc.data() as Statement)
-			.sort((a, b) => (b.evaluation?.agreement ?? b.consensus ?? 0) - (a.evaluation?.agreement ?? a.consensus ?? 0));
+			.map((doc) => doc.data() as Statement)
+			.sort(
+				(a, b) =>
+					(b.evaluation?.agreement ?? b.consensus ?? 0) -
+					(a.evaluation?.agreement ?? a.consensus ?? 0),
+			);
 
-		const selectedSolutions: SelectedSolution[] = sortedDocs.map(s => {
+		const selectedSolutions: SelectedSolution[] = sortedDocs.map((s) => {
 			return {
 				title: s.statement,
 				description: getParagraphsText(s.paragraphs),
 				// Use evaluation.agreement when available, fallback to consensus for legacy data
 				consensus: s.evaluation?.agreement ?? s.consensus ?? 0,
 				averageEvaluation: s.evaluation?.averageEvaluation || 0,
-				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0
+				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0,
 			};
 		});
 
@@ -142,7 +143,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			selectedSolutions,
 			totalParticipants,
 			adminPrompt,
-			detectedLang
+			detectedLang,
 		);
 
 		// 6. Call Gemini AI with retry logic for truncation
@@ -153,7 +154,10 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			// More solutions = need more tokens for complete summary
 			const baseTokens = 4096;
 			const tokensPerSolution = 100;
-			const maxOutputTokens = Math.min(8192, baseTokens + (selectedSolutions.length * tokensPerSolution));
+			const maxOutputTokens = Math.min(
+				8192,
+				baseTokens + selectedSolutions.length * tokensPerSolution,
+			);
 
 			let summaryText = '';
 			let attempts = 0;
@@ -211,7 +215,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			await db.collection(Collections.statements).doc(statementId).update({
 				summary: summaryText,
 				summaryGeneratedAt: generatedAt,
-				lastUpdate: generatedAt
+				lastUpdate: generatedAt,
 			});
 
 			return {
@@ -219,7 +223,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 				questionTitle: question.statement,
 				totalParticipants,
 				solutionsCount: selectedSolutions.length,
-				generatedAt
+				generatedAt,
 			};
 		} catch (error) {
 			if (error instanceof HttpsError) {
@@ -228,7 +232,7 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			console.error('Error generating discussion summary:', error);
 			throw new HttpsError('internal', 'Failed to generate summary');
 		}
-	}
+	},
 );
 
 /**
@@ -239,21 +243,25 @@ function buildSummaryPrompt(
 	solutions: SelectedSolution[],
 	totalParticipants: number,
 	adminPrompt?: string,
-	language: string = 'en'
+	language: string = 'en',
 ): string {
 	const languageName = LANGUAGE_NAMES[language] || 'English';
 
 	// Format solutions with their content and metrics
-	const solutionsText = solutions.map((s, i) => `
+	const solutionsText = solutions
+		.map(
+			(s, i) => `
 ### Agreement ${i + 1}: ${s.title}
 ${s.description ? `**Details**: ${s.description}` : ''}
 - Consensus Score: ${s.consensus.toFixed(2)} | ${s.numberOfEvaluators} voters
-`).join('\n');
+`,
+		)
+		.join('\n');
 
 	// Determine agreement strength descriptions
 	const topSolution = solutions[0];
-	const agreementStrength = topSolution.consensus > 0.5 ? 'strong' :
-		topSolution.consensus > 0.2 ? 'moderate' : 'emerging';
+	const agreementStrength =
+		topSolution.consensus > 0.5 ? 'strong' : topSolution.consensus > 0.2 ? 'moderate' : 'emerging';
 
 	return `You are writing an informative summary of a group decision for people who want to understand what was agreed upon.
 
@@ -301,11 +309,13 @@ Write a clear, informative summary in ${languageName} that helps readers underst
 - Focus on the SUBSTANCE of what was agreed, not the process
 - Use clear, accessible language - avoid jargon
 - Be specific about what the group decided to do/believe/support
-${solutions.length > 10
+${
+	solutions.length > 10
 		? `- Since there are ${solutions.length} agreements, organize them by theme/category using ## and ### headers
 - For each category, summarize the key agreements briefly
 - Aim for 400-600 words to cover all major decisions`
-		: `- Keep it concise (150-300 words) but ensure all key agreements are clearly explained`}
+		: `- Keep it concise (150-300 words) but ensure all key agreements are clearly explained`
+}
 - Use bullet points (- ) for listing multiple agreements under each section
 - If solutions have descriptions, incorporate that detail into your explanation
 - **IMPORTANT: Complete the entire summary - do not stop mid-sentence or mid-section**

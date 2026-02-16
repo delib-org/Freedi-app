@@ -9,9 +9,7 @@ interface ParticipantChipProps {
 const ParticipantChip: FC<ParticipantChipProps> = ({ participant }) => {
 	return (
 		<div className={styles.participantChip}>
-			<span className={styles.participantChip__name}>
-				{participant.userName}
-			</span>
+			<span className={styles.participantChip__name}>{participant.userName}</span>
 			{participant.demographicTags.length > 0 && (
 				<div className={styles.participantChip__tags}>
 					{participant.demographicTags.map((tag, index) => (

@@ -27,7 +27,7 @@ export async function addOrRemoveMemberFromStatementDB(
 	statementId: string,
 	eventType: 'new' | 'update' | 'delete',
 	isMemberAfter: boolean,
-	isMemberBefore: boolean
+	isMemberBefore: boolean,
 ): Promise<void> {
 	if (!statementId) {
 		logger.error('statementId is required');
@@ -49,7 +49,7 @@ export async function addOrRemoveMemberFromStatementDB(
 				lastUpdate: Date.now(),
 				statementId,
 			},
-			{ merge: true }
+			{ merge: true },
 		);
 	} catch (error) {
 		logger.error('error updating statement with number of members', error);

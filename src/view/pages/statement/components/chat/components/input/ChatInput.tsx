@@ -18,11 +18,7 @@ interface Props {
 	sideChat?: boolean;
 }
 
-const ChatInput: FC<Props> = ({
-	statement,
-	hasEvaluation,
-	sideChat = false,
-}) => {
+const ChatInput: FC<Props> = ({ statement, hasEvaluation, sideChat = false }) => {
 	if (!statement) throw new Error('No statement');
 
 	// Redux hooks
@@ -48,10 +44,9 @@ const ChatInput: FC<Props> = ({
 
 	function handleKeyUp(e: React.KeyboardEvent<HTMLTextAreaElement>) {
 		try {
-			const _isMobile =
-				!!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-					navigator.userAgent
-				);
+			const _isMobile = !!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+				navigator.userAgent,
+			);
 
 			if (e.key === 'Enter' && !e.shiftKey && !_isMobile) {
 				handleSubmitInput(e);
@@ -62,9 +57,7 @@ const ChatInput: FC<Props> = ({
 	}
 
 	const handleSubmitInput = (
-		e:
-			| React.FormEvent<HTMLFormElement>
-			| React.KeyboardEvent<HTMLTextAreaElement>
+		e: React.FormEvent<HTMLFormElement> | React.KeyboardEvent<HTMLTextAreaElement>,
 	) => {
 		e.preventDefault();
 
@@ -86,7 +79,7 @@ const ChatInput: FC<Props> = ({
 			)}
 			<form
 				onSubmit={(e) => handleSubmitInput(e)}
-				name='theForm'
+				name="theForm"
 				style={{ flexDirection: rowDirection }}
 			>
 				<textarea
@@ -96,10 +89,10 @@ const ChatInput: FC<Props> = ({
 						resize: 'none', // Prevent manual resizing since we're handling it
 						overflow: 'hidden', // Hide scrollbar since we're auto-expanding
 					}}
-					data-cy='statement-chat-input'
-					className='page__footer__form__input'
-					aria-label='Form Input'
-					name='newStatement'
+					data-cy="statement-chat-input"
+					className="page__footer__form__input"
+					aria-label="Form Input"
+					name="newStatement"
 					ref={textareaRef}
 					onKeyUp={(e) => handleKeyUp(e)}
 					value={message}
@@ -112,10 +105,10 @@ const ChatInput: FC<Props> = ({
 					placeholder={t('Type your message here...')}
 				></textarea>
 				<button
-					type='submit'
-					aria-label='Submit Button'
+					type="submit"
+					aria-label="Submit Button"
 					style={statementColor}
-					data-cy='statement-chat-send-btn'
+					data-cy="statement-chat-send-btn"
 				>
 					<SendIcon color={statementColor.color} />
 				</button>

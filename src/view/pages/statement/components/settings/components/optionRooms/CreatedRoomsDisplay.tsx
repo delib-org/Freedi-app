@@ -30,7 +30,7 @@ const CreatedRoomsDisplay: FC<CreatedRoomsDisplayProps> = ({ statementId, option
 	// Create a map from option statementId to option title
 	const optionTitleMap = useMemo(() => {
 		const map = new Map<string, string>();
-		options.forEach(opt => map.set(opt.statementId, opt.statement));
+		options.forEach((opt) => map.set(opt.statementId, opt.statement));
 
 		return map;
 	}, [options]);
@@ -43,13 +43,17 @@ const CreatedRoomsDisplay: FC<CreatedRoomsDisplayProps> = ({ statementId, option
 	// Filter to only ACTIVE settings for this parent
 	// Group by option (statementId) and take only the most recent active setting per option
 	const activeSettings = useMemo(() => {
-		const filtered = allSettings.filter(s => s.topParentId === statementId && s.status === 'active');
+		const filtered = allSettings.filter(
+			(s) => s.topParentId === statementId && s.status === 'active',
+		);
 
 		// Debug: log what we're filtering
 		if (filtered.length > 0) {
 			console.info('[CreatedRoomsDisplay] Active settings found:', filtered.length);
-			filtered.forEach(s => {
-				console.info(`  - settingsId: ${s.settingsId}, optionId: ${s.statementId}, createdAt: ${s.createdAt}, rooms: ${s.totalRooms}`);
+			filtered.forEach((s) => {
+				console.info(
+					`  - settingsId: ${s.settingsId}, optionId: ${s.statementId}, createdAt: ${s.createdAt}, rooms: ${s.totalRooms}`,
+				);
 			});
 		}
 
@@ -59,8 +63,8 @@ const CreatedRoomsDisplay: FC<CreatedRoomsDisplayProps> = ({ statementId, option
 			if (!existing || setting.createdAt > existing.createdAt) {
 				acc.set(setting.statementId, setting);
 			}
-			
-return acc;
+
+			return acc;
 		}, new Map<string, RoomSettings>());
 
 		const result = Array.from(settingsMap.values());
@@ -69,20 +73,20 @@ return acc;
 		return result;
 	}, [allSettings, statementId]);
 
-	const settingsIds = useMemo(() => activeSettings.map(s => s.settingsId), [activeSettings]);
+	const settingsIds = useMemo(() => activeSettings.map((s) => s.settingsId), [activeSettings]);
 
 	// Get rooms and participants from Redux
 	const allRooms = useSelector((state: RootState) => state.roomAssignment.rooms);
 	const allParticipants = useSelector((state: RootState) => state.roomAssignment.participants);
 
 	// Filter rooms and participants to only those belonging to our active settings
-	const rooms = useMemo(() =>
-		allRooms.filter(r => settingsIds.includes(r.settingsId)),
-		[allRooms, settingsIds]
+	const rooms = useMemo(
+		() => allRooms.filter((r) => settingsIds.includes(r.settingsId)),
+		[allRooms, settingsIds],
 	);
-	const participants = useMemo(() =>
-		allParticipants.filter(p => settingsIds.includes(p.settingsId)),
-		[allParticipants, settingsIds]
+	const participants = useMemo(
+		() => allParticipants.filter((p) => settingsIds.includes(p.settingsId)),
+		[allParticipants, settingsIds],
 	);
 
 	// Clear rooms when statementId changes
@@ -113,19 +117,22 @@ return acc;
 		}
 
 		return () => {
-			unsubscribers.forEach(unsub => unsub());
+			unsubscribers.forEach((unsub) => unsub());
 		};
 	}, [settingsIds.join(','), dispatch]);
 
 	// Group participants by room
-	const participantsByRoom = participants.reduce((acc, participant) => {
-		if (!acc[participant.roomId]) {
-			acc[participant.roomId] = [];
-		}
-		acc[participant.roomId].push(participant);
+	const participantsByRoom = participants.reduce(
+		(acc, participant) => {
+			if (!acc[participant.roomId]) {
+				acc[participant.roomId] = [];
+			}
+			acc[participant.roomId].push(participant);
 
-		return acc;
-	}, {} as Record<string, RoomParticipant[]>);
+			return acc;
+		},
+		{} as Record<string, RoomParticipant[]>,
+	);
 
 	const toggleRoom = (roomId: string) => {
 		setExpandedRooms((prev) => ({
@@ -140,85 +147,85 @@ return acc;
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>
-				{t('Created Rooms')}
-			</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('Created Rooms')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
 				{rooms.length} {t('rooms')} {t('with')} {participants.length} {t('participants')}
 			</p>
 
 			<div className={styles.roomsDisplay}>
-				{rooms.sort((a, b) => a.roomNumber - b.roomNumber).map((room) => {
-					const roomParticipants = participantsByRoom[room.roomId] || [];
-					const isExpanded = expandedRooms[room.roomId];
-					const topicTitle = optionTitleMap.get(room.statementId) || '';
+				{rooms
+					.sort((a, b) => a.roomNumber - b.roomNumber)
+					.map((room) => {
+						const roomParticipants = participantsByRoom[room.roomId] || [];
+						const isExpanded = expandedRooms[room.roomId];
+						const topicTitle = optionTitleMap.get(room.statementId) || '';
 
-					return (
-						<div key={room.roomId} className={styles.roomsDisplay__room}>
-							<button
-								className={styles.roomsDisplay__roomHeader}
-								onClick={() => toggleRoom(room.roomId)}
-								type="button"
-							>
-								<div className={styles.roomsDisplay__roomInfo}>
-									<Home size={18} />
-									<span className={styles.roomsDisplay__roomName}>
-										{room.roomName || `${t('Room')} ${room.roomNumber}`}
-									</span>
-									{topicTitle && (
-										<span className={styles.roomsDisplay__topicBadge}>
-											<Tag size={12} />
-											{topicTitle}
+						return (
+							<div key={room.roomId} className={styles.roomsDisplay__room}>
+								<button
+									className={styles.roomsDisplay__roomHeader}
+									onClick={() => toggleRoom(room.roomId)}
+									type="button"
+								>
+									<div className={styles.roomsDisplay__roomInfo}>
+										<Home size={18} />
+										<span className={styles.roomsDisplay__roomName}>
+											{room.roomName || `${t('Room')} ${room.roomNumber}`}
 										</span>
-									)}
-									<span className={styles.roomsDisplay__roomCount}>
-										<Users size={14} />
-										{roomParticipants.length}
-									</span>
-								</div>
-								{isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-							</button>
+										{topicTitle && (
+											<span className={styles.roomsDisplay__topicBadge}>
+												<Tag size={12} />
+												{topicTitle}
+											</span>
+										)}
+										<span className={styles.roomsDisplay__roomCount}>
+											<Users size={14} />
+											{roomParticipants.length}
+										</span>
+									</div>
+									{isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+								</button>
 
-							{isExpanded && (
-								<div className={styles.roomsDisplay__participants}>
-									{roomParticipants.length === 0 ? (
-										<p className={styles.roomsDisplay__emptyRoom}>
-											{t('No participants assigned')}
-										</p>
-									) : (
-										roomParticipants.map((participant) => (
-											<div
-												key={participant.participantId}
-												className={styles.roomsDisplay__participant}
-											>
-												<span className={styles.roomsDisplay__participantName}>
-													{participant.userName}
-												</span>
-												{participant.demographicTags.length > 0 && (
-													<div className={styles.roomsDisplay__demographicTags}>
-														{participant.demographicTags.map((tag, index) => (
-															<span
-																key={`${tag.questionId}-${index}`}
-																className={styles.roomsDisplay__tag}
-																style={{
-																	backgroundColor: tag.color || '#e0e0e0',
-																	color: getContrastColor(tag.color || '#e0e0e0'),
-																}}
-																title={tag.questionText}
-															>
-																{tag.answer}
-															</span>
-														))}
-													</div>
-												)}
-											</div>
-										))
-									)}
-								</div>
-							)}
-						</div>
-					);
-				})}
+								{isExpanded && (
+									<div className={styles.roomsDisplay__participants}>
+										{roomParticipants.length === 0 ? (
+											<p className={styles.roomsDisplay__emptyRoom}>
+												{t('No participants assigned')}
+											</p>
+										) : (
+											roomParticipants.map((participant) => (
+												<div
+													key={participant.participantId}
+													className={styles.roomsDisplay__participant}
+												>
+													<span className={styles.roomsDisplay__participantName}>
+														{participant.userName}
+													</span>
+													{participant.demographicTags.length > 0 && (
+														<div className={styles.roomsDisplay__demographicTags}>
+															{participant.demographicTags.map((tag, index) => (
+																<span
+																	key={`${tag.questionId}-${index}`}
+																	className={styles.roomsDisplay__tag}
+																	style={{
+																		backgroundColor: tag.color || '#e0e0e0',
+																		color: getContrastColor(tag.color || '#e0e0e0'),
+																	}}
+																	title={tag.questionText}
+																>
+																	{tag.answer}
+																</span>
+															))}
+														</div>
+													)}
+												</div>
+											))
+										)}
+									</div>
+								)}
+							</div>
+						);
+					})}
 			</div>
 		</div>
 	);

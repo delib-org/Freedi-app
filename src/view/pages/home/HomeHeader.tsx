@@ -25,9 +25,7 @@ export default function HomeHeader() {
 	const { t, dir, currentLanguage } = useTranslation();
 	const { isInstallable, isAppInstalled, handleInstall } = usePWAInstallPrompt();
 
-	const currentLabel = LANGUAGES.find(
-		(lang) => lang.code === currentLanguage
-	).label;
+	const currentLabel = LANGUAGES.find((lang) => lang.code === currentLanguage).label;
 
 	// Only show install icon if app is installable AND not already installed
 	const showInstallIcon = isInstallable && !isAppInstalled;
@@ -55,10 +53,10 @@ export default function HomeHeader() {
 
 	return (
 		<div className={`homePage__header ${dir}`}>
-			<div className='homePage__header__wrapper'>
-				<h1 className='homePage__header__wrapper__title'>Delib.Org</h1>
+			<div className="homePage__header__wrapper">
+				<h1 className="homePage__header__wrapper__title">Delib.Org</h1>
 				<WaitingList />
-				<div className='homePage__header__wrapper__icons'>
+				<div className="homePage__header__wrapper__icons">
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
 						setIsOpen={setIsHomeMenuOpen}
@@ -68,18 +66,23 @@ export default function HomeHeader() {
 								className="footer"
 								icon={<DisconnectIcon style={{ color: 'white' }} />}
 								label={t('Disconnect')}
-								onOptionClick={logOut} children={''} />
+								onOptionClick={logOut}
+								children={''}
+							/>
 						}
 					>
-
 						<MenuOption
 							icon={<LanguagesIcon style={{ color: '#4E88C7' }} />}
 							label={currentLabel}
-							onOptionClick={() => handlePanel('changeLanguage')} children={''} />
+							onOptionClick={() => handlePanel('changeLanguage')}
+							children={''}
+						/>
 						<MenuOption
 							icon={<InvitationIcon style={{ color: '#4E88C7' }} />}
 							label={t('Join with PIN number')}
-							onOptionClick={() => handlePanel('invitation')} children={''} />
+							onOptionClick={() => handlePanel('invitation')}
+							children={''}
+						/>
 					</Menu>
 
 					{showInstallIcon && (
@@ -92,9 +95,7 @@ export default function HomeHeader() {
 				</div>
 			</div>
 
-			{showInvitationModal && (
-				<InvitationModal setShowModal={setShowInvitationModal} />
-			)}
+			{showInvitationModal && <InvitationModal setShowModal={setShowInvitationModal} />}
 			{showLanguageModal && (
 				<Modal closeModal={closeModal}>
 					<ChangeLanguage

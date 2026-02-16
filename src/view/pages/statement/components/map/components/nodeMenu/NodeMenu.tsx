@@ -82,18 +82,14 @@ const NodeMenu: FC<Props> = ({
 			statement.statementType === StatementType.option
 				? StatementType.question
 				: StatementType.option;
-		const result = await changeStatementType(
-			statement,
-			newType,
-			isAuthorized
-		);
+		const result = await changeStatementType(statement, newType, isAuthorized);
 
 		if (!result.success) {
 			if (result.error) {
 				alert(result.error);
 			}
 
-return;
+			return;
 		}
 
 		setStatement?.({ ...statement, statementType: newType });
@@ -119,31 +115,18 @@ return;
 				<button ref={addToIconsRef} onClick={changeNodeStatementType}>
 					<ChangeStatementType />
 				</button>
-				<button
-					className={styles.deleteButton}
-					ref={addToIconsRef}
-					onClick={deleteNode}
-				>
+				<button className={styles.deleteButton} ref={addToIconsRef} onClick={deleteNode}>
 					<DeleteIcon />
 				</button>
 
-				<button
-					className={styles.editBtn}
-					ref={addToIconsRef}
-					onClick={editStatement}
-				>
+				<button className={styles.editBtn} ref={addToIconsRef} onClick={editStatement}>
 					<EditIcon />
 				</button>
-				<ClusterButton
-					selectedId={selectedId}
-					addToIconsRef={addToIconsRef}
-				/>
+				<ClusterButton selectedId={selectedId} addToIconsRef={addToIconsRef} />
 			</div>
 			{statement.statementType === StatementType.option && (
 				<div className={styles.rateMenuContainer}>
-					<Evaluation
-						statement={statement}
-					/>
+					<Evaluation statement={statement} />
 				</div>
 			)}
 		</div>

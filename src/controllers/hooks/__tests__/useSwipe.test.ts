@@ -59,9 +59,7 @@ describe('useSwipe', () => {
 	describe('swipe detection', () => {
 		it('should call onSwipeLeft when swiping left past threshold', () => {
 			const onSwipeLeft = jest.fn();
-			const { result } = renderHook(() =>
-				useSwipe({ onSwipeLeft, threshold: 50, enabled: true })
-			);
+			const { result } = renderHook(() => useSwipe({ onSwipeLeft, threshold: 50, enabled: true }));
 
 			// Manually attach ref
 			act(() => {
@@ -81,9 +79,7 @@ describe('useSwipe', () => {
 
 		it('should call onSwipeRight when swiping right past threshold', () => {
 			const onSwipeRight = jest.fn();
-			const { result } = renderHook(() =>
-				useSwipe({ onSwipeRight, threshold: 50, enabled: true })
-			);
+			const { result } = renderHook(() => useSwipe({ onSwipeRight, threshold: 50, enabled: true }));
 
 			act(() => {
 				(result.current as React.MutableRefObject<HTMLDivElement>).current = div;
@@ -102,7 +98,7 @@ describe('useSwipe', () => {
 			const onSwipeRight = jest.fn();
 
 			const { result } = renderHook(() =>
-				useSwipe({ onSwipeLeft, onSwipeRight, threshold: 50, enabled: true })
+				useSwipe({ onSwipeLeft, onSwipeRight, threshold: 50, enabled: true }),
 			);
 
 			act(() => {
@@ -124,9 +120,7 @@ describe('useSwipe', () => {
 		it('should not trigger swipe when vertical movement is greater than horizontal', () => {
 			const onSwipeLeft = jest.fn();
 
-			const { result } = renderHook(() =>
-				useSwipe({ onSwipeLeft, threshold: 50, enabled: true })
-			);
+			const { result } = renderHook(() => useSwipe({ onSwipeLeft, threshold: 50, enabled: true }));
 
 			act(() => {
 				(result.current as React.MutableRefObject<HTMLDivElement>).current = div;
@@ -147,9 +141,7 @@ describe('useSwipe', () => {
 	describe('threshold configuration', () => {
 		it('should use default threshold of 50', () => {
 			const onSwipeLeft = jest.fn();
-			const { result } = renderHook(() =>
-				useSwipe({ onSwipeLeft, enabled: true })
-			);
+			const { result } = renderHook(() => useSwipe({ onSwipeLeft, enabled: true }));
 
 			// Default threshold is 50
 			expect(result.current).toBeDefined();
@@ -157,9 +149,7 @@ describe('useSwipe', () => {
 
 		it('should respect custom threshold', () => {
 			const onSwipeLeft = jest.fn();
-			const { result } = renderHook(() =>
-				useSwipe({ onSwipeLeft, threshold: 100, enabled: true })
-			);
+			const { result } = renderHook(() => useSwipe({ onSwipeLeft, threshold: 100, enabled: true }));
 
 			act(() => {
 				(result.current as React.MutableRefObject<HTMLDivElement>).current = div;
@@ -185,9 +175,7 @@ describe('useSwipe', () => {
 
 		it('should not respond to swipes when disabled', () => {
 			const onSwipeLeft = jest.fn();
-			const { result } = renderHook(() =>
-				useSwipe({ onSwipeLeft, enabled: false })
-			);
+			const { result } = renderHook(() => useSwipe({ onSwipeLeft, enabled: false }));
 
 			act(() => {
 				(result.current as React.MutableRefObject<HTMLDivElement>).current = div;
@@ -205,9 +193,7 @@ describe('useSwipe', () => {
 
 	describe('cleanup', () => {
 		it('should unmount without errors', () => {
-			const { unmount } = renderHook(() =>
-				useSwipe({ enabled: true, onSwipeLeft: jest.fn() })
-			);
+			const { unmount } = renderHook(() => useSwipe({ enabled: true, onSwipeLeft: jest.fn() }));
 
 			// Unmount should not throw
 			expect(() => unmount()).not.toThrow();
@@ -221,7 +207,7 @@ describe('useSwipe', () => {
 
 			const { result, rerender } = renderHook(
 				({ handler }) => useSwipe({ onSwipeLeft: handler, enabled: true }),
-				{ initialProps: { handler: onSwipeLeft1 } }
+				{ initialProps: { handler: onSwipeLeft1 } },
 			);
 
 			act(() => {

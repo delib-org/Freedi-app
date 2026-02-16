@@ -26,7 +26,10 @@ import {
 } from 'firebase/firestore';
 import { Collections } from '@freedi/shared-types';
 import { DB } from '@/controllers/db/config';
-import { removeTokenFromSubscription, addTokenToSubscription } from '@/controllers/db/subscriptions/setSubscriptions';
+import {
+	removeTokenFromSubscription,
+	addTokenToSubscription,
+} from '@/controllers/db/subscriptions/setSubscriptions';
 import { getDeviceInfo } from './platformService';
 import { FIREBASE } from '@/constants/common';
 
@@ -139,7 +142,7 @@ export const deleteToken = async (token: string): Promise<void> => {
 export const registerForStatementNotifications = async (
 	userId: string,
 	token: string,
-	statementId: string
+	statementId: string,
 ): Promise<void> => {
 	// Add token to statementsSubscribe.tokens[] (new approach)
 	await addTokenToSubscription(statementId, userId, token);
@@ -156,7 +159,7 @@ export const registerForStatementNotifications = async (
 			lastUpdate: new Date(),
 			subscribed: true,
 		},
-		{ merge: true }
+		{ merge: true },
 	);
 };
 
@@ -168,7 +171,7 @@ export const registerForStatementNotifications = async (
 export const unregisterFromStatementNotifications = async (
 	token: string,
 	statementId: string,
-	userId: string
+	userId: string,
 ): Promise<void> => {
 	// Remove token from statementsSubscribe.tokens[] (primary)
 	await removeTokenFromSubscription(statementId, userId, token);
@@ -193,12 +196,12 @@ export const unregisterFromStatementNotifications = async (
  */
 export const syncTokenWithSubscriptions = async (
 	userId: string,
-	token: string
+	token: string,
 ): Promise<number> => {
 	const subscriptionsQuery = query(
 		collection(DB, Collections.statementsSubscribe),
 		where('userId', '==', userId),
-		where('getPushNotification', '==', true)
+		where('getPushNotification', '==', true),
 	);
 
 	const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
@@ -252,7 +255,7 @@ export const syncTokenWithSubscriptions = async (
  */
 export const removeTokenFromAllSubscriptions = async (
 	userId: string,
-	token: string
+	token: string,
 ): Promise<void> => {
 	// Validate inputs
 	if (!userId || !token) {
@@ -262,7 +265,7 @@ export const removeTokenFromAllSubscriptions = async (
 	// Get all user's subscriptions
 	const subscriptionsQuery = query(
 		collection(DB, Collections.statementsSubscribe),
-		where('userId', '==', userId)
+		where('userId', '==', userId),
 	);
 
 	const subscriptionsSnapshot = await getDocs(subscriptionsQuery);
@@ -291,15 +294,9 @@ export const removeTokenFromAllSubscriptions = async (
  * Save quiet hours configuration for a user.
  * This updates all tokens belonging to the user.
  */
-export const saveQuietHours = async (
-	userId: string,
-	config: QuietHoursConfig
-): Promise<void> => {
+export const saveQuietHours = async (userId: string, config: QuietHoursConfig): Promise<void> => {
 	// Get all tokens for this user
-	const tokensQuery = query(
-		collection(DB, 'pushNotifications'),
-		where('userId', '==', userId)
-	);
+	const tokensQuery = query(collection(DB, 'pushNotifications'), where('userId', '==', userId));
 
 	const tokensSnapshot = await getDocs(tokensQuery);
 
@@ -327,10 +324,7 @@ export const saveQuietHours = async (
  * Returns the config from any of the user's tokens.
  */
 export const getQuietHours = async (userId: string): Promise<QuietHoursConfig | null> => {
-	const tokensQuery = query(
-		collection(DB, 'pushNotifications'),
-		where('userId', '==', userId)
-	);
+	const tokensQuery = query(collection(DB, 'pushNotifications'), where('userId', '==', userId));
 
 	const tokensSnapshot = await getDocs(tokensQuery);
 

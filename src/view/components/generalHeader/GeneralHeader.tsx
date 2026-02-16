@@ -11,19 +11,19 @@ const GeneralHeader = () => {
 				{dir === 'rtl' ? (
 					<>
 						<div className="app-header-spacer" />
-						<h1 className="app-header-title">{t("My Profile")}</h1>
+						<h1 className="app-header-title">{t('My Profile')}</h1>
 						<Back />
 					</>
 				) : (
 					<>
 						<Back />
-						<h1 className="app-header-title">{t("My Profile")}</h1>
+						<h1 className="app-header-title">{t('My Profile')}</h1>
 						<div className="app-header-spacer" />
 					</>
 				)}
 			</div>
 		</div>
-	)
-}
+	);
+};
 
-export default GeneralHeader
+export default GeneralHeader;

@@ -12,16 +12,15 @@ export const useOnlineUsers = (statementId) => {
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState(null);
 
-	const { creator: currentUser, isLoading: userLoading } =
-		useAuthentication();
+	const { creator: currentUser, isLoading: userLoading } = useAuthentication();
 	const isInitializedRef = useRef(false);
 	const previousStatementRef = useRef(null);
 
 	// Define cleanup function first
 	const cleanup = (targetStatementId, targetUser) => {
 		if (targetStatementId && targetUser?.uid) {
-			removeUserFromOnlineToDB(targetStatementId, targetUser.uid).catch(
-				(err) => console.error('Error in cleanup:', err)
+			removeUserFromOnlineToDB(targetStatementId, targetUser.uid).catch((err) =>
+				console.error('Error in cleanup:', err),
 			);
 		}
 	};
@@ -29,12 +28,7 @@ export const useOnlineUsers = (statementId) => {
 		const previousStatementId = previousStatementRef.current;
 
 		// If we have a previous statement and it's different from current, clean it up
-		if (
-			previousStatementId &&
-			previousStatementId !== statementId &&
-			currentUser &&
-			!userLoading
-		) {
+		if (previousStatementId && previousStatementId !== statementId && currentUser && !userLoading) {
 			cleanup(previousStatementId, currentUser);
 		}
 
@@ -46,13 +40,7 @@ export const useOnlineUsers = (statementId) => {
 	}, [statementId, currentUser]);
 	// Initialize user as online when hook mounts
 	useEffect(() => {
-		if (
-			!statementId ||
-			!currentUser ||
-			userLoading ||
-			isInitializedRef.current
-		)
-			return;
+		if (!statementId || !currentUser || userLoading || isInitializedRef.current) return;
 
 		const initializeOnlineUser = async () => {
 			try {
@@ -74,32 +62,19 @@ export const useOnlineUsers = (statementId) => {
 	useEffect(() => {
 		if (!statementId || !isInitializedRef.current) return;
 
-		const unsubscribe = ListenToOnlineUsers(
-			statementId,
-			setOnlineUsers,
-			setIsLoading
-		);
+		const unsubscribe = ListenToOnlineUsers(statementId, setOnlineUsers, setIsLoading);
 
 		return () => unsubscribe();
 	}, [statementId, isInitializedRef.current]);
 
 	// Handle tab focus/blur events
 	useEffect(() => {
-		if (
-			typeof window === 'undefined' ||
-			!statementId ||
-			!currentUser ||
-			!isInitializedRef.current
-		)
+		if (typeof window === 'undefined' || !statementId || !currentUser || !isInitializedRef.current)
 			return;
 
 		const handleFocus = async () => {
 			try {
-				await updateUserTabFocusToDB(
-					statementId,
-					currentUser.uid,
-					true
-				);
+				await updateUserTabFocusToDB(statementId, currentUser.uid, true);
 			} catch (err) {
 				console.error('Error updating tab focus:', err);
 			}
@@ -107,11 +82,7 @@ export const useOnlineUsers = (statementId) => {
 
 		const handleBlur = async () => {
 			try {
-				await updateUserTabFocusToDB(
-					statementId,
-					currentUser.uid,
-					false
-				);
+				await updateUserTabFocusToDB(statementId, currentUser.uid, false);
 			} catch (err) {
 				console.error('Error updating tab blur:', err);
 			}
@@ -120,11 +91,7 @@ export const useOnlineUsers = (statementId) => {
 		const handleVisibilityChange = async () => {
 			const isVisible = document.visibilityState === 'visible';
 			try {
-				await updateUserTabFocusToDB(
-					statementId,
-					currentUser.uid,
-					isVisible
-				);
+				await updateUserTabFocusToDB(statementId, currentUser.uid, isVisible);
 			} catch (err) {
 				console.error('Error updating visibility:', err);
 			}
@@ -137,10 +104,7 @@ export const useOnlineUsers = (statementId) => {
 		return () => {
 			window.removeEventListener('focus', handleFocus);
 			window.removeEventListener('blur', handleBlur);
-			document.removeEventListener(
-				'visibilitychange',
-				handleVisibilityChange
-			);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 		};
 	}, [statementId, currentUser, isInitializedRef.current]);
 

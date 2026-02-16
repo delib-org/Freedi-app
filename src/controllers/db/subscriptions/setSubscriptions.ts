@@ -1,4 +1,12 @@
-import { doc, updateDoc, setDoc, Timestamp, getDoc, arrayUnion, arrayRemove } from 'firebase/firestore';
+import {
+	doc,
+	updateDoc,
+	setDoc,
+	Timestamp,
+	getDoc,
+	arrayUnion,
+	arrayRemove,
+} from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import {
@@ -9,21 +17,24 @@ import {
 	User,
 	Role,
 	StatementSubscription,
-	Creator
+	Creator,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { store } from '@/redux/store';
 import { setShowGroupDemographicModal } from '@/redux/userDemographic/userDemographicSlice';
-import { getGroupDemographicQuestions, getUserGroupAnswers } from '../userDemographic/getUserDemographic';
+import {
+	getGroupDemographicQuestions,
+	getUserGroupAnswers,
+} from '../userDemographic/getUserDemographic';
 import { getStatementFromDB } from '../statements/getStatement';
 
 interface SetSubscriptionProps {
-	statement: Statement,
-	creator: Creator,
-	role?: Role
-	getInAppNotification?: boolean,
-	getEmailNotification?: boolean,
-	getPushNotification?: boolean
+	statement: Statement;
+	creator: Creator;
+	role?: Role;
+	getInAppNotification?: boolean;
+	getEmailNotification?: boolean;
+	getPushNotification?: boolean;
 }
 
 export async function setStatementSubscriptionToDB({
@@ -32,29 +43,25 @@ export async function setStatementSubscriptionToDB({
 	role = Role.member,
 	getInAppNotification = true,
 	getEmailNotification = false,
-	getPushNotification = false
+	getPushNotification = false,
 }: SetSubscriptionProps): Promise<void> {
 	try {
 		// Validate inputs
 		if (!statement || !creator || !creator.uid) {
 			console.error('Invalid inputs for setStatementSubscriptionToDB', { statement, creator });
-			
+
 			return;
 		}
 
 		const { statementId } = parse(StatementSchema, statement);
 
-		const statementsSubscribeId = getStatementSubscriptionId(
-			statementId,
-			creator.uid
-		);
-		if (!statementsSubscribeId)
-			throw new Error('Error in getting statementsSubscribeId');
+		const statementsSubscribeId = getStatementSubscriptionId(statementId, creator.uid);
+		if (!statementsSubscribeId) throw new Error('Error in getting statementsSubscribeId');
 
 		const statementsSubscribeRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementsSubscribeId
+			statementsSubscribeId,
 		);
 
 		//check if user is already subscribed
@@ -79,10 +86,7 @@ export async function setStatementSubscriptionToDB({
 		if (creator.uid && statement.creator?.uid && creator.uid === statement.creator.uid)
 			subscriptionData.role = Role.admin;
 
-		const parsedStatementSubscription = parse(
-			StatementSubscriptionSchema,
-			subscriptionData
-		);
+		const parsedStatementSubscription = parse(StatementSubscriptionSchema, subscriptionData);
 
 		await setDoc(statementsSubscribeRef, parsedStatementSubscription, {
 			merge: true,
@@ -103,15 +107,17 @@ export async function setStatementSubscriptionToDB({
 
 					// Check for unanswered group questions
 					const hasUnanswered = groupQuestions.some(
-						q => !userAnswers.find(a => a.userQuestionId === q.userQuestionId)
+						(q) => !userAnswers.find((a) => a.userQuestionId === q.userQuestionId),
 					);
 
 					if (hasUnanswered) {
 						// Dispatch action to show demographic modal
-						store.dispatch(setShowGroupDemographicModal({
-							show: true,
-							topParentId: statement.statementId
-						}));
+						store.dispatch(
+							setShowGroupDemographicModal({
+								show: true,
+								topParentId: statement.statementId,
+							}),
+						);
 					}
 				}
 			} catch (demographicError) {
@@ -128,28 +134,25 @@ export async function setStatementSubscriptionToDB({
 	}
 }
 
-export async function updateLastReadTimestamp(
-	statementId: string,
-	userId: string
-) {
+export async function updateLastReadTimestamp(statementId: string, userId: string) {
 	try {
-		if(!statementId || !userId) throw new Error('statementId and userId are required');
+		if (!statementId || !userId) throw new Error('statementId and userId are required');
 		const statementsSubscribeId = `${userId}--${statementId}`;
 
 		const statementsSubscribeRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementsSubscribeId
+			statementsSubscribeId,
 		);
 
 		// Check if subscription exists first
 		const docSnap = await getDoc(statementsSubscribeRef);
-		
+
 		if (docSnap.exists()) {
 			// Document exists, update it
 			await updateDoc(statementsSubscribeRef, {
 				lastReadTimestamp: new Date().getTime(),
-				statementId: statementId // Include statementId to satisfy Firebase rules
+				statementId: statementId, // Include statementId to satisfy Firebase rules
 			});
 		}
 		// If document doesn't exist, don't create it - user should be subscribed first
@@ -163,47 +166,32 @@ export async function updateLastReadTimestamp(
 	}
 }
 
-export async function setRoleToDB(
-	statement: Statement,
-	role: Role,
-	user: User
-): Promise<void> {
+export async function setRoleToDB(statement: Statement, role: Role, user: User): Promise<void> {
 	try {
 		//getting current user role in statement
 		const currentUserStatementSubscriptionId = getStatementSubscriptionId(
 			statement.statementId,
-			user.uid
+			user.uid,
 		);
 		if (!currentUserStatementSubscriptionId)
 			throw new Error('Error in getting statementSubscriptionId');
 		const currentUserStatementSubscriptionRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			currentUserStatementSubscriptionId
+			currentUserStatementSubscriptionId,
 		);
-		const currentUserStatementSubscription = await getDoc(
-			currentUserStatementSubscriptionRef
-		);
+		const currentUserStatementSubscription = await getDoc(currentUserStatementSubscriptionRef);
 		const currentUserRole = currentUserStatementSubscription.data()?.role;
-		if (!currentUserRole)
-			throw new Error('Error in getting currentUserRole');
-		if (
-			currentUserRole !== Role.admin ||
-			statement.creator.uid === user.uid
-		)
-			return;
+		if (!currentUserRole) throw new Error('Error in getting currentUserRole');
+		if (currentUserRole !== Role.admin || statement.creator.uid === user.uid) return;
 
 		//setting user role in statement
-		const statementSubscriptionId = getStatementSubscriptionId(
-			statement.statementId,
-			user.uid
-		);
-		if (!statementSubscriptionId)
-			throw new Error('Error in getting statementSubscriptionId');
+		const statementSubscriptionId = getStatementSubscriptionId(statement.statementId, user.uid);
+		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
 		const statementSubscriptionRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementSubscriptionId
+			statementSubscriptionId,
 		);
 
 		return setDoc(statementSubscriptionRef, { role }, { merge: true });
@@ -215,20 +203,16 @@ export async function setRoleToDB(
 export async function updateMemberRole(
 	statementId: string,
 	userId: string,
-	newRole: Role
+	newRole: Role,
 ): Promise<void> {
 	try {
-		const statementSubscriptionId = getStatementSubscriptionId(
-			statementId,
-			userId
-		);
-		if (!statementSubscriptionId)
-			throw new Error('Error in getting statementSubscriptionId');
+		const statementSubscriptionId = getStatementSubscriptionId(statementId, userId);
+		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
 
 		const statementSubscriptionRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementSubscriptionId
+			statementSubscriptionId,
 		);
 
 		// If changing role to banned, validate that the user can be banned
@@ -252,7 +236,7 @@ export async function updateMemberRole(
 
 		await updateDoc(statementSubscriptionRef, {
 			role: newRole,
-			statementId: statementId // Include statementId to satisfy Firebase rules
+			statementId: statementId, // Include statementId to satisfy Firebase rules
 		});
 	} catch (error) {
 		console.error('Error updating member role:', error);
@@ -266,30 +250,26 @@ export async function updateMemberRole(
 export async function addTokenToSubscription(
 	statementId: string,
 	userId: string,
-	token: string
+	token: string,
 ): Promise<void> {
 	try {
-		const statementSubscriptionId = getStatementSubscriptionId(
-			statementId,
-			userId
-		);
-		if (!statementSubscriptionId)
-			throw new Error('Error in getting statementSubscriptionId');
+		const statementSubscriptionId = getStatementSubscriptionId(statementId, userId);
+		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
 
 		const statementSubscriptionRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementSubscriptionId
+			statementSubscriptionId,
 		);
 
 		// Check if document exists
 		const docSnap = await getDoc(statementSubscriptionRef);
-		
+
 		if (docSnap.exists()) {
 			// Document exists, use updateDoc
 			await updateDoc(statementSubscriptionRef, {
 				tokens: arrayUnion(token),
-				statementId: statementId // Include statementId to satisfy Firebase rules
+				statementId: statementId, // Include statementId to satisfy Firebase rules
 			});
 		}
 		// If document doesn't exist, don't create it - user should be subscribed first
@@ -305,30 +285,26 @@ export async function addTokenToSubscription(
 export async function removeTokenFromSubscription(
 	statementId: string,
 	userId: string,
-	token: string
+	token: string,
 ): Promise<void> {
 	try {
-		const statementSubscriptionId = getStatementSubscriptionId(
-			statementId,
-			userId
-		);
-		if (!statementSubscriptionId)
-			throw new Error('Error in getting statementSubscriptionId');
+		const statementSubscriptionId = getStatementSubscriptionId(statementId, userId);
+		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
 
 		const statementSubscriptionRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementSubscriptionId
+			statementSubscriptionId,
 		);
 
 		// Check if document exists before trying to update
 		const docSnap = await getDoc(statementSubscriptionRef);
-		
+
 		if (docSnap.exists()) {
 			// Remove token from the tokens array
 			await updateDoc(statementSubscriptionRef, {
 				tokens: arrayRemove(token),
-				statementId: statementId // Include statementId to satisfy Firebase rules
+				statementId: statementId, // Include statementId to satisfy Firebase rules
 			});
 		}
 		// If document doesn't exist, nothing to remove from
@@ -347,30 +323,26 @@ export async function updateNotificationPreferences(
 		getInAppNotification?: boolean;
 		getEmailNotification?: boolean;
 		getPushNotification?: boolean;
-	}
+	},
 ): Promise<void> {
 	try {
-		const statementSubscriptionId = getStatementSubscriptionId(
-			statementId,
-			userId
-		);
-		if (!statementSubscriptionId)
-			throw new Error('Error in getting statementSubscriptionId');
+		const statementSubscriptionId = getStatementSubscriptionId(statementId, userId);
+		if (!statementSubscriptionId) throw new Error('Error in getting statementSubscriptionId');
 
 		const statementSubscriptionRef = doc(
 			FireStore,
 			Collections.statementsSubscribe,
-			statementSubscriptionId
+			statementSubscriptionId,
 		);
 
 		// Check if document exists
 		const docSnap = await getDoc(statementSubscriptionRef);
-		
+
 		if (docSnap.exists()) {
 			// Document exists, use updateDoc
 			await updateDoc(statementSubscriptionRef, {
 				...preferences,
-				statementId: statementId // Include statementId to satisfy Firebase rules
+				statementId: statementId, // Include statementId to satisfy Firebase rules
 			});
 		}
 		// If document doesn't exist, don't create it - user should be subscribed first

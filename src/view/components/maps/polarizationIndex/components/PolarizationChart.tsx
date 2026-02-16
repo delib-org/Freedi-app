@@ -20,7 +20,7 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 	selectedAxis,
 	selectedGroup,
 	currentStatementData,
-	onCanvasClick
+	onCanvasClick,
 }) => {
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -95,7 +95,11 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 		ctx.textAlign = 'center';
 
 		// X-axis label
-		ctx.fillText('Average Agreement', dimensions.width / 2, dimensions.height - (isMobile ? 15 : 20));
+		ctx.fillText(
+			'Average Agreement',
+			dimensions.width / 2,
+			dimensions.height - (isMobile ? 15 : 20),
+		);
 
 		// Y-axis label
 		ctx.save();
@@ -110,15 +114,19 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 
 		// X-axis ticks
 		const xTicks = [-1, -0.5, 0, 0.5, 1];
-		xTicks.forEach(tick => {
+		xTicks.forEach((tick) => {
 			const canvasPoint = dataToCanvas(tick, 0, dimensions);
 			ctx.textAlign = 'center';
-			ctx.fillText(tick.toString(), canvasPoint.x, dimensions.height - margin + (isMobile ? 12 : 15));
+			ctx.fillText(
+				tick.toString(),
+				canvasPoint.x,
+				dimensions.height - margin + (isMobile ? 12 : 15),
+			);
 		});
 
 		// Y-axis ticks
 		const yTicks = [0, 0.25, 0.5, 0.75, 1];
-		yTicks.forEach(tick => {
+		yTicks.forEach((tick) => {
 			const canvasPoint = dataToCanvas(-1, tick, dimensions);
 			ctx.textAlign = 'right';
 			ctx.fillText(tick.toString(), margin - (isMobile ? 5 : 10), canvasPoint.y + 3);
@@ -126,14 +134,18 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 
 		// Draw ALL main statement points
 		polarizationIndexes.forEach((statement, index) => {
-			const statementPoint = dataToCanvas(statement.averageAgreement, statement.overallMAD, dimensions);
+			const statementPoint = dataToCanvas(
+				statement.averageAgreement,
+				statement.overallMAD,
+				dimensions,
+			);
 			const isSelected = index === selectedStatementIndex;
 
 			ctx.fillStyle = statement.color || '#666'; // Fallback color
 			ctx.strokeStyle = '#fff';
 			ctx.lineWidth = isSelected ? (isMobile ? 3 : 4) : 2;
 
-			const radius = isSelected ? (isMobile ? 10 : 14) : (isMobile ? 7 : 10);
+			const radius = isSelected ? (isMobile ? 10 : 14) : isMobile ? 7 : 10;
 			ctx.beginPath();
 			ctx.arc(statementPoint.x, statementPoint.y, radius, 0, 2 * Math.PI);
 			ctx.fill();
@@ -141,10 +153,18 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 
 			// Add statement label
 			ctx.fillStyle = '#333';
-			ctx.font = isSelected ? (isMobile ? 'bold 9px Arial' : 'bold 11px Arial') : (isMobile ? '8px Arial' : '10px Arial');
+			ctx.font = isSelected
+				? isMobile
+					? 'bold 9px Arial'
+					: 'bold 11px Arial'
+				: isMobile
+					? '8px Arial'
+					: '10px Arial';
 			ctx.textAlign = 'center';
 			const labelY = statementPoint.y - radius - (isMobile ? 12 : 16);
-			const labelText = isMobile ? (statement.statementId || 'Statement').split('_')[0] : (statement.statementId || 'Statement').replace('_', ' ');
+			const labelText = isMobile
+				? (statement.statementId || 'Statement').split('_')[0]
+				: (statement.statementId || 'Statement').replace('_', ' ');
 			ctx.fillText(labelText, statementPoint.x, labelY);
 		});
 		// Draw groups for SELECTED statement only
@@ -154,7 +174,10 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 			currentAxis.groups?.forEach((group, index: number) => {
 				const groupPoint = dataToCanvas(group.average, group.mad, dimensions);
 
-				const baseRadius = Math.max(isMobile ? 4 : 6, Math.min(isMobile ? 10 : 15, Math.sqrt(group.numberOfMembers / (isMobile ? 15 : 10))));
+				const baseRadius = Math.max(
+					isMobile ? 4 : 6,
+					Math.min(isMobile ? 10 : 15, Math.sqrt(group.numberOfMembers / (isMobile ? 15 : 10))),
+				);
 
 				ctx.fillStyle = group.color || '#666'; // Fallback color
 				ctx.strokeStyle = selectedGroup === index ? '#000' : '#fff';
@@ -170,7 +193,9 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 					ctx.fillStyle = '#333';
 					ctx.font = isMobile ? '9px Arial' : '11px Arial';
 					ctx.textAlign = 'center';
-					const labelText = isMobile ? (group.groupName || 'Group').split(' ')[0] : (group.groupName || 'Group');
+					const labelText = isMobile
+						? (group.groupName || 'Group').split(' ')[0]
+						: group.groupName || 'Group';
 					ctx.fillText(labelText, groupPoint.x, groupPoint.y - baseRadius - (isMobile ? 6 : 8));
 				}
 			});
@@ -199,14 +224,14 @@ export const PolarizationChart: React.FC<PolarizationChartProps> = ({
 			ctx.fillText('Maximum Polarization', vertex3.x, vertex3.y - 20);
 			ctx.fillText('(0, 1)', vertex3.x, vertex3.y - 8);
 		}
+	}, [
+		dimensions,
+		selectedAxis,
+		selectedGroup,
+		selectedStatementIndex,
+		polarizationIndexes,
+		currentStatementData,
+	]);
 
-	}, [dimensions, selectedAxis, selectedGroup, selectedStatementIndex, polarizationIndexes, currentStatementData]);
-
-	return (
-		<canvas
-			ref={canvasRef}
-			onClick={onCanvasClick}
-			className={styles.canvas}
-		/>
-	);
+	return <canvas ref={canvasRef} onClick={onCanvasClick} className={styles.canvas} />;
 };

@@ -2,11 +2,10 @@ import { Statement } from '@freedi/shared-types';
 import React, { createContext, useContext } from 'react';
 
 export enum SimilaritySteps {
-	FORM = "form",
-	SIMILARITIES = "similarities"
+	FORM = 'form',
+	SIMILARITIES = 'similarities',
 }
 interface NewStatementContextProps {
-
 	title?: string;
 	description?: string;
 	setTitle: (statement: string) => void;
@@ -21,13 +20,23 @@ interface NewStatementContextProps {
 export const NewStatementContext = createContext<NewStatementContextProps>({
 	title: '',
 	description: '',
-	setTitle: () => { return; },
-	setDescription: () => { return; },
-	setCurrentStep: () => { return; },
+	setTitle: () => {
+		return;
+	},
+	setDescription: () => {
+		return;
+	},
+	setCurrentStep: () => {
+		return;
+	},
 	lookingForSimilarStatements: false,
-	setLookingForSimilarStatements: () => { return; },
+	setLookingForSimilarStatements: () => {
+		return;
+	},
 	similarStatements: [],
-	setSimilarStatements: () => { return; }
+	setSimilarStatements: () => {
+		return;
+	},
 });
 
 // export const NewStatementProvider: React.FC<{ children: ReactNode }> = ({ children }) => {

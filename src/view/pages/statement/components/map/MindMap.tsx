@@ -31,7 +31,7 @@ const MindMap: FC = () => {
 	const userSubscription = useAppSelector(
 		subscriptionStatementId
 			? statementSubscriptionSelector(subscriptionStatementId)
-			: () => undefined
+			: () => undefined,
 	);
 
 	// Also try to get subscription from root if current doesn't have one
@@ -39,7 +39,7 @@ const MindMap: FC = () => {
 	const rootSubscription = useAppSelector(
 		rootStatementId && !userSubscription
 			? statementSubscriptionSelector(rootStatementId)
-			: () => undefined
+			: () => undefined,
 	);
 
 	// Use whichever subscription is available
@@ -55,9 +55,7 @@ const MindMap: FC = () => {
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 
-	const [filterBy, setFilterBy] = useState<FilterType>(
-		FilterType.questionsResultsOptions
-	);
+	const [filterBy, setFilterBy] = useState<FilterType>(FilterType.questionsResultsOptions);
 
 	// Add loading state tracking
 	const [isInitialLoad, setIsInitialLoad] = useState(true);
@@ -70,9 +68,7 @@ const MindMap: FC = () => {
 			showModal: show,
 		}));
 	};
-	const current = useSelector(
-		selectedId ? statementSelector(selectedId) : () => undefined
-	);
+	const current = useSelector(selectedId ? statementSelector(selectedId) : () => undefined);
 
 	useEffect(() => {
 		if (current) {
@@ -105,39 +101,47 @@ const MindMap: FC = () => {
 	}, [statement, results]);
 
 	const isDefaultOption: boolean =
-		mapContext.parentStatement && typeof mapContext.parentStatement === 'object' && 'statementType' in mapContext.parentStatement
+		mapContext.parentStatement &&
+		typeof mapContext.parentStatement === 'object' &&
+		'statementType' in mapContext.parentStatement
 			? mapContext.parentStatement.statementType === StatementType.question
 			: statementParent?.statementType === StatementType.question;
 	// Options are allowed only under questions (not under groups or other options)
 	const isOptionAllowed =
-		mapContext.parentStatement && typeof mapContext.parentStatement === 'object' && 'statementType' in mapContext.parentStatement
+		mapContext.parentStatement &&
+		typeof mapContext.parentStatement === 'object' &&
+		'statementType' in mapContext.parentStatement
 			? mapContext.parentStatement.statementType === StatementType.question
 			: false;
 
 	// Enhanced loading states
 	if (!statement) {
 		return (
-			<div className="mind-map-loading" style={{
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'center',
-				height: '100vh',
-				flexDirection: 'column',
-				gap: '1rem'
-			}}>
+			<div
+				className="mind-map-loading"
+				style={{
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					height: '100vh',
+					flexDirection: 'column',
+					gap: '1rem',
+				}}
+			>
 				{showSkeleton && (
-					<div className="skeleton-loader" style={{
-						width: '60px',
-						height: '60px',
-						border: '5px solid #f3f3f3',
-						borderTop: '5px solid var(--btn-primary)',
-						borderRadius: '50%',
-						animation: 'spin 1s linear infinite'
-					}}></div>
+					<div
+						className="skeleton-loader"
+						style={{
+							width: '60px',
+							height: '60px',
+							border: '5px solid #f3f3f3',
+							borderTop: '5px solid var(--btn-primary)',
+							borderRadius: '50%',
+							animation: 'spin 1s linear infinite',
+						}}
+					></div>
 				)}
-				<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
-					{loadingMessage}
-				</div>
+				<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>{loadingMessage}</div>
 			</div>
 		);
 	}
@@ -154,10 +158,8 @@ const MindMap: FC = () => {
 		<>
 			<style>{spinnerStyle}</style>
 			<select
-				aria-label='Select filter type for'
-				onChange={(ev) =>
-					setFilterBy(ev.target.value as FilterType)
-				}
+				aria-label="Select filter type for"
+				onChange={(ev) => setFilterBy(ev.target.value as FilterType)}
 				value={filterBy}
 				style={{
 					maxWidth: '300px',
@@ -167,38 +169,37 @@ const MindMap: FC = () => {
 					zIndex: 100,
 				}}
 			>
-				<option value={FilterType.questionsResults}>
-					{t('Questions and Results')}
-				</option>
+				<option value={FilterType.questionsResults}>{t('Questions and Results')}</option>
 				<option value={FilterType.questionsResultsOptions}>
 					{t('Questions, options and Results')}
 				</option>
 			</select>
 			{/* Only render map when results are available */}
 			{results ? (
-				<MindElixirMap
-					descendants={results}
-					isAdmin={_isAdmin}
-					filterBy={filterBy}
-				/>
+				<MindElixirMap descendants={results} isAdmin={_isAdmin} filterBy={filterBy} />
 			) : (
-				<div style={{
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					height: '100%',
-					flexDirection: 'column',
-					gap: '1rem'
-				}}>
+				<div
+					style={{
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+						height: '100%',
+						flexDirection: 'column',
+						gap: '1rem',
+					}}
+				>
 					{showSkeleton && (
-						<div className="skeleton-loader" style={{
-							width: '60px',
-							height: '60px',
-							border: '5px solid #f3f3f3',
-							borderTop: '5px solid var(--btn-primary)',
-							borderRadius: '50%',
-							animation: 'spin 1s linear infinite'
-						}}></div>
+						<div
+							className="skeleton-loader"
+							style={{
+								width: '60px',
+								height: '60px',
+								border: '5px solid #f3f3f3',
+								borderTop: '5px solid var(--btn-primary)',
+								borderRadius: '50%',
+								animation: 'spin 1s linear infinite',
+							}}
+						></div>
 					)}
 					<div style={{ color: 'var(--text-body)', fontSize: '1.1rem' }}>
 						{isInitialLoad ? 'Building mind map...' : 'Updating mind map...'}
@@ -209,10 +210,7 @@ const MindMap: FC = () => {
 			{mapContext.showModal && (
 				<Modal>
 					<CreateStatementModal
-						allowedTypes={[
-							isOptionAllowed && StatementType.option,
-							StatementType.question,
-						]}
+						allowedTypes={[isOptionAllowed && StatementType.option, StatementType.question]}
 						parentStatement={mapContext.parentStatement}
 						isOption={isDefaultOption}
 						setShowModal={toggleModal}

@@ -24,14 +24,11 @@ function preprocessLegacyBold(text: string): string {
 
 	// Protect URLs from conversion
 	const urlPlaceholders: string[] = [];
-	let processedText = text.replace(
-		/https?:\/\/[^\s]+/g,
-		(match) => {
-			urlPlaceholders.push(match);
+	let processedText = text.replace(/https?:\/\/[^\s]+/g, (match) => {
+		urlPlaceholders.push(match);
 
-			return `__URL_PLACEHOLDER_${urlPlaceholders.length - 1}__`;
-		}
-	);
+		return `__URL_PLACEHOLDER_${urlPlaceholders.length - 1}__`;
+	});
 
 	// Convert *text* to **text** (only paired asterisks)
 	processedText = processedText.replace(/\*([^*\n]+)\*/g, '**$1**');
@@ -49,22 +46,34 @@ function preprocessLegacyBold(text: string): string {
  */
 const createMarkdownComponents = (fontSize: string): Components => ({
 	h1: ({ children }) => (
-		<h1 className={styles.h1} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.5)` : undefined }}>
+		<h1
+			className={styles.h1}
+			style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.5)` : undefined }}
+		>
 			{children}
 		</h1>
 	),
 	h2: ({ children }) => (
-		<h2 className={styles.h2} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.3)` : undefined }}>
+		<h2
+			className={styles.h2}
+			style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.3)` : undefined }}
+		>
 			{children}
 		</h2>
 	),
 	h3: ({ children }) => (
-		<h3 className={styles.h3} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.15)` : undefined }}>
+		<h3
+			className={styles.h3}
+			style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.15)` : undefined }}
+		>
 			{children}
 		</h3>
 	),
 	h4: ({ children }) => (
-		<h4 className={styles.h4} style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.05)` : undefined }}>
+		<h4
+			className={styles.h4}
+			style={{ fontSize: fontSize !== 'inherent' ? `calc(${fontSize} * 1.05)` : undefined }}
+		>
 			{children}
 		</h4>
 	),
@@ -79,18 +88,19 @@ const createMarkdownComponents = (fontSize: string): Components => ({
 	ol: ({ children }) => <ol className={styles.ol}>{children}</ol>,
 	li: ({ children }) => <li className={styles.li}>{children}</li>,
 	a: ({ href, children }) => (
-		<a
-			href={href}
-			target="_blank"
-			rel="noopener noreferrer"
-			className={styles.link}
-		>
+		<a href={href} target="_blank" rel="noopener noreferrer" className={styles.link}>
 			{children}
 		</a>
 	),
 });
 
-const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enableMarkdown = true, statementObj }) => {
+const Text: FC<Props> = ({
+	statement,
+	description,
+	fontSize = 'inherent',
+	enableMarkdown = true,
+	statementObj,
+}) => {
 	try {
 		if (!statement && !description && !statementObj) return null;
 
@@ -100,7 +110,10 @@ const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enable
 				return (
 					<>
 						{statement && (
-							<span className={styles.statement} style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}>
+							<span
+								className={styles.statement}
+								style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}
+							>
 								<UrlParser text={statement} />
 							</span>
 						)}
@@ -119,14 +132,15 @@ const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enable
 			return (
 				<>
 					{statement && (
-						<span className={styles.statement} style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}>
+						<span
+							className={styles.statement}
+							style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}
+						>
 							<UrlParser text={statement} />
 						</span>
 					)}
 					<div className={styles.markdown}>
-						<ReactMarkdown components={markdownComponents}>
-							{processedDescription}
-						</ReactMarkdown>
+						<ReactMarkdown components={markdownComponents}>{processedDescription}</ReactMarkdown>
 					</div>
 				</>
 			);
@@ -138,13 +152,11 @@ const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enable
 		const paragraphs = !description
 			? ''
 			: description
-				.split('\n')
-				.filter((p) => p)
-				.map((paragraph: string, i: number) => {
-					if (paragraph.includes('*')) {
-						const boldedParagraph = paragraph
-							.split('*')
-							.map((p, idx) => {
+					.split('\n')
+					.filter((p) => p)
+					.map((paragraph: string, i: number) => {
+						if (paragraph.includes('*')) {
+							const boldedParagraph = paragraph.split('*').map((p, idx) => {
 								if (idx % 2 === 1)
 									return (
 										<b key={`${textId}--${idx}`}>
@@ -155,28 +167,35 @@ const Text: FC<Props> = ({ statement, description, fontSize = "inherent", enable
 								return p;
 							});
 
+							return (
+								<p
+									className={`${styles['p--bold']} ${styles.p}`}
+									key={`${textId}--${i}`}
+									style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}
+								>
+									{boldedParagraph}
+								</p>
+							);
+						}
+
 						return (
 							<p
-								className={`${styles['p--bold']} ${styles.p}`}
+								className={styles.p}
 								key={`${textId}--${i}`}
 								style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}
 							>
-								{boldedParagraph}
+								<UrlParser text={paragraph} />
 							</p>
 						);
-					}
-
-					return (
-						<p className={styles.p} key={`${textId}--${i}`} style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}>
-							<UrlParser text={paragraph} />
-						</p>
-					);
-				});
+					});
 
 		return (
 			<>
 				{statement && (
-					<span className={styles.statement} style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}>
+					<span
+						className={styles.statement}
+						style={{ fontSize: fontSize !== 'inherent' ? fontSize : undefined }}
+					>
 						<UrlParser text={statement} />
 					</span>
 				)}

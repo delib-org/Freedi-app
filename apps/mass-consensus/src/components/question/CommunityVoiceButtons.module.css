@@ -1,0 +1,193 @@
+.buttons {
+  display: flex;
+  gap: var(--spacing-sm, 8px);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.buttons.compact {
+  gap: var(--spacing-xs, 4px);
+}
+
+.button {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs, 4px);
+  padding: var(--spacing-sm, 8px) var(--spacing-md, 12px);
+  border: 2px solid transparent;
+  border-radius: 16px;
+  min-width: 64px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+  background: rgba(91, 138, 154, 0.06);
+  border-color: rgba(91, 138, 154, 0.15);
+}
+
+/* Level variants — progressively deeper teal tones */
+.button.level1 {
+  background: rgba(91, 138, 154, 0.06);
+  border-color: rgba(91, 138, 154, 0.15);
+}
+
+.button.level2 {
+  background: rgba(91, 138, 154, 0.1);
+  border-color: rgba(91, 138, 154, 0.2);
+}
+
+.button.level3 {
+  background: rgba(91, 138, 154, 0.15);
+  border-color: rgba(91, 138, 154, 0.25);
+}
+
+.button.level4 {
+  background: rgba(91, 138, 154, 0.2);
+  border-color: rgba(91, 138, 154, 0.3);
+}
+
+/* Hover states */
+.button:hover:not(.disabled) {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 8px 20px rgba(91, 138, 154, 0.2);
+  border-color: rgba(91, 138, 154, 0.5);
+}
+
+/* Selected states */
+.button.selected {
+  transform: translateY(-2px) scale(1.08);
+  box-shadow: 0 6px 16px rgba(91, 138, 154, 0.3);
+}
+
+.button.level1.selected {
+  background: rgba(91, 138, 154, 0.35);
+  border-color: rgba(91, 138, 154, 0.5);
+}
+
+.button.level2.selected {
+  background: rgba(91, 138, 154, 0.5);
+  border-color: rgba(91, 138, 154, 0.65);
+}
+
+.button.level3.selected {
+  background: rgba(91, 138, 154, 0.65);
+  border-color: rgba(91, 138, 154, 0.8);
+}
+
+.button.level4.selected {
+  background: rgba(91, 138, 154, 0.8);
+  border-color: rgba(91, 138, 154, 0.9);
+}
+
+.button.selected .rippleIcon svg circle {
+  fill: white;
+  stroke: white;
+}
+
+.button.selected .label {
+  color: white;
+}
+
+.button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.rippleIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.label {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: var(--text-secondary, #5B8A9A);
+  text-align: center;
+  max-width: 70px;
+  line-height: 1.2;
+  transition: color 0.2s ease;
+}
+
+/* Ripple animation on click */
+.button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, white 10%, transparent 10.01%);
+  opacity: 0;
+  transform: scale(10, 10);
+  transition: transform 0.5s, opacity 1s;
+}
+
+.button:active::after {
+  transform: scale(0, 0);
+  opacity: 0.3;
+  transition: 0s;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .buttons {
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .button {
+    flex: 1;
+    min-width: 0;
+    padding: var(--spacing-sm, 8px) var(--spacing-xs, 4px);
+    border-radius: 12px;
+  }
+
+  .rippleIcon svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  .label {
+    font-size: 0.5rem;
+    max-width: 55px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 380px) {
+  .buttons {
+    gap: 4px;
+  }
+
+  .button {
+    padding: var(--spacing-xs, 4px);
+  }
+
+  .rippleIcon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .label {
+    display: none;
+  }
+}
+
+/* Compact mode */
+.buttons.compact .button {
+  min-width: 48px;
+  padding: var(--spacing-xs, 4px);
+  border-radius: 12px;
+}
+
+.buttons.compact .rippleIcon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.buttons.compact .label {
+  display: none;
+}

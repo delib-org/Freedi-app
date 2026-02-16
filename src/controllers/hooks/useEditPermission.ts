@@ -14,13 +14,15 @@ export const useEditPermission = (statement?: Statement): EditPermissionState =>
 	const { isAdmin, role } = useAuthorization(statement?.statementId);
 	const creator = useAppSelector(creatorSelector);
 
-	const isCreator = Boolean(statement?.creator?.uid && creator?.uid && statement.creator.uid === creator.uid);
+	const isCreator = Boolean(
+		statement?.creator?.uid && creator?.uid && statement.creator.uid === creator.uid,
+	);
 	const canEdit = isAdmin || isCreator;
 
 	return {
 		canEdit,
 		isAdmin,
 		isCreator,
-		role
+		role,
 	};
 };

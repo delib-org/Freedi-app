@@ -16,7 +16,8 @@ import type { FirebaseApp } from 'firebase/app';
 
 // reCAPTCHA v3 site key for production
 // This key is safe to expose in client-side code as it's tied to specific domains
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_FIREBASE_RECAPTCHA_SITE_KEY || '6LdJdS0sAAAAAG-UGQ9QEzNAcHgYKS7QzTKkqJMn';
+const RECAPTCHA_SITE_KEY =
+	import.meta.env.VITE_FIREBASE_RECAPTCHA_SITE_KEY || '6LdJdS0sAAAAAG-UGQ9QEzNAcHgYKS7QzTKkqJMn';
 
 // List of production domains where reCAPTCHA should be used
 const PRODUCTION_DOMAINS = [
@@ -24,7 +25,7 @@ const PRODUCTION_DOMAINS = [
 	'wizcol-app.web.app',
 	'wizcol-app.firebaseapp.com',
 	'freedi.app',
-	'www.freedi.app'
+	'www.freedi.app',
 ];
 
 /**
@@ -86,14 +87,16 @@ export function initializeFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
 			// eslint-disable-next-line @typescript-eslint/no-explicit-any
 			(self as any).FIREBASE_APPCHECK_DEBUG_TOKEN = true;
 			console.info('App Check: Debug mode enabled for localhost');
-			console.info('App Check: Copy the debug token from the console and register it in Firebase Console');
+			console.info(
+				'App Check: Copy the debug token from the console and register it in Firebase Console',
+			);
 		}
 
 		// Initialize App Check with ReCaptchaV3Provider
 		// The debug token flag (set above) will make Firebase use debug mode on localhost
 		const appCheck = initializeAppCheck(app, {
 			provider: new ReCaptchaV3Provider(RECAPTCHA_SITE_KEY),
-			isTokenAutoRefreshEnabled: true
+			isTokenAutoRefreshEnabled: true,
 		});
 
 		if (isLocalhost()) {

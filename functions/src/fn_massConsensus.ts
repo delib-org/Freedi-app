@@ -18,10 +18,7 @@ export const getInitialMCData = async (req: Request, res: Response) => {
 			return;
 		}
 
-		const statementDB = await db
-			.collection(Collections.statements)
-			.doc(statementId)
-			.get();
+		const statementDB = await db.collection(Collections.statements).doc(statementId).get();
 
 		const statement = statementDB.data();
 		if (!statement) {
@@ -33,8 +30,7 @@ export const getInitialMCData = async (req: Request, res: Response) => {
 
 		res.send({ statement, ok: true });
 	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error occurred';
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 		res.status(500).send({ error: errorMessage, ok: false });
 		logger.error(errorMessage, { statementId: req.query.statementId });
 
@@ -62,8 +58,7 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 
 		res.send({ message: 'Member added successfully', ok: true });
 	} catch (error) {
-		const errorMessage =
-			error instanceof Error ? error.message : 'Unknown error occurred';
+		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
 		console.error(error);
 		res.status(500).send({ error: errorMessage, ok: false });
 	}
@@ -71,8 +66,7 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 
 export async function addOptionToMassConsensus(ev: FirestoreEvent<DocumentSnapshot>) {
 	try {
-
-		const newStatement = ev.data?.data() as Statement || undefined;
+		const newStatement = (ev.data?.data() as Statement) || undefined;
 		if (!newStatement) return;
 		if (newStatement.statementType !== StatementType.option) return;
 
@@ -87,11 +81,11 @@ export async function addOptionToMassConsensus(ev: FirestoreEvent<DocumentSnapsh
 			const parentData = parentDoc.data();
 			if (parentData && parentData.suggestions !== undefined) {
 				transaction.update(parentRef, {
-					suggestions: FieldValue.increment(1)
+					suggestions: FieldValue.increment(1),
 				});
 			} else {
 				transaction.update(parentRef, {
-					suggestions: 1
+					suggestions: 1,
 				});
 			}
 		});
@@ -99,13 +93,12 @@ export async function addOptionToMassConsensus(ev: FirestoreEvent<DocumentSnapsh
 		console.error(error);
 
 		return;
-
 	}
 }
 
 export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentSnapshot>) {
 	try {
-		const deletedStatement = ev.data?.data() as Statement || undefined;
+		const deletedStatement = (ev.data?.data() as Statement) || undefined;
 		if (!deletedStatement) return;
 		if (deletedStatement.statementType !== StatementType.option) return;
 
@@ -120,7 +113,7 @@ export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentS
 			const parentData = parentDoc.data();
 			if (parentData && parentData.suggestions !== undefined && parentData.suggestions > 0) {
 				transaction.update(parentRef, {
-					suggestions: FieldValue.increment(-1)
+					suggestions: FieldValue.increment(-1),
 				});
 			}
 		});
@@ -133,38 +126,39 @@ export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentS
 
 export async function updateOptionInMassConsensus(event: FirestoreEvent<Change<DocumentSnapshot>>) {
 	try {
-		const beforeData = event.data.before?.data() as Statement || undefined;
-		const afterData = event.data.after?.data() as Statement || undefined;
+		const beforeData = (event.data.before?.data() as Statement) || undefined;
+		const afterData = (event.data.after?.data() as Statement) || undefined;
 
 		if (!beforeData || !afterData) return;
 
 		// Only process if this is an option
 		if (afterData.statementType !== StatementType.option) {
 			logger.info('Not an option statement, skipping mass consensus update');
-			
-return;
+
+			return;
 		}
 
 		// Skip if only metadata fields changed (not statementType)
 		const relevantFieldsChanged = beforeData.statementType !== afterData.statementType;
-		
+
 		if (!relevantFieldsChanged) {
 			// Check if this is just a metadata update from other functions
-			const metadataOnlyUpdate = (
-				beforeData.lastUpdate !== afterData.lastUpdate ||
-				beforeData.lastChildUpdate !== afterData.lastChildUpdate ||
-				JSON.stringify(beforeData.lastSubStatements) !== JSON.stringify(afterData.lastSubStatements)
-			) && beforeData.statement === afterData.statement;
-			
+			const metadataOnlyUpdate =
+				(beforeData.lastUpdate !== afterData.lastUpdate ||
+					beforeData.lastChildUpdate !== afterData.lastChildUpdate ||
+					JSON.stringify(beforeData.lastSubStatements) !==
+						JSON.stringify(afterData.lastSubStatements)) &&
+				beforeData.statement === afterData.statement;
+
 			if (metadataOnlyUpdate) {
 				logger.info('Only metadata changed for option, skipping mass consensus update');
-				
-return;
+
+				return;
 			}
-			
+
 			logger.info('No relevant changes for mass consensus, skipping update');
-			
-return;
+
+			return;
 		}
 
 		const parentRef = db.collection(Collections.statements).doc(afterData.parentId);
@@ -177,22 +171,28 @@ return;
 
 			const parentData = parentDoc.data();
 
-			if (beforeData.statementType !== StatementType.option && afterData.statementType === StatementType.option) {
+			if (
+				beforeData.statementType !== StatementType.option &&
+				afterData.statementType === StatementType.option
+			) {
 				// Increment suggestions count
 				if (parentData && parentData.suggestions !== undefined) {
 					transaction.update(parentRef, {
-						suggestions: FieldValue.increment(1)
+						suggestions: FieldValue.increment(1),
 					});
 				} else {
 					transaction.update(parentRef, {
-						suggestions: 1
+						suggestions: 1,
 					});
 				}
-			} else if (beforeData.statementType === StatementType.option && afterData.statementType !== StatementType.option) {
+			} else if (
+				beforeData.statementType === StatementType.option &&
+				afterData.statementType !== StatementType.option
+			) {
 				// Decrement suggestions count
 				if (parentData && parentData.suggestions !== undefined && parentData.suggestions > 0) {
 					transaction.update(parentRef, {
-						suggestions: FieldValue.increment(-1)
+						suggestions: FieldValue.increment(-1),
 					});
 				}
 			}
@@ -219,21 +219,18 @@ export async function addMemberToMassConsensus(ev: FirestoreEvent<DocumentSnapsh
 
 			const statementData = statementDoc.data() as Statement;
 			if (statementData?.massMembers !== undefined) {
-
 				transaction.update(statementRef, {
-					massMembers: FieldValue.increment(1)
+					massMembers: FieldValue.increment(1),
 				});
 			} else {
 				transaction.update(statementRef, {
-					massMembers: 1
+					massMembers: 1,
 				});
 			}
 		});
-
 	} catch (error) {
 		console.error(error);
 
 		return;
-
 	}
 }

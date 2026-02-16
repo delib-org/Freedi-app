@@ -48,7 +48,7 @@ const EditText: FC<EditTextProps> = ({
 	fontSize,
 	onEditStart,
 	onEditEnd,
-	statementObj
+	statementObj,
 }) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [primaryText, setPrimaryText] = useState(value);
@@ -108,7 +108,7 @@ const EditText: FC<EditTextProps> = ({
 	const handleSave = () => {
 		try {
 			if (required && !primaryText.trim()) return;
-			
+
 			onSave?.(primaryText, secondaryText);
 			setRawText('');
 			setIsEditing(false);
@@ -178,7 +178,7 @@ const EditText: FC<EditTextProps> = ({
 				style={{
 					direction,
 					textAlign: align,
-					cursor: editable && !editing ? 'pointer' : 'default'
+					cursor: editable && !editing ? 'pointer' : 'default',
 				}}
 				onClick={editable && !editing ? handleStartEdit : undefined}
 				role={editable && !editing ? 'button' : undefined}
@@ -190,7 +190,12 @@ const EditText: FC<EditTextProps> = ({
 				) : variant === 'statement' ? (
 					<Text statement={primaryText} fontSize={fontSize} statementObj={statementObj} />
 				) : (
-					<Text statement={primaryText} description={secondaryText} fontSize={fontSize} statementObj={statementObj} />
+					<Text
+						statement={primaryText}
+						description={secondaryText}
+						fontSize={fontSize}
+						statementObj={statementObj}
+					/>
 				)}
 			</div>
 		);
@@ -212,7 +217,7 @@ const EditText: FC<EditTextProps> = ({
 						resize: 'none',
 						fontSize: fontSize || 'inherit',
 						width: '100%',
-						boxSizing: 'border-box'
+						boxSizing: 'border-box',
 					}}
 					value={rawText}
 					onChange={handleTextAreaChange}
@@ -242,12 +247,12 @@ const EditText: FC<EditTextProps> = ({
 					/>
 					<textarea
 						className={inputClassName}
-						style={{ 
-							direction, 
+						style={{
+							direction,
 							textAlign: align,
 							minHeight: '3rem',
 							overflow: 'hidden',
-							resize: 'none'
+							resize: 'none',
 						}}
 						value={secondaryText}
 						onChange={(e) => {
@@ -269,12 +274,12 @@ const EditText: FC<EditTextProps> = ({
 				<textarea
 					ref={inputRef as React.RefObject<HTMLTextAreaElement>}
 					className={inputClassName}
-					style={{ 
-						direction, 
+					style={{
+						direction,
 						textAlign: align,
 						minHeight: '3rem',
 						overflow: 'hidden',
-						resize: 'none'
+						resize: 'none',
 					}}
 					value={secondaryText}
 					onChange={(e) => {
@@ -311,18 +316,10 @@ const EditText: FC<EditTextProps> = ({
 			<div className={containerClassName}>
 				{renderEditContent()}
 				<div className={saveButtonClassName}>
-					<button
-						onClick={handleSave}
-						aria-label="Save"
-						type="button"
-					>
+					<button onClick={handleSave} aria-label="Save" type="button">
 						<Save />
 					</button>
-					<button
-						onClick={handleCancel}
-						aria-label="Cancel"
-						type="button"
-					>
+					<button onClick={handleCancel} aria-label="Cancel" type="button">
 						Cancel
 					</button>
 				</div>

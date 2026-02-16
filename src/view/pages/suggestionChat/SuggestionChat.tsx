@@ -18,7 +18,11 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { Statement, ParagraphType } from '@freedi/shared-types';
 import Text from '@/view/components/text/Text';
-import { getParagraphsText, hasParagraphsContent, generateParagraphId } from '@/utils/paragraphUtils';
+import {
+	getParagraphsText,
+	hasParagraphsContent,
+	generateParagraphId,
+} from '@/utils/paragraphUtils';
 
 const SuggestionChat = () => {
 	// Hooks and state
@@ -34,31 +38,29 @@ const SuggestionChat = () => {
 
 	// Derived state - now safe to access
 	const isStatementCreator = statement?.creator?.uid === creator?.uid;
-	const hasCreatorCommented = comments.some(comment => comment?.creator?.uid === creator?.uid);
+	const hasCreatorCommented = comments.some((comment) => comment?.creator?.uid === creator?.uid);
 
 	// Component render
 	return (
 		<div className={styles.suggestionChat}>
-			<div className={styles["suggestionChat__description"]}>
+			<div className={styles['suggestionChat__description']}>
 				<StatementDescription statement={statement} isStatementCreator={isStatementCreator} />
 			</div>
 
-			<p className={styles["suggestionChat__explain"]}>
-				כמה את/ה מרוצה מההצעה?
-			</p>
+			<p className={styles['suggestionChat__explain']}>כמה את/ה מרוצה מההצעה?</p>
 
 			<div className={styles.evaluationPanel}>
 				<Evaluation statement={statement} />
 			</div>
 
-			<p className={styles["suggestionChat__comments"]}>
+			<p className={styles['suggestionChat__comments']}>
 				{!isStatementCreator
-					? "כתוב/כתבי ההערה כדי לסייע למציע ההצעה לשפר את ההצעה"
-					: "כאן יכתבו הערות להצעתך"}
+					? 'כתוב/כתבי ההערה כדי לסייע למציע ההצעה לשפר את ההצעה'
+					: 'כאן יכתבו הערות להצעתך'}
 			</p>
 
 			<div className={styles.comments}>
-				{comments.map(comment => (
+				{comments.map((comment) => (
 					<SuggestionComment
 						key={comment.statementId}
 						statement={comment}
@@ -81,11 +83,7 @@ interface StatementDescriptionProps {
 	isStatementCreator: boolean;
 }
 
-const StatementDescription: FC<StatementDescriptionProps> = ({
-	statement,
-	isStatementCreator
-}) => {
-
+const StatementDescription: FC<StatementDescriptionProps> = ({ statement, isStatementCreator }) => {
 	const [editDescription, setEditDescription] = useState<boolean>(false);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -116,9 +114,9 @@ const StatementDescription: FC<StatementDescriptionProps> = ({
 	// Helper to convert text to paragraphs
 	const textToParagraphs = (text: string) => {
 		if (!text.trim()) return undefined;
-		const lines = text.split('\n').filter(line => line.trim());
-		
-return lines.map((line, index) => ({
+		const lines = text.split('\n').filter((line) => line.trim());
+
+		return lines.map((line, index) => ({
 			paragraphId: generateParagraphId(),
 			type: ParagraphType.paragraph,
 			content: line,
@@ -147,10 +145,7 @@ return lines.map((line, index) => ({
 	if (!hasParagraphsContent(statement.paragraphs) && !editDescription) {
 		return isStatementCreator ? (
 			<div className="btns">
-				<button
-					className="btn btn-primary"
-					onClick={handleEditDescription}
-				>
+				<button className="btn btn-primary" onClick={handleEditDescription}>
 					הוספת תיאור
 				</button>
 			</div>
@@ -171,12 +166,15 @@ return lines.map((line, index) => ({
 				resize: 'none',
 				overflow: 'hidden',
 				padding: '8px',
-				boxSizing: 'border-box'
+				boxSizing: 'border-box',
 			}}
 		/>
 	) : (
-		<button onClick={isStatementCreator ? handleEditDescription : undefined} style={{ cursor: isStatementCreator ? 'pointer' : 'default' }}>
-			<div className={styles["suggestionChat__description-text"]}>
+		<button
+			onClick={isStatementCreator ? handleEditDescription : undefined}
+			style={{ cursor: isStatementCreator ? 'pointer' : 'default' }}
+		>
+			<div className={styles['suggestionChat__description-text']}>
 				<Text description={paragraphsText} />
 			</div>
 		</button>

@@ -1,15 +1,15 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { getFirestore } from "firebase-admin/firestore";
-import { Statement, Collections, StatementType, Role, functionConfig } from "@freedi/shared-types";
-import { logger } from "firebase-functions";
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { getFirestore } from 'firebase-admin/firestore';
+import { Statement, Collections, StatementType, Role, functionConfig } from '@freedi/shared-types';
+import { logger } from 'firebase-functions';
 import {
 	findSimilarAndGenerateSuggestion,
 	mapStatementToWithEvaluation,
 	StatementWithEvaluation,
-} from "./services/integration-ai-service";
-import { migrateEvaluationsToNewStatement } from "./fn_evaluation";
-import { textToParagraphs } from "./helpers";
-import { ALLOWED_ORIGINS } from "./config/cors";
+} from './services/integration-ai-service';
+import { migrateEvaluationsToNewStatement } from './fn_evaluation';
+import { textToParagraphs } from './helpers';
+import { ALLOWED_ORIGINS } from './config/cors';
 
 /**
  * Request type for finding similar statements for integration
@@ -55,20 +55,20 @@ interface ExecuteIntegrationResponse {
 export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest>(
 	{
 		timeoutSeconds: 120,
-		memory: "512MiB",
+		memory: '512MiB',
 		region: functionConfig.region,
-		cors: [...ALLOWED_ORIGINS]
+		cors: [...ALLOWED_ORIGINS],
 	},
 	async (request): Promise<FindSimilarForIntegrationResponse> => {
 		const { statementId } = request.data;
 		const userId = request.auth?.uid;
 
 		if (!userId) {
-			throw new HttpsError("unauthenticated", "User must be authenticated");
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
 		if (!statementId) {
-			throw new HttpsError("invalid-argument", "Statement ID is required");
+			throw new HttpsError('invalid-argument', 'Statement ID is required');
 		}
 
 		const db = getFirestore();
@@ -76,7 +76,7 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 		// 1. Fetch source statement first (needed for subsequent queries)
 		const sourceDoc = await db.collection(Collections.statements).doc(statementId).get();
 		if (!sourceDoc.exists) {
-			throw new HttpsError("not-found", "Statement not found");
+			throw new HttpsError('not-found', 'Statement not found');
 		}
 		const sourceStatement = sourceDoc.data() as Statement;
 		const parentId = sourceStatement.parentId;
@@ -84,16 +84,18 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 
 		// 2. PARALLEL: Fetch admin check, parent, and siblings simultaneously
 		const [membersSnapshot, parentDoc, siblingsSnapshot] = await Promise.all([
-			db.collection(Collections.statementsSubscribe)
-				.where("statementId", "==", topParentId)
-				.where("userId", "==", userId)
-				.where("role", "in", [Role.admin, "creator", "admin"])
+			db
+				.collection(Collections.statementsSubscribe)
+				.where('statementId', '==', topParentId)
+				.where('userId', '==', userId)
+				.where('role', 'in', [Role.admin, 'creator', 'admin'])
 				.limit(1)
 				.get(),
 			db.collection(Collections.statements).doc(parentId).get(),
-			db.collection(Collections.statements)
-				.where("parentId", "==", parentId)
-				.where("statementType", "==", StatementType.option)
+			db
+				.collection(Collections.statements)
+				.where('parentId', '==', parentId)
+				.where('statementType', '==', StatementType.option)
 				.get(),
 		]);
 
@@ -101,11 +103,11 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 		const isCreator = sourceStatement.creatorId === userId;
 
 		if (!isAdmin && !isCreator) {
-			throw new HttpsError("permission-denied", "Only admins can integrate suggestions");
+			throw new HttpsError('permission-denied', 'Only admins can integrate suggestions');
 		}
 
 		const parentStatement = parentDoc.exists ? (parentDoc.data() as Statement) : null;
-		const questionContext = parentStatement?.statement || "";
+		const questionContext = parentStatement?.statement || '';
 		const allSiblings = siblingsSnapshot.docs.map((doc) => doc.data() as Statement);
 
 		logger.info(`Found ${allSiblings.length} sibling statements for integration check`);
@@ -114,7 +116,7 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 		const result = await findSimilarAndGenerateSuggestion(
 			sourceStatement,
 			allSiblings,
-			questionContext
+			questionContext,
 		);
 
 		return {
@@ -123,7 +125,7 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 			suggestedTitle: result.suggestedTitle,
 			suggestedDescription: result.suggestedDescription,
 		};
-	}
+	},
 );
 
 /**
@@ -133,9 +135,9 @@ export const findSimilarForIntegration = onCall<FindSimilarForIntegrationRequest
 export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 	{
 		timeoutSeconds: 120, // May take longer with many evaluations to migrate
-		memory: "512MiB",
+		memory: '512MiB',
 		region: functionConfig.region,
-		cors: [...ALLOWED_ORIGINS]
+		cors: [...ALLOWED_ORIGINS],
 	},
 	async (request): Promise<ExecuteIntegrationResponse> => {
 		const { parentStatementId, selectedStatementIds, integratedTitle, integratedDescription } =
@@ -143,15 +145,15 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		const userId = request.auth?.uid;
 
 		if (!userId) {
-			throw new HttpsError("unauthenticated", "User must be authenticated");
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
 		if (!parentStatementId || !selectedStatementIds || selectedStatementIds.length === 0) {
-			throw new HttpsError("invalid-argument", "Parent ID and selected statement IDs are required");
+			throw new HttpsError('invalid-argument', 'Parent ID and selected statement IDs are required');
 		}
 
 		if (!integratedTitle || integratedTitle.trim().length === 0) {
-			throw new HttpsError("invalid-argument", "Integrated title is required");
+			throw new HttpsError('invalid-argument', 'Integrated title is required');
 		}
 
 		const db = getFirestore();
@@ -159,7 +161,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		// 1. Fetch parent statement
 		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
 		if (!parentDoc.exists) {
-			throw new HttpsError("not-found", "Parent statement not found");
+			throw new HttpsError('not-found', 'Parent statement not found');
 		}
 		const parentStatement = parentDoc.data() as Statement;
 
@@ -168,14 +170,14 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 
 		const membersSnapshot = await db
 			.collection(Collections.statementsSubscribe)
-			.where("statementId", "==", topParentId)
-			.where("userId", "==", userId)
-			.where("role", "in", [Role.admin, "creator", "admin"])
+			.where('statementId', '==', topParentId)
+			.where('userId', '==', userId)
+			.where('role', 'in', [Role.admin, 'creator', 'admin'])
 			.limit(1)
 			.get();
 
 		if (membersSnapshot.empty) {
-			throw new HttpsError("permission-denied", "Only admins can execute integration");
+			throw new HttpsError('permission-denied', 'Only admins can execute integration');
 		}
 
 		// 3. Fetch all selected statements to verify they exist
@@ -188,7 +190,7 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		}
 
 		if (selectedStatements.length === 0) {
-			throw new HttpsError("not-found", "No valid statements found to integrate");
+			throw new HttpsError('not-found', 'No valid statements found to integrate');
 		}
 
 		logger.info(`Integrating ${selectedStatements.length} statements`);
@@ -204,15 +206,15 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		const newStatement: Statement = {
 			statementId: newStatementId,
 			statement: integratedTitle.trim(),
-			paragraphs: textToParagraphs(integratedDescription?.trim() || ""),
+			paragraphs: textToParagraphs(integratedDescription?.trim() || ''),
 			statementType: StatementType.option,
 			parentId: parentStatementId,
 			topParentId: topParentId,
 			creatorId: userId,
 			creator: {
-				displayName: adminData?.displayName || "Admin",
+				displayName: adminData?.displayName || 'Admin',
 				uid: userId,
-				defaultLanguage: adminData?.defaultLanguage || "en",
+				defaultLanguage: adminData?.defaultLanguage || 'en',
 			},
 			createdAt: now,
 			lastUpdate: now,
@@ -243,12 +245,12 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 			const migrationResult = await migrateEvaluationsToNewStatement(
 				selectedStatementIds,
 				newStatementId,
-				parentStatementId
+				parentStatementId,
 			);
 			migratedCount = migrationResult.migratedCount;
 			logger.info(`Migrated ${migratedCount} evaluations`);
 		} catch (error) {
-			logger.error("Error migrating evaluations:", error);
+			logger.error('Error migrating evaluations:', error);
 			// Continue even if migration fails - we can recalculate later
 		}
 
@@ -277,5 +279,5 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 			migratedEvaluationsCount: migratedCount,
 			hiddenStatementsCount: selectedStatements.length,
 		};
-	}
+	},
 );

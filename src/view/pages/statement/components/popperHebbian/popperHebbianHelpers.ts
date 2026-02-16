@@ -2,7 +2,10 @@
  * Convert corroboration score (0-1) to user-friendly label
  * 0 = falsifies, 0.5 = neutral, 1 = corroborates
  */
-export function getCorroborationLabel(corroborationScore: number, t: (key: string) => string): string {
+export function getCorroborationLabel(
+	corroborationScore: number,
+	t: (key: string) => string,
+): string {
 	if (corroborationScore >= 0.8) return t('Strongly Corroborates');
 	if (corroborationScore >= 0.6) return t('Corroborates');
 	if (corroborationScore >= 0.4) return t('Neutral');
@@ -37,7 +40,9 @@ export function getScoreInterpretation(hebbianScore: number, t: (key: string) =>
 /**
  * Get corroboration color class based on 0-1 score
  */
-export function getCorroborationColor(corroborationScore: number): 'support' | 'challenge' | 'neutral' {
+export function getCorroborationColor(
+	corroborationScore: number,
+): 'support' | 'challenge' | 'neutral' {
 	if (corroborationScore >= 0.6) return 'support';
 	if (corroborationScore <= 0.4) return 'challenge';
 

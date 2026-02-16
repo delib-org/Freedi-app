@@ -1,5 +1,5 @@
 export const SetWaitingListCont = async (
-	file: File
+	file: File,
 
 	// statement: Statement
 ) => {

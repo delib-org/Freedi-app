@@ -3,7 +3,14 @@ import { useDispatch } from 'react-redux';
 import { StatementContext } from '../StatementCont';
 import { StatementContent } from './StatementContent';
 import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { Statement, User, Role, StatementType, QuestionType, UserDemographicQuestion } from '@freedi/shared-types';
+import {
+	Statement,
+	User,
+	Role,
+	StatementType,
+	QuestionType,
+	UserDemographicQuestion,
+} from '@freedi/shared-types';
 
 interface StatementProviderProps {
 	statement: Statement | null;
@@ -68,7 +75,7 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 			setNewQuestionType,
 			newQuestionType,
 			dispatch,
-		]
+		],
 	);
 
 	return (

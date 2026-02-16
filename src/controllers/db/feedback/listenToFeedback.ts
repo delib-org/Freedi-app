@@ -5,7 +5,7 @@ import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 export function listenToFeedback(
 	statementId: string,
-	callback: (feedback: Feedback[]) => void
+	callback: (feedback: Feedback[]) => void,
 ): () => void {
 	try {
 		if (!statementId) {
@@ -18,7 +18,7 @@ export function listenToFeedback(
 		// We'll sort client-side instead
 		const feedbackQuery = query(
 			collection(DB, Collections.feedback),
-			where('statementId', '==', statementId)
+			where('statementId', '==', statementId),
 		);
 
 		const unsubscribe = onSnapshot(
@@ -35,8 +35,8 @@ export function listenToFeedback(
 								// Ensure creator exists with required fields
 								creator: data.creator || {
 									uid: 'unknown',
-									displayName: 'Unknown User'
-								}
+									displayName: 'Unknown User',
+								},
 							});
 						}
 					});
@@ -45,8 +45,8 @@ export function listenToFeedback(
 					feedbackList.sort((a, b) => {
 						const aTime = a.createdAt || 0;
 						const bTime = b.createdAt || 0;
-						
-return bTime - aTime;
+
+						return bTime - aTime;
 					});
 
 					callback(feedbackList);
@@ -62,7 +62,7 @@ return bTime - aTime;
 					console.info('Consider adding a composite index for better performance');
 				}
 				callback([]);
-			}
+			},
 		);
 
 		return unsubscribe;

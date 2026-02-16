@@ -11,7 +11,7 @@ interface StatementSelectorProps {
 export const StatementSelector: React.FC<StatementSelectorProps> = ({
 	polarizationIndexes,
 	selectedStatementIndex,
-	onStatementSelect
+	onStatementSelect,
 }) => {
 	return (
 		<div className={styles.statementSelector}>
@@ -21,8 +21,9 @@ export const StatementSelector: React.FC<StatementSelectorProps> = ({
 					onClick={() => onStatementSelect(index)}
 					className={`${styles.statementButton} ${selectedStatementIndex === index ? styles.statementButtonActive : ''}`}
 					style={{
-						backgroundColor: selectedStatementIndex === index ? (statement.color || '#3182ce') : undefined,
-						borderColor: statement.color || '#e2e8f0'
+						backgroundColor:
+							selectedStatementIndex === index ? statement.color || '#3182ce' : undefined,
+						borderColor: statement.color || '#e2e8f0',
 					}}
 				>
 					<div className={styles.statementButtonTitle}>

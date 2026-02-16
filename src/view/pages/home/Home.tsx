@@ -41,9 +41,9 @@ export default function Home() {
 	}, [location, statementId]);
 
 	useEffect(() => {
-		let unsubscribe: () => void = () => { };
-		let updatesUnsubscribe: () => void = () => { };
-		let unsubscribeInAppNotifications: () => void = () => { };
+		let unsubscribe: () => void = () => {};
+		let updatesUnsubscribe: () => void = () => {};
+		let unsubscribeInAppNotifications: () => void = () => {};
 
 		// Set up listeners sequentially with delays to avoid overwhelming IndexedDB
 		// This is especially important for iOS Safari which has strict connection limits
@@ -54,13 +54,13 @@ export default function Home() {
 				// Set up first listener
 				unsubscribe = listenToStatementSubscriptions(user.uid, 100);
 
-				// Wait before setting up next listener (iOS Safari needs breathing room)
-				await new Promise(resolve => setTimeout(resolve, 300));
+				// Brief pause between listeners for iOS Safari IndexedDB compatibility
+				await new Promise((resolve) => setTimeout(resolve, 100));
 
 				updatesUnsubscribe = getNewStatementsFromSubscriptions(user.uid);
 
-				// Wait before final listener
-				await new Promise(resolve => setTimeout(resolve, 300));
+				// Brief pause before final listener
+				await new Promise((resolve) => setTimeout(resolve, 100));
 
 				unsubscribeInAppNotifications = listenToInAppNotifications();
 			} catch (error) {
@@ -78,7 +78,7 @@ export default function Home() {
 	}, [user]);
 
 	return (
-		<main className='page slide-in'>
+		<main className="page slide-in">
 			{displayHeader && <HomeHeader />}
 			<Outlet />
 		</main>

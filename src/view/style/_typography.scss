@@ -1,0 +1,53 @@
+// =============================================================================
+// Global Typography Rules
+// Base heading, paragraph, and text element styles
+// =============================================================================
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 500;
+}
+
+h2 {
+  font-size: 1.5rem;
+  color: var(--h2Color);
+  font-weight: 400;
+}
+
+h3 {
+  font-size: 1.25rem;
+  color: var(--h3Color);
+  font-weight: 400;
+}
+
+h4 {
+  font-size: 1.15rem;
+  color: var(--h4Color);
+  font-weight: 400;
+}
+
+h5 {
+  font-size: 1.1rem;
+  color: var(--h5Color);
+  font-weight: 400;
+}
+
+h1,
+h2 {
+  text-align: center;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+b {
+  font-family: "Open Sans", sans-serif;
+  user-select: text;
+}
+
+p {
+  font-size: 1rem;
+  color: var(--text-paragraph);
+}

@@ -35,7 +35,7 @@ const ParagraphsDisplay: FC<ParagraphsDisplayProps> = ({ statement, className })
 						{currentListItems.map((item) => (
 							<li key={item.paragraphId}>{item.content}</li>
 						))}
-					</ListTag>
+					</ListTag>,
 				);
 				currentListItems = [];
 				currentListType = undefined;
@@ -65,11 +65,7 @@ const ParagraphsDisplay: FC<ParagraphsDisplayProps> = ({ statement, className })
 		return elements;
 	};
 
-	return (
-		<div className={`${styles.paragraphsDisplay} ${className || ''}`}>
-			{renderContent()}
-		</div>
-	);
+	return <div className={`${styles.paragraphsDisplay} ${className || ''}`}>{renderContent()}</div>;
 };
 
 /**
@@ -94,11 +90,7 @@ function renderParagraph(para: Paragraph): React.ReactNode {
 			return <h6 key={key}>{content}</h6>;
 		case ParagraphType.table:
 			return (
-				<div
-					key={key}
-					className={styles.table}
-					dangerouslySetInnerHTML={{ __html: content }}
-				/>
+				<div key={key} className={styles.table} dangerouslySetInnerHTML={{ __html: content }} />
 			);
 		case ParagraphType.paragraph:
 		default:

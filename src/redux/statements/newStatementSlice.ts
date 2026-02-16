@@ -3,7 +3,7 @@ import { QuestionType, Statement, StatementType } from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 
 interface NewStatementState {
-	parentStatement: Statement | null | "top";
+	parentStatement: Statement | null | 'top';
 	newStatement: Partial<Statement> | null;
 	isLoading: boolean;
 	error: string | null;
@@ -23,7 +23,6 @@ const newStatementSlice = createSlice({
 	initialState,
 	reducers: {
 		setNewStatementModal: (state, action: PayloadAction<NewStatementState>) => {
-
 			const { parentStatement, newStatement, isLoading, showModal, error } = action.payload;
 			state.parentStatement = action.payload.parentStatement = parentStatement || null;
 			state.newStatement = newStatement || null;
@@ -31,13 +30,13 @@ const newStatementSlice = createSlice({
 			state.error = error || null;
 			state.showModal = showModal || false;
 		},
-		setParentStatement: (state, action: PayloadAction<Statement | null | "top">) => {
+		setParentStatement: (state, action: PayloadAction<Statement | null | 'top'>) => {
 			state.parentStatement = action.payload;
 		},
 		setNewStatementType: (state, action: PayloadAction<StatementType>) => {
 			state.newStatement = {
 				...state.newStatement,
-				statementType: action.payload
+				statementType: action.payload,
 			};
 		},
 		setNewQuestionType: (state, action: PayloadAction<QuestionType | null>) => {
@@ -46,9 +45,8 @@ const newStatementSlice = createSlice({
 				questionSettings: {
 					...state.newStatement?.questionSettings,
 					questionType: action.payload || getDefaultQuestionType(), // Use centralized default
-				}
+				},
 			};
-
 		},
 		clearNewStatement: (state) => {
 			state.parentStatement = null;

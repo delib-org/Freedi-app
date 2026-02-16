@@ -46,13 +46,13 @@ interface RecalculateResult {
  */
 export async function requestRecalculateEvaluations(
 	statementId: string,
-	dryRun: boolean = false
+	dryRun: boolean = false,
 ): Promise<RecalculateResult> {
 	try {
-		const recalculateEvaluations = httpsCallable<
-			RecalculateRequest,
-			RecalculateResult
-		>(functions, 'recalculateStatementEvaluations');
+		const recalculateEvaluations = httpsCallable<RecalculateRequest, RecalculateResult>(
+			functions,
+			'recalculateStatementEvaluations',
+		);
 
 		const result = await recalculateEvaluations({ statementId, dryRun });
 
@@ -62,7 +62,7 @@ export async function requestRecalculateEvaluations(
 			dryRun,
 			statementsProcessed: result.data.statementsProcessed,
 			statementsFixed: result.data.statementsFixed,
-			fixesCount: result.data.fixes.length
+			fixesCount: result.data.fixes.length,
 		});
 
 		return result.data;

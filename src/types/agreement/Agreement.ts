@@ -1,12 +1,4 @@
-import {
-	object,
-	string,
-	number,
-	InferOutput,
-	optional,
-	InferInput,
-	boolean,
-} from 'valibot';
+import { object, string, number, InferOutput, optional, InferInput, boolean } from 'valibot';
 
 export const TermsOfUseAcceptanceSchema = object({
 	text: string(),
@@ -16,9 +8,7 @@ export const TermsOfUseAcceptanceSchema = object({
 	accepted: boolean(),
 });
 
-export type TermsOfUseAcceptance = InferInput<
-	typeof TermsOfUseAcceptanceSchema
->;
+export type TermsOfUseAcceptance = InferInput<typeof TermsOfUseAcceptanceSchema>;
 
 export enum AgreeDisagreeEnum {
 	Agree = 'agree',

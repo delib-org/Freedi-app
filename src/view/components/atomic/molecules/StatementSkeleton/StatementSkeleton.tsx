@@ -6,10 +6,7 @@ interface StatementSkeletonProps {
 	cardCount?: number;
 }
 
-const StatementSkeleton: React.FC<StatementSkeletonProps> = ({
-	showNav = true,
-	cardCount = 3,
-}) => {
+const StatementSkeleton: React.FC<StatementSkeletonProps> = ({ showNav = true, cardCount = 3 }) => {
 	return (
 		<div className="skeleton-statement">
 			{/* Header */}
@@ -46,11 +43,7 @@ const StatementSkeleton: React.FC<StatementSkeletonProps> = ({
 			{showNav && (
 				<div className="skeleton-statement__nav">
 					{Array.from({ length: 4 }).map((_, index) => (
-						<Skeleton
-							key={index}
-							variant="button"
-							className="skeleton-statement__nav-item"
-						/>
+						<Skeleton key={index} variant="button" className="skeleton-statement__nav-item" />
 					))}
 				</div>
 			)}

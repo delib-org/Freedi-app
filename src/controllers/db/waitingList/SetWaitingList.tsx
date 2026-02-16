@@ -25,14 +25,14 @@ const SetWaitingList: FC = () => {
 
 	return (
 		<div>
-			<label htmlFor='uploadFile'>
+			<label htmlFor="uploadFile">
 				<VisuallyHidden labelName={'uploadFile'} />
 			</label>
 			<input
-				id='uploadFile'
+				id="uploadFile"
 				className={styles.uploadInput}
-				type='file'
-				accept='.xlsx, .xls'
+				type="file"
+				accept=".xlsx, .xls"
 				onChange={handleFileChange}
 				ref={fileInputRef}
 			/>

@@ -16,14 +16,15 @@ interface Props {
 const MainCard: FC<Props> = ({ subscription }) => {
 	const { statement: simpleStatement } = subscription;
 	const { t } = useTranslation();
-	
+
 	// Use lastSubStatements from subscription if available, otherwise fall back to old method
 	const subStatements = subscription.lastSubStatements || [];
-	
+
 	const statementImgUrl = simpleStatement.imageURL || undefined;
-	const description = simpleStatement.description?.length > 30
-		? `${simpleStatement.description.slice(0, 144)} ...`
-		: simpleStatement.description;
+	const description =
+		simpleStatement.description?.length > 30
+			? `${simpleStatement.description.slice(0, 144)} ...`
+			: simpleStatement.description;
 
 	// No longer need to listen to sub-statements as they come from subscription.lastSubStatements
 
@@ -48,7 +49,7 @@ const MainCard: FC<Props> = ({ subscription }) => {
 
 				<div className={styles.contentText}>
 					<h2>{simpleStatement.statement}</h2>
-					<div className={styles["contentText__description"]}>
+					<div className={styles['contentText__description']}>
 						<Text description={description} />
 					</div>
 				</div>
@@ -56,10 +57,7 @@ const MainCard: FC<Props> = ({ subscription }) => {
 			<div className={styles.updates}>
 				{subStatements.length > 0 && <h3>{t('Last Updates')}</h3>}
 				{subStatements.map((subStatement: SimpleStatement) => (
-					<UpdateMainCard
-						key={subStatement.statementId}
-						statement={subStatement}
-					/>
+					<UpdateMainCard key={subStatement.statementId} statement={subStatement} />
 				))}
 			</div>
 		</div>

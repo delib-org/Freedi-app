@@ -19,9 +19,7 @@ const JoinBehaviorSettings: FC<JoinBehaviorSettingsProps> = ({
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>
-				{t('Join Behavior')}
-			</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('Join Behavior')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
 				{t('How participants can join options')}
 			</p>

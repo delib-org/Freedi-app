@@ -1,4 +1,16 @@
-import { doc, setDoc, updateDoc, deleteDoc, getDoc, collection, query, where, onSnapshot, increment, Unsubscribe } from 'firebase/firestore';
+import {
+	doc,
+	setDoc,
+	updateDoc,
+	deleteDoc,
+	getDoc,
+	collection,
+	query,
+	where,
+	onSnapshot,
+	increment,
+	Unsubscribe,
+} from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
 import { FireStore, auth, functions } from '../config';
 import { Collections, Statement, StatementType, Creator } from '@freedi/shared-types';
@@ -79,7 +91,7 @@ async function processLinks(text: string): Promise<LinkWithMetadata> {
 		// Call the summarizeLink function with language
 		const summarizeLinkFn = httpsCallable<{ url: string; language: string }, LinkMetadata>(
 			functions,
-			'summarizeLink'
+			'summarizeLink',
 		);
 		const result = await summarizeLinkFn({ url, language });
 		console.info('[Link Summary] Received summary in language:', language);
@@ -105,7 +117,7 @@ async function processLinks(text: string): Promise<LinkWithMetadata> {
 export async function createEvidencePost(
 	parentStatementId: string,
 	content: string,
-	support: number = 0 // Default to neutral, will be overridden by AI
+	support: number = 0, // Default to neutral, will be overridden by AI
 ): Promise<Statement> {
 	try {
 		// Get current user
@@ -138,7 +150,7 @@ export async function createEvidencePost(
 			displayName: currentUser.displayName || 'Anonymous',
 			uid: currentUser.uid,
 			photoURL: currentUser.photoURL || '',
-			email: currentUser.email || ''
+			email: currentUser.email || '',
 		};
 
 		const evidenceStatement: Statement = {
@@ -158,21 +170,18 @@ export async function createEvidencePost(
 				notHelpfulCount: 0,
 				netScore: 0,
 				evidenceWeight: 1.0, // Will be updated by Firebase Function after AI classification
-				...(linkMetadata && { linkMetadata }) // Add link metadata if available
-			}
+				...(linkMetadata && { linkMetadata }), // Add link metadata if available
+			},
 		};
 
-		await setDoc(
-			doc(FireStore, Collections.statements, statementId),
-			evidenceStatement
-		);
+		await setDoc(doc(FireStore, Collections.statements, statementId), evidenceStatement);
 
 		logger.info('Evidence post created', { statementId, parentId: parentStatement.statementId });
 
 		return evidenceStatement;
 	} catch (error) {
 		logger.error('Failed to create evidence post', error, {
-			parentId: parentStatementId
+			parentId: parentStatementId,
 		});
 		throw error;
 	}
@@ -183,20 +192,24 @@ export async function createEvidencePost(
  */
 export function listenToEvidencePosts(
 	statementId: string,
-	callback: (posts: Statement[]) => void
+	callback: (posts: Statement[]) => void,
 ): Unsubscribe {
 	const q = query(
 		collection(FireStore, Collections.statements),
 		where('parentId', '==', statementId),
-		where('evidence', '!=', null)
+		where('evidence', '!=', null),
 	);
 
-	return onSnapshot(q, (snapshot) => {
-		const posts = snapshot.docs.map(doc => doc.data() as Statement);
-		callback(posts);
-	}, (error) => {
-		logger.error('Error listening to evidence posts', error, { statementId });
-	});
+	return onSnapshot(
+		q,
+		(snapshot) => {
+			const posts = snapshot.docs.map((doc) => doc.data() as Statement);
+			callback(posts);
+		},
+		(error) => {
+			logger.error('Error listening to evidence posts', error, { statementId });
+		},
+	);
 }
 
 /**
@@ -216,7 +229,7 @@ export interface EvidenceVote {
 export async function submitVote(
 	evidenceStatementId: string,
 	userId: string,
-	voteType: 'helpful' | 'not-helpful'
+	voteType: 'helpful' | 'not-helpful',
 ): Promise<void> {
 	try {
 		const voteId = `${evidenceStatementId}_${userId}`;
@@ -235,12 +248,12 @@ export async function submitVote(
 				if (oldVote.voteType === 'helpful') {
 					await updateDoc(statementRef, {
 						'evidence.helpfulCount': increment(-1),
-						lastUpdate: Date.now()
+						lastUpdate: Date.now(),
 					});
 				} else {
 					await updateDoc(statementRef, {
 						'evidence.notHelpfulCount': increment(-1),
-						lastUpdate: Date.now()
+						lastUpdate: Date.now(),
 					});
 				}
 
@@ -248,19 +261,19 @@ export async function submitVote(
 				if (voteType === 'helpful') {
 					await updateDoc(statementRef, {
 						'evidence.helpfulCount': increment(1),
-						lastUpdate: Date.now()
+						lastUpdate: Date.now(),
 					});
 				} else {
 					await updateDoc(statementRef, {
 						'evidence.notHelpfulCount': increment(1),
-						lastUpdate: Date.now()
+						lastUpdate: Date.now(),
 					});
 				}
 
 				// Update vote document
 				await updateDoc(voteRef, {
 					voteType,
-					createdAt: Date.now()
+					createdAt: Date.now(),
 				});
 
 				logger.info('Vote changed', { voteId, voteType });
@@ -270,12 +283,12 @@ export async function submitVote(
 			if (voteType === 'helpful') {
 				await updateDoc(statementRef, {
 					'evidence.helpfulCount': increment(1),
-					lastUpdate: Date.now()
+					lastUpdate: Date.now(),
 				});
 			} else {
 				await updateDoc(statementRef, {
 					'evidence.notHelpfulCount': increment(1),
-					lastUpdate: Date.now()
+					lastUpdate: Date.now(),
 				});
 			}
 
@@ -285,7 +298,7 @@ export async function submitVote(
 				evidenceStatementId,
 				userId,
 				voteType,
-				createdAt: Date.now()
+				createdAt: Date.now(),
 			};
 
 			await setDoc(voteRef, vote);
@@ -301,10 +314,7 @@ export async function submitVote(
 /**
  * Remove a vote
  */
-export async function removeVote(
-	evidenceStatementId: string,
-	userId: string
-): Promise<void> {
+export async function removeVote(evidenceStatementId: string, userId: string): Promise<void> {
 	try {
 		const voteId = `${evidenceStatementId}_${userId}`;
 		const voteRef = doc(FireStore, Collections.evidenceVotes, voteId);
@@ -320,12 +330,12 @@ export async function removeVote(
 			if (vote.voteType === 'helpful') {
 				await updateDoc(statementRef, {
 					'evidence.helpfulCount': increment(-1),
-					lastUpdate: Date.now()
+					lastUpdate: Date.now(),
 				});
 			} else {
 				await updateDoc(statementRef, {
 					'evidence.notHelpfulCount': increment(-1),
-					lastUpdate: Date.now()
+					lastUpdate: Date.now(),
 				});
 			}
 
@@ -345,7 +355,7 @@ export async function removeVote(
  */
 export async function getUserVote(
 	evidenceStatementId: string,
-	userId: string
+	userId: string,
 ): Promise<'helpful' | 'not-helpful' | null> {
 	try {
 		const voteId = `${evidenceStatementId}_${userId}`;
@@ -355,14 +365,14 @@ export async function getUserVote(
 		if (voteSnap.exists()) {
 			const vote = voteSnap.data() as EvidenceVote;
 
-return vote.voteType;
+			return vote.voteType;
 		}
 
 		return null;
 	} catch (error) {
 		logger.error('Failed to get user vote', error, { evidenceStatementId, userId });
 
-return null;
+		return null;
 	}
 }
 
@@ -374,7 +384,7 @@ return null;
 export async function updateEvidencePost(
 	statementId: string,
 	content: string,
-	support: number = 0 // Default to neutral, will be overridden by AI
+	support: number = 0, // Default to neutral, will be overridden by AI
 ): Promise<void> {
 	try {
 		const currentUser = auth.currentUser;
@@ -407,7 +417,7 @@ export async function updateEvidencePost(
 		const updateData: Record<string, unknown> = {
 			statement: formattedText,
 			'evidence.support': support,
-			lastUpdate: Date.now()
+			lastUpdate: Date.now(),
 		};
 
 		// Add or remove link metadata

@@ -54,22 +54,14 @@ const FramingList: FC<FramingListProps> = ({
 		<div className={styles.framingList}>
 			<h4 className={styles.listTitle}>{t('Available Framings')}</h4>
 			<div className={styles.framingItems}>
-				{framings.map(framing => (
-					<div
+				{framings.map((framing) => (
+					<button
+						type="button"
 						key={framing.framingId}
 						className={`${styles.framingItem} ${
-							selectedFraming?.framingId === framing.framingId
-								? styles.selected
-								: ''
+							selectedFraming?.framingId === framing.framingId ? styles.selected : ''
 						}`}
 						onClick={() => onSelectFraming(framing)}
-						role="button"
-						tabIndex={0}
-						onKeyDown={(e) => {
-							if (e.key === 'Enter' || e.key === ' ') {
-								onSelectFraming(framing);
-							}
-						}}
 					>
 						<div className={styles.framingInfo}>
 							<span className={styles.framingName}>{framing.name}</span>
@@ -79,9 +71,7 @@ const FramingList: FC<FramingListProps> = ({
 								) : (
 									<span className={styles.customBadge}>{t('Custom')}</span>
 								)}
-								<span className={styles.date}>
-									{formatDate(framing.createdAt)}
-								</span>
+								<span className={styles.date}>{formatDate(framing.createdAt)}</span>
 							</span>
 							<span className={styles.clusterCount}>
 								{framing.clusterIds.length} {t('clusters')}
@@ -95,7 +85,7 @@ const FramingList: FC<FramingListProps> = ({
 						>
 							{deletingId === framing.framingId ? '...' : '×'}
 						</button>
-					</div>
+					</button>
 				))}
 			</div>
 		</div>

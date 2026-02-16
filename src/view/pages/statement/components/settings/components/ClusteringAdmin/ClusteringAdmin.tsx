@@ -54,21 +54,24 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 	}, [statement.statementId, selectedFraming, t]);
 
 	// Load aggregations when framing is selected
-	const loadAggregations = useCallback(async (framingId: string) => {
-		try {
-			setIsLoading(true);
-			const response = await getClusterAggregations(framingId);
-			setAggregations(response.aggregations);
-		} catch (err) {
-			logError(err, {
-				operation: 'ClusteringAdmin.loadAggregations',
-				metadata: { framingId },
-			});
-			setError(t('Failed to load cluster aggregations'));
-		} finally {
-			setIsLoading(false);
-		}
-	}, [t]);
+	const loadAggregations = useCallback(
+		async (framingId: string) => {
+			try {
+				setIsLoading(true);
+				const response = await getClusterAggregations(framingId);
+				setAggregations(response.aggregations);
+			} catch (err) {
+				logError(err, {
+					operation: 'ClusteringAdmin.loadAggregations',
+					metadata: { framingId },
+				});
+				setError(t('Failed to load cluster aggregations'));
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[t],
+	);
 
 	// Generate new AI framings
 	const handleGenerateFramings = async () => {
@@ -76,7 +79,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 			setIsGenerating(true);
 			setError(null);
 			const newFramings = await generateMultipleFramings(statement.statementId, 3);
-			setFramings(prev => [...prev, ...newFramings]);
+			setFramings((prev) => [...prev, ...newFramings]);
 
 			if (newFramings.length > 0) {
 				setSelectedFraming(newFramings[0]);
@@ -99,16 +102,16 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 
 	// Handle new custom framing created
 	const handleFramingCreated = (newFraming: Framing) => {
-		setFramings(prev => [...prev, newFraming]);
+		setFramings((prev) => [...prev, newFraming]);
 		setSelectedFraming(newFraming);
 		setIsRequestModalOpen(false);
 	};
 
 	// Handle framing deleted
 	const handleFramingDeleted = (framingId: string) => {
-		setFramings(prev => prev.filter(f => f.framingId !== framingId));
+		setFramings((prev) => prev.filter((f) => f.framingId !== framingId));
 		if (selectedFraming?.framingId === framingId) {
-			setSelectedFraming(framings.find(f => f.framingId !== framingId) || null);
+			setSelectedFraming(framings.find((f) => f.framingId !== framingId) || null);
 		}
 	};
 
@@ -133,11 +136,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				</p>
 			</div>
 
-			{error && (
-				<div className={styles.error}>
-					{error}
-				</div>
-			)}
+			{error && <div className={styles.error}>{error}</div>}
 
 			<div className={styles.actions}>
 				<button

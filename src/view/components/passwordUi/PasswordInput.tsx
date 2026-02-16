@@ -16,10 +16,7 @@ const PasswordInput = ({
 }: PasswordProps) => {
 	const inputs = useRef<(HTMLInputElement | null)[]>([]);
 
-	const handleChange = (
-		event: React.ChangeEvent<HTMLInputElement>,
-		index: number
-	) => {
+	const handleChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
 		const val = event.target.value;
 		if (/^[0-9]$/.test(val) || val === '') {
 			const newValues = [...values];
@@ -31,10 +28,7 @@ const PasswordInput = ({
 		}
 	};
 
-	const handleKeyDown = (
-		event: React.KeyboardEvent<HTMLInputElement>,
-		index: number
-	) => {
+	const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>, index: number) => {
 		if (event.key === 'Backspace' && !values[index] && index > 0) {
 			inputs.current[index - 1]?.focus();
 		}
@@ -53,7 +47,7 @@ const PasswordInput = ({
 						inputs.current[index] = element;
 					}}
 					maxLength={1}
-					type='text'
+					type="text"
 					value={val}
 					onChange={(e) => handleChange(e, index)}
 					onKeyDown={(e) => handleKeyDown(e, index)}

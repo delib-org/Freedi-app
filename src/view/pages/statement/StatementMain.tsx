@@ -39,7 +39,7 @@ export const subStatementsSelector = createSelector(
 	(statements, statementId) =>
 		statements
 			.filter((st) => st.parentId === statementId)
-			.sort((a, b) => a.createdAt - b.createdAt)
+			.sort((a, b) => a.createdAt - b.createdAt),
 );
 
 const StatementMain: React.FC = () => {
@@ -80,7 +80,7 @@ const StatementMain: React.FC = () => {
 		isWaitingForApproval,
 		isStatementNotFound,
 		error,
-		role
+		role,
 	});
 
 	// Set up listeners
@@ -97,7 +97,7 @@ const StatementMain: React.FC = () => {
 
 	// Set document title
 	useDocumentTitle({ statement });
-	
+
 	// Track statement view and interaction time
 	const { elementRef } = useStatementViewTracking({
 		statementId: statementId || '',
@@ -105,7 +105,7 @@ const StatementMain: React.FC = () => {
 		minViewTime: 1000,
 	});
 	// TODO: Use markInteraction when user votes or comments
-	
+
 	// Get user from store
 	const user = useAppSelector(creatorSelector);
 

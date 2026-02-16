@@ -8,7 +8,9 @@ import NotificationCard from '../notificationCard/NotificationCard';
 
 const InAppNotifications = () => {
 	const creator = useSelector(creatorSelector);
-	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(n => n.creatorId !== creator?.uid);
+	const inAppNotifications: NotificationType[] = useSelector(inAppNotificationsSelector).filter(
+		(n) => n.creatorId !== creator?.uid,
+	);
 	const { t } = useTranslation();
 
 	return (
@@ -17,9 +19,7 @@ const InAppNotifications = () => {
 				<>
 					<span className={styles.notificationTitle}>{t('Notifications')}</span>
 					{inAppNotifications.map((notification) => {
-						return (
-							<NotificationCard key={notification.notificationId} {...notification} />
-						);
+						return <NotificationCard key={notification.notificationId} {...notification} />;
 					})}
 				</>
 			) : (

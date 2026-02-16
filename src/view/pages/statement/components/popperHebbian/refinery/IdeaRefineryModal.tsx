@@ -2,7 +2,11 @@ import React, { FC, useState, useEffect, useRef } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import RefinementMessage from './RefinementMessage';
 import { RefinementSession, IdeaRefinementStatus } from '@/models/popperHebbian/RefineryModels';
-import { startRefinementSession, submitRefinementResponse, publishRefinedIdea } from '@/controllers/db/popperHebbian/refineryController';
+import {
+	startRefinementSession,
+	submitRefinementResponse,
+	publishRefinedIdea,
+} from '@/controllers/db/popperHebbian/refineryController';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './IdeaRefineryModal.module.scss';
@@ -18,7 +22,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 	parentStatementId,
 	originalIdea,
 	onClose,
-	onPublish
+	onPublish,
 }) => {
 	const { user } = useAuthentication();
 	const { t, currentLanguage } = useTranslation();
@@ -47,7 +51,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 					parentStatementId,
 					originalIdea,
 					user.uid,
-					currentLanguage
+					currentLanguage,
 				);
 
 				setSession(newSession);
@@ -70,7 +74,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 			const updatedSession = await submitRefinementResponse(
 				session.sessionId,
 				userInput.trim(),
-				currentLanguage
+				currentLanguage,
 			);
 
 			setSession(updatedSession);
@@ -111,27 +115,17 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 			<div className={styles.refineryModal}>
 				<div className={styles.modalHeader}>
 					<div className={styles.headerContent}>
-						<h2 className={styles.modalTitle}>
-							🤖 {t('AI Idea Refinery')}
-						</h2>
-						<p className={styles.modalSubtitle}>
-							{t('Making your idea testable and falsifiable')}
-						</p>
+						<h2 className={styles.modalTitle}>🤖 {t('AI Idea Refinery')}</h2>
+						<p className={styles.modalSubtitle}>{t('Making your idea testable and falsifiable')}</p>
 					</div>
-					<button
-						className={styles.closeButton}
-						onClick={onClose}
-						aria-label="Close modal"
-					>
+					<button className={styles.closeButton} onClick={onClose} aria-label="Close modal">
 						×
 					</button>
 				</div>
 
 				<div className={styles.originalIdeaSection}>
 					<h4 className={styles.sectionTitle}>{t('Original Idea')}</h4>
-					<div className={styles.originalIdea}>
-						{originalIdea}
-					</div>
+					<div className={styles.originalIdea}>{originalIdea}</div>
 				</div>
 
 				<div className={styles.conversationSection}>
@@ -156,16 +150,10 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 
 							{isReadyForDiscussion ? (
 								<div className={styles.completionSection}>
-									<div className={styles.completionBadge}>
-										✓ {t('Idea is Ready!')}
-									</div>
+									<div className={styles.completionBadge}>✓ {t('Idea is Ready!')}</div>
 									<div className={styles.refinedIdeaDisplay}>
-										<h4 className={styles.refinedTitle}>
-											{t('Refined Idea')}
-										</h4>
-										<p className={styles.refinedText}>
-											{session.refinedIdea}
-										</p>
+										<h4 className={styles.refinedTitle}>{t('Refined Idea')}</h4>
+										<p className={styles.refinedText}>{session.refinedIdea}</p>
 									</div>
 									<button
 										className={styles.publishButton}

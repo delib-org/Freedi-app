@@ -85,6 +85,18 @@ export interface MultiSuggestionResponse {
 }
 
 /**
+ * Comment data returned from queries (subset of Statement fields)
+ */
+export interface CommentData {
+  statementId: string;
+  statement: string;
+  reasoning?: string;
+  createdAt: number;
+  creator?: { displayName?: string; uid?: string };
+  creatorId: string;
+}
+
+/**
  * Flow state for the add solution workflow
  */
 export type FlowState =

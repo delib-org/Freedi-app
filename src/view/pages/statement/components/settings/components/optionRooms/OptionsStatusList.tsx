@@ -48,7 +48,10 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 		}
 	};
 
-	const getStatusText = (option: OptionWithMembers, status: 'assigned' | 'ok' | 'warning' | 'exceeds') => {
+	const getStatusText = (
+		option: OptionWithMembers,
+		status: 'assigned' | 'ok' | 'warning' | 'exceeds',
+	) => {
 		switch (status) {
 			case 'assigned':
 				return t('Rooms assigned');
@@ -62,14 +65,12 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 	};
 
 	// Check if any rooms are already assigned
-	const hasExistingRooms = options.some(opt => opt.hasActiveRooms);
+	const hasExistingRooms = options.some((opt) => opt.hasActiveRooms);
 	const totalParticipants = options.reduce((sum, opt) => sum + opt.joinedCount, 0);
 
 	return (
 		<div className={styles.optionRooms__subsection}>
-			<h3 className={styles.optionRooms__subsectionTitle}>
-				{t('Options with Participants')}
-			</h3>
+			<h3 className={styles.optionRooms__subsectionTitle}>{t('Options with Participants')}</h3>
 			<p className={styles.optionRooms__subsectionDescription}>
 				{options.length} {t('options')} {t('with')} {totalParticipants} {t('participants')}
 			</p>
@@ -86,9 +87,7 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 							<div className={styles.optionRooms__statusInfo}>
 								<div className={styles.optionRooms__statusHeader}>
 									{getStatusIcon(status)}
-									<span className={styles.optionRooms__optionTitle}>
-										{option.statement}
-									</span>
+									<span className={styles.optionRooms__optionTitle}>{option.statement}</span>
 								</div>
 								<div className={styles.optionRooms__statusDetails}>
 									<span className={styles.optionRooms__memberCount}>
@@ -106,7 +105,13 @@ const OptionsStatusList: FC<OptionsStatusListProps> = ({
 
 			<div className={styles.optionRooms__assignAllButton}>
 				<Button
-					text={isAssigning ? t('Assigning...') : (hasExistingRooms ? t('Reassign all rooms') : t('Assign all rooms'))}
+					text={
+						isAssigning
+							? t('Assigning...')
+							: hasExistingRooms
+								? t('Reassign all rooms')
+								: t('Assign all rooms')
+					}
 					buttonType={ButtonType.PRIMARY}
 					onClick={onAssignAllRooms}
 					disabled={isAssigning}

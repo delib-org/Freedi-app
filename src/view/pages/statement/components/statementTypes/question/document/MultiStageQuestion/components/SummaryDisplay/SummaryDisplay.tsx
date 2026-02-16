@@ -13,9 +13,7 @@ const SummaryDisplay: FC<SummaryDisplayProps> = ({ summary, generatedAt }) => {
 
 	if (!summary) return null;
 
-	const formattedDate = generatedAt
-		? new Date(generatedAt).toLocaleDateString()
-		: undefined;
+	const formattedDate = generatedAt ? new Date(generatedAt).toLocaleDateString() : undefined;
 
 	return (
 		<div className={styles.summaryContainer}>

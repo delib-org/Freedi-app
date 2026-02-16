@@ -13,34 +13,25 @@ interface SubGroupCardReturn {
 	text: string;
 }
 
-const getIconByType = (
-	statementType: StatementType,
-	questionType?: QuestionType
-): ReactElement => {
+const getIconByType = (statementType: StatementType, questionType?: QuestionType): ReactElement => {
 	switch (statementType) {
 		case StatementType.group:
 			return <GroupIcon />;
 		case StatementType.question:
-			return questionType === QuestionType.massConsensus ? (
-				<DocumentIcon />
-			) : (
-				<QuestionIcon />
-			);
+			return questionType === QuestionType.massConsensus ? <DocumentIcon /> : <QuestionIcon />;
 		default:
 			return <DocumentIcon />;
 	}
 };
 
-export default function useSubGroupCard(
-	statement: Statement
-): SubGroupCardReturn {
+export default function useSubGroupCard(statement: Statement): SubGroupCardReturn {
 	const { backgroundColor } = useStatementColor({ statement });
 
 	try {
 		return {
 			Icon: getIconByType(
 				statement.statementType as StatementType,
-				statement.questionSettings?.questionType
+				statement.questionSettings?.questionType,
 			),
 			backgroundColor,
 			text: statement.statement,

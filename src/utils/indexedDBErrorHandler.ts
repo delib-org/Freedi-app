@@ -69,7 +69,7 @@ function attemptRecovery(): void {
 	// Check if we're in cooldown period
 	if (now - lastAttempt < RECOVERY_COOLDOWN_MS && attemptCount >= MAX_RECOVERY_ATTEMPTS) {
 		console.error(
-			'[IndexedDB Recovery] Max recovery attempts reached. Please close other tabs and refresh manually.'
+			'[IndexedDB Recovery] Max recovery attempts reached. Please close other tabs and refresh manually.',
 		);
 		logUserFriendlyError();
 
@@ -118,15 +118,11 @@ function isIndexedDBError(error: unknown): boolean {
 	];
 
 	// Check for Firestore persistence error codes
-	const firestoreErrorCodes = [
-		'failed-precondition',
-		'unavailable',
-		'aborted',
-	];
+	const firestoreErrorCodes = ['failed-precondition', 'unavailable', 'aborted'];
 
 	return (
-		indexedDBPatterns.some(pattern =>
-			errorMessage.toLowerCase().includes(pattern.toLowerCase())
+		indexedDBPatterns.some((pattern) =>
+			errorMessage.toLowerCase().includes(pattern.toLowerCase()),
 		) ||
 		(errorCode !== undefined && firestoreErrorCodes.includes(errorCode))
 	);
@@ -139,8 +135,8 @@ function isIndexedDBError(error: unknown): boolean {
 function isFirestoreAssertionError(error: unknown): boolean {
 	if (!error) return false;
 	const errorMessage = error instanceof Error ? error.message : String(error);
-	
-return errorMessage.includes('INTERNAL ASSERTION FAILED');
+
+	return errorMessage.includes('INTERNAL ASSERTION FAILED');
 }
 
 /**
@@ -166,7 +162,7 @@ function recordIndexedDBError(): void {
 function logUserFriendlyError(): void {
 	console.info(
 		'[App] Running in limited mode. Offline features may be unavailable. ' +
-		'This is common on iOS Safari and private browsing mode.'
+			'This is common on iOS Safari and private browsing mode.',
 	);
 
 	// TODO: Add toast notification when UI toast system is available
@@ -181,10 +177,7 @@ function isMultiTabPersistenceError(error: unknown): boolean {
 
 	const errorMessage = error instanceof Error ? error.message : String(error);
 
-	return (
-		errorMessage.includes('exclusive access') ||
-		errorMessage.includes('persistence layer')
-	);
+	return errorMessage.includes('exclusive access') || errorMessage.includes('persistence layer');
 }
 
 /**
@@ -194,7 +187,7 @@ function isMultiTabPersistenceError(error: unknown): boolean {
 async function clearFirestoreIndexedDB(): Promise<void> {
 	const dbsToDelete = [
 		'firestore/[DEFAULT]/freedi-test/main', // Testing env
-		'firestore/[DEFAULT]/delib-5/main',      // Production env
+		'firestore/[DEFAULT]/delib-5/main', // Production env
 	];
 
 	for (const dbName of dbsToDelete) {
@@ -204,7 +197,9 @@ async function clearFirestoreIndexedDB(): Promise<void> {
 				request.onsuccess = () => resolve();
 				request.onerror = () => reject(request.error);
 				request.onblocked = () => {
-					console.info(`[IndexedDB Recovery] Database ${dbName} is blocked, will retry after reload`);
+					console.info(
+						`[IndexedDB Recovery] Database ${dbName} is blocked, will retry after reload`,
+					);
 					resolve();
 				};
 			});

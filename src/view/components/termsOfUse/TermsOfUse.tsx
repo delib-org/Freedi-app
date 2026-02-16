@@ -8,25 +8,22 @@ interface Props {
 	agreement: string;
 }
 
-export default function TermsOfUse({
-	handleAgreement,
-	agreement,
-}: Readonly<Props>) {
+export default function TermsOfUse({ handleAgreement, agreement }: Readonly<Props>) {
 	const { t } = useTranslation();
 
 	return (
 		<Modal>
-			<div className={styles.termsOfUse} data-cy='termsOfUse'>
+			<div className={styles.termsOfUse} data-cy="termsOfUse">
 				<h1 className={styles.termsOfUseTitle}>{t('terms of use')}</h1>
 				<p>{agreement}</p>
-				<div className='btns'>
+				<div className="btns">
 					<Button
 						text={t('Agree')}
 						onClick={() => handleAgreement(true, agreement)}
-						className='btn btn--primary'
+						className="btn btn--primary"
 					/>
 					<Button
-						data-cy='agree-btn'
+						data-cy="agree-btn"
 						text={t("Don't agree")}
 						onClick={() => handleAgreement(false, agreement)}
 						buttonType={ButtonType.SECONDARY}

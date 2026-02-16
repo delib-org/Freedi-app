@@ -4,26 +4,27 @@
  * Common Firebase operations and patterns to reduce code duplication.
  */
 
-import { doc, collection, writeBatch, DocumentReference, CollectionReference } from 'firebase/firestore';
+import {
+	doc,
+	collection,
+	writeBatch,
+	DocumentReference,
+	CollectionReference,
+} from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { Collections } from '@freedi/shared-types';
 
 /**
  * Create a document reference
  */
-export function createDocRef(
-	collectionName: Collections,
-	docId: string
-): DocumentReference {
+export function createDocRef(collectionName: Collections, docId: string): DocumentReference {
 	return doc(FireStore, collectionName, docId);
 }
 
 /**
  * Create a collection reference
  */
-export function createCollectionRef(
-	collectionName: Collections
-): CollectionReference {
+export function createCollectionRef(collectionName: Collections): CollectionReference {
 	return collection(FireStore, collectionName);
 }
 
@@ -56,9 +57,7 @@ export interface BatchUpdate {
 	data: Record<string, unknown>;
 }
 
-export async function executeBatchUpdates(
-	updates: BatchUpdate[]
-): Promise<void> {
+export async function executeBatchUpdates(updates: BatchUpdate[]): Promise<void> {
 	const BATCH_SIZE = 500; // Firestore limit
 	const batches = [];
 

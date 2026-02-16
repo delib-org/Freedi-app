@@ -101,9 +101,7 @@ const GoogleDocsImportModal: FC<GoogleDocsImportModalProps> = ({
 				</header>
 
 				<div className={styles.content}>
-					<p className={styles.description}>
-						{t('Paste a Google Docs link to import content')}
-					</p>
+					<p className={styles.description}>{t('Paste a Google Docs link to import content')}</p>
 
 					<input
 						type="url"
@@ -121,22 +119,19 @@ const GoogleDocsImportModal: FC<GoogleDocsImportModalProps> = ({
 							<p>{errorMessage}</p>
 							{serviceAccountEmail && (
 								<p className={styles.shareHint}>
-									{t('Share your document with:')}{' '}
-									<code>{serviceAccountEmail}</code>
+									{t('Share your document with:')} <code>{serviceAccountEmail}</code>
 								</p>
 							)}
 						</div>
 					)}
 
 					{status === 'success' && (
-						<div className={styles.success}>
-							{t('Document imported successfully')}
-						</div>
+						<div className={styles.success}>{t('Document imported successfully')}</div>
 					)}
 
 					<p className={styles.hint}>
 						{t(
-							'Make sure the document is shared with the import service or set to "Anyone with the link"'
+							'Make sure the document is shared with the import service or set to "Anyone with the link"',
 						)}
 					</p>
 				</div>

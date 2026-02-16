@@ -5,7 +5,7 @@ import {
 	onSnapshot,
 	DocumentSnapshot,
 	QuerySnapshot,
-	FirestoreError
+	FirestoreError,
 } from 'firebase/firestore';
 import { listenerManager } from './ListenerManager';
 import { Unsubscribe } from 'firebase/auth';
@@ -22,7 +22,7 @@ export function createManagedDocumentListener(
 	docRef: DocumentReference,
 	key: string,
 	onNext: (snapshot: DocumentSnapshot) => void,
-	onError?: (error: FirestoreError) => void
+	onError?: (error: FirestoreError) => void,
 ): Unsubscribe {
 	// SYNCHRONOUS check - prevents race conditions
 	const shouldSetup = listenerManager.registerListenerIntent(key);
@@ -52,12 +52,12 @@ export function createManagedDocumentListener(
 				}
 				onNext(snapshot);
 			},
-			onError
+			onError,
 		);
 	};
 
 	// Add listener to manager (we already registered intent synchronously)
-	listenerManager.addListener(key, setupFn, { type: 'document' }).catch(error => {
+	listenerManager.addListener(key, setupFn, { type: 'document' }).catch((error) => {
 		console.error(`Failed to add listener ${key}:`, error);
 		// Clean up pending state if setup fails
 		listenerManager.removeListener(key);
@@ -83,7 +83,7 @@ export function createManagedCollectionListener(
 	key: string,
 	onNext: (snapshot: QuerySnapshot) => void,
 	onError?: (error: FirestoreError) => void,
-	type: 'collection' | 'query' = 'query'
+	type: 'collection' | 'query' = 'query',
 ): Unsubscribe {
 	// SYNCHRONOUS check - prevents race conditions
 	const shouldSetup = listenerManager.registerListenerIntent(key);
@@ -112,7 +112,7 @@ export function createManagedCollectionListener(
 					} else {
 						// On subsequent calls, only count NEW documents (added)
 						const changes = snapshot.docChanges();
-						const addedCount = changes.filter(change => change.type === 'added').length;
+						const addedCount = changes.filter((change) => change.type === 'added').length;
 						if (addedCount > 0) {
 							onDocumentCount(addedCount);
 						}
@@ -120,12 +120,12 @@ export function createManagedCollectionListener(
 				}
 				onNext(snapshot);
 			},
-			onError
+			onError,
 		);
 	};
 
 	// Add listener to manager (we already registered intent synchronously)
-	listenerManager.addListener(key, setupFn, { type }).catch(error => {
+	listenerManager.addListener(key, setupFn, { type }).catch((error) => {
 		console.error(`Failed to add listener ${key}:`, error);
 		// Clean up pending state if setup fails
 		listenerManager.removeListener(key);
@@ -148,7 +148,7 @@ export function createManagedCollectionListener(
 export function generateListenerKey(
 	component: string,
 	resourceType: string,
-	resourceId: string
+	resourceId: string,
 ): string {
 	return `${component}-${resourceType}-${resourceId}`;
 }

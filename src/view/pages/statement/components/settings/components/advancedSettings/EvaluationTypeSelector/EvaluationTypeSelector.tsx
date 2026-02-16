@@ -11,6 +11,10 @@ import evaluation2 from '@/assets/icons/evaluation/evaluation2.svg';
 import evaluation3 from '@/assets/icons/evaluation/evaluation3.svg';
 import evaluation4 from '@/assets/icons/evaluation/evaluation4.svg';
 import evaluation5 from '@/assets/icons/evaluation/evaluation5.svg';
+import communityVoice1 from '@/assets/icons/evaluation/communityVoice1.svg';
+import communityVoice2 from '@/assets/icons/evaluation/communityVoice2.svg';
+import communityVoice3 from '@/assets/icons/evaluation/communityVoice3.svg';
+import communityVoice4 from '@/assets/icons/evaluation/communityVoice4.svg';
 
 interface EvaluationTypeSelectorProps {
 	currentType: evaluationType;
@@ -24,10 +28,7 @@ interface EvaluationOption {
 	preview: React.ReactNode;
 }
 
-const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
-	currentType,
-	onChange,
-}) => {
+const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({ currentType, onChange }) => {
 	const { t } = useTranslation();
 
 	const evaluationOptions: EvaluationOption[] = [
@@ -54,7 +55,11 @@ const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
 				<div className={styles.previewEmojis}>
 					<img src={evaluation5} alt="Very negative" className={styles.emojiPreview} />
 					<img src={evaluation4} alt="Negative" className={styles.emojiPreview} />
-					<img src={evaluation3} alt="Neutral" className={`${styles.emojiPreview} ${styles.active}`} />
+					<img
+						src={evaluation3}
+						alt="Neutral"
+						className={`${styles.emojiPreview} ${styles.active}`}
+					/>
 					<img src={evaluation2} alt="Positive" className={styles.emojiPreview} />
 					<img src={evaluation1} alt="Very positive" className={styles.emojiPreview} />
 				</div>
@@ -73,6 +78,31 @@ const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
 				</div>
 			),
 		},
+		{
+			type: evaluationType.communityVoice,
+			title: t('Community Voice'),
+			description: t('Respectful 4-level resonance scale'),
+			preview: (
+				<div className={styles.previewEmojis}>
+					<img
+						src={communityVoice1}
+						alt={t('I hear this perspective')}
+						className={styles.emojiPreview}
+					/>
+					<img src={communityVoice2} alt={t('I partly relate')} className={styles.emojiPreview} />
+					<img
+						src={communityVoice3}
+						alt={t('I closely relate to this')}
+						className={styles.emojiPreview}
+					/>
+					<img
+						src={communityVoice4}
+						alt={t("This echoes my community's voice")}
+						className={`${styles.emojiPreview} ${styles.active}`}
+					/>
+				</div>
+			),
+		},
 	];
 
 	return (
@@ -81,9 +111,7 @@ const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
 				{evaluationOptions.map((option) => (
 					<button
 						key={option.type}
-						className={`${styles.optionCard} ${
-							currentType === option.type ? styles.selected : ''
-						}`}
+						className={`${styles.optionCard} ${currentType === option.type ? styles.selected : ''}`}
 						onClick={() => onChange(option.type)}
 						type="button"
 						aria-pressed={currentType === option.type}
@@ -97,9 +125,7 @@ const EvaluationTypeSelector: FC<EvaluationTypeSelectorProps> = ({
 
 						<p className={styles.optionDescription}>{option.description}</p>
 
-						<div className={styles.previewContainer}>
-							{option.preview}
-						</div>
+						<div className={styles.previewContainer}>{option.preview}</div>
 
 						{currentType === option.type && (
 							<div className={styles.selectedIndicator} aria-hidden="true" />

@@ -149,7 +149,7 @@ const Card: React.FC<CardProps> = ({
 		horizontal && 'card--horizontal', // Modifier: horizontal
 		fullWidth && 'card--full-width', // Modifier: full-width
 		centered && 'card--centered', // Modifier: centered
-		className // Additional classes
+		className, // Additional classes
 	);
 
 	const handleClick = (): void => {

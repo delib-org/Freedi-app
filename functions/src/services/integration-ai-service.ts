@@ -1,8 +1,13 @@
-import { GenerativeModel, GoogleGenerativeAI, HarmCategory, HarmBlockThreshold } from "@google/generative-ai";
-import { logger } from "firebase-functions";
-import { GEMINI_MODEL } from "../config/gemini";
-import { Statement, StatementEvaluation } from "@freedi/shared-types";
-import { getParagraphsText } from "../helpers";
+import {
+	GenerativeModel,
+	GoogleGenerativeAI,
+	HarmCategory,
+	HarmBlockThreshold,
+} from '@google/generative-ai';
+import { logger } from 'firebase-functions';
+import { GEMINI_MODEL } from '../config/gemini';
+import { Statement, StatementEvaluation } from '@freedi/shared-types';
+import { getParagraphsText } from '../helpers';
 
 /**
  * Statement with evaluation data for integration
@@ -44,7 +49,7 @@ function getGenAI(): GoogleGenerativeAI {
 	const apiKey = process.env.GEMINI_API_KEY;
 
 	if (!apiKey) {
-		throw new Error("Missing GEMINI_API_KEY environment variable");
+		throw new Error('Missing GEMINI_API_KEY environment variable');
 	}
 
 	return new GoogleGenerativeAI(apiKey);
@@ -58,7 +63,7 @@ async function getIntegrationModel(): Promise<GenerativeModel> {
 		return _integrationModel;
 	}
 
-	logger.info("Initializing GenerativeModel for integration...");
+	logger.info('Initializing GenerativeModel for integration...');
 
 	try {
 		const genAI = getGenAI();
@@ -66,7 +71,7 @@ async function getIntegrationModel(): Promise<GenerativeModel> {
 		const modelConfig = {
 			model: GEMINI_MODEL,
 			generationConfig: {
-				responseMimeType: "application/json",
+				responseMimeType: 'application/json',
 				temperature: 0.4, // Slightly higher for creative merging
 			},
 			safetySettings: [
@@ -93,7 +98,7 @@ async function getIntegrationModel(): Promise<GenerativeModel> {
 
 		return _integrationModel;
 	} catch (error) {
-		logger.error("Error initializing integration model", error);
+		logger.error('Error initializing integration model', error);
 		throw error;
 	}
 }
@@ -114,17 +119,17 @@ interface FindAndGenerateResult {
 export async function findSimilarAndGenerateSuggestion(
 	targetStatement: Statement,
 	allStatements: Statement[],
-	questionContext: string
+	questionContext: string,
 ): Promise<FindAndGenerateResult> {
 	// Filter out the target statement and hidden statements
 	const otherStatements = allStatements.filter(
-		(s) => s.statementId !== targetStatement.statementId && !s.hide
+		(s) => s.statementId !== targetStatement.statementId && !s.hide,
 	);
 
 	if (otherStatements.length === 0) {
-		logger.info("No other statements to compare against");
-		
-return { similarStatements: [] };
+		logger.info('No other statements to compare against');
+
+		return { similarStatements: [] };
 	}
 
 	// Format statements compactly for AI
@@ -132,22 +137,25 @@ return { similarStatements: [] };
 		id: s.statementId,
 		t: s.statement, // title
 		d: getParagraphsText(s.paragraphs), // paragraphs text
-		e: (s.evaluation as { numberOfEvaluators?: number })?.numberOfEvaluators || s.totalEvaluators || 0, // evaluators
+		e:
+			(s.evaluation as { numberOfEvaluators?: number })?.numberOfEvaluators ||
+			s.totalEvaluators ||
+			0, // evaluators
 	}));
 
 	// Detect language for output
 	const isHebrew = /[\u0590-\u05FF]/.test(targetStatement.statement);
 	const isArabic = /[\u0600-\u06FF]/.test(targetStatement.statement);
-	const langHint = isHebrew ? "Output in Hebrew." : isArabic ? "Output in Arabic." : "";
+	const langHint = isHebrew ? 'Output in Hebrew.' : isArabic ? 'Output in Arabic.' : '';
 
 	// Single optimized prompt for both tasks
 	const prompt = `Find similar suggestions to merge and generate a merged version.
 
-TARGET: "${targetStatement.statement}"${getParagraphsText(targetStatement.paragraphs) ? ` - ${getParagraphsText(targetStatement.paragraphs)}` : ""}
+TARGET: "${targetStatement.statement}"${getParagraphsText(targetStatement.paragraphs) ? ` - ${getParagraphsText(targetStatement.paragraphs)}` : ''}
 CONTEXT: "${questionContext}"
 
 CANDIDATES (id, title, desc, evaluators):
-${statementsForAI.map((s) => `${s.id}|${s.t}|${s.d}|${s.e}`).join("\n")}
+${statementsForAI.map((s) => `${s.id}|${s.t}|${s.d}|${s.e}`).join('\n')}
 
 TASK:
 1. Find IDs with 60%+ semantic similarity to TARGET
@@ -162,9 +170,12 @@ If none similar: {"similarIds":[],"mergedTitle":"","mergedDesc":""}`;
 		let responseText = result.response.text();
 
 		// Strip markdown code blocks if present
-		responseText = responseText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+		responseText = responseText
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
 
-		logger.info("AI integration response:", { len: responseText.length });
+		logger.info('AI integration response:', { len: responseText.length });
 
 		const parsed = JSON.parse(responseText);
 
@@ -187,9 +198,9 @@ If none similar: {"similarIds":[],"mergedTitle":"","mergedDesc":""}`;
 			suggestedDescription: parsed.mergedDesc || undefined,
 		};
 	} catch (error) {
-		logger.error("Error in findSimilarAndGenerateSuggestion:", error);
-		
-return { similarStatements: [] };
+		logger.error('Error in findSimilarAndGenerateSuggestion:', error);
+
+		return { similarStatements: [] };
 	}
 }
 
@@ -200,11 +211,15 @@ return { similarStatements: [] };
 export async function findSimilarToStatement(
 	targetStatement: Statement,
 	allStatements: Statement[],
-	questionContext: string
+	questionContext: string,
 ): Promise<StatementWithEvaluation[]> {
-	const result = await findSimilarAndGenerateSuggestion(targetStatement, allStatements, questionContext);
-	
-return result.similarStatements;
+	const result = await findSimilarAndGenerateSuggestion(
+		targetStatement,
+		allStatements,
+		questionContext,
+	);
+
+	return result.similarStatements;
 }
 
 /**
@@ -216,17 +231,17 @@ return result.similarStatements;
  */
 export async function generateIntegratedSuggestion(
 	statements: StatementWithEvaluation[],
-	questionContext: string
+	questionContext: string,
 ): Promise<IntegratedSuggestionResult> {
 	if (statements.length === 0) {
-		throw new Error("No statements provided for integration");
+		throw new Error('No statements provided for integration');
 	}
 
 	if (statements.length === 1) {
 		// Just return the single statement
 		return {
 			title: statements[0].statement,
-			description: statements[0].paragraphsText || "",
+			description: statements[0].paragraphsText || '',
 		};
 	}
 
@@ -238,20 +253,21 @@ export async function generateIntegratedSuggestion(
 	const isHebrew = /[\u0590-\u05FF]/.test(sampleText);
 	const isArabic = /[\u0600-\u06FF]/.test(sampleText);
 	const languageInstruction = isHebrew
-		? "Write the output in Hebrew."
+		? 'Write the output in Hebrew.'
 		: isArabic
-			? "Write the output in Arabic."
-			: "Write the output in the same language as the input suggestions.";
+			? 'Write the output in Arabic.'
+			: 'Write the output in the same language as the input suggestions.';
 
 	// Format statements with their weights
 	const statementsWithWeights = statements.map((s) => {
-		const weight = totalEvaluators > 0
-			? Math.round((s.numberOfEvaluators / totalEvaluators) * 100)
-			: Math.round(100 / statements.length);
-		
-return {
+		const weight =
+			totalEvaluators > 0
+				? Math.round((s.numberOfEvaluators / totalEvaluators) * 100)
+				: Math.round(100 / statements.length);
+
+		return {
 			title: s.statement,
-			description: s.paragraphsText || "",
+			description: s.paragraphsText || '',
 			evaluators: s.numberOfEvaluators,
 			consensus: s.consensus,
 			weight: weight,
@@ -264,14 +280,14 @@ CONTEXT/QUESTION: "${questionContext}"
 
 SUGGESTIONS TO MERGE (with their relative importance based on community support):
 ${statementsWithWeights
-		.map(
-			(s, i) =>
-				`${i + 1}. Title: "${s.title}"
-   ${s.description ? `Description: "${s.description}"` : "No description"}
+	.map(
+		(s, i) =>
+			`${i + 1}. Title: "${s.title}"
+   ${s.description ? `Description: "${s.description}"` : 'No description'}
    Support: ${s.evaluators} evaluators, ${s.consensus.toFixed(2)} consensus score
-   Weight: ${s.weight}% (give this much attention to this suggestion's content)`
-		)
-		.join("\n\n")}
+   Weight: ${s.weight}% (give this much attention to this suggestion's content)`,
+	)
+	.join('\n\n')}
 
 TASK: Create a single merged suggestion that:
 1. Combines the key ideas from all suggestions
@@ -294,27 +310,30 @@ Return JSON format:
 		let responseText = result.response.text();
 
 		// Strip markdown code blocks if present
-		responseText = responseText.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+		responseText = responseText
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
 
-		logger.info("AI integration result:", { responseText: responseText.substring(0, 300) });
+		logger.info('AI integration result:', { responseText: responseText.substring(0, 300) });
 
 		const parsed = JSON.parse(responseText);
 
-		if (parsed.title && typeof parsed.title === "string") {
+		if (parsed.title && typeof parsed.title === 'string') {
 			return {
 				title: parsed.title,
-				description: parsed.description || "",
+				description: parsed.description || '',
 			};
 		}
 
 		// Fallback: combine titles
-		logger.warn("AI returned invalid format, using fallback");
-		
-return createFallbackIntegratedSuggestion(statements);
+		logger.warn('AI returned invalid format, using fallback');
+
+		return createFallbackIntegratedSuggestion(statements);
 	} catch (error) {
-		logger.error("Error generating integrated suggestion:", error);
-		
-return createFallbackIntegratedSuggestion(statements);
+		logger.error('Error generating integrated suggestion:', error);
+
+		return createFallbackIntegratedSuggestion(statements);
 	}
 }
 
@@ -322,7 +341,7 @@ return createFallbackIntegratedSuggestion(statements);
  * Creates a fallback integrated suggestion when AI fails
  */
 function createFallbackIntegratedSuggestion(
-	statements: StatementWithEvaluation[]
+	statements: StatementWithEvaluation[],
 ): IntegratedSuggestionResult {
 	// Sort by evaluators to get the most supported one first
 	const sorted = [...statements].sort((a, b) => b.numberOfEvaluators - a.numberOfEvaluators);
@@ -334,19 +353,23 @@ function createFallbackIntegratedSuggestion(
 	if (statements.length === 1) {
 		return {
 			title: primary.statement,
-			description: primary.paragraphsText || "",
+			description: primary.paragraphsText || '',
 		};
 	}
 
 	// Create a combined title from the top suggestions
 	const isHebrew = /[\u0590-\u05FF]/.test(primary.statement);
-	const combinedPrefix = isHebrew ? "שילוב: " : "Combined: ";
+	const combinedPrefix = isHebrew ? 'שילוב: ' : 'Combined: ';
 
 	return {
-		title: primary.statement.length > 80
-			? primary.statement.substring(0, 77) + "..."
-			: primary.statement,
-		description: `${combinedPrefix}${sorted.slice(0, 3).map((s) => s.statement).join(" + ")}`,
+		title:
+			primary.statement.length > 80
+				? primary.statement.substring(0, 77) + '...'
+				: primary.statement,
+		description: `${combinedPrefix}${sorted
+			.slice(0, 3)
+			.map((s) => s.statement)
+			.join(' + ')}`,
 	};
 }
 

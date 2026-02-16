@@ -7,27 +7,21 @@ export default function MemberRejection() {
 
 	return (
 		<div className={styles.memberRejectionPage}>
-			<div className='memberRejectionPage__wrapper'>
-				<img
-					src={image}
-					alt='member-rejection-image'
-					width={isMobile ? '90%' : '50%'}
-				/>
-				<p className='memberRejectionPage__wrapper__apologize'>
+			<div className="memberRejectionPage__wrapper">
+				<img src={image} alt="member-rejection-image" width={isMobile ? '90%' : '50%'} />
+				<p className="memberRejectionPage__wrapper__apologize">
 					We apologize for the inconvenience
 				</p>
 				<p
-					className='memberRejectionPage__wrapper__explanation'
+					className="memberRejectionPage__wrapper__explanation"
 					style={{ width: isMobile ? '80%' : '60%' }}
 				>
-					unfortunately participation in this group is restricted at
-					this time
+					unfortunately participation in this group is restricted at this time
 				</p>
-				<p className='memberRejectionPage__wrapper__action'>
-					please get in touch with the group admin for inquiries about
-					your participation status
+				<p className="memberRejectionPage__wrapper__action">
+					please get in touch with the group admin for inquiries about your participation status
 				</p>
-				<button className='btn' onClick={async () => await logOut()}>
+				<button className="btn" onClick={async () => await logOut()}>
 					Back home
 				</button>
 			</div>

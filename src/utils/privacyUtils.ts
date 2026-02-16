@@ -62,7 +62,7 @@ export interface PrivacyFilterResult {
  */
 export function meetsKAnonymity(
 	groupSize: number,
-	k: number = PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD
+	k: number = PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD,
 ): boolean {
 	return groupSize >= k;
 }
@@ -75,7 +75,7 @@ export function meetsKAnonymity(
  */
 export function calculateEvaluationStats(
 	evaluations: number[],
-	k: number = PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD
+	k: number = PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD,
 ): GroupEvaluationStats {
 	const meetsK = evaluations.length >= k;
 
@@ -121,7 +121,7 @@ export function calculateEvaluationStats(
  * @returns Map of optionValue -> Set of userIds
  */
 export function groupUsersByDemographic(
-	answers: Array<{ userId: string; answer: string | string[] | undefined }>
+	answers: Array<{ userId: string; answer: string | string[] | undefined }>,
 ): Map<string, Set<string>> {
 	const groups = new Map<string, Set<string>>();
 
@@ -151,7 +151,7 @@ export function groupUsersByDemographic(
  */
 export function filterEvaluationsForPrivacy(
 	evaluations: number[],
-	k: number = PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD
+	k: number = PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD,
 ): PrivacyFilterResult {
 	const meetsK = evaluations.length >= k;
 
@@ -176,10 +176,7 @@ export function filterEvaluationsForPrivacy(
  * @param suppressedCount - Number of groups that had data suppressed
  * @returns Privacy notice string
  */
-export function generatePrivacyNotice(
-	k: number,
-	suppressedCount: number
-): string {
+export function generatePrivacyNotice(k: number, suppressedCount: number): string {
 	return (
 		`This export uses k-anonymity (k=${k}) to protect user privacy. ` +
 		`Demographic breakdowns are only shown when ${k} or more users share the same demographic characteristic. ` +

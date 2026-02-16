@@ -14,7 +14,7 @@ import styles from './NavButtons.module.scss';
 interface NavButtonsProps {
 	parentStatement?: Statement;
 	screen: string | undefined;
-	handleNavigation: (path: string, screen?: "screen") => void;
+	handleNavigation: (path: string, screen?: 'screen') => void;
 	headerStyle: { color: string; backgroundColor: string };
 	allowNavigation: boolean;
 	statement?: Statement;

@@ -28,14 +28,10 @@ const SimpleEvaluation: FC<Props> = ({
 	// number of people who gave a good evaluation
 	const [proVotesCount, setProVotesCount] = useState(initialProVotesCount);
 
-	const evaluation = useAppSelector(
-		evaluationSelector(statement.statementId)
-	);
+	const evaluation = useAppSelector(evaluationSelector(statement.statementId));
 
 	const { consensus } = statement;
-	const consensusToDisplay = consensus
-		? Math.round(consensus * 100) / 100
-		: 0;
+	const consensusToDisplay = consensus ? Math.round(consensus * 100) / 100 : 0;
 
 	useEffect(() => {
 		setConVotesCount(initialContVotesCount);
@@ -44,15 +40,12 @@ const SimpleEvaluation: FC<Props> = ({
 
 	return (
 		<div className={styles.simpleEvaluation}>
-			<div
-				className={styles.evaluationBox}
-				style={{ flexDirection: rowDirection }}
-			>
+			<div className={styles.evaluationBox} style={{ flexDirection: rowDirection }}>
 				{shouldDisplayScore && <span>{conVotesCount}</span>}
 				<div className={styles.thumbIcon}>
 					<Thumb
 						evaluation={evaluation || 0}
-						upDown='down'
+						upDown="down"
 						statement={statement}
 						setConVote={setConVotesCount}
 						setProVote={setProVotesCount}
@@ -62,7 +55,7 @@ const SimpleEvaluation: FC<Props> = ({
 				<div className={styles.thumbIcon}>
 					<Thumb
 						evaluation={evaluation || 0}
-						upDown='up'
+						upDown="up"
 						statement={statement}
 						setProVote={setProVotesCount}
 						setConVote={setConVotesCount}
@@ -71,9 +64,7 @@ const SimpleEvaluation: FC<Props> = ({
 				</div>
 				{shouldDisplayScore && <span>{proVotesCount}</span>}
 			</div>
-			{shouldDisplayScore && (
-				<div className={styles.totalEvaluations}>{consensusToDisplay}</div>
-			)}
+			{shouldDisplayScore && <div className={styles.totalEvaluations}>{consensusToDisplay}</div>}
 		</div>
 	);
 };

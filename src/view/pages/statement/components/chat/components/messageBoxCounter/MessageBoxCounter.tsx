@@ -4,9 +4,7 @@ import { RootState } from '@/redux/store';
 import styles from './message-box-counter.module.scss';
 
 const MessageBoxCounter = () => {
-	const totalMessageBoxes = useSelector((state: RootState) =>
-		totalMessageBoxesSelector(state)
-	);
+	const totalMessageBoxes = useSelector((state: RootState) => totalMessageBoxesSelector(state));
 
 	// Disable eslint rule for the next line
 

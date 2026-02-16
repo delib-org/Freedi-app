@@ -18,7 +18,7 @@ function NavigationButtons({
 	if (!hasChat) return null;
 
 	return (
-		<button onClick={() => handleNavigation('chat', "screen")} >
+		<button onClick={() => handleNavigation('chat', 'screen')}>
 			<Chat color={headerStyle.color} />
 		</button>
 	);

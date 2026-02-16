@@ -86,10 +86,7 @@ const Textarea: React.FC<TextAreaProps> = ({
 				/>
 			</div>
 			{typeof maxLength === 'number' && (
-				<div
-					className={styles.charCounter}
-					style={{ direction: dir === 'rtl' ? 'rtl' : 'ltr' }}
-				>
+				<div className={styles.charCounter} style={{ direction: dir === 'rtl' ? 'rtl' : 'ltr' }}>
 					{value.length} / {maxLength} {t('characters')}
 				</div>
 			)}

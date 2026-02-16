@@ -12,18 +12,14 @@ const EXACT_PUBLIC_ROUTES = ['/', '/start'] as const;
  * Route prefixes that allow unauthenticated access.
  * These routes handle public content (statement routes may have public access).
  */
-const PUBLIC_ROUTE_PREFIXES = [
-	'/statement/',
-	'/stage/',
-	'/statement-screen/',
-] as const;
+const PUBLIC_ROUTE_PREFIXES = ['/statement/', '/stage/', '/statement-screen/'] as const;
 
 /**
  * Check if a route allows unauthenticated access.
  */
 const isPublicRoute = (pathname: string): boolean => {
 	// Check exact matches first
-	if (EXACT_PUBLIC_ROUTES.includes(pathname as typeof EXACT_PUBLIC_ROUTES[number])) {
+	if (EXACT_PUBLIC_ROUTES.includes(pathname as (typeof EXACT_PUBLIC_ROUTES)[number])) {
 		return true;
 	}
 
@@ -66,10 +62,7 @@ export const useAuthRedirect = (authState: AuthState): AuthRedirectResult => {
 			const historyData = {
 				pathname: location.pathname,
 			};
-			localStorage.setItem(
-				LocalStorageObjects.InitialRoute,
-				JSON.stringify(historyData)
-			);
+			localStorage.setItem(LocalStorageObjects.InitialRoute, JSON.stringify(historyData));
 
 			setIsRedirecting(true);
 			navigate('/start', { replace: true });

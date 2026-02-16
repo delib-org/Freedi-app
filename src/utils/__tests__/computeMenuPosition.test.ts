@@ -24,7 +24,7 @@ describe('computeMenuPosition', () => {
 		left: number,
 		top: number,
 		width: number = 100,
-		height: number = 40
+		height: number = 40,
 	): DOMRect => ({
 		left,
 		top,
@@ -39,13 +39,29 @@ describe('computeMenuPosition', () => {
 
 	beforeEach(() => {
 		// Set consistent window size
-		Object.defineProperty(window, 'innerWidth', { value: 1024, writable: true, configurable: true });
-		Object.defineProperty(window, 'innerHeight', { value: 768, writable: true, configurable: true });
+		Object.defineProperty(window, 'innerWidth', {
+			value: 1024,
+			writable: true,
+			configurable: true,
+		});
+		Object.defineProperty(window, 'innerHeight', {
+			value: 768,
+			writable: true,
+			configurable: true,
+		});
 	});
 
 	afterEach(() => {
-		Object.defineProperty(window, 'innerWidth', { value: originalInnerWidth, writable: true, configurable: true });
-		Object.defineProperty(window, 'innerHeight', { value: originalInnerHeight, writable: true, configurable: true });
+		Object.defineProperty(window, 'innerWidth', {
+			value: originalInnerWidth,
+			writable: true,
+			configurable: true,
+		});
+		Object.defineProperty(window, 'innerHeight', {
+			value: originalInnerHeight,
+			writable: true,
+			configurable: true,
+		});
 	});
 
 	describe('basic positioning', () => {
@@ -144,7 +160,11 @@ describe('computeMenuPosition', () => {
 
 	describe('mobile positioning', () => {
 		beforeEach(() => {
-			Object.defineProperty(window, 'innerWidth', { value: 375, writable: true, configurable: true });
+			Object.defineProperty(window, 'innerWidth', {
+				value: 375,
+				writable: true,
+				configurable: true,
+			});
 		});
 
 		it('should center menu on mobile', () => {
@@ -238,7 +258,11 @@ describe('computeMenuPosition', () => {
 		});
 
 		it('should clamp vertical position when menu is too tall', () => {
-			Object.defineProperty(window, 'innerHeight', { value: 400, writable: true, configurable: true });
+			Object.defineProperty(window, 'innerHeight', {
+				value: 400,
+				writable: true,
+				configurable: true,
+			});
 
 			const menuEl = createMockMenuEl(200, 350);
 			const triggerRect = createMockRect(100, 200, 100);

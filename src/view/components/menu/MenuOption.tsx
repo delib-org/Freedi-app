@@ -1,7 +1,7 @@
-import { ComponentProps, FC, ReactNode } from "react";
-import styles from "./MenuOption.module.scss";
+import { ComponentProps, FC, ReactNode } from 'react';
+import styles from './MenuOption.module.scss';
 
-interface MenuOptionProps extends ComponentProps<"button"> {
+interface MenuOptionProps extends ComponentProps<'button'> {
 	onOptionClick: () => void;
 	label: string;
 	isOptionSelected?: boolean;
@@ -22,18 +22,21 @@ const MenuOption: FC<MenuOptionProps> = ({
 		<button
 			className={[
 				styles.menuOption,
-				isOptionSelected ? styles.selected : "",
-				className || "" // ✅ forward className
-			].join(" ")}
-			style={style} onClick={onOptionClick}
+				isOptionSelected ? styles.selected : '',
+				className || '', // ✅ forward className
+			].join(' ')}
+			style={style}
+			onClick={onOptionClick}
 			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
+				if (e.key === 'Enter' || e.key === ' ') {
 					onOptionClick();
 				}
 			}}
 		>
 			{icon}
-			<div className={styles.label} style={style}>{label}</div>
+			<div className={styles.label} style={style}>
+				{label}
+			</div>
 			{children}
 		</button>
 	);

@@ -1,4 +1,4 @@
-import firebaseConfig from "@/controllers/db/configKey";
+import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig } from '@freedi/shared-types';
 
 // Helper to get environment variables
@@ -12,7 +12,7 @@ const getImproveSuggestionEndpoint = () => {
 	return location.hostname === 'localhost'
 		? `http://localhost:5001/${firebaseConfig.projectId}/${functionConfig.region}/improveSuggestion`
 		: getEnvVar('VITE_APP_IMPROVE_SUGGESTION_ENDPOINT') ||
-		  `https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/improveSuggestion`;
+				`https://${functionConfig.region}-${firebaseConfig.projectId}.cloudfunctions.net/improveSuggestion`;
 };
 
 interface ImproveSuggestionRequest {
@@ -43,7 +43,7 @@ export async function improveSuggestion(
 	description?: string,
 	instructions?: string,
 	parentTitle?: string,
-	parentDescription?: string
+	parentDescription?: string,
 ): Promise<ImproveSuggestionResponse> {
 	try {
 		const endpoint = getImproveSuggestionEndpoint();
@@ -66,9 +66,7 @@ export async function improveSuggestion(
 
 		if (!response.ok) {
 			const errorData = await response.json().catch(() => ({}));
-			throw new Error(
-				errorData.message || `Failed to improve suggestion: ${response.statusText}`
-			);
+			throw new Error(errorData.message || `Failed to improve suggestion: ${response.statusText}`);
 		}
 
 		const data: ImproveSuggestionResponse = await response.json();
@@ -100,7 +98,7 @@ export async function improveSuggestionWithTimeout(
 	instructions?: string,
 	parentTitle?: string,
 	parentDescription?: string,
-	timeoutMs: number = 45000
+	timeoutMs: number = 45000,
 ): Promise<ImproveSuggestionResponse> {
 	const timeoutPromise = new Promise<never>((_, reject) => {
 		setTimeout(() => reject(new Error('Improvement request timed out')), timeoutMs);

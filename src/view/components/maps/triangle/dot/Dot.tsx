@@ -10,8 +10,8 @@ interface Props {
 
 const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 	const { t } = useTranslation();
-	const randomX = useRef<number>((Math.random()) * 0.04);
-	const randomY = useRef<number>((Math.random()) * 0.04);
+	const randomX = useRef<number>(Math.random() * 0.04);
+	const randomY = useRef<number>(Math.random() * 0.04);
 	const [show, setShow] = useState(false);
 
 	// Early return if evaluation data is missing
@@ -41,12 +41,8 @@ const Dot: FC<Props> = ({ subStatement, maxEvaluators }) => {
 			onMouseLeave={() => handleShowTooltip(false)}
 		>
 			{show && (
-				<div
-					className={`${styles.tooltip} ${left > 0.5 && styles['tooltip--left']}`}
-				>
-					<div className={styles['tooltip__title']}>
-						{subStatement.statement}
-					</div>
+				<div className={`${styles.tooltip} ${left > 0.5 && styles['tooltip--left']}`}>
+					<div className={styles['tooltip__title']}>{subStatement.statement}</div>
 					<div>
 						{t('Support')}: {sumPro}
 					</div>
@@ -76,10 +72,7 @@ const agreementColors = [
 	'--range-positive-100',
 ];
 
-function fromAgreementToColor(
-	agreement: number,
-	agreementColors: string[]
-): string | undefined {
+function fromAgreementToColor(agreement: number, agreementColors: string[]): string | undefined {
 	try {
 		if (agreement < -1 || agreement > 1) {
 			throw new Error('Agreement must be between -1 and 1');
@@ -87,9 +80,7 @@ function fromAgreementToColor(
 
 		const adjustAgreement = (agreement + 1) / 2;
 
-		const index = Math.floor(
-			adjustAgreement * agreementColors.length * 0.99
-		);
+		const index = Math.floor(adjustAgreement * agreementColors.length * 0.99);
 
 		return agreementColors[index];
 	} catch (error) {

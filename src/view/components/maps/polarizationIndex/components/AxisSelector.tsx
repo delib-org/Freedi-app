@@ -8,11 +8,7 @@ interface AxisSelectorProps {
 	onAxisSelect: (index: number) => void;
 }
 
-export const AxisSelector: React.FC<AxisSelectorProps> = ({
-	axes,
-	selectedAxis,
-	onAxisSelect
-}) => {
+export const AxisSelector: React.FC<AxisSelectorProps> = ({ axes, selectedAxis, onAxisSelect }) => {
 	return (
 		<div className={styles.axisSelector}>
 			{axes.map((axis, index) => (

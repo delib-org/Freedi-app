@@ -10,7 +10,7 @@ import { notificationService } from '@/services/notificationService';
 const FCMTokenDisplay: React.FC = () => {
 	const [token, setToken] = useState<string | null>(null);
 	const [expanded, setExpanded] = useState(false);
-	const [userInfo, setUserInfo] = useState<{ uid: string, email: string } | null>(null);
+	const [userInfo, setUserInfo] = useState<{ uid: string; email: string } | null>(null);
 
 	// Get the FCM token on component mount
 	useEffect(() => {
@@ -21,7 +21,7 @@ const FCMTokenDisplay: React.FC = () => {
 				if (auth.currentUser) {
 					setUserInfo({
 						uid: auth.currentUser.uid,
-						email: auth.currentUser.email || 'No email'
+						email: auth.currentUser.email || 'No email',
 					});
 
 					// Initialize notification service if permission is granted
@@ -59,11 +59,12 @@ const FCMTokenDisplay: React.FC = () => {
 	// Handle copying token to clipboard
 	const handleCopyToken = () => {
 		if (token) {
-			navigator.clipboard.writeText(token)
+			navigator.clipboard
+				.writeText(token)
 				.then(() => {
 					alert('Token copied to clipboard!');
 				})
-				.catch(err => {
+				.catch((err) => {
 					console.error('Error copying token:', err);
 				});
 		}
@@ -72,14 +73,14 @@ const FCMTokenDisplay: React.FC = () => {
 	// Test sending a notification
 	const handleTestNotification = () => {
 		if (Notification.permission === 'granted') {
-			navigator.serviceWorker.ready.then(registration => {
+			navigator.serviceWorker.ready.then((registration) => {
 				registration.showNotification('Test Notification', {
 					body: 'This is a test notification from FCMTokenDisplay',
 					icon: '/icons/logo-192px.png',
 					badge: '/icons/logo-48px.png',
 					//@ts-ignore
 					vibrate: [100, 50, 100],
-					requireInteraction: true
+					requireInteraction: true,
 				});
 			});
 		} else {
@@ -99,7 +100,9 @@ const FCMTokenDisplay: React.FC = () => {
 		<div className={styles.fcmTokenDisplay}>
 			<div className="fcm-token-display-header">
 				<h3>FCM Token for Testing</h3>
-				<button onClick={() => setExpanded(false)} className={styles.closeButton}>×</button>
+				<button onClick={() => setExpanded(false)} className={styles.closeButton}>
+					×
+				</button>
 			</div>
 
 			<div className="fcm-token-display-content">
@@ -112,41 +115,31 @@ const FCMTokenDisplay: React.FC = () => {
 
 				{userInfo && (
 					<div className={styles.fcmTokenUser}>
-						<p><strong>User ID:</strong> {userInfo.uid}</p>
-						<p><strong>Email:</strong> {userInfo.email}</p>
+						<p>
+							<strong>User ID:</strong> {userInfo.uid}
+						</p>
+						<p>
+							<strong>Email:</strong> {userInfo.email}
+						</p>
 					</div>
 				)}
 
 				{Notification.permission !== 'granted' ? (
-					<button
-						onClick={handleRequestPermission}
-						className={styles.requestPermissionButton}
-					>
+					<button onClick={handleRequestPermission} className={styles.requestPermissionButton}>
 						Request Notification Permission
 					</button>
 				) : (
 					<>
 						<div className={styles.fcmTokenValue}>
-							<textarea
-								readOnly
-								value={token || 'No token available'}
-								rows={4}
-							/>
+							<textarea readOnly value={token || 'No token available'} rows={4} />
 						</div>
 
 						<div className={styles.fcmTokenActions}>
-							<button
-								onClick={handleCopyToken}
-								disabled={!token}
-								className={styles.copyButton}
-							>
+							<button onClick={handleCopyToken} disabled={!token} className={styles.copyButton}>
 								Copy Token
 							</button>
 
-							<button
-								onClick={handleTestNotification}
-								className={styles.testButton}
-							>
+							<button onClick={handleTestNotification} className={styles.testButton}>
 								Test Notification
 							</button>
 						</div>

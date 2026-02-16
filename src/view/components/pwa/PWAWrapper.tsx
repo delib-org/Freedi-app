@@ -57,7 +57,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				// Tell the service worker to clear displayed notifications (not the badge)
 				if (navigator.serviceWorker.controller) {
 					navigator.serviceWorker.controller.postMessage({
-						type: 'CLEAR_NOTIFICATIONS'
+						type: 'CLEAR_NOTIFICATIONS',
 					});
 				}
 			}
@@ -73,13 +73,16 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				const reloadPage = () => location.reload();
 
 				if (typeof caches !== 'undefined') {
-					caches.keys().then((names) => {
-						names.forEach((name) => {
-							if (name === 'static-resources') {
-								caches.delete(name);
-							}
-						});
-					}).finally(reloadPage);
+					caches
+						.keys()
+						.then((names) => {
+							names.forEach((name) => {
+								if (name === 'static-resources') {
+									caches.delete(name);
+								}
+							});
+						})
+						.finally(reloadPage);
 				} else {
 					reloadPage();
 				}
@@ -92,122 +95,136 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		// Explicitly register the Firebase Messaging Service Worker
 		// Register on iOS only if it's an installed PWA with Web Push support (iOS 16.4+)
-		const shouldRegisterFirebaseSW = 'serviceWorker' in navigator &&
-			(!isIOS() || isIOSWebPushSupported());
+		const shouldRegisterFirebaseSW =
+			'serviceWorker' in navigator && (!isIOS() || isIOSWebPushSupported());
 
 		if (shouldRegisterFirebaseSW) {
 			// First check if it's already registered
-			navigator.serviceWorker.getRegistrations().then(registrations => {
-				const firebaseSW = registrations.find(r =>
-					r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
-					r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
-					r.waiting?.scriptURL.includes('firebase-messaging-sw.js')
+			navigator.serviceWorker.getRegistrations().then((registrations) => {
+				const firebaseSW = registrations.find(
+					(r) =>
+						r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
+						r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
+						r.waiting?.scriptURL.includes('firebase-messaging-sw.js'),
 				);
 
 				if (!firebaseSW) {
 					// Register Firebase Messaging SW with Firebase's default scope
 					// This allows it to coexist with the PWA's main sw.js at root scope
-					navigator.serviceWorker.register('/firebase-messaging-sw.js', {
-						scope: '/firebase-cloud-messaging-push-scope'
-					})
-					.then(registration => {
-						console.info('[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope');
+					navigator.serviceWorker
+						.register('/firebase-messaging-sw.js', {
+							scope: '/firebase-cloud-messaging-push-scope',
+						})
+						.then((registration) => {
+							console.info(
+								'[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope',
+							);
 
-						// Wait for activation
-						if (registration.installing) {
-							registration.installing.addEventListener('statechange', function() {
-								if (this.state === 'activated') {
-									console.info('[PWAWrapper] Firebase Messaging SW activated');
-								}
-							});
-						}
-					})
-					.catch(error => {
-						console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
-					});
+							// Wait for activation
+							if (registration.installing) {
+								registration.installing.addEventListener('statechange', function () {
+									if (this.state === 'activated') {
+										console.info('[PWAWrapper] Firebase Messaging SW activated');
+									}
+								});
+							}
+						})
+						.catch((error) => {
+							console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
+						});
 				} else {
 					console.info('[PWAWrapper] Firebase Messaging SW already registered');
 				}
 			});
 		} else if (isIOS() && !isInstalledPWA()) {
-			console.info('[PWAWrapper] iOS detected but not installed as PWA - push notifications require installing the app to home screen');
+			console.info(
+				'[PWAWrapper] iOS detected but not installed as PWA - push notifications require installing the app to home screen',
+			);
 		}
 
 		registerSW({
-				immediate: true, // Register immediately
-				onNeedRefresh() {
-					// Prompt mode: let user decide when to update
-					console.info('New app version available. Refresh to update.');
-				},
-				onOfflineReady() {
-					console.info('App ready to work offline');
-				},
-				onRegistered() {
-					// Listen for controller changes (new SW taking control)
-					if (navigator.serviceWorker) {
-						navigator.serviceWorker.addEventListener('controllerchange', () => {
-							// New service worker has taken control
-							// Instead of reloading immediately, just log it
-							// The autoUpdate mode will handle updates smoothly
-							console.info('New service worker has taken control');
-						});
-					}
-				},
-				onRegisteredSW(_swUrl, registration) {
-					// Service Worker registered
+			immediate: true, // Register immediately
+			onNeedRefresh() {
+				// Prompt mode: let user decide when to update
+				console.info('New app version available. Refresh to update.');
+			},
+			onOfflineReady() {
+				console.info('App ready to work offline');
+			},
+			onRegistered() {
+				// Listen for controller changes (new SW taking control)
+				if (navigator.serviceWorker) {
+					navigator.serviceWorker.addEventListener('controllerchange', () => {
+						// New service worker has taken control
+						// Instead of reloading immediately, just log it
+						// The autoUpdate mode will handle updates smoothly
+						console.info('New service worker has taken control');
+					});
+				}
+			},
+			onRegisteredSW(_swUrl, registration) {
+				// Service Worker registered
 
-					// Check for updates periodically
-					// Using a reasonable interval to avoid excessive update prompts
-					const updateInterval = setInterval(() => {
+				// Check for updates periodically
+				// Using a reasonable interval to avoid excessive update prompts
+				const updateInterval = setInterval(
+					() => {
 						// Check for Service Worker updates
-						registration?.update().catch(err => {
+						registration?.update().catch((err) => {
 							console.error('Error updating service worker:', err);
 						});
-					}, 4 * 60 * 60 * 1000); // Check every 4 hours to reduce update frequency
+					},
+					4 * 60 * 60 * 1000,
+				); // Check every 4 hours to reduce update frequency
 
-					// Check if we should show notification prompt (but not in MassConsensus)
-					if ('Notification' in window && Notification.permission === 'default' && !checkIfInMassConsensus()) {
-						// Wait a bit before showing the notification prompt
-						setTimeout(() => {
-							// Double-check we're not in MassConsensus when the timer fires
-							if (!checkIfInMassConsensus()) {
-								setShowNotificationPrompt(true);
-							}
-						}, 5000);
-					}
-
-					// Clean up interval and event listener when component unmounts
-					return () => {
-						clearInterval(updateInterval);
-						document.removeEventListener('visibilitychange', handleVisibilityChange);
-						if ('serviceWorker' in navigator) {
-							navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+				// Check if we should show notification prompt (but not in MassConsensus)
+				if (
+					'Notification' in window &&
+					Notification.permission === 'default' &&
+					!checkIfInMassConsensus()
+				) {
+					// Wait a bit before showing the notification prompt
+					setTimeout(() => {
+						// Double-check we're not in MassConsensus when the timer fires
+						if (!checkIfInMassConsensus()) {
+							setShowNotificationPrompt(true);
 						}
-					};
-				},
-				onRegisterError(error) {
-					console.error('Service worker registration error:', error);
+					}, 5000);
 				}
-			});
 
-			// Store update function for manual updates if needed
-			
-			// Note: Removed automatic update on online event to prevent refresh loops
+				// Clean up interval and event listener when component unmounts
+				return () => {
+					clearInterval(updateInterval);
+					document.removeEventListener('visibilitychange', handleVisibilityChange);
+					if ('serviceWorker' in navigator) {
+						navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+					}
+				};
+			},
+			onRegisterError(error) {
+				console.error('Service worker registration error:', error);
+			},
+		});
 
-			// Listen for notification permission changes
-			const handlePermissionChange = () => {
-				if (Notification.permission !== 'default') {
-					setShowNotificationPrompt(false);
-				}
-			};
+		// Store update function for manual updates if needed
 
-			// Try to listen for permission changes (not supported in all browsers)
-			if ('permissions' in navigator) {
-				navigator.permissions.query({ name: 'notifications' as PermissionName })
-					.then(permissionStatus => {
-						permissionStatus.onchange = handlePermissionChange;
-					})
-					.catch(console.error);
+		// Note: Removed automatic update on online event to prevent refresh loops
+
+		// Listen for notification permission changes
+		const handlePermissionChange = () => {
+			if (Notification.permission !== 'default') {
+				setShowNotificationPrompt(false);
+			}
+		};
+
+		// Try to listen for permission changes (not supported in all browsers)
+		if ('permissions' in navigator) {
+			navigator.permissions
+				.query({ name: 'notifications' as PermissionName })
+				.then((permissionStatus) => {
+					permissionStatus.onchange = handlePermissionChange;
+				})
+				.catch(console.error);
 		}
 	}, []);
 

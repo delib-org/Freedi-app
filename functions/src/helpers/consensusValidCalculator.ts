@@ -12,17 +12,17 @@ export interface ConsensusValidConfig {
 const DEFAULT_CONFIG: ConsensusValidConfig = {
 	consensusWeight: 0.5,
 	corroborationWeight: 0.5,
-	consensusSigmoidFactor: 20
+	consensusSigmoidFactor: 20,
 };
 
 // Hebbian score constants for Popperian-Bayesian formula
 const HEBBIAN_CONFIG = {
-	FALSIFICATION_STRENGTH: 0.7,   // Max 70% reduction per comment
-	CORROBORATION_STRENGTH: 0.15,  // Max ~6% boost per comment
-	RECOVERY_RESISTANCE: 0.6,      // Slower recovery from low scores
-	FLOOR: 0.05,                   // Never completely dead
-	CEILING: 0.95,                 // Never fully proven
-	THRESHOLD: 0.6                 // Corroborated threshold
+	FALSIFICATION_STRENGTH: 0.7, // Max 70% reduction per comment
+	CORROBORATION_STRENGTH: 0.15, // Max ~6% boost per comment
+	RECOVERY_RESISTANCE: 0.6, // Slower recovery from low scores
+	FLOOR: 0.05, // Never completely dead
+	CEILING: 0.95, // Never fully proven
+	THRESHOLD: 0.6, // Corroborated threshold
 };
 
 /**
@@ -73,15 +73,10 @@ export function migrateCorroborationScore(evidence: Evidence): number {
 export function updateHebbianScore(
 	currentScore: number,
 	corroborationScore: number,
-	weight: number
+	weight: number,
 ): number {
-	const {
-		FALSIFICATION_STRENGTH,
-		CORROBORATION_STRENGTH,
-		RECOVERY_RESISTANCE,
-		FLOOR,
-		CEILING
-	} = HEBBIAN_CONFIG;
+	const { FALSIFICATION_STRENGTH, CORROBORATION_STRENGTH, RECOVERY_RESISTANCE, FLOOR, CEILING } =
+		HEBBIAN_CONFIG;
 
 	const isFalsifying = corroborationScore < 0.5;
 	const isCorroborating = corroborationScore > 0.5;
@@ -100,7 +95,8 @@ export function updateHebbianScore(
 		const corroborationStrength = (corroborationScore - 0.5) * 2;
 		const headroom = CEILING - currentScore;
 		const resistanceFactor = 1 - RECOVERY_RESISTANCE * (1 - currentScore);
-		const boost = corroborationStrength * CORROBORATION_STRENGTH * weight * headroom * resistanceFactor;
+		const boost =
+			corroborationStrength * CORROBORATION_STRENGTH * weight * headroom * resistanceFactor;
 		newScore = currentScore + boost;
 	}
 
@@ -120,10 +116,7 @@ export function updateHebbianScore(
  * @param evidenceCount - Number of evidence posts
  * @returns Normalized corroboration level [0, 1]
  */
-export function calculateCorroborationLevel(
-	totalScore: number,
-	evidenceCount: number
-): number {
+export function calculateCorroborationLevel(totalScore: number, evidenceCount: number): number {
 	// Special case: No evidence yet = neutral/agnostic
 	if (evidenceCount === 0) {
 		return 0.5;
@@ -146,7 +139,7 @@ export function calculateCorroborationLevel(
  */
 export function normalizeConsensus(
 	consensus: number,
-	sigmoidFactor: number = DEFAULT_CONFIG.consensusSigmoidFactor
+	sigmoidFactor: number = DEFAULT_CONFIG.consensusSigmoidFactor,
 ): number {
 	return 1 / (1 + Math.exp(-consensus / sigmoidFactor));
 }
@@ -170,21 +163,19 @@ export function normalizeConsensus(
 export function calculateConsensusValid(
 	consensus: number,
 	popperHebbianScore: PopperHebbianScore | undefined,
-	config: Partial<ConsensusValidConfig> = {}
+	config: Partial<ConsensusValidConfig> = {},
 ): number {
 	const finalConfig = { ...DEFAULT_CONFIG, ...config };
 
 	// Normalize consensus to [0, 1]
-	const normalizedConsensus = normalizeConsensus(
-		consensus,
-		finalConfig.consensusSigmoidFactor
-	);
+	const normalizedConsensus = normalizeConsensus(consensus, finalConfig.consensusSigmoidFactor);
 
 	// Get Hebbian score (default to 0.6 PRIOR if no Popper-Hebbian score)
 	// Use hebbianScore if available, fallback to corroborationLevel for backward compatibility
-	const hebbianScore = (popperHebbianScore as { hebbianScore?: number })?.hebbianScore
-		?? popperHebbianScore?.corroborationLevel
-		?? 0.6;
+	const hebbianScore =
+		(popperHebbianScore as { hebbianScore?: number })?.hebbianScore ??
+		popperHebbianScore?.corroborationLevel ??
+		0.6;
 
 	// Calculate weighted average
 	const consensusValid =
@@ -206,7 +197,7 @@ export function calculateConsensusValid(
  * @returns Status indicator
  */
 export function determineStatus(
-	hebbianScore: number
+	hebbianScore: number,
 ): 'looking-good' | 'under-discussion' | 'needs-fixing' {
 	if (hebbianScore >= HEBBIAN_CONFIG.THRESHOLD) {
 		return 'looking-good'; // Well corroborated

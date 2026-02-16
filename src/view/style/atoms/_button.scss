@@ -92,11 +92,11 @@
     border-color: var(--agree);
 
     &:hover:not(:disabled) {
-      background-color: #4bb5a0;
+      background-color: var(--agree-hover);
     }
 
     &:active:not(:disabled) {
-      background-color: #3d9a87;
+      background-color: var(--agree-active);
     }
   }
 
@@ -106,11 +106,11 @@
     border-color: var(--disagree);
 
     &:hover:not(:disabled) {
-      background-color: #fe8ab7;
+      background-color: var(--disagree-hover);
     }
 
     &:active:not(:disabled) {
-      background-color: #fe4c8d;
+      background-color: var(--disagree-active);
     }
   }
 
@@ -122,11 +122,11 @@
     height: 44px;
 
     &:hover:not(:disabled) {
-      background-color: #37756a;
+      background-color: var(--approve-hover);
     }
 
     &:active:not(:disabled) {
-      background-color: #2d5f56;
+      background-color: var(--approve-active);
     }
   }
 
@@ -139,13 +139,13 @@
     height: 44px;
 
     &:hover:not(:disabled) {
-      color: #be3b3d;
-      border-color: #be3b3d;
-      background-color: rgb(228, 228, 228);
+      color: var(--reject-hover);
+      border-color: var(--reject-hover);
+      background-color: var(--bg-disabled);
     }
 
     &:active:not(:disabled) {
-      background-color: rgb(200, 200, 200);
+      background-color: var(--inactive);
     }
   }
 
@@ -156,7 +156,7 @@
     width: fit-content;
 
     &:hover:not(:disabled) {
-      background-color: #1f4eb8;
+      background-color: var(--add-btn-hover);
     }
   }
 
@@ -166,7 +166,7 @@
     border-color: var(--red);
 
     &:hover:not(:disabled) {
-      background-color: #d93636;
+      background-color: var(--red-hover);
     }
   }
 
@@ -182,7 +182,7 @@
     color: var(--white);
 
     &:hover:not(:disabled) {
-      background-color: #2563c7;
+      background-color: var(--icon-blue-hover);
     }
   }
 
@@ -191,7 +191,7 @@
     color: var(--white);
 
     &:hover:not(:disabled) {
-      background-color: #2563c7;
+      background-color: var(--icon-blue-hover);
     }
   }
 

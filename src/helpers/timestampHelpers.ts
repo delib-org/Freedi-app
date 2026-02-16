@@ -31,7 +31,7 @@ export function convertTimestampsToMillis(data: unknown): unknown {
 
 	// Handle arrays recursively
 	if (Array.isArray(data)) {
-		return data.map(item => convertTimestampsToMillis(item));
+		return data.map((item) => convertTimestampsToMillis(item));
 	}
 
 	// Handle objects recursively
@@ -101,7 +101,9 @@ export function normalizeStatementData(data: unknown): unknown {
 			// Note: This may not be accurate for deeply nested statements,
 			// but it's better than failing validation
 			obj.topParentId = obj.parentId;
-			console.info(`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`);
+			console.info(
+				`[normalizeStatementData] Filled missing topParentId for statement ${obj.statementId} using parentId ${obj.parentId}`,
+			);
 		}
 	}
 

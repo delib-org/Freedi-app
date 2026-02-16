@@ -3,7 +3,7 @@ import React from 'react';
 export const compressImage = (
 	file: File,
 	maxSizeKB: number,
-	setProgress: React.Dispatch<React.SetStateAction<number>>
+	setProgress: React.Dispatch<React.SetStateAction<number>>,
 ): Promise<File> => {
 	return new Promise((resolve, reject) => {
 		const reader = new FileReader();
@@ -54,7 +54,7 @@ export const compressImage = (
 							}
 						},
 						file.type,
-						quality
+						quality,
 					);
 				};
 
@@ -65,10 +65,8 @@ export const compressImage = (
 		reader.onerror = (error) =>
 			reject(
 				new Error(
-					`FileReader error: ${
-						error instanceof Error ? error.message : JSON.stringify(error)
-					}`
-				)
+					`FileReader error: ${error instanceof Error ? error.message : JSON.stringify(error)}`,
+				),
 			);
 	});
 };

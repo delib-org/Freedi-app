@@ -16,7 +16,7 @@ const Snackbar: FC<SnackbarProps> = ({
 	isVisible,
 	duration = 3000,
 	onClose,
-	type = 'info'
+	type = 'info',
 }) => {
 	useEffect(() => {
 		if (isVisible && duration > 0) {

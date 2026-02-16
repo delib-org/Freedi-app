@@ -1,33 +1,20 @@
-import {
-	and,
-	collection,
-	doc,
-	getDoc,
-	getDocs,
-	or,
-	query,
-	where,
-} from 'firebase/firestore';
+import { and, collection, doc, getDoc, getDocs, or, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
 
 import {
-	Statement, StatementSchema, Collections,
+	Statement,
+	StatementSchema,
+	Collections,
 	StatementType,
 	DeliberativeElement,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
-export async function getStatementFromDB(
-	statementId: string
-): Promise<Statement | undefined> {
+export async function getStatementFromDB(statementId: string): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('Statement ID is required to get statement from DB');
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
 		const statementDB = await getDoc(statementRef);
 
 		const data = statementDB.data();
@@ -45,7 +32,7 @@ export async function getStatementFromDB(
 export async function getStatementDepth(
 	statement: Statement,
 	subStatements: Statement[],
-	depth: number
+	depth: number,
 ): Promise<Statement[]> {
 	try {
 		const statements: Statement[][] = [[statement]];
@@ -53,17 +40,13 @@ export async function getStatementDepth(
 		// level 1 is already in store
 		// find second level
 		const levelOneStatements: Statement[] = subStatements.filter(
-			(s) =>
-				s.parentId === statement.statementId &&
-				s.statementType !== StatementType.statement
+			(s) => s.parentId === statement.statementId && s.statementType !== StatementType.statement,
 		);
 		statements.push(levelOneStatements);
 
 		// get the next levels
 		for (let i = 1; i < depth; i++) {
-			const statementPromises = statements[i].map((st: Statement) =>
-				getLevelResults(st)
-			);
+			const statementPromises = statements[i].map((st: Statement) => getLevelResults(st));
 
 			const nextLevelStatements = await Promise.all(statementPromises);
 			const flattenedStatements = nextLevelStatements.flat();
@@ -90,20 +73,12 @@ export async function getStatementDepth(
 				statementsRef,
 				and(
 					or(
-						where(
-							'deliberativeElement',
-							'==',
-							DeliberativeElement.option
-						),
-						where(
-							'deliberativeElement',
-							'==',
-							DeliberativeElement.research
-						)
+						where('deliberativeElement', '==', DeliberativeElement.option),
+						where('deliberativeElement', '==', DeliberativeElement.research),
 					),
 					where('statementType', '!=', 'document'),
-					where('parentId', '==', statement.statementId)
-				)
+					where('parentId', '==', statement.statementId),
+				),
 			);
 			const statementsDB = await getDocs(q);
 
@@ -122,33 +97,23 @@ export async function getStatementDepth(
 	}
 }
 
-export async function getChildStatements(
-	statementId: string
-): Promise<Statement[]> {
+export async function getChildStatements(statementId: string): Promise<Statement[]> {
 	try {
 		const statementsRef = collection(FireStore, Collections.statements);
 		const q = query(
 			statementsRef,
 			and(
 				or(
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.option
-					),
-					where(
-						'deliberativeElement',
-						'==',
-						DeliberativeElement.research
-					)
+					where('deliberativeElement', '==', DeliberativeElement.option),
+					where('deliberativeElement', '==', DeliberativeElement.research),
 				),
-				where('parents', 'array-contains', statementId)
-			)
+				where('parents', 'array-contains', statementId),
+			),
 		);
 		const statementsDB = await getDocs(q);
 
 		const subStatements = statementsDB.docs.map((doc) =>
-			parse(StatementSchema, normalizeStatementData(doc.data()))
+			parse(StatementSchema, normalizeStatementData(doc.data())),
 		);
 
 		return subStatements;

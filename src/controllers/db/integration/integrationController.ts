@@ -31,13 +31,13 @@ interface FindSimilarRequest {
  * @returns Source statement and array of similar statements with evaluation data
  */
 export async function findSimilarForIntegration(
-	statementId: string
+	statementId: string,
 ): Promise<FindSimilarForIntegrationResponse> {
 	try {
-		const findSimilar = httpsCallable<
-			FindSimilarRequest,
-			FindSimilarForIntegrationResponse
-		>(functionsWithRegion, 'findSimilarForIntegration');
+		const findSimilar = httpsCallable<FindSimilarRequest, FindSimilarForIntegrationResponse>(
+			functionsWithRegion,
+			'findSimilarForIntegration',
+		);
 
 		const result = await findSimilar({ statementId });
 
@@ -63,13 +63,13 @@ export async function findSimilarForIntegration(
  * @returns Integration result with new statement ID and metrics
  */
 export async function executeIntegration(
-	params: ExecuteIntegrationParams
+	params: ExecuteIntegrationParams,
 ): Promise<ExecuteIntegrationResponse> {
 	try {
-		const execute = httpsCallable<
-			ExecuteIntegrationParams,
-			ExecuteIntegrationResponse
-		>(functionsWithRegion, 'executeIntegration');
+		const execute = httpsCallable<ExecuteIntegrationParams, ExecuteIntegrationResponse>(
+			functionsWithRegion,
+			'executeIntegration',
+		);
 
 		const result = await execute(params);
 

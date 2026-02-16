@@ -21,7 +21,7 @@ const SettingsModal: React.FC<Props> = ({
 	return (
 		<div className={isFullScreen ? styles.fullScreenModal : styles.modal}>
 			{children}
-			<div className='btns'>
+			<div className="btns">
 				<button
 					className={`btn btn--primary ${isFullScreen ? styles.bigButton : ''}`}
 					onClick={closeModal}

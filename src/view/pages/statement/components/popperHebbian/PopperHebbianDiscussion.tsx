@@ -25,7 +25,7 @@ interface PopperHebbianDiscussionProps {
 
 const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 	statement,
-	onCreateImprovedVersion
+	onCreateImprovedVersion,
 }) => {
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
@@ -51,40 +51,38 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 	// Get score from statement, or create a default one with PRIOR (0.6)
 	const score: PopperHebbianScore = extendedStatement.popperHebbianScore
 		? {
-			...extendedStatement.popperHebbianScore,
-			// Ensure hebbianScore exists (fallback to corroborationLevel for old data)
-			hebbianScore: extendedStatement.popperHebbianScore.hebbianScore
-				?? extendedStatement.popperHebbianScore.corroborationLevel
-				?? HEBBIAN_CONFIG.PRIOR
-		}
+				...extendedStatement.popperHebbianScore,
+				// Ensure hebbianScore exists (fallback to corroborationLevel for old data)
+				hebbianScore:
+					extendedStatement.popperHebbianScore.hebbianScore ??
+					extendedStatement.popperHebbianScore.corroborationLevel ??
+					HEBBIAN_CONFIG.PRIOR,
+			}
 		: {
-			statementId: statement.statementId,
-			hebbianScore: HEBBIAN_CONFIG.PRIOR,  // Start at 0.6
-			evidenceCount: 0,
-			status: 'looking-good' as const,  // At 0.6, status is looking-good
-			lastCalculated: Date.now()
-		};
+				statementId: statement.statementId,
+				hebbianScore: HEBBIAN_CONFIG.PRIOR, // Start at 0.6
+				evidenceCount: 0,
+				status: 'looking-good' as const, // At 0.6, status is looking-good
+				lastCalculated: Date.now(),
+			};
 
 	useEffect(() => {
 		if (!statement.statementId) return;
 
 		setIsLoading(true);
 
-		const unsubscribe = listenToEvidencePosts(
-			statement.statementId,
-			(posts) => {
-				// Sort posts by support strength (strongest support/challenge first)
-				const sorted = [...posts].sort((a, b) => {
-					const aSupport = Math.abs(a.evidence?.support ?? 0);
-					const bSupport = Math.abs(b.evidence?.support ?? 0);
+		const unsubscribe = listenToEvidencePosts(statement.statementId, (posts) => {
+			// Sort posts by support strength (strongest support/challenge first)
+			const sorted = [...posts].sort((a, b) => {
+				const aSupport = Math.abs(a.evidence?.support ?? 0);
+				const bSupport = Math.abs(b.evidence?.support ?? 0);
 
-					return bSupport - aSupport;
-				});
+				return bSupport - aSupport;
+			});
 
-				setEvidencePosts(sorted);
-				setIsLoading(false);
-			}
-		);
+			setEvidencePosts(sorted);
+			setIsLoading(false);
+		});
 
 		return () => unsubscribe();
 	}, [statement.statementId]);
@@ -116,16 +114,16 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 						{t('Improve with AI')}
 					</button>
 					<p className={styles.improveHint}>
-						{t('Get an AI-suggested improvement based on {{count}} comments').replace('{{count}}', String(evidencePosts.length))}
+						{t('Get an AI-suggested improvement based on {{count}} comments').replace(
+							'{{count}}',
+							String(evidencePosts.length),
+						)}
 					</p>
 				</div>
 			)}
 
 			{score.status === 'needs-fixing' && (
-				<EvolutionPrompt
-					score={score}
-					onCreateImprovedVersion={handleOpenImproveModal}
-				/>
+				<EvolutionPrompt score={score} onCreateImprovedVersion={handleOpenImproveModal} />
 			)}
 
 			<div className={styles.evidenceSection}>
@@ -149,9 +147,7 @@ const PopperHebbianDiscussion: FC<PopperHebbianDiscussionProps> = ({
 				) : evidencePosts.length === 0 ? (
 					<div className={styles.emptyState}>
 						<div className={styles.emptyIcon}>📊</div>
-						<h4 className={styles.emptyTitle}>
-							{t('No contributions yet')}
-						</h4>
+						<h4 className={styles.emptyTitle}>{t('No contributions yet')}</h4>
 						<p className={styles.emptyText}>
 							{t('Be the first to add a claim, comment, or evidence about this idea.')}
 						</p>

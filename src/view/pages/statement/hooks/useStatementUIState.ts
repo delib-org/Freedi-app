@@ -7,15 +7,11 @@ export const useStatementUIState = () => {
 	const [talker, setTalker] = useState<User | null>(null);
 	const [isStatementNotFound, setIsStatementNotFound] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [newStatementType, setNewStatementType] = useState<StatementType>(
-		StatementType.group
-	);
-	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(
-		getDefaultQuestionType()
-	);
+	const [newStatementType, setNewStatementType] = useState<StatementType>(StatementType.group);
+	const [newQuestionType, setNewQuestionType] = useState<QuestionType>(getDefaultQuestionType());
 
 	const handleShowTalker = useCallback((user: User | null) => {
-		setTalker(prev => prev ? null : user);
+		setTalker((prev) => (prev ? null : user));
 	}, []);
 
 	const resetError = useCallback(() => {
@@ -37,6 +33,6 @@ export const useStatementUIState = () => {
 		setNewQuestionType,
 		// Actions
 		handleShowTalker,
-		resetError
+		resetError,
 	};
 };

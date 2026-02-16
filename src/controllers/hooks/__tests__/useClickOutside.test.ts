@@ -108,10 +108,9 @@ describe('useClickOutside', () => {
 			const handler1 = jest.fn();
 			const handler2 = jest.fn();
 
-			const { result, rerender } = renderHook(
-				({ handler }) => useClickOutside(handler),
-				{ initialProps: { handler: handler1 } }
-			);
+			const { result, rerender } = renderHook(({ handler }) => useClickOutside(handler), {
+				initialProps: { handler: handler1 },
+			});
 
 			// Create element setup
 			const div = document.createElement('div');

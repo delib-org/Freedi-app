@@ -11,7 +11,7 @@ import { Collections, Evaluation } from '@freedi/shared-types';
  */
 export async function removeUserEvaluations(
 	statementId: string,
-	userId: string
+	userId: string,
 ): Promise<{ evaluationsRemoved: number; votesRemoved: number }> {
 	try {
 		if (!statementId || !userId) {
@@ -27,7 +27,7 @@ export async function removeUserEvaluations(
 		const evaluationsQuery = query(
 			evaluationsRef,
 			where('parentId', '==', statementId),
-			where('evaluatorId', '==', userId)
+			where('evaluatorId', '==', userId),
 		);
 
 		const evaluationsSnapshot = await getDocs(evaluationsQuery);
@@ -41,7 +41,7 @@ export async function removeUserEvaluations(
 				evaluationId: docSnapshot.id,
 				statementId: evaluation.statementId,
 				value: evaluation.evaluation,
-				userId
+				userId,
 			});
 
 			// Delete the evaluation document
@@ -69,11 +69,10 @@ export async function removeUserEvaluations(
 			statementId,
 			userId,
 			evaluationsRemoved,
-			votesRemoved
+			votesRemoved,
 		});
 
 		return { evaluationsRemoved, votesRemoved };
-
 	} catch (error) {
 		console.error('Error removing user evaluations:', error);
 		throw error;
@@ -86,9 +85,7 @@ export async function removeUserEvaluations(
  * @param userId - The user ID whose evaluations should be removed globally
  * @returns Promise<number> - Number of evaluations removed
  */
-export async function removeAllUserEvaluations(
-	userId: string
-): Promise<number> {
+export async function removeAllUserEvaluations(userId: string): Promise<number> {
 	try {
 		if (!userId) {
 			throw new Error('User ID is required');
@@ -98,10 +95,7 @@ export async function removeAllUserEvaluations(
 
 		// Query all evaluations by this user
 		const evaluationsRef = collection(FireStore, Collections.evaluations);
-		const evaluationsQuery = query(
-			evaluationsRef,
-			where('evaluatorId', '==', userId)
-		);
+		const evaluationsQuery = query(evaluationsRef, where('evaluatorId', '==', userId));
 
 		const evaluationsSnapshot = await getDocs(evaluationsQuery);
 
@@ -115,10 +109,7 @@ export async function removeAllUserEvaluations(
 
 		// Also remove all votes by this user
 		const votesRef = collection(FireStore, Collections.votes);
-		const votesQuery = query(
-			votesRef,
-			where('userId', '==', userId)
-		);
+		const votesQuery = query(votesRef, where('userId', '==', userId));
 
 		const votesSnapshot = await getDocs(votesQuery);
 
@@ -132,11 +123,10 @@ export async function removeAllUserEvaluations(
 		console.info('Successfully removed all user evaluations:', {
 			userId,
 			evaluationsRemoved,
-			votesRemoved: votesSnapshot.size
+			votesRemoved: votesSnapshot.size,
 		});
 
 		return evaluationsRemoved;
-
 	} catch (error) {
 		console.error('Error removing all user evaluations:', error);
 		throw error;

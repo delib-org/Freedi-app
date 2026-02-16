@@ -52,7 +52,8 @@ export const isInstalledPWA = (): boolean => {
 	const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
 
 	// Check iOS-specific standalone property
-	const isIOSStandalone = 'standalone' in window.navigator &&
+	const isIOSStandalone =
+		'standalone' in window.navigator &&
 		(window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
 	// Check if launched from home screen on Android

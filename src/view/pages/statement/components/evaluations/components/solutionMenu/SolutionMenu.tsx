@@ -59,7 +59,6 @@ const SolutionMenu: FC<Props> = ({
 
 	function handleToggleHideStatement() {
 		toggleStatementHide(statement.statementId);
-
 	}
 
 	if (!isAuthorized) return null;
@@ -69,7 +68,7 @@ const SolutionMenu: FC<Props> = ({
 		<Menu
 			setIsOpen={setIsCardMenuOpen}
 			isMenuOpen={isCardMenuOpen}
-			iconColor='#5899E0'
+			iconColor="#5899E0"
 			isCardMenu={true}
 			isNavMenu={false}
 		>
@@ -87,11 +86,7 @@ const SolutionMenu: FC<Props> = ({
 				<MenuOption
 					isOptionSelected={isOption}
 					icon={<LightBulbIcon />}
-					label={
-						isOption
-							? t('Unmark as a Solution')
-							: t('Mark as a Solution')
-					}
+					label={isOption ? t('Unmark as a Solution') : t('Mark as a Solution')}
 					onOptionClick={() => {
 						handleSetOption();
 						setIsCardMenuOpen(false);
@@ -102,15 +97,12 @@ const SolutionMenu: FC<Props> = ({
 				<MenuOption
 					isOptionSelected={isResearch}
 					icon={<QuestionMarkIcon />}
-					label={
-						isResearch
-							? t('Unmark as a Question')
-							: t('Mark as a Question')
-					}
+					label={isResearch ? t('Unmark as a Question') : t('Mark as a Question')}
 					onOptionClick={async () => {
-						const newType = statement.statementType === StatementType.question
-							? StatementType.statement
-							: StatementType.question;
+						const newType =
+							statement.statementType === StatementType.question
+								? StatementType.statement
+								: StatementType.question;
 						const result = await changeStatementType(statement, newType, isAuthorized);
 						if (!result.success && result.error) {
 							alert(result.error);
@@ -123,11 +115,7 @@ const SolutionMenu: FC<Props> = ({
 				<MenuOption
 					isOptionSelected={isHide}
 					icon={isHide ? <EyeIcon /> : <EyeCrossIcon />}
-					label={
-						isHide
-							? t('Unhide')
-							: t('Hide')
-					}
+					label={isHide ? t('Unhide') : t('Hide')}
 					onOptionClick={() => {
 						handleToggleHideStatement();
 						setIsCardMenuOpen(false);

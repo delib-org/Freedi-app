@@ -62,7 +62,7 @@ const FAB: React.FC<FABProps> = ({
 		blink && 'fab--blink', // Modifier: blink
 		fixed && 'fab--fixed', // Modifier: fixed
 		up && 'fab--up', // Modifier: up
-		className // Additional classes
+		className, // Additional classes
 	);
 
 	return (

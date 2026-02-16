@@ -30,21 +30,14 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 			setNonVoters(joinedMembers);
 		} else {
 			const voterIds = new Set(voters.map((voter) => voter.voter?.uid));
-			const nonVotersList = joinedMembers.filter(
-				(member) => !voterIds.has(member.uid)
-			);
+			const nonVotersList = joinedMembers.filter((member) => !voterIds.has(member.uid));
 			setNonVoters(nonVotersList);
 		}
 	}, [voters, joinedMembers]);
 
 	return (
 		<>
-			<button
-				type='button'
-				className='voters-button form-button'
-				onClick={getVoters}
-				tabIndex={0}
-			>
+			<button type="button" className="voters-button form-button" onClick={getVoters} tabIndex={0}>
 				{t('Get Voters')}
 			</button>
 
@@ -55,9 +48,7 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 							<span>
 								{voters.length} {t('Voted')}
 							</span>
-							<MembersChipsList
-								members={voters.map((v) => v.voter as User)}
-							/>
+							<MembersChipsList members={voters.map((v) => v.voter as User)} />
 						</>
 					) : (
 						<div>{t('No voters found')}</div>
@@ -66,8 +57,8 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 			)}
 
 			<button
-				type='button'
-				className='voters-button form-button'
+				type="button"
+				className="voters-button form-button"
 				onClick={() => setClickedNonVoters(!clickedNonVoters)}
 				tabIndex={0}
 			>

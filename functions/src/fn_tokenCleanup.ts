@@ -46,7 +46,7 @@ export const cleanupStaleTokens = onSchedule(
 			...result,
 			durationMs: duration,
 		});
-	}
+	},
 );
 
 /**
@@ -116,7 +116,9 @@ export async function performTokenCleanup(): Promise<TokenCleanupResult> {
 			result.tokensRemovedFromPushNotifications += batchDocs.length;
 		}
 
-		logger.info(`Deleted ${result.tokensRemovedFromPushNotifications} tokens from pushNotifications`);
+		logger.info(
+			`Deleted ${result.tokensRemovedFromPushNotifications} tokens from pushNotifications`,
+		);
 
 		// Step 4: Remove stale tokens from statementsSubscribe.tokens[] arrays
 		for (const [userId, tokens] of tokensByUser) {
@@ -172,7 +174,7 @@ export async function performTokenCleanup(): Promise<TokenCleanupResult> {
  */
 async function removeTokensFromUserSubscriptions(
 	userId: string,
-	tokens: string[]
+	tokens: string[],
 ): Promise<number> {
 	const subscriptionsSnapshot = await db
 		.collection(Collections.statementsSubscribe)

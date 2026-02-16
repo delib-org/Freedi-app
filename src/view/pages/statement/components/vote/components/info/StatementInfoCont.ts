@@ -11,7 +11,7 @@ export function handleSubmitInfo(
 	},
 	statement: Statement | undefined,
 	setEdit: Dispatch<SetStateAction<boolean>>,
-	setShowInfo: Dispatch<SetStateAction<boolean>>
+	setShowInfo: Dispatch<SetStateAction<boolean>>,
 ) {
 	e.preventDefault();
 	try {
@@ -20,12 +20,17 @@ export function handleSubmitInfo(
 		const descriptionText = formData.description;
 
 		// Convert description text to paragraphs array
-		const paragraphs = descriptionText.trim() ? descriptionText.split('\n').filter(line => line.trim()).map((line, index) => ({
-			paragraphId: generateParagraphId(),
-			type: ParagraphType.paragraph,
-			content: line,
-			order: index,
-		})) : undefined;
+		const paragraphs = descriptionText.trim()
+			? descriptionText
+					.split('\n')
+					.filter((line) => line.trim())
+					.map((line, index) => ({
+						paragraphId: generateParagraphId(),
+						type: ParagraphType.paragraph,
+						content: line,
+						order: index,
+					}))
+			: undefined;
 
 		//update statement to DB
 		if (!statement) throw new Error('No statement');

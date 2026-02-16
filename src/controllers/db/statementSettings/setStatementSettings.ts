@@ -22,11 +22,7 @@ export function setStatementSettingToDB({
 	settingsSection,
 }: SetStatementSettingsProps) {
 	try {
-		const statementSettingsRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementSettingsRef = doc(FireStore, Collections.statements, statement.statementId);
 		setDoc(
 			statementSettingsRef,
 			{
@@ -34,7 +30,7 @@ export function setStatementSettingToDB({
 					[property]: newValue,
 				},
 			},
-			{ merge: true }
+			{ merge: true },
 		);
 	} catch (error) {
 		console.error(error);
@@ -46,16 +42,9 @@ interface SetQuestionTypeToDB {
 	questionType: QuestionType;
 }
 
-export function setQuestionTypeToDB({
-	statement,
-	questionType,
-}: SetQuestionTypeToDB) {
+export function setQuestionTypeToDB({ statement, questionType }: SetQuestionTypeToDB) {
 	try {
-		const statementSettingsRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementSettingsRef = doc(FireStore, Collections.statements, statement.statementId);
 		setDoc(
 			statementSettingsRef,
 			{
@@ -63,7 +52,7 @@ export function setQuestionTypeToDB({
 					questionType: questionType,
 				},
 			},
-			{ merge: true }
+			{ merge: true },
 		);
 	} catch (error) {
 		console.error(error);
@@ -81,7 +70,7 @@ export function updateQuestionType({
 		const statementSettingsRef = doc(
 			FireStore,
 			Collections.statementsSettings,
-			statement.statementId
+			statement.statementId,
 		);
 		setDoc(
 			statementSettingsRef,
@@ -90,7 +79,7 @@ export function updateQuestionType({
 					questionType: newValue,
 				},
 			},
-			{ merge: true }
+			{ merge: true },
 		);
 	} catch (error) {
 		console.error(error);

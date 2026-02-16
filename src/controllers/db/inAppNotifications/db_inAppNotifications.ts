@@ -1,8 +1,26 @@
-import { store } from "@/redux/store";
-import { collection, deleteDoc, getDocs, limit, onSnapshot, orderBy, query, Unsubscribe, where, doc, updateDoc, writeBatch } from "firebase/firestore";
-import { DB } from "../config";
+import { store } from '@/redux/store';
+import {
+	collection,
+	deleteDoc,
+	getDocs,
+	limit,
+	onSnapshot,
+	orderBy,
+	query,
+	Unsubscribe,
+	where,
+	doc,
+	updateDoc,
+	writeBatch,
+} from 'firebase/firestore';
+import { DB } from '../config';
 import { Collections, NotificationType } from '@freedi/shared-types';
-import { setInAppNotificationsAll, markNotificationAsRead, markNotificationsAsRead, markStatementNotificationsAsRead } from "@/redux/notificationsSlice/notificationsSlice";
+import {
+	setInAppNotificationsAll,
+	markNotificationAsRead,
+	markNotificationsAsRead,
+	markStatementNotificationsAsRead,
+} from '@/redux/notificationsSlice/notificationsSlice';
 
 export function listenToInAppNotifications(): Unsubscribe {
 	try {
@@ -13,12 +31,13 @@ export function listenToInAppNotifications(): Unsubscribe {
 		const inAppNotificationsRef = collection(DB, Collections.inAppNotifications);
 		const q = query(
 			inAppNotificationsRef,
-			where("userId", '==', user.uid),
-			orderBy("createdAt", "desc"),
-			limit(100)
+			where('userId', '==', user.uid),
+			orderBy('createdAt', 'desc'),
+			limit(100),
 		);
 
-		return onSnapshot(q,
+		return onSnapshot(
+			q,
 			// Success callback with error handling inside
 			(inAppNotDBs) => {
 				try {
@@ -31,52 +50,58 @@ export function listenToInAppNotifications(): Unsubscribe {
 							// Convert readAt from Firestore Timestamp to milliseconds if it exists
 							readAt: data.readAt?.toMillis ? data.readAt.toMillis() : data.readAt,
 							// Also ensure createdAt is in milliseconds
-							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt
+							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
 						} as NotificationType;
 						notifications.push(inAppNot);
 					});
 					store.dispatch(setInAppNotificationsAll(notifications));
 				} catch (error) {
-					console.error("Error processing notifications snapshot:", error);
+					console.error('Error processing notifications snapshot:', error);
 					// Still allow the listener to continue functioning
 				}
 			},
 			// Error callback for the onSnapshot itself
 			(error) => {
-				console.error("Error in notifications snapshot listener:", error);
-			}
+				console.error('Error in notifications snapshot listener:', error);
+			},
 		);
 	} catch (error) {
-		console.error("In listenToInAppNotifications", error.message);
+		console.error('In listenToInAppNotifications', error.message);
 
-		return () => { return; };
+		return () => {
+			return;
+		};
 	}
 }
 
 export async function clearInAppNotifications(statementId: string) {
 	try {
 		if (!statementId) {
-			console.error("clearInAppNotifications: statementId is required");
-			
-return;
+			console.error('clearInAppNotifications: statementId is required');
+
+			return;
 		}
-		
+
 		const user = store.getState().creator.creator;
 		if (!user) {
-			console.error("clearInAppNotifications: User not found");
-			
-return;
+			console.error('clearInAppNotifications: User not found');
+
+			return;
 		}
-		
+
 		const inAppNotificationsRef = collection(DB, Collections.inAppNotifications);
-		const q = query(inAppNotificationsRef, where("parentId", "==", statementId), where("userId", "==", user.uid));
+		const q = query(
+			inAppNotificationsRef,
+			where('parentId', '==', statementId),
+			where('userId', '==', user.uid),
+		);
 
 		const snapshot = await getDocs(q);
 		snapshot.forEach((ntf) => {
 			deleteDoc(ntf.ref);
 		});
 	} catch (error) {
-		console.error("In clearInAppNotifications", error.message);
+		console.error('In clearInAppNotifications', error.message);
 	}
 }
 
@@ -85,22 +110,22 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 	try {
 		const user = store.getState().creator.creator;
 		if (!user) {
-			console.error("markNotificationAsReadDB: User not found");
-			
-return;
+			console.error('markNotificationAsReadDB: User not found');
+
+			return;
 		}
 
 		// Update in Firestore
 		const notificationRef = doc(DB, Collections.inAppNotifications, notificationId);
 		await updateDoc(notificationRef, {
 			read: true,
-			readAt: Date.now()
+			readAt: Date.now(),
 		});
 
 		// Update in Redux
 		store.dispatch(markNotificationAsRead(notificationId));
 	} catch (error) {
-		console.error("In markNotificationAsReadDB", error.message);
+		console.error('In markNotificationAsReadDB', error.message);
 	}
 }
 
@@ -109,9 +134,9 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			console.error("markMultipleNotificationsAsReadDB: User not found or no notification IDs");
-			
-return;
+			console.error('markMultipleNotificationsAsReadDB: User not found or no notification IDs');
+
+			return;
 		}
 
 		// Batch update in Firestore
@@ -121,7 +146,7 @@ return;
 			const notificationRef = doc(DB, Collections.inAppNotifications, notificationId);
 			batch.update(notificationRef, {
 				read: true,
-				readAt: now
+				readAt: now,
 			});
 		});
 		await batch.commit();
@@ -129,7 +154,7 @@ return;
 		// Update in Redux
 		store.dispatch(markNotificationsAsRead(notificationIds));
 	} catch (error) {
-		console.error("In markMultipleNotificationsAsReadDB", error.message);
+		console.error('In markMultipleNotificationsAsReadDB', error.message);
 	}
 }
 
@@ -138,22 +163,22 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !statementId) {
-			console.error("markStatementNotificationsAsReadDB: User not found or no statement ID");
-			
-return;
+			console.error('markStatementNotificationsAsReadDB: User not found or no statement ID');
+
+			return;
 		}
 
 		// Query notifications for this statement
 		const notificationsRef = collection(DB, Collections.inAppNotifications);
 		const q = query(
 			notificationsRef,
-			where("userId", "==", user.uid),
-			where("parentId", "==", statementId),
-			where("read", "==", false)
+			where('userId', '==', user.uid),
+			where('parentId', '==', statementId),
+			where('read', '==', false),
 		);
 
 		const snapshot = await getDocs(q);
-		
+
 		if (!snapshot.empty) {
 			// Batch update in Firestore
 			const batch = writeBatch(DB);
@@ -162,7 +187,7 @@ return;
 				batch.update(docSnapshot.ref, {
 					read: true,
 					readAt: now,
-					viewedInContext: true
+					viewedInContext: true,
 				});
 			});
 			await batch.commit();
@@ -171,7 +196,7 @@ return;
 			store.dispatch(markStatementNotificationsAsRead(statementId));
 		}
 	} catch (error) {
-		console.error("In markStatementNotificationsAsReadDB", error.message);
+		console.error('In markStatementNotificationsAsReadDB', error.message);
 	}
 }
 
@@ -180,9 +205,9 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			console.error("markNotificationsAsViewedInListDB: User not found or no notification IDs");
-			
-return;
+			console.error('markNotificationsAsViewedInListDB: User not found or no notification IDs');
+
+			return;
 		}
 
 		// Batch update in Firestore
@@ -190,11 +215,11 @@ return;
 		notificationIds.forEach((notificationId) => {
 			const notificationRef = doc(DB, Collections.inAppNotifications, notificationId);
 			batch.update(notificationRef, {
-				viewedInList: true
+				viewedInList: true,
 			});
 		});
 		await batch.commit();
 	} catch (error) {
-		console.error("In markNotificationsAsViewedInListDB", error.message);
+		console.error('In markNotificationsAsViewedInListDB', error.message);
 	}
 }
