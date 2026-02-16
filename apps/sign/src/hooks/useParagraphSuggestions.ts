@@ -351,6 +351,7 @@ export function useRealtimeParagraphs(
                 imageUrl: statement.doc?.imageUrl,
                 imageAlt: statement.doc?.imageAlt,
                 imageCaption: statement.doc?.imageCaption,
+                documentApproval: statement.documentApproval,
               };
               updatedParagraphs.push(paragraph);
             }

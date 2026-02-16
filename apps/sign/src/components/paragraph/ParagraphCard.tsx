@@ -402,6 +402,7 @@ export default function ParagraphCard({
             enableSuggestions={enableSuggestions}
             requireGoogleLogin={requireGoogleLogin}
             isAnonymous={isAnonymous}
+            documentApproval={paragraph.documentApproval}
           />
         </div>
       )}

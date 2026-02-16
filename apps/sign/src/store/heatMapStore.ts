@@ -43,6 +43,8 @@ interface HeatMapState {
   setError: (error: string | null) => void;
   setDocumentId: (documentId: string) => void;
   loadHeatMapData: (documentId: string) => Promise<void>;
+  /** Update approval values from real-time paragraph data */
+  updateApprovalValues: (approvalMap: Record<string, number>) => void;
   reset: () => void;
 
   // Demographic filter actions (admin-only)
@@ -180,6 +182,21 @@ export const useHeatMapStore = create<HeatMapState>((set, get) => ({
         currentSegment: null,
       });
     }
+  },
+
+  updateApprovalValues: (approvalMap) => {
+    const state = get();
+    if (!state.data) return;
+
+    set({
+      data: {
+        ...state.data,
+        approval: {
+          ...state.data.approval,
+          ...approvalMap,
+        },
+      },
+    });
   },
 
   reset: () =>
