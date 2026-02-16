@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * RatingButton Component Tests
  *
  * Tests the 5-level agreement scale (-1 to +1)
@@ -13,6 +17,12 @@ jest.mock('../../SwipeCard/soundEffects', () => ({
   playClickSound: jest.fn(),
 }));
 
+// Mock RatingIcon (SVG component) to render testable text
+jest.mock('@/components/icons/RatingIcon', () => ({
+  __esModule: true,
+  default: ({ rating }: { rating: number }) => <span data-testid="rating-icon">{`icon-${rating}`}</span>,
+}));
+
 // Mock i18n
 jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
@@ -21,12 +31,12 @@ jest.mock('@freedi/shared-i18n/next', () => ({
 }));
 
 describe('RatingButton', () => {
-  it('should render button with emoji', () => {
+  it('should render button with icon', () => {
     const onClick = jest.fn();
     render(<RatingButton rating={RATING.AGREE} onClick={onClick} />);
 
     expect(screen.getByRole('button')).toBeInTheDocument();
-    expect(screen.getByText('👍')).toBeInTheDocument();
+    expect(screen.getByTestId('rating-icon')).toBeInTheDocument();
   });
 
   it('should call onClick when clicked', () => {
@@ -105,20 +115,34 @@ describe('RatingButton', () => {
     expect(screen.getByRole('button')).toHaveAttribute('aria-label', 'Strongly Agree');
   });
 
-  it('should render all rating variants with correct emojis', () => {
+  it('should apply selected class when isSelected is true', () => {
+    const onClick = jest.fn();
+    render(<RatingButton rating={RATING.AGREE} onClick={onClick} isSelected />);
+
+    expect(screen.getByRole('button')).toHaveClass('rating-button--selected');
+  });
+
+  it('should not apply selected class when isSelected is false', () => {
+    const onClick = jest.fn();
+    render(<RatingButton rating={RATING.AGREE} onClick={onClick} />);
+
+    expect(screen.getByRole('button')).not.toHaveClass('rating-button--selected');
+  });
+
+  it('should render all rating variants with icons', () => {
     const ratings = [
-      { value: RATING.STRONGLY_AGREE, emoji: '🎉' },
-      { value: RATING.AGREE, emoji: '👍' },
-      { value: RATING.NEUTRAL, emoji: '🤔' },
-      { value: RATING.DISAGREE, emoji: '👎' },
-      { value: RATING.STRONGLY_DISAGREE, emoji: '🚫' },
+      RATING.STRONGLY_AGREE,
+      RATING.AGREE,
+      RATING.NEUTRAL,
+      RATING.DISAGREE,
+      RATING.STRONGLY_DISAGREE,
     ];
 
-    ratings.forEach(({ value, emoji }) => {
+    ratings.forEach((value) => {
       const { container } = render(
         <RatingButton rating={value} onClick={jest.fn()} />
       );
-      expect(container.textContent).toContain(emoji);
+      expect(container.textContent).toContain(`icon-${value}`);
     });
   });
 

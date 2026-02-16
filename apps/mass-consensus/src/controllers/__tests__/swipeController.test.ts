@@ -1,7 +1,17 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * Swipe Controller Tests
  * Following CLAUDE.md - 80%+ coverage required
  */
+
+// Mock Firebase client before importing controller
+jest.mock('@/lib/firebase/client', () => ({
+  db: {},
+  auth: {},
+}));
 
 import { submitRating, loadCardBatch, syncPendingEvaluations } from '../swipeController';
 import { RATING, SWIPE } from '@/constants/common';
@@ -13,9 +23,28 @@ jest.mock('@/lib/utils/errorHandling', () => ({
   logError: jest.fn(),
 }));
 
+// Mock Firestore query functions used by loadCardBatch
+jest.mock('firebase/firestore', () => ({
+  collection: jest.fn(),
+  query: jest.fn(),
+  where: jest.fn(),
+  orderBy: jest.fn(),
+  limit: jest.fn(),
+  getDocs: jest.fn().mockResolvedValue({ forEach: jest.fn() }),
+}));
+
+// Mock fetch for submitRating (which now uses API route)
+const mockFetch = jest.fn();
+global.fetch = mockFetch;
+
 describe('swipeController', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Default: fetch returns success
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ success: true, evaluationId: 'test-eval-id' }),
+    });
   });
 
   describe('submitRating', () => {

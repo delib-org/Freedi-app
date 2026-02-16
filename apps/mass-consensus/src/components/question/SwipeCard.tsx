@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './SwipeCard.module.css';
 
@@ -29,6 +30,7 @@ export default function SwipeCard({
   totalVotes = 0,
   approvalRate = 0,
 }: SwipeCardProps) {
+  const { t } = useTranslation();
   const [dragX, setDragX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [startX, setStartX] = useState(0);
@@ -62,13 +64,16 @@ export default function SwipeCard({
   const handleEnd = () => {
     if (throwDirection) return;
     setIsDragging(false);
-    if (Math.abs(dragX) > 100) {
+    const absDrag = Math.abs(dragX);
+    if (absDrag > 80) {
       if (dragX > 0) {
-        // Swipe right = like (score 0.5)
-        onRate(solution.statementId, 0.5, 'right');
+        // Swipe right: strong (>160px) = +1, moderate = +0.5
+        const score = absDrag > 160 ? 1 : 0.5;
+        onRate(solution.statementId, score, 'right');
       } else {
-        // Swipe left = dislike (score -0.5)
-        onRate(solution.statementId, -0.5, 'left');
+        // Swipe left: strong (>160px) = -1, moderate = -0.5
+        const score = absDrag > 160 ? -1 : -0.5;
+        onRate(solution.statementId, score, 'left');
       }
     }
     setDragX(0);
@@ -111,28 +116,37 @@ export default function SwipeCard({
         }
       }}
     >
+      {/* Zone color strips */}
+      <div className={styles.zones}>
+        <div className={`${styles.zone} ${styles.zone0}`} />
+        <div className={`${styles.zone} ${styles.zone1}`} />
+        <div className={`${styles.zone} ${styles.zone2}`} />
+        <div className={`${styles.zone} ${styles.zone3}`} />
+        <div className={`${styles.zone} ${styles.zone4}`} />
+      </div>
+
       {/* Like Overlay */}
       <div className={`${styles.overlay} ${styles.likeOverlay} ${showLikeOverlay ? styles.visible : ''}`}>
         <div className={styles.overlayStamp}>
-          LIKE 👍
+          {t('LIKE')} 👍
         </div>
       </div>
 
       {/* Dislike Overlay */}
       <div className={`${styles.overlay} ${styles.dislikeOverlay} ${showDislikeOverlay ? styles.visible : ''}`}>
         <div className={styles.overlayStampDislike}>
-          NOPE 👎
+          {t('NOPE')} 👎
         </div>
       </div>
 
       {/* Card Header */}
       <div className={styles.header}>
         <div className={styles.badge}>
-          Proposal
+          {t('Proposal')}
         </div>
         {approvalRate > 0 && (
           <div className={styles.approvalBadge}>
-            {Math.round(approvalRate)}% approval
+            {Math.round(approvalRate)}% {t('approval')}
           </div>
         )}
       </div>
@@ -153,7 +167,7 @@ export default function SwipeCard({
       {totalVotes > 0 && (
         <div className={styles.stats}>
           <span className={styles.stat}>
-            ❤️ {totalVotes} votes
+            ❤️ {totalVotes} {t('votes')}
           </span>
         </div>
       )}
@@ -161,10 +175,10 @@ export default function SwipeCard({
       {/* Swipe Hints */}
       <div className={styles.hints}>
         <span className={`${styles.hint} ${dragX < -30 ? styles.hintActive : ''}`}>
-          ← Swipe left to dislike
+          ← {t('Swipe left to dislike')}
         </span>
         <span className={`${styles.hint} ${dragX > 30 ? styles.hintActive : ''}`}>
-          Swipe right to like →
+          {t('Swipe right to like')} →
         </span>
       </div>
     </div>

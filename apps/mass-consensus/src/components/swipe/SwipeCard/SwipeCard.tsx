@@ -17,12 +17,14 @@
  */
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { SWIPE, RATING_CONFIG, RATING, ZONES, ZONE_CONFIG } from '@/constants/common';
 import { playWhooshSound } from './soundEffects';
 import type { RatingValue } from '../RatingButton';
+import RatingIcon from '@/components/icons/RatingIcon';
 
 export interface SwipeCardProps {
   statement: Statement;
@@ -391,7 +393,7 @@ export default function SwipeCard({
             )}
             aria-hidden="true"
           >
-            <span className="swipe-card__zone-emoji">{zone.emoji}</span>
+            <span className="swipe-card__zone-emoji"><RatingIcon rating={zone.rating} /></span>
           </div>
         ))}
       </div>
@@ -430,8 +432,8 @@ export default function SwipeCard({
         {currentIndex + 1} {t('of')} {totalCards}
       </div>
 
-      {/* Confirmation modal for learning mode */}
-      {showConfirmation && pendingRating !== null && (
+      {/* Confirmation modal for learning mode - rendered via portal to escape card transforms */}
+      {showConfirmation && pendingRating !== null && createPortal(
         <div className="swipe-card__confirmation-overlay">
           <div
             className={clsx(
@@ -440,7 +442,7 @@ export default function SwipeCard({
             )}
           >
             <div className="swipe-card__confirmation-emoji">
-              {RATING_CONFIG[pendingRating].emoji}
+              <RatingIcon rating={pendingRating} />
             </div>
             <h3 className="swipe-card__confirmation-title">
               {t('You have rated it as')}
@@ -448,7 +450,7 @@ export default function SwipeCard({
             <p className="swipe-card__confirmation-rating">
               {t(RATING_CONFIG[pendingRating].labelKey)}
             </p>
-            <p className="swipe-card__confirmation-question">
+            <p className="swipe-card__confirmation-question" dir="auto">
               {t('Are you sure?')}
             </p>
             <div className="swipe-card__confirmation-buttons">
@@ -468,7 +470,8 @@ export default function SwipeCard({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -322,6 +322,8 @@ export {
   SurveyStatusSchema,
   SuggestionMode,
   SuggestionModeSchema,
+  DisplayMode,
+  DisplayModeSchema,
   DEFAULT_SURVEY_SETTINGS,
   QuestionOverrideSettingsSchema,
   DEFAULT_QUESTION_OVERRIDE_SETTINGS,

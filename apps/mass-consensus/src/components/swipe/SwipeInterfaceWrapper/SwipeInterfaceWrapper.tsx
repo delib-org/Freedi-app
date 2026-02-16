@@ -11,6 +11,7 @@ import SwipeInterface from '../SwipeInterface';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 
 export interface SwipeInterfaceWrapperProps {
   question: Statement;
@@ -28,18 +29,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
 
-  // Generate or retrieve anonymous user ID from localStorage
-  const getAnonymousUserId = (): string => {
-    const key = 'anonymous_user_id';
-    let anonId = localStorage.getItem(key);
-
-    if (!anonId) {
-      anonId = `anon_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem(key, anonId);
-    }
-
-    return anonId;
-  };
+  // Use shared anonymous user utility for consistent ID across modes
 
   // Show loading state
   if (isLoading) {
@@ -58,8 +48,8 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   }
 
   // Use authenticated user or anonymous user ID
-  const userId = user?.uid || getAnonymousUserId();
-  const userName = user?.displayName || 'Anonymous';
+  const userId = user?.uid || getOrCreateAnonymousUser();
+  const userName = user?.displayName || t('Anonymous');
 
   return (
     <SwipeInterface

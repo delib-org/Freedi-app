@@ -55,7 +55,8 @@ const UserQuestionComp = ({
 
 	const isMultiOptions =
 		userQuestions.type === UserDemographicQuestionType.checkbox ||
-		userQuestions.type === UserDemographicQuestionType.radio;
+		userQuestions.type === UserDemographicQuestionType.radio ||
+		userQuestions.type === UserDemographicQuestionType.dropdown;
 
 	const handleAddOption = () => {
 		if (newOptionText.trim()) {
@@ -97,7 +98,8 @@ const UserQuestionComp = ({
 			// If changing to/from multi-option types, handle options appropriately
 			const needsOptions =
 				newType === UserDemographicQuestionType.checkbox ||
-				newType === UserDemographicQuestionType.radio;
+				newType === UserDemographicQuestionType.radio ||
+				newType === UserDemographicQuestionType.dropdown;
 			const currentHasOptions =
 				userQuestions.options && userQuestions.options.length > 0;
 
@@ -196,6 +198,9 @@ const UserQuestionComp = ({
 									<option value={UserDemographicQuestionType.checkbox}>
 										{t('Checkbox')}
 									</option>
+									<option value={UserDemographicQuestionType.dropdown}>
+										{t('Dropdown')}
+									</option>
 								</select>
 							</div>
 							{}
@@ -281,6 +286,47 @@ const UserQuestionComp = ({
 						(option: DemographicOption, index: number) => (
 							<div key={index} className={styles.optionItem}>
 								<CheckboxEmptyIcon />
+								{option.option}
+								<div className={styles.spacer}></div>
+								<input
+									type='color'
+									name={`user-question-${questionIndex}-${index}`}
+									value={option.color}
+									className={styles.optionColor}
+									onChange={(e) =>
+										handleChangeOptionColor(
+											index,
+											e.target.value
+										)
+									}
+									onBlur={(e) =>
+										handleChangeOptionColor(
+											index,
+											e.target.value
+										)
+									}
+								/>
+								<DeleteIcon
+									color={allowDelete ? 'red' : 'white'}
+									cursor={allowDelete ? 'pointer' : 'default'}
+									onClick={() =>
+										allowDelete
+											? handleDeleteOption(index)
+											: ''
+									}
+									title={t('Delete Option')}
+								/>
+							</div>
+						)
+					)}
+				</div>
+			)}
+
+			{userQuestions.type === UserDemographicQuestionType.dropdown && (
+				<div>
+					{userQuestions.options?.map(
+						(option: DemographicOption, index: number) => (
+							<div key={index} className={styles.optionItem}>
 								{option.option}
 								<div className={styles.spacer}></div>
 								<input

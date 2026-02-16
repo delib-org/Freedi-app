@@ -48,7 +48,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 		if (
 			question.type === UserDemographicQuestionType.text ||
 			question.type === UserDemographicQuestionType.textarea ||
-			question.type === UserDemographicQuestionType.radio
+			question.type === UserDemographicQuestionType.radio ||
+			question.type === UserDemographicQuestionType.dropdown
 		) {
 			setUserDemographic((prevData) => {
 				const currentQuestion = prevData.find(
@@ -112,7 +113,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 			if (
 				question.type === UserDemographicQuestionType.text ||
 				question.type === UserDemographicQuestionType.textarea ||
-				question.type === UserDemographicQuestionType.radio
+				question.type === UserDemographicQuestionType.radio ||
+				question.type === UserDemographicQuestionType.dropdown
 			) {
 				if (!userAnswer.answer || userAnswer.answer.trim() === '') {
 					return false;

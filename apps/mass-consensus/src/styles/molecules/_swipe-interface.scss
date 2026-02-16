@@ -20,22 +20,35 @@
   align-items: center;
   gap: 1rem;
 
+  @include mobile {
+    padding: 0.5rem;
+    gap: 0.5rem;
+  }
+
   // Progress section
   &__progress {
     width: 100%;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     display: flex;
     justify-content: center;
     overflow: hidden;
+
+    @include mobile {
+      margin-bottom: 0.5rem;
+    }
   }
 
   // Card section - contains the swipe card
   &__card {
     width: 100%;
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
     display: flex;
     justify-content: center;
     overflow: visible; // Allow cards to swipe freely off-screen
+
+    @include mobile {
+      margin-bottom: 0.5rem;
+    }
   }
 
   // Rating buttons container - spreads emoji buttons horizontally
@@ -47,7 +60,7 @@
     align-items: center;
     width: 100%;
     max-width: 500px;
-    margin: 1.5rem auto 0;
+    margin: 1rem auto 0;
     padding: 0 1rem;
     gap: 0.5rem;
 
@@ -55,6 +68,7 @@
     @include mobile {
       gap: 0.25rem;
       padding: 0 0.5rem;
+      margin: 0.5rem auto 0;
     }
   }
 

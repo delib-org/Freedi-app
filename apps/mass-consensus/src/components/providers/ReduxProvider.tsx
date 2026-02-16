@@ -5,9 +5,12 @@
  * Must be a Client Component
  */
 
+import { type ComponentProps } from 'react';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
 
-export function ReduxProvider({ children }: { children: React.ReactNode }) {
+type ProviderChildren = ComponentProps<typeof Provider>['children'];
+
+export function ReduxProvider({ children }: { children: ProviderChildren }) {
   return <Provider store={store}>{children}</Provider>;
 }

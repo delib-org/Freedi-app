@@ -1,36 +1,47 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * QuestionIntro Component Tests
  */
 
 import { render, fireEvent, screen } from '@testing-library/react';
 import QuestionIntro from '../QuestionIntro';
-import { Statement } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 
 // Mock i18n
-jest.mock('@freedi/shared-i18n/react', () => ({
+jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
 }));
 
-// Mock Button component
-jest.mock('@/components/atomic/atoms/Button', () => ({
-  Button: ({ text, onClick, className }: { text: string; onClick: () => void; className?: string }) => (
-    <button onClick={onClick} className={className}>
-      {text}
-    </button>
-  ),
-}));
+// Statement with optional description (component casts to this type internally)
+type StatementWithDescription = Statement & { description?: string };
+
+const mockCreator = {
+  uid: 'user1',
+  displayName: 'Test User',
+  email: '',
+  photoURL: '',
+  isAnonymous: false,
+};
 
 describe('QuestionIntro', () => {
-  const mockQuestion: Statement = {
+  const mockQuestion = {
     statementId: 'q1',
     statement: 'How can we improve our city?',
     description: 'Share your ideas for making our city better',
-    createdBy: 'user1',
+    creatorId: 'user1',
+    creator: mockCreator,
+    statementType: StatementType.question,
+    parentId: 'root',
+    topParentId: 'root',
+    consensus: 0,
     createdAt: Date.now(),
     lastUpdate: Date.now(),
-  } as Statement;
+  } as unknown as StatementWithDescription;
 
   it('should render question title', () => {
     render(<QuestionIntro question={mockQuestion} onStart={jest.fn()} />);
@@ -45,7 +56,7 @@ describe('QuestionIntro', () => {
   });
 
   it('should not render description when not provided', () => {
-    const questionWithoutDesc = { ...mockQuestion, description: undefined };
+    const questionWithoutDesc = { ...mockQuestion, description: undefined } as unknown as Statement;
     const { container } = render(
       <QuestionIntro question={questionWithoutDesc} onStart={jest.fn()} />
     );

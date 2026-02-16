@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import type { SurveyDemographicPage, SurveyDemographicQuestion } from '@freedi/shared-types';
+import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/shared-types';
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { getDemographicPositionOptions } from '@/types/surveyFlow';
 import DemographicQuestionEditor from './DemographicQuestionEditor';
@@ -12,8 +12,8 @@ interface DemographicPagesEditorProps {
   pages: SurveyDemographicPage[];
   onPagesChange: (pages: SurveyDemographicPage[]) => void;
   /** Custom demographic questions for this survey */
-  customQuestions: SurveyDemographicQuestion[];
-  onCustomQuestionsChange: (questions: SurveyDemographicQuestion[]) => void;
+  customQuestions: UserDemographicQuestion[];
+  onCustomQuestionsChange: (questions: UserDemographicQuestion[]) => void;
   /** Number of questions in the survey (for position options) */
   questionCount: number;
 }
@@ -67,7 +67,7 @@ export default function DemographicPagesEditor({
     const page = pages.find((p) => p.demographicPageId === pageId);
     if (page) {
       onCustomQuestionsChange(
-        customQuestions.filter((q) => !page.customQuestionIds.includes(q.questionId))
+        customQuestions.filter((q) => !page.customQuestionIds.includes(q.userQuestionId || ''))
       );
     }
   };
@@ -79,18 +79,16 @@ export default function DemographicPagesEditor({
   };
 
   const handleAddQuestion = (pageId: string) => {
-    const newQuestion: SurveyDemographicQuestion = {
-      questionId: generateQuestionId(),
-      surveyId: '', // Will be set when saving the survey
+    const questionId = generateQuestionId();
+    const newQuestion: UserDemographicQuestion = {
+      userQuestionId: questionId,
+      statementId: '', // Will be set when saving to Firestore
       question: '',
       type: UserDemographicQuestionType.text,
       options: [],
       order: customQuestions.filter((q) =>
-        pages.find((p) => p.demographicPageId === pageId)?.customQuestionIds.includes(q.questionId)
+        pages.find((p) => p.demographicPageId === pageId)?.customQuestionIds.includes(q.userQuestionId || '')
       ).length,
-      required: true,
-      createdAt: Date.now(),
-      lastUpdate: Date.now(),
     };
 
     onCustomQuestionsChange([...customQuestions, newQuestion]);
@@ -99,24 +97,24 @@ export default function DemographicPagesEditor({
     handleUpdatePage(pageId, {
       customQuestionIds: [
         ...(pages.find((p) => p.demographicPageId === pageId)?.customQuestionIds || []),
-        newQuestion.questionId,
+        questionId,
       ],
     });
   };
 
   const handleUpdateQuestion = (
     questionId: string,
-    updates: Partial<SurveyDemographicQuestion>
+    updates: Partial<UserDemographicQuestion>
   ) => {
     onCustomQuestionsChange(
       customQuestions.map((q) =>
-        q.questionId === questionId ? { ...q, ...updates, lastUpdate: Date.now() } : q
+        q.userQuestionId === questionId ? { ...q, ...updates } : q
       )
     );
   };
 
   const handleRemoveQuestion = (pageId: string, questionId: string) => {
-    onCustomQuestionsChange(customQuestions.filter((q) => q.questionId !== questionId));
+    onCustomQuestionsChange(customQuestions.filter((q) => q.userQuestionId !== questionId));
     handleUpdatePage(pageId, {
       customQuestionIds: pages
         .find((p) => p.demographicPageId === pageId)
@@ -124,14 +122,14 @@ export default function DemographicPagesEditor({
     });
   };
 
-  const getPageQuestions = (pageId: string): SurveyDemographicQuestion[] => {
+  const getPageQuestions = (pageId: string): UserDemographicQuestion[] => {
     const page = pages.find((p) => p.demographicPageId === pageId);
     if (!page) return [];
 
     return page.customQuestionIds
-      .map((id) => customQuestions.find((q) => q.questionId === id))
-      .filter((q): q is SurveyDemographicQuestion => q !== undefined)
-      .sort((a, b) => a.order - b.order);
+      .map((id) => customQuestions.find((q) => q.userQuestionId === id))
+      .filter((q): q is UserDemographicQuestion => q !== undefined)
+      .sort((a, b) => (a.order || 0) - (b.order || 0));
   };
 
   const getPositionLabel = (position: number): string => {
@@ -289,16 +287,16 @@ export default function DemographicPagesEditor({
                         <div className={styles.questionsList}>
                           {pageQuestions.map((question, qIndex) => (
                             <DemographicQuestionEditor
-                              key={question.questionId}
+                              key={question.userQuestionId}
                               question={question}
                               index={qIndex}
                               onUpdate={(updates) =>
-                                handleUpdateQuestion(question.questionId, updates)
+                                handleUpdateQuestion(question.userQuestionId || '', updates)
                               }
                               onRemove={() =>
                                 handleRemoveQuestion(
                                   page.demographicPageId,
-                                  question.questionId
+                                  question.userQuestionId || ''
                                 )
                               }
                             />

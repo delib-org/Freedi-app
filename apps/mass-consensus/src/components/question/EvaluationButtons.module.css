@@ -3,6 +3,7 @@
   gap: var(--spacing-sm);
   justify-content: center;
   flex-wrap: wrap;
+  direction: ltr; /* Match zone strip order: negative (left) to positive (right) */
 }
 
 .buttons.compact {
@@ -109,7 +110,7 @@
 }
 
 .button.selected .emoji {
-  filter: grayscale(1) brightness(2);
+  color: white;
   transform: scale(1.1);
 }
 

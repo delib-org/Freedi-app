@@ -13,6 +13,8 @@ import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import RatingIcon from '@/components/icons/RatingIcon';
 import {
   trackPageView,
   trackEvaluation,
@@ -53,7 +55,14 @@ export default function SolutionFeedClient({
   const [userSolutionCount, setUserSolutionCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
   const [throwDirection, setThrowDirection] = useState<'left' | 'right' | null>(null);
+  const [confirmationPending, setConfirmationPending] = useState<{
+    solutionId: string;
+    score: number;
+    direction?: 'left' | 'right';
+  } | null>(null);
+  const [confirmedCount, setConfirmedCount] = useState(0);
   const hasTrackedPageView = useRef(false);
+  const LEARNING_MODE_COUNT = 3;
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
@@ -332,7 +341,7 @@ export default function SolutionFeedClient({
           return newSet;
         });
       }
-      setError('Failed to save your evaluation. Please try again.');
+      setError(t('Failed to save your evaluation. Please try again.'));
     }
   };
 
@@ -340,6 +349,10 @@ export default function SolutionFeedClient({
    * Handle swipe from SwipeCard component
    */
   const handleSwipeRate = (solutionId: string, score: number, direction: 'left' | 'right') => {
+    if (confirmedCount < LEARNING_MODE_COUNT) {
+      setConfirmationPending({ solutionId, score, direction });
+      return;
+    }
     handleEvaluate(solutionId, score, direction);
   };
 
@@ -349,11 +362,48 @@ export default function SolutionFeedClient({
   const handleButtonRate = (score: number, direction?: 'left' | 'right') => {
     if (!currentSolution || throwDirection) return;
     const dir = direction || (score > 0 ? 'right' : score < 0 ? 'left' : undefined);
+
+    if (confirmedCount < LEARNING_MODE_COUNT) {
+      setConfirmationPending({ solutionId: currentSolution.statementId, score, direction: dir || undefined });
+      return;
+    }
+
     handleEvaluate(currentSolution.statementId, score, dir || undefined);
     // If neutral (score = 0), just move to next without throw
     if (score === 0) {
       setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
     }
+  };
+
+  /**
+   * Confirm the pending evaluation (learning mode)
+   */
+  const handleConfirmEvaluation = () => {
+    if (!confirmationPending) return;
+    const { solutionId, score, direction } = confirmationPending;
+    setConfirmationPending(null);
+    setConfirmedCount(prev => prev + 1);
+    handleEvaluate(solutionId, score, direction);
+    // If neutral (score = 0), just move to next without throw
+    if (score === 0) {
+      setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
+    }
+  };
+
+  /**
+   * Cancel the pending evaluation (learning mode)
+   */
+  const handleCancelEvaluation = () => {
+    setConfirmationPending(null);
+  };
+
+  /** Get label and variant for a score */
+  const getScoreInfo = (score: number) => {
+    if (score >= 1) return { labelKey: 'Strongly Agree', variant: 'strongly-agree' };
+    if (score >= 0.5) return { labelKey: 'Agree', variant: 'agree' };
+    if (score > -0.5) return { labelKey: 'Neutral', variant: 'neutral' };
+    if (score > -1) return { labelKey: 'Disagree', variant: 'disagree' };
+    return { labelKey: 'Strongly Disagree', variant: 'strongly-disagree' };
   };
 
   /**
@@ -397,7 +447,7 @@ export default function SolutionFeedClient({
       }
     } catch (error) {
       console.error('Batch fetch error:', error);
-      setError('Failed to load new solutions. Please try again.');
+      setError(t('Failed to load new solutions. Please try again.'));
     } finally {
       setIsLoadingBatch(false);
     }
@@ -459,7 +509,7 @@ export default function SolutionFeedClient({
         {error && (
           <div className={styles.error}>
             <p>{error}</p>
-            <button onClick={() => setError(null)}>Dismiss</button>
+            <button onClick={() => setError(null)}>{t('Dismiss')}</button>
           </div>
         )}
 
@@ -493,7 +543,7 @@ export default function SolutionFeedClient({
                   {currentIndex + 1} / {solutions.length}
                 </span>
                 {batchCount > 1 && (
-                  <span className={styles.batchBadge}>Batch {batchCount}</span>
+                  <span className={styles.batchBadge}>{t('Batch')} {batchCount}</span>
                 )}
               </div>
               <div className={styles.progressTrack}>
@@ -613,6 +663,7 @@ export default function SolutionFeedClient({
           userId={userId}
           onSubmitSuccess={handleSolutionComplete}
           questionText={question.statement}
+          questionDescription={getParagraphsText(question.paragraphs)}
           title={requiresSolution && !hasCheckedUserSolutions ? t('Add Your Solution First') : t('Add Solution')}
         />
 
@@ -626,6 +677,42 @@ export default function SolutionFeedClient({
             hasSubmittedSolution={hasSubmittedSolution}
             onClose={handleCompletionClose}
           />
+        )}
+
+        {/* Rating Confirmation Modal (learning mode - first 3 evaluations) */}
+        {confirmationPending && (
+          <div className={styles.confirmationOverlay}>
+            <div className={`${styles.confirmationModal} ${styles[`confirmation_${getScoreInfo(confirmationPending.score).variant}`]}`}>
+              <div className={styles.confirmationEmoji}>
+                <RatingIcon rating={confirmationPending.score} />
+              </div>
+              <h3 className={styles.confirmationTitle}>
+                {t('You have rated it as')}
+              </h3>
+              <p className={styles.confirmationRating}>
+                {t(getScoreInfo(confirmationPending.score).labelKey)}
+              </p>
+              <p className={styles.confirmationQuestion}>
+                {t('Are you sure?')}
+              </p>
+              <div className={styles.confirmationButtons}>
+                <button
+                  className={`${styles.confirmationButton} ${styles.confirmationCancel}`}
+                  onClick={handleCancelEvaluation}
+                  type="button"
+                >
+                  {t('No, go back')}
+                </button>
+                <button
+                  className={`${styles.confirmationButton} ${styles.confirmationConfirm}`}
+                  onClick={handleConfirmEvaluation}
+                  type="button"
+                >
+                  {t('Yes, confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </ToastProvider>

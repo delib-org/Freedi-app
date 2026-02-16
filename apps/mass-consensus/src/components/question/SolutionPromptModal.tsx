@@ -24,6 +24,8 @@ interface SolutionPromptModalProps {
   onSubmitSuccess: () => void;
   title?: string;
   questionText?: string;
+  /** Additional description/context for the question (from paragraphs) */
+  questionDescription?: string;
   /** Controls UX friction when adding new suggestions vs merging */
   suggestionMode?: SuggestionMode;
   /** When true, shows "Add your answer later" instead of "Cancel" */
@@ -43,6 +45,7 @@ export default function SolutionPromptModal({
   onSubmitSuccess,
   title = 'Add Your Solution',
   questionText,
+  questionDescription,
   suggestionMode = SuggestionMode.encourage,
   requiresSolution = false,
   hasCheckedUserSolutions: _hasCheckedUserSolutions = false,
@@ -55,6 +58,7 @@ export default function SolutionPromptModal({
   const [generatedTitleDesc, setGeneratedTitleDesc] = useState<{ title?: string; description?: string }>({});
   const [multiSuggestions, setMultiSuggestions] = useState<SplitSuggestion[]>([]);
   const [storedSimilarData, setStoredSimilarData] = useState<SimilarCheckResponse | null>(null);
+  const [isFinalSubmit, setIsFinalSubmit] = useState(false);
   const [isQuestionExpanded, setIsQuestionExpanded] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -242,6 +246,7 @@ export default function SolutionPromptModal({
     genDescription?: string
   ) => {
     const textToSubmit = solutionText || text;
+    setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
     // Use passed values or stored values from check-similar response
@@ -290,6 +295,7 @@ export default function SolutionPromptModal({
 
   // Step 2b: Merge solution into existing statement (new default behavior)
   const handleMergeSolution = async (targetStatementId: string) => {
+    setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
     try {
@@ -333,11 +339,13 @@ export default function SolutionPromptModal({
 
   const handleBack = () => {
     setFlowState({ step: 'input' });
+    setIsFinalSubmit(false);
     setError(null);
   };
 
   // Handle confirming multiple suggestions - submit each one
   const handleConfirmMultiSuggestions = async (suggestions: SplitSuggestion[]) => {
+    setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
 
     try {
@@ -431,7 +439,12 @@ export default function SolutionPromptModal({
                 <p className={`${styles.questionText} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
                   <InlineMarkdown text={questionText} />
                 </p>
-                {questionText.length > 150 && (
+                {questionDescription && (
+                  <p className={`${styles.questionDescription} ${isQuestionExpanded ? styles.questionTextExpanded : ''}`}>
+                    <InlineMarkdown text={questionDescription} />
+                  </p>
+                )}
+                {(questionText.length > 150 || questionDescription) && (
                   <button
                     type="button"
                     className={styles.expandButton}
@@ -487,7 +500,14 @@ export default function SolutionPromptModal({
 
         {flowState.step === 'submitting' && (
           <div className={styles.loaderContainer}>
-            <EnhancedLoader />
+            {isFinalSubmit ? (
+              <div className={styles.simpleLoader}>
+                <div className={styles.simpleSpinner} />
+                <p>{t('Submitting...')}</p>
+              </div>
+            ) : (
+              <EnhancedLoader />
+            )}
           </div>
         )}
 

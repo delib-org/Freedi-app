@@ -1,4 +1,8 @@
 /**
+ * @jest-environment jsdom
+ */
+
+/**
  * SocialFeed Component Tests
  */
 
@@ -6,14 +10,12 @@ import { render, screen } from '@testing-library/react';
 import SocialFeed, { SocialActivity } from '../SocialFeed';
 
 // Mock i18n
-jest.mock('@freedi/shared-i18n/react', () => ({
+jest.mock('@freedi/shared-i18n/next', () => ({
   useTranslation: () => ({
-    t: (key: string, options?: Record<string, string | number>) => {
-      if (key === 'just now') return 'just now';
-      if (key === '{{count}} minutes ago') return `${options?.count} minutes ago`;
-      if (key === '{{count}} hours ago') return `${options?.count} hours ago`;
-      if (key === '{{count}} days ago') return `${options?.count} days ago`;
-      return key;
+    t: (key: string) => key,
+    tWithParams: (key: string, params?: Record<string, string | number>) => {
+      if (!params) return key;
+      return key.replace(/\{\{(\w+)\}\}/g, (_, name) => String(params[name] ?? name));
     },
   }),
 }));

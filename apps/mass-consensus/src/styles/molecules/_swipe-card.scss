@@ -8,8 +8,8 @@
   position: relative;
   width: 90%;
   max-width: 400px;
-  height: clamp(300px, 50vh, 500px);
-  max-height: 60vh;
+  height: clamp(200px, 35vh, 400px);
+  max-height: 45vh;
   background: var(--card-default);
   border-radius: 16px;
   padding: clamp(1.5rem, 4vw, 2rem);
@@ -354,6 +354,9 @@
 
   // Mobile
   @include mobile {
+    height: clamp(180px, 30vh, 280px);
+    max-height: 35vh;
+
     &__zone-emoji {
       font-size: 2rem;
     }
@@ -364,19 +367,45 @@
     }
 
     &__content-wrapper {
-      padding: var(--spacing-lg) var(--spacing-md);
+      padding: var(--spacing-md) var(--spacing-sm);
     }
 
     &__content {
-      font-size: 1.25rem;
+      font-size: 1.125rem;
     }
 
     &__confirmation-modal {
-      padding: 1.5rem;
+      padding: 1.25rem;
+    }
+
+    &__confirmation-emoji {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+    }
+
+    &__confirmation-title {
+      font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    &__confirmation-rating {
+      font-size: 1.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    &__confirmation-question {
+      font-size: 0.9375rem;
+      margin-bottom: 1rem;
     }
 
     &__confirmation-buttons {
-      flex-direction: column;
+      flex-direction: row;
+      gap: 0.75rem;
+    }
+
+    &__confirmation-button {
+      padding: 0.625rem 1.25rem;
+      font-size: 0.9375rem;
     }
   }
 }

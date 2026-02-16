@@ -3,24 +3,26 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Statement, QuestionOverrideSettings, SurveyDemographicPage, SurveyDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
+import { Statement, QuestionOverrideSettings, SurveyDemographicPage, UserDemographicQuestion, SurveyExplanationPage } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
-import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode } from '@/types/survey';
+import { Survey, CreateSurveyRequest, DEFAULT_SURVEY_SETTINGS, SuggestionMode, DisplayMode } from '@/types/survey';
 import QuestionPicker from './QuestionPicker';
 import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
+import OpeningSlideManager from './OpeningSlideManager';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
   existingSurvey?: Survey;
+  onSurveyUpdate?: (survey: Survey) => void;
 }
 
 /**
  * Form for creating or editing a survey
  */
-export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
+export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFormProps) {
   const router = useRouter();
   const { t } = useTranslation();
   const { refreshToken } = useAuth();
@@ -34,15 +36,13 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
   const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
-  const [showIntro, setShowIntro] = useState(existingSurvey?.showIntro ?? true);
-  const [customIntroText, setCustomIntroText] = useState(existingSurvey?.customIntroText || '');
   const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
     existingSurvey?.demographicPages || []
   );
   const [explanationPages, setExplanationPages] = useState<SurveyExplanationPage[]>(
     existingSurvey?.explanationPages || []
   );
-  const [customDemographicQuestions, setCustomDemographicQuestions] = useState<SurveyDemographicQuestion[]>([]);
+  const [customDemographicQuestions, setCustomDemographicQuestions] = useState<UserDemographicQuestion[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -156,8 +156,6 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
         forceLanguage: forceLanguage || undefined,
         demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
         explanationPages: explanationPages.length > 0 ? explanationPages : undefined,
-        showIntro,
-        customIntroText: showIntro && customIntroText.trim() ? customIntroText.trim() : undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -196,8 +194,8 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
               demographicPages,
               questions: customDemographicQuestions.map((q) => ({
                 // Pass temp ID for new questions so API can map them
-                questionId: q.questionId.startsWith('demo-q-') ? undefined : q.questionId,
-                tempId: q.questionId.startsWith('demo-q-') ? q.questionId : undefined,
+                questionId: (q.userQuestionId || '').startsWith('demo-q-') ? undefined : q.userQuestionId,
+                tempId: (q.userQuestionId || '').startsWith('demo-q-') ? q.userQuestionId : undefined,
                 question: q.question,
                 type: q.type,
                 options: q.options,
@@ -329,35 +327,11 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
           />
         </div>
 
-        {/* Introduction Text Settings */}
-        <div className={styles.formGroup}>
-          <label>
-            <input
-              type="checkbox"
-              checked={showIntro}
-              onChange={(e) => setShowIntro(e.target.checked)}
-            />
-            {' '}{t('showIntroText') || 'Show introduction text'}
-          </label>
-          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
-            {t('showIntroTextDescription') || 'Display an introductory message to participants on the welcome screen'}
-          </p>
-        </div>
-
-        {showIntro && (
+        {/* Opening Slide Settings */}
+        {existingSurvey && onSurveyUpdate && (
           <div className={styles.formGroup}>
-            <label htmlFor="customIntroText">{t('customIntroText') || 'Custom introduction text'}</label>
-            <textarea
-              id="customIntroText"
-              className={styles.textArea}
-              value={customIntroText}
-              onChange={(e) => setCustomIntroText(e.target.value)}
-              placeholder={t('customIntroTextPlaceholder') || 'Leave empty to use the default introduction text'}
-              rows={4}
-            />
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-              {t('customIntroTextNote') || 'If left empty, the default system introduction will be shown'}
-            </p>
+            <h3 style={{ marginBottom: '0.5rem' }}>{t('openingSlide')}</h3>
+            <OpeningSlideManager survey={existingSurvey} onUpdate={onSurveyUpdate} />
           </div>
         )}
       </div>
@@ -543,6 +517,49 @@ export default function SurveyForm({ existingSurvey }: SurveyFormProps) {
                 <span className={styles.radioLabel}>{t('suggestionModeRestrict') || 'Encourage Merging'}</span>
                 <span className={styles.radioDescription}>
                   {t('suggestionModeRestrictDesc') || '"Merge" is primary with confirmation for new. Consolidates similar ideas.'}
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {/* Display Mode Toggle */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('displayMode') || 'Display Mode'}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('displayModeDescription') || 'Choose how participants see and evaluate suggestions'}
+        </p>
+
+        <div className={styles.formGroup}>
+          <div className={styles.radioGroup}>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="displayMode"
+                value={DisplayMode.swipe}
+                checked={(settings.displayMode === DisplayMode.swipe) || !settings.displayMode}
+                onChange={() => setSettings({ ...settings, displayMode: DisplayMode.swipe })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('displayModeSwipe') || 'Swipe (Tinder-style)'}</span>
+                <span className={styles.radioDescription}>
+                  {t('displayModeSwipeDesc') || 'One card at a time. Users swipe or tap buttons to rate each suggestion.'}
+                </span>
+              </div>
+            </label>
+            <label className={styles.radioOption}>
+              <input
+                type="radio"
+                name="displayMode"
+                value={DisplayMode.classic}
+                checked={settings.displayMode === DisplayMode.classic}
+                onChange={() => setSettings({ ...settings, displayMode: DisplayMode.classic })}
+              />
+              <div className={styles.radioContent}>
+                <span className={styles.radioLabel}>{t('displayModeClassic') || 'Classic (Multi-card)'}</span>
+                <span className={styles.radioDescription}>
+                  {t('displayModeClassicDesc') || 'Card stack with swipe left/right. Shows batch progress and card stack preview.'}
                 </span>
               </div>
             </label>

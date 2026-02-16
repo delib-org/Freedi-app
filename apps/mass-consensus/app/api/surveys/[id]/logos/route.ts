@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getUserIdFromCookie } from '@/lib/utils/user';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, addLogoToSurvey } from '@/lib/firebase/surveys';
 import { uploadSurveyLogoAdmin } from '@/lib/firebase/storageAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { Collections, Role } from 'delib-npm';
+import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 
 /**
  * GET /api/surveys/[id]/logos
@@ -55,11 +55,19 @@ export async function POST(
   try {
     const surveyId = params.id;
 
-    // Check authentication
-    const userId = getUserIdFromCookie(request.headers.get('cookie'));
+    // Check authentication via Bearer token
+    const token = extractBearerToken(request.headers.get('Authorization'));
+    if (!token) {
+      return NextResponse.json(
+        { error: 'Authorization required' },
+        { status: 401 }
+      );
+    }
+
+    const userId = await verifyToken(token);
     if (!userId) {
       return NextResponse.json(
-        { error: 'Authentication required' },
+        { error: 'Invalid or expired token' },
         { status: 401 }
       );
     }

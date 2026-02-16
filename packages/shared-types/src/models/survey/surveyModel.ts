@@ -66,6 +66,19 @@ export enum SuggestionMode {
 export const SuggestionModeSchema = enum_(SuggestionMode);
 
 // ============================================
+// Display Mode Enum
+// Controls how participants see and evaluate suggestions
+// ============================================
+export enum DisplayMode {
+  /** Tinder-style single card swipe interface (default) */
+  swipe = 'swipe',
+  /** Classic multi-card interface with batch loading */
+  classic = 'classic',
+}
+
+export const DisplayModeSchema = enum_(DisplayMode);
+
+// ============================================
 // Survey Settings Schema
 // ============================================
 export const SurveySettingsSchema = object({
@@ -83,6 +96,8 @@ export const SurveySettingsSchema = object({
   allowParticipantsToAddSuggestions: optional(boolean()),
   /** Controls UX friction when adding new suggestions vs merging with existing */
   suggestionMode: optional(SuggestionModeSchema),
+  /** Display mode: swipe for tinder-style, classic for multi-card */
+  displayMode: optional(DisplayModeSchema),
 });
 
 export type SurveySettings = InferOutput<typeof SurveySettingsSchema>;
@@ -296,6 +311,7 @@ export const DEFAULT_SURVEY_SETTINGS: SurveySettings = {
   randomizeQuestions: false,
   allowParticipantsToAddSuggestions: true,
   suggestionMode: SuggestionMode.encourage,
+  displayMode: DisplayMode.swipe,
 };
 
 export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {

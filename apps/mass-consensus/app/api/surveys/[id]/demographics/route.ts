@@ -7,7 +7,8 @@ import {
   updateSurvey,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
-import { SurveyDemographicQuestion, SurveyDemographicPage } from '@/types/survey';
+import type { UserDemographicQuestion } from '@freedi/shared-types';
+import type { SurveyDemographicPage } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 
 interface RouteContext {
@@ -44,8 +45,8 @@ interface UpdateDemographicsRequest {
     /** Temporary ID used by the client for new questions */
     tempId?: string;
     question: string;
-    type: SurveyDemographicQuestion['type'];
-    options?: SurveyDemographicQuestion['options'];
+    type: UserDemographicQuestion['type'];
+    options?: UserDemographicQuestion['options'];
     order?: number;
     required?: boolean;
     // Range-specific fields
@@ -54,6 +55,7 @@ interface UpdateDemographicsRequest {
     step?: number;
     minLabel?: string;
     maxLabel?: string;
+    allowOther?: boolean;
   }>;
 }
 
@@ -104,7 +106,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const body: UpdateDemographicsRequest = await request.json();
 
     // Batch save all questions in a single Firestore operation (much faster)
-    let savedQuestions: SurveyDemographicQuestion[] = [];
+    let savedQuestions: UserDemographicQuestion[] = [];
     let idMapping: Record<string, string> = {};
 
     if (body.questions && body.questions.length > 0) {

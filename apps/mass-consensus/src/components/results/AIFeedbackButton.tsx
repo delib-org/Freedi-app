@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './AIFeedbackButton.module.css';
 
 interface AIFeedbackButtonProps {
@@ -16,6 +17,7 @@ export default function AIFeedbackButton({
   questionId,
   userId,
 }: AIFeedbackButtonProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function AIFeedbackButton({
       setShowModal(true);
     } catch (error) {
       console.error('AI feedback error:', error);
-      setError('Failed to get feedback. Please try again.');
+      setError(t('Failed to get feedback. Please try again.'));
     } finally {
       setIsLoading(false);
     }
@@ -50,14 +52,14 @@ export default function AIFeedbackButton({
   return (
     <>
       <div className={styles.container}>
-        <h3>Want to improve your solutions?</h3>
-        <p>Get personalized AI feedback based on top-performing solutions</p>
+        <h3>{t('Want to improve your solutions?')}</h3>
+        <p>{t('Get personalized AI feedback based on top-performing solutions')}</p>
         <button
           onClick={handleGetFeedback}
           disabled={isLoading}
           className={`${styles.button} ${isLoading ? styles.loading : ''}`}
         >
-          {isLoading ? 'Generating feedback...' : 'Get AI Feedback'}
+          {isLoading ? t('Generating feedback...') : t('Get AI Feedback')}
         </button>
         {error && <p className={styles.error}>{error}</p>}
       </div>
@@ -67,11 +69,11 @@ export default function AIFeedbackButton({
         <div className={styles.modal} onClick={() => setShowModal(false)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
-              <h2>AI Feedback</h2>
+              <h2>{t('AI Feedback')}</h2>
               <button
                 onClick={() => setShowModal(false)}
                 className={styles.closeButton}
-                aria-label="Close"
+                aria-label={t('Close')}
               >
                 ×
               </button>
@@ -84,7 +86,7 @@ export default function AIFeedbackButton({
                 onClick={() => setShowModal(false)}
                 className={styles.closeButtonBottom}
               >
-                Close
+                {t('Close')}
               </button>
             </div>
           </div>

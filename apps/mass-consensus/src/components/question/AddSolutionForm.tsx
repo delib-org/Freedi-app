@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { VALIDATION, UI } from '@/constants/common';
+import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './AddSolutionForm.module.css';
 
 interface AddSolutionFormProps {
@@ -23,6 +24,7 @@ export default function AddSolutionForm({
   userId: _userId,
   onSubmit,
 }: AddSolutionFormProps) {
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [mounted, setMounted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -73,14 +75,14 @@ export default function AddSolutionForm({
 
   const formContent = (
     <div className={styles.fixedContainer}>
-      <h3 className={styles.title}>Add Your Solution</h3>
+      <h3 className={styles.title}>{t('Add Your Solution')}</h3>
 
       <form onSubmit={handleSubmit} className={styles.form}>
         <textarea
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Type your solution here..."
+          placeholder={t('Type your solution here...')}
           className={styles.textarea}
           rows={1}
           maxLength={VALIDATION.MAX_SOLUTION_LENGTH}
@@ -93,10 +95,10 @@ export default function AddSolutionForm({
               !isValid && characterCount > 0 ? styles.invalid : ''
             }`}
           >
-            {characterCount}/{VALIDATION.MAX_SOLUTION_LENGTH} characters
+            {characterCount}/{VALIDATION.MAX_SOLUTION_LENGTH} {t('characters')}
             {characterCount < VALIDATION.MIN_SOLUTION_LENGTH &&
               characterCount > 0 &&
-              ` (minimum ${VALIDATION.MIN_SOLUTION_LENGTH})`}
+              ` (${t('minimum')} ${VALIDATION.MIN_SOLUTION_LENGTH})`}
           </span>
 
           <button
@@ -104,7 +106,7 @@ export default function AddSolutionForm({
             disabled={!isValid || isSubmitting}
             className={`${styles.submitButton} ${!isValid || isSubmitting ? styles.disabled : ''}`}
           >
-            {isSubmitting ? 'Checking...' : 'Submit Solution'}
+            {isSubmitting ? t('Loading...') : t('Submit Solution')}
           </button>
         </div>
       </form>
