@@ -145,6 +145,7 @@ export default async function DocumentPage({ params }: PageProps) {
     isPublic?: boolean;
     requireGoogleLogin?: boolean;
     hideUserIdentity?: boolean;
+    showSignatureCounts?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -183,6 +184,9 @@ export default async function DocumentPage({ params }: PageProps) {
   const isPublic = signSettings?.isPublic ?? true;
   const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
   const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
+
+  // Signature counts setting (default: true)
+  const showSignatureCounts = signSettings?.showSignatureCounts ?? true;
 
   // Enforce isPublic: private document access control
   if (!isPublic && !isAdmin) {
@@ -256,6 +260,7 @@ export default async function DocumentPage({ params }: PageProps) {
         enableHeadingNumbering={enableHeadingNumbering}
         requireGoogleLogin={requireGoogleLogin}
         hideUserIdentity={hideUserIdentity}
+        showSignatureCounts={showSignatureCounts}
       />
     </LanguageOverrideProvider>
   );

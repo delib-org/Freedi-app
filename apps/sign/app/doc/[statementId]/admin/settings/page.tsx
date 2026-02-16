@@ -65,6 +65,8 @@ interface Settings {
   nonInteractiveNormalStyle: boolean;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -101,6 +103,7 @@ export default function AdminSettingsPage() {
     headerColors: DEFAULT_HEADER_COLORS,
     nonInteractiveNormalStyle: false,
     enableHeadingNumbering: false,
+    showSignatureCounts: true,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -391,6 +394,21 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.showViewCounts ? styles.active : ''}`}
             onClick={() => handleToggle('showViewCounts')}
             aria-pressed={settings.showViewCounts}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Show Signature Counts')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show signed and rejected counts to all users')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.showSignatureCounts ? styles.active : ''}`}
+            onClick={() => handleToggle('showSignatureCounts')}
+            aria-pressed={settings.showSignatureCounts}
           />
         </div>
 

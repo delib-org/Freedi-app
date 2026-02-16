@@ -39,6 +39,8 @@ export interface DocumentSettings {
   headerColors: HeaderColors;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts: boolean;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -67,6 +69,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
   enableHeadingNumbering: false,
+  showSignatureCounts: true,
 };
 
 /**
@@ -140,6 +143,7 @@ export async function GET(
       allowHeaderReactions: document?.signSettings?.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions,
       headerColors: document?.signSettings?.headerColors ?? DEFAULT_SETTINGS.headerColors,
       enableHeadingNumbering: document?.signSettings?.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering,
+      showSignatureCounts: document?.signSettings?.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts,
     };
 
     return NextResponse.json(settings);
@@ -290,6 +294,7 @@ export async function PUT(
       allowHeaderReactions: body.allowHeaderReactions !== undefined ? Boolean(body.allowHeaderReactions) : (existingSettings.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions),
       headerColors,
       enableHeadingNumbering: body.enableHeadingNumbering !== undefined ? Boolean(body.enableHeadingNumbering) : (existingSettings.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering),
+      showSignatureCounts: body.showSignatureCounts !== undefined ? Boolean(body.showSignatureCounts) : (existingSettings.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts),
     };
 
     // Update document with new settings

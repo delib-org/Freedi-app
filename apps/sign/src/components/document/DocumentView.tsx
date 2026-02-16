@@ -10,6 +10,7 @@ import { resolveTextDirection } from '@/lib/utils/textDirection';
 import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import DocumentClient from './DocumentClient';
+import SignatureStats from './SignatureStats';
 import SignButton from './SignButton';
 
 // Import ParagraphCard dynamically to prevent SSR hydration mismatches
@@ -60,6 +61,8 @@ interface DocumentViewProps {
   requireGoogleLogin?: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity?: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts?: boolean;
 }
 
 export default function DocumentView({
@@ -86,6 +89,7 @@ export default function DocumentView({
   enableHeadingNumbering = false,
   requireGoogleLogin = false,
   hideUserIdentity = true,
+  showSignatureCounts = true,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -228,6 +232,10 @@ export default function DocumentView({
             {/* Sign/Reject buttons at bottom */}
             {paragraphs.length > 0 && (
               <footer className={styles.footer}>
+                {showSignatureCounts && (
+                  <SignatureStats documentId={document.statementId} />
+                )}
+                <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
                   {!user ? (
                     <p className={styles.unsignedStatus}>
@@ -261,6 +269,7 @@ export default function DocumentView({
                       <SignButton isSigned={userSignature?.signed === 'signed'} />
                     </>
                   )}
+                </div>
                 </div>
               </footer>
             )}
