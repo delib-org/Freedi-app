@@ -19,8 +19,11 @@ interface Props {
 	role?: Role; // User role to determine admin permissions
 }
 
+const OTHER_SENTINEL = '__other__';
+
 const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true, role }) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
+	const [otherTexts, setOtherTexts] = useState<Record<string, string>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useTranslation();
 	const navigate = useNavigate();
@@ -40,10 +43,24 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const answeredCount = userDemographic.length;
 	const totalCount = questions.length;
 	const progressPercent = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
+	const handleOtherTextChange = (questionId: string, text: string) => {
+		setOtherTexts((prev) => ({ ...prev, [questionId]: text }));
+
+		// Also update the otherText on the demographic answer
+		setUserDemographic((prevData) =>
+			prevData.map((q) =>
+				q.userQuestionId === questionId ? { ...q, otherText: text } : q
+			)
+		);
+	};
+
 	const handleQuestionChange = (
 		question: UserDemographicQuestion,
 		value: string | string[]
 	) => {
+		const questionId = question.userQuestionId || '';
+		const currentOtherText = otherTexts[questionId] || '';
+
 		// Update the statement with the new user demographic
 		if (
 			question.type === UserDemographicQuestionType.text ||
@@ -51,6 +68,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 			question.type === UserDemographicQuestionType.radio ||
 			question.type === UserDemographicQuestionType.dropdown
 		) {
+			const answerValue = Array.isArray(value) ? value.join(',') : value;
+
 			setUserDemographic((prevData) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
@@ -60,9 +79,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 						q.userQuestionId === question.userQuestionId
 							? {
 									...q,
-									answer: Array.isArray(value)
-										? value.join(',')
-										: value,
+									answer: answerValue,
+									otherText: answerValue === OTHER_SENTINEL ? currentOtherText : undefined,
 								}
 							: q
 					);
@@ -72,11 +90,15 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 					...prevData,
 					{
 						...question,
-						answer: Array.isArray(value) ? value.join(',') : value,
+						answer: answerValue,
+						otherText: answerValue === OTHER_SENTINEL ? currentOtherText : undefined,
 					},
 				];
 			});
 		} else if (question.type === UserDemographicQuestionType.checkbox) {
+			const arrayValue = value as string[];
+			const hasOther = arrayValue.includes(OTHER_SENTINEL);
+
 			setUserDemographic((prevData) => {
 				const currentQuestion = prevData.find(
 					(q) => q.userQuestionId === question.userQuestionId
@@ -85,14 +107,22 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
-							? { ...q, answerOptions: value as string[] }
+							? {
+									...q,
+									answerOptions: arrayValue,
+									otherText: hasOther ? currentOtherText : undefined,
+								}
 							: q
 					);
 				}
 
 				return [
 					...prevData,
-					{ ...question, answerOptions: value as string[] },
+					{
+						...question,
+						answerOptions: arrayValue,
+						otherText: hasOther ? currentOtherText : undefined,
+					},
 				];
 			});
 		}
@@ -119,12 +149,26 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 				if (!userAnswer.answer || userAnswer.answer.trim() === '') {
 					return false;
 				}
+				// If "Other" is selected, require otherText
+				if (userAnswer.answer === OTHER_SENTINEL) {
+					const text = otherTexts[question.userQuestionId || ''] || '';
+					if (!text.trim()) {
+						return false;
+					}
+				}
 			} else if (question.type === UserDemographicQuestionType.checkbox) {
 				if (
 					!userAnswer.answerOptions ||
 					userAnswer.answerOptions.length === 0
 				) {
 					return false;
+				}
+				// If "Other" is in the selected options, require otherText
+				if (userAnswer.answerOptions.includes(OTHER_SENTINEL)) {
+					const text = otherTexts[question.userQuestionId || ''] || '';
+					if (!text.trim()) {
+						return false;
+					}
 				}
 			}
 		}
@@ -220,6 +264,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 										onChange={(val) =>
 											handleQuestionChange(question, val)
 										}
+										onOtherTextChange={handleOtherTextChange}
+										otherText={otherTexts[question.userQuestionId || ''] || ''}
 										required={true}
 									/>
 								);
@@ -259,6 +305,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 										onChange={(val) =>
 											handleQuestionChange(question, val)
 										}
+										onOtherTextChange={handleOtherTextChange}
+										otherText={otherTexts[question.userQuestionId || ''] || ''}
 										required={true}
 									/>
 								);
