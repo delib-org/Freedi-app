@@ -42,14 +42,14 @@ jest.mock('@freedi/shared-i18n/next', () => ({
 }));
 
 // Mock UI store
-const mockApprovals: Record<string, boolean> = {};
+const mockEvaluations: Record<string, number> = {};
 const mockCommentCounts: Record<string, number> = {};
 const mockUserInteractions = new Set<string>();
 
 jest.mock('@/store/uiStore', () => ({
 	useUIStore: (selector: (state: unknown) => unknown) => {
 		const state = {
-			approvals: mockApprovals,
+			evaluations: mockEvaluations,
 			commentCounts: mockCommentCounts,
 			userInteractions: mockUserInteractions,
 			suggestionCounts: {},
@@ -104,13 +104,13 @@ describe('ParagraphCard', () => {
 			order: 0,
 		},
 		documentId: 'doc-123',
-		isApproved: undefined,
+		userEvaluation: undefined as number | undefined,
 		isLoggedIn: true,
 	};
 
 	beforeEach(() => {
 		// Clear mock state
-		Object.keys(mockApprovals).forEach((key) => delete mockApprovals[key]);
+		Object.keys(mockEvaluations).forEach((key) => delete mockEvaluations[key]);
 		Object.keys(mockCommentCounts).forEach((key) => delete mockCommentCounts[key]);
 		mockUserInteractions.clear();
 	});
@@ -166,25 +166,25 @@ describe('ParagraphCard', () => {
 		});
 	});
 
-	describe('approval states', () => {
-		it('applies pending class when isApproved is undefined', () => {
+	describe('evaluation states', () => {
+		it('applies pending class when userEvaluation is undefined', () => {
 			render(<ParagraphCard {...defaultProps} />);
 			expect(document.querySelector('.pending')).toBeInTheDocument();
 		});
 
-		it('applies approved class when isApproved is true', () => {
-			render(<ParagraphCard {...defaultProps} isApproved={true} />);
+		it('applies approved class when userEvaluation is 1', () => {
+			render(<ParagraphCard {...defaultProps} userEvaluation={1} />);
 			expect(document.querySelector('.approved')).toBeInTheDocument();
 		});
 
-		it('applies rejected class when isApproved is false', () => {
-			render(<ParagraphCard {...defaultProps} isApproved={false} />);
+		it('applies rejected class when userEvaluation is -1', () => {
+			render(<ParagraphCard {...defaultProps} userEvaluation={-1} />);
 			expect(document.querySelector('.rejected')).toBeInTheDocument();
 		});
 
-		it('uses store approval over prop when available', () => {
-			mockApprovals['p-123'] = true;
-			render(<ParagraphCard {...defaultProps} isApproved={false} />);
+		it('uses store evaluation over prop when available', () => {
+			mockEvaluations['p-123'] = 1;
+			render(<ParagraphCard {...defaultProps} userEvaluation={-1} />);
 			expect(document.querySelector('.approved')).toBeInTheDocument();
 		});
 	});

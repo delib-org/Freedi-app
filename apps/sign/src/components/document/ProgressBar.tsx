@@ -5,34 +5,34 @@ import { useUIStore } from '@/store/uiStore';
 import styles from './DocumentView.module.scss';
 
 interface ProgressBarProps {
-  initialApprovals: Record<string, boolean>;
+  initialEvaluations: Record<string, number>;
   totalParagraphs: number;
 }
 
 export default function ProgressBar({
-  initialApprovals,
+  initialEvaluations,
   totalParagraphs,
 }: ProgressBarProps) {
-  const { approvals, userInteractions, initializeApprovals } = useUIStore();
+  const { evaluations, userInteractions, initializeEvaluations } = useUIStore();
 
-  // Initialize approvals from server data on mount
+  // Initialize evaluations from server data on mount
   useEffect(() => {
-    initializeApprovals(initialApprovals, totalParagraphs);
-  }, [initialApprovals, totalParagraphs, initializeApprovals]);
+    initializeEvaluations(initialEvaluations, totalParagraphs);
+  }, [initialEvaluations, totalParagraphs, initializeEvaluations]);
 
   // Calculate progress from store (real-time updates)
-  // Count paragraphs that have been "dealt with" (approved, rejected, OR interacted)
+  // Count paragraphs that have been "dealt with" (evaluated OR interacted)
   const dealtWithCount = useMemo(() => {
     const dealtWithSet = new Set<string>();
 
-    // Add all approved/rejected paragraphs
-    Object.keys(approvals).forEach(id => dealtWithSet.add(id));
+    // Add all evaluated paragraphs
+    Object.keys(evaluations).forEach(id => dealtWithSet.add(id));
 
     // Add all interacted paragraphs
     userInteractions.forEach((id: string) => dealtWithSet.add(id));
 
     return dealtWithSet.size;
-  }, [approvals, userInteractions]);
+  }, [evaluations, userInteractions]);
 
   const progressPercent = totalParagraphs > 0
     ? Math.round((dealtWithCount / totalParagraphs) * 100)

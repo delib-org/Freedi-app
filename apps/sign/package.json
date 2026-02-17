@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cd .. && cd .. &&  npm run env:dev && cd apps/sign && next dev -p 3002",
+    "deve": "cd ../.. && npm run env:dev && firebase use dev && firebase emulators:start --only firestore,auth,storage,database & cd apps/sign && next dev -p 3002",
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "next lint",

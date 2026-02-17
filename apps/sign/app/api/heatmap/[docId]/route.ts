@@ -7,13 +7,12 @@ import { logger } from '@/lib/utils/logger';
 
 const PARAGRAPH_VIEWS_COLLECTION = 'paragraphViews';
 
-interface ApprovalDoc {
-  paragraphId?: string;
-  statementId?: string;
-  approval: boolean;
+interface EvaluationDoc {
+  statementId: string;
+  evaluatorId: string;
+  evaluation: number; // 1 or -1
   odlUserId?: string;
   odluserId?: string;
-  userId?: string;
 }
 
 interface ParagraphViewDoc {
@@ -203,11 +202,19 @@ export async function GET(
       });
     }
 
-    // 2. Get all approvals for the document
-    const approvalsSnapshot = await db
-      .collection(Collections.approval)
-      .where('documentId', '==', docId)
-      .get();
+    // 2. Get all evaluations for paragraphs (used for approval heat map)
+    // Query evaluations where statementId matches any paragraphId
+    // Firestore `in` queries limited to 30 items, so batch if needed
+    const BATCH_SIZE = 30;
+    const paragraphEvalDocs: FirebaseFirestore.QueryDocumentSnapshot[] = [];
+    for (let i = 0; i < paragraphIds.length; i += BATCH_SIZE) {
+      const batch = paragraphIds.slice(i, i + BATCH_SIZE);
+      const batchSnapshot = await db
+        .collection(Collections.evaluations)
+        .where('statementId', 'in', batch)
+        .get();
+      paragraphEvalDocs.push(...batchSnapshot.docs);
+    }
 
     // 3. Get all comments (statements with parentId in paragraphIds)
     const commentsSnapshot = await db
@@ -216,7 +223,7 @@ export async function GET(
       .where('statementType', '==', StatementType.statement)
       .get();
 
-    // 4. Get all evaluations (for rating)
+    // 4. Get all evaluations for comments (for rating heat map)
     const evaluationsSnapshot = await db
       .collection(Collections.evaluations)
       .where('documentId', '==', docId)
@@ -260,13 +267,13 @@ export async function GET(
       heatMapData.suggestions[id] = 0;
     });
 
-    // Calculate approval score per paragraph (-1 to 1 scale)
+    // Calculate approval score per paragraph (-1 to 1 scale) using evaluations
     // -1 = all rejected, 0 = neutral/mixed, 1 = all approved
-    const approvalsByParagraph: Record<string, { approved: number; rejected: number }> = {};
-    approvalsSnapshot.docs.forEach((doc) => {
-      const approval = doc.data() as ApprovalDoc;
-      const paragraphId = approval.paragraphId || approval.statementId;
-      const userId = approval.odlUserId || approval.odluserId || approval.userId;
+    const evalsByParagraph: Record<string, { positive: number; negative: number }> = {};
+    paragraphEvalDocs.forEach((doc) => {
+      const evalData = doc.data() as EvaluationDoc;
+      const paragraphId = evalData.statementId;
+      const userId = evalData.odlUserId || evalData.odluserId || evalData.evaluatorId;
 
       // Skip if filtering by segment and user not in segment
       if (segmentUsers && userId && !segmentUsers.has(userId)) {
@@ -274,22 +281,22 @@ export async function GET(
       }
 
       if (paragraphId && paragraphIds.includes(paragraphId)) {
-        if (!approvalsByParagraph[paragraphId]) {
-          approvalsByParagraph[paragraphId] = { approved: 0, rejected: 0 };
+        if (!evalsByParagraph[paragraphId]) {
+          evalsByParagraph[paragraphId] = { positive: 0, negative: 0 };
         }
-        if (approval.approval) {
-          approvalsByParagraph[paragraphId].approved++;
-        } else {
-          approvalsByParagraph[paragraphId].rejected++;
+        if (evalData.evaluation > 0) {
+          evalsByParagraph[paragraphId].positive++;
+        } else if (evalData.evaluation < 0) {
+          evalsByParagraph[paragraphId].negative++;
         }
       }
     });
 
-    // Convert to -1 to 1 scale: (approved - rejected) / total
-    Object.entries(approvalsByParagraph).forEach(([id, data]) => {
-      const total = data.approved + data.rejected;
+    // Convert to -1 to 1 scale: (positive - negative) / total
+    Object.entries(evalsByParagraph).forEach(([id, data]) => {
+      const total = data.positive + data.negative;
       heatMapData.approval[id] = total > 0
-        ? Math.round(((data.approved - data.rejected) / total) * 100) / 100
+        ? Math.round(((data.positive - data.negative) / total) * 100) / 100
         : 0;
     });
 

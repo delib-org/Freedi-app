@@ -342,6 +342,7 @@ export function useRealtimeParagraphs(
             if (!statement.hide) {
               // Convert Statement (sub-statement) to Paragraph format for component compatibility
               // Note: isNonInteractive is not mapped as it's not stored in Statement.doc
+              const stmtWithEvals = statement as Statement & { positiveEvaluations?: number; negativeEvaluations?: number };
               const paragraph: Paragraph = {
                 paragraphId: statement.statementId,
                 content: statement.statement,
@@ -352,6 +353,9 @@ export function useRealtimeParagraphs(
                 imageAlt: statement.doc?.imageAlt,
                 imageCaption: statement.doc?.imageCaption,
                 documentApproval: statement.documentApproval,
+                positiveEvaluations: stmtWithEvals.positiveEvaluations,
+                negativeEvaluations: stmtWithEvals.negativeEvaluations,
+                consensus: statement.consensus,
               };
               updatedParagraphs.push(paragraph);
             }

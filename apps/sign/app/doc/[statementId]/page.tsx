@@ -5,7 +5,7 @@ import {
   getDocumentForSigning,
   getDocumentParagraphs,
   getUserSignature,
-  getUserApprovals,
+  getUserEvaluationsForDocument,
   getCommentCountsForDocument,
   getUserInteractionsForDocument,
   getSuggestionCountsForDocument,
@@ -81,24 +81,24 @@ export default async function DocumentPage({ params }: PageProps) {
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
   console.info(`[Perf] getCommentCountsForDocument: ${Date.now() - commentStart}ms`);
 
-  // If user exists, get their signature, approvals, interactions, and admin status
+  // If user exists, get their signature, evaluations, interactions, and admin status
   let userSignature = null;
-  let userApprovals: Awaited<ReturnType<typeof getUserApprovals>> = [];
+  let userEvaluations: Record<string, number> = {};
   let userInteractions: Set<string> = new Set();
   let isAdmin = false;
 
   if (user) {
     const userStart = Date.now();
     const { db } = getFirebaseAdmin();
-    const [signature, approvals, interactions, adminAccess] = await Promise.all([
+    const [signature, evaluations, interactions, adminAccess] = await Promise.all([
       getUserSignature(statementId, user.uid),
-      getUserApprovals(statementId, user.uid),
+      getUserEvaluationsForDocument(paragraphIds, user.uid),
       getUserInteractionsForDocument(statementId, user.uid, paragraphIds),
       checkAdminAccess(db, statementId, user.uid),
     ]);
     console.info(`[Perf] User queries (parallel): ${Date.now() - userStart}ms`);
     userSignature = signature;
-    userApprovals = approvals;
+    userEvaluations = evaluations;
     userInteractions = interactions;
     isAdmin = adminAccess.isAdmin;
 
@@ -111,15 +111,6 @@ export default async function DocumentPage({ params }: PageProps) {
     });
   }
   console.info(`[Perf] Total page load: ${Date.now() - pageStart}ms`);
-
-  // Convert approvals array to a map for easier lookup
-  // Note: approvals now use paragraphId instead of statementId
-  const approvalsMap: Record<string, boolean> = {};
-  userApprovals.forEach((approval) => {
-    // Support both old (statementId) and new (paragraphId) formats
-    const id = approval.paragraphId || approval.statementId;
-    approvalsMap[id] = approval.approval;
-  });
 
   // Convert Set to array for serialization (RSC can't serialize Sets)
   const userInteractionsArray = Array.from(userInteractions);
@@ -241,7 +232,7 @@ export default async function DocumentPage({ params }: PageProps) {
         paragraphs={serializedParagraphs}
         user={serializedUser}
         userSignature={serializedSignature}
-        userApprovals={approvalsMap}
+        userEvaluations={userEvaluations}
         commentCounts={commentCounts}
         suggestionCounts={suggestionCounts}
         userInteractions={userInteractionsArray}

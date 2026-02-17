@@ -14,10 +14,15 @@ export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 /**
  * Sign app extension of Paragraph with additional properties
  * - isNonInteractive: For explanatory text that users cannot interact with
- * - documentApproval: Approval statistics for this paragraph (for statement-based paragraphs)
+ * - positiveEvaluations / negativeEvaluations: Vote counts from evaluations system
+ * - consensus: Calculated consensus score from evaluations
+ * - documentApproval: Legacy approval statistics (kept for backward compatibility)
  */
 export interface Paragraph extends SharedParagraph {
   isNonInteractive?: boolean;
+  positiveEvaluations?: number;
+  negativeEvaluations?: number;
+  consensus?: number;
   documentApproval?: {
     approved: number;
     totalVoters: number;

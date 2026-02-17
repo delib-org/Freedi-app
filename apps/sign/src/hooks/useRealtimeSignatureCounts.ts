@@ -3,14 +3,15 @@
  *
  * Real-time Firestore listener for document signature counts.
  * Counts how many users signed vs rejected a document.
- * Uses onSnapshot for instant updates.
+ * Waits for Firebase Auth to be ready before subscribing to avoid permission errors.
  */
 
 'use client';
 
 import { useEffect, useState } from 'react';
 import { collection, query, where, onSnapshot, Unsubscribe } from 'firebase/firestore';
-import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getFirebaseFirestore, getFirebaseAuth } from '@/lib/firebase/client';
 import { Collections } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -22,12 +23,10 @@ interface SignatureCounts {
 
 /**
  * Hook to listen to signature counts for a document in real-time
+ * Waits for Firebase Auth to be initialized before subscribing
  *
  * @param documentId - The document ID to count signatures for
  * @returns Object with signedCount, rejectedCount, and isLoading
- *
- * @example
- * const { signedCount, rejectedCount, isLoading } = useRealtimeSignatureCounts('doc_123');
  */
 export function useRealtimeSignatureCounts(documentId: string): SignatureCounts {
   const [counts, setCounts] = useState<SignatureCounts>({
@@ -39,55 +38,73 @@ export function useRealtimeSignatureCounts(documentId: string): SignatureCounts 
   useEffect(() => {
     if (!documentId) {
       setCounts({ signedCount: 0, rejectedCount: 0, isLoading: false });
+
       return;
     }
 
-    let unsubscribe: Unsubscribe | null = null;
+    let snapshotUnsubscribe: Unsubscribe | null = null;
 
-    try {
-      const firestore = getFirebaseFirestore();
+    // Wait for auth to be ready before setting up the Firestore listener
+    const auth = getFirebaseAuth();
+    const authUnsubscribe = onAuthStateChanged(auth, (user) => {
+      // Clean up any previous snapshot listener
+      if (snapshotUnsubscribe) {
+        snapshotUnsubscribe();
+        snapshotUnsubscribe = null;
+      }
 
-      const q = query(
-        collection(firestore, Collections.signatures),
-        where('documentId', '==', documentId)
-      );
+      if (!user) {
+        // Not authenticated yet - keep loading
+        return;
+      }
 
-      unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          let signedCount = 0;
-          let rejectedCount = 0;
+      // Auth is ready - set up the Firestore listener
+      try {
+        const firestore = getFirebaseFirestore();
 
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.signed === 'signed') {
-              signedCount++;
-            } else if (data.signed === 'rejected') {
-              rejectedCount++;
-            }
-          });
+        const q = query(
+          collection(firestore, Collections.signatures),
+          where('documentId', '==', documentId)
+        );
 
-          setCounts({ signedCount, rejectedCount, isLoading: false });
-        },
-        (error) => {
-          logError(error, {
-            operation: 'hooks.useRealtimeSignatureCounts',
-            metadata: { documentId },
-          });
-          setCounts(prev => ({ ...prev, isLoading: false }));
-        }
-      );
-    } catch (error) {
-      logError(error, {
-        operation: 'hooks.useRealtimeSignatureCounts.setup',
-        metadata: { documentId },
-      });
-      setCounts(prev => ({ ...prev, isLoading: false }));
-    }
+        snapshotUnsubscribe = onSnapshot(
+          q,
+          (snapshot) => {
+            let signedCount = 0;
+            let rejectedCount = 0;
+
+            snapshot.forEach((doc) => {
+              const data = doc.data();
+              if (data.signed === 'signed') {
+                signedCount++;
+              } else if (data.signed === 'rejected') {
+                rejectedCount++;
+              }
+            });
+
+            setCounts({ signedCount, rejectedCount, isLoading: false });
+          },
+          (error) => {
+            logError(error, {
+              operation: 'hooks.useRealtimeSignatureCounts',
+              metadata: { documentId },
+            });
+            setCounts((prev) => ({ ...prev, isLoading: false }));
+          }
+        );
+      } catch (error) {
+        logError(error, {
+          operation: 'hooks.useRealtimeSignatureCounts.setup',
+          metadata: { documentId },
+        });
+        setCounts((prev) => ({ ...prev, isLoading: false }));
+      }
+    });
 
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
+      authUnsubscribe();
+      if (snapshotUnsubscribe) {
+        snapshotUnsubscribe();
       }
     };
   }, [documentId]);

@@ -8,10 +8,10 @@ import { SignUser } from '@/lib/utils/user';
 import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
+import { useRealtimeSignatureCounts } from '@/hooks/useRealtimeSignatureCounts';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import { useHeatMapStore } from '@/store/heatMapStore';
 import DocumentClient from './DocumentClient';
-import SignatureStats from './SignatureStats';
 import SignButton from './SignButton';
 
 // Import ParagraphCard dynamically to prevent SSR hydration mismatches
@@ -34,7 +34,7 @@ interface DocumentViewProps {
   paragraphs: Paragraph[];
   user: SignUser | null;
   userSignature: Signature | null;
-  userApprovals: Record<string, boolean>;
+  userEvaluations: Record<string, number>;
   commentCounts: Record<string, number>;
   suggestionCounts?: Record<string, number>;
   userInteractions?: string[];
@@ -71,7 +71,7 @@ export default function DocumentView({
   paragraphs: initialParagraphs,
   user,
   userSignature,
-  userApprovals,
+  userEvaluations,
   commentCounts,
   suggestionCounts = {},
   userInteractions = [],
@@ -97,21 +97,26 @@ export default function DocumentView({
   // State to track if blocking video overlay has been dismissed
   const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
 
+  // Real-time signature counts for showing inside Sign/Reject buttons
+  const { signedCount, rejectedCount } = useRealtimeSignatureCounts(document.statementId);
+
   // Real-time paragraph updates - listens for admin-approved changes
   const paragraphs = useRealtimeParagraphs(document.statementId, initialParagraphs);
 
-  // Sync real-time documentApproval into heat map store
-  // Heat map uses -1 to 1 scale: (approved - rejected) / total
+  // Sync real-time evaluation data into heat map store
+  // Heat map uses -1 to 1 scale: (positive - negative) / total
   const updateApprovalValues = useHeatMapStore((state) => state.updateApprovalValues);
   useEffect(() => {
     const approvalMap: Record<string, number> = {};
     let hasValues = false;
 
     for (const p of paragraphs) {
-      if (p.documentApproval && p.documentApproval.totalVoters > 0) {
-        const { approved, totalVoters } = p.documentApproval;
-        const rejected = totalVoters - approved;
-        const score = Math.round(((approved - rejected) / totalVoters) * 100) / 100;
+      const pos = p.positiveEvaluations ?? 0;
+      const neg = p.negativeEvaluations ?? 0;
+      const total = pos + neg;
+
+      if (total > 0) {
+        const score = Math.round(((pos - neg) / total) * 100) / 100;
         approvalMap[p.paragraphId] = score;
         hasValues = true;
       }
@@ -215,7 +220,7 @@ export default function DocumentView({
           {/* Progress indicator */}
           {user && paragraphs.length > 0 && (
             <ProgressBar
-              initialApprovals={userApprovals}
+              initialEvaluations={userEvaluations}
               totalParagraphs={paragraphs.length}
             />
           )}
@@ -233,7 +238,7 @@ export default function DocumentView({
                 key={paragraph.paragraphId}
                 paragraph={paragraph}
                 documentId={document.statementId}
-                isApproved={userApprovals[paragraph.paragraphId]}
+                userEvaluation={userEvaluations[paragraph.paragraphId]}
                 isLoggedIn={!!user}
                 isAdmin={isAdmin}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
@@ -255,9 +260,6 @@ export default function DocumentView({
             {/* Sign/Reject buttons at bottom */}
             {paragraphs.length > 0 && (
               <footer className={styles.footer}>
-                {showSignatureCounts && (
-                  <SignatureStats documentId={document.statementId} />
-                )}
                 <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
                   {!user ? (
@@ -288,8 +290,14 @@ export default function DocumentView({
                     </a>
                   ) : (
                     <>
-                      <RejectButton isRejected={userSignature?.signed === 'rejected'} />
-                      <SignButton isSigned={userSignature?.signed === 'signed'} />
+                      <RejectButton
+                        isRejected={userSignature?.signed === 'rejected'}
+                        count={showSignatureCounts ? rejectedCount : undefined}
+                      />
+                      <SignButton
+                        isSigned={userSignature?.signed === 'signed'}
+                        count={showSignatureCounts ? signedCount : undefined}
+                      />
                     </>
                   )}
                 </div>
