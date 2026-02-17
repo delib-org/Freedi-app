@@ -119,18 +119,44 @@ export async function signOutUser(): Promise<void> {
 }
 
 /**
- * Get current user's ID token (refreshes if needed)
+ * Token cache to prevent excessive refresh calls.
+ * Firebase tokens are valid for ~1 hour; we cache for 5 minutes
+ * to avoid hammering the securetoken API.
+ */
+let cachedToken: string | null = null;
+let tokenExpiry = 0;
+const TOKEN_CACHE_MS = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Get current user's ID token.
+ * Uses in-memory cache to avoid excessive API calls.
+ * Falls back to localStorage token on error (e.g. quota exceeded).
  */
 export async function getCurrentToken(): Promise<string | null> {
   const user = auth.currentUser;
   if (!user) return null;
 
+  // Return cached token if still valid
+  if (cachedToken && Date.now() < tokenExpiry) {
+    return cachedToken;
+  }
+
   try {
-    const token = await user.getIdToken(true);
+    // Don't force refresh — Firebase SDK uses cached token if still valid
+    const token = await user.getIdToken();
+    cachedToken = token;
+    tokenExpiry = Date.now() + TOKEN_CACHE_MS;
     localStorage.setItem('firebase_token', token);
     return token;
   } catch (error) {
     console.error('Error getting token:', error);
+
+    // Fallback to localStorage cached token (may still be valid)
+    const fallbackToken = localStorage.getItem('firebase_token');
+    if (fallbackToken) {
+      return fallbackToken;
+    }
+
     return null;
   }
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import {
   onAuthChange,
   signInWithGoogle,
@@ -60,20 +60,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async (): Promise<User> => {
+  const signIn = useCallback(async (): Promise<User> => {
     try {
       setIsLoading(true);
-      const user = await signInWithGoogle();
-      return user;
+      const signedInUser = await signInWithGoogle();
+      return signedInUser;
     } catch (error) {
       console.error('Sign in failed:', error);
       throw error;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       await signOutUser();
       setUser(null);
@@ -81,20 +81,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.error('Sign out failed:', error);
       throw error;
     }
-  };
+  }, []);
 
-  const refreshToken = async () => {
+  const refreshToken = useCallback(async () => {
     return getCurrentToken();
-  };
+  }, []);
 
-  const value: AuthContextType = {
+  const value: AuthContextType = useMemo(() => ({
     user,
     isLoading,
     isAuthenticated: !!user && !user.isAnonymous,
     signIn,
     signOut,
     refreshToken,
-  };
+  }), [user, isLoading, signIn, signOut, refreshToken]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
