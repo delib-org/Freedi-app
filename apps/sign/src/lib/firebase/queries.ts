@@ -133,17 +133,24 @@ export async function getDocumentParagraphs(document: StatementWithParagraphs): 
     console.info(`[Sign Queries] Using ${officialParagraphs.length} official paragraph statements`);
     // Convert Statement[] to Paragraph[] for backward compatibility
     // Include documentApproval for consensus display
-    return officialParagraphs.map((stmt) => ({
-      paragraphId: stmt.statementId,
-      type: stmt.doc?.paragraphType || ParagraphType.paragraph,
-      content: stmt.statement,
-      order: stmt.doc?.order ?? 0,
-      listType: stmt.doc?.listType,
-      imageUrl: stmt.doc?.imageUrl,
-      imageAlt: stmt.doc?.imageAlt,
-      imageCaption: stmt.doc?.imageCaption,
-      documentApproval: stmt.documentApproval, // Include approval stats for UI display
-    }));
+    return officialParagraphs.map((stmt) => {
+      const stmtWithEvals = stmt as Statement & { positiveEvaluations?: number; negativeEvaluations?: number };
+
+      return {
+        paragraphId: stmt.statementId,
+        type: stmt.doc?.paragraphType || ParagraphType.paragraph,
+        content: stmt.statement,
+        order: stmt.doc?.order ?? 0,
+        listType: stmt.doc?.listType,
+        imageUrl: stmt.doc?.imageUrl,
+        imageAlt: stmt.doc?.imageAlt,
+        imageCaption: stmt.doc?.imageCaption,
+        documentApproval: stmt.documentApproval, // Legacy: kept for backward compatibility
+        positiveEvaluations: stmtWithEvals.positiveEvaluations,
+        negativeEvaluations: stmtWithEvals.negativeEvaluations,
+        consensus: stmt.consensus,
+      };
+    });
   }
 
   // 2. Check for embedded paragraphs array (legacy - trigger migration)
@@ -307,6 +314,56 @@ export async function getUserApprovals(
   } catch (error) {
     logError(error, { operation: 'queries.getUserApprovals', documentId, userId });
     throw error;
+  }
+}
+
+/**
+ * Get user's evaluations for paragraphs in a document
+ * Queries the evaluations collection for evaluations where statementId matches any paragraphId
+ * Firestore `in` queries are limited to 30 items, so we batch if needed
+ *
+ * @returns Map of paragraphId -> evaluation value (1 or -1)
+ */
+export async function getUserEvaluationsForDocument(
+  paragraphIds: string[],
+  userId: string
+): Promise<Record<string, number>> {
+  try {
+    const db = getFirestoreAdmin();
+    const evaluationsMap: Record<string, number> = {};
+
+    if (!userId || paragraphIds.length === 0) {
+      return evaluationsMap;
+    }
+
+    // Firestore `in` queries are limited to 30 items per query
+    const BATCH_SIZE = 30;
+    const batches: string[][] = [];
+    for (let i = 0; i < paragraphIds.length; i += BATCH_SIZE) {
+      batches.push(paragraphIds.slice(i, i + BATCH_SIZE));
+    }
+
+    for (const batch of batches) {
+      const snapshot = await db
+        .collection(Collections.evaluations)
+        .where('statementId', 'in', batch)
+        .where('evaluatorId', '==', userId)
+        .get();
+
+      snapshot.docs.forEach((doc) => {
+        const data = doc.data();
+        if (typeof data.evaluation === 'number' && data.statementId) {
+          evaluationsMap[data.statementId] = data.evaluation;
+        }
+      });
+    }
+
+    console.info(`[Sign Queries] Found ${Object.keys(evaluationsMap).length} evaluations for user ${userId.substring(0, 10)}...`);
+
+    return evaluationsMap;
+  } catch (error) {
+    logError(error, { operation: 'queries.getUserEvaluationsForDocument', userId });
+    return {};
   }
 }
 

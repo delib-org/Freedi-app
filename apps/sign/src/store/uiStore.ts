@@ -58,11 +58,12 @@ export interface UIState {
   setSigningAnimationState: (state: SigningAnimationState) => void;
   resetSigningAnimation: () => void;
 
-  // Paragraph approvals (for real-time progress tracking)
-  approvals: Record<string, boolean>;
+  // Paragraph evaluations (for real-time progress tracking)
+  // Values: 1 (approve/upvote), -1 (reject/downvote)
+  evaluations: Record<string, number>;
   totalParagraphs: number;
-  initializeApprovals: (approvals: Record<string, boolean>, total: number) => void;
-  setApproval: (paragraphId: string, approved: boolean) => void;
+  initializeEvaluations: (evaluations: Record<string, number>, total: number) => void;
+  setEvaluation: (paragraphId: string, evaluation: number | null) => void;
 
   // Comment counts (for real-time updates)
   commentCounts: Record<string, number>;
@@ -131,14 +132,23 @@ export const useUIStore = create<UIState>((set, get) => ({
   setSigningAnimationState: (state) => set({ signingAnimationState: state }),
   resetSigningAnimation: () => set({ signingAnimationState: 'idle' }),
 
-  // Paragraph approvals
-  approvals: {},
+  // Paragraph evaluations
+  evaluations: {},
   totalParagraphs: 0,
-  initializeApprovals: (approvals, total) => set({ approvals, totalParagraphs: total }),
-  setApproval: (paragraphId, approved) =>
-    set((state) => ({
-      approvals: { ...state.approvals, [paragraphId]: approved },
-    })),
+  initializeEvaluations: (evaluations, total) => set({ evaluations, totalParagraphs: total }),
+  setEvaluation: (paragraphId, evaluation) =>
+    set((state) => {
+      if (evaluation === null) {
+        const newEvaluations = { ...state.evaluations };
+        delete newEvaluations[paragraphId];
+
+        return { evaluations: newEvaluations };
+      }
+
+      return {
+        evaluations: { ...state.evaluations, [paragraphId]: evaluation },
+      };
+    }),
 
   // Comment counts
   commentCounts: {},
