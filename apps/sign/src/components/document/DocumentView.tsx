@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
 import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
@@ -9,6 +9,7 @@ import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
+import { useHeatMapStore } from '@/store/heatMapStore';
 import DocumentClient from './DocumentClient';
 import SignatureStats from './SignatureStats';
 import SignButton from './SignButton';
@@ -98,6 +99,28 @@ export default function DocumentView({
 
   // Real-time paragraph updates - listens for admin-approved changes
   const paragraphs = useRealtimeParagraphs(document.statementId, initialParagraphs);
+
+  // Sync real-time documentApproval into heat map store
+  // Heat map uses -1 to 1 scale: (approved - rejected) / total
+  const updateApprovalValues = useHeatMapStore((state) => state.updateApprovalValues);
+  useEffect(() => {
+    const approvalMap: Record<string, number> = {};
+    let hasValues = false;
+
+    for (const p of paragraphs) {
+      if (p.documentApproval && p.documentApproval.totalVoters > 0) {
+        const { approved, totalVoters } = p.documentApproval;
+        const rejected = totalVoters - approved;
+        const score = Math.round(((approved - rejected) / totalVoters) * 100) / 100;
+        approvalMap[p.paragraphId] = score;
+        hasValues = true;
+      }
+    }
+
+    if (hasValues) {
+      updateApprovalValues(approvalMap);
+    }
+  }, [paragraphs, updateApprovalValues]);
 
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);

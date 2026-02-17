@@ -5,7 +5,14 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { useHeatMapStore } from '@/store/heatMapStore';
 import styles from './InteractionBar.module.scss';
+
+interface DocumentApproval {
+  approved: number;
+  totalVoters: number;
+  averageApproval: number;
+}
 
 interface InteractionBarProps {
   paragraphId: string;
@@ -19,6 +26,8 @@ interface InteractionBarProps {
   requireGoogleLogin?: boolean;
   /** Whether the current user is anonymous */
   isAnonymous?: boolean;
+  /** Aggregate approval data from all voters (real-time via Firestore) */
+  documentApproval?: DocumentApproval;
 }
 
 export default function InteractionBar({
@@ -31,6 +40,7 @@ export default function InteractionBar({
   enableSuggestions = false,
   requireGoogleLogin = false,
   isAnonymous = false,
+  documentApproval,
 }: InteractionBarProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -156,6 +166,12 @@ export default function InteractionBar({
     action();
   };
 
+  // Only show vote counts when approval heat map is active
+  const heatMapConfig = useHeatMapStore((state) => state.config);
+  const showVoteCounts = heatMapConfig.isEnabled && heatMapConfig.type === 'approval';
+  const approveCount = documentApproval?.approved ?? 0;
+  const rejectCount = documentApproval ? documentApproval.totalVoters - documentApproval.approved : 0;
+
   return (
     <div className={styles.bar} onClick={(e) => e.stopPropagation()}>
       <div className={styles.approvalButtons}>
@@ -178,6 +194,9 @@ export default function InteractionBar({
             <polyline points="20 6 9 17 4 12" />
           </svg>
           <span className={styles.buttonText}>{t('Approve')}</span>
+          {showVoteCounts && approveCount > 0 && (
+            <span className={styles.voteCount}>{approveCount}</span>
+          )}
         </button>
 
         <button
@@ -200,6 +219,9 @@ export default function InteractionBar({
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
           <span className={styles.buttonText}>{t('Reject')}</span>
+          {showVoteCounts && rejectCount > 0 && (
+            <span className={styles.voteCount}>{rejectCount}</span>
+          )}
         </button>
       </div>
 
