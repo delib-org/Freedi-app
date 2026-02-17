@@ -288,10 +288,10 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
     icon?: React.ElementType;
     badge?: 'recommended' | 'premium' | 'new';
   }> = ({ isChecked, onChange, label, description, icon: Icon, badge }) => (
-    <div className={styles.toggleItem}>
+    <div className={`${styles.toggleItem} ${isChecked ? styles['toggleItem--active'] : ''}`}>
       <div className={styles.toggleContent}>
         {Icon && (
-          <div className={styles.toggleIcon}>
+          <div className={`${styles.toggleIcon} ${isChecked ? styles['toggleIcon--active'] : ''}`}>
             <Icon size={18} />
           </div>
         )}
@@ -309,14 +309,19 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
           )}
         </div>
       </div>
-      <label className={styles.toggleSwitch}>
-        <input
-          type="checkbox"
-          checked={isChecked}
-          onChange={(e) => onChange(e.target.checked)}
-        />
-        <span className={styles.toggleSlider}></span>
-      </label>
+      <div className={styles.toggleControl}>
+        <span className={`${styles.toggleStatus} ${isChecked ? styles['toggleStatus--on'] : styles['toggleStatus--off']}`}>
+          {isChecked ? t('On') : t('Off')}
+        </span>
+        <label className={styles.toggleSwitch}>
+          <input
+            type="checkbox"
+            checked={isChecked}
+            onChange={(e) => onChange(e.target.checked)}
+          />
+          <span className={styles.toggleSlider}></span>
+        </label>
+      </div>
     </div>
   );
 
