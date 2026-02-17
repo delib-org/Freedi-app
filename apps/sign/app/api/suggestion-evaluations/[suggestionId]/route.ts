@@ -132,6 +132,7 @@ export async function POST(
       statementId: suggestionId, // Using statementId for compatibility with existing pattern
       suggestionId, // Explicit reference
       parentId: suggestion?.paragraphId || suggestionId,
+      documentId: suggestion?.topParentId || '',
       evaluatorId: userId,
       evaluation,
       updatedAt: Date.now(),
