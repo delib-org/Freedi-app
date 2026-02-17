@@ -11,9 +11,13 @@ import { UserConfigProvider } from './context/UserConfigContext';
 import PWAWrapper from './view/components/pwa/PWAWrapper';
 import { initSentry } from './services/monitoring/sentry';
 import RootErrorBoundary from './components/ErrorBoundary/RootErrorBoundary';
+import Clarity from '@microsoft/clarity';
 
 // Initialize Sentry before anything else
 initSentry();
+
+// Initialize Microsoft Clarity
+Clarity.init('vipo4d20gg');
 
 // Initialize IndexedDB error handler early to catch connection errors
 import { setupIndexedDBErrorHandler } from './utils/indexedDBErrorHandler';
