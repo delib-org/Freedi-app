@@ -7,13 +7,15 @@ import styles from './DocumentView.module.scss';
 interface SignButtonProps {
   disabled?: boolean;
   isSigned?: boolean;
+  /** Real-time count of users who signed */
+  count?: number;
 }
 
 /**
  * Sign Document button with animated states
  * Shows spinner during signing and checkmark on success or when already signed
  */
-export default function SignButton({ disabled = false, isSigned = false }: SignButtonProps) {
+export default function SignButton({ disabled = false, isSigned = false, count }: SignButtonProps) {
   const { t } = useTranslation();
   const { signingAnimationState, isSubmitting } = useUIStore();
 
@@ -90,6 +92,9 @@ export default function SignButton({ disabled = false, isSigned = false }: SignB
     return <span className={styles.buttonText}>{t('signDocument') || 'Sign Document'}</span>;
   };
 
+  const showCount = count !== undefined && count > 0;
+  const formatter = showCount ? new Intl.NumberFormat() : null;
+
   return (
     <button
       type="button"
@@ -99,6 +104,11 @@ export default function SignButton({ disabled = false, isSigned = false }: SignB
       aria-busy={signingAnimationState === 'signing'}
     >
       {renderContent()}
+      {showCount && formatter && (
+        <span className={styles.buttonCount} aria-label={`${count} ${t('signed') || 'signed'}`}>
+          {formatter.format(count)}
+        </span>
+      )}
     </button>
   );
 }

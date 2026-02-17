@@ -362,7 +362,6 @@
   background: var(--card-default);
   border-top: 1px solid var(--border-light);
   display: flex;
-  flex-direction: column;
   box-shadow: var(--shadow-lg);
   z-index: 100;
 }
@@ -440,9 +439,18 @@
   justify-content: center;
   gap: var(--spacing-xs);
 
+  .buttonCount {
+    background: var(--disagree);
+    color: white;
+  }
+
   &:hover:not(.rejectButtonRejecting):not(.rejectButtonRejected) {
     background: var(--disagree);
     color: white;
+
+    .buttonCount {
+      background: rgba(255, 255, 255, 0.25);
+    }
   }
 
   // Rejecting state - button transforms with spinner
@@ -647,6 +655,23 @@
   justify-content: center;
   gap: var(--spacing-xs);
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+// Count badge inside Sign/Reject buttons
+.buttonCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  padding: 0.1em 0.4em;
+  margin-inline-start: var(--spacing-xs);
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
 }
 
 // Inline checkmark (next to text, not centered)

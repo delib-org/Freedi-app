@@ -8,10 +8,10 @@ import { SignUser } from '@/lib/utils/user';
 import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
+import { useRealtimeSignatureCounts } from '@/hooks/useRealtimeSignatureCounts';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import { useHeatMapStore } from '@/store/heatMapStore';
 import DocumentClient from './DocumentClient';
-import SignatureStats from './SignatureStats';
 import SignButton from './SignButton';
 
 // Import ParagraphCard dynamically to prevent SSR hydration mismatches
@@ -96,6 +96,9 @@ export default function DocumentView({
 
   // State to track if blocking video overlay has been dismissed
   const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
+
+  // Real-time signature counts for showing inside Sign/Reject buttons
+  const { signedCount, rejectedCount } = useRealtimeSignatureCounts(document.statementId);
 
   // Real-time paragraph updates - listens for admin-approved changes
   const paragraphs = useRealtimeParagraphs(document.statementId, initialParagraphs);
@@ -255,9 +258,6 @@ export default function DocumentView({
             {/* Sign/Reject buttons at bottom */}
             {paragraphs.length > 0 && (
               <footer className={styles.footer}>
-                {showSignatureCounts && (
-                  <SignatureStats documentId={document.statementId} />
-                )}
                 <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
                   {!user ? (
@@ -288,8 +288,14 @@ export default function DocumentView({
                     </a>
                   ) : (
                     <>
-                      <RejectButton isRejected={userSignature?.signed === 'rejected'} />
-                      <SignButton isSigned={userSignature?.signed === 'signed'} />
+                      <RejectButton
+                        isRejected={userSignature?.signed === 'rejected'}
+                        count={showSignatureCounts ? rejectedCount : undefined}
+                      />
+                      <SignButton
+                        isSigned={userSignature?.signed === 'signed'}
+                        count={showSignatureCounts ? signedCount : undefined}
+                      />
                     </>
                   )}
                 </div>
