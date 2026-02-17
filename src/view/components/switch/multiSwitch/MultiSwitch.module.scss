@@ -1,34 +1,33 @@
 .switch {
 	display: flex;
 	flex-direction: row;
-	justify-content: start;
-	padding: 10px;
-
-	border-radius: 5px;
-	gap: 1rem;
-	margin: 2rem 0;
+	justify-content: flex-start;
+	padding: 0;
+	gap: 0.625rem;
+	margin: 1rem 0;
 	flex-wrap: wrap;
 
 	.option {
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		background-color: var(--btn-disabled);
-		gap: 1rem;
-		color: var(--white);
-		border: none;
-		padding: 10px 20px;
-
-		border-radius: 4rem;
-		/* Added for rounded corners on buttons */
+		gap: 0.5rem;
+		padding: 0.5rem 1.125rem;
+		border-radius: 20px;
 		cursor: pointer;
-		/* Added to change cursor on hover */
-		font-size: 16px;
-		/* Added for font size of buttons */
+		font-size: 0.9rem;
+		font-weight: 500;
+		transition: all 0.2s ease;
+		border: 1.5px solid var(--border-light);
+		background-color: var(--card-default);
+		color: var(--text-body);
 
 		svg {
-			height: fit-content;
-			/* Added for icon size */
+			width: 18px;
+			height: 18px;
+			flex-shrink: 0;
+			color: var(--text-caption);
+			transition: color 0.2s ease;
 		}
 
 		.optionContent {
@@ -38,13 +37,42 @@
 			gap: 0.5rem;
 		}
 
-		/* Added for active button text color */
+		&:hover {
+			border-color: var(--btn-primary);
+			background-color: var(--bg-hover);
+
+			svg {
+				color: var(--btn-primary);
+			}
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: 2px;
+		}
+
+		&:active {
+			transform: scale(0.97);
+		}
 	}
 
 	.active {
 		background-color: var(--btn-primary);
-		/* Added for active button color */
-		color: white;
-		/* Added for active button text color */
+		border-color: var(--btn-primary);
+		color: var(--white);
+		box-shadow: 0 2px 8px rgba(95, 136, 229, 0.3);
+
+		svg {
+			color: var(--white);
+		}
+
+		&:hover {
+			background-color: var(--btn-primary-hover);
+			border-color: var(--btn-primary-hover);
+
+			svg {
+				color: var(--white);
+			}
+		}
 	}
 }
