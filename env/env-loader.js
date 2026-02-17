@@ -47,6 +47,7 @@ const APPS = {
       'APP_VERSION': 'VITE_APP_VERSION',
       'APP_AGREE_ENDPOINT': 'VITE_APP_AGREE_ENDPOINT',
       'FIND_SIMILAR_STATEMENTS_ENDPOINT': 'VITE_APP_FIND_SIMILAR_STATEMENTS_ENDPOINT',
+      'VITE_SIGN_APP_URL': 'VITE_SIGN_APP_URL',
     },
     // Additional static content to append
     extra: `
@@ -132,6 +133,9 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       ['SIGN_SENTRY_ORG', 'SENTRY_ORG'],
       ['SIGN_SENTRY_PROJECT', 'SENTRY_PROJECT'],
       ['SIGN_SENTRY_AUTH_TOKEN', 'SENTRY_AUTH_TOKEN'],
+      // App URLs (for cross-app navigation)
+      ['VITE_SIGN_APP_URL', 'NEXT_PUBLIC_APP_URL'],
+      ['APP_URL', 'NEXT_PUBLIC_MAIN_APP_URL'],
     ],
     extra: ''
   }

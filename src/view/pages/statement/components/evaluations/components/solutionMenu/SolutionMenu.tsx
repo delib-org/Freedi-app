@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react';
 import DeleteIcon from '@/assets/icons/delete.svg?react';
+import DocumentIcon from '@/assets/icons/document.svg?react';
 import EditIcon from '@/assets/icons/editIcon.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
@@ -7,6 +8,7 @@ import LightBulbIcon from '@/assets/icons/lightBulbIcon.svg?react';
 import QuestionMarkIcon from '@/assets/icons/questionIcon.svg?react';
 import NetworkIcon from '@/assets/icons/networkIcon.svg?react';
 import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
+import { toggleIsDocument } from '@/controllers/db/statements/setIsDocument';
 import { toggleStatementHide } from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -44,6 +46,7 @@ const SolutionMenu: FC<Props> = ({
 	const isCreator = statement.creatorId === user?.uid;
 	const isCreatorOrAdmin = isCreator || isAdmin;
 	const isOption = statement.statementType === StatementType.option;
+	const isDocumentMarked = statement.isDocument === true;
 	const isHide = statement.hide ? true : false;
 	const isResearch = statement.statementType === StatementType.question;
 
@@ -118,6 +121,17 @@ const SolutionMenu: FC<Props> = ({
 					label={isHide ? t('Unhide') : t('Hide')}
 					onOptionClick={() => {
 						handleToggleHideStatement();
+						setIsCardMenuOpen(false);
+					}}
+				/>
+			)}
+			{isAdmin && isOption && (
+				<MenuOption
+					isOptionSelected={isDocumentMarked}
+					icon={<DocumentIcon />}
+					label={isDocumentMarked ? t('Unmark as a Document') : t('Mark as a Document')}
+					onOptionClick={() => {
+						toggleIsDocument(statement.statementId);
 						setIsCardMenuOpen(false);
 					}}
 				/>

@@ -50,7 +50,7 @@ export function isValidUrl(url: string): boolean {
  */
 
 // Sign app base URL (configured via environment variable, defaults to production)
-const SIGN_APP_BASE_URL = import.meta.env.VITE_SIGN_APP_URL || 'https://sign.freedi.app';
+const SIGN_APP_BASE_URL = import.meta.env.VITE_SIGN_APP_URL || 'https://sign.wizcol.com';
 
 /**
  * Get the Sign app URL for a document

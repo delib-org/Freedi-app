@@ -1,44 +1,34 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import Link from 'next/link';
+import { getUserFromCookies, isAnonymousUser } from '@/lib/utils/user';
+import { getUserHomeDocuments } from '@/lib/firebase/homeQueries';
+import HomeClient from '@/components/home/HomeClient';
 
 export default async function HomePage() {
-  // Check if user is logged in via cookie
   const cookieStore = await cookies();
-  const userId = cookieStore.get('userId')?.value;
+  const user = getUserFromCookies(cookieStore);
 
-  // If not logged in, redirect to login
-  if (!userId) {
+  // Redirect to login if not logged in or anonymous
+  if (!user || isAnonymousUser(user.uid)) {
     redirect('/login');
   }
 
-  // User is logged in - show welcome page
+  // Get email from cookies for invitation queries
+  const userEmail = cookieStore.get('userEmail')?.value || undefined;
+
+  // Fetch user's documents
+  const { documents, groups } = await getUserHomeDocuments(user.uid, userEmail);
+
+  // Serialize for client component (Next.js RSC can't serialize some Firestore types)
+  const serializedDocuments = JSON.parse(JSON.stringify(documents));
+  const serializedGroups = JSON.parse(JSON.stringify(groups));
+  const serializedUser = JSON.parse(JSON.stringify(user));
+
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      minHeight: '100vh',
-      padding: '2rem',
-      textAlign: 'center'
-    }}>
-      <h1 style={{ marginBottom: '1rem' }}>Welcome to Freedi Sign</h1>
-      <p style={{ marginBottom: '2rem', color: '#666' }}>
-        You are logged in. Open a document link to view and sign documents.
-      </p>
-      <Link
-        href="/login"
-        style={{
-          padding: '0.75rem 1.5rem',
-          background: '#e0e0e0',
-          borderRadius: '8px',
-          textDecoration: 'none',
-          color: '#333'
-        }}
-      >
-        Back to Login
-      </Link>
-    </div>
+    <HomeClient
+      documents={serializedDocuments}
+      groups={serializedGroups}
+      user={serializedUser}
+    />
   );
 }

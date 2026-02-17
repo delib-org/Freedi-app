@@ -29,6 +29,7 @@ import {
 	Brain,
 	Search,
 	MessageSquare,
+	FileText,
 	Navigation,
 	Plus,
 	Settings,
@@ -58,7 +59,8 @@ import type { RootState } from '@/redux/types';
 import { logError } from '@/utils/errorHandling';
 import type { ExportFormat } from '@/types/export';
 import { requestRecalculateEvaluations } from '@/controllers/db/evaluation/recalculateEvaluations';
-import { RefreshCw } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
+import { getSignDocumentUrl } from '@/utils/urlHelpers';
 
 interface CategoryConfig {
 	id: string;
@@ -223,6 +225,12 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 	function handleHideChange(newValue: boolean) {
 		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 		setDoc(statementRef, { hide: newValue }, { merge: true });
+	}
+
+	// Handler for isDocument toggle (root-level property)
+	function handleIsDocumentChange(newValue: boolean) {
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		setDoc(statementRef, { isDocument: newValue, lastUpdate: Date.now() }, { merge: true });
 	}
 
 	// Handler for defaultLanguage (root-level property for survey language)
@@ -536,6 +544,26 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 												)}
 												icon={GitBranch}
 											/>
+											<ToggleSwitch
+												isChecked={statement.isDocument ?? false}
+												onChange={handleIsDocumentChange}
+												label={t('Mark as a Document')}
+												description={t(
+													'Make this statement available as a signable document in Freedi Sign',
+												)}
+												icon={FileText}
+											/>
+											{statement.isDocument && (
+												<a
+													href={getSignDocumentUrl(statement.statementId)}
+													target="_blank"
+													rel="noopener noreferrer"
+													className={styles.signAppLink}
+												>
+													<ExternalLink size={16} />
+													{t('Open in Freedi Sign')}
+												</a>
+											)}
 										</>
 									)}
 

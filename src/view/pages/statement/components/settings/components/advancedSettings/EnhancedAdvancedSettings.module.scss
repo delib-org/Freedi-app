@@ -1200,4 +1200,24 @@
       }
     }
   }
+
+  .signAppLink {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    margin-top: 0.25rem;
+    background: var(--btn-primary);
+    color: #fff;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    width: fit-content;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
 }
