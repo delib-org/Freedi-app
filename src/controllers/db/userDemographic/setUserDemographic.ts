@@ -6,7 +6,7 @@ import {
 	UserDemographicQuestion,
 	UserDemographicQuestionSchema,
 } from '@freedi/shared-types';
-import { deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import { DB } from '../config';
 import { parse, safeParse } from 'valibot';
 import { store } from '@/redux/store';
@@ -78,22 +78,9 @@ export async function setUserDemographicOption(
 
 		const questionsRef = doc(DB, Collections.userDemographicQuestions, question.userQuestionId);
 
-		const questionDB = await getDoc(questionsRef);
-		if (!questionDB.exists()) throw new Error('Question does not exist in the database');
-		const questionData = questionDB.data() as UserDemographicQuestion;
-
-		if (!questionData.options) {
-			await updateDoc(questionsRef, {
-				options: [option],
-			});
-
-			return;
-		}
-		if (questionData.options.find((opt) => opt.option === option.option)) {
-			return;
-		}
+		// Use arrayUnion for atomic, concurrent-safe option addition
 		await updateDoc(questionsRef, {
-			options: [...questionData.options, option],
+			options: arrayUnion(option),
 		});
 
 		return;
@@ -111,16 +98,15 @@ export async function deleteUserDemographicOption(
 			throw new Error('Question ID and option must be provided');
 		}
 
+		// Find the full option object to use with arrayRemove
+		const optionToRemove = question.options?.find((opt) => opt.option === option);
+		if (!optionToRemove) return;
+
 		const questionsRef = doc(DB, Collections.userDemographicQuestions, question.userQuestionId);
 
-		const questionDB = await getDoc(questionsRef);
-		if (!questionDB.exists()) throw new Error('Question does not exist in the database');
-		const questionData = questionDB.data() as UserDemographicQuestion;
-		if (!questionData.options || !questionData.options.find((opt) => opt.option === option)) {
-			return;
-		}
+		// Use arrayRemove for atomic, concurrent-safe option removal
 		await updateDoc(questionsRef, {
-			options: questionData.options.filter((opt) => opt.option !== option),
+			options: arrayRemove(optionToRemove),
 		});
 
 		return;

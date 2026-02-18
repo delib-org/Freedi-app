@@ -51,15 +51,8 @@ import newStatementReducer, {
 	selectNewStatementError,
 	selectNewStatementShowModal,
 	selectNewStatement,
+	NewStatementState,
 } from '../newStatementSlice';
-
-type NewStatementState = {
-	parentStatement: unknown | null;
-	newStatement: unknown | null;
-	isLoading: boolean;
-	error: string | null;
-	showModal: boolean;
-};
 
 const mockStatement = {
 	statementId: 'stmt-123',

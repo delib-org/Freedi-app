@@ -42,11 +42,13 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 	const subscriptionAttemptedRef = useRef(false);
 	const lastStatementIdRef = useRef<string | undefined>(undefined);
 
-	// Reset subscription attempt when statementId changes
-	if (statementId !== lastStatementIdRef.current) {
-		lastStatementIdRef.current = statementId;
-		subscriptionAttemptedRef.current = false;
-	}
+	// Reset subscription attempt when statementId changes (in useEffect, not render body)
+	useEffect(() => {
+		if (statementId !== lastStatementIdRef.current) {
+			lastStatementIdRef.current = statementId;
+			subscriptionAttemptedRef.current = false;
+		}
+	}, [statementId]);
 
 	const statement = useAppSelector(statementSelector(statementId));
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));

@@ -22,17 +22,19 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 	const creator = useSelector(creatorSelector);
 
 	useEffect(() => {
+		let isMounted = true;
+
 		const checkPublicAccess = async () => {
 			// If no statementId, nothing to check
 			if (!statementId) {
-				setIsCheckingAccess(false);
+				if (isMounted) setIsCheckingAccess(false);
 
 				return;
 			}
 
 			// If user is already authenticated, no need to auto-auth
 			if (creator?.uid) {
-				setIsCheckingAccess(false);
+				if (isMounted) setIsCheckingAccess(false);
 
 				return;
 			}
@@ -42,9 +44,11 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 				// This ensures the user has a valid auth token for Firestore
 				console.info('User not authenticated, initiating auto-authentication');
 				await handlePublicAutoAuth();
+				if (!isMounted) return;
 
 				// Now fetch the statement with valid auth
 				const statement = await getStatementFromDB(statementId);
+				if (!isMounted) return;
 
 				if (!statement) {
 					setIsCheckingAccess(false);
@@ -56,6 +60,7 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 				let topParentStatement = null;
 				if (statement.topParentId && statement.topParentId !== statementId) {
 					topParentStatement = await getStatementFromDB(statement.topParentId);
+					if (!isMounted) return;
 				}
 
 				// Determine effective access - statement override or topParent
@@ -64,11 +69,15 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 			} catch (error) {
 				console.error('Error checking public access:', error);
 			} finally {
-				setIsCheckingAccess(false);
+				if (isMounted) setIsCheckingAccess(false);
 			}
 		};
 
 		checkPublicAccess();
+
+		return () => {
+			isMounted = false;
+		};
 	}, [statementId, creator?.uid]);
 
 	return {
