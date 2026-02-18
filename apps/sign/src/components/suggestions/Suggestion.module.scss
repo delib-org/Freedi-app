@@ -5,6 +5,19 @@
   border-left: 3px solid var(--warning, #f0ad4e);
 }
 
+/* High contrast - cards need clear borders and rounder corners */
+:global(body.a11y-contrast-light) .suggestion,
+:global(body.a11y-contrast-dark) .suggestion {
+  border: 2px solid var(--border-light);
+  border-left: 4px solid var(--warning, #f0ad4e);
+  border-radius: var(--radius-md);
+}
+
+:global(body.a11y-contrast-light) .suggestion--current,
+:global(body.a11y-contrast-dark) .suggestion--current {
+  border-left-color: var(--btn-primary, #1B2650);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -399,6 +412,20 @@
   }
 }
 
+/* High contrast RTL - flip the thick border to right side */
+:global(body.a11y-contrast-light) :global([data-text-dir="rtl"]) .suggestion,
+:global(body.a11y-contrast-dark) :global([data-text-dir="rtl"]) .suggestion {
+  border: 2px solid var(--border-light);
+  border-left-width: 2px;
+  border-right: 4px solid var(--warning, #f0ad4e);
+  border-radius: var(--radius-md);
+}
+
+:global(body.a11y-contrast-light) :global([data-text-dir="rtl"]) .suggestion--current,
+:global(body.a11y-contrast-dark) :global([data-text-dir="rtl"]) .suggestion--current {
+  border-right-color: var(--btn-primary, #1B2650);
+}
+
 /* Also support standard dir="rtl" attribute */
 [dir="rtl"] {
   .suggestion {
@@ -455,4 +482,18 @@
   .consensusDisplay {
     flex-direction: row-reverse;
   }
+}
+
+/* High contrast with standard dir="rtl" */
+:global(body.a11y-contrast-light) :global([dir="rtl"]) .suggestion,
+:global(body.a11y-contrast-dark) :global([dir="rtl"]) .suggestion {
+  border: 2px solid var(--border-light);
+  border-left-width: 2px;
+  border-right: 4px solid var(--warning, #f0ad4e);
+  border-radius: var(--radius-md);
+}
+
+:global(body.a11y-contrast-light) :global([dir="rtl"]) .suggestion--current,
+:global(body.a11y-contrast-dark) :global([dir="rtl"]) .suggestion--current {
+  border-right-color: var(--btn-primary, #1B2650);
 }
