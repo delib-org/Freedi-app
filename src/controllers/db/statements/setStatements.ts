@@ -1,4 +1,4 @@
-import { Timestamp, doc, getDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { Timestamp, doc, getDoc, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
@@ -580,35 +580,22 @@ export async function setStatementIsOption(statement: Statement | undefined) {
 
 		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
-		//get current statement
+		await runTransaction(FireStore, async (transaction) => {
+			const statementDB = await transaction.get(statementRef);
 
-		const statementDB = await getDoc(statementRef);
+			if (!statementDB.exists()) throw new Error('Statement not found');
 
-		if (!statementDB.exists()) throw new Error('Statement not found');
+			const statementDBData = parse(StatementSchema, statementDB.data());
 
-		const statementDBData = parse(StatementSchema, statementDB.data());
+			const newType =
+				statementDBData.statementType === StatementType.option
+					? StatementType.statement
+					: StatementType.option;
 
-		await toggleStatementOption(statementDBData);
+			transaction.update(statementRef, { statementType: newType });
+		});
 	} catch (error) {
 		console.error(error);
-	}
-
-	async function toggleStatementOption(statement: Statement) {
-		try {
-			const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-
-			if (statement.statementType === StatementType.option) {
-				await updateDoc(statementRef, {
-					statementType: StatementType.statement,
-				});
-			} else {
-				await updateDoc(statementRef, {
-					statementType: StatementType.option,
-				});
-			}
-		} catch (error) {
-			console.error(error);
-		}
 	}
 }
 
@@ -737,14 +724,17 @@ export async function toggleStatementHide(statementId: string): Promise<boolean 
 
 		const statementRef = doc(FireStore, Collections.statements, statementId);
 
-		const statementDB = await getDoc(statementRef);
+		const hide = await runTransaction(FireStore, async (transaction) => {
+			const statementDB = await transaction.get(statementRef);
 
-		if (!statementDB.exists()) throw new Error('Statement not found');
-		const statementDBData = statementDB.data() as Statement;
+			if (!statementDB.exists()) throw new Error('Statement not found');
+			const statementDBData = statementDB.data() as Statement;
 
-		const hide = !(statementDBData.hide === true);
+			const newHide = !(statementDBData.hide === true);
+			transaction.update(statementRef, { hide: newHide });
 
-		await updateDoc(statementRef, { hide });
+			return newHide;
+		});
 
 		return hide;
 	} catch (error) {

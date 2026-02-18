@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useMemo, Suspense } from 'rea
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore, selectToasts } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked, selectIsViewBlocked } from '@/store/demographicStore';
-import { SignUser, getOrCreateAnonymousUser, isAnonymousUser } from '@/lib/utils/user';
+import { SignUser, getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { Signature } from '@/lib/firebase/queries';
 import { trackDocumentSign, trackDocumentReject, trackDocumentView } from '@/lib/analytics';
 import { Paragraph } from '@/types';
@@ -200,7 +200,7 @@ export default function DocumentClient({
       }
 
       // Check if Google login is required for interactions
-      if (requireGoogleLogin && (!user || isAnonymousUser(user.uid))) {
+      if (requireGoogleLogin && (!user || user.isAnonymous)) {
         openModal('login', {});
 
         return;

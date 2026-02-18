@@ -12,7 +12,6 @@ import {
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess, checkDocumentAccess } from '@/lib/utils/adminAccess';
-import { isAnonymousUser } from '@/lib/utils/user';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
 import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
@@ -182,7 +181,7 @@ export default async function DocumentPage({ params }: PageProps) {
   // Enforce isPublic: private document access control
   if (!isPublic && !isAdmin) {
     // No user or anonymous user → show login prompt (Google-only)
-    if (!user || isAnonymousUser(user.uid)) {
+    if (!user || user.isAnonymous) {
       return (
         <LanguageOverrideProvider
           adminLanguage={defaultLanguage}

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Online, Creator } from '@freedi/shared-types';
 import {
 	removeUserFromOnlineToDB,
 	setUserOnlineToDB,
@@ -7,23 +8,25 @@ import {
 import { ListenToOnlineUsers } from '../db/online/getOnline';
 import { useAuthentication } from './useAuthentication';
 
-export const useOnlineUsers = (statementId) => {
-	const [onlineUsers, setOnlineUsers] = useState([]);
+export const useOnlineUsers = (statementId: string | undefined) => {
+	const [onlineUsers, setOnlineUsers] = useState<Online[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
-	const [error, setError] = useState(null);
+	const [error, setError] = useState<Error | null>(null);
+	// Use state (not ref) so effects re-run reactively when initialization completes
+	const [isInitialized, setIsInitialized] = useState(false);
 
 	const { creator: currentUser, isLoading: userLoading } = useAuthentication();
-	const isInitializedRef = useRef(false);
-	const previousStatementRef = useRef(null);
+	const previousStatementRef = useRef<string | undefined>(undefined);
 
 	// Define cleanup function first
-	const cleanup = (targetStatementId, targetUser) => {
+	const cleanup = (targetStatementId: string | undefined, targetUser: Creator | undefined) => {
 		if (targetStatementId && targetUser?.uid) {
 			removeUserFromOnlineToDB(targetStatementId, targetUser.uid).catch((err) =>
 				console.error('Error in cleanup:', err),
 			);
 		}
 	};
+
 	useEffect(() => {
 		const previousStatementId = previousStatementRef.current;
 
@@ -35,41 +38,48 @@ export const useOnlineUsers = (statementId) => {
 		// Update the ref with current statementId
 		previousStatementRef.current = statementId;
 
-		// Reset initialization flag when statementId changes
-		isInitializedRef.current = false;
-	}, [statementId, currentUser]);
+		// Reset initialization when statementId changes
+		setIsInitialized(false);
+	}, [statementId, currentUser, userLoading]);
+
 	// Initialize user as online when hook mounts
 	useEffect(() => {
-		if (!statementId || !currentUser || userLoading || isInitializedRef.current) return;
+		if (!statementId || !currentUser || userLoading || isInitialized) return;
+
+		let isMounted = true;
 
 		const initializeOnlineUser = async () => {
 			try {
 				setIsLoading(true);
 				await setUserOnlineToDB(statementId, currentUser);
-				isInitializedRef.current = true;
+				if (isMounted) setIsInitialized(true);
 			} catch (err) {
 				console.error('Error setting user online:', err);
-				setError(err);
+				if (isMounted) setError(err instanceof Error ? err : new Error(String(err)));
 			} finally {
-				setIsLoading(false);
+				if (isMounted) setIsLoading(false);
 			}
 		};
 
 		initializeOnlineUser();
-	}, [statementId, currentUser]);
+
+		return () => {
+			isMounted = false;
+		};
+	}, [statementId, currentUser, userLoading, isInitialized]);
 
 	// Subscribe to online users changes
 	useEffect(() => {
-		if (!statementId || !isInitializedRef.current) return;
+		if (!statementId || !isInitialized) return;
 
 		const unsubscribe = ListenToOnlineUsers(statementId, setOnlineUsers, setIsLoading);
 
 		return () => unsubscribe();
-	}, [statementId, isInitializedRef.current]);
+	}, [statementId, isInitialized]);
 
 	// Handle tab focus/blur events
 	useEffect(() => {
-		if (typeof window === 'undefined' || !statementId || !currentUser || !isInitializedRef.current)
+		if (typeof window === 'undefined' || !statementId || !currentUser || !isInitialized)
 			return;
 
 		const handleFocus = async () => {
@@ -106,7 +116,7 @@ export const useOnlineUsers = (statementId) => {
 			window.removeEventListener('blur', handleBlur);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 		};
-	}, [statementId, currentUser, isInitializedRef.current]);
+	}, [statementId, currentUser, isInitialized]);
 
 	// Cleanup on window close
 	useEffect(() => {
@@ -140,7 +150,7 @@ export const useOnlineUsers = (statementId) => {
 		return getActiveUsers().length;
 	};
 
-	const isUserOnline = (userId) => {
+	const isUserOnline = (userId: string) => {
 		return onlineUsers.some((user) => user.user.uid === userId);
 	};
 

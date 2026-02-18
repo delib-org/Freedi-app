@@ -81,8 +81,10 @@ export function useOptimisticVote({
   const [isConsensusLoading, setIsConsensusLoading] = useState(false);
   const [isVoting, setIsVoting] = useState(false);
 
-  // Track if we have an in-flight optimistic update
-  const hasOptimisticUpdate = useRef(false);
+  // Track in-flight optimistic updates with a counter.
+  // A boolean ref is insufficient: rapid votes can set it to false
+  // in the first timeout while a second vote is still in flight.
+  const pendingVoteCount = useRef(0);
 
   // UI Store for toast notifications and interactions
   const showToast = useUIStore((state) => state.showToast);
@@ -90,8 +92,8 @@ export function useOptimisticVote({
 
   // Sync with server counts when they change (real-time updates)
   useEffect(() => {
-    // Only sync if we don't have an optimistic update in progress
-    if (!hasOptimisticUpdate.current) {
+    // Only sync if no optimistic updates are in flight
+    if (pendingVoteCount.current === 0) {
       setOptimisticPositive(initialPositiveCount);
       setOptimisticNegative(initialNegativeCount);
     }
@@ -115,8 +117,8 @@ export function useOptimisticVote({
         });
 
         if (isMounted) {
-          // Only update optimistic if no in-flight update
-          if (!hasOptimisticUpdate.current) {
+          // Only update optimistic if no in-flight updates
+          if (pendingVoteCount.current === 0) {
             setOptimisticEvaluation(evaluation);
           }
         }
@@ -181,7 +183,7 @@ export function useOptimisticVote({
       );
 
       // OPTIMISTIC UPDATE: Update UI immediately
-      hasOptimisticUpdate.current = true;
+      pendingVoteCount.current += 1;
       setIsVoting(true);
       setOptimisticEvaluation(newEvaluation);
       setOptimisticPositive((prev) => Math.max(0, prev + positiveDelta));
@@ -213,8 +215,10 @@ export function useOptimisticVote({
 
         // Clear consensus loading after a short delay to allow real-time update
         setTimeout(() => {
-          setIsConsensusLoading(false);
-          hasOptimisticUpdate.current = false;
+          pendingVoteCount.current = Math.max(0, pendingVoteCount.current - 1);
+          if (pendingVoteCount.current === 0) {
+            setIsConsensusLoading(false);
+          }
         }, 1500);
       } catch (err) {
         // ROLLBACK: Revert optimistic update on failure
@@ -227,8 +231,10 @@ export function useOptimisticVote({
         setOptimisticEvaluation(previousEvaluation);
         setOptimisticPositive(previousPositive);
         setOptimisticNegative(previousNegative);
-        setIsConsensusLoading(false);
-        hasOptimisticUpdate.current = false;
+        pendingVoteCount.current = Math.max(0, pendingVoteCount.current - 1);
+        if (pendingVoteCount.current === 0) {
+          setIsConsensusLoading(false);
+        }
 
         // Show error feedback
         showToast('error', 'Failed to save your vote. Please try again.');

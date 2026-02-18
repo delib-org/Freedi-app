@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getUserFromCookies, isAnonymousUser } from '@/lib/utils/user';
+import { getUserFromCookies } from '@/lib/utils/user';
 import { getUserHomeDocuments } from '@/lib/firebase/homeQueries';
 import HomeClient from '@/components/home/HomeClient';
 
@@ -9,7 +9,7 @@ export default async function HomePage() {
   const user = getUserFromCookies(cookieStore);
 
   // Redirect to login if not logged in or anonymous
-  if (!user || isAnonymousUser(user.uid)) {
+  if (!user || user.isAnonymous) {
     redirect('/login');
   }
 

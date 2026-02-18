@@ -20,13 +20,34 @@ export function AuthSync() {
 	const isInitialized = useRef(false);
 	const previousUserId = useRef<string | null>(null);
 	const hasAttemptedAnonymousLogin = useRef(false);
+	const isCreatingAnonymousRef = useRef(false);
+	const isMountedRef = useRef(true);
 	const authRestoreTimeout = useRef<NodeJS.Timeout | null>(null);
 
 	useEffect(() => {
+		isMountedRef.current = true;
 		const auth = getFirebaseAuth();
+
+		/**
+		 * Safe anonymous login with mutual exclusion.
+		 * Prevents concurrent calls and skips if component is unmounted.
+		 */
+		const safeAnonymousLogin = async (context: string): Promise<void> => {
+			if (isCreatingAnonymousRef.current || !isMountedRef.current) return;
+			isCreatingAnonymousRef.current = true;
+			try {
+				await anonymousLogin();
+			} catch (error) {
+				console.error(`[AuthSync] Failed to create anonymous session (${context}):`, error);
+			} finally {
+				isCreatingAnonymousRef.current = false;
+			}
+		};
 
 		// Subscribe to auth state changes (don't unsubscribe - keep monitoring)
 		const unsubscribe = auth.onAuthStateChanged(async (user) => {
+			if (!isMountedRef.current) return;
+
 			// Clear any pending auth restore timeout
 			if (authRestoreTimeout.current) {
 				clearTimeout(authRestoreTimeout.current);
@@ -50,7 +71,9 @@ export function AuthSync() {
 				if (needsRefresh && !user.isAnonymous && !isOnLoginPage) {
 					// Small delay to ensure cookies are set
 					setTimeout(() => {
-						window.location.reload();
+						if (isMountedRef.current) {
+							window.location.reload();
+						}
 					}, 100);
 
 					return; // Don't continue - page will reload
@@ -70,15 +93,11 @@ export function AuthSync() {
 					// WAIT for auth to restore before creating anonymous user
 
 					// Give auth 2 seconds to restore
-					// If auth doesn't restore in 2 seconds, cookie is stale → create anonymous
+					// If auth doesn't restore in 2 seconds, cookie is stale -> create anonymous
 					authRestoreTimeout.current = setTimeout(async () => {
 						if (!auth.currentUser && !hasAttemptedAnonymousLogin.current) {
 							hasAttemptedAnonymousLogin.current = true;
-							try {
-								await anonymousLogin();
-							} catch (error) {
-								console.error('[AuthSync] Failed to create anonymous session after timeout:', error);
-							}
+							await safeAnonymousLogin('timeout');
 						}
 					}, 2000);
 
@@ -87,21 +106,15 @@ export function AuthSync() {
 					// NO cookie and first auth check - this is a NEW VISITOR
 					// Create anonymous user IMMEDIATELY (no need to wait)
 					hasAttemptedAnonymousLogin.current = true;
-					try {
-						await anonymousLogin();
-					} catch (error) {
-						console.error('[AuthSync] Failed to create anonymous session:', error);
-					}
+					await safeAnonymousLogin('new visitor');
 					isInitialized.current = true;
-				} else if (isInitialized.current && !userId && previousUserId.current && !hasAttemptedAnonymousLogin.current) {
+				} else if (isInitialized.current && !userId && previousUserId.current) {
 					// User WAS logged in (previousUserId exists) but now isn't (no cookie, no user)
 					// This means they logged out - create new anonymous session
-					hasAttemptedAnonymousLogin.current = true;
-					try {
-						await anonymousLogin();
-					} catch (error) {
-						console.error('[AuthSync] Failed to create anonymous session after logout:', error);
-					}
+					// Note: We do NOT check hasAttemptedAnonymousLogin here because each
+					// logout should trigger a fresh anonymous session. The safeAnonymousLogin
+					// mutex prevents concurrent calls.
+					await safeAnonymousLogin('after logout');
 				}
 
 				previousUserId.current = null;
@@ -120,6 +133,7 @@ export function AuthSync() {
 
 		// Cleanup subscription and interval on unmount
 		return () => {
+			isMountedRef.current = false;
 			unsubscribe();
 			clearInterval(cookieRefreshInterval);
 			if (authRestoreTimeout.current) {

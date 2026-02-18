@@ -47,7 +47,8 @@ export const listenToStatementSubscription = (
 
 		// Track if we've already handled the error to prevent infinite loops
 		let errorHandled = false;
-		let unsubscribeFn: Unsubscribe | null = null;
+		// Initialize to noop to avoid null window between listener creation and assignment
+		let unsubscribeFn: Unsubscribe = () => {};
 
 		const listener = createManagedDocumentListener(
 			statementsSubscribeRef,
@@ -89,16 +90,15 @@ export const listenToStatementSubscription = (
 					// Permission denied is expected for some users, handle silently
 					if (setHasSubscription) setHasSubscription(false);
 					// Unsubscribe immediately to prevent repeated error callbacks
-					if (unsubscribeFn) {
-						unsubscribeFn();
-					}
+					unsubscribeFn();
 				} else {
 					console.error('Error in statement subscription listener:', error);
 				}
 			},
 		);
 
-		// Store the unsubscribe function so we can call it from the error handler
+		// Store the actual unsubscribe function (closure captures the variable binding,
+		// so the error handler above will always call the current value)
 		unsubscribeFn = listener;
 
 		return listener;
