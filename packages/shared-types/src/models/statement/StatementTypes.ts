@@ -69,6 +69,7 @@ export const StatementSchema = object({
 	defaultLanguage: optional(string()), // the default language of the statement
 	forceLanguage: optional(boolean()), // if true, force the language of the statement
 	followMe: optional(string()),
+	powerFollowMe: optional(string()), // when set, auto-redirects non-admin users to this path
 	parentId: string(), // the id of the parent statement
 	parents: optional(array(string())), // the list of all parents of the statement
 	topParentId: string(), // the id of the top parent of the statement
