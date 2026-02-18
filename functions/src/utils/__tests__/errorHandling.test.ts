@@ -10,14 +10,14 @@ import {
 } from '../errorHandling';
 
 describe('Error Handling Utilities', () => {
-	let consoleInfoSpy: jest.SpyInstance;
+	let consoleErrorSpy: jest.SpyInstance;
 
 	beforeEach(() => {
-		consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation();
+		consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
 	});
 
 	afterEach(() => {
-		consoleInfoSpy.mockRestore();
+		consoleErrorSpy.mockRestore();
 	});
 
 	describe('Error Classes', () => {
@@ -69,8 +69,8 @@ describe('Error Handling Utilities', () => {
 			const error = new Error('something broke');
 			logError(error, { operation: 'test.operation' });
 
-			expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-			const logEntry = JSON.parse(consoleInfoSpy.mock.calls[0][0]);
+			expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+			const logEntry = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
 			expect(logEntry.severity).toBe('ERROR');
 			expect(logEntry.operation).toBe('test.operation');
 			expect(logEntry.message).toBe('something broke');
@@ -86,7 +86,7 @@ describe('Error Handling Utilities', () => {
 				statementId: 'stmt456',
 			});
 
-			const logEntry = JSON.parse(consoleInfoSpy.mock.calls[0][0]);
+			const logEntry = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
 			expect(logEntry.userId).toBe('user123');
 			expect(logEntry.statementId).toBe('stmt456');
 		});
@@ -98,14 +98,14 @@ describe('Error Handling Utilities', () => {
 				metadata: { extra: 'data', count: 42 },
 			});
 
-			const logEntry = JSON.parse(consoleInfoSpy.mock.calls[0][0]);
+			const logEntry = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
 			expect(logEntry.metadata).toEqual({ extra: 'data', count: 42 });
 		});
 
 		it('should handle non-Error thrown values', () => {
 			logError('string error', { operation: 'test.stringError' });
 
-			const logEntry = JSON.parse(consoleInfoSpy.mock.calls[0][0]);
+			const logEntry = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
 			expect(logEntry.message).toBe('string error');
 			expect(logEntry.errorName).toBe('Error');
 		});
@@ -114,7 +114,7 @@ describe('Error Handling Utilities', () => {
 			const error = new DatabaseError('query failed', { collection: 'statements' });
 			logError(error, { operation: 'db.query' });
 
-			const logEntry = JSON.parse(consoleInfoSpy.mock.calls[0][0]);
+			const logEntry = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
 			expect(logEntry.errorName).toBe('DatabaseError');
 			expect(logEntry.message).toBe('query failed');
 		});
@@ -153,8 +153,8 @@ describe('Error Handling Utilities', () => {
 			const result = await wrapped();
 
 			expect(result).toBeUndefined();
-			expect(consoleInfoSpy).toHaveBeenCalledTimes(1);
-			const logEntry = JSON.parse(consoleInfoSpy.mock.calls[0][0]);
+			expect(consoleErrorSpy).toHaveBeenCalledTimes(1);
+			const logEntry = JSON.parse(consoleErrorSpy.mock.calls[0][0]);
 			expect(logEntry.operation).toBe('test.boom');
 			expect(logEntry.message).toBe('boom');
 		});

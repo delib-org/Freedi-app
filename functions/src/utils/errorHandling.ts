@@ -73,8 +73,9 @@ interface ErrorContext {
 export function logError(error: unknown, context: ErrorContext): void {
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
-	// Structured log entry for Cloud Logging
-	console.info(
+	// Structured log entry for Cloud Logging — uses console.error to preserve
+	// ERROR severity in Cloud Logging dashboards and alerting policies.
+	console.error(
 		JSON.stringify({
 			severity: 'ERROR',
 			operation: context.operation,
