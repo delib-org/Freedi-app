@@ -269,66 +269,121 @@
   .toggleItem {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding: 0.75rem;
-    border-radius: 8px;
-    transition: background 0.2s ease;
+    align-items: center;
+    padding: 1rem;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+    border: 1.5px solid transparent;
+    gap: 1rem;
 
     &:hover {
       background: rgba(0, 0, 0, 0.02);
+      border-color: var(--border-light, #e0e8fa);
+    }
+
+    // Active (ON) state - subtle highlight on the whole row
+    &--active {
+      background: rgba(87, 198, 178, 0.06);
+      border-color: rgba(87, 198, 178, 0.25);
+
+      &:hover {
+        background: rgba(87, 198, 178, 0.09);
+        border-color: rgba(87, 198, 178, 0.35);
+      }
     }
 
     .toggleContent {
       display: flex;
       gap: 0.75rem;
       flex: 1;
+      min-width: 0;
 
       .toggleIcon {
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
-        background: rgba(var(--accent-rgb), 0.1);
-        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        background: var(--bg-selected, #e5edff);
+        border-radius: 10px;
         flex-shrink: 0;
+        transition: all 0.2s ease;
 
         svg {
-          color: var(--accent);
+          color: var(--icons-blue, #5f88e5);
+          width: 20px;
+          height: 20px;
+        }
+
+        // Active icon state - filled background
+        &--active {
+          background: var(--icons-blue, #5f88e5);
+
+          svg {
+            color: var(--white, #fff);
+          }
         }
       }
 
       .toggleInfo {
         flex: 1;
+        min-width: 0;
 
         .toggleHeader {
           display: flex;
           align-items: center;
           gap: 0.5rem;
           margin-bottom: 0.25rem;
+          flex-wrap: wrap;
 
           .toggleLabel {
             font-size: 1rem;
-            font-weight: 500;
-            color: var(--text-primary);
+            font-weight: 600;
+            color: var(--text-title, #191e29);
           }
         }
 
         .toggleDescription {
           font-size: 0.85rem;
-          color: var(--text-secondary);
+          color: var(--text-body, #3d4d71);
           margin: 0;
           line-height: 1.4;
         }
       }
     }
 
+    // Right side: status text + switch
+    .toggleControl {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .toggleStatus {
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      min-width: 2rem;
+      text-align: center;
+
+      &--on {
+        color: var(--agree, #57c6b2);
+      }
+
+      &--off {
+        color: var(--text-caption, #7484a9);
+      }
+    }
+
     .toggleSwitch {
       position: relative;
       display: inline-block;
-      width: 48px;
-      height: 24px;
+      width: 52px;
+      height: 28px;
       flex-shrink: 0;
+      cursor: pointer;
 
       input {
         opacity: 0;
@@ -336,40 +391,41 @@
         height: 0;
 
         &:checked + .toggleSlider {
-          background-color: var(--accent);
+          background-color: var(--agree, #57c6b2);
+          border-color: var(--agree, #57c6b2);
         }
 
         &:checked + .toggleSlider:before {
           transform: translateX(24px);
         }
 
-        &:focus + .toggleSlider {
-          box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.2);
+        &:focus-visible + .toggleSlider {
+          box-shadow: 0 0 0 3px rgba(87, 198, 178, 0.3);
         }
       }
 
       .toggleSlider {
         position: absolute;
         cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: var(--border-color);
-        transition: all 0.3s ease;
-        border-radius: 24px;
+        inset: 0;
+        background-color: #c5cdd8;
+        border: 2px solid #c5cdd8;
+        transition: all 0.2s ease;
+        border-radius: 28px;
+        // Toggle is always LTR internally (knob moves left→right for on)
+        direction: ltr;
 
         &:before {
           position: absolute;
           content: "";
-          height: 18px;
-          width: 18px;
-          left: 3px;
-          bottom: 3px;
+          height: 20px;
+          width: 20px;
+          left: 2px;
+          bottom: 2px;
           background-color: white;
-          transition: all 0.3s ease;
+          transition: transform 0.2s ease;
           border-radius: 50%;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
         }
       }
     }
@@ -1101,20 +1157,25 @@
     }
 
     .toggleItem {
-      flex-direction: column;
-      gap: 1rem;
+      padding: 0.75rem;
 
       .toggleContent {
         width: 100%;
 
         .toggleIcon {
-          width: 32px;
-          height: 32px;
+          width: 36px;
+          height: 36px;
         }
       }
 
-      .toggleSwitch {
-        align-self: flex-end;
+      .toggleControl {
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+      }
+
+      .toggleStatus {
+        font-size: 0.7rem;
       }
     }
 
