@@ -1,8 +1,8 @@
-import { onCall, HttpsError } from "firebase-functions/v2/https";
-import { logger } from "firebase-functions";
-import { db } from "./index";
-import { Collections, Evaluation, StatementEvaluation, functionConfig } from "@freedi/shared-types";
-import { calculateConsensusValid } from "./helpers/consensusValidCalculator";
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { logger } from 'firebase-functions';
+import { db } from './index';
+import { Collections, Evaluation, StatementEvaluation, functionConfig } from '@freedi/shared-types';
+import { calculateConsensusValid } from './helpers/consensusValidCalculator';
 
 // Uncertainty floor for Mean - SEM calculation
 const FLOOR_STD_DEV = 0.5;
@@ -44,7 +44,7 @@ interface FixClusterResult {
 function calcAgreement(
 	sumEvaluations: number,
 	sumSquaredEvaluations: number,
-	numberOfEvaluators: number
+	numberOfEvaluators: number,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
 
@@ -79,19 +79,19 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 		const { clusterId, sourceIds, dryRun = false } = request.data;
 
 		if (!clusterId) {
-			throw new HttpsError("invalid-argument", "clusterId is required");
+			throw new HttpsError('invalid-argument', 'clusterId is required');
 		}
 
 		if (!sourceIds || sourceIds.length === 0) {
-			throw new HttpsError("invalid-argument", "sourceIds array is required");
+			throw new HttpsError('invalid-argument', 'sourceIds array is required');
 		}
 
 		// Check authentication
 		if (!request.auth) {
-			throw new HttpsError("unauthenticated", "User must be authenticated");
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
 		}
 
-		const modeLabel = dryRun ? "[DRY RUN] " : "";
+		const modeLabel = dryRun ? '[DRY RUN] ' : '';
 		logger.info(`${modeLabel}Fixing cluster ${clusterId} with ${sourceIds.length} sources`);
 
 		// 1. Get cluster statement
@@ -99,7 +99,7 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 		const clusterDoc = await clusterRef.get();
 
 		if (!clusterDoc.exists) {
-			throw new HttpsError("not-found", "Cluster statement not found");
+			throw new HttpsError('not-found', 'Cluster statement not found');
 		}
 
 		const cluster = clusterDoc.data()!;
@@ -111,14 +111,14 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 		};
 
 		// 2. Get source statements
-		const sourceDetails: FixClusterResult["sourceDetails"] = [];
+		const sourceDetails: FixClusterResult['sourceDetails'] = [];
 		for (const sourceId of sourceIds) {
 			const sourceDoc = await db.collection(Collections.statements).doc(sourceId).get();
 			if (sourceDoc.exists) {
 				const source = sourceDoc.data()!;
 				sourceDetails.push({
 					id: sourceId,
-					statement: source.statement?.substring(0, 50) || "",
+					statement: source.statement?.substring(0, 50) || '',
 					evaluators: source.evaluation?.numberOfEvaluators || 0,
 					consensus: source.consensus || 0,
 				});
@@ -126,16 +126,19 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 		}
 
 		// 3. Collect evaluations from sources
-		const userEvaluations = new Map<string, {
-			evaluation: number;
-			isDirect: boolean;
-			sourceEvaluations: number[];
-		}>();
+		const userEvaluations = new Map<
+			string,
+			{
+				evaluation: number;
+				isDirect: boolean;
+				sourceEvaluations: number[];
+			}
+		>();
 
 		for (const sourceId of sourceIds) {
 			const sourceEvals = await db
 				.collection(Collections.evaluations)
-				.where("statementId", "==", sourceId)
+				.where('statementId', '==', sourceId)
 				.get();
 
 			for (const doc of sourceEvals.docs) {
@@ -148,7 +151,8 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 					// Average multiple source evaluations from the same user
 					existing.sourceEvaluations.push(evaluation.evaluation);
 					existing.evaluation =
-						existing.sourceEvaluations.reduce((a, b) => a + b, 0) / existing.sourceEvaluations.length;
+						existing.sourceEvaluations.reduce((a, b) => a + b, 0) /
+						existing.sourceEvaluations.length;
 				} else if (!existing) {
 					userEvaluations.set(userId, {
 						evaluation: evaluation.evaluation,
@@ -164,7 +168,7 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 		// 4. Collect DIRECT evaluations on cluster (without migratedAt) - these OVERWRITE
 		const clusterEvals = await db
 			.collection(Collections.evaluations)
-			.where("statementId", "==", clusterId)
+			.where('statementId', '==', clusterId)
 			.get();
 
 		let directCount = 0;
@@ -211,7 +215,10 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 		const totalEvaluators = proCount + conCount;
 		const averageEvaluation = totalEvaluators > 0 ? sumEvaluations / totalEvaluators : 0;
 		const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalEvaluators);
-		const consensusValid = calculateConsensusValid(agreement, cluster.popperHebbianScore ?? undefined);
+		const consensusValid = calculateConsensusValid(
+			agreement,
+			cluster.popperHebbianScore ?? undefined,
+		);
 
 		const after = {
 			consensus: agreement,
@@ -220,7 +227,9 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 			con: conCount,
 		};
 
-		logger.info(`${modeLabel}Calculated: consensus ${agreement.toFixed(3)}, ${totalEvaluators} evaluators (${proCount} pro, ${conCount} con)`);
+		logger.info(
+			`${modeLabel}Calculated: consensus ${agreement.toFixed(3)}, ${totalEvaluators} evaluators (${proCount} pro, ${conCount} con)`,
+		);
 
 		// 6. Apply changes (unless dry run)
 		if (!dryRun) {
@@ -275,5 +284,5 @@ export const fixClusterIntegration = onCall<FixClusterRequest>(
 			after,
 			sourceDetails,
 		};
-	}
+	},
 );

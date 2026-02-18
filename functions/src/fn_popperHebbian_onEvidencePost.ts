@@ -7,7 +7,7 @@ import {
 	calculateConsensusValid,
 	determineStatus,
 	updateHebbianScore,
-	migrateCorroborationScore
+	migrateCorroborationScore,
 } from './helpers/consensusValidCalculator';
 
 // Extended evidence interface with new corroborationScore field
@@ -15,7 +15,7 @@ import {
 interface EvidenceWithCorroboration {
 	evidenceType?: EvidenceType;
 	support?: number;
-	corroborationScore?: number;  // NEW: 0-1 scale
+	corroborationScore?: number; // NEW: 0-1 scale
 	helpfulCount?: number;
 	notHelpfulCount?: number;
 	netScore?: number;
@@ -26,11 +26,11 @@ interface EvidenceWithCorroboration {
 // 1.0 = scientific/peer-reviewed data
 // 0.1 = fallacious/unreliable
 const EVIDENCE_WEIGHTS: Record<EvidenceType, number> = {
-	[EvidenceType.data]: 1.0,        // Peer-reviewed research
-	[EvidenceType.testimony]: 0.7,   // Expert testimony
-	[EvidenceType.argument]: 0.4,    // Logical reasoning
-	[EvidenceType.anecdote]: 0.2,    // Personal stories
-	[EvidenceType.fallacy]: 0.1      // Flagged content
+	[EvidenceType.data]: 1.0, // Peer-reviewed research
+	[EvidenceType.testimony]: 0.7, // Expert testimony
+	[EvidenceType.argument]: 0.4, // Logical reasoning
+	[EvidenceType.anecdote]: 0.2, // Personal stories
+	[EvidenceType.fallacy]: 0.1, // Flagged content
 };
 
 async function classifyEvidenceType(evidenceText: string): Promise<EvidenceType> {
@@ -70,7 +70,10 @@ Respond with ONLY the type name (data, testimony, argument, anecdote, or fallacy
  * Classify how much evidence corroborates or falsifies a statement
  * Returns 0-1 scale: 0=falsifies, 0.5=neutral, 1=corroborates
  */
-async function classifyCorroborationScore(evidenceText: string, parentStatementText: string): Promise<number> {
+async function classifyCorroborationScore(
+	evidenceText: string,
+	parentStatementText: string,
+): Promise<number> {
 	try {
 		const model = getGeminiModel();
 
@@ -128,7 +131,7 @@ function calculateInitialWeight(evidenceType: EvidenceType): number {
 }
 
 // Hebbian score constants
-const PRIOR = 0.6;  // Starting score (benefit of doubt)
+const PRIOR = 0.6; // Starting score (benefit of doubt)
 
 async function recalculateScore(statementId: string): Promise<void> {
 	const db = getFirestore();
@@ -183,7 +186,7 @@ async function recalculateScore(statementId: string): Promise<void> {
 		lastCalculated: Date.now(),
 		// Keep deprecated fields for backward compatibility
 		totalScore: 0,
-		corroborationLevel: hebbianScore
+		corroborationLevel: hebbianScore,
 	};
 
 	// Calculate combined consensusValid score
@@ -193,14 +196,14 @@ async function recalculateScore(statementId: string): Promise<void> {
 	// Update the parent statement with both scores
 	await db.collection(Collections.statements).doc(statementId).update({
 		popperHebbianScore,
-		consensusValid
+		consensusValid,
 	});
 }
 
 export const onEvidencePostCreate = onDocumentCreated(
 	{
 		document: `${Collections.statements}/{statementId}`,
-		region: functionConfig.region
+		region: functionConfig.region,
 	},
 	async (event) => {
 		const snapshot = event.data;
@@ -234,7 +237,10 @@ export const onEvidencePostCreate = onDocumentCreated(
 			const evidenceType = await classifyEvidenceType(statement.statement);
 
 			// 3. Call AI to classify corroboration score (0-1)
-			const corroborationScore = await classifyCorroborationScore(statement.statement, parentStatementText);
+			const corroborationScore = await classifyCorroborationScore(
+				statement.statement,
+				parentStatementText,
+			);
 
 			// 4. Calculate initial weight
 			const weight = calculateInitialWeight(evidenceType);
@@ -245,31 +251,30 @@ export const onEvidencePostCreate = onDocumentCreated(
 				'evidence.evidenceWeight': weight,
 				'evidence.corroborationScore': corroborationScore,
 				// Keep support for backward compatibility (map 0-1 to -1 to 1)
-				'evidence.support': (corroborationScore * 2) - 1
+				'evidence.support': corroborationScore * 2 - 1,
 			});
 
 			console.info('Evidence classified:', {
 				statementId: statement.statementId,
 				evidenceType,
 				corroborationScore,
-				initialWeight: weight
+				initialWeight: weight,
 			});
 
 			// 6. Trigger score recalculation for parent option
 			if (statement.parentId) {
 				await recalculateScore(statement.parentId);
 			}
-
 		} catch (error) {
 			console.error('Error processing evidence post:', error);
 		}
-	}
+	},
 );
 
 export const onEvidencePostUpdate = onDocumentUpdated(
 	{
 		document: `${Collections.statements}/{statementId}`,
-		region: functionConfig.region
+		region: functionConfig.region,
 	},
 	async (event) => {
 		const beforeSnapshot = event.data?.before;
@@ -293,7 +298,8 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 		const contentChanged = beforeStatement.statement !== afterStatement.statement;
 		const beforeEvidence = beforeStatement.evidence as EvidenceWithCorroboration | undefined;
 		const afterEvidence = afterStatement.evidence as EvidenceWithCorroboration | undefined;
-		const corroborationChanged = beforeEvidence?.corroborationScore !== afterEvidence?.corroborationScore;
+		const corroborationChanged =
+			beforeEvidence?.corroborationScore !== afterEvidence?.corroborationScore;
 
 		if (!contentChanged && !corroborationChanged) {
 			return;
@@ -307,7 +313,10 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 			// 1. Get parent statement for context
 			let parentStatementText = '';
 			if (afterStatement.parentId) {
-				const parentDoc = await db.collection(Collections.statements).doc(afterStatement.parentId).get();
+				const parentDoc = await db
+					.collection(Collections.statements)
+					.doc(afterStatement.parentId)
+					.get();
 				if (parentDoc.exists) {
 					const parentStatement = parentDoc.data() as Statement;
 					parentStatementText = parentStatement.statement || '';
@@ -318,7 +327,10 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 			const newEvidenceType = await classifyEvidenceType(afterStatement.statement);
 
 			// 3. Re-classify corroboration score (0-1)
-			const newCorroborationScore = await classifyCorroborationScore(afterStatement.statement, parentStatementText);
+			const newCorroborationScore = await classifyCorroborationScore(
+				afterStatement.statement,
+				parentStatementText,
+			);
 
 			// 4. Calculate new weight
 			const newWeight = calculateInitialWeight(newEvidenceType);
@@ -329,8 +341,8 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 				'evidence.evidenceWeight': newWeight,
 				'evidence.corroborationScore': newCorroborationScore,
 				// Keep support for backward compatibility
-				'evidence.support': (newCorroborationScore * 2) - 1,
-				lastUpdate: Date.now()
+				'evidence.support': newCorroborationScore * 2 - 1,
+				lastUpdate: Date.now(),
 			});
 
 			// 6. Trigger score recalculation for parent option
@@ -346,11 +358,10 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 				oldWeight: beforeStatement.evidence?.evidenceWeight,
 				newWeight,
 				oldCorroborationScore,
-				newCorroborationScore
+				newCorroborationScore,
 			});
-
 		} catch (error) {
 			console.error('Error re-evaluating evidence post:', error);
 		}
-	}
+	},
 );

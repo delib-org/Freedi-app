@@ -70,8 +70,8 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 		if ((window.navigator as any).standalone === true) {
 			return true;
 		}
-		
-return false;
+
+		return false;
 	}, []);
 
 	/**
@@ -83,8 +83,8 @@ return false;
 		}
 
 		const daysSinceDismissal = (Date.now() - lastPromptDismissedAt) / TIME.DAY;
-		
-return daysSinceDismissal >= PWA.PROMPT_COOLDOWN;
+
+		return daysSinceDismissal >= PWA.PROMPT_COOLDOWN;
 	}, [lastPromptDismissedAt]);
 
 	/**
@@ -94,43 +94,43 @@ return daysSinceDismissal >= PWA.PROMPT_COOLDOWN;
 		// Don't show if app is already installed
 		if (isAppInstalled) {
 			console.info('[PWA] Not showing prompt - app already installed');
-			
-return false;
+
+			return false;
 		}
 
 		// Don't show if user already responded
 		if (userResponded) {
 			console.info('[PWA] Not showing prompt - user already responded');
-			
-return false;
+
+			return false;
 		}
 
 		// Don't show if cooldown period hasn't passed
 		if (!canShowPromptAgain()) {
 			console.info('[PWA] Not showing prompt - cooldown period not passed');
-			
-return false;
+
+			return false;
 		}
 
 		// Don't show if browser doesn't support install
 		if (!isInstallable) {
 			console.info('[PWA] Not showing prompt - browser not installable');
-			
-return false;
+
+			return false;
 		}
 
 		// Check if user created a group (if enabled)
 		if (PWA.SHOW_AFTER_GROUP_CREATION && hasCreatedGroup) {
 			console.info('[PWA] Conditions met - user created a group');
-			
-return true;
+
+			return true;
 		}
 
 		// Check if user created enough options
 		if (optionsCreated >= PWA.MIN_OPTIONS_FOR_PROMPT) {
 			console.info(`[PWA] Conditions met - user created ${optionsCreated} options`);
-			
-return true;
+
+			return true;
 		}
 
 		console.info('[PWA] Not showing prompt - conditions not met', {

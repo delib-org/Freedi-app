@@ -1,5 +1,5 @@
-import { FC } from "react";
-import { Creator, Statement } from "@freedi/shared-types";
+import { FC } from 'react';
+import { Creator, Statement } from '@freedi/shared-types';
 import styles from './ProfileImage.module.scss';
 import DefaultAvatar from '@/assets/images/avatar.jpg';
 
@@ -20,8 +20,7 @@ const ProfileImage: FC<Props> = ({ statement, isSmall, creator }) => {
 			className={`${styles.profileImage} ${isSmall ? styles.small : ''}`}
 			style={{ backgroundImage: `url(${avatar})` }}
 			title={talker?.displayName}
-		>
-		</div>
+		></div>
 	);
 };
 

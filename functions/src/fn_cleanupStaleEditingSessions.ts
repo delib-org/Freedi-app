@@ -30,85 +30,80 @@ const SESSION_TTL_MS = 15 * 60 * 1000;
  * Cleans up stale RTDB editing sessions
  */
 export const fn_cleanupStaleEditingSessions = onSchedule(
-  {
-    schedule: '*/15 * * * *', // Every 15 minutes
-    timeZone: 'UTC',
-    retryCount: 3,
-    memory: '256MiB',
-  },
-  async (): Promise<void> => {
-    try {
-      const now = Date.now();
-      const sessionsRef = rtdb.ref('liveEditing/sessions');
+	{
+		schedule: '*/15 * * * *', // Every 15 minutes
+		timeZone: 'UTC',
+		retryCount: 3,
+		memory: '256MiB',
+	},
+	async (): Promise<void> => {
+		try {
+			const now = Date.now();
+			const sessionsRef = rtdb.ref('liveEditing/sessions');
 
-      // Get all sessions
-      const snapshot = await sessionsRef.once('value');
+			// Get all sessions
+			const snapshot = await sessionsRef.once('value');
 
-      if (!snapshot.exists()) {
-        logger.info('[fn_cleanupStaleEditingSessions] No sessions found');
+			if (!snapshot.exists()) {
+				logger.info('[fn_cleanupStaleEditingSessions] No sessions found');
 
-        return;
-      }
+				return;
+			}
 
-      const sessions = snapshot.val();
-      const sessionIds = Object.keys(sessions);
+			const sessions = snapshot.val();
+			const sessionIds = Object.keys(sessions);
 
-      logger.info('[fn_cleanupStaleEditingSessions] Processing sessions', {
-        count: sessionIds.length,
-      });
+			logger.info('[fn_cleanupStaleEditingSessions] Processing sessions', {
+				count: sessionIds.length,
+			});
 
-      let removedCount = 0;
+			let removedCount = 0;
 
-      for (const sessionId of sessionIds) {
-        const session = sessions[sessionId];
+			for (const sessionId of sessionIds) {
+				const session = sessions[sessionId];
 
-        try {
-          // Check if session is expired (TTL passed)
-          const isExpired = session.ttl && session.ttl < now;
+				try {
+					// Check if session is expired (TTL passed)
+					const isExpired = session.ttl && session.ttl < now;
 
-          // Check if session has no active editors
-          const hasNoEditors =
-            !session.activeEditors || Object.keys(session.activeEditors).length === 0;
+					// Check if session has no active editors
+					const hasNoEditors =
+						!session.activeEditors || Object.keys(session.activeEditors).length === 0;
 
-          // Check if session is very old (2x TTL)
-          const isVeryOld =
-            session.lastUpdate && now - session.lastUpdate > SESSION_TTL_MS * 2;
+					// Check if session is very old (2x TTL)
+					const isVeryOld = session.lastUpdate && now - session.lastUpdate > SESSION_TTL_MS * 2;
 
-          if (isExpired || hasNoEditors || isVeryOld) {
-            // Remove this session
-            await sessionsRef.child(sessionId).remove();
-            removedCount++;
+					if (isExpired || hasNoEditors || isVeryOld) {
+						// Remove this session
+						await sessionsRef.child(sessionId).remove();
+						removedCount++;
 
-            logger.info('[fn_cleanupStaleEditingSessions] Removed session', {
-              sessionId,
-              reason: isExpired
-                ? 'expired'
-                : hasNoEditors
-                  ? 'no_editors'
-                  : 'very_old',
-            });
-          }
-        } catch (error) {
-          logger.error('[fn_cleanupStaleEditingSessions] Error processing session', error, {
-            sessionId,
-          });
-          continue;
-        }
-      }
+						logger.info('[fn_cleanupStaleEditingSessions] Removed session', {
+							sessionId,
+							reason: isExpired ? 'expired' : hasNoEditors ? 'no_editors' : 'very_old',
+						});
+					}
+				} catch (error) {
+					logger.error('[fn_cleanupStaleEditingSessions] Error processing session', error, {
+						sessionId,
+					});
+					continue;
+				}
+			}
 
-      logger.info('[fn_cleanupStaleEditingSessions] Cleanup complete', {
-        totalSessions: sessionIds.length,
-        removedSessions: removedCount,
-        remainingSessions: sessionIds.length - removedCount,
-      });
-    } catch (error) {
-      logger.error('[fn_cleanupStaleEditingSessions] Error', error);
-    }
-  }
+			logger.info('[fn_cleanupStaleEditingSessions] Cleanup complete', {
+				totalSessions: sessionIds.length,
+				removedSessions: removedCount,
+				remainingSessions: sessionIds.length - removedCount,
+			});
+		} catch (error) {
+			logger.error('[fn_cleanupStaleEditingSessions] Error', error);
+		}
+	},
 );
 
 interface CleanupSessionData {
-  sessionId: string;
+	sessionId: string;
 }
 
 /**
@@ -116,39 +111,39 @@ interface CleanupSessionData {
  * Useful for admin tools or testing
  */
 export const cleanupSession = onCall(
-  {
-    memory: '256MiB',
-  },
-  async (request: CallableRequest<CleanupSessionData>) => {
-    const { sessionId } = request.data;
+	{
+		memory: '256MiB',
+	},
+	async (request: CallableRequest<CleanupSessionData>) => {
+		const { sessionId } = request.data;
 
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
+		if (!request.auth) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
+		}
 
-    if (!sessionId) {
-      throw new HttpsError('invalid-argument', 'sessionId is required');
-    }
+		if (!sessionId) {
+			throw new HttpsError('invalid-argument', 'sessionId is required');
+		}
 
-    try {
-      const sessionsRef = rtdb.ref('liveEditing/sessions');
-      await sessionsRef.child(sessionId).remove();
+		try {
+			const sessionsRef = rtdb.ref('liveEditing/sessions');
+			await sessionsRef.child(sessionId).remove();
 
-      logger.info('[cleanupSession] Manually cleaned up session', {
-        sessionId,
-        userId: request.auth.uid,
-      });
+			logger.info('[cleanupSession] Manually cleaned up session', {
+				sessionId,
+				userId: request.auth.uid,
+			});
 
-      return { success: true, sessionId };
-    } catch (error) {
-      logger.error('[cleanupSession] Error', error, { sessionId });
-      throw new HttpsError('internal', 'Failed to cleanup session');
-    }
-  }
+			return { success: true, sessionId };
+		} catch (error) {
+			logger.error('[cleanupSession] Error', error, { sessionId });
+			throw new HttpsError('internal', 'Failed to cleanup session');
+		}
+	},
 );
 
 interface CleanupDocumentSessionsData {
-  documentId: string;
+	documentId: string;
 }
 
 /**
@@ -156,51 +151,51 @@ interface CleanupDocumentSessionsData {
  * Useful when a document is deleted
  */
 export const cleanupDocumentSessions = onCall(
-  {
-    memory: '256MiB',
-  },
-  async (request: CallableRequest<CleanupDocumentSessionsData>) => {
-    const { documentId } = request.data;
+	{
+		memory: '256MiB',
+	},
+	async (request: CallableRequest<CleanupDocumentSessionsData>) => {
+		const { documentId } = request.data;
 
-    if (!request.auth) {
-      throw new HttpsError('unauthenticated', 'User must be authenticated');
-    }
+		if (!request.auth) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
+		}
 
-    if (!documentId) {
-      throw new HttpsError('invalid-argument', 'documentId is required');
-    }
+		if (!documentId) {
+			throw new HttpsError('invalid-argument', 'documentId is required');
+		}
 
-    try {
-      const sessionsRef = rtdb.ref('liveEditing/sessions');
-      const snapshot = await sessionsRef.once('value');
+		try {
+			const sessionsRef = rtdb.ref('liveEditing/sessions');
+			const snapshot = await sessionsRef.once('value');
 
-      if (!snapshot.exists()) {
-        return { success: true, removedCount: 0 };
-      }
+			if (!snapshot.exists()) {
+				return { success: true, removedCount: 0 };
+			}
 
-      const sessions = snapshot.val();
-      const sessionIds = Object.keys(sessions);
-      let removedCount = 0;
+			const sessions = snapshot.val();
+			const sessionIds = Object.keys(sessions);
+			let removedCount = 0;
 
-      for (const sessionId of sessionIds) {
-        const session = sessions[sessionId];
+			for (const sessionId of sessionIds) {
+				const session = sessions[sessionId];
 
-        if (session.documentId === documentId) {
-          await sessionsRef.child(sessionId).remove();
-          removedCount++;
-        }
-      }
+				if (session.documentId === documentId) {
+					await sessionsRef.child(sessionId).remove();
+					removedCount++;
+				}
+			}
 
-      logger.info('[cleanupDocumentSessions] Cleaned up document sessions', {
-        documentId,
-        removedCount,
-        userId: request.auth.uid,
-      });
+			logger.info('[cleanupDocumentSessions] Cleaned up document sessions', {
+				documentId,
+				removedCount,
+				userId: request.auth.uid,
+			});
 
-      return { success: true, removedCount };
-    } catch (error) {
-      logger.error('[cleanupDocumentSessions] Error', error, { documentId });
-      throw new HttpsError('internal', 'Failed to cleanup document sessions');
-    }
-  }
+			return { success: true, removedCount };
+		} catch (error) {
+			logger.error('[cleanupDocumentSessions] Error', error, { documentId });
+			throw new HttpsError('internal', 'Failed to cleanup document sessions');
+		}
+	},
 );

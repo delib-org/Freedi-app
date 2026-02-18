@@ -3,7 +3,12 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { NewStatementContext, SimilaritySteps } from '../NewStatementCont';
 import styles from './SimilarStatements.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearNewStatement, setShowNewStatementModal, selectNewStatement, selectParentStatementForNewStatement } from '@/redux/statements/newStatementSlice';
+import {
+	clearNewStatement,
+	setShowNewStatementModal,
+	selectNewStatement,
+	selectParentStatementForNewStatement,
+} from '@/redux/statements/newStatementSlice';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useLocation, useNavigate } from 'react-router';
@@ -47,7 +52,7 @@ export default function SimilarStatements() {
 
 					window.scrollTo({
 						top: offsetPosition,
-						behavior: 'smooth'
+						behavior: 'smooth',
 					});
 				}
 			}, 100);
@@ -104,7 +109,9 @@ export default function SimilarStatements() {
 			<div className={styles.header}>
 				<h2 className={styles.title}>{t('Similar ideas found!')}</h2>
 				<p className={styles.subtitle}>
-					{t('We found existing ideas similar to yours. Consider joining an existing discussion for greater impact.')}
+					{t(
+						'We found existing ideas similar to yours. Consider joining an existing discussion for greater impact.',
+					)}
 				</p>
 			</div>
 
@@ -123,12 +130,8 @@ export default function SimilarStatements() {
 							{t('Your idea')}
 						</div>
 						<h3 className="similarity-card__title">{title}</h3>
-						{description && (
-							<p className="similarity-card__description">{description}</p>
-						)}
-						<button className="similarity-card__action">
-							{t('Create as new')}
-						</button>
+						{description && <p className="similarity-card__description">{description}</p>}
+						<button className="similarity-card__action">{t('Create as new')}</button>
 					</div>
 				</div>
 
@@ -164,7 +167,9 @@ export default function SimilarStatements() {
 											{t('Best match')}
 										</div>
 									)}
-									<h3 className="similarity-card__title">{renderInlineMarkdown(statement.statement)}</h3>
+									<h3 className="similarity-card__title">
+										{renderInlineMarkdown(statement.statement)}
+									</h3>
 									{descriptionText && (
 										<p className="similarity-card__description">{descriptionText}</p>
 									)}
@@ -175,9 +180,7 @@ export default function SimilarStatements() {
 											</span>
 										)}
 									</div>
-									<button className="similarity-card__action">
-										{t('View & join')}
-									</button>
+									<button className="similarity-card__action">{t('View & join')}</button>
 								</div>
 							);
 						})}
@@ -187,16 +190,8 @@ export default function SimilarStatements() {
 
 			{/* Actions */}
 			<div className={styles.actions}>
-				<Button
-					text={t('Back to edit')}
-					buttonType={ButtonType.SECONDARY}
-					onClick={handleBack}
-				/>
-				<Button
-					text={t('Close')}
-					buttonType={ButtonType.SECONDARY}
-					onClick={handleClose}
-				/>
+				<Button text={t('Back to edit')} buttonType={ButtonType.SECONDARY} onClick={handleBack} />
+				<Button text={t('Close')} buttonType={ButtonType.SECONDARY} onClick={handleClose} />
 			</div>
 		</div>
 	);

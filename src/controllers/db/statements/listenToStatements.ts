@@ -1,14 +1,5 @@
 import { Unsubscribe } from 'firebase/auth';
-import {
-	and,
-	collection,
-	doc,
-	limit,
-	or,
-	orderBy,
-	query,
-	where,
-} from 'firebase/firestore';
+import { and, collection, doc, limit, or, orderBy, query, where } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
@@ -45,26 +36,19 @@ import {
 export const listenToStatementSubscription = (
 	statementId: string,
 	creator: Creator,
-	setHasSubscription?: React.Dispatch<React.SetStateAction<boolean>>
+	setHasSubscription?: React.Dispatch<React.SetStateAction<boolean>>,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
 		const docId = `${creator.uid}--${statementId}`;
-		const statementsSubscribeRef = doc(
-			FireStore,
-			Collections.statementsSubscribe,
-			docId
-		);
+		const statementsSubscribeRef = doc(FireStore, Collections.statementsSubscribe, docId);
 
-		const listenerKey = generateListenerKey(
-			'statement-subscription',
-			'subscription',
-			docId
-		);
+		const listenerKey = generateListenerKey('statement-subscription', 'subscription', docId);
 
 		// Track if we've already handled the error to prevent infinite loops
 		let errorHandled = false;
-		let unsubscribeFn: Unsubscribe | null = null;
+		// Initialize to noop to avoid null window between listener creation and assignment
+		let unsubscribeFn: Unsubscribe = () => {};
 
 		const listener = createManagedDocumentListener(
 			statementsSubscribeRef,
@@ -78,8 +62,7 @@ export const listenToStatementSubscription = (
 
 						return;
 					}
-					const statementSubscription =
-						statementSubscriptionDB.data() as StatementSubscription;
+					const statementSubscription = statementSubscriptionDB.data() as StatementSubscription;
 
 					const { role } = statementSubscription;
 
@@ -88,9 +71,7 @@ export const listenToStatementSubscription = (
 						statementSubscription.role = Role.admin;
 					} else if (role === undefined) {
 						statementSubscription.role = Role.unsubscribed;
-						console.info(
-							'Role is undefined. Setting role to unsubscribed'
-						);
+						console.info('Role is undefined. Setting role to unsubscribed');
 					}
 
 					dispatch(setStatementSubscription(statementSubscription));
@@ -109,16 +90,15 @@ export const listenToStatementSubscription = (
 					// Permission denied is expected for some users, handle silently
 					if (setHasSubscription) setHasSubscription(false);
 					// Unsubscribe immediately to prevent repeated error callbacks
-					if (unsubscribeFn) {
-						unsubscribeFn();
-					}
+					unsubscribeFn();
 				} else {
 					console.error('Error in statement subscription listener:', error);
 				}
-			}
+			},
 		);
 
-		// Store the unsubscribe function so we can call it from the error handler
+		// Store the actual unsubscribe function (closure captures the variable binding,
+		// so the error handler above will always call the current value)
 		unsubscribeFn = listener;
 
 		return listener;
@@ -131,22 +111,14 @@ export const listenToStatementSubscription = (
 
 export const listenToStatement = (
 	statementId: string | undefined,
-	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>
+	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
 
-		const listenerKey = generateListenerKey(
-			'statement',
-			'statement',
-			statementId
-		);
+		const listenerKey = generateListenerKey('statement', 'statement', statementId);
 
 		return createManagedDocumentListener(
 			statementRef,
@@ -154,8 +126,7 @@ export const listenToStatement = (
 			(statementDB) => {
 				try {
 					if (!statementDB.exists()) {
-						if (setIsStatementNotFound)
-							setIsStatementNotFound(true);
+						if (setIsStatementNotFound) setIsStatementNotFound(true);
 						throw new Error('Statement does not exist');
 					}
 					// Normalize data to remove non-serializable values (like VectorValue embeddings)
@@ -170,7 +141,7 @@ export const listenToStatement = (
 			(error) => {
 				console.error('Error in statement listener:', error);
 				if (setIsStatementNotFound) setIsStatementNotFound(true);
-			}
+			},
 		);
 	} catch (error) {
 		console.error(error);
@@ -183,7 +154,7 @@ export const listenToStatement = (
 export const listenToSubStatements = (
 	statementId: string | undefined,
 	topBottom?: 'top' | 'bottom',
-	numberOfOptions?: number
+	numberOfOptions?: number,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
@@ -199,7 +170,7 @@ export const listenToSubStatements = (
 			statementsRef,
 			where('parentId', '==', statementId),
 			where('statementType', '!=', StatementType.document),
-			orderBy('createdAt', descAsc)
+			orderBy('createdAt', descAsc),
 		);
 
 		// Only add limit if numberOfOptions is provided
@@ -210,7 +181,7 @@ export const listenToSubStatements = (
 		const listenerKey = generateListenerKey(
 			'sub-statements',
 			'statement',
-			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}`
+			`${statementId}-${topBottom || 'all'}-${numberOfOptions || 'all'}`,
 		);
 
 		let isFirstCall = true;
@@ -254,7 +225,7 @@ export const listenToSubStatements = (
 				}
 			},
 			(error) => console.error('Error in sub-statements listener:', error),
-			'query'
+			'query',
 		);
 	} catch (error) {
 		console.error(error);
@@ -263,62 +234,49 @@ export const listenToSubStatements = (
 	}
 };
 
-export const listenToMembers =
-	(dispatch: AppDispatch) => (statementId: string) => {
-		try {
-			const membersRef = collection(
-				FireStore,
-				Collections.statementsSubscribe
-			);
-			const q = query(
-				membersRef,
-				where('statementId', '==', statementId),
-				where('statement.statementType', '!=', StatementType.document),
-				orderBy('createdAt', 'desc'),
-				limit(10) // Load only last 10 members initially, more can be loaded on demand
-			);
+export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
+	try {
+		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+		const q = query(
+			membersRef,
+			where('statementId', '==', statementId),
+			where('statement.statementType', '!=', StatementType.document),
+			orderBy('createdAt', 'desc'),
+			limit(10), // Load only last 10 members initially, more can be loaded on demand
+		);
 
-			const listenerKey = generateListenerKey(
-				'members',
-				'statement',
-				statementId
-			);
+		const listenerKey = generateListenerKey('members', 'statement', statementId);
 
-			return createManagedCollectionListener(
-				q,
-				listenerKey,
-				(subsDB) => {
-					subsDB.docChanges().forEach((change) => {
-						const member = change.doc.data() as StatementSubscription;
-						if (change.type === 'added') {
-							dispatch(setMembership(member));
-						}
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(subsDB) => {
+				subsDB.docChanges().forEach((change) => {
+					const member = change.doc.data() as StatementSubscription;
+					if (change.type === 'added') {
+						dispatch(setMembership(member));
+					}
 
-						if (change.type === 'modified') {
-							dispatch(setMembership(member));
-						}
+					if (change.type === 'modified') {
+						dispatch(setMembership(member));
+					}
 
-						if (change.type === 'removed') {
-							dispatch(
-								removeMembership(member.statementsSubscribeId)
-							);
-						}
-					});
-				},
-				(error) => console.error('Error in members listener:', error),
-				'query'
-			);
-		} catch (error) {
-			console.error(error);
-			
-return () => {};
-		}
-	};
+					if (change.type === 'removed') {
+						dispatch(removeMembership(member.statementsSubscribeId));
+					}
+				});
+			},
+			(error) => console.error('Error in members listener:', error),
+			'query',
+		);
+	} catch (error) {
+		console.error(error);
 
-export function listenToAllSubStatements(
-	statementId: string,
-	numberOfLastMessages = 7
-) {
+		return () => {};
+	}
+};
+
+export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
 	try {
 		if (numberOfLastMessages > 25) numberOfLastMessages = 25;
 		if (!statementId) throw new Error('Statement id is undefined');
@@ -329,110 +287,110 @@ export function listenToAllSubStatements(
 			where('topParentId', '==', statementId),
 			where('statementId', '!=', statementId),
 			orderBy('createdAt', 'desc'),
-			limit(numberOfLastMessages)
+			limit(numberOfLastMessages),
 		);
 
 		const listenerKey = generateListenerKey(
 			'all-sub-statements',
 			'statement',
-			`${statementId}-${numberOfLastMessages}`
+			`${statementId}-${numberOfLastMessages}`,
 		);
 
 		return createManagedCollectionListener(
 			q,
 			listenerKey,
 			(statementsDB) => {
-			statementsDB.docChanges().forEach((change) => {
-				const data = change.doc.data();
-				const docId = change.doc.id;
-				
-				// Use safeParse to get detailed validation information
-				const result = safeParse(StatementSchema, data);
-				
-				if (!result.success) {
-					// Get flattened error messages for easier reading
-					const flatErrors = flatten(result.issues);
-					
-					console.error('=== STATEMENT VALIDATION ERROR ===');
-					console.error('Document ID:', docId);
-					console.error('Full data received:', JSON.stringify(data, null, 2));
-					console.error('Data type:', typeof data);
-					
-					// Log detailed validation issues
-					console.error('Validation Issues:');
-					result.issues.forEach((issue, index) => {
-						console.error(`Issue ${index + 1}:`, {
-							kind: issue.kind,
-							type: issue.type,
-							input: issue.input,
-							expected: issue.expected,
-							received: issue.received,
-							message: issue.message,
-							path: issue.path?.map(p => p.key).join('.'),
-							requirement: issue.requirement,
-						});
-					});
-					
-					// Log flattened errors
-					console.error('Flattened errors:', flatErrors);
-					
-					// Log specific field analysis
-					if (data && typeof data === 'object') {
-						console.error('Field analysis:', {
-							hasRequiredFields: {
-								statement: 'statement' in data,
-								statementId: 'statementId' in data,
-								creatorId: 'creatorId' in data,
-								creator: 'creator' in data,
-								statementType: 'statementType' in data,
-								parentId: 'parentId' in data,
-								topParentId: 'topParentId' in data,
-								lastUpdate: 'lastUpdate' in data,
-								createdAt: 'createdAt' in data,
-								consensus: 'consensus' in data,
-							},
-							fieldTypes: {
-								statement: typeof data.statement,
-								statementId: typeof data.statementId,
-								creatorId: typeof data.creatorId,
-								creator: typeof data.creator,
-								statementType: typeof data.statementType,
-								parentId: typeof data.parentId,
-								topParentId: typeof data.topParentId,
-								lastUpdate: typeof data.lastUpdate,
-								createdAt: typeof data.createdAt,
-								consensus: typeof data.consensus,
-							},
-							problematicFields: {
-								resultsSettings: data.resultsSettings,
-								resultsSettingsType: typeof data.resultsSettings,
-								cutoffBy: data.resultsSettings?.cutoffBy,
-							}
-						});
-					}
-					console.error('=== END VALIDATION ERROR ===\n');
-					
-return;
-				}
-				
-				// Successfully parsed
-				const statement = result.output;
-				
-				if (statement.statementId === statementId) return;
+				statementsDB.docChanges().forEach((change) => {
+					const data = change.doc.data();
+					const docId = change.doc.id;
 
-				switch (change.type) {
-					case 'added':
-					case 'modified':
-						store.dispatch(setStatement(statement));
-						break;
-					case 'removed':
-						store.dispatch(deleteStatement(statement.statementId));
-						break;
-				}
-			});
+					// Use safeParse to get detailed validation information
+					const result = safeParse(StatementSchema, data);
+
+					if (!result.success) {
+						// Get flattened error messages for easier reading
+						const flatErrors = flatten(result.issues);
+
+						console.error('=== STATEMENT VALIDATION ERROR ===');
+						console.error('Document ID:', docId);
+						console.error('Full data received:', JSON.stringify(data, null, 2));
+						console.error('Data type:', typeof data);
+
+						// Log detailed validation issues
+						console.error('Validation Issues:');
+						result.issues.forEach((issue, index) => {
+							console.error(`Issue ${index + 1}:`, {
+								kind: issue.kind,
+								type: issue.type,
+								input: issue.input,
+								expected: issue.expected,
+								received: issue.received,
+								message: issue.message,
+								path: issue.path?.map((p) => p.key).join('.'),
+								requirement: issue.requirement,
+							});
+						});
+
+						// Log flattened errors
+						console.error('Flattened errors:', flatErrors);
+
+						// Log specific field analysis
+						if (data && typeof data === 'object') {
+							console.error('Field analysis:', {
+								hasRequiredFields: {
+									statement: 'statement' in data,
+									statementId: 'statementId' in data,
+									creatorId: 'creatorId' in data,
+									creator: 'creator' in data,
+									statementType: 'statementType' in data,
+									parentId: 'parentId' in data,
+									topParentId: 'topParentId' in data,
+									lastUpdate: 'lastUpdate' in data,
+									createdAt: 'createdAt' in data,
+									consensus: 'consensus' in data,
+								},
+								fieldTypes: {
+									statement: typeof data.statement,
+									statementId: typeof data.statementId,
+									creatorId: typeof data.creatorId,
+									creator: typeof data.creator,
+									statementType: typeof data.statementType,
+									parentId: typeof data.parentId,
+									topParentId: typeof data.topParentId,
+									lastUpdate: typeof data.lastUpdate,
+									createdAt: typeof data.createdAt,
+									consensus: typeof data.consensus,
+								},
+								problematicFields: {
+									resultsSettings: data.resultsSettings,
+									resultsSettingsType: typeof data.resultsSettings,
+									cutoffBy: data.resultsSettings?.cutoffBy,
+								},
+							});
+						}
+						console.error('=== END VALIDATION ERROR ===\n');
+
+						return;
+					}
+
+					// Successfully parsed
+					const statement = result.output;
+
+					if (statement.statementId === statementId) return;
+
+					switch (change.type) {
+						case 'added':
+						case 'modified':
+							store.dispatch(setStatement(statement));
+							break;
+						case 'removed':
+							store.dispatch(deleteStatement(statement.statementId));
+							break;
+					}
+				});
 			},
 			(error) => console.error('Error in all sub-statements listener:', error),
-			'query'
+			'query',
 		);
 	} catch (error) {
 		console.error(error);
@@ -444,7 +402,7 @@ return;
 }
 export const listenToUserSuggestions = (
 	statementId: string | undefined,
-	userId: string | undefined
+	userId: string | undefined,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch;
@@ -459,13 +417,13 @@ export const listenToUserSuggestions = (
 			where('parentId', '==', statementId),
 			where('creatorId', '==', userId),
 			where('statementType', '==', StatementType.option),
-			orderBy('createdAt', 'desc')
+			orderBy('createdAt', 'desc'),
 		);
 
 		const listenerKey = generateListenerKey(
 			'user-suggestions',
 			'statement',
-			`${statementId}-${userId}`
+			`${statementId}-${userId}`,
 		);
 
 		let isFirstCall = true;
@@ -504,7 +462,7 @@ export const listenToUserSuggestions = (
 				}
 			},
 			(error) => console.error('Error listening to user suggestions:', error),
-			'query'
+			'query',
 		);
 	} catch (error) {
 		console.error('Error setting up user suggestions listener:', error);
@@ -529,18 +487,14 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 				or(
 					where('statementType', '==', StatementType.question),
 					where('statementType', '==', StatementType.group),
-					where('statementType', '==', StatementType.option)
-				)
+					where('statementType', '==', StatementType.option),
+				),
 			),
 			orderBy('createdAt', 'desc'),
-			limit(MAX_DESCENDANTS_LIMIT)
+			limit(MAX_DESCENDANTS_LIMIT),
 		);
 
-		const listenerKey = generateListenerKey(
-			'all-descendants',
-			'statement',
-			statementId
-		);
+		const listenerKey = generateListenerKey('all-descendants', 'statement', statementId);
 
 		// Use batched updates for better performance
 		let isFirstBatch = true;
@@ -564,8 +518,8 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 								statementId: doc.id,
 								metadata: {
 									parentStatementId: statementId,
-									loadedCount
-								}
+									loadedCount,
+								},
 							});
 						}
 					});
@@ -573,7 +527,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					// Dispatch all statements at once instead of one by one
 					if (statements.length > 0) {
 						store.dispatch(setStatements(statements));
-						console.info(`[listenToAllDescendants] Loaded ${statements.length} descendants for statement ${statementId}`);
+						console.info(
+							`[listenToAllDescendants] Loaded ${statements.length} descendants for statement ${statementId}`,
+						);
 					}
 
 					isFirstBatch = false;
@@ -597,8 +553,8 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 								metadata: {
 									parentStatementId: statementId,
 									changeType: change.type,
-									loadedCount
-								}
+									loadedCount,
+								},
 							});
 						}
 					});
@@ -609,16 +565,16 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 					operation: 'listenToAllDescendants.listener',
 					metadata: {
 						parentStatementId: statementId,
-						loadedCount
-					}
+						loadedCount,
+					},
 				});
 			},
-			'query'
+			'query',
 		);
 	} catch (error) {
 		logError(error, {
 			operation: 'listenToAllDescendants.setup',
-			metadata: { parentStatementId: statementId }
+			metadata: { parentStatementId: statementId },
 		});
 
 		return (): void => {

@@ -157,6 +157,48 @@
   }
 }
 
+// Select mode bar
+.selectModeBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-md);
+}
+
+.selectModeLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cancelSelectButton {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  color: var(--text-body);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+
+  &:hover {
+    background: var(--background);
+    border-color: var(--text-caption);
+  }
+}
+
+.divider {
+  display: inline-block;
+  width: 1px;
+  height: 24px;
+  background: var(--border-light);
+  align-self: center;
+}
+
 // RTL Support
 :global([dir="rtl"]),
 :global([data-text-dir="rtl"]) {

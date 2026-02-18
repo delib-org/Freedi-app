@@ -1,11 +1,7 @@
 import React, { FC, useState, useRef, useEffect } from 'react';
 import styles from './StageCard.module.scss';
 import { NavLink } from 'react-router';
-import {
-	Statement,
-	SimpleStatement,
-	EvaluationUI,
-} from '@freedi/shared-types';
+import { Statement, SimpleStatement, EvaluationUI } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementChatMore from '../../../../chat/components/statementChatMore/StatementChatMore';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
@@ -24,13 +20,10 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	const contentRef = useRef<HTMLDivElement>(null);
 	const [contentHeight, setContentHeight] = useState(0);
 
-	const isVoting =
-		statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
+	const isVoting = statement.evaluationSettings?.evaluationUI === EvaluationUI.voting;
 
 	const votingResults: SimpleStatement | undefined = statement.topVotedOption;
-	const chosen: SimpleStatement[] = isVoting && votingResults
-		? [votingResults]
-		: statement.results;
+	const chosen: SimpleStatement[] = isVoting && votingResults ? [votingResults] : statement.results;
 
 	const getTitle = () => {
 		if (isDescription) return 'Description';
@@ -53,18 +46,19 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 	}, [expanded, chosen]);
 
 	return (
-		<div
-			dir={dir}
-			className={styles.card}
-		>			<button
-			className={`${styles.title} ${styles.item}`}
-			style={expanded ? { backgroundColor: 'transparent' } : {}}
-			onClick={handleCardClick}
-		>
+		<div dir={dir} className={styles.card}>
+			{' '}
+			<button
+				className={`${styles.title} ${styles.item}`}
+				style={expanded ? { backgroundColor: 'transparent' } : {}}
+				onClick={handleCardClick}
+			>
 				<div className={`${styles.notification}`}>
 					<StatementChatMore statement={statement} onlyCircle={true} asButton={false} />
 				</div>
-				<p>{t(title)} {isSuggestions && `: ${statement.statement}`}</p>
+				<p>
+					{t(title)} {isSuggestions && `: ${statement.statement}`}
+				</p>
 				{expanded ? <MinusIcon /> : <PlusIcon />}
 			</button>
 			<div
@@ -84,15 +78,15 @@ const StageCard: FC<Props> = ({ statement, isDescription, isSuggestions }) => {
 					</div>
 				))}
 				{expanded && (
-					<NavLink to={`/stage/${statement.statementId}`} state={{ from: window.location.pathname }}>
-						<Button
-							buttonType={ButtonType.SECONDARY}
-							text={t('Enter sub-question')}
-						/>
+					<NavLink
+						to={`/stage/${statement.statementId}`}
+						state={{ from: window.location.pathname }}
+					>
+						<Button buttonType={ButtonType.SECONDARY} text={t('Enter sub-question')} />
 					</NavLink>
 				)}
 			</div>
-		</div >
+		</div>
 	);
 };
 

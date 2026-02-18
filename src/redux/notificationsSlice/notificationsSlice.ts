@@ -24,31 +24,25 @@ export const notificationsSlicer = createSlice({
 				console.error(error);
 			}
 		},
-		setInAppNotifications: (
-			state,
-			action: PayloadAction<NotificationType[]>
-		) => {
+		setInAppNotifications: (state, action: PayloadAction<NotificationType[]>) => {
 			try {
 				action.payload.forEach((notification) => {
 					state.inAppNotifications = updateArray(
 						state.inAppNotifications,
 						notification,
-						'notificationId'
+						'notificationId',
 					);
 				});
 			} catch (error) {
 				console.error(error);
 			}
 		},
-		setInAppNotification: (
-			state,
-			action: PayloadAction<NotificationType>
-		) => {
+		setInAppNotification: (state, action: PayloadAction<NotificationType>) => {
 			try {
 				state.inAppNotifications = updateArray(
 					state.inAppNotifications,
 					action.payload,
-					'notificationId'
+					'notificationId',
 				);
 			} catch (error) {
 				console.error(error);
@@ -57,20 +51,16 @@ export const notificationsSlicer = createSlice({
 		deleteInAppNotification: (state, action: PayloadAction<string>) => {
 			try {
 				state.inAppNotifications = state.inAppNotifications.filter(
-					(notification) =>
-						notification.notificationId !== action.payload
+					(notification) => notification.notificationId !== action.payload,
 				);
 			} catch (error) {
 				console.error(error);
 			}
 		},
-		deleteInAppNotificationsByParentId: (
-			state,
-			action: PayloadAction<string>
-		) => {
+		deleteInAppNotificationsByParentId: (state, action: PayloadAction<string>) => {
 			try {
 				state.inAppNotifications = state.inAppNotifications.filter(
-					(notification) => notification.parentId !== action.payload
+					(notification) => notification.parentId !== action.payload,
 				);
 			} catch (error) {
 				console.error(error);
@@ -80,7 +70,7 @@ export const notificationsSlicer = createSlice({
 		markNotificationAsRead: (state, action: PayloadAction<string>) => {
 			try {
 				const notification = state.inAppNotifications.find(
-					(n) => n.notificationId === action.payload
+					(n) => n.notificationId === action.payload,
 				);
 				if (notification) {
 					notification.read = true;
@@ -170,15 +160,13 @@ export const inAppNotificationsCountSelectorForStatement = (statementId: string)
 	createSelector(
 		(state: RootState) => state.notifications.inAppNotifications,
 		(inAppNotifications) =>
-			inAppNotifications.filter(
-				(notification) => notification.parentId === statementId
-			)
+			inAppNotifications.filter((notification) => notification.parentId === statementId),
 	);
 
 // ✅ New selector: Get only unread notifications (with backward compatibility)
 export const unreadNotificationsSelector = createSelector(
 	[(state: RootState) => state.notifications.inAppNotifications],
-	(notifications) => notifications.filter((n) => !n.read || n.read === undefined)
+	(notifications) => notifications.filter((n) => !n.read || n.read === undefined),
 );
 
 // ✅ New selector: Get unread count for a specific statement (with backward compatibility)
@@ -186,25 +174,20 @@ export const unreadCountForStatementSelector = (statementId: string) =>
 	createSelector(
 		[(state: RootState) => state.notifications.inAppNotifications],
 		(notifications) =>
-			notifications.filter(
-				(n) => n.parentId === statementId && (!n.read || n.read === undefined)
-			).length
+			notifications.filter((n) => n.parentId === statementId && (!n.read || n.read === undefined))
+				.length,
 	);
 
 // ✅ New selector: Get total unread count (with backward compatibility)
 export const totalUnreadCountSelector = createSelector(
 	[(state: RootState) => state.notifications.inAppNotifications],
-	(notifications) => notifications.filter((n) => !n.read || n.read === undefined).length
+	(notifications) => notifications.filter((n) => !n.read || n.read === undefined).length,
 );
 
 // ✅ New selector: Get unread notifications for a statement (with backward compatibility)
 export const unreadNotificationsForStatementSelector = (statementId: string) =>
-	createSelector(
-		[(state: RootState) => state.notifications.inAppNotifications],
-		(notifications) =>
-			notifications.filter(
-				(n) => n.parentId === statementId && (!n.read || n.read === undefined)
-			)
+	createSelector([(state: RootState) => state.notifications.inAppNotifications], (notifications) =>
+		notifications.filter((n) => n.parentId === statementId && (!n.read || n.read === undefined)),
 	);
 
 export default notificationsSlicer.reducer;

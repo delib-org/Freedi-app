@@ -29,8 +29,8 @@ const loadPWATriggerData = (): Partial<PWAState> => {
 		const stored = localStorage.getItem(STORAGE_KEYS.PWA_INSTALL_TRIGGER_DATA);
 		if (stored) {
 			const data: PWATriggerData = JSON.parse(stored);
-			
-return {
+
+			return {
 				optionsCreated: data.optionsCreated || 0,
 				hasCreatedGroup: data.hasCreatedGroup || false,
 				lastPromptDismissedAt: data.lastPromptDismissedAt || null,
@@ -40,8 +40,8 @@ return {
 	} catch (error) {
 		console.error('Failed to load PWA trigger data:', error);
 	}
-	
-return {};
+
+	return {};
 };
 
 /**
@@ -140,9 +140,12 @@ export const {
 // Selectors
 export const selectPWAState = (state: { pwa: PWAState }): PWAState => state.pwa;
 export const selectOptionsCreated = (state: { pwa: PWAState }): number => state.pwa.optionsCreated;
-export const selectHasCreatedGroup = (state: { pwa: PWAState }): boolean => state.pwa.hasCreatedGroup;
-export const selectInstallPromptShown = (state: { pwa: PWAState }): boolean => state.pwa.installPromptShown;
+export const selectHasCreatedGroup = (state: { pwa: PWAState }): boolean =>
+	state.pwa.hasCreatedGroup;
+export const selectInstallPromptShown = (state: { pwa: PWAState }): boolean =>
+	state.pwa.installPromptShown;
 export const selectUserResponded = (state: { pwa: PWAState }): boolean => state.pwa.userResponded;
-export const selectLastPromptDismissedAt = (state: { pwa: PWAState }): number | null => state.pwa.lastPromptDismissedAt;
+export const selectLastPromptDismissedAt = (state: { pwa: PWAState }): number | null =>
+	state.pwa.lastPromptDismissedAt;
 
 export default pwaSlice.reducer;

@@ -16,22 +16,28 @@ interface Props {
 	onRefresh?: () => void;
 }
 
-const MemberReviewList: FC<Props> = ({ members, onMemberAction, statementId, statement, onRefresh }) => {
+const MemberReviewList: FC<Props> = ({
+	members,
+	onMemberAction,
+	statementId,
+	statement,
+	onRefresh,
+}) => {
 	const { t } = useTranslation();
 	const [selectedMembers, setSelectedMembers] = useState<Set<string>>(new Set());
 	const [banModalData, setBanModalData] = useState<{ member: MemberReviewData } | null>(null);
 	const [selectAll, setSelectAll] = useState(false);
 
 	const handleSelectMember = (userId: string, selected: boolean) => {
-		setSelectedMembers(prev => {
+		setSelectedMembers((prev) => {
 			const newSet = new Set(prev);
 			if (selected) {
 				newSet.add(userId);
 			} else {
 				newSet.delete(userId);
 			}
-			
-return newSet;
+
+			return newSet;
 		});
 	};
 
@@ -40,8 +46,8 @@ return newSet;
 			setSelectedMembers(new Set());
 		} else {
 			// Only select members that can be banned (filter out admins/creators)
-			const bannableMembers = members.filter(m => canBanUser(m.role, m.userId, statement));
-			setSelectedMembers(new Set(bannableMembers.map(m => m.userId)));
+			const bannableMembers = members.filter((m) => canBanUser(m.role, m.userId, statement));
+			setSelectedMembers(new Set(bannableMembers.map((m) => m.userId)));
 		}
 		setSelectAll(!selectAll);
 	};
@@ -55,7 +61,7 @@ return newSet;
 					statementId,
 					userId,
 					'Bulk ban action',
-					true // removeVotes
+					true, // removeVotes
 				);
 				// Update the UI state
 				await onMemberAction(userId, action, 'Bulk ban action');
@@ -80,7 +86,11 @@ return newSet;
 		setBanModalData({ member });
 	};
 
-	const handleBanConfirm = async (banType: 'soft' | 'hard', reason: string, removeVotes: boolean) => {
+	const handleBanConfirm = async (
+		banType: 'soft' | 'hard',
+		reason: string,
+		removeVotes: boolean,
+	) => {
 		if (banModalData) {
 			try {
 				// Call the actual ban function
@@ -88,7 +98,7 @@ return newSet;
 					statementId,
 					banModalData.member.userId,
 					reason || 'No reason provided',
-					removeVotes
+					removeVotes,
 				);
 
 				// Update the UI state
@@ -124,12 +134,10 @@ return newSet;
 			{selectedMembers.size > 0 && (
 				<div className={styles.bulkActions}>
 					<div className={styles.selectionInfo}>
-						<input
-							type="checkbox"
-							checked={selectAll}
-							onChange={handleSelectAll}
-						/>
-						<span>{selectedMembers.size} {t('selected')}</span>
+						<input type="checkbox" checked={selectAll} onChange={handleSelectAll} />
+						<span>
+							{selectedMembers.size} {t('selected')}
+						</span>
 					</div>
 					<div className={styles.actions}>
 						<button
@@ -144,10 +152,7 @@ return newSet;
 						>
 							{t('Flag Selected')}
 						</button>
-						<button
-							className="btn btn--small btn--error"
-							onClick={() => handleBulkAction('ban')}
-						>
+						<button className="btn btn--small btn--error" onClick={() => handleBulkAction('ban')}>
 							{t('Ban Selected')}
 						</button>
 					</div>
@@ -155,7 +160,7 @@ return newSet;
 			)}
 
 			<div className={styles.membersList}>
-				{members.map(member => {
+				{members.map((member) => {
 					const isBannable = canBanUser(member.role, member.userId, statement);
 
 					return (

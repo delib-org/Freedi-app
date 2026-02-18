@@ -13,6 +13,7 @@ import {
  */
 function stripHtml(html: string): string {
 	if (!html) return '';
+
 	return html
 		.replace(/<[^>]*>/g, '') // Remove HTML tags
 		.replace(/&nbsp;/g, ' ') // Replace &nbsp; with space
@@ -47,6 +48,7 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 				logger.warn('[fn_createReplacementQueueItem] Missing before/after data', {
 					suggestionId: event.params.suggestionId,
 				});
+
 				return null;
 			}
 
@@ -69,6 +71,7 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 					suggestionId: event.params.suggestionId,
 					documentId: after.topParentId,
 				});
+
 				return null;
 			}
 
@@ -99,6 +102,7 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 						suggestionId: event.params.suggestionId,
 						paragraphId: after.parentId,
 					});
+
 					return null;
 				}
 
@@ -166,7 +170,8 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 				stack: error instanceof Error ? error.stack : undefined,
 			});
 			// Don't throw - this is a background trigger
+
 			return null;
 		}
-	}
+	},
 );

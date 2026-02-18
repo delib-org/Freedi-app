@@ -64,7 +64,7 @@ describe('evaluationsSlice', () => {
 			it('should add new evaluation to empty state', () => {
 				const newState = evaluationsSlicer.reducer(
 					initialState,
-					setEvaluationToStore(mockEvaluation)
+					setEvaluationToStore(mockEvaluation),
 				);
 
 				expect(newState.userEvaluations).toHaveLength(1);
@@ -80,7 +80,7 @@ describe('evaluationsSlice', () => {
 
 				const newState = evaluationsSlicer.reducer(
 					stateWithEvaluation,
-					setEvaluationToStore(updatedEvaluation)
+					setEvaluationToStore(updatedEvaluation),
 				);
 
 				expect(newState.userEvaluations).toHaveLength(1);
@@ -92,7 +92,7 @@ describe('evaluationsSlice', () => {
 				state = evaluationsSlicer.reducer(state, setEvaluationToStore(mockEvaluation));
 				state = evaluationsSlicer.reducer(
 					state,
-					setEvaluationToStore({ ...mockEvaluation, evaluationId: 'eval-456' })
+					setEvaluationToStore({ ...mockEvaluation, evaluationId: 'eval-456' }),
 				);
 
 				expect(state.userEvaluations).toHaveLength(2);
@@ -111,12 +111,12 @@ describe('evaluationsSlice', () => {
 
 				const newState = evaluationsSlicer.reducer(
 					stateWithEvaluation,
-					setEvaluationToStore(newEvaluation)
+					setEvaluationToStore(newEvaluation),
 				);
 
 				expect(newState.userEvaluations).toHaveLength(2);
-				expect(newState.userEvaluations.find(e => e.evaluationId === 'eval-123')).toBeDefined();
-				expect(newState.userEvaluations.find(e => e.evaluationId === 'eval-789')).toBeDefined();
+				expect(newState.userEvaluations.find((e) => e.evaluationId === 'eval-123')).toBeDefined();
+				expect(newState.userEvaluations.find((e) => e.evaluationId === 'eval-789')).toBeDefined();
 			});
 		});
 
@@ -124,10 +124,7 @@ describe('evaluationsSlice', () => {
 			it('should clear all evaluations', () => {
 				const stateWithEvaluations = {
 					...initialState,
-					userEvaluations: [
-						mockEvaluation,
-						{ ...mockEvaluation, evaluationId: 'eval-456' },
-					],
+					userEvaluations: [mockEvaluation, { ...mockEvaluation, evaluationId: 'eval-456' }],
 				};
 
 				const newState = evaluationsSlicer.reducer(stateWithEvaluations, resetEvaluations());
@@ -173,7 +170,9 @@ describe('evaluationsSlice', () => {
 
 		describe('evaluationsSelector', () => {
 			it('should return all evaluations', () => {
-				const result = evaluationsSelector(mockRootState as Parameters<typeof evaluationsSelector>[0]);
+				const result = evaluationsSelector(
+					mockRootState as Parameters<typeof evaluationsSelector>[0],
+				);
 				expect(result).toHaveLength(3);
 			});
 		});
@@ -183,7 +182,7 @@ describe('evaluationsSlice', () => {
 				const selector = evaluationsParentSelector('parent-123');
 				const result = selector(mockRootState as Parameters<typeof selector>[0]);
 				expect(result).toHaveLength(2);
-				expect(result.every(e => e.parentId === 'parent-123')).toBe(true);
+				expect(result.every((e) => e.parentId === 'parent-123')).toBe(true);
 			});
 
 			it('should return empty array for non-existent parent', () => {

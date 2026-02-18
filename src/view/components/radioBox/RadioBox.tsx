@@ -1,7 +1,7 @@
-import RadioButtonCheckedIcon from "@/assets/icons/radioButtonChecked.svg?react";
-import RadioButtonEmptyIcon from "@/assets/icons/radioButtonEmpty.svg?react";
-import styles from "./RadioBox.module.scss";
-import React from "react";
+import RadioButtonCheckedIcon from '@/assets/icons/radioButtonChecked.svg?react';
+import RadioButtonEmptyIcon from '@/assets/icons/radioButtonEmpty.svg?react';
+import styles from './RadioBox.module.scss';
+import React from 'react';
 
 interface Props {
 	currentValue: string;

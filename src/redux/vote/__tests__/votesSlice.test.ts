@@ -157,7 +157,7 @@ describe('votesSlice', () => {
 			it('should add new vote when no existing vote', () => {
 				const newState = votesSlicer.reducer(
 					initialState,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
 
 				expect(newState.votes).toHaveLength(1);
@@ -182,7 +182,7 @@ describe('votesSlice', () => {
 
 				const newState = votesSlicer.reducer(
 					stateWithVote,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
 
 				expect(newState.votes).toHaveLength(1);
@@ -205,7 +205,7 @@ describe('votesSlice', () => {
 
 				const newState = votesSlicer.reducer(
 					stateWithVote,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
 
 				expect(newState.votes).toHaveLength(1);
@@ -215,7 +215,7 @@ describe('votesSlice', () => {
 			it('should create correct voteId from user and parent', () => {
 				const newState = votesSlicer.reducer(
 					initialState,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
 
 				expect(newState.votes[0].voteId).toBe('user-123--parent-123');
@@ -224,7 +224,7 @@ describe('votesSlice', () => {
 			it('should include timestamp fields', () => {
 				const newState = votesSlicer.reducer(
 					initialState,
-					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0])
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
 
 				expect(newState.votes[0].createdAt).toBeDefined();
@@ -237,7 +237,10 @@ describe('votesSlice', () => {
 				let state = initialState;
 
 				// First vote
-				state = votesSlicer.reducer(state, setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]));
+				state = votesSlicer.reducer(
+					state,
+					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
+				);
 
 				// Second vote for different parent
 				const secondStatement = {
@@ -245,7 +248,10 @@ describe('votesSlice', () => {
 					statementId: 'option-456',
 					parentId: 'parent-456',
 				};
-				state = votesSlicer.reducer(state, setVoteToStore(secondStatement as Parameters<typeof setVoteToStore>[0]));
+				state = votesSlicer.reducer(
+					state,
+					setVoteToStore(secondStatement as Parameters<typeof setVoteToStore>[0]),
+				);
 
 				expect(state.votes).toHaveLength(2);
 			});

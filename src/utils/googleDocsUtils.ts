@@ -63,7 +63,8 @@ export function parseGoogleDocsUrl(url: string): GoogleDocsUrlResult {
 		return {
 			isValid: false,
 			documentId: null,
-			error: 'This URL does not appear to be a Google Docs document. Make sure you are using the full document URL.',
+			error:
+				'This URL does not appear to be a Google Docs document. Make sure you are using the full document URL.',
 		};
 	}
 
@@ -118,7 +119,8 @@ export enum GoogleDocsErrorCode {
  */
 export const GOOGLE_DOCS_ERROR_MESSAGES: Record<GoogleDocsErrorCode, string> = {
 	[GoogleDocsErrorCode.INVALID_URL]: 'Please enter a valid Google Docs URL',
-	[GoogleDocsErrorCode.ACCESS_DENIED]: 'Cannot access this document. Please make it public or share it with the import service.',
+	[GoogleDocsErrorCode.ACCESS_DENIED]:
+		'Cannot access this document. Please make it public or share it with the import service.',
 	[GoogleDocsErrorCode.NOT_FOUND]: 'Document not found. Please check the URL.',
 	[GoogleDocsErrorCode.RATE_LIMITED]: 'Too many requests. Please wait a moment and try again.',
 	[GoogleDocsErrorCode.CONVERSION_ERROR]: 'Failed to process document content.',

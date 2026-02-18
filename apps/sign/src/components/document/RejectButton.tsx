@@ -7,13 +7,15 @@ import styles from './DocumentView.module.scss';
 interface RejectButtonProps {
   disabled?: boolean;
   isRejected?: boolean;
+  /** Real-time count of users who rejected */
+  count?: number;
 }
 
 /**
  * Reject Document button with animated states
  * Shows spinner during rejection and X mark on confirmation or when already rejected
  */
-export default function RejectButton({ disabled = false, isRejected = false }: RejectButtonProps) {
+export default function RejectButton({ disabled = false, isRejected = false, count }: RejectButtonProps) {
   const { t } = useTranslation();
   const { signingAnimationState, isSubmitting } = useUIStore();
 
@@ -95,6 +97,9 @@ export default function RejectButton({ disabled = false, isRejected = false }: R
     return <span className={styles.buttonText}>{t('rejectDocument') || 'Reject Document'}</span>;
   };
 
+  const showCount = count !== undefined && count > 0;
+  const formatter = showCount ? new Intl.NumberFormat() : null;
+
   return (
     <button
       type="button"
@@ -104,6 +109,11 @@ export default function RejectButton({ disabled = false, isRejected = false }: R
       aria-busy={signingAnimationState === 'rejecting'}
     >
       {renderContent()}
+      {showCount && formatter && (
+        <span className={styles.buttonCount} aria-label={`${count} ${t('rejected') || 'rejected'}`}>
+          {formatter.format(count)}
+        </span>
+      )}
     </button>
   );
 }

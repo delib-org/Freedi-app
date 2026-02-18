@@ -1,10 +1,4 @@
-import {
-	ChangeEvent,
-	FC,
-	MouseEvent,
-	TouchEvent,
-	useState,
-} from 'react';
+import { ChangeEvent, FC, MouseEvent, TouchEvent, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import RadioButtonWithLabel from '@/view/components/radioButtonWithLabel/RadioButtonWithLabel';
 import styles from './ChoseBySettings.module.scss';
@@ -12,11 +6,7 @@ import { StatementSettingsProps } from '../../settingsTypeHelpers';
 
 import { useSelector } from 'react-redux';
 
-import {
-	CutoffBy,
-	ResultsBy,
-	Statement,
-} from '@freedi/shared-types';
+import { CutoffBy, ResultsBy, Statement } from '@freedi/shared-types';
 import { updateResultSettingsToDB } from '@/controllers/db/statements/setResultSettings';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import SectionTitle from '../sectionTitle/SectionTitle';
@@ -87,7 +77,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 		step: 1,
 		value: statement?.resultsSettings?.cutoffNumber ?? 1,
 	});
-	
+
 	if (!statement) return null;
 	const { resultsSettings } = statement;
 
@@ -99,7 +89,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 			resultsBy: e.target.id as ResultsBy,
 		};
 		// dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
-		updateResultSettingsToDB(statement.statementId, newResultsSettings)
+		updateResultSettingsToDB(statement.statementId, newResultsSettings);
 	}
 
 	function handleCutoffChange(e: ChangeEvent<HTMLInputElement>) {
@@ -111,14 +101,11 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 		};
 
 		// dispatch(updateStoreResultsSettings({ statementId: statement.statementId, resultsSettings: newResultsSettings }));
-		updateResultSettingsToDB(statement.statementId, newResultsSettings)
+		updateResultSettingsToDB(statement.statementId, newResultsSettings);
 	}
 
 	function handleRangeChange(
-		e:
-			| ChangeEvent<HTMLInputElement>
-			| MouseEvent<HTMLInputElement>
-			| TouchEvent<HTMLInputElement>
+		e: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>,
 	) {
 		const displayValue = (e.target as HTMLInputElement).valueAsNumber;
 
@@ -153,45 +140,41 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 		<div className={styles.choseBy}>
 			<SectionTitle title={t('Options Selection Criteria')} />
 			<section>
-				<h3 className='title'>
-					{t('How to evaluate and select top options')}
-				</h3>
+				<h3 className="title">{t('How to evaluate and select top options')}</h3>
 				<RadioButtonWithLabel
 					id={ResultsBy.consensus}
-					name='resultsBy'
+					name="resultsBy"
 					labelText={t('By Consensus')}
 					checked={resultsSettings?.resultsBy === ResultsBy.consensus}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
 					id={ResultsBy.mostLiked}
-					name='resultsBy'
+					name="resultsBy"
 					labelText={t('By most liked')}
 					checked={resultsSettings?.resultsBy === ResultsBy.mostLiked}
 					onChange={handleEvaluationChange}
 				/>
 				<RadioButtonWithLabel
 					id={ResultsBy.averageLikesDislikes}
-					name='resultsBy'
+					name="resultsBy"
 					labelText={t('By sum liked - disliked')}
 					checked={resultsSettings?.resultsBy === ResultsBy.averageLikesDislikes}
 					onChange={handleEvaluationChange}
 				/>
 			</section>
 			<section>
-				<h3 className='title'>
-					{t('Method of selecting leading options')}
-				</h3>
+				<h3 className="title">{t('Method of selecting leading options')}</h3>
 				<RadioButtonWithLabel
 					id={CutoffBy.topOptions}
-					name='cutoffBy'
+					name="cutoffBy"
 					labelText={`${t('Top results')}`}
 					checked={resultsSettings.cutoffBy === CutoffBy.topOptions}
 					onChange={handleCutoffChange}
 				/>
 				<RadioButtonWithLabel
 					id={CutoffBy.aboveThreshold}
-					name='cutoffBy'
+					name="cutoffBy"
 					labelText={`${t('Above specific value')}`}
 					checked={resultsSettings.cutoffBy === CutoffBy.aboveThreshold}
 					onChange={handleCutoffChange}
@@ -212,7 +195,9 @@ export default ChoseBySettings;
 
 interface ComponentRangeProps {
 	statement: Statement;
-	handleRangeChange: (e: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>) => void;
+	handleRangeChange: (
+		e: ChangeEvent<HTMLInputElement> | MouseEvent<HTMLInputElement> | TouchEvent<HTMLInputElement>,
+	) => void;
 }
 
 function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentRangeProps) {
@@ -221,19 +206,21 @@ function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentR
 	const rangeProps = {
 		maxValue: 20,
 		minValue: 1,
-		step: 1
+		step: 1,
 	};
 
 	return (
 		<>
-			<div className='title'>{t('Top options to be selected')}: {value}</div>
+			<div className="title">
+				{t('Top options to be selected')}: {value}
+			</div>
 			<div className={styles.range}>
 				<span>{rangeProps.minValue}</span>
 				<input
-					className='range'
-					type='range'
-					aria-label='Number Of Results'
-					name='numberOfResults'
+					className="range"
+					type="range"
+					aria-label="Number Of Results"
+					name="numberOfResults"
 					defaultValue={value}
 					min={rangeProps.minValue}
 					max={rangeProps.maxValue}
@@ -245,7 +232,7 @@ function TopOptionsRange({ statement: statement, handleRangeChange }: ComponentR
 				<span>{rangeProps.maxValue}</span>
 			</div>
 		</>
-	)
+	);
 }
 function AboveThresholdRange({ statement, handleRangeChange }: ComponentRangeProps) {
 	const { t } = useTranslation();
@@ -274,16 +261,16 @@ function AboveThresholdRange({ statement, handleRangeChange }: ComponentRangePro
 
 	return (
 		<>
-			<div className='title'>
+			<div className="title">
 				{t('The score to be considered as a top option')}: {formatDisplayValue(displayValue)}
 			</div>
 			<div className={styles.range}>
 				<span>{formatDisplayValue(rangeConfig.min)}</span>
 				<input
-					className='range'
-					type='range'
-					aria-label='Cutoff Threshold'
-					name='cutoffNumber'
+					className="range"
+					type="range"
+					aria-label="Cutoff Threshold"
+					name="cutoffNumber"
 					value={displayValue}
 					min={rangeConfig.min}
 					max={rangeConfig.max}

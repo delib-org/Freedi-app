@@ -1,15 +1,15 @@
-import collapseIcon from '@/assets/icons/Collapse.png'
-import expandIcon from '@/assets/icons/Expand.png'
-import avatar from '@/assets/images/avatar.jpg'
-import { useTranslation } from '@/controllers/hooks/useTranslation'
-import { approveSingle, rejectSingle } from '@/services/membershipActions'
-import { WaitingMember } from '@freedi/shared-types'
-import { FC, useState } from 'react'
-import Checkbox from '../../checkbox/Checkbox'
-import styles from './WaitingMember.module.scss'
+import collapseIcon from '@/assets/icons/Collapse.png';
+import expandIcon from '@/assets/icons/Expand.png';
+import avatar from '@/assets/images/avatar.jpg';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { approveSingle, rejectSingle } from '@/services/membershipActions';
+import { WaitingMember } from '@freedi/shared-types';
+import { FC, useState } from 'react';
+import Checkbox from '../../checkbox/Checkbox';
+import styles from './WaitingMember.module.scss';
 
 interface Props {
-	wait: WaitingMember
+	wait: WaitingMember;
 	isChecked: boolean;
 	onCheckChange: (checked: boolean) => void;
 }
@@ -46,13 +46,17 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 						{new Date(wait.createdAt).toLocaleDateString('en-US', {
 							month: 'short',
 							day: 'numeric',
-							year: 'numeric'
+							year: 'numeric',
 						})}
 					</div>
 				</div>
 
 				<button onClick={() => setShowDetails(!showDetails)} className={styles.expandBtn}>
-					<img src={showDetails ? collapseIcon : expandIcon} alt="Toggle details" className={styles.expandIcon} />
+					<img
+						src={showDetails ? collapseIcon : expandIcon}
+						alt="Toggle details"
+						className={styles.expandIcon}
+					/>
 				</button>
 			</div>
 
@@ -60,20 +64,20 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 			{showDetails && (
 				<div className={styles.detailsPanel}>
 					<div className={styles.detailRow}>
-						<label>{t("Group")}</label>
+						<label>{t('Group')}</label>
 						<span className={styles.groupName}>{wait.statement.statement}</span>
 					</div>
 					<div className={`${styles.detailRow} ${styles.statusRow}`}>
-						<label>{t("Group Status")}</label>
+						<label>{t('Group Status')}</label>
 						<span className={styles.groupStatus}>{wait.statement.membership.access}</span>
 					</div>
 
 					<div className={styles.actions}>
 						<button className={styles.approveBtn} onClick={handleApprove}>
-							{t("Approve")}
+							{t('Approve')}
 						</button>
 						<button className={styles.rejectBtn} onClick={handleReject}>
-							{t("Deny")}
+							{t('Deny')}
 						</button>
 					</div>
 				</div>
@@ -81,4 +85,4 @@ const ApproveMember: FC<Props> = ({ wait, isChecked, onCheckChange }) => {
 		</div>
 	);
 };
-export default ApproveMember
+export default ApproveMember;

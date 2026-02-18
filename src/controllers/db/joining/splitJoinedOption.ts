@@ -97,9 +97,7 @@ export interface SplitResult {
  * @param params - Split parameters including optionStatementId, parentStatementId, roomSize
  * @returns Split result with room assignments
  */
-export async function splitJoinedOption(
-	params: SplitJoinedOptionParams
-): Promise<SplitResult> {
+export async function splitJoinedOption(params: SplitJoinedOptionParams): Promise<SplitResult> {
 	const { optionStatementId, parentStatementId, roomSize, scrambleByQuestions } = params;
 
 	try {
@@ -163,7 +161,7 @@ export async function splitJoinedOption(
  * @returns List of options exceeding max with their details
  */
 export async function getOptionsExceedingMax(
-	parentStatementId: string
+	parentStatementId: string,
 ): Promise<GetOptionsExceedingMaxResponse> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -174,7 +172,7 @@ export async function getOptionsExceedingMax(
 				headers: {
 					'Content-Type': 'application/json',
 				},
-			}
+			},
 		);
 
 		const data: GetOptionsExceedingMaxResponse = await response.json();
@@ -206,7 +204,7 @@ export async function getOptionsExceedingMax(
  * @returns List of all options with members
  */
 export async function getAllOptionsWithMembers(
-	parentStatementId: string
+	parentStatementId: string,
 ): Promise<GetAllOptionsWithMembersResponse> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -217,7 +215,7 @@ export async function getAllOptionsWithMembers(
 				headers: {
 					'Content-Type': 'application/json',
 				},
-			}
+			},
 		);
 
 		const data: GetAllOptionsWithMembersResponse = await response.json();
@@ -248,7 +246,7 @@ export async function getAllOptionsWithMembers(
  * @returns Clear result with counts of deleted items
  */
 export async function clearAllRoomsForParent(
-	parentStatementId: string
+	parentStatementId: string,
 ): Promise<ClearAllRoomsResponse> {
 	try {
 		const baseUrl = getFunctionsUrl();

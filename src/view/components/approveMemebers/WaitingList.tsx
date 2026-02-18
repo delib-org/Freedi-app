@@ -1,13 +1,13 @@
-import closeList from "@/assets/icons/closeList.png";
-import MembersIcon from "@/assets/icons/group.svg?react";
-import { useTranslation } from "@/controllers/hooks/useTranslation";
-import { approveMultiple, rejectMultiple } from "@/services/membershipActions";
-import { useState } from "react";
-import Checkbox from "../checkbox/Checkbox";
-import ApproveMember from "./approveMember/WaitingMember";
-import waitingStyles from "./approveMember/WaitingMember.module.scss";
-import styles from "./WaitingList.module.scss";
-import { useApproveMembership } from "./WaitingListVM";
+import closeList from '@/assets/icons/closeList.png';
+import MembersIcon from '@/assets/icons/group.svg?react';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { approveMultiple, rejectMultiple } from '@/services/membershipActions';
+import { useState } from 'react';
+import Checkbox from '../checkbox/Checkbox';
+import ApproveMember from './approveMember/WaitingMember';
+import waitingStyles from './approveMember/WaitingMember.module.scss';
+import styles from './WaitingList.module.scss';
+import { useApproveMembership } from './WaitingListVM';
 
 const WaitingList = () => {
 	const { waitingList } = useApproveMembership();
@@ -23,46 +23,42 @@ const WaitingList = () => {
 	};
 
 	const handleApproveAll = () => {
-		const membersToApprove = waitingList.filter(m => selectedIds.includes(m.statementsSubscribeId));
+		const membersToApprove = waitingList.filter((m) =>
+			selectedIds.includes(m.statementsSubscribeId),
+		);
 		approveMultiple(membersToApprove);
 		setSelectedIds([]);
 	};
 
 	const handleDenyAll = () => {
-		const membersToReject = waitingList.filter(m => selectedIds.includes(m.statementsSubscribeId));
+		const membersToReject = waitingList.filter((m) =>
+			selectedIds.includes(m.statementsSubscribeId),
+		);
 		rejectMultiple(membersToReject);
 		setSelectedIds([]);
 	};
 
-	const numberMembers = waitingList.length < 99 ? waitingList.length : "99+";
+	const numberMembers = waitingList.length < 99 ? waitingList.length : '99+';
 	if (numberMembers === 0) return null;
 
 	return (
 		<div className={styles.approveMembers}>
-			<button
-				onClick={() => setShow(!show)}
-				className={styles.toggleButton}
-			>
+			<button onClick={() => setShow(!show)} className={styles.toggleButton}>
 				<MembersIcon />
-				<div className={`notificationsCircle ${styles.notification}`}>
-					{numberMembers}
-				</div>
+				<div className={`notificationsCircle ${styles.notification}`}>{numberMembers}</div>
 			</button>
 
 			{show && waitingList.length > 0 && (
-				<div className={`${styles.membersList} ${dir === "rtl" ? styles.rtl : styles.ltr}`}>
-					<button
-						className={styles.exitButton}
-						onClick={() => setShow(false)}
-					>
+				<div className={`${styles.membersList} ${dir === 'rtl' ? styles.rtl : styles.ltr}`}>
+					<button className={styles.exitButton} onClick={() => setShow(false)}>
 						<img src={closeList} alt="Close" />
 					</button>
 
-					<h3 className={styles.listTitle}>{t("Waiting List")}</h3>
+					<h3 className={styles.listTitle}>{t('Waiting List')}</h3>
 
 					<div className={styles.selectAllWrapper}>
 						<Checkbox
-							label={allSelected ? "Deselect All" : "Select All"}
+							label={allSelected ? 'Deselect All' : 'Select All'}
 							isChecked={allSelected}
 							onChange={toggleSelectAll}
 							className={styles.reverseCheckboxLayout}
@@ -72,10 +68,10 @@ const WaitingList = () => {
 					{selectedIds.length === waitingList.length && (
 						<div className={waitingStyles.actions}>
 							<button className={waitingStyles.approveBtn} onClick={handleApproveAll}>
-								{t("Approve All")}
+								{t('Approve All')}
 							</button>
 							<button className={waitingStyles.rejectBtn} onClick={handleDenyAll}>
-								{t("Deny All")}
+								{t('Deny All')}
 							</button>
 						</div>
 					)}
@@ -89,14 +85,14 @@ const WaitingList = () => {
 								setSelectedIds((prev) =>
 									checked
 										? [...prev, member.statementsSubscribeId]
-										: prev.filter((id) => id !== member.statementsSubscribeId)
+										: prev.filter((id) => id !== member.statementsSubscribeId),
 								);
 							}}
 						/>
 					))}
 
 					<button className={styles.closeBtn} onClick={() => setShow(false)}>
-						{t("Close")}
+						{t('Close')}
 					</button>
 				</div>
 			)}

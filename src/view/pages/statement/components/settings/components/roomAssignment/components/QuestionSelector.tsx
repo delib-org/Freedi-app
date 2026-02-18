@@ -52,9 +52,7 @@ const QuestionSelector: FC<QuestionSelectorProps> = ({
 						>
 							{isSelected && <CheckIcon />}
 						</div>
-						<span className={styles.questionSelector__questionText}>
-							{question.question}
-						</span>
+						<span className={styles.questionSelector__questionText}>{question.question}</span>
 						{optionCount > 0 && (
 							<span className={styles.questionSelector__optionCount}>
 								{optionCount} {t('options')}

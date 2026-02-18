@@ -1,9 +1,9 @@
 interface Props {
-  onClick: () => void;
-  color?: string;
+	onClick: () => void;
+	color?: string;
 }
 
-export default function PauseIcon({ onClick, color = "#5899E0" }: Props) {
+export default function PauseIcon({ onClick, color = '#5899E0' }: Props) {
 	return (
 		<button onClick={onClick} aria-label="Pause">
 			<svg
@@ -14,13 +14,7 @@ export default function PauseIcon({ onClick, color = "#5899E0" }: Props) {
 				xmlns="http://www.w3.org/2000/svg"
 			>
 				<g filter="url(#filter0_dddd_3336_54260)">
-					<circle
-						cx="25"
-						cy="21"
-						r="20"
-						transform="rotate(180 25 21)"
-						fill={color}
-					/>
+					<circle cx="25" cy="21" r="20" transform="rotate(180 25 21)" fill={color} />
 				</g>
 				<path
 					d="M29.5 29C28.67 29 28 28.33 28 27.5V14.5C28 13.67 28.67 13 29.5 13C30.33 13 31 13.67 31 14.5V27.5C31 28.33 30.33 29 29.5 29Z"

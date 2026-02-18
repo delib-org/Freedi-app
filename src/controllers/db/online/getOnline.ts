@@ -7,13 +7,13 @@ import { parse } from 'valibot';
 export function ListenToOnlineUsers(
 	statementId: string,
 	setOnlineUsers: (users: Online[]) => void,
-	setIsLoading?: (loading: boolean) => void
+	setIsLoading?: (loading: boolean) => void,
 ): () => void {
 	if (!statementId) return () => {};
 
 	const q = query(
 		collection(FireStore, Collections.online),
-		where('statementId', '==', statementId)
+		where('statementId', '==', statementId),
 	);
 
 	const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -34,8 +34,7 @@ export function ListenToOnlineUsers(
 
 		const now = Date.now();
 		const validUsers = users.filter(
-			(u) =>
-				typeof u.lastUpdated === 'number' && now - u.lastUpdated < 60000
+			(u) => typeof u.lastUpdated === 'number' && now - u.lastUpdated < 60000,
 		);
 
 		setOnlineUsers(validUsers);

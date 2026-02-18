@@ -1,7 +1,4 @@
-import {
-	AuthorizationState,
-	useAuthorization,
-} from '@/controllers/hooks/useAuthorization';
+import { AuthorizationState, useAuthorization } from '@/controllers/hooks/useAuthorization';
 import { createContext, useContext, ReactNode, FC } from 'react';
 
 const AuthContext = createContext<AuthorizationState | null>(null);

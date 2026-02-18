@@ -18,13 +18,15 @@ interface NotificationSettingsButtonProps {
 	headerStyle?: { color: string; backgroundColor: string };
 }
 
-const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({ 
-	statementId, 
-	headerStyle 
+const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
+	statementId,
+	headerStyle,
 }) => {
 	const { t } = useTranslation();
 	const [openSettings, setOpenSettings] = useState(false);
-	const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>('default');
+	const [permissionState, setPermissionState] = useState<NotificationPermission | 'unsupported'>(
+		'default',
+	);
 	const [isSupported, setIsSupported] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
 	const [allNotificationsOff, setAllNotificationsOff] = useState(false);
@@ -34,24 +36,24 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 		// Check if notifications are supported
 		const supported = notificationService.isSupported();
 		setIsSupported(supported);
-		
+
 		if (supported) {
 			// Get current permission state
 			const permission = notificationService.safeGetPermission();
 			setPermissionState(permission);
 		}
-		
+
 		// Check if mobile
 		const checkMobile = () => {
 			setIsMobile(window.innerWidth <= 768);
 		};
-		
+
 		checkMobile();
 		window.addEventListener('resize', checkMobile);
-		
+
 		return () => window.removeEventListener('resize', checkMobile);
 	}, []);
-	
+
 	// Check notification preferences
 	useEffect(() => {
 		const checkNotificationPreferences = async () => {
@@ -68,18 +70,17 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 
 				if (docSnap.exists()) {
 					const data = docSnap.data();
-					const allOff = !data.getInAppNotification &&
-								  !data.getEmailNotification &&
-								  !data.getPushNotification;
+					const allOff =
+						!data.getInAppNotification && !data.getEmailNotification && !data.getPushNotification;
 					setAllNotificationsOff(allOff);
 				}
 			} catch (error) {
 				console.error('Error checking notification preferences:', error);
 			}
 		};
-		
+
 		checkNotificationPreferences();
-		
+
 		// Re-check when settings modal opens/closes
 		if (!openSettings) {
 			checkNotificationPreferences();
@@ -92,30 +93,30 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 	}, [openSettings, isMobile]);
 
 	const containerRef = useClickOutside(handleClickOutside);
-	
+
 	// Handle click outside for mobile (portal) manually
 	useEffect(() => {
 		if (!isMobile || !openSettings) return;
-		
+
 		const handleMobileClickOutside = (event: MouseEvent) => {
 			// Check if click is on backdrop
 			const target = event.target as HTMLElement;
 			if (target.classList.contains(styles.backdrop)) {
 				return; // Backdrop has its own click handler
 			}
-			
+
 			// Check if click is inside dropdown
 			if (dropdownRef.current && dropdownRef.current.contains(target)) {
 				return; // Don't close if clicking inside dropdown
 			}
-			
+
 			// Close if clicking outside
 			setOpenSettings(false);
 		};
-		
+
 		// Use mousedown to match the useClickOutside hook behavior
 		document.addEventListener('mousedown', handleMobileClickOutside);
-		
+
 		return () => {
 			document.removeEventListener('mousedown', handleMobileClickOutside);
 		};
@@ -146,7 +147,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 
 	return (
 		<div className={styles.container} ref={containerRef}>
-			<button 
+			<button
 				className={styles.notificationButton}
 				onClick={() => setOpenSettings(!openSettings)}
 				title={t('Notification Settings')}
@@ -157,60 +158,54 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 					<BellIcon style={{ color: headerStyle?.color }} />
 				)}
 			</button>
-			
-			{openSettings && isMobile && ReactDOM.createPortal(
-				<>
-					<div 
-						className={styles.backdrop} 
-						onClick={() => setOpenSettings(false)}
-					/>
-					<div 
-						className={styles.dropdown} 
-						ref={dropdownRef}
-						onClick={(e) => e.stopPropagation()}
-					>
-						{permissionState === 'default' ? (
-							<div className={styles.permissionPrompt}>
-								<h3>{t('Enable Notifications')}</h3>
-								<p>{t('To receive notifications about updates to this statement, you need to grant permission first.')}</p>
-								<button 
-									className={styles.grantButton}
-									onClick={handleRequestPermission}
-								>
-									{t('Grant Permission')}
-								</button>
-							</div>
-						) : permissionState === 'denied' ? (
-							<div className={styles.permissionDenied}>
-								<h3>{t('Notifications Blocked')}</h3>
-								<p>{t('You have blocked notifications. To enable them:')}</p>
-								<ol>
-									<li>{t('Click the lock icon in your browser address bar')}</li>
-									<li>{t('Find "Notifications" and change to "Allow"')}</li>
-									<li>{t('Reload the page')}</li>
-								</ol>
-							</div>
-						) : (
-							<NotificationPreferences statementId={statementId} />
-						)}
-					</div>
-				</>,
-				document.body
-			)}
-			
+
+			{openSettings &&
+				isMobile &&
+				ReactDOM.createPortal(
+					<>
+						<div className={styles.backdrop} onClick={() => setOpenSettings(false)} />
+						<div className={styles.dropdown} ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+							{permissionState === 'default' ? (
+								<div className={styles.permissionPrompt}>
+									<h3>{t('Enable Notifications')}</h3>
+									<p>
+										{t(
+											'To receive notifications about updates to this statement, you need to grant permission first.',
+										)}
+									</p>
+									<button className={styles.grantButton} onClick={handleRequestPermission}>
+										{t('Grant Permission')}
+									</button>
+								</div>
+							) : permissionState === 'denied' ? (
+								<div className={styles.permissionDenied}>
+									<h3>{t('Notifications Blocked')}</h3>
+									<p>{t('You have blocked notifications. To enable them:')}</p>
+									<ol>
+										<li>{t('Click the lock icon in your browser address bar')}</li>
+										<li>{t('Find "Notifications" and change to "Allow"')}</li>
+										<li>{t('Reload the page')}</li>
+									</ol>
+								</div>
+							) : (
+								<NotificationPreferences statementId={statementId} />
+							)}
+						</div>
+					</>,
+					document.body,
+				)}
+
 			{openSettings && !isMobile && (
-				<div 
-					className={styles.dropdown}
-					onClick={(e) => e.stopPropagation()}
-				>
+				<div className={styles.dropdown} onClick={(e) => e.stopPropagation()}>
 					{permissionState === 'default' ? (
 						<div className={styles.permissionPrompt}>
 							<h3>{t('Enable Notifications')}</h3>
-							<p>{t('To receive notifications about updates to this statement, you need to grant permission first.')}</p>
-							<button 
-								className={styles.grantButton}
-								onClick={handleRequestPermission}
-							>
+							<p>
+								{t(
+									'To receive notifications about updates to this statement, you need to grant permission first.',
+								)}
+							</p>
+							<button className={styles.grantButton} onClick={handleRequestPermission}>
 								{t('Grant Permission')}
 							</button>
 						</div>

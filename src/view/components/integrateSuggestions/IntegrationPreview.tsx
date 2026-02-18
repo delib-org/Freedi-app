@@ -5,7 +5,16 @@ import styles from './IntegrateSuggestions.module.scss';
 
 // Icon components
 const MergeIcon: FC = () => (
-	<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+	<svg
+		width="16"
+		height="16"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
 		<circle cx="18" cy="18" r="3" />
 		<circle cx="6" cy="6" r="3" />
 		<path d="M6 21V9a9 9 0 0 0 9 9" />
@@ -13,7 +22,16 @@ const MergeIcon: FC = () => (
 );
 
 const WarningTriangle: FC = () => (
-	<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+	<svg
+		width="12"
+		height="12"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2.5"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
 		<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
 		<line x1="12" y1="9" x2="12" y2="13" />
 		<line x1="12" y1="17" x2="12.01" y2="17" />
@@ -34,10 +52,7 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 
 	// Calculate totals using useMemo for performance
 	const totalEvaluators = useMemo(() => {
-		return selectedStatements.reduce(
-			(sum, s) => sum + s.numberOfEvaluators,
-			0
-		);
+		return selectedStatements.reduce((sum, s) => sum + s.numberOfEvaluators, 0);
 	}, [selectedStatements]);
 
 	// Character counts
@@ -51,33 +66,29 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 	const buttonClasses = [
 		styles.integrateSuggestions__button,
 		styles['integrateSuggestions__button--primary'],
-		isSubmitting ? styles['integrateSuggestions__button--loading'] : ''
-	].filter(Boolean).join(' ');
+		isSubmitting ? styles['integrateSuggestions__button--loading'] : '',
+	]
+		.filter(Boolean)
+		.join(' ');
 
 	return (
 		<div className={styles.preview}>
 			{/* Selected statements summary card */}
 			<div className={styles.preview__section}>
-				<h3 className={styles.preview__sectionTitle}>
-					{t('Suggestions Being Merged')}
-				</h3>
+				<h3 className={styles.preview__sectionTitle}>{t('Suggestions Being Merged')}</h3>
 				<div className={styles.preview__summaryCard}>
 					<div className={styles.preview__summaryHeader}>
 						<span className={styles.preview__summaryTitle}>
-							<MergeIcon />
-							{' '}
-							{t('Selected Items')}
+							<MergeIcon /> {t('Selected Items')}
 						</span>
 						<span className={styles.preview__summaryBadge}>
 							{selectedStatements.length} {t('items')}
 						</span>
 					</div>
 					<div className={styles.preview__list}>
-						{selectedStatements.map(statement => (
+						{selectedStatements.map((statement) => (
 							<div key={statement.statementId} className={styles.preview__listItem}>
-								<span className={styles.preview__itemTitle}>
-									{statement.statement}
-								</span>
+								<span className={styles.preview__itemTitle}>{statement.statement}</span>
 								<span className={styles.preview__itemMeta}>
 									{statement.numberOfEvaluators} {t('eval')}
 								</span>
@@ -89,9 +100,7 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 
 			{/* Edit integrated suggestion form */}
 			<div className={styles.preview__section}>
-				<h3 className={styles.preview__sectionTitle}>
-					{t('New Integrated Suggestion')}
-				</h3>
+				<h3 className={styles.preview__sectionTitle}>{t('New Integrated Suggestion')}</h3>
 				<div className={styles.preview__editCard}>
 					{/* Title field */}
 					<div className={styles.preview__field}>
@@ -144,11 +153,11 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 					<WarningTriangle />
 				</div>
 				<div className={styles.preview__warningContent}>
-					<p className={styles.preview__warningTitle}>
-						{t('Important Notice')}
-					</p>
+					<p className={styles.preview__warningTitle}>{t('Important Notice')}</p>
 					<p className={styles.preview__warningText}>
-						{t('The original suggestions will be hidden after integration. All evaluations will be transferred to the new integrated suggestion.')}
+						{t(
+							'The original suggestions will be hidden after integration. All evaluations will be transferred to the new integrated suggestion.',
+						)}
 					</p>
 				</div>
 			</div>
@@ -157,21 +166,15 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 			<div className={styles.preview__totalSummary}>
 				<div className={styles.preview__totalContent}>
 					<div className={styles.preview__totalItem}>
-						<span className={styles.preview__totalValue}>
-							{selectedStatements.length}
-						</span>
-						<span className={styles.preview__totalLabel}>
-							{t('Suggestions')}
-						</span>
+						<span className={styles.preview__totalValue}>{selectedStatements.length}</span>
+						<span className={styles.preview__totalLabel}>{t('Suggestions')}</span>
 					</div>
 					<div className={styles.preview__totalDivider} />
 					<div className={styles.preview__totalItem}>
 						<span className={styles.preview__totalValue}>
 							{t('Up to')} {totalEvaluators}
 						</span>
-						<span className={styles.preview__totalLabel}>
-							{t('Evaluators')}
-						</span>
+						<span className={styles.preview__totalLabel}>{t('Evaluators')}</span>
 					</div>
 				</div>
 			</div>
@@ -192,11 +195,7 @@ const IntegrationPreview: FC<IntegrationPreviewProps> = ({
 					disabled={isConfirmDisabled}
 					className={buttonClasses}
 				>
-					{isSubmitting ? (
-						<span>{t('Integrating')}</span>
-					) : (
-						<span>{t('Confirm Integration')}</span>
-					)}
+					{isSubmitting ? <span>{t('Integrating')}</span> : <span>{t('Confirm Integration')}</span>}
 				</button>
 			</div>
 		</div>

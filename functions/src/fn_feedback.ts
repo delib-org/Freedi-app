@@ -11,20 +11,20 @@ export const addFeedback = async (req: Request, res: Response) => {
 
 		if (!feedback.feedbackId) {
 			res.status(400).send({ error: 'Feedback ID is required', ok: false });
-			
-return;
+
+			return;
 		}
 
 		if (!feedback.statementId) {
 			res.status(400).send({ error: 'Statement ID is required', ok: false });
-			
-return;
+
+			return;
 		}
 
 		if (!feedback.feedbackText || feedback.feedbackText.trim().length === 0) {
 			res.status(400).send({ error: 'Feedback text is required', ok: false });
-			
-return;
+
+			return;
 		}
 
 		// Save feedback to Firestore
@@ -35,7 +35,7 @@ return;
 
 		logger.info('Feedback saved successfully', {
 			feedbackId: feedback.feedbackId,
-			statementId: feedback.statementId
+			statementId: feedback.statementId,
 		});
 
 		res.send({ message: 'Feedback submitted successfully', ok: true });
@@ -50,13 +50,17 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 	try {
 		// Check for email configuration
 		// Support both Gmail (via app password) and custom SMTP
-		const emailUser = process.env.EMAIL_USER ||
-			(process.env.FUNCTIONS_EMULATOR ? null :
-			(await import('firebase-functions')).config().email?.user);
+		const emailUser =
+			process.env.EMAIL_USER ||
+			(process.env.FUNCTIONS_EMULATOR
+				? null
+				: (await import('firebase-functions')).config().email?.user);
 
-		const emailPassword = process.env.EMAIL_PASSWORD ||
-			(process.env.FUNCTIONS_EMULATOR ? null :
-			(await import('firebase-functions')).config().email?.password);
+		const emailPassword =
+			process.env.EMAIL_PASSWORD ||
+			(process.env.FUNCTIONS_EMULATOR
+				? null
+				: (await import('firebase-functions')).config().email?.password);
 
 		if (!emailUser || !emailPassword) {
 			logger.warn('Email credentials not configured. Email notification skipped.');
@@ -65,10 +69,10 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 				statementTitle: feedback.statementTitle,
 				feedbackText: feedback.feedbackText,
 				userEmail: feedback.email,
-				date: new Date(feedback.createdAt).toISOString()
+				date: new Date(feedback.createdAt).toISOString(),
 			});
 
-return;
+			return;
 		}
 
 		// Create nodemailer transporter
@@ -77,8 +81,8 @@ return;
 			service: process.env.EMAIL_SERVICE || 'gmail',
 			auth: {
 				user: emailUser,
-				pass: emailPassword
-			}
+				pass: emailPassword,
+			},
 		});
 
 		const emailData = {
@@ -133,7 +137,7 @@ return;
 							${feedback.email ? `<p><strong>User Email:</strong> <a href="mailto:${feedback.email}">${feedback.email}</a></p>` : '<p><em>No email provided</em></p>'}
 							<p><strong>Date:</strong> ${new Date(feedback.createdAt).toLocaleString('en-US', {
 								dateStyle: 'full',
-								timeStyle: 'short'
+								timeStyle: 'short',
 							})}</p>
 						</div>
 						<hr>
@@ -156,14 +160,14 @@ Date: ${new Date(feedback.createdAt).toLocaleString()}
 
 Feedback:
 ${feedback.feedbackText}
-			`
+			`,
 		};
 
 		// Send email using nodemailer
 		const info = await transporter.sendMail(emailData);
 		logger.info('Feedback email sent successfully', {
 			to: 'tal.yaron@gmail.com',
-			messageId: info.messageId
+			messageId: info.messageId,
 		});
 	} catch (error) {
 		logger.error('Error sending feedback email:', error);

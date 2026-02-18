@@ -19,7 +19,7 @@ import { getDefaultQuestionType } from './model/questionTypeDefaults';
  */
 
 export async function updateInAppNotifications(
-	e: FirestoreEvent<QueryDocumentSnapshot>
+	e: FirestoreEvent<QueryDocumentSnapshot>,
 ): Promise<void> {
 	try {
 		//go to the new statement and parse it
@@ -27,16 +27,14 @@ export async function updateInAppNotifications(
 		const statement = parse(StatementSchema, newStatement);
 
 		// Fetch all required data in parallel
-		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] =
-			await fetchNotificationData(statement.parentId);
+		const [subscribersDB, parentStatementDB, askedToBeNotifiedDB] = await fetchNotificationData(
+			statement.parentId,
+		);
 
 		const subscribersInApp = subscribersDB.docs.map(
-			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
+			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
 		);
-		const parentStatement = parse(
-			StatementSchema,
-			parentStatementDB.data()
-		);
+		const parentStatement = parse(StatementSchema, parentStatementDB.data());
 
 		// Also fetch subscribers for the top-level parent if this is a nested reply
 		let topLevelSubscribers: StatementSubscription[] = [];
@@ -44,9 +42,7 @@ export async function updateInAppNotifications(
 			// Find the top-level parent by traversing up
 			let currentParent = parentStatement;
 			while (currentParent && currentParent.parentId !== 'top') {
-				const parentDoc = await db
-					.doc(`${Collections.statements}/${currentParent.parentId}`)
-					.get();
+				const parentDoc = await db.doc(`${Collections.statements}/${currentParent.parentId}`).get();
 				if (parentDoc.exists) {
 					currentParent = parse(StatementSchema, parentDoc.data());
 				} else {
@@ -54,10 +50,7 @@ export async function updateInAppNotifications(
 				}
 			}
 
-			if (
-				currentParent &&
-				currentParent.statementId !== statement.parentId
-			) {
+			if (currentParent && currentParent.statementId !== statement.parentId) {
 				const topSubscribersDB = await db
 					.collection(Collections.statementsSubscribe)
 					.where('statementId', '==', currentParent.statementId)
@@ -65,17 +58,14 @@ export async function updateInAppNotifications(
 					.get();
 
 				topLevelSubscribers = topSubscribersDB.docs.map(
-					(doc) => doc.data() as StatementSubscription
+					(doc) => doc.data() as StatementSubscription,
 				);
 			}
 		}
 
 		// Combine subscribers
 		const seenUserIds = new Set();
-		const allSubscribers = [
-			...subscribersInApp,
-			...topLevelSubscribers,
-		].filter((subscriber) => {
+		const allSubscribers = [...subscribersInApp, ...topLevelSubscribers].filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
 				return false;
 			}
@@ -92,7 +82,7 @@ export async function updateInAppNotifications(
 					userId: data.userId,
 					token: data.token,
 				};
-			}
+			},
 		);
 
 		//update last message in the parent statement
@@ -105,11 +95,7 @@ export async function updateInAppNotifications(
 		});
 
 		// Process notifications
-		await processInAppNotifications(
-			allSubscribers,
-			newStatement,
-			parentStatement
-		);
+		await processInAppNotifications(allSubscribers, newStatement, parentStatement);
 		await processFcmNotifications(fcmSubscribers, newStatement);
 	} catch (error) {
 		logger.error(error);
@@ -129,15 +115,9 @@ async function fetchNotificationData(parentId: string) {
 		.collection(Collections.askedToBeNotified)
 		.where('statementId', '==', parentId)
 		.get();
-	const parentStatementCB = db
-		.doc(`${Collections.statements}/${parentId}`)
-		.get();
+	const parentStatementCB = db.doc(`${Collections.statements}/${parentId}`).get();
 
-	return await Promise.all([
-		parentStatementSubscribersCB,
-		parentStatementCB,
-		askedToBeNotifiedCB,
-	]);
+	return await Promise.all([parentStatementSubscribersCB, parentStatementCB, askedToBeNotifiedCB]);
 }
 
 /**
@@ -146,7 +126,7 @@ async function fetchNotificationData(parentId: string) {
 async function processInAppNotifications(
 	subscribersInApp: StatementSubscription[],
 	newStatement: Statement,
-	parentStatement: Statement
+	parentStatement: Statement,
 ) {
 	//here we should have all the subscribers for the parent notification
 
@@ -154,13 +134,9 @@ async function processInAppNotifications(
 
 	// Create notification for each subscriber
 	subscribersInApp.forEach((subscriber: StatementSubscription) => {
-		const notificationRef = db
-			.collection(Collections.inAppNotifications)
-			.doc();
+		const notificationRef = db.collection(Collections.inAppNotifications).doc();
 
-		const questionType =
-			newStatement.questionSettings?.questionType ??
-			getDefaultQuestionType();
+		const questionType = newStatement.questionSettings?.questionType ?? getDefaultQuestionType();
 
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,
@@ -191,10 +167,7 @@ interface FcmSubscriber {
 	token: string;
 }
 
-async function processFcmNotifications(
-	fcmSubscribers: FcmSubscriber[],
-	newStatement: Statement
-) {
+async function processFcmNotifications(fcmSubscribers: FcmSubscriber[], newStatement: Statement) {
 	if (fcmSubscribers.length > 0) {
 		// Format FCM messages
 		const fcmMessages = fcmSubscribers
@@ -206,9 +179,7 @@ async function processFcmNotifications(
 							title: `New reply from ${newStatement.creator.displayName}`,
 							body:
 								newStatement.statement.substring(0, 100) +
-								(newStatement.statement.length > 100
-									? '...'
-									: ''),
+								(newStatement.statement.length > 100 ? '...' : ''),
 						},
 						data: {
 							statementId: newStatement.statementId,
@@ -229,9 +200,7 @@ async function processFcmNotifications(
 			const batch = fcmMessages.slice(i, i + fcmBatchSize);
 			if (batch.length > 0) {
 				try {
-					await Promise.all(
-						batch.map((message) => admin.messaging().send(message))
-					);
+					await Promise.all(batch.map((message) => admin.messaging().send(message)));
 				} catch (fcmError) {
 					logger.error('Error sending FCM notifications:', fcmError);
 				}

@@ -28,7 +28,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 	const [preferences, setPreferences] = useState<PreferencesState>({
 		getInAppNotification: true,
 		getEmailNotification: false,
-		getPushNotification: false
+		getPushNotification: false,
 	});
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [isSaving, setIsSaving] = useState<boolean>(false);
@@ -38,7 +38,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 		// Check notification permission
 		const permission = notificationService.safeGetPermission();
 		setHasNotificationPermission(permission === 'granted');
-		
+
 		// Load current preferences
 		const loadPreferences = async () => {
 			try {
@@ -48,14 +48,14 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 				if (!auth.currentUser) {
 					setIsLoading(false);
 
-return;
+					return;
 				}
 
 				const subscriptionId = getStatementSubscriptionId(statementId, auth.currentUser.uid);
 				if (!subscriptionId) {
 					setIsLoading(false);
 
-return;
+					return;
 				}
 
 				const docRef = doc(DB, Collections.statementsSubscribe, subscriptionId);
@@ -66,7 +66,7 @@ return;
 					setPreferences({
 						getInAppNotification: data.getInAppNotification ?? true,
 						getEmailNotification: data.getEmailNotification ?? false,
-						getPushNotification: data.getPushNotification ?? false
+						getPushNotification: data.getPushNotification ?? false,
 					});
 				}
 
@@ -88,7 +88,7 @@ return;
 			if (!auth.currentUser) {
 				setIsSaving(false);
 
-return;
+				return;
 			}
 
 			// Update local state
@@ -97,7 +97,7 @@ return;
 
 			// Update in database
 			await updateNotificationPreferences(statementId, auth.currentUser.uid, {
-				[key]: value
+				[key]: value,
 			});
 
 			// If enabling push notifications, add the FCM token to the subscription
@@ -107,11 +107,13 @@ return;
 					await notificationService.registerForStatementNotifications(
 						auth.currentUser.uid,
 						token,
-						statementId
+						statementId,
 					);
 					console.info('[NotificationPreferences] Added FCM token to subscription');
 				} else {
-					console.info('[NotificationPreferences] No FCM token available, will sync on next initialization');
+					console.info(
+						'[NotificationPreferences] No FCM token available, will sync on next initialization',
+					);
 				}
 			}
 
@@ -135,8 +137,10 @@ return;
 	return (
 		<div className={styles.notificationPreferences}>
 			<h3>Notification Settings</h3>
-			<p className={styles.description}>Choose how you want to be notified about updates to this statement</p>
-			
+			<p className={styles.description}>
+				Choose how you want to be notified about updates to this statement
+			</p>
+
 			<div className={styles.preferenceItem}>
 				<div className={styles.preferenceInfo}>
 					<BellIcon className={styles.icon} />
@@ -163,9 +167,7 @@ return;
 						<h4>Push Notifications</h4>
 						<p>Get notified on all your devices even when the app is closed</p>
 						{!hasNotificationPermission && preferences.getPushNotification && (
-							<p className={styles.warningText}>
-								⚠️ Browser notifications must be enabled first
-							</p>
+							<p className={styles.warningText}>⚠️ Browser notifications must be enabled first</p>
 						)}
 					</div>
 				</div>
@@ -175,8 +177,11 @@ return;
 						checked={preferences.getPushNotification}
 						onChange={(e) => handlePreferenceChange('getPushNotification', e.target.checked)}
 						disabled={isSaving || (!hasNotificationPermission && !preferences.getPushNotification)}
-						title={!hasNotificationPermission && !preferences.getPushNotification ? 
-							"Please enable browser notifications first" : ""}
+						title={
+							!hasNotificationPermission && !preferences.getPushNotification
+								? 'Please enable browser notifications first'
+								: ''
+						}
 					/>
 					<span className={styles.slider}></span>
 				</label>

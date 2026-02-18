@@ -26,7 +26,7 @@ interface SummarizeDiscussionResponse {
 export async function requestDiscussionSummary(
 	statementId: string,
 	adminPrompt?: string,
-	language?: string
+	language?: string,
 ): Promise<SummarizeDiscussionResponse> {
 	try {
 		const summarizeDiscussion = httpsCallable<
@@ -37,13 +37,13 @@ export async function requestDiscussionSummary(
 		const result = await summarizeDiscussion({
 			statementId,
 			adminPrompt,
-			language
+			language,
 		});
 
 		logger.info('Discussion summary requested', {
 			statementId,
 			solutionsCount: result.data.solutionsCount,
-			totalParticipants: result.data.totalParticipants
+			totalParticipants: result.data.totalParticipants,
 		});
 
 		return result.data;

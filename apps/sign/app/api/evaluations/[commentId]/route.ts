@@ -136,6 +136,7 @@ export async function POST(
       evaluationId,
       statementId: commentId,
       parentId: comment?.parentId || commentId,
+      documentId: comment?.topParentId || '',
       evaluatorId: effectiveId,
       evaluation,
       updatedAt: Date.now(),

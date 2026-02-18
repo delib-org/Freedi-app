@@ -11,10 +11,7 @@ import { useNavigate } from 'react-router';
 import { GoogleDocsImportModal } from '@/view/components/googleDocsImport';
 import { getParagraphsText, generateParagraphId } from '@/utils/paragraphUtils';
 
-const TitleAndDescription: FC<StatementSettingsProps> = ({
-	statement,
-	setStatementToEdit,
-}) => {
+const TitleAndDescription: FC<StatementSettingsProps> = ({ statement, setStatementToEdit }) => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const [showImportModal, setShowImportModal] = useState(false);
@@ -33,14 +30,14 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 
 	return (
 		<div className={styles.titleAndDescription}>
-			<label htmlFor='statement-title'>
+			<label htmlFor="statement-title">
 				<VisuallyHidden labelName={t('Group Title')}></VisuallyHidden>
 				<input
-					id='statement-title'
-					data-cy='statement-title'
+					id="statement-title"
+					data-cy="statement-title"
 					ref={titleInputRef}
-					type='text'
-					name='statement'
+					type="text"
+					name="statement"
 					placeholder={t('Group Title')}
 					value={title}
 					onChange={(e) => {
@@ -53,20 +50,18 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 					required={true}
 				/>
 			</label>
-			<label htmlFor='statement-description'>
-				<VisuallyHidden
-					labelName={t('Group Description')}
-				></VisuallyHidden>
+			<label htmlFor="statement-description">
+				<VisuallyHidden labelName={t('Group Description')}></VisuallyHidden>
 				<textarea
-					id='statement-description'
-					name='description'
+					id="statement-description"
+					name="description"
 					placeholder={t('Group Description')}
 					rows={3}
 					defaultValue={paragraphsText}
 					onChange={(e) => {
 						const newParagraphsText = e.target.value;
 						// Convert text to paragraphs array
-						const lines = newParagraphsText.split('\n').filter(line => line.trim());
+						const lines = newParagraphsText.split('\n').filter((line) => line.trim());
 						const newParagraphs = lines.map((line, index) => ({
 							paragraphId: generateParagraphId(),
 							type: ParagraphType.paragraph,
@@ -83,25 +78,25 @@ const TitleAndDescription: FC<StatementSettingsProps> = ({
 			<div className={styles.btns}>
 				<Button
 					text={t('Save')}
-					aria-label='Submit button'
-					data-cy='settings-statement-submit-btn'
-					type='submit'
+					aria-label="Submit button"
+					data-cy="settings-statement-submit-btn"
+					type="submit"
 				/>
 				<Button
 					text={t('Cancel')}
-					type='button'
+					type="button"
 					buttonType={ButtonType.SECONDARY}
-					aria-label='Cancel button'
-					data-cy='settings-statement-cancel-btn'
+					aria-label="Cancel button"
+					data-cy="settings-statement-cancel-btn"
 					onClick={() => {
 						navigate('/home');
 					}}
 				/>
 				<Button
 					text={t('Import from Google Docs')}
-					type='button'
+					type="button"
 					buttonType={ButtonType.SECONDARY}
-					aria-label='Import from Google Docs'
+					aria-label="Import from Google Docs"
 					onClick={() => setShowImportModal(true)}
 				/>
 			</div>

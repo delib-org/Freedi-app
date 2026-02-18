@@ -18,6 +18,7 @@ import {
   createParagraphStatementToDB,
   updateParagraphStatementToDB,
   deleteParagraphStatementToDB,
+  bulkDeleteParagraphStatementsToDB,
 } from '@/controllers/db/paragraphs/setParagraphStatement';
 import styles from './editor.module.scss';
 
@@ -47,6 +48,11 @@ export default function EditorPage() {
 
   // Drag state
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  // Select mode state
+  const [isSelectMode, setIsSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Import section collapsed state
   const [isImportCollapsed, setIsImportCollapsed] = useState(true);
@@ -320,6 +326,57 @@ export default function EditorPage() {
     console.info('[EditorPage] Import completed - waiting for real-time updates');
   }, []);
 
+  // Select mode handlers
+  const toggleSelectMode = useCallback(() => {
+    setIsSelectMode(prev => {
+      if (prev) setSelectedIds(new Set());
+
+      return !prev;
+    });
+  }, []);
+
+  const toggleParagraphSelection = useCallback((paragraphId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(paragraphId)) {
+        next.delete(paragraphId);
+      } else {
+        next.add(paragraphId);
+      }
+
+      return next;
+    });
+  }, []);
+
+  const toggleSelectAll = useCallback(() => {
+    if (selectedIds.size === paragraphs.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paragraphs.map(p => p.paragraphId)));
+    }
+  }, [selectedIds.size, paragraphs]);
+
+  const handleBulkDelete = useCallback(async () => {
+    if (selectedIds.size === 0) return;
+
+    if (!confirm(t('Delete {{count}} paragraphs? This cannot be undone.').replace('{{count}}', String(selectedIds.size)))) {
+      return;
+    }
+
+    setIsBulkDeleting(true);
+    try {
+      await bulkDeleteParagraphStatementsToDB(Array.from(selectedIds));
+      setSelectedIds(new Set());
+      setIsSelectMode(false);
+      console.info('[EditorPage] Bulk deleted paragraphs', { count: selectedIds.size });
+    } catch (error) {
+      console.error('[EditorPage] Bulk delete error:', error);
+      alert(t('Failed to delete paragraphs'));
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  }, [selectedIds, t]);
+
   if (loading) {
     return (
       <div className={styles.container}>
@@ -347,6 +404,11 @@ export default function EditorPage() {
         onAddContent={handleAddContent}
         onAddImage={handleAddImage}
         disabled={saving || isAddingContent}
+        isSelectMode={isSelectMode}
+        onToggleSelectMode={toggleSelectMode}
+        onSelectAll={toggleSelectAll}
+        allSelected={selectedIds.size === paragraphs.length && paragraphs.length > 0}
+        selectedCount={selectedIds.size}
       />
 
       {/* Collapsible Import Section */}
@@ -442,23 +504,35 @@ export default function EditorPage() {
 
                 {/* Paragraph Item */}
                 <div
-                  className={`${styles.paragraphItem} ${draggedIndex === index ? styles.dragging : ''}`}
-                  draggable={editingParagraph !== paragraph.paragraphId}
+                  className={`${styles.paragraphItem} ${draggedIndex === index ? styles.dragging : ''} ${isSelectMode && selectedIds.has(paragraph.paragraphId) ? styles.paragraphItemSelected : ''}`}
+                  draggable={!isSelectMode && editingParagraph !== paragraph.paragraphId}
                   onDragStart={() => handleDragStart(index)}
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDragEnd={handleDragEnd}
+                  onClick={isSelectMode ? () => toggleParagraphSelection(paragraph.paragraphId) : undefined}
+                  style={isSelectMode ? { cursor: 'pointer' } : undefined}
                 >
-                  {/* Drag Handle */}
-                  <div className={styles.dragHandle} title={t('Drag to reorder')}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="9" cy="6" r="1.5" />
-                      <circle cx="15" cy="6" r="1.5" />
-                      <circle cx="9" cy="12" r="1.5" />
-                      <circle cx="15" cy="12" r="1.5" />
-                      <circle cx="9" cy="18" r="1.5" />
-                      <circle cx="15" cy="18" r="1.5" />
-                    </svg>
-                  </div>
+                  {/* Drag Handle or Checkbox */}
+                  {isSelectMode ? (
+                    <label className={styles.paragraphCheckbox} onClick={(e) => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(paragraph.paragraphId)}
+                        onChange={() => toggleParagraphSelection(paragraph.paragraphId)}
+                      />
+                    </label>
+                  ) : (
+                    <div className={styles.dragHandle} title={t('Drag to reorder')}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                        <circle cx="9" cy="6" r="1.5" />
+                        <circle cx="15" cy="6" r="1.5" />
+                        <circle cx="9" cy="12" r="1.5" />
+                        <circle cx="15" cy="12" r="1.5" />
+                        <circle cx="9" cy="18" r="1.5" />
+                        <circle cx="15" cy="18" r="1.5" />
+                      </svg>
+                    </div>
+                  )}
 
                   {/* Paragraph Content */}
                   <div className={styles.paragraphContent}>
@@ -525,8 +599,8 @@ export default function EditorPage() {
                     )}
                   </div>
 
-                  {/* Actions */}
-                  {editingParagraph !== paragraph.paragraphId && (
+                  {/* Actions - hidden in select mode */}
+                  {!isSelectMode && editingParagraph !== paragraph.paragraphId && (
                     <div className={styles.itemActions}>
                       <button
                         type="button"
@@ -617,6 +691,25 @@ export default function EditorPage() {
           </>
         )}
       </div>
+
+      {/* Floating bulk delete bar */}
+      {isSelectMode && selectedIds.size > 0 && (
+        <div className={styles.bulkDeleteBar}>
+          <div className={styles.bulkDeleteBarContent}>
+            <span className={styles.bulkDeleteCount}>
+              {selectedIds.size} {t('selected')}
+            </span>
+            <button
+              type="button"
+              className={styles.bulkDeleteButton}
+              onClick={handleBulkDelete}
+              disabled={isBulkDeleting}
+            >
+              {isBulkDeleting ? t('Deleting...') : t('Delete Selected')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Hidden file input for direct image selection */}
       <input

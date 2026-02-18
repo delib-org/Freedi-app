@@ -35,17 +35,11 @@ const HomeTabs: React.FC = () => {
 					onClick={() => handleTabClick(tab.name)}
 				>
 					<img
-						className='homebar-main__icon'
+						className="homebar-main__icon"
 						src={activeTab === tab.name ? tab.activeIcon : tab.inactiveIcon}
 						alt={`${tab.name} icon`}
 					/>
-					<p
-						className={
-							activeTab === tab.name ? 'active-title' : 'inactive-title'
-						}
-					>
-						{tab.name}
-					</p>
+					<p className={activeTab === tab.name ? 'active-title' : 'inactive-title'}>{tab.name}</p>
 				</button>
 			))}
 		</div>

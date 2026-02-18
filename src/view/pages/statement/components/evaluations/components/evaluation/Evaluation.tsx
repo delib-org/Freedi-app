@@ -11,15 +11,14 @@ interface EvaluationProps {
 }
 
 const Evaluation: FC<EvaluationProps> = ({ statement }) => {
-
 	const { parentStatement } = useEvaluation(statement);
 
 	if (!statement) return null;
 	try {
-
 		if (!parentStatement) return null;
 
-		let shouldDisplayScore: boolean = !!parentStatement.statementSettings?.showEvaluation && window.innerWidth >= 768; //also checks for mobile
+		let shouldDisplayScore: boolean =
+			!!parentStatement.statementSettings?.showEvaluation && window.innerWidth >= 768; //also checks for mobile
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
 		// Check if evaluation is enabled (defaults to true for backward compatibility)
@@ -42,18 +41,10 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 						/>
 					);
 				case 'range':
-					return (
-						<EnhancedEvaluation
-							statement={statement}
-							enableEvaluation={enableEvaluation}
-						/>
-					);
+					return <EnhancedEvaluation statement={statement} enableEvaluation={enableEvaluation} />;
 				case 'community-voice':
 					return (
-						<CommunityVoiceEvaluation
-							statement={statement}
-							enableEvaluation={enableEvaluation}
-						/>
+						<CommunityVoiceEvaluation statement={statement} enableEvaluation={enableEvaluation} />
 					);
 				case 'like-dislike':
 				default:
@@ -69,12 +60,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 
 		// Backward compatibility: if no evaluationType, use enhancedEvaluation boolean
 		if (enhancedEvaluation) {
-			return (
-				<EnhancedEvaluation
-					statement={statement}
-					enableEvaluation={enableEvaluation}
-				/>
-			);
+			return <EnhancedEvaluation statement={statement} enableEvaluation={enableEvaluation} />;
 		}
 
 		return (

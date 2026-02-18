@@ -1,11 +1,6 @@
 import React, { FC, useState, useMemo } from 'react';
 import { shallowEqual } from 'react-redux';
-import {
-	Statement,
-	User,
-	RoomSettings,
-	UserDemographicQuestionType,
-} from '@freedi/shared-types';
+import { Statement, User, RoomSettings, UserDemographicQuestionType } from '@freedi/shared-types';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { selectUserDemographicQuestionsByStatementId } from '@/redux/userDemographic/userDemographicSlice';
@@ -33,7 +28,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 	// State
 	const [roomSize, setRoomSize] = useState(existingSettings?.roomSize || 6);
 	const [selectedQuestions, setSelectedQuestions] = useState<string[]>(
-		existingSettings?.scrambleByQuestions || []
+		existingSettings?.scrambleByQuestions || [],
 	);
 	const [isCreating, setIsCreating] = useState(false);
 	const [showConfirm, setShowConfirm] = useState(false);
@@ -44,17 +39,17 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 	// Get demographic questions from Redux with proper memoization
 	const questionsByStatement = useAppSelector(
 		selectUserDemographicQuestionsByStatementId(statement.statementId),
-		shallowEqual
+		shallowEqual,
 	);
 	const questionsByTopParent = useAppSelector(
 		selectUserDemographicQuestionsByStatementId(statement.topParentId || ''),
-		shallowEqual
+		shallowEqual,
 	);
 
 	// Combine and deduplicate by userQuestionId, memoized
 	const demographicQuestions = useMemo(() => {
 		const combined = [...questionsByStatement, ...questionsByTopParent];
-		const uniqueMap = new Map(combined.map(q => [q.userQuestionId, q]));
+		const uniqueMap = new Map(combined.map((q) => [q.userQuestionId, q]));
 
 		return Array.from(uniqueMap.values());
 	}, [questionsByStatement, questionsByTopParent]);
@@ -64,7 +59,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 		return demographicQuestions.filter(
 			(q) =>
 				q.type === UserDemographicQuestionType.radio ||
-				q.type === UserDemographicQuestionType.checkbox
+				q.type === UserDemographicQuestionType.checkbox,
 		);
 	}, [demographicQuestions]);
 
@@ -110,7 +105,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 				roomSize,
 				selectedQuestions,
 				user,
-				dispatch
+				dispatch,
 			);
 
 			if (result?.success && result.settingsId) {
@@ -131,9 +126,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 		<div className={styles.configForm}>
 			{/* Room Size */}
 			<div className={styles.configForm__field}>
-				<label className={styles.configForm__label}>
-					{t('Room Size')}
-				</label>
+				<label className={styles.configForm__label}>{t('Room Size')}</label>
 				<p className={styles.configForm__description}>
 					{t('Number of participants per room (2-50)')}
 				</p>
@@ -153,7 +146,9 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 					{t('Scramble by Demographics')} ({t('Optional')})
 				</label>
 				<p className={styles.configForm__description}>
-					{t('Select demographic questions to ensure diverse room composition, or leave empty for random assignment')}
+					{t(
+						'Select demographic questions to ensure diverse room composition, or leave empty for random assignment',
+					)}
 				</p>
 				<QuestionSelector
 					questions={selectableQuestions}
@@ -165,9 +160,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 			{/* Preview */}
 			{estimatedParticipants > 0 && (
 				<div className={styles.configForm__preview}>
-					<div className={styles.configForm__previewTitle}>
-						{t('Preview')}
-					</div>
+					<div className={styles.configForm__previewTitle}>{t('Preview')}</div>
 					<div className={styles.configForm__previewStats}>
 						<span className={styles.configForm__previewStat}>
 							{t('Participants')}: <strong>{estimatedParticipants}</strong>
@@ -182,7 +175,13 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 			{/* Actions */}
 			<div className={styles.configForm__actions}>
 				<Button
-					text={isCreating ? t('Creating...') : existingSettings ? t('Reassign Rooms') : t('Create Breakout Rooms')}
+					text={
+						isCreating
+							? t('Creating...')
+							: existingSettings
+								? t('Reassign Rooms')
+								: t('Create Breakout Rooms')
+					}
 					buttonType={ButtonType.PRIMARY}
 					onClick={handleCreateClick}
 					disabled={!canCreate || isCreating}
@@ -193,9 +192,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 			{showConfirm && (
 				<div className={styles.confirmModal}>
 					<div className={styles.confirmModal__content}>
-						<h3 className={styles.confirmModal__title}>
-							{t('Replace Existing Assignments?')}
-						</h3>
+						<h3 className={styles.confirmModal__title}>{t('Replace Existing Assignments?')}</h3>
 						<p className={styles.confirmModal__message}>
 							{t('This will delete the current room assignments and create new ones.')}
 						</p>
@@ -205,11 +202,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 								buttonType={ButtonType.SECONDARY}
 								onClick={() => setShowConfirm(false)}
 							/>
-							<Button
-								text={t('Replace')}
-								buttonType={ButtonType.PRIMARY}
-								onClick={handleCreate}
-							/>
+							<Button text={t('Replace')} buttonType={ButtonType.PRIMARY} onClick={handleCreate} />
 						</div>
 					</div>
 				</div>

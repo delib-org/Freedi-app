@@ -13,21 +13,14 @@ export function listenToStatementMetaData(statementId: string): Unsubscribe {
 			throw new Error('Statement ID is missing');
 		}
 
-		const statementMetaDataRef = doc(
-			FireStore,
-			Collections.statementsMetaData,
-			statementId
-		);
+		const statementMetaDataRef = doc(FireStore, Collections.statementsMetaData, statementId);
 
 		return onSnapshot(statementMetaDataRef, (statementMetaDataDB) => {
 			try {
 				if (!statementMetaDataDB.exists()) {
 					throw new Error('Statement meta does not exist');
 				}
-				const statementMetaData = parse(
-					StatementMetaDataSchema,
-					statementMetaDataDB.data()
-				);
+				const statementMetaData = parse(StatementMetaDataSchema, statementMetaDataDB.data());
 
 				dispatch(setStatementMetaData(statementMetaData));
 			} catch (error) {

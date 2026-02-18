@@ -18,10 +18,7 @@ import NodeMenu from './nodeMenu/NodeMenu';
 // Styles
 import styles from './CustomNode.module.scss';
 
-const nodeStyle = (statementColor: {
-	backgroundColor: string;
-	color: string;
-}) => {
+const nodeStyle = (statementColor: { backgroundColor: string; color: string }) => {
 	const style = {
 		backgroundColor: statementColor.backgroundColor,
 		color: statementColor.color,
@@ -203,10 +200,7 @@ function CustomNode({ data }: NodeProps) {
 				onDoubleClick={handleNodeDoubleClick}
 				onClick={handleNodeClick}
 				data-id={statementId}
-				className={clsx(
-					styles.nodeContent,
-					data.animate && styles.trembleAnimate
-				)}
+				className={clsx(styles.nodeContent, data.animate && styles.trembleAnimate)}
 				style={{
 					...dynamicNodeStyle,
 					textAlign: 'center',
@@ -229,41 +223,29 @@ function CustomNode({ data }: NodeProps) {
 					{canAddChild && (
 						<>
 							<button
-								className='addIcon'
+								className="addIcon"
 								onClick={handleAddChildNode}
-								aria-label='Add child node'
+								aria-label="Add child node"
 								ref={addChildRef}
 								style={{
 									position: 'absolute',
 									cursor: 'pointer',
-									right:
-										mapContext.direction === 'TB'
-											? 'calc(50% - 16px)'
-											: '-16px',
-									bottom:
-										mapContext.direction === 'TB'
-											? '-16px'
-											: 'calc(50% - 16px)',
+									right: mapContext.direction === 'TB' ? 'calc(50% - 16px)' : '-16px',
+									bottom: mapContext.direction === 'TB' ? '-16px' : 'calc(50% - 16px)',
 								}}
 							>
 								<AddChildIcon />
 							</button>
 							<button
-								className='addIcon'
+								className="addIcon"
 								onClick={handleAddSiblingNode}
-								aria-label='Add sibling node'
+								aria-label="Add sibling node"
 								ref={addSiblingRef}
 								style={{
 									position: 'absolute',
 									cursor: 'pointer',
-									left:
-										mapContext.direction === 'TB'
-											? '-16px'
-											: 'calc(50% - 16px)',
-									top:
-										mapContext.direction === 'TB'
-											? 'calc(50% - 16px)'
-											: '-16px',
+									left: mapContext.direction === 'TB' ? '-16px' : 'calc(50% - 16px)',
+									top: mapContext.direction === 'TB' ? 'calc(50% - 16px)' : '-16px',
 								}}
 							>
 								<AddSiblingIcon />
@@ -271,8 +253,8 @@ function CustomNode({ data }: NodeProps) {
 						</>
 					)}
 					<button
-						aria-label='open settings menu'
-						className='addIcon'
+						aria-label="open settings menu"
+						className="addIcon"
 						onClick={handleMenuClick}
 						ref={menuButtonRef}
 						style={{
@@ -311,8 +293,8 @@ function CustomNode({ data }: NodeProps) {
 					)}
 				</div>
 			)}
-			<Handle type='target' position={mapContext.targetPosition} />
-			<Handle type='source' position={mapContext.sourcePosition} />
+			<Handle type="target" position={mapContext.targetPosition} />
+			<Handle type="source" position={mapContext.sourcePosition} />
 		</div>
 	);
 }

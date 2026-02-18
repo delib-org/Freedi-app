@@ -30,12 +30,7 @@ jest.mock('@/services/logger', () => ({
 describe('Error Types', () => {
 	describe('AppError', () => {
 		it('should create an AppError with correct properties', () => {
-			const error = new AppError(
-				'Test error',
-				'TEST_CODE',
-				{ key: 'value' },
-				true
-			);
+			const error = new AppError('Test error', 'TEST_CODE', { key: 'value' }, true);
 
 			expect(error.message).toBe('Test error');
 			expect(error.code).toBe('TEST_CODE');
@@ -167,7 +162,7 @@ describe('Error Handling Functions', () => {
 			const result = await withRetry(
 				mockFn,
 				{ maxRetries: 3, delayMs: 100 },
-				{ operation: 'test.operation' }
+				{ operation: 'test.operation' },
 			);
 
 			expect(result).toBe('success');
@@ -184,7 +179,7 @@ describe('Error Handling Functions', () => {
 			const result = await withRetry(
 				mockFn,
 				{ maxRetries: 3, delayMs: 10 },
-				{ operation: 'test.operation' }
+				{ operation: 'test.operation' },
 			);
 
 			expect(result).toBe('success');
@@ -196,11 +191,7 @@ describe('Error Handling Functions', () => {
 			const mockFn = jest.fn().mockRejectedValue(error);
 
 			await expect(
-				withRetry(
-					mockFn,
-					{ maxRetries: 2, delayMs: 10 },
-					{ operation: 'test.operation' }
-				)
+				withRetry(mockFn, { maxRetries: 2, delayMs: 10 }, { operation: 'test.operation' }),
 			).rejects.toThrow('persistent failure');
 
 			expect(mockFn).toHaveBeenCalledTimes(2);
@@ -216,7 +207,7 @@ describe('Error Handling Functions', () => {
 			await withRetry(
 				mockFn,
 				{ maxRetries: 3, delayMs: 10, onRetry },
-				{ operation: 'test.operation' }
+				{ operation: 'test.operation' },
 			);
 
 			expect(onRetry).toHaveBeenCalledTimes(1);
@@ -270,24 +261,20 @@ describe('Error Handling Functions', () => {
 		it('should return friendly message for ValidationError', () => {
 			const error = new ValidationError('Invalid');
 
-			expect(getUserFriendlyErrorMessage(error)).toBe(
-				'Please check your input and try again.'
-			);
+			expect(getUserFriendlyErrorMessage(error)).toBe('Please check your input and try again.');
 		});
 
 		it('should return friendly message for AuthenticationError', () => {
 			const error = new AuthenticationError('Not authenticated');
 
-			expect(getUserFriendlyErrorMessage(error)).toBe(
-				'Please sign in to continue.'
-			);
+			expect(getUserFriendlyErrorMessage(error)).toBe('Please sign in to continue.');
 		});
 
 		it('should return friendly message for AuthorizationError', () => {
 			const error = new AuthorizationError('Not authorized');
 
 			expect(getUserFriendlyErrorMessage(error)).toBe(
-				'You do not have permission to perform this action.'
+				'You do not have permission to perform this action.',
 			);
 		});
 
@@ -295,23 +282,21 @@ describe('Error Handling Functions', () => {
 			const error = new NetworkError('Connection failed');
 
 			expect(getUserFriendlyErrorMessage(error)).toBe(
-				'Network error. Please check your connection and try again.'
+				'Network error. Please check your connection and try again.',
 			);
 		});
 
 		it('should return friendly message for DatabaseError', () => {
 			const error = new DatabaseError('DB error');
 
-			expect(getUserFriendlyErrorMessage(error)).toBe(
-				'Unable to save changes. Please try again.'
-			);
+			expect(getUserFriendlyErrorMessage(error)).toBe('Unable to save changes. Please try again.');
 		});
 
 		it('should return generic message for unknown error', () => {
 			const error = new Error('Unknown');
 
 			expect(getUserFriendlyErrorMessage(error)).toBe(
-				'An unexpected error occurred. Please try again.'
+				'An unexpected error occurred. Please try again.',
 			);
 		});
 	});

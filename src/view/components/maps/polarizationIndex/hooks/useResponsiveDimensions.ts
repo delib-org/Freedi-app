@@ -13,7 +13,7 @@ export const useResponsiveDimensions = () => {
 				const isMobile = window.innerWidth <= 768;
 				setDimensions({
 					width: rect.width,
-					height: Math.min(rect.width * (isMobile ? 1.0 : 0.8), isMobile ? 400 : 500)
+					height: Math.min(rect.width * (isMobile ? 1.0 : 0.8), isMobile ? 400 : 500),
 				});
 			}
 		};

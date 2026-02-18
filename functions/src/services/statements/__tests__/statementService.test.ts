@@ -168,7 +168,7 @@ describe('StatementService', () => {
 			// Assert
 			expect(arrayUtils.getRandomSample).toHaveBeenCalledWith(
 				expect.any(Array),
-				2 // numberOfAnchoredStatements
+				2, // numberOfAnchoredStatements
 			);
 			expect(arrayUtils.shuffleArray).toHaveBeenCalled();
 			expect(result).toBeDefined();
@@ -218,19 +218,19 @@ describe('StatementService', () => {
 				expect.objectContaining({
 					'evaluation.viewed': 6,
 					'evaluation.evaluationRandomNumber': expect.any(Number),
-				})
+				}),
 			);
 			expect(mockBatch.update).toHaveBeenCalledWith(
 				mockDocRef,
 				expect.objectContaining({
 					'evaluation.viewed': 11,
-				})
+				}),
 			);
 			expect(mockBatch.update).toHaveBeenCalledWith(
 				mockDocRef,
 				expect.objectContaining({
 					'evaluation.viewed': 1,
-				})
+				}),
 			);
 			expect(mockBatch.commit).toHaveBeenCalled();
 		});

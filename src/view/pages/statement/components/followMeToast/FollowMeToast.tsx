@@ -5,7 +5,10 @@ import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Role } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { statementSelector, statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementSelector,
+	statementSubscriptionSelector,
+} from '@/redux/statements/statementsSlice';
 import styles from './FollowMeToast.module.scss';
 import { StatementContext } from '../../StatementCont';
 import { useSelector } from 'react-redux';
@@ -15,23 +18,21 @@ const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { dir, t } = useTranslation();
 	const { pathname } = useLocation();
-	
+
 	// Early return if no statement in context
 	if (!statement) {
 		return null;
 	}
-	
+
 	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const _isAdmin = role === Role.admin;
 
-	const topParentStatement = useAppSelector(
-		statementSelector(statement?.topParentId)
-	);
+	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
 
 	// Listen to topParentStatement for followMe updates
 	useEffect(() => {
 		if (!statement?.topParentId) return;
-		
+
 		// Only set up listener if topParentStatement doesn't exist yet
 		if (!topParentStatement) {
 			const unsubscribe = listenToStatement(statement.topParentId);
@@ -41,7 +42,6 @@ const FollowMeToast: FC = () => {
 	}, [statement?.topParentId, topParentStatement]);
 
 	function handleRemoveToast() {
-
 		if (!_isAdmin) return;
 		if (!topParentStatement) return;
 
@@ -52,14 +52,11 @@ const FollowMeToast: FC = () => {
 	// Check if the current pathname matches the followMe path
 	// Compare the base paths (without considering trailing segments like /chat, /main, etc.)
 	const followMePath = topParentStatement?.followMe;
-	
+
 	if (followMePath && pathname.startsWith(followMePath) && !_isAdmin) return null;
 
 	//if the follow me is empty, turn off the follow me toast
-	if (
-		topParentStatement?.followMe === '' ||
-		topParentStatement?.followMe === undefined
-	)
+	if (topParentStatement?.followMe === '' || topParentStatement?.followMe === undefined)
 		return null;
 
 	//if admin render toast, but do not use link
@@ -74,15 +71,13 @@ const FollowMeToast: FC = () => {
 	function ToastInner() {
 		return (
 			<button className={styles.followMeToast} onClick={handleRemoveToast}>
-				<span>
-					{t(_isAdmin ? 'Follow Mode Active' : 'Follow Instructor')}
-				</span>
+				<span>{t(_isAdmin ? 'Follow Mode Active' : 'Follow Instructor')}</span>
 				<div
 					style={{
 						transform: `rotate(${dir === 'rtl' ? '180deg' : '0deg'})`,
 					}}
 				>
-					<FollowMeIcon color='white' />
+					<FollowMeIcon color="white" />
 				</div>
 			</button>
 		);

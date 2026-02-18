@@ -5,14 +5,10 @@ import { ResultsBy, Collections } from '@freedi/shared-types';
 export async function updateResultsSettings(
 	statementId: string,
 	resultsBy: ResultsBy = ResultsBy.consensus,
-	numberOfResults = 3
+	numberOfResults = 3,
 ) {
 	try {
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
 
 		const results = {
 			numberOfResults,

@@ -1,5 +1,5 @@
-import GoogleLoginButton from "../../components/buttons/GoogleLoginButton";
-import image from "@/assets/images/loginFirstImage.png";
+import GoogleLoginButton from '../../components/buttons/GoogleLoginButton';
+import image from '@/assets/images/loginFirstImage.png';
 import styles from './LoginFirst.module.scss';
 
 export default function LoginPage() {
@@ -10,11 +10,7 @@ export default function LoginPage() {
 	return (
 		<div className={styles.loginFirst}>
 			<div className={styles.contentContainer}>
-				<img
-					src={image}
-					alt="login-first-image"
-					width={isMobile ? "100%" : "50%"}
-				/>
+				<img src={image} alt="login-first-image" width={isMobile ? '100%' : '50%'} />
 				<p>In order to continue you have to login</p>
 				<GoogleLoginButton />
 			</div>

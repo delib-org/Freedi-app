@@ -54,14 +54,12 @@ const FramingList: FC<FramingListProps> = ({
 		<div className={styles.framingList}>
 			<h4 className={styles.listTitle}>{t('Available Framings')}</h4>
 			<div className={styles.framingItems}>
-				{framings.map(framing => (
+				{framings.map((framing) => (
 					<button
 						type="button"
 						key={framing.framingId}
 						className={`${styles.framingItem} ${
-							selectedFraming?.framingId === framing.framingId
-								? styles.selected
-								: ''
+							selectedFraming?.framingId === framing.framingId ? styles.selected : ''
 						}`}
 						onClick={() => onSelectFraming(framing)}
 					>
@@ -73,9 +71,7 @@ const FramingList: FC<FramingListProps> = ({
 								) : (
 									<span className={styles.customBadge}>{t('Custom')}</span>
 								)}
-								<span className={styles.date}>
-									{formatDate(framing.createdAt)}
-								</span>
+								<span className={styles.date}>{formatDate(framing.createdAt)}</span>
 							</span>
 							<span className={styles.clusterCount}>
 								{framing.clusterIds.length} {t('clusters')}

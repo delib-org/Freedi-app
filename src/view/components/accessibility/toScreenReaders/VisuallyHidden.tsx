@@ -1,16 +1,12 @@
-import { FC } from "react";
-import styles from "./VisuallyHidden.module.scss";
+import { FC } from 'react';
+import styles from './VisuallyHidden.module.scss';
 
 interface VisuallyHiddenProps {
-  labelName: string;
+	labelName: string;
 }
 
 const VisuallyHidden: FC<VisuallyHiddenProps> = ({ labelName }) => {
-	return (
-		<span className={styles.visuallyHidden}>
-			{labelName}
-		</span>
-	);
+	return <span className={styles.visuallyHidden}>{labelName}</span>;
 };
 
 export default VisuallyHidden;

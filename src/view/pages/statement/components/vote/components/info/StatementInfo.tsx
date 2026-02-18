@@ -26,11 +26,9 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 
 	// Redux
 	const statementSubscription = useAppSelector(
-		statementSubscriptionSelector(statement?.statementId)
+		statementSubscriptionSelector(statement?.statementId),
 	);
-	const parentStatement = useAppSelector(
-		statementSelector(statement?.parentId)
-	);
+	const parentStatement = useAppSelector(statementSelector(statement?.parentId));
 
 	// Use State
 	const [isInEditMode, setIsInEditMode] = useState(false);
@@ -39,13 +37,13 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
-		parentStatement?.creator?.uid
+		parentStatement?.creator?.uid,
 	);
 
 	return (
 		<div className={styles.statementInfo}>
 			<div className={styles.infoGraphic}>
-				<img src={infoGraphic} alt='info' />
+				<img src={infoGraphic} alt="info" />
 			</div>
 
 			<div className={styles.texts}>
@@ -68,7 +66,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 						<button
 							className={styles.editIcon}
 							onClick={() => setIsInEditMode(true)}
-							aria-label='Edit'
+							aria-label="Edit"
 						>
 							<EditIcon />
 						</button>
@@ -91,10 +89,7 @@ const StatementInfo: FC<Props> = ({ statement, setShowInfo }) => {
 				</div>
 			</div>
 			<div className={styles.formButtons}>
-				<button
-					className={styles.closeButton}
-					onClick={() => setShowInfo(false)}
-				>
+				<button className={styles.closeButton} onClick={() => setShowInfo(false)}>
 					{t('Close')}
 				</button>
 			</div>

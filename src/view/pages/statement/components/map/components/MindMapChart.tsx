@@ -19,10 +19,7 @@ import { getStatementFromDB } from '../../../../../../controllers/db/statements/
 import { updateStatementParents } from '../../../../../../controllers/db/statements/setStatements';
 import { useMapContext } from '../../../../../../controllers/hooks/useMap';
 import Modal from '../../../../../components/modal/Modal';
-import {
-	createInitialNodesAndEdges,
-	getLayoutElements,
-} from '../mapHelpers/customNodeCont';
+import { createInitialNodesAndEdges, getLayoutElements } from '../mapHelpers/customNodeCont';
 import CustomNode from './CustomNode';
 import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
 import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
@@ -78,15 +75,16 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const filtered = filterDescendants(descendants);
 
 	useEffect(() => {
-		const { nodes: createdNodes, edges: createdEdges } =
-			createInitialNodesAndEdges(filterBy !== FilterType.questionsResults ? descendants : filtered);
+		const { nodes: createdNodes, edges: createdEdges } = createInitialNodesAndEdges(
+			filterBy !== FilterType.questionsResults ? descendants : filtered,
+		);
 
 		const { nodes: layoutedNodes, edges: layoutedEdges } = getLayoutElements(
 			createdNodes,
 			createdEdges,
 			mapContext.nodeHeight,
 			mapContext.nodeWidth,
-			mapContext.direction
+			mapContext.direction,
 		);
 
 		const latestCreatedAt = Math.max(...layoutedNodes.map((n) => n.data?.createdAt || 0));
@@ -115,7 +113,7 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 						...node.data,
 						animate: false,
 					},
-				}))
+				})),
 			);
 			onSave();
 		}, 1000);
@@ -140,13 +138,13 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				edges,
 				height,
 				width,
-				direction
+				direction,
 			);
 
 			setNodes([...layoutedNodes]);
 			setEdges([...layoutedEdges]);
 		},
-		[nodes, edges, setEdges, setMapContext, setNodes]
+		[nodes, edges, setEdges, setMapContext, setNodes],
 	);
 
 	const onNodeDragStop = async (_: MouseEvent, node: Node) => {
@@ -166,10 +164,10 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				ns.map((n) => ({
 					...n,
 					className: intersection?.id === n.id ? 'highlight' : '',
-				}))
+				})),
 			);
 		},
-		[getIntersectingNodes, setEdges, setNodes]
+		[getIntersectingNodes, setEdges, setNodes],
 	);
 
 	const onSave = useCallback(() => {
@@ -249,30 +247,30 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				}}
 			>
 				<Controls showInteractive={isAdmin} />
-				<Panel position='bottom-right' className='btnsPanel'>
+				<Panel position="bottom-right" className="btnsPanel">
 					{!isButtonVisible && (
-						<div className='mainButton'>
+						<div className="mainButton">
 							<button onClick={handleHamburgerClick}>
-								<img src={MapHamburgerIcon} alt='Hamburger' />
+								<img src={MapHamburgerIcon} alt="Hamburger" />
 							</button>
 						</div>
 					)}
 					{isButtonVisible && (
 						<div className={`arc-buttons ${isButtonVisible ? 'open' : ''}`}>
 							<button onClick={handleCancelClick}>
-								<img src={MapCancelIcon} alt='Cancel' />
+								<img src={MapCancelIcon} alt="Cancel" />
 							</button>
 							<button onClick={() => onLayout('TB')}>
-								<img src={MapVerticalLayoutIcon} alt='vertical layout' />
+								<img src={MapVerticalLayoutIcon} alt="vertical layout" />
 							</button>
 							<button onClick={() => onLayout('LR')}>
-								<img src={MapHorizontalLayoutIcon} alt='horizontal layout' />
+								<img src={MapHorizontalLayoutIcon} alt="horizontal layout" />
 							</button>
 							<button onClick={onRestore}>
-								<img src={MapRestoreIcon} alt='Restore' />
+								<img src={MapRestoreIcon} alt="Restore" />
 							</button>
 							<button onClick={handleAddSiblingNode}>
-								<img src={MapSaveIcon} alt='Add' />
+								<img src={MapSaveIcon} alt="Add" />
 							</button>
 						</div>
 					)}
@@ -284,11 +282,14 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 					<div style={{ padding: '1rem' }}>
 						<h1>Are you sure you want to move statement here?</h1>
 						<br />
-						<div className='btnBox'>
-							<button onClick={() => handleMoveStatement(true)} className='btn btn--large btn--add'>
+						<div className="btnBox">
+							<button onClick={() => handleMoveStatement(true)} className="btn btn--large btn--add">
 								Yes
 							</button>
-							<button onClick={() => handleMoveStatement(false)} className='btn btn--large btn--disagree'>
+							<button
+								onClick={() => handleMoveStatement(false)}
+								className="btn btn--large btn--disagree"
+							>
 								No
 							</button>
 						</div>

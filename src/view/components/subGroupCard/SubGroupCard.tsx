@@ -28,17 +28,12 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 				style={{
 					border: `1px solid ${backgroundColor}`,
 					borderLeft: `5px solid ${backgroundColor}`,
-					opacity: hide ? 0.5 : 1
+					opacity: hide ? 0.5 : 1,
 				}}
 			>
-				<Link
-					to={`/statement/${statement.statementId}`}
-					className={styles.type}
-				>
-					<div className={styles.text}>{text}</div>					<div
-						className={styles.iconWrapper}
-						style={{ color: backgroundColor }}
-					>
+				<Link to={`/statement/${statement.statementId}`} className={styles.type}>
+					<div className={styles.text}>{text}</div>{' '}
+					<div className={styles.iconWrapper} style={{ color: backgroundColor }}>
 						{Icon}
 						<div onClick={(e) => e.stopPropagation()}>
 							<StatementChatMore statement={statement} onlyCircle={true} />
@@ -46,33 +41,29 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 					</div>
 				</Link>
 				{shouldSeeVoting ? (
-					<NavLink
-						to={`/statement/${topVotedOption.statementId}/main`}
-					>
+					<NavLink to={`/statement/${topVotedOption.statementId}/main`}>
 						{topVotedOption.statement}
 					</NavLink>
-				) : (statement.statementType === StatementType.question && (
-					<div className={styles.results}>
-						{results.length !== 0 && (
-							<NavLink
-								to={`/statement/${results[0].parentId}/main`}
-							>
-								<p>{answerLabel}:</p>
-							</NavLink>
-						)}
-						<ul>
-							{results.map((result) => (
-								<li key={result.statementId}>
-									<NavLink
-										to={`/statement/${result.statementId}/main`}
-									>
-										{result.statement}
-									</NavLink>
-								</li>
-							))}
-						</ul>
-					</div>
-				))}
+				) : (
+					statement.statementType === StatementType.question && (
+						<div className={styles.results}>
+							{results.length !== 0 && (
+								<NavLink to={`/statement/${results[0].parentId}/main`}>
+									<p>{answerLabel}:</p>
+								</NavLink>
+							)}
+							<ul>
+								{results.map((result) => (
+									<li key={result.statementId}>
+										<NavLink to={`/statement/${result.statementId}/main`}>
+											{result.statement}
+										</NavLink>
+									</li>
+								))}
+							</ul>
+						</div>
+					)
+				)}
 			</div>
 		);
 	} catch (err) {

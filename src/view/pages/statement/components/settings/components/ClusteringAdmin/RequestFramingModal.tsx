@@ -45,11 +45,7 @@ const RequestFramingModal: FC<RequestFramingModalProps> = ({
 			setIsSubmitting(true);
 			setError(null);
 
-			const newFraming = await requestCustomFraming(
-				statementId,
-				customPrompt.trim(),
-				creator.uid
-			);
+			const newFraming = await requestCustomFraming(statementId, customPrompt.trim(), creator.uid);
 
 			onFramingCreated(newFraming);
 		} catch (err) {
@@ -76,11 +72,7 @@ const RequestFramingModal: FC<RequestFramingModalProps> = ({
 			<div className={styles.modal}>
 				<div className={styles.modalHeader}>
 					<h3>{t('Request Custom Framing')}</h3>
-					<button
-						className={styles.closeBtn}
-						onClick={onClose}
-						aria-label={t('Close')}
-					>
+					<button className={styles.closeBtn} onClick={onClose} aria-label={t('Close')}>
 						×
 					</button>
 				</div>
@@ -89,7 +81,7 @@ const RequestFramingModal: FC<RequestFramingModalProps> = ({
 					<div className={styles.modalBody}>
 						<p className={styles.modalDescription}>
 							{t(
-								'Describe how you want the AI to cluster the options. For example: "Group by implementation cost" or "Organize by timeframe"'
+								'Describe how you want the AI to cluster the options. For example: "Group by implementation cost" or "Organize by timeframe"',
 							)}
 						</p>
 
@@ -102,7 +94,7 @@ const RequestFramingModal: FC<RequestFramingModalProps> = ({
 							value={customPrompt}
 							onChange={(e) => setCustomPrompt(e.target.value)}
 							placeholder={t(
-								'e.g., "Cluster these options based on their environmental impact..."'
+								'e.g., "Cluster these options based on their environmental impact..."',
 							)}
 							rows={4}
 							disabled={isSubmitting}

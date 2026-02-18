@@ -22,7 +22,7 @@
 }
 
 .userDemographicContainer {
-	min-height: 100svh;
+	height: 100svh;
 	width: 100vw;
 	position: relative;
 	background: var(--surface-background);
@@ -30,6 +30,7 @@
 	flex-direction: column;
 	align-items: center;
 	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
 	animation: fadeInUp 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 
 	.surveyBody {
@@ -231,6 +232,7 @@
 		animation: none !important;
 		transition-duration: 0.01ms !important;
 	}
+
 }
 
 // High contrast mode support

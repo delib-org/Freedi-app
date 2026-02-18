@@ -17,11 +17,7 @@ const Page401 = () => {
 	};
 
 	return (
-		<main
-			className={styles.page401}
-			role="main"
-			aria-labelledby="error-title"
-		>
+		<main className={styles.page401} role="main" aria-labelledby="error-title">
 			{/* Background Clouds */}
 			<div className={styles.page401__clouds} aria-hidden="true">
 				<img

@@ -73,7 +73,7 @@ const Toggle: React.FC<ToggleProps> = ({
 		size !== 'medium' && `toggle--${size}`, // Modifier: size
 		variant !== 'default' && `toggle--${variant}`, // Modifier: variant
 		disabled && 'toggle--disabled', // Modifier: disabled
-		className // Additional classes
+		className, // Additional classes
 	);
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

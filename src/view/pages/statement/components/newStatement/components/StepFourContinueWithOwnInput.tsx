@@ -14,34 +14,23 @@ export default function StepFourContinueWithOwnInput({
 }: Readonly<StepFourContinueWithOwnInputProps>) {
 	return (
 		<>
-			<h4 className='similarities__title'>Your statement details</h4>
-			<div className='similarities__titleInput'>
-				<label htmlFor='titleInput'>Your statement title</label>
-				<input
-					type='text'
-					id='titleInput'
-					value={newStatementInput.title}
-					disabled
-				/>
+			<h4 className="similarities__title">Your statement details</h4>
+			<div className="similarities__titleInput">
+				<label htmlFor="titleInput">Your statement title</label>
+				<input type="text" id="titleInput" value={newStatementInput.title} disabled />
 			</div>
-			<div className='similarities__titleInput'>
-				<label htmlFor='descriptionInput'>Your statement description</label>
+			<div className="similarities__titleInput">
+				<label htmlFor="descriptionInput">Your statement description</label>
 				<textarea
 					rows={5}
-					id='descriptionInput'
+					id="descriptionInput"
 					value={newStatementInput.description}
 					disabled
-					placeholder={
-						newStatementInput.description ? '' : 'No description provided'
-					}
+					placeholder={newStatementInput.description ? '' : 'No description provided'}
 				/>
 			</div>
-			<div className='twoButtonBox'>
-				<Button
-					icon={<SendIcon />}
-					text='Submit my Statement'
-					onClick={onFormSubmit}
-				/>
+			<div className="twoButtonBox">
+				<Button icon={<SendIcon />} text="Submit my Statement" onClick={onFormSubmit} />
 			</div>
 		</>
 	);

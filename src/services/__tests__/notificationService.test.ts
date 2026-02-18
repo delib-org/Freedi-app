@@ -211,7 +211,11 @@ describe('NotificationService', () => {
 
 		it('should return early if permission denied', async () => {
 			isBrowserNotificationsSupported.mockReturnValue(true);
-			const { PushService, initializeMessaging, setupForegroundListener } = require('../pushService');
+			const {
+				PushService,
+				initializeMessaging,
+				setupForegroundListener,
+			} = require('../pushService');
 			PushService.requestPermission.mockResolvedValue(false);
 			initializeMessaging.mockResolvedValue(true);
 
@@ -230,7 +234,7 @@ describe('NotificationService', () => {
 			const result = await service.registerForStatementNotifications(
 				'user-123',
 				'token-123',
-				'statement-123'
+				'statement-123',
 			);
 
 			expect(result).toBe(false);
@@ -244,14 +248,14 @@ describe('NotificationService', () => {
 			const result = await service.registerForStatementNotifications(
 				'user-123',
 				'token-123',
-				'statement-123'
+				'statement-123',
 			);
 
 			expect(result).toBe(true);
 			expect(registerForStatementNotifications).toHaveBeenCalledWith(
 				'user-123',
 				'token-123',
-				'statement-123'
+				'statement-123',
 			);
 		});
 
@@ -266,7 +270,7 @@ describe('NotificationService', () => {
 			const result = await service.registerForStatementNotifications(
 				'user-123',
 				'token-123',
-				'statement-123'
+				'statement-123',
 			);
 
 			expect(result).toBe(false);
@@ -365,7 +369,7 @@ describe('NotificationService', () => {
 
 			// Should not throw
 			await expect(
-				service.removeTokenFromAllSubscriptions('user-123', 'token-123')
+				service.removeTokenFromAllSubscriptions('user-123', 'token-123'),
 			).resolves.toBeUndefined();
 
 			consoleErrorSpy.mockRestore();

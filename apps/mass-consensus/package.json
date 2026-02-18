@@ -24,7 +24,6 @@
     "@sentry/nextjs": "^8.0.0",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.0",
-    "delib-npm": "^5.6.71",
     "firebase": "^11.0.2",
     "firebase-admin": "^12.0.0",
     "next": "^14.2.0",

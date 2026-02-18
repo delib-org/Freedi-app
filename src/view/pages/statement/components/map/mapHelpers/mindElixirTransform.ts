@@ -17,7 +17,7 @@ interface MindElixirNodeStyle {
  */
 export function getStyleForType(
 	statementType: StatementType | undefined,
-	isSelected?: boolean
+	isSelected?: boolean,
 ): MindElixirNodeStyle {
 	switch (statementType) {
 		case StatementType.question:
@@ -64,7 +64,7 @@ export interface FreediNodeObj extends NodeObj {
  */
 export function toMindElixirData(
 	results: Results,
-	selectedStatementIds: string[] = []
+	selectedStatementIds: string[] = [],
 ): MindElixirData {
 	function transformNode(result: Results): FreediNodeObj {
 		const statement = result.top;
@@ -83,9 +83,7 @@ export function toMindElixirData(
 
 		// Transform children recursively
 		if (result.sub && result.sub.length > 0) {
-			node.children = result.sub.map((subResult) =>
-				transformNode(subResult)
-			);
+			node.children = result.sub.map((subResult) => transformNode(subResult));
 		}
 
 		return node;
@@ -99,10 +97,7 @@ export function toMindElixirData(
 /**
  * Find a node by ID in the MindElixir data structure
  */
-export function findNodeById(
-	nodeData: FreediNodeObj,
-	id: string
-): FreediNodeObj | null {
+export function findNodeById(nodeData: FreediNodeObj, id: string): FreediNodeObj | null {
 	if (nodeData.id === id) {
 		return nodeData;
 	}
@@ -142,7 +137,7 @@ export function canHaveChildren(statementType: StatementType | undefined): boole
  */
 export function updateNodeSelectionStyles(
 	nodeData: FreediNodeObj,
-	selectedStatementIds: string[]
+	selectedStatementIds: string[],
 ): void {
 	const isSelected = selectedStatementIds.includes(nodeData.id);
 	const style = getStyleForType(nodeData.statementType, isSelected);
@@ -151,10 +146,7 @@ export function updateNodeSelectionStyles(
 
 	if (nodeData.children) {
 		nodeData.children.forEach((child) => {
-			updateNodeSelectionStyles(
-				child as FreediNodeObj,
-				selectedStatementIds
-			);
+			updateNodeSelectionStyles(child as FreediNodeObj, selectedStatementIds);
 		});
 	}
 }

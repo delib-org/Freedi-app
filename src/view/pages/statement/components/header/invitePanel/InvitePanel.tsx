@@ -14,24 +14,19 @@ interface Props {
 }
 
 const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
-	const [invitationNumberArr, setInvitationNumberArr] = useState<number[]>(
-		[]
-	);
+	const [invitationNumberArr, setInvitationNumberArr] = useState<number[]>([]);
 
 	useEffect(() => {
 		if (!statementId) throw new Error('StatementId is missing');
-		setInvitationToDB({ statementId, pathname }).then(
-			(invitation: Invitation | undefined) => {
-				try {
-					if (!invitation)
-						throw new Error('No invitation found in DB');
+		setInvitationToDB({ statementId, pathname }).then((invitation: Invitation | undefined) => {
+			try {
+				if (!invitation) throw new Error('No invitation found in DB');
 
-					invitationNumberToArray(invitation?.number);
-				} catch (error) {
-					console.error(error);
-				}
+				invitationNumberToArray(invitation?.number);
+			} catch (error) {
+				console.error(error);
 			}
-		);
+		});
 	}, []);
 
 	function invitationNumberToArray(invitationNumber: number) {

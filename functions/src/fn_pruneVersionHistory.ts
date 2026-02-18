@@ -69,6 +69,7 @@ export const fn_pruneVersionHistory = onDocumentUpdated(
 
 			if (!documentSnap.exists) {
 				logger.warn('[fn_pruneVersionHistory] Document not found', { paragraphId });
+
 				return null;
 			}
 
@@ -178,6 +179,7 @@ export const fn_pruneVersionHistory = onDocumentUpdated(
 				recentVersions.length +
 				archiveSnap.docs.reduce((sum, doc) => {
 					const archive = doc.data() as VersionArchive;
+
 					return sum + (archive.endVersion - archive.startVersion + 1);
 				}, 0);
 
@@ -220,7 +222,8 @@ export const fn_pruneVersionHistory = onDocumentUpdated(
 				stack: error instanceof Error ? error.stack : undefined,
 			});
 			// Don't throw - this is a background cleanup task
+
 			return null;
 		}
-	}
+	},
 );

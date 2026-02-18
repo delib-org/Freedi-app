@@ -19,11 +19,7 @@ const RoomBadge: FC<RoomBadgeProps> = ({ statementId }) => {
 	useEffect(() => {
 		if (!creator?.uid || !statementId) return;
 
-		const unsubscribe = listenToUserRoomAssignment(
-			statementId,
-			creator.uid,
-			setRoomAssignment
-		);
+		const unsubscribe = listenToUserRoomAssignment(statementId, creator.uid, setRoomAssignment);
 
 		return () => {
 			unsubscribe();
@@ -43,9 +39,7 @@ const RoomBadge: FC<RoomBadgeProps> = ({ statementId }) => {
 			title={t('You are assigned to this room')}
 			aria-label={roomLabel}
 		>
-			<span className={styles.roomBadge__text}>
-				{roomLabel}
-			</span>
+			<span className={styles.roomBadge__text}>{roomLabel}</span>
 		</div>
 	);
 };

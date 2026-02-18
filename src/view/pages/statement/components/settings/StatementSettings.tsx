@@ -10,10 +10,7 @@ import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { listenToMembers } from '@/controllers/db/statements/listenToStatements';
 import { useAppDispatch, useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import {
-	setStatement,
-	statementSelector,
-} from '@/redux/statements/statementsSlice';
+import { setStatement, statementSelector } from '@/redux/statements/statementsSlice';
 
 // Hooks & Helpers
 
@@ -28,19 +25,13 @@ const StatementSettings: FC = () => {
 	const { t } = useTranslation();
 
 	// * State * //
-	const [parentStatement, setParentStatement] = useState<Statement | 'top'>(
-		'top'
-	);
+	const [parentStatement, setParentStatement] = useState<Statement | 'top'>('top');
 	const [isLoading] = useState(false);
-	const [statementToEdit, setStatementToEdit] = useState<
-		Statement | undefined
-	>();
+	const [statementToEdit, setStatementToEdit] = useState<Statement | undefined>();
 
 	// * Redux * //
 	const dispatch = useAppDispatch();
-	const statement: Statement | undefined = useAppSelector(
-		statementSelector(statementId)
-	);
+	const statement: Statement | undefined = useAppSelector(statementSelector(statementId));
 
 	useEffect(() => {
 		try {
@@ -57,8 +48,7 @@ const StatementSettings: FC = () => {
 				getStatementFromDB(statement.parentId)
 					.then((parentStatement) => {
 						try {
-							if (!parentStatement)
-								throw new Error('no parent statement');
+							if (!parentStatement) throw new Error('no parent statement');
 
 							setParentStatement(parentStatement);
 						} catch (error) {
@@ -85,8 +75,7 @@ const StatementSettings: FC = () => {
 					setStatementToEdit(statement);
 				} else {
 					(async () => {
-						const statementDB =
-							await getStatementFromDB(statementId);
+						const statementDB = await getStatementFromDB(statementId);
 						if (statementDB) {
 							dispatch(setStatement(statementDB));
 							setStatementToEdit(statementDB);
@@ -99,7 +88,6 @@ const StatementSettings: FC = () => {
 
 			return () => {
 				if (unsubscribe) unsubscribe();
-
 			};
 		} catch (error) {
 			console.error(error);
@@ -107,15 +95,14 @@ const StatementSettings: FC = () => {
 	}, [statementId]);
 
 	return (
-		<div className='test'>
+		<div className="test">
 			{isLoading || !statementToEdit ? (
-				<div className='center'>
+				<div className="center">
 					<h2>{t('Updating')}</h2>
 					<Loader />
 				</div>
 			) : (
 				<>
-
 					<StatementSettingsForm
 						statement={statementToEdit}
 						parentStatement={parentStatement}

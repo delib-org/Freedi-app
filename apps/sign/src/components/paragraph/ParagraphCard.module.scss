@@ -201,6 +201,20 @@
   }
 }
 
+// Paragraph number prefix - inherits paragraph text style
+.paragraphNumber {
+  user-select: none;
+
+  // RTL support - keep numbers LTR but adjust spacing
+  direction: ltr;
+  unicode-bidi: bidi-override;
+
+  [dir="rtl"] & {
+    margin-right: 0;
+    margin-left: 0.25rem;
+  }
+}
+
 // List item type
 .listItem {
   display: flex;

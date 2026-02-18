@@ -1,30 +1,24 @@
 // termsOfUseService.ts
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
-import {
-	TermsOfUseAcceptanceSchema,
-	type TermsOfUseAcceptance,
-} from '@/types/agreement/Agreement';
+import { TermsOfUseAcceptanceSchema, type TermsOfUseAcceptance } from '@/types/agreement/Agreement';
 import { DB } from '../config';
 import { Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 export async function getLatestTermsAcceptance(
-	userId: string
+	userId: string,
 ): Promise<TermsOfUseAcceptance | null> {
 	try {
 		const q = query(
 			collection(DB, Collections.termsOfUseAcceptance),
-			where('userId', '==', userId)
+			where('userId', '==', userId),
 		);
 
 		const querySnapshot = await getDocs(q);
 
 		if (querySnapshot.empty) return null;
 
-		const doc = parse(
-			TermsOfUseAcceptanceSchema,
-			querySnapshot.docs[0].data()
-		);
+		const doc = parse(TermsOfUseAcceptanceSchema, querySnapshot.docs[0].data());
 
 		return doc;
 	} catch (error) {
@@ -33,9 +27,7 @@ export async function getLatestTermsAcceptance(
 	}
 }
 
-export async function saveTermsAcceptance(
-	acceptance: TermsOfUseAcceptance
-): Promise<boolean> {
+export async function saveTermsAcceptance(acceptance: TermsOfUseAcceptance): Promise<boolean> {
 	try {
 		const termsRef = collection(DB, Collections.termsOfUseAcceptance);
 

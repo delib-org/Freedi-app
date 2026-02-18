@@ -8,9 +8,6 @@ import { onSnapshot, doc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections, Statement } from '@freedi/shared-types';
 
-// Initialize Firestore
-const db = getFirebaseFirestore();
-
 /**
  * Version Control Settings Interface
  */
@@ -86,7 +83,8 @@ export const useVersionControlStore = create<VersionControlStore>((set, get) => 
 			error: { ...state.error, [documentId]: null },
 		}));
 
-		// Create Firebase listener
+		// Create Firebase listener (lazy-init to prevent SSR crashes)
+		const db = getFirebaseFirestore();
 		const docRef = doc(db, Collections.statements, documentId);
 		const unsubscribe = onSnapshot(
 			docRef,

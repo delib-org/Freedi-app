@@ -66,22 +66,15 @@ async function fetchEvaluations(parentId: string): Promise<Evaluation[]> {
  */
 async function fetchDemographicQuestions(
 	statementId: string,
-	topParentId: string
+	topParentId: string,
 ): Promise<UserDemographicQuestion[]> {
-	const questionsRef = collection(
-		FireStore,
-		Collections.userDemographicQuestions
-	);
+	const questionsRef = collection(FireStore, Collections.userDemographicQuestions);
 
 	// Fetch both statement-level and group-level questions in parallel
 	const [statementSnapshot, groupSnapshot] = await Promise.all([
 		getDocs(query(questionsRef, where('statementId', '==', statementId))),
 		getDocs(
-			query(
-				questionsRef,
-				where('topParentId', '==', topParentId),
-				where('scope', '==', 'group')
-			)
+			query(questionsRef, where('topParentId', '==', topParentId), where('scope', '==', 'group')),
 		),
 	]);
 
@@ -89,9 +82,7 @@ async function fetchDemographicQuestions(
 		.map((doc) => doc.data() as UserDemographicQuestion)
 		.filter((q) => q.scope !== 'group');
 
-	const groupQuestions = groupSnapshot.docs.map(
-		(doc) => doc.data() as UserDemographicQuestion
-	);
+	const groupQuestions = groupSnapshot.docs.map((doc) => doc.data() as UserDemographicQuestion);
 
 	return [...groupQuestions, ...statementQuestions];
 }
@@ -100,9 +91,7 @@ async function fetchDemographicQuestions(
  * Fetch ALL demographic answers for given question IDs
  * This fetches answers from all users, not just the current user
  */
-async function fetchAllDemographicAnswers(
-	questionIds: string[]
-): Promise<DemographicAnswer[]> {
+async function fetchAllDemographicAnswers(questionIds: string[]): Promise<DemographicAnswer[]> {
 	if (questionIds.length === 0) return [];
 
 	const answersRef = collection(FireStore, Collections.usersData);
@@ -126,9 +115,7 @@ async function fetchAllDemographicAnswers(
 /**
  * Convert question type to export type
  */
-function mapQuestionType(
-	type: UserDemographicQuestionType
-): ExportDemographicQuestionType {
+function mapQuestionType(type: UserDemographicQuestionType): ExportDemographicQuestionType {
 	switch (type) {
 		case UserDemographicQuestionType.radio:
 			return 'radio';
@@ -144,18 +131,16 @@ function mapQuestionType(
  */
 function buildDemographicStats(
 	questions: UserDemographicQuestion[],
-	answers: DemographicAnswer[]
+	answers: DemographicAnswer[],
 ): DemographicResponseStats[] {
 	return questions
 		.filter(
 			(q) =>
 				q.type === UserDemographicQuestionType.radio ||
-				q.type === UserDemographicQuestionType.checkbox
+				q.type === UserDemographicQuestionType.checkbox,
 		)
 		.map((question) => {
-			const questionAnswers = answers.filter(
-				(a) => a.userQuestionId === question.userQuestionId
-			);
+			const questionAnswers = answers.filter((a) => a.userQuestionId === question.userQuestionId);
 
 			// Count unique users per option
 			const optionCounts = new Map<string, Set<string>>();
@@ -164,9 +149,7 @@ function buildDemographicStats(
 			});
 
 			questionAnswers.forEach((ans) => {
-				const answerValues = ans.answer
-					? [ans.answer]
-					: ans.answerOptions ?? [];
+				const answerValues = ans.answer ? [ans.answer] : (ans.answerOptions ?? []);
 
 				answerValues.forEach((val) => {
 					if (optionCounts.has(val)) {
@@ -175,23 +158,16 @@ function buildDemographicStats(
 				});
 			});
 
-			const totalRespondents = new Set(
-				questionAnswers.map((a) => a.userId)
-			).size;
+			const totalRespondents = new Set(questionAnswers.map((a) => a.userId)).size;
 
 			return {
 				questionId: question.userQuestionId ?? '',
 				questionText: question.question,
-				responses: Array.from(optionCounts.entries()).map(
-					([option, users]) => ({
-						optionValue: option,
-						respondentCount: users.size,
-						percentage:
-							totalRespondents > 0
-								? Math.round((users.size / totalRespondents) * 100)
-								: 0,
-					})
-				),
+				responses: Array.from(optionCounts.entries()).map(([option, users]) => ({
+					optionValue: option,
+					respondentCount: users.size,
+					percentage: totalRespondents > 0 ? Math.round((users.size / totalRespondents) * 100) : 0,
+				})),
 				totalRespondents,
 			};
 		});
@@ -202,16 +178,12 @@ function buildDemographicStats(
  */
 function buildOptionSummaries(
 	options: Statement[],
-	evaluations: Evaluation[]
+	evaluations: Evaluation[],
 ): OptionEvaluationSummary[] {
 	return options.map((option) => {
-		const optionEvaluations = evaluations.filter(
-			(e) => e.statementId === option.statementId
-		);
+		const optionEvaluations = evaluations.filter((e) => e.statementId === option.statementId);
 
-		const stats = calculateEvaluationStats(
-			optionEvaluations.map((e) => e.evaluation)
-		);
+		const stats = calculateEvaluationStats(optionEvaluations.map((e) => e.evaluation));
 
 		return {
 			statementId: option.statementId,
@@ -234,7 +206,7 @@ function buildDemographicBreakdowns(
 	evaluations: Evaluation[],
 	questions: UserDemographicQuestion[],
 	answers: DemographicAnswer[],
-	kThreshold: number
+	kThreshold: number,
 ): { breakdowns: OptionWithDemographics[]; suppressedCount: number } {
 	let suppressedCount = 0;
 
@@ -244,21 +216,14 @@ function buildDemographicBreakdowns(
 		if (!userDemographics.has(ans.userId)) {
 			userDemographics.set(ans.userId, new Map());
 		}
-		const answerValues = ans.answer
-			? [ans.answer]
-			: ans.answerOptions ?? [];
+		const answerValues = ans.answer ? [ans.answer] : (ans.answerOptions ?? []);
 		userDemographics.get(ans.userId)?.set(ans.userQuestionId, answerValues);
 	});
 
 	const breakdowns: OptionWithDemographics[] = options.map((option) => {
-		const optionEvaluations = evaluations.filter(
-			(e) => e.statementId === option.statementId
-		);
+		const optionEvaluations = evaluations.filter((e) => e.statementId === option.statementId);
 
-		const optionSummary = buildOptionSummaries(
-			[option],
-			optionEvaluations
-		)[0];
+		const optionSummary = buildOptionSummaries([option], optionEvaluations)[0];
 
 		const demographicBreakdowns: DemographicBreakdown[] = [];
 
@@ -267,7 +232,7 @@ function buildDemographicBreakdowns(
 			.filter(
 				(q) =>
 					q.type === UserDemographicQuestionType.radio ||
-					q.type === UserDemographicQuestionType.checkbox
+					q.type === UserDemographicQuestionType.checkbox,
 			)
 			.forEach((question) => {
 				// For each option value
@@ -276,23 +241,16 @@ function buildDemographicBreakdowns(
 					const matchingEvaluations: number[] = [];
 
 					optionEvaluations.forEach((evaluation) => {
-						const userAnswers = userDemographics.get(
-							evaluation.evaluatorId
-						);
+						const userAnswers = userDemographics.get(evaluation.evaluatorId);
 						if (userAnswers) {
-							const questionAnswers = userAnswers.get(
-								question.userQuestionId ?? ''
-							);
+							const questionAnswers = userAnswers.get(question.userQuestionId ?? '');
 							if (questionAnswers?.includes(opt.option)) {
 								matchingEvaluations.push(evaluation.evaluation);
 							}
 						}
 					});
 
-					const privacyResult = filterEvaluationsForPrivacy(
-						matchingEvaluations,
-						kThreshold
-					);
+					const privacyResult = filterEvaluationsForPrivacy(matchingEvaluations, kThreshold);
 
 					if (!privacyResult.allowed && privacyResult.count > 0) {
 						suppressedCount++;
@@ -306,21 +264,16 @@ function buildDemographicBreakdowns(
 						meetsKAnonymity: privacyResult.allowed,
 						stats: privacyResult.stats
 							? {
-									averageEvaluation:
-										privacyResult.stats.averageEvaluation,
+									averageEvaluation: privacyResult.stats.averageEvaluation,
 									proCount: privacyResult.stats.proCount,
 									conCount: privacyResult.stats.conCount,
 									neutralCount: privacyResult.stats.neutralCount,
-									sumEvaluations:
-										privacyResult.stats.sumEvaluations,
+									sumEvaluations: privacyResult.stats.sumEvaluations,
 								}
 							: undefined,
 						privacyNote:
 							!privacyResult.allowed && privacyResult.count > 0
-								? generateSuppressionNote(
-										privacyResult.count,
-										kThreshold
-									)
+								? generateSuppressionNote(privacyResult.count, kThreshold)
 								: undefined,
 					});
 				});
@@ -340,11 +293,9 @@ function buildDemographicBreakdowns(
  */
 function buildAnonymizedEvaluations(
 	evaluations: Evaluation[],
-	options: Statement[]
+	options: Statement[],
 ): AnonymizedEvaluation[] {
-	const optionMap = new Map(
-		options.map((o) => [o.statementId, o.statement])
-	);
+	const optionMap = new Map(options.map((o) => [o.statementId, o.statement]));
 
 	return evaluations.map((evaluation) => ({
 		statementId: evaluation.statementId,
@@ -359,24 +310,18 @@ function buildAnonymizedEvaluations(
 export async function createPrivacyPreservingExport(
 	parentStatement: Statement,
 	options: Statement[],
-	kAnonymityThreshold?: number
+	kAnonymityThreshold?: number,
 ): Promise<PrivacyPreservingExportData> {
-	const kThreshold =
-		kAnonymityThreshold ?? PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD;
+	const kThreshold = kAnonymityThreshold ?? PRIVACY_CONFIG.K_ANONYMITY_THRESHOLD;
 
 	try {
 		// Fetch all required data
 		const [evaluations, questions] = await Promise.all([
 			fetchEvaluations(parentStatement.statementId),
-			fetchDemographicQuestions(
-				parentStatement.statementId,
-				parentStatement.topParentId
-			),
+			fetchDemographicQuestions(parentStatement.statementId, parentStatement.topParentId),
 		]);
 
-		const questionIds = questions
-			.map((q) => q.userQuestionId)
-			.filter((id): id is string => !!id);
+		const questionIds = questions.map((q) => q.userQuestionId).filter((id): id is string => !!id);
 
 		const answers = await fetchAllDemographicAnswers(questionIds);
 
@@ -388,19 +333,14 @@ export async function createPrivacyPreservingExport(
 			evaluations,
 			questions,
 			answers,
-			kThreshold
+			kThreshold,
 		);
 
 		// Build anonymized evaluations
-		const anonymizedEvaluations = buildAnonymizedEvaluations(
-			evaluations,
-			options
-		);
+		const anonymizedEvaluations = buildAnonymizedEvaluations(evaluations, options);
 
 		// Count unique evaluators and respondents
-		const uniqueEvaluators = new Set(
-			evaluations.map((e) => e.evaluatorId)
-		).size;
+		const uniqueEvaluators = new Set(evaluations.map((e) => e.evaluatorId)).size;
 		const uniqueRespondents = new Set(answers.map((a) => a.userId)).size;
 
 		const metadata: PrivacyExportMetadata = {
@@ -425,7 +365,7 @@ export async function createPrivacyPreservingExport(
 				.filter(
 					(q) =>
 						q.type === UserDemographicQuestionType.radio ||
-						q.type === UserDemographicQuestionType.checkbox
+						q.type === UserDemographicQuestionType.checkbox,
 				)
 				.map((q) => ({
 					questionId: q.userQuestionId ?? '',
@@ -461,11 +401,7 @@ function escapeCSV(value: string | number | undefined | null): string {
 
 	const stringValue = String(value);
 
-	if (
-		stringValue.includes(',') ||
-		stringValue.includes('"') ||
-		stringValue.includes('\n')
-	) {
+	if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
 		return `"${stringValue.replace(/"/g, '""')}"`;
 	}
 
@@ -483,9 +419,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	lines.push(`# Exported: ${data.metadata.exportedAt}`);
 	lines.push(`# k-Anonymity Threshold: ${data.metadata.kAnonymityThreshold}`);
 	lines.push(`# Total Evaluators: ${data.metadata.totalEvaluators}`);
-	lines.push(
-		`# Total Demographic Respondents: ${data.metadata.totalDemographicRespondents}`
-	);
+	lines.push(`# Total Demographic Respondents: ${data.metadata.totalDemographicRespondents}`);
 	lines.push(`# Suppressed Groups: ${data.metadata.suppressedGroupCount}`);
 	lines.push('#');
 	lines.push(`# ${data.privacyNotice}`);
@@ -504,7 +438,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	// Section 2: Option Evaluation Summary
 	lines.push('# === OPTION EVALUATION SUMMARY ===');
 	lines.push(
-		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations'
+		'Option ID,Option Text,Total Evaluators,Average Evaluation,Pro Count,Con Count,Neutral Count,Sum Evaluations',
 	);
 
 	data.optionEvaluations.forEach((opt) => {
@@ -518,7 +452,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 				opt.conCount,
 				opt.neutralCount,
 				opt.sumEvaluations.toFixed(3),
-			].join(',')
+			].join(','),
 		);
 	});
 
@@ -527,9 +461,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	// Section 3: Demographic Question Stats
 	if (data.demographicStats.length > 0) {
 		lines.push('# === DEMOGRAPHIC QUESTION STATISTICS ===');
-		lines.push(
-			'Question ID,Question Text,Option Value,Respondent Count,Percentage'
-		);
+		lines.push('Question ID,Question Text,Option Value,Respondent Count,Percentage');
 
 		data.demographicStats.forEach((stat) => {
 			stat.responses.forEach((resp) => {
@@ -540,7 +472,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 						escapeCSV(resp.optionValue),
 						resp.respondentCount,
 						`${resp.percentage}%`,
-					].join(',')
+					].join(','),
 				);
 			});
 		});
@@ -552,7 +484,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	if (data.demographicBreakdowns.length > 0) {
 		lines.push('# === DEMOGRAPHIC BREAKDOWNS BY OPTION ===');
 		lines.push(
-			'Option Text,Demographic Question,Demographic Value,Evaluator Count,Meets K-Anonymity,Average Evaluation,Pro,Con,Neutral,Privacy Note'
+			'Option Text,Demographic Question,Demographic Value,Evaluator Count,Meets K-Anonymity,Average Evaluation,Pro,Con,Neutral,Privacy Note',
 		);
 
 		data.demographicBreakdowns.forEach((optBreakdown) => {
@@ -569,7 +501,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 						demo.stats?.conCount ?? '',
 						demo.stats?.neutralCount ?? '',
 						escapeCSV(demo.privacyNote ?? ''),
-					].join(',')
+					].join(','),
 				);
 			});
 		});
@@ -578,10 +510,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 	}
 
 	// Section 5: Anonymized Evaluations
-	if (
-		data.anonymizedEvaluations &&
-		data.anonymizedEvaluations.length > 0
-	) {
+	if (data.anonymizedEvaluations && data.anonymizedEvaluations.length > 0) {
 		lines.push('# === ANONYMIZED INDIVIDUAL EVALUATIONS ===');
 		lines.push('Statement ID,Statement Text,Evaluation Value');
 
@@ -591,7 +520,7 @@ export function convertToCSV(data: PrivacyPreservingExportData): string {
 					escapeCSV(evaluation.statementId),
 					escapeCSV(evaluation.statementText),
 					evaluation.evaluationValue.toFixed(3),
-				].join(',')
+				].join(','),
 			);
 		});
 	}
@@ -606,39 +535,31 @@ export async function exportPrivacyPreservingData(
 	parentStatement: Statement,
 	options: Statement[],
 	format: ExportFormat,
-	kAnonymityThreshold?: number
+	kAnonymityThreshold?: number,
 ): Promise<void> {
 	try {
 		// Filter to only include options
-		const filteredOptions = options.filter(
-			(s) => s.statementType === StatementType.option
-		);
+		const filteredOptions = options.filter((s) => s.statementType === StatementType.option);
 
 		const data = await createPrivacyPreservingExport(
 			parentStatement,
 			filteredOptions,
-			kAnonymityThreshold
+			kAnonymityThreshold,
 		);
 
 		const timestamp = new Date().toISOString().split('T')[0];
-		const safeTitle = parentStatement.statement
-			.slice(0, 30)
-			.replace(/[^a-zA-Z0-9]/g, '_');
+		const safeTitle = parentStatement.statement.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
 
 		if (format === 'json') {
 			const content = JSON.stringify(data, null, 2);
 			downloadFile(
 				content,
 				`freedi_user_data_export_${safeTitle}_${timestamp}.json`,
-				'application/json'
+				'application/json',
 			);
 		} else {
 			const content = convertToCSV(data);
-			downloadFile(
-				content,
-				`freedi_user_data_export_${safeTitle}_${timestamp}.csv`,
-				'text/csv'
-			);
+			downloadFile(content, `freedi_user_data_export_${safeTitle}_${timestamp}.csv`, 'text/csv');
 		}
 	} catch (error) {
 		logError(error, {

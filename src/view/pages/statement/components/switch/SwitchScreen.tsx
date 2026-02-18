@@ -1,37 +1,36 @@
-import { Statement, Role, StatementType, Screen } from "@freedi/shared-types";
-import { ReactNode, useEffect, lazy, Suspense } from "react";
-import GroupPage from "../statementTypes/group/GroupPage";
-import QuestionPage from "../statementTypes/question/QuestionPage";
-import { useParams } from "react-router";
-import { useSelector, useDispatch } from "react-redux";
-import { statementSelectorById, setStatement } from "@/redux/statements/statementsSlice";
-import { getStatementFromDB } from "@/controllers/db/statements/getStatement";
-import { logError } from "@/utils/errorHandling";
-import LoadingPage from "@/view/pages/loadingPage/LoadingPage";
-import Chat from "../chat/Chat";
-import PopperHebbianDiscussion from "../popperHebbian/PopperHebbianDiscussion";
+import { Statement, Role, StatementType, Screen } from '@freedi/shared-types';
+import { ReactNode, useEffect, lazy, Suspense } from 'react';
+import GroupPage from '../statementTypes/group/GroupPage';
+import QuestionPage from '../statementTypes/question/QuestionPage';
+import { useParams } from 'react-router';
+import { useSelector, useDispatch } from 'react-redux';
+import { statementSelectorById, setStatement } from '@/redux/statements/statementsSlice';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
+import { logError } from '@/utils/errorHandling';
+import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
+import Chat from '../chat/Chat';
+import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
 
 // Lazy load heavy screen components
-const Triangle = lazy(() => import("@/view/components/maps/triangle/Triangle"));
-const MindMap = lazy(() => import("../map/MindMap"));
-const StatementSettings = lazy(() => import("../settings/StatementSettings"));
-const PolarizationIndexComp = lazy(() => import("@/view/components/maps/polarizationIndex/PolarizationIndex"));
+const Triangle = lazy(() => import('@/view/components/maps/triangle/Triangle'));
+const MindMap = lazy(() => import('../map/MindMap'));
+const StatementSettings = lazy(() => import('../settings/StatementSettings'));
+const PolarizationIndexComp = lazy(
+	() => import('@/view/components/maps/polarizationIndex/PolarizationIndex'),
+);
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
 	role: Role | undefined;
 }
 
-function SwitchScreen({
-	statement,
-	role,
-}: Readonly<SwitchScreenProps>): ReactNode {
+function SwitchScreen({ statement, role }: Readonly<SwitchScreenProps>): ReactNode {
 	let { screen } = useParams();
 	const dispatch = useDispatch();
 	const { hasChat } = statement?.statementSettings || { hasChat: false };
 
 	// Check if Popper-Hebbian discussion is enabled (check parent statement for options)
-	const parentStatement = useSelector(statementSelectorById(statement?.parentId || ""));
+	const parentStatement = useSelector(statementSelectorById(statement?.parentId || ''));
 
 	// Fetch parent statement from DB if not in Redux store
 	useEffect(() => {
@@ -49,7 +48,7 @@ function SwitchScreen({
 						metadata: {
 							parentId: statement.parentId,
 							statementId: statement.statementId,
-						}
+						},
 					});
 				}
 			}
@@ -58,7 +57,9 @@ function SwitchScreen({
 		fetchParentStatement();
 	}, [statement?.parentId, parentStatement, dispatch, statement?.statementId]);
 
-	const isPopperHebbianEnabled = statement?.statementType === StatementType.option && parentStatement?.statementSettings?.popperianDiscussionEnabled === true;
+	const isPopperHebbianEnabled =
+		statement?.statementType === StatementType.option &&
+		parentStatement?.statementSettings?.popperianDiscussionEnabled === true;
 
 	// Debug logging
 	if (screen === 'chat') {
@@ -69,7 +70,7 @@ function SwitchScreen({
 			parentId: statement?.parentId,
 			parentPopperianEnabled: parentStatement?.statementSettings?.popperianDiscussionEnabled,
 			statementPopperianEnabled: statement?.statementSettings?.popperianDiscussionEnabled,
-			isPopperHebbianEnabled
+			isPopperHebbianEnabled,
 		});
 	}
 
@@ -128,7 +129,7 @@ function SwitchScreen({
 					<StatementSettings />
 				</Suspense>
 			);
-		case "main":
+		case 'main':
 			return <SwitchStatementType statement={statement} />;
 		default:
 			return <SwitchStatementType statement={statement} />;

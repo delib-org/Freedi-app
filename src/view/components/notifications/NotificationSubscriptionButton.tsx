@@ -17,7 +17,9 @@ interface NotificationSubscriptionButtonProps {
 /**
  * Button that allows users to subscribe to or unsubscribe from push notifications for a statement
  */
-const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = ({ statementId }) => {
+const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = ({
+	statementId,
+}) => {
 	const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
 	const [isLoading, setIsLoading] = useState<boolean>(true);
 	const [permissionState, setPermissionState] = useState<NotificationPermission>('default');
@@ -112,7 +114,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			if (isSubscribed) {
 				// Unsubscribe - update preference
 				await updateNotificationPreferences(statementId, auth.currentUser.uid, {
-					getPushNotification: false
+					getPushNotification: false,
 				});
 				// Also unregister from notification service
 				await notificationService.unregisterFromStatementNotifications(statementId);
@@ -120,13 +122,13 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			} else {
 				// Subscribe - update preference and register token
 				await updateNotificationPreferences(statementId, auth.currentUser.uid, {
-					getPushNotification: true
+					getPushNotification: true,
 				});
 				// Register for notifications
 				const success = await notificationService.registerForStatementNotifications(
 					auth.currentUser.uid,
 					token,
-					statementId
+					statementId,
 				);
 				setIsSubscribed(success);
 			}
@@ -159,9 +161,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			{isLoading ? (
 				<span className={styles.loadingIndicator}></span>
 			) : (
-				<>
-					{isSubscribed ? <BellIcon /> : <BellSlashIcon />}
-				</>
+				<>{isSubscribed ? <BellIcon /> : <BellSlashIcon />}</>
 			)}
 		</button>
 	);

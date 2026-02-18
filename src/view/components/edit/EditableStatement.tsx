@@ -5,7 +5,8 @@ import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { getParagraphsText } from '@/utils/paragraphUtils';
 
-interface EditableStatementProps extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'editing' | 'onSave'> {
+interface EditableStatementProps
+	extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'editing' | 'onSave'> {
 	statement: Statement | undefined;
 	showDescription?: boolean;
 	onSaveSuccess?: () => void;

@@ -46,9 +46,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 
 	return (
 		<>
-			<div
-				className={`${styles.wrapper} ${background ? styles.background : ''}`}
-			>
+			<div className={`${styles.wrapper} ${background ? styles.background : ''}`}>
 				{background && (
 					<div className={styles.XBtn}>
 						<Close onClick={() => setShowModal(false)}></Close>
@@ -60,9 +58,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 							className={`${styles.backArrow} ${(!sameDirMenu && currentLanguage === 'he') || currentLanguage === 'ar' ? styles.reverse : ''}`}
 							onClick={goBackToMenu}
 						/>
-						<h1 className={styles.title}>
-							{t('Language selection')}
-						</h1>
+						<h1 className={styles.title}>{t('Language selection')}</h1>
 					</span>
 				)}
 				{background ? (
@@ -71,11 +67,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 							<button
 								key={code}
 								className={`${styles.languageOption} ${currentLanguage === code ? styles.selected : ''}`}
-								onClick={
-									code === currentLanguage
-										? undefined
-										: () => handleLanguageChange(code)
-								}
+								onClick={code === currentLanguage ? undefined : () => handleLanguageChange(code)}
 							>
 								<Icon className={styles.flag} />
 								<span>{t(label)}</span>
@@ -98,7 +90,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 
 				{background && (
 					<Button
-						text='close'
+						text="close"
 						className={styles.closeBtn}
 						buttonType={ButtonType.SECONDARY}
 						onClick={() => setShowModal(false)}
@@ -106,10 +98,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 				)}
 			</div>
 			{background && (
-				<button
-					className={styles.overlay}
-					onClick={() => setShowModal(false)}
-				></button>
+				<button className={styles.overlay} onClick={() => setShowModal(false)}></button>
 			)}
 		</>
 	);

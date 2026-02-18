@@ -53,7 +53,7 @@ export class MaintenanceController {
 			res.send({
 				ok: true,
 				size: result.total,
-				changed: result.updated
+				changed: result.updated,
 			});
 		} catch (error) {
 			this.handleError(res, error);
@@ -70,21 +70,23 @@ export class MaintenanceController {
 			if (!statementId) {
 				res.status(400).send({
 					error: 'statementId is required',
-					ok: false
+					ok: false,
 				});
 
 				return;
 			}
 
 			// Import the migration function
-			const { updateStatementAndChildrenAverageEvaluation } = await import('../migrations/updateStatementAverageEvaluation');
+			const { updateStatementAndChildrenAverageEvaluation } = await import(
+				'../migrations/updateStatementAverageEvaluation'
+			);
 
 			const result = await updateStatementAndChildrenAverageEvaluation(statementId);
 
 			res.send({
 				ok: true,
 				statementId,
-				...result
+				...result,
 			});
 		} catch (error) {
 			this.handleError(res, error);
@@ -102,19 +104,21 @@ export class MaintenanceController {
 			if (!parentId) {
 				res.status(400).send({
 					error: 'parentId is required',
-					ok: false
+					ok: false,
 				});
-				
-return;
+
+				return;
 			}
 
-			const { recalculateOptionsEvaluations } = await import('../migrations/recalculateEvaluations');
+			const { recalculateOptionsEvaluations } = await import(
+				'../migrations/recalculateEvaluations'
+			);
 			const result = await recalculateOptionsEvaluations(parentId);
 
 			res.send({
 				ok: true,
 				parentId,
-				...result
+				...result,
 			});
 		} catch (error) {
 			this.handleError(res, error);
@@ -133,16 +137,18 @@ return;
 			const statsOnly = req.query.stats === 'true';
 
 			// Import the migration functions
-			const { migrateAddRandomSeed, getRandomSeedStats } = await import('../migrations/addRandomSeed');
+			const { migrateAddRandomSeed, getRandomSeedStats } = await import(
+				'../migrations/addRandomSeed'
+			);
 
 			if (statsOnly) {
 				const stats = await getRandomSeedStats();
 				res.send({
 					ok: true,
-					...stats
+					...stats,
 				});
 
-return;
+				return;
 			}
 
 			const result = await migrateAddRandomSeed(parentId);
@@ -150,7 +156,7 @@ return;
 			res.send({
 				ok: true,
 				parentId: parentId || 'all',
-				...result
+				...result,
 			});
 		} catch (error) {
 			this.handleError(res, error);
@@ -168,13 +174,15 @@ return;
 			const statsOnly = req.query.stats === 'true';
 
 			// Import the migration functions
-			const { migrateBackfillEvaluationType, getEvaluationTypeStats } = await import('../migrations/backfillEvaluationType');
+			const { migrateBackfillEvaluationType, getEvaluationTypeStats } = await import(
+				'../migrations/backfillEvaluationType'
+			);
 
 			if (statsOnly) {
 				const stats = await getEvaluationTypeStats();
 				res.send({
 					ok: true,
-					...stats
+					...stats,
 				});
 
 				return;
@@ -184,7 +192,7 @@ return;
 
 			res.send({
 				ok: true,
-				...result
+				...result,
 			});
 		} catch (error) {
 			this.handleError(res, error);

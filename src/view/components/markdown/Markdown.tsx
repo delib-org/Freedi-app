@@ -11,11 +11,7 @@ interface MarkdownProps {
 const Markdown: FC<MarkdownProps> = ({ children }) => {
 	// For now, just render as pre-formatted text
 	// This maintains line breaks and formatting
-	return (
-		<div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
-			{children}
-		</div>
-	);
+	return <div style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>{children}</div>;
 };
 
 export default Markdown;

@@ -62,6 +62,7 @@ export default function SolutionFeedClient({
   } | null>(null);
   const [confirmedCount, setConfirmedCount] = useState(0);
   const hasTrackedPageView = useRef(false);
+  const userIdRef = useRef<string>('');
   const LEARNING_MODE_COUNT = 3;
 
   const questionId = question.statementId;
@@ -164,15 +165,22 @@ export default function SolutionFeedClient({
     return () => clearTimeout(timeoutId);
   }, [solutions.length, questionId]);
 
-  // Initialize user ID and load evaluation history on mount
+  // One-time initialization: user ID and page-view tracking
   useEffect(() => {
     const id = getOrCreateAnonymousUser();
     setUserId(id);
+    userIdRef.current = id;
 
     if (!hasTrackedPageView.current) {
       trackPageView(questionId, id);
       hasTrackedPageView.current = true;
     }
+  }, [questionId]);
+
+  // Load evaluation history when questionId changes (not when solutions change)
+  useEffect(() => {
+    const id = userIdRef.current;
+    if (!id) return;
 
     const loadEvaluationHistory = async () => {
       try {
@@ -186,54 +194,66 @@ export default function SolutionFeedClient({
             setAllOptionsEvaluated(true);
           }
 
-          // Find first unevaluated solution
-          const firstUnevaluatedIndex = solutions.findIndex(
-            s => !evaluatedSet.has(s.statementId)
-          );
-          if (firstUnevaluatedIndex > 0) {
-            setCurrentIndex(firstUnevaluatedIndex);
-          }
+          // Find first unevaluated solution using current solutions
+          setSolutions((currentSolutions) => {
+            const firstUnevaluatedIndex = currentSolutions.findIndex(
+              s => !evaluatedSet.has(s.statementId)
+            );
+            if (firstUnevaluatedIndex > 0) {
+              setCurrentIndex(firstUnevaluatedIndex);
+            }
 
-          const scoresMap = new Map<string, number>();
-          const evaluatedSolutionsInBatch = solutions.filter(solution =>
-            evaluatedSet.has(solution.statementId)
-          );
+            // Fetch individual evaluation scores for solutions already evaluated
+            const evaluatedSolutionsInBatch = currentSolutions.filter(solution =>
+              evaluatedSet.has(solution.statementId)
+            );
 
-          await Promise.all(
-            evaluatedSolutionsInBatch.map(async (solution) => {
-              try {
-                const evalResponse = await fetch(
-                  `/api/evaluations/${solution.statementId}?userId=${id}`
-                );
-                if (evalResponse.ok) {
-                  const evalData = await evalResponse.json();
-                  if (evalData.evaluation?.evaluation !== undefined) {
-                    scoresMap.set(solution.statementId, evalData.evaluation.evaluation);
+            if (evaluatedSolutionsInBatch.length > 0) {
+              Promise.all(
+                evaluatedSolutionsInBatch.map(async (solution) => {
+                  try {
+                    const evalResponse = await fetch(
+                      `/api/evaluations/${solution.statementId}?userId=${id}`
+                    );
+                    if (evalResponse.ok) {
+                      const evalData = await evalResponse.json();
+                      if (evalData.evaluation?.evaluation !== undefined) {
+                        return [solution.statementId, evalData.evaluation.evaluation as number] as const;
+                      }
+                    }
+                  } catch (err) {
+                    console.error(`Failed to fetch evaluation for ${solution.statementId}:`, err);
+                  }
+                  return null;
+                })
+              ).then((results) => {
+                const scoresMap = new Map<string, number>();
+                for (const result of results) {
+                  if (result) {
+                    scoresMap.set(result[0], result[1]);
                   }
                 }
-              } catch (err) {
-                console.error(`Failed to fetch evaluation for ${solution.statementId}:`, err);
-              }
-            })
-          );
+                setEvaluationScores(scoresMap);
 
-          setEvaluationScores(scoresMap);
+                if (scoresMap.size > 0) {
+                  window.dispatchEvent(new CustomEvent('evaluations-loaded', {
+                    detail: { count: scoresMap.size, questionId }
+                  }));
+                }
+              });
+            }
 
-          if (scoresMap.size > 0) {
-            window.dispatchEvent(new CustomEvent('evaluations-loaded', {
-              detail: { count: scoresMap.size, questionId }
-            }));
-          }
+            // Return unchanged solutions (we're just reading, not mutating)
+            return currentSolutions;
+          });
         }
       } catch (error) {
         console.error('Failed to load evaluation history:', error);
       }
     };
 
-    if (id) {
-      loadEvaluationHistory();
-    }
-  }, [questionId, totalOptionsCount, solutions]);
+    loadEvaluationHistory();
+  }, [questionId, totalOptionsCount]);
 
   // Listen for trigger events from SurveyNavigation
   useEffect(() => {

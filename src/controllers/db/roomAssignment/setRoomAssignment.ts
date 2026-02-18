@@ -50,7 +50,7 @@ export async function createRoomAssignments(
 	roomSize: number,
 	scrambleByQuestions: string[],
 	user: User,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): Promise<CreateRoomAssignmentsResponse | null> {
 	try {
 		dispatch(setLoading(true));
@@ -106,7 +106,7 @@ export async function createRoomAssignments(
  */
 export async function notifyRoomParticipants(
 	settingsId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): Promise<NotifyParticipantsResponse | null> {
 	try {
 		dispatch(setLoading(true));
@@ -149,7 +149,7 @@ export async function notifyRoomParticipants(
  */
 export async function deleteRoomAssignments(
 	settingsId: string,
-	dispatch: AppDispatch
+	dispatch: AppDispatch,
 ): Promise<DeleteRoomAssignmentsResponse | null> {
 	try {
 		dispatch(setLoading(true));

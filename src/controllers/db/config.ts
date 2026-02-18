@@ -13,7 +13,7 @@ import {
 	persistentMultipleTabManager,
 	memoryLocalCache,
 	clearIndexedDbPersistence,
-	type Firestore
+	type Firestore,
 } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
 import { getAnalytics, isSupported } from 'firebase/analytics';
@@ -28,8 +28,8 @@ const INDEXEDDB_ERROR_KEY = 'freedi_indexeddb_error';
 // Helper to detect iOS devices
 function isIOS(): boolean {
 	const userAgent = navigator.userAgent.toLowerCase();
-	
-return (
+
+	return (
 		/iphone|ipad|ipod/.test(userAgent) ||
 		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 	);
@@ -50,8 +50,8 @@ async function isIndexedDBAvailable(): Promise<boolean> {
 			request.onerror = () => resolve(false);
 			request.onblocked = () => resolve(false);
 		});
-		
-return testDB;
+
+		return testDB;
 	} catch {
 		return false;
 	}
@@ -67,8 +67,8 @@ function shouldSkipIndexedDB(): boolean {
 			// Reset after 24 hours to allow retry
 			if (hoursSinceError > 24) {
 				localStorage.removeItem(INDEXEDDB_ERROR_KEY);
-				
-return false;
+
+				return false;
 			}
 			// Skip IndexedDB if we've had multiple errors recently
 
@@ -77,8 +77,8 @@ return false;
 	} catch {
 		// Ignore localStorage errors
 	}
-	
-return false;
+
+	return false;
 }
 
 // Record an IndexedDB error for future reference
@@ -101,7 +101,9 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 
 	// In local development, use memory cache to avoid stale data from emulator restarts
 	if (isLocalDev) {
-		console.info('Localhost detected: Using memory-only cache for Firestore (fresh data on refresh)');
+		console.info(
+			'Localhost detected: Using memory-only cache for Firestore (fresh data on refresh)',
+		);
 
 		return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
@@ -121,7 +123,7 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 	if (shouldSkipIndexedDB()) {
 		console.info('Previous IndexedDB errors detected: Using memory-only cache');
 
-return initializeFirestore(app, {
+		return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
 		});
 	}
@@ -137,11 +139,11 @@ return initializeFirestore(app, {
 	} catch (error) {
 		console.error(
 			'Failed to initialize with persistent cache, falling back to memory cache:',
-			error
+			error,
 		);
 		recordIndexedDBError();
-		
-return initializeFirestore(app, {
+
+		return initializeFirestore(app, {
 			localCache: memoryLocalCache(),
 		});
 	}
@@ -177,7 +179,8 @@ const app = initializeApp(firebaseConfig);
 // Firebase app initialized
 
 // Inline isProduction check - needed before App Check decision
-const isProductionForAppCheck = typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+const isProductionForAppCheck =
+	typeof window !== 'undefined' && window.location.hostname !== 'localhost';
 
 // Initialize App Check ONLY in production
 // In development/emulator, App Check debug token exchange fails with Google servers
@@ -193,9 +196,10 @@ const functions = getFunctions(app, 'me-west1');
 // Initialize Analytics only in production and if supported
 let analytics: ReturnType<typeof getAnalytics> | null = null;
 // Inline isProduction check to avoid circular dependency
-const isProduction = typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
-	? false
-	: typeof window !== 'undefined' && window.location.hostname !== 'localhost';
+const isProduction =
+	typeof process !== 'undefined' && process.env.NODE_ENV === 'test'
+		? false
+		: typeof window !== 'undefined' && window.location.hostname !== 'localhost';
 
 if (isProduction) {
 	// Check both isSupported and IndexedDB availability before initializing analytics
@@ -209,7 +213,12 @@ if (isProduction) {
 					// Analytics initialization failed, but app continues
 				}
 			} else {
-				console.info('Analytics not initialized: isSupported=', supported, 'indexedDBAvailable=', indexedDBAvailable);
+				console.info(
+					'Analytics not initialized: isSupported=',
+					supported,
+					'indexedDBAvailable=',
+					indexedDBAvailable,
+				);
 			}
 		})
 		.catch((error) => {

@@ -6,8 +6,8 @@ const UnAuthorizedPage = () => {
 	return (
 		<main className={`page ${styles.unAuth}`}>
 			<h1>Page Not Authorized</h1>
-			<img src={unAuthImage} alt='401 - unauthorized page' />
-			<Link to='/home'>Please go to main Page</Link>
+			<img src={unAuthImage} alt="401 - unauthorized page" />
+			<Link to="/home">Please go to main Page</Link>
 		</main>
 	);
 };

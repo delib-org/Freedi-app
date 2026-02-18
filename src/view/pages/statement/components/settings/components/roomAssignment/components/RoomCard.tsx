@@ -40,15 +40,10 @@ const RoomCard: FC<RoomCardProps> = ({ room, participants }) => {
 			{isExpanded && (
 				<div className={styles.roomCard__participants}>
 					{participants.map((participant) => (
-						<ParticipantChip
-							key={participant.participantId}
-							participant={participant}
-						/>
+						<ParticipantChip key={participant.participantId} participant={participant} />
 					))}
 					{participants.length === 0 && (
-						<p className={styles.roomCard__empty}>
-							{t('No participants assigned')}
-						</p>
+						<p className={styles.roomCard__empty}>{t('No participants assigned')}</p>
 					)}
 				</div>
 			)}

@@ -171,7 +171,7 @@ describe('setVote', () => {
 					parentId: 'parent-123',
 					userId: 'user-123',
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -183,11 +183,7 @@ describe('setVote', () => {
 
 			await setVoteToDB(mockOption, mockUser);
 
-			expect(analyticsService.trackStatementVote).toHaveBeenCalledWith(
-				'option-123',
-				1,
-				'button'
-			);
+			expect(analyticsService.trackStatementVote).toHaveBeenCalledWith('option-123', 1, 'button');
 		});
 
 		it('should log info for new vote', async () => {
@@ -220,7 +216,7 @@ describe('setVote', () => {
 				expect.objectContaining({
 					statementId: 'none',
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -265,7 +261,7 @@ describe('setVote', () => {
 				expect.objectContaining({
 					statementId: 'option-123', // New option, not 'none'
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -295,7 +291,7 @@ describe('setVote', () => {
 				expect.objectContaining({
 					voter: mockUser,
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -313,7 +309,7 @@ describe('setVote', () => {
 					lastUpdate: expect.any(Number),
 					createdAt: expect.any(Number),
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 	});
@@ -328,14 +324,10 @@ describe('setVote', () => {
 
 			await setVoteToDB(mockOption, mockUser);
 
-			expect(logger.error).toHaveBeenCalledWith(
-				'Failed to set vote',
-				expect.any(Error),
-				{
-					statementId: 'option-123',
-					userId: 'user-123',
-				}
-			);
+			expect(logger.error).toHaveBeenCalledWith('Failed to set vote', expect.any(Error), {
+				statementId: 'option-123',
+				userId: 'user-123',
+			});
 		});
 
 		it('should log error when getDoc fails', async () => {
@@ -346,7 +338,7 @@ describe('setVote', () => {
 			expect(logger.error).toHaveBeenCalledWith(
 				'Failed to set vote',
 				expect.any(Error),
-				expect.any(Object)
+				expect.any(Object),
 			);
 		});
 	});

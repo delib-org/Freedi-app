@@ -3,10 +3,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { Paragraph, ParagraphType } from '@freedi/shared-types';
-import {
-	generateParagraphId,
-	sortParagraphs,
-} from '@/utils/paragraphUtils';
+import { generateParagraphId, sortParagraphs } from '@/utils/paragraphUtils';
 import EditorToolbar from './EditorToolbar';
 import styles from './RichTextEditor.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -85,13 +82,26 @@ function editorToParagraphs(json: Record<string, unknown>): Paragraph[] {
 				if (node.type === 'heading' && node.attrs?.level) {
 					const level = node.attrs.level as number;
 					switch (level) {
-						case 1: type = ParagraphType.h1; break;
-						case 2: type = ParagraphType.h2; break;
-						case 3: type = ParagraphType.h3; break;
-						case 4: type = ParagraphType.h4; break;
-						case 5: type = ParagraphType.h5; break;
-						case 6: type = ParagraphType.h6; break;
-						default: type = ParagraphType.h1;
+						case 1:
+							type = ParagraphType.h1;
+							break;
+						case 2:
+							type = ParagraphType.h2;
+							break;
+						case 3:
+							type = ParagraphType.h3;
+							break;
+						case 4:
+							type = ParagraphType.h4;
+							break;
+						case 5:
+							type = ParagraphType.h5;
+							break;
+						case 6:
+							type = ParagraphType.h6;
+							break;
+						default:
+							type = ParagraphType.h1;
 					}
 				}
 
@@ -121,8 +131,8 @@ function extractTextFromNode(node: TipTapNode): string {
 			if (child.type === 'paragraph' && child.content) {
 				return extractTextFromNode(child);
 			}
-			
-return '';
+
+			return '';
 		})
 		.join('');
 }
@@ -208,9 +218,7 @@ function paragraphsToEditor(paragraphs: Paragraph[]): Record<string, unknown> {
  * Convert a single Paragraph to TipTap node
  */
 function paragraphTypeToNode(para: Paragraph): Record<string, unknown> {
-	const textContent = para.content
-		? [{ type: 'text', text: para.content }]
-		: [];
+	const textContent = para.content ? [{ type: 'text', text: para.content }] : [];
 
 	switch (para.type) {
 		case ParagraphType.h1:
@@ -283,8 +291,8 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({
 			if (existingPara && existingPara.content === newPara.content) {
 				return { ...newPara, paragraphId: existingPara.paragraphId };
 			}
-			
-return newPara;
+
+			return newPara;
 		});
 
 		await onSave(mergedParagraphs);
@@ -299,12 +307,7 @@ return newPara;
 			</div>
 
 			<div className={styles.actions}>
-				<button
-					type="button"
-					className={styles.cancelBtn}
-					onClick={onCancel}
-					disabled={isLoading}
-				>
+				<button type="button" className={styles.cancelBtn} onClick={onCancel} disabled={isLoading}>
 					{t('Cancel')}
 				</button>
 				<button

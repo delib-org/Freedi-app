@@ -3,12 +3,7 @@
  */
 
 import { Results, Statement } from '@freedi/shared-types';
-import {
-	resultsSlice,
-	setResults,
-	resetResults,
-	resultSelector,
-} from '../resultsSlice';
+import { resultsSlice, setResults, resetResults, resultSelector } from '../resultsSlice';
 
 describe('resultsSlice', () => {
 	const mockStatement: Partial<Statement> = {

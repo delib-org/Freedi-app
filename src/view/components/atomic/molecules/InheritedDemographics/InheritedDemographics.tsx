@@ -2,10 +2,7 @@ import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Toggle } from '@/view/components/atomic/atoms/Toggle';
-import {
-	UserDemographicQuestion,
-	UserDemographicQuestionType,
-} from '@freedi/shared-types';
+import { UserDemographicQuestion, UserDemographicQuestionType } from '@freedi/shared-types';
 
 // Icons - using SVG react components
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg?react';
@@ -64,10 +61,7 @@ interface QuestionTypeDisplayProps {
 	optionsCount?: number;
 }
 
-const QuestionTypeDisplay: React.FC<QuestionTypeDisplayProps> = ({
-	type,
-	optionsCount,
-}) => {
+const QuestionTypeDisplay: React.FC<QuestionTypeDisplayProps> = ({ type, optionsCount }) => {
 	const { t } = useTranslation();
 
 	const typeLabels: Record<UserDemographicQuestionType, string> = {
@@ -145,7 +139,7 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 		isExpanded && 'inherited-demographics--expanded',
 		compact && 'inherited-demographics--compact',
 		loading && 'inherited-demographics--loading',
-		className
+		className,
 	);
 
 	if (totalCount === 0) {
@@ -164,9 +158,7 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 			>
 				<GroupIcon className="inherited-demographics__icon" />
 				<div>
-					<h4 className="inherited-demographics__title">
-						{t('Inherited Surveys')}
-					</h4>
+					<h4 className="inherited-demographics__title">{t('Inherited Surveys')}</h4>
 					<p className="inherited-demographics__subtitle">
 						{t('Surveys from parent discussions that apply here')}
 					</p>
@@ -178,10 +170,7 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 			</button>
 
 			{/* Content */}
-			<div
-				className="inherited-demographics__content"
-				id="inherited-demographics-content"
-			>
+			<div className="inherited-demographics__content" id="inherited-demographics-content">
 				<div className="inherited-demographics__inner">
 					{loading ? (
 						<div className="inherited-demographics__loading">
@@ -189,27 +178,20 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 						</div>
 					) : (
 						groupedQuestions.map((group) => (
-							<div
-								key={group.sourceStatementId}
-								className="inherited-demographics__source-group"
-							>
+							<div key={group.sourceStatementId} className="inherited-demographics__source-group">
 								{/* Source Header */}
 								<div className="inherited-demographics__source-header">
-									<span className="inherited-demographics__source-label">
-										{t('From')}:
-									</span>
+									<span className="inherited-demographics__source-label">{t('From')}:</span>
 									<span className="inherited-demographics__source-name">
 										{group.sourceStatementTitle}
 									</span>
 									<span
 										className={clsx(
 											'inherited-demographics__source-badge',
-											`inherited-demographics__source-badge--${group.sourceType}`
+											`inherited-demographics__source-badge--${group.sourceType}`,
 										)}
 									>
-										{group.sourceType === 'group'
-											? t('Group')
-											: t('Discussion')}
+										{group.sourceType === 'group' ? t('Group') : t('Discussion')}
 									</span>
 								</div>
 
@@ -220,27 +202,21 @@ const InheritedDemographics: React.FC<InheritedDemographicsProps> = ({
 											key={question.userQuestionId}
 											className={clsx(
 												'inherited-demographics__question-item',
-												!question.isEnabled &&
-													'inherited-demographics__question-item--excluded'
+												!question.isEnabled && 'inherited-demographics__question-item--excluded',
 											)}
 										>
 											<div className="inherited-demographics__question-toggle">
 												<Toggle
 													checked={question.isEnabled}
 													onChange={(checked) =>
-														onToggleQuestion(
-															question.userQuestionId || '',
-															checked
-														)
+														onToggleQuestion(question.userQuestionId || '', checked)
 													}
 													size="small"
 													ariaLabel={`${t('Toggle')} ${question.question}`}
 												/>
 											</div>
 											<div className="inherited-demographics__question-content">
-												<p className="inherited-demographics__question-text">
-													{question.question}
-												</p>
+												<p className="inherited-demographics__question-text">{question.question}</p>
 												<div className="inherited-demographics__question-meta">
 													<QuestionTypeDisplay
 														type={question.type}

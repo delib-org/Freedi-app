@@ -17,7 +17,7 @@ function getEnvVar(key: string): string | undefined {
 export function APIEndPoint(
 	functionName: string,
 	queryParams: Record<string, string | number>,
-	envVarName?: string
+	envVarName?: string,
 ): string {
 	// Convert query parameters to URL search params
 	const queryString = Object.entries(queryParams)

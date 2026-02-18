@@ -25,8 +25,8 @@ const ClusterCard: FC<ClusterCardProps> = ({ aggregation }) => {
 		aggregation.averageClusterConsensus > 0
 			? styles.positive
 			: aggregation.averageClusterConsensus < 0
-			? styles.negative
-			: styles.neutral;
+				? styles.negative
+				: styles.neutral;
 
 	return (
 		<div className={`${styles.clusterCard} ${aggregation.isStale ? styles.stale : ''}`}>
@@ -44,9 +44,7 @@ const ClusterCard: FC<ClusterCardProps> = ({ aggregation }) => {
 			<div className={styles.cardBody}>
 				{/* Unique Evaluators Count */}
 				<div className={styles.mainStat}>
-					<span className={styles.statNumber}>
-						{aggregation.uniqueEvaluatorCount}
-					</span>
+					<span className={styles.statNumber}>{aggregation.uniqueEvaluatorCount}</span>
 					<span className={styles.statLabel}>{t('Unique Evaluators')}</span>
 				</div>
 

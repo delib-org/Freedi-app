@@ -5,15 +5,7 @@ import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { RootState } from '@/redux/store';
 import { Statement } from '@freedi/shared-types';
-import {
-	ComponentProps,
-	FC,
-	ReactNode,
-	useCallback,
-	useEffect,
-	useRef,
-	useState,
-} from 'react';
+import { ComponentProps, FC, ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import IconButton from '../iconButton/IconButton';
 import styles from './Menu.module.scss';
@@ -61,12 +53,12 @@ const Menu: FC<MenuProps> = ({
 
 		const handleClickOutside = (e: MouseEvent) => {
 			const target = e.target as HTMLElement;
-			
+
 			// Check if click is inside menu
 			if (menuRef.current?.contains(target)) {
 				return;
 			}
-			
+
 			// Close menu if clicked outside
 			setIsOpen(false);
 		};
@@ -118,11 +110,7 @@ const Menu: FC<MenuProps> = ({
 	}, [isMenuOpen, setIsOpen]);
 
 	return (
-		<div
-			ref={menuRef}
-			className={styles.menu}
-			dir={dir}
-		>
+		<div ref={menuRef} className={styles.menu} dir={dir}>
 			<IconButton
 				ref={buttonRef}
 				onClick={handleToggle}

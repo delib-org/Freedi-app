@@ -4,19 +4,11 @@ import { StatementSkeleton } from '@/view/components/atomic/molecules/StatementS
 import withSuspense, { withCustomSuspense } from './withSuspense';
 
 // Lazy load protected route components
-const StatementMain = lazy(
-	() => import('@/view/pages/statement/StatementMain')
-);
-const MySuggestions = lazy(
-	() => import('@/view/pages/my-suggestions/MySuggestions')
-);
-const VotingThankYou = lazy(
-	() => import('@/view/pages/votingThankYou/VotingThankYou')
-);
+const StatementMain = lazy(() => import('@/view/pages/statement/StatementMain'));
+const MySuggestions = lazy(() => import('@/view/pages/my-suggestions/MySuggestions'));
+const VotingThankYou = lazy(() => import('@/view/pages/votingThankYou/VotingThankYou'));
 const My = lazy(() => import('@/view/pages/my/My'));
-const CheckNotifications = lazy(
-	() => import('@/view/pages/settings/ChecNotifications')
-);
+const CheckNotifications = lazy(() => import('@/view/pages/settings/ChecNotifications'));
 
 // Helper to wrap with skeleton suspense (first load only)
 const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>

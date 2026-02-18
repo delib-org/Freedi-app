@@ -1,9 +1,29 @@
-import { collection, query, Unsubscribe, where, getDocs, limit, orderBy, startAfter, DocumentSnapshot, QueryConstraint } from "firebase/firestore";
-import { DB, FireStore } from "../config";
-import { Collections, WaitingMember, StatementSubscription, Role, StatementType } from "@freedi/shared-types";
-import { store } from "@/redux/store";
-import { removeWaitingMember, setWaitingMember } from "@/redux/subscriptions/subscriptionsSlice";
-import { createManagedCollectionListener, generateListenerKey } from "@/controllers/utils/firestoreListenerHelpers";
+import {
+	collection,
+	query,
+	Unsubscribe,
+	where,
+	getDocs,
+	limit,
+	orderBy,
+	startAfter,
+	DocumentSnapshot,
+	QueryConstraint,
+} from 'firebase/firestore';
+import { DB, FireStore } from '../config';
+import {
+	Collections,
+	WaitingMember,
+	StatementSubscription,
+	Role,
+	StatementType,
+} from '@freedi/shared-types';
+import { store } from '@/redux/store';
+import { removeWaitingMember, setWaitingMember } from '@/redux/subscriptions/subscriptionsSlice';
+import {
+	createManagedCollectionListener,
+	generateListenerKey,
+} from '@/controllers/utils/firestoreListenerHelpers';
 
 /**
  * Check if the user has admin role in any statement
@@ -14,9 +34,9 @@ export async function checkIfUserIsAdmin(userId: string): Promise<boolean> {
 	try {
 		const subscriptionsQuery = query(
 			collection(DB, Collections.statementsSubscribe),
-			where("userId", "==", userId),
-			where("role", "==", "admin"),
-			limit(1) // We only need to know if at least one exists
+			where('userId', '==', userId),
+			where('role', '==', 'admin'),
+			limit(1), // We only need to know if at least one exists
 		);
 
 		const snapshot = await getDocs(subscriptionsQuery);
@@ -28,7 +48,7 @@ export async function checkIfUserIsAdmin(userId: string): Promise<boolean> {
 		if (err?.code === 'permission-denied') {
 			return false; // User is not admin
 		}
-		console.error("Error checking admin status:", error);
+		console.error('Error checking admin status:', error);
 
 		return false;
 	}
@@ -45,7 +65,7 @@ export function listenToWaitingForMembership(): Unsubscribe {
 		const dispatch = store.dispatch;
 
 		if (!user || !user.uid) {
-			console.info("User not found in the store or missing uid");
+			console.info('User not found in the store or missing uid');
 
 			return () => {};
 		}
@@ -55,11 +75,11 @@ export function listenToWaitingForMembership(): Unsubscribe {
 
 		// Check if user is admin before setting up listener
 		checkIfUserIsAdmin(user.uid)
-			.then(isAdmin => {
+			.then((isAdmin) => {
 				if (isAdmin) {
 					const waitingList = collection(DB, Collections.awaitingUsers);
 					// PHASE 3 FIX: Updated to use adminIds array instead of adminId
-					const q = query(waitingList, where("adminIds", "array-contains", user.uid));
+					const q = query(waitingList, where('adminIds', 'array-contains', user.uid));
 
 					// Use managed collection listener with document counting
 					unsubscribe = createManagedCollectionListener(
@@ -69,20 +89,20 @@ export function listenToWaitingForMembership(): Unsubscribe {
 							try {
 								waitingMembersDB.docChanges().forEach((change) => {
 									const subscription = change.doc.data() as WaitingMember;
-									if (change.type === "added" || change.type === "modified") {
+									if (change.type === 'added' || change.type === 'modified') {
 										dispatch(setWaitingMember(subscription));
-									} else if (change.type === "removed") {
+									} else if (change.type === 'removed') {
 										dispatch(removeWaitingMember(subscription.statementsSubscribeId));
 									}
 								});
 							} catch (error) {
-								console.error("Error processing waiting members snapshot:", error);
+								console.error('Error processing waiting members snapshot:', error);
 							}
 						},
 						(error) => {
-							console.error("Error in waiting members listener:", error);
+							console.error('Error in waiting members listener:', error);
 						},
-						'query'
+						'query',
 					);
 				}
 				// Removed console.info to reduce noise - this is expected behavior for non-admins
@@ -99,7 +119,7 @@ export function listenToWaitingForMembership(): Unsubscribe {
 			}
 		};
 	} catch (error) {
-		console.error("Error setting up waiting members listener:", error);
+		console.error('Error setting up waiting members listener:', error);
 
 		return () => {};
 	}
@@ -119,8 +139,12 @@ export async function searchMembers(
 	searchTerm?: string,
 	roleFilter?: Role,
 	lastDoc: DocumentSnapshot | null = null,
-	pageSize: number = 20
-): Promise<{ members: StatementSubscription[]; lastDoc: DocumentSnapshot | null; hasMore: boolean }> {
+	pageSize: number = 20,
+): Promise<{
+	members: StatementSubscription[];
+	lastDoc: DocumentSnapshot | null;
+	hasMore: boolean;
+}> {
 	try {
 		const membersRef = collection(FireStore, Collections.statementsSubscribe);
 
@@ -165,7 +189,7 @@ export async function searchMembers(
 		// Get only the requested page size
 		const docs = hasMore ? snapshot.docs.slice(0, pageSize) : snapshot.docs;
 
-		const members = docs.map(doc => doc.data() as StatementSubscription);
+		const members = docs.map((doc) => doc.data() as StatementSubscription);
 		const newLastDoc = docs.length > 0 ? docs[docs.length - 1] : null;
 
 		return { members, lastDoc: newLastDoc, hasMore };
@@ -183,11 +207,13 @@ export async function searchMembers(
  * @returns Promise with counts object
  */
 export async function getMembersCounts(
-	statementId: string
+	statementId: string,
 ): Promise<{ total: number; admins: number; members: number; banned: number }> {
 	try {
 		// Try to get from statement's numberOfMembers field first
-		const statementSnap = await getDocs(query(collection(FireStore, Collections.statements), where('__name__', '==', statementId)));
+		const statementSnap = await getDocs(
+			query(collection(FireStore, Collections.statements), where('__name__', '==', statementId)),
+		);
 
 		// If statement has numberOfMembers, use it for total
 		let totalFromMetadata = 0;
@@ -201,7 +227,7 @@ export async function getMembersCounts(
 		const baseConstraints = [
 			where('statementId', '==', statementId),
 			where('statement.statementType', '!=', StatementType.document),
-			orderBy('statement.statementType', 'asc')
+			orderBy('statement.statementType', 'asc'),
 		];
 
 		// Count admins
@@ -216,13 +242,13 @@ export async function getMembersCounts(
 		const membersQuery = query(membersRef, ...baseConstraints, where('role', '==', Role.member));
 		const membersSnap = await getDocs(membersQuery);
 
-		const total = totalFromMetadata || (adminsSnap.size + bannedSnap.size + membersSnap.size);
+		const total = totalFromMetadata || adminsSnap.size + bannedSnap.size + membersSnap.size;
 
 		return {
 			total,
 			admins: adminsSnap.size,
 			members: membersSnap.size,
-			banned: bannedSnap.size
+			banned: bannedSnap.size,
 		};
 	} catch (error) {
 		console.error('Error getting members counts:', error);

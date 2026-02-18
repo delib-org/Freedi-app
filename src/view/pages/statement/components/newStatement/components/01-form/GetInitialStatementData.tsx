@@ -9,7 +9,12 @@ import Input from '@/view/components/input/Input';
 import Textarea from '@/view/components/textarea/Textarea';
 import { StatementType, ParagraphType } from '@freedi/shared-types';
 import { useDispatch, useSelector } from 'react-redux';
-import { clearNewStatement, selectNewStatement, selectParentStatementForNewStatement, setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import {
+	clearNewStatement,
+	selectNewStatement,
+	selectParentStatementForNewStatement,
+	setShowNewStatementModal,
+} from '@/redux/statements/newStatementSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
@@ -19,7 +24,13 @@ import { generateParagraphId } from '@/utils/paragraphUtils';
 import SuggestionLoader from '@/view/components/loaders/SuggestionLoader';
 
 export default function GetInitialStatementData() {
-	const { lookingForSimilarStatements, setLookingForSimilarStatements, setSimilarStatements, setCurrentStep, setTitle } = useContext(NewStatementContext);
+	const {
+		lookingForSimilarStatements,
+		setLookingForSimilarStatements,
+		setSimilarStatements,
+		setCurrentStep,
+		setTitle,
+	} = useContext(NewStatementContext);
 	const { t, currentLanguage } = useTranslation();
 	const location = useLocation();
 	const navigate = useNavigate();
@@ -49,7 +60,11 @@ export default function GetInitialStatementData() {
 			if (!title) throw new Error('Title is required');
 			setTitle(title);
 
-			if (lookingForSimilarStatements && typeof newStatementParent === 'object' && newStatementParent?.statementId !== 'top') {
+			if (
+				lookingForSimilarStatements &&
+				typeof newStatementParent === 'object' &&
+				newStatementParent?.statementId !== 'top'
+			) {
 				setLoading(true);
 
 				//get api to find similar statements
@@ -57,15 +72,15 @@ export default function GetInitialStatementData() {
 					newStatementParent.statementId,
 					title,
 					user.uid,
-					setError
+					setError,
 				);
 				setLoading(false);
-				
+
 				if (result && result.similarStatements && result.similarStatements.length > 0) {
 					setSimilarStatements(result.similarStatements);
 					setCurrentStep(SimilaritySteps.SIMILARITIES);
-					
-return;
+
+					return;
 				}
 			}
 
@@ -76,12 +91,17 @@ return;
 			closePanels();
 
 			// Convert description text to paragraphs array
-			const paragraphs = description.trim() ? description.split('\n').filter(line => line.trim()).map((line, index) => ({
-				paragraphId: generateParagraphId(),
-				type: ParagraphType.paragraph,
-				content: line,
-				order: index,
-			})) : undefined;
+			const paragraphs = description.trim()
+				? description
+						.split('\n')
+						.filter((line) => line.trim())
+						.map((line, index) => ({
+							paragraphId: generateParagraphId(),
+							type: ParagraphType.paragraph,
+							content: line,
+							order: index,
+						}))
+				: undefined;
 
 			const statementIdPromise = createStatementWithSubscription({
 				newStatementParent,
@@ -95,7 +115,7 @@ return;
 			});
 
 			if (isHomePage) {
-				statementIdPromise.then(statementId => {
+				statementIdPromise.then((statementId) => {
 					navigate(`/statement/${statementId}`);
 				});
 			}
@@ -104,16 +124,17 @@ return;
 		}
 	};
 
-	const { header, title: titleLabel, titlePlaceholder, description: descriptionLabel, descriptionPlaceholder, similarSearchLabel } =
-		getTexts(newStatementType);
+	const {
+		header,
+		title: titleLabel,
+		titlePlaceholder,
+		description: descriptionLabel,
+		descriptionPlaceholder,
+		similarSearchLabel,
+	} = getTexts(newStatementType);
 
 	if (loading) {
-		return (
-			<SuggestionLoader
-				show={loading}
-				variant="modern"
-			/>
-		);
+		return <SuggestionLoader show={loading} variant="modern" />;
 	}
 
 	return (
@@ -123,13 +144,13 @@ return;
 				<Input
 					label={t(titleLabel)}
 					placeholder={t(titlePlaceholder)}
-					name='title'
+					name="title"
 					autoFocus={true}
 				/>
 				<Textarea
 					label={t(descriptionLabel)}
 					placeholder={t(descriptionPlaceholder)}
-					name='description'
+					name="description"
 				/>
 				<div className={styles.similarityToggle}>
 					<Checkbox
@@ -145,9 +166,9 @@ return;
 				</div>
 
 				{error && <p className={styles.error}>{t(error)}</p>}
-				<div className='btns'>
+				<div className="btns">
 					<Button
-						type='submit'
+						type="submit"
 						text={lookingForSimilarStatements ? t('Continue') : t('Create')}
 						buttonType={ButtonType.PRIMARY}
 					/>

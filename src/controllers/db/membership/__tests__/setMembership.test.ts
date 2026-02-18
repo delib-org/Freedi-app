@@ -2,8 +2,8 @@
  * Tests for setMembership controller
  */
 
-// Mock delib-npm before import to prevent valibot loading
-jest.mock('delib-npm', () => ({
+// Mock @freedi/shared-types before import to prevent valibot loading
+jest.mock('@freedi/shared-types', () => ({
 	Role: {
 		admin: 'admin',
 		member: 'member',
@@ -95,36 +95,48 @@ describe('setMembership', () => {
 
 	describe('approveMembership', () => {
 		it('should approve membership when accept is true', async () => {
-			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
+			await approveMembership(
+				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+				true,
+			);
 
 			expect(mockDoc).toHaveBeenCalledWith(
 				expect.anything(),
 				Collections.statementsSubscribe,
-				mockWaitingMember.statementsSubscribeId
+				mockWaitingMember.statementsSubscribeId,
 			);
 			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', { role: Role.member });
 		});
 
 		it('should ban member when accept is false', async () => {
-			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], false);
+			await approveMembership(
+				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+				false,
+			);
 
 			expect(mockUpdateDoc).toHaveBeenCalledWith('mock-doc-ref', { role: Role.banned });
 		});
 
 		it('should delete from waiting list after approval', async () => {
-			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
+			await approveMembership(
+				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+				true,
+			);
 
 			expect(mockDoc).toHaveBeenCalledWith(
 				expect.anything(),
 				Collections.awaitingUsers,
-				mockWaitingMember.statementsSubscribeId
+				mockWaitingMember.statementsSubscribeId,
 			);
 			expect(mockBatchDelete).toHaveBeenCalled();
 			expect(mockBatchCommit).toHaveBeenCalled();
 		});
 
 		it('should delete from waiting list after rejection', async () => {
-			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], false);
+			await approveMembership(
+				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+				false,
+			);
 
 			expect(mockBatchDelete).toHaveBeenCalled();
 			expect(mockBatchCommit).toHaveBeenCalled();
@@ -135,7 +147,12 @@ describe('setMembership', () => {
 			mockUpdateDoc.mockRejectedValueOnce(error);
 			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-			await expect(approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true)).rejects.toThrow('Update failed');
+			await expect(
+				approveMembership(
+					mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+					true,
+				),
+			).rejects.toThrow('Update failed');
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith('Error in approveMembership:', error);
 			consoleErrorSpy.mockRestore();
@@ -146,7 +163,12 @@ describe('setMembership', () => {
 			mockBatchCommit.mockRejectedValueOnce(error);
 			const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
 
-			await expect(approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true)).rejects.toThrow('Batch commit failed');
+			await expect(
+				approveMembership(
+					mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+					true,
+				),
+			).rejects.toThrow('Batch commit failed');
 
 			expect(consoleErrorSpy).toHaveBeenCalled();
 			consoleErrorSpy.mockRestore();
@@ -156,25 +178,27 @@ describe('setMembership', () => {
 			// eslint-disable-next-line @typescript-eslint/no-require-imports
 			const { parse } = require('valibot');
 
-			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
+			await approveMembership(
+				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+				true,
+			);
 
 			expect(parse).toHaveBeenCalled();
 		});
 
 		it('should use statementsSubscribeId as document key', async () => {
-			await approveMembership(mockWaitingMember as unknown as Parameters<typeof approveMembership>[0], true);
+			await approveMembership(
+				mockWaitingMember as unknown as Parameters<typeof approveMembership>[0],
+				true,
+			);
 
 			// Should use statementsSubscribeId for both subscription and waiting list
 			expect(mockDoc).toHaveBeenCalledWith(
 				expect.anything(),
 				Collections.statementsSubscribe,
-				'sub-123'
+				'sub-123',
 			);
-			expect(mockDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				Collections.awaitingUsers,
-				'sub-123'
-			);
+			expect(mockDoc).toHaveBeenCalledWith(expect.anything(), Collections.awaitingUsers, 'sub-123');
 		});
 	});
 
@@ -194,7 +218,10 @@ describe('setMembership', () => {
 				},
 			};
 
-			await approveMembership(minimalMember as unknown as Parameters<typeof approveMembership>[0], true);
+			await approveMembership(
+				minimalMember as unknown as Parameters<typeof approveMembership>[0],
+				true,
+			);
 
 			expect(mockUpdateDoc).toHaveBeenCalled();
 		});

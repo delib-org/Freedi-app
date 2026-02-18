@@ -26,7 +26,8 @@ export async function migrateAddRandomSeed(parentId?: string): Promise<{
 
 		while (true) {
 			// Build query with pagination
-			let query = db.collection(Collections.statements)
+			let query = db
+				.collection(Collections.statements)
 				.where('statementType', '==', StatementType.option);
 
 			// If parentId is provided, only update options under that parent
@@ -43,7 +44,9 @@ export async function migrateAddRandomSeed(parentId?: string): Promise<{
 			const snapshot = await query.get();
 
 			if (snapshot.empty) {
-				logger.info(`Migration complete. Processed: ${totalProcessed}, Updated: ${totalUpdated}, Skipped: ${totalSkipped}`);
+				logger.info(
+					`Migration complete. Processed: ${totalProcessed}, Updated: ${totalUpdated}, Skipped: ${totalSkipped}`,
+				);
 				break;
 			}
 
@@ -69,7 +72,9 @@ export async function migrateAddRandomSeed(parentId?: string): Promise<{
 			// Commit the batch if there are updates
 			if (batchCount > 0) {
 				await batch.commit();
-				logger.info(`Batch updated: ${batchCount} documents. Total updated so far: ${totalUpdated}`);
+				logger.info(
+					`Batch updated: ${batchCount} documents. Total updated so far: ${totalUpdated}`,
+				);
 			}
 
 			// Get the last document for pagination
@@ -79,7 +84,7 @@ export async function migrateAddRandomSeed(parentId?: string): Promise<{
 		logger.info('Migration completed successfully', {
 			totalProcessed,
 			totalUpdated,
-			totalSkipped
+			totalSkipped,
 		});
 
 		return { totalProcessed, totalUpdated, totalSkipped };
@@ -106,8 +111,8 @@ export async function addRandomSeedToStatement(statementId: string): Promise<voi
 
 		if (data?.randomSeed !== undefined) {
 			logger.info(`Statement ${statementId} already has randomSeed: ${data.randomSeed}`);
-			
-return;
+
+			return;
 		}
 
 		const randomSeed = Math.random();
@@ -131,7 +136,8 @@ export async function getRandomSeedStats(): Promise<{
 }> {
 	try {
 		// Count total options
-		const totalSnapshot = await db.collection(Collections.statements)
+		const totalSnapshot = await db
+			.collection(Collections.statements)
 			.where('statementType', '==', StatementType.option)
 			.count()
 			.get();
@@ -140,7 +146,8 @@ export async function getRandomSeedStats(): Promise<{
 		// Count options with randomSeed (using a range query to find documents with the field)
 		// Note: Firestore doesn't have a direct way to check if field exists,
 		// so we check for non-null values
-		const withSeedSnapshot = await db.collection(Collections.statements)
+		const withSeedSnapshot = await db
+			.collection(Collections.statements)
 			.where('statementType', '==', StatementType.option)
 			.where('randomSeed', '>=', 0)
 			.count()
@@ -148,15 +155,14 @@ export async function getRandomSeedStats(): Promise<{
 		const withRandomSeed = withSeedSnapshot.data().count;
 
 		const withoutRandomSeed = totalOptions - withRandomSeed;
-		const coveragePercent = totalOptions > 0
-			? Math.round((withRandomSeed / totalOptions) * 100)
-			: 100;
+		const coveragePercent =
+			totalOptions > 0 ? Math.round((withRandomSeed / totalOptions) * 100) : 100;
 
 		return {
 			totalOptions,
 			withRandomSeed,
 			withoutRandomSeed,
-			coveragePercent
+			coveragePercent,
 		};
 	} catch (error) {
 		logger.error('Error getting randomSeed stats:', error);

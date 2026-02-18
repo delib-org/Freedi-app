@@ -1,7 +1,10 @@
 import React, { FC, useState, useEffect, useCallback, useMemo } from 'react';
 import Modal from '@/view/components/modal/Modal';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { findSimilarForIntegration, executeIntegration } from '@/controllers/db/integration/integrationController';
+import {
+	findSimilarForIntegration,
+	executeIntegration,
+} from '@/controllers/db/integration/integrationController';
 import { logError } from '@/utils/errorHandling';
 import type {
 	IntegrateSuggestionsModalProps,
@@ -14,13 +17,31 @@ import styles from './IntegrateSuggestions.module.scss';
 
 // SVG Icons as components for better visuals
 const CheckIcon: FC = () => (
-	<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+	<svg
+		width="32"
+		height="32"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="3"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
 		<polyline points="20 6 9 17 4 12" />
 	</svg>
 );
 
 const ErrorIcon: FC = () => (
-	<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+	<svg
+		width="28"
+		height="28"
+		viewBox="0 0 24 24"
+		fill="none"
+		stroke="currentColor"
+		strokeWidth="2"
+		strokeLinecap="round"
+		strokeLinejoin="round"
+	>
 		<circle cx="12" cy="12" r="10" />
 		<line x1="12" y1="8" x2="12" y2="12" />
 		<line x1="12" y1="16" x2="12.01" y2="16" />
@@ -108,11 +129,9 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 
 	// Get selected statements for preview
 	const getSelectedStatements = useCallback((): StatementWithEvaluation[] => {
-		const all = sourceStatement
-			? [sourceStatement, ...similarStatements]
-			: similarStatements;
+		const all = sourceStatement ? [sourceStatement, ...similarStatements] : similarStatements;
 
-		return all.filter(s => selectedIds.includes(s.statementId));
+		return all.filter((s) => selectedIds.includes(s.statementId));
 	}, [sourceStatement, similarStatements, selectedIds]);
 
 	// Move to preview step
@@ -177,23 +196,23 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 
 	// Calculate total evaluators using useMemo for performance
 	const totalEvaluators = useMemo(() => {
-		return getSelectedStatements().reduce(
-			(sum, s) => sum + s.numberOfEvaluators,
-			0
-		);
+		return getSelectedStatements().reduce((sum, s) => sum + s.numberOfEvaluators, 0);
 	}, [getSelectedStatements]);
 
 	// Get step information for step indicator
-	const getStepStatus = useCallback((stepName: IntegrationStep) => {
-		const stepOrder: IntegrationStep[] = ['loading', 'selection', 'preview', 'success'];
-		const currentIndex = stepOrder.indexOf(step);
-		const stepIndex = stepOrder.indexOf(stepName);
+	const getStepStatus = useCallback(
+		(stepName: IntegrationStep) => {
+			const stepOrder: IntegrationStep[] = ['loading', 'selection', 'preview', 'success'];
+			const currentIndex = stepOrder.indexOf(step);
+			const stepIndex = stepOrder.indexOf(stepName);
 
-		if (stepIndex < currentIndex) return 'completed';
-		if (stepIndex === currentIndex) return 'active';
+			if (stepIndex < currentIndex) return 'completed';
+			if (stepIndex === currentIndex) return 'active';
 
-		return 'pending';
-	}, [step]);
+			return 'pending';
+		},
+		[step],
+	);
 
 	return (
 		<Modal closeModal={onClose} title={t('Integrate Similar Suggestions')}>
@@ -213,21 +232,31 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 				{/* Step Indicator */}
 				{step !== 'loading' && step !== 'error' && (
 					<div className={styles.integrateSuggestions__steps}>
-						<div className={`${styles.integrateSuggestions__step} ${styles[`integrateSuggestions__step--${getStepStatus('selection')}`]}`}>
+						<div
+							className={`${styles.integrateSuggestions__step} ${styles[`integrateSuggestions__step--${getStepStatus('selection')}`]}`}
+						>
 							<span className={styles.integrateSuggestions__stepNumber}>
 								{getStepStatus('selection') === 'completed' ? '✓' : '1'}
 							</span>
 							<span>{t('Select')}</span>
 						</div>
-						<div className={`${styles.integrateSuggestions__stepDivider} ${styles[`integrateSuggestions__stepDivider--${getStepStatus('preview')}`]}`} />
-						<div className={`${styles.integrateSuggestions__step} ${styles[`integrateSuggestions__step--${getStepStatus('preview')}`]}`}>
+						<div
+							className={`${styles.integrateSuggestions__stepDivider} ${styles[`integrateSuggestions__stepDivider--${getStepStatus('preview')}`]}`}
+						/>
+						<div
+							className={`${styles.integrateSuggestions__step} ${styles[`integrateSuggestions__step--${getStepStatus('preview')}`]}`}
+						>
 							<span className={styles.integrateSuggestions__stepNumber}>
 								{getStepStatus('preview') === 'completed' ? '✓' : '2'}
 							</span>
 							<span>{t('Preview')}</span>
 						</div>
-						<div className={`${styles.integrateSuggestions__stepDivider} ${styles[`integrateSuggestions__stepDivider--${getStepStatus('success')}`]}`} />
-						<div className={`${styles.integrateSuggestions__step} ${styles[`integrateSuggestions__step--${getStepStatus('success')}`]}`}>
+						<div
+							className={`${styles.integrateSuggestions__stepDivider} ${styles[`integrateSuggestions__stepDivider--${getStepStatus('success')}`]}`}
+						/>
+						<div
+							className={`${styles.integrateSuggestions__step} ${styles[`integrateSuggestions__step--${getStepStatus('success')}`]}`}
+						>
 							<span className={styles.integrateSuggestions__stepNumber}>
 								{getStepStatus('success') === 'completed' ? '✓' : '3'}
 							</span>
@@ -326,9 +355,7 @@ const IntegrateSuggestionsModal: FC<IntegrateSuggestionsModalProps> = ({
 						<span className={styles.integrateSuggestions__errorBannerIcon}>
 							<WarningIcon />
 						</span>
-						<p className={styles.integrateSuggestions__errorBannerText}>
-							{error}
-						</p>
+						<p className={styles.integrateSuggestions__errorBannerText}>{error}</p>
 					</div>
 				)}
 

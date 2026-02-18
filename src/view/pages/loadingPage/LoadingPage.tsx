@@ -5,15 +5,9 @@ const LoadingPage = () => {
 		<div className={styles['loading-page']}>
 			<div className={styles['loading-page__content']}>
 				<h1 className={styles['loading-page__brand']}>WizCol</h1>
-				<p className={styles['loading-page__tagline']}>
-					Empowering collective decisions
-				</p>
+				<p className={styles['loading-page__tagline']}>Empowering collective decisions</p>
 
-				<div
-					className={styles['constellation-loader']}
-					role="img"
-					aria-label="Loading animation"
-				>
+				<div className={styles['constellation-loader']} role="img" aria-label="Loading animation">
 					<div className={styles['constellation-loader__ring']} />
 					<div className={styles['constellation-loader__center']} />
 					<div className={styles['constellation-loader__node']} />
@@ -25,9 +19,7 @@ const LoadingPage = () => {
 					<div className={styles['constellation-loader__connections']} />
 				</div>
 
-				<p className={styles['loading-page__status']}>
-					Loading your workspace...
-				</p>
+				<p className={styles['loading-page__status']}>Loading your workspace...</p>
 
 				<div className={styles['loading-progress']}>
 					<div className={styles['loading-progress__bar-container']}>

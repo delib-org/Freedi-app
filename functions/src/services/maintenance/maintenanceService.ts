@@ -1,9 +1,5 @@
 import { db } from '../../db';
-import {
-	Collections,
-	DeliberativeElement,
-	StatementType,
-} from '@freedi/shared-types';
+import { Collections, DeliberativeElement, StatementType } from '@freedi/shared-types';
 
 export class MaintenanceService {
 	/**
@@ -21,8 +17,8 @@ export class MaintenanceService {
 		});
 
 		await batch.commit();
-		
-return { updated: subscriptionsDB.size };
+
+		return { updated: subscriptionsDB.size };
 	}
 
 	/**
@@ -59,14 +55,14 @@ return { updated: subscriptionsDB.size };
 		});
 
 		await batch.commit();
-		
-return { updated: statementsDB.size };
+
+		return { updated: statementsDB.size };
 	}
 
 	/**
 	 * Update statement results settings
 	 */
-	async updateStatementResultsSettings(): Promise<{ updated: number, cleared: number }> {
+	async updateStatementResultsSettings(): Promise<{ updated: number; cleared: number }> {
 		const statementsRef = db.collection(Collections.statements);
 
 		// Update resultsBy field
@@ -94,14 +90,14 @@ return { updated: statementsDB.size };
 		});
 
 		await batch.commit();
-		
-return { updated: statementsDB1.size, cleared: clearedCount };
+
+		return { updated: statementsDB1.size, cleared: clearedCount };
 	}
 
 	/**
 	 * Convert subscription token from string to array
 	 */
-	async updateSubscriptionTokenFormat(): Promise<{ total: number, updated: number }> {
+	async updateSubscriptionTokenFormat(): Promise<{ total: number; updated: number }> {
 		const subscriptionRef = db.collection(Collections.statementsSubscribe);
 		const subscriptionsDB = await subscriptionRef.get();
 
@@ -118,7 +114,7 @@ return { updated: statementsDB1.size, cleared: clearedCount };
 		});
 
 		await batch.commit();
-		
-return { total: subscriptionsDB.size, updated: count };
+
+		return { total: subscriptionsDB.size, updated: count };
 	}
 }

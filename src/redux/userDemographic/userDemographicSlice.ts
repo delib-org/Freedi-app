@@ -23,8 +23,8 @@ const initialState: UserDemographicState = {
 	polarizationIndexes: [],
 	showGroupDemographicModal: {
 		show: false,
-		topParentId: null
-	}
+		topParentId: null,
+	},
 };
 
 const userDemographicSlice = createSlice({
@@ -32,20 +32,31 @@ const userDemographicSlice = createSlice({
 	initialState,
 	reducers: {
 		setUserDemographicQuestion: (state, action: PayloadAction<UserDemographicQuestion>) => {
-			state.userDemographicQuestions = updateArray(state.userDemographicQuestions, action.payload, 'userQuestionId');
+			state.userDemographicQuestions = updateArray(
+				state.userDemographicQuestions,
+				action.payload,
+				'userQuestionId',
+			);
 		},
 
 		deleteUserDemographicQuestion: (state, action: PayloadAction<string>) => {
-			state.userDemographicQuestions = state.userDemographicQuestions.filter(q => q.userQuestionId !== action.payload);
+			state.userDemographicQuestions = state.userDemographicQuestions.filter(
+				(q) => q.userQuestionId !== action.payload,
+			);
 		},
 		setUserDemographicQuestions: (state, action: PayloadAction<UserDemographicQuestion[]>) => {
 			state.userDemographicQuestions = action.payload;
 		},
-		updateUserDemographicQuestionOptionColor: (state, action: PayloadAction<{ userQuestionId: string; option: string; color: string }>) => {
+		updateUserDemographicQuestionOptionColor: (
+			state,
+			action: PayloadAction<{ userQuestionId: string; option: string; color: string }>,
+		) => {
 			const { userQuestionId, option, color } = action.payload;
-			const question = state.userDemographicQuestions.find(q => q.userQuestionId === userQuestionId);
+			const question = state.userDemographicQuestions.find(
+				(q) => q.userQuestionId === userQuestionId,
+			);
 			if (question) {
-				const optionToUpdate = question.options.find(opt => opt.option === option);
+				const optionToUpdate = question.options.find((opt) => opt.option === option);
 				if (optionToUpdate) {
 					optionToUpdate.color = color;
 				}
@@ -55,21 +66,29 @@ const userDemographicSlice = createSlice({
 			state.userDemographic = updateArray(state.userDemographic, action.payload, 'userQuestionId');
 		},
 		deleteUserDemographic: (state, action: PayloadAction<string>) => {
-			state.userDemographic = state.userDemographic.filter(q => q.userQuestionId !== action.payload);
+			state.userDemographic = state.userDemographic.filter(
+				(q) => q.userQuestionId !== action.payload,
+			);
 		},
 		setPolarizationIndexes: (state, action: PayloadAction<PolarizationIndex>) => {
-			state.polarizationIndexes = updateArray(state.polarizationIndexes, action.payload, 'statementId');
+			state.polarizationIndexes = updateArray(
+				state.polarizationIndexes,
+				action.payload,
+				'statementId',
+			);
 		},
 		deletePolarizationIndex: (state, action: PayloadAction<string>) => {
-			state.polarizationIndexes = state.polarizationIndexes.filter(pi => pi.statementId !== action.payload);
+			state.polarizationIndexes = state.polarizationIndexes.filter(
+				(pi) => pi.statementId !== action.payload,
+			);
 		},
 		setShowGroupDemographicModal: (state, action: PayloadAction<GroupDemographicModalState>) => {
 			state.showGroupDemographicModal = action.payload;
 		},
 		hideGroupDemographicModal: (state) => {
 			state.showGroupDemographicModal = { show: false, topParentId: null };
-		}
-	}
+		},
+	},
 });
 
 export const {
@@ -82,68 +101,71 @@ export const {
 	deletePolarizationIndex,
 	updateUserDemographicQuestionOptionColor,
 	setShowGroupDemographicModal,
-	hideGroupDemographicModal
+	hideGroupDemographicModal,
 } = userDemographicSlice.actions;
 
 // Selectors
-export const selectUserDemographicQuestionsByStatementId = (statementId: string) => createSelector(
-	[(state: RootState) => state.userDemographic.userDemographicQuestions],
-	(userDemographicQuestions) => userDemographicQuestions.filter(question => question.statementId === statementId)
-);
+export const selectUserDemographicQuestionsByStatementId = (statementId: string) =>
+	createSelector(
+		[(state: RootState) => state.userDemographic.userDemographicQuestions],
+		(userDemographicQuestions) =>
+			userDemographicQuestions.filter((question) => question.statementId === statementId),
+	);
 
-export const selectUserDemographicByStatementId = (statementId: string) => createSelector(
-	[(state: RootState) => state.userDemographic.userDemographic],
-	(userDemographic) => userDemographic.filter(data => data.statementId === statementId)
-);
+export const selectUserDemographicByStatementId = (statementId: string) =>
+	createSelector([(state: RootState) => state.userDemographic.userDemographic], (userDemographic) =>
+		userDemographic.filter((data) => data.statementId === statementId),
+	);
 
-export const selectPolarizationIndexByParentId = (parentId: string) => createSelector(
-	[(state: RootState) => state.userDemographic.polarizationIndexes],
-	(polarizationIndexes) => polarizationIndexes.filter(pi => pi.parentId === parentId)
-);
+export const selectPolarizationIndexByParentId = (parentId: string) =>
+	createSelector(
+		[(state: RootState) => state.userDemographic.polarizationIndexes],
+		(polarizationIndexes) => polarizationIndexes.filter((pi) => pi.parentId === parentId),
+	);
 
 // Group-level demographic selectors
-export const selectGroupQuestions = (topParentId: string) => createSelector(
-	[(state: RootState) => state.userDemographic.userDemographicQuestions],
-	(questions) => questions.filter(
-		q => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP
-	)
-);
+export const selectGroupQuestions = (topParentId: string) =>
+	createSelector(
+		[(state: RootState) => state.userDemographic.userDemographicQuestions],
+		(questions) =>
+			questions.filter((q) => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP),
+	);
 
 // Select effective questions (group + statement merged)
-export const selectEffectiveQuestions = (statementId: string, topParentId: string) => createSelector(
-	[(state: RootState) => state.userDemographic.userDemographicQuestions],
-	(questions) => {
-		const groupQ = questions.filter(
-			q => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP
-		);
-		const statementQ = questions.filter(
-			q => q.statementId === statementId && q.scope !== DEMOGRAPHIC_SCOPE_GROUP
-		);
+export const selectEffectiveQuestions = (statementId: string, topParentId: string) =>
+	createSelector(
+		[(state: RootState) => state.userDemographic.userDemographicQuestions],
+		(questions) => {
+			const groupQ = questions.filter(
+				(q) => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP,
+			);
+			const statementQ = questions.filter(
+				(q) => q.statementId === statementId && q.scope !== DEMOGRAPHIC_SCOPE_GROUP,
+			);
 
-		return [...groupQ, ...statementQ];
-	}
-);
+			return [...groupQ, ...statementQ];
+		},
+	);
 
 // Select user's group-level answers
-export const selectUserGroupAnswers = (topParentId: string) => createSelector(
-	[(state: RootState) => state.userDemographic.userDemographic],
-	(answers) => answers.filter(
-		a => a.topParentId === topParentId && a.scope === DEMOGRAPHIC_SCOPE_GROUP
-	)
-);
+export const selectUserGroupAnswers = (topParentId: string) =>
+	createSelector([(state: RootState) => state.userDemographic.userDemographic], (answers) =>
+		answers.filter((a) => a.topParentId === topParentId && a.scope === DEMOGRAPHIC_SCOPE_GROUP),
+	);
 
 // Check unanswered group questions
-export const selectUnansweredGroupQuestions = (topParentId: string) => createSelector(
-	[
-		(state: RootState) => selectGroupQuestions(topParentId)(state),
-		(state: RootState) => state.userDemographic.userDemographic
-	],
-	(questions, answers) => questions.filter(
-		q => !answers.find(a => a.userQuestionId === q.userQuestionId)
-	)
-);
+export const selectUnansweredGroupQuestions = (topParentId: string) =>
+	createSelector(
+		[
+			(state: RootState) => selectGroupQuestions(topParentId)(state),
+			(state: RootState) => state.userDemographic.userDemographic,
+		],
+		(questions, answers) =>
+			questions.filter((q) => !answers.find((a) => a.userQuestionId === q.userQuestionId)),
+	);
 
 // Select group demographic modal state
-export const selectShowGroupDemographicModal = (state: RootState) => state.userDemographic.showGroupDemographicModal;
+export const selectShowGroupDemographicModal = (state: RootState) =>
+	state.userDemographic.showGroupDemographicModal;
 
 export default userDemographicSlice.reducer;

@@ -11,7 +11,7 @@
  * - Neutral and positive ratings throw cards right
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
 import SwipeCard from '../SwipeCard';
@@ -79,6 +79,9 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
 
   // Previous evaluation scores: statementId → rating value
   const [previousEvaluations, setPreviousEvaluations] = useState<Map<string, number>>(new Map());
+
+  // Guard against double swipes within the same animation cycle
+  const isSwipeInFlightRef = useRef(false);
 
   // Check if user must add solution first
   const requiresSolution = mergedSettings?.askUserForASolutionBeforeEvaluation ?? true;
@@ -203,7 +206,13 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   }, [evaluatedCount, totalCount, onComplete]);
 
   const handleSwipe = async (rating: RatingValue) => {
-    if (!currentCard) return;
+    if (!currentCard || isSwipeInFlightRef.current) return;
+
+    // Set guard to prevent double swipes
+    isSwipeInFlightRef.current = true;
+
+    // Capture statementId BEFORE the setTimeout to avoid stale closure
+    const capturedStatementId = currentCard.statementId;
 
     // Get throw direction from rating config
     const config = RATING_CONFIG[rating];
@@ -217,19 +226,19 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     setTimeout(async () => {
       try {
         // Save rating via API (deterministic ID prevents duplicates)
-        await submitRating(question.statementId, currentCard.statementId, rating, userId, userName);
+        await submitRating(question.statementId, capturedStatementId, rating, userId, userName);
 
         // Update local previous evaluations map
         setPreviousEvaluations((prev) => {
           const next = new Map(prev);
-          next.set(currentCard.statementId, rating);
+          next.set(capturedStatementId, rating);
 
           return next;
         });
 
         // Update Redux state
         dispatch(
-          cardEvaluated({ statementId: currentCard.statementId, rating })
+          cardEvaluated({ statementId: capturedStatementId, rating })
         );
 
         // Dispatch custom event for SurveyQuestionWrapper to track progress
@@ -245,6 +254,8 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         console.error('Failed to submit rating:', err);
         dispatch(setError(t('Failed to submit rating. Please try again.')));
         setProgrammaticThrow(null);
+      } finally {
+        isSwipeInFlightRef.current = false;
       }
     }, 300); // Wait for animation to complete
   };

@@ -2,11 +2,7 @@
  * Tests for consensus color utilities
  */
 
-import {
-	getAgreementColor,
-	calculateAgreement,
-	getCSSVariableValue,
-} from '../consensusColors';
+import { getAgreementColor, calculateAgreement, getCSSVariableValue } from '../consensusColors';
 
 describe('consensusColors', () => {
 	describe('getAgreementColor', () => {

@@ -11,11 +11,21 @@ interface QuickActionsProps {
 export default function QuickActions({ statementId }: QuickActionsProps) {
   const { t } = useTranslation();
   const { canManageSettings, canExport } = useAdminContext();
+  const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://wizcol.app';
 
   return (
     <section className={styles.section}>
       <h2 className={styles.sectionTitle}>{t('quickActions')}</h2>
       <div style={{ display: 'flex', gap: 'var(--spacing-md)', flexWrap: 'wrap' }}>
+        <a
+          href={`${mainAppUrl}/statement-screen/${statementId}/settings`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.exportButton}
+          style={{ textDecoration: 'none', background: 'var(--btn-primary)' }}
+        >
+          {t('Open in Main App')}
+        </a>
         <a
           href={`/doc/${statementId}/admin/users`}
           className={styles.exportButton}

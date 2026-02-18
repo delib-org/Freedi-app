@@ -87,7 +87,9 @@ const Thumb: FC<ThumbProps> = ({
 			onClick={enableEvaluation ? () => handleVote(isUpVote) : undefined}
 			disabled={!enableEvaluation}
 			aria-disabled={!enableEvaluation}
-			aria-label={enableEvaluation ? (isUpVote ? 'Vote up' : 'Vote down') : t('Voting disabled - view only')}
+			aria-label={
+				enableEvaluation ? (isUpVote ? 'Vote up' : 'Vote down') : t('Voting disabled - view only')
+			}
 		>
 			{isUpVote ? <SmileIcon /> : <FrownIcon />}
 		</button>
@@ -96,10 +98,7 @@ const Thumb: FC<ThumbProps> = ({
 	if (!enableEvaluation) {
 		return (
 			<>
-				<Tooltip
-					content={t('Voting is currently disabled by the moderator')}
-					position='top'
-				>
+				<Tooltip content={t('Voting is currently disabled by the moderator')} position="top">
 					{button}
 				</Tooltip>
 				<AddSolutionPrompt

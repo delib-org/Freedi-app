@@ -8,9 +8,7 @@ export async function updateStatementWithViews(ev) {
 		const view = ev.data.data() as StatementView;
 		const statementId = view.statementId;
 		if (!statementId) throw new Error('StatementId not found');
-		const statementRef = db
-			.collection(Collections.statements)
-			.doc(statementId);
+		const statementRef = db.collection(Collections.statements).doc(statementId);
 
 		//increment the view count
 		await db.runTransaction(async (t) => {
@@ -20,8 +18,7 @@ export async function updateStatementWithViews(ev) {
 				const statement = statementDB.data() as Statement;
 				if (!statement) throw new Error('Statement not found');
 
-				if (!statement.viewed)
-					statement.viewed = { individualViews: 0 };
+				if (!statement.viewed) statement.viewed = { individualViews: 0 };
 
 				const views = statement.viewed.individualViews || 0;
 				t.update(statementRef, { 'viewed.individualViews': views + 1 });

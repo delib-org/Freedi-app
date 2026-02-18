@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
-import { Statement } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { useCommentDraft } from '@/hooks/useCommentDraft';
+import { useParagraphComments } from '@/hooks/useParagraphComments';
+import { logError } from '@/lib/utils/errorHandling';
 import Comment from './Comment';
 import SuggestionPrompt from '../suggestions/SuggestionPrompt';
 import styles from './CommentThread.module.scss';
@@ -19,6 +20,8 @@ interface CommentThreadProps {
   enableSuggestions?: boolean;
   originalContent?: string;
   onOpenSuggestions?: () => void;
+  /** When true, hide display names in comments */
+  hideUserIdentity?: boolean;
 }
 
 export default function CommentThread({
@@ -30,16 +33,18 @@ export default function CommentThread({
   enableSuggestions = false,
   originalContent: _originalContent = '',
   onOpenSuggestions,
+  hideUserIdentity = false,
 }: CommentThreadProps) {
   const { t } = useTranslation();
   const { incrementCommentCount, decrementCommentCount, addUserInteraction } = useUIStore();
-  const [comments, setComments] = useState<Statement[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { draft: newComment, setDraft: setNewComment, clearDraft } = useCommentDraft({ paragraphId });
   const [error, setError] = useState<string | null>(null);
   const [effectiveUserId, setEffectiveUserId] = useState<string | null>(userId);
   const [showSuggestionPrompt, setShowSuggestionPrompt] = useState(false);
+
+  // Real-time comments from Firestore (updates instantly when anyone comments or evaluations change)
+  const { comments, isLoading } = useParagraphComments(paragraphId);
 
   // Notify parent of draft changes for minimize feature
   useEffect(() => {
@@ -61,29 +66,6 @@ export default function CommentThread({
 
     return comments.find((c) => c.creatorId === currentUserId) || null;
   }, [comments, userId, effectiveUserId]);
-
-  // Fetch comments
-  const fetchComments = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`/api/comments/${paragraphId}`);
-
-      if (response.ok) {
-        const data = await response.json();
-        setComments(data.comments || []);
-      } else {
-        console.error('Failed to fetch comments');
-      }
-    } catch (err) {
-      console.error('Error fetching comments:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [paragraphId]);
-
-  useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
 
   // Submit new comment
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,14 +95,10 @@ export default function CommentThread({
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setComments((prev) => [...prev, data.comment]);
-        clearDraft(); // Clear draft from localStorage on successful submit
-        // Update comment count in store
+        // Real-time listener will pick up the new comment automatically
+        clearDraft();
         incrementCommentCount(paragraphId);
-        // Mark paragraph as interacted
         addUserInteraction(paragraphId);
-        // Show suggestion prompt if suggestions are enabled
         if (enableSuggestions) {
           setShowSuggestionPrompt(true);
         }
@@ -129,25 +107,47 @@ export default function CommentThread({
         setError(errorData.error || 'Failed to post comment');
       }
     } catch (err) {
-      console.error('Error posting comment:', err);
+      logError(err, {
+        operation: 'CommentThread.handleSubmit',
+        userId: effectiveUserId || undefined,
+        metadata: { paragraphId },
+      });
       setError('Failed to post comment. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Update comment
-  const handleUpdate = (commentId: string, newStatement: string) => {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.statementId === commentId
-          ? { ...c, statement: newStatement, lastUpdate: Date.now() }
-          : c
-      )
-    );
+  // Update comment via API (real-time listener will reflect the change)
+  const handleUpdate = async (commentId: string, newStatement: string) => {
+    try {
+      const response = await fetch(`/api/comments/${paragraphId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          commentId,
+          statement: newStatement,
+        }),
+      });
+
+      if (!response.ok) {
+        logError(new Error('Failed to update comment'), {
+          operation: 'CommentThread.handleUpdate',
+          metadata: { paragraphId, commentId },
+        });
+      }
+      // Real-time listener will update the comment automatically
+    } catch (err) {
+      logError(err, {
+        operation: 'CommentThread.handleUpdate',
+        metadata: { paragraphId, commentId },
+      });
+    }
   };
 
-  // Delete comment
+  // Delete comment via API (real-time listener will reflect the change)
   const handleDelete = async (commentId: string) => {
     try {
       const response = await fetch(`/api/comments/${paragraphId}`, {
@@ -159,14 +159,20 @@ export default function CommentThread({
       });
 
       if (response.ok) {
-        setComments((prev) => prev.filter((c) => c.statementId !== commentId));
-        // Decrement comment count in store
+        // Real-time listener will remove the comment automatically
         decrementCommentCount(paragraphId);
       } else {
-        console.error('Failed to delete comment');
+        logError(new Error('Failed to delete comment'), {
+          operation: 'CommentThread.handleDelete',
+          metadata: { paragraphId, commentId },
+        });
       }
     } catch (err) {
-      console.error('Error deleting comment:', err);
+      logError(err, {
+        operation: 'CommentThread.handleDelete',
+        userId: effectiveUserId || undefined,
+        metadata: { paragraphId, commentId },
+      });
     }
   };
 
@@ -190,6 +196,7 @@ export default function CommentThread({
               paragraphId={paragraphId}
               onDelete={handleDelete}
               onUpdate={handleUpdate}
+              hideUserIdentity={hideUserIdentity}
             />
           ))
         )}

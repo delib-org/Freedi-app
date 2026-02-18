@@ -1,9 +1,7 @@
-import styles from "./Clustering.module.scss";
+import styles from './Clustering.module.scss';
 
 const Clustering = () => {
-  return (
-    <div className={styles.clustering}>Clustering</div>
-  );
-}
+	return <div className={styles.clustering}>Clustering</div>;
+};
 
 export default Clustering;

@@ -6,13 +6,10 @@ interface UrlParserProps {
 	linkClassName?: string;
 }
 
-const UrlParser: React.FC<UrlParserProps> = ({
-	text,
-	className = '',
-	linkClassName = '',
-}) => {
+const UrlParser: React.FC<UrlParserProps> = ({ text, className = '', linkClassName = '' }) => {
 	// More robust URL regex that better handles various URL formats
-	const URL_REGEX = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi;
+	const URL_REGEX =
+		/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&//=]*)/gi;
 
 	const parseText = (text: string): React.ReactNode[] => {
 		const parts: React.ReactNode[] = [];
@@ -23,11 +20,7 @@ const UrlParser: React.FC<UrlParserProps> = ({
 
 		while ((match = URL_REGEX.exec(text)) !== null) {
 			if (match.index > lastIndex) {
-				parts.push(
-					<span key={`text-${lastIndex}`}>
-						{text.slice(lastIndex, match.index)}
-					</span>
-				);
+				parts.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex, match.index)}</span>);
 			}
 
 			const url = match[0];
@@ -42,16 +35,14 @@ const UrlParser: React.FC<UrlParserProps> = ({
 					className={linkClassName}
 				>
 					{url}
-				</a>
+				</a>,
 			);
 
 			lastIndex = match.index + url.length;
 		}
 
 		if (lastIndex < text.length) {
-			parts.push(
-				<span key={`text-${lastIndex}`}>{text.slice(lastIndex)}</span>
-			);
+			parts.push(<span key={`text-${lastIndex}`}>{text.slice(lastIndex)}</span>);
 		}
 
 		return parts;

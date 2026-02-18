@@ -1,11 +1,4 @@
-import {
-	Timestamp,
-	doc,
-	getDoc,
-	setDoc,
-	updateDoc,
-	writeBatch,
-} from 'firebase/firestore';
+import { Timestamp, doc, getDoc, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
@@ -46,26 +39,16 @@ export const resultsSettingsDefault: ResultsSettings = {
 	cutoffBy: CutoffBy.topOptions,
 };
 
-export const updateStatementParents = async (
-	statement: Statement,
-	parentStatement: Statement
-) => {
+export const updateStatementParents = async (statement: Statement, parentStatement: Statement) => {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 		const newStatement = {
 			parentId: parentStatement.statementId,
-			parents: [
-				parentStatement.parents,
-				parentStatement.statementId,
-			].flat(1),
+			parents: [parentStatement.parents, parentStatement.statementId].flat(1),
 			topParentId: parentStatement.topParentId,
 		};
 
@@ -120,11 +103,8 @@ export async function saveStatementToDB({
 			statement.resultsSettings = {
 				...statement.resultsSettings,
 				resultsBy: resultsBy || statement.resultsSettings.resultsBy,
-				numberOfResults:
-					numberOfResults ||
-					statement.resultsSettings.numberOfResults,
-				cutoffBy:
-					statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
+				numberOfResults: numberOfResults || statement.resultsSettings.numberOfResults,
+				cutoffBy: statement.resultsSettings.cutoffBy || CutoffBy.topOptions,
 			};
 		}
 
@@ -146,9 +126,9 @@ export const setStatementToDB = async ({
 	parentStatement,
 }: SetStatementToDBParams): Promise<
 	| {
-		statementId: string;
-		statement: Statement;
-	}
+			statementId: string;
+			statement: Statement;
+	  }
 	| undefined
 > => {
 	try {
@@ -179,29 +159,22 @@ export const setStatementToDB = async ({
 		mutableStatement.topParentId =
 			parentStatement === 'top'
 				? mutableStatement.statementId
-				: mutableStatement?.topParentId ||
-				parentStatement?.topParentId ||
-				'top';
-		
+				: mutableStatement?.topParentId || parentStatement?.topParentId || 'top';
+
 		// Update statement reference to use the mutable copy
 		statement = mutableStatement;
 
-		const siblingOptions = getSiblingOptionsByParentId(
-			parentId,
-			storeState.statements.statements
-		);
+		const siblingOptions = getSiblingOptionsByParentId(parentId, storeState.statements.statements);
 		const existingColors = getExistingOptionColors(siblingOptions);
 
 		statement.consensus = 0;
 		statement.color = statement.color || getRandomColor(existingColors);
 		statement.randomSeed = statement.randomSeed ?? Math.random();
 
-		statement.statementType =
-			statement.statementType || StatementType.statement;
+		statement.statementType = statement.statementType || StatementType.statement;
 		const { results, resultsSettings } = statement;
 		if (!results) statement.results = [];
-		if (!resultsSettings)
-			statement.resultsSettings = resultsSettingsDefault;
+		if (!resultsSettings) statement.resultsSettings = resultsSettingsDefault;
 
 		statement.lastUpdate = new Date().getTime();
 		statement.createdAt = statement?.createdAt || new Date().getTime();
@@ -222,11 +195,7 @@ export const setStatementToDB = async ({
 		parse(UserSchema, statement.creator);
 
 		//set statement
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 		const statementPromises = [];
 
 		//update timestamp
@@ -242,7 +211,7 @@ export const setStatementToDB = async ({
 		// Track statement creation
 		logger.info('Statement created', {
 			statementId: statement.statementId,
-			statementType: statement.statementType
+			statementType: statement.statementType,
 		});
 
 		analyticsService.logEvent('statement_created', {
@@ -324,29 +293,18 @@ export function createStatement({
 		const statementId = getRandomUID();
 
 		//get default values for simple or advanced users
-		enableNavigationalElements = defaultValue(
-			enableNavigationalElements, creator?.advanceUser
-		);
+		enableNavigationalElements = defaultValue(enableNavigationalElements, creator?.advanceUser);
 		hasChildren = defaultValue(hasChildren, creator?.advanceUser);
 
-		const parentId =
-			parentStatement !== 'top' ? parentStatement?.statementId : 'top';
+		const parentId = parentStatement !== 'top' ? parentStatement?.statementId : 'top';
 		const parentsSet: Set<string> =
-			parentStatement !== 'top'
-				? new Set(parentStatement?.parents)
-				: new Set();
+			parentStatement !== 'top' ? new Set(parentStatement?.parents) : new Set();
 		parentsSet.add(parentId);
 		const parents: string[] = [...parentsSet];
 
-		const topParentId =
-			parentStatement !== 'top'
-				? parentStatement?.topParentId
-				: statementId;
+		const topParentId = parentStatement !== 'top' ? parentStatement?.topParentId : statementId;
 
-		const siblingOptions = getSiblingOptionsByParentId(
-			parentId,
-			storeState.statements.statements
-		);
+		const siblingOptions = getSiblingOptionsByParentId(parentId, storeState.statements.statements);
 		const existingColors = getExistingOptionColors(siblingOptions);
 
 		const newStatement: Statement = {
@@ -364,7 +322,7 @@ export function createStatement({
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
 				enhancedEvaluation,
-				hasChat:true,
+				hasChat: true,
 				showEvaluation,
 				enableAddEvaluationOption,
 				enableAddVotingOption,
@@ -407,9 +365,7 @@ export function createStatement({
 			};
 		}
 
-		function getEvaluationUI(
-			stageSelectionType?: StageSelectionType
-		): EvaluationUI {
+		function getEvaluationUI(stageSelectionType?: StageSelectionType): EvaluationUI {
 			switch (stageSelectionType) {
 				case StageSelectionType.consensus:
 					return EvaluationUI.suggestions;
@@ -480,8 +436,7 @@ export function updateStatement({
 			newStatement.resultsSettings = resultsSettingsDefault;
 		}
 		if (numberOfResults && newStatement.resultsSettings)
-			newStatement.resultsSettings.numberOfResults =
-				Number(numberOfResults);
+			newStatement.resultsSettings.numberOfResults = Number(numberOfResults);
 		else if (numberOfResults && !newStatement.resultsSettings) {
 			newStatement.resultsSettings = resultsSettingsDefault;
 		}
@@ -555,7 +510,7 @@ function updateStatementSettings({
 export async function updateStatementText(
 	statement: Statement | undefined,
 	title?: string,
-	paragraphs?: Paragraph[]
+	paragraphs?: Paragraph[],
 ) {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
@@ -584,11 +539,7 @@ export async function updateStatementText(
 
 		updates.lastUpdate = Timestamp.now().toMillis();
 
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 		await updateDoc(statementRef, updates);
 	} catch (error) {
@@ -603,7 +554,7 @@ export async function updateStatementText(
  */
 export async function updateStatementParagraphs(
 	statement: Statement | undefined,
-	paragraphs: Paragraph[]
+	paragraphs: Paragraph[],
 ): Promise<void> {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
@@ -614,11 +565,7 @@ export async function updateStatementParagraphs(
 			lastUpdate: Timestamp.now().toMillis(),
 		};
 
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 		await updateDoc(statementRef, updates);
 	} catch (error) {
@@ -631,78 +578,42 @@ export async function setStatementIsOption(statement: Statement | undefined) {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
 
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
-		//get current statement
+		await runTransaction(FireStore, async (transaction) => {
+			const statementDB = await transaction.get(statementRef);
 
-		const statementDB = await getDoc(statementRef);
+			if (!statementDB.exists()) throw new Error('Statement not found');
 
-		if (!statementDB.exists()) throw new Error('Statement not found');
+			const statementDBData = parse(StatementSchema, statementDB.data());
 
-		const statementDBData = parse(StatementSchema, statementDB.data());
+			const newType =
+				statementDBData.statementType === StatementType.option
+					? StatementType.statement
+					: StatementType.option;
 
-		await toggleStatementOption(statementDBData);
+			transaction.update(statementRef, { statementType: newType });
+		});
 	} catch (error) {
 		console.error(error);
-	}
-
-	async function toggleStatementOption(statement: Statement) {
-		try {
-			const statementRef = doc(
-				FireStore,
-				Collections.statements,
-				statement.statementId
-			);
-
-			if (statement.statementType === StatementType.option) {
-				await updateDoc(statementRef, {
-					statementType: StatementType.statement,
-				});
-			} else {
-				await updateDoc(statementRef, {
-					statementType: StatementType.option,
-				});
-			}
-		} catch (error) {
-			console.error(error);
-		}
 	}
 }
 
 export async function setStatementGroupToDB(statement: Statement) {
 	try {
 		const statementId = statement.statementId;
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
-		await setDoc(
-			statementRef,
-			{ statementType: StatementType.statement },
-			{ merge: true }
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
+		await setDoc(statementRef, { statementType: StatementType.statement }, { merge: true });
 	} catch (error) {
 		console.error(error);
 	}
 }
 
-export function setRoomSizeInStatementDB(
-	statement: Statement,
-	roomSize: number
-) {
+export function setRoomSizeInStatementDB(statement: Statement, roomSize: number) {
 	try {
 		parse(number(), roomSize);
 		parse(StatementSchema, statement);
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 		const newRoomSize = { roomSize };
 		updateDoc(statementRef, newRoomSize);
 	} catch (error) {
@@ -712,22 +623,16 @@ export function setRoomSizeInStatementDB(
 
 export async function updateIsQuestion(statement: Statement) {
 	try {
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 		let { statementType } = statement;
 		if (statementType === StatementType.question) {
 			statementType = StatementType.statement;
-		
-		}
-		else {
+		} else {
 			statementType = StatementType.question;
 			statement.questionSettings = {
 				...statement.questionSettings,
-			questionType: QuestionType.simple,
+				questionType: QuestionType.simple,
 			};
 			statement.evaluationSettings = {
 				...statement.evaluationSettings,
@@ -742,17 +647,10 @@ export async function updateIsQuestion(statement: Statement) {
 	}
 }
 
-export async function updateStatementMainImage(
-	statement: Statement,
-	imageURL: string | undefined
-) {
+export async function updateStatementMainImage(statement: Statement, imageURL: string | undefined) {
 	try {
 		if (!imageURL) throw new Error('Image URL is undefined');
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 		// Use nested field update to preserve other imagesURL fields like displayMode
 		await updateDoc(statementRef, {
@@ -765,14 +663,10 @@ export async function updateStatementMainImage(
 
 export async function updateStatementImageDisplayMode(
 	statement: Statement,
-	displayMode: 'above' | 'inline'
+	displayMode: 'above' | 'inline',
 ) {
 	try {
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statement.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 		await updateDoc(statementRef, {
 			'imagesURL.displayMode': displayMode,
@@ -784,7 +678,7 @@ export async function updateStatementImageDisplayMode(
 
 export async function setFollowMeDB(
 	topParentStatement: Statement,
-	path: string | undefined
+	path: string | undefined,
 ): Promise<void> {
 	try {
 		parse(string(), path);
@@ -793,7 +687,7 @@ export async function setFollowMeDB(
 		const topParentStatementRef = doc(
 			FireStore,
 			Collections.statements,
-			topParentStatement.statementId
+			topParentStatement.statementId,
 		);
 
 		if (path) {
@@ -813,11 +707,7 @@ export async function updateStatementsOrderToDB(statements: Statement[]) {
 		for (const statement of statements) {
 			parse(StatementSchema, statement);
 
-			const statementRef = doc(
-				FireStore,
-				Collections.statements,
-				statement.statementId
-			);
+			const statementRef = doc(FireStore, Collections.statements, statement.statementId);
 
 			batch.update(statementRef, { order: statement.order });
 		}
@@ -832,20 +722,19 @@ export async function toggleStatementHide(statementId: string): Promise<boolean 
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, statementId);
 
-		const statementDB = await getDoc(statementRef);
+		const hide = await runTransaction(FireStore, async (transaction) => {
+			const statementDB = await transaction.get(statementRef);
 
-		if (!statementDB.exists()) throw new Error('Statement not found');
-		const statementDBData = statementDB.data() as Statement;
+			if (!statementDB.exists()) throw new Error('Statement not found');
+			const statementDBData = statementDB.data() as Statement;
 
-		const hide = !(statementDBData.hide === true);
+			const newHide = !(statementDBData.hide === true);
+			transaction.update(statementRef, { hide: newHide });
 
-		await updateDoc(statementRef, { hide });
+			return newHide;
+		});
 
 		return hide;
 	} catch (error) {
@@ -858,15 +747,16 @@ export async function toggleStatementHide(statementId: string): Promise<boolean 
 export async function toggleStatementAnchored(
 	statementId: string,
 	anchored: boolean,
-	parentId: string
+	parentId: string,
 ): Promise<void> {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 		if (!parentId) throw new Error('Parent ID is undefined');
 
 		// Check if user is admin
-		const role = store.getState().statements.statementSubscription
-			.find(sub => sub.statementId === parentId)?.role;
+		const role = store
+			.getState()
+			.statements.statementSubscription.find((sub) => sub.statementId === parentId)?.role;
 
 		if (role !== 'admin') {
 			throw new Error('Only admins can anchor statements');
@@ -892,9 +782,8 @@ export async function toggleStatementAnchored(
 		logger.info('Statement Anchored', {
 			statementId,
 			anchored,
-			parentId
+			parentId,
 		});
-
 	} catch (error) {
 		console.error('Error toggling anchored status:', error);
 		throw error;

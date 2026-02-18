@@ -40,6 +40,10 @@ interface DocumentClientProps {
   enableSuggestions?: boolean;
   paragraphs?: Paragraph[];
   textDirection?: 'ltr' | 'rtl';
+  /** When true, users must sign in with Google to interact (comment, suggest, approve, sign) */
+  requireGoogleLogin?: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity?: boolean;
   children: React.ReactNode;
 }
 
@@ -54,6 +58,8 @@ export default function DocumentClient({
   enableSuggestions = false,
   paragraphs = [],
   textDirection = 'ltr',
+  requireGoogleLogin = false,
+  hideUserIdentity = true,
   children,
 }: DocumentClientProps) {
   const { t } = useTranslation();
@@ -193,6 +199,13 @@ export default function DocumentClient({
         return;
       }
 
+      // Check if Google login is required for interactions
+      if (requireGoogleLogin && (!user || user.isAnonymous)) {
+        openModal('login', {});
+
+        return;
+      }
+
       // Ensure user has an ID (create anonymous user if needed)
       // This is synchronous and sets the cookie immediately
       if (!user) {
@@ -319,6 +332,8 @@ export default function DocumentClient({
       isDemographicLoading,
       demographicStatus.isLoaded,
       openSurveyModal,
+      requireGoogleLogin,
+      openModal,
       showToast,
       t,
     ]
@@ -361,14 +376,14 @@ export default function DocumentClient({
   // Ensure user has ID and fetch demographic status on mount
   useEffect(() => {
     if (documentId) {
-      // Create anonymous user if none exists (sets cookie for API calls)
+      // Create anonymous user if none exists (sets cookie for API calls and view tracking)
       if (!user) {
         getOrCreateAnonymousUser();
       }
       // Fetch demographic status (cookie is already set synchronously)
       fetchStatus(documentId);
     }
-  }, [documentId, user, fetchStatus]);
+  }, [documentId, user, fetchStatus, requireGoogleLogin]);
 
   // Auto-open survey modal only if viewing is blocked (before_viewing mode)
   // For on_interaction mode, modal opens when user attempts to interact
@@ -462,6 +477,7 @@ export default function DocumentClient({
             enableSuggestions={enableSuggestions}
             originalContent={currentParagraph?.content || ''}
             onOpenSuggestions={handleOpenSuggestions}
+            hideUserIdentity={hideUserIdentity}
           />
         </Modal>
       )}
@@ -481,6 +497,7 @@ export default function DocumentClient({
             documentId={documentId}
             originalContent={currentParagraph?.content || ''}
             onClose={closeModal}
+            hideUserIdentity={hideUserIdentity}
           />
         </Modal>
       )}
@@ -503,10 +520,13 @@ export default function DocumentClient({
         </Modal>
       )}
 
-      {/* Login Modal */}
+      {/* Login Modal (also used for requireGoogleLogin interaction gating) */}
       {activeModal === 'login' && (
-        <Modal title="Sign In" onClose={closeModal}>
-          <LoginModal onClose={closeModal} />
+        <Modal title={t('Sign In Required')} onClose={closeModal}>
+          <LoginModal
+            onClose={closeModal}
+            hideGuestOption={requireGoogleLogin}
+          />
         </Modal>
       )}
 

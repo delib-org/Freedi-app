@@ -5,15 +5,16 @@ import {
   getDocumentForSigning,
   getDocumentParagraphs,
   getUserSignature,
-  getUserApprovals,
+  getUserEvaluationsForDocument,
   getCommentCountsForDocument,
   getUserInteractionsForDocument,
   getSuggestionCountsForDocument,
 } from '@/lib/firebase/queries';
 import { getUserFromCookies } from '@/lib/utils/user';
-import { checkAdminAccess } from '@/lib/utils/adminAccess';
+import { checkAdminAccess, checkDocumentAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
+import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
 
@@ -79,24 +80,24 @@ export default async function DocumentPage({ params }: PageProps) {
   const commentCounts = await getCommentCountsForDocument(statementId, paragraphIds);
   console.info(`[Perf] getCommentCountsForDocument: ${Date.now() - commentStart}ms`);
 
-  // If user exists, get their signature, approvals, interactions, and admin status
+  // If user exists, get their signature, evaluations, interactions, and admin status
   let userSignature = null;
-  let userApprovals: Awaited<ReturnType<typeof getUserApprovals>> = [];
+  let userEvaluations: Record<string, number> = {};
   let userInteractions: Set<string> = new Set();
   let isAdmin = false;
 
   if (user) {
     const userStart = Date.now();
     const { db } = getFirebaseAdmin();
-    const [signature, approvals, interactions, adminAccess] = await Promise.all([
+    const [signature, evaluations, interactions, adminAccess] = await Promise.all([
       getUserSignature(statementId, user.uid),
-      getUserApprovals(statementId, user.uid),
+      getUserEvaluationsForDocument(paragraphIds, user.uid),
       getUserInteractionsForDocument(statementId, user.uid, paragraphIds),
       checkAdminAccess(db, statementId, user.uid),
     ]);
     console.info(`[Perf] User queries (parallel): ${Date.now() - userStart}ms`);
     userSignature = signature;
-    userApprovals = approvals;
+    userEvaluations = evaluations;
     userInteractions = interactions;
     isAdmin = adminAccess.isAdmin;
 
@@ -109,15 +110,6 @@ export default async function DocumentPage({ params }: PageProps) {
     });
   }
   console.info(`[Perf] Total page load: ${Date.now() - pageStart}ms`);
-
-  // Convert approvals array to a map for easier lookup
-  // Note: approvals now use paragraphId instead of statementId
-  const approvalsMap: Record<string, boolean> = {};
-  userApprovals.forEach((approval) => {
-    // Support both old (statementId) and new (paragraphId) formats
-    const id = approval.paragraphId || approval.statementId;
-    approvalsMap[id] = approval.approval;
-  });
 
   // Convert Set to array for serialization (RSC can't serialize Sets)
   const userInteractionsArray = Array.from(userInteractions);
@@ -140,6 +132,10 @@ export default async function DocumentPage({ params }: PageProps) {
     headerColors?: HeaderColors;
     nonInteractiveNormalStyle?: boolean;
     enableHeadingNumbering?: boolean;
+    isPublic?: boolean;
+    requireGoogleLogin?: boolean;
+    hideUserIdentity?: boolean;
+    showSignatureCounts?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -174,6 +170,43 @@ export default async function DocumentPage({ params }: PageProps) {
   // Heading numbering setting
   const enableHeadingNumbering = signSettings?.enableHeadingNumbering ?? false;
 
+  // Visibility and access settings
+  const isPublic = signSettings?.isPublic ?? true;
+  const requireGoogleLogin = signSettings?.requireGoogleLogin ?? false;
+  const hideUserIdentity = signSettings?.hideUserIdentity ?? true;
+
+  // Signature counts setting (default: true)
+  const showSignatureCounts = signSettings?.showSignatureCounts ?? true;
+
+  // Enforce isPublic: private document access control
+  if (!isPublic && !isAdmin) {
+    // No user or anonymous user → show login prompt (Google-only)
+    if (!user || user.isAnonymous) {
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={defaultLanguage}
+          forceLanguage={forceLanguage}
+        >
+          <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} showLoginPrompt />
+        </LanguageOverrideProvider>
+      );
+    }
+
+    // Google-authenticated user → check document access (collaborator or subscriber)
+    const { db } = getFirebaseAdmin();
+    const hasAccess = await checkDocumentAccess(db, statementId, user.uid);
+    if (!hasAccess) {
+      return (
+        <LanguageOverrideProvider
+          adminLanguage={defaultLanguage}
+          forceLanguage={forceLanguage}
+        >
+          <PrivateDocumentNotice logoUrl={logoUrl} brandName={brandName} />
+        </LanguageOverrideProvider>
+      );
+    }
+  }
+
   // Fetch suggestion counts if feature is enabled
   let suggestionCounts: Record<string, number> = {};
   if (enableSuggestions && paragraphIds.length > 0) {
@@ -198,7 +231,7 @@ export default async function DocumentPage({ params }: PageProps) {
         paragraphs={serializedParagraphs}
         user={serializedUser}
         userSignature={serializedSignature}
-        userApprovals={approvalsMap}
+        userEvaluations={userEvaluations}
         commentCounts={commentCounts}
         suggestionCounts={suggestionCounts}
         userInteractions={userInteractionsArray}
@@ -215,6 +248,9 @@ export default async function DocumentPage({ params }: PageProps) {
         headerColors={headerColors}
         nonInteractiveNormalStyle={nonInteractiveNormalStyle}
         enableHeadingNumbering={enableHeadingNumbering}
+        requireGoogleLogin={requireGoogleLogin}
+        hideUserIdentity={hideUserIdentity}
+        showSignatureCounts={showSignatureCounts}
       />
     </LanguageOverrideProvider>
   );

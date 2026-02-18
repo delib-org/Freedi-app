@@ -8,11 +8,7 @@ interface GroupsListProps {
 	onGroupSelect: (index: number | null) => void;
 }
 
-export const GroupsList: React.FC<GroupsListProps> = ({
-	groups,
-	selectedGroup,
-	onGroupSelect
-}) => {
+export const GroupsList: React.FC<GroupsListProps> = ({ groups, selectedGroup, onGroupSelect }) => {
 	if (!groups || groups.length === 0) return null;
 
 	return (
@@ -25,8 +21,8 @@ export const GroupsList: React.FC<GroupsListProps> = ({
 						onClick={() => onGroupSelect(selectedGroup === index ? null : index)}
 						className={`${styles.groupCard} ${selectedGroup === index ? styles.groupCardSelected : ''}`}
 						style={{
-							borderColor: selectedGroup === index ? (group.color || '#666') : undefined,
-							backgroundColor: selectedGroup === index ? `${group.color || '#666'}15` : undefined
+							borderColor: selectedGroup === index ? group.color || '#666' : undefined,
+							backgroundColor: selectedGroup === index ? `${group.color || '#666'}15` : undefined,
 						}}
 					>
 						<div className={styles.groupCardHeader}>

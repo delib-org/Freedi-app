@@ -74,6 +74,9 @@ export default function SwipeCard({
   const [isEntering, setIsEntering] = useState(true);
   const [isTouchDevice, setIsTouchDevice] = useState(false);
 
+  // Synchronous ref guard to prevent double-fires within the same render cycle
+  const isThrowingRef = useRef(false);
+
   // Zone tracking
   const [, setCurrentZone] = useState<number | null>(null);
   const [dragStartZone, setDragStartZone] = useState<number | null>(null);
@@ -113,6 +116,7 @@ export default function SwipeCard({
     setDragStartY(null);
     setIsDragging(false);
     setIsThrowing(false);
+    isThrowingRef.current = false;
     setThrowDirection(null);
     setIsEntering(true);
     setCurrentZone(null);
@@ -129,7 +133,7 @@ export default function SwipeCard({
 
   // Handle drag start (touch/mouse)
   const handleDragStart = useCallback((clientX: number, clientY: number, isTouch: boolean) => {
-    if (isThrowing || isEntering) return;
+    if (isThrowing || isThrowingRef.current || isEntering) return;
     setIsTouchDevice(isTouch);
     setDragStart(clientX);
     setDragStartY(clientY);
@@ -198,7 +202,7 @@ export default function SwipeCard({
 
   // Handle drag end
   const handleDragEnd = useCallback(() => {
-    if (dragStart === null || isThrowing) return;
+    if (dragStart === null || isThrowing || isThrowingRef.current) return;
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current);
@@ -217,6 +221,7 @@ export default function SwipeCard({
           resetDragState(); // Reset card position while showing confirmation
         } else {
           // Direct throw without confirmation
+          isThrowingRef.current = true;
           setIsThrowing(true);
           setThrowDirection('up');
           playWhooshSound();
@@ -244,6 +249,7 @@ export default function SwipeCard({
           resetDragState(); // Reset card position while showing confirmation
         } else {
           // Direct throw without confirmation
+          isThrowingRef.current = true;
           setIsThrowing(true);
           setThrowDirection(direction);
           playWhooshSound();
@@ -261,6 +267,7 @@ export default function SwipeCard({
     if (pendingRating === null || pendingDirection === null) return;
 
     setShowConfirmation(false);
+    isThrowingRef.current = true;
     setIsThrowing(true);
     setThrowDirection(pendingDirection);
     playWhooshSound();
@@ -281,9 +288,10 @@ export default function SwipeCard({
 
   // Handle programmatic throw (from button clicks)
   useEffect(() => {
-    if (programmaticThrow && !isThrowing && !isEntering) {
+    if (programmaticThrow && !isThrowing && !isThrowingRef.current && !isEntering) {
       const { rating, direction } = programmaticThrow;
 
+      isThrowingRef.current = true;
       setThrowDirection(direction);
       setIsThrowing(true);
 

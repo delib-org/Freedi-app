@@ -18,9 +18,7 @@ export async function migrateAddAverageEvaluation(): Promise<void> {
 
 		while (true) {
 			// Build query with pagination
-			let query = db.collection(Collections.statements)
-				.orderBy('__name__')
-				.limit(batchSize);
+			let query = db.collection(Collections.statements).orderBy('__name__').limit(batchSize);
 
 			if (lastDoc) {
 				query = query.startAfter(lastDoc);
@@ -41,19 +39,21 @@ export async function migrateAddAverageEvaluation(): Promise<void> {
 				const statement = doc.data() as Statement;
 
 				// Check if statement has evaluation data that needs updating
-				if (statement.evaluation &&
+				if (
+					statement.evaluation &&
 					statement.evaluation.numberOfEvaluators !== undefined &&
 					statement.evaluation.sumEvaluations !== undefined &&
-					statement.evaluation.averageEvaluation === undefined) {
-
+					statement.evaluation.averageEvaluation === undefined
+				) {
 					// Calculate average evaluation
-					const averageEvaluation = statement.evaluation.numberOfEvaluators > 0
-						? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
-						: 0;
+					const averageEvaluation =
+						statement.evaluation.numberOfEvaluators > 0
+							? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
+							: 0;
 
 					// Update the document
 					batch.update(doc.ref, {
-						'evaluation.averageEvaluation': averageEvaluation
+						'evaluation.averageEvaluation': averageEvaluation,
 					});
 
 					batchCount++;
@@ -64,7 +64,9 @@ export async function migrateAddAverageEvaluation(): Promise<void> {
 			// Commit the batch if there are updates
 			if (batchCount > 0) {
 				await batch.commit();
-				logger.info(`Batch updated: ${batchCount} documents. Total updated so far: ${totalUpdated}`);
+				logger.info(
+					`Batch updated: ${batchCount} documents. Total updated so far: ${totalUpdated}`,
+				);
 			}
 
 			// Get the last document for pagination
@@ -99,12 +101,13 @@ export async function updateSingleStatementAverage(statementId: string): Promise
 			return;
 		}
 
-		const averageEvaluation = statement.evaluation.numberOfEvaluators > 0
-			? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
-			: 0;
+		const averageEvaluation =
+			statement.evaluation.numberOfEvaluators > 0
+				? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
+				: 0;
 
 		await statementRef.update({
-			'evaluation.averageEvaluation': averageEvaluation
+			'evaluation.averageEvaluation': averageEvaluation,
 		});
 
 		logger.info(`Updated statement ${statementId} with averageEvaluation: ${averageEvaluation}`);

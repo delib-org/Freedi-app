@@ -4,7 +4,7 @@ export enum IdeaRefinementStatus {
 	draft = 'draft',
 	inRefinement = 'in-refinement',
 	readyForDiscussion = 'ready-for-discussion',
-	rejected = 'rejected'
+	rejected = 'rejected',
 }
 
 export const RefinementMessageSchema = object({
@@ -12,7 +12,7 @@ export const RefinementMessageSchema = object({
 	role: picklist(['user', 'ai-guide']),
 	content: string(),
 	timestamp: number(),
-	messageType: picklist(['question', 'answer', 'clarification', 'suggestion'])
+	messageType: picklist(['question', 'answer', 'clarification', 'suggestion']),
 });
 
 export type RefinementMessage = InferOutput<typeof RefinementMessageSchema>;
@@ -29,7 +29,7 @@ export const RefinementSessionSchema = object({
 	testabilityCriteria: array(string()),
 	createdAt: number(),
 	lastUpdate: number(),
-	completedAt: optional(number())
+	completedAt: optional(number()),
 });
 
 export type RefinementSession = InferOutput<typeof RefinementSessionSchema>;
@@ -39,7 +39,7 @@ export const FalsifiabilityAnalysisSchema = object({
 	vagueTerms: array(string()),
 	suggestions: array(string()),
 	confidence: number(), // 0-1
-	reasoning: string()
+	reasoning: string(),
 });
 
 export type FalsifiabilityAnalysis = InferOutput<typeof FalsifiabilityAnalysisSchema>;
@@ -49,7 +49,7 @@ export const RefinementMetadataSchema = object({
 	originalIdea: string(),
 	refinementSessionId: string(),
 	testabilityCriteria: array(string()),
-	refinedAt: number()
+	refinedAt: number(),
 });
 
 export type RefinementMetadata = InferOutput<typeof RefinementMetadataSchema>;

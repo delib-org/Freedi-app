@@ -1,4 +1,4 @@
-import { Statement } from "@freedi/shared-types";
+import { Statement } from '@freedi/shared-types';
 import Chat from '@/assets/icons/chatTop.svg?react';
 
 interface NavigationButtonsProps {
@@ -18,7 +18,7 @@ function NavigationButtons({
 	if (!hasChat) return null;
 
 	return (
-		<button onClick={() => handleNavigation('chat', "screen")} >
+		<button onClick={() => handleNavigation('chat', 'screen')}>
 			<Chat color={headerStyle.color} />
 		</button>
 	);

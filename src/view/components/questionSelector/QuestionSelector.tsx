@@ -10,9 +10,7 @@ import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 const QuestionSelector: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
-	const handleChangeQuestionType = (
-		ev: React.ChangeEvent<HTMLSelectElement>
-	) => {
+	const handleChangeQuestionType = (ev: React.ChangeEvent<HTMLSelectElement>) => {
 		if (statement)
 			updateQuestionType({
 				statement,
@@ -25,28 +23,20 @@ const QuestionSelector: FC = () => {
 			<select
 				onChange={handleChangeQuestionType}
 				className={styles.questionSelector}
-				defaultValue={
-					statement?.questionSettings?.questionType ??
-					getDefaultQuestionType()
-				}
+				defaultValue={statement?.questionSettings?.questionType ?? getDefaultQuestionType()}
 			>
-				<option value={QuestionType.multiStage}>
-					{t('Simple Question')}
-				</option>
-				<option value={QuestionType.massConsensus}>
-					{t('Mass Consensus')}
-				</option>
+				<option value={QuestionType.multiStage}>{t('Simple Question')}</option>
+				<option value={QuestionType.massConsensus}>{t('Mass Consensus')}</option>
 			</select>
-			{statement?.questionSettings?.questionType ===
-				QuestionType.massConsensus && statement && (
-					<a
-						href={getMassConsensusQuestionUrl(statement.statementId)}
-						target="_blank"
-						rel="noopener noreferrer"
-					>
-						{t('Open Mass Consensus')}
-					</a>
-				)}
+			{statement?.questionSettings?.questionType === QuestionType.massConsensus && statement && (
+				<a
+					href={getMassConsensusQuestionUrl(statement.statementId)}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					{t('Open Mass Consensus')}
+				</a>
+			)}
 		</>
 	);
 };

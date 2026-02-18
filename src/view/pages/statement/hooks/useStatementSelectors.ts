@@ -13,11 +13,14 @@ export const useStatementParams = () => {
 		screen?: string;
 	}>();
 
-	return useMemo(() => ({
-		statementId,
-		stageId,
-		screen
-	}), [statementId, stageId, screen]);
+	return useMemo(
+		() => ({
+			statementId,
+			stageId,
+			screen,
+		}),
+		[statementId, stageId, screen],
+	);
 };
 
 export const useStatementSelectors = (statementId?: string, stageId?: string) => {
@@ -26,10 +29,13 @@ export const useStatementSelectors = (statementId?: string, stageId?: string) =>
 	const topParentStatement = useSelector(statementSelector(statement?.topParentId));
 	const role = useSelector(statementSubscriptionSelector(statementId))?.role;
 
-	return useMemo(() => ({
-		statement,
-		stage,
-		topParentStatement,
-		role
-	}), [statement, stage, topParentStatement, role]);
+	return useMemo(
+		() => ({
+			statement,
+			stage,
+			topParentStatement,
+			role,
+		}),
+		[statement, stage, topParentStatement, role],
+	);
 };

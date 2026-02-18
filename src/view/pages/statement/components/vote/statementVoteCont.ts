@@ -1,17 +1,13 @@
 import { DeliberativeElement, SortType, Statement } from '@freedi/shared-types';
 
 // Updates the displayed options with how many votes each option has from the parent statement
-export function setSelectionsToOptions(
-	statement: Statement,
-	options: Statement[]
-) {
+export function setSelectionsToOptions(statement: Statement, options: Statement[]) {
 	try {
 		const parsedOptions = JSON.parse(JSON.stringify(options));
 		if (statement.selections) {
 			parsedOptions.forEach((option: Statement) => {
 				if (statement.selections?.[option.statementId] !== undefined) {
-					const optionSelections =
-						statement.selections[option.statementId];
+					const optionSelections = statement.selections[option.statementId];
 					option.voted = optionSelections;
 				}
 			});
@@ -25,10 +21,7 @@ export function setSelectionsToOptions(
 	}
 }
 
-export function sortOptionsIndex(
-	options: Statement[],
-	sort: string | undefined
-): Statement[] {
+export function sortOptionsIndex(options: Statement[], sort: string | undefined): Statement[] {
 	let _options = JSON.parse(JSON.stringify(options));
 
 	// sort only the order of the options according to the sort
@@ -108,7 +101,7 @@ export function getSelections(statement: Statement, option: Statement) {
 
 export const getSiblingOptionsByParentId = (
 	parentId: string,
-	statements: Statement[]
+	statements: Statement[],
 ): Statement[] => {
 	return statements.filter((statement) => {
 		return (

@@ -69,21 +69,13 @@ describe('Card', () => {
 
 	describe('header actions', () => {
 		it('should render headerActions when provided', () => {
-			render(
-				<Card headerActions={<button>Action</button>}>
-					Content
-				</Card>
-			);
+			render(<Card headerActions={<button>Action</button>}>Content</Card>);
 
 			expect(screen.getByRole('button', { name: 'Action' })).toBeInTheDocument();
 		});
 
 		it('should render headerActions in card__actions', () => {
-			const { container } = render(
-				<Card headerActions={<button>Action</button>}>
-					Content
-				</Card>
-			);
+			const { container } = render(<Card headerActions={<button>Action</button>}>Content</Card>);
 
 			expect(container.querySelector('.card__actions')).toBeInTheDocument();
 		});
@@ -91,21 +83,13 @@ describe('Card', () => {
 
 	describe('footer', () => {
 		it('should render footer when provided', () => {
-			render(
-				<Card footer={<button>Submit</button>}>
-					Content
-				</Card>
-			);
+			render(<Card footer={<button>Submit</button>}>Content</Card>);
 
 			expect(screen.getByRole('button', { name: 'Submit' })).toBeInTheDocument();
 		});
 
 		it('should render footer with card__footer class', () => {
-			const { container } = render(
-				<Card footer={<span>Footer content</span>}>
-					Content
-				</Card>
-			);
+			const { container } = render(<Card footer={<span>Footer content</span>}>Content</Card>);
 
 			expect(container.querySelector('.card__footer')).toBeInTheDocument();
 		});
@@ -119,21 +103,13 @@ describe('Card', () => {
 
 	describe('media', () => {
 		it('should render media when provided', () => {
-			render(
-				<Card media={<img alt="Test" src="test.jpg" />}>
-					Content
-				</Card>
-			);
+			render(<Card media={<img alt="Test" src="test.jpg" />}>Content</Card>);
 
 			expect(screen.getByRole('img', { name: 'Test' })).toBeInTheDocument();
 		});
 
 		it('should render media with card__media class', () => {
-			const { container } = render(
-				<Card media={<img alt="Test" src="test.jpg" />}>
-					Content
-				</Card>
-			);
+			const { container } = render(<Card media={<img alt="Test" src="test.jpg" />}>Content</Card>);
 
 			expect(container.querySelector('.card__media')).toBeInTheDocument();
 		});
@@ -302,14 +278,22 @@ describe('Card', () => {
 		});
 
 		it('should have button role when interactive', () => {
-			render(<Card interactive onClick={() => {}}>Content</Card>);
+			render(
+				<Card interactive onClick={() => {}}>
+					Content
+				</Card>,
+			);
 
 			expect(screen.getByRole('button')).toBeInTheDocument();
 		});
 
 		it('should call onClick when clicked and interactive', () => {
 			const handleClick = jest.fn();
-			render(<Card interactive onClick={handleClick}>Content</Card>);
+			render(
+				<Card interactive onClick={handleClick}>
+					Content
+				</Card>,
+			);
 
 			fireEvent.click(screen.getByRole('button'));
 
@@ -327,7 +311,11 @@ describe('Card', () => {
 
 		it('should not call onClick when disabled', () => {
 			const handleClick = jest.fn();
-			render(<Card interactive disabled onClick={handleClick}>Content</Card>);
+			render(
+				<Card interactive disabled onClick={handleClick}>
+					Content
+				</Card>,
+			);
 
 			fireEvent.click(screen.getByRole('button'));
 
@@ -336,7 +324,11 @@ describe('Card', () => {
 
 		it('should not call onClick when loading', () => {
 			const handleClick = jest.fn();
-			render(<Card interactive loading onClick={handleClick}>Content</Card>);
+			render(
+				<Card interactive loading onClick={handleClick}>
+					Content
+				</Card>,
+			);
 
 			fireEvent.click(screen.getByRole('button'));
 
@@ -345,7 +337,11 @@ describe('Card', () => {
 
 		it('should handle Enter key when interactive', () => {
 			const handleClick = jest.fn();
-			render(<Card interactive onClick={handleClick}>Content</Card>);
+			render(
+				<Card interactive onClick={handleClick}>
+					Content
+				</Card>,
+			);
 
 			// Use keyDown as keyPress is deprecated and inconsistent in jsdom
 			fireEvent.keyDown(screen.getByRole('button'), { key: 'Enter', code: 'Enter' });
@@ -357,7 +353,11 @@ describe('Card', () => {
 
 		it('should handle Space key when interactive', () => {
 			const handleClick = jest.fn();
-			render(<Card interactive onClick={handleClick}>Content</Card>);
+			render(
+				<Card interactive onClick={handleClick}>
+					Content
+				</Card>,
+			);
 
 			// Space key handling verified through role=button setup
 			// which provides native keyboard accessibility
@@ -373,7 +373,11 @@ describe('Card', () => {
 		});
 
 		it('should allow custom tabIndex when interactive', () => {
-			render(<Card interactive tabIndex={-1}>Content</Card>);
+			render(
+				<Card interactive tabIndex={-1}>
+					Content
+				</Card>,
+			);
 
 			expect(screen.getByRole('button')).toHaveAttribute('tabindex', '-1');
 		});

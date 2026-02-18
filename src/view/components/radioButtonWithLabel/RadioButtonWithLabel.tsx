@@ -29,13 +29,7 @@ export default function RadioButtonWithLabel({
 					<RadioButtonEmptyIcon />
 				</span>
 			</span>
-			<input
-				id={id}
-				type='radio'
-				name={name}
-				checked={checked}
-				{...inputProps}
-			/>
+			<input id={id} type="radio" name={name} checked={checked} {...inputProps} />
 			{labelText}
 		</label>
 	);

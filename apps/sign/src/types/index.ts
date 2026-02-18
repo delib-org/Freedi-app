@@ -14,10 +14,15 @@ export type { Signature, Approval, Comment } from '@/lib/firebase/queries';
 /**
  * Sign app extension of Paragraph with additional properties
  * - isNonInteractive: For explanatory text that users cannot interact with
- * - documentApproval: Approval statistics for this paragraph (for statement-based paragraphs)
+ * - positiveEvaluations / negativeEvaluations: Vote counts from evaluations system
+ * - consensus: Calculated consensus score from evaluations
+ * - documentApproval: Legacy approval statistics (kept for backward compatibility)
  */
 export interface Paragraph extends SharedParagraph {
   isNonInteractive?: boolean;
+  positiveEvaluations?: number;
+  negativeEvaluations?: number;
+  consensus?: number;
   documentApproval?: {
     approved: number;
     totalVoters: number;
@@ -140,7 +145,12 @@ export interface DocumentSettings {
   enableLikes: boolean;
   enableSuggestions: boolean;
   showScores: boolean;
-  requireLogin: boolean;
+  /** @deprecated Use requireGoogleLogin instead */
+  requireLogin?: boolean;
+  /** When true, users must sign in with Google to view and interact */
+  requireGoogleLogin: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity: boolean;
   isHidden: boolean;
   heatMapMode: HeatMapMode;
   // Demographic survey settings
@@ -169,6 +179,8 @@ export interface DocumentSettings {
   // Non-interactive element styling
   /** When true, non-interactive elements use normal text color instead of dimmed/disabled styling */
   nonInteractiveNormalStyle?: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts?: boolean;
 }
 
 // Default branding constants
@@ -184,7 +196,8 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   enableLikes: true,
   enableSuggestions: false,
   showScores: false,
-  requireLogin: false,
+  requireGoogleLogin: false,
+  hideUserIdentity: true,
   isHidden: false,
   heatMapMode: 'none',
   demographicMode: 'disabled',
@@ -199,4 +212,5 @@ export const DEFAULT_DOCUMENT_SETTINGS: DocumentSettings = {
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle: false,
+  showSignatureCounts: true,
 };

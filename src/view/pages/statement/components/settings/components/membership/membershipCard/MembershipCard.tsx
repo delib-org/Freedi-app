@@ -21,8 +21,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	const { user } = useAuthentication();
 
 	useEffect(() => {
-		if (member.role)
-			setRole(member.role);
+		if (member.role) setRole(member.role);
 	}, [member.role]);
 
 	if (member.user?.uid === user?.uid) return null;
@@ -41,11 +40,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 
 		const newRole = role === Role.banned ? Role.member : Role.banned;
 		try {
-			await updateMemberRole(
-				member.statementId,
-				member.user.uid,
-				newRole
-			);
+			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
 			console.error('Error removing member:', error);
@@ -56,11 +51,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 		try {
 			const newRole = role === Role.admin ? Role.member : Role.admin;
 			if (!member.user?.uid) throw new Error('No user id');
-			await updateMemberRole(
-				member.statementId,
-				member.user?.uid,
-				newRole
-			);
+			await updateMemberRole(member.statementId, member.user?.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
 			console.error('Error setting role:', error);
@@ -79,20 +70,14 @@ const MembershipCard: FC<Props> = ({ member }) => {
 				>
 					{!displayImg && firstLetter}
 				</div>
-				<div
-					className={`${styles.card__info__name} ${isBanned ? styles.bannedText : ''}`}
-				>
+				<div className={`${styles.card__info__name} ${isBanned ? styles.bannedText : ''}`}>
 					{member.user.displayName}
 				</div>
 			</div>
 			<div className={styles.card__membership}>
 				{isBanned ? (
 					<button onClick={handleRemoveMember}>
-						<img
-							src={unBlockImg}
-							alt='Unblock'
-							className={styles.unBlockImg}
-						/>
+						<img src={unBlockImg} alt="Unblock" className={styles.unBlockImg} />
 					</button>
 				) : (
 					<>
@@ -109,7 +94,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 							title={banDisabledReason || ''}
 							style={{
 								opacity: userCanBeBanned ? 1 : 0.5,
-								cursor: userCanBeBanned ? 'pointer' : 'not-allowed'
+								cursor: userCanBeBanned ? 'pointer' : 'not-allowed',
 							}}
 						>
 							<MemberRemove />

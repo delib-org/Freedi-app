@@ -7,6 +7,8 @@ import { useUIStore, UIState } from '@/store/uiStore';
 import { getVisitorId } from '@/lib/utils/visitor';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
+import { getPseudoName } from '@/lib/utils/pseudoName';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Comment.module.scss';
 
 interface CommentProps {
@@ -15,17 +17,39 @@ interface CommentProps {
   paragraphId: string;
   onDelete: (commentId: string) => void;
   onUpdate: (commentId: string, newStatement: string) => void;
+  /** When true, hide display names and show generic "Contributor" */
+  hideUserIdentity?: boolean;
 }
 
-export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate }: CommentProps) {
+export default function Comment({ comment, userId, paragraphId, onDelete, onUpdate, hideUserIdentity = false }: CommentProps) {
   const { t } = useTranslation();
   const addUserInteraction = useUIStore((state: UIState) => state.addUserInteraction);
+
+  // Use consensus from real-time parent data (comment prop updates via onSnapshot)
   const [consensus, setConsensus] = useState(comment.consensus || 0);
   const [userEvaluation, setUserEvaluation] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editText, setEditText] = useState(comment.statement);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Track if we have an in-flight evaluation update
+  const [hasLocalUpdate, setHasLocalUpdate] = useState(false);
+
+  // Sync consensus from real-time parent data when it changes
+  // Only sync if we don't have a local update in progress
+  useEffect(() => {
+    if (!hasLocalUpdate) {
+      setConsensus(comment.consensus || 0);
+    }
+  }, [comment.consensus, hasLocalUpdate]);
+
+  // Sync edit text when comment is updated in real-time
+  useEffect(() => {
+    if (!isEditing) {
+      setEditText(comment.statement);
+    }
+  }, [comment.statement, isEditing]);
 
   // Convert comment text: preserve newlines as paragraphs and support markdown
   const sanitizedContent = useMemo(() => {
@@ -42,7 +66,7 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
   // Check if current user owns this comment
   const isOwner = effectiveId && comment.creatorId === effectiveId;
 
-  // Fetch user's existing evaluation
+  // Fetch user's existing evaluation (one-time - user's own evaluation doesn't need real-time)
   const fetchEvaluation = useCallback(async () => {
     if (!effectiveId) return;
 
@@ -56,10 +80,13 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
       if (response.ok) {
         const data = await response.json();
         setUserEvaluation(data.userEvaluation);
-        setConsensus(data.sumEvaluation || 0);
+        // Don't override consensus here - real-time data from parent is more current
       }
     } catch (err) {
-      console.error('Error fetching evaluation:', err);
+      logError(err, {
+        operation: 'Comment.fetchEvaluation',
+        metadata: { commentId: comment.statementId },
+      });
     }
   }, [comment.statementId, effectiveId, userId, visitorId]);
 
@@ -71,11 +98,18 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
   const handleEvaluate = async (evaluation: number) => {
     if (!effectiveId || isOwner || isLoading) return;
 
+    const previousConsensus = consensus;
+    const previousEvaluation = userEvaluation;
+
     // If clicking the same evaluation, remove it
     if (userEvaluation === evaluation) {
+      // Optimistic update
+      setHasLocalUpdate(true);
       setIsLoading(true);
+      setConsensus((prev) => prev - evaluation);
+      setUserEvaluation(null);
+
       try {
-        // Pass visitorId as query param for anonymous users when deleting
         const url = userId
           ? `/api/evaluations/${comment.statementId}`
           : `/api/evaluations/${comment.statementId}?visitorId=${encodeURIComponent(visitorId)}`;
@@ -84,19 +118,37 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
           method: 'DELETE',
         });
 
-        if (response.ok) {
-          setConsensus((prev) => prev - evaluation);
-          setUserEvaluation(null);
+        if (!response.ok) {
+          // Rollback on failure
+          setConsensus(previousConsensus);
+          setUserEvaluation(previousEvaluation);
         }
       } catch (err) {
-        console.error('Error removing evaluation:', err);
+        // Rollback on error
+        setConsensus(previousConsensus);
+        setUserEvaluation(previousEvaluation);
+        logError(err, {
+          operation: 'Comment.handleEvaluate.remove',
+          metadata: { commentId: comment.statementId },
+        });
       } finally {
         setIsLoading(false);
+        // Allow real-time sync after a short delay
+        setTimeout(() => setHasLocalUpdate(false), 1500);
       }
+
       return;
     }
 
+    // Optimistic update for new/changed evaluation
+    setHasLocalUpdate(true);
     setIsLoading(true);
+
+    // Calculate optimistic consensus change
+    const oldEffect = previousEvaluation || 0;
+    setConsensus((prev) => prev - oldEffect + evaluation);
+    setUserEvaluation(evaluation);
+
     try {
       const response = await fetch(`/api/evaluations/${comment.statementId}`, {
         method: 'POST',
@@ -105,22 +157,30 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
         },
         body: JSON.stringify({
           evaluation,
-          // Include visitorId for anonymous users
           ...(userId ? {} : { visitorId }),
         }),
       });
 
       if (response.ok) {
-        const data = await response.json();
-        setConsensus(data.newConsensus);
-        setUserEvaluation(evaluation);
         // Mark paragraph as interacted
         addUserInteraction(paragraphId);
+      } else {
+        // Rollback on failure
+        setConsensus(previousConsensus);
+        setUserEvaluation(previousEvaluation);
       }
     } catch (err) {
-      console.error('Error submitting evaluation:', err);
+      // Rollback on error
+      setConsensus(previousConsensus);
+      setUserEvaluation(previousEvaluation);
+      logError(err, {
+        operation: 'Comment.handleEvaluate.submit',
+        metadata: { commentId: comment.statementId, evaluation },
+      });
     } finally {
       setIsLoading(false);
+      // Allow real-time sync after a short delay
+      setTimeout(() => setHasLocalUpdate(false), 1500);
     }
   };
 
@@ -130,26 +190,13 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
 
     setIsSaving(true);
     try {
-      const response = await fetch(`/api/comments/${paragraphId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          commentId: comment.statementId,
-          statement: editText.trim(),
-        }),
-      });
-
-      if (response.ok) {
-        onUpdate(comment.statementId, editText.trim());
-        setIsEditing(false);
-      } else {
-        const errorData = await response.json();
-        console.error('Failed to update comment:', errorData.error);
-      }
+      onUpdate(comment.statementId, editText.trim());
+      setIsEditing(false);
     } catch (err) {
-      console.error('Error updating comment:', err);
+      logError(err, {
+        operation: 'Comment.handleSaveEdit',
+        metadata: { commentId: comment.statementId },
+      });
     } finally {
       setIsSaving(false);
     }
@@ -188,11 +235,13 @@ export default function Comment({ comment, userId, paragraphId, onDelete, onUpda
     <article className={styles.comment}>
       <header className={styles.header}>
         <div className={styles.avatar}>
-          {comment.creator?.displayName?.charAt(0).toUpperCase() || '?'}
+          {hideUserIdentity
+            ? getPseudoName(comment.creatorId).charAt(0).toUpperCase()
+            : (comment.creator?.displayName?.charAt(0).toUpperCase() || '?')}
         </div>
         <div className={styles.meta}>
           <span className={styles.author}>
-            {comment.creator?.displayName || t('Anonymous')}
+            {hideUserIdentity ? getPseudoName(comment.creatorId) : (comment.creator?.displayName || t('Anonymous'))}
           </span>
           <span className={styles.date}>
             {formatDate(comment.createdAt)}

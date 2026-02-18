@@ -39,7 +39,7 @@ const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, url, title }) => {
 		} catch (error) {
 			logError(error, {
 				operation: 'shareModal.copyToClipboard',
-				metadata: { url: fullUrl }
+				metadata: { url: fullUrl },
 			});
 		}
 	};
@@ -69,26 +69,16 @@ const ShareModal: FC<ShareModalProps> = ({ isOpen, onClose, url, title }) => {
 						className={styles.shareModal__linkInput}
 						onClick={(e) => (e.target as HTMLInputElement).select()}
 					/>
-					<button
-						type="button"
-						onClick={copyToClipboard}
-						className={styles.shareModal__copyButton}
-					>
+					<button type="button" onClick={copyToClipboard} className={styles.shareModal__copyButton}>
 						{copied ? t('copied') : t('copy')}
 					</button>
 				</div>
 
 				{copied && (
-					<p className={styles.shareModal__copiedMessage}>
-						{t('Link copied to clipboard')}
-					</p>
+					<p className={styles.shareModal__copiedMessage}>{t('Link copied to clipboard')}</p>
 				)}
 
-				<button
-					type="button"
-					onClick={onClose}
-					className={styles.shareModal__closeButton}
-				>
+				<button type="button" onClick={onClose} className={styles.shareModal__closeButton}>
 					{t('Close')}
 				</button>
 			</div>

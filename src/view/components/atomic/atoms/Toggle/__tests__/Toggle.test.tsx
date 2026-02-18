@@ -182,13 +182,17 @@ describe('Toggle', () => {
 
 	describe('variants', () => {
 		it('should apply success variant class', () => {
-			const { container } = render(<Toggle checked={false} onChange={() => {}} variant="success" />);
+			const { container } = render(
+				<Toggle checked={false} onChange={() => {}} variant="success" />,
+			);
 
 			expect(container.querySelector('.toggle--success')).toBeInTheDocument();
 		});
 
 		it('should apply warning variant class', () => {
-			const { container } = render(<Toggle checked={false} onChange={() => {}} variant="warning" />);
+			const { container } = render(
+				<Toggle checked={false} onChange={() => {}} variant="warning" />,
+			);
 
 			expect(container.querySelector('.toggle--warning')).toBeInTheDocument();
 		});
@@ -224,7 +228,9 @@ describe('Toggle', () => {
 
 	describe('additional props', () => {
 		it('should apply custom className', () => {
-			const { container } = render(<Toggle checked={false} onChange={() => {}} className="custom-class" />);
+			const { container } = render(
+				<Toggle checked={false} onChange={() => {}} className="custom-class" />,
+			);
 
 			expect(container.querySelector('.custom-class')).toBeInTheDocument();
 		});

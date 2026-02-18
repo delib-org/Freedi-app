@@ -12,6 +12,11 @@ interface QuickActionBarProps {
   onAddContent: (type: ParagraphType) => void;
   onAddImage: () => void;
   disabled?: boolean;
+  isSelectMode?: boolean;
+  onToggleSelectMode?: () => void;
+  onSelectAll?: () => void;
+  allSelected?: boolean;
+  selectedCount?: number;
 }
 
 /**
@@ -22,6 +27,11 @@ export default function QuickActionBar({
   onAddContent,
   onAddImage,
   disabled = false,
+  isSelectMode = false,
+  onToggleSelectMode,
+  onSelectAll,
+  allSelected = false,
+  selectedCount = 0,
 }: QuickActionBarProps) {
   const { t } = useTranslation();
   const [showHeadingMenu, setShowHeadingMenu] = useState(false);
@@ -86,6 +96,34 @@ export default function QuickActionBar({
     { level: 'h5', label: t('Heading 5'), preview: 'Aa' },
     { level: 'h6', label: t('Heading 6'), preview: 'Aa' },
   ];
+
+  if (isSelectMode) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.selectModeBar}>
+          <button
+            type="button"
+            className={styles.cancelSelectButton}
+            onClick={onToggleSelectMode}
+          >
+            {t('Cancel')}
+          </button>
+          <span className={styles.selectModeLabel}>
+            {selectedCount > 0
+              ? `${selectedCount} ${t('selected')}`
+              : t('Select paragraphs')}
+          </span>
+          <button
+            type="button"
+            className={styles.actionButton}
+            onClick={onSelectAll}
+          >
+            {allSelected ? t('Deselect All') : t('Select All')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -231,6 +269,32 @@ export default function QuickActionBar({
             <circle cx="4" cy="18" r="1" fill="currentColor" />
           </svg>
           <span>{t('List')}</span>
+        </button>
+
+        {/* Divider */}
+        <span className={styles.divider} />
+
+        {/* Select Mode Button */}
+        <button
+          type="button"
+          className={styles.actionButton}
+          onClick={onToggleSelectMode}
+          disabled={disabled}
+          title={t('Select paragraphs for bulk actions')}
+        >
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            aria-hidden="true"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M9 12l2 2 4-4" />
+          </svg>
+          <span>{t('Select')}</span>
         </button>
       </div>
     </div>

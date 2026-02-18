@@ -49,7 +49,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 				setIsLoadingCount(true);
 				const functionsUrl = getFunctionsUrl();
 				const response = await fetch(
-					`${functionsUrl}/getEmailSubscriberCount?statementId=${statement.statementId}`
+					`${functionsUrl}/getEmailSubscriberCount?statementId=${statement.statementId}`,
 				);
 
 				if (!response.ok) {
@@ -129,9 +129,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 			const data: SendEmailResponse = await response.json();
 
 			if (data.ok) {
-				setSuccess(
-					`${t('Email sent successfully to')} ${data.sentCount || 0} ${t('subscribers')}`
-				);
+				setSuccess(`${t('Email sent successfully to')} ${data.sentCount || 0} ${t('subscribers')}`);
 				// Clear form after successful send
 				setSubject('');
 				setMessage('');
@@ -191,7 +189,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 					<p>{t('No email subscribers yet')}</p>
 					<p className={styles.hint}>
 						{t(
-							'Users can subscribe to email notifications when participating in the mass consensus process'
+							'Users can subscribe to email notifications when participating in the mass consensus process',
 						)}
 					</p>
 				</div>
@@ -211,9 +209,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 						/>
 						<span
 							className={`${styles.characterCount} ${
-								subject.length > MAX_SUBJECT_LENGTH * 0.9
-									? styles.warning
-									: ''
+								subject.length > MAX_SUBJECT_LENGTH * 0.9 ? styles.warning : ''
 							}`}
 						>
 							{subject.length}/{MAX_SUBJECT_LENGTH}
@@ -233,9 +229,7 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 						/>
 						<span
 							className={`${styles.characterCount} ${
-								message.length > MAX_MESSAGE_LENGTH * 0.9
-									? styles.warning
-									: ''
+								message.length > MAX_MESSAGE_LENGTH * 0.9 ? styles.warning : ''
 							}`}
 						>
 							{message.length}/{MAX_MESSAGE_LENGTH}
@@ -280,13 +274,12 @@ const EmailNotifications: FC<EmailNotificationsProps> = ({ statement }) => {
 					<div className={styles.actions}>
 						<button
 							type="submit"
-							className={`btn btn--secondary ${(!isFormValid || isSending || !subscriberCount) ? 'btn--disabled' : ''}`}
+							className={`btn btn--secondary ${!isFormValid || isSending || !subscriberCount ? 'btn--disabled' : ''}`}
 							disabled={!isFormValid || isSending || !subscriberCount}
 						>
 							{isSending
 								? t('Sending...')
-								: `${t('Send to')} ${subscriberCount ?? 0} ${t('subscribers')}`
-							}
+								: `${t('Send to')} ${subscriberCount ?? 0} ${t('subscribers')}`}
 						</button>
 					</div>
 				</form>

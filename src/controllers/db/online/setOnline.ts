@@ -1,17 +1,11 @@
-import {
-	Timestamp,
-	doc,
-	setDoc,
-	deleteDoc,
-	getDoc,
-} from 'firebase/firestore';
+import { Timestamp, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Creator, Online, OnlineSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
 
 export async function setUserOnlineToDB(
 	statementId: string,
-	user: Creator
+	user: Creator,
 ): Promise<string | undefined> {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
@@ -57,7 +51,7 @@ export async function setUserOnlineToDB(
 export async function updateUserTabFocusToDB(
 	statementId: string,
 	userId: string,
-	tabInFocus: boolean
+	tabInFocus: boolean,
 ): Promise<void> {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
@@ -73,7 +67,7 @@ export async function updateUserTabFocusToDB(
 				tabInFocus,
 				lastUpdated: Timestamp.now().toMillis(),
 			},
-			{ merge: true }
+			{ merge: true },
 		);
 	} catch (error) {
 		console.error('Error updating tab focus:', error);
@@ -82,28 +76,28 @@ export async function updateUserTabFocusToDB(
 
 export async function removeUserFromOnlineToDB(
 	statementId: string | null | undefined,
-	userId: string | null | undefined
+	userId: string | null | undefined,
 ): Promise<void> {
 	try {
 		// Early return if either parameter is null/undefined
 		if (!statementId || !userId) {
 			console.info('removeUserFromOnlineToDB: Skipping - missing statementId or userId');
-			
-return;
+
+			return;
 		}
 
 		// Validate that parameters are valid strings
 		if (typeof statementId !== 'string' || typeof userId !== 'string') {
 			console.error('removeUserFromOnlineToDB: Invalid parameter types');
-			
-return;
+
+			return;
 		}
 
 		// Additional validation to prevent empty strings
 		if (statementId.trim() === '' || userId.trim() === '') {
 			console.error('removeUserFromOnlineToDB: Empty statementId or userId');
-			
-return;
+
+			return;
 		}
 
 		const onlineId = `${userId}--${statementId}`;
@@ -111,7 +105,7 @@ return;
 		// Check if document exists before trying to delete
 		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
 		const docSnapshot = await getDoc(onlineUserRef);
-		
+
 		if (docSnapshot.exists()) {
 			await deleteDoc(onlineUserRef);
 		}

@@ -32,14 +32,13 @@ const VotingThankYou: FC = () => {
 				<h1 className={styles.heading}>{t('Thank you for your vote')}</h1>
 
 				<p className={styles.description}>
-					{t('The Deliberative Democracy Institute developing apps for deliberative democracy in communities and cities.')}
+					{t(
+						'The Deliberative Democracy Institute developing apps for deliberative democracy in communities and cities.',
+					)}
 				</p>
 
 				<div className={styles.contactInfo}>
-					<a
-						href="mailto:tal.yaron@gmail.com"
-						className={styles.contactLink}
-					>
+					<a href="mailto:tal.yaron@gmail.com" className={styles.contactLink}>
 						<svg
 							className={styles.icon}
 							viewBox="0 0 24 24"
@@ -71,9 +70,7 @@ const VotingThankYou: FC = () => {
 				</div>
 
 				<div className={styles.websiteInfo}>
-					<p className={styles.websiteText}>
-						{t('For more information, visit our website')}:
-					</p>
+					<p className={styles.websiteText}>{t('For more information, visit our website')}:</p>
 					<a
 						href="https://delib.org"
 						target="_blank"

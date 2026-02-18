@@ -26,10 +26,7 @@ export function useTranslation(): UseTranslationReturn {
 	const context = useContext(UserConfigContext);
 
 	// Fallback translation function
-	const fallbackT = useCallback(
-		(text: string) => defaultLanguageData[text] || text,
-		[]
-	);
+	const fallbackT = useCallback((text: string) => defaultLanguageData[text] || text, []);
 
 	// Fallback when context is not available
 	const fallback = useMemo<UseTranslationReturn>(
@@ -40,7 +37,7 @@ export function useTranslation(): UseTranslationReturn {
 			dir: getDirection(LanguagesEnum.en),
 			rowDirection: getRowDirection(LanguagesEnum.en),
 		}),
-		[fallbackT]
+		[fallbackT],
 	);
 
 	if (!context) {

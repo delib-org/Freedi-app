@@ -10,10 +10,7 @@ interface DocumentEditModalProps {
 	onClose: () => void;
 }
 
-const DocumentEditModal: React.FC<DocumentEditModalProps> = ({
-	statement,
-	onClose,
-}) => {
+const DocumentEditModal: React.FC<DocumentEditModalProps> = ({ statement, onClose }) => {
 	const { t } = useTranslation();
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
@@ -43,7 +40,7 @@ const DocumentEditModal: React.FC<DocumentEditModalProps> = ({
 				setIsLoading(false);
 			}
 		},
-		[statement, onClose, t]
+		[statement, onClose, t],
 	);
 
 	const handleCancel = useCallback(() => {

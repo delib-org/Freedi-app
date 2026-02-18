@@ -41,18 +41,18 @@ const Checkbox: FC<CheckboxProps> = ({
 			className={`${styles.checkbox} ${checkedValue ? styles.checked : ''} ${className ?? ''}`}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
-			role='checkbox'
+			role="checkbox"
 			aria-checked={checkedValue}
 			tabIndex={0}
 		>
 			<label htmlFor={`checkbox-${label}`}>
 				<VisuallyHidden labelName={t(label)} />
 			</label>
-			<div className={styles.checkboxIcon} aria-hidden='true'>
+			<div className={styles.checkboxIcon} aria-hidden="true">
 				{checkedValue ? <CheckboxCheckedIcon /> : <CheckboxEmptyIcon />}
 			</div>
 			<input
-				type='checkbox'
+				type="checkbox"
 				name={name}
 				id={`checkbox-${label}`}
 				checked={checkedValue}

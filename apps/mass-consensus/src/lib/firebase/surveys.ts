@@ -6,6 +6,7 @@ import {
   SurveyLogo,
   UserDemographicQuestion,
 } from '@freedi/shared-types';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from './admin';
 import {
   Survey,
@@ -348,6 +349,7 @@ export async function getSurveyProgress(
 
 /**
  * Create or update user's survey progress
+ * Uses set(..., { merge: true }) and FieldValue.arrayUnion to eliminate TOCTOU race conditions.
  */
 export async function upsertSurveyProgress(
   surveyId: string,
@@ -364,63 +366,70 @@ export async function upsertSurveyProgress(
   const progressId = generateProgressId(surveyId, userId);
   const now = Date.now();
 
-  const existingProgress = await getSurveyProgress(surveyId, userId);
+  // Build the data to merge atomically
+  const mergeData: Record<string, unknown> = {
+    progressId,
+    surveyId,
+    userId,
+    lastUpdated: now,
+  };
 
-  if (existingProgress) {
-    // Update existing progress
-    const progressUpdates: Partial<SurveyProgress> = {
-      lastUpdated: now,
-    };
-
-    if (updates.currentQuestionIndex !== undefined) {
-      progressUpdates.currentQuestionIndex = updates.currentQuestionIndex;
-    }
-
-    if (updates.completedQuestionId) {
-      const completedIds = existingProgress.completedQuestionIds;
-      if (!completedIds.includes(updates.completedQuestionId)) {
-        progressUpdates.completedQuestionIds = [...completedIds, updates.completedQuestionId];
-      }
-    }
-
-    if (updates.isCompleted !== undefined) {
-      progressUpdates.isCompleted = updates.isCompleted;
-    }
-
-    // Note: Don't update isTestData on existing progress - it was set when created
-
-    await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).update(progressUpdates);
-
-    logger.info('[upsertSurveyProgress] Updated progress:', progressId);
-
-    return {
-      ...existingProgress,
-      ...progressUpdates,
-    };
-  } else {
-    // Create new progress
-    const newProgress: SurveyProgress = {
-      progressId,
-      surveyId,
-      userId,
-      currentQuestionIndex: updates.currentQuestionIndex || 0,
-      completedQuestionIds: updates.completedQuestionId ? [updates.completedQuestionId] : [],
-      startedAt: now,
-      lastUpdated: now,
-      isCompleted: updates.isCompleted || false,
-    };
-
-    // Set isTestData flag if provided (when survey is in test mode)
-    if (updates.isTestData === true) {
-      newProgress.isTestData = true;
-    }
-
-    await db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId).set(newProgress);
-
-    logger.info('[upsertSurveyProgress] Created new progress:', progressId);
-
-    return newProgress;
+  if (updates.currentQuestionIndex !== undefined) {
+    mergeData.currentQuestionIndex = updates.currentQuestionIndex;
   }
+
+  if (updates.completedQuestionId) {
+    // Use FieldValue.arrayUnion for atomic, idempotent array append
+    mergeData.completedQuestionIds = FieldValue.arrayUnion(updates.completedQuestionId);
+  }
+
+  if (updates.isCompleted !== undefined) {
+    mergeData.isCompleted = updates.isCompleted;
+  }
+
+  if (updates.isTestData === true) {
+    mergeData.isTestData = true;
+  }
+
+  // Use set with merge: true so that:
+  // - If document doesn't exist, it creates it with these fields
+  // - If it exists, it merges only the specified fields
+  // - startedAt and completedQuestionIds (as array) are handled safely
+  const docRef = db.collection(SURVEY_PROGRESS_COLLECTION).doc(progressId);
+
+  // We still need startedAt on first creation. Use a transaction for that single concern.
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(docRef);
+
+    if (!doc.exists) {
+      // First creation: include startedAt and initialize completedQuestionIds
+      const newProgress: Record<string, unknown> = {
+        ...mergeData,
+        startedAt: now,
+        // For new documents, set completedQuestionIds as a plain array
+        // (FieldValue.arrayUnion works on create too, but we ensure the field exists)
+        completedQuestionIds: updates.completedQuestionId ? [updates.completedQuestionId] : [],
+        currentQuestionIndex: updates.currentQuestionIndex ?? 0,
+        isCompleted: updates.isCompleted ?? false,
+      };
+
+      if (updates.isTestData === true) {
+        newProgress.isTestData = true;
+      }
+
+      transaction.set(docRef, newProgress);
+    } else {
+      // Existing document: merge updates
+      transaction.set(docRef, mergeData, { merge: true });
+    }
+  });
+
+  logger.info('[upsertSurveyProgress] Upserted progress:', progressId);
+
+  // Read back the current state to return
+  const resultDoc = await docRef.get();
+
+  return resultDoc.data() as SurveyProgress;
 }
 
 // ============================================
@@ -1145,8 +1154,6 @@ export async function unmarkRetroactiveTestData(
     ];
 
     // Batch update - remove isTestData and markedAsTestAt using FieldValue.delete()
-    const { FieldValue } = await import('firebase-admin/firestore');
-
     for (let i = 0; i < allDocs.length; i += BATCH_SIZE) {
       const batch = db.batch();
       const batchDocs = allDocs.slice(i, i + BATCH_SIZE);
@@ -1303,14 +1310,16 @@ function generateDemographicAnswerId(userQuestionId: string, userId: string): st
 
 /**
  * Get the statementId for a survey's demographic questions.
- * Uses parentStatementId if available, falling back to the first question ID.
+ * Uses parentStatementId if available, falling back to surveyId.
+ *
+ * IMPORTANT: Always use surveyId as fallback (not questionIds[0]) because
+ * surveyId is stable. Using questionIds[0] caused a bug where demographic
+ * questions saved before any survey questions were added (statementId = surveyId)
+ * became unfindable once questions were added (lookup switched to questionIds[0]).
  */
 function getStatementIdForSurvey(survey: Survey): string {
   if (survey.parentStatementId) {
     return survey.parentStatementId;
-  }
-  if (survey.questionIds.length > 0) {
-    return survey.questionIds[0];
   }
   return survey.surveyId;
 }

@@ -128,10 +128,32 @@ export function getAnonymousDisplayName(userId: string): string {
 }
 
 /**
- * Check if a user ID is anonymous
+ * Check if a user ID is anonymous.
+ *
+ * Detects both localStorage-based anonymous IDs (prefixed with "anon_")
+ * and Firebase anonymous users (no email stored in localStorage).
+ * Firebase anonymous UIDs look like random strings (e.g., "oBz4MdGtX...")
+ * and do NOT have the "anon_" prefix, so we must also check stored user data.
  */
 export function isAnonymousUser(userId: string): boolean {
-  return userId.startsWith('anon_');
+  // Check for localStorage-based anonymous IDs
+  if (userId.startsWith('anon_')) return true;
+
+  // Check if there's a stored Firebase user without an email,
+  // which indicates a Firebase anonymous auth user
+  if (typeof window !== 'undefined') {
+    try {
+      const storedUser = localStorage.getItem(FIREBASE_USER_KEY);
+      if (storedUser) {
+        const parsed = JSON.parse(storedUser) as { uid: string; email: string | null };
+        if (parsed.uid === userId && !parsed.email) return true;
+      }
+    } catch {
+      // If parsing fails, fall through to default
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -144,7 +166,12 @@ export interface SignUser {
 }
 
 /**
- * Get user info from cookies (server-side)
+ * Get user info from cookies (server-side).
+ *
+ * On the server we cannot access localStorage, so we determine anonymity
+ * by checking: (1) the "anon_" prefix, and (2) whether an email cookie exists.
+ * Google-authenticated users always have an email cookie; Firebase anonymous
+ * users do not.
  */
 export function getUserFromCookies(
   cookieStore: { get: (name: string) => { value: string } | undefined }
@@ -157,9 +184,14 @@ export function getUserFromCookies(
     ? decodeURIComponent(displayNameCookie.value)
     : getAnonymousDisplayName(userId);
 
+  // Determine anonymity: "anon_" prefix OR no email cookie (Firebase anonymous users)
+  const emailCookie = cookieStore.get('userEmail');
+  const hasEmail = Boolean(emailCookie?.value);
+  const isAnonymous = userId.startsWith('anon_') || !hasEmail;
+
   return {
     uid: userId,
     displayName,
-    isAnonymous: isAnonymousUser(userId),
+    isAnonymous,
   };
 }

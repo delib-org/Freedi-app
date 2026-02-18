@@ -43,26 +43,19 @@ const Input: React.FC<SearchInputProps> = ({
 		<div className={styles.container}>
 			<label
 				htmlFor={inputId}
-				className={`${styles.label} ${dir === 'ltr' ? styles['label--ltr'] : styles['label--rtl']
-					}`}
+				className={`${styles.label} ${dir === 'ltr' ? styles['label--ltr'] : styles['label--rtl']}`}
 				style={{ backgroundColor: backgroundColor }}
 			>
 				{label}
 			</label>
 			<div className={styles.inputContainer}>
 				{image && (
-					<img
-						src={image}
-						alt='search'
-						className={styles.searchIcon}
-						width={24}
-						height={24}
-					/>
+					<img src={image} alt="search" className={styles.searchIcon} width={24} height={24} />
 				)}
 				<input
 					id={inputId}
 					name={name}
-					type='text'
+					type="text"
 					value={inputValue}
 					onChange={handleChange}
 					placeholder={placeholder}
@@ -73,8 +66,8 @@ const Input: React.FC<SearchInputProps> = ({
 					<button
 						onClick={handleClear}
 						className={styles.clearButton}
-						type='button'
-						aria-label='Clear input'
+						type="button"
+						aria-label="Clear input"
 					>
 						<CloseIcon />
 					</button>

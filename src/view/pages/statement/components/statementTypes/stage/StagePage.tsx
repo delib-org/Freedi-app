@@ -28,8 +28,7 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	useEffect(() => {
 		const updateHeight = () => {
 			if (stageRef.current) {
-				const topPosition =
-					stageRef.current.getBoundingClientRect().top;
+				const topPosition = stageRef.current.getBoundingClientRect().top;
 				const viewportHeight = window.innerHeight;
 				const newHeight = viewportHeight - topPosition;
 				stageRef.current.style.height = `${newHeight + 300}px`;
@@ -62,8 +61,7 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	};
 
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
-	const isClustering =
-		statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
+	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
 
 	return (
 		<>

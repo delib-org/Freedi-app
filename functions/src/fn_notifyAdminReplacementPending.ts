@@ -1,11 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import {
-	Collections,
-	PendingReplacement,
-	StatementType,
-} from '@freedi/shared-types';
+import { Collections, PendingReplacement, StatementType } from '@freedi/shared-types';
 import { Role } from '@freedi/shared-types';
 
 /**
@@ -27,6 +23,7 @@ export const fn_notifyAdminReplacementPending = onDocumentCreated(
 
 			if (!queueEntry) {
 				logger.warn('[fn_notifyAdminReplacementPending] No queue data');
+
 				return null;
 			}
 
@@ -48,6 +45,7 @@ export const fn_notifyAdminReplacementPending = onDocumentCreated(
 				logger.warn('[fn_notifyAdminReplacementPending] No admins found', {
 					documentId: queueEntry.documentId,
 				});
+
 				return null;
 			}
 
@@ -116,7 +114,8 @@ export const fn_notifyAdminReplacementPending = onDocumentCreated(
 				stack: error instanceof Error ? error.stack : undefined,
 			});
 			// Don't throw - this is a notification trigger
+
 			return null;
 		}
-	}
+	},
 );

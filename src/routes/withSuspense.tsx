@@ -49,7 +49,7 @@ function getComponentId(Component: React.LazyExoticComponent<ComponentType>): st
 
 // Default wrapper with loading page
 export default function withSuspense(
-	Component: React.LazyExoticComponent<ComponentType<Record<string, never>>>
+	Component: React.LazyExoticComponent<ComponentType<Record<string, never>>>,
 ) {
 	const componentId = getComponentId(Component);
 
@@ -63,7 +63,7 @@ export default function withSuspense(
 // Wrapper with custom fallback (e.g., skeleton)
 export function withCustomSuspense(
 	Component: React.LazyExoticComponent<ComponentType<Record<string, never>>>,
-	fallback: React.ReactNode
+	fallback: React.ReactNode,
 ) {
 	const componentId = getComponentId(Component);
 

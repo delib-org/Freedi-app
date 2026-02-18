@@ -1,13 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 
-export type SkeletonVariant =
-	| 'text'
-	| 'title'
-	| 'avatar'
-	| 'button'
-	| 'card'
-	| 'header';
+export type SkeletonVariant = 'text' | 'title' | 'avatar' | 'button' | 'card' | 'header';
 
 export interface SkeletonProps {
 	variant?: SkeletonVariant;

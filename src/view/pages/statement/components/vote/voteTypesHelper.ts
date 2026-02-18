@@ -15,9 +15,7 @@ export interface OptionBarProps {
 	totalVotes: number;
 	statement: Statement;
 	order: number;
-	setStatementInfo: React.Dispatch<
-		React.SetStateAction<Statement | undefined>
-	>;
+	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	optionsCount: number;
 	isVertical: boolean;

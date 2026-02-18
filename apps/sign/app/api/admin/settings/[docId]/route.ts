@@ -11,7 +11,10 @@ export interface DocumentSettings {
   allowComments: boolean;
   allowApprovals: boolean;
   enableSuggestions: boolean;
-  requireLogin: boolean;
+  /** When true, users must sign in with Google to view and interact */
+  requireGoogleLogin: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
@@ -36,13 +39,16 @@ export interface DocumentSettings {
   headerColors: HeaderColors;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts: boolean;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
   allowComments: true,
   allowApprovals: true,
   enableSuggestions: false,
-  requireLogin: false,
+  requireGoogleLogin: false,
+  hideUserIdentity: true,
   showHeatMap: true,
   showViewCounts: true,
   isPublic: true,
@@ -63,6 +69,7 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   allowHeaderReactions: false,
   headerColors: DEFAULT_HEADER_COLORS,
   enableHeadingNumbering: false,
+  showSignatureCounts: true,
 };
 
 /**
@@ -114,7 +121,8 @@ export async function GET(
       allowComments: document?.signSettings?.allowComments ?? DEFAULT_SETTINGS.allowComments,
       allowApprovals: document?.signSettings?.allowApprovals ?? DEFAULT_SETTINGS.allowApprovals,
       enableSuggestions: document?.signSettings?.enableSuggestions ?? DEFAULT_SETTINGS.enableSuggestions,
-      requireLogin: document?.signSettings?.requireLogin ?? DEFAULT_SETTINGS.requireLogin,
+      requireGoogleLogin: document?.signSettings?.requireGoogleLogin ?? DEFAULT_SETTINGS.requireGoogleLogin,
+      hideUserIdentity: document?.signSettings?.hideUserIdentity ?? DEFAULT_SETTINGS.hideUserIdentity,
       showHeatMap: document?.signSettings?.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap,
       showViewCounts: document?.signSettings?.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts,
       isPublic: document?.signSettings?.isPublic ?? DEFAULT_SETTINGS.isPublic,
@@ -135,6 +143,7 @@ export async function GET(
       allowHeaderReactions: document?.signSettings?.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions,
       headerColors: document?.signSettings?.headerColors ?? DEFAULT_SETTINGS.headerColors,
       enableHeadingNumbering: document?.signSettings?.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering,
+      showSignatureCounts: document?.signSettings?.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts,
     };
 
     return NextResponse.json(settings);
@@ -263,7 +272,8 @@ export async function PUT(
       allowComments: body.allowComments !== undefined ? Boolean(body.allowComments) : (existingSettings.allowComments ?? DEFAULT_SETTINGS.allowComments),
       allowApprovals: body.allowApprovals !== undefined ? Boolean(body.allowApprovals) : (existingSettings.allowApprovals ?? DEFAULT_SETTINGS.allowApprovals),
       enableSuggestions: body.enableSuggestions !== undefined ? Boolean(body.enableSuggestions) : (existingSettings.enableSuggestions ?? DEFAULT_SETTINGS.enableSuggestions),
-      requireLogin: body.requireLogin !== undefined ? Boolean(body.requireLogin) : (existingSettings.requireLogin ?? DEFAULT_SETTINGS.requireLogin),
+      requireGoogleLogin: body.requireGoogleLogin !== undefined ? Boolean(body.requireGoogleLogin) : (existingSettings.requireGoogleLogin ?? DEFAULT_SETTINGS.requireGoogleLogin),
+      hideUserIdentity: body.hideUserIdentity !== undefined ? Boolean(body.hideUserIdentity) : (existingSettings.hideUserIdentity ?? DEFAULT_SETTINGS.hideUserIdentity),
       showHeatMap: body.showHeatMap !== undefined ? Boolean(body.showHeatMap) : (existingSettings.showHeatMap ?? DEFAULT_SETTINGS.showHeatMap),
       showViewCounts: body.showViewCounts !== undefined ? Boolean(body.showViewCounts) : (existingSettings.showViewCounts ?? DEFAULT_SETTINGS.showViewCounts),
       isPublic: body.isPublic !== undefined ? Boolean(body.isPublic) : (existingSettings.isPublic ?? DEFAULT_SETTINGS.isPublic),
@@ -284,6 +294,7 @@ export async function PUT(
       allowHeaderReactions: body.allowHeaderReactions !== undefined ? Boolean(body.allowHeaderReactions) : (existingSettings.allowHeaderReactions ?? DEFAULT_SETTINGS.allowHeaderReactions),
       headerColors,
       enableHeadingNumbering: body.enableHeadingNumbering !== undefined ? Boolean(body.enableHeadingNumbering) : (existingSettings.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering),
+      showSignatureCounts: body.showSignatureCounts !== undefined ? Boolean(body.showSignatureCounts) : (existingSettings.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts),
     };
 
     // Update document with new settings

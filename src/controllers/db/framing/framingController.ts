@@ -1,11 +1,7 @@
 import { getFunctionsUrl } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
-import type {
-	Framing,
-	ClusterAggregatedEvaluation,
-	Statement,
-} from '@freedi/shared-types';
+import type { Framing, ClusterAggregatedEvaluation, Statement } from '@freedi/shared-types';
 
 // ============================================================================
 // Types for API responses
@@ -82,7 +78,7 @@ interface DeleteFramingResponse {
  */
 export async function generateMultipleFramings(
 	statementId: string,
-	maxFramings: number = 3
+	maxFramings: number = 3,
 ): Promise<Framing[]> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -126,7 +122,7 @@ export async function generateMultipleFramings(
 export async function requestCustomFraming(
 	statementId: string,
 	customPrompt: string,
-	userId: string
+	userId: string,
 ): Promise<Framing> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -167,9 +163,7 @@ export async function requestCustomFraming(
  * @param statementId - The statement to get framings for
  * @returns Array of framings
  */
-export async function getFramingsForStatement(
-	statementId: string
-): Promise<Framing[]> {
+export async function getFramingsForStatement(statementId: string): Promise<Framing[]> {
 	try {
 		const baseUrl = getFunctionsUrl();
 		const response = await fetch(
@@ -179,7 +173,7 @@ export async function getFramingsForStatement(
 				headers: {
 					'Content-Type': 'application/json',
 				},
-			}
+			},
 		);
 
 		const data: GetFramingsResponse = await response.json();
@@ -203,9 +197,7 @@ export async function getFramingsForStatement(
  * @param framingId - The framing to get clusters for
  * @returns Framing with clusters and their options
  */
-export async function getFramingClusters(
-	framingId: string
-): Promise<GetFramingClustersResponse> {
+export async function getFramingClusters(framingId: string): Promise<GetFramingClustersResponse> {
 	try {
 		const baseUrl = getFunctionsUrl();
 		const response = await fetch(
@@ -215,7 +207,7 @@ export async function getFramingClusters(
 				headers: {
 					'Content-Type': 'application/json',
 				},
-			}
+			},
 		);
 
 		const data: GetFramingClustersResponse = await response.json();
@@ -278,7 +270,7 @@ export async function deleteFraming(framingId: string): Promise<void> {
  */
 export async function getClusterAggregations(
 	framingId: string,
-	forceRefresh: boolean = false
+	forceRefresh: boolean = false,
 ): Promise<GetClusterAggregationsResponse> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -325,7 +317,7 @@ export async function getClusterAggregations(
  */
 export async function recalculateClusterAggregation(
 	clusterId: string,
-	framingId: string
+	framingId: string,
 ): Promise<ClusterAggregatedEvaluation> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -365,7 +357,7 @@ export async function recalculateClusterAggregation(
  * @returns Summary statistics
  */
 export async function getFramingAggregationSummary(
-	framingId: string
+	framingId: string,
 ): Promise<GetFramingAggregationSummaryResponse> {
 	try {
 		const baseUrl = getFunctionsUrl();
@@ -376,7 +368,7 @@ export async function getFramingAggregationSummary(
 				headers: {
 					'Content-Type': 'application/json',
 				},
-			}
+			},
 		);
 
 		const data: GetFramingAggregationSummaryResponse = await response.json();

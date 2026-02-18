@@ -5,11 +5,7 @@
  * IMPORTANT: All exports are anonymized - no personal data (names, user IDs) is included.
  */
 
-import {
-	Statement,
-	StatementEvaluation,
-	Paragraph,
-} from '@freedi/shared-types';
+import { Statement, StatementEvaluation, Paragraph } from '@freedi/shared-types';
 
 /**
  * Anonymized version of SimpleStatement - removes all personal data
@@ -125,7 +121,19 @@ export type ExportFormat = 'json' | 'csv';
  * Anonymize a SimpleStatement by removing personal data (creator info)
  */
 function anonymizeSimpleStatement(
-	simple: { statementId: string; statement: string; paragraphs?: Paragraph[]; parentId: string; consensus: number; lastUpdate?: number; createdAt?: number; voted?: number; evaluation?: { agreement?: number } } | undefined
+	simple:
+		| {
+				statementId: string;
+				statement: string;
+				paragraphs?: Paragraph[];
+				parentId: string;
+				consensus: number;
+				lastUpdate?: number;
+				createdAt?: number;
+				voted?: number;
+				evaluation?: { agreement?: number };
+		  }
+		| undefined,
 ): AnonymizedSimpleStatement | undefined {
 	if (!simple) return undefined;
 
@@ -148,9 +156,7 @@ function anonymizeSimpleStatement(
  * IMPORTANT: This function anonymizes all data - no personal information is exported.
  * Creator names, user IDs, and joined users are stripped from the export.
  */
-export function extractExportableData(
-	statement: Statement
-): ExportableStatementData {
+export function extractExportableData(statement: Statement): ExportableStatementData {
 	// Calculate averages for pro and con evaluations
 	const evaluation = statement.evaluation;
 	const numberOfProEvaluators = evaluation?.numberOfProEvaluators ?? 0;
@@ -187,7 +193,9 @@ export function extractExportableData(
 		voted: statement.voted,
 		isVoted: statement.isVoted,
 		// Anonymize results - remove creator info from each
-		results: statement.results?.map(anonymizeSimpleStatement).filter((r): r is AnonymizedSimpleStatement => r !== undefined),
+		results: statement.results
+			?.map(anonymizeSimpleStatement)
+			.filter((r): r is AnonymizedSimpleStatement => r !== undefined),
 		totalEvaluators: statement.totalEvaluators,
 		// Pro/Con evaluator statistics
 		numberOfProEvaluators: numberOfProEvaluators || undefined,

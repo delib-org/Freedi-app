@@ -5,14 +5,14 @@
 // CSS variable names for agreement colors from most negative to most positive
 const agreementColors = [
 	'--range-objections-100', // Strong disagreement (dark red)
-	'--range-objections-60',  // Moderate disagreement
-	'--range-objections-30',  // Mild disagreement
-	'--range-conflict-100',   // Strong conflict (yellow-orange)
-	'--range-conflict-60',     // Moderate conflict
-	'--range-conflict-30',     // Mild conflict
-	'--range-positive-30',     // Mild agreement (light green)
-	'--range-positive-60',     // Moderate agreement
-	'--range-positive-100',    // Strong agreement (green)
+	'--range-objections-60', // Moderate disagreement
+	'--range-objections-30', // Mild disagreement
+	'--range-conflict-100', // Strong conflict (yellow-orange)
+	'--range-conflict-60', // Moderate conflict
+	'--range-conflict-30', // Mild conflict
+	'--range-positive-30', // Mild agreement (light green)
+	'--range-positive-60', // Moderate agreement
+	'--range-positive-100', // Strong agreement (green)
 ];
 
 /**
@@ -34,8 +34,8 @@ export function getAgreementColor(agreement: number): string {
 		return agreementColors[Math.max(0, Math.min(index, agreementColors.length - 1))];
 	} catch (error) {
 		console.error('Error calculating agreement color:', error);
-		
-return agreementColors[4]; // Default to neutral color
+
+		return agreementColors[4]; // Default to neutral color
 	}
 }
 
@@ -49,11 +49,11 @@ return agreementColors[4]; // Default to neutral color
 export function calculateAgreement(
 	sumPro: number = 0,
 	sumCon: number = 0,
-	numberOfEvaluators: number = 1
+	numberOfEvaluators: number = 1,
 ): number {
 	if (numberOfEvaluators === 0) return 0;
-	
-return (sumPro - sumCon) / numberOfEvaluators;
+
+	return (sumPro - sumCon) / numberOfEvaluators;
 }
 
 /**
@@ -63,11 +63,9 @@ return (sumPro - sumCon) / numberOfEvaluators;
  */
 export function getCSSVariableValue(cssVariable: string): string {
 	try {
-		const value = getComputedStyle(document.documentElement)
-			.getPropertyValue(cssVariable)
-			.trim();
-		
-return value || getFallbackColor(cssVariable);
+		const value = getComputedStyle(document.documentElement).getPropertyValue(cssVariable).trim();
+
+		return value || getFallbackColor(cssVariable);
 	} catch {
 		return getFallbackColor(cssVariable);
 	}
@@ -80,15 +78,15 @@ return value || getFallbackColor(cssVariable);
  */
 function getFallbackColor(cssVariable: string): string {
 	const fallbacks: Record<string, string> = {
-		'--range-objections-100': '#D32F2F',  // Dark red
-		'--range-objections-60': '#E57373',   // Medium red
-		'--range-objections-30': '#FFCDD2',   // Light red
-		'--range-conflict-100': '#FFA000',    // Dark orange
-		'--range-conflict-60': '#FFB74D',     // Medium orange
-		'--range-conflict-30': '#FFE0B2',     // Light orange
-		'--range-positive-30': '#C8E6C9',     // Light green
-		'--range-positive-60': '#81C784',     // Medium green
-		'--range-positive-100': '#388E3C',    // Dark green
+		'--range-objections-100': '#D32F2F', // Dark red
+		'--range-objections-60': '#E57373', // Medium red
+		'--range-objections-30': '#FFCDD2', // Light red
+		'--range-conflict-100': '#FFA000', // Dark orange
+		'--range-conflict-60': '#FFB74D', // Medium orange
+		'--range-conflict-30': '#FFE0B2', // Light orange
+		'--range-positive-30': '#C8E6C9', // Light green
+		'--range-positive-60': '#81C784', // Medium green
+		'--range-positive-100': '#388E3C', // Dark green
 	};
 
 	return fallbacks[cssVariable] || '#9E9E9E'; // Default grey

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Signature } from '@/lib/firebase/queries';
 import { Paragraph, StatementWithParagraphs, TextDirection, TocSettings, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, DEVELOPED_BY_URL, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
@@ -8,7 +8,9 @@ import { SignUser } from '@/lib/utils/user';
 import dynamic from 'next/dynamic';
 import { resolveTextDirection } from '@/lib/utils/textDirection';
 import { useRealtimeParagraphs } from '@/hooks/useParagraphSuggestions';
+import { useRealtimeSignatureCounts } from '@/hooks/useRealtimeSignatureCounts';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
+import { useHeatMapStore } from '@/store/heatMapStore';
 import DocumentClient from './DocumentClient';
 import SignButton from './SignButton';
 
@@ -32,7 +34,7 @@ interface DocumentViewProps {
   paragraphs: Paragraph[];
   user: SignUser | null;
   userSignature: Signature | null;
-  userApprovals: Record<string, boolean>;
+  userEvaluations: Record<string, number>;
   commentCounts: Record<string, number>;
   suggestionCounts?: Record<string, number>;
   userInteractions?: string[];
@@ -56,6 +58,12 @@ interface DocumentViewProps {
   nonInteractiveNormalStyle?: boolean;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering?: boolean;
+  /** When true, users must sign in with Google to interact (comment, suggest, approve, sign) */
+  requireGoogleLogin?: boolean;
+  /** When true, hide display names in comments, suggestions, and interactions */
+  hideUserIdentity?: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts?: boolean;
 }
 
 export default function DocumentView({
@@ -63,7 +71,7 @@ export default function DocumentView({
   paragraphs: initialParagraphs,
   user,
   userSignature,
-  userApprovals,
+  userEvaluations,
   commentCounts,
   suggestionCounts = {},
   userInteractions = [],
@@ -80,14 +88,44 @@ export default function DocumentView({
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
   enableHeadingNumbering = false,
+  requireGoogleLogin = false,
+  hideUserIdentity = true,
+  showSignatureCounts = true,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
   // State to track if blocking video overlay has been dismissed
   const [videoOverlayDismissed, setVideoOverlayDismissed] = useState(false);
 
+  // Real-time signature counts for showing inside Sign/Reject buttons
+  const { signedCount, rejectedCount } = useRealtimeSignatureCounts(document.statementId);
+
   // Real-time paragraph updates - listens for admin-approved changes
   const paragraphs = useRealtimeParagraphs(document.statementId, initialParagraphs);
+
+  // Sync real-time evaluation data into heat map store
+  // Heat map uses -1 to 1 scale: (positive - negative) / total
+  const updateApprovalValues = useHeatMapStore((state) => state.updateApprovalValues);
+  useEffect(() => {
+    const approvalMap: Record<string, number> = {};
+    let hasValues = false;
+
+    for (const p of paragraphs) {
+      const pos = p.positiveEvaluations ?? 0;
+      const neg = p.negativeEvaluations ?? 0;
+      const total = pos + neg;
+
+      if (total > 0) {
+        const score = Math.round(((pos - neg) / total) * 100) / 100;
+        approvalMap[p.paragraphId] = score;
+        hasValues = true;
+      }
+    }
+
+    if (hasValues) {
+      updateApprovalValues(approvalMap);
+    }
+  }, [paragraphs, updateApprovalValues]);
 
   // Convert array to Set for O(1) lookup
   const userInteractionsSet = new Set(userInteractions);
@@ -120,6 +158,8 @@ export default function DocumentView({
         enableSuggestions={enableSuggestions}
         paragraphs={paragraphs}
         textDirection={resolvedDirection}
+        requireGoogleLogin={requireGoogleLogin}
+        hideUserIdentity={hideUserIdentity}
       >
         <div
           className={`${styles.pageLayout} ${showToc ? styles.pageLayoutWithToc : ''}`}
@@ -180,7 +220,7 @@ export default function DocumentView({
           {/* Progress indicator */}
           {user && paragraphs.length > 0 && (
             <ProgressBar
-              initialApprovals={userApprovals}
+              initialEvaluations={userEvaluations}
               totalParagraphs={paragraphs.length}
             />
           )}
@@ -198,7 +238,7 @@ export default function DocumentView({
                 key={paragraph.paragraphId}
                 paragraph={paragraph}
                 documentId={document.statementId}
-                isApproved={userApprovals[paragraph.paragraphId]}
+                userEvaluation={userEvaluations[paragraph.paragraphId]}
                 isLoggedIn={!!user}
                 isAdmin={isAdmin}
                 commentCount={commentCounts[paragraph.paragraphId] || 0}
@@ -210,6 +250,8 @@ export default function DocumentView({
                 headerColors={headerColors}
                 nonInteractiveNormalStyle={nonInteractiveNormalStyle}
                 headingNumber={headingNumbers.get(paragraph.paragraphId)}
+                requireGoogleLogin={requireGoogleLogin}
+                isAnonymous={!user || user.isAnonymous}
               />
             ))
           )}
@@ -218,6 +260,7 @@ export default function DocumentView({
             {/* Sign/Reject buttons at bottom */}
             {paragraphs.length > 0 && (
               <footer className={styles.footer}>
+                <div className={styles.footerContent}>
                 <div className={styles.signatureStatus}>
                   {!user ? (
                     <p className={styles.unsignedStatus}>
@@ -247,10 +290,17 @@ export default function DocumentView({
                     </a>
                   ) : (
                     <>
-                      <RejectButton isRejected={userSignature?.signed === 'rejected'} />
-                      <SignButton isSigned={userSignature?.signed === 'signed'} />
+                      <RejectButton
+                        isRejected={userSignature?.signed === 'rejected'}
+                        count={showSignatureCounts ? rejectedCount : undefined}
+                      />
+                      <SignButton
+                        isSigned={userSignature?.signed === 'signed'}
+                        count={showSignatureCounts ? signedCount : undefined}
+                      />
                     </>
                   )}
+                </div>
                 </div>
               </footer>
             )}

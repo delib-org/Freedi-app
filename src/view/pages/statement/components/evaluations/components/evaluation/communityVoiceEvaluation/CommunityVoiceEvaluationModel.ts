@@ -20,8 +20,8 @@ export const communityVoiceOptions: CommunityVoiceOption[] = [
 		svg: communityVoice4,
 		color: 'rgba(91, 138, 154, 0.18)',
 		colorSelected: 'rgba(91, 138, 154, 0.9)',
-		alt: 'This echoes my community\'s voice',
-		labelKey: 'This echoes my community\'s voice',
+		alt: "This echoes my community's voice",
+		labelKey: "This echoes my community's voice",
 	},
 	{
 		id: 'cv-3',

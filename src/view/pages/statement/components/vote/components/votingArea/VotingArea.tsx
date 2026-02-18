@@ -10,9 +10,7 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { Statement, StatementType } from '@freedi/shared-types';
 
 interface VotingAreaProps {
-	setStatementInfo: React.Dispatch<
-		React.SetStateAction<Statement | undefined>
-	>;
+	setStatementInfo: React.Dispatch<React.SetStateAction<Statement | undefined>>;
 	subStatements: Statement[];
 	setShowInfo: React.Dispatch<React.SetStateAction<boolean>>;
 	totalVotes: number;
@@ -34,9 +32,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 
 		const defaultOptions = statement.statementSettings?.inVotingGetOnlyResults
 			? subStatements.filter((st) => st.isResult)
-			: subStatements.filter(
-				(st) => st.statementType === StatementType.option
-			);
+			: subStatements.filter((st) => st.statementType === StatementType.option);
 
 		return subStatements || defaultOptions;
 	}, [statement, subStatements]);
@@ -55,7 +51,7 @@ const VotingArea: FC<VotingAreaProps> = ({
 	const optionsCount = options.length;
 	const shouldShowVerticalBar = useMemo(
 		() => isVerticalOptionBar(width, optionsCount),
-		[width, optionsCount]
+		[width, optionsCount],
 	);
 
 	if (!statement) return null;

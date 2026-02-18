@@ -23,9 +23,8 @@ export const useComponentState = ({
 	isWaitingForApproval,
 	isStatementNotFound,
 	error,
-	role
+	role,
 }: UseComponentStateProps): ComponentStateResult => {
-
 	const currentState = useMemo((): ComponentState => {
 		if (error) return COMPONENT_STATES.ERROR;
 		if (isStatementNotFound) return COMPONENT_STATES.NOT_FOUND;
@@ -62,6 +61,6 @@ export const useComponentState = ({
 	return {
 		currentState,
 		shouldRender,
-		renderComponent
+		renderComponent,
 	};
 };

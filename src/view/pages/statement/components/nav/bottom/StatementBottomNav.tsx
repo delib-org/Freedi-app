@@ -22,7 +22,10 @@ import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { useDispatch, useSelector } from 'react-redux';
 import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
-import { statementSubscriptionSelector, statementOptionsSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementSubscriptionSelector,
+	statementOptionsSelector,
+} from '@/redux/statements/statementsSlice';
 import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
@@ -31,7 +34,9 @@ import { QuestionType } from '@freedi/shared-types';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 
-interface Props { showNav?: boolean; }
+interface Props {
+	showNav?: boolean;
+}
 
 const StatementBottomNav: FC<Props> = () => {
 	const { statementId } = useParams<{ statementId: string }>();
@@ -93,7 +98,7 @@ const StatementBottomNav: FC<Props> = () => {
 	// Filter out sort options based on settings
 	const showEvaluation = statement?.statementSettings?.showEvaluation ?? true;
 	const joiningEnabled = statement?.statementSettings?.joiningEnabled ?? false;
-	const filteredSortItems = sortItems.filter(item => {
+	const filteredSortItems = sortItems.filter((item) => {
 		// Filter out Agreement if evaluation is disabled
 		if (item.id === SortType.accepted && !showEvaluation) return false;
 		// When joining is enabled, show Joined instead of Update
@@ -107,9 +112,10 @@ const StatementBottomNav: FC<Props> = () => {
 		if (!statement) return;
 
 		// Default to question if parent is an option (options can't be created under options)
-		const defaultType = statement.statementType === StatementType.option
-			? StatementType.question
-			: StatementType.option;
+		const defaultType =
+			statement.statementType === StatementType.option
+				? StatementType.question
+				: StatementType.option;
 
 		dispatch(
 			setNewStatementModal({
@@ -118,7 +124,7 @@ const StatementBottomNav: FC<Props> = () => {
 				showModal: true,
 				isLoading: false,
 				error: null,
-			})
+			}),
 		);
 	}
 
@@ -151,14 +157,15 @@ const StatementBottomNav: FC<Props> = () => {
 			setInitialIdea('');
 
 			// Automatically create the statement with the refined idea
-			const defaultType = statement.statementType === StatementType.option
-				? StatementType.question
-				: StatementType.option;
+			const defaultType =
+				statement.statementType === StatementType.option
+					? StatementType.question
+					: StatementType.option;
 
 			// Extract title (first line or first 100 chars) and convert rest to paragraphs
 			const lines = refinedText.split('\n');
 			const title = lines[0].substring(0, 100);
-			const bodyLines = lines.slice(1).filter(line => line.trim());
+			const bodyLines = lines.slice(1).filter((line) => line.trim());
 			const paragraphs = bodyLines.map((line, index) => ({
 				paragraphId: generateParagraphId(),
 				type: ParagraphType.paragraph,
@@ -176,14 +183,13 @@ const StatementBottomNav: FC<Props> = () => {
 				user,
 				dispatch,
 			});
-
-			} catch (error) {
+		} catch (error) {
 			console.error('Failed to publish refined idea:', error);
 		}
 	}
 
 	function handleSortingClick() {
-		setShowSorting(v => !v);
+		setShowSorting((v) => !v);
 	}
 
 	function getBaseRoute() {
@@ -192,7 +198,7 @@ const StatementBottomNav: FC<Props> = () => {
 		return path.includes('/stage/') ? 'stage' : 'statement';
 	}
 
-	function handleSortClick(navItem: typeof filteredSortItems[0]) {
+	function handleSortClick(navItem: (typeof filteredSortItems)[0]) {
 		setShowSorting(false);
 		if (navItem.link === SortType.random) {
 			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}?t=${Date.now()}`);
@@ -203,18 +209,27 @@ const StatementBottomNav: FC<Props> = () => {
 
 	// Add mobile-only class that hides the Add button when menu is open
 	const navRootClass = [
-		showSorting ? `${styles.statementBottomNav} ${styles.statementBottomNavShow}` : styles.statementBottomNav,
+		showSorting
+			? `${styles.statementBottomNav} ${styles.statementBottomNavShow}`
+			: styles.statementBottomNav,
 		showSorting ? styles.sortExpandedMobile : '',
 	].join(' ');
 
 	return (
 		<>
 			<div className={navRootClass}>
-				<div className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}>
+				<div
+					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
+				>
 					{(canAddOption || isAdmin) && (
 						<button
-							className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${showIntro ? (isRTL ? styles.addOptionButtonIntroRTL : styles.addOptionButtonIntroLTR) : ''
-								} ${justFinishedLearning ? styles.addOptionButtonShrinking : ''}`}
+							className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${
+								showIntro
+									? isRTL
+										? styles.addOptionButtonIntroRTL
+										: styles.addOptionButtonIntroLTR
+									: ''
+							} ${justFinishedLearning ? styles.addOptionButtonShrinking : ''}`}
 							aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
 							style={statementColor}
 							onClick={handleAddOption}
@@ -307,16 +322,25 @@ const StatementBottomNav: FC<Props> = () => {
 
 export default StatementBottomNav;
 
-interface NavIconProps { name: string; color: string; }
+interface NavIconProps {
+	name: string;
+	color: string;
+}
 
 const NavIcon: FC<NavIconProps> = ({ name, color }) => {
 	const props = { style: { color } };
 	switch (name) {
-		case SortType.newest: return <NewestIcon {...props} />;
-		case SortType.mostUpdated: return <UpdateIcon {...props} />;
-		case SortType.random: return <RandomIcon {...props} />;
-		case SortType.accepted: return <AgreementIcon {...props} />;
-		case SortType.mostJoined: return <Users size={24} color={color} />;
-		default: return null;
+		case SortType.newest:
+			return <NewestIcon {...props} />;
+		case SortType.mostUpdated:
+			return <UpdateIcon {...props} />;
+		case SortType.random:
+			return <RandomIcon {...props} />;
+		case SortType.accepted:
+			return <AgreementIcon {...props} />;
+		case SortType.mostJoined:
+			return <Users size={24} color={color} />;
+		default:
+			return null;
 	}
 };

@@ -89,24 +89,20 @@ export const useStatementListeners = ({
 				listenToStatementSubscription(statementId, creator),
 				listenToUserDemographicQuestions(statementId),
 				listenToUserDemographicAnswers(statementId),
-				listenToInAppNotifications()
+				listenToInAppNotifications(),
 			);
 
 			// Conditional listeners based on screen
 			if (currentScreen === 'mind-map') {
 				// Use consolidated listener to avoid dual listener overhead
-				unsubscribersRef.current.push(
-					listenToMindMapData(statementId)
-				);
+				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else {
 				unsubscribersRef.current.push(listenToSubStatements(statementId));
 			}
 
 			// Stage listener
 			if (stageId) {
-				unsubscribersRef.current.push(
-					listenToStatement(stageId, setIsStatementNotFound)
-				);
+				unsubscribersRef.current.push(listenToStatement(stageId, setIsStatementNotFound));
 			}
 		} catch (error) {
 			console.error('Error setting up listeners:', error);
@@ -135,7 +131,7 @@ export const useStatementListeners = ({
 		unsubscribers.push(listenToGroupDemographicAnswers(topParentId));
 
 		return () => {
-			unsubscribers.forEach(unsubscribe => {
+			unsubscribers.forEach((unsubscribe) => {
 				try {
 					if (typeof unsubscribe === 'function') {
 						unsubscribe();

@@ -24,6 +24,8 @@ interface SuggestionThreadProps {
   documentId: string;
   originalContent: string;
   onClose: () => void;
+  /** When true, hide display names in suggestions */
+  hideUserIdentity?: boolean;
 }
 
 // Seeded random for consistent random order during session
@@ -39,6 +41,7 @@ export default function SuggestionThread({
   documentId,
   originalContent,
   onClose: _onClose,
+  hideUserIdentity = false,
 }: SuggestionThreadProps) {
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
@@ -318,6 +321,7 @@ export default function SuggestionThread({
           onDelete={handleDelete}
           onEdit={handleEdit}
           isCurrent={true}
+          hideUserIdentity={hideUserIdentity}
         />
       </div>
 
@@ -353,6 +357,7 @@ export default function SuggestionThread({
                   onDelete={handleDelete}
                   onEdit={handleEdit}
                   isCurrent={false}
+                  hideUserIdentity={hideUserIdentity}
                 />
               </div>
             </Flipped>
@@ -362,7 +367,7 @@ export default function SuggestionThread({
 
       {/* Typing indicator - shows when others are writing */}
       {typingUsers.length > 0 && (
-        <TypingIndicator typingUsers={typingUsers} currentUserId={user?.uid || null} />
+        <TypingIndicator typingUsers={typingUsers} currentUserId={user?.uid || null} hideUserIdentity={hideUserIdentity} />
       )}
 
       {/* Add suggestion button or notice */}

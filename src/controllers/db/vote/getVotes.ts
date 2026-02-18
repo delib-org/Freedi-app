@@ -1,11 +1,4 @@
-import {
-	collection,
-	doc,
-	getDoc,
-	getDocs,
-	query,
-	where,
-} from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
 import {
 	Collections,
@@ -22,7 +15,7 @@ import { normalizeStatementData } from '@/helpers/timestampHelpers';
 export async function getToVoteOnParent(
 	parentId: string | undefined,
 	userId: string,
-	updateStoreWithVoteCB: (statement: Statement) => void
+	updateStoreWithVoteCB: (statement: Statement) => void,
 ): Promise<void> {
 	try {
 		if (!parentId) throw new Error('ParentId not provided');
@@ -37,11 +30,7 @@ export async function getToVoteOnParent(
 		if (!voteDB.exists()) return null;
 		const vote = parse(VoteSchema, voteDB.data());
 
-		const statementRef = doc(
-			FireStore,
-			Collections.statements,
-			vote.statementId
-		);
+		const statementRef = doc(FireStore, Collections.statements, vote.statementId);
 		const statementDB = await getDoc(statementRef);
 		const statement = parse(StatementSchema, normalizeStatementData(statementDB.data()));
 
@@ -59,9 +48,7 @@ export async function getVoters(parentId: string): Promise<Vote[]> {
 		const q = query(votesRef, where('parentId', '==', parentId));
 
 		const votersDB = await getDocs(q);
-		const voters = votersDB.docs.map((vote) =>
-			parse(VoteSchema, vote.data())
-		);
+		const voters = votersDB.docs.map((vote) => parse(VoteSchema, vote.data()));
 
 		return voters;
 	} catch (error) {

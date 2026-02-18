@@ -5,7 +5,7 @@ import { InferOutput, object, string, number, array, picklist, optional } from '
  */
 export const ImproveProposalRequestSchema = object({
 	statementId: string(),
-	language: optional(string())
+	language: optional(string()),
 });
 
 export type ImproveProposalRequest = InferOutput<typeof ImproveProposalRequestSchema>;
@@ -21,7 +21,7 @@ export const ImproveProposalResponseSchema = object({
 	improvementSummary: string(),
 	changesHighlight: array(string()),
 	evidenceConsidered: number(),
-	confidence: number()
+	confidence: number(),
 });
 
 export type ImproveProposalResponse = InferOutput<typeof ImproveProposalResponseSchema>;
@@ -36,7 +36,7 @@ export const StatementVersionSchema = object({
 	timestamp: number(),
 	changedBy: string(),
 	changeType: picklist(['manual', 'ai-improved']),
-	improvementSummary: optional(string())
+	improvementSummary: optional(string()),
 });
 
 export type StatementVersion = InferOutput<typeof StatementVersionSchema>;
@@ -61,22 +61,22 @@ export const LOADING_MESSAGES = {
 		'Reviewing supporting evidence...',
 		'Considering challenges raised...',
 		'Synthesizing community feedback...',
-		'Crafting improved proposal...'
+		'Crafting improved proposal...',
 	],
 	he: [
 		'מנתח את התרומות לדיון...',
 		'סוקר ראיות תומכות...',
 		'שוקל אתגרים שהועלו...',
 		'מסנתז משוב מהקהילה...',
-		'יוצר הצעה משופרת...'
+		'יוצר הצעה משופרת...',
 	],
 	ar: [
 		'تحليل مساهمات النقاش...',
 		'مراجعة الأدلة الداعمة...',
 		'النظر في التحديات المطروحة...',
 		'تجميع ملاحظات المجتمع...',
-		'صياغة اقتراح محسّن...'
-	]
+		'صياغة اقتراح محسّن...',
+	],
 } as const;
 
 /**

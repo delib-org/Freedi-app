@@ -14,14 +14,12 @@ export const useStatementData = () => {
 	// Get statement data
 	const { statement, stage, topParentStatement, role } = useStatementSelectors(
 		statementId,
-		stageId
+		stageId,
 	);
 
 	// Get user data - pass topParentId for group-level demographic questions
-	const { userDemographicQuestions, userDemographic, showUserDemographicQuestions } = useUserDemographic(
-		statementId || '',
-		statement?.topParentId
-	);
+	const { userDemographicQuestions, userDemographic, showUserDemographicQuestions } =
+		useUserDemographic(statementId || '', statement?.topParentId);
 
 	// Get UI state
 	const uiState = useStatementUIState();
@@ -30,9 +28,9 @@ export const useStatementData = () => {
 	const showNewStatement = useSelector(selectNewStatementShowModal);
 
 	// Computed values
-	const isMassConsensus = useMemo(() =>
-		statement?.questionSettings?.questionType === QuestionType.massConsensus,
-		[statement?.questionSettings?.questionType]
+	const isMassConsensus = useMemo(
+		() => statement?.questionSettings?.questionType === QuestionType.massConsensus,
+		[statement?.questionSettings?.questionType],
 	);
 
 	return {

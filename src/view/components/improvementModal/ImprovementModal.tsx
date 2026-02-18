@@ -54,17 +54,11 @@ const ImprovementModal: FC<ImprovementModalProps> = ({
 						rows={4}
 						disabled={isLoading}
 					/>
-					<p className={styles.hint}>
-						{t('Leave empty for automatic improvement')}
-					</p>
+					<p className={styles.hint}>{t('Leave empty for automatic improvement')}</p>
 				</div>
 
 				<div className={styles.btns}>
-					<button
-						className={styles.btnSecondary}
-						onClick={handleClose}
-						disabled={isLoading}
-					>
+					<button className={styles.btnSecondary} onClick={handleClose} disabled={isLoading}>
 						{t('Cancel')}
 					</button>
 					<button

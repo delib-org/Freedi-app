@@ -3,18 +3,18 @@ import { logError } from '@/utils/errorHandling';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
 
 interface Props {
-  children: ReactNode;
-  fallback?: ReactNode;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
-  statementId?: string;
+	children: ReactNode;
+	fallback?: ReactNode;
+	onError?: (error: Error, errorInfo: ErrorInfo) => void;
+	statementId?: string;
 }
 
 interface State {
-  hasError: boolean;
-  error: Error | null;
-  errorInfo: ErrorInfo | null;
-  errorCount: number;
-  lastErrorTime: number;
+	hasError: boolean;
+	error: Error | null;
+	errorInfo: ErrorInfo | null;
+	errorCount: number;
+	lastErrorTime: number;
 }
 
 /**
@@ -22,235 +22,221 @@ interface State {
  * Provides graceful error handling and recovery
  */
 export class MindMapErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      errorCount: 0,
-      lastErrorTime: 0,
-    };
-  }
+	constructor(props: Props) {
+		super(props);
+		this.state = {
+			hasError: false,
+			error: null,
+			errorInfo: null,
+			errorCount: 0,
+			lastErrorTime: 0,
+		};
+	}
 
-  static getDerivedStateFromError(error: Error): Partial<State> {
-    // Update state so the next render will show the fallback UI
-    return { hasError: true, error };
-  }
+	static getDerivedStateFromError(error: Error): Partial<State> {
+		// Update state so the next render will show the fallback UI
+		return { hasError: true, error };
+	}
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    const { statementId, onError } = this.props;
-    const { errorCount, lastErrorTime } = this.state;
+	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+		const { statementId, onError } = this.props;
+		const { errorCount, lastErrorTime } = this.state;
 
-    // Log error with context
-    logError(error, {
-      operation: 'MindMapErrorBoundary.componentDidCatch',
-      statementId,
-      metadata: {
-        componentStack: errorInfo.componentStack,
-        errorCount: errorCount + 1,
-        timeSinceLastError: Date.now() - lastErrorTime,
-      }
-    });
+		// Log error with context
+		logError(error, {
+			operation: 'MindMapErrorBoundary.componentDidCatch',
+			statementId,
+			metadata: {
+				componentStack: errorInfo.componentStack,
+				errorCount: errorCount + 1,
+				timeSinceLastError: Date.now() - lastErrorTime,
+			},
+		});
 
-    // Update error state
-    this.setState({
-      errorInfo,
-      errorCount: errorCount + 1,
-      lastErrorTime: Date.now(),
-    });
+		// Update error state
+		this.setState({
+			errorInfo,
+			errorCount: errorCount + 1,
+			lastErrorTime: Date.now(),
+		});
 
-    // Call custom error handler if provided
-    if (onError) {
-      onError(error, errorInfo);
-    }
+		// Call custom error handler if provided
+		if (onError) {
+			onError(error, errorInfo);
+		}
 
-    // Check for error loop
-    if (this.isErrorLoop()) {
-      this.handleErrorLoop();
-    }
-  }
+		// Check for error loop
+		if (this.isErrorLoop()) {
+			this.handleErrorLoop();
+		}
+	}
 
-  /**
-   * Check if we're in an error loop
-   */
-  private isErrorLoop(): boolean {
-    const { errorCount, lastErrorTime } = this.state;
-    const timeSinceLastError = Date.now() - lastErrorTime;
+	/**
+	 * Check if we're in an error loop
+	 */
+	private isErrorLoop(): boolean {
+		const { errorCount, lastErrorTime } = this.state;
+		const timeSinceLastError = Date.now() - lastErrorTime;
 
-    // If we've had more than 3 errors in the last 5 seconds, it's likely a loop
-    return errorCount > 3 && timeSinceLastError < 5000;
-  }
+		// If we've had more than 3 errors in the last 5 seconds, it's likely a loop
+		return errorCount > 3 && timeSinceLastError < 5000;
+	}
 
-  /**
-   * Handle error loop by showing a more severe error message
-   */
-  private handleErrorLoop(): void {
-    logError(new Error('Mind-map error loop detected'), {
-      operation: 'MindMapErrorBoundary.handleErrorLoop',
-      metadata: {
-        errorCount: this.state.errorCount,
-        lastError: this.state.error?.message,
-      }
-    });
-  }
+	/**
+	 * Handle error loop by showing a more severe error message
+	 */
+	private handleErrorLoop(): void {
+		logError(new Error('Mind-map error loop detected'), {
+			operation: 'MindMapErrorBoundary.handleErrorLoop',
+			metadata: {
+				errorCount: this.state.errorCount,
+				lastError: this.state.error?.message,
+			},
+		});
+	}
 
-  /**
-   * Retry rendering
-   */
-  handleRetry = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      // Keep error count to track retries
-    });
-  };
+	/**
+	 * Retry rendering
+	 */
+	handleRetry = () => {
+		this.setState({
+			hasError: false,
+			error: null,
+			errorInfo: null,
+			// Keep error count to track retries
+		});
+	};
 
-  /**
-   * Reset error boundary completely
-   */
-  handleReset = () => {
-    this.setState({
-      hasError: false,
-      error: null,
-      errorInfo: null,
-      errorCount: 0,
-      lastErrorTime: 0,
-    });
+	/**
+	 * Reset error boundary completely
+	 */
+	handleReset = () => {
+		this.setState({
+			hasError: false,
+			error: null,
+			errorInfo: null,
+			errorCount: 0,
+			lastErrorTime: 0,
+		});
 
-    // Reload the page if error persists
-    if (this.state.errorCount > 5) {
-      window.location.reload();
-    }
-  };
+		// Reload the page if error persists
+		if (this.state.errorCount > 5) {
+			window.location.reload();
+		}
+	};
 
-  render() {
-    const { hasError, error, errorInfo, errorCount } = this.state;
-    const { children, fallback } = this.props;
+	render() {
+		const { hasError, error, errorInfo, errorCount } = this.state;
+		const { children, fallback } = this.props;
 
-    if (hasError && error) {
-      // Check if we should show custom fallback
-      if (fallback) {
-        return <>{fallback}</>;
-      }
+		if (hasError && error) {
+			// Check if we should show custom fallback
+			if (fallback) {
+				return <>{fallback}</>;
+			}
 
-      // Check if it's an error loop
-      if (this.isErrorLoop()) {
-        return (
-          <div className="mind-map-error mind-map-error--critical">
-            <div className="mind-map-error__container">
-              <h2 className="mind-map-error__title">
-                Critical Error
-              </h2>
-              <p className="mind-map-error__message">
-                The mind-map is experiencing repeated errors and cannot recover.
-              </p>
-              <div className="mind-map-error__actions">
-                <button
-                  className="btn btn--primary"
-                  onClick={() => window.location.reload()}
-                >
-                  Reload Page
-                </button>
-              </div>
-              <details className="mind-map-error__details">
-                <summary>Error Details</summary>
-                <pre>{error.stack}</pre>
-                <p>Error count: {errorCount}</p>
-              </details>
-            </div>
-          </div>
-        );
-      }
+			// Check if it's an error loop
+			if (this.isErrorLoop()) {
+				return (
+					<div className="mind-map-error mind-map-error--critical">
+						<div className="mind-map-error__container">
+							<h2 className="mind-map-error__title">Critical Error</h2>
+							<p className="mind-map-error__message">
+								The mind-map is experiencing repeated errors and cannot recover.
+							</p>
+							<div className="mind-map-error__actions">
+								<button className="btn btn--primary" onClick={() => window.location.reload()}>
+									Reload Page
+								</button>
+							</div>
+							<details className="mind-map-error__details">
+								<summary>Error Details</summary>
+								<pre>{error.stack}</pre>
+								<p>Error count: {errorCount}</p>
+							</details>
+						</div>
+					</div>
+				);
+			}
 
-      // Regular error display
-      return (
-        <div className="mind-map-error">
-          <div className="mind-map-error__container">
-            <h2 className="mind-map-error__title">
-              {MINDMAP_CONFIG.ERROR_MESSAGES.LOAD_FAILED}
-            </h2>
-            <p className="mind-map-error__message">
-              {error.message || 'An unexpected error occurred while rendering the mind-map.'}
-            </p>
+			// Regular error display
+			return (
+				<div className="mind-map-error">
+					<div className="mind-map-error__container">
+						<h2 className="mind-map-error__title">{MINDMAP_CONFIG.ERROR_MESSAGES.LOAD_FAILED}</h2>
+						<p className="mind-map-error__message">
+							{error.message || 'An unexpected error occurred while rendering the mind-map.'}
+						</p>
 
-            <div className="mind-map-error__actions">
-              <button
-                className="btn btn--primary"
-                onClick={this.handleRetry}
-                disabled={errorCount > 5}
-              >
-                {errorCount > 0 ? `Retry (${errorCount})` : 'Retry'}
-              </button>
-              <button
-                className="btn btn--secondary"
-                onClick={this.handleReset}
-              >
-                Reset
-              </button>
-            </div>
+						<div className="mind-map-error__actions">
+							<button
+								className="btn btn--primary"
+								onClick={this.handleRetry}
+								disabled={errorCount > 5}
+							>
+								{errorCount > 0 ? `Retry (${errorCount})` : 'Retry'}
+							</button>
+							<button className="btn btn--secondary" onClick={this.handleReset}>
+								Reset
+							</button>
+						</div>
 
-            {/* Development mode: show detailed error */}
-            {process.env.NODE_ENV === 'development' && errorInfo && (
-              <details className="mind-map-error__details">
-                <summary>Error Details (Development Only)</summary>
-                <pre className="mind-map-error__stack">
-                  {error.stack}
-                </pre>
-                <pre className="mind-map-error__component-stack">
-                  {errorInfo.componentStack}
-                </pre>
-              </details>
-            )}
-          </div>
-        </div>
-      );
-    }
+						{/* Development mode: show detailed error */}
+						{process.env.NODE_ENV === 'development' && errorInfo && (
+							<details className="mind-map-error__details">
+								<summary>Error Details (Development Only)</summary>
+								<pre className="mind-map-error__stack">{error.stack}</pre>
+								<pre className="mind-map-error__component-stack">{errorInfo.componentStack}</pre>
+							</details>
+						)}
+					</div>
+				</div>
+			);
+		}
 
-    return children;
-  }
+		return children;
+	}
 }
 
 /**
  * Higher-order component to wrap any component with error boundary
  */
 export function withMindMapErrorBoundary<P extends object>(
-  Component: React.ComponentType<P>,
-  fallback?: ReactNode
+	Component: React.ComponentType<P>,
+	fallback?: ReactNode,
 ): React.FC<P> {
-  const WrappedComponent: React.FC<P> = (props: P) => (
-    <MindMapErrorBoundary fallback={fallback}>
-      <Component {...props} />
-    </MindMapErrorBoundary>
-  );
+	const WrappedComponent: React.FC<P> = (props: P) => (
+		<MindMapErrorBoundary fallback={fallback}>
+			<Component {...props} />
+		</MindMapErrorBoundary>
+	);
 
-  WrappedComponent.displayName = `withMindMapErrorBoundary(${Component.displayName || Component.name || 'Component'})`;
+	WrappedComponent.displayName = `withMindMapErrorBoundary(${Component.displayName || Component.name || 'Component'})`;
 
-  return WrappedComponent;
+	return WrappedComponent;
 }
 
 /**
  * Hook for error handling in functional components
  */
 export function useMindMapError() {
-  const [error, setError] = React.useState<Error | null>(null);
+	const [error, setError] = React.useState<Error | null>(null);
 
-  React.useEffect(() => {
-    if (error) {
-      throw error;
-    }
-  }, [error]);
+	React.useEffect(() => {
+		if (error) {
+			throw error;
+		}
+	}, [error]);
 
-  const throwError = React.useCallback((error: Error) => {
-    setError(error);
-  }, []);
+	const throwError = React.useCallback((error: Error) => {
+		setError(error);
+	}, []);
 
-  const clearError = React.useCallback(() => {
-    setError(null);
-  }, []);
+	const clearError = React.useCallback(() => {
+		setError(null);
+	}, []);
 
-  return { throwError, clearError };
+	return { throwError, clearError };
 }
 
 /**
@@ -361,7 +347,7 @@ const styles = `
 
 // Inject styles
 if (typeof document !== 'undefined') {
-  const styleElement = document.createElement('style');
-  styleElement.innerHTML = styles;
-  document.head.appendChild(styleElement);
+	const styleElement = document.createElement('style');
+	styleElement.innerHTML = styles;
+	document.head.appendChild(styleElement);
 }

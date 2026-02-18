@@ -1,11 +1,4 @@
-import {
-	collection,
-	getDocs,
-	limit,
-	orderBy,
-	query,
-	where,
-} from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { getNumberDigits } from '@/controllers/general/helpers';
 import { Collections } from '@freedi/shared-types';
@@ -15,13 +8,9 @@ export async function getMaxInvitationDigits(): Promise<number | undefined> {
 		const invitationsRef = collection(FireStore, Collections.invitations);
 		const q = query(
 			invitationsRef,
-			where(
-				'lastUpdate',
-				'>',
-				new Date().getTime() - 24 * 60 * 60 * 1000
-			),
+			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
 			orderBy('number', 'desc'),
-			limit(1)
+			limit(1),
 		);
 		const numbers = await getDocs(q);
 		const maxNumber = numbers.docs[0].data().number;
@@ -36,9 +25,7 @@ export async function getMaxInvitationDigits(): Promise<number | undefined> {
 	}
 }
 
-export async function getInvitationPathName(
-	number: number
-): Promise<string | undefined> {
+export async function getInvitationPathName(number: number): Promise<string | undefined> {
 	try {
 		if (!number) throw new Error('No number');
 		if (typeof number !== 'number') number = Number(number);
@@ -47,19 +34,14 @@ export async function getInvitationPathName(
 		const q = query(
 			invitationsRef,
 			where('number', '==', number),
-			where(
-				'lastUpdate',
-				'>',
-				new Date().getTime() - 24 * 60 * 60 * 1000
-			),
+			where('lastUpdate', '>', new Date().getTime() - 24 * 60 * 60 * 1000),
 			orderBy('number', 'desc'),
-			limit(1)
+			limit(1),
 		);
 		const numbersDB = await getDocs(q);
 		const numbers = numbersDB.docs.map((doc) => doc.data());
 
-		if (numbers.length === 0)
-			throw new Error('No number found in FireStore');
+		if (numbers.length === 0) throw new Error('No number found in FireStore');
 		const { pathname } = numbers[0];
 		if (!pathname) throw new Error('No path name found');
 

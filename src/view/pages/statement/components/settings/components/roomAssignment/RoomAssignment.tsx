@@ -37,9 +37,7 @@ const RoomAssignment: FC<RoomAssignmentProps> = ({ statement }) => {
 	const user = useAppSelector((state: RootState) => state.creator.creator) as User | null;
 
 	// Get room assignment data from Redux
-	const activeSettings = useSelector(
-		selectActiveSettingsByStatementId(statement.statementId)
-	);
+	const activeSettings = useSelector(selectActiveSettingsByStatementId(statement.statementId));
 	const settingsId = activeSettings?.settingsId || '';
 	const rooms = useSelector(selectRoomsBySettingsId(settingsId));
 	const participants = useSelector(selectParticipantsBySettingsId(settingsId));
@@ -48,10 +46,7 @@ const RoomAssignment: FC<RoomAssignmentProps> = ({ statement }) => {
 
 	// Listen to room settings for this statement
 	useEffect(() => {
-		const unsubscribeSettings = listenToRoomSettingsByStatement(
-			statement.statementId,
-			dispatch
-		);
+		const unsubscribeSettings = listenToRoomSettingsByStatement(statement.statementId, dispatch);
 
 		return () => {
 			unsubscribeSettings();

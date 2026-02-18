@@ -12,7 +12,8 @@ export const usePolarizationData = () => {
 	const [selectedGroup, setSelectedGroup] = useState<number | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	// Get polarization data from Redux
-	const polarizationIndexes: PolarizationIndex[] = useSelector(selectPolarizationIndexByParentId(statementId)) || [];
+	const polarizationIndexes: PolarizationIndex[] =
+		useSelector(selectPolarizationIndexByParentId(statementId)) || [];
 	// Safety check: Get current statement data with fallback
 	const currentStatementData = polarizationIndexes[selectedStatementIndex];
 	const hasData = polarizationIndexes.length > 0 && !!currentStatementData;
@@ -57,7 +58,8 @@ export const usePolarizationData = () => {
 
 	// Safe access to current axis and selected group data
 	const currentAxis = currentStatementData?.axes?.[selectedAxis];
-	const selectedGroupData = selectedGroup !== null && currentAxis?.groups ? currentAxis.groups[selectedGroup] : null;
+	const selectedGroupData =
+		selectedGroup !== null && currentAxis?.groups ? currentAxis.groups[selectedGroup] : null;
 
 	return {
 		statementId,
@@ -72,6 +74,6 @@ export const usePolarizationData = () => {
 		currentStatementData,
 		hasData,
 		currentAxis,
-		selectedGroupData
+		selectedGroupData,
 	};
 };

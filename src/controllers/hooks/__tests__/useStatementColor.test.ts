@@ -34,7 +34,7 @@ describe('useStatementColor', () => {
 
 			const { result, rerender } = renderHook(
 				({ stmt }) => useStatementColor({ statement: stmt }),
-				{ initialProps: { stmt: statement } }
+				{ initialProps: { stmt: statement } },
 			);
 
 			// Allow useEffect to run
@@ -54,7 +54,7 @@ describe('useStatementColor', () => {
 
 			const { result, rerender } = renderHook(
 				({ stmt }) => useStatementColor({ statement: stmt }),
-				{ initialProps: { stmt: statement } }
+				{ initialProps: { stmt: statement } },
 			);
 
 			await act(async () => {
@@ -73,7 +73,7 @@ describe('useStatementColor', () => {
 
 			const { result, rerender } = renderHook(
 				({ stmt }) => useStatementColor({ statement: stmt }),
-				{ initialProps: { stmt: statement } }
+				{ initialProps: { stmt: statement } },
 			);
 
 			await act(async () => {
@@ -92,7 +92,7 @@ describe('useStatementColor', () => {
 
 			const { result, rerender } = renderHook(
 				({ stmt }) => useStatementColor({ statement: stmt }),
-				{ initialProps: { stmt: statement } }
+				{ initialProps: { stmt: statement } },
 			);
 
 			await act(async () => {
@@ -118,7 +118,7 @@ describe('useStatementColor', () => {
 
 			const { result, rerender } = renderHook(
 				({ stmt }) => useStatementColor({ statement: stmt }),
-				{ initialProps: { stmt: optionStatement } }
+				{ initialProps: { stmt: optionStatement } },
 			);
 
 			await act(async () => {
@@ -142,7 +142,7 @@ describe('useStatementColor', () => {
 
 			const { result, rerender } = renderHook(
 				({ stmt }) => useStatementColor({ statement: stmt }),
-				{ initialProps: { stmt: statement as Statement | undefined } }
+				{ initialProps: { stmt: statement as Statement | undefined } },
 			);
 
 			await act(async () => {

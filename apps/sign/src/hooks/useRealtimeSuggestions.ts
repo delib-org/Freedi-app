@@ -46,21 +46,41 @@ export function useRealtimeSuggestions({
   // Wait for Firebase Auth to be ready before setting up Firestore listeners
   const { isAuthReady, isAuthenticated } = useFirebaseAuth();
 
-  // Polling fallback function
+  // AbortController ref for cancelling in-flight polling requests
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Polling fallback function with abort support
   const fetchSuggestions = useCallback(async () => {
+    // Cancel any in-flight request before starting a new one
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
-      const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId));
+      const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId), {
+        signal: controller.signal,
+      });
       if (response.ok) {
         const data = await response.json();
-        setSuggestions(data.suggestions || []);
+        // Only update state if this request was not aborted
+        if (!controller.signal.aborted) {
+          setSuggestions(data.suggestions || []);
+        }
       }
     } catch (err) {
+      // Ignore abort errors - they are expected when paragraphId changes
+      if (err instanceof DOMException && err.name === 'AbortError') return;
       logError(err, {
         operation: 'useRealtimeSuggestions.polling',
         metadata: { paragraphId },
       });
     } finally {
-      setIsLoading(false);
+      if (!controller.signal.aborted) {
+        setIsLoading(false);
+      }
     }
   }, [paragraphId]);
 
@@ -193,7 +213,14 @@ export function useRealtimeSuggestions({
     // Poll for updates every 5 seconds
     const interval = setInterval(fetchSuggestions, SUGGESTIONS.REALTIME_POLL_INTERVAL_MS);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      // Cancel any in-flight request when effect cleans up
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+    };
   }, [paragraphId, enabled, usePollingFallback, fetchSuggestions]);
 
   // Sync suggestion count to uiStore when suggestions change

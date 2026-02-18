@@ -187,6 +187,7 @@ export const StatementSchema = object({
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
 	joined: optional(array(CreatorSchema)), // the joined users of the statement
 	hide: optional(boolean()), // if true, the statement is hidden
+	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division

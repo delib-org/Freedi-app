@@ -22,9 +22,7 @@ export class StatementController {
 			const userId = req.query.userId as string;
 			const parentId = req.query.parentId as string;
 
-			validator
-				.requireString(parentId, 'parentId')
-				.requireString(userId, 'userId');
+			validator.requireString(parentId, 'parentId').requireString(userId, 'userId');
 
 			if (!validator.isValid()) {
 				res.status(400).send({
@@ -73,9 +71,7 @@ export class StatementController {
 
 			// Parse excludeIds (comma-separated string)
 			const excludeIdsParam = req.query.excludeIds as string;
-			let excludeIds = excludeIdsParam
-				? excludeIdsParam.split(',').filter(id => id.trim())
-				: [];
+			let excludeIds = excludeIdsParam ? excludeIdsParam.split(',').filter((id) => id.trim()) : [];
 
 			// Fetch user's evaluated options if userId is provided
 			if (userId) {
@@ -102,7 +98,7 @@ export class StatementController {
 					this.statementService.updateStatementViewCounts(cachedData.statements);
 					res.status(200).send({ ...cachedData, ok: true });
 
-return;
+					return;
 				}
 			}
 
@@ -144,7 +140,7 @@ return;
 					error: validator.getErrorMessage(),
 					ok: false,
 				});
-				
+
 				return;
 			}
 
@@ -157,8 +153,8 @@ return;
 
 			if (cachedData) {
 				res.send({ ...cachedData, ok: true });
-				
-return;
+
+				return;
 			}
 
 			// Get top statements

@@ -55,28 +55,18 @@ const IdeaScoreboard: FC<IdeaScoreboardProps> = ({ score }) => {
 
 			<div className={styles.scoreboardBody}>
 				<div className={styles.scoreDisplay}>
-					<div className={styles.scoreValue}>
-						{scorePercentage}%
-					</div>
+					<div className={styles.scoreValue}>{scorePercentage}%</div>
 					<div className={styles.scoreLabel}>{t('Validity Score')}</div>
 				</div>
 
-				<div className={styles.scoreInterpretation}>
-					{getScoreInterpretation(hebbianScore, t)}
-				</div>
+				<div className={styles.scoreInterpretation}>{getScoreInterpretation(hebbianScore, t)}</div>
 			</div>
 
 			<div className={styles.scoreboardFooter}>
 				<div className={styles.scoreBar}>
-					<div
-						className={styles.scoreBarFill}
-						style={{ width: `${scorePercentage}%` }}
-					/>
+					<div className={styles.scoreBarFill} style={{ width: `${scorePercentage}%` }} />
 					{/* Threshold marker at 60% */}
-					<div
-						className={styles.thresholdMarker}
-						style={{ left: `${thresholdPercentage}%` }}
-					/>
+					<div className={styles.thresholdMarker} style={{ left: `${thresholdPercentage}%` }} />
 				</div>
 				<div className={styles.scoreBarLabels}>
 					<span>0%</span>

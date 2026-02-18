@@ -17,24 +17,16 @@ const EmptyScreen: FC<Props> = ({ statement: _statement }) => {
 
 	return (
 		<div className={styles.emptyScreen}>
-			<img
-				src={ideaImage}
-				alt={t('Compose your suggestion')}
-				className={styles.ideaImage}
-			/>
+			<img src={ideaImage} alt={t('Compose your suggestion')} className={styles.ideaImage} />
 
 			<h1 className={styles.title}>
-				{isLearning
-					? t('Be the first to share your idea!')
-					: t('No suggestions yet')
-				}
+				{isLearning ? t('Be the first to share your idea!') : t('No suggestions yet')}
 			</h1>
 
 			<p className={styles.subtitle}>
 				{isLearning
 					? t('Press "Add an answer" to add your suggestion')
-					: t('Press the + button to add your suggestion')
-				}
+					: t('Press the + button to add your suggestion')}
 			</p>
 
 			{isLearning && <ChevronDown className={styles.arrow} size={32} />}

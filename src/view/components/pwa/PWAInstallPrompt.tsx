@@ -19,11 +19,7 @@ interface PWAInstallPromptProps {
  * Displays a modal prompting the user to install the PWA.
  * Triggered after certain user actions (creating groups, adding options).
  */
-const PWAInstallPrompt: FC<PWAInstallPromptProps> = ({
-	isVisible,
-	onInstall,
-	onDismiss,
-}) => {
+const PWAInstallPrompt: FC<PWAInstallPromptProps> = ({ isVisible, onInstall, onDismiss }) => {
 	if (!isVisible) {
 		return null;
 	}
@@ -53,12 +49,7 @@ const PWAInstallPrompt: FC<PWAInstallPromptProps> = ({
 							xmlns="http://www.w3.org/2000/svg"
 							aria-hidden="true"
 						>
-							<rect
-								width="48"
-								height="48"
-								rx="12"
-								fill="var(--btn-primary)"
-							/>
+							<rect width="48" height="48" rx="12" fill="var(--btn-primary)" />
 							<path
 								d="M24 14V34M24 14L18 20M24 14L30 20"
 								stroke="white"
@@ -68,14 +59,10 @@ const PWAInstallPrompt: FC<PWAInstallPromptProps> = ({
 							/>
 						</svg>
 					</div>
-					<h2 className={styles.pwaPrompt__title}>
-						{PWA_MESSAGES.TITLE}
-					</h2>
+					<h2 className={styles.pwaPrompt__title}>{PWA_MESSAGES.TITLE}</h2>
 				</div>
 
-				<p className={styles.pwaPrompt__description}>
-					{PWA_MESSAGES.DESCRIPTION}
-				</p>
+				<p className={styles.pwaPrompt__description}>{PWA_MESSAGES.DESCRIPTION}</p>
 
 				<div className={styles.pwaPrompt__actions}>
 					<Button

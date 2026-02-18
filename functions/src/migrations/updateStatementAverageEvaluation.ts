@@ -14,7 +14,7 @@ export async function updateStatementAndChildrenAverageEvaluation(statementId: s
 	const results = {
 		updated: 0,
 		processed: 0,
-		errors: [] as string[]
+		errors: [] as string[],
 	};
 
 	try {
@@ -39,18 +39,20 @@ export async function updateStatementAndChildrenAverageEvaluation(statementId: s
 			results.processed++;
 			const statement = doc.data() as Statement;
 
-			if (statement.evaluation &&
+			if (
+				statement.evaluation &&
 				statement.evaluation.numberOfEvaluators !== undefined &&
-				statement.evaluation.sumEvaluations !== undefined) {
-
+				statement.evaluation.sumEvaluations !== undefined
+			) {
 				// Calculate average evaluation
-				const averageEvaluation = statement.evaluation.numberOfEvaluators > 0
-					? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
-					: 0;
+				const averageEvaluation =
+					statement.evaluation.numberOfEvaluators > 0
+						? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
+						: 0;
 
 				// Add to batch
 				batch.update(doc.ref, {
-					'evaluation.averageEvaluation': averageEvaluation
+					'evaluation.averageEvaluation': averageEvaluation,
 				});
 
 				batchCount++;
@@ -74,7 +76,6 @@ export async function updateStatementAndChildrenAverageEvaluation(statementId: s
 		logger.info(`Update complete. Processed: ${results.processed}, Updated: ${results.updated}`);
 
 		return results;
-
 	} catch (error) {
 		const errorMessage = `Error updating statement ${statementId}: ${error}`;
 		logger.error(errorMessage);
@@ -87,11 +88,14 @@ export async function updateStatementAndChildrenAverageEvaluation(statementId: s
 /**
  * Update averageEvaluation for a single statement
  */
-async function updateSingleStatement(statementId: string, results: {
-	updated: number;
-	processed: number;
-	errors: string[];
-}): Promise<void> {
+async function updateSingleStatement(
+	statementId: string,
+	results: {
+		updated: number;
+		processed: number;
+		errors: string[];
+	},
+): Promise<void> {
 	try {
 		const statementRef = db.collection(Collections.statements).doc(statementId);
 		const statementDoc = await statementRef.get();
@@ -114,24 +118,26 @@ async function updateSingleStatement(statementId: string, results: {
 			return;
 		}
 
-		if (statement.evaluation.numberOfEvaluators === undefined ||
-			statement.evaluation.sumEvaluations === undefined) {
+		if (
+			statement.evaluation.numberOfEvaluators === undefined ||
+			statement.evaluation.sumEvaluations === undefined
+		) {
 			logger.info(`Statement ${statementId} missing required evaluation fields`);
 
 			return;
 		}
 
-		const averageEvaluation = statement.evaluation.numberOfEvaluators > 0
-			? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
-			: 0;
+		const averageEvaluation =
+			statement.evaluation.numberOfEvaluators > 0
+				? statement.evaluation.sumEvaluations / statement.evaluation.numberOfEvaluators
+				: 0;
 
 		await statementRef.update({
-			'evaluation.averageEvaluation': averageEvaluation
+			'evaluation.averageEvaluation': averageEvaluation,
 		});
 
 		results.updated++;
 		logger.info(`Updated statement ${statementId} with averageEvaluation: ${averageEvaluation}`);
-
 	} catch (error) {
 		const errorMessage = `Error updating single statement ${statementId}: ${error}`;
 		logger.error(errorMessage);

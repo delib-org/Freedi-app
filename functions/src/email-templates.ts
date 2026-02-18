@@ -100,10 +100,14 @@ function createBaseEmailTemplate({
             <a href="${buttonUrl}" class="button">${buttonText}</a>
         </div>
         
-        ${showButtonLink ? `
+        ${
+					showButtonLink
+						? `
         <p>If you're having trouble with the button above, you can also copy and paste the following link into your browser:</p>
         <p style="word-break: break-all;">${buttonUrl}</p>
-        ` : ''}
+        `
+						: ''
+				}
         
         <p>Thank you for using Freedi!</p>
         
@@ -180,9 +184,8 @@ export function createReplyNotificationEmail({
 }): string {
 	try {
 		// Limit reply text to avoid very long emails
-		const limitedReplyText = replyText.length > 150
-			? `${replyText.substring(0, 150)}...`
-			: replyText;
+		const limitedReplyText =
+			replyText.length > 150 ? `${replyText.substring(0, 150)}...` : replyText;
 
 		const message = `<strong>${replierName}</strong> has replied to your statement:<br>
       <blockquote style="margin: 10px 0; padding: 10px; background-color: #f0f4f8; border-left: 4px solid #1f5895; font-style: italic;">
@@ -202,7 +205,7 @@ export function createReplyNotificationEmail({
 		return createStatementEmailTemplate({
 			statementId,
 			message: `${replierName} has replied to your statement: "${replyText.substring(0, 100)}${replyText.length > 100 ? '...' : ''}"`,
-			buttonText: 'View Reply'
+			buttonText: 'View Reply',
 		});
 	}
 }
@@ -232,7 +235,7 @@ export function createInvitationEmail({
 	return createStatementEmailTemplate({
 		statementId,
 		message: message || defaultMessage,
-		title: 'You\'ve been invited to join a discussion',
+		title: "You've been invited to join a discussion",
 		buttonText: 'Join Discussion',
 		recipientName,
 	});
@@ -313,9 +316,7 @@ export function createMassConsensusNotificationEmail({
 	try {
 		const baseUrl = getBaseUrl();
 		const finalButtonUrl = buttonUrl || `${baseUrl}/statement/${statementId}`;
-		const title = statementTitle
-			? `Update: ${statementTitle}`
-			: 'Update from Freedi';
+		const title = statementTitle ? `Update: ${statementTitle}` : 'Update from Freedi';
 
 		// Format message - convert newlines to <br> for HTML
 		const formattedMessage = message.replace(/\n/g, '<br>');

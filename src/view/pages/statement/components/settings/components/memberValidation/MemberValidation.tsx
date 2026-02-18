@@ -33,7 +33,9 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 	const [showModal, setShowModal] = useState(false);
 	const [members, setMembers] = useState<MemberReviewData[]>([]);
 	const [loading, setLoading] = useState(false);
-	const [filter, setFilter] = useState<'all' | 'pending' | 'flagged' | 'approved' | 'banned'>('all');
+	const [filter, setFilter] = useState<'all' | 'pending' | 'flagged' | 'approved' | 'banned'>(
+		'all',
+	);
 
 	useEffect(() => {
 		// Load member responses on mount and when modal opens
@@ -58,7 +60,11 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 		setShowModal(false);
 	};
 
-	const handleMemberAction = async (userId: string, action: 'approve' | 'flag' | 'ban', reason?: string) => {
+	const handleMemberAction = async (
+		userId: string,
+		action: 'approve' | 'flag' | 'ban',
+		reason?: string,
+	) => {
 		try {
 			// Get current user as reviewer
 			const currentUser = store.getState().creator.creator;
@@ -70,15 +76,21 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 				userId,
 				action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : 'banned',
 				reason,
-				reviewedBy
+				reviewedBy,
 			);
 
 			// Update local state
-			setMembers(prev => prev.map(member =>
-				member.userId === userId
-					? { ...member, status: action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : 'banned' }
-					: member
-			));
+			setMembers((prev) =>
+				prev.map((member) =>
+					member.userId === userId
+						? {
+								...member,
+								status:
+									action === 'approve' ? 'approved' : action === 'flag' ? 'flagged' : 'banned',
+							}
+						: member,
+				),
+			);
 
 			console.info(`Action ${action} for user ${userId} saved successfully`);
 		} catch (error) {
@@ -86,10 +98,10 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 		}
 	};
 
-	const filteredMembers = members.filter(member => {
+	const filteredMembers = members.filter((member) => {
 		if (filter === 'all') return true;
-		
-return member.status === filter;
+
+		return member.status === filter;
 	});
 
 	const getStatusCounts = () => {
@@ -98,10 +110,10 @@ return member.status === filter;
 			pending: 0,
 			flagged: 0,
 			approved: 0,
-			banned: 0
+			banned: 0,
 		};
 
-		members.forEach(member => {
+		members.forEach((member) => {
 			counts[member.status]++;
 		});
 
@@ -113,21 +125,14 @@ return member.status === filter;
 	return (
 		<div>
 			<SectionTitle title={t('Member Validation')} />
-			<div className='btns'>
-				<button
-					className='btn btn--secondary'
-					onClick={() => setShowModal(true)}
-				>
+			<div className="btns">
+				<button className="btn btn--secondary" onClick={() => setShowModal(true)}>
 					{t('Review Members')} ({counts.pending} pending)
 				</button>
 			</div>
 
 			{showModal && (
-				<SettingsModal
-					closeModal={closeModal}
-					isFullScreen={true}
-					customCloseWord={t('Close')}
-				>
+				<SettingsModal closeModal={closeModal} isFullScreen={true} customCloseWord={t('Close')}>
 					<div className={styles.memberValidation}>
 						<h2>{t('Member Validation & Review')}</h2>
 

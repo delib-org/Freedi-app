@@ -39,7 +39,7 @@ import { Results } from '@freedi/shared-types';
 function convertMindMapNodeToResults(node: MindMapNode): Results {
 	return {
 		top: node.statement,
-		sub: node.children.map(child => convertMindMapNodeToResults(child))
+		sub: node.children.map((child) => convertMindMapNodeToResults(child)),
 	};
 }
 
@@ -56,14 +56,14 @@ const EnhancedMindMap: FC = () => {
 	const userSubscription = useAppSelector(
 		subscriptionStatementId
 			? statementSubscriptionSelector(subscriptionStatementId)
-			: () => undefined
+			: () => undefined,
 	);
 
 	const rootStatementId = statement?.topParentId ?? statement?.statementId;
 	const rootSubscription = useAppSelector(
 		rootStatementId && !userSubscription
 			? statementSubscriptionSelector(rootStatementId)
-			: () => undefined
+			: () => undefined,
 	);
 
 	const effectiveSubscription = userSubscription || rootSubscription;
@@ -76,12 +76,8 @@ const EnhancedMindMap: FC = () => {
 	const selectedId = mapContext?.selectedId ?? null;
 
 	// State
-	const [filterBy, setFilterBy] = useState<FilterType>(
-		FilterType.questionsResultsOptions
-	);
-	const [loadingState, setLoadingState] = useState<MindMapLoadingState>(
-		MindMapLoadingState.IDLE
-	);
+	const [filterBy, setFilterBy] = useState<FilterType>(FilterType.questionsResultsOptions);
+	const [loadingState, setLoadingState] = useState<MindMapLoadingState>(MindMapLoadingState.IDLE);
 	const [, setError] = useState<Error | null>(null);
 	const [results, setResults] = useState<MindMapNode | null>(null);
 	const [isOffline, setIsOffline] = useState(!navigator.onLine);
@@ -96,7 +92,7 @@ const EnhancedMindMap: FC = () => {
 	// Use optimized selector
 	const treeSelector = useMemo(() => createMindMapTreeSelector(), []);
 	const treeData = useSelector((state: RootState) =>
-		statementId ? treeSelector(state, statementId) : null
+		statementId ? treeSelector(state, statementId) : null,
 	);
 
 	// Monitor online/offline status
@@ -148,8 +144,8 @@ const EnhancedMindMap: FC = () => {
 						setLoadingMessage('Loaded from offline storage');
 						setLoadingState(MindMapLoadingState.FULLY_LOADED);
 						clearTimeout(skeletonTimer);
-						
-return;
+
+						return;
 					}
 				}
 
@@ -165,7 +161,7 @@ return;
 
 					// Save for offline access
 					if (data.loadingState === MindMapLoadingState.FULLY_LOADED) {
-						offlineManager.saveMindMap(data).catch(error => {
+						offlineManager.saveMindMap(data).catch((error) => {
 							console.info('[EnhancedMindMap] Failed to save offline:', error);
 						});
 					}
@@ -186,7 +182,7 @@ return;
 				const unsubscribeUpdates = enhancedMindMapService.subscribeToUpdates(
 					statementId,
 					updateCallback,
-					{ useCache: true }
+					{ useCache: true },
 				);
 
 				// Combine unsubscribes
@@ -198,7 +194,6 @@ return;
 				clearTimeout(skeletonTimer);
 				setShowSkeleton(false);
 				setLoadingState(MindMapLoadingState.FULLY_LOADED);
-
 			} catch (error) {
 				logError(error, {
 					operation: 'EnhancedMindMap.loadData',
@@ -224,19 +219,14 @@ return;
 	// Update loading progress
 	useEffect(() => {
 		if (loadingState === MindMapLoadingState.LOADING && treeData) {
-			const progress = Math.min(
-				(treeData.totalNodes / 100) * 100,
-				90
-			);
+			const progress = Math.min((treeData.totalNodes / 100) * 100, 90);
 			setLoadProgress(progress);
 			setNodeCount(treeData.totalNodes);
 		}
 	}, [treeData, loadingState]);
 
 	// Handle current selection
-	const current = useSelector(
-		selectedId ? statementSelector(selectedId) : () => undefined
-	);
+	const current = useSelector(selectedId ? statementSelector(selectedId) : () => undefined);
 
 	useEffect(() => {
 		if (current) {
@@ -245,39 +235,45 @@ return;
 	}, [current]);
 
 	// Modal handling
-	const toggleModal = useCallback((show: boolean) => {
-		setMapContext((prev) => ({
-			...prev,
-			showModal: show,
-		}));
-	}, [setMapContext]);
+	const toggleModal = useCallback(
+		(show: boolean) => {
+			setMapContext((prev) => ({
+				...prev,
+				showModal: show,
+			}));
+		},
+		[setMapContext],
+	);
 
 	// Export functionality
-	const handleExport = useCallback(async (format: 'json' | 'svg' | 'png') => {
-		if (!statementId) return;
+	const handleExport = useCallback(
+		async (format: 'json' | 'svg' | 'png') => {
+			if (!statementId) return;
 
-		try {
-			const blob = await enhancedMindMapService.exportMindMap(statementId, format);
+			try {
+				const blob = await enhancedMindMapService.exportMindMap(statementId, format);
 
-			// Download the file
-			const url = URL.createObjectURL(blob);
-			const a = document.createElement('a');
-			a.href = url;
-			a.download = `mindmap-${statementId}.${format}`;
-			document.body.appendChild(a);
-			a.click();
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
+				// Download the file
+				const url = URL.createObjectURL(blob);
+				const a = document.createElement('a');
+				a.href = url;
+				a.download = `mindmap-${statementId}.${format}`;
+				document.body.appendChild(a);
+				a.click();
+				document.body.removeChild(a);
+				URL.revokeObjectURL(url);
 
-			console.info(`[EnhancedMindMap] Exported as ${format}`);
-		} catch (error) {
-			logError(error, {
-				operation: 'EnhancedMindMap.handleExport',
-				statementId,
-				metadata: { format }
-			});
-		}
-	}, [statementId]);
+				console.info(`[EnhancedMindMap] Exported as ${format}`);
+			} catch (error) {
+				logError(error, {
+					operation: 'EnhancedMindMap.handleExport',
+					statementId,
+					metadata: { format },
+				});
+			}
+		},
+		[statementId],
+	);
 
 	// Validate hierarchy
 	const handleValidate = useCallback(async () => {
@@ -294,7 +290,7 @@ return;
 		} catch (error) {
 			logError(error, {
 				operation: 'EnhancedMindMap.handleValidate',
-				statementId
+				statementId,
 			});
 		}
 	}, [statementId]);
@@ -317,51 +313,63 @@ return;
 	// Render loading state
 	if (loadingState === MindMapLoadingState.LOADING || !statement) {
 		return (
-			<div className="enhanced-mind-map-loading" style={{
-				display: 'flex',
-				alignItems: 'center',
-				justifyContent: 'center',
-				height: '100vh',
-				flexDirection: 'column',
-				gap: '1.5rem',
-				background: 'var(--background-primary)',
-			}}>
+			<div
+				className="enhanced-mind-map-loading"
+				style={{
+					display: 'flex',
+					alignItems: 'center',
+					justifyContent: 'center',
+					height: '100vh',
+					flexDirection: 'column',
+					gap: '1.5rem',
+					background: 'var(--background-primary)',
+				}}
+			>
 				{showSkeleton && (
 					<>
-						<div className="skeleton-loader" style={{
-							width: '80px',
-							height: '80px',
-							border: '6px solid var(--background-secondary)',
-							borderTop: '6px solid var(--btn-primary)',
-							borderRadius: '50%',
-							animation: 'spin 1s linear infinite',
-						}}></div>
+						<div
+							className="skeleton-loader"
+							style={{
+								width: '80px',
+								height: '80px',
+								border: '6px solid var(--background-secondary)',
+								borderTop: '6px solid var(--btn-primary)',
+								borderRadius: '50%',
+								animation: 'spin 1s linear infinite',
+							}}
+						></div>
 
 						{loadProgress > 0 && (
-							<div style={{
-								width: '300px',
-								height: '8px',
-								background: 'var(--background-secondary)',
-								borderRadius: '4px',
-								overflow: 'hidden'
-							}}>
-								<div style={{
-									width: `${loadProgress}%`,
-									height: '100%',
-									background: 'var(--btn-primary)',
-									transition: 'width 0.3s ease',
-									borderRadius: '4px'
-								}}></div>
+							<div
+								style={{
+									width: '300px',
+									height: '8px',
+									background: 'var(--background-secondary)',
+									borderRadius: '4px',
+									overflow: 'hidden',
+								}}
+							>
+								<div
+									style={{
+										width: `${loadProgress}%`,
+										height: '100%',
+										background: 'var(--btn-primary)',
+										transition: 'width 0.3s ease',
+										borderRadius: '4px',
+									}}
+								></div>
 							</div>
 						)}
 					</>
 				)}
 
-				<div style={{
-					color: 'var(--text-body)',
-					fontSize: '1.1rem',
-					textAlign: 'center'
-				}}>
+				<div
+					style={{
+						color: 'var(--text-body)',
+						fontSize: '1.1rem',
+						textAlign: 'center',
+					}}
+				>
 					<div>{loadingMessage}</div>
 					{nodeCount > 0 && (
 						<div style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.7 }}>
@@ -371,13 +379,15 @@ return;
 				</div>
 
 				{isOffline && (
-					<div style={{
-						padding: '0.5rem 1rem',
-						background: 'var(--warning-bg)',
-						color: 'var(--warning)',
-						borderRadius: '4px',
-						fontSize: '0.9rem'
-					}}>
+					<div
+						style={{
+							padding: '0.5rem 1rem',
+							background: 'var(--warning-bg)',
+							color: 'var(--warning)',
+							borderRadius: '4px',
+							fontSize: '0.9rem',
+						}}
+					>
 						Offline mode - Limited functionality
 					</div>
 				)}
@@ -396,22 +406,24 @@ return;
 	// Main render
 	return (
 		<MindMapErrorBoundary statementId={statementId}>
-			<main className='page__main' style={{ padding: 0, alignItems: 'stretch' }}>
+			<main className="page__main" style={{ padding: 0, alignItems: 'stretch' }}>
 				<style>{spinnerStyle}</style>
 				<ReactFlowProvider>
 					{/* Control panel */}
-					<div style={{
-						position: 'absolute',
-						top: '1rem',
-						right: '1rem',
-						zIndex: 100,
-						display: 'flex',
-						flexDirection: 'column',
-						gap: '0.5rem',
-					}}>
+					<div
+						style={{
+							position: 'absolute',
+							top: '1rem',
+							right: '1rem',
+							zIndex: 100,
+							display: 'flex',
+							flexDirection: 'column',
+							gap: '0.5rem',
+						}}
+					>
 						{/* Filter selector */}
 						<select
-							aria-label='Select filter type'
+							aria-label="Select filter type"
 							onChange={(ev) => setFilterBy(ev.target.value as FilterType)}
 							value={filterBy}
 							style={{
@@ -421,9 +433,7 @@ return;
 								background: 'white',
 							}}
 						>
-							<option value={FilterType.questionsResults}>
-								{t('Questions and Results')}
-							</option>
+							<option value={FilterType.questionsResults}>{t('Questions and Results')}</option>
 							<option value={FilterType.questionsResultsOptions}>
 								{t('Questions, options and Results')}
 							</option>
@@ -431,20 +441,22 @@ return;
 
 						{/* Export buttons */}
 						{_isAdmin && (
-							<div style={{
-								display: 'flex',
-								gap: '0.5rem',
-								background: 'white',
-								padding: '0.5rem',
-								borderRadius: '4px',
-								border: '1px solid var(--border-color)',
-							}}>
+							<div
+								style={{
+									display: 'flex',
+									gap: '0.5rem',
+									background: 'white',
+									padding: '0.5rem',
+									borderRadius: '4px',
+									border: '1px solid var(--border-color)',
+								}}
+							>
 								<button
 									onClick={() => handleExport('json')}
 									style={{
 										padding: '0.25rem 0.5rem',
 										fontSize: '0.875rem',
-										cursor: 'pointer'
+										cursor: 'pointer',
 									}}
 								>
 									Export JSON
@@ -456,7 +468,7 @@ return;
 										padding: '0.25rem 0.5rem',
 										fontSize: '0.875rem',
 										cursor: 'not-allowed',
-										opacity: 0.5
+										opacity: 0.5,
 									}}
 								>
 									Export SVG
@@ -466,16 +478,18 @@ return;
 
 						{/* Dev tools */}
 						{process.env.NODE_ENV === 'development' && (
-							<div style={{
-								display: 'flex',
-								flexDirection: 'column',
-								gap: '0.25rem',
-								background: 'white',
-								padding: '0.5rem',
-								borderRadius: '4px',
-								border: '1px solid var(--border-color)',
-								fontSize: '0.75rem'
-							}}>
+							<div
+								style={{
+									display: 'flex',
+									flexDirection: 'column',
+									gap: '0.25rem',
+									background: 'white',
+									padding: '0.5rem',
+									borderRadius: '4px',
+									border: '1px solid var(--border-color)',
+									fontSize: '0.75rem',
+								}}
+							>
 								<button onClick={handleValidate}>Validate</button>
 								<button onClick={handleCacheStats}>Cache Stats</button>
 								<button onClick={() => enhancedMindMapService.clearAll()}>Clear Cache</button>
@@ -484,58 +498,68 @@ return;
 					</div>
 
 					{/* Status indicators */}
-					<div style={{
-						position: 'absolute',
-						bottom: '1rem',
-						left: '1rem',
-						zIndex: 100,
-						display: 'flex',
-						gap: '0.5rem',
-					}}>
+					<div
+						style={{
+							position: 'absolute',
+							bottom: '1rem',
+							left: '1rem',
+							zIndex: 100,
+							display: 'flex',
+							gap: '0.5rem',
+						}}
+					>
 						{isOffline && (
-							<div style={{
-								background: 'var(--warning-bg)',
-								color: 'var(--warning)',
-								padding: '0.25rem 0.5rem',
-								borderRadius: '4px',
-								fontSize: '0.75rem',
-							}}>
+							<div
+								style={{
+									background: 'var(--warning-bg)',
+									color: 'var(--warning)',
+									padding: '0.25rem 0.5rem',
+									borderRadius: '4px',
+									fontSize: '0.75rem',
+								}}
+							>
 								Offline
 							</div>
 						)}
 
 						{offlineDataAvailable && (
-							<div style={{
-								background: 'var(--info-bg)',
-								color: 'var(--info)',
-								padding: '0.25rem 0.5rem',
-								borderRadius: '4px',
-								fontSize: '0.75rem',
-							}}>
+							<div
+								style={{
+									background: 'var(--info-bg)',
+									color: 'var(--info)',
+									padding: '0.25rem 0.5rem',
+									borderRadius: '4px',
+									fontSize: '0.75rem',
+								}}
+							>
 								Cached Data
 							</div>
 						)}
 
 						{nodeCount > 0 && (
-							<div style={{
-								background: 'rgba(255, 255, 255, 0.9)',
-								color: 'var(--text-secondary)',
-								padding: '0.25rem 0.5rem',
-								borderRadius: '4px',
-								fontSize: '0.75rem',
-							}}>
+							<div
+								style={{
+									background: 'rgba(255, 255, 255, 0.9)',
+									color: 'var(--text-secondary)',
+									padding: '0.25rem 0.5rem',
+									borderRadius: '4px',
+									fontSize: '0.75rem',
+								}}
+							>
 								{nodeCount} nodes
 							</div>
 						)}
 					</div>
 
 					{/* Mind map chart */}
-					<div style={{
-						height: '100vh',
-						width: '100vw',
-						direction: 'ltr',
-						position: 'relative',
-					}}>
+					<div
+						style={{
+							height: '100vh',
+							width: '100vw',
+							direction: 'ltr',
+							position: 'relative',
+						}}
+					>
 						{results ? (
 							<VirtualMindMapChart
 								descendants={convertMindMapNodeToResults(results)}
@@ -543,13 +567,15 @@ return;
 								filterBy={filterBy}
 							/>
 						) : (
-							<div style={{
-								display: 'flex',
-								alignItems: 'center',
-								justifyContent: 'center',
-								height: '100%',
-								color: 'var(--text-secondary)'
-							}}>
+							<div
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+									height: '100%',
+									color: 'var(--text-secondary)',
+								}}
+							>
 								No data available
 							</div>
 						)}
@@ -559,10 +585,7 @@ return;
 					{mapContext.showModal && (
 						<Modal>
 							<CreateStatementModal
-								allowedTypes={[
-									isOptionAllowed && StatementType.option,
-									StatementType.question,
-								]}
+								allowedTypes={[isOptionAllowed && StatementType.option, StatementType.question]}
 								parentStatement={mapContext.parentStatement}
 								isOption={isDefaultOption}
 								setShowModal={toggleModal}

@@ -34,11 +34,17 @@ const StatementVote: FC = () => {
 	const inVotingGetOnlyResults = statement?.statementSettings?.inVotingGetOnlyResults;
 	const topOptionsCount = statement?.resultsSettings?.numberOfResults ?? 3;
 
-	const _subStatements = useSelector(
-		statementSubsSelector(statement?.statementId)
-	);
+	const _subStatements = useSelector(statementSubsSelector(statement?.statementId));
 
-	const subStatements = inVotingGetOnlyResults ? _subStatements.sort((b, a) => (a.evaluation?.agreement ?? a.consensus ?? 0) - (b.evaluation?.agreement ?? b.consensus ?? 0)).slice(0, topOptionsCount) : _subStatements;
+	const subStatements = inVotingGetOnlyResults
+		? _subStatements
+				.sort(
+					(b, a) =>
+						(a.evaluation?.agreement ?? a.consensus ?? 0) -
+						(b.evaluation?.agreement ?? b.consensus ?? 0),
+				)
+				.slice(0, topOptionsCount)
+		: _subStatements;
 
 	const currentStep = statement?.questionSettings?.currentStep;
 	const isCurrentStepVoting = currentStep === QuestionStep.voting;
@@ -46,23 +52,17 @@ const StatementVote: FC = () => {
 	const toastMessage = stageInfo ? stageInfo.message : '';
 
 	// * Use State * //
-	const [showMultiStageMessage, setShowMultiStageMessage] =
-		useState(isCurrentStepVoting);
-	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] =
-		useState(false);
-	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(
-		undefined
-	);
+	const [showMultiStageMessage, setShowMultiStageMessage] = useState(isCurrentStepVoting);
+	const [isStatementInfoModalOpen, setIsStatementInfoModalOpen] = useState(false);
+	const [statementInfo, setStatementInfo] = useState<Statement | undefined>(undefined);
 
 	// * Variables * //
 	const totalVotes = getTotalVoters(statement);
 
 	useEffect(() => {
 		if (!getVoteFromDB && user?.uid) {
-			getToVoteOnParent(
-				statement?.statementId,
-				user.uid,
-				(option: Statement) => dispatch(setVoteToStore(option))
+			getToVoteOnParent(statement?.statementId, user.uid, (option: Statement) =>
+				dispatch(setVoteToStore(option)),
 			);
 			getVoteFromDB = true;
 		}
@@ -74,7 +74,7 @@ const StatementVote: FC = () => {
 				{showMultiStageMessage && (
 					<Toast
 						text={t(`${toastMessage}`)}
-						type='message'
+						type="message"
 						show={showMultiStageMessage}
 						setShow={setShowMultiStageMessage}
 					>
@@ -98,10 +98,7 @@ const StatementVote: FC = () => {
 			</div>
 			{isStatementInfoModalOpen && (
 				<Modal>
-					<StatementInfo
-						statement={statementInfo}
-						setShowInfo={setIsStatementInfoModalOpen}
-					/>
+					<StatementInfo statement={statementInfo} setShowInfo={setIsStatementInfoModalOpen} />
 				</Modal>
 			)}
 		</>

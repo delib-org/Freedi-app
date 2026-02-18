@@ -20,19 +20,11 @@ const RefinementMessage: FC<RefinementMessageProps> = ({ role, content, timestam
 	return (
 		<div className={`${styles.message} ${styles[`message--${role}`]}`}>
 			<div className={styles.messageHeader}>
-				<span className={styles.messageRole}>
-					{role === 'ai' ? '🤖 AI Guide' : '👤 You'}
-				</span>
-				<span className={styles.messageTime}>
-					{formatTime(timestamp)}
-				</span>
+				<span className={styles.messageRole}>{role === 'ai' ? '🤖 AI Guide' : '👤 You'}</span>
+				<span className={styles.messageTime}>{formatTime(timestamp)}</span>
 			</div>
 			<div className={styles.messageContent}>
-				{role === 'ai' ? (
-					<Markdown>{content}</Markdown>
-				) : (
-					<p>{content}</p>
-				)}
+				{role === 'ai' ? <Markdown>{content}</Markdown> : <p>{content}</p>}
 			</div>
 		</div>
 	);

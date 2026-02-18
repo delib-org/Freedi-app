@@ -20,7 +20,7 @@ export async function banMember(
 	statementId: string,
 	userId: string,
 	reason: string,
-	removeVotes: boolean
+	removeVotes: boolean,
 ): Promise<void> {
 	try {
 		if (!statementId || !userId) {
@@ -52,7 +52,7 @@ export async function banMember(
 			statementId,
 			userId,
 			reason,
-			removeVotes
+			removeVotes,
 		});
 
 		// 1. Update subscription role to Role.banned
@@ -70,9 +70,8 @@ export async function banMember(
 			userId,
 			reason,
 			votesRemoved: removeVotes,
-			bannedAt: new Date().toISOString()
+			bannedAt: new Date().toISOString(),
 		});
-
 	} catch (error) {
 		console.error('Error banning member:', error);
 		throw error;
@@ -86,10 +85,7 @@ export async function banMember(
  * @param userId - The user ID to unban
  * @returns Promise<void>
  */
-export async function unbanMember(
-	statementId: string,
-	userId: string
-): Promise<void> {
+export async function unbanMember(statementId: string, userId: string): Promise<void> {
 	try {
 		if (!statementId || !userId) {
 			throw new Error('Statement ID and User ID are required to unban a member');
@@ -97,7 +93,7 @@ export async function unbanMember(
 
 		console.info('Unbanning member:', {
 			statementId,
-			userId
+			userId,
 		});
 
 		// Update subscription role back to Role.member
@@ -106,9 +102,8 @@ export async function unbanMember(
 		console.info('Member unbanned successfully:', {
 			statementId,
 			userId,
-			unbannedAt: new Date().toISOString()
+			unbannedAt: new Date().toISOString(),
 		});
-
 	} catch (error) {
 		console.error('Error unbanning member:', error);
 		throw error;

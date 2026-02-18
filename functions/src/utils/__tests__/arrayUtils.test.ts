@@ -66,7 +66,7 @@ describe('arrayUtils', () => {
 			const array = ['a', 'b', 'c', 'd', 'e'];
 			const sample = getRandomSample(array, 2);
 
-			sample.forEach(element => {
+			sample.forEach((element) => {
 				expect(array).toContain(element);
 			});
 		});

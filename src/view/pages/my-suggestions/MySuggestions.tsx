@@ -2,7 +2,10 @@ import { FC, useEffect } from 'react';
 import { useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import { statementSelector, userSuggestionsSelector } from '@/redux/statements/statementsSlice';
-import { listenToStatement, listenToUserSuggestions } from '@/controllers/db/statements/listenToStatements';
+import {
+	listenToStatement,
+	listenToUserSuggestions,
+} from '@/controllers/db/statements/listenToStatements';
 import { getStatementSubscriptionFromDB } from '@/controllers/db/subscriptions/getSubscriptions';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -22,15 +25,15 @@ const MySuggestions: FC = () => {
 
 	useEffect(() => {
 		if (!statementId) return;
-		
+
 		// Listen to the statement itself
 		const unsubscribeStatement = listenToStatement(statementId);
-		
+
 		// Listen to user's own suggestions only
-		const unsubscribeUserSuggestions = userId 
+		const unsubscribeUserSuggestions = userId
 			? listenToUserSuggestions(statementId, userId)
 			: () => {};
-		
+
 		return () => {
 			unsubscribeStatement();
 			unsubscribeUserSuggestions();
@@ -40,9 +43,9 @@ const MySuggestions: FC = () => {
 	useEffect(() => {
 		// Fetch subscription if we have a user
 		if (!statementId || !userId) return;
-		
+
 		const subscriptionId = getStatementSubscriptionId(statementId, userId);
-		getStatementSubscriptionFromDB(subscriptionId).then(sub => {
+		getStatementSubscriptionFromDB(subscriptionId).then((sub) => {
 			if (sub) {
 				dispatch(setStatementSubscription(sub));
 			}
@@ -59,7 +62,7 @@ const MySuggestions: FC = () => {
 			<div className="wrapper">
 				<div className={styles.pageContent}>
 					{statement && <h1>{statement.statement}</h1>}
-					
+
 					<div className={styles.suggestionsList}>
 						{userSuggestions.length === 0 ? (
 							<div className={styles.empty}>

@@ -4,14 +4,18 @@ import styles from './Tooltip.module.scss';
 interface TooltipProps {
 	content: string;
 	children: ReactNode;
-	position?: 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+	position?:
+		| 'top'
+		| 'bottom'
+		| 'left'
+		| 'right'
+		| 'top-left'
+		| 'top-right'
+		| 'bottom-left'
+		| 'bottom-right';
 }
 
-export const Tooltip: FC<TooltipProps> = ({
-	content,
-	children,
-	position = 'top'
-}) => {
+export const Tooltip: FC<TooltipProps> = ({ content, children, position = 'top' }) => {
 	const [isVisible, setIsVisible] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
 	const tooltipRef = useRef<HTMLDivElement>(null);
@@ -33,13 +37,10 @@ export const Tooltip: FC<TooltipProps> = ({
 
 	// Handle outside clicks on mobile
 	useEffect(() => {
-		if (!isMobile) return
+		if (!isMobile) return;
 
 		const handleClickOutside = (event: MouseEvent) => {
-			if (
-				triggerRef.current &&
-				!triggerRef.current.contains(event.target as Node)
-			) {
+			if (triggerRef.current && !triggerRef.current.contains(event.target as Node)) {
 				setIsVisible(false);
 			}
 		};
@@ -79,10 +80,7 @@ export const Tooltip: FC<TooltipProps> = ({
 		>
 			{children}
 			{isVisible && (
-				<div
-					className={`${styles.tooltip} ${styles[position]}`}
-					ref={tooltipRef}
-				>
+				<div className={`${styles.tooltip} ${styles[position]}`} ref={tooltipRef}>
 					{content}
 					<span className={styles.arrow}></span>
 				</div>

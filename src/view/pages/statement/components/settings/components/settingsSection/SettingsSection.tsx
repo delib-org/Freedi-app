@@ -71,11 +71,7 @@ const SettingsSection: FC<SettingsSectionProps> = ({
 							onClick={(e) => e.stopPropagation()}
 						>
 							<HelpCircle size={18} className={styles.settingsSection__helpIcon} />
-							{showTooltip && (
-								<div className={styles.settingsSection__tooltip}>
-									{tooltip}
-								</div>
-							)}
+							{showTooltip && <div className={styles.settingsSection__tooltip}>{tooltip}</div>}
 						</div>
 					)}
 					{collapsible && (
@@ -84,15 +80,9 @@ const SettingsSection: FC<SettingsSectionProps> = ({
 						</div>
 					)}
 				</div>
-				{description && (
-					<p className={styles.settingsSection__description}>{description}</p>
-				)}
+				{description && <p className={styles.settingsSection__description}>{description}</p>}
 			</div>
-			{isExpanded && (
-				<div className={styles.settingsSection__content}>
-					{children}
-				</div>
-			)}
+			{isExpanded && <div className={styles.settingsSection__content}>{children}</div>}
 		</section>
 	);
 };

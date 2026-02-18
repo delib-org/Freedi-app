@@ -27,21 +27,15 @@ export const votesSlicer = createSlice({
 					statementId: statement.statementId,
 					userId: statement.creator.uid,
 					parentId: statement.parentId,
-					voteId: getVoteId(
-						statement.creator.uid,
-						statement.parentId
-					),
+					voteId: getVoteId(statement.creator.uid, statement.parentId),
 					createdAt: new Date().getTime(),
 					lastUpdate: new Date().getTime(),
 				};
-				const oldVote = state.votes.find(
-					(vote) => vote.voteId === newVote.voteId
-				);
+				const oldVote = state.votes.find((vote) => vote.voteId === newVote.voteId);
 				if (!oldVote) {
 					state.votes = updateArray(state.votes, newVote, 'parentId');
 				} else {
-					const isSameOption =
-						newVote.statementId === oldVote?.statementId;
+					const isSameOption = newVote.statementId === oldVote?.statementId;
 					if (isSameOption) newVote.statementId = 'none';
 					state.votes = updateArray(state.votes, newVote, 'parentId');
 				}
@@ -62,9 +56,6 @@ export const votesSelector = (state: RootState) => state.votes.votes;
 // Memoized selector factory for finding vote by parentId
 // This prevents O(N) find operations on every render
 export const parentVoteSelector = (parentId: string | undefined) =>
-	createSelector(
-		[votesSelector],
-		(votes) => votes.find((vote) => vote.parentId === parentId)
-	);
+	createSelector([votesSelector], (votes) => votes.find((vote) => vote.parentId === parentId));
 
 export default votesSlicer.reducer;

@@ -11,12 +11,14 @@ import AddQuestionIcon from '@/assets/icons/addQuestion.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
-import { updateStatementText, updateStatementMainImage, toggleStatementHide } from '@/controllers/db/statements/setStatements';
+import {
+	updateStatementText,
+	updateStatementMainImage,
+	toggleStatementHide,
+} from '@/controllers/db/statements/setStatements';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import useStatementColor, {
-	StyleProps,
-} from '@/controllers/hooks/useStatementColor';
+import useStatementColor, { StyleProps } from '@/controllers/hooks/useStatementColor';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
@@ -39,10 +41,7 @@ interface Props {
 	parentStatement?: Statement | undefined;
 }
 
-const SuggestionCard: FC<Props> = ({
-	parentStatement,
-	statement,
-}) => {
+const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 	// Hooks
 	if (!parentStatement) console.error('parentStatement is not defined');
 
@@ -55,7 +54,8 @@ const SuggestionCard: FC<Props> = ({
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
 	const enableAIImprovement = parentStatement?.statementSettings?.enableAIImprovement;
-	const showBadges = parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
+	const showBadges =
+		parentStatement?.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot;
 	const isAnchored = statement?.anchored === true;
 	const anchorIcon = parentStatement?.evaluationSettings?.anchored?.anchorIcon;
 	const anchorDescription = parentStatement?.evaluationSettings?.anchored?.anchorDescription;
@@ -69,16 +69,17 @@ const SuggestionCard: FC<Props> = ({
 	// Early return if statement is not defined
 	if (!statement) return null;
 
-	const hasJoinedServer = statement?.joined?.find(
-		(c) => c?.uid === creator?.uid
-	) ? true : false;
+	const hasJoinedServer = statement?.joined?.find((c) => c?.uid === creator?.uid) ? true : false;
 
 	// Join count and status for visual indicators
 	const joinedCount = statement?.joined?.length ?? 0;
-	const isBelowMinimum = enableJoining && minJoinMembers !== undefined && joinedCount < minJoinMembers;
-	const isAboveMinimum = enableJoining && minJoinMembers !== undefined && joinedCount >= minJoinMembers;
+	const isBelowMinimum =
+		enableJoining && minJoinMembers !== undefined && joinedCount < minJoinMembers;
+	const isAboveMinimum =
+		enableJoining && minJoinMembers !== undefined && joinedCount >= minJoinMembers;
 	// Note: exceeding max is handled by admin splitting into rooms, not by blocking joining
-	const exceedsMaximum = enableJoining && maxJoinMembers !== undefined && joinedCount > maxJoinMembers;
+	const exceedsMaximum =
+		enableJoining && maxJoinMembers !== undefined && joinedCount > maxJoinMembers;
 
 	// Optimistic state for instant UI updates
 	const [hasJoinedOptimistic, setHasJoinedOptimistic] = useState(hasJoinedServer);
@@ -91,8 +92,7 @@ const SuggestionCard: FC<Props> = ({
 
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
-	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] =
-		useState(false);
+	const [shouldShowAddSubQuestionModal, setShouldShowAddSubQuestionModal] = useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
 
@@ -105,7 +105,7 @@ const SuggestionCard: FC<Props> = ({
 	const [hasBeenImproved, setHasBeenImproved] = useState(false);
 
 	// Image states
-	const imageUrl = statement?.imagesURL?.main ?? "";
+	const imageUrl = statement?.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
 	const [showImageUpload, setShowImageUpload] = useState(false);
 
@@ -156,15 +156,14 @@ const SuggestionCard: FC<Props> = ({
 	async function handleSetOption() {
 		try {
 			if (statement?.statementType === StatementType.option) {
-				const cancelOption = window.confirm(
-					'Are you sure you want to cancel this option?'
-				);
+				const cancelOption = window.confirm('Are you sure you want to cancel this option?');
 				if (!cancelOption) return;
 			}
 
-			const newType = statement?.statementType === StatementType.option
-				? StatementType.statement
-				: StatementType.option;
+			const newType =
+				statement?.statementType === StatementType.option
+					? StatementType.statement
+					: StatementType.option;
 
 			const result = await changeStatementType(statement, newType, isAuthorized);
 			if (!result.success && result.error) {
@@ -221,9 +220,9 @@ const SuggestionCard: FC<Props> = ({
 				statement.statement,
 				statement.summary,
 				instructions,
-				parentStatement?.statement,  // Parent question/title for context
+				parentStatement?.statement, // Parent question/title for context
 				parentStatement?.summary, // Parent summary for additional context
-				45000 // 45 seconds timeout
+				45000, // 45 seconds timeout
 			);
 
 			// Update title in the database (paragraphs not modified by AI improvement)
@@ -238,7 +237,9 @@ const SuggestionCard: FC<Props> = ({
 			let errorMessage = t('Failed to improve suggestion. Please try again.');
 			if (error instanceof Error) {
 				if (error.message.includes('timed out')) {
-					errorMessage = t('The improvement request took too long. Please try again with simpler instructions.');
+					errorMessage = t(
+						'The improvement request took too long. Please try again with simpler instructions.',
+					);
 				} else if (error.message.includes('network')) {
 					errorMessage = t('Network error. Please check your connection and try again.');
 				}
@@ -269,9 +270,9 @@ const SuggestionCard: FC<Props> = ({
 	}
 
 	// Check if statement is in parent's results array (evaluation/consensus winner)
-	const isInResults = parentStatement?.results?.some(
-		(result) => result.statementId === statement.statementId
-	) ?? false;
+	const isInResults =
+		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
+		false;
 
 	// Check if statement is the voting winner (from voting screen)
 	const isVotingWinner = parentStatement?.topVotedOption?.statementId === statement.statementId;
@@ -301,7 +302,7 @@ const SuggestionCard: FC<Props> = ({
 				borderLeft: showEvaluation ? selectedOptionIndicator : '12px solid transparent',
 				color: statementColor.color,
 				flexDirection: dir === 'ltr' ? 'row' : 'row-reverse',
-				pointerEvents: (statement.hide && !isAuthorized ? 'none' : 'auto'),
+				pointerEvents: statement.hide && !isAuthorized ? 'none' : 'auto',
 			}}
 			ref={elementRef}
 			id={statement.statementId}
@@ -330,19 +331,6 @@ const SuggestionCard: FC<Props> = ({
 					aria-label={t('Unhide this card')}
 				>
 					<EyeIcon />
-				</button>
-			)}
-
-			{/* Quick hide button - appears on hover for admins on visible cards */}
-			{!statement.hide && isAuthorized && (
-				<button
-					type="button"
-					className={styles.quickHideBtn}
-					onClick={handleToggleHide}
-					title={t('Hide')}
-					aria-label={t('Hide this card from participants')}
-				>
-					<EyeCrossIcon />
 				</button>
 			)}
 
@@ -435,10 +423,7 @@ const SuggestionCard: FC<Props> = ({
 							)}
 							{/* Show Undo button when suggestion has been improved and AI improvement is enabled */}
 							{enableAIImprovement && hasBeenImproved && (
-								<button
-									onClick={handleUndo}
-									className="btn btn--small btn--cancel"
-								>
+								<button onClick={handleUndo} className="btn btn--small btn--cancel">
 									{t('Undo')}
 								</button>
 							)}
@@ -458,8 +443,7 @@ const SuggestionCard: FC<Props> = ({
 											`.trim()}
 										>
 											{joinedCount}
-											{maxJoinMembers !== undefined && `/${maxJoinMembers}`}
-											{' '}{t('members')}
+											{maxJoinMembers !== undefined && `/${maxJoinMembers}`} {t('members')}
 										</span>
 									)}
 									<button
@@ -471,7 +455,7 @@ const SuggestionCard: FC<Props> = ({
 											color: hasJoinedOptimistic ? 'white' : 'inherit',
 											borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
 											opacity: isJoinLoading ? 0.7 : 1,
-											cursor: isJoinLoading ? 'not-allowed' : 'pointer'
+											cursor: isJoinLoading ? 'not-allowed' : 'pointer',
 										}}
 									>
 										{hasJoinedOptimistic ? t('Leave') : t('Join')}
@@ -523,7 +507,7 @@ const SuggestionCard: FC<Props> = ({
 							className={`${styles['add-sub-question-button']} ${styles['more-question']}`}
 							style={{ display: 'none', cursor: 'default' }} // changed to display none for it to not take dom space
 							onClick={
-								() => { } //delete the brackets and uncomment the line below for functionality
+								() => {} //delete the brackets and uncomment the line below for functionality
 								//	setShouldShowAddSubQuestionModal(true)
 							}
 						>
@@ -561,10 +545,7 @@ const SuggestionCard: FC<Props> = ({
 						}}
 						isAdmin={isAdmin}
 					/>
-					<button
-						onClick={() => setShowImageUpload(false)}
-						className={styles.closeUploadBtn}
-					>
+					<button onClick={() => setShowImageUpload(false)} className={styles.closeUploadBtn}>
 						✕
 					</button>
 				</div>

@@ -21,13 +21,13 @@ interface ImproveProposalResponse {
 }
 
 const LANGUAGE_NAMES: Record<string, string> = {
-	'he': 'Hebrew',
-	'ar': 'Arabic',
-	'en': 'English',
-	'es': 'Spanish',
-	'fr': 'French',
-	'de': 'German',
-	'nl': 'Dutch'
+	he: 'Hebrew',
+	ar: 'Arabic',
+	en: 'English',
+	es: 'Spanish',
+	fr: 'French',
+	de: 'German',
+	nl: 'Dutch',
 };
 
 /**
@@ -78,7 +78,7 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 		if (!isCreator && !isAdmin) {
 			throw new HttpsError(
 				'permission-denied',
-				'Only the creator or admins can improve this proposal'
+				'Only the creator or admins can improve this proposal',
 			);
 		}
 
@@ -92,14 +92,14 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 			.limit(50)
 			.get();
 
-		const comments = commentsSnapshot.docs.map(doc => doc.data() as Statement);
+		const comments = commentsSnapshot.docs.map((doc) => doc.data() as Statement);
 
 		// 4. Build synthesis prompt
 		const prompt = buildSynthesisPrompt(
 			statement.statement,
 			getParagraphsText(statement.paragraphs),
 			comments,
-			language
+			language,
 		);
 
 		// 5. Call Gemini
@@ -133,7 +133,11 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 			}
 
 			// Validate response structure
-			if (!aiResponse.improvedTitle || !aiResponse.improvedDescription || !aiResponse.improvementSummary) {
+			if (
+				!aiResponse.improvedTitle ||
+				!aiResponse.improvedDescription ||
+				!aiResponse.improvementSummary
+			) {
 				console.error('Invalid AI response structure:', aiResponse);
 				throw new HttpsError('internal', 'Invalid AI response structure');
 			}
@@ -155,7 +159,7 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 			console.error('Error generating improved proposal:', error);
 			throw new HttpsError('internal', 'Failed to generate improved proposal');
 		}
-	}
+	},
 );
 
 /**
@@ -165,45 +169,50 @@ function buildSynthesisPrompt(
 	proposalTitle: string,
 	proposalDescription: string,
 	comments: Statement[],
-	language: string
+	language: string,
 ): string {
 	const languageName = LANGUAGE_NAMES[language] || 'English';
 
 	// Categorize comments by support level
 	const supporting = comments
-		.filter(c => (c.evidence?.support ?? 0) > 0.2)
-		.map(c => ({
+		.filter((c) => (c.evidence?.support ?? 0) > 0.2)
+		.map((c) => ({
 			text: c.statement,
 			support: c.evidence?.support ?? 0,
-			type: c.evidence?.evidenceType || 'argument'
+			type: c.evidence?.evidenceType || 'argument',
 		}));
 
 	const challenging = comments
-		.filter(c => (c.evidence?.support ?? 0) < -0.2)
-		.map(c => ({
+		.filter((c) => (c.evidence?.support ?? 0) < -0.2)
+		.map((c) => ({
 			text: c.statement,
 			support: c.evidence?.support ?? 0,
-			type: c.evidence?.evidenceType || 'argument'
+			type: c.evidence?.evidenceType || 'argument',
 		}));
 
 	const neutral = comments
-		.filter(c => Math.abs(c.evidence?.support ?? 0) <= 0.2)
-		.map(c => ({
+		.filter((c) => Math.abs(c.evidence?.support ?? 0) <= 0.2)
+		.map((c) => ({
 			text: c.statement,
-			type: c.evidence?.evidenceType || 'argument'
+			type: c.evidence?.evidenceType || 'argument',
 		}));
 
-	const supportingSection = supporting.length > 0
-		? supporting.map(s => `- ${s.text} (support: ${s.support.toFixed(1)}, type: ${s.type})`).join('\n')
-		: 'None';
+	const supportingSection =
+		supporting.length > 0
+			? supporting
+					.map((s) => `- ${s.text} (support: ${s.support.toFixed(1)}, type: ${s.type})`)
+					.join('\n')
+			: 'None';
 
-	const challengingSection = challenging.length > 0
-		? challenging.map(c => `- ${c.text} (challenge: ${Math.abs(c.support).toFixed(1)}, type: ${c.type})`).join('\n')
-		: 'None';
+	const challengingSection =
+		challenging.length > 0
+			? challenging
+					.map((c) => `- ${c.text} (challenge: ${Math.abs(c.support).toFixed(1)}, type: ${c.type})`)
+					.join('\n')
+			: 'None';
 
-	const neutralSection = neutral.length > 0
-		? neutral.map(n => `- ${n.text} (type: ${n.type})`).join('\n')
-		: 'None';
+	const neutralSection =
+		neutral.length > 0 ? neutral.map((n) => `- ${n.text} (type: ${n.type})`).join('\n') : 'None';
 
 	const descriptionSection = proposalDescription
 		? `\n## Original Description\n"${proposalDescription}"`

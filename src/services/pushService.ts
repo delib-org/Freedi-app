@@ -100,13 +100,15 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 		const allRegistrations = await navigator.serviceWorker.getRegistrations();
 
 		// Check if firebase-messaging-sw.js is registered at Firebase's default scope
-		let registration = await navigator.serviceWorker.getRegistration('/firebase-cloud-messaging-push-scope');
+		let registration = await navigator.serviceWorker.getRegistration(
+			'/firebase-cloud-messaging-push-scope',
+		);
 
 		// If not found at Firebase scope, look for it in all registrations
 		if (!registration || !registration.active?.scriptURL.includes('firebase-messaging-sw.js')) {
 			// Try to find it in all registrations
 			registration = allRegistrations.find((r) =>
-				r.active?.scriptURL.includes('firebase-messaging-sw.js')
+				r.active?.scriptURL.includes('firebase-messaging-sw.js'),
 			);
 		}
 
@@ -115,9 +117,7 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 			await new Promise<void>((resolve) => {
 				const checkInterval = setInterval(async () => {
 					const regs = await navigator.serviceWorker.getRegistrations();
-					registration = regs.find((r) =>
-						r.active?.scriptURL.includes('firebase-messaging-sw.js')
-					);
+					registration = regs.find((r) => r.active?.scriptURL.includes('firebase-messaging-sw.js'));
 					if (registration && registration.active) {
 						clearInterval(checkInterval);
 						resolve();
@@ -260,7 +260,7 @@ export const deleteCurrentToken = async (): Promise<void> => {
  * Set up a listener for foreground messages.
  */
 export const setupForegroundListener = async (
-	onMessage?: (payload: MessagePayload) => void
+	onMessage?: (payload: MessagePayload) => void,
 ): Promise<void> => {
 	if (!isSupported() || !state.messaging) {
 		return;

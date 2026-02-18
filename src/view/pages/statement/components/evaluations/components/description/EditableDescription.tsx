@@ -43,11 +43,7 @@ const EditableDescription: FC = () => {
 
 	return (
 		<>
-			<button
-				type="button"
-				className={containerClass}
-				onClick={() => setIsEditorOpen(true)}
-			>
+			<button type="button" className={containerClass} onClick={() => setIsEditorOpen(true)}>
 				<div className={styles.descriptionHeader}>
 					<button
 						className={styles.editButton}
@@ -74,10 +70,7 @@ const EditableDescription: FC = () => {
 			</button>
 
 			{isEditorOpen && (
-				<DocumentEditModal
-					statement={statement}
-					onClose={() => setIsEditorOpen(false)}
-				/>
+				<DocumentEditModal statement={statement} onClose={() => setIsEditorOpen(false)} />
 			)}
 		</>
 	);

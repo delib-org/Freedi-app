@@ -47,7 +47,7 @@ const CustomSwitchSmall: FC<Props> = ({
 			className={styles.customSwitchSmall}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
-			role='switch'
+			role="switch"
 			aria-checked={isChecked}
 			tabIndex={0}
 		>
@@ -60,32 +60,37 @@ const CustomSwitchSmall: FC<Props> = ({
 				<div
 					className={`${styles.ball} ${styles.ballBackground}`}
 					style={{ left: '4.15rem' }}
-					aria-hidden='true'
+					aria-hidden="true"
 				>
 					{imageUnchecked}
 				</div>
 				<div
 					className={`${styles.ball} ${styles.ballBackground} ${styles.ballBackgroundOff}`}
-					aria-hidden='true'
+					aria-hidden="true"
 				>
 					{imageChecked}
 				</div>
 				<div
 					className={`${styles.ball} ${styles.ballSwitch} ${isChecked ? styles.ballSwitchChecked : styles.ballSwitchUnchecked}`}
-					style={{ left: `${isChecked ? 0 : 4.15}rem`, backgroundColor:  isChecked ? colorChecked ?? '#4ade80' : colorUnchecked ?? '#ef4444' }}
-					aria-hidden='true'
+					style={{
+						left: `${isChecked ? 0 : 4.15}rem`,
+						backgroundColor: isChecked
+							? (colorChecked ?? '#4ade80')
+							: (colorUnchecked ?? '#ef4444'),
+					}}
+					aria-hidden="true"
 				>
 					{isChecked ? imageChecked : imageUnchecked}
 				</div>
 			</div>
-			<div className={styles.text} aria-hidden='true'>
+			<div className={styles.text} aria-hidden="true">
 				{isChecked ? textChecked : textUnchecked}
 			</div>
 			<label htmlFor={`toggleSwitchSimple-${label}`}>
 				<VisuallyHidden labelName={label} />
 			</label>
 			<input
-				type='checkbox'
+				type="checkbox"
 				name={label}
 				id={`toggleSwitchSimple-${label}`}
 				className={styles.switchInput}

@@ -19,8 +19,16 @@ interface Props {
 	role?: Role; // User role to determine admin permissions
 }
 
-const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandatory = true, role }) => {
+const OTHER_SENTINEL = '__other__';
+
+const UserDemographicQuestions: FC<Props> = ({
+	questions,
+	closeModal,
+	isMandatory = true,
+	role,
+}) => {
 	const [userDemographic, setUserDemographic] = useState<UserDemographicQuestion[]>([]);
+	const [otherTexts, setOtherTexts] = useState<Record<string, string>>({});
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const { t } = useTranslation();
 	const navigate = useNavigate();
@@ -30,8 +38,8 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 
 	// Separate questions by scope (group vs statement)
 	const { groupQuestions, statementQuestions } = useMemo(() => {
-		const groupQ = questions.filter(q => q.scope === DEMOGRAPHIC_SCOPE_GROUP);
-		const statementQ = questions.filter(q => q.scope !== DEMOGRAPHIC_SCOPE_GROUP);
+		const groupQ = questions.filter((q) => q.scope === DEMOGRAPHIC_SCOPE_GROUP);
+		const statementQ = questions.filter((q) => q.scope !== DEMOGRAPHIC_SCOPE_GROUP);
 
 		return { groupQuestions: groupQ, statementQuestions: statementQ };
 	}, [questions]);
@@ -40,10 +48,21 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const answeredCount = userDemographic.length;
 	const totalCount = questions.length;
 	const progressPercent = totalCount > 0 ? (answeredCount / totalCount) * 100 : 0;
-	const handleQuestionChange = (
-		question: UserDemographicQuestion,
-		value: string | string[]
-	) => {
+	const handleOtherTextChange = (questionId: string, text: string) => {
+		setOtherTexts((prev) => ({ ...prev, [questionId]: text }));
+
+		// Also update the otherText on the demographic answer
+		setUserDemographic((prevData) =>
+			prevData.map((q) =>
+				q.userQuestionId === questionId ? { ...q, otherText: text } : q
+			)
+		);
+	};
+
+	const handleQuestionChange = (question: UserDemographicQuestion, value: string | string[]) => {
+		const questionId = question.userQuestionId || '';
+		const currentOtherText = otherTexts[questionId] || '';
+
 		// Update the statement with the new user demographic
 		if (
 			question.type === UserDemographicQuestionType.text ||
@@ -51,18 +70,45 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 			question.type === UserDemographicQuestionType.radio ||
 			question.type === UserDemographicQuestionType.dropdown
 		) {
+			const answerValue = Array.isArray(value) ? value.join(',') : value;
+
 			setUserDemographic((prevData) => {
-				const currentQuestion = prevData.find(
-					(q) => q.userQuestionId === question.userQuestionId
-				);
+				const currentQuestion = prevData.find((q) => q.userQuestionId === question.userQuestionId);
 				if (currentQuestion) {
 					return prevData.map((q) =>
 						q.userQuestionId === question.userQuestionId
 							? {
 									...q,
-									answer: Array.isArray(value)
-										? value.join(',')
-										: value,
+									answer: answerValue,
+									otherText: answerValue === OTHER_SENTINEL ? currentOtherText : undefined,
+								}
+							: q,
+					);
+				}
+
+				return [
+					...prevData,
+					{
+						...question,
+						answer: answerValue,
+						otherText: answerValue === OTHER_SENTINEL ? currentOtherText : undefined,
+					},
+				];
+			});
+		} else if (question.type === UserDemographicQuestionType.checkbox) {
+			const arrayValue = value as string[];
+			const hasOther = arrayValue.includes(OTHER_SENTINEL);
+
+			setUserDemographic((prevData) => {
+				const currentQuestion = prevData.find((q) => q.userQuestionId === question.userQuestionId);
+
+				if (currentQuestion) {
+					return prevData.map((q) =>
+						q.userQuestionId === question.userQuestionId
+							? {
+									...q,
+									answerOptions: arrayValue,
+									otherText: hasOther ? currentOtherText : undefined,
 								}
 							: q
 					);
@@ -72,27 +118,9 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 					...prevData,
 					{
 						...question,
-						answer: Array.isArray(value) ? value.join(',') : value,
+						answerOptions: arrayValue,
+						otherText: hasOther ? currentOtherText : undefined,
 					},
-				];
-			});
-		} else if (question.type === UserDemographicQuestionType.checkbox) {
-			setUserDemographic((prevData) => {
-				const currentQuestion = prevData.find(
-					(q) => q.userQuestionId === question.userQuestionId
-				);
-
-				if (currentQuestion) {
-					return prevData.map((q) =>
-						q.userQuestionId === question.userQuestionId
-							? { ...q, answerOptions: value as string[] }
-							: q
-					);
-				}
-
-				return [
-					...prevData,
-					{ ...question, answerOptions: value as string[] },
 				];
 			});
 		}
@@ -101,9 +129,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 	const validateForm = (): boolean => {
 		// Check if all questions have been answered
 		for (const question of questions) {
-			const userAnswer = userDemographic.find(
-				(q) => q.userQuestionId === question.userQuestionId
-			);
+			const userAnswer = userDemographic.find((q) => q.userQuestionId === question.userQuestionId);
 
 			if (!userAnswer) {
 				return false;
@@ -119,12 +145,23 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 				if (!userAnswer.answer || userAnswer.answer.trim() === '') {
 					return false;
 				}
+				// If "Other" is selected, require otherText
+				if (userAnswer.answer === OTHER_SENTINEL) {
+					const text = otherTexts[question.userQuestionId || ''] || '';
+					if (!text.trim()) {
+						return false;
+					}
+				}
 			} else if (question.type === UserDemographicQuestionType.checkbox) {
-				if (
-					!userAnswer.answerOptions ||
-					userAnswer.answerOptions.length === 0
-				) {
+				if (!userAnswer.answerOptions || userAnswer.answerOptions.length === 0) {
 					return false;
+				}
+				// If "Other" is in the selected options, require otherText
+				if (userAnswer.answerOptions.includes(OTHER_SENTINEL)) {
+					const text = otherTexts[question.userQuestionId || ''] || '';
+					if (!text.trim()) {
+						return false;
+					}
 				}
 			}
 		}
@@ -162,9 +199,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 		<div className={styles.userDemographicContainer}>
 			<div className={styles.surveyBody}>
 				<div className={styles.topNavSurvey}>
-					{!isMandatory && (
-						<BackToMenuArrow onClick={() => navigate('/')} />
-					)}
+					{!isMandatory && <BackToMenuArrow onClick={() => navigate('/')} />}
 					{((!isMandatory && closeModal) || (isAdmin && closeModal)) && (
 						<X className={styles.XBtn} onClick={isAdmin ? handleAdminClose : closeModal} />
 					)}
@@ -180,10 +215,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 				{questions.length > 1 && (
 					<div className={styles.progressContainer}>
 						<div className={styles.progressBar}>
-							<div
-								className={styles.progressFill}
-								style={{ width: `${progressPercent}%` }}
-							/>
+							<div className={styles.progressFill} style={{ width: `${progressPercent}%` }} />
 						</div>
 						<span className={styles.progressText}>
 							{answeredCount} / {totalCount} {t('completed')}
@@ -201,7 +233,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 							</p>
 							{groupQuestions.map((question: UserDemographicQuestion) => {
 								const currentAnswer = userDemographic.find(
-									(q) => q.userQuestionId === question.userQuestionId
+									(q) => q.userQuestionId === question.userQuestionId,
 								);
 								let value: string | string[] = '';
 
@@ -217,9 +249,9 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 										question={question}
 										value={value}
 										options={question.options || []}
-										onChange={(val) =>
-											handleQuestionChange(question, val)
-										}
+										onChange={(val) => handleQuestionChange(question, val)}
+										onOtherTextChange={handleOtherTextChange}
+										otherText={otherTexts[question.userQuestionId || ''] || ''}
 										required={true}
 									/>
 								);
@@ -240,7 +272,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 							)}
 							{statementQuestions.map((question: UserDemographicQuestion) => {
 								const currentAnswer = userDemographic.find(
-									(q) => q.userQuestionId === question.userQuestionId
+									(q) => q.userQuestionId === question.userQuestionId,
 								);
 								let value: string | string[] = '';
 
@@ -256,9 +288,9 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 										question={question}
 										value={value}
 										options={question.options || []}
-										onChange={(val) =>
-											handleQuestionChange(question, val)
-										}
+										onChange={(val) => handleQuestionChange(question, val)}
+										onOtherTextChange={handleOtherTextChange}
+										otherText={otherTexts[question.userQuestionId || ''] || ''}
 										required={true}
 									/>
 								);
@@ -268,9 +300,7 @@ const UserDemographicQuestions: FC<Props> = ({ questions, closeModal, isMandator
 
 					<div className={styles.button}>
 						<Button
-							text={
-								isSubmitting ? t('Submitting...') : t('Submit Survey')
-							}
+							text={isSubmitting ? t('Submitting...') : t('Submit Survey')}
 							buttonType={ButtonType.PRIMARY}
 							disabled={isSubmitting || !validateForm()}
 						></Button>

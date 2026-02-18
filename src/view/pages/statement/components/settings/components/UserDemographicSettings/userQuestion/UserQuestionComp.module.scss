@@ -260,6 +260,61 @@
 	}
 }
 
+.allowOtherToggle {
+	margin-top: 0.75rem;
+	padding-top: 0.75rem;
+	border-top: 1px solid var(--border-primary);
+
+	.allowOtherLabel {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		cursor: pointer;
+
+		input[type='checkbox'] {
+			appearance: none;
+			-webkit-appearance: none;
+			width: 1.25rem;
+			height: 1.25rem;
+			min-width: 1.25rem;
+			border: 2px solid var(--border-primary);
+			border-radius: 4px;
+			background-color: var(--card-default);
+			cursor: pointer;
+			position: relative;
+			transition: all 0.2s ease;
+
+			&:checked {
+				border-color: var(--btn-primary);
+				background-color: var(--btn-primary);
+
+				&::after {
+					content: '';
+					position: absolute;
+					top: 45%;
+					left: 50%;
+					transform: translate(-50%, -50%) rotate(45deg);
+					width: 0.3rem;
+					height: 0.55rem;
+					border: solid white;
+					border-width: 0 2px 2px 0;
+				}
+			}
+
+			&:hover {
+				border-color: var(--btn-primary);
+			}
+		}
+
+		span {
+			font-size: 0.9375rem;
+			font-weight: 500;
+			color: var(--text-title);
+			line-height: 1.4;
+		}
+	}
+}
+
 .scopeToggle {
 	margin-top: 1rem;
 	padding-top: 1rem;

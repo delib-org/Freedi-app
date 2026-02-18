@@ -35,7 +35,8 @@ interface Settings {
   allowComments: boolean;
   allowApprovals: boolean;
   enableSuggestions: boolean;
-  requireLogin: boolean;
+  requireGoogleLogin: boolean;
+  hideUserIdentity: boolean;
   showHeatMap: boolean;
   showViewCounts: boolean;
   isPublic: boolean;
@@ -64,6 +65,8 @@ interface Settings {
   nonInteractiveNormalStyle: boolean;
   /** When true, automatically numbers headings hierarchically (1, 1.1, 1.1.1, etc.) */
   enableHeadingNumbering: boolean;
+  /** When true, shows signed/rejected counts to all users in the document footer */
+  showSignatureCounts: boolean;
 }
 
 export default function AdminSettingsPage() {
@@ -77,7 +80,8 @@ export default function AdminSettingsPage() {
     allowComments: true,
     allowApprovals: true,
     enableSuggestions: false,
-    requireLogin: false,
+    requireGoogleLogin: false,
+    hideUserIdentity: true,
     showHeatMap: true,
     showViewCounts: true,
     isPublic: true,
@@ -99,6 +103,7 @@ export default function AdminSettingsPage() {
     headerColors: DEFAULT_HEADER_COLORS,
     nonInteractiveNormalStyle: false,
     enableHeadingNumbering: false,
+    showSignatureCounts: true,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -214,16 +219,31 @@ export default function AdminSettingsPage() {
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
-            <p className={styles.settingLabel}>{t('Require Login')}</p>
+            <p className={styles.settingLabel}>{t('Require Google Login')}</p>
             <p className={styles.settingDescription}>
-              {t('Users must be logged in to view and interact')}
+              {t('Users must sign in with Google to comment, suggest, or approve')}
             </p>
           </div>
           <button
             type="button"
-            className={`${styles.toggle} ${settings.requireLogin ? styles.active : ''}`}
-            onClick={() => handleToggle('requireLogin')}
-            aria-pressed={settings.requireLogin}
+            className={`${styles.toggle} ${settings.requireGoogleLogin ? styles.active : ''}`}
+            onClick={() => handleToggle('requireGoogleLogin')}
+            aria-pressed={settings.requireGoogleLogin}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Hide User Identity')}</p>
+            <p className={styles.settingDescription}>
+              {t('Hide display names in comments, suggestions, and interactions')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.hideUserIdentity ? styles.active : ''}`}
+            onClick={() => handleToggle('hideUserIdentity')}
+            aria-pressed={settings.hideUserIdentity}
           />
         </div>
       </section>
@@ -374,6 +394,21 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.showViewCounts ? styles.active : ''}`}
             onClick={() => handleToggle('showViewCounts')}
             aria-pressed={settings.showViewCounts}
+          />
+        </div>
+
+        <div className={styles.settingRow}>
+          <div className={styles.settingInfo}>
+            <p className={styles.settingLabel}>{t('Show Signature Counts')}</p>
+            <p className={styles.settingDescription}>
+              {t('Show signed and rejected counts to all users')}
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`${styles.toggle} ${settings.showSignatureCounts ? styles.active : ''}`}
+            onClick={() => handleToggle('showSignatureCounts')}
+            aria-pressed={settings.showSignatureCounts}
           />
         </div>
 

@@ -90,7 +90,7 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
 	if (subscribers.length === 0) return [];
 
 	// Get unique user IDs to batch fetch quiet hours
-	const userIds = [...new Set(subscribers.map(s => s.userId))];
+	const userIds = [...new Set(subscribers.map((s) => s.userId))];
 	const quietHoursMap = new Map<string, QuietHoursConfig | null>();
 
 	// Batch fetch quiet hours for all users (using tokens)
@@ -104,7 +104,7 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
 
 			if (!tokensSnapshot.empty) {
 				const tokenData = tokensSnapshot.docs[0].data();
-				quietHoursMap.set(userId, tokenData.quietHours as QuietHoursConfig | undefined || null);
+				quietHoursMap.set(userId, (tokenData.quietHours as QuietHoursConfig | undefined) || null);
 			} else {
 				quietHoursMap.set(userId, null);
 			}
@@ -117,7 +117,7 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
 	await Promise.all(fetchPromises);
 
 	// Filter out subscribers who are in quiet hours
-	return subscribers.filter(subscriber => {
+	return subscribers.filter((subscriber) => {
 		const quietHours = quietHoursMap.get(subscriber.userId);
 
 		return !isInQuietHours(quietHours || undefined);
@@ -129,7 +129,7 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
  * Creates notifications for users subscribed to the parent statement.
  */
 export async function updateInAppNotifications(
-	e: FirestoreEvent<QueryDocumentSnapshot>
+	e: FirestoreEvent<QueryDocumentSnapshot>,
 ): Promise<void> {
 	try {
 		//go to the new statement and parse it
@@ -137,11 +137,12 @@ export async function updateInAppNotifications(
 		const statement = parse(StatementSchema, newStatement);
 
 		// Fetch all required data in parallel
-		const [subscribersDB, parentStatementDB, pushSubscribersDB] =
-			await fetchNotificationData(statement.parentId);
+		const [subscribersDB, parentStatementDB, pushSubscribersDB] = await fetchNotificationData(
+			statement.parentId,
+		);
 
 		const subscribersInApp = subscribersDB.docs.map(
-			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
+			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
 		);
 
 		// Handle top-level statements (no parent) and check if parent exists
@@ -151,21 +152,18 @@ export async function updateInAppNotifications(
 			// Skip parent-specific logic
 		} else if (!parentStatementDB.exists) {
 			logger.error(`Parent statement ${statement.parentId} not found`);
-			
-return;
+
+			return;
 		} else {
-			parentStatement = parse(
-				StatementSchema,
-				parentStatementDB.data()
-			);
+			parentStatement = parse(StatementSchema, parentStatementDB.data());
 		}
 
 		// Also fetch subscribers for ALL parent statements in the hierarchy
 		let allParentSubscribers: StatementSubscription[] = [];
 		if (statement.parentId !== 'top' && statement.parents && statement.parents.length > 0) {
 			// Get all parent statement IDs from the parents array
-			const parentIds = statement.parents.filter(id => id !== 'top');
-			
+			const parentIds = statement.parents.filter((id) => id !== 'top');
+
 			// Fetch subscribers for all parent statements in parallel
 			const parentSubscriberPromises = parentIds.map(async (parentId) => {
 				const subscribersDB = await db
@@ -173,27 +171,26 @@ return;
 					.where('statementId', '==', parentId)
 					.where('getInAppNotification', '==', true)
 					.get();
-				
+
 				return subscribersDB.docs.map(
-					(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
+					(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
 				);
 			});
-			
+
 			// Wait for all parent subscriber queries to complete
 			const parentSubscriberArrays = await Promise.all(parentSubscriberPromises);
-			
+
 			// Flatten the array of arrays into a single array
 			allParentSubscribers = parentSubscriberArrays.flat();
-			
-			logger.info(`Found ${allParentSubscribers.length} subscribers from ${parentIds.length} parent statements`);
+
+			logger.info(
+				`Found ${allParentSubscribers.length} subscribers from ${parentIds.length} parent statements`,
+			);
 		}
 
 		// Combine subscribers from direct parent and all ancestors
 		const seenUserIds = new Set();
-		const allSubscribers = [
-			...subscribersInApp,
-			...allParentSubscribers,
-		].filter((subscriber) => {
+		const allSubscribers = [...subscribersInApp, ...allParentSubscribers].filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
 				return false;
 			}
@@ -204,18 +201,18 @@ return;
 
 		// Get push notification subscribers
 		const pushSubscribers = pushSubscribersDB.docs.map(
-			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription
+			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
 		);
-		
+
 		// Also get push subscribers from all parent statements
 		let allPushSubscribers = [...pushSubscribers];
 		if (statement.parentId !== 'top' && allParentSubscribers.length > 0) {
 			const parentPushSubscribers = allParentSubscribers.filter(
-				sub => sub.getPushNotification === true
+				(sub) => sub.getPushNotification === true,
 			);
 			// Combine and dedupe by userId
-			const seenPushUserIds = new Set(pushSubscribers.map(s => s.userId));
-			parentPushSubscribers.forEach(sub => {
+			const seenPushUserIds = new Set(pushSubscribers.map((s) => s.userId));
+			parentPushSubscribers.forEach((sub) => {
 				if (!seenPushUserIds.has(sub.userId)) {
 					allPushSubscribers.push(sub);
 				}
@@ -224,13 +221,13 @@ return;
 
 		// Convert to FCM subscriber format
 		const fcmSubscribers: FcmSubscriber[] = [];
-		allPushSubscribers.forEach(subscriber => {
+		allPushSubscribers.forEach((subscriber) => {
 			if (subscriber.tokens && subscriber.tokens.length > 0) {
-				subscriber.tokens.forEach(token => {
+				subscriber.tokens.forEach((token) => {
 					fcmSubscribers.push({
 						userId: subscriber.userId,
 						token: token,
-						documentId: `${subscriber.userId}_${statement.parentId}`
+						documentId: `${subscriber.userId}_${statement.parentId}`,
 					});
 				});
 			}
@@ -248,17 +245,10 @@ return;
 		}
 
 		// Process notifications
-		await processInAppNotifications(
-			allSubscribers,
-			newStatement,
-			parentStatement
-		);
-		
+		await processInAppNotifications(allSubscribers, newStatement, parentStatement);
+
 		// Process FCM notifications with improved error handling
-		await processFcmNotificationsImproved(
-			fcmSubscribers,
-			newStatement
-		);
+		await processFcmNotificationsImproved(fcmSubscribers, newStatement);
 	} catch (error) {
 		logger.error('Error in updateInAppNotifications:', error);
 	}
@@ -274,17 +264,15 @@ async function fetchNotificationData(parentId: string) {
 		.where('statementId', '==', parentId)
 		.where('getInAppNotification', '==', true)
 		.get();
-	
+
 	// Query for push notification subscribers
 	const pushStatementSubscribersCB = db
 		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
 		.where('getPushNotification', '==', true)
 		.get();
-		
-	const parentStatementCB = db
-		.doc(`${Collections.statements}/${parentId}`)
-		.get();
+
+	const parentStatementCB = db.doc(`${Collections.statements}/${parentId}`).get();
 
 	return await Promise.all([
 		parentStatementSubscribersCB,
@@ -299,7 +287,7 @@ async function fetchNotificationData(parentId: string) {
 async function processInAppNotifications(
 	subscribersInApp: StatementSubscription[],
 	newStatement: Statement,
-	parentStatement: Statement | null
+	parentStatement: Statement | null,
 ) {
 	//here we should have all the subscribers for the parent notification
 
@@ -307,13 +295,9 @@ async function processInAppNotifications(
 
 	// Create notification for each subscriber
 	subscribersInApp.forEach((subscriber: StatementSubscription) => {
-		const notificationRef = db
-			.collection(Collections.inAppNotifications)
-			.doc();
+		const notificationRef = db.collection(Collections.inAppNotifications).doc();
 
-		const questionType =
-			newStatement.questionSettings?.questionType ??
-			getDefaultQuestionType();
+		const questionType = newStatement.questionSettings?.questionType ?? getDefaultQuestionType();
 
 		const newNotification: NotificationType = {
 			userId: subscriber.user.uid,
@@ -351,30 +335,38 @@ async function validateTokens(subscribers: FcmSubscriber[]): Promise<TokenValida
 	const validationPromises = subscribers.map(async (subscriber) => {
 		try {
 			// Send a dry run message to validate the token
-			await admin.messaging().send({
-				token: subscriber.token,
-				notification: {
-					title: 'Test',
-					body: 'Test'
+			await admin.messaging().send(
+				{
+					token: subscriber.token,
+					notification: {
+						title: 'Test',
+						body: 'Test',
+					},
+					data: {
+						test: 'true',
+					},
 				},
-				data: {
-					test: 'true'
-				}
-			}, true); // true = dry run
-			
+				true,
+			); // true = dry run
+
 			validTokens.push(subscriber);
 		} catch (error) {
-			const errorCode = error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown';
-			
+			const errorCode =
+				error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown';
+
 			// Only mark as invalid if it's a specific token error
-			if (errorCode === 'messaging/registration-token-not-registered' ||
+			if (
+				errorCode === 'messaging/registration-token-not-registered' ||
 				errorCode === 'messaging/invalid-registration-token' ||
-				errorCode === 'messaging/invalid-argument') {
+				errorCode === 'messaging/invalid-argument'
+			) {
 				logger.warn(`Invalid token for user ${subscriber.userId}:`, errorCode);
 				invalidTokens.push(subscriber);
 			} else {
 				// For other errors (like quota, server errors, etc), consider the token valid
-				logger.info(`Token validation warning for user ${subscriber.userId}: ${errorCode}, treating as valid`);
+				logger.info(
+					`Token validation warning for user ${subscriber.userId}: ${errorCode}, treating as valid`,
+				);
 				validTokens.push(subscriber);
 			}
 		}
@@ -383,7 +375,9 @@ async function validateTokens(subscribers: FcmSubscriber[]): Promise<TokenValida
 	// Wait for all validations to complete
 	await Promise.all(validationPromises);
 
-	logger.info(`Token validation complete: ${validTokens.length} valid, ${invalidTokens.length} invalid`);
+	logger.info(
+		`Token validation complete: ${validTokens.length} valid, ${invalidTokens.length} invalid`,
+	);
 
 	return { validTokens, invalidTokens };
 }
@@ -468,13 +462,13 @@ async function removeUserTokensFromSubscriptions(userId: string, tokens: string[
 			const currentTokens: string[] = subscription.tokens || [];
 
 			// Filter out invalid tokens
-			const updatedTokens = currentTokens.filter(t => !tokens.includes(t));
+			const updatedTokens = currentTokens.filter((t) => !tokens.includes(t));
 
 			// Only update if tokens changed
 			if (updatedTokens.length !== currentTokens.length) {
 				batch.update(docSnapshot.ref, {
 					tokens: updatedTokens,
-					lastUpdate: Date.now()
+					lastUpdate: Date.now(),
 				});
 				operationCount++;
 
@@ -503,12 +497,12 @@ async function removeUserTokensFromSubscriptions(userId: string, tokens: string[
  */
 export async function processFcmNotificationsImproved(
 	fcmSubscribers: FcmSubscriber[],
-	newStatement: Statement
+	newStatement: Statement,
 ): Promise<SendResult> {
 	const result: SendResult = {
 		successful: 0,
 		failed: 0,
-		invalidTokens: []
+		invalidTokens: [],
 	};
 
 	if (fcmSubscribers.length === 0) {
@@ -516,11 +510,12 @@ export async function processFcmNotificationsImproved(
 	}
 
 	// First, validate all tokens (skip validation if in development to speed up)
-	const skipValidation = process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
-	
+	const skipValidation =
+		process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
+
 	let validTokens = fcmSubscribers;
 	let invalidTokens: FcmSubscriber[] = [];
-	
+
 	if (!skipValidation) {
 		logger.info(`Validating ${fcmSubscribers.length} FCM tokens...`);
 		const validationResult = await validateTokens(fcmSubscribers);
@@ -529,17 +524,17 @@ export async function processFcmNotificationsImproved(
 	} else {
 		logger.info(`Skipping token validation (development mode) for ${fcmSubscribers.length} tokens`);
 	}
-	
+
 	// Remove invalid tokens from database
 	if (invalidTokens.length > 0) {
 		await removeInvalidTokens(invalidTokens);
-		result.invalidTokens = invalidTokens.map(t => t.token);
+		result.invalidTokens = invalidTokens.map((t) => t.token);
 	}
 
 	if (validTokens.length === 0) {
 		logger.warn('No valid tokens found after validation');
 
-return result;
+		return result;
 	}
 
 	// Filter out users in quiet hours
@@ -559,8 +554,8 @@ return result;
 	// Format FCM messages for valid tokens only with rich notification features
 	const creatorName = newStatement.creator.displayName || 'Someone';
 	const creatorPhoto = newStatement.creator.photoURL || '';
-	const statementPreview = newStatement.statement.substring(0, 100) +
-		(newStatement.statement.length > 100 ? '...' : '');
+	const statementPreview =
+		newStatement.statement.substring(0, 100) + (newStatement.statement.length > 100 ? '...' : '');
 
 	// Build URL for notification click
 	const notificationUrl = `/statement/${newStatement.parentId}?focusId=${newStatement.statementId}`;
@@ -626,7 +621,10 @@ return result;
 	const fcmBatchSize = 500;
 	for (let i = 0; i < fcmMessages.length; i += fcmBatchSize) {
 		const batch = fcmMessages.slice(i, i + fcmBatchSize);
-		const batchResult = await sendBatchWithRetry(batch, tokensAfterQuietHours.slice(i, i + fcmBatchSize));
+		const batchResult = await sendBatchWithRetry(
+			batch,
+			tokensAfterQuietHours.slice(i, i + fcmBatchSize),
+		);
 
 		result.successful += batchResult.successful;
 		result.failed += batchResult.failed;
@@ -635,7 +633,9 @@ return result;
 
 	// Clean up any newly discovered invalid tokens
 	if (result.invalidTokens.length > 0) {
-		const tokensToRemove = tokensAfterQuietHours.filter(t => result.invalidTokens.includes(t.token));
+		const tokensToRemove = tokensAfterQuietHours.filter((t) =>
+			result.invalidTokens.includes(t.token),
+		);
 		await removeInvalidTokens(tokensToRemove);
 	}
 
@@ -646,14 +646,14 @@ return result;
  * Sends a batch of messages with retry logic and exponential backoff
  */
 async function sendBatchWithRetry(
-	messages: admin.messaging.Message[], 
+	messages: admin.messaging.Message[],
 	subscribers: FcmSubscriber[],
-	maxRetries: number = 3
+	maxRetries: number = 3,
 ): Promise<SendResult> {
 	const result: SendResult = {
 		successful: 0,
 		failed: 0,
-		invalidTokens: []
+		invalidTokens: [],
 	};
 
 	let retryMessages = [...messages];
@@ -673,10 +673,10 @@ async function sendBatchWithRetry(
 				const messageId = await admin.messaging().send(retryMessages[i]);
 				result.successful++;
 				logger.info(`Successfully sent notification. Message ID: ${messageId}`);
-				
+
 				// Add 50ms delay between messages to avoid rate limiting
 				if (i < retryMessages.length - 1) {
-					await new Promise(resolve => setTimeout(resolve, 50));
+					await new Promise((resolve) => setTimeout(resolve, 50));
 				}
 			} catch (error: unknown) {
 				logger.error(`Failed to send to token ${message.token}:`, error);
@@ -688,14 +688,18 @@ async function sendBatchWithRetry(
 
 				if (isFirebaseError(error)) {
 					// Check if token is invalid
-					if (error.code === 'messaging/registration-token-not-registered' ||
+					if (
+						error.code === 'messaging/registration-token-not-registered' ||
 						error.code === 'messaging/invalid-registration-token' ||
-						error.code === 'messaging/invalid-argument') {
+						error.code === 'messaging/invalid-argument'
+					) {
 						result.invalidTokens.push(message.token);
-					} else if (error.code === 'messaging/message-rate-exceeded' ||
-							   error.code === 'messaging/internal-error' ||
-							   error.code === 'messaging/server-unavailable' ||
-							   error.code === 'messaging/unknown-error') {
+					} else if (
+						error.code === 'messaging/message-rate-exceeded' ||
+						error.code === 'messaging/internal-error' ||
+						error.code === 'messaging/server-unavailable' ||
+						error.code === 'messaging/unknown-error'
+					) {
 						// These errors might be temporary, retry them
 						failedMessages.push(retryMessages[i]);
 						failedSubscribers.push(retrySubscribers[i]);
@@ -715,12 +719,12 @@ async function sendBatchWithRetry(
 		retryMessages = failedMessages;
 		retrySubscribers = failedSubscribers;
 
-			if (retryMessages.length > 0 && attempt < maxRetries - 1) {
-				// Exponential backoff: 1s, 2s, 4s
-				const delay = Math.pow(2, attempt) * 1000;
-				logger.info(`Retrying ${retryMessages.length} failed messages after ${delay}ms delay...`);
-				await new Promise(resolve => setTimeout(resolve, delay));
-			}
+		if (retryMessages.length > 0 && attempt < maxRetries - 1) {
+			// Exponential backoff: 1s, 2s, 4s
+			const delay = Math.pow(2, attempt) * 1000;
+			logger.info(`Retrying ${retryMessages.length} failed messages after ${delay}ms delay...`);
+			await new Promise((resolve) => setTimeout(resolve, delay));
+		}
 
 		attempt++;
 	}

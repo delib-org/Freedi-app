@@ -10,11 +10,7 @@ const WaitingPage = () => {
 			<div className={styles['waiting-page__wrapper']}>
 				<div className={styles['waiting-page__card']}>
 					{/* Portal Animation */}
-					<div
-						className={styles['portal-loader']}
-						role="img"
-						aria-label={t('Waiting for access')}
-					>
+					<div className={styles['portal-loader']} role="img" aria-label={t('Waiting for access')}>
 						<div className={styles['portal-loader__outer-ring']} />
 						<div className={styles['portal-loader__middle-ring']} />
 						<div className={styles['portal-loader__inner-ring']} />
@@ -42,27 +38,23 @@ const WaitingPage = () => {
 
 					{/* Status Section */}
 					<div className={styles['waiting-status']}>
-						<h1 className={styles['waiting-status__title']}>
-							{t('Request Submitted')}
-						</h1>
+						<h1 className={styles['waiting-status__title']}>{t('Request Submitted')}</h1>
 						<p className={styles['waiting-status__message']}>
-							{t('The group administrator will review your request to join. You will be notified once approved.')}
+							{t(
+								'The group administrator will review your request to join. You will be notified once approved.',
+							)}
 						</p>
 
 						{/* Status Indicator */}
 						<div className={styles['status-indicator']}>
 							<span className={styles['status-indicator__dot']} />
-							<span className={styles['status-indicator__text']}>
-								{t('Pending review')}
-							</span>
+							<span className={styles['status-indicator__text']}>{t('Pending review')}</span>
 						</div>
 					</div>
 
 					{/* Info Section */}
 					<div className={styles['waiting-info']}>
-						<h2 className={styles['waiting-info__title']}>
-							{t('What you can do in WizCol')}
-						</h2>
+						<h2 className={styles['waiting-info__title']}>{t('What you can do in WizCol')}</h2>
 						<ul className={styles['waiting-info__list']}>
 							<li className={styles['waiting-info__item']}>
 								<svg

@@ -1,5 +1,5 @@
-import React, { JSX } from 'react'
-import styles from "./MultiSwitch.module.scss";
+import React, { JSX } from 'react';
+import styles from './MultiSwitch.module.scss';
 import CheckIcon from '@/assets/icons/checkIcon.svg?react';
 import { Tooltip } from '../../tooltip/Tooltip';
 
@@ -11,7 +11,7 @@ export interface MultiSwitchProps {
 
 const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValue }) => {
 	function handleSwitch(value: string) {
-		onClick(value)
+		onClick(value);
 	}
 
 	return (
@@ -24,7 +24,7 @@ const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValu
 					onKeyDown={(e) => e.key === 'Enter' && handleSwitch(option.value)}
 					tabIndex={0}
 				>
-					<Tooltip content={option.toolTip ? option.toolTip : ''} position="top" >
+					<Tooltip content={option.toolTip ? option.toolTip : ''} position="top">
 						<div className={styles.optionContent}>
 							{option.icon ? option.icon : null}
 							{option.label}
@@ -34,7 +34,7 @@ const MultiSwitch: React.FC<MultiSwitchProps> = ({ options, onClick, currentValu
 				</button>
 			))}
 		</div>
-	)
-}
+	);
+};
 
-export default MultiSwitch
+export default MultiSwitch;

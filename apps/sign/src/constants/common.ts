@@ -25,6 +25,7 @@ export const QUERY_LIMITS = {
   INVITATIONS: 50,
   DEFAULT: 50,
   SIGNATURES: 200,
+  HOME_DOCUMENTS: 100,
 } as const;
 
 /**

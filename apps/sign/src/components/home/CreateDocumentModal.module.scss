@@ -1,0 +1,228 @@
+.stepIndicator {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--h6-font-size);
+  color: var(--text-caption);
+}
+
+.stepDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--border-light);
+
+  &.active {
+    background: var(--btn-primary);
+  }
+}
+
+.stepLabel {
+  margin-left: var(--spacing-xs);
+}
+
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.groupItem {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+  text-align: start;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  width: 100%;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    background: color-mix(in srgb, var(--btn-primary) 5%, transparent);
+  }
+
+  &.selected {
+    border-color: var(--btn-primary);
+    background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
+    font-weight: 500;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.newGroupRow {
+  display: flex;
+  gap: var(--spacing-xs);
+  margin-bottom: var(--spacing-md);
+}
+
+.input {
+  flex: 1;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+  background: var(--card-default);
+  outline: none;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: var(--btn-primary);
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
+.addButton {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--btn-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--p-font-size);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.formGroup {
+  margin-bottom: var(--spacing-md);
+}
+
+.label {
+  display: block;
+  font-size: var(--h6-font-size);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-xs);
+  font-weight: 500;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--p-font-size);
+  color: var(--text-body);
+  background: var(--card-default);
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    border-color: var(--btn-primary);
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
+.selectedGroupChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 4px 12px;
+  background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
+  color: var(--btn-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--h6-font-size);
+  font-weight: 500;
+  margin-bottom: var(--spacing-md);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-lg);
+}
+
+.cancelButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--p-font-size);
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: color-mix(in srgb, var(--text-secondary) 5%, transparent);
+  }
+}
+
+.submitButton {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background: var(--btn-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: var(--p-font-size);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: var(--btn-primary-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.error {
+  color: var(--disagree);
+  font-size: var(--h6-font-size);
+  margin-top: var(--spacing-xs);
+}
+
+[dir="rtl"] {
+  .actions {
+    flex-direction: row-reverse;
+  }
+
+  .stepLabel {
+    margin-left: 0;
+    margin-right: var(--spacing-xs);
+  }
+}

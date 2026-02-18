@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './notificationPreferences.module.scss';
 import { getAuth } from 'firebase/auth';
-import {
-	saveQuietHours,
-	getQuietHours,
-	QuietHoursConfig,
-} from '@/services/notificationRepository';
+import { saveQuietHours, getQuietHours, QuietHoursConfig } from '@/services/notificationRepository';
 
 interface QuietHoursSettingsProps {
 	disabled?: boolean;
@@ -113,9 +109,7 @@ const QuietHoursSettings: React.FC<QuietHoursSettingsProps> = ({ disabled = fals
 	return (
 		<div className={styles.quietHoursSection}>
 			<h4>Quiet Hours</h4>
-			<p className={styles.quietHoursDescription}>
-				Pause push notifications during specific hours
-			</p>
+			<p className={styles.quietHoursDescription}>Pause push notifications during specific hours</p>
 
 			<div className={styles.quietHoursToggle}>
 				<span>Enable quiet hours</span>

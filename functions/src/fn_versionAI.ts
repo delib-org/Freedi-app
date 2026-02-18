@@ -5,8 +5,8 @@
  * based on community feedback. Has 540s timeout vs Vercel's 30s limit.
  */
 
-import { Request, Response } from "firebase-functions/v1";
-import { getFirestore } from "firebase-admin/firestore";
+import { Request, Response } from 'firebase-functions/v1';
+import { getFirestore } from 'firebase-admin/firestore';
 
 const db = getFirestore();
 
@@ -16,234 +16,230 @@ const db = getFirestore();
 
 // Collection names
 const SignCollections = {
-  documentVersions: "documentVersions",
-  versionChanges: "versionChanges",
+	documentVersions: 'documentVersions',
+	versionChanges: 'versionChanges',
 } as const;
 
 // Enums
 enum VersionStatus {
-  draft = "draft",
-  published = "published",
-  archived = "archived",
+	draft = 'draft',
+	published = 'published',
+	archived = 'archived',
 }
 
 enum ChangeType {
-  modified = "modified",
-  added = "added",
-  removed = "removed",
-  unchanged = "unchanged",
+	modified = 'modified',
+	added = 'added',
+	removed = 'removed',
+	unchanged = 'unchanged',
 }
 
 enum ChangeSourceType {
-  suggestion = "suggestion",
-  comment = "comment",
+	suggestion = 'suggestion',
+	comment = 'comment',
 }
 
 enum ParagraphType {
-  h1 = "h1",
-  h2 = "h2",
-  h3 = "h3",
-  h4 = "h4",
-  h5 = "h5",
-  h6 = "h6",
-  paragraph = "paragraph",
-  li = "li",
-  table = "table",
-  image = "image",
+	h1 = 'h1',
+	h2 = 'h2',
+	h3 = 'h3',
+	h4 = 'h4',
+	h5 = 'h5',
+	h6 = 'h6',
+	paragraph = 'paragraph',
+	li = 'li',
+	table = 'table',
+	image = 'image',
 }
 
 // Interfaces
 interface ChangeSource {
-  type: ChangeSourceType;
-  sourceId: string;
-  content: string;
-  impact: number;
-  supporters: number;
-  objectors: number;
-  creatorId: string;
-  creatorDisplayName: string;
+	type: ChangeSourceType;
+	sourceId: string;
+	content: string;
+	impact: number;
+	supporters: number;
+	objectors: number;
+	creatorId: string;
+	creatorDisplayName: string;
 }
 
 interface Paragraph {
-  paragraphId: string;
-  type: ParagraphType;
-  content: string;
-  order: number;
-  listType?: "ul" | "ol";
-  sourceStatementId?: string;
-  imageUrl?: string;
-  imageAlt?: string;
-  imageCaption?: string;
+	paragraphId: string;
+	type: ParagraphType;
+	content: string;
+	order: number;
+	listType?: 'ul' | 'ol';
+	sourceStatementId?: string;
+	imageUrl?: string;
+	imageAlt?: string;
+	imageCaption?: string;
 }
 
 interface VersionChange {
-  changeId: string;
-  versionId: string;
-  paragraphId: string;
-  originalContent: string;
-  proposedContent: string;
-  finalContent?: string;
-  changeType: ChangeType;
-  sources: ChangeSource[];
-  aiReasoning: string;
-  combinedImpact: number;
+	changeId: string;
+	versionId: string;
+	paragraphId: string;
+	originalContent: string;
+	proposedContent: string;
+	finalContent?: string;
+	changeType: ChangeType;
+	sources: ChangeSource[];
+	aiReasoning: string;
+	combinedImpact: number;
 }
 
 interface DocumentVersion {
-  versionId: string;
-  documentId: string;
-  versionNumber: number;
-  paragraphs: Paragraph[];
-  status: VersionStatus;
-  createdAt: number;
-  publishedAt?: number;
-  createdBy: string;
-  publishedBy?: string;
-  aiGenerated: boolean;
-  aiModel?: string;
-  summary?: string;
+	versionId: string;
+	documentId: string;
+	versionNumber: number;
+	paragraphs: Paragraph[];
+	status: VersionStatus;
+	createdAt: number;
+	publishedAt?: number;
+	createdBy: string;
+	publishedBy?: string;
+	aiGenerated: boolean;
+	aiModel?: string;
+	summary?: string;
 }
 
 // ============================================================================
 // AI CONFIGURATION
 // ============================================================================
 
-const GEMINI_MODEL = "gemini-3-flash-preview";
+const GEMINI_MODEL = 'gemini-3-flash-preview';
 const MAX_TOKENS = 8192;
 const TEMPERATURE = 0.3;
 
 interface ParagraphAnalysisOutput {
-  proposedContent: string;
-  reasoning: string;
-  confidence: number;
+	proposedContent: string;
+	reasoning: string;
+	confidence: number;
 }
 
 /**
  * Extract and parse JSON from AI response
  */
 function extractJSON<T>(response: string, fallback?: T): T {
-  let cleanedResponse = response.trim();
+	let cleanedResponse = response.trim();
 
-  // Remove markdown code blocks
-  const codeBlockMatch = cleanedResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
-  if (codeBlockMatch) {
-    cleanedResponse = codeBlockMatch[1].trim();
-  }
+	// Remove markdown code blocks
+	const codeBlockMatch = cleanedResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
+	if (codeBlockMatch) {
+		cleanedResponse = codeBlockMatch[1].trim();
+	}
 
-  // Try to find JSON object or array
-  const jsonMatch = cleanedResponse.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-  if (jsonMatch) {
-    cleanedResponse = jsonMatch[1];
-  }
+	// Try to find JSON object or array
+	const jsonMatch = cleanedResponse.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
+	if (jsonMatch) {
+		cleanedResponse = jsonMatch[1];
+	}
 
-  try {
-    return JSON.parse(cleanedResponse);
-  } catch (parseError) {
-    if (fallback !== undefined) {
-      return fallback;
-    }
+	try {
+		return JSON.parse(cleanedResponse);
+	} catch (parseError) {
+		if (fallback !== undefined) {
+			return fallback;
+		}
 
-    // Try to fix truncation
-    let fixedResponse = cleanedResponse;
-    const openBraces = (fixedResponse.match(/\{/g) || []).length;
-    const closeBraces = (fixedResponse.match(/\}/g) || []).length;
-    const openBrackets = (fixedResponse.match(/\[/g) || []).length;
-    const closeBrackets = (fixedResponse.match(/\]/g) || []).length;
+		// Try to fix truncation
+		let fixedResponse = cleanedResponse;
+		const openBraces = (fixedResponse.match(/\{/g) || []).length;
+		const closeBraces = (fixedResponse.match(/\}/g) || []).length;
+		const openBrackets = (fixedResponse.match(/\[/g) || []).length;
+		const closeBrackets = (fixedResponse.match(/\]/g) || []).length;
 
-    for (let i = 0; i < openBrackets - closeBrackets; i++) {
-      fixedResponse += "]";
-    }
-    for (let i = 0; i < openBraces - closeBraces; i++) {
-      fixedResponse += "}";
-    }
+		for (let i = 0; i < openBrackets - closeBrackets; i++) {
+			fixedResponse += ']';
+		}
+		for (let i = 0; i < openBraces - closeBraces; i++) {
+			fixedResponse += '}';
+		}
 
-    try {
-      return JSON.parse(fixedResponse);
-    } catch {
-      // Try to extract partial content
-      const proposedContentMatch = cleanedResponse.match(
-        /"proposedContent"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/
-      );
-      if (proposedContentMatch) {
-        return {
-          proposedContent: proposedContentMatch[1]
-            .replace(/\\"/g, '"')
-            .replace(/\\n/g, "\n"),
-          reasoning: "Response was truncated - partial recovery",
-          confidence: 0.7,
-        } as T;
-      }
-      throw parseError;
-    }
-  }
+		try {
+			return JSON.parse(fixedResponse);
+		} catch {
+			// Try to extract partial content
+			const proposedContentMatch = cleanedResponse.match(
+				/"proposedContent"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/,
+			);
+			if (proposedContentMatch) {
+				return {
+					proposedContent: proposedContentMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n'),
+					reasoning: 'Response was truncated - partial recovery',
+					confidence: 0.7,
+				} as T;
+			}
+			throw parseError;
+		}
+	}
 }
 
 /**
  * Call Gemini API
  */
-async function callGemini(
-  systemPrompt: string,
-  userPrompt: string
-): Promise<string> {
-  const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) {
-    throw new Error("GOOGLE_API_KEY not configured");
-  }
+async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
+	const apiKey = process.env.GOOGLE_API_KEY;
+	if (!apiKey) {
+		throw new Error('GOOGLE_API_KEY not configured');
+	}
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-          },
-        ],
-        generationConfig: {
-          temperature: TEMPERATURE,
-          maxOutputTokens: MAX_TOKENS,
-          responseMimeType: "application/json",
-        },
-      }),
-    }
-  );
+	const response = await fetch(
+		`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
+		{
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({
+				contents: [
+					{
+						role: 'user',
+						parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+					},
+				],
+				generationConfig: {
+					temperature: TEMPERATURE,
+					maxOutputTokens: MAX_TOKENS,
+					responseMimeType: 'application/json',
+				},
+			}),
+		},
+	);
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error(`[Gemini API] Error ${response.status}:`, errorText);
-    throw new Error(`Gemini API error: ${response.status}`);
-  }
+	if (!response.ok) {
+		const errorText = await response.text();
+		console.error(`[Gemini API] Error ${response.status}:`, errorText);
+		throw new Error(`Gemini API error: ${response.status}`);
+	}
 
-  const data = await response.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+	const data = await response.json();
+
+	return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
 
 /**
  * Format feedback sources for the AI prompt
  */
 function formatFeedback(sources: ChangeSource[]): string {
-  if (sources.length === 0) {
-    return "No feedback received for this paragraph.";
-  }
+	if (sources.length === 0) {
+		return 'No feedback received for this paragraph.';
+	}
 
-  return sources
-    .map((source, index) => {
-      const type = source.type === ChangeSourceType.suggestion ? "Suggestion" : "Comment";
-      const support =
-        source.supporters > 0 || source.objectors > 0
-          ? ` (${source.supporters} supporters, ${source.objectors} objectors)`
-          : "";
+	return sources
+		.map((source, index) => {
+			const type = source.type === ChangeSourceType.suggestion ? 'Suggestion' : 'Comment';
+			const support =
+				source.supporters > 0 || source.objectors > 0
+					? ` (${source.supporters} supporters, ${source.objectors} objectors)`
+					: '';
 
-      return `${index + 1}. [${type}] (Impact: ${source.impact.toFixed(2)}${support})
+			return `${index + 1}. [${type}] (Impact: ${source.impact.toFixed(2)}${support})
    "${source.content}"
    - By: ${source.creatorDisplayName}`;
-    })
-    .join("\n\n");
+		})
+		.join('\n\n');
 }
 
 const PARAGRAPH_ANALYSIS_SYSTEM_PROMPT = `You are an expert document editor helping to revise documents based on democratic public feedback.
@@ -307,224 +303,229 @@ IMPORTANT:
  * Analyze a single paragraph
  */
 async function analyzeParagraph(
-  paragraph: Paragraph,
-  sources: ChangeSource[],
-  approvalRate?: number
+	paragraph: Paragraph,
+	sources: ChangeSource[],
+	approvalRate?: number,
 ): Promise<ParagraphAnalysisOutput> {
-  if (sources.length === 0) {
-    return {
-      proposedContent: paragraph.content || "",
-      reasoning: "No significant feedback to address.",
-      confidence: 1.0,
-    };
-  }
+	if (sources.length === 0) {
+		return {
+			proposedContent: paragraph.content || '',
+			reasoning: 'No significant feedback to address.',
+			confidence: 1.0,
+		};
+	}
 
-  const userPrompt = PARAGRAPH_ANALYSIS_USER_PROMPT.replace(
-    "{originalContent}",
-    paragraph.content || ""
-  )
-    .replace("{feedbackList}", formatFeedback(sources))
-    .replace(
-      "{approvalRate}",
-      approvalRate !== undefined ? approvalRate.toFixed(0) : "N/A"
-    );
+	const userPrompt = PARAGRAPH_ANALYSIS_USER_PROMPT.replace(
+		'{originalContent}',
+		paragraph.content || '',
+	)
+		.replace('{feedbackList}', formatFeedback(sources))
+		.replace('{approvalRate}', approvalRate !== undefined ? approvalRate.toFixed(0) : 'N/A');
 
-  try {
-    console.info(`[analyzeParagraph] Calling Gemini for paragraph ${paragraph.paragraphId} with ${sources.length} sources`);
+	try {
+		console.info(
+			`[analyzeParagraph] Calling Gemini for paragraph ${paragraph.paragraphId} with ${sources.length} sources`,
+		);
 
-    const response = await callGemini(
-      PARAGRAPH_ANALYSIS_SYSTEM_PROMPT,
-      userPrompt
-    );
+		const response = await callGemini(PARAGRAPH_ANALYSIS_SYSTEM_PROMPT, userPrompt);
 
-    console.info(`[analyzeParagraph] Gemini response length: ${response.length}`);
+		console.info(`[analyzeParagraph] Gemini response length: ${response.length}`);
 
-    const parsed = extractJSON<{
-      proposedContent?: string;
-      reasoning?: string;
-      confidence?: number;
-    }>(response);
+		const parsed = extractJSON<{
+			proposedContent?: string;
+			reasoning?: string;
+			confidence?: number;
+		}>(response);
 
-    const originalContent = paragraph.content || "";
-    const proposedContent = parsed.proposedContent || originalContent;
-    const isChanged = proposedContent !== originalContent;
+		const originalContent = paragraph.content || '';
+		const proposedContent = parsed.proposedContent || originalContent;
+		const isChanged = proposedContent !== originalContent;
 
-    console.info(`[analyzeParagraph] Paragraph ${paragraph.paragraphId}: changed=${isChanged}, confidence=${parsed.confidence}`);
-    if (isChanged) {
-      console.info(`[analyzeParagraph] Original (first 100 chars): ${originalContent.substring(0, 100)}...`);
-      console.info(`[analyzeParagraph] Proposed (first 100 chars): ${proposedContent.substring(0, 100)}...`);
-    }
+		console.info(
+			`[analyzeParagraph] Paragraph ${paragraph.paragraphId}: changed=${isChanged}, confidence=${parsed.confidence}`,
+		);
+		if (isChanged) {
+			console.info(
+				`[analyzeParagraph] Original (first 100 chars): ${originalContent.substring(0, 100)}...`,
+			);
+			console.info(
+				`[analyzeParagraph] Proposed (first 100 chars): ${proposedContent.substring(0, 100)}...`,
+			);
+		}
 
-    return {
-      proposedContent,
-      reasoning: parsed.reasoning || "AI analysis completed.",
-      confidence: typeof parsed.confidence === "number" ? parsed.confidence : 0.8,
-    };
-  } catch (error) {
-    console.error(
-      `[analyzeParagraph] Error for paragraph ${paragraph.paragraphId}:`,
-      error
-    );
-    return {
-      proposedContent: paragraph.content || "",
-      reasoning:
-        "AI analysis encountered an error. The original content has been preserved.",
-      confidence: 0.0,
-    };
-  }
+		return {
+			proposedContent,
+			reasoning: parsed.reasoning || 'AI analysis completed.',
+			confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
+		};
+	} catch (error) {
+		console.error(`[analyzeParagraph] Error for paragraph ${paragraph.paragraphId}:`, error);
+
+		return {
+			proposedContent: paragraph.content || '',
+			reasoning: 'AI analysis encountered an error. The original content has been preserved.',
+			confidence: 0.0,
+		};
+	}
 }
 
 /**
  * HTTP handler for processing version AI
  */
-export async function processVersionAI(
-  req: Request,
-  res: Response
-): Promise<void> {
-  try {
-    if (req.method !== "POST") {
-      res.status(405).json({ error: "Method not allowed" });
-      return;
-    }
+export async function processVersionAI(req: Request, res: Response): Promise<void> {
+	try {
+		if (req.method !== 'POST') {
+			res.status(405).json({ error: 'Method not allowed' });
 
-    const { versionId, documentId } = req.body;
+			return;
+		}
 
-    if (!versionId || !documentId) {
-      res.status(400).json({ error: "versionId and documentId are required" });
-      return;
-    }
+		const { versionId, documentId } = req.body;
 
-    console.info(`[processVersionAI] Starting for version ${versionId}`);
+		if (!versionId || !documentId) {
+			res.status(400).json({ error: 'versionId and documentId are required' });
 
-    // Get the version
-    const versionRef = db.collection(SignCollections.documentVersions).doc(versionId);
-    const versionSnap = await versionRef.get();
+			return;
+		}
 
-    if (!versionSnap.exists) {
-      res.status(404).json({ error: "Version not found" });
-      return;
-    }
+		console.info(`[processVersionAI] Starting for version ${versionId}`);
 
-    const version = versionSnap.data() as DocumentVersion;
+		// Get the version
+		const versionRef = db.collection(SignCollections.documentVersions).doc(versionId);
+		const versionSnap = await versionRef.get();
 
-    if (version.documentId !== documentId) {
-      res.status(400).json({ error: "Version does not belong to this document" });
-      return;
-    }
+		if (!versionSnap.exists) {
+			res.status(404).json({ error: 'Version not found' });
 
-    if (version.status !== VersionStatus.draft) {
-      res.status(400).json({ error: "Only draft versions can be processed" });
-      return;
-    }
+			return;
+		}
 
-    // Get changes
-    const changesSnapshot = await db
-      .collection(SignCollections.versionChanges)
-      .where("versionId", "==", versionId)
-      .get();
+		const version = versionSnap.data() as DocumentVersion;
 
-    const changes = changesSnapshot.docs.map((doc) => doc.data() as VersionChange);
+		if (version.documentId !== documentId) {
+			res.status(400).json({ error: 'Version does not belong to this document' });
 
-    if (changes.length === 0) {
-      res.status(400).json({ error: "No changes found for this version" });
-      return;
-    }
+			return;
+		}
 
-    const paragraphs: Paragraph[] = version.paragraphs || [];
+		if (version.status !== VersionStatus.draft) {
+			res.status(400).json({ error: 'Only draft versions can be processed' });
 
-    if (paragraphs.length === 0) {
-      res.status(400).json({ error: "Version has no paragraphs" });
-      return;
-    }
+			return;
+		}
 
-    // Log all changes for debugging
-    console.info(`[processVersionAI] Total changes: ${changes.length}`);
-    for (const change of changes) {
-      console.info(`[processVersionAI] Change ${change.paragraphId}: type=${change.changeType}, sources=${change.sources?.length || 0}`);
-    }
+		// Get changes
+		const changesSnapshot = await db
+			.collection(SignCollections.versionChanges)
+			.where('versionId', '==', versionId)
+			.get();
 
-    // Filter changes needing AI
-    const changesNeedingAI = changes.filter(
-      (c) => c.changeType !== ChangeType.unchanged && c.sources.length > 0
-    );
+		const changes = changesSnapshot.docs.map((doc) => doc.data() as VersionChange);
 
-    console.info(
-      `[processVersionAI] Processing ${changesNeedingAI.length} paragraphs with AI (filtered from ${changes.length} total)`
-    );
+		if (changes.length === 0) {
+			res.status(400).json({ error: 'No changes found for this version' });
 
-    if (changesNeedingAI.length === 0) {
-      console.info(`[processVersionAI] No changes need AI processing - all paragraphs either unchanged or have no sources`);
-      res.json({
-        success: true,
-        processedChanges: 0,
-        totalChanges: changes.length,
-        message: "No paragraphs had feedback requiring AI processing",
-      });
-      return;
-    }
+			return;
+		}
 
-    // Process all paragraphs in parallel
-    const analysisPromises = changesNeedingAI.map(async (change) => {
-      const paragraph = paragraphs.find(
-        (p) => p.paragraphId === change.paragraphId
-      );
+		const paragraphs: Paragraph[] = version.paragraphs || [];
 
-      if (!paragraph) return null;
+		if (paragraphs.length === 0) {
+			res.status(400).json({ error: 'Version has no paragraphs' });
 
-      const result = await analyzeParagraph(paragraph, change.sources);
+			return;
+		}
 
-      return {
-        changeId: change.changeId,
-        paragraphId: change.paragraphId,
-        result,
-      };
-    });
+		// Log all changes for debugging
+		console.info(`[processVersionAI] Total changes: ${changes.length}`);
+		for (const change of changes) {
+			console.info(
+				`[processVersionAI] Change ${change.paragraphId}: type=${change.changeType}, sources=${change.sources?.length || 0}`,
+			);
+		}
 
-    const analysisResultsWithNulls = await Promise.all(analysisPromises);
-    const analysisResults = analysisResultsWithNulls.filter(
-      (r): r is { changeId: string; paragraphId: string; result: ParagraphAnalysisOutput } =>
-        r !== null
-    );
+		// Filter changes needing AI
+		const changesNeedingAI = changes.filter(
+			(c) => c.changeType !== ChangeType.unchanged && c.sources.length > 0,
+		);
 
-    // Update changes in database
-    const batch = db.batch();
+		console.info(
+			`[processVersionAI] Processing ${changesNeedingAI.length} paragraphs with AI (filtered from ${changes.length} total)`,
+		);
 
-    for (const analysis of analysisResults) {
-      const changeRef = db
-        .collection(SignCollections.versionChanges)
-        .doc(analysis.changeId);
-      batch.update(changeRef, {
-        proposedContent: analysis.result.proposedContent,
-        aiReasoning: analysis.result.reasoning,
-      });
-    }
+		if (changesNeedingAI.length === 0) {
+			console.info(
+				`[processVersionAI] No changes need AI processing - all paragraphs either unchanged or have no sources`,
+			);
+			res.json({
+				success: true,
+				processedChanges: 0,
+				totalChanges: changes.length,
+				message: 'No paragraphs had feedback requiring AI processing',
+			});
 
-    // Update version paragraphs
-    const updatedParagraphs = paragraphs.map((p) => {
-      const analysis = analysisResults.find((a) => a.paragraphId === p.paragraphId);
-      if (analysis) {
-        return { ...p, content: analysis.result.proposedContent };
-      }
-      return p;
-    });
+			return;
+		}
 
-    batch.update(versionRef, {
-      paragraphs: updatedParagraphs,
-      summary: `Version generated with ${analysisResults.length} AI-processed changes.`,
-      aiModel: GEMINI_MODEL,
-    });
+		// Process all paragraphs in parallel
+		const analysisPromises = changesNeedingAI.map(async (change) => {
+			const paragraph = paragraphs.find((p) => p.paragraphId === change.paragraphId);
 
-    await batch.commit();
+			if (!paragraph) return null;
 
-    console.info(`[processVersionAI] Completed for version ${versionId}`);
+			const result = await analyzeParagraph(paragraph, change.sources);
 
-    res.json({
-      success: true,
-      processedChanges: analysisResults.length,
-      totalChanges: changes.length,
-    });
-  } catch (error) {
-    console.error("[processVersionAI] Error:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
+			return {
+				changeId: change.changeId,
+				paragraphId: change.paragraphId,
+				result,
+			};
+		});
+
+		const analysisResultsWithNulls = await Promise.all(analysisPromises);
+		const analysisResults = analysisResultsWithNulls.filter(
+			(r): r is { changeId: string; paragraphId: string; result: ParagraphAnalysisOutput } =>
+				r !== null,
+		);
+
+		// Update changes in database
+		const batch = db.batch();
+
+		for (const analysis of analysisResults) {
+			const changeRef = db.collection(SignCollections.versionChanges).doc(analysis.changeId);
+			batch.update(changeRef, {
+				proposedContent: analysis.result.proposedContent,
+				aiReasoning: analysis.result.reasoning,
+			});
+		}
+
+		// Update version paragraphs
+		const updatedParagraphs = paragraphs.map((p) => {
+			const analysis = analysisResults.find((a) => a.paragraphId === p.paragraphId);
+			if (analysis) {
+				return { ...p, content: analysis.result.proposedContent };
+			}
+
+			return p;
+		});
+
+		batch.update(versionRef, {
+			paragraphs: updatedParagraphs,
+			summary: `Version generated with ${analysisResults.length} AI-processed changes.`,
+			aiModel: GEMINI_MODEL,
+		});
+
+		await batch.commit();
+
+		console.info(`[processVersionAI] Completed for version ${versionId}`);
+
+		res.json({
+			success: true,
+			processedChanges: analysisResults.length,
+			totalChanges: changes.length,
+		});
+	} catch (error) {
+		console.error('[processVersionAI] Error:', error);
+		res.status(500).json({ error: 'Internal server error' });
+	}
 }

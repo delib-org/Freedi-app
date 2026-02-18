@@ -27,15 +27,11 @@ export default function TwoColorButton({
 					<div style={{ backgroundColor: iconBackgroundColor }}>
 						<Icon style={{ color: textBackgroundColor }} />
 					</div>
-					<p style={{ backgroundColor: textBackgroundColor, color: textColor }}>
-						{text}
-					</p>
+					<p style={{ backgroundColor: textBackgroundColor, color: textColor }}>{text}</p>
 				</>
 			) : (
 				<>
-					<p style={{ backgroundColor: textBackgroundColor, color: textColor }}>
-						{text}
-					</p>
+					<p style={{ backgroundColor: textBackgroundColor, color: textColor }}>{text}</p>
 					<div style={{ backgroundColor: iconBackgroundColor }}>
 						<Icon style={{ color: textBackgroundColor }} />
 					</div>

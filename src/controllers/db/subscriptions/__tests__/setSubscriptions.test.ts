@@ -216,7 +216,7 @@ describe('setSubscriptions', () => {
 					statementId: 'stmt-123',
 					role: Role.member,
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -248,7 +248,7 @@ describe('setSubscriptions', () => {
 				expect.objectContaining({
 					role: Role.admin,
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -274,7 +274,7 @@ describe('setSubscriptions', () => {
 				expect.objectContaining({
 					role: Role.waiting,
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -298,7 +298,7 @@ describe('setSubscriptions', () => {
 					getEmailNotification: true,
 					getPushNotification: true,
 				}),
-				{ merge: true }
+				{ merge: true },
 			);
 		});
 
@@ -343,7 +343,7 @@ describe('setSubscriptions', () => {
 				expect.objectContaining({
 					lastReadTimestamp: expect.any(Number),
 					statementId: 'stmt-123',
-				})
+				}),
 			);
 		});
 
@@ -385,16 +385,16 @@ describe('setSubscriptions', () => {
 				expect.objectContaining({
 					role: Role.admin,
 					statementId: 'stmt-123',
-				})
+				}),
 			);
 		});
 
 		it('should throw error for invalid subscription id', async () => {
 			(getStatementSubscriptionId as jest.Mock).mockReturnValueOnce(null);
 
-			await expect(
-				updateMemberRole('stmt-123', 'user-123', Role.admin)
-			).rejects.toThrow('Error in getting statementSubscriptionId');
+			await expect(updateMemberRole('stmt-123', 'user-123', Role.admin)).rejects.toThrow(
+				'Error in getting statementSubscriptionId',
+			);
 		});
 	});
 
@@ -411,7 +411,7 @@ describe('setSubscriptions', () => {
 				expect.objectContaining({
 					tokens: { _arrayUnion: 'fcm-token-abc' },
 					statementId: 'stmt-123',
-				})
+				}),
 			);
 		});
 
@@ -439,7 +439,7 @@ describe('setSubscriptions', () => {
 				expect.objectContaining({
 					tokens: { _arrayRemove: 'fcm-token-abc' },
 					statementId: 'stmt-123',
-				})
+				}),
 			);
 		});
 
@@ -473,7 +473,7 @@ describe('setSubscriptions', () => {
 					getEmailNotification: false,
 					getPushNotification: true,
 					statementId: 'stmt-123',
-				})
+				}),
 			);
 		});
 
@@ -502,7 +502,7 @@ describe('setSubscriptions', () => {
 				expect.anything(),
 				expect.objectContaining({
 					getPushNotification: false,
-				})
+				}),
 			);
 		});
 	});

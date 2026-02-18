@@ -54,17 +54,11 @@ const SummarizeModal: FC<SummarizeModalProps> = ({
 						rows={4}
 						disabled={isLoading}
 					/>
-					<p className={styles.hint}>
-						{t('Leave empty for automatic summary of top suggestions')}
-					</p>
+					<p className={styles.hint}>{t('Leave empty for automatic summary of top suggestions')}</p>
 				</div>
 
 				<div className={styles.btns}>
-					<button
-						className={styles.btnSecondary}
-						onClick={handleClose}
-						disabled={isLoading}
-					>
+					<button className={styles.btnSecondary} onClick={handleClose} disabled={isLoading}>
 						{t('Cancel')}
 					</button>
 					<button

@@ -15,7 +15,7 @@ export class AppError extends Error {
 		message: string,
 		public readonly code: string,
 		public readonly context?: Record<string, unknown>,
-		public readonly recoverable: boolean = true
+		public readonly recoverable: boolean = true,
 	) {
 		super(message);
 		this.name = 'AppError';
@@ -23,50 +23,35 @@ export class AppError extends Error {
 }
 
 export class DatabaseError extends AppError {
-	constructor(
-		message: string,
-		context?: Record<string, unknown>
-	) {
+	constructor(message: string, context?: Record<string, unknown>) {
 		super(message, 'DATABASE_ERROR', context, true);
 		this.name = 'DatabaseError';
 	}
 }
 
 export class ValidationError extends AppError {
-	constructor(
-		message: string,
-		context?: Record<string, unknown>
-	) {
+	constructor(message: string, context?: Record<string, unknown>) {
 		super(message, 'VALIDATION_ERROR', context, false);
 		this.name = 'ValidationError';
 	}
 }
 
 export class AuthenticationError extends AppError {
-	constructor(
-		message: string,
-		context?: Record<string, unknown>
-	) {
+	constructor(message: string, context?: Record<string, unknown>) {
 		super(message, 'AUTHENTICATION_ERROR', context, false);
 		this.name = 'AuthenticationError';
 	}
 }
 
 export class AuthorizationError extends AppError {
-	constructor(
-		message: string,
-		context?: Record<string, unknown>
-	) {
+	constructor(message: string, context?: Record<string, unknown>) {
 		super(message, 'AUTHORIZATION_ERROR', context, false);
 		this.name = 'AuthorizationError';
 	}
 }
 
 export class NetworkError extends AppError {
-	constructor(
-		message: string,
-		context?: Record<string, unknown>
-	) {
+	constructor(message: string, context?: Record<string, unknown>) {
 		super(message, 'NETWORK_ERROR', context, true);
 		this.name = 'NetworkError';
 	}
@@ -86,10 +71,7 @@ interface ErrorContext {
 /**
  * Log an error with context
  */
-export function logError(
-	error: unknown,
-	context: ErrorContext
-): void {
+export function logError(error: unknown, context: ErrorContext): void {
 	// Ensure we have a proper Error object for the logger
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 
@@ -104,7 +86,7 @@ export function logError(
  */
 export function withErrorHandling<T extends unknown[], R>(
 	fn: (...args: T) => Promise<R>,
-	context: Omit<ErrorContext, 'metadata'>
+	context: Omit<ErrorContext, 'metadata'>,
 ): (...args: T) => Promise<R | undefined> {
 	return async (...args: T): Promise<R | undefined> => {
 		try {
@@ -125,7 +107,7 @@ export function withErrorHandling<T extends unknown[], R>(
  */
 export function withErrorHandlingSync<T extends unknown[], R>(
 	fn: (...args: T) => R,
-	context: Omit<ErrorContext, 'metadata'>
+	context: Omit<ErrorContext, 'metadata'>,
 ): (...args: T) => R | undefined {
 	return (...args: T): R | undefined => {
 		try {
@@ -154,7 +136,7 @@ interface RetryOptions {
 export async function withRetry<T>(
 	fn: () => Promise<T>,
 	options: RetryOptions,
-	context: ErrorContext
+	context: ErrorContext,
 ): Promise<T> {
 	const { maxRetries, delayMs, exponentialBackoff = false, onRetry } = options;
 	let lastError: unknown;
@@ -169,9 +151,7 @@ export async function withRetry<T>(
 				break;
 			}
 
-			const delay = exponentialBackoff
-				? delayMs * Math.pow(2, attempt - 1)
-				: delayMs;
+			const delay = exponentialBackoff ? delayMs * Math.pow(2, attempt - 1) : delayMs;
 
 			logger.info(`Retrying ${context.operation}`, {
 				attempt,
@@ -184,7 +164,7 @@ export async function withRetry<T>(
 				onRetry(attempt, error);
 			}
 
-			await new Promise(resolve => setTimeout(resolve, delay));
+			await new Promise((resolve) => setTimeout(resolve, delay));
 		}
 	}
 

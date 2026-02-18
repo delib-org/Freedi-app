@@ -5,15 +5,14 @@ import { Statement, Collections } from '@freedi/shared-types';
 export function uploadImageToStorage(
 	file: File,
 	statement: Statement,
-	onProgress?: (progress: number) => void
+	onProgress?: (progress: number) => void,
 ): Promise<string> {
 	return new Promise((resolve, reject) => {
 		// Use the statement's ID for the image path
 		// This ensures the user can upload to their own statement
 		const imageRef = ref(
 			storage,
-			`${Collections.statements}/${statement.statementId
-			}/imgId-${Math.random()}`
+			`${Collections.statements}/${statement.statementId}/imgId-${Math.random()}`,
 		);
 
 		const uploadTask = uploadBytesResumable(imageRef, file);
@@ -23,7 +22,7 @@ export function uploadImageToStorage(
 			(snapshot) => {
 				const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
 				onProgress?.(progress);
-				
+
 				switch (snapshot.state) {
 					case 'paused':
 						console.info('Upload is paused');
@@ -40,15 +39,13 @@ export function uploadImageToStorage(
 			async () => {
 				try {
 					onProgress?.(100);
-					const downloadURL = await getDownloadURL(
-						uploadTask.snapshot.ref
-					);
+					const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 					resolve(downloadURL);
 				} catch (error) {
 					console.error('Error retrieving download URL:', error);
 					reject(error);
 				}
-			}
+			},
 		);
 	});
 }

@@ -24,14 +24,14 @@ const db = getFirestore();
  * Extended Statement type with suggestionSettings for auto-mode documents
  */
 interface StatementWithSuggestionSettings extends Statement {
-  doc?: Statement['doc'] & {
-    suggestionSettings?: {
-      mode: 'auto' | 'manual' | 'deadline';
-      votingDeadline?: number;
-      finalized?: boolean;
-      finalizedAt?: number;
-    };
-  };
+	doc?: Statement['doc'] & {
+		suggestionSettings?: {
+			mode: 'auto' | 'manual' | 'deadline';
+			votingDeadline?: number;
+			finalized?: boolean;
+			finalizedAt?: number;
+		};
+	};
 }
 
 /**
@@ -39,150 +39,150 @@ interface StatementWithSuggestionSettings extends Statement {
  * Only processes suggestions (not official paragraphs)
  */
 export const fn_updateOfficialParagraphText = onDocumentUpdated(
-  {
-    document: `${Collections.statements}/{statementId}`,
-    memory: '256MiB',
-  },
-  async (event) => {
-    const statementId = event.params.statementId;
-    const beforeData = event.data?.before.data() as Statement | undefined;
-    const afterData = event.data?.after.data() as Statement | undefined;
+	{
+		document: `${Collections.statements}/{statementId}`,
+		memory: '256MiB',
+	},
+	async (event) => {
+		const statementId = event.params.statementId;
+		const beforeData = event.data?.before.data() as Statement | undefined;
+		const afterData = event.data?.after.data() as Statement | undefined;
 
-    if (!beforeData || !afterData) {
-      logger.warn('[fn_updateOfficialParagraphText] Missing data', { statementId });
+		if (!beforeData || !afterData) {
+			logger.warn('[fn_updateOfficialParagraphText] Missing data', { statementId });
 
-      return null;
-    }
+			return null;
+		}
 
-    try {
-      // Only process if consensus changed
-      if (beforeData.consensus === afterData.consensus) {
-        return null;
-      }
+		try {
+			// Only process if consensus changed
+			if (beforeData.consensus === afterData.consensus) {
+				return null;
+			}
 
-      // Only process suggestions (not official paragraphs)
-      if (afterData.doc?.isOfficialParagraph) {
-        return null;
-      }
+			// Only process suggestions (not official paragraphs)
+			if (afterData.doc?.isOfficialParagraph) {
+				return null;
+			}
 
-      // Must have a parent (official paragraph ID)
-      const officialParagraphId = afterData.parentId;
-      if (!officialParagraphId) {
-        return null;
-      }
+			// Must have a parent (official paragraph ID)
+			const officialParagraphId = afterData.parentId;
+			if (!officialParagraphId) {
+				return null;
+			}
 
-      // Get the official paragraph
-      const officialParagraphRef = db.collection(Collections.statements).doc(officialParagraphId);
-      const officialParagraphSnap = await officialParagraphRef.get();
+			// Get the official paragraph
+			const officialParagraphRef = db.collection(Collections.statements).doc(officialParagraphId);
+			const officialParagraphSnap = await officialParagraphRef.get();
 
-      if (!officialParagraphSnap.exists) {
-        logger.warn('[fn_updateOfficialParagraphText] Official paragraph not found', {
-          officialParagraphId,
-          suggestionId: statementId,
-        });
+			if (!officialParagraphSnap.exists) {
+				logger.warn('[fn_updateOfficialParagraphText] Official paragraph not found', {
+					officialParagraphId,
+					suggestionId: statementId,
+				});
 
-        return null;
-      }
+				return null;
+			}
 
-      const officialParagraph = officialParagraphSnap.data() as Statement;
+			const officialParagraph = officialParagraphSnap.data() as Statement;
 
-      // Get document to check suggestion settings
-      const documentId = afterData.topParentId;
-      const documentRef = db.collection(Collections.statements).doc(documentId);
-      const documentSnap = await documentRef.get();
+			// Get document to check suggestion settings
+			const documentId = afterData.topParentId;
+			const documentRef = db.collection(Collections.statements).doc(documentId);
+			const documentSnap = await documentRef.get();
 
-      if (!documentSnap.exists) {
-        logger.warn('[fn_updateOfficialParagraphText] Document not found', {
-          documentId,
-        });
+			if (!documentSnap.exists) {
+				logger.warn('[fn_updateOfficialParagraphText] Document not found', {
+					documentId,
+				});
 
-        return null;
-      }
+				return null;
+			}
 
-      const document = documentSnap.data() as StatementWithSuggestionSettings;
+			const document = documentSnap.data() as StatementWithSuggestionSettings;
 
-      // Check suggestion settings mode
-      const suggestionSettings = document.doc?.suggestionSettings;
-      const mode = suggestionSettings?.mode || 'manual'; // Default to manual
+			// Check suggestion settings mode
+			const suggestionSettings = document.doc?.suggestionSettings;
+			const mode = suggestionSettings?.mode || 'manual'; // Default to manual
 
-      // Only proceed if mode is 'auto'
-      if (mode !== 'auto') {
-        logger.info('[fn_updateOfficialParagraphText] Skipping - not auto mode', {
-          mode,
-          documentId,
-        });
+			// Only proceed if mode is 'auto'
+			if (mode !== 'auto') {
+				logger.info('[fn_updateOfficialParagraphText] Skipping - not auto mode', {
+					mode,
+					documentId,
+				});
 
-        return null;
-      }
+				return null;
+			}
 
-      // Get all suggestions for this paragraph
-      const suggestionsSnap = await db
-        .collection(Collections.statements)
-        .where('parentId', '==', officialParagraphId)
-        .where('statementType', '==', afterData.statementType)
-        .orderBy('consensus', 'desc')
-        .limit(1)
-        .get();
+			// Get all suggestions for this paragraph
+			const suggestionsSnap = await db
+				.collection(Collections.statements)
+				.where('parentId', '==', officialParagraphId)
+				.where('statementType', '==', afterData.statementType)
+				.orderBy('consensus', 'desc')
+				.limit(1)
+				.get();
 
-      if (suggestionsSnap.empty) {
-        return null;
-      }
+			if (suggestionsSnap.empty) {
+				return null;
+			}
 
-      const winningSuggestion = suggestionsSnap.docs[0]!.data() as Statement;
+			const winningSuggestion = suggestionsSnap.docs[0]!.data() as Statement;
 
-      // Only update if winning suggestion has higher consensus than official
-      if (winningSuggestion.consensus <= officialParagraph.consensus) {
-        logger.info('[fn_updateOfficialParagraphText] Winning suggestion not higher', {
-          winningConsensus: winningSuggestion.consensus,
-          officialConsensus: officialParagraph.consensus,
-        });
+			// Only update if winning suggestion has higher consensus than official
+			if (winningSuggestion.consensus <= officialParagraph.consensus) {
+				logger.info('[fn_updateOfficialParagraphText] Winning suggestion not higher', {
+					winningConsensus: winningSuggestion.consensus,
+					officialConsensus: officialParagraph.consensus,
+				});
 
-        return null;
-      }
+				return null;
+			}
 
-      // Update official paragraph text to winning suggestion
-      await officialParagraphRef.update({
-        statement: winningSuggestion.statement,
-        lastUpdate: FieldValue.serverTimestamp(),
-        // Optionally track which suggestion was applied
-        appliedSuggestionId: winningSuggestion.statementId,
-        appliedAt: FieldValue.serverTimestamp(),
-      });
+			// Update official paragraph text to winning suggestion
+			await officialParagraphRef.update({
+				statement: winningSuggestion.statement,
+				lastUpdate: FieldValue.serverTimestamp(),
+				// Optionally track which suggestion was applied
+				appliedSuggestionId: winningSuggestion.statementId,
+				appliedAt: FieldValue.serverTimestamp(),
+			});
 
-      logger.info('[fn_updateOfficialParagraphText] Updated official paragraph text', {
-        officialParagraphId,
-        winningSuggestionId: winningSuggestion.statementId,
-        newText: winningSuggestion.statement,
-        consensus: winningSuggestion.consensus,
-      });
+			logger.info('[fn_updateOfficialParagraphText] Updated official paragraph text', {
+				officialParagraphId,
+				winningSuggestionId: winningSuggestion.statementId,
+				newText: winningSuggestion.statement,
+				consensus: winningSuggestion.consensus,
+			});
 
-      // Create version history entry (preserve old text as a suggestion)
-      // This allows reverting if needed
-      const historyEntry = {
-        statementId: `history_${Date.now()}`,
-        statement: officialParagraph.statement, // Old text
-        statementType: afterData.statementType,
-        parentId: officialParagraphId,
-        topParentId: documentId,
-        creatorId: officialParagraph.creatorId,
-        creator: officialParagraph.creator,
-        createdAt: Date.now(),
-        lastUpdate: Date.now(),
-        consensus: officialParagraph.consensus,
-        hide: true, // Hidden history entry
-        replacedBy: winningSuggestion.statementId,
-        replacedAt: Date.now(),
-      };
+			// Create version history entry (preserve old text as a suggestion)
+			// This allows reverting if needed
+			const historyEntry = {
+				statementId: `history_${Date.now()}`,
+				statement: officialParagraph.statement, // Old text
+				statementType: afterData.statementType,
+				parentId: officialParagraphId,
+				topParentId: documentId,
+				creatorId: officialParagraph.creatorId,
+				creator: officialParagraph.creator,
+				createdAt: Date.now(),
+				lastUpdate: Date.now(),
+				consensus: officialParagraph.consensus,
+				hide: true, // Hidden history entry
+				replacedBy: winningSuggestion.statementId,
+				replacedAt: Date.now(),
+			};
 
-      await db.collection(Collections.statements).doc(historyEntry.statementId).set(historyEntry);
+			await db.collection(Collections.statements).doc(historyEntry.statementId).set(historyEntry);
 
-      return null;
-    } catch (error) {
-      logger.error('[fn_updateOfficialParagraphText] Error', error, {
-        statementId,
-      });
+			return null;
+		} catch (error) {
+			logger.error('[fn_updateOfficialParagraphText] Error', error, {
+				statementId,
+			});
 
-      return null;
-    }
-  }
+			return null;
+		}
+	},
 );

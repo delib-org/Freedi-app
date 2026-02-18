@@ -21,13 +21,13 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 	React.useEffect(() => {
 		if (clickedUserId) {
 			document.addEventListener('click', handleClickOutside);
-			
-return () => {
+
+			return () => {
 				document.removeEventListener('click', handleClickOutside);
 			};
 		}
-		
-return undefined;
+
+		return undefined;
 	}, [clickedUserId]);
 
 	// Early return AFTER all hooks
@@ -56,8 +56,7 @@ return undefined;
 		<div className={styles.container}>
 			{shownUsers.map((online) => {
 				const isPopoverVisible =
-					hoveredUserId === online.user.uid ||
-					clickedUserId === online.user.uid;
+					hoveredUserId === online.user.uid || clickedUserId === online.user.uid;
 
 				return (
 					<div

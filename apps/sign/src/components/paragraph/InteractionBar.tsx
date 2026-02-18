@@ -5,43 +5,65 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { useHeatMapStore } from '@/store/heatMapStore';
 import styles from './InteractionBar.module.scss';
 
 interface InteractionBarProps {
   paragraphId: string;
-  documentId: string;
-  isApproved: boolean | undefined;
+  /** User's evaluation: 1 (approve), -1 (reject), undefined (no vote) */
+  userEvaluation: number | undefined;
   isLoggedIn: boolean;
   commentCount: number;
   suggestionCount?: number;
   enableSuggestions?: boolean;
+  /** When true, users must sign in with Google to interact */
+  requireGoogleLogin?: boolean;
+  /** Whether the current user is anonymous */
+  isAnonymous?: boolean;
+  /** Positive evaluation count from evaluations system */
+  positiveEvaluations?: number;
+  /** Negative evaluation count from evaluations system */
+  negativeEvaluations?: number;
 }
 
 export default function InteractionBar({
   paragraphId,
-  documentId,
-  isApproved,
+  userEvaluation,
   isLoggedIn,
   commentCount,
   suggestionCount = 0,
   enableSuggestions = false,
+  requireGoogleLogin = false,
+  isAnonymous = false,
+  positiveEvaluations,
+  negativeEvaluations,
 }: InteractionBarProps) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [localApproval, setLocalApproval] = useState(isApproved);
-  const { openModal, setApproval } = useUIStore();
+  const [localEvaluation, setLocalEvaluation] = useState(userEvaluation);
+  const { openModal, setEvaluation } = useUIStore();
   const { openSurveyModal } = useDemographicStore();
   const isInteractionBlocked = useDemographicStore(selectIsInteractionBlocked);
 
-  // Sync local approval with store on mount and when isApproved changes
+  // Sync local evaluation with store on mount and when userEvaluation changes
   useEffect(() => {
-    if (isApproved !== undefined) {
-      setApproval(paragraphId, isApproved);
+    if (userEvaluation !== undefined) {
+      setEvaluation(paragraphId, userEvaluation);
     }
-  }, [paragraphId, isApproved, setApproval]);
+  }, [paragraphId, userEvaluation, setEvaluation]);
 
-  const handleApproval = useCallback(
-    async (approved: boolean) => {
+  // Whether interaction is blocked by requireGoogleLogin
+  const isGoogleLoginRequired = requireGoogleLogin && isAnonymous;
+
+  const handleVote = useCallback(
+    async (vote: number) => {
+      // Check if Google login is required for interactions
+      if (isGoogleLoginRequired) {
+        openModal('login', {});
+
+        return;
+      }
+
       // Check if blocked by demographic survey
       if (isInteractionBlocked) {
         openSurveyModal();
@@ -54,41 +76,69 @@ export default function InteractionBar({
         getOrCreateAnonymousUser();
       }
 
+      // Toggle: if same vote, remove it; otherwise set new vote
+      const previousEvaluation = localEvaluation;
+      const newEvaluation = previousEvaluation === vote ? null : vote;
+
       // Optimistic update - both local state and store
-      setLocalApproval(approved);
-      setApproval(paragraphId, approved);
+      setLocalEvaluation(newEvaluation ?? undefined);
+      setEvaluation(paragraphId, newEvaluation);
       setIsSubmitting(true);
 
       try {
-        const response = await fetch(`/api/approvals/${paragraphId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            approval: approved,
-            documentId,
-          }),
-        });
+        if (newEvaluation === null) {
+          // Remove evaluation
+          const response = await fetch(`/api/suggestion-evaluations/${paragraphId}`, {
+            method: 'DELETE',
+            credentials: 'include',
+          });
 
-        if (!response.ok) {
-          // Revert on failure
-          setLocalApproval(isApproved);
-          const error = await response.json();
-          console.error('Failed to submit approval:', error);
+          if (!response.ok) {
+            // Revert on failure
+            setLocalEvaluation(previousEvaluation);
+            setEvaluation(paragraphId, previousEvaluation ?? null);
+            const error = await response.json();
+            console.error('Failed to remove evaluation:', error);
+          }
+        } else {
+          // Create or update evaluation
+          const response = await fetch(`/api/suggestion-evaluations/${paragraphId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({ evaluation: newEvaluation }),
+          });
+
+          if (!response.ok) {
+            // Revert on failure
+            setLocalEvaluation(previousEvaluation);
+            setEvaluation(paragraphId, previousEvaluation ?? null);
+            const error = await response.json();
+            console.error('Failed to submit evaluation:', error);
+          }
         }
       } catch (error) {
         // Revert on error
-        setLocalApproval(isApproved);
-        console.error('Error submitting approval:', error);
+        setLocalEvaluation(previousEvaluation);
+        setEvaluation(paragraphId, previousEvaluation ?? null);
+        console.error('Error submitting evaluation:', error);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [paragraphId, documentId, isLoggedIn, isApproved, setApproval, isInteractionBlocked, openSurveyModal]
+    [paragraphId, isLoggedIn, localEvaluation, setEvaluation, isInteractionBlocked, openSurveyModal, isGoogleLoginRequired, openModal]
   );
 
   const handleOpenComments = () => {
+    // Check if Google login is required for interactions
+    if (isGoogleLoginRequired) {
+      openModal('login', {});
+
+      return;
+    }
+
     // Check if blocked by demographic survey
     if (isInteractionBlocked) {
       openSurveyModal();
@@ -100,6 +150,13 @@ export default function InteractionBar({
   };
 
   const handleOpenSuggestions = () => {
+    // Check if Google login is required for interactions
+    if (isGoogleLoginRequired) {
+      openModal('login', {});
+
+      return;
+    }
+
     // Check if blocked by demographic survey
     if (isInteractionBlocked) {
       openSurveyModal();
@@ -111,12 +168,14 @@ export default function InteractionBar({
   };
 
   // Tooltip text when blocked
-  const blockedTitle = isInteractionBlocked
-    ? t('Complete survey to interact')
-    : undefined;
+  const blockedTitle = isGoogleLoginRequired
+    ? t('Sign in with Google to interact')
+    : isInteractionBlocked
+      ? t('Complete survey to interact')
+      : undefined;
 
   // Use local state if available, otherwise use prop
-  const currentApproval = localApproval !== undefined ? localApproval : isApproved;
+  const currentEvaluation = localEvaluation !== undefined ? localEvaluation : userEvaluation;
 
   // Stop propagation to prevent toggling the parent card
   const handleButtonClick = (e: React.MouseEvent, action: () => void) => {
@@ -124,15 +183,21 @@ export default function InteractionBar({
     action();
   };
 
+  // Only show vote counts when approval heat map is active
+  const heatMapConfig = useHeatMapStore((state) => state.config);
+  const showVoteCounts = heatMapConfig.isEnabled && heatMapConfig.type === 'approval';
+  const approveCount = positiveEvaluations ?? 0;
+  const rejectCount = negativeEvaluations ?? 0;
+
   return (
     <div className={styles.bar} onClick={(e) => e.stopPropagation()}>
       <div className={styles.approvalButtons}>
         <button
           type="button"
-          className={`${styles.button} ${styles.approveButton} ${currentApproval === true ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
-          onClick={(e) => handleButtonClick(e, () => handleApproval(true))}
+          className={`${styles.button} ${styles.approveButton} ${currentEvaluation === 1 ? styles.active : ''} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
+          onClick={(e) => handleButtonClick(e, () => handleVote(1))}
           disabled={isSubmitting}
-          aria-pressed={currentApproval === true}
+          aria-pressed={currentEvaluation === 1}
           title={blockedTitle || t('Approve')}
         >
           <svg
@@ -146,14 +211,17 @@ export default function InteractionBar({
             <polyline points="20 6 9 17 4 12" />
           </svg>
           <span className={styles.buttonText}>{t('Approve')}</span>
+          {showVoteCounts && approveCount > 0 && (
+            <span className={styles.voteCount}>{approveCount}</span>
+          )}
         </button>
 
         <button
           type="button"
-          className={`${styles.button} ${styles.rejectButton} ${currentApproval === false ? styles.active : ''} ${isInteractionBlocked ? styles.blocked : ''}`}
-          onClick={(e) => handleButtonClick(e, () => handleApproval(false))}
+          className={`${styles.button} ${styles.rejectButton} ${currentEvaluation === -1 ? styles.active : ''} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
+          onClick={(e) => handleButtonClick(e, () => handleVote(-1))}
           disabled={isSubmitting}
-          aria-pressed={currentApproval === false}
+          aria-pressed={currentEvaluation === -1}
           title={blockedTitle || t('Reject')}
         >
           <svg
@@ -168,12 +236,15 @@ export default function InteractionBar({
             <line x1="6" y1="6" x2="18" y2="18" />
           </svg>
           <span className={styles.buttonText}>{t('Reject')}</span>
+          {showVoteCounts && rejectCount > 0 && (
+            <span className={styles.voteCount}>{rejectCount}</span>
+          )}
         </button>
       </div>
 
       <button
         type="button"
-        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked ? styles.blocked : ''}`}
+        className={`${styles.button} ${styles.commentButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
         onClick={(e) => handleButtonClick(e, handleOpenComments)}
         title={blockedTitle || t('Comments')}
       >
@@ -197,7 +268,7 @@ export default function InteractionBar({
       {enableSuggestions && (
         <button
           type="button"
-          className={`${styles.button} ${styles.suggestButton} ${isInteractionBlocked ? styles.blocked : ''}`}
+          className={`${styles.button} ${styles.suggestButton} ${isInteractionBlocked || isGoogleLoginRequired ? styles.blocked : ''}`}
           onClick={(e) => handleButtonClick(e, handleOpenSuggestions)}
           title={blockedTitle || t('Suggest Alternative')}
         >

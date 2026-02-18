@@ -8,10 +8,7 @@ interface LanguageSelectorProps {
 	onChange: (language: string) => void;
 }
 
-const LanguageSelector: FC<LanguageSelectorProps> = ({
-	currentLanguage,
-	onChange,
-}) => {
+const LanguageSelector: FC<LanguageSelectorProps> = ({ currentLanguage, onChange }) => {
 	const { t } = useTranslation();
 
 	// Handle click - toggle off if already selected, otherwise select
@@ -31,9 +28,7 @@ const LanguageSelector: FC<LanguageSelectorProps> = ({
 				{LANGUAGES.map(({ code, label, icon: Icon }) => (
 					<button
 						key={code}
-						className={`${styles.optionCard} ${
-							currentLanguage === code ? styles.selected : ''
-						}`}
+						className={`${styles.optionCard} ${currentLanguage === code ? styles.selected : ''}`}
 						onClick={() => handleLanguageClick(code)}
 						type="button"
 						aria-pressed={currentLanguage === code}

@@ -13,8 +13,9 @@ interface Props {
 }
 
 const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
-
-	const statement: Statement | undefined = useSelector(statementSelector(simpleStatement.statementId))
+	const statement: Statement | undefined = useSelector(
+		statementSelector(simpleStatement.statementId),
+	);
 	const lastMessage = statement?.lastMessage;
 
 	useEffect(() => {
@@ -30,7 +31,9 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 			className={styles.mainCard}
 			to={`/statement/${simpleStatement.statementId}/`}
 			state={{ from: window.location.pathname }}
-		>			<div className={styles.info}>
+		>
+			{' '}
+			<div className={styles.info}>
 				<div className={styles.title}>
 					<div>{simpleStatement.statement}</div>
 					<div onClick={(e) => e.stopPropagation()}>
@@ -44,7 +47,6 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 					</div>
 				)}
 			</div>
-
 		</Link>
 	);
 };

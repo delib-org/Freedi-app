@@ -2,7 +2,14 @@
  * Tests for statementsSlice Redux store
  */
 
-import { Statement, StatementSubscription, StatementType, Role, ResultsBy, CutoffBy } from '@freedi/shared-types';
+import {
+	Statement,
+	StatementSubscription,
+	StatementType,
+	Role,
+	ResultsBy,
+	CutoffBy,
+} from '@freedi/shared-types';
 import {
 	statementsSlicer,
 	setStatement,
@@ -67,10 +74,7 @@ describe('statementsSlice', () => {
 	describe('reducers', () => {
 		describe('setStatement', () => {
 			it('should add new statement to empty state', () => {
-				const newState = statementsSlicer.reducer(
-					initialState,
-					setStatement(mockStatement)
-				);
+				const newState = statementsSlicer.reducer(initialState, setStatement(mockStatement));
 
 				expect(newState.statements).toHaveLength(1);
 				expect(newState.statements[0].statementId).toBe(mockStatement.statementId);
@@ -85,7 +89,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					stateWithStatement,
-					setStatement(updatedStatement)
+					setStatement(updatedStatement),
 				);
 
 				expect(newState.statements).toHaveLength(1);
@@ -120,10 +124,7 @@ describe('statementsSlice', () => {
 
 		describe('setStatements', () => {
 			it('should add multiple statements', () => {
-				const statements = [
-					mockStatement,
-					{ ...mockStatement, statementId: 'stmt-456' },
-				];
+				const statements = [mockStatement, { ...mockStatement, statementId: 'stmt-456' }];
 
 				const newState = statementsSlicer.reducer(initialState, setStatements(statements));
 
@@ -142,7 +143,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					stateWithStatement,
-					setStatements(updatedStatements)
+					setStatements(updatedStatements),
 				);
 
 				expect(newState.statements).toHaveLength(2);
@@ -158,7 +159,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					stateWithStatement,
-					deleteStatement(mockStatement.statementId)
+					deleteStatement(mockStatement.statementId),
 				);
 
 				expect(newState.statements).toHaveLength(0);
@@ -172,7 +173,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					stateWithStatement,
-					deleteStatement('non-existent-id')
+					deleteStatement('non-existent-id'),
 				);
 
 				expect(newState.statements).toHaveLength(1);
@@ -183,7 +184,7 @@ describe('statementsSlice', () => {
 			it('should add new subscription', () => {
 				const newState = statementsSlicer.reducer(
 					initialState,
-					setStatementSubscription(mockSubscription)
+					setStatementSubscription(mockSubscription),
 				);
 
 				expect(newState.statementSubscription).toHaveLength(1);
@@ -196,7 +197,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					initialState,
-					setStatementSubscription(newSubscription)
+					setStatementSubscription(newSubscription),
 				);
 
 				expect(newState.statementSubscriptionLastUpdate).toBe(futureTime);
@@ -212,7 +213,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					stateWithStatement,
-					setStatementOrder({ statementId: mockStatement.statementId as 'string', order: 5 })
+					setStatementOrder({ statementId: mockStatement.statementId as 'string', order: 5 }),
 				);
 
 				expect(newState.statements[0].order).toBe(5);
@@ -221,7 +222,7 @@ describe('statementsSlice', () => {
 			it('should do nothing when statement not found', () => {
 				const newState = statementsSlicer.reducer(
 					initialState,
-					setStatementOrder({ statementId: 'non-existent' as 'string', order: 5 })
+					setStatementOrder({ statementId: 'non-existent' as 'string', order: 5 }),
 				);
 
 				expect(newState.statements).toHaveLength(0);
@@ -230,10 +231,7 @@ describe('statementsSlice', () => {
 
 		describe('setScreen', () => {
 			it('should update screen to options', () => {
-				const newState = statementsSlicer.reducer(
-					initialState,
-					setScreen(StatementScreen.options)
-				);
+				const newState = statementsSlicer.reducer(initialState, setScreen(StatementScreen.options));
 
 				expect(newState.screen).toBe(StatementScreen.options);
 			});
@@ -243,7 +241,7 @@ describe('statementsSlice', () => {
 
 				const newState = statementsSlicer.reducer(
 					stateWithOptions,
-					setScreen(StatementScreen.chat)
+					setScreen(StatementScreen.chat),
 				);
 
 				expect(newState.screen).toBe(StatementScreen.chat);
@@ -284,7 +282,9 @@ describe('statementsSlice', () => {
 
 		describe('totalMessageBoxesSelector', () => {
 			it('should return count of statements', () => {
-				const result = totalMessageBoxesSelector(mockRootState as Parameters<typeof totalMessageBoxesSelector>[0]);
+				const result = totalMessageBoxesSelector(
+					mockRootState as Parameters<typeof totalMessageBoxesSelector>[0],
+				);
 				expect(result).toBe(1);
 			});
 		});
@@ -318,7 +318,9 @@ describe('statementsSlice', () => {
 
 		describe('statementsSelector', () => {
 			it('should return all statements', () => {
-				const result = statementsSelector(mockRootState as Parameters<typeof statementsSelector>[0]);
+				const result = statementsSelector(
+					mockRootState as Parameters<typeof statementsSelector>[0],
+				);
 				expect(result).toHaveLength(1);
 				expect(result[0].statementId).toBe(mockStatement.statementId);
 			});

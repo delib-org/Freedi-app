@@ -74,6 +74,7 @@ export async function createMindMapChild({
 		// Check if parent can have children
 		if (!canHaveChildren(parentStatement.statementType)) {
 			console.info('Options cannot have children');
+
 			return undefined;
 		}
 
@@ -81,6 +82,7 @@ export async function createMindMapChild({
 		const childType = getDefaultChildType(parentStatement.statementType);
 		if (!childType) {
 			console.info('Cannot determine child type for parent:', parentStatement.statementType);
+
 			return undefined;
 		}
 
@@ -99,6 +101,7 @@ export async function createMindMapChild({
 			statementId: parentStatement.statementId,
 			metadata: { parentType: parentStatement.statementType },
 		});
+
 		return undefined;
 	}
 }
@@ -139,6 +142,7 @@ export async function createMindMapSibling({
 				parentId: parentStatement.statementId,
 			},
 		});
+
 		return undefined;
 	}
 }
@@ -159,6 +163,7 @@ export async function updateMindMapNodeText({
 	try {
 		if (!newText || newText.trim().length < 2) {
 			console.info('Text too short, not updating');
+
 			return;
 		}
 

@@ -60,8 +60,8 @@ function shuffleArray<T>(array: T[]): T[] {
  * Creates a demographic key from participant's answers to selected questions
  */
 function createDemographicKey(tags: DemographicTag[], questionIds: string[]): string {
-	const answers = questionIds.map(qId => {
-		const tag = tags.find(t => t.questionId === qId);
+	const answers = questionIds.map((qId) => {
+		const tag = tags.find((t) => t.questionId === qId);
 
 		return tag?.answer || 'unknown';
 	});
@@ -75,7 +75,7 @@ function createDemographicKey(tags: DemographicTag[], questionIds: string[]): st
  */
 function scrambleIntoRooms(
 	participants: ParticipantWithDemographics[],
-	roomSize: number
+	roomSize: number,
 ): ScrambleResult {
 	if (participants.length === 0) {
 		return {
@@ -90,8 +90,8 @@ function scrambleIntoRooms(
 	const totalRooms = Math.ceil(participants.length / roomSize);
 
 	// Separate complete and incomplete demographic profiles
-	const completeProfiles = participants.filter(p => p.hasCompleteDemographics);
-	const incompleteProfiles = participants.filter(p => !p.hasCompleteDemographics);
+	const completeProfiles = participants.filter((p) => p.hasCompleteDemographics);
+	const incompleteProfiles = participants.filter((p) => !p.hasCompleteDemographics);
 
 	// Group participants by demographic combination
 	const demographicGroups = new Map<string, ParticipantWithDemographics[]>();
@@ -122,7 +122,7 @@ function scrambleIntoRooms(
 		for (const participant of group) {
 			// Find room with fewest participants
 			const targetRoom = rooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min
+				room.participants.length < min.participants.length ? room : min,
 			);
 			targetRoom.participants.push(participant);
 		}
@@ -132,16 +132,16 @@ function scrambleIntoRooms(
 	const shuffledIncomplete = shuffleArray(incompleteProfiles);
 	for (const participant of shuffledIncomplete) {
 		// Find room with fewest participants that isn't full
-		const availableRooms = rooms.filter(r => r.participants.length < roomSize);
+		const availableRooms = rooms.filter((r) => r.participants.length < roomSize);
 		if (availableRooms.length > 0) {
 			const targetRoom = availableRooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min
+				room.participants.length < min.participants.length ? room : min,
 			);
 			targetRoom.participants.push(participant);
 		} else {
 			// All rooms at capacity, add to room with fewest
 			const targetRoom = rooms.reduce((min, room) =>
-				room.participants.length < min.participants.length ? room : min
+				room.participants.length < min.participants.length ? room : min,
 			);
 			targetRoom.participants.push(participant);
 		}
@@ -164,18 +164,18 @@ function scrambleIntoRooms(
  */
 function calculateBalanceScore(
 	rooms: Array<{ roomNumber: number; participants: ParticipantWithDemographics[] }>,
-	numDemographicGroups: number
+	numDemographicGroups: number,
 ): number {
 	if (rooms.length <= 1 || numDemographicGroups <= 1) return 1;
 
 	// Calculate variance in room sizes
-	const sizes = rooms.map(r => r.participants.length);
+	const sizes = rooms.map((r) => r.participants.length);
 	const avgSize = sizes.reduce((a, b) => a + b, 0) / sizes.length;
 	const variance = sizes.reduce((sum, size) => sum + Math.pow(size - avgSize, 2), 0) / sizes.length;
 
 	// Normalize variance to a 0-1 score (lower variance = higher score)
 	const maxVariance = Math.pow(avgSize, 2);
-	const sizeScore = maxVariance > 0 ? 1 - (variance / maxVariance) : 1;
+	const sizeScore = maxVariance > 0 ? 1 - variance / maxVariance : 1;
 
 	return Math.max(0, Math.min(1, sizeScore));
 }
@@ -185,14 +185,8 @@ function calculateBalanceScore(
  */
 export async function createRoomAssignments(req: Request, res: Response): Promise<void> {
 	try {
-		const {
-			statementId,
-			topParentId,
-			roomSize,
-			scrambleByQuestions,
-			adminId,
-			adminName,
-		} = req.body as CreateRoomAssignmentsRequest;
+		const { statementId, topParentId, roomSize, scrambleByQuestions, adminId, adminName } =
+			req.body as CreateRoomAssignmentsRequest;
 
 		// Validate input
 		if (!statementId || !topParentId || !roomSize || !adminId) {
@@ -213,7 +207,9 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 		// Note: questionsToScramble can be empty for simple random assignment
 		const useRandomAssignment = questionsToScramble.length === 0;
 
-		logger.info(`Creating room assignments for statement ${statementId} with room size ${roomSize}${useRandomAssignment ? ' (random assignment)' : ''}`);
+		logger.info(
+			`Creating room assignments for statement ${statementId} with room size ${roomSize}${useRandomAssignment ? ' (random assignment)' : ''}`,
+		);
 
 		// 1. Get all participants (subscribers) for the statement
 		const subscriptionsSnapshot = await db
@@ -234,7 +230,10 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 		if (useRandomAssignment) {
 			// Random assignment - no demographic data needed
 			for (const doc of subscriptionsSnapshot.docs) {
-				const subscription = parse(StatementSubscriptionSchema, doc.data()) as StatementSubscription;
+				const subscription = parse(
+					StatementSubscriptionSchema,
+					doc.data(),
+				) as StatementSubscription;
 				const userId = subscription.user.uid;
 				const userName = subscription.user.displayName || 'Anonymous';
 
@@ -253,10 +252,10 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 				.where('userQuestionId', 'in', questionsToScramble)
 				.get();
 
-			const questions = questionsSnapshot.docs.map(doc => doc.data() as UserDemographicQuestion);
+			const questions = questionsSnapshot.docs.map((doc) => doc.data() as UserDemographicQuestion);
 
 			// 3. Get demographic answers for all participants
-			const participantIds = subscriptionsSnapshot.docs.map(doc => {
+			const participantIds = subscriptionsSnapshot.docs.map((doc) => {
 				const sub = parse(StatementSubscriptionSchema, doc.data()) as StatementSubscription;
 
 				return sub.user.uid;
@@ -283,7 +282,10 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 
 			// 4. Build participants with demographics
 			for (const doc of subscriptionsSnapshot.docs) {
-				const subscription = parse(StatementSubscriptionSchema, doc.data()) as StatementSubscription;
+				const subscription = parse(
+					StatementSubscriptionSchema,
+					doc.data(),
+				) as StatementSubscription;
 				const userId = subscription.user.uid;
 				const userName = subscription.user.displayName || 'Anonymous';
 
@@ -295,11 +297,11 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 				let hasAllAnswers = true;
 
 				for (const questionId of questionsToScramble) {
-					const answer = userAnswers.find(a => a.userQuestionId === questionId);
-					const question = questions.find(q => q.userQuestionId === questionId);
+					const answer = userAnswers.find((a) => a.userQuestionId === questionId);
+					const question = questions.find((q) => q.userQuestionId === questionId);
 
 					if (answer?.answer) {
-						const option = question?.options?.find(o => o.option === answer.answer);
+						const option = question?.options?.find((o) => o.option === answer.answer);
 						demographicTags.push({
 							questionId,
 							questionText: question?.question || '',
@@ -318,7 +320,8 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 					userName,
 					demographicKey,
 					demographicTags,
-					hasCompleteDemographics: hasAllAnswers && demographicTags.length === questionsToScramble.length,
+					hasCompleteDemographics:
+						hasAllAnswers && demographicTags.length === questionsToScramble.length,
 				});
 			}
 		}
@@ -363,7 +366,7 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 				settingsId,
 				statementId,
 				roomNumber: room.roomNumber,
-				participants: room.participants.map(p => p.userId),
+				participants: room.participants.map((p) => p.userId),
 				createdAt: now,
 			};
 
@@ -391,7 +394,9 @@ export async function createRoomAssignments(req: Request, res: Response): Promis
 
 		await batch.commit();
 
-		logger.info(`Created ${scrambleResult.totalRooms} rooms for ${scrambleResult.totalParticipants} participants`);
+		logger.info(
+			`Created ${scrambleResult.totalRooms} rooms for ${scrambleResult.totalParticipants} participants`,
+		);
 
 		res.status(200).json({
 			success: true,
@@ -523,7 +528,7 @@ export async function getRoomAssignments(req: Request, res: Response): Promise<v
 			.orderBy('roomNumber', 'asc')
 			.get();
 
-		const rooms = roomsSnapshot.docs.map(doc => doc.data() as Room);
+		const rooms = roomsSnapshot.docs.map((doc) => doc.data() as Room);
 
 		// Get participants
 		const participantsSnapshot = await db
@@ -531,7 +536,7 @@ export async function getRoomAssignments(req: Request, res: Response): Promise<v
 			.where('settingsId', '==', settings.settingsId)
 			.get();
 
-		const participants = participantsSnapshot.docs.map(doc => doc.data() as RoomParticipant);
+		const participants = participantsSnapshot.docs.map((doc) => doc.data() as RoomParticipant);
 
 		res.status(200).json({
 			hasAssignments: true,
@@ -577,7 +582,10 @@ export async function getMyRoomAssignment(req: Request, res: Response): Promise<
 
 		// Get user's assignment using composite ID
 		const participantId = `${settings.settingsId}--${userId}`;
-		const participantDoc = await db.collection(Collections.roomParticipants).doc(participantId).get();
+		const participantDoc = await db
+			.collection(Collections.roomParticipants)
+			.doc(participantId)
+			.get();
 
 		if (!participantDoc.exists) {
 			res.status(200).json({ hasAssignment: false });

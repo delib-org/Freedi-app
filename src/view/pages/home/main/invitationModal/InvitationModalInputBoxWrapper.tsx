@@ -1,8 +1,8 @@
-import styles from "./InvitationModal.module.scss";
-import InvitationModalInputBox from "./InvitationModalInputBox";
+import styles from './InvitationModal.module.scss';
+import InvitationModalInputBox from './InvitationModalInputBox';
 
 type Props = {
-  maxInvitation: number | undefined;
+	maxInvitation: number | undefined;
 };
 
 function InvitationModalInputBoxWrapper({ maxInvitation }: Props) {
@@ -14,11 +14,7 @@ function InvitationModalInputBoxWrapper({ maxInvitation }: Props) {
 		<InvitationModalInputBox key={i} id={`pin${i}`} />
 	));
 
-	return (
-		<div className={styles.invitation__form__inputBoxWrapper}>
-			{inputBoxes}
-		</div>
-	);
+	return <div className={styles.invitation__form__inputBoxWrapper}>{inputBoxes}</div>;
 }
 
 export default InvitationModalInputBoxWrapper;

@@ -3,7 +3,13 @@ import { Users } from 'lucide-react';
 import { Statement, StatementSettings } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { getAllOptionsWithMembers, splitJoinedOption, clearAllRoomsForParent, SplitResult, OptionWithMembers } from '@/controllers/db/joining/splitJoinedOption';
+import {
+	getAllOptionsWithMembers,
+	splitJoinedOption,
+	clearAllRoomsForParent,
+	SplitResult,
+	OptionWithMembers,
+} from '@/controllers/db/joining/splitJoinedOption';
 import { logError } from '@/utils/errorHandling';
 import { JOINING } from '@/constants/common';
 import { SettingsSection } from '../settingsSection';
@@ -25,7 +31,9 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	// State
 	const [joiningEnabled, setJoiningEnabled] = useState(settings.joiningEnabled ?? false);
 	const [singleJoinOnly, setSingleJoinOnly] = useState(settings.singleJoinOnly ?? false);
-	const [minMembers, setMinMembers] = useState(settings.minJoinMembers ?? JOINING.DEFAULT_MIN_MEMBERS);
+	const [minMembers, setMinMembers] = useState(
+		settings.minJoinMembers ?? JOINING.DEFAULT_MIN_MEMBERS,
+	);
 	const [maxMembers, setMaxMembers] = useState(settings.maxJoinMembers ?? 7); // Default to 7 for optimal group size
 	const [scrambleByQuestions, setScrambleByQuestions] = useState<string[]>([]);
 	const [options, setOptions] = useState<OptionWithMembers[]>([]);
@@ -46,7 +54,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 				settingsSection: 'statementSettings',
 			});
 		},
-		[statement]
+		[statement],
 	);
 
 	// Handlers for join behavior
@@ -55,7 +63,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 			setJoiningEnabled(enabled);
 			handleSettingChange('joiningEnabled', enabled);
 		},
-		[handleSettingChange]
+		[handleSettingChange],
 	);
 
 	const handleSingleJoinOnlyChange = useCallback(
@@ -63,7 +71,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 			setSingleJoinOnly(singleOnly);
 			handleSettingChange('singleJoinOnly', singleOnly);
 		},
-		[handleSettingChange]
+		[handleSettingChange],
 	);
 
 	// Handlers for room size
@@ -72,7 +80,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 			setMinMembers(value);
 			handleSettingChange('minJoinMembers', value);
 		},
-		[handleSettingChange]
+		[handleSettingChange],
 	);
 
 	const handleMaxMembersChange = useCallback(
@@ -80,7 +88,7 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 			setMaxMembers(value);
 			handleSettingChange('maxJoinMembers', value);
 		},
-		[handleSettingChange]
+		[handleSettingChange],
 	);
 
 	// Handler for scramble questions toggle
@@ -124,60 +132,57 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 	}, [joiningEnabled, loadOptions]);
 
 	// Handler for assigning rooms to ALL options at once
-	const handleAssignAllRooms = useCallback(
-		async () => {
-			if (options.length === 0) return;
+	const handleAssignAllRooms = useCallback(async () => {
+		if (options.length === 0) return;
 
-			setIsSplitting(true);
-			setSplitResult(null);
+		setIsSplitting(true);
+		setSplitResult(null);
 
-			try {
-				// First, clear all existing rooms to start fresh with Room 1
-				await clearAllRoomsForParent(statement.statementId);
+		try {
+			// First, clear all existing rooms to start fresh with Room 1
+			await clearAllRoomsForParent(statement.statementId);
 
-				let totalRoomsCreated = 0;
-				let totalParticipantsAssigned = 0;
+			let totalRoomsCreated = 0;
+			let totalParticipantsAssigned = 0;
 
-				// Sort options by joined count (descending) so topics with most participants get lower room numbers
-				const sortedOptions = [...options].sort((a, b) => b.joinedCount - a.joinedCount);
+			// Sort options by joined count (descending) so topics with most participants get lower room numbers
+			const sortedOptions = [...options].sort((a, b) => b.joinedCount - a.joinedCount);
 
-				// Process each option sequentially to ensure proper global room numbering
-				for (const option of sortedOptions) {
-					const result = await splitJoinedOption({
-						optionStatementId: option.statementId,
-						parentStatementId: statement.statementId,
-						roomSize: maxMembers,
-						scrambleByQuestions,
-					});
-
-					totalRoomsCreated += result.totalRooms;
-					totalParticipantsAssigned += result.totalParticipants;
-				}
-
-				// Set a summary result
-				setSplitResult({
-					success: true,
-					settingsId: '',
-					optionTitle: `${options.length} options`,
-					totalRooms: totalRoomsCreated,
-					totalParticipants: totalParticipantsAssigned,
-					balanceScore: 0,
-					rooms: [],
+			// Process each option sequentially to ensure proper global room numbering
+			for (const option of sortedOptions) {
+				const result = await splitJoinedOption({
+					optionStatementId: option.statementId,
+					parentStatementId: statement.statementId,
+					roomSize: maxMembers,
+					scrambleByQuestions,
 				});
 
-				// Refresh options list
-				await loadOptions();
-			} catch (error) {
-				logError(error, {
-					operation: 'OptionRooms.handleAssignAllRooms',
-					statementId: statement.statementId,
-				});
-			} finally {
-				setIsSplitting(false);
+				totalRoomsCreated += result.totalRooms;
+				totalParticipantsAssigned += result.totalParticipants;
 			}
-		},
-		[options, statement.statementId, maxMembers, scrambleByQuestions, loadOptions]
-	);
+
+			// Set a summary result
+			setSplitResult({
+				success: true,
+				settingsId: '',
+				optionTitle: `${options.length} options`,
+				totalRooms: totalRoomsCreated,
+				totalParticipants: totalParticipantsAssigned,
+				balanceScore: 0,
+				rooms: [],
+			});
+
+			// Refresh options list
+			await loadOptions();
+		} catch (error) {
+			logError(error, {
+				operation: 'OptionRooms.handleAssignAllRooms',
+				statementId: statement.statementId,
+			});
+		} finally {
+			setIsSplitting(false);
+		}
+	}, [options, statement.statementId, maxMembers, scrambleByQuestions, loadOptions]);
 
 	return (
 		<SettingsSection
@@ -186,7 +191,9 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 			icon={Users}
 			priority="medium"
 			defaultExpanded={false}
-			tooltip={t('Help users join options and form optimal-sized, diverse groups for better deliberation')}
+			tooltip={t(
+				'Help users join options and form optimal-sized, diverse groups for better deliberation',
+			)}
 		>
 			<div className={styles.optionRooms}>
 				<JoinBehaviorSettings
@@ -223,8 +230,8 @@ const OptionRooms: FC<OptionRoomsProps> = ({ statement }) => {
 						{splitResult && (
 							<div className={styles.optionRooms__splitResult}>
 								<p className={styles.optionRooms__splitResultText}>
-									{t('Successfully assigned')} {splitResult.totalParticipants} {t('participants')} {t('into')}{' '}
-									{splitResult.totalRooms} {t('rooms')}.
+									{t('Successfully assigned')} {splitResult.totalParticipants} {t('participants')}{' '}
+									{t('into')} {splitResult.totalRooms} {t('rooms')}.
 								</p>
 							</div>
 						)}

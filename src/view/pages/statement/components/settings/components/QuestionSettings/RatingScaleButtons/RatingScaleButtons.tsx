@@ -16,17 +16,15 @@ interface RatingScaleButtonsProps {
 	onClick: (value: evaluationType) => void;
 }
 
-const RatingScaleButtons: FC<RatingScaleButtonsProps> = ({
-	options,
-	currentValue,
-	onClick,
-}) => {
+const RatingScaleButtons: FC<RatingScaleButtonsProps> = ({ options, currentValue, onClick }) => {
 	return (
 		<div className={styles.ratingScaleButtons}>
 			{options.map((option) => {
 				const isSelected = currentValue === option.value;
 				const scoreClass = `score${option.score}`;
-				const buttonClass = isSelected ? `${styles.button} ${styles.selected} ${styles[scoreClass]}` : `${styles.button} ${styles[scoreClass]}`;
+				const buttonClass = isSelected
+					? `${styles.button} ${styles.selected} ${styles[scoreClass]}`
+					: `${styles.button} ${styles[scoreClass]}`;
 
 				return (
 					<button
@@ -37,9 +35,7 @@ const RatingScaleButtons: FC<RatingScaleButtonsProps> = ({
 						type="button"
 						aria-pressed={isSelected}
 					>
-						<div className={styles.iconContainer}>
-							{option.icon}
-						</div>
+						<div className={styles.iconContainer}>{option.icon}</div>
 						<span className={styles.label}>{option.label}</span>
 					</button>
 				);

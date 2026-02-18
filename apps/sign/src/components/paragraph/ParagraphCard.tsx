@@ -17,7 +17,8 @@ import styles from './ParagraphCard.module.scss';
 interface ParagraphCardProps {
   paragraph: Paragraph;
   documentId: string;
-  isApproved: boolean | undefined;
+  /** User's evaluation: 1 (approve), -1 (reject), undefined (no vote) */
+  userEvaluation: number | undefined;
   isLoggedIn: boolean;
   heatLevel?: 'low' | 'medium' | 'high';
   viewCount?: number;
@@ -37,12 +38,16 @@ interface ParagraphCardProps {
   nonInteractiveNormalStyle?: boolean;
   /** Optional heading number to display (e.g., "1.2.1") */
   headingNumber?: string;
+  /** When true, users must sign in with Google to interact */
+  requireGoogleLogin?: boolean;
+  /** Whether the current user is anonymous */
+  isAnonymous?: boolean;
 }
 
 export default function ParagraphCard({
   paragraph,
   documentId,
-  isApproved: initialApproval,
+  userEvaluation: initialEvaluation,
   isLoggedIn,
   heatLevel,
   viewCount,
@@ -57,6 +62,8 @@ export default function ParagraphCard({
   headerColors = DEFAULT_HEADER_COLORS,
   nonInteractiveNormalStyle = false,
   headingNumber,
+  requireGoogleLogin = false,
+  isAnonymous = false,
 }: ParagraphCardProps) {
   const { t } = useTranslation();
   const [isExpanded, setIsExpanded] = useState(false);
@@ -121,21 +128,21 @@ export default function ParagraphCard({
   // Use store value if available, otherwise fall back to initial prop
   const suggestionCount = storeSuggestionCount !== undefined ? storeSuggestionCount : initialSuggestionCount;
 
-  // Get approval state from store (updates in real-time when user approves/rejects)
-  const storeApproval = useUIStore((state: UIState) => state.approvals[paragraph.paragraphId]);
+  // Get evaluation state from store (updates in real-time when user votes)
+  const storeEvaluation = useUIStore((state: UIState) => state.evaluations[paragraph.paragraphId]);
 
   // Get interaction state from store (updates in real-time when user comments/evaluates)
   const storeHasInteracted = useUIStore((state: UIState) => state.userInteractions.has(paragraph.paragraphId));
 
   // Use store value if available, otherwise fall back to initial prop
-  const isApproved = storeApproval !== undefined ? storeApproval : initialApproval;
+  const userEvaluation = storeEvaluation !== undefined ? storeEvaluation : initialEvaluation;
   const hasInteracted = storeHasInteracted || initialHasInteracted;
 
   // Determine approval state for styling
-  // Priority: approved/rejected > interacted > pending
-  const approvalState = isApproved === undefined
+  // Priority: evaluated (approve/reject) > interacted > pending
+  const approvalState = userEvaluation === undefined
     ? (hasInteracted ? 'interacted' : 'pending')
-    : isApproved
+    : userEvaluation === 1
       ? 'approved'
       : 'rejected';
 
@@ -336,7 +343,12 @@ export default function ParagraphCard({
         );
       }
       default:
-        return <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />;
+        return (
+          <p className={styles.content} suppressHydrationWarning>
+            {headingNumber && <span className={styles.paragraphNumber}>{headingNumber}. </span>}
+            <span dangerouslySetInnerHTML={{ __html: sanitizedContent }} />
+          </p>
+        );
     }
   };
 
@@ -383,12 +395,15 @@ export default function ParagraphCard({
         )}>
           <InteractionBar
             paragraphId={paragraph.paragraphId}
-            documentId={documentId}
-            isApproved={isApproved}
+            userEvaluation={userEvaluation}
             isLoggedIn={isLoggedIn}
             commentCount={commentCount}
             suggestionCount={suggestionCount}
             enableSuggestions={enableSuggestions}
+            requireGoogleLogin={requireGoogleLogin}
+            isAnonymous={isAnonymous}
+            positiveEvaluations={paragraph.positiveEvaluations}
+            negativeEvaluations={paragraph.negativeEvaluations}
           />
         </div>
       )}

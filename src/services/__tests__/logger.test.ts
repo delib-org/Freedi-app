@@ -79,7 +79,7 @@ describe('Logger', () => {
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
 				expect.stringContaining('[ERROR]'),
-				expect.any(Error)
+				expect.any(Error),
 			);
 		});
 
@@ -88,7 +88,7 @@ describe('Logger', () => {
 
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
 				expect.stringContaining('[ERROR]'),
-				expect.any(Error)
+				expect.any(Error),
 			);
 		});
 	});

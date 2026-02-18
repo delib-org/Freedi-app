@@ -6,13 +6,21 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, StatementType, evaluationType, Collections } from '@freedi/shared-types';
+import {
+	StatementSettings,
+	StatementType,
+	evaluationType,
+	Collections,
+} from '@freedi/shared-types';
 import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
-import { getOptionsExceedingMax, splitJoinedOption } from '@/controllers/db/joining/splitJoinedOption';
+import {
+	getOptionsExceedingMax,
+	splitJoinedOption,
+} from '@/controllers/db/joining/splitJoinedOption';
 import { JOINING } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
 
@@ -31,15 +39,22 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const settings: StatementSettings = statement.statementSettings ?? defaultStatementSettings;
 
 	// Vote limit state (this needs to remain as it's UI-specific state)
-	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(!!statement.evaluationSettings?.maxVotesPerUser);
-	const [maxVotes, setMaxVotes] = useState<number>(statement.evaluationSettings?.maxVotesPerUser || 3);
+	const [isVoteLimitEnabled, setIsVoteLimitEnabled] = useState<boolean>(
+		!!statement.evaluationSettings?.maxVotesPerUser,
+	);
+	const [maxVotes, setMaxVotes] = useState<number>(
+		statement.evaluationSettings?.maxVotesPerUser || 3,
+	);
 
 	// Split rooms state
 	const [exceedingOptions, setExceedingOptions] = useState<OptionExceedingMax[]>([]);
 	const [isLoadingExceeding, setIsLoadingExceeding] = useState(false);
 	const [splitRoomSize, setSplitRoomSize] = useState<number>(JOINING.DEFAULT_MAX_MEMBERS);
 	const [splittingOptionId, setSplittingOptionId] = useState<string | null>(null);
-	const [splitResults, setSplitResults] = useState<{ optionTitle: string; totalRooms: number } | null>(null);
+	const [splitResults, setSplitResults] = useState<{
+		optionTitle: string;
+		totalRooms: number;
+	} | null>(null);
 
 	// Update vote limit state when statement changes
 	useEffect(() => {
@@ -107,7 +122,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	// Unified handler for all statement settings
 	function handleSettingChange(
 		property: keyof StatementSettings,
-		newValue: boolean | string | number | undefined
+		newValue: boolean | string | number | undefined,
 	) {
 		setStatementSettingToDB({
 			statement,
@@ -118,10 +133,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	}
 
 	// Handler for number input changes
-	function handleNumberSettingChange(
-		property: keyof StatementSettings,
-		value: string
-	) {
+	function handleNumberSettingChange(property: keyof StatementSettings, value: string) {
 		const numValue = value === '' ? undefined : Number(value);
 		if (numValue === undefined || (numValue >= 1 && numValue <= 1000)) {
 			handleSettingChange(property, numValue);
@@ -172,9 +184,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{/* Visibility & Access Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('Visibility & Access')}
-					</span>
+					<span className={styles.categoryTitle}>{t('Visibility & Access')}</span>
 				</div>
 				<div className={styles.categoryContent}>
 					<Checkbox
@@ -185,16 +195,12 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					<Checkbox
 						label={'Chat'}
 						isChecked={settings.hasChat ?? false}
-						onChange={(checked) =>
-							handleSettingChange('hasChat', checked)
-						}
+						onChange={(checked) => handleSettingChange('hasChat', checked)}
 					/>
 					<Checkbox
 						label={'Enable Sub-Conversations'}
 						isChecked={settings.hasChildren ?? false}
-						onChange={(checked) =>
-							handleSettingChange('hasChildren', checked)
-						}
+						onChange={(checked) => handleSettingChange('hasChildren', checked)}
 					/>
 				</div>
 			</div>
@@ -203,12 +209,8 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{statement.statementType === StatementType.question && (
 				<div className={`${styles.category} ${styles.smartJoinCategory}`}>
 					<div className={styles.categoryHeader}>
-						<span className={styles.categoryTitle}>
-							{t('Smart Join')}
-						</span>
-						<span className={styles.categoryBadge}>
-							{t('Team Formation')}
-						</span>
+						<span className={styles.categoryTitle}>{t('Smart Join')}</span>
+						<span className={styles.categoryBadge}>{t('Team Formation')}</span>
 					</div>
 					<div className={styles.categoryContent}>
 						{/* Master toggle */}
@@ -216,9 +218,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 							<Checkbox
 								label={t('Enable Smart Join')}
 								isChecked={settings.joiningEnabled ?? false}
-								onChange={(checked) =>
-									handleSettingChange('joiningEnabled', checked)
-								}
+								onChange={(checked) => handleSettingChange('joiningEnabled', checked)}
 							/>
 							<p className={styles.featureDescription}>
 								{t('Allow participants to join options and form teams with size limits')}
@@ -230,15 +230,11 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 							<div className={styles.settingsGrid}>
 								{/* Join Behavior Card */}
 								<div className={styles.settingCard}>
-									<h4 className={styles.settingCardTitle}>
-										{t('Join Behavior')}
-									</h4>
+									<h4 className={styles.settingCardTitle}>{t('Join Behavior')}</h4>
 									<Checkbox
 										label={t('Single option join only')}
 										isChecked={settings.singleJoinOnly ?? false}
-										onChange={(checked) =>
-											handleSettingChange('singleJoinOnly', checked)
-										}
+										onChange={(checked) => handleSettingChange('singleJoinOnly', checked)}
 									/>
 									<p className={styles.helperText}>
 										{t('Users can only join one option at a time')}
@@ -247,9 +243,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 								{/* Team Size Limits Card */}
 								<div className={styles.settingCard}>
-									<h4 className={styles.settingCardTitle}>
-										{t('Team Size Limits')}
-									</h4>
+									<h4 className={styles.settingCardTitle}>{t('Team Size Limits')}</h4>
 									<div className={styles.numberInputRow}>
 										<div className={styles.numberInputGroup}>
 											<label>{t('Minimum')}</label>
@@ -259,7 +253,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 												max="1000"
 												placeholder={t('None')}
 												value={settings.minJoinMembers ?? ''}
-												onChange={(e) => handleNumberSettingChange('minJoinMembers', e.target.value)}
+												onChange={(e) =>
+													handleNumberSettingChange('minJoinMembers', e.target.value)
+												}
 												className={styles.numberInput}
 											/>
 										</div>
@@ -272,7 +268,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 												max="1000"
 												placeholder={t('None')}
 												value={settings.maxJoinMembers ?? ''}
-												onChange={(e) => handleNumberSettingChange('maxJoinMembers', e.target.value)}
+												onChange={(e) =>
+													handleNumberSettingChange('maxJoinMembers', e.target.value)
+												}
 												className={styles.numberInput}
 											/>
 										</div>
@@ -287,9 +285,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 									<h4 className={styles.settingCardTitle}>
 										{t('Room Splitting')}
 										{!settings.maxJoinMembers && (
-											<span className={styles.requiresTag}>
-												{t('Set maximum first')}
-											</span>
+											<span className={styles.requiresTag}>{t('Set maximum first')}</span>
 										)}
 									</h4>
 
@@ -302,7 +298,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 													min={JOINING.MIN_ROOM_SIZE}
 													max="100"
 													value={splitRoomSize}
-													onChange={(e) => setSplitRoomSize(Number(e.target.value) || JOINING.DEFAULT_MAX_MEMBERS)}
+													onChange={(e) =>
+														setSplitRoomSize(Number(e.target.value) || JOINING.DEFAULT_MAX_MEMBERS)
+													}
 													className={styles.numberInput}
 												/>
 											</div>
@@ -327,9 +325,7 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 																</span>
 																<span className={styles.optionCount}>
 																	{option.joinedCount} / {option.maxMembers} {t('members')}
-																	<span className={styles.excessBadge}>
-																		+{option.excessCount}
-																	</span>
+																	<span className={styles.excessBadge}>+{option.excessCount}</span>
 																</span>
 															</div>
 															<button
@@ -349,7 +345,8 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 											{splitResults && (
 												<div className={styles.splitSuccess}>
 													<p>
-														{t('Successfully split')} "{splitResults.optionTitle}" {t('into')} {splitResults.totalRooms} {t('rooms')}
+														{t('Successfully split')} "{splitResults.optionTitle}" {t('into')}{' '}
+														{splitResults.totalRooms} {t('rooms')}
 													</p>
 													<button
 														className={styles.dismissButton}
@@ -370,7 +367,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 										</div>
 									) : (
 										<p className={styles.helperText}>
-											{t('Set a maximum team size above to enable room splitting for oversized teams')}
+											{t(
+												'Set a maximum team size above to enable room splitting for oversized teams',
+											)}
 										</p>
 									)}
 								</div>
@@ -383,24 +382,18 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{/* Participation & Collaboration Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('Participation & Collaboration')}
-					</span>
+					<span className={styles.categoryTitle}>{t('Participation & Collaboration')}</span>
 				</div>
 				<div className={styles.categoryContent}>
 					<Checkbox
 						label={'Allow participants to contribute options to the voting page'}
 						isChecked={settings.enableAddVotingOption ?? false}
-						onChange={(checked) =>
-							handleSettingChange('enableAddVotingOption', checked)
-						}
+						onChange={(checked) => handleSettingChange('enableAddVotingOption', checked)}
 					/>
 					<Checkbox
-						label='Allow participants to contribute options to the evaluation page'
+						label="Allow participants to contribute options to the evaluation page"
 						isChecked={settings.enableAddEvaluationOption ?? false}
-						onChange={(checked) =>
-							handleSettingChange('enableAddEvaluationOption', checked)
-						}
+						onChange={(checked) => handleSettingChange('enableAddEvaluationOption', checked)}
 					/>
 				</div>
 			</div>
@@ -408,15 +401,11 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{/* Evaluation & Voting Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('Evaluation & Voting')}
-					</span>
+					<span className={styles.categoryTitle}>{t('Evaluation & Voting')}</span>
 				</div>
 				<div className={styles.categoryContent}>
 					<div className={styles.evaluationTypeSection}>
-						<label className={styles.sectionLabel}>
-							{t('Evaluation Type')}
-						</label>
+						<label className={styles.sectionLabel}>{t('Evaluation Type')}</label>
 						<EvaluationTypeSelector
 							currentType={settings.evaluationType ?? evaluationType.range}
 							onChange={(type) => {
@@ -455,30 +444,22 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					<Checkbox
 						label={'Show Evaluations results'}
 						isChecked={settings.showEvaluation ?? false}
-						onChange={(checked) =>
-							handleSettingChange('showEvaluation', checked)
-						}
+						onChange={(checked) => handleSettingChange('showEvaluation', checked)}
 					/>
 					<Checkbox
 						label={t('Enable user voting/evaluation')}
 						isChecked={settings.enableEvaluation ?? true}
-						onChange={(checked) =>
-							handleSettingChange('enableEvaluation', checked)
-						}
+						onChange={(checked) => handleSettingChange('enableEvaluation', checked)}
 					/>
 					<Checkbox
-						label='In Voting page, show only the results of the top options'
+						label="In Voting page, show only the results of the top options"
 						isChecked={settings.inVotingGetOnlyResults ?? false}
-						onChange={(checked) =>
-							handleSettingChange('inVotingGetOnlyResults', checked)
-						}
+						onChange={(checked) => handleSettingChange('inVotingGetOnlyResults', checked)}
 					/>
 					<Checkbox
 						label={t('Enable Submit Mode')}
 						isChecked={settings.isSubmitMode ?? false}
-						onChange={(checked) =>
-							handleSettingChange('isSubmitMode', checked)
-						}
+						onChange={(checked) => handleSettingChange('isSubmitMode', checked)}
 					/>
 				</div>
 			</div>
@@ -486,32 +467,24 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{/* AI & Automation Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('AI & Automation')}
-					</span>
+					<span className={styles.categoryTitle}>{t('AI & Automation')}</span>
 				</div>
 				<div className={styles.categoryContent}>
 					<Checkbox
 						label={t('Enable AI suggestion improvement')}
 						isChecked={settings.enableAIImprovement ?? false}
-						onChange={(checked) =>
-							handleSettingChange('enableAIImprovement', checked)
-						}
+						onChange={(checked) => handleSettingChange('enableAIImprovement', checked)}
 					/>
 					<Checkbox
-						label='Allow similarity search'
+						label="Allow similarity search"
 						isChecked={settings.enableSimilaritiesSearch ?? false}
-						onChange={(checked) =>
-							handleSettingChange('enableSimilaritiesSearch', checked)
-						}
+						onChange={(checked) => handleSettingChange('enableSimilaritiesSearch', checked)}
 					/>
 					{statement.statementType === StatementType.question && (
 						<Checkbox
 							label={'By default, look for similar statements'}
 							isChecked={settings.defaultLookForSimilarities ?? false}
-							onChange={(checked) =>
-								handleSettingChange('defaultLookForSimilarities', checked)
-							}
+							onChange={(checked) => handleSettingChange('defaultLookForSimilarities', checked)}
 						/>
 					)}
 				</div>
@@ -521,32 +494,30 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{statement.statementType === StatementType.question && (
 				<div className={styles.category}>
 					<div className={styles.categoryHeader}>
-						<span className={styles.categoryTitle}>
-							{t('Discussion Framework')}
-						</span>
+						<span className={styles.categoryTitle}>{t('Discussion Framework')}</span>
 					</div>
 					<div className={styles.categoryContent}>
 						<Checkbox
 							label={t('Enable Popper-Hebbian Discussion Mode')}
 							isChecked={settings.popperianDiscussionEnabled ?? false}
-							onChange={(checked) =>
-								handleSettingChange('popperianDiscussionEnabled', checked)
-							}
+							onChange={(checked) => handleSettingChange('popperianDiscussionEnabled', checked)}
 						/>
 						<p className={styles.helperText}>
-							{t('Transforms discussion into evidence-based Support/Challenge format with weighted scoring and AI-guided idea refinement')}
+							{t(
+								'Transforms discussion into evidence-based Support/Challenge format with weighted scoring and AI-guided idea refinement',
+							)}
 						</p>
 						{settings.popperianDiscussionEnabled && (
 							<>
 								<Checkbox
 									label={t('Enable AI Pre-Check for Options')}
 									isChecked={settings.popperianPreCheckEnabled ?? false}
-									onChange={(checked) =>
-										handleSettingChange('popperianPreCheckEnabled', checked)
-									}
+									onChange={(checked) => handleSettingChange('popperianPreCheckEnabled', checked)}
 								/>
 								<p className={styles.helperText}>
-									{t('When enabled, AI will help refine and clarify options before they are posted')}
+									{t(
+										'When enabled, AI will help refine and clarify options before they are posted',
+									)}
 								</p>
 							</>
 						)}
@@ -557,17 +528,15 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{/* Localization Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('Localization')}
-					</span>
+					<span className={styles.categoryTitle}>{t('Localization')}</span>
 				</div>
 				<div className={styles.categoryContent}>
 					<div className={styles.evaluationTypeSection}>
-						<label className={styles.sectionLabel}>
-							{t('Survey Default Language')}
-						</label>
+						<label className={styles.sectionLabel}>{t('Survey Default Language')}</label>
 						<p className={styles.helperText}>
-							{t('This language will be used for surveys when users have no language preference set')}
+							{t(
+								'This language will be used for surveys when users have no language preference set',
+							)}
 						</p>
 						<LanguageSelector
 							currentLanguage={statement.defaultLanguage}
@@ -580,7 +549,9 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						onChange={handleForceLanguageChange}
 					/>
 					<p className={styles.helperText}>
-						{t('When enabled, all participants will see the survey in the default language regardless of their browser settings')}
+						{t(
+							'When enabled, all participants will see the survey in the default language regardless of their browser settings',
+						)}
 					</p>
 				</div>
 			</div>
@@ -588,26 +559,20 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			{/* Navigation & Structure Category */}
 			<div className={styles.category}>
 				<div className={styles.categoryHeader}>
-					<span className={styles.categoryTitle}>
-						{t('Navigation & Structure')}
-					</span>
+					<span className={styles.categoryTitle}>{t('Navigation & Structure')}</span>
 				</div>
 				<div className={styles.categoryContent}>
 					{statement.statementType === StatementType.question && (
 						<Checkbox
 							label={'Enable add new sub-questions button'}
 							isChecked={settings.enableAddNewSubQuestionsButton ?? false}
-							onChange={(checked) =>
-								handleSettingChange('enableAddNewSubQuestionsButton', checked)
-							}
+							onChange={(checked) => handleSettingChange('enableAddNewSubQuestionsButton', checked)}
 						/>
 					)}
 					<Checkbox
-						label='Navigational elements'
+						label="Navigational elements"
 						isChecked={settings.enableNavigationalElements ?? false}
-						onChange={(checked) =>
-							handleSettingChange('enableNavigationalElements', checked)
-						}
+						onChange={(checked) => handleSettingChange('enableNavigationalElements', checked)}
 					/>
 				</div>
 			</div>

@@ -191,6 +191,20 @@ export default function DemographicQuestionEditor({
             </label>
           </div>
 
+          {/* Allow Other toggle - only for radio/checkbox */}
+          {hasOptions && (
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={question.allowOther ?? false}
+                  onChange={(e) => onUpdate({ allowOther: e.target.checked })}
+                />
+                <span>{t('allowOtherOption') || 'Allow "Other" option'}</span>
+              </label>
+            </div>
+          )}
+
           {/* Options for radio/checkbox */}
           {hasOptions && (
             <div className={styles.optionsSection}>

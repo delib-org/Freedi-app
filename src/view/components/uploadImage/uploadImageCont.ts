@@ -8,7 +8,7 @@ export async function setImageLocally(
 	file: File,
 	statement: Statement,
 	setImage: React.Dispatch<React.SetStateAction<string>>,
-	setProgress: React.Dispatch<React.SetStateAction<number>>
+	setProgress: React.Dispatch<React.SetStateAction<number>>,
 ) {
 	if (file) {
 		const img = new Image();
@@ -21,13 +21,9 @@ export async function setImageLocally(
 				img.onload = async () => {
 					try {
 						// Step 1: Compress image (0-50% progress)
-						const compressedFile = await compressImage(
-							file,
-							200,
-							(compressionProgress: number) => {
-								setProgress(compressionProgress / 2); // 0-50%
-							}
-						);
+						const compressedFile = await compressImage(file, 200, (compressionProgress: number) => {
+							setProgress(compressionProgress / 2); // 0-50%
+						});
 
 						// Show compressed image preview
 						const previewURL = URL.createObjectURL(compressedFile);
@@ -38,8 +34,8 @@ export async function setImageLocally(
 							compressedFile,
 							statement,
 							(uploadProgress: number) => {
-								setProgress(50 + (uploadProgress / 2)); // 50-100%
-							}
+								setProgress(50 + uploadProgress / 2); // 50-100%
+							},
 						);
 
 						// Step 3: Update database and show final image
@@ -47,7 +43,7 @@ export async function setImageLocally(
 						await updateStatementMainImage(statement, imageURL);
 						setImage(imageURL);
 						setProgress(100);
-						
+
 						// Clean up blob URL after a delay to ensure image loads
 						setTimeout(() => {
 							URL.revokeObjectURL(previewURL);

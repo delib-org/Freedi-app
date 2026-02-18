@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './TypingIndicator.module.scss';
 
 export interface TypingUser {
@@ -13,6 +14,8 @@ export interface TypingUser {
 interface TypingIndicatorProps {
   typingUsers: TypingUser[];
   currentUserId: string | null;
+  /** When true, hide display names and show generic "Someone" */
+  hideUserIdentity?: boolean;
 }
 
 /**
@@ -22,6 +25,7 @@ interface TypingIndicatorProps {
 export default function TypingIndicator({
   typingUsers,
   currentUserId,
+  hideUserIdentity = false,
 }: TypingIndicatorProps) {
   const { t, tWithParams } = useTranslation();
 
@@ -45,6 +49,8 @@ export default function TypingIndicator({
 
   // Get display names or fallback
   const getDisplayName = (user: TypingUser): string => {
+    if (hideUserIdentity) return getPseudoName(user.id);
+
     return user.displayName || t('Someone');
   };
 
@@ -79,6 +85,7 @@ export default function TypingIndicator({
 
   // Get first letter for avatar
   const getInitial = (user: TypingUser): string => {
+    if (hideUserIdentity) return getPseudoName(user.id).charAt(0).toUpperCase();
     if (user.displayName && user.displayName.length > 0) {
       return user.displayName.charAt(0).toUpperCase();
     }

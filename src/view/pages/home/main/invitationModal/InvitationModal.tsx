@@ -19,9 +19,7 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 	const { t } = useTranslation();
 
 	const [errorMessage, setErrorMessage] = useState<string>('');
-	const [maxInvitation, setMaxInvitation] = useState<number | undefined>(
-		undefined
-	);
+	const [maxInvitation, setMaxInvitation] = useState<number | undefined>(undefined);
 
 	useEffect(() => {
 		getMaxInvitationDigits().then((result) => {
@@ -42,11 +40,7 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 
 			const pathname = await getInvitationPathName(fullPin);
 			if (!pathname) {
-				setErrorMessage(
-					t(
-						"Couldn't find the invitation. Please check the PIN and try again."
-					)
-				);
+				setErrorMessage(t("Couldn't find the invitation. Please check the PIN and try again."));
 
 				return;
 			}
@@ -59,18 +53,14 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 
 	function gettingPinsFromInput(
 		maxInvitation: number | undefined,
-		ev: React.FormEvent<HTMLFormElement>
+		ev: React.FormEvent<HTMLFormElement>,
 	) {
 		const pins: number[] = [];
 		const form = ev.target as HTMLFormElement;
 		for (let i = 0; i < maxInvitation!; i++) {
 			const pinValue = (form['pin' + i] as HTMLInputElement).value;
 
-			if (
-				Number.isInteger(Number(pinValue)) &&
-				Number(pinValue) >= 0 &&
-				Number(pinValue) <= 9
-			) {
+			if (Number.isInteger(Number(pinValue)) && Number(pinValue) >= 0 && Number(pinValue) <= 9) {
 				pins.push(Number(pinValue));
 			} else {
 				pins.push(0);
@@ -93,30 +83,16 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 		<InviteModal>
 			<div className={styles.invitation}>
 				<form className={styles.invitation__form} onSubmit={handleJoin}>
-					<InvitationModalInputBoxWrapper
-						maxInvitation={maxInvitation}
-					/>
-					{errorMessage && (
-						<div className={styles.invitation__error}>
-							{errorMessage}
-						</div>
-					)}
+					<InvitationModalInputBoxWrapper maxInvitation={maxInvitation} />
+					{errorMessage && <div className={styles.invitation__error}>{errorMessage}</div>}
 
 					{maxInvitation === undefined ? (
-						<p className={styles.invitation__form__noRooms}>
-							{t('There are no rooms yet')}
-						</p>
+						<p className={styles.invitation__form__noRooms}>{t('There are no rooms yet')}</p>
 					) : (
-						<input
-							type='submit'
-							className={styles.invitation__form__btn}
-							value={t('Join')}
-						></input>
+						<input type="submit" className={styles.invitation__form__btn} value={t('Join')}></input>
 					)}
 
-					<button
-						onClick={() => handleCloseInviteModal(setShowModal)}
-					>
+					<button onClick={() => handleCloseInviteModal(setShowModal)}>
 						<XIcon />
 					</button>
 				</form>

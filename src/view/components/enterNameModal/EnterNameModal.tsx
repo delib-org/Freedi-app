@@ -19,7 +19,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 	const [displayName, setDisplayName] = useState<string | null>(null);
 	const [showStartBtn, setShowStartBtn] = useState<boolean>(false);
 	const inputRef = useRef<HTMLInputElement>(null); // Create a ref for the input
-		
+
 	const { t } = useTranslation();
 
 	function handleSetName(ev: React.ChangeEvent<HTMLInputElement>) {
@@ -56,27 +56,27 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 
 	return (
 		<Modal>
-			<form className={styles.box} onSubmit={handleSubmit} data-cy='anonymous-input'>
+			<form className={styles.box} onSubmit={handleSubmit} data-cy="anonymous-input">
 				<input
 					ref={inputRef} // Assign the ref to the input
 					className={styles.input}
 					onChange={handleSetName}
-					type='text'
-					name='displayName'
+					type="text"
+					name="displayName"
 					placeholder={t('Nickname')}
-					autoComplete='off'
+					autoComplete="off"
 				/>
-				<div className='btns'>
+				<div className="btns">
 					<Button
 						buttonType={ButtonType.PRIMARY}
-						data-cy='anonymous-start-btn'
+						data-cy="anonymous-start-btn"
 						text={t('Start')}
 						onClick={handleStart}
 						disabled={!showStartBtn}
 					/>
 					<Button
 						buttonType={ButtonType.SECONDARY}
-						data-cy='anonymous-cancel-btn'
+						data-cy="anonymous-cancel-btn"
 						text={t('Cancel')}
 						onClick={closeModal}
 					/>

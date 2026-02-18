@@ -1,5 +1,5 @@
-import firebaseConfig from "@/controllers/db/configKey";
-import { functionConfig } from "@freedi/shared-types";
+import firebaseConfig from '@/controllers/db/configKey';
+import { functionConfig } from '@freedi/shared-types';
 
 export const similarOptionsEndPoint =
 	location.hostname === 'localhost'

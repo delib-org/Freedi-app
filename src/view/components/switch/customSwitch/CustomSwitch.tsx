@@ -12,13 +12,7 @@ interface Props {
 	setChecked: (checked: boolean) => void;
 }
 
-const CustomSwitch: FC<Props> = ({
-	label,
-	checked,
-	name,
-	setChecked,
-	children,
-}) => {
+const CustomSwitch: FC<Props> = ({ label, checked, name, setChecked, children }) => {
 	const { t } = useTranslation();
 
 	const handleChange = () => {
@@ -35,14 +29,14 @@ const CustomSwitch: FC<Props> = ({
 	return (
 		<div
 			className={`${styles.customSwitch} ${checked ? styles.checked : ''}`}
-			role='switch'
+			role="switch"
 			aria-checked={checked}
 			tabIndex={0}
 			onClick={handleChange}
 			onKeyDown={handleKeyDown}
 			data-cy={`toggleSwitch-${name}`}
 		>
-			<div className={styles.tag} aria-hidden='true'>
+			<div className={styles.tag} aria-hidden="true">
 				{children}
 			</div>
 			<div className={styles.label}>{t(label)}</div>
@@ -50,7 +44,7 @@ const CustomSwitch: FC<Props> = ({
 				<VisuallyHidden labelName={label} />
 			</label>
 			<input
-				type='checkbox'
+				type="checkbox"
 				name={name}
 				id={`toggleSwitch-${name}`}
 				className={styles.switchInput}

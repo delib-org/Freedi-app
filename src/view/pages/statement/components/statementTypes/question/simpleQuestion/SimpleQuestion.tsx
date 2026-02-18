@@ -1,36 +1,36 @@
-import { useContext, useState } from 'react'
-import { Statement } from '@freedi/shared-types'
-import StatementBottomNav from '../../../nav/bottom/StatementBottomNav'
-import styles from './SimpleQuestion.module.scss'
-import SuggestionCards from '../../../evaluations/components/suggestionCards/SuggestionCards'
-import Description from '../../../evaluations/components/description/Description'
-import { StatementContext } from '@/view/pages/statement/StatementCont'
-import { useSummarization } from '@/controllers/hooks/useSummarization'
-import { useTranslation } from '@/controllers/hooks/useTranslation'
-import { useEditPermission } from '@/controllers/hooks/useEditPermission'
-import SummaryDisplay from '../document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay'
-import SummarizeModal from '../document/MultiStageQuestion/components/SummarizeModal/SummarizeModal'
+import { useContext, useState } from 'react';
+import { Statement } from '@freedi/shared-types';
+import StatementBottomNav from '../../../nav/bottom/StatementBottomNav';
+import styles from './SimpleQuestion.module.scss';
+import SuggestionCards from '../../../evaluations/components/suggestionCards/SuggestionCards';
+import Description from '../../../evaluations/components/description/Description';
+import { StatementContext } from '@/view/pages/statement/StatementCont';
+import { useSummarization } from '@/controllers/hooks/useSummarization';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useEditPermission } from '@/controllers/hooks/useEditPermission';
+import SummaryDisplay from '../document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
+import SummarizeModal from '../document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 
 const SimpleQuestion = () => {
-	const { statement } = useContext(StatementContext)
-	const { t } = useTranslation()
-	const { isGenerating, generateSummary } = useSummarization()
-	const { isAdmin } = useEditPermission(statement)
-	const [isModalOpen, setIsModalOpen] = useState(false)
+	const { statement } = useContext(StatementContext);
+	const { t } = useTranslation();
+	const { isGenerating, generateSummary } = useSummarization();
+	const { isAdmin } = useEditPermission(statement);
+	const [isModalOpen, setIsModalOpen] = useState(false);
 
 	const handleGenerateSummary = async (customPrompt: string) => {
-		if (!statement) return
-		const success = await generateSummary(statement.statementId, customPrompt)
+		if (!statement) return;
+		const success = await generateSummary(statement.statementId, customPrompt);
 		if (success) {
-			setIsModalOpen(false)
+			setIsModalOpen(false);
 		}
-	}
+	};
 
 	// Type assertion for summary fields
 	const statementWithSummary = statement as Statement & {
-		summary?: string
-		summaryGeneratedAt?: number
-	}
+		summary?: string;
+		summaryGeneratedAt?: number;
+	};
 
 	return (
 		<div className={styles.simpleQuestion}>
@@ -75,7 +75,7 @@ const SimpleQuestion = () => {
 				/>
 			)}
 		</div>
-	)
-}
+	);
+};
 
-export default SimpleQuestion
+export default SimpleQuestion;

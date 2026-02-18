@@ -19,114 +19,109 @@ import MenuOption from '@/view/components/menu/MenuOption';
 import styles from './ViewsDropdown.module.scss';
 
 interface ViewsDropdownProps {
-  statement: Statement;
-  screen: string | undefined;
-  headerStyle: { color: string; backgroundColor: string };
-  onNavigate: (screen: Screen) => void;
+	statement: Statement;
+	screen: string | undefined;
+	headerStyle: { color: string; backgroundColor: string };
+	onNavigate: (screen: Screen) => void;
 }
 
-const ViewsDropdown: FC<ViewsDropdownProps> = ({
-  statement,
-  screen,
-  headerStyle,
-  onNavigate,
-}) => {
-  const { t } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle, onNavigate }) => {
+	const { t } = useTranslation();
+	const [isOpen, setIsOpen] = useState(false);
 
-  useEffect(() => {
-    setIsOpen(false);
-  }, [screen]);
+	useEffect(() => {
+		setIsOpen(false);
+	}, [screen]);
 
-  useEffect(() => {
-    if (screen === 'view') {
-      setIsOpen(true);
-    }
-  }, [screen]);
+	useEffect(() => {
+		if (screen === 'view') {
+			setIsOpen(true);
+		}
+	}, [screen]);
 
-  const handleClickOutside = useCallback(() => {
-    if (isOpen) setIsOpen(false);
-  }, [isOpen]);
+	const handleClickOutside = useCallback(() => {
+		if (isOpen) setIsOpen(false);
+	}, [isOpen]);
 
-  const dropdownRef = useClickOutside(handleClickOutside);
+	const dropdownRef = useClickOutside(handleClickOutside);
 
-  const handleToggle = () => {
-    if (screen === Screen.settings || screen === Screen.chat || 
-        screen === Screen.agreementMap || screen === Screen.mindMap) {
-      onNavigate('view' as Screen);
-    } else {
-      setIsOpen(!isOpen);
-    }
-  };
+	const handleToggle = () => {
+		if (
+			screen === Screen.settings ||
+			screen === Screen.chat ||
+			screen === Screen.agreementMap ||
+			screen === Screen.mindMap
+		) {
+			onNavigate('view' as Screen);
+		} else {
+			setIsOpen(!isOpen);
+		}
+	};
 
-  const handleOptionClick = (targetScreen: Screen) => {
-    onNavigate(targetScreen);
-    setIsOpen(false);
-  };
+	const handleOptionClick = (targetScreen: Screen) => {
+		onNavigate(targetScreen);
+		setIsOpen(false);
+	};
 
-  return (
-    <div className={styles.viewsDropdown}>
-      <button
-        className={styles.viewsDropdown__trigger}
-        onClick={handleToggle}
-        aria-label={t('View options')}
-      >
-        <NavIcon
-          statement={statement}
-          screen={screen}
-          headerStyle={headerStyle}
-        />
-      </button>
-      
-      {isOpen && (
-        <div 
-          ref={(node) => {
-            if (dropdownRef) dropdownRef.current = node;
-          }} 
-          className={styles.viewsDropdown__menu}
-        >
-          <MenuOption
-            label={t('Agreement Map')}
-            icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
-            onOptionClick={() => handleOptionClick(Screen.agreementMap)}
-          />
-          <MenuOption
-            label={t('Collaboration Index')}
-            icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
-            onOptionClick={() => handleOptionClick(Screen.polarizationIndex)}
-          />
-          <MenuOption
-            label={t('Mind Map')}
-            icon={<MapIcon style={{ color: '#4E88C7' }} />}
-            onOptionClick={() => handleOptionClick(Screen.mindMap)}
-          />
-        </div>
-      )}
-    </div>
-  );
+	return (
+		<div className={styles.viewsDropdown}>
+			<button
+				className={styles.viewsDropdown__trigger}
+				onClick={handleToggle}
+				aria-label={t('View options')}
+			>
+				<NavIcon statement={statement} screen={screen} headerStyle={headerStyle} />
+			</button>
+
+			{isOpen && (
+				<div
+					ref={(node) => {
+						if (dropdownRef) dropdownRef.current = node;
+					}}
+					className={styles.viewsDropdown__menu}
+				>
+					<MenuOption
+						label={t('Agreement Map')}
+						icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
+						onOptionClick={() => handleOptionClick(Screen.agreementMap)}
+					/>
+					<MenuOption
+						label={t('Collaboration Index')}
+						icon={<TriangleIcon style={{ color: '#4E88C7' }} />}
+						onOptionClick={() => handleOptionClick(Screen.polarizationIndex)}
+					/>
+					<MenuOption
+						label={t('Mind Map')}
+						icon={<MapIcon style={{ color: '#4E88C7' }} />}
+						onOptionClick={() => handleOptionClick(Screen.mindMap)}
+					/>
+				</div>
+			)}
+		</div>
+	);
 };
 
 function NavIcon({
-  statement,
-  screen,
-  headerStyle,
+	statement,
+	screen,
+	headerStyle,
 }: {
-  readonly statement: Statement;
-  readonly screen: string | undefined;
-  readonly headerStyle: {
-    readonly color: string;
-    readonly backgroundColor: string;
-  };
+	readonly statement: Statement;
+	readonly screen: string | undefined;
+	readonly headerStyle: {
+		readonly color: string;
+		readonly backgroundColor: string;
+	};
 }) {
-  if (screen === 'view' || screen === undefined) {
-    return <View color={headerStyle.color} />;
-  } else if (statement.statementType === StatementType.question) {
-    return <QuestionIcon color={headerStyle.color} />;
-  } else if (statement.statementType === StatementType.group) {
-    return <GroupIcon color={headerStyle.color} />;
-  } else {
-    return <View color={headerStyle.color} />;
-  }
+	if (screen === 'view' || screen === undefined) {
+		return <View color={headerStyle.color} />;
+	} else if (statement.statementType === StatementType.question) {
+		return <QuestionIcon color={headerStyle.color} />;
+	} else if (statement.statementType === StatementType.group) {
+		return <GroupIcon color={headerStyle.color} />;
+	} else {
+		return <View color={headerStyle.color} />;
+	}
 }
 
 export default ViewsDropdown;

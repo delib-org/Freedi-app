@@ -14,12 +14,8 @@ export function useMindMap(statementIdPassed: string | null = null) {
 	const { statementId: paramsStatement } = useParams();
 	const statementId = statementIdPassed ?? paramsStatement;
 	const statement = useSelector(statementSelector(statementId));
-	const allDescendants: Statement[] = useSelector(
-		statementDescendantsSelector(statementId)
-	);
-	const descendants = allDescendants.filter(
-		(statement) => !isChatMessage(statement.statementType)
-	);
+	const allDescendants: Statement[] = useSelector(statementDescendantsSelector(statementId));
+	const descendants = allDescendants.filter((statement) => !isChatMessage(statement.statementType));
 
 	const [flat, setFlat] = useState(false);
 	const [loading, setLoading] = useState(false);
@@ -66,15 +62,13 @@ export function useMindMap(statementIdPassed: string | null = null) {
 				const prevResultsStr = JSON.stringify(prevResults);
 				const newResultsStr = JSON.stringify(newResults);
 
-				return prevResultsStr === newResultsStr
-					? prevResults
-					: newResults;
+				return prevResultsStr === newResultsStr ? prevResults : newResults;
 			});
 		} catch (error) {
 			logError(error, {
 				operation: 'useMindMap.calculateResults',
 				statementId: statement?.statementId,
-				metadata: { descendantsCount: descendants?.length }
+				metadata: { descendantsCount: descendants?.length },
 			});
 		}
 	}, [descendants, statement]);
@@ -94,7 +88,7 @@ export function useMindMap(statementIdPassed: string | null = null) {
 			.catch((error) => {
 				logError(error, {
 					operation: 'useMindMap.handleCluster',
-					statementId
+					statementId,
 				});
 			})
 			.finally(() => {
@@ -115,7 +109,7 @@ export function useMindMap(statementIdPassed: string | null = null) {
 			.catch((error) => {
 				logError(error, {
 					operation: 'useMindMap.handleRecoverSnapshot',
-					metadata: { snapshotId: statementId }
+					metadata: { snapshotId: statementId },
 				});
 			})
 			.finally(() => {
@@ -135,7 +129,6 @@ export function useMindMap(statementIdPassed: string | null = null) {
 
 function isFlat(descendants: Statement[], statementId: string) {
 	return !descendants.some(
-		(descendant) =>
-			descendant.isCluster && descendant.parentId === statementId
+		(descendant) => descendant.isCluster && descendant.parentId === statementId,
 	);
 }

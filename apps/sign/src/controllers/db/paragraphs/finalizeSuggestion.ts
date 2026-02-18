@@ -38,8 +38,44 @@ export async function finalizeSuggestion(
   const db = getFirestoreAdmin();
 
   try {
+    // Pre-fetch the winning suggestion ID outside the transaction if not provided.
+    // This avoids running a non-transactional query inside the transaction.
+    // The actual suggestion data is re-read atomically inside the transaction.
+    let resolvedSuggestionId = suggestionId;
+
+    if (!resolvedSuggestionId) {
+      // We need the officialParagraph's statementType for the query,
+      // so read it here as well (will be re-read inside the transaction)
+      const officialParagraphSnap = await db
+        .collection(Collections.statements)
+        .doc(officialParagraphId)
+        .get();
+
+      if (!officialParagraphSnap.exists) {
+        throw new ValidationError('Official paragraph not found', { officialParagraphId });
+      }
+
+      const officialParagraph = officialParagraphSnap.data() as Statement;
+
+      const suggestionsSnap = await db
+        .collection(Collections.statements)
+        .where('parentId', '==', officialParagraphId)
+        .where('statementType', '==', officialParagraph.statementType)
+        .orderBy('consensus', 'desc')
+        .limit(1)
+        .get();
+
+      if (suggestionsSnap.empty) {
+        throw new ValidationError('No suggestions found for this paragraph', {
+          officialParagraphId,
+        });
+      }
+
+      resolvedSuggestionId = suggestionsSnap.docs[0]!.id;
+    }
+
     await db.runTransaction(async (transaction) => {
-      // 1. Get official paragraph
+      // 1. Get official paragraph (transactional read)
       const officialParagraphRef = db.collection(Collections.statements).doc(officialParagraphId);
       const officialParagraphSnap = await transaction.get(officialParagraphRef);
 
@@ -55,37 +91,15 @@ export async function finalizeSuggestion(
         });
       }
 
-      // 2. Get suggestion to finalize
-      let suggestionToFinalize: Statement;
+      // 2. Get suggestion to finalize (transactional read for atomicity)
+      const suggestionRef = db.collection(Collections.statements).doc(resolvedSuggestionId!);
+      const suggestionSnap = await transaction.get(suggestionRef);
 
-      if (suggestionId) {
-        // Use specified suggestion
-        const suggestionRef = db.collection(Collections.statements).doc(suggestionId);
-        const suggestionSnap = await transaction.get(suggestionRef);
-
-        if (!suggestionSnap.exists) {
-          throw new ValidationError('Suggestion not found', { suggestionId });
-        }
-
-        suggestionToFinalize = suggestionSnap.data() as Statement;
-      } else {
-        // Get winning suggestion (highest consensus)
-        const suggestionsSnap = await db
-          .collection(Collections.statements)
-          .where('parentId', '==', officialParagraphId)
-          .where('statementType', '==', officialParagraph.statementType)
-          .orderBy('consensus', 'desc')
-          .limit(1)
-          .get();
-
-        if (suggestionsSnap.empty) {
-          throw new ValidationError('No suggestions found for this paragraph', {
-            officialParagraphId,
-          });
-        }
-
-        suggestionToFinalize = suggestionsSnap.docs[0]!.data() as Statement;
+      if (!suggestionSnap.exists) {
+        throw new ValidationError('Suggestion not found', { suggestionId: resolvedSuggestionId });
       }
+
+      const suggestionToFinalize = suggestionSnap.data() as Statement;
 
       // Validate suggestion is for this paragraph
       if (suggestionToFinalize.parentId !== officialParagraphId) {
@@ -131,10 +145,10 @@ export async function finalizeSuggestion(
       });
 
       // 5. Mark suggestion as finalized
-      const suggestionRef = db
+      const finalizedSuggestionRef = db
         .collection(Collections.statements)
         .doc(suggestionToFinalize.statementId);
-      transaction.update(suggestionRef, {
+      transaction.update(finalizedSuggestionRef, {
         'versionControl.finalized': true,
         'versionControl.finalizedAt': Date.now(),
         'versionControl.finalizedBy': userId,

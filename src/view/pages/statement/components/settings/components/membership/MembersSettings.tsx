@@ -38,9 +38,8 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			(state: RootState) => state.statements.statementMembership,
 			(memberships) =>
 				memberships.filter(
-					(membership: StatementSubscription) =>
-						membership.statementId === statementId
-				)
+					(membership: StatementSubscription) => membership.statementId === statementId,
+				),
 		);
 
 	function handleShare(statement: Statement | undefined) {
@@ -65,7 +64,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			try {
 				const awaitingUsersQuery = query(
 					collection(FireStore, Collections.awaitingUsers),
-					where('adminIds', 'array-contains', userId)
+					where('adminIds', 'array-contains', userId),
 				);
 				const usersSnapshot = await getDocs(awaitingUsersQuery);
 				setUserCount(usersSnapshot.docs.length);
@@ -78,30 +77,23 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 		fetchAwaitingUsers();
 	}, [userId]);
 
-	const members: StatementSubscription[] = useAppSelector(
-		statementMembershipSelector(statementId)
-	);
+	const members: StatementSubscription[] = useAppSelector(statementMembershipSelector(statementId));
 
 	if (!members) return null;
 
-	const joinedMembers = members.filter(
-		(member) => member.role !== Role.banned
-	);
+	const joinedMembers = members.filter((member) => member.role !== Role.banned);
 	const bannedUser = members.filter((member) => member.role === Role.banned);
 
 	return (
 		<div className={styles.membersSettings}>
-			<button
-				className={styles.linkAnonymous}
-				onClick={() => handleShare(statement)}
-			>
+			<button className={styles.linkAnonymous} onClick={() => handleShare(statement)}>
 				{t('Send a link to anonymous users')}
 				<ShareIcon />
 			</button>
-			<div className='upload-waiting-list'>
+			<div className="upload-waiting-list">
 				<SetWaitingList />
 			</div>
-			<div className='title'>
+			<div className="title">
 				{t('Joined members')} ({`${userCount}`})
 			</div>
 			<div className={styles.membersBox}>
@@ -110,7 +102,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 				))}
 			</div>
 
-			<div className='title'>
+			<div className="title">
 				{t('Banned users')} ({bannedUser.length})
 			</div>
 			<div className={styles.membersBox}>

@@ -70,12 +70,12 @@ const StatementChatMore: FC<Props> = ({
 
 	// Filter for UNREAD notifications only (with fallback for missing field)
 	const unreadNotificationsList: NotificationType[] = useSelector(
-		inAppNotificationsSelector
+		inAppNotificationsSelector,
 	).filter(
 		(n) =>
 			n.creatorId !== creator?.uid &&
 			n.parentId === statement.statementId &&
-			(!n.read || n.read === undefined) // Treat missing field as unread for backward compatibility
+			(!n.read || n.read === undefined), // Treat missing field as unread for backward compatibility
 	);
 
 	const unreadCount = unreadNotificationsList.length;
@@ -83,7 +83,7 @@ const StatementChatMore: FC<Props> = ({
 	const hasMessages = totalMessages > 0 || unreadCount > 0;
 	const hasUnread = unreadCount > 0;
 	// Display count: show total if available, otherwise show unread as indicator
-	const displayCount = totalMessages > 0 ? totalMessages : (unreadCount > 0 ? unreadCount : 0);
+	const displayCount = totalMessages > 0 ? totalMessages : unreadCount > 0 ? unreadCount : 0;
 
 	const handleClick = async () => {
 		if (useLink) {

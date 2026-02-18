@@ -30,7 +30,7 @@ interface ImportResponse {
 export async function importGoogleDocToStatement(
 	documentUrl: string,
 	statement: Statement,
-	userId: string
+	userId: string,
 ): Promise<ImportResponse> {
 	try {
 		// Initialize functions (may be needed for future httpsCallable usage)

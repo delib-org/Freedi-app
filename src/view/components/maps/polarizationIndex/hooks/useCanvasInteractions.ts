@@ -12,7 +12,7 @@ export const useCanvasInteractions = (
 	currentStatementData: PolarizationStatement | undefined,
 	selectedAxis: number,
 	selectedGroup: number | null,
-	dimensions: ChartDimensions
+	dimensions: ChartDimensions,
 ) => {
 	// Handle canvas clicks
 	const handleCanvasClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
@@ -27,11 +27,15 @@ export const useCanvasInteractions = (
 		// Check for main statement point clicks FIRST
 		let clickedStatement: number | null = null;
 		polarizationIndexes.forEach((statement, index) => {
-			const statementPoint = dataToCanvas(statement.averageAgreement, statement.overallMAD, dimensions);
-			const distance = Math.sqrt(
-				Math.pow(canvasX - statementPoint.x, 2) + Math.pow(canvasY - statementPoint.y, 2)
+			const statementPoint = dataToCanvas(
+				statement.averageAgreement,
+				statement.overallMAD,
+				dimensions,
 			);
-			const radius = index === selectedStatementIndex ? (isMobile ? 10 : 14) : (isMobile ? 7 : 10);
+			const distance = Math.sqrt(
+				Math.pow(canvasX - statementPoint.x, 2) + Math.pow(canvasY - statementPoint.y, 2),
+			);
+			const radius = index === selectedStatementIndex ? (isMobile ? 10 : 14) : isMobile ? 7 : 10;
 
 			if (distance <= radius + (isMobile ? 8 : 5)) {
 				clickedStatement = index;
@@ -54,10 +58,13 @@ export const useCanvasInteractions = (
 			currentAxis.groups?.forEach((group, index: number) => {
 				const groupPoint = dataToCanvas(group.average, group.mad, dimensions);
 				const groupDistance = Math.sqrt(
-					Math.pow(canvasX - groupPoint.x, 2) + Math.pow(canvasY - groupPoint.y, 2)
+					Math.pow(canvasX - groupPoint.x, 2) + Math.pow(canvasY - groupPoint.y, 2),
 				);
 
-				const radius = Math.max(isMobile ? 4 : 6, Math.min(isMobile ? 10 : 15, Math.sqrt(group.numberOfMembers / (isMobile ? 15 : 10))));
+				const radius = Math.max(
+					isMobile ? 4 : 6,
+					Math.min(isMobile ? 10 : 15, Math.sqrt(group.numberOfMembers / (isMobile ? 15 : 10))),
+				);
 
 				if (groupDistance <= radius + (isMobile ? 8 : 5)) {
 					clickedGroup = index;

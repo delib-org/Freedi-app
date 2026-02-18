@@ -1,14 +1,9 @@
-import { Request, Response } from "firebase-functions/v1";
-import { logger } from "firebase-functions";
-import { getFirestore, FieldValue } from "firebase-admin/firestore";
-import {
-	Collections,
-	StatementType,
-	Paragraph,
-	ParagraphType,
-} from "@freedi/shared-types";
-import { mergeAndReorganizeParagraphs, ParagraphForMerge } from "./services/ai-service";
-import { generateParagraphId } from "./helpers";
+import { Request, Response } from 'firebase-functions/v1';
+import { logger } from 'firebase-functions';
+import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { Collections, StatementType, Paragraph, ParagraphType } from '@freedi/shared-types';
+import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
+import { generateParagraphId } from './helpers';
 
 interface MergeRequest {
 	/** ID of the target statement to merge into */
@@ -45,32 +40,24 @@ interface MergeResponse {
  * 4. Create +1 evaluation for the user on the target statement
  * 5. Update counters
  */
-export async function mergeStatements(
-	request: Request,
-	response: Response
-): Promise<void> {
+export async function mergeStatements(request: Request, response: Response): Promise<void> {
 	const startTime = Date.now();
 
 	try {
-		const {
-			targetStatementId,
-			newContent,
-			questionId,
-			userId,
-			userName,
-		}: MergeRequest = request.body;
+		const { targetStatementId, newContent, questionId, userId, userName }: MergeRequest =
+			request.body;
 
 		// Validate required fields
 		if (!targetStatementId || !newContent || !questionId || !userId) {
 			response.status(400).send({
 				ok: false,
-				error: "Missing required fields: targetStatementId, newContent, questionId, userId",
+				error: 'Missing required fields: targetStatementId, newContent, questionId, userId',
 			});
 
 			return;
 		}
 
-		logger.info("mergeStatements request", {
+		logger.info('mergeStatements request', {
 			targetStatementId,
 			questionId,
 			userId,
@@ -88,7 +75,7 @@ export async function mergeStatements(
 		if (!targetDoc.exists) {
 			response.status(404).send({
 				ok: false,
-				error: "Target statement not found",
+				error: 'Target statement not found',
 			});
 
 			return;
@@ -97,7 +84,7 @@ export async function mergeStatements(
 		if (!questionDoc.exists) {
 			response.status(404).send({
 				ok: false,
-				error: "Question not found",
+				error: 'Question not found',
 			});
 
 			return;
@@ -109,7 +96,7 @@ export async function mergeStatements(
 		if (!targetStatement || !questionData) {
 			response.status(500).send({
 				ok: false,
-				error: "Failed to read statement data",
+				error: 'Failed to read statement data',
 			});
 
 			return;
@@ -121,13 +108,15 @@ export async function mergeStatements(
 
 		const hiddenStatement = {
 			statementId: hiddenStatementRef.id,
-			statement: newContent.substring(0, 100) + (newContent.length > 100 ? "..." : ""),
-			paragraphs: [{
-				paragraphId: generateParagraphId(),
-				type: ParagraphType.paragraph,
-				content: newContent,
-				order: 0,
-			}],
+			statement: newContent.substring(0, 100) + (newContent.length > 100 ? '...' : ''),
+			paragraphs: [
+				{
+					paragraphId: generateParagraphId(),
+					type: ParagraphType.paragraph,
+					content: newContent,
+					order: 0,
+				},
+			],
 			statementType: StatementType.option,
 			parentId: questionId,
 			topParentId: questionData.topParentId || questionId,
@@ -135,8 +124,8 @@ export async function mergeStatements(
 			creator: {
 				uid: userId,
 				displayName: userName || `Anonymous-${userId.substring(0, 6)}`,
-				email: "",
-				photoURL: "",
+				email: '',
+				photoURL: '',
 				isAnonymous: true,
 			},
 			createdAt: now,
@@ -151,7 +140,7 @@ export async function mergeStatements(
 			(p: Paragraph) => ({
 				content: p.content,
 				sourceStatementId: p.sourceStatementId ?? undefined,
-			})
+			}),
 		);
 
 		// If no paragraphs, create one from the statement text
@@ -163,15 +152,15 @@ export async function mergeStatements(
 		}
 
 		// 4. Use AI to merge and reorganize paragraphs
-		const questionContext = questionData.statement || "";
+		const questionContext = questionData.statement || '';
 		const mergeResult = await mergeAndReorganizeParagraphs(
 			existingParagraphs,
 			newContent,
 			hiddenStatementRef.id, // Use the hidden statement ID as source
-			questionContext
+			questionContext,
 		);
 
-		logger.info("AI merge result", {
+		logger.info('AI merge result', {
 			paragraphCount: mergeResult.paragraphs.length,
 			newTitle: mergeResult.newTitle.substring(0, 50),
 		});
@@ -188,8 +177,8 @@ export async function mergeStatements(
 		// 6. Check if user already has an evaluation on target
 		const existingEvalQuery = await db
 			.collection(Collections.evaluations)
-			.where("statementId", "==", targetStatementId)
-			.where("evaluatorId", "==", userId)
+			.where('statementId', '==', targetStatementId)
+			.where('evaluatorId', '==', userId)
 			.limit(1)
 			.get();
 
@@ -236,7 +225,7 @@ export async function mergeStatements(
 		});
 
 		const totalTime = Date.now() - startTime;
-		logger.info("mergeStatements completed", {
+		logger.info('mergeStatements completed', {
 			responseTime: totalTime,
 			targetStatementId,
 			hiddenStatementId: hiddenStatementRef.id,
@@ -254,18 +243,19 @@ export async function mergeStatements(
 	} catch (error) {
 		const errorTime = Date.now() - startTime;
 		// Properly serialize error for logging (some error types don't serialize with { error })
-		const errorDetails = error instanceof Error
-			? { message: error.message, stack: error.stack, name: error.name }
-			: { message: String(error) };
+		const errorDetails =
+			error instanceof Error
+				? { message: error.message, stack: error.stack, name: error.name }
+				: { message: String(error) };
 
-		logger.error("Error in mergeStatements:", {
+		logger.error('Error in mergeStatements:', {
 			...errorDetails,
 			responseTime: errorTime,
 		});
 
 		response.status(500).send({
 			ok: false,
-			error: "Internal server error",
+			error: 'Internal server error',
 		});
 	}
 }

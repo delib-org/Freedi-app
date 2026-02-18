@@ -45,7 +45,7 @@ export const useAuthentication = (): AuthState => {
 
 	// Get initial route from local storage
 	const initialRoute = useRef(
-		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null')
+		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null'),
 	);
 
 	// Track if user has been set to prevent duplicate calls

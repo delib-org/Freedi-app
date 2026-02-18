@@ -157,62 +157,6 @@
     }
   }
 
-  // Quick hide button for visible cards - subtle until hover
-  .quickHideBtn {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
-    z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    background-color: transparent;
-    color: var(--icons-disabled);
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    opacity: 0;
-    transition: all 0.2s ease;
-
-    svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    &:hover {
-      background-color: var(--icons-disabled);
-      color: white;
-      opacity: 1;
-      transform: scale(1.1);
-    }
-
-    &:active {
-      transform: scale(0.95);
-    }
-
-    // RTL support
-    [dir='rtl'] & {
-      right: auto;
-      left: 0.5rem;
-    }
-  }
-
-  // Show quick hide button on card hover (only for non-hidden cards)
-  &:not(&--hidden):hover .quickHideBtn {
-    opacity: 0.6;
-  }
-
-  // Mobile: show button with tap affordance instead of hover
-  @media screen and (max-width: 600px) {
-    &:not(&--hidden) .quickHideBtn {
-      opacity: 0.4;
-      width: 32px;
-      height: 32px;
-    }
-  }
 
   // Elevated z-index when menu is open to ensure it appears above other cards
   &--menu-open {

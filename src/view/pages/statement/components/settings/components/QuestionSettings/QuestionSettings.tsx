@@ -23,7 +23,10 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getMassConsensusQuestionUrl } from '@/controllers/db/config';
 import MultiSwitch from '@/view/components/switch/multiSwitch/MultiSwitch';
 import RatingScaleButtons from './RatingScaleButtons/RatingScaleButtons';
-import { setEvaluationUIType, setAnchoredEvaluationSettings } from '@/controllers/db/evaluation/setEvaluation';
+import {
+	setEvaluationUIType,
+	setAnchoredEvaluationSettings,
+} from '@/controllers/db/evaluation/setEvaluation';
 import VotingSettings from './votingSettings/VotingSettings';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
 import { uploadAnchorIcon, validateImageFile } from '@/controllers/db/storage/uploadHelpers';
@@ -34,19 +37,19 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const [anchoredCount, setAnchoredCount] = useState(
-		statement.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3
+		statement.evaluationSettings?.anchored?.numberOfAnchoredStatements || 3,
 	);
 	const [showCommunityBadges, setShowCommunityBadges] = useState(
-		statement.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot || false
+		statement.evaluationSettings?.anchored?.differentiateBetweenAnchoredAndNot || false,
 	);
 	const [anchorIcon, setAnchorIcon] = useState(
-		statement.evaluationSettings?.anchored?.anchorIcon || ''
+		statement.evaluationSettings?.anchored?.anchorIcon || '',
 	);
 	const [anchorDescription, setAnchorDescription] = useState(
-		statement.evaluationSettings?.anchored?.anchorDescription || ''
+		statement.evaluationSettings?.anchored?.anchorDescription || '',
 	);
 	const [anchorLabel, setAnchorLabel] = useState(
-		statement.evaluationSettings?.anchored?.anchorLabel || ''
+		statement.evaluationSettings?.anchored?.anchorLabel || '',
 	);
 	const [isLoadingIcon, setIsLoadingIcon] = useState(false);
 	const [iconError, setIconError] = useState(false);
@@ -154,7 +157,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				differentiateBetweenAnchoredAndNot: showCommunityBadges,
 				anchorIcon,
 				anchorDescription,
-				anchorLabel
+				anchorLabel,
 			});
 		}
 
@@ -169,7 +172,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						differentiateBetweenAnchoredAndNot: showCommunityBadges,
 						anchorIcon,
 						anchorDescription,
-						anchorLabel
+						anchorLabel,
 					});
 				}
 			}
@@ -184,7 +187,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					differentiateBetweenAnchoredAndNot: enabled,
 					anchorIcon,
 					anchorDescription,
-					anchorLabel
+					anchorLabel,
 				});
 			}
 		}
@@ -200,7 +203,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					differentiateBetweenAnchoredAndNot: showCommunityBadges,
 					anchorIcon: '',
 					anchorDescription,
-					anchorLabel
+					anchorLabel,
 				});
 			}
 		}
@@ -216,7 +219,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						differentiateBetweenAnchoredAndNot: showCommunityBadges,
 						anchorIcon,
 						anchorDescription: value,
-						anchorLabel
+						anchorLabel,
 					});
 				}
 			}
@@ -233,7 +236,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						differentiateBetweenAnchoredAndNot: showCommunityBadges,
 						anchorIcon,
 						anchorDescription,
-						anchorLabel: value
+						anchorLabel: value,
 					});
 				}
 			}
@@ -305,7 +308,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 						differentiateBetweenAnchoredAndNot: showCommunityBadges,
 						anchorIcon: result.url,
 						anchorDescription,
-						anchorLabel
+						anchorLabel,
 					});
 				}
 
@@ -325,12 +328,34 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 				<SectionTitle title={t('Evaluation Mode')} />
 				<MultiSwitch
 					options={[
-						{ label: t('Agreement'), value: EvaluationUI.suggestions, icon: <SuggestionsIcon />, toolTip: t('Consensus') },
-						{ label: t('Voting'), value: EvaluationUI.voting, icon: <VotingIcon />, toolTip: t('Voting') },
-						{ label: t('Approval'), value: EvaluationUI.checkbox, icon: <ConsentIcon />, toolTip: t('Consent') },
-						{ label: t('Cluster'), value: EvaluationUI.clustering, icon: <ClusterIcon />, toolTip: t('Clustering') },
+						{
+							label: t('Agreement'),
+							value: EvaluationUI.suggestions,
+							icon: <SuggestionsIcon />,
+							toolTip: t('Consensus'),
+						},
+						{
+							label: t('Voting'),
+							value: EvaluationUI.voting,
+							icon: <VotingIcon />,
+							toolTip: t('Voting'),
+						},
+						{
+							label: t('Approval'),
+							value: EvaluationUI.checkbox,
+							icon: <ConsentIcon />,
+							toolTip: t('Consent'),
+						},
+						{
+							label: t('Cluster'),
+							value: EvaluationUI.clustering,
+							icon: <ClusterIcon />,
+							toolTip: t('Clustering'),
+						},
 					]}
-					onClick={(value) => { handleEvaluationTypeChange(value as EvaluationUI); }}
+					onClick={(value) => {
+						handleEvaluationTypeChange(value as EvaluationUI);
+					}}
 					currentValue={statement.evaluationSettings?.evaluationUI}
 				/>
 				{isVoting && <VotingSettings />}
@@ -343,31 +368,33 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 							value: evaluationType.range,
 							icon: <SuggestionsIcon />,
 							toolTip: t('5 emoji faces from negative to positive'),
-							score: 0
+							score: 0,
 						},
 						{
 							label: t('Simple Scale'),
 							value: evaluationType.likeDislike,
 							icon: <EvaluationsIcon />,
 							toolTip: t('Thumbs up or down'),
-							score: 1
+							score: 1,
 						},
 						{
 							label: t('Like Only'),
 							value: evaluationType.singleLike,
 							icon: <LikeIcon />,
 							toolTip: t('Only positive feedback'),
-							score: 2
+							score: 2,
 						},
 						{
 							label: t('Community Voice'),
 							value: evaluationType.communityVoice,
 							icon: <UsersIcon />,
 							toolTip: t('Respectful 4-level resonance scale'),
-							score: 3
+							score: 3,
 						},
 					]}
-					onClick={(value) => { handleRatingScaleChange(value as evaluationType); }}
+					onClick={(value) => {
+						handleRatingScaleChange(value as evaluationType);
+					}}
 					currentValue={statement.statementSettings?.evaluationType || evaluationType.range}
 				/>
 
@@ -382,19 +409,11 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 							readOnly
 							className={styles.questionLink__input}
 						/>
-						<button
-							type="button"
-							onClick={handleCopyLink}
-							className={styles.questionLink__button}
-						>
+						<button type="button" onClick={handleCopyLink} className={styles.questionLink__button}>
 							<ShareIcon />
 							<span>{linkCopied ? t('Copied!') : t('Copy')}</span>
 						</button>
-						<button
-							type="button"
-							onClick={handleOpenLink}
-							className={styles.questionLink__button}
-						>
+						<button type="button" onClick={handleOpenLink} className={styles.questionLink__button}>
 							<span>{t('Open')}</span>
 						</button>
 					</div>
@@ -405,7 +424,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					{t('These settings control the new Mass Consensus app behavior')}
 				</p>
 
-				<h3 className='title'>{t('Require original input before viewing others')}</h3>
+				<h3 className="title">{t('Require original input before viewing others')}</h3>
 				<CustomSwitchSmall
 					label={t('Request solution at start')}
 					checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
@@ -414,12 +433,16 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					textUnchecked={t("Don't ask")}
 					imageChecked={<SuggestionsIcon />}
 					imageUnchecked={<SuggestionsIcon />}
-					colorChecked='var(--question)'
-					colorUnchecked='var(--question)'
+					colorChecked="var(--question)"
+					colorUnchecked="var(--question)"
 				/>
 
-				<h3 className='title'>{t('Anchored Sampling')}</h3>
-				<p>{t('Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.')}</p>
+				<h3 className="title">{t('Anchored Sampling')}</h3>
+				<p>
+					{t(
+						'Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.',
+					)}
+				</p>
 				<CustomSwitchSmall
 					label={t('Enable Anchored Sampling')}
 					checked={isAnchoredEnabled}
@@ -428,176 +451,180 @@ const QuestionSettings: FC<StatementSettingsProps> = ({
 					textUnchecked={t('Standard')}
 					imageChecked={<AnchorIcon />}
 					imageUnchecked={<SuggestionsIcon />}
-					colorChecked='var(--question)'
-					colorUnchecked='var(--question)'
+					colorChecked="var(--question)"
+					colorUnchecked="var(--question)"
 				/>
 
 				{isAnchoredEnabled && (
 					<>
-								<div className={styles.anchoredCount}>
-									<label>{t('Number of anchored options in evaluation')}</label>
+						<div className={styles.anchoredCount}>
+							<label>{t('Number of anchored options in evaluation')}</label>
+							<input
+								type="number"
+								min="1"
+								max="10"
+								value={anchoredCount}
+								onChange={handleAnchoredCountChange}
+								data-cy="anchored-count-input"
+							/>
+						</div>
+						<CustomSwitchSmall
+							label={t('Show Community Recognition')}
+							checked={showCommunityBadges}
+							setChecked={handleCommunityBadgesToggle}
+							textChecked={t('Show Badges')}
+							textUnchecked={t('Hide Badges')}
+							imageChecked={<UsersIcon />}
+							imageUnchecked={<AnchorIcon />}
+							colorChecked="var(--question)"
+							colorUnchecked="var(--question)"
+						/>
+
+						{/* Enhanced Anchor Customization Section */}
+						<div className={styles.anchorCustomization}>
+							<div className={styles.anchorCustomization__title}>
+								<AnchorIcon style={{ width: '18px', height: '18px' }} />
+								{t('Customize Anchor Appearance')}
+							</div>
+
+							{/* Icon Customization */}
+							<div
+								className={`${styles.anchorCustomization__field} ${styles['anchorCustomization__field--icon']}`}
+							>
+								<label>{t('Anchor Icon')}</label>
+
+								{/* Drag and Drop Zone */}
+								<div
+									className={`${styles.dropZone} ${isDragging ? styles['dropZone--active'] : ''} ${anchorIcon ? styles['dropZone--hasImage'] : ''}`}
+									onDragEnter={handleDragEnter}
+									onDragLeave={handleDragLeave}
+									onDragOver={handleDragOver}
+									onDrop={handleDrop}
+									onClick={() => fileInputRef.current?.click()}
+								>
 									<input
-										type="number"
-										min="1"
-										max="10"
-										value={anchoredCount}
-										onChange={handleAnchoredCountChange}
-										data-cy="anchored-count-input"
+										ref={fileInputRef}
+										type="file"
+										accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp"
+										onChange={handleFileSelect}
+										style={{ display: 'none' }}
 									/>
-								</div>
-								<CustomSwitchSmall
-									label={t('Show Community Recognition')}
-									checked={showCommunityBadges}
-									setChecked={handleCommunityBadgesToggle}
-									textChecked={t('Show Badges')}
-									textUnchecked={t('Hide Badges')}
-									imageChecked={<UsersIcon />}
-									imageUnchecked={<AnchorIcon />}
-									colorChecked='var(--question)'
-									colorUnchecked='var(--question)'
-								/>
 
-								{/* Enhanced Anchor Customization Section */}
-								<div className={styles.anchorCustomization}>
-									<div className={styles.anchorCustomization__title}>
-										<AnchorIcon style={{ width: '18px', height: '18px' }} />
-										{t('Customize Anchor Appearance')}
-									</div>
-
-									{/* Icon Customization */}
-									<div className={`${styles.anchorCustomization__field} ${styles['anchorCustomization__field--icon']}`}>
-										<label>{t('Anchor Icon')}</label>
-
-										{/* Drag and Drop Zone */}
-										<div
-											className={`${styles.dropZone} ${isDragging ? styles['dropZone--active'] : ''} ${anchorIcon ? styles['dropZone--hasImage'] : ''}`}
-											onDragEnter={handleDragEnter}
-											onDragLeave={handleDragLeave}
-											onDragOver={handleDragOver}
-											onDrop={handleDrop}
-											onClick={() => fileInputRef.current?.click()}
-										>
-											<input
-												ref={fileInputRef}
-												type="file"
-												accept="image/png,image/jpeg,image/gif,image/svg+xml,image/webp"
-												onChange={handleFileSelect}
-												style={{ display: 'none' }}
+									{anchorIcon ? (
+										<div className={styles.dropZone__preview}>
+											<img
+												src={anchorIcon}
+												alt="Custom anchor icon"
+												onError={() => setIconError(true)}
 											/>
-
-											{anchorIcon ? (
-												<div className={styles.dropZone__preview}>
-													<img
-														src={anchorIcon}
-														alt="Custom anchor icon"
-														onError={() => setIconError(true)}
-													/>
-													<div className={styles.dropZone__overlay}>
-														<div style={{ fontSize: '24px', color: 'white' }}>📤</div>
-														<span>{t('Click or drag to replace')}</span>
-													</div>
-												</div>
-											) : (
-												<div className={styles.dropZone__empty}>
-													<div style={{ fontSize: '32px' }}>📤</div>
-													<p>{t('Drag & drop image')}</p>
-													<p className={styles.dropZone__or}>{t('or')}</p>
-													<button type="button" className={styles.dropZone__button}>
-														{t('Choose File')}
-													</button>
-													<p className={styles.dropZone__hint}>
-														{t('Image will be resized to 32x32px')}
-													</p>
-												</div>
-											)}
-
-											{isLoadingIcon && (
-												<div className={styles.dropZone__loading}>
-													<div className={styles.spinner} />
-													<p>{uploadProgress}</p>
-												</div>
-											)}
-										</div>
-
-										{/* Status Messages */}
-										{uploadProgress && !isLoadingIcon && (
-											<div className={`${styles.statusMessage} ${iconError ? styles['statusMessage--error'] : styles['statusMessage--success']}`}>
-												{uploadProgress}
+											<div className={styles.dropZone__overlay}>
+												<div style={{ fontSize: '24px', color: 'white' }}>📤</div>
+												<span>{t('Click or drag to replace')}</span>
 											</div>
-										)}
-
-										{/* Clear Button */}
-										{anchorIcon && (
-											<button
-												onClick={handleClearIcon}
-												className={styles.clearButton}
-												type="button"
-											>
-												{t('Remove Custom Icon')}
+										</div>
+									) : (
+										<div className={styles.dropZone__empty}>
+											<div style={{ fontSize: '32px' }}>📤</div>
+											<p>{t('Drag & drop image')}</p>
+											<p className={styles.dropZone__or}>{t('or')}</p>
+											<button type="button" className={styles.dropZone__button}>
+												{t('Choose File')}
 											</button>
-										)}
+											<p className={styles.dropZone__hint}>
+												{t('Image will be resized to 32x32px')}
+											</p>
+										</div>
+									)}
 
-										<div className={styles.helperText}>
-											{t('Supported formats: PNG, JPG, GIF, SVG, WebP (max 5MB)')}
+									{isLoadingIcon && (
+										<div className={styles.dropZone__loading}>
+											<div className={styles.spinner} />
+											<p>{uploadProgress}</p>
 										</div>
-									</div>
-
-									{/* Label Customization */}
-									<div className={`${styles.anchorCustomization__field} ${styles['anchorCustomization__field--label']}`}>
-										<label>{t('Badge Label')}</label>
-										<input
-											type="text"
-											className={styles.labelInput}
-											placeholder={t('Enter badge label (e.g., "Priority", "Essential")')}
-											value={anchorLabel}
-											onChange={handleAnchorLabelChange}
-											maxLength={20}
-										/>
-										<div className={`${styles.charCount} ${
-											anchorLabel.length > 15 ? styles['charCount--warning'] : ''
-										} ${
-											anchorLabel.length === 20 ? styles['charCount--error'] : ''
-										}`}>
-											{anchorLabel.length}/20
-										</div>
-									</div>
-
-									{/* Description Customization */}
-									<div className={`${styles.anchorCustomization__field} ${styles['anchorCustomization__field--description']}`}>
-										<label>{t('Tooltip Description')}</label>
-										<textarea
-											className={styles.descriptionInput}
-											placeholder={t('Enter custom tooltip text (e.g., "Priority option selected by moderator")')}
-											value={anchorDescription}
-											onChange={handleAnchorDescriptionChange}
-											maxLength={100}
-										/>
-										<div className={`${styles.charCount} ${
-											anchorDescription.length > 90 ? styles['charCount--warning'] : ''
-										} ${
-											anchorDescription.length === 100 ? styles['charCount--error'] : ''
-										}`}>
-											{anchorDescription.length}/100
-										</div>
-									</div>
-
-									{/* Live Preview */}
-									<div className={styles.anchorCustomization__preview}>
-										<div className={styles.anchorCustomization__previewTitle}>
-											{t('Preview')}
-										</div>
-										<div className={styles.anchorCustomization__previewContent}>
-											<AnchoredBadge
-												customIcon={anchorIcon}
-												customDescription={anchorDescription}
-												customLabel={anchorLabel}
-											/>
-											<span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-												{t('This is how the anchored badge will appear')}
-											</span>
-										</div>
-									</div>
+									)}
 								</div>
+
+								{/* Status Messages */}
+								{uploadProgress && !isLoadingIcon && (
+									<div
+										className={`${styles.statusMessage} ${iconError ? styles['statusMessage--error'] : styles['statusMessage--success']}`}
+									>
+										{uploadProgress}
+									</div>
+								)}
+
+								{/* Clear Button */}
+								{anchorIcon && (
+									<button onClick={handleClearIcon} className={styles.clearButton} type="button">
+										{t('Remove Custom Icon')}
+									</button>
+								)}
+
+								<div className={styles.helperText}>
+									{t('Supported formats: PNG, JPG, GIF, SVG, WebP (max 5MB)')}
+								</div>
+							</div>
+
+							{/* Label Customization */}
+							<div
+								className={`${styles.anchorCustomization__field} ${styles['anchorCustomization__field--label']}`}
+							>
+								<label>{t('Badge Label')}</label>
+								<input
+									type="text"
+									className={styles.labelInput}
+									placeholder={t('Enter badge label (e.g., "Priority", "Essential")')}
+									value={anchorLabel}
+									onChange={handleAnchorLabelChange}
+									maxLength={20}
+								/>
+								<div
+									className={`${styles.charCount} ${
+										anchorLabel.length > 15 ? styles['charCount--warning'] : ''
+									} ${anchorLabel.length === 20 ? styles['charCount--error'] : ''}`}
+								>
+									{anchorLabel.length}/20
+								</div>
+							</div>
+
+							{/* Description Customization */}
+							<div
+								className={`${styles.anchorCustomization__field} ${styles['anchorCustomization__field--description']}`}
+							>
+								<label>{t('Tooltip Description')}</label>
+								<textarea
+									className={styles.descriptionInput}
+									placeholder={t(
+										'Enter custom tooltip text (e.g., "Priority option selected by moderator")',
+									)}
+									value={anchorDescription}
+									onChange={handleAnchorDescriptionChange}
+									maxLength={100}
+								/>
+								<div
+									className={`${styles.charCount} ${
+										anchorDescription.length > 90 ? styles['charCount--warning'] : ''
+									} ${anchorDescription.length === 100 ? styles['charCount--error'] : ''}`}
+								>
+									{anchorDescription.length}/100
+								</div>
+							</div>
+
+							{/* Live Preview */}
+							<div className={styles.anchorCustomization__preview}>
+								<div className={styles.anchorCustomization__previewTitle}>{t('Preview')}</div>
+								<div className={styles.anchorCustomization__previewContent}>
+									<AnchoredBadge
+										customIcon={anchorIcon}
+										customDescription={anchorDescription}
+										customLabel={anchorLabel}
+									/>
+									<span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+										{t('This is how the anchored badge will appear')}
+									</span>
+								</div>
+							</div>
+						</div>
 					</>
 				)}
 			</div>

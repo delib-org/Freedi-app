@@ -1,5 +1,12 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { Collections, getRandomUID, Statement, StatementSchema, StatementSnapShot, StatementType } from '@freedi/shared-types';
+import {
+	Collections,
+	getRandomUID,
+	Statement,
+	StatementSchema,
+	StatementSnapShot,
+	StatementType,
+} from '@freedi/shared-types';
 import { Response, Request, onInit, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
@@ -30,7 +37,6 @@ onInit(() => {
 
 export async function getCluster(req: Request, res: Response) {
 	try {
-
 		const statementId = req.body.statementId as Statement[];
 		if (!statementId || typeof statementId !== 'string') {
 			throw new Error('Invalid input: statementId is required');
@@ -38,14 +44,15 @@ export async function getCluster(req: Request, res: Response) {
 
 		const [topicDB, descendantsDB] = await Promise.all([
 			db.collection(Collections.statements).doc(statementId).get(),
-			db.collection(Collections.statements).where("parentId", "==", statementId).get()
+			db.collection(Collections.statements).where('parentId', '==', statementId).get(),
 		]);
-		const descendants = descendantsDB.docs.map((doc) => parse(StatementSchema, doc.data())).filter((statement) => statement.isCluster !== true) as Statement[];
+		const descendants = descendantsDB.docs
+			.map((doc) => parse(StatementSchema, doc.data()))
+			.filter((statement) => statement.isCluster !== true) as Statement[];
 
 		const topic = topicDB.data() as Statement;
 
 		if (!topic || !topic.statementId) {
-
 			res.status(400).send({ error: 'Invalid input: topic is required', ok: false });
 
 			return;
@@ -57,7 +64,6 @@ export async function getCluster(req: Request, res: Response) {
 		}
 
 		if (!descendants || descendants.length === 0) {
-
 			logger.log('No descendants found for the given statementId:', statementId);
 			res.status(200).send({ message: 'No descendants found', descendants: [], ok: true });
 
@@ -138,7 +144,7 @@ export async function getCluster(req: Request, res: Response) {
 				consensus: 0,
 				randomSeed: Math.random(),
 				lastUpdate: new Date().getTime(),
-			}
+			};
 			batch.set(groupRef, newStatement);
 			group.statements.forEach((statement: SimpleDescendants) => {
 				const statementRef = db.collection(Collections.statements).doc(statement.statementId);
@@ -157,10 +163,10 @@ export async function getCluster(req: Request, res: Response) {
 		logger.log('Snapshot saved successfully:', snapshot.topic.statementId, newSnapshot.id);
 
 		res.status(200).send({ text, descendants, ok: true, groups });
-
 	} catch (error) {
-		res.status(500).send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
-
+		res
+			.status(500)
+			.send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
 	}
 }
 
@@ -191,7 +197,11 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 		}
 
 		const snapshotsRef = db.collection(Collections.statementSnapShots);
-		const snapshotDoc = await snapshotsRef.where("topic.statementId", "==", snapshotId).orderBy("createdAt", "desc").limit(1).get();
+		const snapshotDoc = await snapshotsRef
+			.where('topic.statementId', '==', snapshotId)
+			.orderBy('createdAt', 'desc')
+			.limit(1)
+			.get();
 
 		if (snapshotDoc.empty) {
 			throw new Error('Snapshot not found');
@@ -201,7 +211,11 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 
 		//recover the snapshot data
 		const batch = db.batch();
-		const clustersDB = await db.collection(Collections.statements).where("parentId", "==", snapshotData.topic.statementId).where("isCluster", "==", true).get();
+		const clustersDB = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', snapshotData.topic.statementId)
+			.where('isCluster', '==', true)
+			.get();
 		const clustersIds = clustersDB.docs.map((doc) => doc.id as string);
 		const descendants = snapshotData.descendants;
 
@@ -224,6 +238,8 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 
 		res.status(200).send({ snapshotData, ok: true });
 	} catch (error) {
-		res.status(500).send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
+		res
+			.status(500)
+			.send({ error: error instanceof Error ? error.message : 'Unknown server error', ok: false });
 	}
-}
+};

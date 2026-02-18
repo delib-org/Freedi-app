@@ -1,16 +1,6 @@
-export default function UncheckedIcon({
-	color = "#787FFF",
-}: {
-    color?: string;
-}) {
+export default function UncheckedIcon({ color = '#787FFF' }: { color?: string }) {
 	return (
-		<svg
-			xmlns="http://www.w3.org/2000/svg"
-			width="24"
-			height="24"
-			viewBox="0 0 18 18"
-			fill="none"
-		>
+		<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 18 18" fill="none">
 			<path
 				fillRule="evenodd"
 				clipRule="evenodd"
