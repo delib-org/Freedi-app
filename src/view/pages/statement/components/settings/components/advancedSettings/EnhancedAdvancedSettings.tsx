@@ -11,7 +11,7 @@ import {
 	evaluationType,
 	Collections,
 } from '@freedi/shared-types';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 import {
@@ -49,6 +49,7 @@ import {
 	Globe,
 	Scissors,
 	Download,
+	Radio,
 } from 'lucide-react';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { useSelector } from 'react-redux';
@@ -245,6 +246,13 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 		setDoc(statementRef, { forceLanguage: newValue, lastUpdate: Date.now() }, { merge: true });
 	}
 
+	// Handler for powerFollowMe toggle (root-level property)
+	function handlePowerFollowMeChange(newValue: boolean) {
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const powerFollowMePath = newValue ? `/statement/${statement.statementId}/chat` : '';
+		updateDoc(statementRef, { powerFollowMe: powerFollowMePath, lastUpdate: Date.now() });
+	}
+
 	function handleVoteLimitToggle(enabled: boolean) {
 		setIsVoteLimitEnabled(enabled);
 		if (enabled) {
@@ -342,26 +350,20 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 					<div className={styles.toggleHeader}>
 						<span className={styles.toggleLabel}>{label}</span>
 						{badge && (
-							<span className={`${styles.badge} ${styles[`badge--${badge}`]}`}>
-								{t(badge)}
-							</span>
+							<span className={`${styles.badge} ${styles[`badge--${badge}`]}`}>{t(badge)}</span>
 						)}
 					</div>
-					{description && (
-						<p className={styles.toggleDescription}>{description}</p>
-					)}
+					{description && <p className={styles.toggleDescription}>{description}</p>}
 				</div>
 			</div>
 			<div className={styles.toggleControl}>
-				<span className={`${styles.toggleStatus} ${isChecked ? styles['toggleStatus--on'] : styles['toggleStatus--off']}`}>
+				<span
+					className={`${styles.toggleStatus} ${isChecked ? styles['toggleStatus--on'] : styles['toggleStatus--off']}`}
+				>
 					{isChecked ? t('On') : t('Off')}
 				</span>
 				<label className={styles.toggleSwitch}>
-					<input
-						type="checkbox"
-						checked={isChecked}
-						onChange={(e) => onChange(e.target.checked)}
-					/>
+					<input type="checkbox" checked={isChecked} onChange={(e) => onChange(e.target.checked)} />
 					<span className={styles.toggleSlider}></span>
 				</label>
 			</div>
@@ -556,6 +558,13 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 													'Display the navigational tree of sub-questions alongside the main content',
 												)}
 												icon={GitBranch}
+											/>
+											<ToggleSwitch
+												isChecked={!!statement.powerFollowMe}
+												onChange={handlePowerFollowMeChange}
+												label={t('Power Follow Me')}
+												description={t('Auto-redirect all participants to the instructor screen')}
+												icon={Radio}
 											/>
 											<ToggleSwitch
 												isChecked={statement.isDocument ?? false}

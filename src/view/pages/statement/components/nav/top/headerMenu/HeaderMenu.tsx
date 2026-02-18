@@ -29,7 +29,6 @@ interface HeaderMenuProps {
 	onShare: () => void;
 	onLogout: () => void;
 	onFollowMe: () => void;
-	onPowerFollowMe: () => void;
 	onInvitePanel: () => void;
 	onNavigateToSettings: () => void;
 }
@@ -45,7 +44,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onShare,
 	onLogout,
 	onFollowMe,
-	onPowerFollowMe,
 	onInvitePanel,
 	onNavigateToSettings,
 }) => {
@@ -103,11 +101,6 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 							label={t('Follow Me')}
 							icon={<FollowMe style={menuIconStyle} />}
 							onOptionClick={onFollowMe}
-						/>
-						<MenuOption
-							label={t('Power Follow Me')}
-							icon={<FollowMe style={menuIconStyle} />}
-							onOptionClick={onPowerFollowMe}
 						/>
 						<MenuOption
 							label={t('Invite with PIN number')}

@@ -4,7 +4,7 @@ import StatementTopNav from '../nav/top/StatementTopNav';
 import InvitePanel from './invitePanel/InvitePanel';
 import ShareModal from '@/view/components/shareModal/ShareModal';
 import { logOut } from '@/controllers/db/authenticationUtils';
-import { setFollowMeDB, setPowerFollowMeDB } from '@/controllers/db/statements/setStatements';
+import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 
@@ -41,18 +41,6 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 		}
 	}
 
-	async function handlePowerFollowMe() {
-		try {
-			if (!topParentStatement) throw new Error('No top parent statement');
-
-			await setPowerFollowMeDB(topParentStatement, pathname);
-		} catch (error) {
-			console.error(error);
-		} finally {
-			setIsHeaderMenuOpen(false);
-		}
-	}
-
 	function handleInvitePanel() {
 		try {
 			setShowInvitationPanel(true);
@@ -79,7 +67,6 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 				parentStatement={parentStatement}
 				handleShare={handleShare}
 				handleFollowMe={handleFollowMe}
-				handlePowerFollowMe={handlePowerFollowMe}
 				handleInvitePanel={handleInvitePanel}
 				handleLogout={handleLogout}
 				setIsHeaderMenuOpen={setIsHeaderMenuOpen}

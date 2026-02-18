@@ -20,11 +20,6 @@ const FollowMeToast: FC = () => {
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
 
-	// Early return if no statement in context
-	if (!statement) {
-		return null;
-	}
-
 	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const _isAdmin = role === Role.admin;
 
@@ -47,6 +42,19 @@ const FollowMeToast: FC = () => {
 	const followMePath = topParentStatement?.followMe;
 	const isPowerMode = !!powerFollowMePath && powerFollowMePath !== '';
 	const activePath = isPowerMode ? powerFollowMePath : followMePath;
+
+	// Admin in power mode: auto-update the powerFollowMe path as they navigate
+	useEffect(() => {
+		if (!isPowerMode || !_isAdmin || !topParentStatement) return;
+
+		// Don't update if the path hasn't changed
+		if (pathname === powerFollowMePath) return;
+
+		// Only update for paths within the statement tree (not settings, etc.)
+		if (pathname.includes('/settings')) return;
+
+		setPowerFollowMeDB(topParentStatement, pathname);
+	}, [isPowerMode, _isAdmin, pathname, topParentStatement, powerFollowMePath]);
 
 	// Auto-redirect for non-admin users in power mode
 	useEffect(() => {
@@ -72,6 +80,8 @@ const FollowMeToast: FC = () => {
 			setFollowMeDB(topParentStatement, '');
 		}
 	}
+
+	if (!statement) return null;
 
 	// If the user is already on the followed page and not admin, hide toast
 	if (activePath && pathname.startsWith(activePath) && !_isAdmin) return null;
