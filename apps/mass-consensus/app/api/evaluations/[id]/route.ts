@@ -93,27 +93,28 @@ export async function POST(
       updatedAt: Date.now(),
     };
 
-    // Save evaluation
-    await evaluationRef.set(evaluationData);
-
-    // Update userEvaluations collection to track this evaluation
+    // Save evaluation and update userEvaluations in a single transaction
     const userEvaluationId = `${userId}--${parentId}`;
     const userEvaluationRef = db.collection(Collections.userEvaluations).doc(userEvaluationId);
 
-    // Use set with merge to create if doesn't exist, or update if exists
-    // Check if document exists to set createdAt only on first creation
-    const userEvalDoc = await userEvaluationRef.get();
-    const now = Date.now();
+    await db.runTransaction(async (transaction) => {
+      const userEvalDoc = await transaction.get(userEvaluationRef);
+      const now = Date.now();
 
-    await userEvaluationRef.set({
-      userEvaluationId,
-      userId,
-      parentStatementId: parentId,
-      evaluatedOptionsIds: FieldValue.arrayUnion(statementId),
-      lastUpdated: now,
-      // Only set createdAt if document doesn't exist
-      ...(userEvalDoc.exists ? {} : { createdAt: now }),
-    }, { merge: true });
+      // Save evaluation
+      transaction.set(evaluationRef, evaluationData);
+
+      // Update userEvaluations collection to track this evaluation
+      transaction.set(userEvaluationRef, {
+        userEvaluationId,
+        userId,
+        parentStatementId: parentId,
+        evaluatedOptionsIds: FieldValue.arrayUnion(statementId),
+        lastUpdated: now,
+        // Only set createdAt if document doesn't exist
+        ...(userEvalDoc.exists ? {} : { createdAt: now }),
+      }, { merge: true });
+    });
 
     // Update statement consensus (async, don't wait)
     updateStatementConsensus(statementId).catch((error) => {
