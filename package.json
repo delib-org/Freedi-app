@@ -53,7 +53,14 @@
     "deploy:dev": "npm-run-all deploy:h:dev deploy:f:dev deploy:rules:dev",
     "deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test",
     "deploy:sign": "cd apps/sign && ./deploy.sh",
-    "deploy:sign:vercel": "curl -X POST \"https://api.vercel.com/v1/integrations/deploy/prj_0m8aMtkMP7PPgfqdOpLVO55AsvfU/gsFjuMHuE9\""
+    "deploy:sign:vercel": "curl -X POST \"https://api.vercel.com/v1/integrations/deploy/prj_0m8aMtkMP7PPgfqdOpLVO55AsvfU/gsFjuMHuE9\"",
+    "e2e:main": "npx playwright test --config=e2e/main-app/playwright.config.ts",
+    "e2e:sign": "npx playwright test --config=e2e/sign-app/playwright.config.ts",
+    "e2e:mc": "npx playwright test --config=e2e/mass-consensus/playwright.config.ts",
+    "e2e:main:ui": "npx playwright test --config=e2e/main-app/playwright.config.ts --ui",
+    "e2e:sign:ui": "npx playwright test --config=e2e/sign-app/playwright.config.ts --ui",
+    "e2e:mc:ui": "npx playwright test --config=e2e/mass-consensus/playwright.config.ts --ui",
+    "e2e:install": "npx playwright install chromium"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -95,6 +102,7 @@
     "@babel/preset-typescript": "^7.28.5",
     "@dagrejs/dagre": "^1.0.4",
     "@eslint/js": "^9.18.0",
+    "@playwright/test": "^1.58.2",
     "@swc/cli": "^0.7.8",
     "@swc/core": "^1.3.94",
     "@swc/helpers": "^0.5.17",
