@@ -13,6 +13,7 @@ export async function getMaxInvitationDigits(): Promise<number | undefined> {
 			limit(1),
 		);
 		const numbers = await getDocs(q);
+		if (numbers.empty) throw new Error('No invitation documents found');
 		const maxNumber = numbers.docs[0].data().number;
 		if (!maxNumber) throw new Error('No max number found');
 		const numberDigits = getNumberDigits(maxNumber);

@@ -92,7 +92,7 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 						<input type="submit" className={styles.invitation__form__btn} value={t('Join')}></input>
 					)}
 
-					<button onClick={() => handleCloseInviteModal(setShowModal)}>
+					<button type="button" onClick={() => handleCloseInviteModal(setShowModal)}>
 						<XIcon />
 					</button>
 				</form>

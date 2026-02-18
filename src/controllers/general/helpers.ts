@@ -294,11 +294,14 @@ export function isProduction(): boolean {
 
 export const handleCloseInviteModal = (setShowModal: (show: boolean) => void) => {
 	const inviteModal = document.querySelector('.inviteModal');
-	inviteModal.classList.add('closing');
-
-	setTimeout(() => {
+	if (inviteModal) {
+		inviteModal.classList.add('closing');
+		setTimeout(() => {
+			setShowModal(false);
+		}, 400);
+	} else {
 		setShowModal(false);
-	}, 400);
+	}
 };
 
 export function getLastElements(array: Array<unknown>, number: number): Array<unknown> {
