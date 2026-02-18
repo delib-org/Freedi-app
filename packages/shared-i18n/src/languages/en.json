@@ -1633,6 +1633,12 @@
   "From": "From",
   "Checking...": "Checking...",
 
+  "Share Your Perspective First": "Share Your Perspective First",
+  "We value your independent thinking. Share your perspective before seeing others' ideas to help generate more diverse and creative solutions.": "We value your independent thinking. Share your perspective before seeing others' ideas to help generate more diverse and creative solutions.",
+  "What's your idea?": "What's your idea?",
+  "Share My Idea": "Share My Idea",
+  "Skip for now": "Skip for now",
+
   "filterByDemographic": "Filter by Demographic",
   "openDemographicFilter": "Open demographic filter",
   "closeDemographicFilter": "Close demographic filter",
