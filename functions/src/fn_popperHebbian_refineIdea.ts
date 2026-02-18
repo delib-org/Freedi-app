@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
+import { logError } from './utils/errorHandling';
 
 interface RefinementMessage {
 	messageId: string;
@@ -156,14 +157,17 @@ Think independently and ask what YOU think is most important to clarify.`;
 			let refinementResult: RefineIdeaResponse;
 			try {
 				refinementResult = JSON.parse(text);
-			} catch {
-				console.error('Failed to parse JSON response:', text);
+			} catch (parseError) {
+				logError(parseError, {
+					operation: 'popperHebbian.refineIdea.parseJSON',
+					metadata: { responseLength: text.length },
+				});
 				throw new Error('Invalid JSON response from AI');
 			}
 
 			return refinementResult;
 		} catch (error) {
-			console.error('Error refining idea:', error);
+			logError(error, { operation: 'popperHebbian.refineIdea' });
 			throw new HttpsError('internal', 'Failed to refine idea');
 		}
 	},

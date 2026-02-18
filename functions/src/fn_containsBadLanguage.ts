@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GEMINI_MODEL } from './config/gemini';
+import { logError } from './utils/errorHandling';
 
 function getGenAI(): GoogleGenerativeAI {
 	const apiKey = process.env.GOOGLE_API_KEY;
@@ -22,7 +23,7 @@ export async function containsBadLanguage(text: string): Promise<boolean> {
 
 		return output.includes('true');
 	} catch (error) {
-		console.error('Error detecting bad language', error);
+		logError(error, { operation: 'containsBadLanguage.detect' });
 
 		return false; // fail-safe: allow text if error occurs
 	}

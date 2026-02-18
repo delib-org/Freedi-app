@@ -1,4 +1,4 @@
-import { DeliberativeElement, SortType, Statement } from '@freedi/shared-types';
+import { SortType, Statement } from '@freedi/shared-types';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(statement: Statement, options: Statement[]) {
@@ -99,20 +99,8 @@ export function getSelections(statement: Statement, option: Statement) {
 	}
 }
 
-export const getSiblingOptionsByParentId = (
-	parentId: string,
-	statements: Statement[],
-): Statement[] => {
-	return statements.filter((statement) => {
-		return (
-			statement.parentId === parentId &&
-			statement.deliberativeElement === DeliberativeElement.option
-		);
-	});
-};
-
-export const getExistingOptionColors = (options: Statement[]): string[] => {
-	const colors = options.flatMap((option: Statement) => option.color ?? []);
-
-	return colors;
-};
+// Re-export from canonical location
+export {
+	getSiblingOptionsByParentId,
+	getExistingOptionColors,
+} from '@/controllers/utils/colorUtils';

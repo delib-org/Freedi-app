@@ -6,7 +6,6 @@ import UploadFileIcon from '../../../view/components/icons/UploadFileIcon';
 
 //Styles
 import styles from './setWaitingList.module.scss';
-import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 
 const SetWaitingList: FC = () => {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -26,7 +25,7 @@ const SetWaitingList: FC = () => {
 	return (
 		<div>
 			<label htmlFor="uploadFile">
-				<VisuallyHidden labelName={'uploadFile'} />
+				<span className="sr-only">uploadFile</span>
 			</label>
 			<input
 				id="uploadFile"

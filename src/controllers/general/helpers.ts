@@ -6,7 +6,7 @@ import {
 	QuestionType,
 } from '@freedi/shared-types';
 import { useAuthentication } from '../hooks/useAuthentication';
-import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
+import { EnhancedEvaluationThumb } from '@/types/evaluation';
 
 // Re-export APIEndPoint from separate file to avoid circular dependencies
 export { APIEndPoint } from './apiEndpoint';

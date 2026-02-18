@@ -9,6 +9,7 @@ import {
 	updateHebbianScore,
 	migrateCorroborationScore,
 } from './helpers/consensusValidCalculator';
+import { logError } from './utils/errorHandling';
 
 // Extended evidence interface with new corroborationScore field
 // (until delib-npm is updated)
@@ -59,7 +60,7 @@ Respond with ONLY the type name (data, testimony, argument, anecdote, or fallacy
 		// Default to argument if classification fails
 		return EvidenceType.argument;
 	} catch (error) {
-		console.error('Error classifying evidence:', error);
+		logError(error, { operation: 'popperHebbian.classifyEvidenceType' });
 		// Default to argument if AI fails
 
 		return EvidenceType.argument;
@@ -100,7 +101,10 @@ Respond with ONLY a single number between 0.0 and 1.0.`;
 
 		// Validate and clamp to [0, 1]
 		if (isNaN(corroborationScore)) {
-			console.error('AI returned invalid corroboration score:', response);
+			logError(new Error('AI returned invalid corroboration score'), {
+				operation: 'popperHebbian.classifyCorroborationScore',
+				metadata: { response },
+			});
 
 			return 0.5; // Default to neutral
 		}
@@ -108,7 +112,7 @@ Respond with ONLY a single number between 0.0 and 1.0.`;
 		// Ensure it's within bounds
 		return Math.max(0.0, Math.min(1.0, corroborationScore));
 	} catch (error) {
-		console.error('Error classifying corroboration score:', error);
+		logError(error, { operation: 'popperHebbian.classifyCorroborationScore' });
 		// Default to neutral if AI fails
 
 		return 0.5;
@@ -139,7 +143,10 @@ async function recalculateScore(statementId: string): Promise<void> {
 	// Get the parent statement to access consensus
 	const parentDoc = await db.collection(Collections.statements).doc(statementId).get();
 	if (!parentDoc.exists) {
-		console.error(`Parent statement ${statementId} not found`);
+		logError(new Error(`Parent statement ${statementId} not found`), {
+			operation: 'popperHebbian.recalculateScore',
+			statementId,
+		});
 
 		return;
 	}
@@ -208,7 +215,9 @@ export const onEvidencePostCreate = onDocumentCreated(
 	async (event) => {
 		const snapshot = event.data;
 		if (!snapshot) {
-			console.error('No data associated with the event');
+			logError(new Error('No data associated with the event'), {
+				operation: 'popperHebbian.onEvidencePostCreate',
+			});
 
 			return;
 		}
@@ -266,7 +275,10 @@ export const onEvidencePostCreate = onDocumentCreated(
 				await recalculateScore(statement.parentId);
 			}
 		} catch (error) {
-			console.error('Error processing evidence post:', error);
+			logError(error, {
+				operation: 'popperHebbian.onEvidencePostCreate',
+				statementId: statement.statementId,
+			});
 		}
 	},
 );
@@ -281,7 +293,9 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 		const afterSnapshot = event.data?.after;
 
 		if (!beforeSnapshot || !afterSnapshot) {
-			console.error('No data associated with the event');
+			logError(new Error('No data associated with the event'), {
+				operation: 'popperHebbian.onEvidencePostUpdate',
+			});
 
 			return;
 		}
@@ -361,7 +375,10 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 				newCorroborationScore,
 			});
 		} catch (error) {
-			console.error('Error re-evaluating evidence post:', error);
+			logError(error, {
+				operation: 'popperHebbian.onEvidencePostUpdate',
+				statementId: afterStatement.statementId,
+			});
 		}
 	},
 );

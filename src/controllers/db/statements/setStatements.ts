@@ -1,12 +1,20 @@
-import { Timestamp, doc, getDoc, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
+import {
+	Timestamp,
+	doc,
+	getDoc,
+	setDoc,
+	updateDoc,
+	writeBatch,
+	runTransaction,
+} from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
-} from '@/view/pages/statement/components/vote/statementVoteCont';
-import { getRandomColor } from '@/view/pages/statement/components/vote/votingColors';
+	getRandomColor,
+} from '@/controllers/utils/colorUtils';
 import {
 	Statement,
 	StatementSchema,

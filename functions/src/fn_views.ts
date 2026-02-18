@@ -1,6 +1,7 @@
 import { logger } from 'firebase-functions/v1';
 import { db } from '.';
 import { Collections, Statement, StatementView } from '@freedi/shared-types';
+import { logError } from './utils/errorHandling';
 
 //@ts-ignore
 export async function updateStatementWithViews(ev) {
@@ -23,7 +24,10 @@ export async function updateStatementWithViews(ev) {
 				const views = statement.viewed.individualViews || 0;
 				t.update(statementRef, { 'viewed.individualViews': views + 1 });
 			} catch (error) {
-				console.error(error);
+				logError(error, {
+					operation: 'views.updateStatementWithViews.transaction',
+					statementId: view.statementId,
+				});
 			}
 		});
 	} catch (error) {

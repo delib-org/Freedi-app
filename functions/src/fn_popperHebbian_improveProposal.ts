@@ -3,6 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel } from './config/gemini';
 import { getParagraphsText } from './helpers';
+import { logError } from './utils/errorHandling';
 
 interface ImproveProposalRequest {
 	statementId: string;
@@ -127,8 +128,12 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 
 			try {
 				aiResponse = JSON.parse(text);
-			} catch {
-				console.error('Failed to parse AI response:', text);
+			} catch (parseError) {
+				logError(parseError, {
+					operation: 'popperHebbian.improveProposal.parseJSON',
+					statementId,
+					metadata: { responseLength: text.length },
+				});
 				throw new HttpsError('internal', 'Failed to parse AI response');
 			}
 
@@ -138,7 +143,15 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 				!aiResponse.improvedDescription ||
 				!aiResponse.improvementSummary
 			) {
-				console.error('Invalid AI response structure:', aiResponse);
+				logError(new Error('Invalid AI response structure'), {
+					operation: 'popperHebbian.improveProposal',
+					statementId,
+					metadata: {
+						hasTitle: !!aiResponse.improvedTitle,
+						hasDescription: !!aiResponse.improvedDescription,
+						hasSummary: !!aiResponse.improvementSummary,
+					},
+				});
 				throw new HttpsError('internal', 'Invalid AI response structure');
 			}
 
@@ -156,7 +169,11 @@ export const improveProposalWithAI = onCall<ImproveProposalRequest>(
 			if (error instanceof HttpsError) {
 				throw error;
 			}
-			console.error('Error generating improved proposal:', error);
+			logError(error, {
+				operation: 'popperHebbian.improveProposal',
+				statementId,
+				userId,
+			});
 			throw new HttpsError('internal', 'Failed to generate improved proposal');
 		}
 	},

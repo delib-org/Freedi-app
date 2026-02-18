@@ -8,6 +8,7 @@ import {
 	updateHebbianScore,
 	migrateCorroborationScore,
 } from './helpers/consensusValidCalculator';
+import { logError } from './utils/errorHandling';
 
 // Base weights now scaled to 0-1 range
 // 1.0 = scientific/peer-reviewed data
@@ -78,7 +79,10 @@ async function recalculateScore(statementId: string): Promise<void> {
 	// Get the parent statement to access consensus
 	const parentDoc = await db.collection(Collections.statements).doc(statementId).get();
 	if (!parentDoc.exists) {
-		console.error(`Parent statement ${statementId} not found`);
+		logError(new Error(`Parent statement ${statementId} not found`), {
+			operation: 'popperHebbian.onVote.recalculateScore',
+			statementId,
+		});
 
 		return;
 	}
@@ -174,7 +178,10 @@ export const onVoteUpdate = onDocumentUpdated(
 					await recalculateScore(after.parentId);
 				}
 			} catch (error) {
-				console.error('Error updating vote scores:', error);
+				logError(error, {
+					operation: 'popperHebbian.onVoteUpdate',
+					statementId: after.statementId,
+				});
 			}
 		}
 	},

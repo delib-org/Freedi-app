@@ -11,6 +11,7 @@ import { Response, Request, onInit, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
 import { GEMINI_MODEL } from './config/gemini';
+import { logError } from './utils/errorHandling';
 
 // New collection names (not yet in delib-npm)
 const FRAMING_COLLECTIONS = {
@@ -50,7 +51,7 @@ onInit(() => {
 
 		genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 	} catch (error) {
-		console.error('Error initializing GenAI', error);
+		logError(error, { operation: 'multiFramingClusters.initGenAI' });
 	}
 });
 

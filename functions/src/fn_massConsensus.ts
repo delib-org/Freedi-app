@@ -3,6 +3,7 @@ import { logger, Request, Response } from 'firebase-functions/v1';
 import { Collections, MassConsensusMember, Statement, StatementType } from '@freedi/shared-types';
 import { FieldValue, DocumentSnapshot } from 'firebase-admin/firestore';
 import type { FirestoreEvent, Change } from 'firebase-functions/v2/firestore';
+import { logError } from './utils/errorHandling';
 
 export const getInitialMCData = async (req: Request, res: Response) => {
 	try {
@@ -59,7 +60,7 @@ export const addMassConsensusMember = async (req: Request, res: Response) => {
 		res.send({ message: 'Member added successfully', ok: true });
 	} catch (error) {
 		const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-		console.error(error);
+		logError(error, { operation: 'massConsensus.addMassConsensusMember' });
 		res.status(500).send({ error: errorMessage, ok: false });
 	}
 };
@@ -90,7 +91,7 @@ export async function addOptionToMassConsensus(ev: FirestoreEvent<DocumentSnapsh
 			}
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'massConsensus.addOptionToMassConsensus' });
 
 		return;
 	}
@@ -118,7 +119,7 @@ export async function removeOptionFromMassConsensus(ev: FirestoreEvent<DocumentS
 			}
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'massConsensus.removeOptionFromMassConsensus' });
 
 		return;
 	}
@@ -198,7 +199,7 @@ export async function updateOptionInMassConsensus(event: FirestoreEvent<Change<D
 			}
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'massConsensus.updateOptionInMassConsensus' });
 
 		return;
 	}
@@ -229,7 +230,7 @@ export async function addMemberToMassConsensus(ev: FirestoreEvent<DocumentSnapsh
 			}
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'massConsensus.addMemberToMassConsensus' });
 
 		return;
 	}

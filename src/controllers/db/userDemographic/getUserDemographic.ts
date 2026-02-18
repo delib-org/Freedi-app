@@ -19,7 +19,7 @@ import {
 	setUserDemographicQuestion,
 	setUserDemographicQuestions,
 } from '@/redux/userDemographic/userDemographicSlice';
-import { MemberReviewData } from '@/view/pages/statement/components/settings/components/memberValidation/MemberValidation';
+import { MemberReviewData } from '@/types/demographics';
 import { getAllMemberValidationStatuses } from '../memberValidation/memberValidationStatus';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 

@@ -5,6 +5,7 @@ import { Statement, Collections, functionConfig } from '@freedi/shared-types';
 import { getGeminiModel } from './config/gemini';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { getParagraphsText } from './helpers';
+import { logError } from './utils/errorHandling';
 
 interface SummarizeDiscussionRequest {
 	statementId: string;
@@ -229,7 +230,11 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			if (error instanceof HttpsError) {
 				throw error;
 			}
-			console.error('Error generating discussion summary:', error);
+			logError(error, {
+				operation: 'summarizeDiscussion.generate',
+				statementId,
+				userId,
+			});
 			throw new HttpsError('internal', 'Failed to generate summary');
 		}
 	},

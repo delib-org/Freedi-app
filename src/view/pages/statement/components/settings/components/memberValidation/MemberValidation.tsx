@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect } from 'react';
-import { Statement, User, Role } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import SettingsModal from '../settingsModal/SettingsModal';
@@ -13,20 +13,9 @@ interface Props {
 	statement: Statement;
 }
 
-export interface MemberReviewData {
-	userId: string;
-	user: User;
-	role?: Role;
-	responses: {
-		questionId: string;
-		question: string;
-		answer: string | string[];
-		answeredAt?: number;
-	}[];
-	joinedAt?: number;
-	flags: string[];
-	status: 'pending' | 'approved' | 'flagged' | 'banned';
-}
+import type { MemberReviewData } from '@/types/demographics';
+
+export type { MemberReviewData } from '@/types/demographics';
 
 const MemberValidation: FC<Props> = ({ statement }) => {
 	const { t } = useTranslation();

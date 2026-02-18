@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import clsx from 'clsx';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Toggle } from '@/view/components/atomic/atoms/Toggle';
-import { UserDemographicQuestion, UserDemographicQuestionType } from '@freedi/shared-types';
+import { UserDemographicQuestionType } from '@freedi/shared-types';
 
 // Icons - using SVG react components
 import ArrowDownIcon from '@/assets/icons/arrow-down.svg?react';
@@ -21,16 +21,8 @@ import GroupIcon from '@/assets/icons/group.svg?react';
 // TYPES
 // ============================================================================
 
-export interface InheritedQuestion extends UserDemographicQuestion {
-	/** ID of the source statement */
-	sourceStatementId: string;
-	/** Title/name of the source statement */
-	sourceStatementTitle: string;
-	/** Whether this is a group-level or statement-level source */
-	sourceType: 'group' | 'discussion';
-	/** Whether this inherited question is enabled for the current statement */
-	isEnabled: boolean;
-}
+export type { InheritedQuestion } from '@/types/demographics';
+import type { InheritedQuestion } from '@/types/demographics';
 
 export interface InheritedDemographicsProps {
 	/** List of inherited questions grouped by source */

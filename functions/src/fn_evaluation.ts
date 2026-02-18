@@ -23,6 +23,7 @@ type StatementWithPopper = Statement & { popperHebbianScore?: PopperHebbianScore
 import { number, parse } from 'valibot';
 import { updateUserDemographicEvaluation } from './fn_polarizationIndex';
 import { calculateConsensusValid } from './helpers/consensusValidCalculator';
+import { logError } from './utils/errorHandling';
 
 // import { getRandomColor } from './helpers';
 // import { user } from 'firebase-functions/v1/auth';
@@ -1095,7 +1096,10 @@ async function clearPreviousChosenOptions(parentId: string | undefined): Promise
 
 		await batch.commit();
 	} catch (error) {
-		console.error('Error clearing previous chosen options:', error);
+		logError(error, {
+			operation: 'evaluation.clearPreviousChosenOptions',
+			metadata: { parentId },
+		});
 	}
 }
 
