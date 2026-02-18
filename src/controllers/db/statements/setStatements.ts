@@ -700,6 +700,30 @@ export async function setFollowMeDB(
 	}
 }
 
+export async function setPowerFollowMeDB(
+	topParentStatement: Statement,
+	path: string | undefined,
+): Promise<void> {
+	try {
+		parse(string(), path);
+		parse(StatementSchema, topParentStatement);
+
+		const topParentStatementRef = doc(
+			FireStore,
+			Collections.statements,
+			topParentStatement.statementId,
+		);
+
+		if (path) {
+			await updateDoc(topParentStatementRef, { powerFollowMe: path });
+		} else {
+			await updateDoc(topParentStatementRef, { powerFollowMe: '' });
+		}
+	} catch (error) {
+		logger.error('Failed to set power follow me', error);
+	}
+}
+
 export async function updateStatementsOrderToDB(statements: Statement[]) {
 	try {
 		const batch = writeBatch(FireStore);

@@ -23,6 +23,7 @@ interface Props {
 	parentStatement?: Statement;
 	handleShare: () => void;
 	handleFollowMe: () => void;
+	handlePowerFollowMe: () => void;
 	handleInvitePanel: () => void;
 	handleLogout: () => void;
 	setIsHeaderMenuOpen: (value: boolean) => void;
@@ -35,6 +36,7 @@ const StatementTopNav: FC<Props> = ({
 	setIsHeaderMenuOpen,
 	handleLogout,
 	handleFollowMe,
+	handlePowerFollowMe,
 	handleInvitePanel,
 	isHeaderMenuOpen,
 	handleShare,
@@ -89,6 +91,7 @@ const StatementTopNav: FC<Props> = ({
 						onShare={handleShare}
 						onLogout={handleLogout}
 						onFollowMe={handleFollowMe}
+						onPowerFollowMe={handlePowerFollowMe}
 						onInvitePanel={handleInvitePanel}
 						onNavigateToSettings={handleNavigateToSettings}
 					/>

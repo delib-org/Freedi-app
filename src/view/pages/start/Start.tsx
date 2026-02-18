@@ -31,7 +31,7 @@ const Start = () => {
 	return (
 		<div className={styles.splashPage}>
 			<div className={styles.mainLogo}>
-				<LogoStart />
+				<LogoStart className={styles.mainLogo__logo} />
 				<span className={styles.mainLogo__slogan}>{t('Fostering Collaborations')}</span>
 			</div>
 			<div className={styles.version}>v: {AppVersion}</div>
