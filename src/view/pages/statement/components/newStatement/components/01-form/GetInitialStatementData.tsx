@@ -57,7 +57,12 @@ export default function GetInitialStatementData() {
 
 			if (!newStatementParent) throw new Error('Statement is not defined');
 
-			if (!title) throw new Error('Title is required');
+			if (!title) {
+				setError('Title is required');
+
+				return;
+			}
+			setError('');
 			setTitle(title);
 
 			if (
@@ -121,6 +126,9 @@ export default function GetInitialStatementData() {
 			}
 		} catch (error) {
 			console.error(error);
+			if (error instanceof Error) {
+				setError(error.message);
+			}
 		}
 	};
 

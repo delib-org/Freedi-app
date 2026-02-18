@@ -8,6 +8,7 @@ import { store } from './redux/store';
 import { Provider } from 'react-redux';
 import { router } from './routes/router';
 import { UserConfigProvider } from './context/UserConfigContext';
+import { AuthStateProvider } from './context/AuthStateContext';
 import PWAWrapper from './view/components/pwa/PWAWrapper';
 import { initSentry } from './services/monitoring/sentry';
 import RootErrorBoundary from './components/ErrorBoundary/RootErrorBoundary';
@@ -74,9 +75,11 @@ root.render(
 		<RootErrorBoundary>
 			<Provider store={store}>
 				<UserConfigProvider>
-					<PWAWrapper>
-						<RouterProvider router={router} />
-					</PWAWrapper>
+					<AuthStateProvider>
+						<PWAWrapper>
+							<RouterProvider router={router} />
+						</PWAWrapper>
+					</AuthStateProvider>
 				</UserConfigProvider>
 			</Provider>
 		</RootErrorBoundary>

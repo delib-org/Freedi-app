@@ -233,7 +233,7 @@
   gap: var(--spacing-xs);
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--btn-primary);
-  color: white;
+  color: #ffffff;
   border-radius: var(--radius-md);
   font-size: 0.875rem;
   font-weight: 500;
@@ -247,6 +247,16 @@
   svg {
     flex-shrink: 0;
   }
+}
+
+:global(body.a11y-contrast-light) .adminButton {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+:global(body.a11y-contrast-dark) .adminButton {
+  color: #000000;
+  text-decoration: none;
 }
 
 .header {

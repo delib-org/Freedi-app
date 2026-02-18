@@ -20,6 +20,12 @@ yarn.lock
 .env.sentry-build-plugin
 .playwright-mcp/
 
+# Playwright E2E test artifacts
+e2e/*/test-results/
+e2e/*/playwright-report/
+e2e/*/auth-state/
+playwright-report/
+
 .DS_Store
 
 # Downloaded files (Hebrew)

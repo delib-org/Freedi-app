@@ -3,7 +3,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useTranslation } from '@freedi/shared-i18n/next';
@@ -65,7 +64,6 @@ export default function TiptapEditor({
           levels: [1, 2, 3, 4, 5, 6],
         },
       }),
-      Underline,
       CustomImage.configure({
         HTMLAttributes: {
           class: styles.editorImage,
