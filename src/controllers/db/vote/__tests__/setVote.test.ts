@@ -1,5 +1,8 @@
 /**
  * Tests for setVote controller
+ *
+ * NOTE: setVoteToDB uses runTransaction (not setDoc/getDoc directly).
+ * We mock runTransaction to control its behavior in tests.
  */
 
 // Mock @freedi/shared-types before import to prevent valibot loading
@@ -78,11 +81,14 @@ interface Statement {
 	};
 }
 
-// Mock Firebase
+// Mock runTransaction to allow us to control the transaction behavior
+const mockRunTransaction = jest.fn();
+const mockDoc = jest.fn();
+
+// Mock Firebase - use runTransaction
 jest.mock('firebase/firestore', () => ({
 	doc: jest.fn(),
-	getDoc: jest.fn(),
-	setDoc: jest.fn(),
+	runTransaction: jest.fn(),
 	Timestamp: {
 		now: jest.fn(() => ({
 			toMillis: jest.fn(() => 1704067200000),
@@ -114,13 +120,12 @@ jest.mock('@/services/logger', () => ({
 }));
 
 import { setVoteToDB } from '../setVote';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { runTransaction, doc } from 'firebase/firestore';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
 
-const mockDoc = doc as jest.MockedFunction<typeof doc>;
-const mockGetDoc = getDoc as jest.MockedFunction<typeof getDoc>;
-const mockSetDoc = setDoc as jest.MockedFunction<typeof setDoc>;
+const mockedRunTransaction = runTransaction as jest.MockedFunction<typeof runTransaction>;
+const mockedDoc = doc as jest.MockedFunction<typeof doc>;
 
 describe('setVote', () => {
 	const mockUser: User = {
@@ -151,48 +156,33 @@ describe('setVote', () => {
 
 	beforeEach(() => {
 		jest.clearAllMocks();
-		mockDoc.mockReturnValue({} as ReturnType<typeof doc>);
-		mockSetDoc.mockResolvedValue(undefined);
+		mockedDoc.mockReturnValue({} as ReturnType<typeof doc>);
 	});
 
-	describe('new vote', () => {
-		it('should create a new vote when no existing vote', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-				data: () => undefined,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+	describe('new vote (no existing vote)', () => {
+		beforeEach(() => {
+			// Simulate transaction: no existing vote document
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => false,
+						data: () => undefined,
+					}),
+					set: jest.fn(),
+				};
 
-			await setVoteToDB(mockOption, mockUser);
-
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.objectContaining({
-					statementId: 'option-123',
-					parentId: 'parent-123',
-					userId: 'user-123',
-				}),
-				{ merge: true },
-			);
+				return updateFn(transaction as never);
+			});
 		});
 
-		it('should track analytics for new vote', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-				data: () => undefined,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+		it('should call runTransaction when setting a vote', async () => {
+			await setVoteToDB(mockOption as never, mockUser as never);
 
-			await setVoteToDB(mockOption, mockUser);
-
-			expect(analyticsService.trackStatementVote).toHaveBeenCalledWith('option-123', 1, 'button');
+			expect(mockedRunTransaction).toHaveBeenCalledTimes(1);
 		});
 
 		it('should log info for new vote', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-				data: () => undefined,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await setVoteToDB(mockOption, mockUser);
+			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(logger.info).toHaveBeenCalledWith('Vote cast', {
 				statementId: 'option-123',
@@ -200,44 +190,128 @@ describe('setVote', () => {
 				userId: 'user-123',
 			});
 		});
+
+		it('should track analytics for new vote', async () => {
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			expect(analyticsService.trackStatementVote).toHaveBeenCalledWith('option-123', 1, 'button');
+		});
+
+		it('should call set inside transaction with correct statementId', async () => {
+			let capturedVote: Record<string, unknown> | null = null;
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => false,
+						data: () => undefined,
+					}),
+					set: jest.fn((ref, data) => {
+						capturedVote = data as Record<string, unknown>;
+					}),
+				};
+
+				return updateFn(transaction as never);
+			});
+
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			expect(capturedVote).not.toBeNull();
+			expect(capturedVote?.statementId).toBe('option-123');
+			expect(capturedVote?.userId).toBe('user-123');
+			expect(capturedVote?.parentId).toBe('parent-123');
+		});
+
+		it('should include voter information in vote data', async () => {
+			let capturedVote: Record<string, unknown> | null = null;
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => false,
+						data: () => undefined,
+					}),
+					set: jest.fn((ref, data) => {
+						capturedVote = data as Record<string, unknown>;
+					}),
+				};
+
+				return updateFn(transaction as never);
+			});
+
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			expect(capturedVote).not.toBeNull();
+			expect(capturedVote?.voter).toEqual(mockUser);
+		});
+
+		it('should include timestamps in vote data', async () => {
+			let capturedVote: Record<string, unknown> | null = null;
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => false,
+						data: () => undefined,
+					}),
+					set: jest.fn((ref, data) => {
+						capturedVote = data as Record<string, unknown>;
+					}),
+				};
+
+				return updateFn(transaction as never);
+			});
+
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			expect(capturedVote).not.toBeNull();
+			expect(typeof capturedVote?.lastUpdate).toBe('number');
+			expect(typeof capturedVote?.createdAt).toBe('number');
+		});
 	});
 
 	describe('toggle vote (remove vote)', () => {
-		it('should remove vote when voting for same option', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-				data: () => ({ statementId: 'option-123' }),
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+		beforeEach(() => {
+			// Simulate transaction: existing vote for same option → toggle off
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => true,
+						data: () => ({ statementId: 'option-123' }), // Same option → toggle off
+					}),
+					set: jest.fn(),
+				};
 
-			await setVoteToDB(mockOption, mockUser);
+				return updateFn(transaction as never);
+			});
+		});
 
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.objectContaining({
-					statementId: 'none',
-				}),
-				{ merge: true },
-			);
+		it('should set statementId to "none" when toggling off', async () => {
+			let capturedVote: Record<string, unknown> | null = null;
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => true,
+						data: () => ({ statementId: 'option-123' }),
+					}),
+					set: jest.fn((ref, data) => {
+						capturedVote = data as Record<string, unknown>;
+					}),
+				};
+
+				return updateFn(transaction as never);
+			});
+
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			expect(capturedVote?.statementId).toBe('none');
 		});
 
 		it('should not track analytics when removing vote', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-				data: () => ({ statementId: 'option-123' }),
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await setVoteToDB(mockOption, mockUser);
+			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(analyticsService.trackStatementVote).not.toHaveBeenCalled();
 		});
 
 		it('should log info for removed vote', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-				data: () => ({ statementId: 'option-123' }),
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await setVoteToDB(mockOption, mockUser);
+			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(logger.info).toHaveBeenCalledWith('Vote removed', {
 				statementId: 'option-123',
@@ -247,82 +321,56 @@ describe('setVote', () => {
 		});
 	});
 
-	describe('change vote', () => {
+	describe('change vote (vote for different option)', () => {
+		beforeEach(() => {
+			// Simulate transaction: existing vote for different option → update
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => true,
+						data: () => ({ statementId: 'different-option-456' }), // Different option
+					}),
+					set: jest.fn(),
+				};
+
+				return updateFn(transaction as never);
+			});
+		});
+
 		it('should update vote when voting for different option', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-				data: () => ({ statementId: 'different-option-456' }),
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			let capturedVote: Record<string, unknown> | null = null;
+			mockedRunTransaction.mockImplementation(async (_firestore, updateFn) => {
+				const transaction = {
+					get: jest.fn().mockResolvedValue({
+						exists: () => true,
+						data: () => ({ statementId: 'different-option-456' }),
+					}),
+					set: jest.fn((ref, data) => {
+						capturedVote = data as Record<string, unknown>;
+					}),
+				};
 
-			await setVoteToDB(mockOption, mockUser);
+				return updateFn(transaction as never);
+			});
 
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.objectContaining({
-					statementId: 'option-123', // New option, not 'none'
-				}),
-				{ merge: true },
-			);
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			// Should store the new option, not 'none'
+			expect(capturedVote?.statementId).toBe('option-123');
 		});
 
 		it('should track analytics when changing vote', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => true,
-				data: () => ({ statementId: 'different-option-456' }),
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
+			await setVoteToDB(mockOption as never, mockUser as never);
 
-			await setVoteToDB(mockOption, mockUser);
-
-			expect(analyticsService.trackStatementVote).toHaveBeenCalled();
-		});
-	});
-
-	describe('vote data structure', () => {
-		it('should include voter information', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-				data: () => undefined,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await setVoteToDB(mockOption, mockUser);
-
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.objectContaining({
-					voter: mockUser,
-				}),
-				{ merge: true },
-			);
-		});
-
-		it('should include timestamps', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-				data: () => undefined,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-
-			await setVoteToDB(mockOption, mockUser);
-
-			expect(mockSetDoc).toHaveBeenCalledWith(
-				expect.anything(),
-				expect.objectContaining({
-					lastUpdate: expect.any(Number),
-					createdAt: expect.any(Number),
-				}),
-				{ merge: true },
-			);
+			expect(analyticsService.trackStatementVote).toHaveBeenCalledWith('option-123', 1, 'button');
 		});
 	});
 
 	describe('error handling', () => {
-		it('should log error when setDoc fails', async () => {
-			mockGetDoc.mockResolvedValue({
-				exists: () => false,
-				data: () => undefined,
-			} as ReturnType<typeof getDoc> extends Promise<infer T> ? T : never);
-			mockSetDoc.mockRejectedValue(new Error('Firebase error'));
+		it('should log error when transaction fails', async () => {
+			mockedRunTransaction.mockRejectedValue(new Error('Firebase transaction error'));
 
-			await setVoteToDB(mockOption, mockUser);
+			await setVoteToDB(mockOption as never, mockUser as never);
 
 			expect(logger.error).toHaveBeenCalledWith('Failed to set vote', expect.any(Error), {
 				statementId: 'option-123',
@@ -330,16 +378,19 @@ describe('setVote', () => {
 			});
 		});
 
-		it('should log error when getDoc fails', async () => {
-			mockGetDoc.mockRejectedValue(new Error('Firebase read error'));
+		it('should not throw when transaction fails', async () => {
+			mockedRunTransaction.mockRejectedValue(new Error('Firebase error'));
 
-			await setVoteToDB(mockOption, mockUser);
+			// Should not throw
+			await expect(setVoteToDB(mockOption as never, mockUser as never)).resolves.toBeUndefined();
+		});
 
-			expect(logger.error).toHaveBeenCalledWith(
-				'Failed to set vote',
-				expect.any(Error),
-				expect.any(Object),
-			);
+		it('should not track analytics when transaction fails', async () => {
+			mockedRunTransaction.mockRejectedValue(new Error('Firebase error'));
+
+			await setVoteToDB(mockOption as never, mockUser as never);
+
+			expect(analyticsService.trackStatementVote).not.toHaveBeenCalled();
 		});
 	});
 });
