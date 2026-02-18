@@ -1,6 +1,6 @@
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { getDoc, updateDoc } from 'firebase/firestore';
+import { Statement, StatementType } from '@freedi/shared-types';
+import { createStatementRef } from '@/utils/firebaseUtils';
 
 /**
  * Toggle the isDocument flag on an option statement.
@@ -10,7 +10,7 @@ export async function toggleIsDocument(statementId: string): Promise<boolean | u
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const statementDB = await getDoc(statementRef);
 
 		if (!statementDB.exists()) throw new Error('Statement not found');

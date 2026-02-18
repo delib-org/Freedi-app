@@ -20,6 +20,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@freedi/shared-i18n": "file:../../packages/shared-i18n",
     "@freedi/shared-types": "file:../../packages/shared-types",
+    "@freedi/shared-utils": "file:../../packages/shared-utils",
     "@google/generative-ai": "^0.21.0",
     "@sentry/nextjs": "^8.0.0",
     "@vercel/analytics": "^1.6.1",

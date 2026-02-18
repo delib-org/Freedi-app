@@ -1,12 +1,4 @@
-import {
-	Timestamp,
-	doc,
-	getDoc,
-	setDoc,
-	updateDoc,
-	writeBatch,
-	runTransaction,
-} from 'firebase/firestore';
+import { getDoc, setDoc, updateDoc, writeBatch, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
@@ -18,7 +10,6 @@ import {
 import {
 	Statement,
 	StatementSchema,
-	Collections,
 	StatementType,
 	Access,
 	QuestionType,
@@ -40,6 +31,7 @@ import { LanguagesEnum } from '@/context/UserConfigContext';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
 import { incrementOptionsCreated, setHasCreatedGroup } from '@/redux/pwa/pwaSlice';
+import { createStatementRef, getCurrentTimestamp, createTimestamps } from '@/utils/firebaseUtils';
 
 export const resultsSettingsDefault: ResultsSettings = {
 	resultsBy: ResultsBy.consensus,
@@ -52,7 +44,7 @@ export const updateStatementParents = async (statement: Statement, parentStateme
 		if (!statement) throw new Error('Statement is undefined');
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		const newStatement = {
 			parentId: parentStatement.statementId,
@@ -203,7 +195,7 @@ export const setStatementToDB = async ({
 		parse(UserSchema, statement.creator);
 
 		//set statement
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 		const statementPromises = [];
 
 		//update timestamp
@@ -337,8 +329,7 @@ export function createStatement({
 				hasChildren,
 				enableNavigationalElements,
 			},
-			createdAt: Timestamp.now().toMillis(),
-			lastUpdate: Timestamp.now().toMillis(),
+			...createTimestamps(),
 			color: getRandomColor(existingColors),
 			resultsSettings: {
 				resultsBy: resultsBy || ResultsBy.consensus,
@@ -436,7 +427,7 @@ export function updateStatement({
 		if (text) newStatement.statement = text;
 		if (paragraphs) newStatement.paragraphs = paragraphs;
 
-		newStatement.lastUpdate = Timestamp.now().toMillis();
+		newStatement.lastUpdate = getCurrentTimestamp();
 
 		if (resultsBy && newStatement.resultsSettings)
 			newStatement.resultsSettings.resultsBy = resultsBy;
@@ -533,7 +524,7 @@ export async function updateStatementText(
 
 		// If statement lacks topParentId, derive it from parent
 		if (!statement.topParentId && statement.parentId) {
-			const parentRef = doc(FireStore, Collections.statements, statement.parentId);
+			const parentRef = createStatementRef(statement.parentId);
 			const parentDoc = await getDoc(parentRef);
 			if (parentDoc.exists()) {
 				const parentData = parentDoc.data() as Statement;
@@ -545,9 +536,9 @@ export async function updateStatementText(
 			return;
 		}
 
-		updates.lastUpdate = Timestamp.now().toMillis();
+		updates.lastUpdate = getCurrentTimestamp();
 
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		await updateDoc(statementRef, updates);
 	} catch (error) {
@@ -570,10 +561,10 @@ export async function updateStatementParagraphs(
 
 		const updates: Partial<Statement> = {
 			paragraphs,
-			lastUpdate: Timestamp.now().toMillis(),
+			lastUpdate: getCurrentTimestamp(),
 		};
 
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		await updateDoc(statementRef, updates);
 	} catch (error) {
@@ -586,7 +577,7 @@ export async function setStatementIsOption(statement: Statement | undefined) {
 	try {
 		if (!statement) throw new Error('Statement is undefined');
 
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		await runTransaction(FireStore, async (transaction) => {
 			const statementDB = await transaction.get(statementRef);
@@ -610,7 +601,7 @@ export async function setStatementIsOption(statement: Statement | undefined) {
 export async function setStatementGroupToDB(statement: Statement) {
 	try {
 		const statementId = statement.statementId;
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		await setDoc(statementRef, { statementType: StatementType.statement }, { merge: true });
 	} catch (error) {
 		console.error(error);
@@ -621,7 +612,7 @@ export function setRoomSizeInStatementDB(statement: Statement, roomSize: number)
 	try {
 		parse(number(), roomSize);
 		parse(StatementSchema, statement);
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 		const newRoomSize = { roomSize };
 		updateDoc(statementRef, newRoomSize);
 	} catch (error) {
@@ -631,7 +622,7 @@ export function setRoomSizeInStatementDB(statement: Statement, roomSize: number)
 
 export async function updateIsQuestion(statement: Statement) {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		let { statementType } = statement;
 		if (statementType === StatementType.question) {
@@ -658,7 +649,7 @@ export async function updateIsQuestion(statement: Statement) {
 export async function updateStatementMainImage(statement: Statement, imageURL: string | undefined) {
 	try {
 		if (!imageURL) throw new Error('Image URL is undefined');
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		// Use nested field update to preserve other imagesURL fields like displayMode
 		await updateDoc(statementRef, {
@@ -674,7 +665,7 @@ export async function updateStatementImageDisplayMode(
 	displayMode: 'above' | 'inline',
 ) {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		await updateDoc(statementRef, {
 			'imagesURL.displayMode': displayMode,
@@ -692,11 +683,7 @@ export async function setFollowMeDB(
 		parse(string(), path);
 		parse(StatementSchema, topParentStatement);
 
-		const topParentStatementRef = doc(
-			FireStore,
-			Collections.statements,
-			topParentStatement.statementId,
-		);
+		const topParentStatementRef = createStatementRef(topParentStatement.statementId);
 
 		if (path) {
 			await updateDoc(topParentStatementRef, { followMe: path });
@@ -716,11 +703,7 @@ export async function setPowerFollowMeDB(
 		parse(string(), path);
 		parse(StatementSchema, topParentStatement);
 
-		const topParentStatementRef = doc(
-			FireStore,
-			Collections.statements,
-			topParentStatement.statementId,
-		);
+		const topParentStatementRef = createStatementRef(topParentStatement.statementId);
 
 		if (path) {
 			await updateDoc(topParentStatementRef, { powerFollowMe: path });
@@ -739,7 +722,7 @@ export async function updateStatementsOrderToDB(statements: Statement[]) {
 		for (const statement of statements) {
 			parse(StatementSchema, statement);
 
-			const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+			const statementRef = createStatementRef(statement.statementId);
 
 			batch.update(statementRef, { order: statement.order });
 		}
@@ -754,7 +737,7 @@ export async function toggleStatementHide(statementId: string): Promise<boolean 
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		const hide = await runTransaction(FireStore, async (transaction) => {
 			const statementDB = await transaction.get(statementRef);
@@ -795,7 +778,7 @@ export async function toggleStatementAnchored(
 		}
 
 		// Get parent statement to check settings
-		const parentRef = doc(FireStore, Collections.statements, parentId);
+		const parentRef = createStatementRef(parentId);
 		const parentDoc = await getDoc(parentRef);
 
 		if (!parentDoc.exists()) {
@@ -807,7 +790,7 @@ export async function toggleStatementAnchored(
 		// anchored options are randomly selected for each evaluation
 
 		// Update the statement
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		await updateDoc(statementRef, { anchored });
 
 		// Log analytics event

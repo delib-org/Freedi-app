@@ -6,7 +6,15 @@ import {
 	UserDemographicQuestion,
 	UserDemographicQuestionSchema,
 } from '@freedi/shared-types';
-import { arrayRemove, arrayUnion, deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import {
+	arrayRemove,
+	arrayUnion,
+	deleteDoc,
+	doc,
+	setDoc,
+	updateDoc,
+	writeBatch,
+} from 'firebase/firestore';
 import { DB } from '../config';
 import { parse, safeParse } from 'valibot';
 import { store } from '@/redux/store';
@@ -145,7 +153,6 @@ export async function setUserAnswers(answers: UserDemographicQuestion[]) {
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateDataAndLogIssues<T>(
 	schema: BaseSchema<any, T, any>,
 	data: unknown,

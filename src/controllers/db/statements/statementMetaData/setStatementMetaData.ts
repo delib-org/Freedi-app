@@ -1,13 +1,7 @@
-import { doc, updateDoc } from 'firebase/firestore';
-import { FireStore } from '@/controllers/db/config';
-import {
-	QuestionStage,
-	Collections,
-	QuestionType,
-	QuestionSettings,
-	QuestionStep,
-} from '@freedi/shared-types';
+import { updateDoc } from 'firebase/firestore';
+import { QuestionStage, QuestionType, QuestionSettings, QuestionStep } from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { createStatementRef } from '@/utils/firebaseUtils';
 
 interface SetStatementStageParams {
 	statementId: string;
@@ -19,7 +13,7 @@ export async function setQuestionStage({
 }: SetStatementStageParams) {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const questionSettings: QuestionSettings = {
 			currentStep: step,
 			questionType: getDefaultQuestionType(),
@@ -43,7 +37,7 @@ export async function setQuestionType({
 }: SetStatementTypeProps) {
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const questionSettings: QuestionSettings = {
 			currentStage: stage,
 			questionType: type,

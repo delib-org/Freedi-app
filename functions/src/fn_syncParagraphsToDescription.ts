@@ -17,7 +17,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v1';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from '@freedi/shared-types';
 
 const db = getFirestore();
@@ -105,11 +105,11 @@ export const fn_syncParagraphsToDescription = onDocumentUpdated(
 			const documentRef = db.collection(Collections.statements).doc(documentId);
 			await documentRef.update({
 				statement: description,
-				lastUpdate: FieldValue.serverTimestamp(),
-				lastChildUpdate: FieldValue.serverTimestamp(),
+				lastUpdate: Date.now(),
+				lastChildUpdate: Date.now(),
 				// Track sync metadata
 				syncedFromParagraphs: true,
-				syncedAt: FieldValue.serverTimestamp(),
+				syncedAt: Date.now(),
 				paragraphCount: officialParagraphsSnap.size,
 			});
 
@@ -208,9 +208,9 @@ export const triggerParagraphSync = onCall(
 			const documentRef = db.collection(Collections.statements).doc(documentId);
 			await documentRef.update({
 				statement: description,
-				lastUpdate: FieldValue.serverTimestamp(),
+				lastUpdate: Date.now(),
 				syncedFromParagraphs: true,
-				syncedAt: FieldValue.serverTimestamp(),
+				syncedAt: Date.now(),
 				paragraphCount: officialParagraphsSnap.size,
 			});
 

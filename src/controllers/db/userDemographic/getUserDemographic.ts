@@ -1,5 +1,4 @@
-import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { query, where, getDocs, onSnapshot, getDoc } from 'firebase/firestore';
 import {
 	Collections,
 	UserDemographicQuestion,
@@ -7,6 +6,7 @@ import {
 	User,
 	Role,
 } from '@freedi/shared-types';
+import { createCollectionRef, createSubscriptionRef } from '@/utils/firebaseUtils';
 import { parse } from 'valibot';
 
 // Use string literal for scope until delib-npm exports the enum value
@@ -37,7 +37,7 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 		const dispatch = store.dispatch;
 
 		// Create a reference to the userDataQuestions collection
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 
 		// Create a query to filter by statementId
 		const q = query(userQuestionsRef, where('statementId', '==', statementId));
@@ -80,7 +80,7 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 			throw new Error('Statement ID is required to listen for user demographic questions');
 		}
 
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const q = query(userQuestionsRef, where('statementId', '==', statementId));
 
 		return onSnapshot(q, (userQuestionsDB) => {
@@ -119,7 +119,7 @@ export function listenToUserDemographicAnswers(statementId: string) {
 		}
 		const uid = user.uid;
 
-		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const userAnswersRef = createCollectionRef(Collections.usersData);
 		const q = query(
 			userAnswersRef,
 			where('statementId', '==', statementId),
@@ -169,7 +169,7 @@ export async function getUserDemographicResponses(
 		}
 
 		// Get all questions for this statement
-		const questionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const questionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const questionsQuery = query(questionsRef, where('statementId', '==', statementId));
 		const questionsSnapshot = await getDocs(questionsQuery);
 
@@ -185,7 +185,7 @@ export async function getUserDemographicResponses(
 		});
 
 		// Get all user responses for this statement
-		const responsesRef = collection(FireStore, Collections.usersData);
+		const responsesRef = createCollectionRef(Collections.usersData);
 		const responsesQuery = query(responsesRef, where('statementId', '==', statementId));
 		const responsesSnapshot = await getDocs(responsesQuery);
 
@@ -245,7 +245,7 @@ export async function getUserDemographicResponses(
 					const subscriptionId = getStatementSubscriptionId(statementId, member.userId);
 					if (!subscriptionId) return;
 
-					const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, subscriptionId);
+					const subscriptionRef = createSubscriptionRef(subscriptionId);
 					const subscriptionDoc = await getDoc(subscriptionRef);
 
 					if (subscriptionDoc.exists()) {
@@ -277,7 +277,7 @@ export function listenToGroupDemographicQuestions(topParentId: string): () => vo
 			throw new Error('Top Parent ID is required to listen for group demographic questions');
 		}
 
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const q = query(
 			userQuestionsRef,
 			where('topParentId', '==', topParentId),
@@ -325,7 +325,7 @@ export function listenToGroupDemographicAnswers(topParentId: string): () => void
 		}
 		const uid = user.uid;
 
-		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const userAnswersRef = createCollectionRef(Collections.usersData);
 		const q = query(
 			userAnswersRef,
 			where('topParentId', '==', topParentId),
@@ -374,7 +374,7 @@ export async function getGroupDemographicQuestions(
 			throw new Error('Top Parent ID is required to get group demographic questions');
 		}
 
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const q = query(
 			userQuestionsRef,
 			where('topParentId', '==', topParentId),
@@ -423,7 +423,7 @@ export async function getUserGroupAnswers(
 			throw new Error('Top Parent ID and User ID are required to get group demographic answers');
 		}
 
-		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const userAnswersRef = createCollectionRef(Collections.usersData);
 		const q = query(
 			userAnswersRef,
 			where('topParentId', '==', topParentId),

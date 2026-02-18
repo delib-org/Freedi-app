@@ -1,6 +1,5 @@
 import { Unsubscribe } from 'firebase/auth';
-import { collection, query, where, doc, getDocs, getDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { query, where, getDocs, getDoc } from 'firebase/firestore';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { parse } from 'valibot';
@@ -17,6 +16,7 @@ import {
 	createManagedDocumentListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+import { createCollectionRef, createEvaluationRef, createDocRef } from '@/utils/firebaseUtils';
 
 export const listenToEvaluations = (
 	parentId: string,
@@ -24,7 +24,7 @@ export const listenToEvaluations = (
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch as AppDispatch;
-		const evaluationsRef = collection(FireStore, Collections.evaluations);
+		const evaluationsRef = createCollectionRef(Collections.evaluations);
 		const user = store.getState().creator.creator;
 
 		if (!user) throw new Error('User is undefined');
@@ -83,7 +83,7 @@ export function listenToEvaluation(statementId: string, userId: string): () => v
 	try {
 		const evaluationId = getStatementSubscriptionId(statementId, userId);
 
-		const evaluationsRef = doc(FireStore, Collections.evaluations, evaluationId);
+		const evaluationsRef = createEvaluationRef(evaluationId);
 
 		// Generate unique key for this listener
 		const listenerKey = generateListenerKey('evaluation', 'single', evaluationId);
@@ -115,7 +115,7 @@ export function listenToEvaluation(statementId: string, userId: string): () => v
 
 export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 	try {
-		const evaluationsRef = collection(FireStore, Collections.evaluations);
+		const evaluationsRef = createCollectionRef(Collections.evaluations);
 		const q = query(evaluationsRef, where('parentId', '==', parentId));
 
 		const evaluationsDB = await getDocs(q);
@@ -137,7 +137,7 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 		const evaluatorsPromise = evaluations
 			.map((evaluation) => {
 				if (!evaluation.evaluator) {
-					const evaluatorRef = doc(FireStore, 'usersV2', evaluation.evaluatorId);
+					const evaluatorRef = createDocRef(Collections.users, evaluation.evaluatorId);
 					const promise = getDoc(evaluatorRef);
 
 					return promise;

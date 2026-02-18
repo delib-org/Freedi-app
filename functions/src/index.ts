@@ -22,7 +22,7 @@ import {
 	newEvaluation,
 	updateEvaluation,
 	updateChosenOptions,
-} from './fn_evaluation';
+} from './evaluation';
 import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,

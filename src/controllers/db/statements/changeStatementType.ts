@@ -1,5 +1,4 @@
-import { doc, getDoc, updateDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { getDoc, updateDoc, query, where, getDocs } from 'firebase/firestore';
 import {
 	Collections,
 	Statement,
@@ -8,6 +7,7 @@ import {
 	EvaluationUI,
 } from '@freedi/shared-types';
 import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
+import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 
 export async function changeStatementType(
 	statement: Statement,
@@ -33,7 +33,7 @@ export async function changeStatementType(
 
 		// Check parent type restrictions using unified validation
 		if (statement.parentId && statement.parentId !== 'top') {
-			const parentRef = doc(FireStore, Collections.statements, statement.parentId);
+			const parentRef = createStatementRef(statement.parentId);
 			const parentDoc = await getDoc(parentRef);
 
 			if (parentDoc.exists()) {
@@ -53,7 +53,7 @@ export async function changeStatementType(
 		if (newType === StatementType.option || newType === StatementType.group) {
 			// Check if this statement has option children
 			const childrenQuery = query(
-				collection(FireStore, Collections.statements),
+				createCollectionRef(Collections.statements),
 				where('parentId', '==', statement.statementId),
 				where('statementType', '==', StatementType.option),
 			);
@@ -93,7 +93,7 @@ export async function changeStatementType(
 		}
 
 		// Update the statement type
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 
 		await updateDoc(statementRef, updateData);
 

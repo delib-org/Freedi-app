@@ -1,9 +1,9 @@
 import { httpsCallable } from 'firebase/functions';
-import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
-import { FireStore, functions, auth } from '../config';
-import { Collections, Statement } from '@freedi/shared-types';
+import { updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { functions, auth } from '../config';
+import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
-import { getCurrentTimestamp } from '@/utils/firebaseUtils';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logger } from '@/services/logger';
 import { ImproveProposalResponse, StatementVersion } from '@/models/popperHebbian';
 
@@ -52,7 +52,7 @@ export async function applyImprovement(
 			throw new Error('User must be authenticated');
 		}
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const newVersion: StatementVersion = {
 			version: currentVersion + 1,
 			title: improvedTitle,
@@ -121,7 +121,7 @@ export async function revertToVersion(
 			throw new Error('Target version not found');
 		}
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		// Create revert version entry
 		const revertVersion: StatementVersion = {
@@ -171,7 +171,7 @@ export async function getStatementWithVersions(
 	statementId: string,
 ): Promise<Statement & { versions?: StatementVersion[]; currentVersion?: number }> {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const statementSnap = await getDoc(statementRef);
 
 		if (!statementSnap.exists()) {

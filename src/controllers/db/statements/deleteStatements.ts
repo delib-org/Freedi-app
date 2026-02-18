@@ -1,15 +1,7 @@
-import {
-	collection,
-	deleteDoc,
-	doc,
-	getDoc,
-	getDocs,
-	query,
-	where,
-	writeBatch,
-} from 'firebase/firestore';
+import { deleteDoc, getDoc, getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 
 export async function deleteStatementFromDB(
 	statement: Statement,
@@ -30,13 +22,13 @@ export async function deleteStatementFromDB(
 		}
 
 		//get all children and update their parentId to this statement's parentId
-		const childrenRef = collection(FireStore, Collections.statements);
+		const childrenRef = createCollectionRef(Collections.statements);
 		const q = query(childrenRef, where('parentId', '==', statement.statementId));
 		const children = await getDocs(q);
 		// Check if parent is a group and any child is an option
 		if (statement.parentId) {
 			// Get the parent statement
-			const parentRef = doc(FireStore, Collections.statements, statement.parentId);
+			const parentRef = createStatementRef(statement.parentId);
 			const parentDoc = await getDoc(parentRef);
 
 			// Check if parent is a group
@@ -58,12 +50,12 @@ export async function deleteStatementFromDB(
 		// Update each child's parentId to the deleted statement's parentId
 		const batch = writeBatch(FireStore);
 		children.docs.forEach((child) => {
-			const childRef = doc(FireStore, Collections.statements, child.id);
+			const childRef = createStatementRef(child.id);
 			batch.update(childRef, { parentId: statement.parentId });
 		});
 		await batch.commit();
 
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementRef = createStatementRef(statement.statementId);
 		await deleteDoc(statementRef);
 	} catch (error) {
 		console.error(error);

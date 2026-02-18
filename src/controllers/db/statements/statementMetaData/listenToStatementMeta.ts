@@ -1,10 +1,10 @@
 import { Dispatch } from '@reduxjs/toolkit';
-import { Unsubscribe, doc, onSnapshot } from 'firebase/firestore';
-import { FireStore } from '@/controllers/db/config';
+import { Unsubscribe, onSnapshot } from 'firebase/firestore';
 import { setStatementMetaData } from '@/redux/statements/statementsMetaSlice';
 import { store } from '@/redux/store';
 import { StatementMetaDataSchema, Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { createDocRef } from '@/utils/firebaseUtils';
 
 export function listenToStatementMetaData(statementId: string): Unsubscribe {
 	try {
@@ -13,7 +13,7 @@ export function listenToStatementMetaData(statementId: string): Unsubscribe {
 			throw new Error('Statement ID is missing');
 		}
 
-		const statementMetaDataRef = doc(FireStore, Collections.statementsMetaData, statementId);
+		const statementMetaDataRef = createDocRef(Collections.statementsMetaData, statementId);
 
 		return onSnapshot(statementMetaDataRef, (statementMetaDataDB) => {
 			try {

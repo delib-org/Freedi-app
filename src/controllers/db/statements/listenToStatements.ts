@@ -1,10 +1,14 @@
 import { Unsubscribe } from 'firebase/auth';
-import { and, collection, doc, limit, or, orderBy, query, where } from 'firebase/firestore';
+import { and, limit, or, orderBy, query, where } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 // Redux Store
-import { FireStore } from '../config';
+import {
+	createSubscriptionRef,
+	createStatementRef,
+	createCollectionRef,
+} from '@/utils/firebaseUtils';
 import {
 	deleteStatement,
 	removeMembership,
@@ -41,7 +45,7 @@ export const listenToStatementSubscription = (
 	try {
 		const dispatch = store.dispatch;
 		const docId = `${creator.uid}--${statementId}`;
-		const statementsSubscribeRef = doc(FireStore, Collections.statementsSubscribe, docId);
+		const statementsSubscribeRef = createSubscriptionRef(docId);
 
 		const listenerKey = generateListenerKey('statement-subscription', 'subscription', docId);
 
@@ -116,7 +120,7 @@ export const listenToStatement = (
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		const listenerKey = generateListenerKey('statement', 'statement', statementId);
 
@@ -159,7 +163,7 @@ export const listenToSubStatements = (
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 
 		// Reduce the initial load to 25 items for faster initial loading
 		// This should be enough for most use cases while dramatically improving load time
@@ -236,7 +240,7 @@ export const listenToSubStatements = (
 
 export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
 	try {
-		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+		const membersRef = createCollectionRef(Collections.statementsSubscribe);
 		const q = query(
 			membersRef,
 			where('statementId', '==', statementId),
@@ -281,7 +285,7 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 		if (numberOfLastMessages > 25) numberOfLastMessages = 25;
 		if (!statementId) throw new Error('Statement id is undefined');
 
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 		const q = query(
 			statementsRef,
 			where('topParentId', '==', statementId),
@@ -409,7 +413,7 @@ export const listenToUserSuggestions = (
 		if (!statementId) throw new Error('Statement id is undefined');
 		if (!userId) throw new Error('User id is undefined');
 
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 
 		// Query for options created by the user under this statement
 		const q = query(
@@ -476,7 +480,7 @@ const MAX_DESCENDANTS_LIMIT = 200;
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
 		// Wrap in and() as required by Firestore for composite filters
 		// Added limit to prevent loading too many documents at once

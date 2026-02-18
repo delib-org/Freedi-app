@@ -1,7 +1,7 @@
-import { Timestamp, doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
-import { Collections, Creator, Online, OnlineSchema } from '@freedi/shared-types';
+import { setDoc, deleteDoc, getDoc } from 'firebase/firestore';
+import { Creator, Online, OnlineSchema, Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { createDocRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 
 export async function setUserOnlineToDB(
 	statementId: string,
@@ -24,15 +24,14 @@ export async function setUserOnlineToDB(
 				email: user.email || null,
 				advanceUser: user.advanceUser || false,
 			},
-			// Use Timestamp.now().toMillis() to get a number that validates properly
-			lastUpdated: Timestamp.now().toMillis(),
+			lastUpdated: getCurrentTimestamp(),
 			tabInFocus: true,
 		};
 
 		// Validate with your schema
 		parse(OnlineSchema, onlineUser);
 
-		const onlineRef = doc(FireStore, Collections.online, onlineId);
+		const onlineRef = createDocRef(Collections.online, onlineId);
 
 		// Force write to server first, then local cache
 		await setDoc(onlineRef, onlineUser, {
@@ -58,14 +57,14 @@ export async function updateUserTabFocusToDB(
 		if (!userId) throw new Error('User ID is undefined');
 
 		const onlineId = `${userId}--${statementId}`;
-		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
+		const onlineUserRef = createDocRef(Collections.online, onlineId);
 
 		// Use setDoc with merge to create or update
 		await setDoc(
 			onlineUserRef,
 			{
 				tabInFocus,
-				lastUpdated: Timestamp.now().toMillis(),
+				lastUpdated: getCurrentTimestamp(),
 			},
 			{ merge: true },
 		);
@@ -103,7 +102,7 @@ export async function removeUserFromOnlineToDB(
 		const onlineId = `${userId}--${statementId}`;
 
 		// Check if document exists before trying to delete
-		const onlineUserRef = doc(FireStore, Collections.online, onlineId);
+		const onlineUserRef = createDocRef(Collections.online, onlineId);
 		const docSnapshot = await getDoc(onlineUserRef);
 
 		if (docSnapshot.exists()) {

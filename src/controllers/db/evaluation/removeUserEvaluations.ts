@@ -1,6 +1,7 @@
-import { collection, doc, getDocs, query, where, writeBatch } from 'firebase/firestore';
+import { getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Evaluation } from '@freedi/shared-types';
+import { createCollectionRef, createDocRef } from '@/utils/firebaseUtils';
 
 /**
  * Removes all evaluations and votes by a specific user for a statement and its options
@@ -23,7 +24,7 @@ export async function removeUserEvaluations(
 
 		// 1. Remove evaluations for all child options of this statement
 		// Query evaluations where the user evaluated options under this parent
-		const evaluationsRef = collection(FireStore, Collections.evaluations);
+		const evaluationsRef = createCollectionRef(Collections.evaluations);
 		const evaluationsQuery = query(
 			evaluationsRef,
 			where('parentId', '==', statementId),
@@ -54,7 +55,7 @@ export async function removeUserEvaluations(
 		// 2. Remove votes (for voting systems)
 		// The vote ID is constructed as {userId}--{parentId}
 		const voteId = `${userId}--${statementId}`;
-		const voteRef = doc(FireStore, Collections.votes, voteId);
+		const voteRef = createDocRef(Collections.votes, voteId);
 
 		// Check if vote exists and delete it
 		// Note: We can't check existence in a batch, so we'll try to delete
@@ -94,7 +95,7 @@ export async function removeAllUserEvaluations(userId: string): Promise<number> 
 		let evaluationsRemoved = 0;
 
 		// Query all evaluations by this user
-		const evaluationsRef = collection(FireStore, Collections.evaluations);
+		const evaluationsRef = createCollectionRef(Collections.evaluations);
 		const evaluationsQuery = query(evaluationsRef, where('evaluatorId', '==', userId));
 
 		const evaluationsSnapshot = await getDocs(evaluationsQuery);
@@ -108,7 +109,7 @@ export async function removeAllUserEvaluations(userId: string): Promise<number> 
 		});
 
 		// Also remove all votes by this user
-		const votesRef = collection(FireStore, Collections.votes);
+		const votesRef = createCollectionRef(Collections.votes);
 		const votesQuery = query(votesRef, where('userId', '==', userId));
 
 		const votesSnapshot = await getDocs(votesQuery);

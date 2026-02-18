@@ -1,6 +1,6 @@
-import { doc, setDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
-import { ResultsBy, Collections } from '@freedi/shared-types';
+import { setDoc } from 'firebase/firestore';
+import { ResultsBy } from '@freedi/shared-types';
+import { createStatementRef } from '@/utils/firebaseUtils';
 
 export async function updateResultsSettings(
 	statementId: string,
@@ -8,7 +8,7 @@ export async function updateResultsSettings(
 	numberOfResults = 3,
 ) {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		const results = {
 			numberOfResults,

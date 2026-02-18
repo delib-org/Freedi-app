@@ -1,11 +1,11 @@
-import { Role, Collections } from '@freedi/shared-types';
-import { doc, getDoc } from 'firebase/firestore';
+import { Role } from '@freedi/shared-types';
+import { getDoc } from 'firebase/firestore';
 import { updateMemberRole } from '../subscriptions/setSubscriptions';
 import { removeUserEvaluations } from '../evaluation/removeUserEvaluations';
 import { getStatementFromDB } from '../statements/getStatement';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
-import { FireStore } from '../config';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
+import { createSubscriptionRef } from '@/utils/firebaseUtils';
 
 /**
  * Bans a member from a statement by updating their role to banned
@@ -33,7 +33,7 @@ export async function banMember(
 			throw new Error('Error getting subscription ID');
 		}
 
-		const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, subscriptionId);
+		const subscriptionRef = createSubscriptionRef(subscriptionId);
 		const subscriptionDoc = await getDoc(subscriptionRef);
 
 		if (!subscriptionDoc.exists()) {
