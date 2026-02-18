@@ -28,6 +28,14 @@ playwright-report/
 
 .DS_Store
 
+# Debug screenshots and build analysis
+*.png
+!public/**/*.png
+!src/assets/**/*.png
+!apps/**/public/**/*.png
+!docs/**/*.png
+stats.html
+
 # Downloaded files (Hebrew)
 *.הורדה
 *הורדה*
