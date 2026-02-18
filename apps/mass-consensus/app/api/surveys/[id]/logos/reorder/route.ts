@@ -3,7 +3,7 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { getSurveyById, reorderSurveyLogos } from '@/lib/firebase/surveys';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Role } from 'delib-npm';
+import { Collections, Role } from '@freedi/shared-types';
 import type { ReorderLogosRequest } from '@/types/survey';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 
