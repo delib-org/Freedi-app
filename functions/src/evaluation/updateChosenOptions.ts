@@ -72,32 +72,16 @@ export async function updateParentStatementWithChosenOptions(
 	}
 
 	try {
-		logger.info(`updateParentStatementWithChosenOptions: Starting for parent ${parentId}`);
-
 		const parentStatement = await getParentStatement(parentId);
-		logger.info(
-			`updateParentStatementWithChosenOptions: Parent statement found, resultsSettings: ${JSON.stringify(parentStatement.resultsSettings)}`,
-		);
-
+		
 		// Use defaultResultsSettings if parent has no resultsSettings configured
 		const resultsSettings = parentStatement.resultsSettings || defaultResultsSettings;
-		logger.info(
-			`updateParentStatementWithChosenOptions: Using resultsSettings: ${JSON.stringify(resultsSettings)}`,
-		);
-
+		
 		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
-		logger.info(
-			`updateParentStatementWithChosenOptions: Found ${chosenOptions.length} chosen options`,
-		);
-
+		
 		if (chosenOptions.length > 0) {
-			logger.info(
-				`updateParentStatementWithChosenOptions: Updating parent with ${chosenOptions.length} results`,
-			);
 			await updateParentWithResults(parentId, chosenOptions);
-			logger.info(`updateParentStatementWithChosenOptions: Parent updated successfully`);
 		} else {
-			logger.info(`updateParentStatementWithChosenOptions: No chosen options, clearing results`);
 			await updateParentWithResults(parentId, []);
 		}
 
@@ -169,8 +153,6 @@ export async function updateParentTotalEvaluators(parentId: string): Promise<voi
 			totalEvaluators: totalUniqueEvaluators, // Also update the legacy field for compatibility
 			lastUpdate: Date.now(),
 		});
-
-		logger.info(`Updated parent ${parentId} with ${totalUniqueEvaluators} total unique evaluators`);
 	} catch (error) {
 		logger.error('Error updating parent total evaluators:', error);
 	}
@@ -264,10 +246,6 @@ async function getOptionsUsingMethod(
 ): Promise<Statement[] | undefined> {
 	const { numberOfResults, resultsBy, cutoffBy, cutoffNumber } = resultsSettings;
 
-	logger.info(
-		`getOptionsUsingMethod: parentId=${parentId}, numberOfResults=${numberOfResults}, resultsBy=${resultsBy}, cutoffBy=${cutoffBy}, cutoffNumber=${cutoffNumber}`,
-	);
-
 	// cutoffNumber serves as the minimum threshold (default to 0, meaning no minimum)
 	const effectiveCutoffNumber = cutoffNumber ?? 0;
 
@@ -279,10 +257,6 @@ async function getOptionsUsingMethod(
 	// Default to topOptions if cutoffBy is not specified
 	const effectiveCutoffBy = cutoffBy || CutoffBy.topOptions;
 
-	logger.info(
-		`getOptionsUsingMethod: effectiveCutoffBy=${effectiveCutoffBy}, effectiveCutoffNumber=${effectiveCutoffNumber}`,
-	);
-
 	if (effectiveCutoffBy === CutoffBy.topOptions) {
 		const effectiveNumberOfResults = numberOfResults || 5; // Default to 5 results
 
@@ -290,23 +264,12 @@ async function getOptionsUsingMethod(
 		// NO cutoffNumber filtering - just return top N regardless of their values
 		const snapshot = await baseQuery.get();
 
-		logger.info(`getOptionsUsingMethod (topOptions): Query returned ${snapshot.size} documents`);
-
 		if (snapshot.empty) {
-			logger.info(`getOptionsUsingMethod: No options found for parent ${parentId}`);
-
 			return [];
 		}
 
 		const options = snapshot.docs
-			.map((doc) => {
-				const data = doc.data() as Statement;
-				logger.info(
-					`getOptionsUsingMethod: Option ${doc.id}, statementType=${data.statementType}, consensus=${data.consensus}, hide=${data.hide}`,
-				);
-
-				return data;
-			})
+			.map((doc) => doc.data() as Statement)
 			// Filter out hidden statements (e.g., merged source statements)
 			.filter((opt) => !opt.hide);
 
@@ -314,21 +277,12 @@ async function getOptionsUsingMethod(
 		const sortedOptions = sortOptionsByResultsBy(options, resultsBy);
 
 		// Return top N results (no cutoff filtering in topOptions mode)
-		const result = sortedOptions.slice(0, Math.ceil(Number(effectiveNumberOfResults)));
-		logger.info(
-			`getOptionsUsingMethod (topOptions): Returning top ${result.length} options (limit: ${effectiveNumberOfResults})`,
-		);
-
-		return result;
+		return sortedOptions.slice(0, Math.ceil(Number(effectiveNumberOfResults)));
 	}
 
 	if (effectiveCutoffBy === CutoffBy.aboveThreshold) {
 		// Get all options and filter in memory to handle undefined fields
 		const snapshot = await baseQuery.get();
-
-		logger.info(
-			`getOptionsUsingMethod (aboveThreshold): Query returned ${snapshot.size} documents`,
-		);
 
 		if (snapshot.empty) {
 			return [];
@@ -339,9 +293,6 @@ async function getOptionsUsingMethod(
 		// Filter options above the threshold
 		const filtered = options.filter(
 			(opt) => getEvaluationValue(opt, resultsBy) > effectiveCutoffNumber,
-		);
-		logger.info(
-			`getOptionsUsingMethod (aboveThreshold): After filtering, ${filtered.length} options remain`,
 		);
 
 		return filtered;
@@ -384,25 +335,14 @@ async function updateParentWithResults(
 	parentId: string,
 	chosenOptions: Statement[],
 ): Promise<void> {
-	logger.info(
-		`updateParentWithResults: Starting update for parent ${parentId} with ${chosenOptions.length} options`,
-	);
 
 	const childStatementsSimple = chosenOptions.map(statementToSimpleStatement);
-
-	logger.info(
-		`updateParentWithResults: Converted to ${childStatementsSimple.length} simple statements`,
-	);
-	logger.info(
-		`updateParentWithResults: Results data: ${JSON.stringify(childStatementsSimple.map((s) => ({ id: s.statementId, statement: s.statement?.substring(0, 30) })))}`,
-	);
 
 	try {
 		await db.collection(Collections.statements).doc(parentId).update({
 			totalResults: childStatementsSimple.length,
 			results: childStatementsSimple,
 		});
-		logger.info(`updateParentWithResults: Successfully updated parent ${parentId} with results`);
 	} catch (error) {
 		logger.error(`updateParentWithResults: Failed to update parent ${parentId}:`, error);
 		throw error;
