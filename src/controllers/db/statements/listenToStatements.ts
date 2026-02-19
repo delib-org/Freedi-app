@@ -17,7 +17,7 @@ import {
 	setStatementSubscription,
 	setStatements,
 } from '@/redux/statements/statementsSlice';
-import { AppDispatch, store } from '@/redux/store';
+import { AppDispatch } from '@/redux/store';
 import {
 	StatementSubscription,
 	Role,
@@ -40,10 +40,10 @@ import {
 export const listenToStatementSubscription = (
 	statementId: string,
 	creator: Creator,
+	dispatch: AppDispatch,
 	setHasSubscription?: React.Dispatch<React.SetStateAction<boolean>>,
 ): Unsubscribe => {
 	try {
-		const dispatch = store.dispatch;
 		const docId = `${creator.uid}--${statementId}`;
 		const statementsSubscribeRef = createSubscriptionRef(docId);
 
@@ -70,8 +70,8 @@ export const listenToStatementSubscription = (
 
 					const { role } = statementSubscription;
 
-					//@ts-ignore
-					if (role === 'statement-creator') {
+					// Migrate legacy 'statement-creator' role to admin
+					if (role === Role.creator) {
 						statementSubscription.role = Role.admin;
 					} else if (role === undefined) {
 						statementSubscription.role = Role.unsubscribed;
@@ -115,10 +115,10 @@ export const listenToStatementSubscription = (
 
 export const listenToStatement = (
 	statementId: string | undefined,
+	dispatch: AppDispatch,
 	setIsStatementNotFound?: React.Dispatch<React.SetStateAction<boolean>>,
 ): Unsubscribe => {
 	try {
-		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		const statementRef = createStatementRef(statementId);
 
@@ -157,11 +157,11 @@ export const listenToStatement = (
 
 export const listenToSubStatements = (
 	statementId: string | undefined,
+	dispatch: AppDispatch,
 	topBottom?: 'top' | 'bottom',
 	numberOfOptions?: number,
 ): Unsubscribe => {
 	try {
-		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		const statementsRef = createCollectionRef(Collections.statements);
 
@@ -280,7 +280,7 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 	}
 };
 
-export function listenToAllSubStatements(statementId: string, numberOfLastMessages = 7) {
+export function listenToAllSubStatements(statementId: string, dispatch: AppDispatch, numberOfLastMessages = 7) {
 	try {
 		if (numberOfLastMessages > 25) numberOfLastMessages = 25;
 		if (!statementId) throw new Error('Statement id is undefined');
@@ -346,10 +346,10 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 					switch (change.type) {
 						case 'added':
 						case 'modified':
-							store.dispatch(setStatement(statement));
+							dispatch(setStatement(statement));
 							break;
 						case 'removed':
-							store.dispatch(deleteStatement(statement.statementId));
+							dispatch(deleteStatement(statement.statementId));
 							break;
 					}
 				});
@@ -368,9 +368,9 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 export const listenToUserSuggestions = (
 	statementId: string | undefined,
 	userId: string | undefined,
+	dispatch: AppDispatch,
 ): Unsubscribe => {
 	try {
-		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
 		if (!userId) throw new Error('User id is undefined');
 
@@ -439,7 +439,7 @@ export const listenToUserSuggestions = (
 // Maximum number of descendants to load at once for performance
 const MAX_DESCENDANTS_LIMIT = 200;
 
-export function listenToAllDescendants(statementId: string): Unsubscribe {
+export function listenToAllDescendants(statementId: string, dispatch: AppDispatch): Unsubscribe {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
@@ -491,7 +491,7 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 
 					// Dispatch all statements at once instead of one by one
 					if (statements.length > 0) {
-						store.dispatch(setStatements(statements));
+						dispatch(setStatements(statements));
 						console.info(
 							`[listenToAllDescendants] Loaded ${statements.length} descendants for statement ${statementId}`,
 						);
@@ -507,9 +507,9 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 							const statement = parse(StatementSchema, normalizeStatementData(change.doc.data()));
 
 							if (change.type === 'added' || change.type === 'modified') {
-								store.dispatch(setStatement(statement));
+								dispatch(setStatement(statement));
 							} else if (change.type === 'removed') {
-								store.dispatch(deleteStatement(statement.statementId));
+								dispatch(deleteStatement(statement.statementId));
 							}
 						} catch (error) {
 							logError(error, {

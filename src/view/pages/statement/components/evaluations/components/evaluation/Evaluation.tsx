@@ -7,6 +7,25 @@ import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
 import { logError } from '@/utils/errorHandling';
 
+/** Common props accepted by all evaluation components in the registry */
+interface CommonEvaluationProps {
+	statement: Statement;
+	parentStatement?: Statement;
+	shouldDisplayScore?: boolean;
+	enableEvaluation?: boolean;
+}
+
+/** Registry mapping evaluation type strings to their component implementations */
+const EVALUATION_REGISTRY: Record<string, FC<CommonEvaluationProps>> = {
+	'single-like': SingleLikeEvaluation,
+	'range': EnhancedEvaluation as FC<CommonEvaluationProps>,
+	'community-voice': CommunityVoiceEvaluation as FC<CommonEvaluationProps>,
+	'like-dislike': SimpleEvaluation,
+};
+
+/** Default evaluation component when no type matches */
+const DEFAULT_EVALUATION: FC<CommonEvaluationProps> = SimpleEvaluation;
+
 interface EvaluationProps {
 	statement?: Statement;
 }
@@ -29,34 +48,19 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 		const evaluationType = parentStatement.statementSettings?.evaluationType;
 		const enhancedEvaluation = parentStatement.statementSettings?.enhancedEvaluation;
 
-		// Handle evaluation type routing
+		// Common props passed to all evaluation components
+		const commonProps: CommonEvaluationProps = {
+			statement,
+			parentStatement,
+			shouldDisplayScore,
+			enableEvaluation,
+		};
+
+		// Handle evaluation type routing via registry
 		if (evaluationType) {
-			switch (evaluationType) {
-				case 'single-like':
-					return (
-						<SingleLikeEvaluation
-							statement={statement}
-							parentStatement={parentStatement}
-							shouldDisplayScore={shouldDisplayScore}
-							enableEvaluation={enableEvaluation}
-						/>
-					);
-				case 'range':
-					return <EnhancedEvaluation statement={statement} enableEvaluation={enableEvaluation} />;
-				case 'community-voice':
-					return (
-						<CommunityVoiceEvaluation statement={statement} enableEvaluation={enableEvaluation} />
-					);
-				case 'like-dislike':
-				default:
-					return (
-						<SimpleEvaluation
-							statement={statement}
-							shouldDisplayScore={shouldDisplayScore}
-							enableEvaluation={enableEvaluation}
-						/>
-					);
-			}
+			const EvalComponent = EVALUATION_REGISTRY[evaluationType] ?? DEFAULT_EVALUATION;
+
+			return <EvalComponent {...commonProps} />;
 		}
 
 		// Backward compatibility: if no evaluationType, use enhancedEvaluation boolean

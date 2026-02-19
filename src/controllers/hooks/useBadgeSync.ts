@@ -13,22 +13,18 @@ const setAppBadge = async (count: number): Promise<void> => {
 			if ('clearAppBadge' in navigator) {
 				await navigator.clearAppBadge();
 			} else if ('clearExperimentalAppBadge' in navigator) {
-				// @ts-expect-error - Experimental API
 				await navigator.clearExperimentalAppBadge();
 			} else if ('ExperimentalBadge' in window) {
-				// @ts-expect-error - Experimental API
-				await window.ExperimentalBadge.clear();
+				await window.ExperimentalBadge?.clear();
 			}
 		} else {
 			// Set badge count
 			if ('setAppBadge' in navigator) {
 				await navigator.setAppBadge(count);
 			} else if ('setExperimentalAppBadge' in navigator) {
-				// @ts-expect-error - Experimental API
 				await navigator.setExperimentalAppBadge(count);
 			} else if ('ExperimentalBadge' in window) {
-				// @ts-expect-error - Experimental API
-				await window.ExperimentalBadge.set(count);
+				await window.ExperimentalBadge?.set(count);
 			}
 		}
 	} catch (error) {

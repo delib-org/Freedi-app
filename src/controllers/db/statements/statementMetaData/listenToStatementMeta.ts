@@ -31,7 +31,6 @@ export function listenToStatementMetaData(statementId: string): Unsubscribe {
 	} catch (error) {
 		logError(error, { operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData' });
 
-		//@ts-ignore
 		return () => {
 			logError(new Error('Unsubscribe function not returned'), { operation: 'statements.statementMetaData.listenToStatementMeta.not' });
 		};

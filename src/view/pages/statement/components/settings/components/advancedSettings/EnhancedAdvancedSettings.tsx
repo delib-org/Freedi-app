@@ -5,9 +5,14 @@ import { defaultStatementSettings } from '../../emptyStatementModel';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { StatementSettings, Collections } from '@freedi/shared-types';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { FireStore } from '@/controllers/db/config';
+import { StatementSettings } from '@freedi/shared-types';
+import {
+	setStatementHideDB,
+	setStatementIsDocumentDB,
+	setStatementDefaultLanguageDB,
+	setStatementForceLanguageDB,
+	setStatementPowerFollowMeDB,
+} from '@/controllers/db/statements/updateStatementProperties';
 import {
 	Eye,
 	EyeOff,
@@ -164,29 +169,23 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 	}
 
 	function handleHideChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { hide: newValue }, { merge: true });
+		setStatementHideDB(statement.statementId, newValue);
 	}
 
 	function handleIsDocumentChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { isDocument: newValue, lastUpdate: Date.now() }, { merge: true });
+		setStatementIsDocumentDB(statement.statementId, newValue);
 	}
 
 	function handleDefaultLanguageChange(newLanguage: string) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
+		setStatementDefaultLanguageDB(statement.statementId, newLanguage);
 	}
 
 	function handleForceLanguageChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { forceLanguage: newValue, lastUpdate: Date.now() }, { merge: true });
+		setStatementForceLanguageDB(statement.statementId, newValue);
 	}
 
 	function handlePowerFollowMeChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		const powerFollowMePath = newValue ? `/statement/${statement.statementId}/chat` : '';
-		updateDoc(statementRef, { powerFollowMe: powerFollowMePath, lastUpdate: Date.now() });
+		setStatementPowerFollowMeDB(statement.statementId, newValue);
 	}
 
 	return (

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import styles from './MainQuestionCard.module.scss';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { statementSelector } from '@/redux/statements/statementsSlice';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, Statement } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
@@ -13,18 +14,19 @@ interface Props {
 }
 
 const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
+	const dispatch = useAppDispatch();
 	const statement: Statement | undefined = useSelector(
 		statementSelector(simpleStatement.statementId),
 	);
 	const lastMessage = statement?.lastMessage;
 
 	useEffect(() => {
-		const unsubscribe = listenToStatement(simpleStatement.statementId);
+		const unsubscribe = listenToStatement(simpleStatement.statementId, dispatch);
 
 		return () => {
 			unsubscribe();
 		};
-	}, []);
+	}, [dispatch, simpleStatement.statementId]);
 
 	return (
 		<Link

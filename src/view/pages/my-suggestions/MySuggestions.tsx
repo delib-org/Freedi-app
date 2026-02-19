@@ -27,18 +27,18 @@ const MySuggestions: FC = () => {
 		if (!statementId) return;
 
 		// Listen to the statement itself
-		const unsubscribeStatement = listenToStatement(statementId);
+		const unsubscribeStatement = listenToStatement(statementId, dispatch);
 
 		// Listen to user's own suggestions only
 		const unsubscribeUserSuggestions = userId
-			? listenToUserSuggestions(statementId, userId)
+			? listenToUserSuggestions(statementId, userId, dispatch)
 			: () => {};
 
 		return () => {
 			unsubscribeStatement();
 			unsubscribeUserSuggestions();
 		};
-	}, [statementId, userId]);
+	}, [statementId, userId, dispatch]);
 
 	useEffect(() => {
 		// Fetch subscription if we have a user

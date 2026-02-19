@@ -5,14 +5,8 @@ import { defaultStatementSettings } from '../../emptyStatementModel';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './ImprovedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import {
-	StatementSettings,
-	StatementType,
-	evaluationType,
-	Collections,
-} from '@freedi/shared-types';
-import { doc, setDoc } from 'firebase/firestore';
-import { FireStore } from '@/controllers/db/config';
+import { StatementSettings, StatementType, evaluationType } from '@freedi/shared-types';
+import { setStatementHideDB } from '@/controllers/db/statements/updateStatementProperties';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 import clsx from 'clsx';
 
@@ -250,8 +244,7 @@ const ImprovedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	// Handler for hide toggle (root-level property)
 	function handleHideChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { hide: newValue }, { merge: true });
+		setStatementHideDB(statement.statementId, newValue);
 	}
 
 	function handleVoteLimitToggle(enabled: boolean) {

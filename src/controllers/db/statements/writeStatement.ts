@@ -1,5 +1,5 @@
 import { setDoc, updateDoc } from 'firebase/firestore';
-import { store } from '@/redux/store';
+import { AppDispatch } from '@/redux/store';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,
@@ -28,11 +28,17 @@ import { createStatement, CreateStatementProps } from './createStatement';
 interface SetStatementToDBParams {
 	statement: Statement;
 	parentStatement: Statement | 'top';
+	creator: Creator;
+	existingStatements: Statement[];
+	dispatch: AppDispatch;
 }
 
 export const setStatementToDB = async ({
 	statement,
 	parentStatement,
+	creator,
+	existingStatements,
+	dispatch,
 }: SetStatementToDBParams): Promise<
 	| {
 			statementId: string;
@@ -44,8 +50,6 @@ export const setStatementToDB = async ({
 		if (!statement) throw new Error('Statement is undefined');
 		if (!parentStatement) throw new Error('Parent statement is undefined');
 
-		const storeState = store.getState();
-		const creator: Creator = storeState.creator?.creator;
 		if (!creator) throw new Error('Creator is undefined');
 
 		if (statement.statement.length < 2) {
@@ -73,7 +77,7 @@ export const setStatementToDB = async ({
 		// Update statement reference to use the mutable copy
 		statement = mutableStatement;
 
-		const siblingOptions = getSiblingOptionsByParentId(parentId, storeState.statements.statements);
+		const siblingOptions = getSiblingOptionsByParentId(parentId, existingStatements);
 		const existingColors = getExistingOptionColors(siblingOptions);
 
 		statement.consensus = 0;
@@ -133,12 +137,12 @@ export const setStatementToDB = async ({
 
 		// Track PWA install prompt triggers
 		if (statement.statementType === StatementType.option) {
-			store.dispatch(incrementOptionsCreated());
+			dispatch(incrementOptionsCreated());
 		}
 
 		// Track if user created a top-level group
 		if (statement.parentId === 'top') {
-			store.dispatch(setHasCreatedGroup(true));
+			dispatch(setHasCreatedGroup(true));
 		}
 
 		return { statementId: statement.statementId, statement };
@@ -154,6 +158,9 @@ export async function saveStatementToDB({
 	paragraphs,
 	parentStatement,
 	statementType,
+	creator,
+	existingStatements,
+	dispatch,
 	enableAddEvaluationOption,
 	enableAddVotingOption,
 	enhancedEvaluation,
@@ -164,13 +171,15 @@ export async function saveStatementToDB({
 	defaultLanguage,
 	membership,
 	stageSelectionType,
-}: CreateStatementProps): Promise<Statement | undefined> {
+}: CreateStatementProps & { dispatch: AppDispatch }): Promise<Statement | undefined> {
 	try {
 		const statement = createStatement({
 			text,
 			paragraphs,
 			parentStatement,
 			statementType,
+			creator,
+			existingStatements,
 			enableAddEvaluationOption,
 			enableAddVotingOption,
 			enhancedEvaluation,
@@ -188,6 +197,9 @@ export async function saveStatementToDB({
 		await setStatementToDB({
 			statement,
 			parentStatement,
+			creator,
+			existingStatements,
+			dispatch,
 		});
 
 		if (statement.statementType !== StatementType.group) {

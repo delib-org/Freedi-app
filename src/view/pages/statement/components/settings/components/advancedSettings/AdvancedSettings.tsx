@@ -6,14 +6,13 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import styles from './AdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { StatementSettings, StatementType, evaluationType } from '@freedi/shared-types';
 import {
-	StatementSettings,
-	StatementType,
-	evaluationType,
-	Collections,
-} from '@freedi/shared-types';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { FireStore } from '@/controllers/db/config';
+	setStatementHideDB,
+	setStatementDefaultLanguageDB,
+	setStatementForceLanguageDB,
+	setStatementPowerFollowMeDB,
+} from '@/controllers/db/statements/updateStatementProperties';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
@@ -142,27 +141,22 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 	// Handler for hide toggle (root-level property)
 	function handleHideChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { hide: newValue }, { merge: true });
+		setStatementHideDB(statement.statementId, newValue);
 	}
 
 	// Handler for defaultLanguage (root-level property for survey language)
 	function handleDefaultLanguageChange(newLanguage: string) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
+		setStatementDefaultLanguageDB(statement.statementId, newLanguage);
 	}
 
 	// Handler for powerFollowMe toggle (root-level property)
 	function handlePowerFollowMeChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		const powerFollowMePath = newValue ? `/statement/${statement.statementId}/chat` : '';
-		updateDoc(statementRef, { powerFollowMe: powerFollowMePath, lastUpdate: Date.now() });
+		setStatementPowerFollowMeDB(statement.statementId, newValue);
 	}
 
 	// Handler for forceLanguage (root-level property for forcing survey language)
 	function handleForceLanguageChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		setDoc(statementRef, { forceLanguage: newValue, lastUpdate: Date.now() }, { merge: true });
+		setStatementForceLanguageDB(statement.statementId, newValue);
 	}
 
 	function handleVoteLimitToggle(enabled: boolean) {

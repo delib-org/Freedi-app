@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import {
 	listenToStatement,
 	listenToSubStatements,
@@ -41,6 +42,7 @@ export const useStatementListeners = ({
 	setError,
 }: UseStatementListenersProps) => {
 	const { creator } = useAuthentication();
+	const dispatch = useAppDispatch();
 	const unsubscribersRef = useRef<(() => void)[]>([]);
 	const previousStatementIdRef = useRef<string | undefined>();
 
@@ -86,8 +88,8 @@ export const useStatementListeners = ({
 
 			// Core listeners
 			unsubscribersRef.current.push(
-				listenToStatement(statementId, setIsStatementNotFound),
-				listenToStatementSubscription(statementId, creator),
+				listenToStatement(statementId, dispatch, setIsStatementNotFound),
+				listenToStatementSubscription(statementId, creator, dispatch),
 				listenToUserDemographicQuestions(statementId),
 				listenToUserDemographicAnswers(statementId),
 				listenToInAppNotifications(),
@@ -96,14 +98,14 @@ export const useStatementListeners = ({
 			// Conditional listeners based on screen
 			if (currentScreen === 'mind-map') {
 				// Use consolidated listener to avoid dual listener overhead
-				unsubscribersRef.current.push(listenToMindMapData(statementId));
+				unsubscribersRef.current.push(listenToMindMapData(statementId, dispatch));
 			} else {
-				unsubscribersRef.current.push(listenToSubStatements(statementId));
+				unsubscribersRef.current.push(listenToSubStatements(statementId, dispatch));
 			}
 
 			// Stage listener
 			if (stageId) {
-				unsubscribersRef.current.push(listenToStatement(stageId, setIsStatementNotFound));
+				unsubscribersRef.current.push(listenToStatement(stageId, dispatch, setIsStatementNotFound));
 			}
 		} catch (error) {
 			logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error setting up listeners:' } });
@@ -111,7 +113,7 @@ export const useStatementListeners = ({
 		}
 
 		return cleanup;
-	}, [creator, statementId, stageId, screen, setIsStatementNotFound, setError]);
+	}, [creator, statementId, stageId, screen, setIsStatementNotFound, setError, dispatch]);
 
 	// Effect for top parent statement and group-level demographic questions
 	// This effect now properly depends on topParentId from Redux selector
@@ -123,7 +125,7 @@ export const useStatementListeners = ({
 		// If this is a child statement (not the top parent itself), also listen to top parent
 		if (topParentId !== statementId) {
 			// Listen to top parent statement for followMe updates
-			unsubscribers.push(listenToStatement(topParentId, () => {}));
+			unsubscribers.push(listenToStatement(topParentId, dispatch, () => {}));
 		}
 
 		// Always listen to group-level demographic questions and answers for the group

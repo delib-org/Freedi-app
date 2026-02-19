@@ -1,5 +1,5 @@
 import { Statement, Role, StatementType, Screen } from '@freedi/shared-types';
-import { ReactNode, useEffect, lazy, Suspense } from 'react';
+import { FC, ReactNode, useEffect, lazy, Suspense } from 'react';
 import GroupPage from '../statementTypes/group/GroupPage';
 import QuestionPage from '../statementTypes/question/QuestionPage';
 import { useParams } from 'react-router';
@@ -18,6 +18,13 @@ const StatementSettings = lazy(() => import('../settings/StatementSettings'));
 const PolarizationIndexComp = lazy(
 	() => import('@/view/components/maps/polarizationIndex/PolarizationIndex'),
 );
+
+/** Registry mapping statement types to their page components */
+const STATEMENT_TYPE_REGISTRY: Partial<Record<StatementType, FC>> = {
+	[StatementType.group]: GroupPage,
+	[StatementType.question]: QuestionPage,
+	[StatementType.option]: QuestionPage,
+};
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -83,26 +90,24 @@ function SwitchScreen({ statement, role }: Readonly<SwitchScreenProps>): ReactNo
 		screen = 'main';
 	}
 
-	switch (screen) {
-		case Screen.polarizationIndex:
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<PolarizationIndexComp />
-				</Suspense>
-			);
-		case Screen.agreementMap:
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<Triangle />
-				</Suspense>
-			);
-		case Screen.mindMap:
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<MindMap />
-				</Suspense>
-			);
-		case Screen.chat:
+	// Screen routing registry (created inside component for access to local state/props)
+	const screenRegistry: Record<string, () => ReactNode> = {
+		[Screen.polarizationIndex]: () => (
+			<Suspense fallback={<LoadingPage />}>
+				<PolarizationIndexComp />
+			</Suspense>
+		),
+		[Screen.agreementMap]: () => (
+			<Suspense fallback={<LoadingPage />}>
+				<Triangle />
+			</Suspense>
+		),
+		[Screen.mindMap]: () => (
+			<Suspense fallback={<LoadingPage />}>
+				<MindMap />
+			</Suspense>
+		),
+		[Screen.chat]: () => {
 			// For chat screen with Popperian-Hegelian enabled, show both components
 			if (isPopperHebbianEnabled && statement) {
 				return (
@@ -123,17 +128,18 @@ function SwitchScreen({ statement, role }: Readonly<SwitchScreenProps>): ReactNo
 					<Chat />
 				</Suspense>
 			);
-		case Screen.settings:
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<StatementSettings />
-				</Suspense>
-			);
-		case 'main':
-			return <SwitchStatementType statement={statement} />;
-		default:
-			return <SwitchStatementType statement={statement} />;
-	}
+		},
+		[Screen.settings]: () => (
+			<Suspense fallback={<LoadingPage />}>
+				<StatementSettings />
+			</Suspense>
+		),
+	};
+
+	const renderScreen = screen ? screenRegistry[screen] : undefined;
+	if (renderScreen) return renderScreen();
+
+	return <SwitchStatementType statement={statement} />;
 }
 
 function SwitchStatementType({
@@ -142,16 +148,11 @@ function SwitchStatementType({
 	statement: Statement | undefined;
 }>): ReactNode {
 	const statementType = statement?.statementType;
+	if (!statementType) return null;
 
-	switch (statementType) {
-		case StatementType.group:
-			return <GroupPage />;
-		case StatementType.question:
-		case StatementType.option:
-			return <QuestionPage />;
-		default:
-			return null;
-	}
+	const PageComponent = STATEMENT_TYPE_REGISTRY[statementType];
+
+	return PageComponent ? <PageComponent /> : null;
 }
 
 export default SwitchScreen;

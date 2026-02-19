@@ -6,7 +6,7 @@ import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
 import ChatInput from './components/input/ChatInput';
 import NewMessages from './components/newMessages/NewMessages';
 import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
-import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { useAppSelector, useAppDispatch } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import Description from '../evaluations/components/description/Description';
 import { Statement } from '@freedi/shared-types';

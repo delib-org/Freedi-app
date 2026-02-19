@@ -200,6 +200,32 @@ export {
   StatementSchema,
   StatementMetaDataSchema
 } from "./models/statement/StatementTypes";
+
+// Statement Sub-Types (ISP decomposition)
+export type {
+  StatementCore,
+  SignDocumentFields,
+  EvaluationFields,
+  VotingFields,
+  MassConsensusFields,
+  DiscussionFields,
+  AccessFields,
+  MediaFields,
+  StageFields,
+  QuestionnaireFields,
+  CreatorDataFields,
+  StatementUIState,
+  SignStatement,
+  MCStatement,
+  StatementSummary,
+} from "./models/statement/StatementSubTypes";
+
+export {
+  isSignDocument,
+  isMassConsensusStatement,
+  hasEvaluation,
+  hasVotingData,
+} from "./models/statement/StatementSubTypes";
 export {
   createBasicStatement,
   createStatementObject,

@@ -44,13 +44,13 @@ const SuggestionComment: FC<Props> = ({ statement, parentStatement }) => {
 	const commentsRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		const unsubscribe = listenToSubStatements(statement.statementId);
+		const unsubscribe = listenToSubStatements(statement.statementId, dispatch);
 
 		return () => {
 			unsubscribe();
 			clearInAppNotifications(statement.statementId);
 		};
-	}, []);
+	}, [statement.statementId, dispatch]);
 
 	useEffect(() => {
 		if (previousEvaluation) {

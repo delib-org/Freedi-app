@@ -27,20 +27,22 @@ export function monitorPushEvents() {
 	if ('Notification' in window) {
 		// Override Notification constructor to log when notifications are created
 		const OriginalNotification = window.Notification;
-		// @ts-ignore
-		window.Notification = function (...args) {
+		const MonitoredNotification = function (
+			title: string,
+			options?: NotificationOptions,
+		): Notification {
 			eventCount++;
 			console.info(`[Event ${eventCount}] Notification Created`);
-			console.info('Title:', { title: args[0] });
-			console.info('Options:', { options: args[1] });
+			console.info('Title:', { title });
+			console.info('Options:', { options });
 			console.info('---\n');
 
-			// @ts-ignore
-			return new OriginalNotification(...args);
-		};
+			return new OriginalNotification(title, options);
+		} as unknown as typeof Notification;
 		// Copy static properties
-		Object.setPrototypeOf(window.Notification, OriginalNotification);
-		Object.setPrototypeOf(window.Notification.prototype, OriginalNotification.prototype);
+		Object.setPrototypeOf(MonitoredNotification, OriginalNotification);
+		Object.setPrototypeOf(MonitoredNotification.prototype, OriginalNotification.prototype);
+		window.Notification = MonitoredNotification;
 	}
 
 	// Check service worker state

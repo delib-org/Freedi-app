@@ -1,4 +1,3 @@
-import { store } from '@/redux/store';
 import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import {
 	getExistingOptionColors,
@@ -18,6 +17,7 @@ import {
 	EvaluationUI,
 	CutoffBy,
 	Paragraph,
+	Creator,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -31,6 +31,8 @@ export interface CreateStatementProps {
 	paragraphs?: Paragraph[];
 	parentStatement: Statement | 'top';
 	statementType: StatementType;
+	creator: Creator;
+	existingStatements: Statement[];
 	questionType?: QuestionType;
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
@@ -50,6 +52,8 @@ export function createStatement({
 	paragraphs,
 	parentStatement,
 	statementType,
+	creator,
+	existingStatements,
 	questionType,
 	enableAddEvaluationOption = true,
 	enableNavigationalElements,
@@ -68,8 +72,6 @@ export function createStatement({
 			hasChildren = false;
 			defaultLanguage = defaultLanguage ?? LanguagesEnum.he;
 		}
-		const storeState = store.getState();
-		const creator = storeState.creator?.creator;
 		if (!isStatementTypeAllowedAsChildren(parentStatement, statementType)) {
 			return;
 		}
@@ -90,7 +92,7 @@ export function createStatement({
 
 		const topParentId = parentStatement !== 'top' ? parentStatement?.topParentId : statementId;
 
-		const siblingOptions = getSiblingOptionsByParentId(parentId, storeState.statements.statements);
+		const siblingOptions = getSiblingOptionsByParentId(parentId, existingStatements);
 		const existingColors = getExistingOptionColors(siblingOptions);
 
 		const newStatement: Statement = {

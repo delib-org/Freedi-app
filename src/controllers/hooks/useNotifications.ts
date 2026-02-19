@@ -186,7 +186,6 @@ export const useNotifications = (statementId?: string) => {
 				body: 'This is a test notification',
 				icon: '/icons/logo-192px.png',
 				badge: '/icons/logo-48px.png',
-				//@ts-ignore
 				vibrate: [100, 50, 100],
 				actions: [
 					{
