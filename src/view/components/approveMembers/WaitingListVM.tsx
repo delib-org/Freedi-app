@@ -28,7 +28,7 @@ export function useApproveMembership() {
 				try {
 					unsubscribe();
 				} catch (error) {
-					logError(error, { operation: 'approveMemebers.WaitingListVM.waitingList', metadata: { message: 'Error cleaning up waiting membership listener:' } });
+					logError(error, { operation: 'approveMembers.WaitingListVM.waitingList', metadata: { message: 'Error cleaning up waiting membership listener:' } });
 				}
 			}
 		};

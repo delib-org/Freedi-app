@@ -13,7 +13,7 @@ const initialState: NotificationsState = {
 	inAppNotifications: [],
 };
 
-export const notificationsSlicer = createSlice({
+export const notificationsSlice = createSlice({
 	name: 'notifications',
 	initialState,
 	reducers: {
@@ -154,7 +154,7 @@ export const {
 	markStatementNotificationsAsRead,
 	markNotificationsAsViewedInList,
 	markAllNotificationsAsRead,
-} = notificationsSlicer.actions;
+} = notificationsSlice.actions;
 
 // Selectors use narrowly-typed state parameters to avoid circular dependencies with store.ts
 export const inAppNotificationsSelector = (state: { notifications: NotificationsState }) =>
@@ -196,4 +196,4 @@ export const unreadNotificationsForStatementSelector = (statementId: string) =>
 			notifications.filter((n) => n.parentId === statementId && (!n.read || n.read === undefined)),
 	);
 
-export default notificationsSlicer.reducer;
+export default notificationsSlice.reducer;

@@ -49,7 +49,7 @@ const initialState: StatementsState = {
 	screen: StatementScreen.chat,
 };
 
-export const statementsSlicer = createSlice({
+export const statementsSlice = createSlice({
 	name: 'statements',
 	initialState,
 	reducers: {
@@ -358,7 +358,7 @@ export const {
 	setCurrentMultiStepOptions,
 	setMassConsensusStatements,
 	updateStoreResultsSettings,
-} = statementsSlicer.actions;
+} = statementsSlice.actions;
 
 // statements
 export const totalMessageBoxesSelector = (state: { statements: StatementsState }) =>
@@ -488,4 +488,4 @@ export const userSuggestionsSelector = (parentId: string | undefined, userId: st
 		sortByCreatedAt,
 	);
 
-export default statementsSlicer.reducer;
+export default statementsSlice.reducer;

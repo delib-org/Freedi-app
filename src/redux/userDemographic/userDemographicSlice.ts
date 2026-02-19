@@ -26,7 +26,7 @@ const initialState: UserDemographicState = {
 	},
 };
 
-const userDemographicSlice = createSlice({
+export const userDemographicSlice = createSlice({
 	name: 'userDemographic',
 	initialState,
 	reducers: {
@@ -182,5 +182,3 @@ export const selectUnansweredGroupQuestions = (topParentId: string) =>
 // Select group demographic modal state
 export const selectShowGroupDemographicModal = (state: { userDemographic: UserDemographicState }) =>
 	state.userDemographic.showGroupDemographicModal;
-
-export default userDemographicSlice.reducer;

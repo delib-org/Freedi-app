@@ -19,7 +19,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import SuggestionLoader from '@/view/components/loaders/SuggestionLoader';
 import { logError } from '@/utils/errorHandling';

@@ -9,7 +9,7 @@ const initialState: CreatorState = {
 	creator: null,
 };
 
-const creatorSlice = createSlice({
+export const creatorSlice = createSlice({
 	name: 'creator',
 	initialState,
 	reducers: {
@@ -30,5 +30,3 @@ const creatorSlice = createSlice({
 export const { setCreator, removeCreator, setUserAdvanceUser } = creatorSlice.actions;
 
 export const creatorSelector = (state: { creator: CreatorState }) => state.creator.creator;
-
-export default creatorSlice.reducer;

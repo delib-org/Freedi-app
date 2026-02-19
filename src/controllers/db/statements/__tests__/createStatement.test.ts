@@ -118,7 +118,7 @@ jest.mock('@/redux/pwa/pwaSlice', () => ({
 	setHasCreatedGroup: jest.fn(() => ({ type: 'pwa/setHasCreatedGroup' })),
 }));
 
-jest.mock('@/model/questionTypeDefaults', () => ({
+jest.mock('@/models/questionTypeDefaults', () => ({
 	getDefaultQuestionType: jest.fn(() => 'simple'),
 }));
 

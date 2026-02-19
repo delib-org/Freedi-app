@@ -20,7 +20,7 @@ const initialState: EvaluationsState = {
 	userEvaluations: [],
 };
 
-export const evaluationsSlicer = createSlice({
+export const evaluationsSlice = createSlice({
 	name: 'evaluations',
 	initialState,
 	reducers: {
@@ -38,7 +38,7 @@ export const evaluationsSlicer = createSlice({
 	},
 });
 
-export const { setEvaluationToStore, resetEvaluations } = evaluationsSlicer.actions;
+export const { setEvaluationToStore, resetEvaluations } = evaluationsSlice.actions;
 
 export const evaluationsSelector = (state: EvaluationsSliceRootState) =>
 	state.evaluations.userEvaluations;
@@ -97,4 +97,4 @@ export const userVotedStatementsInParentSelector =
 			.map((evaluation) => evaluation.statementId);
 	};
 
-export default evaluationsSlicer.reducer;
+export default evaluationsSlice.reducer;

@@ -16,7 +16,7 @@ import { useStatementListeners } from './hooks/useStatementListeners';
 import { useNotificationSetup } from './hooks/useNotificationSetup';
 import { useDocumentTitle } from './hooks/useDocumentTitle';
 import { useComponentState } from './hooks/useComponentState';
-import { useStatementViewTracking } from '@/hooks/useStatementViewTracking';
+import { useStatementViewTracking } from '@/controllers/hooks/useStatementViewTracking';
 import { analyticsService } from '@/services/analytics';
 import { updateLastReadTimestamp } from '@/controllers/db/subscriptions/setSubscriptions';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';

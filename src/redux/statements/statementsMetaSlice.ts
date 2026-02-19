@@ -14,7 +14,7 @@ const initialState: StatementMetaDataState = {
 	statementsMetaData: [],
 };
 
-export const statementMetaData = createSlice({
+export const statementsMetaSlice = createSlice({
 	name: 'statements-meta-data',
 	initialState,
 	reducers: {
@@ -34,7 +34,7 @@ export const statementMetaData = createSlice({
 	},
 });
 
-export const { setStatementMetaData } = statementMetaData.actions;
+export const { setStatementMetaData } = statementsMetaSlice.actions;
 
 // Other code such as selectors can use the narrowly-typed state parameter
 export const statementMetaDataSelector =
@@ -43,4 +43,4 @@ export const statementMetaDataSelector =
 			(statementMetaData) => statementMetaData.statementId === statementId,
 		);
 
-export default statementMetaData.reducer;
+export default statementsMetaSlice.reducer;

@@ -2,7 +2,7 @@ import { Screen, Statement } from '@freedi/shared-types';
 import { FC } from 'react';
 
 // Components
-import ApproveMembers from '@/view/components/approveMemebers/WaitingList';
+import ApproveMembers from '@/view/components/approveMembers/WaitingList';
 import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
 import Back from '../../../header/Back';
 import HomeButton from '../../../header/HomeButton';

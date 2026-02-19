@@ -12,7 +12,7 @@ import {
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useLocation, useNavigate } from 'react-router';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { getParagraphsText } from '@/utils/paragraphUtils';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { closePanels } from '@/controllers/hooks/panelUtils';

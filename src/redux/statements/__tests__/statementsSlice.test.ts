@@ -11,7 +11,7 @@ import {
 	CutoffBy,
 } from '@freedi/shared-types';
 import {
-	statementsSlicer,
+	statementsSlice,
 	setStatement,
 	setStatements,
 	deleteStatement,
@@ -69,12 +69,12 @@ describe('statementsSlice', () => {
 		},
 	} as unknown as StatementSubscription;
 
-	const initialState = statementsSlicer.getInitialState();
+	const initialState = statementsSlice.getInitialState();
 
 	describe('reducers', () => {
 		describe('setStatement', () => {
 			it('should add new statement to empty state', () => {
-				const newState = statementsSlicer.reducer(initialState, setStatement(mockStatement));
+				const newState = statementsSlice.reducer(initialState, setStatement(mockStatement));
 
 				expect(newState.statements).toHaveLength(1);
 				expect(newState.statements[0].statementId).toBe(mockStatement.statementId);
@@ -87,7 +87,7 @@ describe('statementsSlice', () => {
 				};
 				const updatedStatement = { ...mockStatement, statement: 'Updated content' };
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					stateWithStatement,
 					setStatement(updatedStatement),
 				);
@@ -100,7 +100,7 @@ describe('statementsSlice', () => {
 				const futureTime = Date.now() + 100000;
 				const newStatement = { ...mockStatement, lastUpdate: futureTime };
 
-				const newState = statementsSlicer.reducer(initialState, setStatement(newStatement));
+				const newState = statementsSlice.reducer(initialState, setStatement(newStatement));
 
 				expect(newState.statementSubscriptionLastUpdate).toBe(futureTime);
 			});
@@ -108,7 +108,7 @@ describe('statementsSlice', () => {
 			it('should ensure results is an array for legacy statements', () => {
 				const legacyStatement = { ...mockStatement, results: undefined as unknown as [] };
 
-				const newState = statementsSlicer.reducer(initialState, setStatement(legacyStatement));
+				const newState = statementsSlice.reducer(initialState, setStatement(legacyStatement));
 
 				expect(Array.isArray(newState.statements[0].results)).toBe(true);
 			});
@@ -116,7 +116,7 @@ describe('statementsSlice', () => {
 			it('should set order to 0 for new statements', () => {
 				const statementWithOrder = { ...mockStatement, order: 5 };
 
-				const newState = statementsSlicer.reducer(initialState, setStatement(statementWithOrder));
+				const newState = statementsSlice.reducer(initialState, setStatement(statementWithOrder));
 
 				expect(newState.statements[0].order).toBe(0);
 			});
@@ -126,7 +126,7 @@ describe('statementsSlice', () => {
 			it('should add multiple statements', () => {
 				const statements = [mockStatement, { ...mockStatement, statementId: 'stmt-456' }];
 
-				const newState = statementsSlicer.reducer(initialState, setStatements(statements));
+				const newState = statementsSlice.reducer(initialState, setStatements(statements));
 
 				expect(newState.statements).toHaveLength(2);
 			});
@@ -141,7 +141,7 @@ describe('statementsSlice', () => {
 					{ ...mockStatement, statementId: 'stmt-new', statement: 'New statement' },
 				];
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					stateWithStatement,
 					setStatements(updatedStatements),
 				);
@@ -157,7 +157,7 @@ describe('statementsSlice', () => {
 					statements: [mockStatement],
 				};
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					stateWithStatement,
 					deleteStatement(mockStatement.statementId),
 				);
@@ -171,7 +171,7 @@ describe('statementsSlice', () => {
 					statements: [mockStatement],
 				};
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					stateWithStatement,
 					deleteStatement('non-existent-id'),
 				);
@@ -182,7 +182,7 @@ describe('statementsSlice', () => {
 
 		describe('setStatementSubscription', () => {
 			it('should add new subscription', () => {
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					initialState,
 					setStatementSubscription(mockSubscription),
 				);
@@ -195,7 +195,7 @@ describe('statementsSlice', () => {
 				const futureTime = Date.now() + 100000;
 				const newSubscription = { ...mockSubscription, lastUpdate: futureTime };
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					initialState,
 					setStatementSubscription(newSubscription),
 				);
@@ -211,7 +211,7 @@ describe('statementsSlice', () => {
 					statements: [mockStatement],
 				};
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					stateWithStatement,
 					setStatementOrder({ statementId: mockStatement.statementId as 'string', order: 5 }),
 				);
@@ -220,7 +220,7 @@ describe('statementsSlice', () => {
 			});
 
 			it('should do nothing when statement not found', () => {
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					initialState,
 					setStatementOrder({ statementId: 'non-existent' as 'string', order: 5 }),
 				);
@@ -231,7 +231,7 @@ describe('statementsSlice', () => {
 
 		describe('setScreen', () => {
 			it('should update screen to options', () => {
-				const newState = statementsSlicer.reducer(initialState, setScreen(StatementScreen.options));
+				const newState = statementsSlice.reducer(initialState, setScreen(StatementScreen.options));
 
 				expect(newState.screen).toBe(StatementScreen.options);
 			});
@@ -239,7 +239,7 @@ describe('statementsSlice', () => {
 			it('should update screen to chat', () => {
 				const stateWithOptions = { ...initialState, screen: StatementScreen.options };
 
-				const newState = statementsSlicer.reducer(
+				const newState = statementsSlice.reducer(
 					stateWithOptions,
 					setScreen(StatementScreen.chat),
 				);
@@ -258,7 +258,7 @@ describe('statementsSlice', () => {
 					screen: StatementScreen.options,
 				};
 
-				const newState = statementsSlicer.reducer(populatedState, resetStatements());
+				const newState = statementsSlice.reducer(populatedState, resetStatements());
 
 				expect(newState.statements).toHaveLength(0);
 				expect(newState.statementSubscription).toHaveLength(0);

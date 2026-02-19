@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
-import userDataReducer, {
+import {
+	userDemographicSlice,
 	setUserDemographicQuestion,
 	deleteUserDemographicQuestion,
 	setUserDemographicQuestions,
@@ -12,7 +13,7 @@ import userDataReducer, {
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 
 // Test-specific selectors that work with our test store
-type TestState = { userData: ReturnType<typeof userDataReducer> };
+type TestState = { userData: ReturnType<typeof userDemographicSlice.reducer> };
 const selectUserQuestions = (state: TestState) => state.userData.userDemographicQuestions;
 const selectUserData = (state: TestState) => state.userData.userDemographic;
 const selectPolarizationIndexes = (state: TestState) => state.userData.polarizationIndexes;
@@ -25,7 +26,7 @@ describe('userDataSlice', () => {
 	beforeEach(() => {
 		store = configureStore({
 			reducer: {
-				userData: userDataReducer,
+				userData: userDemographicSlice.reducer,
 			},
 			middleware: (getDefaultMiddleware) =>
 				getDefaultMiddleware({

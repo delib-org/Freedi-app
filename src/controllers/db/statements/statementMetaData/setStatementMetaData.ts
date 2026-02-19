@@ -1,6 +1,6 @@
 import { updateDoc } from 'firebase/firestore';
 import { QuestionStage, QuestionType, QuestionSettings, QuestionStep } from '@freedi/shared-types';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 

@@ -1,5 +1,5 @@
 import { store } from '@/redux/store';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import {
 	getExistingOptionColors,
 	getSiblingOptionsByParentId,

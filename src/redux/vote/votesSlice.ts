@@ -15,7 +15,7 @@ const initialState: VotesState = {
 	votes: [],
 };
 
-export const votesSlicer = createSlice({
+export const votesSlice = createSlice({
 	name: 'votes',
 	initialState,
 	reducers: {
@@ -49,7 +49,7 @@ export const votesSlicer = createSlice({
 	},
 });
 
-export const { setVoteToStore, resetVotes } = votesSlicer.actions;
+export const { setVoteToStore, resetVotes } = votesSlice.actions;
 
 export const votesSelector = (state: { votes: VotesState }) => state.votes.votes;
 
@@ -58,4 +58,4 @@ export const votesSelector = (state: { votes: VotesState }) => state.votes.votes
 export const parentVoteSelector = (parentId: string | undefined) =>
 	createSelector([votesSelector], (votes) => votes.find((vote) => vote.parentId === parentId));
 
-export default votesSlicer.reducer;
+export default votesSlice.reducer;

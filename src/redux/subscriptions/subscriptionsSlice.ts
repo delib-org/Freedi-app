@@ -15,7 +15,7 @@ const initialState: SubscriptionsState = {
 	waitingList: [],
 };
 
-export const statementsSlicer = createSlice({
+export const subscriptionsSlice = createSlice({
 	name: 'subscriptions',
 	initialState,
 	reducers: {
@@ -48,7 +48,7 @@ const getWaitingList = (state: SubscriptionsSliceRootState) => state.subscriptio
 const getCreatorUid = (state: SubscriptionsSliceRootState) => state.creator.creator?.uid;
 
 export const { setWaitingMember, removeWaitingMember, clearWaitingMember } =
-	statementsSlicer.actions;
+	subscriptionsSlice.actions;
 export const selectWaitingMember = createSelector(
 	[getWaitingList, getCreatorUid],
 	(waitingList, creatorUid) => waitingList.filter((waiting) => waiting.adminId === creatorUid),
@@ -57,5 +57,3 @@ export const selectWaitingMemberByStatementId =
 	(statementId: string) => (state: SubscriptionsSliceRootState) => {
 		return state.subscriptions.waitingList.filter((waiting) => waiting.statementId === statementId);
 	};
-
-export default statementsSlicer;

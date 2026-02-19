@@ -13,7 +13,7 @@ import {
 } from '@/redux/statements/newStatementSlice';
 import { useParams } from 'react-router';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 
 export default function AddButton() {
 	const { statementId } = useParams<{ statementId: string }>();

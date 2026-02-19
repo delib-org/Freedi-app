@@ -71,7 +71,7 @@ const initialState: PWAState = {
 	...loadPWATriggerData(),
 };
 
-const pwaSlice = createSlice({
+export const pwaSlice = createSlice({
 	name: 'pwa',
 	initialState,
 	reducers: {
@@ -148,5 +148,3 @@ export const selectInstallPromptShown = (state: { pwa: PWAState }): boolean =>
 export const selectUserResponded = (state: { pwa: PWAState }): boolean => state.pwa.userResponded;
 export const selectLastPromptDismissedAt = (state: { pwa: PWAState }): number | null =>
 	state.pwa.lastPromptDismissedAt;
-
-export default pwaSlice.reducer;

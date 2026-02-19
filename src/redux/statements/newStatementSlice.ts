@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { QuestionType, Statement, StatementType } from '@freedi/shared-types';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 
 export interface NewStatementState {
 	parentStatement: Statement | null | 'top';
@@ -18,7 +18,7 @@ const initialState: NewStatementState = {
 	showModal: false,
 };
 
-const newStatementSlice = createSlice({
+export const newStatementSlice = createSlice({
 	name: 'newStatement',
 	initialState,
 	reducers: {
@@ -92,5 +92,3 @@ export const selectNewStatementShowModal = (state: { newStatement: NewStatementS
 
 export const selectNewStatement = (state: { newStatement: NewStatementState }) =>
 	state.newStatement.newStatement;
-
-export default newStatementSlice.reducer;

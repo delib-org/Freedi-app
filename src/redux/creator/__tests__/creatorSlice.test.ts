@@ -3,7 +3,8 @@
  */
 
 import { Creator } from '@freedi/shared-types';
-import creatorReducer, {
+import {
+	creatorSlice,
 	setCreator,
 	removeCreator,
 	setUserAdvanceUser,
@@ -25,7 +26,7 @@ describe('creatorSlice', () => {
 	describe('reducers', () => {
 		describe('setCreator', () => {
 			it('should set creator from null state', () => {
-				const newState = creatorReducer(initialState, setCreator(mockCreator));
+				const newState = creatorSlice.reducer(initialState, setCreator(mockCreator));
 
 				expect(newState.creator).toEqual(mockCreator);
 			});
@@ -40,7 +41,7 @@ describe('creatorSlice', () => {
 					email: 'new@example.com',
 				};
 
-				const newState = creatorReducer(stateWithCreator, setCreator(newCreator));
+				const newState = creatorSlice.reducer(stateWithCreator, setCreator(newCreator));
 
 				expect(newState.creator).toEqual(newCreator);
 				expect(newState.creator?.uid).toBe('user-456');
@@ -55,7 +56,7 @@ describe('creatorSlice', () => {
 					advanceUser: true,
 				};
 
-				const newState = creatorReducer(initialState, setCreator(fullCreator));
+				const newState = creatorSlice.reducer(initialState, setCreator(fullCreator));
 
 				expect(newState.creator?.uid).toBe('user-789');
 				expect(newState.creator?.displayName).toBe('Full User');
@@ -71,13 +72,13 @@ describe('creatorSlice', () => {
 					creator: mockCreator,
 				};
 
-				const newState = creatorReducer(stateWithCreator, removeCreator());
+				const newState = creatorSlice.reducer(stateWithCreator, removeCreator());
 
 				expect(newState.creator).toBeNull();
 			});
 
 			it('should do nothing when creator is already null', () => {
-				const newState = creatorReducer(initialState, removeCreator());
+				const newState = creatorSlice.reducer(initialState, removeCreator());
 
 				expect(newState.creator).toBeNull();
 			});
@@ -89,7 +90,7 @@ describe('creatorSlice', () => {
 					creator: mockCreator,
 				};
 
-				const newState = creatorReducer(stateWithCreator, setUserAdvanceUser(true));
+				const newState = creatorSlice.reducer(stateWithCreator, setUserAdvanceUser(true));
 
 				expect(newState.creator?.advanceUser).toBe(true);
 			});
@@ -99,19 +100,19 @@ describe('creatorSlice', () => {
 					creator: { ...mockCreator, advanceUser: true },
 				};
 
-				const newState = creatorReducer(stateWithCreator, setUserAdvanceUser(false));
+				const newState = creatorSlice.reducer(stateWithCreator, setUserAdvanceUser(false));
 
 				expect(newState.creator?.advanceUser).toBe(false);
 			});
 
 			it('should not throw when creator is null', () => {
 				expect(() => {
-					creatorReducer(initialState, setUserAdvanceUser(true));
+					creatorSlice.reducer(initialState, setUserAdvanceUser(true));
 				}).not.toThrow();
 			});
 
 			it('should not modify state when creator is null', () => {
-				const newState = creatorReducer(initialState, setUserAdvanceUser(true));
+				const newState = creatorSlice.reducer(initialState, setUserAdvanceUser(true));
 
 				expect(newState.creator).toBeNull();
 			});
@@ -121,7 +122,7 @@ describe('creatorSlice', () => {
 					creator: mockCreator,
 				};
 
-				const newState = creatorReducer(stateWithCreator, setUserAdvanceUser(true));
+				const newState = creatorSlice.reducer(stateWithCreator, setUserAdvanceUser(true));
 
 				expect(newState.creator?.uid).toBe(mockCreator.uid);
 				expect(newState.creator?.displayName).toBe(mockCreator.displayName);
@@ -178,7 +179,7 @@ describe('creatorSlice', () => {
 
 	describe('initial state', () => {
 		it('should have null creator', () => {
-			const state = creatorReducer(undefined, { type: 'unknown' });
+			const state = creatorSlice.reducer(undefined, { type: 'unknown' });
 
 			expect(state.creator).toBeNull();
 		});
