@@ -44,6 +44,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     existingSurvey?.explanationPages || []
   );
   const [customDemographicQuestions, setCustomDemographicQuestions] = useState<UserDemographicQuestion[]>([]);
+  const [showEmailSignup, setShowEmailSignup] = useState(existingSurvey?.showEmailSignup ?? true);
+  const [customEmailTitle, setCustomEmailTitle] = useState(existingSurvey?.customEmailTitle || '');
+  const [customEmailDescription, setCustomEmailDescription] = useState(existingSurvey?.customEmailDescription || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -150,13 +153,16 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       const surveyData: CreateSurveyRequest = {
         title: title.trim(),
         description: description.trim() || undefined,
-        questionIds: selectedQuestions.map((q) => q.statementId),
+        questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
         settings,
         questionSettings: cleanedQuestionSettings,
         defaultLanguage: defaultLanguage || undefined,
         forceLanguage: forceLanguage || undefined,
         demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
         explanationPages: explanationPages.length > 0 ? explanationPages : undefined,
+        showEmailSignup: showEmailSignup,
+        customEmailTitle: customEmailTitle.trim() || undefined,
+        customEmailDescription: customEmailDescription.trim() || undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -574,6 +580,61 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </label>
           </div>
         </div>
+      </div>
+
+      {/* Email Signup Settings */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('emailSignupCustomization')}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('emailSignupCustomizationDescription')}
+        </p>
+
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={showEmailSignup}
+              onChange={(e) => setShowEmailSignup(e.target.checked)}
+            />
+            {' '}{t('showEmailSignup')}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('showEmailSignupDescription')}
+          </p>
+        </div>
+
+        {showEmailSignup && (
+          <>
+            <div className={styles.formGroup}>
+              <label htmlFor="customEmailTitle">{t('emailSignupTitle')}</label>
+              <input
+                id="customEmailTitle"
+                type="text"
+                className={styles.textInput}
+                value={customEmailTitle}
+                onChange={(e) => setCustomEmailTitle(e.target.value)}
+                placeholder={t('stayUpdated')}
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                {t('leaveBlankForDefault')}
+              </p>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="customEmailDescription">{t('emailSignupDescriptionLabel')}</label>
+              <textarea
+                id="customEmailDescription"
+                className={styles.textArea}
+                value={customEmailDescription}
+                onChange={(e) => setCustomEmailDescription(e.target.value)}
+                placeholder={t('emailSignupDescription')}
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                {t('leaveBlankForDefault')}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Step 5: Language Settings */}

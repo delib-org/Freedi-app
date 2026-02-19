@@ -53,6 +53,15 @@ export async function createSurvey(
   if (data.explanationPages !== undefined && data.explanationPages.length > 0) {
     survey.explanationPages = data.explanationPages;
   }
+  if (data.showEmailSignup !== undefined) {
+    survey.showEmailSignup = data.showEmailSignup;
+  }
+  if (data.customEmailTitle !== undefined) {
+    survey.customEmailTitle = data.customEmailTitle;
+  }
+  if (data.customEmailDescription !== undefined) {
+    survey.customEmailDescription = data.customEmailDescription;
+  }
 
   await db.collection(SURVEYS_COLLECTION).doc(survey.surveyId).set(survey);
 
@@ -95,8 +104,9 @@ export async function getSurveyWithQuestions(
     return null;
   }
 
-  // Fetch all questions in parallel
-  const questionPromises = survey.questionIds.map(async (questionId) => {
+  // Fetch all questions in parallel (deduplicate IDs)
+  const uniqueQuestionIds = [...new Set(survey.questionIds)];
+  const questionPromises = uniqueQuestionIds.map(async (questionId) => {
     const doc = await db.collection(Collections.statements).doc(questionId).get();
 
     return doc.exists ? (doc.data() as Statement) : null;
@@ -179,6 +189,15 @@ export async function updateSurvey(
   }
   if (data.logos !== undefined) {
     updates.logos = data.logos;
+  }
+  if (data.showEmailSignup !== undefined) {
+    updates.showEmailSignup = data.showEmailSignup;
+  }
+  if (data.customEmailTitle !== undefined) {
+    updates.customEmailTitle = data.customEmailTitle;
+  }
+  if (data.customEmailDescription !== undefined) {
+    updates.customEmailDescription = data.customEmailDescription;
   }
 
   await db.collection(SURVEYS_COLLECTION).doc(surveyId).update(updates);
