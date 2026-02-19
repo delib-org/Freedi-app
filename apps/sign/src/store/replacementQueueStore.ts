@@ -8,6 +8,7 @@ import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from 'fire
 import { onAuthStateChanged } from 'firebase/auth';
 import { getFirebaseFirestore, getFirebaseAuth } from '@/lib/firebase/client';
 import { Collections, PendingReplacement, ReplacementQueueStatus } from '@freedi/shared-types';
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * Replacement Queue Store State
@@ -114,7 +115,10 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 							console.info('[ReplacementQueueStore] Queue updated:', queue.length, 'items');
 						},
 						(error) => {
-							console.error('[ReplacementQueueStore] Listener error:', error);
+							logError(error, {
+								operation: 'ReplacementQueueStore.onSnapshot',
+								metadata: { documentId },
+							});
 							set((state) => ({
 								isLoading: { ...state.isLoading, [documentId]: false },
 								error: { ...state.error, [documentId]: error as Error },
@@ -122,7 +126,10 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 						}
 					);
 				} catch (error) {
-					console.error('[ReplacementQueueStore] Setup error:', error);
+					logError(error, {
+						operation: 'ReplacementQueueStore.setupFirestoreListener',
+						metadata: { documentId },
+					});
 					set((state) => ({
 						isLoading: { ...state.isLoading, [documentId]: false },
 						error: { ...state.error, [documentId]: error as Error },
@@ -143,7 +150,10 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 
 			return finalUnsubscribe;
 		} catch (error) {
-			console.error('[ReplacementQueueStore] Setup error:', error);
+			logError(error, {
+				operation: 'ReplacementQueueStore.subscribeToPendingReplacements',
+				metadata: { documentId },
+			});
 			set((state) => ({
 				isLoading: { ...state.isLoading, [documentId]: false },
 				error: { ...state.error, [documentId]: error as Error },

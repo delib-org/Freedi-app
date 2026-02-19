@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react';
 import { shallowEqual, useSelector } from 'react-redux';
 import { selectEffectiveQuestions } from '@/redux/userDemographic/userDemographicSlice';
-import { RootState } from '@/redux/types';
+import { RootState } from '@/redux/store';
 
 // Use string literal for scope until delib-npm exports the enum value
 const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;

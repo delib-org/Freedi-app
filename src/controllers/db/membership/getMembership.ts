@@ -24,6 +24,7 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Check if the user has admin role in any statement
@@ -48,7 +49,7 @@ export async function checkIfUserIsAdmin(userId: string): Promise<boolean> {
 		if (err?.code === 'permission-denied') {
 			return false; // User is not admin
 		}
-		console.error('Error checking admin status:', error);
+		logError(error, { operation: 'membership.getMembership.checkIfUserIsAdmin', metadata: { message: 'Error checking admin status:' } });
 
 		return false;
 	}
@@ -96,11 +97,11 @@ export function listenToWaitingForMembership(): Unsubscribe {
 									}
 								});
 							} catch (error) {
-								console.error('Error processing waiting members snapshot:', error);
+								logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error processing waiting members snapshot:' } });
 							}
 						},
 						(error) => {
-							console.error('Error in waiting members listener:', error);
+							logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error in waiting members listener:' } });
 						},
 						'query',
 					);
@@ -119,7 +120,7 @@ export function listenToWaitingForMembership(): Unsubscribe {
 			}
 		};
 	} catch (error) {
-		console.error('Error setting up waiting members listener:', error);
+		logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error setting up waiting members listener:' } });
 
 		return () => {};
 	}
@@ -194,7 +195,7 @@ export async function searchMembers(
 
 		return { members, lastDoc: newLastDoc, hasMore };
 	} catch (error) {
-		console.error('Error searching members:', error);
+		logError(error, { operation: 'membership.getMembership.members', metadata: { message: 'Error searching members:' } });
 
 		return { members: [], lastDoc: null, hasMore: false };
 	}
@@ -251,7 +252,7 @@ export async function getMembersCounts(
 			banned: bannedSnap.size,
 		};
 	} catch (error) {
-		console.error('Error getting members counts:', error);
+		logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error getting members counts:' } });
 
 		return { total: 0, admins: 0, members: 0, banned: 0 };
 	}

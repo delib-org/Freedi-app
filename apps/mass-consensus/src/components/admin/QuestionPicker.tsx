@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
 interface QuestionPickerProps {
@@ -94,7 +95,10 @@ export default function QuestionPicker({
         setHasMore(data.hasMore);
       }
     } catch (err) {
-      console.error('[QuestionPicker] Error:', err);
+      logError(err, {
+        operation: 'QuestionPicker.fetchQuestions',
+        metadata: { searchQuery: search },
+      });
       setError(err instanceof Error ? err.message : 'Failed to load questions');
     } finally {
       setLoading(false);

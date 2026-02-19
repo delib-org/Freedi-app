@@ -13,6 +13,7 @@ import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { logError } from '@/lib/utils/errorHandling';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import RatingIcon from '@/components/icons/RatingIcon';
 import {
@@ -124,7 +125,10 @@ export default function SolutionFeedClient({
         }
         setHasCheckedUserSolutions(true);
       } catch (error) {
-        console.error('Failed to check user solutions:', error);
+        logError(error, {
+          operation: 'SolutionFeedClient.checkUserSolutions',
+          metadata: { questionId },
+        });
         setHasCheckedUserSolutions(true);
       }
     };
@@ -142,7 +146,10 @@ export default function SolutionFeedClient({
           setParticipantCount(data.participantCount || 0);
         }
       } catch (error) {
-        console.error('Failed to fetch participant count:', error);
+        logError(error, {
+          operation: 'SolutionFeedClient.fetchParticipantCount',
+          metadata: { questionId },
+        });
       }
     };
 
@@ -222,7 +229,10 @@ export default function SolutionFeedClient({
                       }
                     }
                   } catch (err) {
-                    console.error(`Failed to fetch evaluation for ${solution.statementId}:`, err);
+                    logError(err, {
+                      operation: 'SolutionFeedClient.loadEvaluationHistory.fetchEvaluation',
+                      metadata: { statementId: solution.statementId },
+                    });
                   }
                   return null;
                 })
@@ -248,7 +258,10 @@ export default function SolutionFeedClient({
           });
         }
       } catch (error) {
-        console.error('Failed to load evaluation history:', error);
+        logError(error, {
+          operation: 'SolutionFeedClient.loadEvaluationHistory',
+          metadata: { questionId },
+        });
       }
     };
 
@@ -343,7 +356,10 @@ export default function SolutionFeedClient({
         setAllOptionsEvaluated(true);
       }
     } catch (error) {
-      console.error('Evaluation error:', error);
+      logError(error, {
+        operation: 'SolutionFeedClient.handleEvaluate',
+        metadata: { questionId, solutionId, score },
+      });
       // Revert optimistic update
       setEvaluationScores((prev) => {
         const newMap = new Map(prev);
@@ -466,7 +482,10 @@ export default function SolutionFeedClient({
         setAllOptionsEvaluated(true);
       }
     } catch (error) {
-      console.error('Batch fetch error:', error);
+      logError(error, {
+        operation: 'SolutionFeedClient.handleGetNewBatch',
+        metadata: { questionId, batchCount },
+      });
       setError(t('Failed to load new solutions. Please try again.'));
     } finally {
       setIsLoadingBatch(false);
@@ -508,7 +527,10 @@ export default function SolutionFeedClient({
         }
       }
     } catch (error) {
-      console.error('Failed to refresh after submission:', error);
+      logError(error, {
+        operation: 'SolutionFeedClient.handleSolutionComplete',
+        metadata: { questionId },
+      });
     } finally {
       setIsLoadingBatch(false);
     }

@@ -2,6 +2,7 @@ import { DB } from '@/controllers/db/config';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { Collections } from '@freedi/shared-types';
 import { notificationService } from '@/services/notificationService';
+import { logError } from '@/utils/errorHandling';
 
 interface NotificationDebugInfo {
 	userId: string;
@@ -35,7 +36,7 @@ export async function debugGroupNotifications(statementId?: string) {
 	const currentToken = notificationService.getToken();
 
 	if (!currentUser) {
-		console.error('No user logged in');
+		logError(new Error('No user logged in'), { operation: 'utils.debugGroupNotifications.debugGroupNotifications' });
 
 		return;
 	}
@@ -74,7 +75,7 @@ export async function debugGroupNotifications(statementId?: string) {
 		});
 
 		if (debugInfo.storedTokens.length === 0) {
-			console.error('   ❌ No FCM tokens found in pushNotifications collection!');
+			logError(new Error('   ❌ No FCM tokens found in pushNotifications collection!'), { operation: 'utils.debugGroupNotifications.unknown' });
 		}
 
 		// 2. Check statement subscriptions
@@ -100,7 +101,7 @@ export async function debugGroupNotifications(statementId?: string) {
 					statementTitle = stmtDoc.data().statement || 'Untitled';
 				}
 			} catch (e) {
-				console.error('Error fetching statement:', e);
+				logError(e, { operation: 'utils.debugGroupNotifications.unknown', metadata: { message: 'Error fetching statement:' } });
 			}
 
 			const subInfo = {
@@ -125,7 +126,7 @@ export async function debugGroupNotifications(statementId?: string) {
 		}
 
 		if (debugInfo.subscriptions.length === 0) {
-			console.error('   ❌ No statement subscriptions found!');
+			logError(new Error('   ❌ No statement subscriptions found!'), { operation: 'utils.debugGroupNotifications.unknown' });
 		}
 
 		// 3. Check askedToBeNotified collection
@@ -157,7 +158,7 @@ export async function debugGroupNotifications(statementId?: string) {
 			});
 
 			if (debugInfo.askedToBeNotified.length === 0) {
-				console.error('   ❌ No entries found in askedToBeNotified collection!');
+				logError(new Error('   ❌ No entries found in askedToBeNotified collection!'), { operation: 'utils.debugGroupNotifications.unknown' });
 				console.info("   ℹ️  This means push notifications won't be sent to this device");
 			}
 		}
@@ -197,8 +198,8 @@ export async function debugGroupNotifications(statementId?: string) {
 		}
 
 		if (issues.length > 0) {
-			console.error('%c5. Issues Found:', 'color: red; font-weight: bold');
-			issues.forEach((issue, i) => console.error(`   ${i + 1}. ${issue}`));
+			logError(new Error('%c5. Issues Found:'), { operation: 'utils.debugGroupNotifications.pushEnabledSubs', metadata: { detail: 'color: red; font-weight: bold' } });
+			issues.forEach((issue, i) => logError(new Error('   ${i + 1}. ${issue}'), { operation: 'utils.debugGroupNotifications.pushEnabledSubs' }));
 
 			console.info('%c6. Recommendations:', 'color: orange; font-weight: bold');
 			console.info('   1. Make sure you have enabled push notifications for the statement');
@@ -209,7 +210,7 @@ export async function debugGroupNotifications(statementId?: string) {
 			console.info('%c✅ Everything looks good!', 'color: green; font-weight: bold');
 		}
 	} catch (error) {
-		console.error('Error during debug:', error);
+		logError(error, { operation: 'utils.debugGroupNotifications.pushEnabledSubs', metadata: { message: 'Error during debug:' } });
 	}
 
 	console.info('%c=== END DEBUG ===', 'color: blue; font-weight: bold; font-size: 16px');
@@ -225,7 +226,7 @@ export async function registerForStatementPushNotifications(statementId: string)
 	const token = notificationService.getToken();
 
 	if (!userId || !token) {
-		console.error('Missing user ID or FCM token');
+		logError(new Error('Missing user ID or FCM token'), { operation: 'utils.debugGroupNotifications.registerForStatementPushNotifications' });
 
 		return false;
 	}
@@ -240,7 +241,7 @@ export async function registerForStatementPushNotifications(statementId: string)
 
 		return result;
 	} catch (error) {
-		console.error('Error registering for notifications:', error);
+		logError(error, { operation: 'utils.debugGroupNotifications.registerForStatementPushNotifications', metadata: { message: 'Error registering for notifications:' } });
 
 		return false;
 	}

@@ -18,7 +18,10 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	const { results } = useMindMap(statement?.topParentId);
 	const { pathname } = useLocation();
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
-	const followMePath = topParentStatement?.followMe;
+	const powerFollowMePath = topParentStatement?.powerFollowMe;
+	const regularFollowMePath = topParentStatement?.followMe;
+	const followMePath =
+		powerFollowMePath && powerFollowMePath !== '' ? powerFollowMePath : regularFollowMePath;
 
 	// Listen to topParentStatement for followMe updates
 	useEffect(() => {

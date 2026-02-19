@@ -5,6 +5,7 @@ import {
 import { updateStatementTop } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { Statement, SortType } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 export function sortSubStatements(
 	subStatements: Statement[],
@@ -115,7 +116,7 @@ export function sortSubStatements(
 
 					return update;
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'evaluations.statementsEvaluationCont.allMeasured' });
 				}
 			})
 			.filter((update) => update !== undefined) as {
@@ -139,7 +140,7 @@ export function sortSubStatements(
 
 		return { totalHeight };
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'evaluations.statementsEvaluationCont.statement' });
 
 		return { totalHeight: 0 };
 	}

@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import type { SurveyExplanationPage as SurveyExplanationPageType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
+import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import MarkdownRenderer from '../shared/MarkdownRenderer';
 import styles from './Survey.module.scss';
@@ -79,7 +80,10 @@ export default function SurveyExplanationPage({
         isCompleted: isLastItem,
       }),
     }).catch((error) => {
-      console.error('[SurveyExplanationPage] Failed to save progress to server:', error);
+      logError(error, {
+        operation: 'SurveyExplanationPage.handleNext',
+        metadata: { surveyId: survey.surveyId },
+      });
     });
 
     if (isLastItem) {

@@ -6,6 +6,7 @@ import {
 	deletePolarizationIndex,
 	setPolarizationIndexes,
 } from '@/redux/userDemographic/userDemographicSlice';
+import { logError } from '@/utils/errorHandling';
 
 export function listenToPolarizationIndex(statementId: string) {
 	try {
@@ -30,6 +31,6 @@ export function listenToPolarizationIndex(statementId: string) {
 			});
 		});
 	} catch (error) {
-		console.error('Error listening to polarization index:', error);
+		logError(error, { operation: 'polarizationIndex.getPolarizationIndex.listenToPolarizationIndex', metadata: { message: 'Error listening to polarization index:' } });
 	}
 }

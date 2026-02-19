@@ -1,5 +1,4 @@
-import { and, collection, doc, getDoc, getDocs, or, query, where } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { and, getDoc, getDocs, or, query, where } from 'firebase/firestore';
 
 import {
 	Statement,
@@ -10,11 +9,13 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
+import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export async function getStatementFromDB(statementId: string): Promise<Statement | undefined> {
 	try {
 		if (!statementId) throw new Error('Statement ID is required to get statement from DB');
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const statementDB = await getDoc(statementRef);
 
 		const data = statementDB.data();
@@ -23,7 +24,7 @@ export async function getStatementFromDB(statementId: string): Promise<Statement
 		// Normalize statement data (converts timestamps and fills missing topParentId)
 		return normalizeStatementData(data) as Statement;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.getStatement.getStatementFromDB' });
 
 		return undefined;
 	}
@@ -60,7 +61,7 @@ export async function getStatementDepth(
 
 		return finalStatements;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.getStatement.statementPromises' });
 
 		return [];
 	}
@@ -68,7 +69,7 @@ export async function getStatementDepth(
 	async function getLevelResults(statement: Statement): Promise<Statement[]> {
 		try {
 			const subStatements: Statement[] = [];
-			const statementsRef = collection(FireStore, Collections.statements);
+			const statementsRef = createCollectionRef(Collections.statements);
 			const q = query(
 				statementsRef,
 				and(
@@ -90,7 +91,7 @@ export async function getStatementDepth(
 
 			return subStatements;
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'statements.getStatement.getLevelResults' });
 
 			return [];
 		}
@@ -99,7 +100,7 @@ export async function getStatementDepth(
 
 export async function getChildStatements(statementId: string): Promise<Statement[]> {
 	try {
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 		const q = query(
 			statementsRef,
 			and(
@@ -118,7 +119,7 @@ export async function getChildStatements(statementId: string): Promise<Statement
 
 		return subStatements;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.getStatement.subStatements' });
 
 		return [];
 	}

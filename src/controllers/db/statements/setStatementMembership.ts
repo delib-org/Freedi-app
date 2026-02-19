@@ -1,6 +1,7 @@
 import { Access, Collections, Statement } from '@freedi/shared-types';
 import { doc, updateDoc, deleteField } from 'firebase/firestore';
 import { DB } from '../config';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement;
@@ -24,7 +25,7 @@ export async function setStatementMembership({
 		} else if (membershipAccess) {
 			// Validate that membershipAccess is defined and valid
 			if (!Object.values(Access).includes(membershipAccess)) {
-				console.error('Invalid membership access value:', membershipAccess);
+				logError(membershipAccess, { operation: 'statements.setStatementMembership.setStatementMembership', metadata: { message: 'Invalid membership access value:' } });
 				throw new Error(`Invalid membership access value: ${membershipAccess}`);
 			}
 
@@ -35,11 +36,11 @@ export async function setStatementMembership({
 				},
 			});
 		} else {
-			console.error('Undefined membership access value');
+			logError(new Error('Undefined membership access value'), { operation: 'statements.setStatementMembership.setStatementMembership' });
 			throw new Error('Membership access value is undefined');
 		}
 	} catch (error) {
-		console.error('Error updating statement membership:', error);
+		logError(error, { operation: 'statements.setStatementMembership.unknown', metadata: { message: 'Error updating statement membership:' } });
 		throw error;
 	}
 }

@@ -1,4 +1,5 @@
 import { useUserConfig } from './useUserConfig';
+import { logError } from '@/utils/errorHandling';
 
 export function useDecreaseLearningRemain() {
 	const { learning, decrementLearning } = useUserConfig();
@@ -32,7 +33,7 @@ export function useDecreaseLearningRemain() {
 
 			return true;
 		} catch (error) {
-			console.error('Error decreasing learning remain:', error);
+			logError(error, { operation: 'hooks.useDecreaseLearningRemain.decreaseLearning', metadata: { message: 'Error decreasing learning remain:' } });
 
 			return false;
 		}

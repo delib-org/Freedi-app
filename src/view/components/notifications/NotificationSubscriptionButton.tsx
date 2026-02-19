@@ -9,6 +9,7 @@ import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 import { updateNotificationPreferences } from '@/controllers/db/subscriptions/setSubscriptions';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
+import { logError } from '@/utils/errorHandling';
 
 interface NotificationSubscriptionButtonProps {
 	statementId: string;
@@ -61,7 +62,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 
 				setIsLoading(false);
 			} catch (error) {
-				console.error('Error checking notification subscription:', error);
+				logError(error, { operation: 'notifications.NotificationSubscriptionButton.checkSubscription', metadata: { message: 'Error checking notification subscription:' } });
 				setIsLoading(false);
 			}
 		};
@@ -105,7 +106,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			const token = notificationService.getToken();
 
 			if (!token) {
-				console.error('No FCM token available');
+				logError(new Error('No FCM token available'), { operation: 'notifications.NotificationSubscriptionButton.unknown' });
 				setIsLoading(false);
 
 				return;
@@ -135,7 +136,7 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 
 			setIsLoading(false);
 		} catch (error) {
-			console.error('Error toggling notification subscription:', error);
+			logError(error, { operation: 'notifications.NotificationSubscriptionButton.unknown', metadata: { message: 'Error toggling notification subscription:' } });
 			setIsLoading(false);
 		}
 	};

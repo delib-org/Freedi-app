@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import { getStorage, Storage } from 'firebase-admin/storage';
+import { logError } from '../utils/errorHandling';
 
 // Handle emulator configuration BEFORE any Firebase initialization
 // Firebase Admin SDK automatically uses emulators if FIRESTORE_EMULATOR_HOST and FIREBASE_AUTH_EMULATOR_HOST are set
@@ -73,7 +74,7 @@ return app;
 
     return app;
   } catch (error) {
-    console.error('[Firebase Admin] Initialization failed:', error);
+    logError(error, { operation: 'firebaseAdmin.initializeFirebaseAdmin' });
     throw error;
   }
 }

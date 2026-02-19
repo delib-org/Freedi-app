@@ -9,6 +9,7 @@ import {
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import { TermsOfUseAcceptance } from '@/types/agreement/Agreement';
 import { User } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 interface AgreementProviderProps {
 	children: ReactNode;
@@ -40,7 +41,7 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 					setShowSignAgreement(true);
 				}
 			} catch (error) {
-				console.error('Error checking terms acceptance:', error);
+				logError(error, { operation: 'context.AgreementProvider.checkTermsAcceptance', metadata: { message: 'Error checking terms acceptance:' } });
 			} finally {
 				setLoading(false);
 			}
@@ -72,7 +73,7 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 				await logOut();
 			}
 		} catch (error) {
-			console.error('Agreement handling error:', error);
+			logError(error, { operation: 'context.AgreementProvider.handleAgreement', metadata: { message: 'Agreement handling error:' } });
 		}
 	};
 

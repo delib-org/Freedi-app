@@ -1,6 +1,7 @@
 import { getMessaging, getToken } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
+import { logError } from '@/utils/errorHandling';
 
 export async function debugChromeNotifications() {
 	console.info(
@@ -61,16 +62,11 @@ export async function debugChromeNotifications() {
 				const token2 = await getToken(messaging, { vapidKey });
 				console.info('   - Direct VAPID:', token2 ? 'Success' : 'Failed');
 			} catch (e) {
-				console.error('   - Direct VAPID error:', (e as Error).message);
+				logError(e, { operation: 'utils.debugChromeNotifications.vapidTest', metadata: { message: 'Direct VAPID error' } });
 			}
 		}
 	} catch (error) {
-		console.error('   - Token generation error:', error);
-		console.error('   - Error details:', {
-			name: (error as Error).name,
-			message: (error as Error).message,
-			stack: (error as Error).stack,
-		});
+		logError(error, { operation: 'utils.debugChromeNotifications.tokenGeneration', metadata: { name: (error as Error).name, message: (error as Error).message } });
 	}
 
 	// 4. Check Push API
@@ -86,7 +82,7 @@ export async function debugChromeNotifications() {
 				console.info('   - P256dh:', subscription.toJSON().keys?.p256dh);
 			}
 		} catch (error) {
-			console.error('   - Push API error:', error);
+			logError(error, { operation: 'utils.debugChromeNotifications.unknown', metadata: { message: '   - Push API error:' } });
 		}
 	}
 
@@ -105,7 +101,7 @@ export async function debugChromeNotifications() {
 			console.info('   - Check chrome://flags for notification settings');
 			console.info('   - Check chrome://settings/content/notifications');
 		} catch (error) {
-			console.error('   - Permission query error:', error);
+			logError(error, { operation: 'utils.debugChromeNotifications.unknown', metadata: { message: '   - Permission query error:' } });
 		}
 	}
 

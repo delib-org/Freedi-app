@@ -2,6 +2,7 @@ import { getAuth } from 'firebase-admin/auth';
 import { Collections, Role } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '../firebase/admin';
 import { initializeFirebaseAdmin } from '../firebase/admin';
+import { logError } from '../utils/errorHandling';
 
 export interface AdminVerificationResult {
   isAdmin: boolean;
@@ -42,7 +43,7 @@ export async function verifyAdmin(token: string): Promise<AdminVerificationResul
       userId,
     };
   } catch (error) {
-    console.error('[verifyAdmin] Token verification failed:', error);
+    logError(error, { operation: 'verifyAdmin.verifyAdmin' });
 
     return {
       isAdmin: false,
@@ -65,7 +66,7 @@ export async function verifyToken(token: string): Promise<string | null> {
     const decodedToken = await auth.verifyIdToken(token);
     return decodedToken.uid;
   } catch (error) {
-    console.error('[verifyToken] Token verification failed:', error);
+    logError(error, { operation: 'verifyAdmin.verifyToken' });
     return null;
   }
 }
@@ -110,7 +111,11 @@ export async function isAdminOfStatement(
 
     return false;
   } catch (error) {
-    console.error('[isAdminOfStatement] Error checking admin access:', error);
+    logError(error, {
+      operation: 'verifyAdmin.isAdminOfStatement',
+      userId,
+      statementId,
+    });
     return false;
   }
 }

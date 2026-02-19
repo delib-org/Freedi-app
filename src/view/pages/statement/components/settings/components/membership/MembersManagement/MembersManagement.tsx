@@ -9,6 +9,7 @@ import { RootState } from '@/redux/store';
 import MemberFilters from '../MemberFilters/MemberFilters';
 import FilteredMembersList from '../FilteredMembersList/FilteredMembersList';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
+import { logError } from '@/utils/errorHandling';
 
 interface MembersManagementProps {
 	statement: Statement;
@@ -76,7 +77,7 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 
 		if (navigator.share) {
 			navigator.share(shareData).catch((error) => {
-				console.error('Error sharing:', error);
+				logError(error, { operation: 'MembersManagement.MembersManagement.handleShare', metadata: { message: 'Error sharing:' } });
 			});
 		} else {
 			// Fallback: Copy to clipboard
@@ -86,7 +87,7 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 					console.info('Link copied to clipboard');
 				},
 				(error) => {
-					console.error('Failed to copy link:', error);
+					logError(error, { operation: 'MembersManagement.MembersManagement.handleShare', metadata: { message: 'Failed to copy link:' } });
 				},
 			);
 		}

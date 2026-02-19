@@ -6,7 +6,8 @@ import {
 	QuestionType,
 } from '@freedi/shared-types';
 import { useAuthentication } from '../hooks/useAuthentication';
-import { EnhancedEvaluationThumb } from '@/view/pages/statement/components/evaluations/components/evaluation/enhancedEvaluation/EnhancedEvaluationModel';
+import { EnhancedEvaluationThumb } from '@/types/evaluation';
+import { logError } from '@/utils/errorHandling';
 
 // Re-export APIEndPoint from separate file to avoid circular dependencies
 export { APIEndPoint } from './apiEndpoint';
@@ -36,7 +37,7 @@ export function isAuthorized(
 
 		return false;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.helpers.isAuthorized' });
 
 		return false;
 	}
@@ -218,7 +219,7 @@ export function getTitle(statement: Statement | undefined) {
 
 		return title;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.helpers.getTitle' });
 
 		return '';
 	}
@@ -232,7 +233,7 @@ export function getDescription(statement: Statement) {
 
 		return description;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.helpers.getDescription' });
 
 		return '';
 	}
@@ -255,7 +256,7 @@ export function getStatementSubscriptionId(
 
 		return `${userId}--${statementId}`;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.helpers.getStatementSubscriptionId' });
 
 		return undefined;
 	}
@@ -271,7 +272,7 @@ export function getFirstName(fullName: string) {
 
 		return names[0];
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.helpers.getFirstName' });
 
 		return '';
 	}

@@ -2,6 +2,7 @@ import { collection, getDocs, limit, orderBy, query, where } from 'firebase/fire
 import { FireStore } from '../config';
 import { getNumberDigits } from '@/controllers/general/helpers';
 import { Collections } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 export async function getMaxInvitationDigits(): Promise<number | undefined> {
 	try {
@@ -20,7 +21,7 @@ export async function getMaxInvitationDigits(): Promise<number | undefined> {
 
 		return numberDigits;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'invitations.getInvitations.getMaxInvitationDigits' });
 
 		return undefined;
 	}
@@ -48,7 +49,7 @@ export async function getInvitationPathName(number: number): Promise<string | un
 
 		return pathname;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'invitations.getInvitations.numbers' });
 
 		return undefined;
 	}

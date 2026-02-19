@@ -8,6 +8,7 @@ import { setStatementMembership } from '@/controllers/db/statements/setStatement
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import styles from './MembershipSettings.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement;
@@ -112,7 +113,7 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 
 		// Validate the new access value
 		if (!newAccess && newAccess !== Access.public) {
-			console.error('Invalid access value:', newAccess);
+			logError(newAccess, { operation: 'membershipSettings.MembershipSettings.handleAccessChange', metadata: { message: 'Invalid access value:' } });
 
 			return;
 		}

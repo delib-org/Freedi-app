@@ -7,6 +7,7 @@ import {
 } from '../db/online/setOnline';
 import { ListenToOnlineUsers } from '../db/online/getOnline';
 import { useAuthentication } from './useAuthentication';
+import { logError } from '@/utils/errorHandling';
 
 export const useOnlineUsers = (statementId: string | undefined) => {
 	const [onlineUsers, setOnlineUsers] = useState<Online[]>([]);
@@ -22,7 +23,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 	const cleanup = (targetStatementId: string | undefined, targetUser: Creator | undefined) => {
 		if (targetStatementId && targetUser?.uid) {
 			removeUserFromOnlineToDB(targetStatementId, targetUser.uid).catch((err) =>
-				console.error('Error in cleanup:', err),
+				logError(err, { operation: 'hooks.useOnlineUsers.cleanup', metadata: { message: 'Error in cleanup:' } }),
 			);
 		}
 	};
@@ -54,7 +55,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 				await setUserOnlineToDB(statementId, currentUser);
 				if (isMounted) setIsInitialized(true);
 			} catch (err) {
-				console.error('Error setting user online:', err);
+				logError(err, { operation: 'hooks.useOnlineUsers.initializeOnlineUser', metadata: { message: 'Error setting user online:' } });
 				if (isMounted) setError(err instanceof Error ? err : new Error(String(err)));
 			} finally {
 				if (isMounted) setIsLoading(false);
@@ -86,7 +87,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 			try {
 				await updateUserTabFocusToDB(statementId, currentUser.uid, true);
 			} catch (err) {
-				console.error('Error updating tab focus:', err);
+				logError(err, { operation: 'hooks.useOnlineUsers.handleFocus', metadata: { message: 'Error updating tab focus:' } });
 			}
 		};
 
@@ -94,7 +95,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 			try {
 				await updateUserTabFocusToDB(statementId, currentUser.uid, false);
 			} catch (err) {
-				console.error('Error updating tab blur:', err);
+				logError(err, { operation: 'hooks.useOnlineUsers.handleBlur', metadata: { message: 'Error updating tab blur:' } });
 			}
 		};
 
@@ -103,7 +104,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 			try {
 				await updateUserTabFocusToDB(statementId, currentUser.uid, isVisible);
 			} catch (err) {
-				console.error('Error updating visibility:', err);
+				logError(err, { operation: 'hooks.useOnlineUsers.handleVisibilityChange', metadata: { message: 'Error updating visibility:' } });
 			}
 		};
 

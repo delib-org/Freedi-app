@@ -17,6 +17,7 @@ export interface HomeDocument {
   creatorId: string;
   creatorDisplayName: string;
   parentId: string;
+  topParentId: string;
   groupName?: string;
   relationship: 'created' | 'collaborator' | 'invited' | 'signed';
   userRole: 'owner' | 'admin' | 'viewer' | 'signer';
@@ -98,8 +99,12 @@ export async function getUserHomeDocuments(
     }
 
     for (const doc of documentMap.values()) {
+      // Try parentId first (legacy documents where parentId == groupId)
       if (doc.parentId && doc.parentId !== 'top' && groupMap.has(doc.parentId)) {
         doc.groupName = groupMap.get(doc.parentId);
+      // Fall back to topParentId (new documents where parentId == questionId)
+      } else if (doc.topParentId && doc.topParentId !== 'top' && groupMap.has(doc.topParentId)) {
+        doc.groupName = groupMap.get(doc.topParentId);
       }
     }
 
@@ -131,7 +136,6 @@ async function getCreatedDocuments(
       .collection(Collections.statements)
       .where('creatorId', '==', userId)
       .where('statementType', 'in', [
-        StatementType.question,
         StatementType.option,
         StatementType.document,
       ])
@@ -330,16 +334,10 @@ async function batchGetDocuments(
 
     for (const doc of snapshot.docs) {
       const data = doc.data() as Statement;
-      // Options only appear if explicitly marked as documents
-      if (data.statementType === StatementType.option && data.isDocument !== true) {
-        continue;
-      }
-      // Include questions, documents, and marked options
+      // Include legacy documents and options marked as documents
       if (
-        data.statementType === StatementType.question ||
-        data.statementType === StatementType.option ||
         data.statementType === StatementType.document ||
-        data.isDocument === true
+        (data.statementType === StatementType.option && data.isDocument === true)
       ) {
         results.push(data);
       }
@@ -414,6 +412,7 @@ function statementToHomeDocument(
     creatorId: data.creatorId || '',
     creatorDisplayName: data.creator?.displayName || '',
     parentId: data.parentId || 'top',
+    topParentId: data.topParentId || data.parentId || 'top',
     relationship,
     userRole,
     signatureStatus: null,

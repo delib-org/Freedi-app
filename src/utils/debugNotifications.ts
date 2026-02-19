@@ -1,5 +1,6 @@
 import { notificationService } from '@/services/notificationService';
 import { auth } from '@/controllers/db/config';
+import { logError } from '@/utils/errorHandling';
 
 export async function debugNotifications() {
 	console.info('=== NOTIFICATION DEBUG START ===');
@@ -46,7 +47,7 @@ export async function debugNotifications() {
 						console.info(`     Endpoint: ${subscription.endpoint.substring(0, 50)}...`);
 					}
 				} catch (e) {
-					console.error(`     Push subscription error:`, e);
+					logError(e, { operation: 'utils.debugNotifications.unknown', metadata: { message: '     Push subscription error:' } });
 				}
 			}
 		}
@@ -94,7 +95,7 @@ export async function debugNotifications() {
 
 			setTimeout(() => notification.close(), 5000);
 		} catch (e) {
-			console.error('   - ❌ Local notification error:', e);
+			logError(e, { operation: 'utils.debugNotifications.unknown', metadata: { message: '   - ❌ Local notification error:' } });
 		}
 	} else {
 		console.info('   - ❌ Permission not granted');
@@ -106,7 +107,7 @@ export async function debugNotifications() {
 		const diagnostics = await notificationService.getDiagnostics();
 		console.info('   - Diagnostics:', diagnostics);
 	} catch (e) {
-		console.error('   - Error getting diagnostics:', e);
+		logError(e, { operation: 'utils.debugNotifications.unknown', metadata: { message: '   - Error getting diagnostics:' } });
 	}
 
 	console.info('\n=== NOTIFICATION DEBUG END ===');

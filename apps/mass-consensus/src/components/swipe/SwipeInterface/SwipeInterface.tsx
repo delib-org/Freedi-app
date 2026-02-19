@@ -38,6 +38,7 @@ import { submitComment } from '@/controllers/commentController';
 import { RATING, RATING_CONFIG } from '@/constants/common';
 import type { RatingValue } from '../RatingButton';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { logError } from '@/lib/utils/errorHandling';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import { useToast } from '@/components/shared/Toast';
 import {
@@ -115,7 +116,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         }
         setHasCheckedUserSolutions(true);
       } catch (error) {
-        console.error('Failed to check user solutions:', error);
+        logError(error, {
+          operation: 'SwipeInterface.checkUserSolutions',
+          metadata: { questionId: question.statementId, userId },
+        });
         setHasCheckedUserSolutions(true);
       }
     };
@@ -182,7 +186,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           count: evaluationMap.size,
         });
       } catch (error) {
-        console.error('Failed to load previous evaluations:', error);
+        logError(error, {
+          operation: 'SwipeInterface.loadPreviousEvaluations',
+          metadata: { questionId: question.statementId, userId },
+        });
       }
     };
 
@@ -251,7 +258,10 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
         // Reset programmaticThrow for next card
         setProgrammaticThrow(null);
       } catch (err) {
-        console.error('Failed to submit rating:', err);
+        logError(err, {
+          operation: 'SwipeInterface.handleSwipe',
+          metadata: { questionId: question.statementId, statementId: capturedStatementId, rating },
+        });
         dispatch(setError(t('Failed to submit rating. Please try again.')));
         setProgrammaticThrow(null);
       } finally {

@@ -6,9 +6,18 @@ import {
 	UserDemographicQuestion,
 	UserDemographicQuestionSchema,
 } from '@freedi/shared-types';
-import { arrayRemove, arrayUnion, deleteDoc, doc, getDoc, setDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import {
+	arrayRemove,
+	arrayUnion,
+	deleteDoc,
+	doc,
+	setDoc,
+	updateDoc,
+	writeBatch,
+} from 'firebase/firestore';
 import { DB } from '../config';
 import { parse, safeParse } from 'valibot';
+import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';
 import {
 	deleteUserDemographicQuestion as deleteUserDemographicQuestionAction,
@@ -35,7 +44,7 @@ export async function setUserDemographicQuestion(
 
 		dispatch(setUserDemographicQuestionAction(question));
 	} catch (error) {
-		console.error('Error adding user demographic question:', error);
+		logError(error, { operation: 'userDemographic.setUserDemographicQuestion' });
 	}
 }
 
@@ -51,7 +60,7 @@ export async function deleteUserDemographicQuestion(question: UserDemographicQue
 
 		store.dispatch(deleteUserDemographicQuestionAction(question.userQuestionId));
 	} catch (error) {
-		console.error('Error deleting user demographic question:', error);
+		logError(error, { operation: 'userDemographic.deleteUserDemographicQuestion' });
 	}
 }
 
@@ -66,13 +75,13 @@ export async function setUserDemographicOption(
 
 		const results = safeParse(UserDemographicQuestionSchema, question);
 		if (!results.success) {
-			console.error('Invalid question data:', results.issues);
+			logError(new Error('Invalid question data'), { operation: 'userDemographic.setUserDemographicOption', metadata: { issues: results.issues } });
 			throw new Error('Invalid question data');
 		}
 
 		const resultsOption = safeParse(DemographicOptionSchema, option);
 		if (!resultsOption.success) {
-			console.error('Invalid option data:', resultsOption.issues);
+			logError(new Error('Invalid option data'), { operation: 'userDemographic.setUserDemographicOption', metadata: { issues: resultsOption.issues } });
 			throw new Error('Invalid option data');
 		}
 
@@ -85,7 +94,7 @@ export async function setUserDemographicOption(
 
 		return;
 	} catch (error) {
-		console.error('Error adding user demographic option:', error);
+		logError(error, { operation: 'userDemographic.setUserDemographicOption' });
 	}
 }
 
@@ -111,7 +120,7 @@ export async function deleteUserDemographicOption(
 
 		return;
 	} catch (error) {
-		console.error('Error deleting user demographic option:', error);
+		logError(error, { operation: 'userDemographic.deleteUserDemographicOption' });
 	}
 }
 
@@ -141,11 +150,10 @@ export async function setUserAnswers(answers: UserDemographicQuestion[]) {
 
 		await batch.commit();
 	} catch (error) {
-		console.error('Error setting user answers:', error);
+		logError(error, { operation: 'userDemographic.setUserAnswers' });
 	}
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function validateDataAndLogIssues<T>(
 	schema: BaseSchema<any, T, any>,
 	data: unknown,
@@ -182,7 +190,7 @@ export function setDemographicOptionColor(
 
 	const results = safeParse(UserDemographicQuestionSchema, userQuestion);
 	if (!results.success) {
-		console.error('Invalid user question data:', results.issues);
+		logError(new Error('Invalid user question data'), { operation: 'userDemographic.setDemographicOptionColor', metadata: { issues: results.issues } });
 		throw new Error('Invalid user question data');
 	}
 

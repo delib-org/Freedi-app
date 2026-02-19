@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Third party imports
 import { Outlet, useLocation, useParams } from 'react-router';
@@ -64,7 +65,7 @@ export default function Home() {
 
 				unsubscribeInAppNotifications = listenToInAppNotifications();
 			} catch (error) {
-				console.error('Error setting up listeners:', error);
+				logError(error, { operation: 'home.Home.setupListenersSequentially', metadata: { message: 'Error setting up listeners:' } });
 			}
 		}
 

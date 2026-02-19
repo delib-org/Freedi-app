@@ -4,6 +4,7 @@ import RichTextEditor from './RichTextEditor';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { updateStatementParagraphs } from '@/controllers/db/statements/setStatements';
 import styles from './DocumentEditModal.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface DocumentEditModalProps {
 	statement: Statement;
@@ -34,7 +35,7 @@ const DocumentEditModal: React.FC<DocumentEditModalProps> = ({ statement, onClos
 
 				onClose();
 			} catch (err) {
-				console.error('Error saving paragraphs:', err);
+				logError(err, { operation: 'richTextEditor.DocumentEditModal.handleSave', metadata: { message: 'Error saving paragraphs:' } });
 				setError(t('Failed to save changes. Please try again.'));
 			} finally {
 				setIsLoading(false);

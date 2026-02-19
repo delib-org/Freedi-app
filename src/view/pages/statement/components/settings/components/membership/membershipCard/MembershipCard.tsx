@@ -1,5 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 import styles from './MembershipCard.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 //icons
 import unBlockImg from '@/assets/icons/Icon-base-46px.png';
@@ -33,7 +34,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	async function handleRemoveMember() {
 		// If trying to ban, check if user can be banned
 		if (role !== Role.banned && !userCanBeBanned) {
-			console.error('Cannot ban this user:', banDisabledReason);
+			logError(banDisabledReason, { operation: 'membershipCard.MembershipCard.handleRemoveMember', metadata: { message: 'Cannot ban this user:' } });
 
 			return;
 		}
@@ -43,7 +44,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			console.error('Error removing member:', error);
+			logError(error, { operation: 'membershipCard.MembershipCard.handleRemoveMember', metadata: { message: 'Error removing member:' } });
 		}
 	}
 
@@ -54,7 +55,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 			await updateMemberRole(member.statementId, member.user?.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			console.error('Error setting role:', error);
+			logError(error, { operation: 'membershipCard.MembershipCard.handleSetRole', metadata: { message: 'Error setting role:' } });
 		}
 	}
 

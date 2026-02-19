@@ -2,6 +2,7 @@ import { Collections, ResultsSettings, ResultsSettingsSchema } from '@freedi/sha
 import { doc, updateDoc } from 'firebase/firestore';
 import { DB } from '../config';
 import { parse } from 'valibot';
+import { logError } from '@/utils/errorHandling';
 
 export async function updateResultSettingsToDB(
 	statementId: string,
@@ -12,6 +13,6 @@ export async function updateResultSettingsToDB(
 		parse(ResultsSettingsSchema, resultsSettings);
 		await updateDoc(resultSettingsRef, { resultsSettings });
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.setResultSettings.updateResultSettingsToDB' });
 	}
 }

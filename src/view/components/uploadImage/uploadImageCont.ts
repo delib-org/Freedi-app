@@ -3,6 +3,7 @@ import { uploadImageToStorage } from '@/controllers/db/images/setImages';
 import { updateStatementMainImage } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@freedi/shared-types';
 import React from 'react';
+import { logError } from '@/utils/errorHandling';
 
 export async function setImageLocally(
 	file: File,
@@ -49,7 +50,7 @@ export async function setImageLocally(
 							URL.revokeObjectURL(previewURL);
 						}, 1000);
 					} catch (error) {
-						console.error('Error uploading image:', error);
+						logError(error, { operation: 'uploadImage.uploadImageCont.compressedFile', metadata: { message: 'Error uploading image:' } });
 						setProgress(0);
 					}
 				};

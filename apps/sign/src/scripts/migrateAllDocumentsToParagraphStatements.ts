@@ -111,7 +111,7 @@ function loadCheckpoint(): MigrationCheckpoint | null {
       return JSON.parse(data);
     }
   } catch (error) {
-    console.error('Failed to load checkpoint:', error);
+    logError(error, { operation: 'migration.loadCheckpoint' });
   }
   return null;
 }
@@ -124,7 +124,7 @@ function saveCheckpoint(checkpoint: MigrationCheckpoint): void {
     fs.writeFileSync(CONFIG.CHECKPOINT_FILE, JSON.stringify(checkpoint, null, 2));
     console.info('[Checkpoint] Saved at', new Date().toISOString());
   } catch (error) {
-    console.error('Failed to save checkpoint:', error);
+    logError(error, { operation: 'migration.saveCheckpoint' });
   }
 }
 
@@ -151,7 +151,7 @@ function saveLog(stats: MigrationStats): void {
     fs.writeFileSync(CONFIG.LOG_FILE, JSON.stringify(logs, null, 2));
     console.info('[Log] Saved migration log');
   } catch (error) {
-    console.error('Failed to save log:', error);
+    logError(error, { operation: 'migration.saveLog' });
   }
 }
 
@@ -494,7 +494,10 @@ async function migrateDocument(
 
     console.info(`[Document] ✓ Successfully ${dryRun ? 'would migrate' : 'migrated'}: ${documentId}`);
   } catch (error) {
-    console.error(`[Document] ✗ Failed to migrate: ${documentId}`, error);
+    logError(error, {
+      operation: 'migration.migrateDocument',
+      documentId,
+    });
     stats.failedDocuments++;
     stats.errors.push({
       documentId,
@@ -596,7 +599,7 @@ async function main(): Promise<void> {
     if (stats.errors.length > 0) {
       console.info('\nErrors:');
       stats.errors.forEach((err) => {
-        console.error(`  - ${err.documentId}: ${err.error}`);
+        console.info(`  - ${err.documentId}: ${err.error}`);
       });
     }
 
@@ -618,7 +621,6 @@ async function main(): Promise<void> {
       }
     }
   } catch (error) {
-    console.error('\n✗ Migration failed:', error);
     logError(error, { operation: 'migration.main' });
     process.exit(1);
   }
@@ -631,6 +633,6 @@ main()
     process.exit(0);
   })
   .catch((error) => {
-    console.error('Migration script failed:', error);
+    logError(error, { operation: 'migration.scriptEntry' });
     process.exit(1);
   });

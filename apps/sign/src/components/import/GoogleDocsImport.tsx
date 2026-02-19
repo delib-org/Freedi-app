@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './GoogleDocsImport.module.scss';
 
 interface GoogleDocsImportProps {
@@ -62,7 +63,10 @@ export default function GoogleDocsImport({
         }
       }
     } catch (error) {
-      console.error('Import error:', error);
+      logError(error, {
+        operation: 'GoogleDocsImport.handleImport',
+        metadata: { statementId },
+      });
       setStatus('error');
       setErrorMessage(t('Failed to import document. Please try again.'));
     }

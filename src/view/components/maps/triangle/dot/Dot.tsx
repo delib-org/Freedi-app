@@ -2,6 +2,7 @@ import { FC, useState, useRef } from 'react';
 import styles from './Dot.module.scss';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	subStatement: Statement;
@@ -84,7 +85,7 @@ function fromAgreementToColor(agreement: number, agreementColors: string[]): str
 
 		return agreementColors[index];
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'dot.Dot.adjustAgreement' });
 
 		return undefined;
 	}

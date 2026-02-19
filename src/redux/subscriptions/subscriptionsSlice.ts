@@ -1,16 +1,21 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../types';
 import { WaitingMember } from '@freedi/shared-types';
 
 interface SubscriptionsState {
 	waitingList: WaitingMember[];
 }
 
+// Minimal cross-slice type for selectors that access the creator slice
+interface SubscriptionsSliceRootState {
+	subscriptions: SubscriptionsState;
+	creator: { creator: { uid: string } | null };
+}
+
 const initialState: SubscriptionsState = {
 	waitingList: [],
 };
 
-export const statementsSlicer = createSlice({
+export const subscriptionsSlice = createSlice({
 	name: 'subscriptions',
 	initialState,
 	reducers: {
@@ -39,17 +44,16 @@ export const statementsSlicer = createSlice({
 	},
 });
 
-const getWaitingList = (state: RootState) => state.subscriptions.waitingList;
-const getCreatorUid = (state: RootState) => state.creator.creator?.uid;
+const getWaitingList = (state: SubscriptionsSliceRootState) => state.subscriptions.waitingList;
+const getCreatorUid = (state: SubscriptionsSliceRootState) => state.creator.creator?.uid;
 
 export const { setWaitingMember, removeWaitingMember, clearWaitingMember } =
-	statementsSlicer.actions;
+	subscriptionsSlice.actions;
 export const selectWaitingMember = createSelector(
 	[getWaitingList, getCreatorUid],
 	(waitingList, creatorUid) => waitingList.filter((waiting) => waiting.adminId === creatorUid),
 );
-export const selectWaitingMemberByStatementId = (statementId: string) => (state: RootState) => {
-	return state.subscriptions.waitingList.filter((waiting) => waiting.statementId === statementId);
-};
-
-export default statementsSlicer;
+export const selectWaitingMemberByStatementId =
+	(statementId: string) => (state: SubscriptionsSliceRootState) => {
+		return state.subscriptions.waitingList.filter((waiting) => waiting.statementId === statementId);
+	};

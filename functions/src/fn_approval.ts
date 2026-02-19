@@ -4,6 +4,7 @@ import { Collections, Statement, DocumentApproval, ApprovalSchema } from '@freed
 import { number, parse } from 'valibot';
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
+import { logError } from './utils/errorHandling';
 
 export async function updateApprovalResults(
 	event: FirestoreEvent<
@@ -107,7 +108,7 @@ export async function updateApprovalResults(
 			try {
 				return parse(number(), averageApproval);
 			} catch (error) {
-				console.error(error);
+				logError(error, { operation: 'approval.getAverageApproval' });
 
 				return 0;
 			}

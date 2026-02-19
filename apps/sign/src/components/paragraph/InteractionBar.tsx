@@ -6,6 +6,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useDemographicStore, selectIsInteractionBlocked } from '@/store/demographicStore';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { useHeatMapStore } from '@/store/heatMapStore';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './InteractionBar.module.scss';
 
 interface InteractionBarProps {
@@ -98,7 +99,10 @@ export default function InteractionBar({
             setLocalEvaluation(previousEvaluation);
             setEvaluation(paragraphId, previousEvaluation ?? null);
             const error = await response.json();
-            console.error('Failed to remove evaluation:', error);
+            logError(error, {
+              operation: 'InteractionBar.handleVote.remove',
+              metadata: { paragraphId },
+            });
           }
         } else {
           // Create or update evaluation
@@ -116,14 +120,20 @@ export default function InteractionBar({
             setLocalEvaluation(previousEvaluation);
             setEvaluation(paragraphId, previousEvaluation ?? null);
             const error = await response.json();
-            console.error('Failed to submit evaluation:', error);
+            logError(error, {
+              operation: 'InteractionBar.handleVote.submit',
+              metadata: { paragraphId },
+            });
           }
         }
       } catch (error) {
         // Revert on error
         setLocalEvaluation(previousEvaluation);
         setEvaluation(paragraphId, previousEvaluation ?? null);
-        console.error('Error submitting evaluation:', error);
+        logError(error, {
+          operation: 'InteractionBar.handleVote',
+          metadata: { paragraphId },
+        });
       } finally {
         setIsSubmitting(false);
       }

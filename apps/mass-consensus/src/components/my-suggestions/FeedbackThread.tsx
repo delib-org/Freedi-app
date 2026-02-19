@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { CommentData } from '@/types/api';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './FeedbackThread.module.scss';
 
 interface FeedbackThreadProps {
@@ -63,7 +64,10 @@ export default function FeedbackThread({ statementId, initialComments, totalComm
         setIsExpanded(true);
       }
     } catch (error) {
-      console.error('[FeedbackThread] Error fetching comments:', error);
+      logError(error, {
+        operation: 'FeedbackThread.fetchComments',
+        statementId,
+      });
     } finally {
       setIsLoading(false);
     }

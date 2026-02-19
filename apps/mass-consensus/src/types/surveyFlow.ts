@@ -74,7 +74,7 @@ export function buildSurveyFlow(survey: Survey): SurveyFlowItem[] {
   const flow: SurveyFlowItem[] = [];
   const demographicPages = survey.demographicPages || [];
   const explanationPages = survey.explanationPages || [];
-  const questionIds = survey.questionIds || [];
+  const questionIds = [...new Set(survey.questionIds || [])];
 
   // Group demographic pages by position
   const demographicsByPosition = new Map<number, SurveyDemographicPage[]>();

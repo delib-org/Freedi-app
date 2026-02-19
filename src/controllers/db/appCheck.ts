@@ -13,6 +13,7 @@
 
 import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from 'firebase/app-check';
 import type { FirebaseApp } from 'firebase/app';
+import { logError } from '@/utils/errorHandling';
 
 // reCAPTCHA v3 site key for production
 // This key is safe to expose in client-side code as it's tied to specific domains
@@ -109,7 +110,7 @@ export function initializeFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
 
 		return appCheck;
 	} catch (error) {
-		console.error('App Check: Failed to initialize', error);
+		logError(error, { operation: 'appCheck.unknown', metadata: { message: 'App Check: Failed to initialize' } });
 		// Return null but don't throw - allow the app to continue
 		// Firebase services will work without App Check, just without the extra protection
 

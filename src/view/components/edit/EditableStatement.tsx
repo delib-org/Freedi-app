@@ -4,6 +4,7 @@ import EditText, { EditTextProps } from './EditText';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { getParagraphsText } from '@/utils/paragraphUtils';
+import { logError } from '@/utils/errorHandling';
 
 interface EditableStatementProps
 	extends Omit<EditTextProps, 'value' | 'secondaryValue' | 'editable' | 'editing' | 'onSave'> {
@@ -39,7 +40,7 @@ const EditableStatement: FC<EditableStatementProps> = ({
 			await updateStatementText(statement, title);
 			onSaveSuccess?.();
 		} catch (error) {
-			console.error('Error updating statement:', error);
+			logError(error, { operation: 'edit.EditableStatement.handleSave', metadata: { message: 'Error updating statement:' } });
 			onSaveError?.(error as Error);
 		}
 	};

@@ -1,0 +1,245 @@
+// Tooltip Atom - BEM Methodology
+// Usage: <div class="tooltip"><div class="tooltip__trigger">Hover me</div><div class="tooltip__content">Tip text</div></div>
+
+@use '../mixins' as *;
+
+// ============================================================================
+// TOOLTIP BLOCK
+// ============================================================================
+
+.tooltip {
+  position: relative;
+  display: inline-flex;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the tooltip)
+  // ============================================================================
+
+  &__trigger {
+    display: inline-flex;
+    cursor: pointer;
+  }
+
+  &__content {
+    position: absolute;
+    z-index: 9999;
+    width: max-content;
+    max-width: 220px;
+    min-width: 80px;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.8125rem;
+    font-weight: 400;
+    line-height: 1.4;
+    text-align: center;
+    white-space: normal;
+    word-wrap: break-word;
+    word-break: break-word;
+    hyphens: auto;
+    background-color: var(--text-title, rgba(0, 0, 0, 0.85));
+    color: var(--white, #fff);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    pointer-events: none;
+    animation: tooltipFadeIn 0.2s ease-out forwards;
+
+    @include mobile {
+      max-width: 160px;
+      min-width: 60px;
+      padding: 0.375rem 0.5rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  &__arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 5px solid transparent;
+  }
+
+  // ============================================================================
+  // MODIFIERS - Position variants
+  // ============================================================================
+
+  &--top {
+    .tooltip__content {
+      bottom: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .tooltip__arrow {
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-top-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-bottom: 0;
+    }
+  }
+
+  &--bottom {
+    .tooltip__content {
+      top: calc(100% + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .tooltip__arrow {
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-bottom-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-top: 0;
+    }
+  }
+
+  &--left {
+    .tooltip__content {
+      right: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .tooltip__arrow {
+      right: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-left-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-right: 0;
+    }
+  }
+
+  &--right {
+    .tooltip__content {
+      left: calc(100% + 10px);
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .tooltip__arrow {
+      left: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      border-right-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-left: 0;
+    }
+  }
+
+  &--top-left {
+    .tooltip__content {
+      bottom: calc(100% + 10px);
+      right: 0;
+    }
+
+    .tooltip__arrow {
+      bottom: -10px;
+      right: 1rem;
+      border-top-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-bottom: 0;
+    }
+  }
+
+  &--top-right {
+    .tooltip__content {
+      bottom: calc(100% + 10px);
+      left: 0;
+    }
+
+    .tooltip__arrow {
+      bottom: -10px;
+      left: 1rem;
+      border-top-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-bottom: 0;
+    }
+  }
+
+  &--bottom-left {
+    .tooltip__content {
+      top: calc(100% + 10px);
+      right: 0;
+    }
+
+    .tooltip__arrow {
+      top: -10px;
+      right: 1rem;
+      border-bottom-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-top: 0;
+    }
+  }
+
+  &--bottom-right {
+    .tooltip__content {
+      top: calc(100% + 10px);
+      left: 0;
+    }
+
+    .tooltip__arrow {
+      top: -10px;
+      left: 1rem;
+      border-bottom-color: var(--text-title, rgba(0, 0, 0, 0.85));
+      border-top: 0;
+    }
+  }
+
+  // ============================================================================
+  // MODIFIERS - Style variants
+  // ============================================================================
+
+  &--light {
+    .tooltip__content {
+      background-color: var(--white);
+      color: var(--text-body);
+      border: 1px solid var(--border-light);
+      @include shadow-elevated;
+    }
+
+    &.tooltip--top .tooltip__arrow {
+      border-top-color: var(--white);
+    }
+
+    &.tooltip--bottom .tooltip__arrow {
+      border-bottom-color: var(--white);
+    }
+
+    &.tooltip--left .tooltip__arrow {
+      border-left-color: var(--white);
+    }
+
+    &.tooltip--right .tooltip__arrow {
+      border-right-color: var(--white);
+    }
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @media (prefers-reduced-motion: reduce) {
+    .tooltip__content {
+      animation: none;
+    }
+  }
+
+  @media (prefers-contrast: more) {
+    .tooltip__content {
+      background-color: #000;
+      color: #fff;
+      border: 1px solid #fff;
+    }
+  }
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}

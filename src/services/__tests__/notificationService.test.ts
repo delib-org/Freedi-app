@@ -347,7 +347,7 @@ describe('NotificationService', () => {
 
 			await service.syncTokenWithSubscriptions('user-123');
 
-			expect(consoleErrorSpy).toHaveBeenCalledWith('No token available to sync');
+			expect(consoleErrorSpy).toHaveBeenCalled();
 			consoleErrorSpy.mockRestore();
 		});
 	});

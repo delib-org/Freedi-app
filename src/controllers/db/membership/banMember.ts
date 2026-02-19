@@ -1,11 +1,12 @@
-import { Role, Collections } from '@freedi/shared-types';
-import { doc, getDoc } from 'firebase/firestore';
+import { Role } from '@freedi/shared-types';
+import { getDoc } from 'firebase/firestore';
 import { updateMemberRole } from '../subscriptions/setSubscriptions';
 import { removeUserEvaluations } from '../evaluation/removeUserEvaluations';
 import { getStatementFromDB } from '../statements/getStatement';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
-import { FireStore } from '../config';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
+import { createSubscriptionRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Bans a member from a statement by updating their role to banned
@@ -33,7 +34,7 @@ export async function banMember(
 			throw new Error('Error getting subscription ID');
 		}
 
-		const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, subscriptionId);
+		const subscriptionRef = createSubscriptionRef(subscriptionId);
 		const subscriptionDoc = await getDoc(subscriptionRef);
 
 		if (!subscriptionDoc.exists()) {
@@ -73,7 +74,7 @@ export async function banMember(
 			bannedAt: new Date().toISOString(),
 		});
 	} catch (error) {
-		console.error('Error banning member:', error);
+		logError(error, { operation: 'membership.banMember.unknown', metadata: { message: 'Error banning member:' } });
 		throw error;
 	}
 }
@@ -105,7 +106,7 @@ export async function unbanMember(statementId: string, userId: string): Promise<
 			unbannedAt: new Date().toISOString(),
 		});
 	} catch (error) {
-		console.error('Error unbanning member:', error);
+		logError(error, { operation: 'membership.banMember.unbanMember', metadata: { message: 'Error unbanning member:' } });
 		throw error;
 	}
 }

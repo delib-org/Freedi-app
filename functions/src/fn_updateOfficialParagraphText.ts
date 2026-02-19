@@ -15,7 +15,7 @@
 
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from '@freedi/shared-types';
 
 const db = getFirestore();
@@ -143,10 +143,10 @@ export const fn_updateOfficialParagraphText = onDocumentUpdated(
 			// Update official paragraph text to winning suggestion
 			await officialParagraphRef.update({
 				statement: winningSuggestion.statement,
-				lastUpdate: FieldValue.serverTimestamp(),
+				lastUpdate: Date.now(),
 				// Optionally track which suggestion was applied
 				appliedSuggestionId: winningSuggestion.statementId,
-				appliedAt: FieldValue.serverTimestamp(),
+				appliedAt: Date.now(),
 			});
 
 			logger.info('[fn_updateOfficialParagraphText] Updated official paragraph text', {

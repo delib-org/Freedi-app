@@ -12,7 +12,7 @@ import {
 	evaluationType,
 	Collections,
 } from '@freedi/shared-types';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
@@ -152,6 +152,13 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
 	}
 
+	// Handler for powerFollowMe toggle (root-level property)
+	function handlePowerFollowMeChange(newValue: boolean) {
+		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
+		const powerFollowMePath = newValue ? `/statement/${statement.statementId}/chat` : '';
+		updateDoc(statementRef, { powerFollowMe: powerFollowMePath, lastUpdate: Date.now() });
+	}
+
 	// Handler for forceLanguage (root-level property for forcing survey language)
 	function handleForceLanguageChange(newValue: boolean) {
 		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
@@ -201,6 +208,11 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						label={'Enable Sub-Conversations'}
 						isChecked={settings.hasChildren ?? false}
 						onChange={(checked) => handleSettingChange('hasChildren', checked)}
+					/>
+					<Checkbox
+						label={t('Power Follow Me')}
+						isChecked={!!statement.powerFollowMe}
+						onChange={handlePowerFollowMeChange}
 					/>
 				</div>
 			</div>

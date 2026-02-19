@@ -3,7 +3,7 @@ import { useParams } from 'react-router';
 import { OptionBar } from '../optionBar/OptionBar';
 import styles from './VotingArea.module.scss';
 import { getSortedVotingOptions, isVerticalOptionBar } from './VotingAreaCont';
-import useWindowDimensions from '@/controllers/hooks/useWindowDimentions';
+import useWindowDimensions from '@/controllers/hooks/useWindowDimensions';
 
 import { useSelector } from 'react-redux';
 import { statementSelectorById } from '@/redux/statements/statementsSlice';

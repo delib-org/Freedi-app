@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SignDemographicQuestion } from '@/types/demographics';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './DemographicResponses.module.scss';
 
 interface UserResponse {
@@ -36,7 +37,10 @@ export default function DemographicResponses({ documentId }: DemographicResponse
       setQuestions(data.questions || []);
       setResponses(data.responses || []);
     } catch (err) {
-      console.error('Failed to fetch demographic responses:', err);
+      logError(err, {
+        operation: 'DemographicResponses.fetchResponses',
+        documentId,
+      });
       setError(t('Failed to load responses'));
     } finally {
       setLoading(false);

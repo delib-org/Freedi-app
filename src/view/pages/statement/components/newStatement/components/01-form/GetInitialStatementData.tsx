@@ -19,9 +19,10 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import Checkbox from '@/view/components/checkbox/Checkbox';
 import { NewStatementContext, SimilaritySteps } from '../../NewStatementCont';
 import { getSimilarOptions } from './GetInitialStatementDataCont';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import SuggestionLoader from '@/view/components/loaders/SuggestionLoader';
+import { logError } from '@/utils/errorHandling';
 
 export default function GetInitialStatementData() {
 	const {
@@ -125,7 +126,7 @@ export default function GetInitialStatementData() {
 				});
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: '01-form.GetInitialStatementData.unknown' });
 			if (error instanceof Error) {
 				setError(error.message);
 			}
@@ -242,7 +243,7 @@ function getTexts(statementType: StatementType): {
 				};
 		}
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: '01-form.GetInitialStatementData.unknown' });
 
 		return {
 			header: 'Create a statement',

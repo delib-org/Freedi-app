@@ -81,6 +81,12 @@ export interface CreateSurveyRequest {
   customIntroText?: string;
   /** Whether to show the introduction text on welcome screen (defaults to true) */
   showIntro?: boolean;
+  /** Whether to show email signup on completion screen (defaults to true) */
+  showEmailSignup?: boolean;
+  /** Custom email signup title (replaces default i18n 'stayUpdated') */
+  customEmailTitle?: string;
+  /** Custom email signup description (replaces default i18n 'emailSignupDescription') */
+  customEmailDescription?: string;
 }
 
 /**
@@ -115,6 +121,12 @@ export interface UpdateSurveyRequest {
   openingSlideContent?: string;
   /** Whether to show custom opening slide */
   showOpeningSlide?: boolean;
+  /** Whether to show email signup on completion screen (defaults to true) */
+  showEmailSignup?: boolean;
+  /** Custom email signup title (replaces default i18n 'stayUpdated') */
+  customEmailTitle?: string;
+  /** Custom email signup description (replaces default i18n 'emailSignupDescription') */
+  customEmailDescription?: string;
 }
 
 /**

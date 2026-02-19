@@ -6,7 +6,7 @@ const nextConfig = {
   poweredByHeader: false,
 
   // Transpile shared packages
-  transpilePackages: ['@freedi/shared-i18n'],
+  transpilePackages: ['@freedi/shared-i18n', '@freedi/shared-utils'],
 
   // Optimize for production
   compiler: {

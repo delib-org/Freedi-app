@@ -1,7 +1,7 @@
 import { FC, useContext, useEffect } from 'react';
-import { Link, useLocation } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import FollowMeIcon from '../../../../components/icons/FollowMeIcon';
-import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
+import { setFollowMeDB, setPowerFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Role } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -18,11 +18,7 @@ const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { dir, t } = useTranslation();
 	const { pathname } = useLocation();
-
-	// Early return if no statement in context
-	if (!statement) {
-		return null;
-	}
+	const navigate = useNavigate();
 
 	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const _isAdmin = role === Role.admin;
@@ -41,37 +37,90 @@ const FollowMeToast: FC = () => {
 		}
 	}, [statement?.topParentId, topParentStatement]);
 
+	// Determine active mode: power takes precedence
+	const powerFollowMePath = topParentStatement?.powerFollowMe;
+	const followMePath = topParentStatement?.followMe;
+	const isPowerMode = !!powerFollowMePath && powerFollowMePath !== '';
+	const activePath = isPowerMode ? powerFollowMePath : followMePath;
+
+	// Admin in power mode: auto-update the powerFollowMe path as they navigate
+	useEffect(() => {
+		if (!isPowerMode || !_isAdmin || !topParentStatement) return;
+
+		// Don't update if the path hasn't changed
+		if (pathname === powerFollowMePath) return;
+
+		// Only update for paths within the statement tree (not settings, etc.)
+		if (pathname.includes('/settings')) return;
+
+		setPowerFollowMeDB(topParentStatement, pathname);
+	}, [isPowerMode, _isAdmin, pathname, topParentStatement, powerFollowMePath]);
+
+	// Auto-redirect for non-admin users in power mode
+	useEffect(() => {
+		if (!isPowerMode || _isAdmin || !powerFollowMePath) return;
+
+		// Don't redirect if already on the target page
+		if (pathname.startsWith(powerFollowMePath)) return;
+
+		const timer = setTimeout(() => {
+			navigate(powerFollowMePath);
+		}, 300);
+
+		return () => clearTimeout(timer);
+	}, [isPowerMode, _isAdmin, powerFollowMePath, pathname, navigate]);
+
 	function handleRemoveToast() {
 		if (!_isAdmin) return;
 		if (!topParentStatement) return;
 
-		setFollowMeDB(topParentStatement, '');
+		if (isPowerMode) {
+			setPowerFollowMeDB(topParentStatement, '');
+		} else {
+			setFollowMeDB(topParentStatement, '');
+		}
 	}
 
-	//in case the followers are in the page, turn off the follow me toast
-	// Check if the current pathname matches the followMe path
-	// Compare the base paths (without considering trailing segments like /chat, /main, etc.)
-	const followMePath = topParentStatement?.followMe;
+	if (!statement) return null;
 
-	if (followMePath && pathname.startsWith(followMePath) && !_isAdmin) return null;
+	// If the user is already on the followed page and not admin, hide toast
+	if (activePath && pathname.startsWith(activePath) && !_isAdmin) return null;
 
-	//if the follow me is empty, turn off the follow me toast
-	if (topParentStatement?.followMe === '' || topParentStatement?.followMe === undefined)
-		return null;
+	// If no active follow mode, hide toast
+	if (!activePath || activePath === '') return null;
 
-	//if admin render toast, but do not use link
-	return _isAdmin ? (
-		<ToastInner />
-	) : (
-		<Link to={topParentStatement?.followMe || '/home'}>
+	// Admin sees toast they can click to deactivate; non-admin in regular mode gets a link
+	if (_isAdmin) {
+		return <ToastInner />;
+	}
+
+	// In power mode, non-admin is auto-redirected so just show informational toast
+	if (isPowerMode) {
+		return <ToastInner />;
+	}
+
+	// Regular follow mode: non-admin gets a clickable link
+	return (
+		<Link to={activePath || '/home'}>
 			<ToastInner />
 		</Link>
 	);
 
 	function ToastInner() {
+		let label: string;
+		if (_isAdmin) {
+			label = isPowerMode ? t('Power Follow Mode Active') : t('Follow Mode Active');
+		} else {
+			label = isPowerMode ? t('Following Instructor (Auto)') : t('Follow Instructor');
+		}
+
+		const toastClass = isPowerMode
+			? `${styles.followMeToast} ${styles['followMeToast--power']}`
+			: styles.followMeToast;
+
 		return (
-			<button className={styles.followMeToast} onClick={handleRemoveToast}>
-				<span>{t(_isAdmin ? 'Follow Mode Active' : 'Follow Instructor')}</span>
+			<button className={toastClass} onClick={handleRemoveToast}>
+				<span>{label}</span>
 				<div
 					style={{
 						transform: `rotate(${dir === 'rtl' ? '180deg' : '0deg'})`,

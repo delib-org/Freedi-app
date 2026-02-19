@@ -104,6 +104,131 @@ import { Button, FAB } from '@/view/components/atomic/atoms/Button';
 - `large` - Large button
 - `mass-consensus` - Responsive mass consensus size
 
+#### Checkbox
+```typescript
+import { Checkbox } from '@/view/components/atomic/atoms/Checkbox';
+
+// Basic usage
+<Checkbox label="Accept terms" checked={isChecked} onChange={setIsChecked} />
+
+// With hint text
+<Checkbox
+  label="Subscribe to newsletter"
+  hint="We will not spam you"
+  checked={subscribed}
+  onChange={setSubscribed}
+/>
+
+// With custom icons (e.g., SVG checkbox icons)
+<Checkbox
+  label="Custom icons"
+  checked={checked}
+  onChange={setChecked}
+  icon={<CheckboxEmptyIcon />}
+  checkedIcon={<CheckboxCheckedIcon />}
+/>
+
+// States
+<Checkbox label="Disabled" checked={false} onChange={noop} disabled />
+<Checkbox label="Error" checked={false} onChange={noop} error />
+<Checkbox label="Indeterminate" checked={false} onChange={noop} indeterminate />
+```
+
+**Sizes:** `small`, `medium` (default), `large`
+
+#### Input
+```typescript
+import { Input } from '@/view/components/atomic/atoms/Input';
+
+// Basic usage
+<Input name="username" label="Username" placeholder="Enter your name" />
+
+// Controlled with validation
+<Input
+  name="email"
+  label="Email"
+  type="email"
+  value={email}
+  onChange={setEmail}
+  state={emailError ? 'error' : 'default'}
+  errorText={emailError}
+  required
+/>
+
+// With icons and clearable
+<Input
+  name="search"
+  placeholder="Search..."
+  iconLeft={<SearchIcon />}
+  clearable
+  onChange={handleSearch}
+/>
+
+// Textarea mode
+<Input
+  name="description"
+  label="Description"
+  as="textarea"
+  rows={5}
+  maxLength={500}
+/>
+```
+
+**Sizes:** `small`, `medium` (default), `large`
+**States:** `default`, `error`, `success`, `disabled`
+
+#### Loader
+```typescript
+import { Loader } from '@/view/components/atomic/atoms/Loader';
+
+// Basic spinner
+<Loader />
+
+// With text
+<Loader text="Loading data..." />
+
+// Size variants
+<Loader size="small" />
+<Loader size="large" />
+
+// Centered in container
+<Loader layout="centered" text="Please wait..." />
+
+// Fullscreen overlay
+<Loader layout="fullscreen" text="Processing..." />
+
+// White variant (for dark backgrounds)
+<Loader variant="white" />
+```
+
+**Sizes:** `small`, `medium` (default), `large`
+**Variants:** `default`, `primary`, `white`
+**Layouts:** `inline` (default), `centered`, `fullscreen`
+
+#### Tooltip
+```typescript
+import { Tooltip } from '@/view/components/atomic/atoms/Tooltip';
+
+// Basic usage
+<Tooltip content="More information">
+  <InfoIcon />
+</Tooltip>
+
+// Different positions
+<Tooltip content="Above" position="top">...</Tooltip>
+<Tooltip content="Below" position="bottom">...</Tooltip>
+<Tooltip content="To the left" position="left">...</Tooltip>
+<Tooltip content="To the right" position="right">...</Tooltip>
+
+// Light variant
+<Tooltip content="Light tooltip" variant="light">
+  <button>Hover me</button>
+</Tooltip>
+```
+
+**Positions:** `top` (default), `bottom`, `left`, `right`, `top-left`, `top-right`, `bottom-left`, `bottom-right`
+**Variants:** `dark` (default), `light`
+
 ### Molecules
 
 #### Card
@@ -167,6 +292,60 @@ import { Card } from '@/view/components/atomic/molecules/Card';
 - `selected` - Selected state (blue border)
 - `disabled` - Disabled state
 - `loading` - Loading state
+
+#### Modal
+```typescript
+import { Modal } from '@/view/components/atomic/molecules/Modal';
+
+// Basic usage
+<Modal isOpen={isOpen} onClose={handleClose} title="Confirm">
+  <p>Are you sure?</p>
+</Modal>
+
+// With footer buttons
+<Modal
+  isOpen={isOpen}
+  onClose={handleClose}
+  title="Delete Item"
+  variant="warning"
+  footer={
+    <>
+      <Button text="Cancel" variant="secondary" onClick={handleClose} />
+      <Button text="Delete" variant="reject" onClick={handleDelete} />
+    </>
+  }
+>
+  <p>This action cannot be undone.</p>
+</Modal>
+
+// Bottom sheet on mobile
+<Modal
+  isOpen={isOpen}
+  onClose={handleClose}
+  layout="bottom-sheet"
+  title="Options"
+>
+  <ul>...</ul>
+</Modal>
+
+// Full screen
+<Modal isOpen={isOpen} onClose={handleClose} size="full-screen">
+  <p>Full screen content</p>
+</Modal>
+```
+
+**Sizes:** `small`, `medium` (default), `large`, `full-screen`
+**Variants:** `default`, `primary`, `warning`, `error`, `success`
+**Layouts:** `default`, `bottom-sheet`, `centered`
+**Footer Alignment:** `end` (default), `center`, `start`, `space-between`
+
+**Features:**
+- Portal rendering (renders to `document.body`)
+- Escape key to close (configurable via `closeOnEscape`)
+- Backdrop click to close (configurable via `closeOnBackdrop`)
+- Body scroll lock when open
+- Focus management (traps focus, restores on close)
+- Close button in header (toggleable via `showCloseButton`)
 
 ## Styling Guide
 

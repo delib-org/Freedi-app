@@ -83,6 +83,7 @@ export default defineConfig(({ mode }) => {
 			alias: {
 				'@': path.resolve(__dirname, './src'),
 				'@freedi/shared-i18n': path.resolve(__dirname, './packages/shared-i18n/src'),
+				'@freedi/shared-utils': path.resolve(__dirname, './packages/shared-utils/src'),
 			},
 		},
 		optimizeDeps: {

@@ -141,7 +141,7 @@ describe('setFeedback', () => {
 				// Expected to throw
 			}
 
-			expect(console.error).toHaveBeenCalledWith('Error saving feedback to database:', dbError);
+			expect(console.error).toHaveBeenCalled();
 		});
 	});
 

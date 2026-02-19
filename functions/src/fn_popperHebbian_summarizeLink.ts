@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
+import { logError } from './utils/errorHandling';
 
 interface SummarizeLinkRequest {
 	url: string;
@@ -99,7 +100,10 @@ async function fetchWebpage(
 
 		return { title, content, domain };
 	} catch (error) {
-		console.error('Error fetching webpage:', error);
+		logError(error, {
+			operation: 'popperHebbian.summarizeLink.fetchWebpage',
+			metadata: { url },
+		});
 		throw new HttpsError('internal', 'Failed to fetch webpage');
 	}
 }
@@ -154,7 +158,7 @@ Provide a clear, objective summary in ${languageName}:`;
 
 		return summary;
 	} catch (error) {
-		console.error('Error summarizing content:', error);
+		logError(error, { operation: 'popperHebbian.summarizeLink.summarizeContent' });
 		// Return a basic fallback if AI fails
 
 		return `Article from this webpage. Click to read more.`;
@@ -210,7 +214,11 @@ export const summarizeLink = onCall<SummarizeLinkRequest>(
 				domain,
 			};
 		} catch (error) {
-			console.error('Error processing link:', error);
+			logError(error, {
+				operation: 'popperHebbian.summarizeLink',
+				userId: request.auth?.uid,
+				metadata: { url },
+			});
 			throw new HttpsError('internal', 'Failed to process link');
 		}
 	},

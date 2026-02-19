@@ -11,6 +11,7 @@ import QuickActionBar from '@/components/admin/editor/QuickActionBar';
 import InlineAddContent from '@/components/admin/editor/InlineAddContent';
 import GoogleDocsImport from '@/components/import/GoogleDocsImport';
 import { useAdminContext } from '../AdminContext';
+import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { collection, query, where, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
@@ -592,7 +593,7 @@ export default function EditorPage() {
                         ) : (
                           <div
                             className={styles.preview}
-                            dangerouslySetInnerHTML={{ __html: paragraph.content }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeHTML(paragraph.content) }}
                           />
                         )}
                       </div>

@@ -1,5 +1,6 @@
 import { notificationService } from '@/services/notificationService';
 import { auth } from '@/controllers/db/config';
+import { logError } from '@/utils/errorHandling';
 
 export async function checkNotificationStatus() {
 	console.info('=== NOTIFICATION STATUS CHECK ===');
@@ -37,7 +38,7 @@ export async function checkNotificationStatus() {
 				tokenPreview: newToken ? newToken.substring(0, 30) + '...' : 'failed',
 			});
 		} catch (error) {
-			console.error('Failed to initialize:', error);
+			logError(error, { operation: 'utils.notificationStatus.unknown', metadata: { message: 'Failed to initialize:' } });
 		}
 	} else if (!user) {
 		console.info('3. Cannot initialize - user not logged in');
@@ -61,7 +62,7 @@ export async function checkNotificationStatus() {
 			),
 		});
 	} catch (error) {
-		console.error('Error getting diagnostics:', error);
+		logError(error, { operation: 'utils.notificationStatus.unknown', metadata: { message: 'Error getting diagnostics:' } });
 	}
 
 	console.info('=== END STATUS CHECK ===');
@@ -73,7 +74,7 @@ export async function refreshNotificationToken() {
 
 	const user = auth.currentUser;
 	if (!user) {
-		console.error('No user logged in');
+		logError(new Error('No user logged in'), { operation: 'utils.notificationStatus.refreshNotificationToken' });
 
 		return;
 	}
@@ -86,7 +87,7 @@ export async function refreshNotificationToken() {
 			tokenPreview: newToken ? newToken.substring(0, 30) + '...' : 'failed',
 		});
 	} catch (error) {
-		console.error('Error refreshing token:', error);
+		logError(error, { operation: 'utils.notificationStatus.refreshNotificationToken', metadata: { message: 'Error refreshing token:' } });
 	}
 }
 

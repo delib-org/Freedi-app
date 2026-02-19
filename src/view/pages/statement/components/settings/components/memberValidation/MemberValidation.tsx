@@ -1,5 +1,5 @@
 import React, { FC, useState, useEffect } from 'react';
-import { Statement, User, Role } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import SettingsModal from '../settingsModal/SettingsModal';
@@ -8,25 +8,13 @@ import styles from './MemberValidation.module.scss';
 import { getUserDemographicResponses } from '@/controllers/db/userDemographic/getUserDemographic';
 import { saveMemberValidationStatus } from '@/controllers/db/memberValidation/memberValidationStatus';
 import { store } from '@/redux/store';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement;
 }
 
-export interface MemberReviewData {
-	userId: string;
-	user: User;
-	role?: Role;
-	responses: {
-		questionId: string;
-		question: string;
-		answer: string | string[];
-		answeredAt?: number;
-	}[];
-	joinedAt?: number;
-	flags: string[];
-	status: 'pending' | 'approved' | 'flagged' | 'banned';
-}
+import type { MemberReviewData } from '@/types/demographics';
 
 const MemberValidation: FC<Props> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -50,7 +38,7 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 			// This will be implemented with actual data fetching
 			setMembers(responses as MemberReviewData[]);
 		} catch (error) {
-			console.error('Error loading member responses:', error);
+			logError(error, { operation: 'memberValidation.MemberValidation.loadMemberResponses', metadata: { message: 'Error loading member responses:' } });
 		} finally {
 			setLoading(false);
 		}
@@ -94,7 +82,7 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 
 			console.info(`Action ${action} for user ${userId} saved successfully`);
 		} catch (error) {
-			console.error(`Error performing action ${action} for user ${userId}:`, error);
+			logError(error, { operation: 'memberValidation.MemberValidation.unknown', metadata: { message: 'Error performing action ${action} for user ${userId}:' } });
 		}
 	};
 

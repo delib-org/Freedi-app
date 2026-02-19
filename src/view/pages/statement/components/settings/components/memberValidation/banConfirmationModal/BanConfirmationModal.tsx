@@ -1,9 +1,10 @@
 import React, { FC, useState } from 'react';
 import { Statement, Role } from '@freedi/shared-types';
-import { MemberReviewData } from '../MemberValidation';
+import type { MemberReviewData } from '@/types/demographics';
 import styles from './BanConfirmationModal.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	member: MemberReviewData;
@@ -37,7 +38,7 @@ const BanConfirmationModal: FC<Props> = ({ member, statement, onConfirm, onCance
 	const handleConfirm = () => {
 		// Final safety check before confirming
 		if (!userCanBeBanned) {
-			console.error('Attempted to ban protected user:', banDisabledReason);
+			logError(banDisabledReason, { operation: 'banConfirmationModal.BanConfirmationModal.handleConfirm', metadata: { message: 'Attempted to ban protected user:' } });
 
 			return;
 		}

@@ -1,4 +1,5 @@
 import React, { FC, useRef, useState } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Styles
 import Button, { ButtonType } from '../buttons/button/Button';
@@ -37,7 +38,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 			localStorage.setItem('displayName', _displayName);
 			closeModal();
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'enterNameModal.EnterNameModal.handleSubmit' });
 		}
 	}
 
@@ -50,7 +51,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 				closeModal();
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'enterNameModal.EnterNameModal.handleStart' });
 		}
 	}
 

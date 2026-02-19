@@ -3,15 +3,9 @@ import evaluation2 from '@/assets/icons/evaluation/evaluation2.svg';
 import evaluation3 from '@/assets/icons/evaluation/evaluation3.svg';
 import evaluation4 from '@/assets/icons/evaluation/evaluation4.svg';
 import evaluation5 from '@/assets/icons/evaluation/evaluation5.svg';
+import type { EnhancedEvaluationThumb } from '@/types/evaluation';
 
-export interface EnhancedEvaluationThumb {
-	id: string;
-	evaluation: number;
-	svg: string;
-	color: string;
-	colorSelected: string;
-	alt: string;
-}
+export type { EnhancedEvaluationThumb } from '@/types/evaluation';
 
 export const enhancedEvaluationsThumbs: EnhancedEvaluationThumb[] = [
 	{

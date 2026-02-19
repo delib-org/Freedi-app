@@ -12,6 +12,7 @@ import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 import { store } from '@/redux/store';
 import { deleteStatement, setStatement } from '@/redux/statements/statementsSlice';
+import { logError } from '@/utils/errorHandling';
 
 export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 	try {
@@ -24,7 +25,7 @@ export async function getResultsDB(statement: Statement): Promise<Statement[]> {
 			return [];
 		}
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'results.getResults.getResultsDB' });
 
 		return [];
 	}
@@ -65,7 +66,7 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 			)
 			.slice(0, numberOfOptions);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'results.getResults.topOptions' });
 
 		return [];
 	}
@@ -103,13 +104,12 @@ export function listenToDescendants(statementId: string) {
 						dispatch(deleteStatement(statement.statementId));
 					}
 				} catch (error) {
-					console.error('Error parsing statement:', error);
-					console.error('Statement data:', change.doc.data());
+					logError(error, { operation: 'results.listenToDescendants.parseStatement', metadata: { documentData: change.doc.data() } });
 				}
 			});
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'results.getResults.unknown' });
 
 		return () => {
 			return;
