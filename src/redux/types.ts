@@ -1,5 +1,8 @@
 // Redux type definitions - centralized to avoid circular dependencies
-// Import the actual types from store.ts
-// Slices should import from here instead of directly from store
-
-export type { RootState, AppDispatch } from './store';
+// NOTE: RootState and AppDispatch are now exported from store.ts directly.
+// This file is kept for backward compatibility but no longer re-exports from store
+// to avoid creating circular dependencies.
+//
+// If you need RootState or AppDispatch, import directly from '@/redux/store'.
+// Slice files should use narrowly-typed state parameters instead of RootState
+// to avoid circular dependencies (e.g., { statements: StatementsState }).

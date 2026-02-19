@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../types';
 import { updateArray, StatementMetaData, StatementMetaDataSchema } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { logError } from '@/utils/errorHandling';
 
 // Define a type for the slice state
 interface StatementMetaDataState {
@@ -28,7 +28,7 @@ export const statementMetaData = createSlice({
 					'statementId',
 				);
 			} catch (error) {
-				console.error(error);
+				logError(error, { operation: 'redux.statements.statementsMetaSlice.unknown' });
 			}
 		},
 	},
@@ -36,10 +36,11 @@ export const statementMetaData = createSlice({
 
 export const { setStatementMetaData } = statementMetaData.actions;
 
-// Other code such as selectors can use the imported `RootState` type
-export const statementMetaDataSelector = (statementId: string) => (state: RootState) =>
-	state.statementMetaData.statementsMetaData.find(
-		(statementMetaData) => statementMetaData.statementId === statementId,
-	);
+// Other code such as selectors can use the narrowly-typed state parameter
+export const statementMetaDataSelector =
+	(statementId: string) => (state: { statementMetaData: StatementMetaDataState }) =>
+		state.statementMetaData.statementsMetaData.find(
+			(statementMetaData) => statementMetaData.statementId === statementId,
+		);
 
 export default statementMetaData.reducer;

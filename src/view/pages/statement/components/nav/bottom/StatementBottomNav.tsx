@@ -1,5 +1,6 @@
 import { FC, useContext, useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router';
+import { logError } from '@/utils/errorHandling';
 
 // Icons
 import AgreementIcon from '@/assets/icons/agreementIcon.svg?react';
@@ -184,7 +185,7 @@ const StatementBottomNav: FC<Props> = () => {
 				dispatch,
 			});
 		} catch (error) {
-			console.error('Failed to publish refined idea:', error);
+			logError(error, { operation: 'bottom.StatementBottomNav.paragraphs', metadata: { message: 'Failed to publish refined idea:' } });
 		}
 	}
 

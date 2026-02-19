@@ -2,6 +2,8 @@
  * Utility functions for calculating consensus colors based on agreement scores
  */
 
+import { logError } from './errorHandling';
+
 // CSS variable names for agreement colors from most negative to most positive
 const agreementColors = [
   '--range-objections-100', // Strong disagreement (dark red)
@@ -33,7 +35,7 @@ export function getAgreementColor(agreement: number): string {
 
     return agreementColors[Math.max(0, Math.min(index, agreementColors.length - 1))];
   } catch (error) {
-    console.error('Error calculating agreement color:', error);
+    logError(error, { operation: 'consensusColors.getAgreementColor' });
 
     return agreementColors[4]; // Default to neutral color
   }

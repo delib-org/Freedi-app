@@ -18,6 +18,7 @@ import {
 } from '../userDemographic/getUserDemographic';
 import { getStatementFromDB } from '../statements/getStatement';
 import { createSubscriptionRef, createTimestamps } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 interface SetSubscriptionProps {
 	statement: Statement;
@@ -39,7 +40,7 @@ export async function setStatementSubscriptionToDB({
 	try {
 		// Validate inputs
 		if (!statement || !creator || !creator.uid) {
-			console.error('Invalid inputs for setStatementSubscriptionToDB', { statement, creator });
+			logError(new Error('Invalid inputs for setStatementSubscriptionToDB'), { operation: 'subscriptions.setSubscriptions.setStatementSubscriptionToDB', metadata: { detail: { statement, creator } } });
 
 			return;
 		}
@@ -109,7 +110,7 @@ export async function setStatementSubscriptionToDB({
 					}
 				}
 			} catch (demographicError) {
-				console.error('Error checking group demographic questions:', demographicError);
+				logError(demographicError, { operation: 'subscriptions.setSubscriptions.hasUnanswered', metadata: { message: 'Error checking group demographic questions:' } });
 				// Don't fail the subscription if demographic check fails
 			}
 		}
@@ -117,7 +118,7 @@ export async function setStatementSubscriptionToDB({
 		// Only log non-permission errors
 		const err = error as { code?: string };
 		if (err?.code !== 'permission-denied') {
-			console.error('Error setting subscription:', error);
+			logError(error, { operation: 'subscriptions.setSubscriptions.hasUnanswered', metadata: { message: 'Error setting subscription:' } });
 		}
 	}
 }
@@ -145,7 +146,7 @@ export async function updateLastReadTimestamp(statementId: string, userId: strin
 		// Only log non-permission errors
 		const err = error as { code?: string };
 		if (err?.code !== 'permission-denied') {
-			console.error('Error updating last read timestamp:', error);
+			logError(error, { operation: 'subscriptions.setSubscriptions.updateLastReadTimestamp', metadata: { message: 'Error updating last read timestamp:' } });
 		}
 	}
 }
@@ -174,7 +175,7 @@ export async function setRoleToDB(statement: Statement, role: Role, user: User):
 
 		return setDoc(statementSubscriptionRef, { role }, { merge: true });
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'subscriptions.setSubscriptions.setRoleToDB' });
 	}
 }
 
@@ -213,7 +214,7 @@ export async function updateMemberRole(
 			statementId: statementId, // Include statementId to satisfy Firebase rules
 		});
 	} catch (error) {
-		console.error('Error updating member role:', error);
+		logError(error, { operation: 'subscriptions.setSubscriptions.unknown', metadata: { message: 'Error updating member role:' } });
 		throw error;
 	}
 }
@@ -245,7 +246,7 @@ export async function addTokenToSubscription(
 		// If document doesn't exist, don't create it - user should be subscribed first
 		// This prevents creating incomplete subscription objects
 	} catch (error) {
-		console.error('Error adding token to subscription:', error);
+		logError(error, { operation: 'subscriptions.setSubscriptions.addTokenToSubscription', metadata: { message: 'Error adding token to subscription:' } });
 	}
 }
 
@@ -275,7 +276,7 @@ export async function removeTokenFromSubscription(
 		}
 		// If document doesn't exist, nothing to remove from
 	} catch (error) {
-		console.error('Error removing token from subscription:', error);
+		logError(error, { operation: 'subscriptions.setSubscriptions.removeTokenFromSubscription', metadata: { message: 'Error removing token from subscription:' } });
 	}
 }
 
@@ -310,6 +311,6 @@ export async function updateNotificationPreferences(
 		// If document doesn't exist, don't create it - user should be subscribed first
 		// This prevents creating incomplete subscription objects
 	} catch (error) {
-		console.error('Error updating notification preferences:', error);
+		logError(error, { operation: 'subscriptions.setSubscriptions.updateNotificationPreferences', metadata: { message: 'Error updating notification preferences:' } });
 	}
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
 import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
+import { logError } from '@/utils/errorHandling';
 // import InstallPWA from './InstallPWA';
 
 interface PWAWrapperProps {
@@ -130,7 +131,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 							}
 						})
 						.catch((error) => {
-							console.error('[PWAWrapper] Firebase Messaging SW registration failed:', error);
+							logError(error, { operation: 'pwa.PWAWrapper.firebaseSW', metadata: { message: '[PWAWrapper] Firebase Messaging SW registration failed:' } });
 						});
 				} else {
 					console.info('[PWAWrapper] Firebase Messaging SW already registered');
@@ -171,7 +172,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					() => {
 						// Check for Service Worker updates
 						registration?.update().catch((err) => {
-							console.error('Error updating service worker:', err);
+							logError(err, { operation: 'pwa.PWAWrapper.updateInterval', metadata: { message: 'Error updating service worker:' } });
 						});
 					},
 					4 * 60 * 60 * 1000,
@@ -202,7 +203,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				};
 			},
 			onRegisterError(error) {
-				console.error('Service worker registration error:', error);
+				logError(error, { operation: 'pwa.PWAWrapper.unknown', metadata: { message: 'Service worker registration error:' } });
 			},
 		});
 
@@ -224,7 +225,7 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				.then((permissionStatus) => {
 					permissionStatus.onchange = handlePermissionChange;
 				})
-				.catch(console.error);
+				.catch((error: unknown) => logError(error, { operation: 'PWAWrapper.permissionQuery' }));
 		}
 	}, []);
 

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions, SurveyProgress } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Survey.module.scss';
 
 interface SurveyWelcomeProps {
@@ -46,7 +47,10 @@ export default function SurveyWelcome({ survey }: SurveyWelcomeProps) {
           }
         }
       } catch (error) {
-        console.error('Failed to fetch progress:', error);
+        logError(error, {
+          operation: 'SurveyWelcome.fetchProgress',
+          metadata: { surveyId: survey.surveyId },
+        });
       } finally {
         setIsLoading(false);
       }

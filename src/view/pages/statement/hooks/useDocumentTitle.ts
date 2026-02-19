@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
 import { Statement } from '@freedi/shared-types';
 import { APP_CONSTANTS } from '../constants';
+import { logError } from '@/utils/errorHandling';
 
 interface UseDocumentTitleProps {
 	statement: Statement | null;
@@ -22,7 +23,7 @@ export const useDocumentTitle = ({ statement }: UseDocumentTitleProps) => {
 			);
 			document.title = `${APP_CONSTANTS.DOCUMENT_TITLE_PREFIX} - ${shortVersion}`;
 		} catch (error) {
-			console.error('Error setting document title:', error);
+			logError(error, { operation: 'hooks.useDocumentTitle.useDocumentTitle', metadata: { message: 'Error setting document title:' } });
 			document.title = APP_CONSTANTS.DOCUMENT_TITLE_PREFIX;
 		}
 	}, [statement]);

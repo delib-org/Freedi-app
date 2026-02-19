@@ -1,6 +1,7 @@
 import { notificationService } from '@/services/notificationService';
 import { vapidKey } from '@/controllers/db/configKey';
 import { auth } from '@/controllers/db/config';
+import { logError } from '@/utils/errorHandling';
 
 interface DebugResults {
 	environment?: {
@@ -134,7 +135,7 @@ export async function comprehensiveNotificationDebug() {
 					isFirebaseMessaging: true,
 				});
 			} else {
-				console.error('❌ Firebase messaging SW not found or not active');
+				logError(new Error('❌ Firebase messaging SW not found or not active'), { operation: 'utils.notificationDebugger.firebaseSW' });
 			}
 		}
 	}
@@ -172,7 +173,7 @@ export async function comprehensiveNotificationDebug() {
 			console.info('FCM Token Result:', { data: JSON.stringify(results.fcmToken, null, 2) });
 		}
 	} catch (error) {
-		console.error('Error getting notification diagnostics:', error);
+		logError(error, { operation: 'utils.notificationDebugger.unknown', metadata: { message: 'Error getting notification diagnostics:' } });
 		results.notificationServiceError = {
 			error: (error as Error).message,
 			stack: (error as Error).stack,
@@ -213,8 +214,8 @@ export async function comprehensiveNotificationDebug() {
 	}
 
 	if (issues.length > 0) {
-		console.error('Issues Found:');
-		issues.forEach((issue) => console.error(issue));
+		logError(new Error('Issues Found:'), { operation: 'utils.notificationDebugger.firebaseSW' });
+		issues.forEach((issue) => logError(issue, { operation: 'utils.notificationDebugger.firebaseSW' }));
 	} else {
 		console.info('✅ No obvious issues found');
 	}

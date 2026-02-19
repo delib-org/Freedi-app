@@ -80,7 +80,7 @@ export const listenToStatementSubscription = (
 
 					dispatch(setStatementSubscription(statementSubscription));
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'listenToStatementSubscription.onSnapshot' });
 				}
 			},
 			(error) => {
@@ -96,7 +96,7 @@ export const listenToStatementSubscription = (
 					// Unsubscribe immediately to prevent repeated error callbacks
 					unsubscribeFn();
 				} else {
-					console.error('Error in statement subscription listener:', error);
+					logError(error, { operation: 'listenToStatementSubscription.errorHandler', statementId });
 				}
 			},
 		);
@@ -107,7 +107,7 @@ export const listenToStatementSubscription = (
 
 		return listener;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return () => {};
 	}
@@ -138,17 +138,17 @@ export const listenToStatement = (
 
 					dispatch(setStatement(statement));
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'statements.listenToStatements.listenToStatement' });
 					if (setIsStatementNotFound) setIsStatementNotFound(true);
 				}
 			},
 			(error) => {
-				console.error('Error in statement listener:', error);
+				logError(error, { operation: 'statements.listenToStatements.listenToStatement', metadata: { message: 'Error in statement listener:' } });
 				if (setIsStatementNotFound) setIsStatementNotFound(true);
 			},
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
 		return () => {};
@@ -228,11 +228,11 @@ export const listenToSubStatements = (
 					});
 				}
 			},
-			(error) => console.error('Error in sub-statements listener:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in sub-statements listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return () => {};
 	}
@@ -270,11 +270,11 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 					}
 				});
 			},
-			(error) => console.error('Error in members listener:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in members listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return () => {};
 	}
@@ -315,64 +315,25 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 						// Get flattened error messages for easier reading
 						const flatErrors = flatten(result.issues);
 
-						console.error('=== STATEMENT VALIDATION ERROR ===');
-						console.error('Document ID:', docId);
-						console.error('Full data received:', JSON.stringify(data, null, 2));
-						console.error('Data type:', typeof data);
-
-						// Log detailed validation issues
-						console.error('Validation Issues:');
-						result.issues.forEach((issue, index) => {
-							console.error(`Issue ${index + 1}:`, {
-								kind: issue.kind,
-								type: issue.type,
-								input: issue.input,
-								expected: issue.expected,
-								received: issue.received,
-								message: issue.message,
-								path: issue.path?.map((p) => p.key).join('.'),
-								requirement: issue.requirement,
-							});
+						logError(new Error('Statement validation error'), {
+							operation: 'statements.listenToAllSubStatements.validation',
+							statementId: docId,
+							metadata: {
+								dataType: typeof data,
+								flatErrors,
+								issues: result.issues.map((issue, index) => ({
+									issueNumber: index + 1,
+									kind: issue.kind,
+									type: issue.type,
+									input: issue.input,
+									expected: issue.expected,
+									received: issue.received,
+									message: issue.message,
+									path: issue.path?.map((p) => p.key).join('.'),
+									requirement: issue.requirement,
+								})),
+							},
 						});
-
-						// Log flattened errors
-						console.error('Flattened errors:', flatErrors);
-
-						// Log specific field analysis
-						if (data && typeof data === 'object') {
-							console.error('Field analysis:', {
-								hasRequiredFields: {
-									statement: 'statement' in data,
-									statementId: 'statementId' in data,
-									creatorId: 'creatorId' in data,
-									creator: 'creator' in data,
-									statementType: 'statementType' in data,
-									parentId: 'parentId' in data,
-									topParentId: 'topParentId' in data,
-									lastUpdate: 'lastUpdate' in data,
-									createdAt: 'createdAt' in data,
-									consensus: 'consensus' in data,
-								},
-								fieldTypes: {
-									statement: typeof data.statement,
-									statementId: typeof data.statementId,
-									creatorId: typeof data.creatorId,
-									creator: typeof data.creator,
-									statementType: typeof data.statementType,
-									parentId: typeof data.parentId,
-									topParentId: typeof data.topParentId,
-									lastUpdate: typeof data.lastUpdate,
-									createdAt: typeof data.createdAt,
-									consensus: typeof data.consensus,
-								},
-								problematicFields: {
-									resultsSettings: data.resultsSettings,
-									resultsSettingsType: typeof data.resultsSettings,
-									cutoffBy: data.resultsSettings?.cutoffBy,
-								},
-							});
-						}
-						console.error('=== END VALIDATION ERROR ===\n');
 
 						return;
 					}
@@ -393,11 +354,11 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 					}
 				});
 			},
-			(error) => console.error('Error in all sub-statements listener:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in all sub-statements listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return (): void => {
 			return;
@@ -465,11 +426,11 @@ export const listenToUserSuggestions = (
 					});
 				}
 			},
-			(error) => console.error('Error listening to user suggestions:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error listening to user suggestions:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error('Error setting up user suggestions listener:', error);
+		logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error setting up user suggestions listener:' } });
 
 		return () => {};
 	}

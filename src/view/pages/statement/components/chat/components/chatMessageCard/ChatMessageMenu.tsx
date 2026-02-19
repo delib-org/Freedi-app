@@ -11,6 +11,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import Menu from '@/view/components/menu/Menu';
 import MenuOption from '@/view/components/menu/MenuOption';
 import { Statement, StatementType } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 interface ChatMessageMenuProps {
 	statement: Statement;
@@ -57,7 +58,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
 				alert(result.error);
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'chatMessageCard.ChatMessageMenu.handleSetOption' });
 		}
 	}
 

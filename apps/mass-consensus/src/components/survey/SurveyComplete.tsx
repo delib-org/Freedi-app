@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Survey.module.scss';
 
 interface SurveyCompleteProps {
@@ -45,7 +46,10 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
           totalQuestions: survey.questions.length,
         });
       } catch {
-        console.error('[SurveyComplete] Error parsing stored progress');
+        logError(new Error('Error parsing stored progress'), {
+          operation: 'SurveyComplete.parseProgress',
+          metadata: { surveyId: survey.surveyId },
+        });
       }
     }
 
@@ -99,7 +103,10 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
       await Promise.all(subscribePromises);
       setIsSubscribed(true);
     } catch (error) {
-      console.error('[SurveyComplete] Error subscribing:', error);
+      logError(error, {
+        operation: 'SurveyComplete.handleEmailSubmit',
+        metadata: { surveyId: survey.surveyId },
+      });
     } finally {
       setIsSubmitting(false);
     }

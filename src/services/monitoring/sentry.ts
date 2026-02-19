@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/react';
 import { useLocation, useNavigationType } from 'react-router';
 import React, { useEffect } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 export function initSentry() {
 	const sentryDsn = import.meta.env.VITE_SENTRY_DSN;
@@ -67,7 +68,7 @@ export function initSentry() {
 // Enhanced error capture with context
 export function captureException(error: Error, context?: Record<string, unknown>) {
 	if (import.meta.env.DEV) {
-		console.error('Error captured:', error, context);
+		logError(new Error('Error captured:'), { operation: 'services.monitoring.sentry.captureException', metadata: { detail: error, context } });
 
 		return;
 	}

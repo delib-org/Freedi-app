@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { STORAGE_KEYS } from '@/constants/common';
+import { logError } from '@/utils/errorHandling';
 
 const SHOW_HIDDEN_CARDS_KEY = STORAGE_KEYS.SHOW_HIDDEN_CARDS;
 
@@ -38,7 +39,7 @@ export function useShowHiddenCards(): UseShowHiddenCardsReturn {
 			// Dispatch custom event for other components to listen
 			window.dispatchEvent(new CustomEvent(SHOW_HIDDEN_CARDS_CHANGE_EVENT, { detail: value }));
 		} catch (error) {
-			console.error('Failed to save showHiddenCards preference:', error);
+			logError(error, { operation: 'hooks.useShowHiddenCards.setShowHiddenCards', metadata: { message: 'Failed to save showHiddenCards preference:' } });
 		}
 	}, []);
 

@@ -2,6 +2,7 @@ import { deleteDoc, getDoc, getDocs, query, where, writeBatch } from 'firebase/f
 import { FireStore } from '../config';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export async function deleteStatementFromDB(
 	statement: Statement,
@@ -58,6 +59,6 @@ export async function deleteStatementFromDB(
 		const statementRef = createStatementRef(statement.statementId);
 		await deleteDoc(statementRef);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.deleteStatements.batch' });
 	}
 }

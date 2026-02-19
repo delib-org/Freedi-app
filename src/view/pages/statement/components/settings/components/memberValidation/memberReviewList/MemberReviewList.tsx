@@ -1,12 +1,13 @@
 import React, { FC, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
-import { MemberReviewData } from '../MemberValidation';
+import type { MemberReviewData } from '@/types/demographics';
 import MemberReviewCard from '../memberReviewCard/MemberReviewCard';
 import BanConfirmationModal from '../banConfirmationModal/BanConfirmationModal';
 import styles from './MemberReviewList.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { banMember } from '@/controllers/db/membership/banMember';
 import { canBanUser } from '@/helpers/roleHelpers';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	members: MemberReviewData[];
@@ -115,7 +116,7 @@ const MemberReviewList: FC<Props> = ({
 				// Show success feedback
 				console.info('Member banned successfully');
 			} catch (error) {
-				console.error('Error banning member:', error);
+				logError(error, { operation: 'memberReviewList.MemberReviewList.handleBanConfirm', metadata: { message: 'Error banning member:' } });
 				// TODO: Show error notification to user
 			}
 		}

@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 /**
  * Global error handler for IndexedDB connection errors
  * Prevents app crashes from IndexedDB failures, especially on iOS Safari
@@ -19,7 +20,7 @@ export function setupIndexedDBErrorHandler(): void {
 
 		// Check if this is an IndexedDB-related error
 		if (isIndexedDBError(error)) {
-			console.error('IndexedDB error detected:', error);
+			logError(error, { operation: 'utils.indexedDBErrorHandler.setupIndexedDBErrorHandler', metadata: { message: 'IndexedDB error detected:' } });
 
 			// Prevent the error from crashing the app
 			event.preventDefault();
@@ -43,7 +44,7 @@ export function setupIndexedDBErrorHandler(): void {
 	window.addEventListener('error', (event) => {
 		const error = event.error;
 		if (isFirestoreAssertionError(error)) {
-			console.error('Firestore assertion error detected:', error);
+			logError(error, { operation: 'utils.indexedDBErrorHandler.unknown', metadata: { message: 'Firestore assertion error detected:' } });
 			event.preventDefault();
 			recordIndexedDBError();
 			attemptRecovery();
@@ -68,9 +69,7 @@ function attemptRecovery(): void {
 
 	// Check if we're in cooldown period
 	if (now - lastAttempt < RECOVERY_COOLDOWN_MS && attemptCount >= MAX_RECOVERY_ATTEMPTS) {
-		console.error(
-			'[IndexedDB Recovery] Max recovery attempts reached. Please close other tabs and refresh manually.',
-		);
+		logError(new Error('Max recovery attempts reached. Please close other tabs and refresh manually.'), { operation: 'indexedDBErrorHandler.attemptRecovery' });
 		logUserFriendlyError();
 
 		return;

@@ -11,6 +11,7 @@ import {
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { createDocRef, createStatementRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 // Why get user from firebase when we can pass it as a parameter?
 export async function getToVoteOnParent(
@@ -37,7 +38,7 @@ export async function getToVoteOnParent(
 
 		updateStoreWithVoteCB(statement);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.getVotes.getToVoteOnParent' });
 
 		return null;
 	}
@@ -53,7 +54,7 @@ export async function getVoters(parentId: string): Promise<Vote[]> {
 
 		return voters;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.getVotes.voters' });
 
 		return [] as Vote[];
 	}

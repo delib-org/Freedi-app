@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 /**
  * Utility functions for calculating consensus colors based on agreement scores
  */
@@ -33,7 +34,7 @@ export function getAgreementColor(agreement: number): string {
 
 		return agreementColors[Math.max(0, Math.min(index, agreementColors.length - 1))];
 	} catch (error) {
-		console.error('Error calculating agreement color:', error);
+		logError(error, { operation: 'utils.consensusColors.adjustedAgreement', metadata: { message: 'Error calculating agreement color:' } });
 
 		return agreementColors[4]; // Default to neutral color
 	}

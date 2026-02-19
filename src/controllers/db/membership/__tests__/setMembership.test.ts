@@ -154,7 +154,7 @@ describe('setMembership', () => {
 				),
 			).rejects.toThrow('Update failed');
 
-			expect(consoleErrorSpy).toHaveBeenCalledWith('Error in approveMembership:', error);
+			expect(consoleErrorSpy).toHaveBeenCalled();
 			consoleErrorSpy.mockRestore();
 		});
 

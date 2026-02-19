@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Paragraph, ParagraphType } from '@/types';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './ImageAltWarning.module.scss';
 
 interface ImageWithoutAlt {
@@ -74,7 +75,11 @@ export default function ImageAltWarning({
         setAltText('');
       }
     } catch (error) {
-      console.error('Failed to save alt text:', error);
+      logError(error, {
+        operation: 'ImageAltWarning.handleSave',
+        documentId,
+        metadata: { paragraphId },
+      });
     } finally {
       setSaving(false);
     }

@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { logError } from '@/utils/errorHandling';
 
 //styles
 
@@ -65,7 +66,7 @@ export default function PasswordUi({
 				});
 			}
 		} catch (err) {
-			console.error(err);
+			logError(err, { operation: 'passwordUi.PasswordUi.unknown' });
 		}
 	}
 

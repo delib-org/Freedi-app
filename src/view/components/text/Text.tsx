@@ -4,6 +4,7 @@ import { Statement } from '@freedi/shared-types';
 import UrlParser from '../edit/URLParse';
 import { ParagraphsDisplay } from '@/view/components/richTextEditor';
 import styles from './Text.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement?: string;
@@ -205,7 +206,7 @@ const Text: FC<Props> = ({
 			</>
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'text.Text.unknown' });
 
 		return null;
 	}

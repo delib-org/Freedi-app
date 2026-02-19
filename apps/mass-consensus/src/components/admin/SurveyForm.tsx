@@ -12,6 +12,7 @@ import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
 import OpeningSlideManager from './OpeningSlideManager';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -78,7 +79,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       const validQuestions = questions.filter((q): q is Statement => q !== null);
       setSelectedQuestions(validQuestions);
     } catch (err) {
-      console.error('[SurveyForm] Error loading questions:', err);
+      logError(err, { operation: 'SurveyForm.loadExistingQuestions' });
     } finally {
       setIsLoadingQuestions(false);
     }
@@ -110,7 +111,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         }
       }
     } catch (err) {
-      console.error('[SurveyForm] Error loading demographic questions:', err);
+      logError(err, { operation: 'SurveyForm.loadDemographicQuestions' });
     }
   }, [existingSurvey, refreshToken, router]);
 
@@ -213,13 +214,15 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         );
 
         if (!demographicsResponse.ok) {
-          console.error('[SurveyForm] Failed to save demographic questions');
+          logError(new Error('Failed to save demographic questions'), {
+            operation: 'SurveyForm.handleSubmit.saveDemographics',
+          });
         }
       }
 
       router.push(`/admin/surveys/${survey.surveyId}`);
     } catch (err) {
-      console.error('[SurveyForm] Error:', err);
+      logError(err, { operation: 'SurveyForm.handleSubmit' });
       setError(err instanceof Error ? err.message : 'Failed to save survey');
     } finally {
       setIsSubmitting(false);
@@ -279,10 +282,16 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       });
 
       if (!response.ok) {
-        console.error('[SurveyForm] Failed to save question text:', await response.text());
+        logError(new Error('Failed to save question text'), {
+          operation: 'SurveyForm.handleQuestionTextChange',
+          statementId: questionId,
+        });
       }
     } catch (err) {
-      console.error('[SurveyForm] Error saving question text:', err);
+      logError(err, {
+        operation: 'SurveyForm.handleQuestionTextChange',
+        statementId: questionId,
+      });
     }
   };
 

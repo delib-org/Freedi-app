@@ -16,6 +16,7 @@ import { LANGUAGES } from '@/constants/Languages';
 import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import WaitingList from '@/view/components/approveMemebers/WaitingList';
 import { usePWAInstallPrompt } from '@/hooks/usePWAInstallPrompt';
+import { logError } from '@/utils/errorHandling';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function HomeHeader() {
 			else setShowLanguageModal(true);
 			setIsHomeMenuOpen(false);
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'home.HomeHeader.handlePanel' });
 		}
 	}
 

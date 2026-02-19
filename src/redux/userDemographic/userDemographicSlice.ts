@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import { PolarizationIndex, updateArray, UserDemographicQuestion } from '@freedi/shared-types';
-import { RootState } from '../types';
 
 // Use string literal for scope until delib-npm exports the enum value
 const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
@@ -104,29 +103,39 @@ export const {
 	hideGroupDemographicModal,
 } = userDemographicSlice.actions;
 
-// Selectors
+// Selectors use narrowly-typed state parameter to avoid circular dependencies with store.ts
 export const selectUserDemographicQuestionsByStatementId = (statementId: string) =>
 	createSelector(
-		[(state: RootState) => state.userDemographic.userDemographicQuestions],
+		[
+			(state: { userDemographic: UserDemographicState }) =>
+				state.userDemographic.userDemographicQuestions,
+		],
 		(userDemographicQuestions) =>
 			userDemographicQuestions.filter((question) => question.statementId === statementId),
 	);
 
 export const selectUserDemographicByStatementId = (statementId: string) =>
-	createSelector([(state: RootState) => state.userDemographic.userDemographic], (userDemographic) =>
-		userDemographic.filter((data) => data.statementId === statementId),
+	createSelector(
+		[(state: { userDemographic: UserDemographicState }) => state.userDemographic.userDemographic],
+		(userDemographic) => userDemographic.filter((data) => data.statementId === statementId),
 	);
 
 export const selectPolarizationIndexByParentId = (parentId: string) =>
 	createSelector(
-		[(state: RootState) => state.userDemographic.polarizationIndexes],
+		[
+			(state: { userDemographic: UserDemographicState }) =>
+				state.userDemographic.polarizationIndexes,
+		],
 		(polarizationIndexes) => polarizationIndexes.filter((pi) => pi.parentId === parentId),
 	);
 
 // Group-level demographic selectors
 export const selectGroupQuestions = (topParentId: string) =>
 	createSelector(
-		[(state: RootState) => state.userDemographic.userDemographicQuestions],
+		[
+			(state: { userDemographic: UserDemographicState }) =>
+				state.userDemographic.userDemographicQuestions,
+		],
 		(questions) =>
 			questions.filter((q) => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP),
 	);
@@ -134,7 +143,10 @@ export const selectGroupQuestions = (topParentId: string) =>
 // Select effective questions (group + statement merged)
 export const selectEffectiveQuestions = (statementId: string, topParentId: string) =>
 	createSelector(
-		[(state: RootState) => state.userDemographic.userDemographicQuestions],
+		[
+			(state: { userDemographic: UserDemographicState }) =>
+				state.userDemographic.userDemographicQuestions,
+		],
 		(questions) => {
 			const groupQ = questions.filter(
 				(q) => q.topParentId === topParentId && q.scope === DEMOGRAPHIC_SCOPE_GROUP,
@@ -149,23 +161,26 @@ export const selectEffectiveQuestions = (statementId: string, topParentId: strin
 
 // Select user's group-level answers
 export const selectUserGroupAnswers = (topParentId: string) =>
-	createSelector([(state: RootState) => state.userDemographic.userDemographic], (answers) =>
-		answers.filter((a) => a.topParentId === topParentId && a.scope === DEMOGRAPHIC_SCOPE_GROUP),
+	createSelector(
+		[(state: { userDemographic: UserDemographicState }) => state.userDemographic.userDemographic],
+		(answers) =>
+			answers.filter((a) => a.topParentId === topParentId && a.scope === DEMOGRAPHIC_SCOPE_GROUP),
 	);
 
 // Check unanswered group questions
 export const selectUnansweredGroupQuestions = (topParentId: string) =>
 	createSelector(
 		[
-			(state: RootState) => selectGroupQuestions(topParentId)(state),
-			(state: RootState) => state.userDemographic.userDemographic,
+			(state: { userDemographic: UserDemographicState }) =>
+				selectGroupQuestions(topParentId)(state),
+			(state: { userDemographic: UserDemographicState }) => state.userDemographic.userDemographic,
 		],
 		(questions, answers) =>
 			questions.filter((q) => !answers.find((a) => a.userQuestionId === q.userQuestionId)),
 	);
 
 // Select group demographic modal state
-export const selectShowGroupDemographicModal = (state: RootState) =>
+export const selectShowGroupDemographicModal = (state: { userDemographic: UserDemographicState }) =>
 	state.userDemographic.showGroupDemographicModal;
 
 export default userDemographicSlice.reducer;

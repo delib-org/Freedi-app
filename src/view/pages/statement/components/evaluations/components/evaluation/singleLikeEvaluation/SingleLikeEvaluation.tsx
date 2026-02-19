@@ -13,6 +13,7 @@ import LikeIcon from '@/assets/icons/likeIcon.svg?react';
 import EvaluationManagementModal from '@/view/components/evaluationManagement/EvaluationManagementModal';
 import Snackbar from '@/view/components/snackbar/Snackbar';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement;
@@ -113,7 +114,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 				setShowSnackbar(true);
 			}
 		} catch (error) {
-			console.error('Error setting evaluation:', error);
+			logError(error, { operation: 'singleLikeEvaluation.SingleLikeEvaluation.unknown', metadata: { message: 'Error setting evaluation:' } });
 			// Rollback on error
 			const rollbackLikes = statement.evaluation?.sumPro || statement.pro || 0;
 			const rollbackEvaluators =

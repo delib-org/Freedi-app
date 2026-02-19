@@ -10,6 +10,7 @@ import { Access } from '@freedi/shared-types';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { handlePublicAutoAuth } from '@/controllers/auth/publicAuthHandler';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { logError } from '@/utils/errorHandling';
 
 interface UsePublicAccessResult {
 	isCheckingAccess: boolean;
@@ -67,7 +68,7 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 				const access = statement?.membership?.access || topParentStatement?.membership?.access;
 				setEffectiveAccess(access || null);
 			} catch (error) {
-				console.error('Error checking public access:', error);
+				logError(error, { operation: 'hooks.usePublicAccess.unknown', metadata: { message: 'Error checking public access:' } });
 			} finally {
 				if (isMounted) setIsCheckingAccess(false);
 			}

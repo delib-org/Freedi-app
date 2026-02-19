@@ -16,6 +16,7 @@ import { logger } from '@/services/logger';
 import { createStatementRef, createDocRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { detectUrls } from '@/utils/urlHelpers';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
+import { logError } from '@/utils/errorHandling';
 
 function generateId(): string {
 	return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -50,7 +51,7 @@ function getUserLanguage(): string {
 			}
 		}
 	} catch (error) {
-		console.error('[Link Summary] Error reading userConfig from localStorage:', error);
+		logError(error, { operation: 'popperHebbian.evidenceController.getUserLanguage', metadata: { message: '[Link Summary] Error reading userConfig from localStorage:' } });
 	}
 
 	// Fallback to browser language

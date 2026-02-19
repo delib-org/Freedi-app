@@ -10,6 +10,7 @@ import {
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export async function getStatementFromDB(statementId: string): Promise<Statement | undefined> {
 	try {
@@ -23,7 +24,7 @@ export async function getStatementFromDB(statementId: string): Promise<Statement
 		// Normalize statement data (converts timestamps and fills missing topParentId)
 		return normalizeStatementData(data) as Statement;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.getStatement.getStatementFromDB' });
 
 		return undefined;
 	}
@@ -60,7 +61,7 @@ export async function getStatementDepth(
 
 		return finalStatements;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.getStatement.statementPromises' });
 
 		return [];
 	}
@@ -90,7 +91,7 @@ export async function getStatementDepth(
 
 			return subStatements;
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'statements.getStatement.getLevelResults' });
 
 			return [];
 		}
@@ -118,7 +119,7 @@ export async function getChildStatements(statementId: string): Promise<Statement
 
 		return subStatements;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.getStatement.subStatements' });
 
 		return [];
 	}

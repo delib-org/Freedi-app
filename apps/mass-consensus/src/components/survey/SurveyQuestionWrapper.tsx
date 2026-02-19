@@ -3,6 +3,7 @@
 import { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
 import { SurveyWithQuestions } from '@/types/survey';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
+import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import SurveyNavigation from './SurveyNavigation';
 import styles from './Survey.module.scss';
@@ -73,7 +74,10 @@ export default function SurveyQuestionWrapper({
         const data = JSON.parse(stored);
         setCompletedIndices(data.completedIndices || []);
       } catch {
-        console.error('[SurveyQuestionWrapper] Error parsing stored progress');
+        logError(new Error('Error parsing stored progress'), {
+          operation: 'SurveyQuestionWrapper.parseProgress',
+          metadata: { surveyId: survey.surveyId },
+        });
       }
     }
   }, [survey.surveyId]);
@@ -191,7 +195,10 @@ export default function SurveyQuestionWrapper({
           isCompleted: isLastQuestion,
         }),
       }).catch((error) => {
-        console.error('[SurveyQuestionWrapper] Failed to save progress to server:', error);
+        logError(error, {
+          operation: 'SurveyQuestionWrapper.handleNavigate',
+          metadata: { surveyId: survey.surveyId },
+        });
       });
     }
   };

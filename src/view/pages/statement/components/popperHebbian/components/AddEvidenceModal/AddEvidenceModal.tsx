@@ -8,6 +8,7 @@ import {
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './AddEvidenceModal.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface AddEvidenceModalProps {
 	parentStatementId: string;
@@ -43,7 +44,7 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 
 			onClose();
 		} catch (error) {
-			console.error(`Error ${isEditMode ? 'updating' : 'creating'} evidence post:`, error);
+			logError(error, { operation: 'AddEvidenceModal.AddEvidenceModal.handleSubmit', metadata: { message: `Error ${isEditMode ? 'updating' : 'creating'} evidence post:` } });
 		} finally {
 			setIsSubmitting(false);
 		}

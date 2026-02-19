@@ -16,6 +16,7 @@ import type { Messaging, MessagePayload } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
 import { isFirebaseMessagingSupported, isBrowserNotificationsSupported } from './platformService';
+import { logError } from '@/utils/errorHandling';
 
 // Token refresh interval (30 days in milliseconds)
 const TOKEN_REFRESH_INTERVAL = 30 * 24 * 60 * 60 * 1000;
@@ -53,7 +54,7 @@ export const safeGetPermission = (): NotificationPermission | 'unsupported' => {
 	try {
 		return Notification.permission;
 	} catch (error) {
-		console.error('Error accessing Notification.permission:', error);
+		logError(error, { operation: 'services.pushService.safeGetPermission', metadata: { message: 'Error accessing Notification.permission:' } });
 
 		return 'unsupported';
 	}
@@ -79,7 +80,7 @@ export const requestPermission = async (): Promise<boolean> => {
 
 		return permission === 'granted';
 	} catch (error) {
-		console.error('Failed to request notification permission:', error);
+		logError(error, { operation: 'services.pushService.requestPermission', metadata: { message: 'Failed to request notification permission:' } });
 
 		return false;
 	}
@@ -90,7 +91,7 @@ export const requestPermission = async (): Promise<boolean> => {
  */
 export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
 	if (!('serviceWorker' in navigator)) {
-		console.error('Service workers not supported');
+		logError(new Error('Service workers not supported'), { operation: 'services.pushService.waitForServiceWorker' });
 
 		return null;
 	}
@@ -127,7 +128,7 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 				// Timeout after 10 seconds
 				setTimeout(() => {
 					clearInterval(checkInterval);
-					console.error('[PushService] Timeout waiting for service worker');
+					logError(new Error('[PushService] Timeout waiting for service worker'), { operation: 'services.pushService.regs' });
 					resolve(); // Resolve anyway to continue
 				}, 10000);
 			});
@@ -137,7 +138,7 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 
 		return registration || null;
 	} catch (error) {
-		console.error('[PushService] Error waiting for service worker:', error);
+		logError(error, { operation: 'services.pushService.regs', metadata: { message: '[PushService] Error waiting for service worker:' } });
 
 		return null;
 	}
@@ -161,7 +162,7 @@ export const initializeMessaging = async (): Promise<boolean> => {
 
 		return true;
 	} catch (error) {
-		console.error('[PushService] Failed to initialize Firebase Messaging:', error);
+		logError(error, { operation: 'services.pushService.initializeMessaging', metadata: { message: '[PushService] Failed to initialize Firebase Messaging:' } });
 
 		return false;
 	}
@@ -178,7 +179,7 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 	try {
 		// Initialize messaging if not already done
 		if (!(await initializeMessaging())) {
-			console.error('[PushService] Failed to initialize messaging in getOrRefreshToken');
+			logError(new Error('[PushService] Failed to initialize messaging in getOrRefreshToken'), { operation: 'services.pushService.getOrRefreshToken' });
 
 			return null;
 		}
@@ -197,7 +198,7 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 				const { deleteToken } = await import('firebase/messaging');
 				await deleteToken(state.messaging);
 			} catch (error) {
-				console.error('[PushService] Error deleting old token:', error);
+				logError(error, { operation: 'services.pushService.getOrRefreshToken', metadata: { message: '[PushService] Error deleting old token:' } });
 			}
 		}
 
@@ -205,7 +206,7 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		const swRegistration = await waitForServiceWorker();
 
 		if (!swRegistration) {
-			console.error('[PushService] No Firebase messaging service worker registration found!');
+			logError(new Error('[PushService] No Firebase messaging service worker registration found!'), { operation: 'services.pushService.unknown' });
 
 			return null;
 		}
@@ -229,13 +230,13 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 
 			return currentToken;
 		} else {
-			console.error('[PushService] No token received from getToken()');
+			logError(new Error('[PushService] No token received from getToken()'), { operation: 'services.pushService.getToken' });
 			state.token = null;
 
 			return null;
 		}
 	} catch (error) {
-		console.error('[PushService] Error getting FCM token:', error);
+		logError(error, { operation: 'services.pushService.unknown', metadata: { message: '[PushService] Error getting FCM token:' } });
 
 		return null;
 	}
@@ -251,7 +252,7 @@ export const deleteCurrentToken = async (): Promise<void> => {
 			await deleteToken(state.messaging);
 			state.token = null;
 		} catch (error) {
-			console.error('[PushService] Error deleting FCM token:', error);
+			logError(error, { operation: 'services.pushService.deleteCurrentToken', metadata: { message: '[PushService] Error deleting FCM token:' } });
 		}
 	}
 };
@@ -284,7 +285,7 @@ export const setupForegroundListener = async (
 			}
 		});
 	} catch (error) {
-		console.error('[PushService] Error setting up foreground listener:', error);
+		logError(error, { operation: 'services.pushService.setupForegroundListener', metadata: { message: '[PushService] Error setting up foreground listener:' } });
 	}
 };
 
@@ -330,9 +331,9 @@ const showForegroundNotification = (payload: MessagePayload): void => {
 export const playNotificationSound = (): void => {
 	try {
 		const audio = new Audio('/assets/sounds/bell.mp3');
-		audio.play().catch((error) => console.error('Error playing notification sound:', error));
+		audio.play().catch((error) => logError(error, { operation: 'services.pushService.audio', metadata: { message: 'Error playing notification sound:' } }));
 	} catch (error) {
-		console.error('Error playing notification sound:', error);
+		logError(error, { operation: 'services.pushService.audio', metadata: { message: 'Error playing notification sound:' } });
 	}
 };
 

@@ -12,6 +12,7 @@ import NotificationPreferences from './NotificationPreferences';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import BellSlashIcon from '@/assets/icons/bellSlashIcon.svg?react';
 import styles from './NotificationSettingsButton.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface NotificationSettingsButtonProps {
 	statementId: string;
@@ -75,7 +76,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 					setAllNotificationsOff(allOff);
 				}
 			} catch (error) {
-				console.error('Error checking notification preferences:', error);
+				logError(error, { operation: 'notifications.NotificationSettingsButton.checkNotificationPreferences', metadata: { message: 'Error checking notification preferences:' } });
 			}
 		};
 
@@ -136,7 +137,7 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 				}
 			}
 		} catch (error) {
-			console.error('Error requesting notification permission:', error);
+			logError(error, { operation: 'notifications.NotificationSettingsButton.handleRequestPermission', metadata: { message: 'Error requesting notification permission:' } });
 		}
 	};
 

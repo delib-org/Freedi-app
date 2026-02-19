@@ -1,4 +1,5 @@
 import { SortType, Statement } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 // Updates the displayed options with how many votes each option has from the parent statement
 export function setSelectionsToOptions(statement: Statement, options: Statement[]) {
@@ -15,7 +16,7 @@ export function setSelectionsToOptions(statement: Statement, options: Statement[
 
 		return parsedOptions;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.statementVoteCont.setSelectionsToOptions' });
 
 		return options;
 	}
@@ -75,7 +76,7 @@ export function getTotalVoters(statement: Statement | undefined) {
 
 		return 0;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.statementVoteCont.getTotalVoters' });
 
 		return 0;
 	}
@@ -93,7 +94,7 @@ export function getSelections(statement: Statement, option: Statement) {
 
 		return 0;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.statementVoteCont.getSelections' });
 
 		return 0;
 	}

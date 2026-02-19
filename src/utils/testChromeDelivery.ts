@@ -1,6 +1,7 @@
 import { getMessaging, getToken, deleteToken } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
+import { logError } from '@/utils/errorHandling';
 
 export async function testChromeDelivery() {
 	console.info('=== CHROME DELIVERY TEST ===');
@@ -22,7 +23,7 @@ export async function testChromeDelivery() {
 			console.info('   - Copy this token for testing');
 		}
 	} catch (error) {
-		console.error('Token regeneration error:', error);
+		logError(error, { operation: 'utils.testChromeDelivery.testChromeDelivery', metadata: { message: 'Token regeneration error:' } });
 	}
 
 	// 2. Check service worker
@@ -44,7 +45,7 @@ export async function testChromeDelivery() {
 
 		firebaseSW.active?.postMessage({ type: 'CHECK_PUSH_SUPPORT' }, [channel.port2]);
 	} else {
-		console.error('   - Firebase SW NOT FOUND!');
+		logError(new Error('   - Firebase SW NOT FOUND!'), { operation: 'utils.testChromeDelivery.channel' });
 	}
 
 	// 3. Test direct push subscription
@@ -62,10 +63,10 @@ export async function testChromeDelivery() {
 			console.info('   - Is FCM endpoint:', { isFCMEndpoint });
 
 			if (!isFCMEndpoint) {
-				console.error('   - WARNING: Not an FCM endpoint!');
+				logError(new Error('   - WARNING: Not an FCM endpoint!'), { operation: 'utils.testChromeDelivery.channel' });
 			}
 		} else {
-			console.error('   - No push subscription found!');
+			logError(new Error('   - No push subscription found!'), { operation: 'utils.testChromeDelivery.channel' });
 
 			// Try to create one
 			console.info('   - Attempting to create push subscription...');
@@ -76,7 +77,7 @@ export async function testChromeDelivery() {
 			console.info('   - New subscription created:', { endpoint: newSub.endpoint });
 		}
 	} catch (error) {
-		console.error('Push API error:', error);
+		logError(error, { operation: 'utils.testChromeDelivery.unknown', metadata: { message: 'Push API error:' } });
 	}
 
 	// 4. Listen for any push events

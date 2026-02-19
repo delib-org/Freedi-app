@@ -6,6 +6,7 @@ import { notificationService } from '@/services/notificationService';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { analyticsService, AnalyticsEvents } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { logError } from '@/utils/errorHandling';
 
 // Helper to check if service workers are supported
 const isServiceWorkerSupported = () => 'serviceWorker' in navigator;
@@ -65,7 +66,7 @@ export const useNotifications = (statementId?: string) => {
 						serviceWorkerSupported: true,
 					});
 				} catch (error) {
-					console.error('Error initializing notifications:', error);
+					logError(error, { operation: 'hooks.useNotifications.unsubscribe', metadata: { message: 'Error initializing notifications:' } });
 					setPermissionState((prev) => ({ ...prev, loading: false }));
 				}
 			} else {
@@ -160,9 +161,9 @@ export const useNotifications = (statementId?: string) => {
 		try {
 			const audio = new Audio('/assets/sounds/bell.mp3');
 			audio.volume = 0.5; // 50% volume
-			audio.play().catch(console.error);
+			audio.play().catch((error: unknown) => logError(error, { operation: 'hooks.useNotifications.playNotificationSound' }));
 		} catch (error) {
-			console.error('Error playing notification sound:', error);
+			logError(error, { operation: 'hooks.useNotifications.playNotificationSound', metadata: { message: 'Error playing notification sound:' } });
 		}
 	};
 
@@ -175,7 +176,7 @@ export const useNotifications = (statementId?: string) => {
 		}
 
 		if (notificationService.safeGetPermission() !== 'granted') {
-			console.error('Notification permission not granted');
+			logError(new Error('Notification permission not granted'), { operation: 'hooks.useNotifications.sendTestNotification' });
 
 			return;
 		}

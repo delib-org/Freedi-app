@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
+import DOMPurify from 'dompurify';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './Admin.module.scss';
 
@@ -66,7 +67,7 @@ export default function QuestionTextEditor({
           </span>
           <span
             className={styles.questionPreviewText}
-            dangerouslySetInnerHTML={{ __html: formattedPreview }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formattedPreview) }}
           />
         </div>
       )}

@@ -114,7 +114,7 @@ export function scrollToSection(paragraphId: string, offset: number = 100): void
   const element = document.getElementById(`paragraph-${paragraphId}`);
 
   if (!element) {
-    console.error(`Element with id paragraph-${paragraphId} not found`);
+    console.info(`[scrollToSection] Element with id paragraph-${paragraphId} not found`);
     return;
   }
 

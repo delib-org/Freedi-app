@@ -1,6 +1,7 @@
 import { addDoc, collection, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Invitation } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 interface CreateInvitationProps {
 	pathname: string;
@@ -67,7 +68,7 @@ export async function setInvitationToDB({
 
 		return invitation;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'invitations.setInvitation.unknown' });
 
 		return undefined;
 	}

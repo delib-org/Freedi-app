@@ -7,6 +7,7 @@ import {
 	QuestionType,
 } from '@freedi/shared-types';
 import { createStatementRef, createDocRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 interface SetStatementSettingsProps {
 	statement: Statement;
@@ -33,7 +34,7 @@ export function setStatementSettingToDB({
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettings.setStatementSettings.setStatementSettingToDB' });
 	}
 }
 
@@ -55,7 +56,7 @@ export function setQuestionTypeToDB({ statement, questionType }: SetQuestionType
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettings.setStatementSettings.setQuestionTypeToDB' });
 	}
 }
 
@@ -81,6 +82,6 @@ export function updateQuestionType({
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettings.setStatementSettings.updateQuestionType' });
 	}
 }

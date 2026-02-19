@@ -2,6 +2,7 @@ import { setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { Creator, Online, OnlineSchema, Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { createDocRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export async function setUserOnlineToDB(
 	statementId: string,
@@ -41,7 +42,7 @@ export async function setUserOnlineToDB(
 
 		return onlineId;
 	} catch (error) {
-		console.error('Error setting user online:', error);
+		logError(error, { operation: 'online.setOnline.unknown', metadata: { message: 'Error setting user online:' } });
 
 		return undefined;
 	}
@@ -69,7 +70,7 @@ export async function updateUserTabFocusToDB(
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error('Error updating tab focus:', error);
+		logError(error, { operation: 'online.setOnline.updateUserTabFocusToDB', metadata: { message: 'Error updating tab focus:' } });
 	}
 }
 
@@ -87,14 +88,14 @@ export async function removeUserFromOnlineToDB(
 
 		// Validate that parameters are valid strings
 		if (typeof statementId !== 'string' || typeof userId !== 'string') {
-			console.error('removeUserFromOnlineToDB: Invalid parameter types');
+			logError(new Error('removeUserFromOnlineToDB: Invalid parameter types'), { operation: 'online.setOnline.removeUserFromOnlineToDB' });
 
 			return;
 		}
 
 		// Additional validation to prevent empty strings
 		if (statementId.trim() === '' || userId.trim() === '') {
-			console.error('removeUserFromOnlineToDB: Empty statementId or userId');
+			logError(new Error('removeUserFromOnlineToDB: Empty statementId or userId'), { operation: 'online.setOnline.removeUserFromOnlineToDB' });
 
 			return;
 		}
@@ -112,7 +113,7 @@ export async function removeUserFromOnlineToDB(
 		// Only log actual errors, not permission issues from non-existent docs
 		const err = error as { code?: string; message?: string };
 		if (err?.code !== 'permission-denied' || err?.message?.includes('document does not exist')) {
-			console.error('Error removing user from online:', error);
+			logError(error, { operation: 'online.setOnline.unknown', metadata: { message: 'Error removing user from online:' } });
 		}
 	}
 }

@@ -1,6 +1,7 @@
 import { doc, setDoc } from 'firebase/firestore';
 import { Collections, Feedback } from '@freedi/shared-types';
 import { DB } from '../config';
+import { logError } from '@/utils/errorHandling';
 
 export async function setFeedbackToDB(feedback: Feedback): Promise<void> {
 	try {
@@ -21,7 +22,7 @@ export async function setFeedbackToDB(feedback: Feedback): Promise<void> {
 
 		console.info('Feedback saved successfully:', feedback.feedbackId);
 	} catch (error) {
-		console.error('Error saving feedback to database:', error);
+		logError(error, { operation: 'feedback.setFeedback.setFeedbackToDB', metadata: { message: 'Error saving feedback to database:' } });
 		throw error;
 	}
 }

@@ -1,5 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { functionConfig } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 // Helper to get environment variables
 // In tests, babel-plugin-transform-vite-meta-env transforms import.meta.env to process.env
@@ -77,7 +78,7 @@ export async function improveSuggestion(
 
 		return data;
 	} catch (error) {
-		console.error('Error improving suggestion:', error);
+		logError(error, { operation: 'services.suggestionImprovement.errorData', metadata: { message: 'Error improving suggestion:' } });
 		throw error;
 	}
 }
@@ -111,7 +112,7 @@ export async function improveSuggestionWithTimeout(
 		]);
 	} catch (error) {
 		if (error instanceof Error && error.message === 'Improvement request timed out') {
-			console.error('Suggestion improvement timed out');
+			logError(new Error('Suggestion improvement timed out'), { operation: 'services.suggestionImprovement.timeoutPromise' });
 		}
 		throw error;
 	}

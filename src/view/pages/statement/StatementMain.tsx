@@ -1,5 +1,4 @@
 import React from 'react';
-import { createSelector } from '@reduxjs/toolkit';
 import { useDispatch } from 'react-redux';
 
 // Components
@@ -31,16 +30,13 @@ import { StatementErrorBoundary } from './components/StatementErrorBoundary';
 import { COMPONENT_STATES } from './constants';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
 
 // Create selectors
-export const subStatementsSelector = createSelector(
+const selectSubStatementsByParent = createStatementsByParentSelector(
 	(state: RootState) => state.statements.statements,
-	(_state: RootState, statementId: string | undefined) => statementId,
-	(statements, statementId) =>
-		statements
-			.filter((st) => st.parentId === statementId)
-			.sort((a, b) => a.createdAt - b.createdAt),
 );
+export const subStatementsSelector = selectSubStatementsByParent;
 
 const StatementMain: React.FC = () => {
 	const dispatch = useDispatch();

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
+import { logError } from '@/lib/utils/errorHandling';
 
 /**
  * AuthSync Component
@@ -38,7 +39,10 @@ export function AuthSync() {
 			try {
 				await anonymousLogin();
 			} catch (error) {
-				console.error(`[AuthSync] Failed to create anonymous session (${context}):`, error);
+				logError(error, {
+					operation: 'AuthSync.safeAnonymousLogin',
+					metadata: { context },
+				});
 			} finally {
 				isCreatingAnonymousRef.current = false;
 			}

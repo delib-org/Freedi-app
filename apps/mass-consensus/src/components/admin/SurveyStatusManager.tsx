@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus, TestDataCounts } from '@/types/survey';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
 interface SurveyStatusManagerProps {
@@ -64,7 +65,10 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
         setStats(data);
       }
     } catch (err) {
-      console.error('Failed to fetch stats:', err);
+      logError(err, {
+        operation: 'SurveyStatusManager.fetchStats',
+        metadata: { surveyId: survey.surveyId },
+      });
     }
   }, [survey.surveyId, refreshToken, router]);
 
@@ -81,7 +85,10 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
         setTestDataCounts(data);
       }
     } catch (err) {
-      console.error('Failed to fetch test data counts:', err);
+      logError(err, {
+        operation: 'SurveyStatusManager.fetchTestDataCounts',
+        metadata: { surveyId: survey.surveyId },
+      });
     }
   }, [survey.surveyId, refreshToken]);
 
@@ -98,7 +105,10 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
         setPilotDataCounts(data);
       }
     } catch (err) {
-      console.error('Failed to fetch pilot data counts:', err);
+      logError(err, {
+        operation: 'SurveyStatusManager.fetchPilotDataCounts',
+        metadata: { surveyId: survey.surveyId },
+      });
     }
   }, [survey.surveyId, refreshToken]);
 

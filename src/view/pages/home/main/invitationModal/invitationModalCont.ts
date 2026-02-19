@@ -1,5 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
 import { getMaxInvitationDigits } from '@/controllers/db/invitations/getInvitations';
+import { logError } from '@/utils/errorHandling';
 
 //search for max digits on invitations
 
@@ -12,6 +13,6 @@ export async function handleGetMaxInvitationDigits(
 
 		setNumberOfDigits(numberOfDigits);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'invitationModal.invitationModalCont.handleGetMaxInvitationDigits' });
 	}
 }

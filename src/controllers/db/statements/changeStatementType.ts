@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export async function changeStatementType(
 	statement: Statement,
@@ -99,7 +100,7 @@ export async function changeStatementType(
 
 		return { success: true };
 	} catch (error) {
-		console.error('Error changing statement type:', error);
+		logError(error, { operation: 'statements.changeStatementType.unknown', metadata: { message: 'Error changing statement type:' } });
 
 		return {
 			success: false,

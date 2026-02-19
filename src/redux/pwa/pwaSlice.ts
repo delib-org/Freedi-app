@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { STORAGE_KEYS } from '@/constants/common';
+import { logError } from '@/utils/errorHandling';
 
 interface PWAState {
 	/** Number of options the user has created in this session */
@@ -38,7 +39,7 @@ const loadPWATriggerData = (): Partial<PWAState> => {
 			};
 		}
 	} catch (error) {
-		console.error('Failed to load PWA trigger data:', error);
+		logError(error, { operation: 'redux.pwa.pwaSlice.loadPWATriggerData', metadata: { message: 'Failed to load PWA trigger data:' } });
 	}
 
 	return {};
@@ -57,7 +58,7 @@ const savePWATriggerData = (state: PWAState): void => {
 		};
 		localStorage.setItem(STORAGE_KEYS.PWA_INSTALL_TRIGGER_DATA, JSON.stringify(data));
 	} catch (error) {
-		console.error('Failed to save PWA trigger data:', error);
+		logError(error, { operation: 'redux.pwa.pwaSlice.savePWATriggerData', metadata: { message: 'Failed to save PWA trigger data:' } });
 	}
 };
 

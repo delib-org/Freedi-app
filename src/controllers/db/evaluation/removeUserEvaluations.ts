@@ -2,6 +2,7 @@ import { getDocs, query, where, writeBatch } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { Collections, Evaluation } from '@freedi/shared-types';
 import { createCollectionRef, createDocRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Removes all evaluations and votes by a specific user for a statement and its options
@@ -75,7 +76,7 @@ export async function removeUserEvaluations(
 
 		return { evaluationsRemoved, votesRemoved };
 	} catch (error) {
-		console.error('Error removing user evaluations:', error);
+		logError(error, { operation: 'evaluation.removeUserEvaluations.deleteEvaluation', metadata: { message: 'Error removing user evaluations:' } });
 		throw error;
 	}
 }
@@ -129,7 +130,7 @@ export async function removeAllUserEvaluations(userId: string): Promise<number> 
 
 		return evaluationsRemoved;
 	} catch (error) {
-		console.error('Error removing all user evaluations:', error);
+		logError(error, { operation: 'evaluation.removeUserEvaluations.unknown', metadata: { message: 'Error removing all user evaluations:' } });
 		throw error;
 	}
 }

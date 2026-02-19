@@ -32,6 +32,7 @@ import {
 } from '@/controllers/db/subscriptions/setSubscriptions';
 import { getDeviceInfo } from './platformService';
 import { FIREBASE } from '@/constants/common';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Quiet hours configuration for push notifications.
@@ -129,7 +130,7 @@ export const deleteToken = async (token: string): Promise<void> => {
 		// Silently handle if document doesn't exist
 		const err = error as { code?: string };
 		if (err?.code !== 'permission-denied' && err?.code !== 'not-found') {
-			console.error('Error deleting push notification doc:', error);
+			logError(error, { operation: 'services.notificationRepository.deleteToken', metadata: { message: 'Error deleting push notification doc:' } });
 		}
 	}
 };
@@ -185,7 +186,7 @@ export const unregisterFromStatementNotifications = async (
 		// Silently handle if document doesn't exist in legacy collection
 		const err = error as { code?: string };
 		if (err?.code !== 'not-found') {
-			console.error('Error cleaning up legacy notification doc:', error);
+			logError(error, { operation: 'services.notificationRepository.unregisterFromStatementNotifications', metadata: { message: 'Error cleaning up legacy notification doc:' } });
 		}
 	}
 };
@@ -217,7 +218,7 @@ export const syncTokenWithSubscriptions = async (
 		const statementId = subscription.statementId || subscription.statement?.statementId;
 
 		if (!statementId) {
-			console.error('No statementId found in subscription:', docSnapshot.id);
+			logError(new Error('No statementId found in subscription:'), { operation: 'services.notificationRepository.syncTokenWithSubscriptions', metadata: { detail: docSnapshot.id } });
 			continue;
 		}
 
@@ -282,7 +283,7 @@ export const removeTokenFromAllSubscriptions = async (
 		return removeTokenFromSubscription(statementId, userId, token).catch((err) => {
 			// Silently handle individual subscription errors
 			if (!err?.message?.includes('Null value error')) {
-				console.error(`Error removing token from subscription ${statementId}:`, err);
+				logError(err, { operation: 'services.notificationRepository.removePromises', metadata: { message: 'Error removing token from subscription ${statementId}:' } });
 			}
 		});
 	});
@@ -375,7 +376,7 @@ export const isInQuietHours = (config: QuietHoursConfig): boolean => {
 			return currentMinutes >= startMinutes && currentMinutes < endMinutes;
 		}
 	} catch (error) {
-		console.error('Error checking quiet hours:', error);
+		logError(error, { operation: 'services.notificationRepository.unknown', metadata: { message: 'Error checking quiet hours:' } });
 
 		return false;
 	}

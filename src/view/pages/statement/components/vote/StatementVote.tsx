@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect, useState } from 'react';
-import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/QuestionStageRadioBtn';
+import { getStepsInfo } from '../settings/components/QuestionSettings/QuestionStageRadioBtn/helpers';
 import StatementInfo from './components/info/StatementInfo';
 import VotingArea from './components/votingArea/VotingArea';
 import { getTotalVoters } from './statementVoteCont';

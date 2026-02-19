@@ -10,6 +10,7 @@ import {
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './IdeaRefineryModal.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface IdeaRefineryModalProps {
 	parentStatementId: string;
@@ -56,7 +57,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 
 				setSession(newSession);
 			} catch (error) {
-				console.error('Error initializing refinement session:', error);
+				logError(error, { operation: 'refinery.IdeaRefineryModal.initializeSession', metadata: { message: 'Error initializing refinement session:' } });
 			} finally {
 				setIsInitializing(false);
 			}
@@ -80,7 +81,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 			setSession(updatedSession);
 			setUserInput('');
 		} catch (error) {
-			console.error('Error submitting response:', error);
+			logError(error, { operation: 'refinery.IdeaRefineryModal.handleSubmitResponse', metadata: { message: 'Error submitting response:' } });
 		} finally {
 			setIsProcessing(false);
 		}
@@ -96,7 +97,7 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 			onPublish(session.refinedIdea, session.sessionId);
 			onClose();
 		} catch (error) {
-			console.error('Error publishing refined idea:', error);
+			logError(error, { operation: 'refinery.IdeaRefineryModal.handlePublish', metadata: { message: 'Error publishing refined idea:' } });
 			setIsProcessing(false);
 		}
 	};

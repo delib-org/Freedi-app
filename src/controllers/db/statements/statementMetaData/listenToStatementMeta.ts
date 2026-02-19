@@ -5,6 +5,7 @@ import { store } from '@/redux/store';
 import { StatementMetaDataSchema, Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { createDocRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export function listenToStatementMetaData(statementId: string): Unsubscribe {
 	try {
@@ -24,15 +25,15 @@ export function listenToStatementMetaData(statementId: string): Unsubscribe {
 
 				dispatch(setStatementMetaData(statementMetaData));
 			} catch (error) {
-				console.error(error);
+				logError(error, { operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData' });
 			}
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData' });
 
 		//@ts-ignore
 		return () => {
-			console.error('Unsubscribe function not returned');
+			logError(new Error('Unsubscribe function not returned'), { operation: 'statements.statementMetaData.listenToStatementMeta.not' });
 		};
 	}
 }

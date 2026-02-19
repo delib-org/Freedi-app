@@ -1,9 +1,9 @@
 import { createSlice, createSelector } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import { RootState } from '../types';
 import { Statement, StatementSchema, Vote, getVoteId, updateArray } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
+import { logError } from '@/utils/errorHandling';
 
 // Define a type for the slice state
 interface VotesState {
@@ -40,7 +40,7 @@ export const votesSlicer = createSlice({
 					state.votes = updateArray(state.votes, newVote, 'parentId');
 				}
 			} catch (error) {
-				console.error(error);
+				logError(error, { operation: 'redux.vote.votesSlice.oldVote' });
 			}
 		},
 		resetVotes: (state) => {
@@ -51,7 +51,7 @@ export const votesSlicer = createSlice({
 
 export const { setVoteToStore, resetVotes } = votesSlicer.actions;
 
-export const votesSelector = (state: RootState) => state.votes.votes;
+export const votesSelector = (state: { votes: VotesState }) => state.votes.votes;
 
 // Memoized selector factory for finding vote by parentId
 // This prevents O(N) find operations on every render

@@ -17,6 +17,7 @@ import {
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { createCollectionRef, createEvaluationRef, createDocRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 export const listenToEvaluations = (
 	parentId: string,
@@ -62,18 +63,18 @@ export const listenToEvaluations = (
 
 							dispatch(setEvaluationToStore(evaluation));
 						} catch (error) {
-							console.error(error);
+							logError(error, { operation: 'evaluation.getEvaluation.unknown' });
 						}
 					});
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'evaluation.getEvaluation.unknown' });
 				}
 			},
-			(error) => console.error('Error in evaluations listener:', error),
+			(error) => logError(error, { operation: 'evaluation.getEvaluation.unknown', metadata: { message: 'Error in evaluations listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'evaluation.getEvaluation.unknown' });
 
 		return () => {};
 	}
@@ -99,13 +100,13 @@ export function listenToEvaluation(statementId: string, userId: string): () => v
 
 					store.dispatch(setEvaluationToStore(evaluation));
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation' });
 				}
 			},
-			(error) => console.error('Error in evaluation listener:', error),
+			(error) => logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation', metadata: { message: 'Error in evaluation listener:' } }),
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation' });
 
 		return () => {
 			return;
@@ -160,7 +161,7 @@ export async function getEvaluations(parentId: string): Promise<Evaluation[]> {
 
 		return evaluations;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'evaluation.getEvaluation.evaluator' });
 
 		return [] as Evaluation[];
 	}

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { VersionStatus } from '@freedi/shared-types';
 import { API_ROUTES } from '@/constants/common';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './VersionSelector.module.scss';
 
 interface PublicVersion {
@@ -49,11 +50,9 @@ export default function VersionSelector({
 				}
 			}
 		} catch (error) {
-			// Log error with context for debugging
-			const errorMessage = error instanceof Error ? error.message : String(error);
-			console.error(`[VersionSelector] fetchVersions failed: ${errorMessage}`, {
+			logError(error, {
+				operation: 'VersionSelector.fetchVersions',
 				documentId,
-				error: errorMessage,
 			});
 		} finally {
 			setLoading(false);

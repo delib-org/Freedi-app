@@ -5,6 +5,7 @@ import SingleLikeEvaluation from './singleLikeEvaluation/SingleLikeEvaluation';
 import CommunityVoiceEvaluation from './communityVoiceEvaluation/CommunityVoiceEvaluation';
 import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
+import { logError } from '@/utils/errorHandling';
 
 interface EvaluationProps {
 	statement?: Statement;
@@ -71,7 +72,7 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 			/>
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'evaluation.Evaluation.unknown' });
 
 		return null;
 	}

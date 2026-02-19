@@ -14,6 +14,7 @@ import {
 	markStatementNotificationsAsReadDB,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * ✅ Custom hook for managing notification actions
@@ -40,7 +41,7 @@ export function useNotificationActions() {
 				// Then sync with database
 				await markNotificationAsReadDB(notificationId);
 			} catch (error) {
-				console.error('Error marking notification as read:', error);
+				logError(error, { operation: 'hooks.useNotificationActions.markAsRead', metadata: { message: 'Error marking notification as read:' } });
 			}
 		},
 		[dispatch],
@@ -57,7 +58,7 @@ export function useNotificationActions() {
 				// Then sync with database
 				await markMultipleNotificationsAsReadDB(notificationIds);
 			} catch (error) {
-				console.error('Error marking multiple notifications as read:', error);
+				logError(error, { operation: 'hooks.useNotificationActions.markMultipleAsRead', metadata: { message: 'Error marking multiple notifications as read:' } });
 			}
 		},
 		[dispatch],
@@ -74,7 +75,7 @@ export function useNotificationActions() {
 				// Then sync with database
 				await markStatementNotificationsAsReadDB(statementId);
 			} catch (error) {
-				console.error('Error marking statement notifications as read:', error);
+				logError(error, { operation: 'hooks.useNotificationActions.markStatementAsRead', metadata: { message: 'Error marking statement notifications as read:' } });
 			}
 		},
 		[dispatch],
@@ -95,7 +96,7 @@ export function useNotificationActions() {
 			// Then sync with database
 			await markMultipleNotificationsAsReadDB(unreadIds);
 		} catch (error) {
-			console.error('Error marking all notifications as read:', error);
+			logError(error, { operation: 'hooks.useNotificationActions.unreadIds', metadata: { message: 'Error marking all notifications as read:' } });
 		}
 	}, [dispatch, userUnreadNotifications]);
 
