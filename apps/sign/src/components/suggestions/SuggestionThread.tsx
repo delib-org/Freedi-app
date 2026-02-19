@@ -81,7 +81,10 @@ export default function SuggestionThread({
         }
       },
       (error) => {
-        console.error('[SuggestionThread] Error listening to official paragraph:', error);
+        logError(error, {
+          operation: 'SuggestionThread.onSnapshot',
+          metadata: { paragraphId },
+        });
       }
     );
 

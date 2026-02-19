@@ -113,7 +113,7 @@ interface Vote {
 }
 
 import {
-	votesSlicer,
+	votesSlice,
 	setVoteToStore,
 	resetVotes,
 	votesSelector,
@@ -150,12 +150,12 @@ describe('votesSlice', () => {
 		},
 	};
 
-	const initialState = votesSlicer.getInitialState();
+	const initialState = votesSlice.getInitialState();
 
 	describe('reducers', () => {
 		describe('setVoteToStore', () => {
 			it('should add new vote when no existing vote', () => {
-				const newState = votesSlicer.reducer(
+				const newState = votesSlice.reducer(
 					initialState,
 					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -180,7 +180,7 @@ describe('votesSlice', () => {
 					votes: [existingVote],
 				};
 
-				const newState = votesSlicer.reducer(
+				const newState = votesSlice.reducer(
 					stateWithVote,
 					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -203,7 +203,7 @@ describe('votesSlice', () => {
 					votes: [existingVote],
 				};
 
-				const newState = votesSlicer.reducer(
+				const newState = votesSlice.reducer(
 					stateWithVote,
 					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -213,7 +213,7 @@ describe('votesSlice', () => {
 			});
 
 			it('should create correct voteId from user and parent', () => {
-				const newState = votesSlicer.reducer(
+				const newState = votesSlice.reducer(
 					initialState,
 					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -222,7 +222,7 @@ describe('votesSlice', () => {
 			});
 
 			it('should include timestamp fields', () => {
-				const newState = votesSlicer.reducer(
+				const newState = votesSlice.reducer(
 					initialState,
 					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -237,7 +237,7 @@ describe('votesSlice', () => {
 				let state = initialState;
 
 				// First vote
-				state = votesSlicer.reducer(
+				state = votesSlice.reducer(
 					state,
 					setVoteToStore(mockStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -248,7 +248,7 @@ describe('votesSlice', () => {
 					statementId: 'option-456',
 					parentId: 'parent-456',
 				};
-				state = votesSlicer.reducer(
+				state = votesSlice.reducer(
 					state,
 					setVoteToStore(secondStatement as Parameters<typeof setVoteToStore>[0]),
 				);
@@ -280,13 +280,13 @@ describe('votesSlice', () => {
 					] as Vote[],
 				};
 
-				const newState = votesSlicer.reducer(stateWithVotes, resetVotes());
+				const newState = votesSlice.reducer(stateWithVotes, resetVotes());
 
 				expect(newState.votes).toHaveLength(0);
 			});
 
 			it('should do nothing on empty state', () => {
-				const newState = votesSlicer.reducer(initialState, resetVotes());
+				const newState = votesSlice.reducer(initialState, resetVotes());
 
 				expect(newState.votes).toHaveLength(0);
 			});
@@ -358,7 +358,7 @@ describe('votesSlice', () => {
 
 	describe('slice name', () => {
 		it('should have correct name', () => {
-			expect(votesSlicer.name).toBe('votes');
+			expect(votesSlice.name).toBe('votes');
 		});
 	});
 

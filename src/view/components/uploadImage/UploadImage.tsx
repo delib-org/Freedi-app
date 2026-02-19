@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './UploadImage.module.scss';
 import { setImageLocally } from './uploadImageCont';
 import { Statement } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 type SizeVariant = 'default' | 'compact' | 'inline';
 
@@ -43,7 +44,7 @@ export default function UploadImage({
 		try {
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
-				console.error('Unauthorized: Only admins can upload images');
+				logError(new Error('Unauthorized: Only admins can upload images'), { operation: 'uploadImage.UploadImage.handleFileChange' });
 
 				return;
 			}
@@ -53,7 +54,7 @@ export default function UploadImage({
 				await setImageLocally(file, statement, setImage, setProgress);
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'uploadImage.UploadImage.handleFileChange' });
 		}
 	};
 
@@ -67,7 +68,7 @@ export default function UploadImage({
 		try {
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
-				console.error('Unauthorized: Only admins can upload images');
+				logError(new Error('Unauthorized: Only admins can upload images'), { operation: 'uploadImage.UploadImage.handleDrop' });
 
 				return;
 			}
@@ -76,7 +77,7 @@ export default function UploadImage({
 
 			await setImageLocally(file, statement, setImage, setProgress);
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'uploadImage.UploadImage.handleDrop' });
 		}
 	};
 

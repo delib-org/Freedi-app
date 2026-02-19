@@ -16,6 +16,7 @@ import {
 } from '../mapHelpers/mindMapStatements';
 import { FilterType } from '@/controllers/general/sorting';
 import styles from './MindElixirMap.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 // Icons
 import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
@@ -357,7 +358,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				const parsedData = JSON.parse(savedData);
 				mindRef.current.init(parsedData);
 			} catch {
-				console.error('Failed to restore mind map data');
+				logError(new Error('Failed to restore mind map data'), { operation: 'components.MindElixirMap.handleRestore' });
 			}
 		}
 	}, []);

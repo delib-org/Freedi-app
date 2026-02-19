@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './AIFeedbackButton.module.css';
 
 interface AIFeedbackButtonProps {
@@ -42,7 +43,10 @@ export default function AIFeedbackButton({
       setFeedback(data.feedback);
       setShowModal(true);
     } catch (error) {
-      console.error('AI feedback error:', error);
+      logError(error, {
+        operation: 'AIFeedbackButton.handleGetFeedback',
+        metadata: { questionId, userId },
+      });
       setError(t('Failed to get feedback. Please try again.'));
     } finally {
       setIsLoading(false);

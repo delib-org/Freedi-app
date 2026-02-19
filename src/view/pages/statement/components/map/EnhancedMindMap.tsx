@@ -10,12 +10,14 @@ import CreateStatementModal from '../createStatementModal/CreateStatementModal';
 import VirtualMindMapChart from './components/VirtualMindMapChart';
 import { MindMapErrorBoundary } from './components/MindMapErrorBoundary';
 import Modal from '@/view/components/modal/Modal';
+import MindMapToolbar from './MindMapToolbar';
+import MindMapStatusBar from './MindMapStatusBar';
+import MindMapLoadingView from './MindMapLoadingView';
 
 // Hooks and utilities
 import { isAdmin } from '@/controllers/general/helpers';
 import { FilterType } from '@/controllers/general/sorting';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useMapContext } from '@/controllers/hooks/useMap';
 import {
 	statementSelector,
@@ -71,7 +73,6 @@ const EnhancedMindMap: FC = () => {
 	const _isAdmin = isAdmin(role);
 
 	// Hooks
-	const { t } = useTranslation();
 	const { mapContext, setMapContext } = useMapContext();
 	const selectedId = mapContext?.selectedId ?? null;
 
@@ -100,7 +101,6 @@ const EnhancedMindMap: FC = () => {
 		const handleOnline = () => {
 			setIsOffline(false);
 			console.info('[EnhancedMindMap] Network online');
-			// Sync pending updates
 			offlineManager.syncPendingUpdates();
 		};
 
@@ -129,12 +129,10 @@ const EnhancedMindMap: FC = () => {
 				setLoadingState(MindMapLoadingState.LOADING);
 				setLoadingMessage('Loading mind map data...');
 
-				// Show skeleton after delay
 				const skeletonTimer = setTimeout(() => {
 					setShowSkeleton(true);
 				}, MINDMAP_CONFIG.LOADING.SKELETON_DELAY);
 
-				// Check for offline data first
 				if (isOffline) {
 					const offlineData = await offlineManager.loadMindMap(statementId);
 					if (offlineData) {
@@ -149,17 +147,14 @@ const EnhancedMindMap: FC = () => {
 					}
 				}
 
-				// Use consolidated listener
 				unsubscribe = listenToMindMapData(statementId);
 
-				// Subscribe to updates
 				const updateCallback = (data: MindMapData) => {
 					setResults(data.tree);
 					setNodeCount(data.nodeMap?.size || 0);
 					setLoadProgress(100);
 					setLoadingState(data.loadingState);
 
-					// Save for offline access
 					if (data.loadingState === MindMapLoadingState.FULLY_LOADED) {
 						offlineManager.saveMindMap(data).catch((error) => {
 							console.info('[EnhancedMindMap] Failed to save offline:', error);
@@ -167,7 +162,6 @@ const EnhancedMindMap: FC = () => {
 					}
 				};
 
-				// Load hierarchy with enhanced service
 				const data = await enhancedMindMapService.loadHierarchy(statementId, {
 					useCache: true,
 					retryOnError: true,
@@ -178,14 +172,12 @@ const EnhancedMindMap: FC = () => {
 					setLoadingMessage(`Loaded ${data.nodeMap.size} nodes`);
 				}
 
-				// Subscribe to real-time updates
 				const unsubscribeUpdates = enhancedMindMapService.subscribeToUpdates(
 					statementId,
 					updateCallback,
 					{ useCache: true },
 				);
 
-				// Combine unsubscribes
 				unsubscribe = () => {
 					unsubscribeUpdates();
 					if (unsubscribe) unsubscribe();
@@ -208,7 +200,6 @@ const EnhancedMindMap: FC = () => {
 
 		loadData();
 
-		// Cleanup
 		return () => {
 			if (unsubscribe) {
 				unsubscribe();
@@ -245,62 +236,6 @@ const EnhancedMindMap: FC = () => {
 		[setMapContext],
 	);
 
-	// Export functionality
-	const handleExport = useCallback(
-		async (format: 'json' | 'svg' | 'png') => {
-			if (!statementId) return;
-
-			try {
-				const blob = await enhancedMindMapService.exportMindMap(statementId, format);
-
-				// Download the file
-				const url = URL.createObjectURL(blob);
-				const a = document.createElement('a');
-				a.href = url;
-				a.download = `mindmap-${statementId}.${format}`;
-				document.body.appendChild(a);
-				a.click();
-				document.body.removeChild(a);
-				URL.revokeObjectURL(url);
-
-				console.info(`[EnhancedMindMap] Exported as ${format}`);
-			} catch (error) {
-				logError(error, {
-					operation: 'EnhancedMindMap.handleExport',
-					statementId,
-					metadata: { format },
-				});
-			}
-		},
-		[statementId],
-	);
-
-	// Validate hierarchy
-	const handleValidate = useCallback(async () => {
-		if (!statementId) return;
-
-		try {
-			const validation = await enhancedMindMapService.validateHierarchy(statementId);
-
-			if (validation.isValid) {
-				console.info('[EnhancedMindMap] Hierarchy is valid:', validation.stats);
-			} else {
-				console.error('[EnhancedMindMap] Hierarchy validation issues:', validation.issues);
-			}
-		} catch (error) {
-			logError(error, {
-				operation: 'EnhancedMindMap.handleValidate',
-				statementId,
-			});
-		}
-	}, [statementId]);
-
-	// Cache statistics
-	const handleCacheStats = useCallback(() => {
-		const stats = enhancedMindMapService.getCacheStats();
-		console.info('[EnhancedMindMap] Cache statistics:', stats);
-	}, []);
-
 	// Determine allowed statement types
 	const isDefaultOption = statementParent?.statementType === StatementType.question;
 	const isOptionAllowed =
@@ -313,89 +248,17 @@ const EnhancedMindMap: FC = () => {
 	// Render loading state
 	if (loadingState === MindMapLoadingState.LOADING || !statement) {
 		return (
-			<div
-				className="enhanced-mind-map-loading"
-				style={{
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-					height: '100vh',
-					flexDirection: 'column',
-					gap: '1.5rem',
-					background: 'var(--background-primary)',
-				}}
-			>
-				{showSkeleton && (
-					<>
-						<div
-							className="skeleton-loader"
-							style={{
-								width: '80px',
-								height: '80px',
-								border: '6px solid var(--background-secondary)',
-								borderTop: '6px solid var(--btn-primary)',
-								borderRadius: '50%',
-								animation: 'spin 1s linear infinite',
-							}}
-						></div>
-
-						{loadProgress > 0 && (
-							<div
-								style={{
-									width: '300px',
-									height: '8px',
-									background: 'var(--background-secondary)',
-									borderRadius: '4px',
-									overflow: 'hidden',
-								}}
-							>
-								<div
-									style={{
-										width: `${loadProgress}%`,
-										height: '100%',
-										background: 'var(--btn-primary)',
-										transition: 'width 0.3s ease',
-										borderRadius: '4px',
-									}}
-								></div>
-							</div>
-						)}
-					</>
-				)}
-
-				<div
-					style={{
-						color: 'var(--text-body)',
-						fontSize: '1.1rem',
-						textAlign: 'center',
-					}}
-				>
-					<div>{loadingMessage}</div>
-					{nodeCount > 0 && (
-						<div style={{ fontSize: '0.9rem', marginTop: '0.5rem', opacity: 0.7 }}>
-							{nodeCount} nodes loaded...
-						</div>
-					)}
-				</div>
-
-				{isOffline && (
-					<div
-						style={{
-							padding: '0.5rem 1rem',
-							background: 'var(--warning-bg)',
-							color: 'var(--warning)',
-							borderRadius: '4px',
-							fontSize: '0.9rem',
-						}}
-					>
-						Offline mode - Limited functionality
-					</div>
-				)}
-			</div>
+			<MindMapLoadingView
+				showSkeleton={showSkeleton}
+				loadProgress={loadProgress}
+				loadingMessage={loadingMessage}
+				nodeCount={nodeCount}
+				isOffline={isOffline}
+			/>
 		);
 	}
 
-	// Add spinner animation styles
+	// Spinner animation styles
 	const spinnerStyle = `
 		@keyframes spin {
 			0% { transform: rotate(0deg); }
@@ -403,153 +266,23 @@ const EnhancedMindMap: FC = () => {
 		}
 	`;
 
-	// Main render
 	return (
 		<MindMapErrorBoundary statementId={statementId}>
 			<main className="page__main" style={{ padding: 0, alignItems: 'stretch' }}>
 				<style>{spinnerStyle}</style>
 				<ReactFlowProvider>
-					{/* Control panel */}
-					<div
-						style={{
-							position: 'absolute',
-							top: '1rem',
-							right: '1rem',
-							zIndex: 100,
-							display: 'flex',
-							flexDirection: 'column',
-							gap: '0.5rem',
-						}}
-					>
-						{/* Filter selector */}
-						<select
-							aria-label="Select filter type"
-							onChange={(ev) => setFilterBy(ev.target.value as FilterType)}
-							value={filterBy}
-							style={{
-								padding: '0.5rem',
-								borderRadius: '4px',
-								border: '1px solid var(--border-color)',
-								background: 'white',
-							}}
-						>
-							<option value={FilterType.questionsResults}>{t('Questions and Results')}</option>
-							<option value={FilterType.questionsResultsOptions}>
-								{t('Questions, options and Results')}
-							</option>
-						</select>
+					<MindMapToolbar
+						filterBy={filterBy}
+						setFilterBy={setFilterBy}
+						isAdmin={_isAdmin}
+						statementId={statementId}
+					/>
 
-						{/* Export buttons */}
-						{_isAdmin && (
-							<div
-								style={{
-									display: 'flex',
-									gap: '0.5rem',
-									background: 'white',
-									padding: '0.5rem',
-									borderRadius: '4px',
-									border: '1px solid var(--border-color)',
-								}}
-							>
-								<button
-									onClick={() => handleExport('json')}
-									style={{
-										padding: '0.25rem 0.5rem',
-										fontSize: '0.875rem',
-										cursor: 'pointer',
-									}}
-								>
-									Export JSON
-								</button>
-								<button
-									onClick={() => handleExport('svg')}
-									disabled
-									style={{
-										padding: '0.25rem 0.5rem',
-										fontSize: '0.875rem',
-										cursor: 'not-allowed',
-										opacity: 0.5,
-									}}
-								>
-									Export SVG
-								</button>
-							</div>
-						)}
-
-						{/* Dev tools */}
-						{process.env.NODE_ENV === 'development' && (
-							<div
-								style={{
-									display: 'flex',
-									flexDirection: 'column',
-									gap: '0.25rem',
-									background: 'white',
-									padding: '0.5rem',
-									borderRadius: '4px',
-									border: '1px solid var(--border-color)',
-									fontSize: '0.75rem',
-								}}
-							>
-								<button onClick={handleValidate}>Validate</button>
-								<button onClick={handleCacheStats}>Cache Stats</button>
-								<button onClick={() => enhancedMindMapService.clearAll()}>Clear Cache</button>
-							</div>
-						)}
-					</div>
-
-					{/* Status indicators */}
-					<div
-						style={{
-							position: 'absolute',
-							bottom: '1rem',
-							left: '1rem',
-							zIndex: 100,
-							display: 'flex',
-							gap: '0.5rem',
-						}}
-					>
-						{isOffline && (
-							<div
-								style={{
-									background: 'var(--warning-bg)',
-									color: 'var(--warning)',
-									padding: '0.25rem 0.5rem',
-									borderRadius: '4px',
-									fontSize: '0.75rem',
-								}}
-							>
-								Offline
-							</div>
-						)}
-
-						{offlineDataAvailable && (
-							<div
-								style={{
-									background: 'var(--info-bg)',
-									color: 'var(--info)',
-									padding: '0.25rem 0.5rem',
-									borderRadius: '4px',
-									fontSize: '0.75rem',
-								}}
-							>
-								Cached Data
-							</div>
-						)}
-
-						{nodeCount > 0 && (
-							<div
-								style={{
-									background: 'rgba(255, 255, 255, 0.9)',
-									color: 'var(--text-secondary)',
-									padding: '0.25rem 0.5rem',
-									borderRadius: '4px',
-									fontSize: '0.75rem',
-								}}
-							>
-								{nodeCount} nodes
-							</div>
-						)}
-					</div>
+					<MindMapStatusBar
+						isOffline={isOffline}
+						offlineDataAvailable={offlineDataAvailable}
+						nodeCount={nodeCount}
+					/>
 
 					{/* Mind map chart */}
 					<div

@@ -4,6 +4,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { uploadFile, subscribeToAuthState } from '@/lib/firebase/client';
 import { User } from 'firebase/auth';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './LogoUpload.module.scss';
 
 interface LogoUploadProps {
@@ -83,7 +84,10 @@ export default function LogoUpload({ documentId, currentLogoUrl, onLogoChange }:
       setPreviewUrl(downloadUrl);
       onLogoChange(downloadUrl);
     } catch (err) {
-      console.error('Logo upload failed:', err);
+      logError(err, {
+        operation: 'LogoUpload.handleUpload',
+        documentId,
+      });
       setError(t('Failed to upload logo. Please try again.'));
       setPreviewUrl(currentLogoUrl);
     } finally {

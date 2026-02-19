@@ -1,5 +1,4 @@
 import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
-import { RootState } from '../types';
 import { RoomSettings, Room, RoomParticipant } from '@freedi/shared-types';
 
 interface RoomAssignmentState {
@@ -130,10 +129,12 @@ export const roomAssignmentSlice = createSlice({
 	},
 });
 
-// Base selectors
-const getSettings = (state: RootState) => state.roomAssignment.settings;
-const getRooms = (state: RootState) => state.roomAssignment.rooms;
-const getParticipants = (state: RootState) => state.roomAssignment.participants;
+// Base selectors using narrowly-typed state parameter
+const getSettings = (state: { roomAssignment: RoomAssignmentState }) =>
+	state.roomAssignment.settings;
+const getRooms = (state: { roomAssignment: RoomAssignmentState }) => state.roomAssignment.rooms;
+const getParticipants = (state: { roomAssignment: RoomAssignmentState }) =>
+	state.roomAssignment.participants;
 
 // Export actions
 export const {
@@ -159,7 +160,8 @@ export const {
 /**
  * Select all room settings
  */
-export const selectAllRoomSettings = (state: RootState) => state.roomAssignment.settings;
+export const selectAllRoomSettings = (state: { roomAssignment: RoomAssignmentState }) =>
+	state.roomAssignment.settings;
 
 /**
  * Select active settings for a specific statement
@@ -212,17 +214,20 @@ export const selectParticipantsByRoomId = (roomId: string) =>
 /**
  * Select current user's room assignment for a statement
  */
-export const selectMyRoomAssignment = (state: RootState) => state.roomAssignment.myAssignment;
+export const selectMyRoomAssignment = (state: { roomAssignment: RoomAssignmentState }) =>
+	state.roomAssignment.myAssignment;
 
 /**
  * Select loading state
  */
-export const selectIsLoading = (state: RootState) => state.roomAssignment.isLoading;
+export const selectIsLoading = (state: { roomAssignment: RoomAssignmentState }) =>
+	state.roomAssignment.isLoading;
 
 /**
  * Select error state
  */
-export const selectError = (state: RootState) => state.roomAssignment.error;
+export const selectError = (state: { roomAssignment: RoomAssignmentState }) =>
+	state.roomAssignment.error;
 
 /**
  * Select room count for a settings ID

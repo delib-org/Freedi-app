@@ -2,6 +2,7 @@ import { collection, onSnapshot, query, where } from 'firebase/firestore';
 import { Collections, Feedback } from '@freedi/shared-types';
 import { DB } from '../config';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
+import { logError } from '@/utils/errorHandling';
 
 export function listenToFeedback(
 	statementId: string,
@@ -9,7 +10,7 @@ export function listenToFeedback(
 ): () => void {
 	try {
 		if (!statementId) {
-			console.error('No statementId provided to listenToFeedback');
+			logError(new Error('No statementId provided to listenToFeedback'), { operation: 'feedback.listenToFeedback.listenToFeedback' });
 
 			return () => {};
 		}
@@ -51,12 +52,12 @@ export function listenToFeedback(
 
 					callback(feedbackList);
 				} catch (error) {
-					console.error('Error processing feedback snapshot:', error);
+					logError(error, { operation: 'feedback.listenToFeedback.unknown', metadata: { message: 'Error processing feedback snapshot:' } });
 					callback([]);
 				}
 			},
 			(error) => {
-				console.error('Error in feedback listener:', error);
+				logError(error, { operation: 'feedback.listenToFeedback.unknown', metadata: { message: 'Error in feedback listener:' } });
 				// If it's an index error, provide helpful message
 				if (error.message?.includes('index')) {
 					console.info('Consider adding a composite index for better performance');
@@ -67,7 +68,7 @@ export function listenToFeedback(
 
 		return unsubscribe;
 	} catch (error) {
-		console.error('Error setting up feedback listener:', error);
+		logError(error, { operation: 'feedback.listenToFeedback.unknown', metadata: { message: 'Error setting up feedback listener:' } });
 		callback([]);
 
 		return () => {};

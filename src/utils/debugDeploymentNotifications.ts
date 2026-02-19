@@ -1,5 +1,6 @@
 import firebaseConfig from '@/controllers/db/configKey';
 import { vapidKey } from '@/controllers/db/configKey';
+import { logError } from '@/utils/errorHandling';
 
 export async function debugDeploymentNotifications() {
 	console.info(
@@ -42,7 +43,7 @@ export async function debugDeploymentNotifications() {
 			console.info('   - Sender ID:', expectedSenderId || 'NOT SET');
 		}
 	} catch (error) {
-		console.error('   - Failed to load firebase-config.json:', error);
+		logError(error, { operation: 'utils.debugDeploymentNotifications.unknown', metadata: { message: '   - Failed to load firebase-config.json:' } });
 	}
 
 	if (!expectedProjectId || !expectedSenderId) {
@@ -84,9 +85,9 @@ export async function debugDeploymentNotifications() {
 	);
 
 	if (!projectIdMatch || !senderIdMatch) {
-		console.error('%c   ❌ CRITICAL: Firebase config mismatch!', 'color: red; font-weight: bold');
-		console.error('   The service worker and main app are using different Firebase projects!');
-		console.error('   This will cause FCM tokens to be invalid.');
+		logError(new Error('%c   ❌ CRITICAL: Firebase config mismatch!'), { operation: 'utils.debugDeploymentNotifications.unknown', metadata: { detail: 'color: red; font-weight: bold' } });
+		logError(new Error('   The service worker and main app are using different Firebase projects!'), { operation: 'utils.debugDeploymentNotifications.unknown' });
+		logError(new Error('   This will cause FCM tokens to be invalid.'), { operation: 'utils.debugDeploymentNotifications.unknown' });
 	}
 
 	// 5. Check service worker registration
@@ -108,7 +109,7 @@ export async function debugDeploymentNotifications() {
 				firebaseSW.active.postMessage({ type: 'PING' });
 			}
 		} else {
-			console.error('   - Firebase SW: ❌ Not found');
+			logError(new Error('   - Firebase SW: ❌ Not found'), { operation: 'utils.debugDeploymentNotifications.firebaseSW' });
 		}
 	}
 

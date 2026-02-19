@@ -12,7 +12,7 @@ import {
 } from 'valibot';
 import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
-import { ResultsSettingsSchema } from '../results/Results';
+import { ResultsSettingsSchema } from '../results/ResultsSettings';
 import { QuestionSettingsSchema } from '../question/QuestionType';
 import {
 	AgreeSchema,

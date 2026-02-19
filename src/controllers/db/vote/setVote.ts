@@ -1,28 +1,31 @@
-import { Timestamp, doc, runTransaction } from 'firebase/firestore';
+import { runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
-import { Collections, Statement, getVoteId, Vote, VoteSchema, User } from '@freedi/shared-types';
+import { Statement, getVoteId, Vote, VoteSchema, User } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { createDocRef, createTimestamps } from '@/utils/firebaseUtils';
+import { Collections } from '@freedi/shared-types';
 
 export async function setVoteToDB(option: Statement, creator: User) {
 	try {
 		//vote reference
 		const voteId = getVoteId(creator.uid, option.parentId);
 
-		const voteRef = doc(FireStore, Collections.votes, voteId);
+		const voteRef = createDocRef(Collections.votes, voteId);
 
 		// toggle vote atomically using a transaction
 		const isRemovingVote = await runTransaction(FireStore, async (transaction) => {
 			const voteDoc = await transaction.get(voteRef);
 
+			const { createdAt, lastUpdate } = createTimestamps();
 			const vote: Vote = {
 				voteId,
 				statementId: option.statementId,
 				parentId: option.parentId,
 				userId: creator.uid,
-				lastUpdate: Timestamp.now().toMillis(),
-				createdAt: Timestamp.now().toMillis(),
+				lastUpdate,
+				createdAt,
 				voter: creator,
 			};
 

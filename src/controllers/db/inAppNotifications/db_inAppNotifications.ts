@@ -21,6 +21,7 @@ import {
 	markNotificationsAsRead,
 	markStatementNotificationsAsRead,
 } from '@/redux/notificationsSlice/notificationsSlice';
+import { logError } from '@/utils/errorHandling';
 
 export function listenToInAppNotifications(): Unsubscribe {
 	try {
@@ -56,17 +57,17 @@ export function listenToInAppNotifications(): Unsubscribe {
 					});
 					store.dispatch(setInAppNotificationsAll(notifications));
 				} catch (error) {
-					console.error('Error processing notifications snapshot:', error);
+					logError(error, { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { message: 'Error processing notifications snapshot:' } });
 					// Still allow the listener to continue functioning
 				}
 			},
 			// Error callback for the onSnapshot itself
 			(error) => {
-				console.error('Error in notifications snapshot listener:', error);
+				logError(error, { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { message: 'Error in notifications snapshot listener:' } });
 			},
 		);
 	} catch (error) {
-		console.error('In listenToInAppNotifications', error.message);
+		logError(new Error('In listenToInAppNotifications'), { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { detail: error.message } });
 
 		return () => {
 			return;
@@ -77,14 +78,14 @@ export function listenToInAppNotifications(): Unsubscribe {
 export async function clearInAppNotifications(statementId: string) {
 	try {
 		if (!statementId) {
-			console.error('clearInAppNotifications: statementId is required');
+			logError(new Error('clearInAppNotifications: statementId is required'), { operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications' });
 
 			return;
 		}
 
 		const user = store.getState().creator.creator;
 		if (!user) {
-			console.error('clearInAppNotifications: User not found');
+			logError(new Error('clearInAppNotifications: User not found'), { operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications' });
 
 			return;
 		}
@@ -101,7 +102,7 @@ export async function clearInAppNotifications(statementId: string) {
 			deleteDoc(ntf.ref);
 		});
 	} catch (error) {
-		console.error('In clearInAppNotifications', error.message);
+		logError(new Error('In clearInAppNotifications'), { operation: 'inAppNotifications.db_inAppNotifications.snapshot', metadata: { detail: error.message } });
 	}
 }
 
@@ -110,7 +111,7 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 	try {
 		const user = store.getState().creator.creator;
 		if (!user) {
-			console.error('markNotificationAsReadDB: User not found');
+			logError(new Error('markNotificationAsReadDB: User not found'), { operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB' });
 
 			return;
 		}
@@ -125,7 +126,7 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 		// Update in Redux
 		store.dispatch(markNotificationAsRead(notificationId));
 	} catch (error) {
-		console.error('In markNotificationAsReadDB', error.message);
+		logError(new Error('In markNotificationAsReadDB'), { operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB', metadata: { detail: error.message } });
 	}
 }
 
@@ -134,7 +135,7 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			console.error('markMultipleNotificationsAsReadDB: User not found or no notification IDs');
+			logError(new Error('markMultipleNotificationsAsReadDB: User not found or no notification IDs'), { operation: 'inAppNotifications.db_inAppNotifications.markMultipleNotificationsAsReadDB' });
 
 			return;
 		}
@@ -154,7 +155,7 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 		// Update in Redux
 		store.dispatch(markNotificationsAsRead(notificationIds));
 	} catch (error) {
-		console.error('In markMultipleNotificationsAsReadDB', error.message);
+		logError(new Error('In markMultipleNotificationsAsReadDB'), { operation: 'inAppNotifications.db_inAppNotifications.now', metadata: { detail: error.message } });
 	}
 }
 
@@ -163,7 +164,7 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !statementId) {
-			console.error('markStatementNotificationsAsReadDB: User not found or no statement ID');
+			logError(new Error('markStatementNotificationsAsReadDB: User not found or no statement ID'), { operation: 'inAppNotifications.db_inAppNotifications.markStatementNotificationsAsReadDB' });
 
 			return;
 		}
@@ -196,7 +197,7 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 			store.dispatch(markStatementNotificationsAsRead(statementId));
 		}
 	} catch (error) {
-		console.error('In markStatementNotificationsAsReadDB', error.message);
+		logError(new Error('In markStatementNotificationsAsReadDB'), { operation: 'inAppNotifications.db_inAppNotifications.now', metadata: { detail: error.message } });
 	}
 }
 
@@ -205,7 +206,7 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			console.error('markNotificationsAsViewedInListDB: User not found or no notification IDs');
+			logError(new Error('markNotificationsAsViewedInListDB: User not found or no notification IDs'), { operation: 'inAppNotifications.db_inAppNotifications.markNotificationsAsViewedInListDB' });
 
 			return;
 		}
@@ -220,6 +221,6 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 		});
 		await batch.commit();
 	} catch (error) {
-		console.error('In markNotificationsAsViewedInListDB', error.message);
+		logError(new Error('In markNotificationsAsViewedInListDB'), { operation: 'inAppNotifications.db_inAppNotifications.batch', metadata: { detail: error.message } });
 	}
 }

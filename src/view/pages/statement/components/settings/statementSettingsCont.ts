@@ -19,6 +19,7 @@ import {
 	Paragraph,
 } from '@freedi/shared-types';
 import { Dispatch, SetStateAction } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -50,7 +51,7 @@ export async function handleGetNonVoters(
 
 		setClicked(true);
 	} catch (error) {
-		console.error('Error fetching non-voters:', error);
+		logError(error, { operation: 'settings.statementSettingsCont.nonVoters', metadata: { message: 'Error fetching non-voters:' } });
 	}
 }
 
@@ -150,7 +151,7 @@ export async function setNewStatement({
 			return newStatement;
 		}
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'settings.statementSettingsCont.unknown' });
 
 		return undefined;
 	}
@@ -250,6 +251,6 @@ export async function createStatementFromModal({
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 		});
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'settings.statementSettingsCont.unknown' });
 	}
 }

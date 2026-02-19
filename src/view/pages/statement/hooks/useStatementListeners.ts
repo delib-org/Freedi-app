@@ -19,6 +19,7 @@ import {
 } from '@/controllers/db/userDemographic/getUserDemographic';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
+import { logError } from '@/utils/errorHandling';
 
 interface UseStatementListenersProps {
 	statementId?: string;
@@ -70,7 +71,7 @@ export const useStatementListeners = ({
 						unsubscribe();
 					}
 				} catch (error) {
-					console.error('Error while unsubscribing:', error);
+					logError(error, { operation: 'hooks.useStatementListeners.cleanup', metadata: { message: 'Error while unsubscribing:' } });
 					setError(error instanceof Error ? error.message : 'Unsubscribe error');
 				}
 			});
@@ -105,7 +106,7 @@ export const useStatementListeners = ({
 				unsubscribersRef.current.push(listenToStatement(stageId, setIsStatementNotFound));
 			}
 		} catch (error) {
-			console.error('Error setting up listeners:', error);
+			logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error setting up listeners:' } });
 			setError(error instanceof Error ? error.message : 'Setup error');
 		}
 
@@ -137,7 +138,7 @@ export const useStatementListeners = ({
 						unsubscribe();
 					}
 				} catch (error) {
-					console.error('Error while unsubscribing from group listeners:', error);
+					logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error while unsubscribing from group listeners:' } });
 				}
 			});
 		};

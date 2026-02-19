@@ -1,6 +1,7 @@
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
-import { Collections, Statement, StatementType } from '@freedi/shared-types';
+import { getDoc, updateDoc } from 'firebase/firestore';
+import { Statement, StatementType } from '@freedi/shared-types';
+import { createStatementRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Toggle the isDocument flag on an option statement.
@@ -10,7 +11,7 @@ export async function toggleIsDocument(statementId: string): Promise<boolean | u
 	try {
 		if (!statementId) throw new Error('Statement ID is undefined');
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const statementDB = await getDoc(statementRef);
 
 		if (!statementDB.exists()) throw new Error('Statement not found');
@@ -18,7 +19,7 @@ export async function toggleIsDocument(statementId: string): Promise<boolean | u
 		const statementData = statementDB.data() as Statement;
 
 		if (statementData.statementType !== StatementType.option) {
-			console.error('Only options can be marked as documents');
+			logError(new Error('Only options can be marked as documents'), { operation: 'statements.setIsDocument.toggleIsDocument' });
 
 			return undefined;
 		}
@@ -29,7 +30,7 @@ export async function toggleIsDocument(statementId: string): Promise<boolean | u
 
 		return isDocument;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.setIsDocument.toggleIsDocument' });
 
 		return undefined;
 	}

@@ -4,17 +4,17 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MemoryRouter } from 'react-router';
 import { store as appStore, RootState } from '@/redux/store';
-import { statementsSlicer } from '@/redux/statements/statementsSlice';
-import { statementMetaData } from '@/redux/statements/statementsMetaSlice';
-import { evaluationsSlicer } from '@/redux/evaluations/evaluationsSlice';
-import { votesSlicer } from '@/redux/vote/votesSlice';
+import { statementsSlice } from '@/redux/statements/statementsSlice';
+import { statementsMetaSlice } from '@/redux/statements/statementsMetaSlice';
+import { evaluationsSlice } from '@/redux/evaluations/evaluationsSlice';
+import { votesSlice } from '@/redux/vote/votesSlice';
 import { resultsSlice } from '@/redux/results/resultsSlice';
 import { choseBySlice } from '@/redux/choseBy/choseBySlice';
-import { notificationsSlicer } from '@/redux/notificationsSlice/notificationsSlice';
-import creatorReducer from '@/redux/creator/creatorSlice';
-import SubscriptionsReducer from '@/redux/subscriptions/subscriptionsSlice';
-import userDemographicReducer from '@/redux/userDemographic/userDemographicSlice';
-import newStatementReducer from '@/redux/statements/newStatementSlice';
+import { notificationsSlice } from '@/redux/notificationsSlice/notificationsSlice';
+import { creatorSlice } from '@/redux/creator/creatorSlice';
+import { subscriptionsSlice } from '@/redux/subscriptions/subscriptionsSlice';
+import { userDemographicSlice } from '@/redux/userDemographic/userDemographicSlice';
+import { newStatementSlice } from '@/redux/statements/newStatementSlice';
 
 interface CustomRenderOptions extends Omit<RenderOptions, 'wrapper'> {
 	preloadedState?: Record<string, unknown>;
@@ -44,17 +44,17 @@ export function renderWithProviders(
 export const createMockStore = (preloadedState: Partial<RootState> = {}) => {
 	return configureStore({
 		reducer: {
-			statements: statementsSlicer.reducer,
-			statementMetaData: statementMetaData.reducer,
-			evaluations: evaluationsSlicer.reducer,
-			votes: votesSlicer.reducer,
+			statements: statementsSlice.reducer,
+			statementMetaData: statementsMetaSlice.reducer,
+			evaluations: evaluationsSlice.reducer,
+			votes: votesSlice.reducer,
 			results: resultsSlice.reducer,
 			choseBys: choseBySlice.reducer,
-			notifications: notificationsSlicer.reducer,
-			creator: creatorReducer,
-			subscriptions: SubscriptionsReducer.reducer,
-			userDemographic: userDemographicReducer,
-			newStatement: newStatementReducer,
+			notifications: notificationsSlice.reducer,
+			creator: creatorSlice.reducer,
+			subscriptions: subscriptionsSlice.reducer,
+			userDemographic: userDemographicSlice.reducer,
+			newStatement: newStatementSlice.reducer,
 		},
 		preloadedState,
 	});

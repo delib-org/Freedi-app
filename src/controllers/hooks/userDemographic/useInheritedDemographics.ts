@@ -3,7 +3,7 @@ import { useSelector } from 'react-redux';
 import { Statement } from '@freedi/shared-types';
 import { RootState } from '@/redux/store';
 import { logError } from '@/utils/errorHandling';
-import type { InheritedQuestion } from '@/view/components/atomic/molecules/InheritedDemographics';
+import type { InheritedQuestion } from '@/types/demographics';
 
 // Use string literal for scope since it's exported as type-only
 const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;

@@ -12,6 +12,7 @@ import UnifiedFlowEditor from './UnifiedFlowEditor';
 import LanguageSelector from './LanguageSelector';
 import { CreateQuestionModal } from './CreateQuestionModal';
 import OpeningSlideManager from './OpeningSlideManager';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
 interface SurveyFormProps {
@@ -43,6 +44,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     existingSurvey?.explanationPages || []
   );
   const [customDemographicQuestions, setCustomDemographicQuestions] = useState<UserDemographicQuestion[]>([]);
+  const [showEmailSignup, setShowEmailSignup] = useState(existingSurvey?.showEmailSignup ?? true);
+  const [customEmailTitle, setCustomEmailTitle] = useState(existingSurvey?.customEmailTitle || '');
+  const [customEmailDescription, setCustomEmailDescription] = useState(existingSurvey?.customEmailDescription || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false);
@@ -78,7 +82,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       const validQuestions = questions.filter((q): q is Statement => q !== null);
       setSelectedQuestions(validQuestions);
     } catch (err) {
-      console.error('[SurveyForm] Error loading questions:', err);
+      logError(err, { operation: 'SurveyForm.loadExistingQuestions' });
     } finally {
       setIsLoadingQuestions(false);
     }
@@ -110,7 +114,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         }
       }
     } catch (err) {
-      console.error('[SurveyForm] Error loading demographic questions:', err);
+      logError(err, { operation: 'SurveyForm.loadDemographicQuestions' });
     }
   }, [existingSurvey, refreshToken, router]);
 
@@ -149,13 +153,16 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       const surveyData: CreateSurveyRequest = {
         title: title.trim(),
         description: description.trim() || undefined,
-        questionIds: selectedQuestions.map((q) => q.statementId),
+        questionIds: [...new Set(selectedQuestions.map((q) => q.statementId))],
         settings,
         questionSettings: cleanedQuestionSettings,
         defaultLanguage: defaultLanguage || undefined,
         forceLanguage: forceLanguage || undefined,
         demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
         explanationPages: explanationPages.length > 0 ? explanationPages : undefined,
+        showEmailSignup: showEmailSignup,
+        customEmailTitle: customEmailTitle.trim() || undefined,
+        customEmailDescription: customEmailDescription.trim() || undefined,
       };
 
       console.info('[SurveyForm] Submitting survey with questionSettings:', JSON.stringify(cleanedQuestionSettings));
@@ -213,13 +220,15 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         );
 
         if (!demographicsResponse.ok) {
-          console.error('[SurveyForm] Failed to save demographic questions');
+          logError(new Error('Failed to save demographic questions'), {
+            operation: 'SurveyForm.handleSubmit.saveDemographics',
+          });
         }
       }
 
       router.push(`/admin/surveys/${survey.surveyId}`);
     } catch (err) {
-      console.error('[SurveyForm] Error:', err);
+      logError(err, { operation: 'SurveyForm.handleSubmit' });
       setError(err instanceof Error ? err.message : 'Failed to save survey');
     } finally {
       setIsSubmitting(false);
@@ -279,10 +288,16 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       });
 
       if (!response.ok) {
-        console.error('[SurveyForm] Failed to save question text:', await response.text());
+        logError(new Error('Failed to save question text'), {
+          operation: 'SurveyForm.handleQuestionTextChange',
+          statementId: questionId,
+        });
       }
     } catch (err) {
-      console.error('[SurveyForm] Error saving question text:', err);
+      logError(err, {
+        operation: 'SurveyForm.handleQuestionTextChange',
+        statementId: questionId,
+      });
     }
   };
 
@@ -565,6 +580,61 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
             </label>
           </div>
         </div>
+      </div>
+
+      {/* Email Signup Settings */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('emailSignupCustomization')}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('emailSignupCustomizationDescription')}
+        </p>
+
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={showEmailSignup}
+              onChange={(e) => setShowEmailSignup(e.target.checked)}
+            />
+            {' '}{t('showEmailSignup')}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('showEmailSignupDescription')}
+          </p>
+        </div>
+
+        {showEmailSignup && (
+          <>
+            <div className={styles.formGroup}>
+              <label htmlFor="customEmailTitle">{t('emailSignupTitle')}</label>
+              <input
+                id="customEmailTitle"
+                type="text"
+                className={styles.textInput}
+                value={customEmailTitle}
+                onChange={(e) => setCustomEmailTitle(e.target.value)}
+                placeholder={t('stayUpdated')}
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                {t('leaveBlankForDefault')}
+              </p>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label htmlFor="customEmailDescription">{t('emailSignupDescriptionLabel')}</label>
+              <textarea
+                id="customEmailDescription"
+                className={styles.textArea}
+                value={customEmailDescription}
+                onChange={(e) => setCustomEmailDescription(e.target.value)}
+                placeholder={t('emailSignupDescription')}
+              />
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                {t('leaveBlankForDefault')}
+              </p>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Step 5: Language Settings */}

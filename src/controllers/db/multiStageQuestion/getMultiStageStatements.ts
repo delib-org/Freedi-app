@@ -4,6 +4,7 @@ import { setCurrentMultiStepOptions } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { Statement, StatementSchema, functionConfig } from '@freedi/shared-types';
 import firebaseConfig from '../configKey';
+import { logError } from '@/utils/errorHandling';
 
 export async function getFirstEvaluationOptions(statement: Statement | undefined): Promise<void> {
 	try {
@@ -22,7 +23,7 @@ export async function getFirstEvaluationOptions(statement: Statement | undefined
 
 		dispatch(setCurrentMultiStepOptions(randomStatements));
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'multiStageQuestion.getMultiStageStatements.getFirstEvaluationOptions' });
 	}
 }
 
@@ -42,6 +43,6 @@ export async function getSecondEvaluationOptions(statement: Statement | undefine
 		v.parse(topSolutions, v.array(StatementSchema));
 		dispatch(setCurrentMultiStepOptions(topSolutions));
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'multiStageQuestion.getMultiStageStatements.getSecondEvaluationOptions' });
 	}
 }

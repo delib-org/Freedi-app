@@ -1,5 +1,6 @@
 import { doc, setDoc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { FireStore } from '../config';
+import { logError } from '@/utils/errorHandling';
 
 export interface MemberValidationStatus {
 	statementId: string;
@@ -47,7 +48,7 @@ export async function saveMemberValidationStatus(
 
 		await setDoc(validationRef, validationData, { merge: true });
 	} catch (error) {
-		console.error('Error saving member validation status:', error);
+		logError(error, { operation: 'memberValidation.memberValidationStatus.unknown', metadata: { message: 'Error saving member validation status:' } });
 		throw error;
 	}
 }
@@ -70,7 +71,7 @@ export async function getMemberValidationStatus(
 
 		return null;
 	} catch (error) {
-		console.error('Error getting member validation status:', error);
+		logError(error, { operation: 'memberValidation.memberValidationStatus.getMemberValidationStatus', metadata: { message: 'Error getting member validation status:' } });
 
 		return null;
 	}
@@ -96,7 +97,7 @@ export async function getAllMemberValidationStatuses(
 
 		return statusMap;
 	} catch (error) {
-		console.error('Error getting all member validation statuses:', error);
+		logError(error, { operation: 'memberValidation.memberValidationStatus.getAllMemberValidationStatuses', metadata: { message: 'Error getting all member validation statuses:' } });
 
 		return new Map();
 	}

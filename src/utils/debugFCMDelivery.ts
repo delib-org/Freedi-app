@@ -1,5 +1,6 @@
 import { getMessaging, onMessage } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
+import { logError } from '@/utils/errorHandling';
 
 export async function debugFCMDelivery() {
 	console.info('%c=== FCM DELIVERY DEBUG ===', 'color: purple; font-weight: bold; font-size: 16px');
@@ -33,7 +34,7 @@ export async function debugFCMDelivery() {
 			// Send a test message to SW
 			sw.active?.postMessage({ type: 'CHECK_PUSH_SUPPORT' });
 		} catch (error) {
-			console.error('SW communication error:', error);
+			logError(error, { operation: 'utils.debugFCMDelivery.unknown', metadata: { message: 'SW communication error:' } });
 		}
 	}
 

@@ -1,9 +1,13 @@
-import { Timestamp, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { setDoc, updateDoc } from 'firebase/firestore';
 import { number, parse } from 'valibot';
-import { EvaluationSchema, Collections, Statement, User, EvaluationUI } from '@freedi/shared-types';
+import { EvaluationSchema, Statement, User, EvaluationUI } from '@freedi/shared-types';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import {
+	createEvaluationRef,
+	createStatementRef,
+	getCurrentTimestamp,
+} from '@/utils/firebaseUtils';
 
 export async function setEvaluationToDB(
 	statement: Statement,
@@ -25,13 +29,13 @@ export async function setEvaluationToDB(
 
 		//set evaluation to db
 
-		const evaluationRef = doc(FireStore, Collections.evaluations, evaluationId);
+		const evaluationRef = createEvaluationRef(evaluationId);
 		const evaluationData = {
 			parentId,
 			evaluationId,
 			statementId,
 			evaluatorId: creator.uid,
-			updatedAt: Timestamp.now().toMillis(),
+			updatedAt: getCurrentTimestamp(),
 			evaluation,
 			evaluator: creator,
 		};
@@ -61,7 +65,7 @@ export async function setEvaluationToDB(
 }
 
 export function setEvaluationUIType(statementId: string, evaluationUI: EvaluationUI) {
-	const evaluationUIRef = doc(FireStore, Collections.statements, statementId);
+	const evaluationUIRef = createStatementRef(statementId);
 	updateDoc(evaluationUIRef, { evaluationSettings: { evaluationUI: evaluationUI } }).catch(
 		(error) => {
 			logger.error('Error updating evaluation UI', error, { statementId });
@@ -83,7 +87,7 @@ export async function setAnchoredEvaluationSettings(
 	},
 ): Promise<void> {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		await updateDoc(statementRef, {
 			'evaluationSettings.anchored': anchoredSettings,
@@ -109,7 +113,7 @@ export async function setMaxVotesPerUser(
 	maxVotes: number | undefined,
 ): Promise<void> {
 	try {
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		await updateDoc(statementRef, {
 			'evaluationSettings.axVotesPerUser': maxVotes || null,

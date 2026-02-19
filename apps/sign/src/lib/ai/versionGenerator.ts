@@ -94,8 +94,10 @@ function extractJSON<T>(response: string, fallback?: T): T {
 		// Parse the cleaned JSON
 		return JSON.parse(cleanedResponse);
 	} catch (parseError) {
-		console.error('[extractJSON] Parse error:', parseError);
-		console.error('[extractJSON] Cleaned response:', cleanedResponse.substring(0, 1000));
+		logError(parseError, {
+			operation: 'ai.extractJSON',
+			metadata: { cleanedResponsePreview: cleanedResponse.substring(0, 1000) },
+		});
 
 		// If we have a fallback, return it
 		if (fallback !== undefined) {
@@ -377,7 +379,14 @@ async function callGemini(
 
 	if (!response.ok) {
 		const errorText = await response.text();
-		console.error(`[Gemini API] Error ${response.status} for model ${model}:`, errorText);
+		logError(new NetworkError(`Gemini API error: ${response.status}`, {
+			status: response.status,
+			error: errorText,
+			model,
+		}), {
+			operation: 'ai.callGemini',
+			metadata: { status: response.status, model },
+		});
 		throw new NetworkError(`Gemini API error: ${response.status}`, {
 			status: response.status,
 			error: errorText,

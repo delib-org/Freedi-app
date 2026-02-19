@@ -8,6 +8,7 @@ import {
 	isChunkLoadError,
 	handleChunkLoadError,
 } from '../../utils/errorBoundaryHelpers';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	children: ReactNode;
@@ -45,7 +46,7 @@ export class RootErrorBoundary extends Component<Props, State> {
 	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 		// Log to console in development
 		if (import.meta.env.DEV) {
-			console.error('Error caught by boundary:', error, errorInfo);
+			logError(new Error('Error caught by boundary:'), { operation: 'components.ErrorBoundary.RootErrorBoundary.unknown', metadata: { detail: error, errorInfo } });
 		}
 
 		// Check for chunk loading errors (stale cache after deployment)

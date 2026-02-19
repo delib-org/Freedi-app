@@ -1,6 +1,7 @@
 import { onRequest } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement, functionConfig } from '@freedi/shared-types';
+import { logError } from './utils/errorHandling';
 
 const db = getFirestore();
 
@@ -180,7 +181,11 @@ export const serveOgTags = onRequest(
 			res.set('Content-Type', 'text/html');
 			res.send(generateOgHtml(title, description, fullUrl, imageUrl));
 		} catch (error) {
-			console.error('Error fetching statement for OG tags:', error);
+			logError(error, {
+				operation: 'dynamicOgTags.serveOgTags',
+				statementId: statementId ?? undefined,
+				metadata: { path },
+			});
 
 			// On error, serve default OG tags
 			res.set('Content-Type', 'text/html');

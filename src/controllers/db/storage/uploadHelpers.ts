@@ -1,5 +1,6 @@
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { storage, auth } from '../config';
+import { logError } from '@/utils/errorHandling';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB (before resizing)
 export const ALLOWED_FILE_TYPES = [
@@ -140,7 +141,7 @@ export async function deleteAnchorIcon(path: string): Promise<void> {
 		const storageRef = ref(storage, path);
 		await deleteObject(storageRef);
 	} catch (error) {
-		console.error('Error deleting anchor icon:', error);
+		logError(error, { operation: 'storage.uploadHelpers.deleteAnchorIcon', metadata: { message: 'Error deleting anchor icon:' } });
 		// Don't throw - deletion failures shouldn't break the UI
 	}
 }

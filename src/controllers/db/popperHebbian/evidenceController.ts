@@ -1,10 +1,8 @@
 import {
-	doc,
 	setDoc,
 	updateDoc,
 	deleteDoc,
 	getDoc,
-	collection,
 	query,
 	where,
 	onSnapshot,
@@ -12,11 +10,13 @@ import {
 	Unsubscribe,
 } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { FireStore, auth, functions } from '../config';
+import { auth, functions } from '../config';
 import { Collections, Statement, StatementType, Creator } from '@freedi/shared-types';
 import { logger } from '@/services/logger';
+import { createStatementRef, createDocRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { detectUrls } from '@/utils/urlHelpers';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
+import { logError } from '@/utils/errorHandling';
 
 function generateId(): string {
 	return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -51,7 +51,7 @@ function getUserLanguage(): string {
 			}
 		}
 	} catch (error) {
-		console.error('[Link Summary] Error reading userConfig from localStorage:', error);
+		logError(error, { operation: 'popperHebbian.evidenceController.getUserLanguage', metadata: { message: '[Link Summary] Error reading userConfig from localStorage:' } });
 	}
 
 	// Fallback to browser language
@@ -127,7 +127,7 @@ export async function createEvidencePost(
 		}
 
 		// Get parent statement to access topParentId
-		const parentRef = doc(FireStore, Collections.statements, parentStatementId);
+		const parentRef = createStatementRef(parentStatementId);
 		const parentSnap = await getDoc(parentRef);
 
 		if (!parentSnap.exists()) {
@@ -174,7 +174,7 @@ export async function createEvidencePost(
 			},
 		};
 
-		await setDoc(doc(FireStore, Collections.statements, statementId), evidenceStatement);
+		await setDoc(createStatementRef(statementId), evidenceStatement);
 
 		logger.info('Evidence post created', { statementId, parentId: parentStatement.statementId });
 
@@ -195,7 +195,7 @@ export function listenToEvidencePosts(
 	callback: (posts: Statement[]) => void,
 ): Unsubscribe {
 	const q = query(
-		collection(FireStore, Collections.statements),
+		createCollectionRef(Collections.statements),
 		where('parentId', '==', statementId),
 		where('evidence', '!=', null),
 	);
@@ -233,8 +233,8 @@ export async function submitVote(
 ): Promise<void> {
 	try {
 		const voteId = `${evidenceStatementId}_${userId}`;
-		const voteRef = doc(FireStore, Collections.evidenceVotes, voteId);
-		const statementRef = doc(FireStore, Collections.statements, evidenceStatementId);
+		const voteRef = createDocRef(Collections.evidenceVotes, voteId);
+		const statementRef = createStatementRef(evidenceStatementId);
 
 		// Check if user already voted
 		const existingVote = await getDoc(voteRef);
@@ -317,8 +317,8 @@ export async function submitVote(
 export async function removeVote(evidenceStatementId: string, userId: string): Promise<void> {
 	try {
 		const voteId = `${evidenceStatementId}_${userId}`;
-		const voteRef = doc(FireStore, Collections.evidenceVotes, voteId);
-		const statementRef = doc(FireStore, Collections.statements, evidenceStatementId);
+		const voteRef = createDocRef(Collections.evidenceVotes, voteId);
+		const statementRef = createStatementRef(evidenceStatementId);
 
 		// Get existing vote
 		const voteSnap = await getDoc(voteRef);
@@ -359,7 +359,7 @@ export async function getUserVote(
 ): Promise<'helpful' | 'not-helpful' | null> {
 	try {
 		const voteId = `${evidenceStatementId}_${userId}`;
-		const voteRef = doc(FireStore, Collections.evidenceVotes, voteId);
+		const voteRef = createDocRef(Collections.evidenceVotes, voteId);
 		const voteSnap = await getDoc(voteRef);
 
 		if (voteSnap.exists()) {
@@ -396,7 +396,7 @@ export async function updateEvidencePost(
 			throw new Error('Support value must be between -1 and 1');
 		}
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const statementSnap = await getDoc(statementRef);
 
 		if (!statementSnap.exists()) {

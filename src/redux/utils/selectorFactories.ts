@@ -2,18 +2,20 @@
  * Redux Selector Factories
  *
  * Reusable selector patterns to reduce duplication across Redux slices.
+ * Uses generic state types to avoid circular dependencies with store.ts.
  */
 
 import { createSelector } from '@reduxjs/toolkit';
 import { Statement, StatementType } from '@freedi/shared-types';
-import type { RootState } from '../types';
+
+// Generic state selector type - avoids importing RootState and creating circular dependencies
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StateSelector<T> = (state: any) => T;
 
 /**
  * Create a selector that filters statements by parent ID
  */
-export function createStatementsByParentSelector(
-	selectStatements: (state: RootState) => Statement[],
-) {
+export function createStatementsByParentSelector(selectStatements: StateSelector<Statement[]>) {
 	return (parentId: string | undefined) =>
 		createSelector([selectStatements], (statements) =>
 			statements
@@ -26,7 +28,7 @@ export function createStatementsByParentSelector(
  * Create a selector that filters statements by parent ID and type
  */
 export function createStatementsByParentAndTypeSelector(
-	selectStatements: (state: RootState) => Statement[],
+	selectStatements: StateSelector<Statement[]>,
 ) {
 	return (parentId: string | undefined, statementType: StatementType) =>
 		createSelector([selectStatements], (statements) =>
@@ -42,7 +44,7 @@ export function createStatementsByParentAndTypeSelector(
 /**
  * Create a selector that finds a statement by ID
  */
-export function createStatementByIdSelector(selectStatements: (state: RootState) => Statement[]) {
+export function createStatementByIdSelector(selectStatements: StateSelector<Statement[]>) {
 	return (statementId: string | undefined) =>
 		createSelector([selectStatements], (statements) =>
 			statements.find((statement) => statement.statementId === statementId),
@@ -52,9 +54,7 @@ export function createStatementByIdSelector(selectStatements: (state: RootState)
 /**
  * Create a selector that filters statements by top parent ID
  */
-export function createStatementsByTopParentSelector(
-	selectStatements: (state: RootState) => Statement[],
-) {
+export function createStatementsByTopParentSelector(selectStatements: StateSelector<Statement[]>) {
 	return (topParentId: string | undefined) =>
 		createSelector([selectStatements], (statements) =>
 			statements.filter((statement) => statement.topParentId === topParentId),
@@ -64,9 +64,7 @@ export function createStatementsByTopParentSelector(
 /**
  * Create a selector that filters and sorts by a custom predicate
  */
-export function createFilteredStatementsSelector(
-	selectStatements: (state: RootState) => Statement[],
-) {
+export function createFilteredStatementsSelector(selectStatements: StateSelector<Statement[]>) {
 	return (
 		predicate: (statement: Statement) => boolean,
 		sortFn?: (a: Statement, b: Statement) => number,
@@ -94,14 +92,14 @@ export const sortByEvaluationCount = (a: Statement, b: Statement): number =>
 /**
  * Create a memoized selector for counting items
  */
-export function createCountSelector<T>(selectItems: (state: RootState) => T[]) {
+export function createCountSelector<T>(selectItems: StateSelector<T[]>) {
 	return createSelector([selectItems], (items) => items.length);
 }
 
 /**
  * Create a selector that checks if an item exists
  */
-export function createExistsSelector<T>(selectItems: (state: RootState) => T[], idKey: keyof T) {
+export function createExistsSelector<T>(selectItems: StateSelector<T[]>, idKey: keyof T) {
 	return (id: string | undefined) =>
 		createSelector([selectItems], (items) => items.some((item) => item[idKey] === id));
 }

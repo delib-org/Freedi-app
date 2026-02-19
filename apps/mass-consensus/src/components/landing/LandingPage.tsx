@@ -2,6 +2,7 @@
 
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './LandingPage.module.scss';
 
 interface LandingPageProps {
@@ -20,7 +21,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
       await signIn();
       onGetStarted();
     } catch (error) {
-      console.error('Sign in failed:', error);
+      logError(error, { operation: 'LandingPage.handleSignIn' });
     }
   };
 

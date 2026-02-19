@@ -6,6 +6,7 @@ import InviteModal from '../../../../../components/modal/InviteModal';
 import styles from './InvitePanel.module.scss';
 import InvitePanelBox from './InvitePanelBox';
 import { Invitation } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	setShowModal: (show: boolean) => void;
@@ -24,7 +25,7 @@ const InvitePanel: FC<Props> = ({ setShowModal, statementId, pathname }) => {
 
 				invitationNumberToArray(invitation?.number);
 			} catch (error) {
-				console.error(error);
+				logError(error, { operation: 'invitePanel.InvitePanel.unknown' });
 			}
 		});
 	}, []);

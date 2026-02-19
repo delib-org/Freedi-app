@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { logError } from '@/lib/utils/errorHandling';
 import { Survey, SurveyStatus } from '@/types/survey';
 import SurveyCard, { SurveyStats } from './SurveyCard';
 import styles from './Admin.module.scss';
@@ -52,7 +53,9 @@ export default function SurveyList() {
         setStatsMap(data.stats);
       }
     } catch (err) {
-      console.error('[SurveyList] Error:', err);
+      logError(err, {
+        operation: 'SurveyList.fetchSurveys',
+      });
       setError(err instanceof Error ? err.message : 'Failed to load surveys');
     } finally {
       setLoading(false);
@@ -87,7 +90,10 @@ export default function SurveyList() {
       // Remove from list
       setSurveys((prev) => prev.filter((s) => s.surveyId !== surveyId));
     } catch (err) {
-      console.error('[SurveyList] Delete error:', err);
+      logError(err, {
+        operation: 'SurveyList.handleDelete',
+        metadata: { surveyId },
+      });
       alert('Failed to delete survey');
     }
   };
@@ -120,7 +126,10 @@ export default function SurveyList() {
         prev.map((s) => (s.surveyId === surveyId ? { ...s, status: updatedSurvey.status } : s))
       );
     } catch (err) {
-      console.error('[SurveyList] Status change error:', err);
+      logError(err, {
+        operation: 'SurveyList.handleStatusChange',
+        metadata: { surveyId, newStatus },
+      });
       alert('Failed to update survey status');
     }
   };

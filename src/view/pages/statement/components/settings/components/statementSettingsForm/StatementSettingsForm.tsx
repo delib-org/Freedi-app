@@ -1,4 +1,5 @@
 import { Dispatch, FC, FormEvent, useState } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Third party imports
 import { useNavigate, useParams } from 'react-router';
@@ -267,7 +268,7 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 			</div>
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettingsForm.StatementSettingsForm.unknown' });
 
 		return null;
 	}

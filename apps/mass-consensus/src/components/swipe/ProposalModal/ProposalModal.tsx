@@ -7,6 +7,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import clsx from 'clsx';
 import { VALIDATION } from '@/constants/common';
+import { logError } from '@/lib/utils/errorHandling';
 import EnhancedLoader from '@/components/question/EnhancedLoader';
 
 export interface ProposalModalProps {
@@ -115,7 +116,7 @@ const ProposalModal: React.FC<ProposalModalProps> = ({
       onClose();
     } catch (error) {
       // Error is handled by parent component
-      console.error('Proposal submission failed:', error);
+      logError(error, { operation: 'ProposalModal.handleSubmit' });
     } finally {
       setIsSubmitting(false);
     }

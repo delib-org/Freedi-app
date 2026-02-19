@@ -262,6 +262,12 @@ export const SurveySchema = object({
   openingSlideContent: optional(string()),
   /** Whether to show custom opening slide (false = skip to questions directly) */
   showOpeningSlide: optional(boolean()),
+  /** Whether to show email signup on completion screen (defaults to true) */
+  showEmailSignup: optional(boolean()),
+  /** Custom email signup title (replaces default i18n 'stayUpdated') */
+  customEmailTitle: optional(string()),
+  /** Custom email signup description (replaces default i18n 'emailSignupDescription') */
+  customEmailDescription: optional(string()),
   createdAt: number(),
   lastUpdate: number(),
 });

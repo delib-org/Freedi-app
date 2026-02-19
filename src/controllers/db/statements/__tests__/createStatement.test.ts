@@ -118,18 +118,15 @@ jest.mock('@/redux/pwa/pwaSlice', () => ({
 	setHasCreatedGroup: jest.fn(() => ({ type: 'pwa/setHasCreatedGroup' })),
 }));
 
-jest.mock('@/model/questionTypeDefaults', () => ({
+jest.mock('@/models/questionTypeDefaults', () => ({
 	getDefaultQuestionType: jest.fn(() => 'simple'),
 }));
 
 // Mock vote color utilities
-jest.mock(
-	'@/view/pages/statement/components/vote/statementVoteCont',
-	() => ({
-		getExistingOptionColors: jest.fn(() => []),
-		getSiblingOptionsByParentId: jest.fn(() => []),
-	}),
-);
+jest.mock('@/view/pages/statement/components/vote/statementVoteCont', () => ({
+	getExistingOptionColors: jest.fn(() => []),
+	getSiblingOptionsByParentId: jest.fn(() => []),
+}));
 
 jest.mock('@/view/pages/statement/components/vote/votingColors', () => ({
 	getRandomColor: jest.fn(() => '#FF5733'),
@@ -513,13 +510,15 @@ describe('updateStatement', () => {
 	});
 
 	it('should update lastUpdate timestamp', () => {
+		const now = Date.now();
 		const result = updateStatement({
 			text: 'Updated text',
 			statement: baseStatement as never,
 		} as never);
 
-		// lastUpdate should be the mocked Timestamp value
-		expect(result?.lastUpdate).toBe(1704067200000);
+		// lastUpdate should be a recent Date.now() value
+		expect(result?.lastUpdate).toBeGreaterThanOrEqual(now);
+		expect(result?.lastUpdate).toBeLessThanOrEqual(Date.now());
 	});
 
 	it('should not modify the original statement (immutable)', () => {

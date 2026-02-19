@@ -15,6 +15,7 @@ import {
 	listenToGroupDemographicQuestions,
 } from '@/controllers/db/userDemographic/getUserDemographic';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Converts agreement level (-1 to +1) to a color on red-yellow-green gradient
@@ -393,7 +394,7 @@ function calculatePosition(
 
 		return { x, y };
 	} catch (error) {
-		console.error('Error calculating points:', error);
+		logError(error, { operation: 'polarizationIndex.PolarizationIndex.x', metadata: { message: 'Error calculating points:' } });
 
 		return { x: 0, y: 0 };
 	}
@@ -465,11 +466,11 @@ function calculatePositions(
 					})),
 				};
 			} catch (error) {
-				console.error('Error calculating point:', error);
+				logError(error, { operation: 'polarizationIndex.PolarizationIndex.unknown', metadata: { message: 'Error calculating point:' } });
 			}
 		});
 	} catch (error) {
-		console.error('Error calculating positions:', error);
+		logError(error, { operation: 'polarizationIndex.PolarizationIndex.unknown', metadata: { message: 'Error calculating positions:' } });
 
 		return [];
 	}

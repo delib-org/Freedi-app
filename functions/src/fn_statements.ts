@@ -12,6 +12,7 @@ import {
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { Response, Request } from 'firebase-functions/v1';
+import { logError } from './utils/errorHandling';
 
 export async function updateNumberOfNewSubStatements(
 	e: FirestoreEvent<
@@ -83,7 +84,10 @@ export async function getQuestionOptions(req: Request, res: Response) {
 
 		res.status(200).send({ options, ok: true });
 	} catch (error) {
-		console.error(error);
+		logError(error, {
+			operation: 'statements.getQuestionOptions',
+			statementId: req.query.statementId as string,
+		});
 		res.status(500).send({ error: error, ok: false });
 	}
 }

@@ -3,6 +3,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { notificationService } from '@/services/notificationService';
 import { Statement } from '@freedi/shared-types';
 import { APP_CONSTANTS, ERROR_MESSAGES } from '../constants';
+import { logError } from '@/utils/errorHandling';
 
 interface UseNotificationSetupProps {
 	statement: Statement | null;
@@ -33,7 +34,7 @@ export const useNotificationSetup = ({ statement, setError }: UseNotificationSet
 					await notificationService.initialize(creator.uid);
 				}
 			} catch (error) {
-				console.error('Error in notification setup:', error);
+				logError(error, { operation: 'hooks.useNotificationSetup.timeoutId', metadata: { message: 'Error in notification setup:' } });
 				const errorMessage =
 					error instanceof Error ? error.message : ERROR_MESSAGES.NOTIFICATION_SETUP;
 				setError(errorMessage);

@@ -3,7 +3,7 @@
  */
 
 import { renderHook, act } from '@testing-library/react';
-import useWindowDimensions from '../useWindowDimentions';
+import useWindowDimensions from '../useWindowDimensions';
 
 describe('useWindowDimensions', () => {
 	// Store original window dimensions

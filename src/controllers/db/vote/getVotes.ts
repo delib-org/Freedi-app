@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDoc, getDocs, query, where } from 'firebase/firestore';
 import { FireStore } from '../config';
 import {
 	Collections,
@@ -10,6 +10,8 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
+import { createDocRef, createStatementRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 // Why get user from firebase when we can pass it as a parameter?
 export async function getToVoteOnParent(
@@ -24,19 +26,19 @@ export async function getToVoteOnParent(
 		const voteId = getVoteId(userId, parentId);
 		if (!voteId) throw new Error('VoteId not found');
 
-		const parentVoteRef = doc(FireStore, Collections.votes, voteId);
+		const parentVoteRef = createDocRef(Collections.votes, voteId);
 		const voteDB = await getDoc(parentVoteRef);
 
 		if (!voteDB.exists()) return null;
 		const vote = parse(VoteSchema, voteDB.data());
 
-		const statementRef = doc(FireStore, Collections.statements, vote.statementId);
+		const statementRef = createStatementRef(vote.statementId);
 		const statementDB = await getDoc(statementRef);
 		const statement = parse(StatementSchema, normalizeStatementData(statementDB.data()));
 
 		updateStoreWithVoteCB(statement);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.getVotes.getToVoteOnParent' });
 
 		return null;
 	}
@@ -52,7 +54,7 @@ export async function getVoters(parentId: string): Promise<Vote[]> {
 
 		return voters;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'vote.getVotes.voters' });
 
 		return [] as Vote[];
 	}

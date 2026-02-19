@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 /**
  * ListenerManager - Manages Firestore listeners to prevent duplicates and ensure proper cleanup
  *
@@ -143,7 +144,7 @@ export class ListenerManager {
 
 			return true;
 		} catch (error) {
-			console.error(`Error setting up listener '${key}':`, error);
+			logError(error, { operation: 'controllerUtils.ListenerManager.onDocumentCount', metadata: { message: `Error setting up listener '${key}':` } });
 			this.pendingListeners.delete(key);
 
 			return false;
@@ -170,7 +171,7 @@ export class ListenerManager {
 
 					return true;
 				} catch (error) {
-					console.error(`Error removing listener '${key}':`, error);
+					logError(error, { operation: 'controllerUtils.ListenerManager.unknown', metadata: { message: `Error removing listener '${key}':` } });
 					// Still remove from map even if unsubscribe failed
 					this.listeners.delete(key);
 

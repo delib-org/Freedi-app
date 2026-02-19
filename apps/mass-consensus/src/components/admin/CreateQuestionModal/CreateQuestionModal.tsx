@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './CreateQuestionModal.module.scss';
 
 interface CreateQuestionModalProps {
@@ -83,7 +84,9 @@ export default function CreateQuestionModal({
       const data = await response.json();
       setGroups(data.groups || []);
     } catch (err) {
-      console.error('[CreateQuestionModal] Error fetching groups:', err);
+      logError(err, {
+        operation: 'CreateQuestionModal.fetchGroups',
+      });
       setGroupsError(t('failedToLoadGroups') || 'Failed to load groups');
     } finally {
       setGroupsLoading(false);
@@ -153,7 +156,10 @@ export default function CreateQuestionModal({
       setIsCreatingGroup(false);
       setNewGroupName('');
     } catch (err) {
-      console.error('[CreateQuestionModal] Error creating group:', err);
+      logError(err, {
+        operation: 'CreateQuestionModal.handleCreateGroup',
+        metadata: { groupName: newGroupName.trim() },
+      });
       setError(t('failedToCreateGroup') || 'Failed to create group');
     } finally {
       setCreatingGroup(false);
@@ -198,7 +204,10 @@ export default function CreateQuestionModal({
       const data = await response.json();
       onQuestionCreated(data.question);
     } catch (err) {
-      console.error('[CreateQuestionModal] Error creating question:', err);
+      logError(err, {
+        operation: 'CreateQuestionModal.handleCreateQuestion',
+        metadata: { selectedGroupId, evaluationType },
+      });
       setError(
         err instanceof Error
           ? err.message

@@ -1,7 +1,7 @@
-import { doc, updateDoc, getDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
-import { Collections, Statement } from '@freedi/shared-types';
+import { updateDoc, getDoc } from 'firebase/firestore';
+import { Statement } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { createStatementRef } from '@/utils/firebaseUtils';
 
 /**
  * Save excluded inherited demographic question IDs for a statement
@@ -17,7 +17,7 @@ export async function setExcludedInheritedDemographics(
 			throw new Error('Statement ID is required');
 		}
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		await updateDoc(statementRef, {
 			'statementSettings.excludedInheritedDemographicIds': excludedIds,
@@ -49,7 +49,7 @@ export async function getExcludedInheritedDemographics(statementId: string): Pro
 			throw new Error('Statement ID is required');
 		}
 
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 		const statementDoc = await getDoc(statementRef);
 
 		if (!statementDoc.exists()) {

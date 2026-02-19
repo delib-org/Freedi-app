@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { logError } from '../utils/errorHandling';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -47,7 +48,7 @@ if (isLocalhost) {
     connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
     console.info('[Firebase Client] Connected to Auth emulator on localhost:9099');
   } catch (error) {
-    console.error('[Firebase Client] Auth emulator connection error:', error);
+    logError(error, { operation: 'firebaseClient.connectAuthEmulator' });
   }
 
   // Connect to Firestore emulator
@@ -55,7 +56,7 @@ if (isLocalhost) {
     connectFirestoreEmulator(db, 'localhost', 8081);
     console.info('[Firebase Client] Connected to Firestore emulator on localhost:8081');
   } catch (error) {
-    console.error('[Firebase Client] Firestore emulator connection error:', error);
+    logError(error, { operation: 'firebaseClient.connectFirestoreEmulator' });
   }
 
   // Connect to Storage emulator
@@ -63,14 +64,14 @@ if (isLocalhost) {
     connectStorageEmulator(storage, 'localhost', 9199);
     console.info('[Firebase Client] Connected to Storage emulator on localhost:9199');
   } catch (error) {
-    console.error('[Firebase Client] Storage emulator connection error:', error);
+    logError(error, { operation: 'firebaseClient.connectStorageEmulator' });
   }
 }
 
 // Set persistence to local storage
 if (typeof window !== 'undefined') {
   setPersistence(auth, browserLocalPersistence).catch((error) => {
-    console.error('Error setting auth persistence:', error);
+    logError(error, { operation: 'firebaseClient.setPersistence' });
   });
 }
 
@@ -91,7 +92,7 @@ export async function signInWithGoogle(): Promise<User> {
     console.info('[Firebase] Sign in successful:', result.user.email);
     return result.user;
   } catch (error) {
-    console.error('[Firebase] Google sign-in error:', error);
+    logError(error, { operation: 'firebaseClient.signInWithGoogle' });
     throw error;
   }
 }
@@ -113,7 +114,7 @@ export async function signOutUser(): Promise<void> {
     await signOut(auth);
     localStorage.removeItem('firebase_token');
   } catch (error) {
-    console.error('Sign out error:', error);
+    logError(error, { operation: 'firebaseClient.signOutUser' });
     throw error;
   }
 }
@@ -149,7 +150,7 @@ export async function getCurrentToken(): Promise<string | null> {
     localStorage.setItem('firebase_token', token);
     return token;
   } catch (error) {
-    console.error('Error getting token:', error);
+    logError(error, { operation: 'firebaseClient.getCurrentToken' });
 
     // Fallback to localStorage cached token (may still be valid)
     const fallbackToken = localStorage.getItem('firebase_token');

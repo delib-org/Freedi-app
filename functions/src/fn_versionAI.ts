@@ -7,6 +7,7 @@
 
 import { Request, Response } from 'firebase-functions/v1';
 import { getFirestore } from 'firebase-admin/firestore';
+import { logError } from './utils/errorHandling';
 
 const db = getFirestore();
 
@@ -210,7 +211,10 @@ async function callGemini(systemPrompt: string, userPrompt: string): Promise<str
 
 	if (!response.ok) {
 		const errorText = await response.text();
-		console.error(`[Gemini API] Error ${response.status}:`, errorText);
+		logError(new Error(`Gemini API error: ${response.status}`), {
+			operation: 'versionAI.callGemini',
+			metadata: { status: response.status, errorText },
+		});
 		throw new Error(`Gemini API error: ${response.status}`);
 	}
 
@@ -359,7 +363,10 @@ async function analyzeParagraph(
 			confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
 		};
 	} catch (error) {
-		console.error(`[analyzeParagraph] Error for paragraph ${paragraph.paragraphId}:`, error);
+		logError(error, {
+			operation: 'versionAI.analyzeParagraph',
+			metadata: { paragraphId: paragraph.paragraphId, sourcesCount: sources.length },
+		});
 
 		return {
 			proposedContent: paragraph.content || '',
@@ -525,7 +532,10 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 			totalChanges: changes.length,
 		});
 	} catch (error) {
-		console.error('[processVersionAI] Error:', error);
+		logError(error, {
+			operation: 'versionAI.processVersionAI',
+			metadata: { versionId: req.body?.versionId, documentId: req.body?.documentId },
+		});
 		res.status(500).json({ error: 'Internal server error' });
 	}
 }

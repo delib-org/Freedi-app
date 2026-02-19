@@ -7,6 +7,7 @@ import type { SurveyDemographicPage, UserDemographicQuestion } from '@freedi/sha
 import { UserDemographicQuestionType } from '@freedi/shared-types';
 import { SurveyWithQuestions, getTotalFlowLength } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import styles from './Survey.module.scss';
@@ -380,7 +381,10 @@ export default function SurveyDemographicPage({
           isCompleted: isLastItem,
         }),
       }).catch((error) => {
-        console.error('[SurveyDemographicPage] Failed to save progress to server:', error);
+        logError(error, {
+          operation: 'SurveyDemographicPage.saveProgress',
+          metadata: { surveyId: survey.surveyId },
+        });
       });
 
       // Navigate to the next item in the flow
@@ -390,7 +394,10 @@ export default function SurveyDemographicPage({
         router.push(`/s/${survey.surveyId}/q/${currentFlowIndex + 1}`);
       }
     } catch (error) {
-      console.error('[SurveyDemographicPage] Error saving answers:', error);
+      logError(error, {
+        operation: 'SurveyDemographicPage.handleSubmit',
+        metadata: { surveyId: survey.surveyId },
+      });
       setErrors({ submit: t('errorSavingAnswers') || 'Failed to save answers. Please try again.' });
     } finally {
       setIsSubmitting(false);
@@ -411,7 +418,10 @@ export default function SurveyDemographicPage({
         isCompleted: isLastItem,
       }),
     }).catch((error) => {
-      console.error('[SurveyDemographicPage] Failed to save progress to server:', error);
+      logError(error, {
+        operation: 'SurveyDemographicPage.handleNext.saveProgress',
+        metadata: { surveyId: survey.surveyId, currentFlowIndex },
+      });
     });
 
     if (isLastItem) {

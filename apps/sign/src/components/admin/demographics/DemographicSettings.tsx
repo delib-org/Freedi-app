@@ -28,6 +28,7 @@ import {
   DemographicOption,
   SingleChoiceDisplayType,
 } from '@/types/demographics';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './DemographicSettings.module.scss';
 
 // Sortable Question Item Component
@@ -333,7 +334,10 @@ async function saveDemographicSettings(
 
     return response.ok;
   } catch (error) {
-    console.error('Failed to save demographic settings:', error);
+    logError(error, {
+      operation: 'DemographicSettings.saveDemographicSettings',
+      documentId,
+    });
 
     return false;
   }
@@ -382,7 +386,10 @@ export default function DemographicSettings({
     setSavingMode(false);
 
     if (!saved) {
-      console.error('Failed to save demographic mode');
+      logError(new Error('Failed to save demographic mode'), {
+        operation: 'DemographicSettings.handleModeChange',
+        documentId,
+      });
     }
   };
 
@@ -395,7 +402,10 @@ export default function DemographicSettings({
     setSavingMode(false);
 
     if (!saved) {
-      console.error('Failed to save demographic required setting');
+      logError(new Error('Failed to save demographic required setting'), {
+        operation: 'DemographicSettings.handleRequiredChange',
+        documentId,
+      });
     }
   };
 
@@ -408,7 +418,10 @@ export default function DemographicSettings({
     setSavingMode(false);
 
     if (!saved) {
-      console.error('Failed to save survey trigger setting');
+      logError(new Error('Failed to save survey trigger setting'), {
+        operation: 'DemographicSettings.handleSurveyTriggerChange',
+        documentId,
+      });
     }
   };
 
@@ -427,7 +440,10 @@ export default function DemographicSettings({
         setQuestions(data.questions || []);
       }
     } catch (error) {
-      console.error('Failed to fetch questions:', error);
+      logError(error, {
+        operation: 'DemographicSettings.fetchQuestions',
+        documentId,
+      });
     } finally {
       setLoading(false);
     }
@@ -476,11 +492,18 @@ export default function DemographicSettings({
         await fetchQuestions();
       } else {
         const errorData = await response.json();
-        console.error('Failed to create question:', errorData);
+        logError(new Error(errorData.error || 'Failed to create question'), {
+          operation: 'DemographicSettings.handleCreateQuestion',
+          documentId,
+          metadata: { errorData },
+        });
         alert(t('Failed to create question') + ': ' + (errorData.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Failed to create question:', error);
+      logError(error, {
+        operation: 'DemographicSettings.handleCreateQuestion',
+        documentId,
+      });
       alert(t('Failed to create question'));
     } finally {
       setLoading(false);
@@ -500,7 +523,10 @@ export default function DemographicSettings({
         await fetchQuestions();
       }
     } catch (error) {
-      console.error('Failed to delete question:', error);
+      logError(error, {
+        operation: 'DemographicSettings.handleDeleteQuestion',
+        documentId,
+      });
     } finally {
       setLoading(false);
     }
@@ -563,11 +589,18 @@ export default function DemographicSettings({
         await fetchQuestions();
       } else {
         const errorData = await response.json();
-        console.error('Failed to update question:', errorData);
+        logError(new Error(errorData.error || 'Failed to update question'), {
+          operation: 'DemographicSettings.handleSaveEdit',
+          documentId,
+          metadata: { errorData },
+        });
         alert(t('Failed to update question') + ': ' + (errorData.error || 'Unknown error'));
       }
     } catch (error) {
-      console.error('Failed to update question:', error);
+      logError(error, {
+        operation: 'DemographicSettings.handleSaveEdit',
+        documentId,
+      });
       alert(t('Failed to update question'));
     } finally {
       setLoading(false);
@@ -628,7 +661,10 @@ export default function DemographicSettings({
 
       await Promise.all(updatePromises);
     } catch (error) {
-      console.error('Failed to reorder questions:', error);
+      logError(error, {
+        operation: 'DemographicSettings.handleDragEnd',
+        documentId,
+      });
       alert(t('Failed to reorder questions'));
       // Revert on error
       await fetchQuestions();

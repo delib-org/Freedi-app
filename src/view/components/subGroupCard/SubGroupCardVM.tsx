@@ -6,6 +6,7 @@ import { QuestionType, StatementType, Statement } from '@freedi/shared-types';
 import DocumentIcon from '@/assets/icons/document.svg?react';
 import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
+import { logError } from '@/utils/errorHandling';
 
 interface SubGroupCardReturn {
 	Icon: ReactElement;
@@ -37,7 +38,7 @@ export default function useSubGroupCard(statement: Statement): SubGroupCardRetur
 			text: statement.statement,
 		};
 	} catch (error) {
-		console.error('Error in useSubGroupCard:', error);
+		logError(error, { operation: 'subGroupCard.SubGroupCardVM.useSubGroupCard', metadata: { message: 'Error in useSubGroupCard:' } });
 
 		return {
 			Icon: <DocumentIcon />,

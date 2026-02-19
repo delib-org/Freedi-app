@@ -13,13 +13,16 @@ import { getFirestore } from 'firebase-admin/firestore';
 // Import collection constants
 import { Collections, functionConfig } from '@freedi/shared-types';
 
+// Structured error handling
+import { logError } from './utils/errorHandling';
+
 // Import function modules
 import {
 	deleteEvaluation,
 	newEvaluation,
 	updateEvaluation,
 	updateChosenOptions,
-} from './fn_evaluation';
+} from './evaluation';
 import { updateResultsSettings } from './fn_results';
 import {
 	getQuestionOptions,
@@ -225,7 +228,10 @@ const wrapHttpFunction = (handler: (req: Request, res: Response) => Promise<void
 			} catch (error) {
 				const duration = Date.now() - startTime;
 				const endTimestamp = getTimestamp();
-				console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
+				logError(error, {
+					operation: `httpFunction.${functionName}`,
+					metadata: { duration, endTimestamp },
+				});
 				res.status(500).send('Internal Server Error');
 			}
 		},
@@ -261,7 +267,10 @@ const wrapMemoryIntensiveHttpFunction = (
 			} catch (error) {
 				const duration = Date.now() - startTime;
 				const endTimestamp = getTimestamp();
-				console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
+				logError(error, {
+					operation: `memoryIntensiveHttpFunction.${functionName}`,
+					metadata: { duration, endTimestamp },
+				});
 				res.status(500).send('Internal Server Error');
 			}
 		},
@@ -317,7 +326,10 @@ function createFirestoreFunction<T>(
 			} catch (error) {
 				const duration = Date.now() - startTime;
 				const endTimestamp = getTimestamp();
-				console.error(`[${endTimestamp}] ✗ Error in ${functionName} after ${duration}ms:`, error);
+				logError(error, {
+					operation: `firestoreTrigger.${functionName}`,
+					metadata: { duration, endTimestamp, path },
+				});
 				throw error;
 			}
 		},

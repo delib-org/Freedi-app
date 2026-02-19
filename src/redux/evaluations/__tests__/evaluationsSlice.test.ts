@@ -36,7 +36,7 @@ interface Evaluation {
 }
 
 import {
-	evaluationsSlicer,
+	evaluationsSlice,
 	setEvaluationToStore,
 	resetEvaluations,
 	evaluationsSelector,
@@ -57,12 +57,12 @@ describe('evaluationsSlice', () => {
 		updatedAt: Date.now(),
 	};
 
-	const initialState = evaluationsSlicer.getInitialState();
+	const initialState = evaluationsSlice.getInitialState();
 
 	describe('reducers', () => {
 		describe('setEvaluationToStore', () => {
 			it('should add new evaluation to empty state', () => {
-				const newState = evaluationsSlicer.reducer(
+				const newState = evaluationsSlice.reducer(
 					initialState,
 					setEvaluationToStore(mockEvaluation),
 				);
@@ -78,7 +78,7 @@ describe('evaluationsSlice', () => {
 				};
 				const updatedEvaluation = { ...mockEvaluation, evaluation: 0.8 };
 
-				const newState = evaluationsSlicer.reducer(
+				const newState = evaluationsSlice.reducer(
 					stateWithEvaluation,
 					setEvaluationToStore(updatedEvaluation),
 				);
@@ -89,8 +89,8 @@ describe('evaluationsSlice', () => {
 
 			it('should add multiple different evaluations', () => {
 				let state = initialState;
-				state = evaluationsSlicer.reducer(state, setEvaluationToStore(mockEvaluation));
-				state = evaluationsSlicer.reducer(
+				state = evaluationsSlice.reducer(state, setEvaluationToStore(mockEvaluation));
+				state = evaluationsSlice.reducer(
 					state,
 					setEvaluationToStore({ ...mockEvaluation, evaluationId: 'eval-456' }),
 				);
@@ -109,7 +109,7 @@ describe('evaluationsSlice', () => {
 					statementId: 'stmt-789',
 				};
 
-				const newState = evaluationsSlicer.reducer(
+				const newState = evaluationsSlice.reducer(
 					stateWithEvaluation,
 					setEvaluationToStore(newEvaluation),
 				);
@@ -127,13 +127,13 @@ describe('evaluationsSlice', () => {
 					userEvaluations: [mockEvaluation, { ...mockEvaluation, evaluationId: 'eval-456' }],
 				};
 
-				const newState = evaluationsSlicer.reducer(stateWithEvaluations, resetEvaluations());
+				const newState = evaluationsSlice.reducer(stateWithEvaluations, resetEvaluations());
 
 				expect(newState.userEvaluations).toHaveLength(0);
 			});
 
 			it('should do nothing on empty state', () => {
-				const newState = evaluationsSlicer.reducer(initialState, resetEvaluations());
+				const newState = evaluationsSlice.reducer(initialState, resetEvaluations());
 
 				expect(newState.userEvaluations).toHaveLength(0);
 			});

@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Third party imports
 import { useParams } from 'react-router';
@@ -52,15 +53,15 @@ const StatementSettings: FC = () => {
 
 							setParentStatement(parentStatement);
 						} catch (error) {
-							console.error(error);
+							logError(error, { operation: 'settings.StatementSettings.unknown' });
 						}
 					})
 					.catch((error) => {
-						console.error(error);
+						logError(error, { operation: 'settings.StatementSettings.unknown' });
 					});
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'settings.StatementSettings.unknown' });
 		}
 	}, [statement]);
 
@@ -90,7 +91,7 @@ const StatementSettings: FC = () => {
 				if (unsubscribe) unsubscribe();
 			};
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'settings.StatementSettings.unknown' });
 		}
 	}, [statementId]);
 

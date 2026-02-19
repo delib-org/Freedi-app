@@ -1,10 +1,14 @@
 import { Unsubscribe } from 'firebase/auth';
-import { and, collection, doc, limit, or, orderBy, query, where } from 'firebase/firestore';
+import { and, limit, or, orderBy, query, where } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 // Redux Store
-import { FireStore } from '../config';
+import {
+	createSubscriptionRef,
+	createStatementRef,
+	createCollectionRef,
+} from '@/utils/firebaseUtils';
 import {
 	deleteStatement,
 	removeMembership,
@@ -41,7 +45,7 @@ export const listenToStatementSubscription = (
 	try {
 		const dispatch = store.dispatch;
 		const docId = `${creator.uid}--${statementId}`;
-		const statementsSubscribeRef = doc(FireStore, Collections.statementsSubscribe, docId);
+		const statementsSubscribeRef = createSubscriptionRef(docId);
 
 		const listenerKey = generateListenerKey('statement-subscription', 'subscription', docId);
 
@@ -76,7 +80,7 @@ export const listenToStatementSubscription = (
 
 					dispatch(setStatementSubscription(statementSubscription));
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'listenToStatementSubscription.onSnapshot' });
 				}
 			},
 			(error) => {
@@ -92,7 +96,7 @@ export const listenToStatementSubscription = (
 					// Unsubscribe immediately to prevent repeated error callbacks
 					unsubscribeFn();
 				} else {
-					console.error('Error in statement subscription listener:', error);
+					logError(error, { operation: 'listenToStatementSubscription.errorHandler', statementId });
 				}
 			},
 		);
@@ -103,7 +107,7 @@ export const listenToStatementSubscription = (
 
 		return listener;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return () => {};
 	}
@@ -116,7 +120,7 @@ export const listenToStatement = (
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
-		const statementRef = doc(FireStore, Collections.statements, statementId);
+		const statementRef = createStatementRef(statementId);
 
 		const listenerKey = generateListenerKey('statement', 'statement', statementId);
 
@@ -134,17 +138,17 @@ export const listenToStatement = (
 
 					dispatch(setStatement(statement));
 				} catch (error) {
-					console.error(error);
+					logError(error, { operation: 'statements.listenToStatements.listenToStatement' });
 					if (setIsStatementNotFound) setIsStatementNotFound(true);
 				}
 			},
 			(error) => {
-				console.error('Error in statement listener:', error);
+				logError(error, { operation: 'statements.listenToStatements.listenToStatement', metadata: { message: 'Error in statement listener:' } });
 				if (setIsStatementNotFound) setIsStatementNotFound(true);
 			},
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 		if (setIsStatementNotFound) setIsStatementNotFound(true);
 
 		return () => {};
@@ -159,7 +163,7 @@ export const listenToSubStatements = (
 	try {
 		const dispatch = store.dispatch;
 		if (!statementId) throw new Error('Statement id is undefined');
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 
 		// Reduce the initial load to 25 items for faster initial loading
 		// This should be enough for most use cases while dramatically improving load time
@@ -224,11 +228,11 @@ export const listenToSubStatements = (
 					});
 				}
 			},
-			(error) => console.error('Error in sub-statements listener:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in sub-statements listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return () => {};
 	}
@@ -236,7 +240,7 @@ export const listenToSubStatements = (
 
 export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
 	try {
-		const membersRef = collection(FireStore, Collections.statementsSubscribe);
+		const membersRef = createCollectionRef(Collections.statementsSubscribe);
 		const q = query(
 			membersRef,
 			where('statementId', '==', statementId),
@@ -266,11 +270,11 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 					}
 				});
 			},
-			(error) => console.error('Error in members listener:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in members listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return () => {};
 	}
@@ -281,7 +285,7 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 		if (numberOfLastMessages > 25) numberOfLastMessages = 25;
 		if (!statementId) throw new Error('Statement id is undefined');
 
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 		const q = query(
 			statementsRef,
 			where('topParentId', '==', statementId),
@@ -311,64 +315,25 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 						// Get flattened error messages for easier reading
 						const flatErrors = flatten(result.issues);
 
-						console.error('=== STATEMENT VALIDATION ERROR ===');
-						console.error('Document ID:', docId);
-						console.error('Full data received:', JSON.stringify(data, null, 2));
-						console.error('Data type:', typeof data);
-
-						// Log detailed validation issues
-						console.error('Validation Issues:');
-						result.issues.forEach((issue, index) => {
-							console.error(`Issue ${index + 1}:`, {
-								kind: issue.kind,
-								type: issue.type,
-								input: issue.input,
-								expected: issue.expected,
-								received: issue.received,
-								message: issue.message,
-								path: issue.path?.map((p) => p.key).join('.'),
-								requirement: issue.requirement,
-							});
+						logError(new Error('Statement validation error'), {
+							operation: 'statements.listenToAllSubStatements.validation',
+							statementId: docId,
+							metadata: {
+								dataType: typeof data,
+								flatErrors,
+								issues: result.issues.map((issue, index) => ({
+									issueNumber: index + 1,
+									kind: issue.kind,
+									type: issue.type,
+									input: issue.input,
+									expected: issue.expected,
+									received: issue.received,
+									message: issue.message,
+									path: issue.path?.map((p) => p.key).join('.'),
+									requirement: issue.requirement,
+								})),
+							},
 						});
-
-						// Log flattened errors
-						console.error('Flattened errors:', flatErrors);
-
-						// Log specific field analysis
-						if (data && typeof data === 'object') {
-							console.error('Field analysis:', {
-								hasRequiredFields: {
-									statement: 'statement' in data,
-									statementId: 'statementId' in data,
-									creatorId: 'creatorId' in data,
-									creator: 'creator' in data,
-									statementType: 'statementType' in data,
-									parentId: 'parentId' in data,
-									topParentId: 'topParentId' in data,
-									lastUpdate: 'lastUpdate' in data,
-									createdAt: 'createdAt' in data,
-									consensus: 'consensus' in data,
-								},
-								fieldTypes: {
-									statement: typeof data.statement,
-									statementId: typeof data.statementId,
-									creatorId: typeof data.creatorId,
-									creator: typeof data.creator,
-									statementType: typeof data.statementType,
-									parentId: typeof data.parentId,
-									topParentId: typeof data.topParentId,
-									lastUpdate: typeof data.lastUpdate,
-									createdAt: typeof data.createdAt,
-									consensus: typeof data.consensus,
-								},
-								problematicFields: {
-									resultsSettings: data.resultsSettings,
-									resultsSettingsType: typeof data.resultsSettings,
-									cutoffBy: data.resultsSettings?.cutoffBy,
-								},
-							});
-						}
-						console.error('=== END VALIDATION ERROR ===\n');
 
 						return;
 					}
@@ -389,11 +354,11 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 					}
 				});
 			},
-			(error) => console.error('Error in all sub-statements listener:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in all sub-statements listener:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statements.listenToStatements.unknown' });
 
 		return (): void => {
 			return;
@@ -409,7 +374,7 @@ export const listenToUserSuggestions = (
 		if (!statementId) throw new Error('Statement id is undefined');
 		if (!userId) throw new Error('User id is undefined');
 
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 
 		// Query for options created by the user under this statement
 		const q = query(
@@ -461,11 +426,11 @@ export const listenToUserSuggestions = (
 					});
 				}
 			},
-			(error) => console.error('Error listening to user suggestions:', error),
+			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error listening to user suggestions:' } }),
 			'query',
 		);
 	} catch (error) {
-		console.error('Error setting up user suggestions listener:', error);
+		logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error setting up user suggestions listener:' } });
 
 		return () => {};
 	}
@@ -476,7 +441,7 @@ const MAX_DESCENDANTS_LIMIT = 200;
 
 export function listenToAllDescendants(statementId: string): Unsubscribe {
 	try {
-		const statementsRef = collection(FireStore, Collections.statements);
+		const statementsRef = createCollectionRef(Collections.statements);
 		// Query ONLY for questions, groups, and options (not any other types)
 		// Wrap in and() as required by Firestore for composite filters
 		// Added limit to prevent loading too many documents at once

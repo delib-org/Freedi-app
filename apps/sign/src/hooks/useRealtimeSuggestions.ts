@@ -163,7 +163,6 @@ export function useRealtimeSuggestions({
           setIsLoading(false);
         },
         (err) => {
-          console.error('[RealtimeSuggestions] Error:', err);
           logError(err, {
             operation: 'useRealtimeSuggestions.onSnapshot',
             metadata: { paragraphId },
@@ -180,7 +179,6 @@ export function useRealtimeSuggestions({
         }
       );
     } catch (err) {
-      console.error('[RealtimeSuggestions] Setup error:', err);
       logError(err, {
         operation: 'useRealtimeSuggestions.setup',
         metadata: { paragraphId },

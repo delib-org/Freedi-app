@@ -1,0 +1,206 @@
+// Loader Atom - BEM Methodology
+// Usage: <div class="loader"><span class="loader__spinner" /></div>
+
+@use '../mixins' as *;
+
+// ============================================================================
+// LOADER BLOCK
+// ============================================================================
+
+.loader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the loader)
+  // ============================================================================
+
+  &__spinner {
+    display: block;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    position: relative;
+    transform: rotateZ(45deg);
+
+    &::before,
+    &::after {
+      content: '';
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: inherit;
+      height: inherit;
+      border-radius: 50%;
+    }
+
+    &::before {
+      transform: rotateX(70deg);
+      animation: loaderSpinBlue 1s linear infinite;
+    }
+
+    &::after {
+      transform: rotateY(70deg);
+      animation: loaderSpinAccent 1s linear infinite;
+      animation-delay: 0.4s;
+    }
+  }
+
+  &__text {
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.875rem;
+    color: var(--text-caption);
+    margin-top: 0.75rem;
+  }
+
+  // ============================================================================
+  // MODIFIERS (Variants of the loader)
+  // ============================================================================
+
+  // Size variants
+  &--small {
+    .loader__spinner {
+      width: 24px;
+      height: 24px;
+    }
+
+    .loader__text {
+      font-size: 0.75rem;
+      margin-top: 0.5rem;
+    }
+  }
+
+  &--large {
+    .loader__spinner {
+      width: 64px;
+      height: 64px;
+    }
+
+    .loader__text {
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+  }
+
+  // Layout variants
+  &--fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    background-color: rgba(255, 255, 255, 0.8);
+    flex-direction: column;
+  }
+
+  &--inline {
+    display: inline-flex;
+  }
+
+  &--centered {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 2rem 0;
+  }
+
+  // Color variants
+  &--primary {
+    .loader__spinner {
+      &::before {
+        animation-name: loaderSpinPrimary;
+      }
+    }
+  }
+
+  &--white {
+    .loader__spinner {
+      &::before {
+        animation-name: loaderSpinWhite;
+      }
+
+      &::after {
+        animation-name: loaderSpinWhiteAccent;
+      }
+    }
+
+    .loader__text {
+      color: var(--white);
+    }
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @media (prefers-reduced-motion: reduce) {
+    .loader__spinner {
+      &::before,
+      &::after {
+        animation-duration: 2s;
+      }
+    }
+  }
+}
+
+// ============================================================================
+// ANIMATIONS
+// ============================================================================
+
+@keyframes loaderSpinBlue {
+  0%, 100% { box-shadow: 0.2em 0 0 0 var(--btn-primary, navy); }
+  12% { box-shadow: 0.2em 0.2em 0 0 var(--btn-primary, navy); }
+  25% { box-shadow: 0 0.2em 0 0 var(--btn-primary, navy); }
+  37% { box-shadow: -0.2em 0.2em 0 0 var(--btn-primary, navy); }
+  50% { box-shadow: -0.2em 0 0 0 var(--btn-primary, navy); }
+  62% { box-shadow: -0.2em -0.2em 0 0 var(--btn-primary, navy); }
+  75% { box-shadow: 0 -0.2em 0 0 var(--btn-primary, navy); }
+  87% { box-shadow: 0.2em -0.2em 0 0 var(--btn-primary, navy); }
+}
+
+@keyframes loaderSpinAccent {
+  0%, 100% { box-shadow: 0.2em 0 0 0 var(--text-error, #ff3d00); }
+  12% { box-shadow: 0.2em 0.2em 0 0 var(--text-error, #ff3d00); }
+  25% { box-shadow: 0 0.2em 0 0 var(--text-error, #ff3d00); }
+  37% { box-shadow: -0.2em 0.2em 0 0 var(--text-error, #ff3d00); }
+  50% { box-shadow: -0.2em 0 0 0 var(--text-error, #ff3d00); }
+  62% { box-shadow: -0.2em -0.2em 0 0 var(--text-error, #ff3d00); }
+  75% { box-shadow: 0 -0.2em 0 0 var(--text-error, #ff3d00); }
+  87% { box-shadow: 0.2em -0.2em 0 0 var(--text-error, #ff3d00); }
+}
+
+@keyframes loaderSpinPrimary {
+  0%, 100% { box-shadow: 0.2em 0 0 0 var(--btn-primary); }
+  12% { box-shadow: 0.2em 0.2em 0 0 var(--btn-primary); }
+  25% { box-shadow: 0 0.2em 0 0 var(--btn-primary); }
+  37% { box-shadow: -0.2em 0.2em 0 0 var(--btn-primary); }
+  50% { box-shadow: -0.2em 0 0 0 var(--btn-primary); }
+  62% { box-shadow: -0.2em -0.2em 0 0 var(--btn-primary); }
+  75% { box-shadow: 0 -0.2em 0 0 var(--btn-primary); }
+  87% { box-shadow: 0.2em -0.2em 0 0 var(--btn-primary); }
+}
+
+@keyframes loaderSpinWhite {
+  0%, 100% { box-shadow: 0.2em 0 0 0 var(--white, white); }
+  12% { box-shadow: 0.2em 0.2em 0 0 var(--white, white); }
+  25% { box-shadow: 0 0.2em 0 0 var(--white, white); }
+  37% { box-shadow: -0.2em 0.2em 0 0 var(--white, white); }
+  50% { box-shadow: -0.2em 0 0 0 var(--white, white); }
+  62% { box-shadow: -0.2em -0.2em 0 0 var(--white, white); }
+  75% { box-shadow: 0 -0.2em 0 0 var(--white, white); }
+  87% { box-shadow: 0.2em -0.2em 0 0 var(--white, white); }
+}
+
+@keyframes loaderSpinWhiteAccent {
+  0%, 100% { box-shadow: 0.2em 0 0 0 rgba(255, 255, 255, 0.5); }
+  12% { box-shadow: 0.2em 0.2em 0 0 rgba(255, 255, 255, 0.5); }
+  25% { box-shadow: 0 0.2em 0 0 rgba(255, 255, 255, 0.5); }
+  37% { box-shadow: -0.2em 0.2em 0 0 rgba(255, 255, 255, 0.5); }
+  50% { box-shadow: -0.2em 0 0 0 rgba(255, 255, 255, 0.5); }
+  62% { box-shadow: -0.2em -0.2em 0 0 rgba(255, 255, 255, 0.5); }
+  75% { box-shadow: 0 -0.2em 0 0 rgba(255, 255, 255, 0.5); }
+  87% { box-shadow: 0.2em -0.2em 0 0 rgba(255, 255, 255, 0.5); }
+}

@@ -4,6 +4,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementVersion } from '@/models/popperHebbian';
 import { revertToVersion } from '@/controllers/db/popperHebbian/improveProposalController';
 import styles from './ImproveProposalModal.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface VersionHistoryProps {
 	versions: StatementVersion[];
@@ -32,7 +33,7 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 			await revertToVersion(statementId, versions, selectedVersion);
 			onRevert();
 		} catch (error) {
-			console.error('Failed to revert:', error);
+			logError(error, { operation: 'ImproveProposalModal.VersionHistory.handleRevert', metadata: { message: 'Failed to revert:' } });
 		} finally {
 			setIsReverting(false);
 		}

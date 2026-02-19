@@ -1,6 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getGeminiModel } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
+import { logError } from './utils/errorHandling';
 
 interface AnalyzeFalsifiabilityRequest {
 	ideaText: string;
@@ -99,7 +100,10 @@ Use simple, encouraging language.`;
 						(item: unknown) => item && typeof item === 'object' && 'isTestable' in item,
 					);
 					if (!analysisObj) {
-						console.error('No valid analysis found in array:', parsed);
+						logError(new Error('No valid analysis found in array'), {
+							operation: 'popperHebbian.analyzeFalsifiability',
+							metadata: { parsedLength: parsed.length },
+						});
 						throw new Error('AI returned array without analysis object');
 					}
 					analysis = analysisObj as FalsifiabilityAnalysis;
@@ -111,18 +115,26 @@ Use simple, encouraging language.`;
 
 				// Validate the analysis structure
 				if (!analysis || typeof analysis !== 'object') {
-					console.error('Invalid analysis structure:', analysis);
+					logError(new Error('AI returned invalid analysis structure'), {
+						operation: 'popperHebbian.analyzeFalsifiability',
+						metadata: { analysisType: typeof analysis },
+					});
 					throw new Error('AI returned invalid analysis structure');
 				}
 
 				// Ensure vagueTerms is an array
 				if (!analysis.vagueTerms || !Array.isArray(analysis.vagueTerms)) {
-					console.error('Missing or invalid vagueTerms in analysis:', analysis);
+					logError(new Error('Missing or invalid vagueTerms in analysis'), {
+						operation: 'popperHebbian.analyzeFalsifiability',
+						metadata: { hasVagueTerms: !!analysis.vagueTerms },
+					});
 					analysis.vagueTerms = [];
 				}
 			} catch (parseError) {
-				const errorMessage = parseError instanceof Error ? parseError.message : 'Unknown error';
-				console.error('Failed to parse JSON response:', text, errorMessage);
+				logError(parseError, {
+					operation: 'popperHebbian.analyzeFalsifiability.parseJSON',
+					metadata: { responseLength: text.length },
+				});
 				throw new Error('Invalid JSON response from AI');
 			}
 
@@ -150,7 +162,7 @@ Use simple, encouraging language.`;
 				initialMessage,
 			};
 		} catch (error) {
-			console.error('Error analyzing falsifiability:', error);
+			logError(error, { operation: 'popperHebbian.analyzeFalsifiability' });
 			throw new HttpsError('internal', 'Failed to analyze idea');
 		}
 	},

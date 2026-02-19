@@ -11,6 +11,7 @@ import { Response, Request, onInit, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
 import { GEMINI_MODEL } from './config/gemini';
+import { logError } from './utils/errorHandling';
 
 interface SimpleDescendants {
 	statement: string;
@@ -31,7 +32,7 @@ onInit(() => {
 
 		genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 	} catch (error) {
-		console.error('Error initializing GenAI', error);
+		logError(error, { operation: 'clusters.initGenAI' });
 	}
 });
 
@@ -183,9 +184,8 @@ function convertStringToJson(input: string): Group[] | null {
 		return jsonArray as Group[];
 	} catch (error) {
 		// Handle any parsing errors
-		console.error('Error parsing JSON string:', error);
+		logError(error, { operation: 'clusters.convertStringToJson' });
 		throw new Error('Invalid JSON string provided');
-		// Return an empty array in case of error
 	}
 }
 

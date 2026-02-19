@@ -11,6 +11,7 @@ import { LiveEditingManager } from '@/lib/realtime/liveEditingSession';
 import type { LiveEditingSession, ActiveEditor } from '@/lib/realtime/liveEditingSession';
 import { htmlToMarkdown, markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { API_ROUTES, SUGGESTIONS } from '@/constants/common';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './SuggestionModal.module.scss';
 
 interface SuggestionModalProps {
@@ -88,7 +89,10 @@ export default function SuggestionModal({
         suggestedContent || markdownOriginalContent
       )
       .catch((error) => {
-        console.error('Failed to join editing session:', error);
+        logError(error, {
+          operation: 'SuggestionModal.joinEditingSession',
+          metadata: { documentId, paragraphId },
+        });
       });
 
     // Subscribe to session updates to see other editors
@@ -176,7 +180,10 @@ export default function SuggestionModal({
     }
 
     if (!user) {
-      console.error('[SuggestionModal] No user - cannot submit');
+      logError(new Error('No user - cannot submit suggestion'), {
+        operation: 'SuggestionModal.handleSubmit',
+        metadata: { paragraphId },
+      });
       setErrorMessage('Please wait for authentication to complete...');
       return;
     }
@@ -227,7 +234,10 @@ export default function SuggestionModal({
 
       if (!response.ok) {
         const data = await response.json();
-        console.error('[SuggestionModal] Error response:', data);
+        logError(new Error(data.error || 'Error response from suggestion API'), {
+          operation: 'SuggestionModal.handleSubmit',
+          metadata: { paragraphId, responseData: data },
+        });
         throw new Error(data.error || 'Failed to submit suggestion');
       }
 
@@ -251,7 +261,10 @@ export default function SuggestionModal({
         onClose();
       }, 500);
     } catch (error) {
-      console.error('[SuggestionModal] Submit error:', error);
+      logError(error, {
+        operation: 'SuggestionModal.handleSubmit',
+        metadata: { paragraphId, isEditing },
+      });
       setSubmitState('error');
       setErrorMessage(error instanceof Error ? error.message : t('Failed to submit suggestion'));
     }

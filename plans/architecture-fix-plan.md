@@ -420,9 +420,409 @@ Mixed naming: `statementsSlicer.reducer` vs `creatorReducer` vs `pwaReducer`.
 
 ---
 
-## Phase 5: Ongoing Maintenance
+## Phase 5: SOLID & Clean Architecture (Weeks 7-10)
 
-### Task 5.1: Set Up Automated Enforcement
+> **Current SOLID Scores**: SRP 2/5, OCP 2.5/5, LSP 3.5/5, ISP 2/5, DIP 1.5/5
+> **Clean Architecture Score**: 2/5
+> **Target**: All principles ≥ 3.5/5, Clean Architecture ≥ 3.5/5
+
+### Task 5.1: Introduce Repository Pattern (DIP — highest leverage)
+**Agent**: `system-architect` (design interfaces) → `react-firebase-engineer` (implement)
+**SOLID**: DIP (1.5 → 3.5), SRP (improves controller focus)
+
+Currently there is **zero abstraction** over Firebase. 64 raw `doc(FireStore, ...)` calls in controllers + 10+ in View components. Swapping the database = rewriting everything.
+
+**Steps**:
+1. Define repository interfaces in `src/repositories/`:
+   ```
+   src/repositories/
+   ├── IStatementRepository.ts
+   ├── IEvaluationRepository.ts
+   ├── ISubscriptionRepository.ts
+   ├── IVoteRepository.ts
+   ├── INotificationRepository.ts
+   └── firebase/
+       ├── FirebaseStatementRepository.ts
+       ├── FirebaseEvaluationRepository.ts
+       ├── FirebaseSubscriptionRepository.ts
+       ├── FirebaseVoteRepository.ts
+       └── FirebaseNotificationRepository.ts
+   ```
+2. Each interface defines domain operations (not Firebase operations):
+   ```typescript
+   interface IStatementRepository {
+       getById(id: string): Promise<Statement | undefined>;
+       save(statement: Statement): Promise<void>;
+       update(id: string, fields: Partial<Statement>): Promise<void>;
+       delete(id: string): Promise<void>;
+       getChildrenByParent(parentId: string): Promise<Statement[]>;
+       listenToChildren(parentId: string, cb: (stmts: Statement[]) => void): Unsubscribe;
+   }
+   ```
+3. Firebase implementations use existing `firebaseUtils.ts` (finally giving it real consumers)
+4. Controllers receive repositories as parameters or via a simple service locator
+5. Migrate controllers one domain at a time: statements → evaluations → votes → subscriptions
+
+**Verification**: No controller file imports `firebase/firestore` directly. All Firestore access goes through repository implementations.
+
+---
+
+### Task 5.2: Extract Firebase from View Components (DIP)
+**Agent**: `react-firebase-engineer`
+**SOLID**: DIP, SRP
+
+10+ View components directly import and call Firebase SDK. No View file should know Firebase exists.
+
+**Files with direct Firestore access in View layer**:
+1. `src/view/pages/statement/components/settings/components/advancedSettings/EnhancedAdvancedSettings.tsx`
+   - 5 raw `doc()` + `setDoc()` calls (lines 227-253)
+2. `src/view/pages/statement/components/settings/components/advancedSettings/AdvancedSettings.tsx`
+   - 4 raw Firestore calls
+3. `src/view/pages/statement/components/settings/components/advancedSettings/ImprovedSettings.tsx`
+   - 1 raw Firestore call
+4. `src/view/pages/statement/components/settings/MembersSettings.tsx`
+   - Firestore `query()`/`getDocs()` directly
+5. Notification components (5 files)
+   - `getAuth()`/`getDoc()` directly
+
+**Pattern for each**:
+```typescript
+// BEFORE (in View component)
+import { doc, setDoc } from 'firebase/firestore';
+function handleHideChange(newValue: boolean) {
+    const ref = doc(FireStore, Collections.statements, statement.statementId);
+    setDoc(ref, { hide: newValue }, { merge: true });
+}
+
+// AFTER (View calls controller, controller calls repository)
+import { updateStatementVisibility } from '@/controllers/db/statements/statementVisibility';
+function handleHideChange(newValue: boolean) {
+    updateStatementVisibility(statement.statementId, newValue);
+}
+```
+
+**Verification**: `grep -r "from 'firebase/firestore'" src/view/` — should return 0 results.
+
+---
+
+### Task 5.3: Decouple Controllers from Redux Store (DIP)
+**Agent**: `system-architect` (plan pattern) → `react-firebase-engineer` (execute)
+**SOLID**: DIP, SRP (controllers stop being Redux dispatchers)
+
+60+ `store.getState()` and `store.dispatch()` calls directly in controller files. Controllers should receive dependencies, not reach into global singletons.
+
+**Current pattern** (tightly coupled):
+```typescript
+// setStatements.ts
+import store from '@/redux/store';
+const storeState = store.getState();
+const creator = storeState.creator?.creator;
+// ...
+store.dispatch(incrementOptionsCreated());
+```
+
+**Target pattern** (dependency injected):
+```typescript
+// Option A: Pass as parameters
+export async function createStatement(
+    input: CreateStatementInput,
+    context: { creator: Creator; dispatch: AppDispatch }
+): Promise<Statement> { ... }
+
+// Option B: Use a thin context hook (for hooks that call controllers)
+const { creator } = useCreatorContext();
+const dispatch = useAppDispatch();
+await createStatement(input, { creator, dispatch });
+```
+
+**Approach**:
+1. Audit all 60+ `store.getState()`/`store.dispatch()` call sites
+2. Group by pattern (reading creator, reading user, dispatching actions)
+3. For each controller function, add explicit parameters for what it needs
+4. Update all call sites (mostly in hooks and components) to pass the context
+5. Remove direct `store` import from controllers
+
+**Verification**: `grep -r "store.getState\|store.dispatch" src/controllers/` — should return 0 results.
+
+---
+
+### Task 5.4: Decompose the Statement God Object (ISP)
+**Agent**: `system-architect` (design types) → `react-firebase-engineer` (main app) → `backend-security-engineer` (functions)
+**SOLID**: ISP (2 → 3.5)
+
+The `Statement` type is 166 lines with ~75 fields. Every consumer depends on fields they never use. UI state is leaked into the domain type.
+
+**Proposed decomposition**:
+```typescript
+// packages/shared-types/src/models/statement/
+
+// Core — what every consumer needs (~20 fields)
+interface StatementCore {
+    statementId: string;
+    statement: string;
+    description: string;
+    statementType: StatementType;
+    parentId: string;
+    topParentId: string;
+    creatorId: string;
+    creator: Creator;
+    createdAt: number;
+    lastUpdate: number;
+    lastChildUpdate: number;
+    consensus: number;
+    results?: Results[];
+    resultsSettings?: ResultsSettings;
+    statementSettings?: StatementSettings;
+    membership?: Membership;
+    maxConsensus?: number;
+    totalSubStatements?: number;
+}
+
+// Sign-app extensions
+interface SignDocumentFields {
+    doc?: DocumentFields;
+    documentApproval?: number;
+    documentImportance?: number;
+    documentAgree?: number;
+    isDocument?: boolean;
+    versionControl?: VersionControl;
+}
+
+// Evaluation extensions
+interface EvaluationFields {
+    evaluation?: Evaluation;
+    evaluationSettings?: EvaluationSettings;
+    evaluationType?: EvaluationType;
+}
+
+// Voting extensions
+interface VotingFields {
+    selections?: Selection[];
+    voted?: number;
+    topVotedOption?: string;
+}
+
+// MC-specific
+interface MassConsensusFields {
+    massMembers?: number;
+    isCluster?: boolean;
+    integratedOptions?: string[];
+}
+
+// Composed types per app
+type Statement = StatementCore & SignDocumentFields & EvaluationFields & VotingFields & MassConsensusFields & ...;
+type SignStatement = StatementCore & SignDocumentFields;
+type MCStatement = StatementCore & MassConsensusFields & VotingFields;
+```
+
+**Critical**: Remove UI state from domain type:
+- `elementHight` (typo) → move to Redux UI slice or component state
+- `top` → move to Redux UI slice
+- `order` → keep (this is domain data for ordering)
+- `isInMultiStage` → move to Redux UI slice
+- `selected` → move to component state
+
+**Steps**:
+1. Design the decomposition in `shared-types`
+2. Create the sub-interfaces
+3. Keep `Statement` as the full intersection type for backward compatibility
+4. Gradually narrow type usage in each app (e.g., Sign app uses `SignStatement`)
+5. Move UI state fields to appropriate Redux slices
+
+**Verification**: `StatementCore` has ≤ 25 fields. Each app imports only the composed type it needs. Build passes across all apps.
+
+---
+
+### Task 5.5: Split God Files by Responsibility (SRP)
+**Agent**: `system-architect` (plan splits) → `react-firebase-engineer` (execute)
+**SOLID**: SRP (2 → 3.5)
+
+Beyond the file size fixes in Phase 3, this task focuses on **responsibility separation**.
+
+**`setStatements.ts` (815 lines, 15 responsibilities) → 5 files**:
+```
+src/controllers/db/statements/
+├── createStatement.ts          # Factory: createStatement(), getDefaultStatement()
+├── writeStatement.ts           # Persistence: setStatementToDB(), saveStatementToDB()
+├── updateStatementFields.ts    # Mutations: updateStatementText(), updateStatementParagraphs(),
+│                               #   updateStatementMainImage(), updateStatementImageDisplayMode()
+├── statementVisibility.ts      # Visibility: toggleStatementHide(), toggleStatementAnchored(),
+│                               #   setFollowMeDB(), setPowerFollowMeDB()
+├── statementOrdering.ts        # Ordering: updateStatementsOrderToDB(), setRoomSizeInStatementDB(),
+│                               #   setStatementGroupToDB()
+```
+
+**`helpers.ts` (411 lines, 10+ concerns) → 5 files**:
+```
+src/controllers/general/
+├── authorization.ts            # isAuthorized(), isAdmin(), isUserCreator()
+├── formatting.ts               # getInitials(), getFirstName(), truncateString(), getTime()
+├── statementDisplay.ts         # statementTitleToDisplay(), getTitle(), getDescription()
+├── typeHierarchy.ts            # TYPE_RESTRICTIONS, isStatementTypeAllowedAsChildren()
+├── colors.ts                   # getRandomColor(), generateRandomLightColor(), getPastelColor()
+```
+
+**`EnhancedAdvancedSettings.tsx` (1,027 lines) → 6 components**:
+```
+src/view/pages/statement/components/settings/components/advancedSettings/
+├── EnhancedAdvancedSettings.tsx  # Shell: renders sub-sections (~100 lines)
+├── VisibilitySettings.tsx        # hide/anchor/follow-me
+├── EvaluationSettings.tsx        # evaluation type, vote limits, recalculation
+├── ExportSettings.tsx            # data export, privacy export
+├── LocalizationSettings.tsx      # language, forced localization
+├── DocumentModeSettings.tsx      # document mode toggling
+```
+
+**`statementsSlice.ts` (499 lines, 5 concerns) → 3 slices**:
+```
+src/redux/
+├── statements/statementsSlice.ts      # Statement entities only
+├── subscriptions/subscriptionsSlice.ts # Subscription management (extracted)
+├── membership/membershipSlice.ts       # Membership tracking (extracted)
+```
+Move `screen` state to a UI slice. Remove `elementHight`/`top` from Redux entirely.
+
+**Verification**: No file > 300 lines. Each file has a single clear responsibility. All imports resolve. Build passes.
+
+---
+
+### Task 5.6: Replace Switch Chains with Registries (OCP)
+**Agent**: `react-firebase-engineer`
+**SOLID**: OCP (2.5 → 3.5)
+
+Switch statements that grow every time a new type is added. Replace with data-driven registries.
+
+**Evaluation type routing** (`Evaluation.tsx` lines 32-59):
+```typescript
+// BEFORE — must modify for every new type
+switch (evaluationType) {
+    case 'single-like': return <SingleLikeEvaluation />;
+    case 'range': return <EnhancedEvaluation />;
+    // ... grows with each new type
+}
+
+// AFTER — open for extension, closed for modification
+const EVALUATION_REGISTRY: Record<EvaluationType, FC<EvalProps>> = {
+    'single-like': SingleLikeEvaluation,
+    'range': EnhancedEvaluation,
+    'community-voice': CommunityVoiceEvaluation,
+    'like-dislike': SimpleEvaluation,
+};
+
+const EvalComponent = EVALUATION_REGISTRY[evaluationType] ?? SimpleEvaluation;
+return <EvalComponent {...props} />;
+```
+
+**Screen routing** (`SwitchScreen.tsx` lines 86-155):
+```typescript
+// AFTER
+const SCREEN_REGISTRY: Record<StatementScreen, FC<ScreenProps>> = {
+    [StatementScreen.vote]: VoteScreen,
+    [StatementScreen.chat]: ChatScreen,
+    [StatementScreen.settings]: SettingsScreen,
+    // ...
+};
+```
+
+**Sort strategies** (`statementVoteCont.ts` lines 24-58):
+```typescript
+// AFTER
+const SORT_STRATEGIES: Record<SortType, (a: Statement, b: Statement) => number> = {
+    [SortType.newest]: (a, b) => b.createdAt - a.createdAt,
+    [SortType.random]: () => Math.random() - 0.5,
+    [SortType.accepted]: (a, b) => (b.consensus ?? 0) - (a.consensus ?? 0),
+};
+```
+
+**EvaluationUI mapping** (`setStatements.ts` lines 368-379):
+```typescript
+// AFTER
+const STAGE_TO_UI: Record<StageSelectionType, EvaluationUI> = {
+    [StageSelectionType.consensus]: EvaluationUI.suggestions,
+    [StageSelectionType.voting]: EvaluationUI.voting,
+    [StageSelectionType.checkbox]: EvaluationUI.checkbox,
+};
+```
+
+**Verification**: `grep -rn "switch.*evaluationType\|switch.*screen\|switch.*sort" src/` — should return 0 results for the migrated patterns.
+
+---
+
+### Task 5.7: Fix LSP Violations and Type Safety Hacks
+**Agent**: `react-firebase-engineer`
+**SOLID**: LSP (3.5 → 4.5)
+
+**`@ts-ignore` in `listenToStatements.ts:69`**:
+```typescript
+// BEFORE — silently mutates type at runtime
+//@ts-ignore
+if (role === 'statement-creator') {
+    statementSubscription.role = Role.admin;
+}
+
+// AFTER — proper migration function
+function migrateRole(role: string): Role {
+    const LEGACY_ROLE_MAP: Record<string, Role> = {
+        'statement-creator': Role.admin,
+    };
+    return LEGACY_ROLE_MAP[role] ?? (role as Role);
+}
+statementSubscription.role = migrateRole(role);
+```
+
+**Tighten component prop contracts**:
+- `SuggestionCard` accepts `Statement | undefined` then early-returns on `undefined`
+- Parent should guarantee non-null — remove `undefined` from prop type
+- Audit other components with similar patterns
+
+**Verification**: `grep -r "@ts-ignore\|@ts-expect-error" src/` — should return 0 for the fixed patterns.
+
+---
+
+### Task 5.8: Establish Domain Layer (Clean Architecture)
+**Agent**: `system-architect` (design) → `react-firebase-engineer` (implement)
+**Clean Architecture**: Entities layer (1.5 → 3)
+
+Currently there is **no domain layer**. Business logic is scattered across controllers, Redux reducers, view components, and shared-types. The `Statement` type is an anemic data structure with zero behavior.
+
+**Steps**:
+1. Create `src/domain/` directory:
+   ```
+   src/domain/
+   ├── statement/
+   │   ├── StatementEntity.ts       # Domain logic methods
+   │   ├── StatementFactory.ts      # Creation with validation
+   │   └── StatementRules.ts        # Business rules (type hierarchy, permissions)
+   ├── evaluation/
+   │   ├── EvaluationEntity.ts
+   │   └── ConsensusCalculator.ts
+   └── vote/
+       └── VoteRules.ts
+   ```
+
+2. Move business logic from scattered locations into domain:
+   ```typescript
+   // src/domain/statement/StatementRules.ts
+   export function canAddChild(parent: Statement, childType: StatementType): boolean {
+       // Moved from helpers.ts isStatementTypeAllowedAsChildren()
+   }
+
+   export function calculateConsensus(evaluations: Evaluation[]): number {
+       // Moved from fn_evaluation.ts consensus calculation
+   }
+   ```
+
+3. Domain layer has **zero imports** from React, Firebase, Redux — pure TypeScript only
+4. Controllers become orchestrators that call domain logic + repositories
+5. Shared domain logic can later be extracted to a `@freedi/domain` package
+
+**Verification**: `src/domain/` has zero imports from `firebase`, `react`, `@reduxjs`. All business rules have unit tests. Build passes.
+
+---
+
+## Phase 6: Ongoing Maintenance
+
+### Task 6.1: Set Up Automated Enforcement
 **Agent**: `backend-security-engineer`
 
 Add ESLint rules and CI checks to prevent regressions:
@@ -431,29 +831,44 @@ Add ESLint rules and CI checks to prevent regressions:
 3. **No `any` type** — already enforced, ensure it stays
 4. **File size limit** — warn on files > 300 lines, error on > 500
 5. **No controller-to-view imports** — dependency direction lint rule
-6. **Circular dependency check** — `madge --circular` in CI
+6. **No view-to-Firebase imports** — ban `firebase/firestore` in `src/view/`
+7. **No `store.getState/dispatch` in controllers** — enforce DIP
+8. **Circular dependency check** — `madge --circular` in CI
+9. **Registry pattern enforcement** — warn on new switch statements matching known patterns
 
 ---
 
 ## Execution Summary
 
-| Phase | Tasks | Duration | Key Agents |
-|-------|-------|----------|------------|
-| 1 - Critical | 3 tasks | Week 1 | system-architect, backend-security-engineer, react-firebase-engineer |
-| 2 - High | 5 tasks | Week 2 | system-architect, backend-security-engineer, react-firebase-engineer, Bash |
-| 3 - Medium | 6 tasks | Weeks 3-4 | react-firebase-engineer, backend-security-engineer, system-architect, scss-architect |
-| 4 - Low | 7 tasks | Weeks 5-6 | react-firebase-engineer, Bash, qa-test-architect, scss-architect, ux-ui-architect |
-| 5 - Ongoing | 1 task | Continuous | backend-security-engineer |
+| Phase | Tasks | Duration | Key Agents | SOLID Focus |
+|-------|-------|----------|------------|-------------|
+| 1 - Critical | 3 tasks | Week 1 | system-architect, backend-security-engineer, react-firebase-engineer | — |
+| 2 - High | 5 tasks | Week 2 | system-architect, backend-security-engineer, react-firebase-engineer, Bash | — |
+| 3 - Medium | 6 tasks | Weeks 3-4 | react-firebase-engineer, backend-security-engineer, system-architect, scss-architect | — |
+| 4 - Low | 7 tasks | Weeks 5-6 | react-firebase-engineer, Bash, qa-test-architect, scss-architect, ux-ui-architect | — |
+| **5 - SOLID/Clean** | **8 tasks** | **Weeks 7-10** | **system-architect, react-firebase-engineer, backend-security-engineer** | **DIP, ISP, SRP, OCP, LSP** |
+| 6 - Ongoing | 1 task | Continuous | backend-security-engineer | Enforcement |
 
-**Total**: 22 tasks across ~6 weeks
+**Total**: 30 tasks across ~10 weeks
+
+### SOLID Score Targets
+
+| Principle | Before | After Phase 5 | Target |
+|-----------|--------|---------------|--------|
+| SRP | 2/5 | 3.5/5 | Tasks 5.5, 5.8 |
+| OCP | 2.5/5 | 3.5/5 | Task 5.6 |
+| LSP | 3.5/5 | 4.5/5 | Task 5.7 |
+| ISP | 2/5 | 3.5/5 | Task 5.4 |
+| DIP | 1.5/5 | 3.5/5 | Tasks 5.1, 5.2, 5.3 |
+| Clean Arch | 2/5 | 3.5/5 | Tasks 5.1, 5.8 |
 
 ### Agent Usage Summary
 
 | Agent | Tasks | Purpose |
 |-------|-------|---------|
-| `system-architect` | 1.1, 1.3, 3.2, 3.5 | Architecture decisions, decomposition planning |
-| `backend-security-engineer` | 1.2, 2.1, 2.5, 3.3, 5.1 | Functions, security, shared packages |
-| `react-firebase-engineer` | 1.1, 2.2, 2.3, 3.1, 3.2, 3.4, 3.6, 4.2, 4.3, 4.6, 4.7 | React/Redux/Firebase code changes |
+| `system-architect` | 1.1, 1.3, 3.2, 3.5, 5.1, 5.3, 5.4, 5.5, 5.8 | Architecture decisions, SOLID design, decomposition |
+| `backend-security-engineer` | 1.2, 2.1, 2.5, 3.3, 5.4, 6.1 | Functions, security, shared packages, enforcement |
+| `react-firebase-engineer` | 1.1, 2.2, 2.3, 3.1, 3.2, 3.4, 3.6, 4.2, 4.3, 4.6, 4.7, 5.1, 5.2, 5.3, 5.5, 5.6, 5.7, 5.8 | React/Redux/Firebase code changes, SOLID refactoring |
 | `scss-architect` | 3.2, 4.6 | Style refactoring, atomic design |
 | `qa-test-architect` | 4.5 | Test planning and execution |
 | `qa-code-auditor` | Post-phase reviews | Quality verification after each phase |

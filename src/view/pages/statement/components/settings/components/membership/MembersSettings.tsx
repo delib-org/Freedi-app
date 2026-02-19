@@ -1,6 +1,7 @@
 import { FC, useEffect, useState } from 'react';
 import { createSelector } from '@reduxjs/toolkit';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import { logError } from '@/utils/errorHandling';
 
 // Third party imports
 import { useParams } from 'react-router';
@@ -69,7 +70,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 				const usersSnapshot = await getDocs(awaitingUsersQuery);
 				setUserCount(usersSnapshot.docs.length);
 			} catch (error) {
-				console.error('Error fetching awaiting users:', error);
+				logError(error, { operation: 'membership.MembersSettings.fetchAwaitingUsers', metadata: { message: 'Error fetching awaiting users:' } });
 				setUserCount(0);
 			}
 		};

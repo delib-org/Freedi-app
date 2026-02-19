@@ -154,12 +154,18 @@ export default function AddSolutionFlow({
             suggestionsCount: multiData.suggestions?.length,
           });
         } catch (parseError) {
-          console.error('Failed to parse multi-suggestion response:', parseError);
+          logError(parseError, {
+            operation: 'AddSolutionFlow.handleCheckSimilar.parseMultiResponse',
+            userId,
+            questionId,
+          });
         }
       } else {
-        console.error('Multi-suggestion detection failed:', {
-          status: multiResponse.status,
-          statusText: multiResponse.statusText,
+        logError(new Error('Multi-suggestion detection failed'), {
+          operation: 'AddSolutionFlow.handleCheckSimilar.multiDetection',
+          userId,
+          questionId,
+          metadata: { status: multiResponse.status, statusText: multiResponse.statusText },
         });
       }
 

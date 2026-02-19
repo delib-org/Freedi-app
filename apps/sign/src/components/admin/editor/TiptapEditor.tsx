@@ -6,6 +6,7 @@ import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './TiptapEditor.module.scss';
 
 // Extend Image to support alignment and width
@@ -110,11 +111,17 @@ export default function TiptapEditor({
         editor.chain().focus().setImage({ src: data.url, alt: '' } as { src: string; alt?: string }).run();
         onImageUpload?.(data.url);
       } else {
-        console.error('Upload failed:', data.error);
+        logError(new Error(data.error || 'Upload failed'), {
+          operation: 'TiptapEditor.handleImageUpload',
+          metadata: { documentId, error: data.error },
+        });
         alert(data.error || t('Failed to upload image'));
       }
     } catch (error) {
-      console.error('Upload error:', error);
+      logError(error, {
+        operation: 'TiptapEditor.handleImageUpload',
+        metadata: { documentId },
+      });
       alert(t('Failed to upload image'));
     }
   }, [editor, documentId, onImageUpload, t]);

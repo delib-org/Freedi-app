@@ -1,5 +1,6 @@
 import React, { FC, useState, useEffect, useRef } from 'react';
 import styles from './ChatInput.module.scss';
+import { logError } from '@/utils/errorHandling';
 // Third Party Imports
 
 // Icons
@@ -52,7 +53,7 @@ const ChatInput: FC<Props> = ({ statement, hasEvaluation, sideChat = false }) =>
 				handleSubmitInput(e);
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'input.ChatInput.handleKeyUp' });
 		}
 	}
 

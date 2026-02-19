@@ -4,6 +4,7 @@ import { auth } from '@/controllers/db/config';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { CheckCircle2, XCircle, AlertCircle, RefreshCw, Bell, Info } from 'lucide-react';
 import styles from './NotificationDiagnostics.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface DiagnosticInfo {
 	supported: boolean;
@@ -26,7 +27,7 @@ export const NotificationDiagnostics: React.FC = () => {
 			const info = await notificationService.getDiagnostics();
 			setDiagnostics(info);
 		} catch (error) {
-			console.error('Error loading diagnostics:', error);
+			logError(error, { operation: 'notifications.NotificationDiagnostics.loadDiagnostics', metadata: { message: 'Error loading diagnostics:' } });
 		} finally {
 			setIsLoading(false);
 		}
@@ -57,7 +58,7 @@ export const NotificationDiagnostics: React.FC = () => {
 				alert('Failed to send test notification. Check console for details.');
 			}
 		} catch (error) {
-			console.error('Error sending test notification:', error);
+			logError(error, { operation: 'notifications.NotificationDiagnostics.handleTestNotification', metadata: { message: 'Error sending test notification:' } });
 			alert('Error sending test notification. Check console for details.');
 		} finally {
 			setTestSending(false);
@@ -81,7 +82,7 @@ export const NotificationDiagnostics: React.FC = () => {
 				alert('Failed to refresh token. Check console for details.');
 			}
 		} catch (error) {
-			console.error('Error refreshing token:', error);
+			logError(error, { operation: 'notifications.NotificationDiagnostics.handleRefreshToken', metadata: { message: 'Error refreshing token:' } });
 			alert('Error refreshing token. Check console for details.');
 		} finally {
 			setRefreshing(false);

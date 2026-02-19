@@ -1,5 +1,6 @@
 import { getMessaging, onMessage } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
+import { logError } from '@/utils/errorHandling';
 
 export function monitorNotifications() {
 	// console.info('=== STARTING NOTIFICATION MONITOR ===');
@@ -12,7 +13,7 @@ export function monitorNotifications() {
 			// console.info('[FC MESSAGE]', { data: message });
 		});
 	} catch (error) {
-		console.error('Error setting up monitor:', error);
+		logError(error, { operation: 'utils.monitorNotifications.monitorNotifications', metadata: { message: 'Error setting up monitor:' } });
 	}
 }
 

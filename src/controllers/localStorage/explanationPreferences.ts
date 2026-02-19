@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 // LocalStorage keys
 const EXPLANATIONS_KEY_PREFIX = 'mc_explanations_';
 const GLOBAL_PREFS_KEY = 'mc_global_preferences';
@@ -23,7 +24,7 @@ export function getExplanationPreferences(): ExplanationPreferences {
 			return JSON.parse(stored);
 		}
 	} catch (error) {
-		console.error('Error loading explanation preferences:', error);
+		logError(error, { operation: 'localStorage.explanationPreferences.getExplanationPreferences', metadata: { message: 'Error loading explanation preferences:' } });
 	}
 
 	return {
@@ -38,7 +39,7 @@ export function saveExplanationPreferences(prefs: ExplanationPreferences): void 
 	try {
 		localStorage.setItem(GLOBAL_PREFS_KEY, JSON.stringify(prefs));
 	} catch (error) {
-		console.error('Error saving explanation preferences:', error);
+		logError(error, { operation: 'localStorage.explanationPreferences.saveExplanationPreferences', metadata: { message: 'Error saving explanation preferences:' } });
 	}
 }
 

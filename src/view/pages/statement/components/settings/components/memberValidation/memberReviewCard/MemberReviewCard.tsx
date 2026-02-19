@@ -1,6 +1,6 @@
 import React, { FC, useState, memo } from 'react';
 import { Statement, Role } from '@freedi/shared-types';
-import { MemberReviewData } from '../MemberValidation';
+import type { MemberReviewData } from '@/types/demographics';
 import styles from './MemberReviewCard.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getBanDisabledReason } from '@/helpers/roleHelpers';

@@ -12,13 +12,14 @@ import {
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useLocation, useNavigate } from 'react-router';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { getParagraphsText } from '@/utils/paragraphUtils';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import { closePanels } from '@/controllers/hooks/panelUtils';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { Statement } from '@freedi/shared-types';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
+import { logError } from '@/utils/errorHandling';
 
 export default function SimilarStatements() {
 	const dispatch = useDispatch();
@@ -61,7 +62,7 @@ export default function SimilarStatements() {
 			dispatch(clearNewStatement());
 			closePanels();
 		} catch (error) {
-			console.error('Failed to set evaluation:', error);
+			logError(error, { operation: 'components.SimilarStatements.handleSelectSimilarStatement', metadata: { message: 'Failed to set evaluation:' } });
 		}
 	};
 
@@ -90,7 +91,7 @@ export default function SimilarStatements() {
 				navigate(`/statement/${statementId}`);
 			}
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'components.SimilarStatements.handleCreateNewStatement' });
 		}
 	};
 

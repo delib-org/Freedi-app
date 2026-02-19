@@ -1,0 +1,242 @@
+// Checkbox Atom - BEM Methodology
+// Usage: <label class="checkbox"><input type="checkbox" /><span class="checkbox__box" /><span class="checkbox__label">Label</span></label>
+
+@use '../mixins' as *;
+
+// ============================================================================
+// CHECKBOX BLOCK
+// ============================================================================
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  font-family: 'Roboto', sans-serif;
+  line-height: 1.5;
+  user-select: none;
+
+  // ============================================================================
+  // ELEMENTS (Parts of the checkbox)
+  // ============================================================================
+
+  &__input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  &__box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid var(--icons-disabled, #b0b0b0);
+    border-radius: 4px;
+    background-color: transparent;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      color: var(--white);
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      color: var(--icons-disabled, #b0b0b0);
+      transition: color 0.2s ease;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    font-size: 1rem;
+    color: var(--text-disabled);
+    transition: color 0.2s ease;
+  }
+
+  &__hint {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--text-caption);
+    margin-top: 0.125rem;
+  }
+
+  // ============================================================================
+  // MODIFIERS (States)
+  // ============================================================================
+
+  &--checked {
+    .checkbox__box {
+      border-color: var(--icons-blue-dark, var(--btn-primary));
+      background-color: var(--icons-blue-dark, var(--btn-primary));
+
+      svg {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    .checkbox__icon svg {
+      color: var(--icons-blue-dark, var(--btn-primary));
+    }
+
+    .checkbox__label {
+      color: var(--text-body);
+    }
+  }
+
+  &--indeterminate {
+    .checkbox__box {
+      border-color: var(--icons-blue-dark, var(--btn-primary));
+      background-color: var(--icons-blue-dark, var(--btn-primary));
+
+      svg {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+  }
+
+  &--disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+
+    .checkbox__box {
+      border-color: var(--bg-disabled);
+      background-color: var(--bg-disabled);
+    }
+
+    .checkbox__label {
+      color: var(--text-disabled);
+    }
+  }
+
+  &--error {
+    .checkbox__box {
+      border-color: var(--text-error);
+    }
+
+    .checkbox__label {
+      color: var(--text-error);
+    }
+  }
+
+  // Size variants
+  &--small {
+    gap: 0.5rem;
+
+    .checkbox__box {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .checkbox__icon {
+      width: 20px;
+      height: 20px;
+    }
+
+    .checkbox__label {
+      font-size: 0.875rem;
+    }
+  }
+
+  &--large {
+    gap: 1rem;
+
+    .checkbox__box {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 5px;
+    }
+
+    .checkbox__icon {
+      width: 28px;
+      height: 28px;
+    }
+
+    .checkbox__label {
+      font-size: 1.125rem;
+    }
+  }
+
+  // ============================================================================
+  // FOCUS STATE
+  // ============================================================================
+
+  &:focus-within {
+    .checkbox__box {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  // ============================================================================
+  // HOVER STATE
+  // ============================================================================
+
+  &:hover:not(.checkbox--disabled) {
+    .checkbox__box {
+      border-color: var(--btn-primary);
+    }
+  }
+
+  // ============================================================================
+  // ACCESSIBILITY
+  // ============================================================================
+
+  @media (prefers-reduced-motion: reduce) {
+    .checkbox__box,
+    .checkbox__box svg,
+    .checkbox__icon svg,
+    .checkbox__label {
+      transition: none;
+    }
+  }
+}
+
+// ============================================================================
+// CHECKBOX GROUP (Multiple checkboxes together)
+// ============================================================================
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__label {
+    @include heading-base;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+  }
+
+  &__error {
+    font-size: 0.875rem;
+    color: var(--text-error);
+    margin-top: 0.25rem;
+  }
+
+  &--horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+}

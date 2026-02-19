@@ -5,6 +5,7 @@ import { updateMemberRole } from '@/controllers/db/subscriptions/setSubscription
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { canBanUser, getBanDisabledReason } from '@/helpers/roleHelpers';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { logError } from '@/utils/errorHandling';
 
 interface EnhancedMemberCardProps {
 	member: StatementSubscription;
@@ -78,7 +79,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 			await updateMemberRole(member.statementId, member.user?.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			console.error('Error updating role:', error);
+			logError(error, { operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleRole', metadata: { message: 'Error updating role:' } });
 		} finally {
 			setIsUpdating(false);
 		}
@@ -89,7 +90,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 
 		// If trying to ban, check if user can be banned
 		if (role !== Role.banned && !userCanBeBanned) {
-			console.error('Cannot ban this user:', banDisabledReason);
+			logError(banDisabledReason, { operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleBan', metadata: { message: 'Cannot ban this user:' } });
 
 			return;
 		}
@@ -101,7 +102,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			console.error('Error toggling ban:', error);
+			logError(error, { operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleBan', metadata: { message: 'Error toggling ban:' } });
 		} finally {
 			setIsUpdating(false);
 		}
