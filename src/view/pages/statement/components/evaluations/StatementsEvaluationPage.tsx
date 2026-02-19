@@ -15,6 +15,7 @@ import Toast from '@/view/components/toast/Toast';
 import { QuestionStep, StatementType, Statement } from '@freedi/shared-types';
 import { useEvaluationGuard } from '@/controllers/hooks/useEvaluationGuard';
 import AddSolutionPrompt from '@/view/components/evaluation/AddSolutionPrompt';
+import { logError } from '@/utils/errorHandling';
 
 interface StatementEvaluationPageProps {
 	statement: Statement;
@@ -159,13 +160,13 @@ const StatementEvaluationPage: FC<StatementEvaluationPageProps> = ({
 						);
 				}
 			} catch (error) {
-				console.error(error);
+				logError(error, { operation: 'evaluations.StatementsEvaluationPage.unknown' });
 
 				return null;
 			}
 		}
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'evaluations.StatementsEvaluationPage.unknown' });
 
 		return null;
 	}

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './installPWA.module.scss';
 import InstallAppIcon from '@/assets/icons/installIconW.svg?react';
+import { logError } from '@/utils/errorHandling';
 
 type BeforeInstallPromptEvent = Event & {
 	prompt: () => Promise<void>;
@@ -94,7 +95,7 @@ const InstallPWA: React.FC = () => {
 				settled = true;
 			}
 		} catch (err) {
-			console.error('Prompt error:', err);
+			logError(err, { operation: 'pwa.InstallPWA.fallbackTimeout', metadata: { message: 'Prompt error:' } });
 			if (!settled) {
 				setIsInstallable(false);
 				setDeferredPrompt(null);

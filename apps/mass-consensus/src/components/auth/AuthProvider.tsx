@@ -8,6 +8,7 @@ import {
   getCurrentToken,
   User,
 } from '@/lib/firebase/client';
+import { logError } from '@/lib/utils/errorHandling';
 
 interface AuthContextType {
   user: User | null;
@@ -47,7 +48,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
             document.cookie = `userId=${firebaseUser.uid}; path=/; max-age=31536000; SameSite=Lax`;
           }
         } catch (error) {
-          console.error('[AuthProvider] Error refreshing token:', error);
+          logError(error, { operation: 'AuthProvider.refreshToken' });
         }
       } else {
         // Clear userId cookie on sign out
@@ -66,7 +67,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const signedInUser = await signInWithGoogle();
       return signedInUser;
     } catch (error) {
-      console.error('Sign in failed:', error);
+      logError(error, { operation: 'AuthProvider.signIn' });
       throw error;
     } finally {
       setIsLoading(false);
@@ -78,7 +79,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       await signOutUser();
       setUser(null);
     } catch (error) {
-      console.error('Sign out failed:', error);
+      logError(error, { operation: 'AuthProvider.signOut' });
       throw error;
     }
   }, []);

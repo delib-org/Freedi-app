@@ -11,6 +11,7 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import AddEvidenceModal from '../AddEvidenceModal/AddEvidenceModal';
 import styles from './EvidencePost.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface LinkMetadata {
 	url: string;
@@ -108,7 +109,7 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 				setUserVote(voteType);
 			}
 		} catch (error) {
-			console.error('Error voting on evidence:', error);
+			logError(error, { operation: 'EvidencePost.EvidencePost.handleVote', metadata: { message: 'Error voting on evidence:' } });
 		}
 	};
 

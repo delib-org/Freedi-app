@@ -35,6 +35,7 @@ function buildStatementData({
   email,
   now,
   description,
+  isDocument = false,
 }: {
   statementId: string;
   title: string;
@@ -47,6 +48,7 @@ function buildStatementData({
   email: string;
   now: number;
   description?: string;
+  isDocument?: boolean;
 }) {
   return {
     statementId,
@@ -96,7 +98,7 @@ function buildStatementData({
     },
     hasChildren: true,
     results: [],
-    isDocument: statementType === StatementType.document,
+    isDocument,
   };
 }
 
@@ -216,10 +218,14 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const documentData = buildStatementData({
-        statementId,
+      // Create Group -> Question -> Option (isDocument) hierarchy
+      const questionId = crypto.randomUUID();
+      const optionId = crypto.randomUUID();
+
+      const questionData = buildStatementData({
+        statementId: questionId,
         title: body.title.trim(),
-        statementType: StatementType.document,
+        statementType: StatementType.question,
         parentId: groupId,
         topParentId: groupId,
         parents: ['top', groupId],
@@ -227,15 +233,37 @@ export async function POST(request: NextRequest) {
         displayName,
         email,
         now,
-        description: description?.trim(),
       });
 
-      await db.collection(Collections.statements).doc(statementId).set(documentData);
+      const optionData = buildStatementData({
+        statementId: optionId,
+        title: body.title.trim(),
+        statementType: StatementType.option,
+        parentId: questionId,
+        topParentId: groupId,
+        parents: ['top', groupId, questionId],
+        userId,
+        displayName,
+        email,
+        now,
+        description: description?.trim(),
+        isDocument: true,
+      });
 
-      // Create subscription so it appears in the main app
-      await createSubscription(db, documentData, userId, displayName, email, now);
+      // Batch write for atomicity
+      const batch = db.batch();
+      batch.set(db.collection(Collections.statements).doc(questionId), questionData);
+      batch.set(db.collection(Collections.statements).doc(optionId), optionData);
+      await batch.commit();
 
-      return NextResponse.json({ statementId });
+      // Create subscriptions so they appear in the main app
+      await Promise.all([
+        createSubscription(db, questionData, userId, displayName, email, now),
+        createSubscription(db, optionData, userId, displayName, email, now),
+      ]);
+
+      // Return the option's ID — the actual document for editing
+      return NextResponse.json({ statementId: optionId });
     }
 
     return NextResponse.json(

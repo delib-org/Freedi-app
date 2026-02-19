@@ -2,6 +2,7 @@ import { Results, Statement } from '@freedi/shared-types';
 import dagre from '@dagrejs/dagre';
 import { Edge, Node, Position } from 'reactflow';
 import { statementTitleToDisplay } from '@/controllers/general/helpers';
+import { logError } from '@/utils/errorHandling';
 
 const position = { x: 0, y: 0 };
 
@@ -60,7 +61,7 @@ export const getLayoutElements = (
 
 		return { nodes, edges };
 	} catch (error) {
-		console.error('getLayoutedElements() failed: ', error);
+		logError(error, { operation: 'customNodeCont.getLayoutedElements' });
 
 		return { nodes: [], edges: [] };
 	}
@@ -105,7 +106,7 @@ export const edgeOptions = (result: Results, parentId: string): Edge => {
 			style: edgeStyle,
 		};
 	} catch (error) {
-		console.error('edgeOptions() failed: ', error);
+		logError(error, { operation: 'customNodeCont.edgeOptions' });
 
 		return {
 			id: '',
@@ -137,7 +138,7 @@ export const createInitialNodesAndEdges = (
 
 		return { nodes, edges };
 	} catch (error) {
-		console.error('createInitialElements() failed: ', error);
+		logError(error, { operation: 'customNodeCont.createInitialElements' });
 
 		return { nodes: [], edges: [] };
 	}

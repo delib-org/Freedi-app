@@ -1,6 +1,6 @@
 import { User, Role, Statement, StatementType, QuestionType } from '@freedi/shared-types';
 import { createContext } from 'react';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 
 interface StatementContextProps {
 	statement: Statement | undefined;

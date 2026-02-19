@@ -10,6 +10,7 @@
 
 import { analytics } from '@/controllers/db/config';
 import { logEvent as firebaseLogEvent } from 'firebase/analytics';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Notification event types for analytics
@@ -80,7 +81,7 @@ export function logNotificationEvent(
 		});
 	} catch (error) {
 		// Silently fail - analytics should never break the app
-		console.error('[NotificationAnalytics] Failed to log event:', error);
+		logError(error, { operation: 'services.notificationAnalytics.logNotificationEvent', metadata: { message: '[NotificationAnalytics] Failed to log event:' } });
 	}
 }
 

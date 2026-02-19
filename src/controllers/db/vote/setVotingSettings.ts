@@ -2,6 +2,7 @@ import { Collections, VotingSettings, VotingSettingsSchema } from '@freedi/share
 import { doc, updateDoc } from 'firebase/firestore';
 import { DB } from '../config';
 import { safeParse } from 'valibot';
+import { logError } from '@/utils/errorHandling';
 
 export async function setVotingSettingsToDB({
 	statementId,
@@ -17,7 +18,7 @@ export async function setVotingSettingsToDB({
 		const validationResult = safeParse(VotingSettingsSchema, votingSettings);
 
 		if (!validationResult.success) {
-			console.error('Invalid voting settings:', validationResult.issues);
+			logError(new Error('Invalid voting settings:'), { operation: 'vote.setVotingSettings.setVotingSettingsToDB', metadata: { detail: validationResult.issues } });
 			throw new Error(
 				`Validation failed: ${validationResult.issues.map((i) => i.message).join(', ')}`,
 			);
@@ -31,6 +32,6 @@ export async function setVotingSettingsToDB({
 
 		console.info('Voting settings updated successfully');
 	} catch (error) {
-		console.error('Error updating voting settings:', error);
+		logError(error, { operation: 'vote.setVotingSettings.setVotingSettingsToDB', metadata: { message: 'Error updating voting settings:' } });
 	}
 }

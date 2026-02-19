@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { StatementType, QuestionType, User } from '@freedi/shared-types';
-import { getDefaultQuestionType } from '@/model/questionTypeDefaults';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 
 export const useStatementUIState = () => {
 	// Local state

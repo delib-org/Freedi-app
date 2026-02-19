@@ -7,6 +7,7 @@ import { logOut } from '@/controllers/db/authenticationUtils';
 import { setFollowMeDB } from '@/controllers/db/statements/setStatements';
 import { Statement } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement | undefined;
@@ -35,7 +36,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 
 			await setFollowMeDB(topParentStatement, pathname);
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'header.StatementHeader.handleFollowMe' });
 		} finally {
 			setIsHeaderMenuOpen(false);
 		}
@@ -45,7 +46,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 		try {
 			setShowInvitationPanel(true);
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'header.StatementHeader.handleInvitePanel' });
 		}
 	}
 
@@ -56,7 +57,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 			navigate('/');
 			await logOut();
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'header.StatementHeader.handleLogout' });
 		}
 	}
 

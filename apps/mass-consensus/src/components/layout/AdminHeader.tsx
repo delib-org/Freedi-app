@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { logError } from '@/lib/utils/errorHandling';
 import LanguageSwitcher from './LanguageSwitcher';
 import styles from './Layout.module.scss';
 
@@ -23,7 +24,7 @@ export default function AdminHeader() {
       await signOut();
       window.location.href = '/';
     } catch (error) {
-      console.error('Sign out error:', error);
+      logError(error, { operation: 'AdminHeader.handleSignOut' });
     }
   };
 

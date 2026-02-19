@@ -10,6 +10,7 @@ import { handleCloseInviteModal } from '@/controllers/general/helpers';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import XIcon from '@/view/components/icons/XIcon';
 import InviteModal from '@/view/components/modal/InviteModal';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	setShowModal: (show: boolean) => void;
@@ -47,7 +48,7 @@ const InvitationModal: FC<Props> = ({ setShowModal }) => {
 			setShowModal(false);
 			navigate(pathname);
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'invitationModal.InvitationModal.handleJoin' });
 		}
 	}
 

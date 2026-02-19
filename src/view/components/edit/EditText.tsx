@@ -3,6 +3,7 @@ import { Statement } from '@freedi/shared-types';
 import Save from '@/assets/icons/saveIcon.svg?react';
 import Text from '../text/Text';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { logError } from '@/utils/errorHandling';
 
 export interface EditTextProps {
 	value: string;
@@ -114,7 +115,7 @@ const EditText: FC<EditTextProps> = ({
 			setIsEditing(false);
 			onEditEnd?.();
 		} catch (error) {
-			console.error('Error saving text:', error);
+			logError(error, { operation: 'edit.EditText.handleSave', metadata: { message: 'Error saving text:' } });
 		}
 	};
 

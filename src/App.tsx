@@ -7,7 +7,7 @@ import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import Accessibility from './view/components/accessibility/Accessibility';
 import { ListenerStats } from './view/components/ListenerStats';
 import PWAInstallPrompt from './view/components/pwa/PWAInstallPrompt';
-import { usePWAInstallPrompt } from './hooks/usePWAInstallPrompt';
+import { usePWAInstallPrompt } from './controllers/hooks/usePWAInstallPrompt';
 import OfflineAlert from './view/components/offlineAlert/OfflineAlert';
 
 export default function App() {

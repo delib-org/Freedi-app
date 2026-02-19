@@ -1,5 +1,6 @@
 // UserConfigContext.tsx
 import React, { createContext, useState, useCallback, useEffect, ReactNode, useMemo } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Import from shared i18n package
 import {
@@ -103,7 +104,7 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 				};
 			}
 		} catch (error) {
-			console.error('Error reading from localStorage:', error);
+			logError(error, { operation: 'context.UserConfigContext.unknown', metadata: { message: 'Error reading from localStorage:' } });
 		}
 
 		return DEFAULT_CONFIG;
@@ -118,7 +119,7 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 		try {
 			localStorage.setItem(LocalStorageObjects.UserConfig, JSON.stringify(config));
 		} catch (error) {
-			console.error('Error saving to localStorage:', error);
+			logError(error, { operation: 'context.UserConfigContext.unknown', metadata: { message: 'Error saving to localStorage:' } });
 		}
 	}, [config]);
 

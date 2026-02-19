@@ -7,6 +7,7 @@ import styles from './updateMainCard.module.scss';
 import { setStatement, statementSelectorById } from '@/redux/statements/statementsSlice';
 import { Statement, SimpleStatement } from '@freedi/shared-types';
 import { useDispatch, useSelector } from 'react-redux';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement | SimpleStatement;
@@ -44,7 +45,7 @@ const UpdateMainCard: FC<Props> = ({ statement }) => {
 			</Link>
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'updateMainCard.UpdateMainCard.unknown' });
 
 		return null;
 	}
@@ -61,7 +62,7 @@ export function getTitle(text: string): string {
 
 		return title;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'updateMainCard.UpdateMainCard.getTitle' });
 
 		return '';
 	}

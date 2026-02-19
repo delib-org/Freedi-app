@@ -165,8 +165,10 @@ export type {
 
 export {
   SimpleStatementSchema,
-  statementToSimpleStatement
 } from "./models/statement/SimpleStatement";
+export {
+  statementToSimpleStatement
+} from "./models/statement/statementToSimple";
 export type {
   StatementSettings
 } from "./models/statement/StatementSettings";

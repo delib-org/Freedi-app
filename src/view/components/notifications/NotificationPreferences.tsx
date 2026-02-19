@@ -10,6 +10,7 @@ import { notificationService } from '@/services/notificationService';
 import BellIcon from '@/assets/icons/bellIcon.svg?react';
 import MailIcon from '@/assets/icons/bellIcon.svg?react';
 import PhoneIcon from '@/assets/icons/bellIcon.svg?react';
+import { logError } from '@/utils/errorHandling';
 
 interface NotificationPreferencesProps {
 	statementId: string;
@@ -72,7 +73,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 				setIsLoading(false);
 			} catch (error) {
-				console.error('Error loading notification preferences:', error);
+				logError(error, { operation: 'notifications.NotificationPreferences.unknown', metadata: { message: 'Error loading notification preferences:' } });
 				setIsLoading(false);
 			}
 		};
@@ -119,7 +120,7 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 			setIsSaving(false);
 		} catch (error) {
-			console.error('Error updating notification preference:', error);
+			logError(error, { operation: 'notifications.NotificationPreferences.unknown', metadata: { message: 'Error updating notification preference:' } });
 			// Revert on error
 			setPreferences(preferences);
 			setIsSaving(false);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './fcmTokenDisplay.module.scss';
 import { getAuth } from 'firebase/auth';
 import { notificationService } from '@/services/notificationService';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Component to display FCM token for testing purposes
@@ -32,7 +33,7 @@ const FCMTokenDisplay: React.FC = () => {
 					}
 				}
 			} catch (error) {
-				console.error('Error getting FCM token:', error);
+				logError(error, { operation: 'notifications.FCMTokenDisplay.getAndDisplayToken', metadata: { message: 'Error getting FCM token:' } });
 			}
 		};
 
@@ -52,7 +53,7 @@ const FCMTokenDisplay: React.FC = () => {
 				}
 			}
 		} catch (error) {
-			console.error('Error requesting notification permission:', error);
+			logError(error, { operation: 'notifications.FCMTokenDisplay.handleRequestPermission', metadata: { message: 'Error requesting notification permission:' } });
 		}
 	};
 
@@ -65,7 +66,7 @@ const FCMTokenDisplay: React.FC = () => {
 					alert('Token copied to clipboard!');
 				})
 				.catch((err) => {
-					console.error('Error copying token:', err);
+					logError(err, { operation: 'notifications.FCMTokenDisplay.handleCopyToken', metadata: { message: 'Error copying token:' } });
 				});
 		}
 	};

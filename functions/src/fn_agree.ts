@@ -4,6 +4,7 @@ import { Agree, AgreeDisagree, AgreeSchema, Collections } from '@freedi/shared-t
 import { DocumentSnapshot } from 'firebase-admin/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
+import { logError } from './utils/errorHandling';
 
 export async function updateAgrees(
 	event: FirestoreEvent<
@@ -67,7 +68,7 @@ export function agreeDisagreeDifferences(
 			diffInDisagree: diffDisagree,
 		};
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'agree.agreeDisagreeDifferences' });
 
 		return {
 			diffInAgree: 0,

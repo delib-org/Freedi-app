@@ -2,11 +2,14 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { GEMINI_MODEL } from './config/gemini';
 import { functionConfig } from '@freedi/shared-types';
+import { logError } from './utils/errorHandling';
 
 function getGenAI(): GoogleGenerativeAI {
 	const apiKey = process.env.GOOGLE_API_KEY;
 	if (!apiKey) {
-		console.error('GOOGLE_API_KEY missing (waiting for secret setup)');
+		logError(new Error('GOOGLE_API_KEY missing (waiting for secret setup)'), {
+			operation: 'profanityChecker.getGenAI',
+		});
 		throw new Error('Missing GOOGLE_API_KEY');
 	}
 
@@ -30,7 +33,7 @@ async function containsBadLanguage(text: string): Promise<boolean> {
 
 		return output.includes('true');
 	} catch (error) {
-		console.error('Gemini API error:', error);
+		logError(error, { operation: 'profanityChecker.containsBadLanguage' });
 
 		return false; // fail-safe: allow text if Gemini fails
 	}
@@ -60,7 +63,7 @@ export const checkProfanity = onCall<CheckProfanityRequest>(
 
 			return { score: isBad ? 1 : 0 }; // mimic Perspective API style
 		} catch (error) {
-			console.error('Profanity check failed:', error);
+			logError(error, { operation: 'profanityChecker.checkProfanity' });
 
 			return { score: null, error: 'AI call failed' };
 		}

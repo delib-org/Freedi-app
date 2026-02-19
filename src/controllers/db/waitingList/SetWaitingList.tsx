@@ -1,4 +1,5 @@
 import React, { useRef, FC } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 //Custom components
 import Button from '../../../view/components/buttons/button/Button';
@@ -6,7 +7,6 @@ import UploadFileIcon from '../../../view/components/icons/UploadFileIcon';
 
 //Styles
 import styles from './setWaitingList.module.scss';
-import VisuallyHidden from '@/view/components/accessibility/toScreenReaders/VisuallyHidden';
 
 const SetWaitingList: FC = () => {
 	const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -14,7 +14,7 @@ const SetWaitingList: FC = () => {
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files;
 		if (files && files.length > 0) {
-			console.error('File uploaded');
+			logError(new Error('File uploaded'), { operation: 'waitingList.SetWaitingList.handleFileChange' });
 		}
 	};
 
@@ -26,7 +26,7 @@ const SetWaitingList: FC = () => {
 	return (
 		<div>
 			<label htmlFor="uploadFile">
-				<VisuallyHidden labelName={'uploadFile'} />
+				<span className="sr-only">uploadFile</span>
 			</label>
 			<input
 				id="uploadFile"

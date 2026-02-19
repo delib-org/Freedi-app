@@ -21,7 +21,7 @@ jest.mock('@freedi/shared-types', () => ({
 	},
 }));
 
-jest.mock('@/model/questionTypeDefaults', () => ({
+jest.mock('@/models/questionTypeDefaults', () => ({
 	getDefaultQuestionType: jest.fn(() => 'simple'),
 }));
 
@@ -37,7 +37,8 @@ enum QuestionType {
 	massConsensus = 'massConsensus',
 }
 
-import newStatementReducer, {
+import {
+	newStatementSlice,
 	setNewStatementModal,
 	setParentStatement,
 	setNewStatementType,
@@ -51,15 +52,8 @@ import newStatementReducer, {
 	selectNewStatementError,
 	selectNewStatementShowModal,
 	selectNewStatement,
+	NewStatementState,
 } from '../newStatementSlice';
-
-type NewStatementState = {
-	parentStatement: unknown | null;
-	newStatement: unknown | null;
-	isLoading: boolean;
-	error: string | null;
-	showModal: boolean;
-};
 
 const mockStatement = {
 	statementId: 'stmt-123',
@@ -96,7 +90,7 @@ describe('newStatementSlice', () => {
 					showModal: true,
 				};
 
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					getInitialState(),
 					setNewStatementModal(modalPayload as never),
 				);
@@ -117,7 +111,7 @@ describe('newStatementSlice', () => {
 					showModal: false,
 				};
 
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					getInitialState(),
 					setNewStatementModal(modalPayload as never),
 				);
@@ -132,7 +126,7 @@ describe('newStatementSlice', () => {
 
 		describe('setParentStatement', () => {
 			it('should set parent statement to a statement', () => {
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					getInitialState(),
 					setParentStatement(mockStatement as never),
 				);
@@ -141,7 +135,7 @@ describe('newStatementSlice', () => {
 			});
 
 			it('should set parent statement to "top"', () => {
-				const result = newStatementReducer(getInitialState(), setParentStatement('top'));
+				const result = newStatementSlice.reducer(getInitialState(), setParentStatement('top'));
 
 				expect(result.parentStatement).toBe('top');
 			});
@@ -149,7 +143,7 @@ describe('newStatementSlice', () => {
 			it('should set parent statement to null (clearing)', () => {
 				const stateWithParent = { ...getInitialState(), parentStatement: mockStatement };
 
-				const result = newStatementReducer(stateWithParent as never, setParentStatement(null));
+				const result = newStatementSlice.reducer(stateWithParent as never, setParentStatement(null));
 
 				expect(result.parentStatement).toBeNull();
 			});
@@ -157,7 +151,7 @@ describe('newStatementSlice', () => {
 
 		describe('setNewStatementType', () => {
 			it('should set the statement type', () => {
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					getInitialState(),
 					setNewStatementType(StatementType.option as never),
 				);
@@ -173,7 +167,7 @@ describe('newStatementSlice', () => {
 					newStatement: { statement: 'Partial text', statementType: StatementType.statement },
 				};
 
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					stateWithNewStatement as never,
 					setNewStatementType(StatementType.option as never),
 				);
@@ -190,7 +184,7 @@ describe('newStatementSlice', () => {
 					newStatement: { statementType: StatementType.statement },
 				};
 
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					initialWithType as never,
 					setNewStatementType(StatementType.question as never),
 				);
@@ -203,7 +197,7 @@ describe('newStatementSlice', () => {
 
 		describe('setNewQuestionType', () => {
 			it('should set question type', () => {
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					getInitialState(),
 					setNewQuestionType(QuestionType.multipleChoice as never),
 				);
@@ -213,7 +207,7 @@ describe('newStatementSlice', () => {
 			});
 
 			it('should use default question type when null is passed', () => {
-				const result = newStatementReducer(getInitialState(), setNewQuestionType(null));
+				const result = newStatementSlice.reducer(getInitialState(), setNewQuestionType(null));
 
 				const settings = (result.newStatement as Record<string, unknown>)?.questionSettings as Record<string, unknown>;
 				// getDefaultQuestionType is mocked to return 'simple'
@@ -228,7 +222,7 @@ describe('newStatementSlice', () => {
 					},
 				};
 
-				const result = newStatementReducer(
+				const result = newStatementSlice.reducer(
 					stateWithSettings as never,
 					setNewQuestionType(QuestionType.simple as never),
 				);
@@ -249,7 +243,7 @@ describe('newStatementSlice', () => {
 					showModal: true,
 				};
 
-				const result = newStatementReducer(populatedState as never, clearNewStatement());
+				const result = newStatementSlice.reducer(populatedState as never, clearNewStatement());
 
 				expect(result.parentStatement).toBeNull();
 				expect(result.newStatement).toBeNull();
@@ -261,39 +255,39 @@ describe('newStatementSlice', () => {
 
 		describe('setLoading', () => {
 			it('should set isLoading to true', () => {
-				const result = newStatementReducer(getInitialState(), setLoading(true));
+				const result = newStatementSlice.reducer(getInitialState(), setLoading(true));
 				expect(result.isLoading).toBe(true);
 			});
 
 			it('should set isLoading to false', () => {
 				const stateWithLoading = { ...getInitialState(), isLoading: true };
-				const result = newStatementReducer(stateWithLoading, setLoading(false));
+				const result = newStatementSlice.reducer(stateWithLoading, setLoading(false));
 				expect(result.isLoading).toBe(false);
 			});
 		});
 
 		describe('setError', () => {
 			it('should set an error message', () => {
-				const result = newStatementReducer(getInitialState(), setError('Network error'));
+				const result = newStatementSlice.reducer(getInitialState(), setError('Network error'));
 				expect(result.error).toBe('Network error');
 			});
 
 			it('should clear the error when null is passed', () => {
 				const stateWithError = { ...getInitialState(), error: 'Some error' };
-				const result = newStatementReducer(stateWithError, setError(null));
+				const result = newStatementSlice.reducer(stateWithError, setError(null));
 				expect(result.error).toBeNull();
 			});
 		});
 
 		describe('setShowNewStatementModal', () => {
 			it('should show the modal', () => {
-				const result = newStatementReducer(getInitialState(), setShowNewStatementModal(true));
+				const result = newStatementSlice.reducer(getInitialState(), setShowNewStatementModal(true));
 				expect(result.showModal).toBe(true);
 			});
 
 			it('should hide the modal', () => {
 				const stateWithModal = { ...getInitialState(), showModal: true };
-				const result = newStatementReducer(stateWithModal, setShowNewStatementModal(false));
+				const result = newStatementSlice.reducer(stateWithModal, setShowNewStatementModal(false));
 				expect(result.showModal).toBe(false);
 			});
 		});
@@ -350,12 +344,12 @@ describe('newStatementSlice', () => {
 		it('should handle rapid state changes', () => {
 			let state = getInitialState();
 
-			state = newStatementReducer(state, setLoading(true));
-			state = newStatementReducer(state, setError('Error'));
-			state = newStatementReducer(state, setShowNewStatementModal(true));
-			state = newStatementReducer(state, setParentStatement(mockStatement as never));
-			state = newStatementReducer(state, setNewStatementType(StatementType.option as never));
-			state = newStatementReducer(state, clearNewStatement());
+			state = newStatementSlice.reducer(state, setLoading(true));
+			state = newStatementSlice.reducer(state, setError('Error'));
+			state = newStatementSlice.reducer(state, setShowNewStatementModal(true));
+			state = newStatementSlice.reducer(state, setParentStatement(mockStatement as never));
+			state = newStatementSlice.reducer(state, setNewStatementType(StatementType.option as never));
+			state = newStatementSlice.reducer(state, clearNewStatement());
 
 			// After clear, all should be reset
 			expect(state.parentStatement).toBeNull();

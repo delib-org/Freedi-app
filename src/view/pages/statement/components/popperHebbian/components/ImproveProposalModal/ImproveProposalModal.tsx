@@ -16,6 +16,7 @@ import {
 import DiffView from './DiffView';
 import VersionHistory from './VersionHistory';
 import styles from './ImproveProposalModal.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface ImproveProposalModalProps {
 	statement: Statement & { versions?: StatementVersion[]; currentVersion?: number };
@@ -58,7 +59,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClos
 				const response = await requestProposalImprovement(statement.statementId, currentLanguage);
 				setModalState({ status: 'preview', data: response });
 			} catch (error) {
-				console.error('Failed to get AI improvement:', error);
+				logError(error, { operation: 'ImproveProposalModal.ImproveProposalModal.fetchImprovement', metadata: { message: 'Failed to get AI improvement:' } });
 				setModalState({
 					status: 'error',
 					error: t('Failed to generate improvement. Please try again.'),
@@ -105,7 +106,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClos
 				onClose();
 			}, 1500);
 		} catch (error) {
-			console.error('Failed to apply improvement:', error);
+			logError(error, { operation: 'ImproveProposalModal.ImproveProposalModal.handleApply', metadata: { message: 'Failed to apply improvement:' } });
 			setModalState({
 				status: 'error',
 				error: t('Failed to apply improvement. Please try again.'),
@@ -124,7 +125,7 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClos
 			const response = await requestProposalImprovement(statement.statementId, currentLanguage);
 			setModalState({ status: 'preview', data: response });
 		} catch (error) {
-			console.error('Failed to get AI improvement:', error);
+			logError(error, { operation: 'ImproveProposalModal.ImproveProposalModal.handleRetry', metadata: { message: 'Failed to get AI improvement:' } });
 			setModalState({
 				status: 'error',
 				error: t('Failed to generate improvement. Please try again.'),

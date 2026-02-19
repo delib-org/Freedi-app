@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 export async function debugServiceWorkerScopes() {
 	console.info(
 		'%c=== SERVICE WORKER SCOPE DEBUG ===',
@@ -34,9 +35,9 @@ export async function debugServiceWorkerScopes() {
 	const duplicateScopes = scopes.filter((scope, index) => scopes.indexOf(scope) !== index);
 
 	if (duplicateScopes.length > 0) {
-		console.error('%c⚠️ Scope conflict detected!', 'color: red; font-weight: bold');
-		console.error('Duplicate scopes:', duplicateScopes);
-		console.error('This can prevent service workers from working correctly.');
+		logError(new Error('%c⚠️ Scope conflict detected!'), { operation: 'utils.debugServiceWorkerScopes.duplicateScopes', metadata: { detail: 'color: red; font-weight: bold' } });
+		logError(duplicateScopes, { operation: 'utils.debugServiceWorkerScopes.duplicateScopes', metadata: { message: 'Duplicate scopes:' } });
+		logError(new Error('This can prevent service workers from working correctly.'), { operation: 'utils.debugServiceWorkerScopes.duplicateScopes' });
 	}
 
 	// Check controller
@@ -45,7 +46,7 @@ export async function debugServiceWorkerScopes() {
 		console.info('  Script URL:', navigator.serviceWorker.controller.scriptURL);
 		console.info('  State:', navigator.serviceWorker.controller.state);
 	} else {
-		console.error('  No active controller');
+		logError(new Error('  No active controller'), { operation: 'utils.debugServiceWorkerScopes.duplicateScopes' });
 	}
 
 	// Recommendation
@@ -55,9 +56,9 @@ export async function debugServiceWorkerScopes() {
 	);
 
 	if (!hasFirebaseSW) {
-		console.error('❌ Firebase Messaging SW is missing! Run fixChromeServiceWorker()');
+		logError(new Error('Firebase Messaging SW is missing! Run fixChromeServiceWorker()'), { operation: 'utils.debugServiceWorkerScopes.checkScopes' });
 	} else if (scopes.filter((s) => s.endsWith('/')).length > 1) {
-		console.error('⚠️ Multiple SWs with root scope. Consider using different scopes.');
+		logError(new Error('⚠️ Multiple SWs with root scope. Consider using different scopes.'), { operation: 'utils.debugServiceWorkerScopes.hasFirebaseSW' });
 	} else {
 		console.info('✅ Service workers are properly configured');
 	}

@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 export async function debugServiceWorkers() {
 	console.info(
 		'%c=== SERVICE WORKER DEBUG ===',
@@ -11,7 +12,7 @@ export async function debugServiceWorkers() {
 	console.info('   - Protocol:', window.location.protocol);
 
 	if (!('serviceWorker' in navigator)) {
-		console.error('   ❌ Service Workers not supported in this browser!');
+		logError(new Error('   ❌ Service Workers not supported in this browser!'), { operation: 'utils.debugServiceWorkers.debugServiceWorkers' });
 
 		return;
 	}
@@ -23,7 +24,7 @@ export async function debugServiceWorkers() {
 		console.info('   - Total registrations:', registrations.length);
 
 		if (registrations.length === 0) {
-			console.error('   ❌ No service workers registered!');
+			logError(new Error('   ❌ No service workers registered!'), { operation: 'utils.debugServiceWorkers.debugServiceWorkers' });
 		} else {
 			registrations.forEach((reg, index) => {
 				console.info(`   - SW ${index + 1}:`);
@@ -40,7 +41,7 @@ export async function debugServiceWorkers() {
 			});
 		}
 	} catch (error) {
-		console.error('   Error getting registrations:', error);
+		logError(error, { operation: 'utils.debugServiceWorkers.unknown', metadata: { message: '   Error getting registrations:' } });
 	}
 
 	// 3. Check current controller
@@ -78,17 +79,13 @@ export async function debugServiceWorkers() {
 				// Timeout after 5 seconds
 				setTimeout(() => {
 					clearInterval(checkActivation);
-					console.error('   - ❌ Activation timeout');
+					logError(new Error('   - ❌ Activation timeout'), { operation: 'utils.debugServiceWorkers.checkActivation' });
 					resolve(false);
 				}, 5000);
 			});
 		}
 	} catch (error) {
-		console.error('   - ❌ Registration failed:', error);
-		console.error('   - Error details:', {
-			message: (error as Error).message,
-			stack: (error as Error).stack,
-		});
+		logError(error, { operation: 'utils.debugServiceWorkers.checkActivation', metadata: { message: (error as Error).message } });
 	}
 
 	// 5. Check if Firebase SW file exists
@@ -100,14 +97,14 @@ export async function debugServiceWorkers() {
 		console.info('   - Content-Type:', response.headers.get('content-type'));
 
 		if (!response.ok) {
-			console.error('   - ❌ File not accessible!');
+			logError(new Error('   - ❌ File not accessible!'), { operation: 'utils.debugServiceWorkers.unknown' });
 		} else {
 			const text = await response.text();
 			console.info('   - File size:', text.length, 'bytes');
 			console.info('   - Starts with:', text.substring(0, 50) + '...');
 		}
 	} catch (error) {
-		console.error('   - Error fetching file:', error);
+		logError(error, { operation: 'utils.debugServiceWorkers.unknown', metadata: { message: '   - Error fetching file:' } });
 	}
 
 	// 6. Check PWAWrapper initialization

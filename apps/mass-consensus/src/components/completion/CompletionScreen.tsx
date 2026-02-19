@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { trackEmailSubscribed } from '@/lib/analytics';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './CompletionScreen.module.scss';
 import AchievementBadge, { BadgeType } from './AchievementBadge';
 
@@ -77,7 +78,10 @@ export default function CompletionScreen({
       setIsSubscribed(true);
       trackEmailSubscribed(questionId, userId);
     } catch (err) {
-      console.error('Subscription error:', err);
+      logError(err, {
+        operation: 'CompletionScreen.handleSubscribe',
+        metadata: { questionId },
+      });
       setError(t('Something went wrong. Please try again!'));
     } finally {
       setIsSubmitting(false);

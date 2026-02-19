@@ -1,5 +1,4 @@
-import { collection, query, where, getDocs, onSnapshot, doc, getDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { query, where, getDocs, onSnapshot, getDoc } from 'firebase/firestore';
 import {
 	Collections,
 	UserDemographicQuestion,
@@ -7,6 +6,8 @@ import {
 	User,
 	Role,
 } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
+import { createCollectionRef, createSubscriptionRef } from '@/utils/firebaseUtils';
 import { parse } from 'valibot';
 
 // Use string literal for scope until delib-npm exports the enum value
@@ -19,7 +20,7 @@ import {
 	setUserDemographicQuestion,
 	setUserDemographicQuestions,
 } from '@/redux/userDemographic/userDemographicSlice';
-import { MemberReviewData } from '@/view/pages/statement/components/settings/components/memberValidation/MemberValidation';
+import { MemberReviewData } from '@/types/demographics';
 import { getAllMemberValidationStatuses } from '../memberValidation/memberValidationStatus';
 import { getStatementSubscriptionId } from '@/controllers/general/helpers';
 
@@ -37,7 +38,7 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 		const dispatch = store.dispatch;
 
 		// Create a reference to the userDataQuestions collection
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 
 		// Create a query to filter by statementId
 		const q = query(userQuestionsRef, where('statementId', '==', statementId));
@@ -55,10 +56,7 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 
 					return parse(UserDemographicQuestionSchema, data);
 				} catch (validationError) {
-					console.error(
-						`Invalid user demographic question data for document ${doc.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.getUserDemographicQuestions.validation', metadata: { documentId: doc.id } });
 
 					return null;
 				}
@@ -68,7 +66,7 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 		// Dispatch the questions to Redux store
 		dispatch(setUserDemographicQuestions(userQuestions));
 	} catch (error) {
-		console.error('Error fetching user demographic questions:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching user demographic questions:' } });
 		// Dispatch empty array in case of error to clear any stale data
 		store.dispatch(setUserDemographicQuestions([]));
 	}
@@ -80,7 +78,7 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 			throw new Error('Statement ID is required to listen for user demographic questions');
 		}
 
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const q = query(userQuestionsRef, where('statementId', '==', statementId));
 
 		return onSnapshot(q, (userQuestionsDB) => {
@@ -95,15 +93,12 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 						store.dispatch(deleteUserDemographicQuestion(change.doc.id));
 					}
 				} catch (validationError) {
-					console.error(
-						`Invalid user question data for document ${change.doc.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.listenToUserDemographicQuestions.validation', metadata: { documentId: change.doc.id } });
 				}
 			});
 		});
 	} catch (error) {
-		console.error('Error setting up listener for user demographic questions:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.listenToUserDemographicQuestions', metadata: { message: 'Error setting up listener for user demographic questions:' } });
 
 		return () => {
 			return;
@@ -119,7 +114,7 @@ export function listenToUserDemographicAnswers(statementId: string) {
 		}
 		const uid = user.uid;
 
-		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const userAnswersRef = createCollectionRef(Collections.usersData);
 		const q = query(
 			userAnswersRef,
 			where('statementId', '==', statementId),
@@ -138,15 +133,12 @@ export function listenToUserDemographicAnswers(statementId: string) {
 						store.dispatch(deleteUserDemographic(data.userQuestionId));
 					}
 				} catch (validationError) {
-					console.error(
-						`Invalid user demographic answer data for document ${change.doc.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.listenToUserDemographicAnswers.validation', metadata: { documentId: change.doc.id } });
 				}
 			});
 		});
 	} catch (error) {
-		console.error('Error setting up listener for user demographic answers:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error setting up listener for user demographic answers:' } });
 
 		return () => {
 			return;
@@ -169,7 +161,7 @@ export async function getUserDemographicResponses(
 		}
 
 		// Get all questions for this statement
-		const questionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const questionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const questionsQuery = query(questionsRef, where('statementId', '==', statementId));
 		const questionsSnapshot = await getDocs(questionsQuery);
 
@@ -180,12 +172,12 @@ export async function getUserDemographicResponses(
 				const validatedQuestion = parse(UserDemographicQuestionSchema, data);
 				questions.push(validatedQuestion);
 			} catch (error) {
-				console.error('Error validating question:', error);
+				logError(error, { operation: 'userDemographic.getUserDemographic.getUserDemographicResponses', metadata: { message: 'Error validating question:' } });
 			}
 		});
 
 		// Get all user responses for this statement
-		const responsesRef = collection(FireStore, Collections.usersData);
+		const responsesRef = createCollectionRef(Collections.usersData);
 		const responsesQuery = query(responsesRef, where('statementId', '==', statementId));
 		const responsesSnapshot = await getDocs(responsesQuery);
 
@@ -245,21 +237,21 @@ export async function getUserDemographicResponses(
 					const subscriptionId = getStatementSubscriptionId(statementId, member.userId);
 					if (!subscriptionId) return;
 
-					const subscriptionRef = doc(FireStore, Collections.statementsSubscribe, subscriptionId);
+					const subscriptionRef = createSubscriptionRef(subscriptionId);
 					const subscriptionDoc = await getDoc(subscriptionRef);
 
 					if (subscriptionDoc.exists()) {
 						member.role = subscriptionDoc.data()?.role as Role;
 					}
 				} catch (error) {
-					console.error(`Error fetching role for user ${member.userId}:`, error);
+					logError(error, { operation: 'userDemographic.getUserDemographic.question', metadata: { message: 'Error fetching role for user ${member.userId}:' } });
 				}
 			}),
 		);
 
 		return memberReviews;
 	} catch (error) {
-		console.error('Error fetching user demographic responses for review:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching user demographic responses for review:' } });
 
 		return [];
 	}
@@ -277,7 +269,7 @@ export function listenToGroupDemographicQuestions(topParentId: string): () => vo
 			throw new Error('Top Parent ID is required to listen for group demographic questions');
 		}
 
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const q = query(
 			userQuestionsRef,
 			where('topParentId', '==', topParentId),
@@ -296,15 +288,12 @@ export function listenToGroupDemographicQuestions(topParentId: string): () => vo
 						store.dispatch(deleteUserDemographicQuestion(change.doc.id));
 					}
 				} catch (validationError) {
-					console.error(
-						`Invalid group demographic question data for document ${change.doc.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.listenToGroupDemographicQuestions.validation', metadata: { documentId: change.doc.id } });
 				}
 			});
 		});
 	} catch (error) {
-		console.error('Error setting up listener for group demographic questions:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error setting up listener for group demographic questions:' } });
 
 		return () => {
 			return;
@@ -325,7 +314,7 @@ export function listenToGroupDemographicAnswers(topParentId: string): () => void
 		}
 		const uid = user.uid;
 
-		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const userAnswersRef = createCollectionRef(Collections.usersData);
 		const q = query(
 			userAnswersRef,
 			where('topParentId', '==', topParentId),
@@ -345,15 +334,12 @@ export function listenToGroupDemographicAnswers(topParentId: string): () => void
 						store.dispatch(deleteUserDemographic(data.userQuestionId));
 					}
 				} catch (validationError) {
-					console.error(
-						`Invalid group demographic answer data for document ${change.doc.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.listenToGroupDemographicAnswers.validation', metadata: { documentId: change.doc.id } });
 				}
 			});
 		});
 	} catch (error) {
-		console.error('Error setting up listener for group demographic answers:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error setting up listener for group demographic answers:' } });
 
 		return () => {
 			return;
@@ -374,7 +360,7 @@ export async function getGroupDemographicQuestions(
 			throw new Error('Top Parent ID is required to get group demographic questions');
 		}
 
-		const userQuestionsRef = collection(FireStore, Collections.userDemographicQuestions);
+		const userQuestionsRef = createCollectionRef(Collections.userDemographicQuestions);
 		const q = query(
 			userQuestionsRef,
 			where('topParentId', '==', topParentId),
@@ -390,10 +376,7 @@ export async function getGroupDemographicQuestions(
 
 					return parse(UserDemographicQuestionSchema, data);
 				} catch (validationError) {
-					console.error(
-						`Invalid group demographic question data for document ${docSnap.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.getGroupDemographicQuestions.validation', metadata: { documentId: docSnap.id } });
 
 					return null;
 				}
@@ -402,7 +385,7 @@ export async function getGroupDemographicQuestions(
 
 		return questions;
 	} catch (error) {
-		console.error('Error fetching group demographic questions:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching group demographic questions:' } });
 
 		return [];
 	}
@@ -423,7 +406,7 @@ export async function getUserGroupAnswers(
 			throw new Error('Top Parent ID and User ID are required to get group demographic answers');
 		}
 
-		const userAnswersRef = collection(FireStore, Collections.usersData);
+		const userAnswersRef = createCollectionRef(Collections.usersData);
 		const q = query(
 			userAnswersRef,
 			where('topParentId', '==', topParentId),
@@ -440,10 +423,7 @@ export async function getUserGroupAnswers(
 
 					return parse(UserDemographicQuestionSchema, data);
 				} catch (validationError) {
-					console.error(
-						`Invalid group demographic answer data for document ${docSnap.id}:`,
-						validationError,
-					);
+					logError(validationError, { operation: 'userDemographic.getUserGroupAnswers.validation', metadata: { documentId: docSnap.id } });
 
 					return null;
 				}
@@ -452,7 +432,7 @@ export async function getUserGroupAnswers(
 
 		return answers;
 	} catch (error) {
-		console.error('Error fetching user group demographic answers:', error);
+		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching user group demographic answers:' } });
 
 		return [];
 	}

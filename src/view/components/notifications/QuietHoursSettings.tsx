@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './notificationPreferences.module.scss';
 import { getAuth } from 'firebase/auth';
 import { saveQuietHours, getQuietHours, QuietHoursConfig } from '@/services/notificationRepository';
+import { logError } from '@/utils/errorHandling';
 
 interface QuietHoursSettingsProps {
 	disabled?: boolean;
@@ -38,7 +39,7 @@ const QuietHoursSettings: React.FC<QuietHoursSettingsProps> = ({ disabled = fals
 				}
 				setIsLoading(false);
 			} catch (error) {
-				console.error('Error loading quiet hours config:', error);
+				logError(error, { operation: 'notifications.QuietHoursSettings.loadConfig', metadata: { message: 'Error loading quiet hours config:' } });
 				setIsLoading(false);
 			}
 		};
@@ -61,7 +62,7 @@ const QuietHoursSettings: React.FC<QuietHoursSettingsProps> = ({ disabled = fals
 			setConfig(newConfig);
 			setIsSaving(false);
 		} catch (error) {
-			console.error('Error saving quiet hours:', error);
+			logError(error, { operation: 'notifications.QuietHoursSettings.handleSave', metadata: { message: 'Error saving quiet hours:' } });
 			setIsSaving(false);
 		}
 	};

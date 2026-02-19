@@ -5,6 +5,7 @@ import useSubGroupCard from './SubGroupCardVM';
 import { EvaluationUI, Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement: Statement;
@@ -67,7 +68,7 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 			</div>
 		);
 	} catch (err) {
-		console.error(err);
+		logError(err, { operation: 'subGroupCard.SubGroupCard.unknown' });
 	}
 };
 

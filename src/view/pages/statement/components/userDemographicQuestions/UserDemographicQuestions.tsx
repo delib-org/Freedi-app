@@ -1,5 +1,6 @@
 import { UserDemographicQuestion, UserDemographicQuestionType, Role } from '@freedi/shared-types';
 import { FC, useState, FormEvent, useMemo } from 'react';
+import { logError } from '@/utils/errorHandling';
 
 // Use string literal for scope until delib-npm exports the enum value
 const DEMOGRAPHIC_SCOPE_GROUP = 'group' as const;
@@ -183,7 +184,7 @@ const UserDemographicQuestions: FC<Props> = ({
 			await setUserAnswers(userDemographic);
 			closeModal?.();
 		} catch (error) {
-			console.error('Error saving user answers:', error);
+			logError(error, { operation: 'userDemographicQuestions.UserDemographicQuestions.handleSubmit', metadata: { message: 'Error saving user answers:' } });
 			// You might want to show an error message to the user here
 		} finally {
 			setIsSubmitting(false);

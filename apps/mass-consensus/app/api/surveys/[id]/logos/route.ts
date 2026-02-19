@@ -4,7 +4,7 @@ import { logger } from '@/lib/utils/logger';
 import { getSurveyById, addLogoToSurvey } from '@/lib/firebase/surveys';
 import { uploadSurveyLogoAdmin } from '@/lib/firebase/storageAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, Role } from 'delib-npm';
+import { Collections, Role } from '@freedi/shared-types';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 
 /**

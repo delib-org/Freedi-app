@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Survey.module.scss';
 
 interface SurveyCompleteProps {
@@ -45,7 +46,10 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
           totalQuestions: survey.questions.length,
         });
       } catch {
-        console.error('[SurveyComplete] Error parsing stored progress');
+        logError(new Error('Error parsing stored progress'), {
+          operation: 'SurveyComplete.parseProgress',
+          metadata: { surveyId: survey.surveyId },
+        });
       }
     }
 
@@ -99,7 +103,10 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
       await Promise.all(subscribePromises);
       setIsSubscribed(true);
     } catch (error) {
-      console.error('[SurveyComplete] Error subscribing:', error);
+      logError(error, {
+        operation: 'SurveyComplete.handleEmailSubmit',
+        metadata: { surveyId: survey.surveyId },
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -133,34 +140,36 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
         </div>
       </div>
 
-      {!isSubscribed ? (
-        <div className={styles.emailSignup}>
-          <h3 className={styles.emailTitle}>{t('stayUpdated')}</h3>
-          <p className={styles.emailDescription}>{t('emailSignupDescription')}</p>
-          <form className={styles.emailForm} onSubmit={handleEmailSubmit}>
-            <input
-              type="email"
-              className={styles.emailInput}
-              placeholder={t('enterEmail')}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <button
-              type="submit"
-              className={styles.emailSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? t('subscribing') : t('subscribe')}
-            </button>
-          </form>
-        </div>
-      ) : (
-        <div className={styles.emailSignup}>
-          <p style={{ color: 'var(--agree)', fontWeight: 600 }}>
-            {t('subscribedSuccessfully')}
-          </p>
-        </div>
+      {survey.showEmailSignup !== false && (
+        !isSubscribed ? (
+          <div className={styles.emailSignup}>
+            <h3 className={styles.emailTitle}>{survey.customEmailTitle || t('stayUpdated')}</h3>
+            <p className={styles.emailDescription}>{survey.customEmailDescription || t('emailSignupDescription')}</p>
+            <form className={styles.emailForm} onSubmit={handleEmailSubmit}>
+              <input
+                type="email"
+                className={styles.emailInput}
+                placeholder={t('enterEmail')}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <button
+                type="submit"
+                className={styles.emailSubmit}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? t('subscribing') : t('subscribe')}
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className={styles.emailSignup}>
+            <p style={{ color: 'var(--agree)', fontWeight: 600 }}>
+              {t('subscribedSuccessfully')}
+            </p>
+          </div>
+        )
       )}
 
       <div className={styles.completeActions}>

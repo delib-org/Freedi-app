@@ -9,6 +9,7 @@ import {
 } from 'firebase/firestore';
 import { listenerManager } from './ListenerManager';
 import { Unsubscribe } from 'firebase/auth';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Creates a managed document listener that tracks document fetches
@@ -58,7 +59,7 @@ export function createManagedDocumentListener(
 
 	// Add listener to manager (we already registered intent synchronously)
 	listenerManager.addListener(key, setupFn, { type: 'document' }).catch((error) => {
-		console.error(`Failed to add listener ${key}:`, error);
+		logError(error, { operation: 'controllerUtils.firestoreListenerHelpers.setupFn', metadata: { message: 'Failed to add listener ${key}:' } });
 		// Clean up pending state if setup fails
 		listenerManager.removeListener(key);
 	});
@@ -126,7 +127,7 @@ export function createManagedCollectionListener(
 
 	// Add listener to manager (we already registered intent synchronously)
 	listenerManager.addListener(key, setupFn, { type }).catch((error) => {
-		console.error(`Failed to add listener ${key}:`, error);
+		logError(error, { operation: 'controllerUtils.firestoreListenerHelpers.addedCount', metadata: { message: 'Failed to add listener ${key}:' } });
 		// Clean up pending state if setup fails
 		listenerManager.removeListener(key);
 	});

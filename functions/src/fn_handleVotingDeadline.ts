@@ -14,7 +14,7 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v1';
-import { getFirestore, FieldValue } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Statement, Collections } from '@freedi/shared-types';
 
 const db = getFirestore();
@@ -132,11 +132,11 @@ export const fn_handleVotingDeadline = onSchedule(
 							.doc(officialParagraph.statementId);
 						batch.update(officialParagraphRef, {
 							statement: winningSuggestion.statement,
-							lastUpdate: FieldValue.serverTimestamp(),
+							lastUpdate: Date.now(),
 							appliedSuggestionId: winningSuggestion.statementId,
-							appliedAt: FieldValue.serverTimestamp(),
+							appliedAt: Date.now(),
 							finalizedBy: 'system',
-							finalizedAt: FieldValue.serverTimestamp(),
+							finalizedAt: Date.now(),
 							finalizedReason: 'voting_deadline_expired',
 						});
 
@@ -146,7 +146,7 @@ export const fn_handleVotingDeadline = onSchedule(
 							.doc(winningSuggestion.statementId);
 						batch.update(suggestionRef, {
 							finalized: true,
-							finalizedAt: FieldValue.serverTimestamp(),
+							finalizedAt: Date.now(),
 							finalizedBy: 'system',
 						});
 
@@ -166,7 +166,7 @@ export const fn_handleVotingDeadline = onSchedule(
 					const documentRef = db.collection(Collections.statements).doc(documentId);
 					batch.update(documentRef, {
 						'doc.suggestionSettings.finalized': true,
-						'doc.suggestionSettings.finalizedAt': FieldValue.serverTimestamp(),
+						'doc.suggestionSettings.finalizedAt': Date.now(),
 					});
 
 					operationCount++;

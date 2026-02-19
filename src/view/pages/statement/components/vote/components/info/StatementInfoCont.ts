@@ -2,6 +2,7 @@ import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { Statement, ParagraphType } from '@freedi/shared-types';
 import { FormEvent, Dispatch, SetStateAction } from 'react';
 import { generateParagraphId } from '@/utils/paragraphUtils';
+import { logError } from '@/utils/errorHandling';
 
 export function handleSubmitInfo(
 	e: FormEvent<HTMLFormElement>,
@@ -38,6 +39,6 @@ export function handleSubmitInfo(
 		setEdit(false);
 		setShowInfo(false);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'info.StatementInfoCont.unknown' });
 	}
 }

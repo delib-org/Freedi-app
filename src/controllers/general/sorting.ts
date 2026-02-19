@@ -1,4 +1,5 @@
 import { DeliberativeElement, Results, Statement } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 interface ResultLevel {
 	result: Results;
@@ -44,7 +45,7 @@ export function sortStatementsByHierarchy(statements: Statement[]): Results[] {
 
 		return results;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.sorting.unknown' });
 
 		return [];
 	}
@@ -71,7 +72,7 @@ function findMostTopStatement(
 
 		return parentStatement;
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.sorting.findMostTopStatement' });
 
 		return statement;
 	}
@@ -97,7 +98,7 @@ function createResultLevel(
 			ids,
 		};
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.sorting.subs' });
 
 		return { result: { top: statement, sub: [] }, ids };
 	}
@@ -132,7 +133,7 @@ export function filterByStatementType(filter: FilterType): Filter {
 				};
 		}
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'general.sorting.filterByStatementType' });
 
 		return {
 			types: [DeliberativeElement.option, DeliberativeElement.research, 'result'],

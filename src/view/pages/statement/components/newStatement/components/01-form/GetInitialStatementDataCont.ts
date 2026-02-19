@@ -1,5 +1,6 @@
 import { similarOptionsEndPoint } from '@/services/similarOptions';
 import { Statement } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 export async function getSimilarOptions(
 	statementId: string,
@@ -50,7 +51,7 @@ export async function getSimilarOptions(
 			userText: string | null;
 		};
 	} catch (error) {
-		console.error('Error fetching similar options:', error);
+		logError(error, { operation: '01-form.GetInitialStatementDataCont.unknown', metadata: { message: 'Error fetching similar options:' } });
 		setError(`${error.message}`);
 
 		return null;

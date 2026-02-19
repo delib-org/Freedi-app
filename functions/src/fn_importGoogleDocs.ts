@@ -6,6 +6,7 @@ import { Request, Response } from 'firebase-functions/v1';
 import { google, docs_v1 } from 'googleapis';
 import { Collections } from '@freedi/shared-types';
 import { db } from './index';
+import { logError } from './utils/errorHandling';
 
 /**
  * Paragraph types (matching the app's paragraph format)
@@ -354,7 +355,12 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
 				return;
 			}
 
-			console.error('Google Docs API error:', error);
+			logError(error, {
+				operation: 'importGoogleDocs.fetchDocument',
+				statementId,
+				userId,
+				metadata: { googleDocId },
+			});
 			res.status(500).json({
 				success: false,
 				error: 'Failed to fetch document. Please try again.',
@@ -395,7 +401,10 @@ export async function importGoogleDoc(req: Request, res: Response): Promise<void
 			documentTitle,
 		});
 	} catch (error) {
-		console.error('Import error:', error);
+		logError(error, {
+			operation: 'importGoogleDocs.importGoogleDoc',
+			metadata: { statementId: req.body?.statementId },
+		});
 		res.status(500).json({
 			success: false,
 			error: 'Failed to import document. Please try again.',

@@ -2,6 +2,7 @@ import { WaitingMember, WaitingMemberSchema, Collections, Role } from '@freedi/s
 import { parse } from 'valibot';
 import { DB } from '../config';
 import { doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { logError } from '@/utils/errorHandling';
 
 export async function approveMembership(waitingMember: WaitingMember, accept: boolean) {
 	try {
@@ -21,7 +22,7 @@ export async function approveMembership(waitingMember: WaitingMember, accept: bo
 		await batch.commit();
 	} catch (error) {
 		// Handle error appropriately, e.g., log it or rethrow it
-		console.error('Error in approveMembership:', error);
+		logError(error, { operation: 'membership.setMembership.approveMembership', metadata: { message: 'Error in approveMembership:' } });
 		throw error; // Rethrow the error if needed
 	}
 }

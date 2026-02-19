@@ -1,7 +1,8 @@
-import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
+import { setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { httpsCallable } from 'firebase/functions';
-import { FireStore, functions } from '../config';
+import { functions } from '../config';
 import { Collections } from '@freedi/shared-types';
+import { createDocRef } from '@/utils/firebaseUtils';
 import {
 	RefinementSession,
 	IdeaRefinementStatus,
@@ -89,7 +90,7 @@ export async function startRefinementSession(
 		};
 
 		// Save to Firestore
-		await setDoc(doc(FireStore, Collections.refinementSessions, sessionId), session);
+		await setDoc(createDocRef(Collections.refinementSessions, sessionId), session);
 
 		logger.info('Refinement session started', { sessionId, userId });
 
@@ -110,7 +111,7 @@ export async function submitRefinementResponse(
 ): Promise<RefinementSession> {
 	try {
 		// Get current session
-		const sessionRef = doc(FireStore, Collections.refinementSessions, sessionId);
+		const sessionRef = createDocRef(Collections.refinementSessions, sessionId);
 		const sessionSnap = await getDoc(sessionRef);
 
 		if (!sessionSnap.exists()) {
@@ -200,7 +201,7 @@ export async function submitRefinementResponse(
 
 export async function publishRefinedIdea(sessionId: string): Promise<RefinementSession> {
 	try {
-		const sessionRef = doc(FireStore, Collections.refinementSessions, sessionId);
+		const sessionRef = createDocRef(Collections.refinementSessions, sessionId);
 		const sessionSnap = await getDoc(sessionRef);
 
 		if (!sessionSnap.exists()) {

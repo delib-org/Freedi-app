@@ -1,3 +1,4 @@
+import { logError } from '@/utils/errorHandling';
 // Removed unused imports
 
 export async function testNotificationSend() {
@@ -6,7 +7,7 @@ export async function testNotificationSend() {
 	try {
 		// First, check if we have notification permission
 		if (Notification.permission !== 'granted') {
-			console.error('Notification permission not granted');
+			logError(new Error('Notification permission not granted'), { operation: 'utils.testNotification.testNotificationSend' });
 
 			return;
 		}
@@ -46,7 +47,7 @@ export async function testNotificationSend() {
 		console.info('2. System notification settings');
 		console.info('3. Do Not Disturb mode');
 	} catch (error) {
-		console.error('Error testing notification:', error);
+		logError(error, { operation: 'utils.testNotification.unknown', metadata: { message: 'Error testing notification:' } });
 	}
 }
 

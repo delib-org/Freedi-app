@@ -8,7 +8,7 @@ import {
 	setRoomsArray,
 	setParticipantsArray,
 } from '@/redux/roomAssignment/roomAssignmentSlice';
-import { RootState } from '@/redux/types';
+import { RootState } from '@/redux/store';
 import {
 	listenToRoomSettingsByTopParent,
 	listenToRoomsBySettingsIdMerge,

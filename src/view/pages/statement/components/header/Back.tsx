@@ -4,6 +4,7 @@ import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
 import { Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	statement?: Statement | undefined;
@@ -47,7 +48,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 				state: { from: window.location.pathname },
 			});
 		} catch (error) {
-			console.error(error);
+			logError(error, { operation: 'header.Back.unknown' });
 		}
 	}
 

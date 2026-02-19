@@ -1,4 +1,5 @@
 import React, { FC } from 'react';
+import DOMPurify from 'dompurify';
 import { Statement, Paragraph, ParagraphType } from '@freedi/shared-types';
 import { sortParagraphs } from '@/utils/paragraphUtils';
 import styles from './ParagraphsDisplay.module.scss';
@@ -90,7 +91,7 @@ function renderParagraph(para: Paragraph): React.ReactNode {
 			return <h6 key={key}>{content}</h6>;
 		case ParagraphType.table:
 			return (
-				<div key={key} className={styles.table} dangerouslySetInnerHTML={{ __html: content }} />
+				<div key={key} className={styles.table} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
 			);
 		case ParagraphType.paragraph:
 		default:

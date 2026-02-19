@@ -1,6 +1,7 @@
 import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
 import { storage } from '../config';
 import { Statement, Collections } from '@freedi/shared-types';
+import { logError } from '@/utils/errorHandling';
 
 export function uploadImageToStorage(
 	file: File,
@@ -33,7 +34,7 @@ export function uploadImageToStorage(
 				}
 			},
 			(error) => {
-				console.error(error);
+				logError(error, { operation: 'images.setImages.progress' });
 				reject(error);
 			},
 			async () => {
@@ -42,7 +43,7 @@ export function uploadImageToStorage(
 					const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 					resolve(downloadURL);
 				} catch (error) {
-					console.error('Error retrieving download URL:', error);
+					logError(error, { operation: 'images.setImages.progress', metadata: { message: 'Error retrieving download URL:' } });
 					reject(error);
 				}
 			},

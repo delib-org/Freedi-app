@@ -42,7 +42,7 @@ export async function getUserRoomAssignment(
 
 		return doc.data() as RoomParticipant;
 	} catch (error) {
-		console.error('Error fetching room assignment:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.getUserRoomAssignment', metadata: { message: 'Error fetching room assignment:' } });
 
 		return null;
 	}
@@ -81,12 +81,12 @@ export function listenToUserRoomAssignment(
 				callback(doc.data() as RoomParticipant);
 			},
 			(error) => {
-				console.error('Error listening to room assignment:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToUserRoomAssignment', metadata: { message: 'Error listening to room assignment:' } });
 				callback(null);
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up room assignment listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.unknown', metadata: { message: 'Error setting up room assignment listener:' } });
 
 		return () => {};
 	}
@@ -126,12 +126,12 @@ export function listenToRoomSettingsByStatement(
 				dispatch(setRoomSettingsArray(settings));
 			},
 			(error) => {
-				console.error('Error listening to room settings:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomSettingsByStatement', metadata: { message: 'Error listening to room settings:' } });
 				dispatch(setRoomSettingsArray([]));
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up room settings listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomSettingsByStatement', metadata: { message: 'Error setting up room settings listener:' } });
 
 		return () => {};
 	}
@@ -162,12 +162,12 @@ export function listenToRoomSettingsByTopParent(
 				dispatch(setRoomSettingsArray(settings));
 			},
 			(error) => {
-				console.error('Error listening to room settings by top parent:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomSettingsByTopParent', metadata: { message: 'Error listening to room settings by top parent:' } });
 				dispatch(setRoomSettingsArray([]));
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up room settings listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomSettingsByTopParent', metadata: { message: 'Error setting up room settings listener:' } });
 
 		return () => {};
 	}
@@ -197,12 +197,12 @@ export function listenToRoomsBySettingsId(settingsId: string, dispatch: AppDispa
 				dispatch(setRoomsArray(rooms));
 			},
 			(error) => {
-				console.error('Error listening to rooms:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomsBySettingsId', metadata: { message: 'Error listening to rooms:' } });
 				dispatch(setRoomsArray([]));
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up rooms listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomsBySettingsId', metadata: { message: 'Error setting up rooms listener:' } });
 
 		return () => {};
 	}
@@ -235,12 +235,12 @@ export function listenToRoomsBySettingsIdMerge(
 				dispatch(mergeRoomsBySettingsId({ settingsId, rooms }));
 			},
 			(error) => {
-				console.error('Error listening to rooms:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomsBySettingsIdMerge', metadata: { message: 'Error listening to rooms:' } });
 				dispatch(mergeRoomsBySettingsId({ settingsId, rooms: [] }));
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up rooms listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToRoomsBySettingsIdMerge', metadata: { message: 'Error setting up rooms listener:' } });
 
 		return () => {};
 	}
@@ -271,12 +271,12 @@ export function listenToParticipantsBySettingsId(
 				dispatch(setParticipantsArray(participants));
 			},
 			(error) => {
-				console.error('Error listening to participants:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToParticipantsBySettingsId', metadata: { message: 'Error listening to participants:' } });
 				dispatch(setParticipantsArray([]));
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up participants listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToParticipantsBySettingsId', metadata: { message: 'Error setting up participants listener:' } });
 
 		return () => {};
 	}
@@ -307,12 +307,12 @@ export function listenToParticipantsBySettingsIdMerge(
 				dispatch(mergeParticipantsBySettingsId({ settingsId, participants }));
 			},
 			(error) => {
-				console.error('Error listening to participants:', error);
+				logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToParticipantsBySettingsIdMerge', metadata: { message: 'Error listening to participants:' } });
 				dispatch(mergeParticipantsBySettingsId({ settingsId, participants: [] }));
 			},
 		);
 	} catch (error) {
-		console.error('Error setting up participants listener:', error);
+		logError(error, { operation: 'roomAssignment.getRoomAssignment.listenToParticipantsBySettingsIdMerge', metadata: { message: 'Error setting up participants listener:' } });
 
 		return () => {};
 	}

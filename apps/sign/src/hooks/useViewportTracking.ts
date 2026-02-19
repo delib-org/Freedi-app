@@ -5,6 +5,7 @@
  */
 
 import { useRef, useEffect } from 'react';
+import { logError } from '@/lib/utils/errorHandling';
 
 interface UseViewportTrackingOptions {
   paragraphId: string;
@@ -150,7 +151,10 @@ async function flushPendingViews(): Promise<void> {
         viewedParagraphs.add(viewKey);
       }
     } catch (error) {
-      console.error('[ViewportTracking] Failed to record view:', error);
+      logError(error, {
+        operation: 'viewportTracking.flushPendingViews',
+        metadata: { paragraphId: view.paragraphId, documentId: view.documentId },
+      });
     }
   }
 }

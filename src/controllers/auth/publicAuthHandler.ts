@@ -17,6 +17,7 @@ import { auth } from '@/controllers/db/config';
 import { generateTemporalName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { logError } from '@/utils/errorHandling';
 
 /**
  * Attempts to silently sign in with Google if user has previous session
@@ -87,7 +88,7 @@ async function createAnonymousUser(): Promise<User> {
 
 		return user;
 	} catch (error) {
-		console.error('Failed to create anonymous user:', error);
+		logError(error, { operation: 'auth.publicAuthHandler.createAnonymousUser', metadata: { message: 'Failed to create anonymous user:' } });
 		throw error;
 	}
 }
@@ -116,7 +117,7 @@ export async function handlePublicAutoAuth(): Promise<void> {
 		// Fall back to anonymous authentication
 		await createAnonymousUser();
 	} catch (error) {
-		console.error('Public auto-authentication failed:', error);
+		logError(error, { operation: 'auth.publicAuthHandler.handlePublicAutoAuth', metadata: { message: 'Public auto-authentication failed:' } });
 		// Don't throw - let the user see the content even if auth fails
 		// The useAuthorization hook will handle the lack of authentication
 	}
@@ -165,7 +166,7 @@ export async function upgradeAnonymousUser(credential: AuthCredential): Promise<
 
 		console.info('Anonymous user successfully upgraded');
 	} catch (error) {
-		console.error('Failed to upgrade anonymous user:', error);
+		logError(error, { operation: 'auth.publicAuthHandler.upgradeAnonymousUser', metadata: { message: 'Failed to upgrade anonymous user:' } });
 		throw error;
 	}
 }

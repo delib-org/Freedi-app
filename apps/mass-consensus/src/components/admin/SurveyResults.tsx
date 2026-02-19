@@ -36,6 +36,11 @@ interface ResultsData {
   demographics: DemographicQuestionResult[];
 }
 
+interface SubscribersData {
+  emails: string[];
+  count: number;
+}
+
 interface SurveyResultsProps {
   survey: Survey;
 }
@@ -50,8 +55,10 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
   const router = useRouter();
   const { refreshToken } = useAuth();
   const [results, setResults] = useState<ResultsData | null>(null);
+  const [subscribers, setSubscribers] = useState<SubscribersData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [emailsCopied, setEmailsCopied] = useState(false);
 
   const fetchResults = useCallback(async () => {
     setIsLoading(true);
@@ -65,16 +72,26 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
         return;
       }
 
-      const response = await fetch(`/api/surveys/${survey.surveyId}/results`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const [resultsResponse, subscribersResponse] = await Promise.all([
+        fetch(`/api/surveys/${survey.surveyId}/results`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+        fetch(`/api/surveys/${survey.surveyId}/subscribers`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }),
+      ]);
 
-      if (!response.ok) {
+      if (!resultsResponse.ok) {
         throw new Error('Failed to fetch results');
       }
 
-      const data: ResultsData = await response.json();
+      const data: ResultsData = await resultsResponse.json();
       setResults(data);
+
+      if (subscribersResponse.ok) {
+        const subscribersData: SubscribersData = await subscribersResponse.json();
+        setSubscribers(subscribersData);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch results');
     } finally {
@@ -109,6 +126,27 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
   if (!results) {
     return null;
   }
+
+  const handleCopyEmails = async () => {
+    if (!subscribers || subscribers.emails.length === 0) return;
+
+    const emailText = subscribers.emails.join(', ');
+    try {
+      await navigator.clipboard.writeText(emailText);
+    } catch {
+      // Fallback for older browsers
+      const textArea = document.createElement('textarea');
+      textArea.value = emailText;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+    }
+    setEmailsCopied(true);
+    setTimeout(() => setEmailsCopied(false), 2000);
+  };
 
   const hasQuestions = results.questions.length > 0;
   const hasDemographics = results.demographics.length > 0;
@@ -213,6 +251,31 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           </div>
         </div>
       )}
+
+      {/* Email Subscribers Section */}
+      <div className={styles.resultsSection}>
+        <h2 className={styles.resultsSectionTitle}>{t('emailSubscribers')}</h2>
+        {subscribers && subscribers.count > 0 ? (
+          <div className={styles.emailSubscribersContent}>
+            <div className={styles.emailSubscribersHeader}>
+              <span className={styles.emailSubscribersCount}>
+                {subscribers.count} {t('subscribers')}
+              </span>
+              <button
+                className={`${styles.copyButton} ${emailsCopied ? styles.copied : ''}`}
+                onClick={handleCopyEmails}
+              >
+                {emailsCopied ? t('copied') : t('copyAllEmails')}
+              </button>
+            </div>
+            <div className={styles.emailSubscribersList}>
+              {subscribers.emails.join(', ')}
+            </div>
+          </div>
+        ) : (
+          <p className={styles.resultsEmpty}>{t('noEmailSubscribers')}</p>
+        )}
+      </div>
     </div>
   );
 }

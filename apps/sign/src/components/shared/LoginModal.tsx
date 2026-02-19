@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { googleLogin, anonymousLogin } from '@/lib/firebase/client';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './LoginModal.module.scss';
 
 interface LoginModalProps {
@@ -37,7 +38,10 @@ export default function LoginModal({ onClose: _onClose, redirectUrl, hideGuestOp
           setError(t('Login failed. Please try again.'));
         }
       } catch (err) {
-        console.error(`[Login] ${method} login failed`, err);
+        logError(err, {
+          operation: 'LoginModal.handleLogin',
+          metadata: { method },
+        });
         setError(t('Login failed. Please try again.'));
       } finally {
         setIsLoading(false);

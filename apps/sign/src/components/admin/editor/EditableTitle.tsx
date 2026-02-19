@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { updateDocumentTitleToDB } from '@/controllers/db/paragraphs/setParagraphStatement';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './EditableTitle.module.scss';
 
 interface EditableTitleProps {
@@ -62,7 +63,10 @@ export default function EditableTitle({
       setIsEditing(false);
       onTitleChange?.(trimmedTitle);
     } catch (error) {
-      console.error('[EditableTitle] Failed to save title:', error);
+      logError(error, {
+        operation: 'EditableTitle.handleSave',
+        documentId,
+      });
       setTitle(initialTitle);
     } finally {
       setIsSaving(false);

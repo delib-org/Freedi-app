@@ -3,6 +3,7 @@ import { app, DB } from '@/controllers/db/config';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Collections } from '@freedi/shared-types';
 import { vapidKey } from '@/controllers/db/configKey';
+import { logError } from '@/utils/errorHandling';
 
 export async function compareBrowserTokens() {
 	console.info(
@@ -26,7 +27,7 @@ export async function compareBrowserTokens() {
 	// Get all tokens for current user
 	const user = JSON.parse(localStorage.getItem('userAuth') || '{}');
 	if (!user.uid) {
-		console.error('No user logged in');
+		logError(new Error('No user logged in'), { operation: 'utils.compareBrowserTokens.compareBrowserTokens' });
 
 		return;
 	}
@@ -79,7 +80,7 @@ export async function compareBrowserTokens() {
 			console.info('   - Matches current token:', fcmMatch[1] === currentToken);
 		}
 	} else {
-		console.error('   - No push subscription found!');
+		logError(new Error('   - No push subscription found!'), { operation: 'utils.compareBrowserTokens.unknown' });
 	}
 
 	console.info('\n%c=== END COMPARISON ===', 'color: purple; font-weight: bold');

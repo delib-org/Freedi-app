@@ -5,6 +5,7 @@ import {
 	getUserFriendlyErrorMessage,
 	formatErrorDetails,
 } from '../../../../utils/errorBoundaryHelpers';
+import { logError } from '@/utils/errorHandling';
 
 interface Props {
 	children: ReactNode;
@@ -33,7 +34,7 @@ export class StatementErrorBoundary extends Component<Props, State> {
 	}
 
 	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		console.error('StatementErrorBoundary caught an error:', error, errorInfo);
+		logError(new Error('StatementErrorBoundary caught an error:'), { operation: 'components.StatementErrorBoundary.unknown', metadata: { detail: error, errorInfo } });
 		this.setState({ errorInfo });
 		this.props.onError?.(error, errorInfo);
 	}

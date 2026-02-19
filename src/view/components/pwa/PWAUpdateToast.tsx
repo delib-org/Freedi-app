@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './pwaUpdateToast.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface PWAUpdateToastProps {
 	registerUpdate: (skipCallback: boolean) => Promise<void>;
@@ -43,7 +44,7 @@ const PWAUpdateToast: React.FC<PWAUpdateToastProps> = ({ registerUpdate }) => {
 
 	const handleUpdate = () => {
 		// Update the service worker with reload
-		registerUpdate(true).catch(console.error);
+		registerUpdate(true).catch((error: unknown) => logError(error, { operation: 'PWAUpdateToast.handleUpdate' }));
 		setNeedsUpdate(false);
 	};
 

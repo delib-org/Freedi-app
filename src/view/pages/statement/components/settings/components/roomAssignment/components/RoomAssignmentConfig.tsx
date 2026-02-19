@@ -8,6 +8,7 @@ import { createRoomAssignments, notifyRoomParticipants } from '@/controllers/db/
 import QuestionSelector from './QuestionSelector';
 import Button, { ButtonType } from '@/view/components/buttons/button/Button';
 import styles from '../RoomAssignment.module.scss';
+import { logError } from '@/utils/errorHandling';
 
 interface RoomAssignmentConfigProps {
 	statement: Statement;
@@ -114,7 +115,7 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 				onCreateSuccess();
 			}
 		} catch (error) {
-			console.error('Failed to create room assignments:', error);
+			logError(error, { operation: 'components.RoomAssignmentConfig.handleCreate', metadata: { message: 'Failed to create room assignments:' } });
 		} finally {
 			setIsCreating(false);
 		}

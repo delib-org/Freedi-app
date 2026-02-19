@@ -7,7 +7,7 @@ import {
 	mapStatementToWithEvaluation,
 	StatementWithEvaluation,
 } from './services/integration-ai-service';
-import { migrateEvaluationsToNewStatement } from './fn_evaluation';
+import { migrateEvaluationsToNewStatement } from './evaluation';
 import { textToParagraphs } from './helpers';
 import { ALLOWED_ORIGINS } from './config/cors';
 

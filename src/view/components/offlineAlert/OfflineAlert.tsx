@@ -1,6 +1,6 @@
 import { FC, useState, useEffect } from 'react';
 import Snackbar from '@/view/components/snackbar/Snackbar';
-import { useOnlineStatus } from '@/hooks/useOnlineStatus';
+import { useOnlineStatus } from '@/controllers/hooks/useOnlineStatus';
 import { TIME } from '@/constants/common';
 
 /**

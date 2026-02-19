@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import { logError } from '@/lib/utils/errorHandling';
 import styles from './Admin.module.scss';
 
 interface ExportModalProps {
@@ -29,7 +30,10 @@ export default function ExportModal({
       await onExport(includeTestData);
       onClose();
     } catch (error) {
-      console.error('Export failed:', error);
+      logError(error, {
+        operation: 'ExportModal.handleExport',
+        metadata: { context: 'Export failed' },
+      });
     } finally {
       setIsExporting(false);
     }

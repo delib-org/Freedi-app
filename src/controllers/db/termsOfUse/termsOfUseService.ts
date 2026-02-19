@@ -4,6 +4,7 @@ import { TermsOfUseAcceptanceSchema, type TermsOfUseAcceptance } from '@/types/a
 import { DB } from '../config';
 import { Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { logError } from '@/utils/errorHandling';
 
 export async function getLatestTermsAcceptance(
 	userId: string,
@@ -22,7 +23,7 @@ export async function getLatestTermsAcceptance(
 
 		return doc;
 	} catch (error) {
-		console.error('Error fetching terms acceptance:', error);
+		logError(error, { operation: 'termsOfUse.termsOfUseService.getLatestTermsAcceptance', metadata: { message: 'Error fetching terms acceptance:' } });
 		throw error;
 	}
 }
@@ -38,7 +39,7 @@ export async function saveTermsAcceptance(acceptance: TermsOfUseAcceptance): Pro
 
 		return true;
 	} catch (error) {
-		console.error('Error saving terms acceptance:', error);
+		logError(error, { operation: 'termsOfUse.termsOfUseService.saveTermsAcceptance', metadata: { message: 'Error saving terms acceptance:' } });
 
 		return false;
 	}

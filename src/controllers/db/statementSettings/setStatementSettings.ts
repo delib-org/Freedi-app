@@ -1,5 +1,4 @@
-import { doc, setDoc } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { setDoc } from 'firebase/firestore';
 import {
 	StatementSettings,
 	QuestionSettings,
@@ -7,6 +6,8 @@ import {
 	Collections,
 	QuestionType,
 } from '@freedi/shared-types';
+import { createStatementRef, createDocRef } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
 
 interface SetStatementSettingsProps {
 	statement: Statement;
@@ -22,7 +23,7 @@ export function setStatementSettingToDB({
 	settingsSection,
 }: SetStatementSettingsProps) {
 	try {
-		const statementSettingsRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementSettingsRef = createStatementRef(statement.statementId);
 		setDoc(
 			statementSettingsRef,
 			{
@@ -33,7 +34,7 @@ export function setStatementSettingToDB({
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettings.setStatementSettings.setStatementSettingToDB' });
 	}
 }
 
@@ -44,7 +45,7 @@ interface SetQuestionTypeToDB {
 
 export function setQuestionTypeToDB({ statement, questionType }: SetQuestionTypeToDB) {
 	try {
-		const statementSettingsRef = doc(FireStore, Collections.statements, statement.statementId);
+		const statementSettingsRef = createStatementRef(statement.statementId);
 		setDoc(
 			statementSettingsRef,
 			{
@@ -55,7 +56,7 @@ export function setQuestionTypeToDB({ statement, questionType }: SetQuestionType
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettings.setStatementSettings.setQuestionTypeToDB' });
 	}
 }
 
@@ -67,8 +68,7 @@ export function updateQuestionType({
 	newValue: QuestionType;
 }) {
 	try {
-		const statementSettingsRef = doc(
-			FireStore,
+		const statementSettingsRef = createDocRef(
 			Collections.statementsSettings,
 			statement.statementId,
 		);
@@ -82,6 +82,6 @@ export function updateQuestionType({
 			{ merge: true },
 		);
 	} catch (error) {
-		console.error(error);
+		logError(error, { operation: 'statementSettings.setStatementSettings.updateQuestionType' });
 	}
 }

@@ -36,6 +36,7 @@ import {
 import { submitRating, loadCardBatch } from '@/controllers/swipeController';
 import { submitProposal } from '@/controllers/proposalController';
 import { RATING } from '@/constants/common';
+import { logError } from '@/lib/utils/errorHandling';
 import type { RatingValue } from '@/components/swipe/RatingButton';
 
 export default function TestSwipePage() {
@@ -130,7 +131,7 @@ export default function TestSwipePage() {
 
         dispatch(setLoading(false));
       } catch (err) {
-        console.error('Failed to load data:', err);
+        logError(err, { operation: 'TestSwipePage.loadData' });
         dispatch(setError('Failed to load question data. Make sure the question exists in Firestore.'));
         dispatch(setLoading(false));
       }
@@ -164,7 +165,7 @@ export default function TestSwipePage() {
         })
       );
     } catch (err) {
-      console.error('Failed to submit rating:', err);
+      logError(err, { operation: 'TestSwipePage.handleSwipe' });
       dispatch(setError('Failed to submit rating. Please try again.'));
     }
   };
@@ -197,7 +198,7 @@ export default function TestSwipePage() {
 
       console.log('Proposal saved to Firestore successfully');
     } catch (err) {
-      console.error('Failed to submit proposal:', err);
+      logError(err, { operation: 'TestSwipePage.handleProposalSubmit' });
       dispatch(setError('Failed to submit proposal. Please try again.'));
       throw err; // Re-throw to keep modal open on error
     }
