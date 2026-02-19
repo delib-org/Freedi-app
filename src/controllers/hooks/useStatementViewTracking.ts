@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { analyticsService } from '../services/analytics';
+import { analyticsService } from '@/services/analytics';
 
 interface ViewTrackingOptions {
 	statementId: string;
