@@ -1,5 +1,5 @@
-import React, { useContext, useState, useMemo, useRef } from 'react';
-import { useParams } from 'react-router';
+import React, { useContext, useState, useMemo, useRef, useCallback } from 'react';
+import { useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
 
 import { StatementContext } from '../../StatementCont';
@@ -30,9 +30,16 @@ const Switch = () => {
 	const { role } = useAuthorization(statement?.statementId);
 	const isAdmin = role === Role.admin || role === Role.creator;
 
+	const [searchParams, setSearchParams] = useSearchParams();
+	const tabFromUrl = searchParams.get('tab');
 	const defaultView = statement?.statementSettings?.defaultView ?? 'chat';
-	const [activeView, setActiveView] = useState<string>(defaultView);
+	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
+
+	const handleTabChange = useCallback((tabId: string) => {
+		setActiveView(tabId);
+		setSearchParams({ tab: tabId }, { replace: true });
+	}, [setSearchParams]);
 
 	const mainRef = useRef<HTMLElement>(null);
 	useHeaderHideOnScroll(mainRef);
@@ -103,7 +110,7 @@ const Switch = () => {
 
 					{showSegmentedControl && (
 						<div className={styles.segmentedControlWrapper}>
-							<SegmentedControl segments={segments} activeId={activeView} onChange={setActiveView} />
+							<SegmentedControl segments={segments} activeId={activeView} onChange={handleTabChange} />
 						</div>
 					)}
 				</div>
