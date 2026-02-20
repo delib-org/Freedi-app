@@ -1,6 +1,7 @@
 .questionsView {
 	width: 100%;
 	padding: 1rem 0;
+	position: relative;
 }
 
 .grid {
@@ -20,4 +21,61 @@
 	padding: 3rem 1rem;
 	color: var(--text-body);
 	opacity: 0.6;
+}
+
+$addButtonSize: 60px;
+
+.addButtonWrapper {
+	position: fixed;
+	bottom: 0;
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: var(--wrapper);
+	width: 90vw;
+	min-height: 6rem;
+	box-sizing: border-box;
+	display: flex;
+	justify-content: flex-start;
+	align-items: center;
+	padding: 30px 20px;
+	pointer-events: none;
+	z-index: 10;
+	background: linear-gradient(
+		180deg,
+		rgba(252, 252, 252, 0) 0%,
+		rgba(255, 255, 255, 0.8688) 37%,
+		rgba(255, 255, 255, 1) 100%
+	);
+
+	@media screen and (max-width: 600px) {
+		width: 100%;
+		max-width: 100%;
+	}
+}
+
+.addButton {
+	width: $addButtonSize;
+	height: $addButtonSize;
+	border-radius: $addButtonSize;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	pointer-events: auto;
+	box-shadow: 2px 2px 5px var(--shadow);
+	transition: transform 200ms ease;
+	z-index: 10000;
+
+	svg {
+		width: 24px;
+		height: 24px;
+	}
+
+	&:hover {
+		transform: scale(1.05);
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
 }
