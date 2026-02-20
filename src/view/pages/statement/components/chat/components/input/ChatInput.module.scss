@@ -13,6 +13,10 @@
         cursor: pointer;
         background-color: #4e88c7;
 
+        @media screen and (max-width: 600px) {
+            max-width: 100%;
+        }
+
         textarea {
             padding: 0.5rem 70px 0.5rem 1rem;
             resize: none;
