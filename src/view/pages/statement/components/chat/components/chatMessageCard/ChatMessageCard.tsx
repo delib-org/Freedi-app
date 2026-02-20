@@ -1,4 +1,4 @@
-import { FC, useEffect, useRef, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import StatementChatMore from '../statementChatMore/StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import { isAuthorized } from '@/controllers/general/helpers';
@@ -13,6 +13,12 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import ChatMessageMenu from './ChatMessageMenu';
+
+function formatMessageTime(timestamp: number): string {
+	const date = new Date(timestamp);
+
+	return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
 
 export interface NewQuestion {
 	statement: Statement;
@@ -81,6 +87,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	const isGeneral =
 		statement.statementType === StatementType.statement || statement.statementType === undefined;
 
+	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
+
 	const getMessageBoxClassName = () => {
 		const baseClass = styles.messageBox;
 		const marginClass = sideChat ? '' : styles.messageMargin;
@@ -90,6 +98,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			return `${baseClass} ${marginClass}`;
 		}
 	};
+
+	const messageBoxStyle = isGeneral ? undefined : { borderColor: statementColor.backgroundColor };
 
 	if (!statement) return null;
 	if (!parentStatement) return null;
@@ -105,12 +115,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 				</div>
 			)}
 
-			<div
-				className={getMessageBoxClassName()}
-				style={{
-					borderColor: isGeneral ? 'var(--inputBackground)' : statementColor.backgroundColor,
-				}}
-			>
+			<div className={getMessageBoxClassName()} style={messageBoxStyle}>
 				<div className={styles.triangle} />
 
 				<div className={styles.info}>
@@ -155,6 +160,8 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 						setImage={setImage}
 					/>
 				</div>
+
+				<span className={styles.timestamp}>{timeString}</span>
 
 				{isNewStatementModalOpen && (
 					<CreateStatementModal

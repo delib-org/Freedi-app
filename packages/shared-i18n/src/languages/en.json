@@ -597,6 +597,7 @@
   "Method of selecting leading options": "Method of selecting leading options",
   "Minimize modal": "Minimize modal",
   "Mind Map": "Mind Map",
+  "Statement Map": "Statement Map",
   "Missing Alt Text": "Missing Alt Text",
   "Moderated": "Moderated",
   "Multiple Choice (Checkbox)": "Multiple Choice (Checkbox)",
@@ -2539,5 +2540,8 @@
   "Signer": "Signer",
   "Step 1 of 2": "Step 1 of 2",
   "Step 2 of 2": "Step 2 of 2",
-  "Welcome to WizCol Sign": "Welcome to WizCol Sign"
+  "Welcome to WizCol Sign": "Welcome to WizCol Sign",
+  "Default View": "Default View",
+  "Choose which view participants see first": "Choose which view participants see first",
+  "No questions yet": "No questions yet"
 }

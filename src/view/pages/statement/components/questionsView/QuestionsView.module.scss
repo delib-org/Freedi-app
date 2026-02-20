@@ -1,0 +1,23 @@
+.questionsView {
+	width: 100%;
+	padding: 1rem 0;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 1rem;
+
+	@media screen and (max-width: 768px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.empty {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 3rem 1rem;
+	color: var(--text-body);
+	opacity: 0.6;
+}

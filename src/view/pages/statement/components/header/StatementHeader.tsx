@@ -62,17 +62,19 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 	}
 
 	return (
-		<div className={`page__header ${dir}`}>
-			<StatementTopNav
-				statement={statement}
-				parentStatement={parentStatement}
-				handleShare={handleShare}
-				handleFollowMe={handleFollowMe}
-				handleInvitePanel={handleInvitePanel}
-				handleLogout={handleLogout}
-				setIsHeaderMenuOpen={setIsHeaderMenuOpen}
-				isHeaderMenuOpen={isHeaderMenuOpen}
-			/>
+		<>
+			<div className={`page__header ${dir}`}>
+				<StatementTopNav
+					statement={statement}
+					parentStatement={parentStatement}
+					handleShare={handleShare}
+					handleFollowMe={handleFollowMe}
+					handleInvitePanel={handleInvitePanel}
+					handleLogout={handleLogout}
+					setIsHeaderMenuOpen={setIsHeaderMenuOpen}
+					isHeaderMenuOpen={isHeaderMenuOpen}
+				/>
+			</div>
 			{showInvitationPanel && (
 				<InvitePanel
 					setShowModal={setShowInvitationPanel}
@@ -86,7 +88,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 				url={pathname}
 				title={t('Share this link')}
 			/>
-		</div>
+		</>
 	);
 };
 

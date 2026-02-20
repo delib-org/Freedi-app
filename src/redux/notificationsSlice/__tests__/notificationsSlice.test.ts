@@ -16,22 +16,14 @@ jest.mock('@freedi/shared-types', () => ({
 
 		return newArr;
 	}),
+	StatementType: { statement: 'statement' },
 }));
 
 jest.mock('@/utils/errorHandling', () => ({
 	logError: jest.fn(),
 }));
 
-interface MockNotification {
-	notificationId: string;
-	parentId: string;
-	text: string;
-	read?: boolean;
-	readAt?: number;
-	viewedInList?: boolean;
-	viewedInContext?: boolean;
-}
-
+import { NotificationType } from '@freedi/shared-types';
 import {
 	notificationsSlice,
 	setInAppNotificationsAll,
@@ -50,24 +42,38 @@ import {
 	unreadCountForStatementSelector,
 } from '../notificationsSlice';
 
+/** Helper to create a full NotificationType with defaults */
+function mockNotif(overrides: Partial<NotificationType> & { notificationId: string; parentId: string; text: string }): NotificationType {
+	return {
+		userId: 'user-1',
+		statementId: overrides.parentId,
+		statementType: 'statement' as NotificationType['statementType'],
+		creatorId: 'creator-1',
+		creatorName: 'Test Creator',
+		createdAt: Date.now(),
+		read: false,
+		...overrides,
+	};
+}
+
 describe('notificationsSlice', () => {
-	const mockNotification1: MockNotification = {
+	const mockNotification1 = mockNotif({
 		notificationId: 'notif-1',
 		parentId: 'stmt-1',
 		text: 'First notification',
-	};
+	});
 
-	const mockNotification2: MockNotification = {
+	const mockNotification2 = mockNotif({
 		notificationId: 'notif-2',
 		parentId: 'stmt-1',
 		text: 'Second notification',
-	};
+	});
 
-	const mockNotification3: MockNotification = {
+	const mockNotification3 = mockNotif({
 		notificationId: 'notif-3',
 		parentId: 'stmt-2',
 		text: 'Third notification',
-	};
+	});
 
 	const initialState = notificationsSlice.getInitialState();
 
@@ -170,7 +176,7 @@ describe('notificationsSlice', () => {
 					stateWithNotifs,
 					markNotificationAsRead('non-existent'),
 				);
-				expect(newState.inAppNotifications[0].read).toBeUndefined();
+				expect(newState.inAppNotifications[0].read).toBe(false);
 			});
 		});
 
@@ -189,7 +195,7 @@ describe('notificationsSlice', () => {
 					markNotificationsAsRead(['notif-1', 'notif-3']),
 				);
 				expect(newState.inAppNotifications[0].read).toBe(true);
-				expect(newState.inAppNotifications[1].read).toBeUndefined();
+				expect(newState.inAppNotifications[1].read).toBe(false);
 				expect(newState.inAppNotifications[2].read).toBe(true);
 			});
 		});
@@ -211,7 +217,7 @@ describe('notificationsSlice', () => {
 				expect(newState.inAppNotifications[0].read).toBe(true);
 				expect(newState.inAppNotifications[0].viewedInContext).toBe(true);
 				expect(newState.inAppNotifications[1].read).toBe(true);
-				expect(newState.inAppNotifications[2].read).toBeUndefined();
+				expect(newState.inAppNotifications[2].read).toBe(false);
 			});
 		});
 
@@ -229,7 +235,7 @@ describe('notificationsSlice', () => {
 					markNotificationsAsViewedInList(['notif-1']),
 				);
 				expect(newState.inAppNotifications[0].viewedInList).toBe(true);
-				expect(newState.inAppNotifications[1].viewedInList).toBeUndefined();
+				expect(newState.inAppNotifications[1].viewedInList).toBeFalsy();
 			});
 		});
 
@@ -273,7 +279,7 @@ describe('notificationsSlice', () => {
 		describe('unreadNotificationsSelector', () => {
 			it('should return only unread notifications', () => {
 				const result = unreadNotificationsSelector(stateWithNotifications);
-				// notif-1 has read: false, notif-3 has read: undefined
+				// notif-1 has read: false, notif-3 has read: false (default)
 				expect(result).toHaveLength(2);
 			});
 		});

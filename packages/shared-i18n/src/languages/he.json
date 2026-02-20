@@ -584,6 +584,7 @@
   "Method of selecting leading options": "שיטת בחירת האופציות המובילות",
   "Minimize modal": "מזער חלון",
   "Mind Map": "מפת חשיבה",
+  "Statement Map": "מפת היגדים",
   "Missing Alt Text": "חסר טקסט חלופי",
   "Moderated": "דורש אישור מנהל/ת",
   "Multiple Choice (Checkbox)": "בחירה מרובה (תיבת סימון)",
@@ -2527,5 +2528,8 @@
   "Signer": "חותם",
   "Step 1 of 2": "שלב 1 מתוך 2",
   "Step 2 of 2": "שלב 2 מתוך 2",
-  "Welcome to WizCol Sign": "ברוכים הבאים ל-WizCol Sign"
+  "Welcome to WizCol Sign": "ברוכים הבאים ל-WizCol Sign",
+  "Default View": "תצוגת ברירת מחדל",
+  "Choose which view participants see first": "בחר איזו תצוגה המשתתפים יראו ראשונה",
+  "No questions yet": "אין שאלות עדיין"
 }

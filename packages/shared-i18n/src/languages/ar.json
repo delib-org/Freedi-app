@@ -463,6 +463,7 @@
   "Method of selecting leading options": "طريقة اختيار الخيارات الرائدة",
   "Minimize modal": "تصغير النافذة",
   "Mind Map": "خريطة ذهنية",
+  "Statement Map": "خريطة البيانات",
   "Moderated": "مُدارة",
   "Multiple Choice (Checkbox)": "اختيار متعدد (مربع اختيار)",
   "Multiple pieces of evidence challenge this idea. Consider addressing the main concerns raised.": "عدة أدلة تتحدى هذه الفكرة. فكر في معالجة المخاوف الرئيسية المثارة.",
@@ -1829,5 +1830,8 @@
   "Step 2 of 2": "الخطوة 2 من 2",
   "Viewed": "تم العرض",
   "Welcome to WizCol Sign": "مرحبًا بك في WizCol Sign",
-  "optional": "اختياري"
+  "optional": "اختياري",
+  "Default View": "العرض الافتراضي",
+  "Choose which view participants see first": "اختر العرض الذي يراه المشاركون أولاً",
+  "No questions yet": "لا توجد أسئلة بعد"
 }
