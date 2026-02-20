@@ -1,4 +1,4 @@
-import { FC, useContext } from 'react';
+import { FC, useContext, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Role } from '@freedi/shared-types';
 import {
@@ -16,7 +16,8 @@ const QuestionsView: FC = () => {
 	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
 
-	const questions = useSelector(questionsSelector(statement?.statementId));
+	const questionsSelect = useMemo(() => questionsSelector(statement?.statementId), [statement?.statementId]);
+	const questions = useSelector(questionsSelect);
 	const visibleQuestions = questions.filter((q) => !q.hide || isAdmin);
 
 	if (visibleQuestions.length === 0) {

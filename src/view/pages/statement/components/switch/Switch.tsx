@@ -36,9 +36,13 @@ const Switch = () => {
 	const mainRef = useRef<HTMLElement>(null);
 	useHeaderHideOnScroll(mainRef);
 
-	const allSubs = useSelector(statementSubsSelector(statement?.statementId));
-	const options = useSelector(statementOptionsSelector(statement?.statementId));
-	const questions = useSelector(questionsSelector(statement?.statementId));
+	const subsSelect = useMemo(() => statementSubsSelector(statement?.statementId), [statement?.statementId]);
+	const optionsSelect = useMemo(() => statementOptionsSelector(statement?.statementId), [statement?.statementId]);
+	const questionsSelect = useMemo(() => questionsSelector(statement?.statementId), [statement?.statementId]);
+
+	const allSubs = useSelector(subsSelect);
+	const options = useSelector(optionsSelect);
+	const questions = useSelector(questionsSelect);
 
 	const segments = useMemo(
 		() => [

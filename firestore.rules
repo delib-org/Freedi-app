@@ -107,8 +107,9 @@ service cloud.firestore {
       // Allow read if authenticated - the app already filters by userId in queries
       allow read: if request.auth.uid != null;
       // Only allow updates and deletes by the owner of the notification
-      allow update: if request.auth.uid == resource.data.userId;
-      allow delete: if request.auth.uid == resource.data.userId;
+      // Use get() with default to prevent null value errors on documents missing userId
+      allow update: if request.auth.uid != null && resource.data.get('userId', '') == request.auth.uid;
+      allow delete: if request.auth.uid != null && resource.data.get('userId', '') == request.auth.uid;
     }
 
     match /pushNotifications/{pushNotificationId=**} {

@@ -426,14 +426,8 @@ const selectStatementsByParentAndType = createStatementsByParentAndTypeSelector(
 export const statementOptionsSelector = (statementId: string | undefined) =>
 	selectStatementsByParentAndType(statementId, StatementType.option);
 
-export const questionsSelector =
-	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
-		state.statements.statements
-			.filter(
-				(statement) =>
-					statement.parentId === statementId && statement.statementType === StatementType.question,
-			)
-			.sort((a, b) => a.createdAt - b.createdAt);
+export const questionsSelector = (statementId: string | undefined) =>
+	selectStatementsByParentAndType(statementId, StatementType.question);
 
 export const statementSubscriptionSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
