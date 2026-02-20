@@ -4,7 +4,8 @@ import { useSelector } from 'react-redux';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
-import { Role } from '@freedi/shared-types';
+import { Role, StatementType } from '@freedi/shared-types';
+import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import SwitchScreen from './SwitchScreen';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
@@ -44,14 +45,19 @@ const Switch = () => {
 	const options = useSelector(optionsSelect);
 	const questions = useSelector(questionsSelect);
 
-	const segments = useMemo(
-		() => [
+	const segments = useMemo(() => {
+		const allSegments = [
 			{ id: 'chat', label: t('Chat'), count: allSubs.length },
-			{ id: 'options', label: t('Options'), count: options.length },
-			{ id: 'questions', label: t('Questions'), count: questions.length },
-		],
-		[t, allSubs.length, options.length, questions.length],
-	);
+			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
+				? [{ id: 'options', label: t('Options'), count: options.length }]
+				: []),
+			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
+				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
+				: []),
+		];
+
+		return allSegments;
+	}, [t, allSubs.length, options.length, questions.length, statement]);
 
 	const showSegmentedControl = MAIN_SCREENS.has(screen);
 
