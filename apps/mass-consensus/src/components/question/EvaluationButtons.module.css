@@ -48,8 +48,8 @@
 }
 
 .button.love {
-  background: var(--rating-love, #ffe4e6);
-  border-color: #fecdd3;
+  background: var(--rating-love, #ccfbf1);
+  border-color: #99f6e4;
 }
 
 /* Hover states */
@@ -75,7 +75,7 @@
 }
 
 .button.love:hover:not(.disabled) {
-  border-color: #ec4899;
+  border-color: #0d9488;
 }
 
 /* Selected states */
@@ -105,8 +105,8 @@
 }
 
 .button.love.selected {
-  background: #ec4899;
-  border-color: #ec4899;
+  background: #0d9488;
+  border-color: #0d9488;
 }
 
 .button.selected .emoji {
