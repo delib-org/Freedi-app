@@ -1,10 +1,24 @@
 import { FC } from 'react';
 import { Statement, StatementSettings } from '@freedi/shared-types';
-import { EyeOff, MessageCircle, GitBranch, Radio, FileText, ExternalLink } from 'lucide-react';
+import {
+	EyeOff,
+	MessageCircle,
+	GitBranch,
+	Radio,
+	FileText,
+	ExternalLink,
+	Layout,
+} from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getSignDocumentUrl } from '@/utils/urlHelpers';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
+
+const DEFAULT_VIEW_OPTIONS = [
+	{ value: 'chat', labelKey: 'Chat' },
+	{ value: 'options', labelKey: 'Options' },
+	{ value: 'questions', labelKey: 'Questions' },
+] as const;
 
 interface VisibilitySettingsProps {
 	statement: Statement;
@@ -27,6 +41,7 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 	handleIsDocumentChange,
 }) => {
 	const { t } = useTranslation();
+	const currentDefaultView = settings.defaultView ?? 'chat';
 
 	return (
 		<>
@@ -45,15 +60,35 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 				icon={MessageCircle}
 				badge="recommended"
 			/>
-			{settings.hasChat !== false && (
-				<ToggleSwitch
-					isChecked={settings.enableChatPanel ?? true}
-					onChange={(checked) => handleSettingChange('enableChatPanel', checked)}
-					label={t('Show Chat Side Panel')}
-					description={t('Display the collapsible chat panel alongside the main content')}
-					icon={MessageCircle}
-				/>
-			)}
+			<div className={styles.toggleItem}>
+				<div className={styles.toggleContent}>
+					<div className={styles.toggleIcon}>
+						<Layout size={18} />
+					</div>
+					<div className={styles.toggleInfo}>
+						<div className={styles.toggleHeader}>
+							<span className={styles.toggleLabel}>{t('Default View')}</span>
+						</div>
+						<p className={styles.toggleDescription}>
+							{t('Choose which view participants see first')}
+						</p>
+						<div className={styles.defaultViewOptions}>
+							{DEFAULT_VIEW_OPTIONS.map((option) => (
+								<label key={option.value} className={styles.defaultViewOption}>
+									<input
+										type="radio"
+										name="defaultView"
+										value={option.value}
+										checked={currentDefaultView === option.value}
+										onChange={() => handleSettingChange('defaultView', option.value)}
+									/>
+									<span>{t(option.labelKey)}</span>
+								</label>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
 			<ToggleSwitch
 				isChecked={settings.hasChildren ?? false}
 				onChange={(checked) => handleSettingChange('hasChildren', checked)}

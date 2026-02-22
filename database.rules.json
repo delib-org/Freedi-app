@@ -1,11 +1,68 @@
 {
   "rules": {
+    ".read": false,
+    ".write": false,
+
     "liveEditing": {
       "sessions": {
         "$sessionId": {
           ".read": "auth != null",
-          ".write": "auth != null",
-          ".indexOn": ["lastUpdate", "ttl"]
+          ".indexOn": ["lastUpdate", "ttl"],
+
+          "documentId": {
+            ".write": "auth != null",
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 128"
+          },
+
+          "paragraphId": {
+            ".write": "auth != null",
+            ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 128"
+          },
+
+          "draftContent": {
+            ".write": "auth != null",
+            ".validate": "newData.isString() && newData.val().length <= 50000"
+          },
+
+          "lastUpdate": {
+            ".write": "auth != null",
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+
+          "ttl": {
+            ".write": "auth != null",
+            ".validate": "newData.isNumber() && newData.val() > 0"
+          },
+
+          "activeEditors": {
+            "$userId": {
+              ".write": "auth != null && auth.uid === $userId",
+              ".validate": "newData.hasChildren(['userId', 'displayName', 'cursorPosition', 'lastActive', 'color'])",
+
+              "userId": {
+                ".validate": "newData.isString() && newData.val() === $userId"
+              },
+              "displayName": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+              },
+              "cursorPosition": {
+                ".validate": "newData.isNumber() && newData.val() >= 0"
+              },
+              "lastActive": {
+                ".validate": "newData.isNumber() && newData.val() > 0"
+              },
+              "color": {
+                ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 10"
+              },
+              "$other": {
+                ".validate": false
+              }
+            }
+          },
+
+          "$other": {
+            ".validate": false
+          }
         }
       }
     }
