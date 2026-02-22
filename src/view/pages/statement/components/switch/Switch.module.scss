@@ -5,16 +5,41 @@
 	width: 100vw;
 }
 
-.header {
+.stickyTop {
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background-color: var(--statementBackground);
 
+	// Mobile scroll-to-hide animation
+	@media screen and (max-width: 600px) {
+		display: grid;
+		grid-template-rows: 1fr;
+		transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 0.25s ease;
+	}
+}
+
+.stickyTopInner {
+	@media screen and (max-width: 600px) {
+		overflow: hidden;
+	}
+}
+
+// Driven by parent .page--header-hidden class (toggled by JS)
+:global(.page--header-hidden) .stickyTop {
+	@media screen and (max-width: 600px) {
+		grid-template-rows: 0fr;
+		opacity: 0;
+		pointer-events: none;
+	}
+}
+
+.header {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	width: 100%;
-	position: sticky;
-	top: 0;
-	background-color: var(--statementBackground);
-	z-index: 2;
 
 	h1 {
 		width: 100%;
@@ -35,8 +60,15 @@
 	}
 }
 
-.main {
+.segmentedControlWrapper {
+	padding: 0.5rem 1rem;
 
+	@media screen and (max-width: 600px) {
+		padding: 0.5rem 0.75rem;
+	}
+}
+
+.main {
 	width: 100vw;
 	scroll-behavior: smooth;
 }

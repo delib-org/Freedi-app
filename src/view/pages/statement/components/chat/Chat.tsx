@@ -128,36 +128,37 @@ const Chat: FC<ChatProps> = ({
 	}, [subStatements.length]);
 
 	return (
-		<div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
-			{hasParagraphsContent(statement?.paragraphs) && !sideChat && (
-				<div className="wrapper">
-					<Description />
-				</div>
-			)}
-			{subStatements?.map((statementSub: Statement, index) => (
-				<ChatMessageCard
-					key={statementSub.statementId}
-					parentStatement={statement}
-					statement={statementSub}
-					previousStatement={subStatements[index - 1]}
-					sideChat={sideChat}
-				/>
-			))}
+		<div className={styles.chatContainer}>
+			<div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
+				{hasParagraphsContent(statement?.paragraphs) && !sideChat && (
+					<div className="wrapper">
+						<Description />
+					</div>
+				)}
+				{subStatements?.map((statementSub: Statement, index) => (
+					<ChatMessageCard
+						key={statementSub.statementId}
+						parentStatement={statement}
+						statement={statementSub}
+						previousStatement={subStatements[index - 1]}
+						sideChat={sideChat}
+					/>
+				))}
 
-			<div ref={messagesEndRef} />
+				<div ref={messagesEndRef} />
 
-			{statement && showInput && (
-				<div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
-					<ChatInput statement={statement} sideChat={sideChat} />
-				</div>
-			)}
-			{!sideChat && (
-				<div>
+				{!sideChat && (
 					<NewMessages
 						newMessages={numberOfNewMessages}
 						setNewMessages={setNumberOfNewMessages}
 						scrollToBottom={scrollToBottom}
 					/>
+				)}
+			</div>
+
+			{statement && showInput && (
+				<div className={sideChat ? styles.sideChatInputWrapper : styles.input}>
+					<ChatInput statement={statement} sideChat={sideChat} />
 				</div>
 			)}
 		</div>

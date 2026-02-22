@@ -464,6 +464,7 @@
   "Method of selecting leading options": "Methode zur Auswahl führender Optionen",
   "Minimize modal": "Fenster minimieren",
   "Mind Map": "Gedankenkarte",
+  "Statement Map": "Aussagenkarte",
   "Moderated": "Moderiert",
   "Multiple Choice (Checkbox)": "Mehrfachauswahl (Kontrollkästchen)",
   "Multiple pieces of evidence challenge this idea. Consider addressing the main concerns raised.": "Mehrere Beweise stellen diese Idee in Frage. Erwägen Sie, auf die Hauptbedenken einzugehen.",
@@ -1805,5 +1806,9 @@
   "Step 2 of 2": "Schritt 2 von 2",
   "Viewed": "Angesehen",
   "Welcome to WizCol Sign": "Willkommen bei WizCol Sign",
-  "optional": "optional"
+  "optional": "optional",
+  "Default View": "Standardansicht",
+  "Choose which view participants see first": "Wählen Sie, welche Ansicht die Teilnehmer zuerst sehen",
+  "No questions yet": "Noch keine Fragen",
+  "Add a question": "Frage hinzufügen"
 }

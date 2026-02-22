@@ -7,9 +7,27 @@
 	background-color: var(--statementBackground);
 	overflow: hidden;
 
+	// Mobile scroll-to-hide: when this class is toggled by JS,
+	// the header collapses via negative margin
+	&--header-hidden {
+		@media screen and (max-width: 600px) {
+			.page__header {
+				margin-top: -4.2rem;
+				opacity: 0;
+				pointer-events: none;
+			}
+		}
+	}
+
 	&__header {
 		width: 100%;
 		z-index: 999;
+
+		// Mobile scroll-to-hide animation
+		@media screen and (max-width: 600px) {
+			transition: margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+				opacity 0.25s ease;
+		}
 
 		&.rtl {
 			border-bottom-right-radius: 0;

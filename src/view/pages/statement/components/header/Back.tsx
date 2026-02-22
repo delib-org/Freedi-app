@@ -17,6 +17,11 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 
 	function handleBack() {
 		try {
+			if (location.pathname.includes('statement-screen')) {
+				return navigate(`/statement/${statement?.statementId}`, {
+					state: { from: window.location.pathname },
+				});
+			}
 			if (location.pathname.includes('my')) {
 				return navigate('/home', {
 					state: { from: window.location.pathname },

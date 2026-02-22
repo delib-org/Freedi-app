@@ -464,6 +464,7 @@
   "Method of selecting leading options": "Methode voor het selecteren van leidende opties",
   "Minimize modal": "Venster minimaliseren",
   "Mind Map": "Mindmap",
+  "Statement Map": "Verklaringenkaart",
   "Moderated": "Gemodereerd",
   "Multiple Choice (Checkbox)": "Meerkeuze (Selectievakje)",
   "Multiple pieces of evidence challenge this idea. Consider addressing the main concerns raised.": "Meerdere bewijzen dagen dit idee uit. Overweeg de belangrijkste zorgen aan te pakken.",
@@ -1805,5 +1806,9 @@
   "Step 2 of 2": "Stap 2 van 2",
   "Viewed": "Bekeken",
   "Welcome to WizCol Sign": "Welkom bij WizCol Sign",
-  "optional": "optioneel"
+  "optional": "optioneel",
+  "Default View": "Standaardweergave",
+  "Choose which view participants see first": "Kies welke weergave deelnemers als eerste zien",
+  "No questions yet": "Nog geen vragen",
+  "Add a question": "Vraag toevoegen"
 }
