@@ -1,0 +1,60 @@
+@use '../mixins' as *;
+
+.segmented-control {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  background: var(--card-default, #f0f0f0);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+
+  &__segment {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 44px;
+    padding: 0.5rem 0.75rem;
+    border: none;
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    white-space: nowrap;
+    position: relative;
+
+    &:hover:not(.segmented-control__segment--active) {
+      background: var(--lighter, rgba(0, 0, 0, 0.05));
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: -2px;
+    }
+
+    &--active {
+      background: var(--btn-primary);
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+  }
+
+  &__count {
+    font-size: 0.75rem;
+    font-weight: 400;
+    opacity: 0.8;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .segmented-control__segment {
+      transition: none;
+    }
+  }
+}

@@ -115,10 +115,12 @@ export enum Screen {
 	statement = 'statement',
 	chat = 'chat',
 	options = 'options',
+	questions = 'questions',
 	settings = 'settings',
 	mindMap = 'mind-map',
 	agreementMap = 'agreement-map',
 	polarizationIndex = 'polarization-index',
+	subQuestionsMap = 'sub-questions-map',
 }
 
 export enum SortType {

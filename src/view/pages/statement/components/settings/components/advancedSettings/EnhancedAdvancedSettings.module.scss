@@ -431,6 +431,34 @@
     }
   }
 
+  // Default View radio options
+  .defaultViewOptions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .defaultViewOption {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--text-body, #3d4d71);
+
+    input[type="radio"] {
+      accent-color: var(--btn-primary, #5f88e5);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    span {
+      font-weight: 500;
+    }
+  }
+
   // Badges
   .badge {
     padding: 0.2rem 0.5rem;

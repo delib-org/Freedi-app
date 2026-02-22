@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { ToastProvider } from '@/components/shared/Toast';
-import SwipeCard from './SwipeCard';
-import EvaluationButtons from './EvaluationButtons';
-import CommunityVoiceButtons from './CommunityVoiceButtons';
+import SolutionCard from './SolutionCard';
 import SocialFeed from './SocialFeed';
 import SolutionPromptModal from './SolutionPromptModal';
 import CompletionScreen from '@/components/completion/CompletionScreen';
@@ -15,7 +13,6 @@ import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { logError } from '@/lib/utils/errorHandling';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
-import RatingIcon from '@/components/icons/RatingIcon';
 import {
   trackPageView,
   trackEvaluation,
@@ -31,8 +28,8 @@ interface SolutionFeedClientProps {
 }
 
 /**
- * Client Component - Interactive Tinder-style solution feed
- * Single-card swipe interface with throw animations
+ * Client Component - Classic 6-card list view for solution evaluation
+ * Shows all solutions in a scrollable list with inline rating buttons
  */
 export default function SolutionFeedClient({
   question,
@@ -41,7 +38,6 @@ export default function SolutionFeedClient({
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
-  const [currentIndex, setCurrentIndex] = useState(0);
   const [userId, setUserId] = useState<string>('');
   const [evaluationScores, setEvaluationScores] = useState<Map<string, number>>(new Map());
   const [allEvaluatedIds, setAllEvaluatedIds] = useState<Set<string>>(new Set());
@@ -55,16 +51,8 @@ export default function SolutionFeedClient({
   const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
   const [userSolutionCount, setUserSolutionCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
-  const [throwDirection, setThrowDirection] = useState<'left' | 'right' | null>(null);
-  const [confirmationPending, setConfirmationPending] = useState<{
-    solutionId: string;
-    score: number;
-    direction?: 'left' | 'right';
-  } | null>(null);
-  const [confirmedCount, setConfirmedCount] = useState(0);
   const hasTrackedPageView = useRef(false);
   const userIdRef = useRef<string>('');
-  const LEARNING_MODE_COUNT = 3;
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
@@ -83,18 +71,17 @@ export default function SolutionFeedClient({
   // Check if we're in survey context (to hide bottomContainer)
   const inSurveyContext = !!mergedSettings;
 
-  // Check evaluation type for community voice
-  const isCommunityVoice = question.statementSettings?.evaluationType === 'community-voice';
-
   // Check if solutions array is empty
   const hasNoSolutions = solutions.length === 0;
 
   // Check if participants can add suggestions
   const canAddSuggestions = hasNoSolutions || (mergedSettings?.allowParticipantsToAddSuggestions ?? true);
 
-  // Current solution to display
-  const currentSolution = solutions[currentIndex];
-  const hasMoreCards = currentIndex < solutions.length;
+  // Count how many solutions in the current batch have been evaluated
+  const evaluatedInBatch = solutions.filter(
+    s => evaluationScores.has(s.statementId) || allEvaluatedIds.has(s.statementId)
+  ).length;
+  const allBatchEvaluated = evaluatedInBatch >= solutions.length && solutions.length > 0;
 
   // Check if user has submitted solutions
   useEffect(() => {
@@ -201,15 +188,8 @@ export default function SolutionFeedClient({
             setAllOptionsEvaluated(true);
           }
 
-          // Find first unevaluated solution using current solutions
+          // Fetch individual evaluation scores for already-evaluated solutions
           setSolutions((currentSolutions) => {
-            const firstUnevaluatedIndex = currentSolutions.findIndex(
-              s => !evaluatedSet.has(s.statementId)
-            );
-            if (firstUnevaluatedIndex > 0) {
-              setCurrentIndex(firstUnevaluatedIndex);
-            }
-
             // Fetch individual evaluation scores for solutions already evaluated
             const evaluatedSolutionsInBatch = currentSolutions.filter(solution =>
               evaluatedSet.has(solution.statementId)
@@ -301,24 +281,11 @@ export default function SolutionFeedClient({
   }, [allEvaluatedIds.size, inSurveyContext]);
 
   /**
-   * Move to next card after throw animation completes
+   * Handle evaluation from SolutionCard
    */
-  const handleThrowComplete = useCallback(() => {
-    setThrowDirection(null);
-    setCurrentIndex(prev => prev + 1);
-  }, []);
-
-  /**
-   * Handle evaluation from swipe gesture or buttons
-   */
-  const handleEvaluate = async (solutionId: string, score: number, direction?: 'left' | 'right') => {
+  const handleEvaluate = async (solutionId: string, score: number) => {
     const previousScore = evaluationScores.get(solutionId);
     const wasAlreadyEvaluated = allEvaluatedIds.has(solutionId);
-
-    // Trigger throw animation if direction provided
-    if (direction && !throwDirection) {
-      setThrowDirection(direction);
-    }
 
     try {
       // Optimistic update
@@ -382,67 +349,6 @@ export default function SolutionFeedClient({
   };
 
   /**
-   * Handle swipe from SwipeCard component
-   */
-  const handleSwipeRate = (solutionId: string, score: number, direction: 'left' | 'right') => {
-    if (confirmedCount < LEARNING_MODE_COUNT) {
-      setConfirmationPending({ solutionId, score, direction });
-      return;
-    }
-    handleEvaluate(solutionId, score, direction);
-  };
-
-  /**
-   * Handle rate from evaluation buttons
-   */
-  const handleButtonRate = (score: number, direction?: 'left' | 'right') => {
-    if (!currentSolution || throwDirection) return;
-    const dir = direction || (score > 0 ? 'right' : score < 0 ? 'left' : undefined);
-
-    if (confirmedCount < LEARNING_MODE_COUNT) {
-      setConfirmationPending({ solutionId: currentSolution.statementId, score, direction: dir || undefined });
-      return;
-    }
-
-    handleEvaluate(currentSolution.statementId, score, dir || undefined);
-    // If neutral (score = 0), just move to next without throw
-    if (score === 0) {
-      setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
-    }
-  };
-
-  /**
-   * Confirm the pending evaluation (learning mode)
-   */
-  const handleConfirmEvaluation = () => {
-    if (!confirmationPending) return;
-    const { solutionId, score, direction } = confirmationPending;
-    setConfirmationPending(null);
-    setConfirmedCount(prev => prev + 1);
-    handleEvaluate(solutionId, score, direction);
-    // If neutral (score = 0), just move to next without throw
-    if (score === 0) {
-      setTimeout(() => setCurrentIndex(prev => prev + 1), 300);
-    }
-  };
-
-  /**
-   * Cancel the pending evaluation (learning mode)
-   */
-  const handleCancelEvaluation = () => {
-    setConfirmationPending(null);
-  };
-
-  /** Get label and variant for a score */
-  const getScoreInfo = (score: number) => {
-    if (score >= 1) return { labelKey: 'Strongly Agree', variant: 'strongly-agree' };
-    if (score >= 0.5) return { labelKey: 'Agree', variant: 'agree' };
-    if (score > -0.5) return { labelKey: 'Neutral', variant: 'neutral' };
-    if (score > -1) return { labelKey: 'Disagree', variant: 'disagree' };
-    return { labelKey: 'Strongly Disagree', variant: 'strongly-disagree' };
-  };
-
-  /**
    * Fetch new batch of solutions
    */
   const handleGetNewBatch = async () => {
@@ -471,7 +377,6 @@ export default function SolutionFeedClient({
 
       if (data.solutions && data.solutions.length > 0) {
         setSolutions(data.solutions);
-        setCurrentIndex(0);
         setEvaluationScores(new Map());
         setBatchCount((prev) => prev + 1);
 
@@ -521,7 +426,6 @@ export default function SolutionFeedClient({
         const data = await response.json();
         if (data.solutions && data.solutions.length > 0) {
           setSolutions(data.solutions);
-          setCurrentIndex(0);
           setEvaluationScores(new Map());
           setBatchCount((prev) => prev + 1);
         }
@@ -578,94 +482,58 @@ export default function SolutionFeedClient({
           </div>
         ) : (
           <>
-            {/* Progress indicator */}
-            <div className={styles.progressBar}>
-              <div className={styles.progressInfo}>
-                <span className={styles.progressCount}>
-                  {currentIndex + 1} / {solutions.length}
-                </span>
-                {batchCount > 1 && (
-                  <span className={styles.batchBadge}>{t('Batch')} {batchCount}</span>
-                )}
-              </div>
-              <div className={styles.progressTrack}>
-                <div
-                  className={styles.progressFill}
-                  style={{ width: `${((currentIndex + 1) / solutions.length) * 100}%` }}
-                />
-              </div>
+            {/* Instructions */}
+            <div className={styles.instructions}>
+              <h3>{t('Please rate the following suggestions')}</h3>
+              <p>{t('rateInstructions')}</p>
             </div>
 
-            {/* Card stack area */}
-            <div className={styles.cardStack}>
-              {hasMoreCards ? (
+            {/* Solution cards list */}
+            <div className={styles.solutions}>
+              {solutions.map((solution) => (
+                <SolutionCard
+                  key={solution.statementId}
+                  solution={solution}
+                  onEvaluate={handleEvaluate}
+                  currentScore={evaluationScores.get(solution.statementId)}
+                />
+              ))}
+            </div>
+
+            {/* Batch controls */}
+            <div className={styles.batchControls}>
+              {allOptionsEvaluated ? (
                 <>
-                  {/* Show up to 3 cards in stack */}
-                  {solutions.slice(currentIndex, currentIndex + 3).map((solution, idx) => (
-                    <SwipeCard
-                      key={solution.statementId}
-                      solution={solution}
-                      onRate={handleSwipeRate}
-                      isTop={idx === 0}
-                      throwDirection={idx === 0 ? throwDirection : null}
-                      onThrowComplete={handleThrowComplete}
-                      totalVotes={solution.evaluation?.numberOfEvaluators || 0}
-                      approvalRate={solution.consensus !== undefined ? Math.round((solution.consensus + 1) * 50) : undefined}
-                    />
-                  ))}
+                  <p className={styles.hint}>
+                    {tWithParams('You have evaluated all {{count}} available options', { count: totalOptionsCount })}
+                  </p>
+                  <button
+                    className={styles.batchButton}
+                    onClick={handleViewProgress}
+                  >
+                    {t('View Results')}
+                  </button>
                 </>
               ) : (
-                /* Batch completed state */
-                <div className={styles.batchComplete}>
-                  {allOptionsEvaluated ? (
-                    <>
-                      <div className={styles.completeIcon}>🎉</div>
-                      <h3>{t('All Done!')}</h3>
-                      <p>{tWithParams('You have evaluated all {{count}} available options', { count: totalOptionsCount })}</p>
-                      <button
-                        className={styles.viewResultsButton}
-                        onClick={handleViewProgress}
-                      >
-                        {t('View Results')}
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className={styles.completeIcon}>✓</div>
-                      <h3>{t('Batch Complete!')}</h3>
-                      <p>{tWithParams('You evaluated {{count}} solutions', { count: solutions.length })}</p>
-                      <button
-                        className={styles.nextBatchButton}
-                        onClick={handleGetNewBatch}
-                        disabled={isLoadingBatch}
-                      >
-                        {isLoadingBatch ? t('Loading...') : t('Get More Suggestions')}
-                      </button>
-                    </>
+                <>
+                  <button
+                    className={`${styles.batchButton} ${!allBatchEvaluated ? styles.disabled : ''}`}
+                    onClick={handleGetNewBatch}
+                    disabled={isLoadingBatch || !allBatchEvaluated}
+                  >
+                    {isLoadingBatch
+                      ? t('Loading...')
+                      : `${t('Get New Suggestions')} (${evaluatedInBatch}/${solutions.length} ${t('evaluated')})`
+                    }
+                  </button>
+                  {!allBatchEvaluated && (
+                    <p className={styles.hint}>
+                      {t('Rate all suggestions above to get new ones')}
+                    </p>
                   )}
-                </div>
+                </>
               )}
             </div>
-
-            {/* Evaluation buttons - only show when there's a current card */}
-            {hasMoreCards && currentSolution && !throwDirection && (
-              <div className={styles.evaluationArea}>
-                {isCommunityVoice ? (
-                  <CommunityVoiceButtons
-                    onEvaluate={handleButtonRate}
-                    currentScore={evaluationScores.get(currentSolution.statementId)}
-                  />
-                ) : (
-                  <EvaluationButtons
-                    onEvaluate={handleButtonRate}
-                    currentScore={evaluationScores.get(currentSolution.statementId)}
-                  />
-                )}
-                <p className={styles.swipeHint}>
-                  {t('Swipe or tap to rate')}
-                </p>
-              </div>
-            )}
           </>
         )}
 
@@ -721,41 +589,6 @@ export default function SolutionFeedClient({
           />
         )}
 
-        {/* Rating Confirmation Modal (learning mode - first 3 evaluations) */}
-        {confirmationPending && (
-          <div className={styles.confirmationOverlay}>
-            <div className={`${styles.confirmationModal} ${styles[`confirmation_${getScoreInfo(confirmationPending.score).variant}`]}`}>
-              <div className={styles.confirmationEmoji}>
-                <RatingIcon rating={confirmationPending.score} />
-              </div>
-              <h3 className={styles.confirmationTitle}>
-                {t('You have rated it as')}
-              </h3>
-              <p className={styles.confirmationRating}>
-                {t(getScoreInfo(confirmationPending.score).labelKey)}
-              </p>
-              <p className={styles.confirmationQuestion}>
-                {t('Are you sure?')}
-              </p>
-              <div className={styles.confirmationButtons}>
-                <button
-                  className={`${styles.confirmationButton} ${styles.confirmationCancel}`}
-                  onClick={handleCancelEvaluation}
-                  type="button"
-                >
-                  {t('No, go back')}
-                </button>
-                <button
-                  className={`${styles.confirmationButton} ${styles.confirmationConfirm}`}
-                  onClick={handleConfirmEvaluation}
-                  type="button"
-                >
-                  {t('Yes, confirm')}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </ToastProvider>
   );

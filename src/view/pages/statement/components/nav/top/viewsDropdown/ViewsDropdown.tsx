@@ -50,7 +50,9 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle,
 			screen === Screen.settings ||
 			screen === Screen.chat ||
 			screen === Screen.agreementMap ||
-			screen === Screen.mindMap
+			screen === Screen.mindMap ||
+			screen === Screen.polarizationIndex ||
+			screen === Screen.subQuestionsMap
 		) {
 			onNavigate('view' as Screen);
 		} else {
@@ -95,6 +97,13 @@ const ViewsDropdown: FC<ViewsDropdownProps> = ({ statement, screen, headerStyle,
 						icon={<MapIcon style={{ color: '#4E88C7' }} />}
 						onOptionClick={() => handleOptionClick(Screen.mindMap)}
 					/>
+					{statement.statementSettings?.enableSubQuestionsMap !== false && (
+						<MenuOption
+							label={t('Statement Map')}
+							icon={<MapIcon style={{ color: '#4E88C7' }} />}
+							onOptionClick={() => handleOptionClick(Screen.subQuestionsMap)}
+						/>
+					)}
 				</div>
 			)}
 		</div>

@@ -1,22 +1,20 @@
-import { Results, Statement, StatementType } from '@freedi/shared-types';
+import { Results, StatementType } from '@freedi/shared-types';
 import { type JSX, useState, useEffect } from 'react';
 import { useParams, useLocation } from 'react-router';
 import { useMindMap } from '../map/MindMapMV';
 import SubQuestionNode from './subQuestionNode/SubQuestionNode';
 import styles from './SubQuestionsMap.module.scss';
-import { useSwipe } from '@/controllers/hooks/useSwipe';
-import { usePanelState } from '@/controllers/hooks/usePanelState';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 
-interface SubQuestionsMapProps {
-	readonly statement: Statement;
-}
-
-const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
-	const { results } = useMindMap(statement?.topParentId);
+const SubQuestionsMap = () => {
+	const { t } = useTranslation();
+	const { statementId } = useParams();
 	const { pathname } = useLocation();
+	const statement = useAppSelector(statementSelector(statementId));
+	const { results } = useMindMap(statement?.topParentId);
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
 	const powerFollowMePath = topParentStatement?.powerFollowMe;
 	const regularFollowMePath = topParentStatement?.followMe;
@@ -35,37 +33,19 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 		}
 	}, [statement?.topParentId, topParentStatement]);
 
-	const [isOpen, setIsOpen] = usePanelState({
-		storageKey: 'freedi-subquestions-map-open',
-		defaultDesktopOpen: true,
-		defaultMobileOpen: false,
-	});
-
-	const swipeRef = useSwipe({
-		onSwipeLeft: () => {
-			if (isOpen) {
-				setIsOpen(false);
-			}
-		},
-		threshold: 80,
-		enabled: isOpen && window.innerWidth <= 768,
-	});
-
-	const { screen } = useParams();
 	const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
 	const numberOfElements = nodeHeights.size;
-	if (!statement) return null;
-	if (screen === 'mind-map' || screen === 'polarization-index' || screen === 'agreement-map')
-		return null;
 
+	if (!statement) return null;
 	if (!results) return null;
+
 	const defaultDepth = 1;
-	const filterResults = (results: Results): Results => {
+	const filterResults = (res: Results): Results => {
 		return {
-			top: results.top,
-			sub: results.sub
+			top: res.top,
+			sub: res.sub
 				.map(filterResults)
-				.filter((res) => res.top.statementType !== StatementType.option || res.sub.length > 0),
+				.filter((r) => r.top.statementType !== StatementType.option || r.sub.length > 0),
 		};
 	};
 	const filteredResults = filterResults(results);
@@ -118,39 +98,26 @@ const SubQuestionsMap = ({ statement }: SubQuestionsMapProps) => {
 	};
 
 	return (
-		<div
-			className={`${styles.subQuestionsMapContainer} ${isOpen ? styles.open : styles.closed}`}
-			ref={swipeRef}
-			dir="ltr"
-		>
-			<button
-				className={styles.toggleButton}
-				onClick={() => setIsOpen(!isOpen)}
-				aria-label={isOpen ? 'Close statement map' : 'Open statement map'}
-			>
-				<span className={styles.toggleIcon}>{isOpen ? '›' : '‹'}</span>
-			</button>
-			{isOpen && (
-				<div className={styles.content}>
-					<div className={styles.title}>
-						<h3>Statement Map</h3>
-					</div>
-					<SubQuestionNode
-						statement={results.top}
-						depth={defaultDepth}
-						childCount={results.sub.length}
-						height={getLineLength(results)}
-						setNodeHeights={setNodeHeights}
-						numberOfElements={numberOfElements | 0}
-						isFirstChild={false}
-						heightMargin={getLineMargin(results)}
-						heightToChild={getLineToChild(results)}
-						followMePath={followMePath}
-						currentPath={pathname}
-					/>
-					{renderStatementTree(filteredResults, defaultDepth)}
+		<div className={styles.subQuestionsMap} dir="ltr">
+			<div className={styles.content}>
+				<div className={styles.title}>
+					<h3>{t('Statement Map')}</h3>
 				</div>
-			)}
+				<SubQuestionNode
+					statement={results.top}
+					depth={defaultDepth}
+					childCount={results.sub.length}
+					height={getLineLength(results)}
+					setNodeHeights={setNodeHeights}
+					numberOfElements={numberOfElements | 0}
+					isFirstChild={false}
+					heightMargin={getLineMargin(results)}
+					heightToChild={getLineToChild(results)}
+					followMePath={followMePath}
+					currentPath={pathname}
+				/>
+				{renderStatementTree(filteredResults, defaultDepth)}
+			</div>
 		</div>
 	);
 };
