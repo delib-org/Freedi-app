@@ -1744,6 +1744,7 @@
   "Check Failed": "Verificación fallida",
   "Submission Failed": "Envío fallido",
   "Failed to save your evaluation. Please try again.": "No se pudo guardar tu evaluación. Por favor, inténtalo de nuevo.",
+  "This solution is no longer available and has been removed.": "Esta solución ya no está disponible y ha sido eliminada.",
   "Failed to submit rating. Please try again.": "No se pudo enviar la calificación. Por favor, inténtalo de nuevo.",
   "Failed to submit proposal. Please try again.": "No se pudo enviar la propuesta. Por favor, inténtalo de nuevo.",
   "Failed to load new solutions. Please try again.": "No se pudieron cargar nuevas soluciones. Por favor, inténtalo de nuevo.",

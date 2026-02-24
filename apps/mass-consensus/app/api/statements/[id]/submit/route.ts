@@ -82,8 +82,10 @@ async function handleExistingSolution(
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: questionId } = await params;
+
   // Rate limit check - stricter for write operations
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.WRITE);
   if (rateLimitResponse) {
@@ -132,8 +134,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const questionId = params.id;
     const db = getFirestoreAdmin();
 
     // Check if question exists
@@ -280,15 +280,9 @@ export async function POST(
       evaluation,
     });
   } catch (error) {
-    const body = await request.json().catch(() => ({}));
-    const { userId } = body;
-    const questionId = params.id;
-
     logError(error, {
       operation: 'api.submit',
-      userId,
-      questionId,
-      metadata: { solutionTextLength: body.solutionText?.length },
+      metadata: { questionId },
     });
 
     return NextResponse.json(

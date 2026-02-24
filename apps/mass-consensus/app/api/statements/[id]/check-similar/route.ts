@@ -9,13 +9,13 @@ import { ERROR_MESSAGES } from '@/constants/common';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: questionId } = await params;
+
   try {
     const body = await request.json();
     const { userInput, userId } = body;
-
-    const questionId = params.id;
 
     // Validate input
     if (!userInput || typeof userInput !== 'string') {
@@ -102,15 +102,9 @@ export async function POST(
       },
     });
   } catch (error) {
-    const body = await request.json().catch(() => ({}));
-    const { userId } = body;
-    const questionId = params.id;
-
     logError(error, {
       operation: 'api.checkSimilar',
-      userId,
-      questionId,
-      metadata: { endpoint: process.env.CHECK_SIMILARITIES_ENDPOINT },
+      metadata: { questionId, endpoint: process.env.CHECK_SIMILARITIES_ENDPOINT },
     });
 
     return NextResponse.json(

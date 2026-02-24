@@ -9,13 +9,13 @@ import { ERROR_MESSAGES } from '@/constants/common';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: questionId } = await params;
+
   try {
     const body = await request.json();
     const { userInput, userId } = body;
-
-    const questionId = params.id;
 
     // Validate input
     if (!userInput || typeof userInput !== 'string') {
@@ -77,8 +77,6 @@ export async function POST(
 
     return NextResponse.json(data);
   } catch (error) {
-    const questionId = params.id;
-
     logError(error, {
       operation: 'api.detectMulti',
       questionId,
