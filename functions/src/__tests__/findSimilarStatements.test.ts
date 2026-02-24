@@ -95,7 +95,7 @@ describe('findSimilarStatements - Optimized', () => {
 			// Parent statement is always fetched first to get threshold
 			jest.spyOn(cachedStatementService, 'getCachedParentStatement').mockResolvedValue({
 				statement: 'parent question',
-				statementSettings: { similarityThreshold: 0.75 },
+				statementSettings: { similarityThreshold: 0.85 },
 			} as Partial<Statement> as Statement);
 		});
 
@@ -197,7 +197,7 @@ describe('findSimilarStatements - Optimized', () => {
 				expect.objectContaining({
 					userText: 'test user input',
 				}),
-				0.75, // default threshold
+				0.85, // default threshold
 			);
 
 			expect(mockStatus).toHaveBeenCalledWith(200);
@@ -396,7 +396,7 @@ describe('findSimilarStatements - Optimized', () => {
 			// Parent statement must be fetched first to get threshold
 			jest.spyOn(cachedStatementService, 'getCachedParentStatement').mockResolvedValue({
 				statement: 'parent question',
-				statementSettings: { similarityThreshold: 0.75 },
+				statementSettings: { similarityThreshold: 0.85 },
 			} as Partial<Statement> as Statement);
 
 			jest.spyOn(cachedAiService, 'getCachedSimilarityResponse').mockResolvedValue({

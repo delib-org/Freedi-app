@@ -22,20 +22,50 @@ async function containsBadLanguage(text: string): Promise<boolean> {
 		const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
 		const prompt = `
-      Detect if the following text contains any offensive, hateful, or inappropriate language.
+      You are a strict content moderator for a collaborative discussion platform.
+      You must moderate content in ALL languages including Hebrew, Arabic, English, Spanish, German, and Dutch.
+
+      Flag the text as inappropriate if it contains ANY of these:
+      - Profanity, curse words, or vulgar language (in any language)
+      - Slurs or derogatory terms targeting any group
+      - Hate speech or discriminatory language
+      - Personal attacks, insults, name-calling, or belittling language — even indirect. Examples in multiple languages:
+        English: "idiots", "fools", "stupid people", "moron", "shut up"
+        Hebrew: "טיפשים", "מטומטם", "אידיוט", "תפסיק להיות אידיוט", "טמבל", "דביל"
+        Arabic: "أغبياء", "غبي", "حمار"
+      - Sexually explicit or suggestive content
+      - Violence, threats, or incitement to harm
+
+      Genuine opinions and disagreements are ALLOWED. Insults disguised as opinions are NOT.
+      When in doubt, flag the content.
+
       Return only true or false. Text: "${text}"
     `;
 
 		const result = await model.generateContent(prompt);
-		const output = (await result.response.text()).trim().toLowerCase();
+		const response = result.response;
 
-		console.info('🧠 Gemini response:', output);
+		// Check if Gemini's safety filters blocked the content
+		if (!response.candidates || response.candidates.length === 0) {
+			console.info('Content blocked by Gemini safety filters');
+
+			return true;
+		}
+
+		const output = response.text().trim().toLowerCase();
+		console.info('Gemini moderation response:', output);
 
 		return output.includes('true');
-	} catch (error) {
-		logError(error, { operation: 'profanityChecker.containsBadLanguage' });
+	} catch (error: unknown) {
+		// Any error (safety block, network, etc.) — treat as inappropriate
+		const message = error instanceof Error ? error.message : String(error);
+		if (message.includes('SAFETY') || message.includes('blocked') || message.includes('harm')) {
+			console.info('Content blocked by Gemini safety filters (exception)', { message });
+		} else {
+			logError(error, { operation: 'profanityChecker.containsBadLanguage' });
+		}
 
-		return false; // fail-safe: allow text if Gemini fails
+		return true; // fail-closed: block text if Gemini fails
 	}
 }
 

@@ -1742,6 +1742,7 @@
   "Check Failed": "Prüfung fehlgeschlagen",
   "Submission Failed": "Einreichung fehlgeschlagen",
   "Failed to save your evaluation. Please try again.": "Ihre Bewertung konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+  "This solution is no longer available and has been removed.": "Diese Lösung ist nicht mehr verfügbar und wurde entfernt.",
   "Failed to submit rating. Please try again.": "Bewertung konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
   "Failed to submit proposal. Please try again.": "Vorschlag konnte nicht eingereicht werden. Bitte versuchen Sie es erneut.",
   "Failed to load new solutions. Please try again.": "Neue Lösungen konnten nicht geladen werden. Bitte versuchen Sie es erneut.",

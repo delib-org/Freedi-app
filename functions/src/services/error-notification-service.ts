@@ -17,22 +17,16 @@ interface ErrorNotificationOptions {
 
 /**
  * Gets email transporter configuration
+ * Uses process.env variables (EMAIL_USER, EMAIL_PASSWORD, EMAIL_SERVICE)
  */
 async function getEmailTransporter(): Promise<nodemailer.Transporter | null> {
 	try {
-		const emailUser =
-			process.env.EMAIL_USER ||
-			(process.env.FUNCTIONS_EMULATOR
-				? null
-				: (await import('firebase-functions')).config().email?.user);
-
-		const emailPassword =
-			process.env.EMAIL_PASSWORD ||
-			(process.env.FUNCTIONS_EMULATOR
-				? null
-				: (await import('firebase-functions')).config().email?.password);
+		const emailUser = process.env.EMAIL_USER;
+		const emailPassword = process.env.EMAIL_PASSWORD;
 
 		if (!emailUser || !emailPassword) {
+			logger.warn('Email credentials not configured (EMAIL_USER / EMAIL_PASSWORD missing)');
+
 			return null;
 		}
 
@@ -87,8 +81,7 @@ export async function sendErrorNotification(options: ErrorNotificationOptions): 
 			return false;
 		}
 
-		const emailUser =
-			process.env.EMAIL_USER || (await import('firebase-functions')).config().email?.user;
+		const emailUser = process.env.EMAIL_USER;
 
 		const severityEmoji = severity === 'critical' ? '🚨' : severity === 'error' ? '❌' : '⚠️';
 		const severityColor =

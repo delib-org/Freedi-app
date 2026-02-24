@@ -14,7 +14,7 @@ import { logger } from '@/lib/utils/logger';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Rate limit check - standard for evaluations
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.STANDARD);
@@ -23,6 +23,7 @@ export async function POST(
   }
 
   try {
+    const { id: statementId } = await params;
     const body = await request.json();
     const { evaluation, userId: bodyUserId, userName } = body;
 
@@ -44,8 +45,6 @@ export async function POST(
         { status: 400 }
       );
     }
-
-    const statementId = params.id;
     const db = getFirestoreAdmin();
 
     // Get statement to find parentId
@@ -144,7 +143,7 @@ return NextResponse.json(
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   // Rate limit check - more lenient for reads
   const rateLimitResponse = checkRateLimit(request, RATE_LIMITS.READ);
@@ -153,6 +152,7 @@ export async function GET(
   }
 
   try {
+    const { id: statementId } = await params;
     const url = new URL(request.url);
     const queryUserId = url.searchParams.get('userId');
     const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -161,8 +161,6 @@ export async function GET(
     if (!userId) {
       return NextResponse.json({ evaluation: null });
     }
-
-    const statementId = params.id;
     const evaluationId = `${userId}--${statementId}`;
 
     const db = getFirestoreAdmin();

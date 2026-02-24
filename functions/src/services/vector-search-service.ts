@@ -1,7 +1,7 @@
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Statement } from '@freedi/shared-types';
-import { embeddingService } from './embedding-service';
+import { embeddingService, EMBEDDING_DIMENSIONS } from './embedding-service';
 import { embeddingCache } from './embedding-cache-service';
 
 interface SimilarStatement {
@@ -16,7 +16,7 @@ interface VectorSearchOptions {
 }
 
 const DEFAULT_LIMIT = 10;
-const DEFAULT_THRESHOLD = 0.75;
+const DEFAULT_THRESHOLD = 0.80;
 
 /**
  * Service for performing vector-based similarity search using Firestore
@@ -52,11 +52,9 @@ class VectorSearchService {
 				questionContext,
 			);
 
-			// Debug: log first 5 values of query embedding to verify it's unique
 			logger.info('Query embedding generated', {
 				userInput: userInput.substring(0, 50),
 				embeddingLength: queryEmbedding.length,
-				firstValues: queryEmbedding.slice(0, 5).map((v) => v.toFixed(4)),
 			});
 
 			// Perform vector search
@@ -88,7 +86,7 @@ class VectorSearchService {
 	 * Find statements similar to a given embedding vector
 	 * Uses Firestore's native vector search (findNearest)
 	 *
-	 * @param queryEmbedding - The 768-dimensional embedding to search for
+	 * @param queryEmbedding - The embedding vector to search for
 	 * @param parentId - The parent statement ID to search within
 	 * @param options - Search options
 	 * @returns Array of similar statements with similarity scores
@@ -106,14 +104,13 @@ class VectorSearchService {
 			const query = this.db.collection(this.statementsCollection).where('parentId', '==', parentId);
 
 			// Create vector query using Firestore's findNearest
-			// Note: Firestore returns distance (0 = identical), we convert to similarity
 			// Use distanceResultField to get the distance value in results
 			const vectorQuery = query.findNearest({
 				vectorField: 'embedding',
 				queryVector: FieldValue.vector(queryEmbedding),
 				limit: limit * 3, // Get more results to account for hidden filtering
 				distanceMeasure: 'COSINE',
-				distanceResultField: 'vectorDistance', // This field will contain the distance
+				distanceResultField: 'vectorDistance',
 			});
 
 			const snapshot = await vectorQuery.get();
@@ -128,32 +125,18 @@ class VectorSearchService {
 					continue;
 				}
 
-				// Get the distance from the vectorDistance field (set via distanceResultField option)
-				// For cosine distance: Firestore returns distance in [0, 2], where 0 = identical
-				// We convert to similarity: similarity = 1 - (distance / 2), giving [0, 1] range
+				// Firestore COSINE distance = 1 - cosine_similarity, range [0, 2]
+				// Convert back: cosine_similarity = 1 - distance
 				const rawData = doc.data() as Record<string, unknown>;
-
-				// Debug: log all fields to see what Firestore returns
-				logger.info('Raw document data keys', {
-					statementId: data.statementId,
-					keys: Object.keys(rawData),
-					hasVectorDistance: 'vectorDistance' in rawData,
-					vectorDistanceValue: rawData.vectorDistance,
-					hasEmbedding: 'embedding' in rawData,
-					embeddingLength: Array.isArray(rawData.embedding)
-						? rawData.embedding.length
-						: 'not array',
-				});
 
 				const distance = typeof rawData.vectorDistance === 'number' ? rawData.vectorDistance : null;
 
-				// If distance is not available, skip this document (shouldn't happen with distanceResultField)
 				if (distance === null) {
 					logger.warn('Vector search result missing distance', { statementId: data.statementId });
 					continue;
 				}
 
-				const similarity = 1 - distance / 2; // Normalize to [0, 1]
+				const similarity = 1 - distance; // Cosine similarity = 1 - cosine distance
 
 				logger.info('Vector search result', {
 					statementId: data.statementId,
@@ -267,8 +250,8 @@ class VectorSearchService {
 			// Try a minimal vector search to check if index is ready
 			const testQuery = this.db.collection(this.statementsCollection).limit(1);
 
-			// Create a dummy embedding for testing
-			const dummyEmbedding = new Array(768).fill(0);
+			// Create a dummy embedding matching actual dimensions
+			const dummyEmbedding = new Array(EMBEDDING_DIMENSIONS).fill(0);
 
 			const vectorQuery = testQuery.findNearest({
 				vectorField: 'embedding',

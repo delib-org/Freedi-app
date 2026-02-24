@@ -10,8 +10,10 @@ import { logger } from '@/lib/utils/logger';
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id: questionId } = await params;
+
   // Parse body at top level to avoid double parsing in catch block
   let parsedBody: {
     targetStatementId?: string;
@@ -19,7 +21,6 @@ export async function POST(
     userId?: string;
     userName?: string;
   } = {};
-  const questionId = params.id;
 
   try {
     parsedBody = await request.json();

@@ -76,9 +76,9 @@ export async function findSimilarStatements(request: Request, response: Response
 			return;
 		}
 
-		// Get threshold from settings (default 0.75)
+		// Get threshold from settings (default 0.85)
 		const settings = parentStatement.statementSettings as Record<string, unknown> | undefined;
-		const threshold = (settings?.similarityThreshold as number | undefined) ?? 0.75;
+		const threshold = (settings?.similarityThreshold as number | undefined) ?? 0.80;
 
 		logger.info('Using similarity threshold for cache', { threshold, statementId });
 

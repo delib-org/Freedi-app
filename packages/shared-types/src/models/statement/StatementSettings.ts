@@ -46,7 +46,7 @@ export const StatementSettingsSchema = object({
 	popperianPreCheckEnabled: optional(boolean()),
 	enableMultiSuggestionDetection: optional(boolean()),
 	enableAutoMerge: optional(boolean()), // if true (default), similar proposals will be automatically merged; if false, users choose
-	similarityThreshold: optional(number()), // 0-1, default 0.75 - threshold for finding similar options
+	similarityThreshold: optional(number()), // 0-1, default 0.85 - threshold for finding similar options
 	excludedInheritedDemographicIds: optional(array(string())), // IDs of inherited demographic questions to exclude for this statement
 	enableChatPanel: optional(boolean()), // if false, the chat side panel is hidden (default: true)
 	enableSubQuestionsMap: optional(boolean()), // if false, the sub-questions map side panel is hidden (default: true)

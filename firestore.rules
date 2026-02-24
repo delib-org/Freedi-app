@@ -68,39 +68,76 @@ service cloud.firestore {
     match /statements/{statementId} {
       function isAdmin() {
         let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
-        let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && subscription.role == 'admin';
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        // Must check exists() first - get() on non-existent doc returns null,
+        // and null.data crashes the entire rule evaluation
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
       }
-      
+
       function isCreator() {
         return request.auth.uid != null && resource.data.creatorId == request.auth.uid;
       }
-      
+
+      // Check if user is admin of the statement's direct parent
+      // Only called when parentId is confirmed non-null (via short-circuit)
+      function checkParentAdmin() {
+        let parentSubId = string(request.auth.uid) + '--' + cleanPath(string(resource.data.parentId));
+        let parentSubPath = /databases/$(database)/documents/statementsSubscribe/$(parentSubId);
+        return exists(parentSubPath) &&
+               (get(parentSubPath).data.role == 'admin' || get(parentSubPath).data.role == 'statement-creator');
+      }
+
+      // Check if user is admin of the top-level parent statement
+      // Only called when topParentId is confirmed non-null (via short-circuit)
+      function checkTopParentAdmin() {
+        let topSubId = string(request.auth.uid) + '--' + cleanPath(string(resource.data.topParentId));
+        let topSubPath = /databases/$(database)/documents/statementsSubscribe/$(topSubId);
+        return exists(topSubPath) &&
+               (get(topSubPath).data.role == 'admin' || get(topSubPath).data.role == 'statement-creator');
+      }
+
+      // Combined check: direct admin, creator, parent admin, or topParent admin
+      function isAuthorized() {
+        return isAdmin() || isCreator() ||
+               (resource.data.keys().hasAll(['parentId']) &&
+                resource.data.parentId != null &&
+                checkParentAdmin()) ||
+               (resource.data.keys().hasAll(['topParentId']) &&
+                resource.data.topParentId != null &&
+                checkTopParentAdmin());
+      }
+
       function hasProtectedFieldChanges() {
-        return resource != null && request.resource != null && (
-          // Check if questionSettings is being modified
+        return resource != null && request.resource != null &&
+               resource.data.keys().hasAll(['questionSettings', 'statementSettings']) && (
           (request.resource.data.questionSettings != resource.data.questionSettings) ||
-          // Check if statementSettings is being modified
           (request.resource.data.statementSettings != resource.data.statementSettings)
         );
       }
-      
+
       // Only allow membership.access to be changed by admins or creator
       function hasUnauthorizedAccessChange() {
         return resource != null && request.resource != null &&
+               resource.data.keys().hasAll(['membership']) &&
+               request.resource.data.keys().hasAll(['membership']) &&
                request.resource.data.membership.access != resource.data.membership.access &&
-               !(isAdmin() || isCreator());
+               !isAuthorized();
       }
-      
+
       function isAllowedToUpdate() {
-        return !hasProtectedFieldChanges() && !hasUnauthorizedAccessChange() || 
-               (isAdmin() || isCreator());
+        // Check non-protected field changes FIRST (no get() calls needed).
+        // This allows reparenting and other non-sensitive updates without
+        // needing the user to be admin/creator of the specific statement.
+        // Only fall through to isAuthorized() if protected fields are changing.
+        return (!hasProtectedFieldChanges() && !hasUnauthorizedAccessChange()) ||
+               isAuthorized();
       }
-      
+
       allow read;
       allow create: if request.auth.uid != null;
       allow update: if request.auth.uid != null && isAllowedToUpdate();
-      allow delete: if request.auth.uid != null && (isAdmin() || isCreator());
+      allow delete: if request.auth.uid != null && isAuthorized();
     }
 
     match /inAppNotifications/{inAppNotificationId=**} {
@@ -183,9 +220,9 @@ service cloud.firestore {
         let statementId = getStatementId();
         let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
         let subscription = get(/databases/$(database)/documents/statementsSubscribe/$(subId)).data;
-        return subscription != null && subscription.role == 'admin';
+        return subscription != null && (subscription.role == 'admin' || subscription.role == 'statement-creator');
       }
-      
+
       function isCreator() {
         let statementId = getStatementId();
         let statement = get(/databases/$(database)/documents/statements/$(statementId)).data;

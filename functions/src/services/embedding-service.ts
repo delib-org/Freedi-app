@@ -54,6 +54,7 @@ class EmbeddingService {
 
 			// Combine text with context for context-aware embedding
 			// This helps the embedding capture meaning relative to the question
+			// Context must ALWAYS be applied to match stored embeddings (which all have context)
 			const input = context ? `Question: ${context}\nAnswer: ${text}` : text;
 
 			logger.info('OpenAI Embedding API input', {
@@ -225,14 +226,14 @@ class EmbeddingService {
 	 * @param queryEmbedding - The embedding to compare against
 	 * @param candidates - Array of candidate embeddings with IDs
 	 * @param topK - Number of top results to return
-	 * @param threshold - Minimum similarity threshold (default: 0.75)
+	 * @param threshold - Minimum similarity threshold (default: 0.85)
 	 * @returns Array of {id, similarity} sorted by similarity descending
 	 */
 	findTopKSimilar(
 		queryEmbedding: number[],
 		candidates: Array<{ id: string; embedding: number[] }>,
 		topK: number,
-		threshold: number = 0.75,
+		threshold: number = 0.80,
 	): Array<{ id: string; similarity: number }> {
 		const results: Array<{ id: string; similarity: number }> = [];
 

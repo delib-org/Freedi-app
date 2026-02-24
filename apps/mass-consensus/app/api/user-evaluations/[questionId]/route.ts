@@ -10,8 +10,10 @@ import { logError } from '@/lib/utils/errorHandling';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { questionId: string } }
+  { params }: { params: Promise<{ questionId: string }> }
 ) {
+  const { questionId } = await params;
+
   try {
     // Get user ID from request
     const url = new URL(request.url);
@@ -25,8 +27,6 @@ export async function GET(
         totalEvaluated: 0,
       });
     }
-
-    const questionId = params.questionId;
     const userEvaluationId = `${userId}--${questionId}`;
 
     const db = getFirestoreAdmin();
@@ -53,7 +53,7 @@ export async function GET(
   } catch (error) {
     logError(error, {
       operation: 'api.userEvaluations',
-      metadata: { questionId: params.questionId },
+      metadata: { questionId },
     });
 
     return NextResponse.json(
