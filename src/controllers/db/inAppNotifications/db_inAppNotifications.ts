@@ -62,7 +62,15 @@ export function listenToInAppNotifications(): Unsubscribe {
 				}
 			},
 			// Error callback for the onSnapshot itself
-			(error) => {
+			(error: Error & { code?: string }) => {
+				// Permission errors are expected during sign-out when Firebase
+				// revokes the auth token before React cleanup unsubscribes the listener
+				if (error.code === 'permission-denied') {
+					store.dispatch(setInAppNotificationsAll([]));
+
+					return;
+				}
+
 				logError(error, { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { message: 'Error in notifications snapshot listener:' } });
 			},
 		);
