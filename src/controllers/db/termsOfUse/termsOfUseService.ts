@@ -24,7 +24,8 @@ export async function getLatestTermsAcceptance(
 		return doc;
 	} catch (error) {
 		logError(error, { operation: 'termsOfUse.termsOfUseService.getLatestTermsAcceptance', metadata: { message: 'Error fetching terms acceptance:' } });
-		throw error;
+
+		return null;
 	}
 }
 
