@@ -106,9 +106,10 @@ export async function clearInAppNotifications(statementId: string) {
 		);
 
 		const snapshot = await getDocs(q);
-		snapshot.forEach((ntf) => {
-			deleteDoc(ntf.ref);
-		});
+		const deletePromises = snapshot.docs.map((ntf) => deleteDoc(ntf.ref).catch(() => {
+			// Ignore errors from already-deleted documents
+		}));
+		await Promise.all(deletePromises);
 	} catch (error) {
 		logError(new Error('In clearInAppNotifications'), { operation: 'inAppNotifications.db_inAppNotifications.snapshot', metadata: { detail: error.message } });
 	}
