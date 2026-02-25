@@ -85,6 +85,11 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 		return parts.join(' › ');
 	}, [parentStatement, topParentStatement, statement?.topParentId, statement?.parentId]);
 
+	// Only show statements that have sub-statements
+	if (statement && (!statement.lastSubStatements || statement.lastSubStatements.length === 0)) {
+		return null;
+	}
+
 	return (
 		<Link
 			className={styles.chatItem}

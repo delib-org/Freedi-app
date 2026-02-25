@@ -42,13 +42,7 @@ const HomeMain = () => {
 		[allTopSubscriptions, userId],
 	);
 
-	const latestDecisions = useMemo(
-		() =>
-			allStatementsSubscriptions.filter(
-				(sub) => sub.statement.statementType === StatementType.question,
-			),
-		[allStatementsSubscriptions],
-	);
+	const latestDecisions = allStatementsSubscriptions;
 
 	useEffect(() => {
 		if (topSubscriptions.length > 0 || latestDecisions.length > 0) {
