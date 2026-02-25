@@ -1,9 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { registerSW } from 'virtual:pwa-register';
+import { useSelector } from 'react-redux';
 import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
+import { PWA, STORAGE_KEYS, TIME } from '@/constants/common';
+import { selectHasCreatedGroup, selectOptionsCreated } from '@/redux/pwa/pwaSlice';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 import { logError } from '@/utils/errorHandling';
-// import InstallPWA from './InstallPWA';
+import InstallPWA from './InstallPWA';
 import NotificationPrompt from '../notifications/NotificationPrompt';
 
 interface PWAWrapperProps {
@@ -11,7 +14,24 @@ interface PWAWrapperProps {
 }
 
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
+	const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+	const hasCreatedGroup = useSelector(selectHasCreatedGroup);
+	const optionsCreated = useSelector(selectOptionsCreated);
+	const previousIntentRef = useRef({ hasCreatedGroup, optionsCreated });
+
+	const getStoredTimestamp = (key: string): number => {
+		const value = localStorage.getItem(key);
+		const parsed = Number(value);
+
+		return Number.isFinite(parsed) ? parsed : 0;
+	};
+
+	const canShowByCooldown = (key: string, cooldownMs: number): boolean => {
+		const lastDismissedAt = getStoredTimestamp(key);
+
+		return Date.now() - lastDismissedAt >= cooldownMs;
+	};
 
 	// Sync Redux unread notification count with app badge
 	useBadgeSync();
@@ -21,26 +41,64 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		return window.location.pathname.includes('/mass-consensus');
 	};
 
-	// Hide notification prompt if we navigate to MassConsensus
+	// Hide soft prompts if we navigate to MassConsensus
 	useEffect(() => {
 		const handleLocationChange = () => {
-			if (checkIfInMassConsensus() && showNotificationPrompt) {
+			if (checkIfInMassConsensus()) {
 				setShowNotificationPrompt(false);
+				setShowInstallPrompt(false);
 			}
 		};
 
 		// Listen for URL changes
 		window.addEventListener('popstate', handleLocationChange);
 
-		// Also check on initial render and when showNotificationPrompt changes
-		if (checkIfInMassConsensus() && showNotificationPrompt) {
+		// Also check on initial render and when soft prompt state changes
+		if (checkIfInMassConsensus()) {
 			setShowNotificationPrompt(false);
+			setShowInstallPrompt(false);
 		}
 
 		return () => {
 			window.removeEventListener('popstate', handleLocationChange);
 		};
-	}, [showNotificationPrompt]);
+	}, [showInstallPrompt, showNotificationPrompt]);
+
+	// Auto-open soft prompts on success moments (intent milestones) with cooldown.
+	useEffect(() => {
+		const previous = previousIntentRef.current;
+		const crossedGroupCreation = !previous.hasCreatedGroup && hasCreatedGroup;
+		const crossedOptionsThreshold =
+			previous.optionsCreated < PWA.MIN_OPTIONS_FOR_PROMPT &&
+			optionsCreated >= PWA.MIN_OPTIONS_FOR_PROMPT;
+		const reachedIntentMilestone = crossedGroupCreation || crossedOptionsThreshold;
+
+		previousIntentRef.current = { hasCreatedGroup, optionsCreated };
+
+		if (!reachedIntentMilestone || checkIfInMassConsensus()) {
+			return;
+		}
+
+		if (
+			canShowByCooldown(
+				STORAGE_KEYS.PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT,
+				PWA.PROMPT_COOLDOWN * TIME.DAY,
+			)
+		) {
+			setShowInstallPrompt(true);
+		}
+
+		if (
+			'Notification' in window &&
+			Notification.permission === 'default' &&
+			canShowByCooldown(
+				STORAGE_KEYS.NOTIFICATION_SOFT_PROMPT_DISMISSED_AT,
+				PWA.PROMPT_COOLDOWN * TIME.DAY,
+			)
+		) {
+			setShowNotificationPrompt(true);
+		}
+	}, [hasCreatedGroup, optionsCreated]);
 
 	useEffect(() => {
 		// Initialize PWA wrapper
@@ -217,6 +275,27 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			}
 		};
 
+		// Open notification prompt from explicit user action events.
+		const handleOpenNotificationPrompt = () => {
+			if (
+				'Notification' in window &&
+				Notification.permission === 'default' &&
+				!checkIfInMassConsensus()
+			) {
+				setShowNotificationPrompt(true);
+			}
+		};
+
+		// Open install prompt from explicit user action events.
+		const handleOpenInstallPrompt = () => {
+			if (!checkIfInMassConsensus()) {
+				setShowInstallPrompt(true);
+			}
+		};
+
+		window.addEventListener('freedi:open-notification-prompt', handleOpenNotificationPrompt);
+		window.addEventListener('freedi:open-install-prompt', handleOpenInstallPrompt);
+
 		// Try to listen for permission changes (not supported in all browsers)
 		if ('permissions' in navigator) {
 			navigator.permissions
@@ -226,6 +305,11 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				})
 				.catch((error: unknown) => logError(error, { operation: 'PWAWrapper.permissionQuery' }));
 		}
+
+		return () => {
+			window.removeEventListener('freedi:open-notification-prompt', handleOpenNotificationPrompt);
+			window.removeEventListener('freedi:open-install-prompt', handleOpenInstallPrompt);
+		};
 	}, []);
 
 	return (
@@ -234,8 +318,23 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 			{/* Extracted manual triggers for install and notifications contextually */}
 			{showNotificationPrompt && !checkIfInMassConsensus() && (
-				<NotificationPrompt isOpen={true} onClose={() => setShowNotificationPrompt(false)} />
+				<NotificationPrompt
+					isOpen={true}
+					onClose={(reason) => {
+						if (reason === 'dismissed') {
+							localStorage.setItem(
+								STORAGE_KEYS.NOTIFICATION_SOFT_PROMPT_DISMISSED_AT,
+								String(Date.now()),
+							);
+						}
+						setShowNotificationPrompt(false);
+					}}
+				/>
 			)}
+			<InstallPWA
+				isOpen={showInstallPrompt && !checkIfInMassConsensus()}
+				onClose={() => setShowInstallPrompt(false)}
+			/>
 		</>
 	);
 };

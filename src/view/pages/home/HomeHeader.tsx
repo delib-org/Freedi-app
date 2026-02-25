@@ -24,7 +24,7 @@ export default function HomeHeader() {
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
 	const { t, dir, currentLanguage } = useTranslation();
-	const { isInstallable, isAppInstalled, handleInstall } = usePWAInstallPrompt();
+	const { isInstallable, isAppInstalled } = usePWAInstallPrompt();
 
 	const currentLabel = LANGUAGES.find((lang) => lang.code === currentLanguage).label;
 
@@ -50,6 +50,10 @@ export default function HomeHeader() {
 
 	function closeModal() {
 		setShowLanguageModal(false);
+	}
+
+	function handleOpenInstallPrompt() {
+		window.dispatchEvent(new Event('freedi:open-install-prompt'));
 	}
 
 	return (
@@ -87,7 +91,7 @@ export default function HomeHeader() {
 					</Menu>
 
 					{showInstallIcon && (
-						<IconButton onClick={handleInstall}>
+						<IconButton onClick={handleOpenInstallPrompt}>
 							<InstallIcon />
 						</IconButton>
 					)}

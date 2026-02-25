@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './installPWA.module.scss';
 import InstallAppIcon from '@/assets/icons/installIconW.svg?react';
+import { STORAGE_KEYS } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
 
 type BeforeInstallPromptEvent = Event & {
@@ -17,11 +18,6 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 	const [isInstallable, setIsInstallable] = useState(false);
 
-	// Track if the user has already responded to the PWA install prompt
-	const [hasUserResponded, setHasUserResponded] = useState<boolean>(() => {
-		return localStorage.getItem('pwa-user-responded') === 'true';
-	});
-
 	useEffect(() => {
 		// Handle the 'beforeinstallprompt' event — fired when the app becomes installable
 		const handleBeforeInstallPrompt = (e: Event) => {
@@ -32,9 +28,7 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 			setDeferredPrompt(e as BeforeInstallPromptEvent);
 
 			// Device can install the app
-			if (!hasUserResponded) {
-				setIsInstallable(true);
-			}
+			setIsInstallable(true);
 		};
 
 		// Handle the 'appinstalled' event — fired when the app is actually installed
@@ -44,8 +38,6 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 			// Clean up the prompt and hide the install button
 			setDeferredPrompt(null);
 			setIsInstallable(false);
-			setHasUserResponded(true);
-			localStorage.setItem('pwa-user-responded', 'true');
 		};
 
 		// Listen for install prompt availability
@@ -64,7 +56,7 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
 		};
-	}, [hasUserResponded]);
+	}, []);
 
 	const handleInstallClick = async () => {
 		if (!deferredPrompt) return;
@@ -80,8 +72,6 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 				console.info('No response from install prompt — hiding button');
 				setIsInstallable(false);
 				setDeferredPrompt(null);
-				setHasUserResponded(true);
-				localStorage.setItem('pwa-user-responded', 'true');
 				settled = true;
 			}
 		}, 5000);
@@ -95,8 +85,6 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 				clearTimeout(fallbackTimeout); // clear fallback if user did respond
 				setIsInstallable(false);
 				setDeferredPrompt(null);
-				setHasUserResponded(true);
-				localStorage.setItem('pwa-user-responded', 'true');
 				settled = true;
 			}
 		} catch (err) {
@@ -107,16 +95,12 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 			if (!settled) {
 				setIsInstallable(false);
 				setDeferredPrompt(null);
-				setHasUserResponded(true);
-				localStorage.setItem('pwa-user-responded', 'true');
 			}
 		}
 	};
 
 	const handleDismissClick = () => {
-		setIsInstallable(false);
-		setHasUserResponded(true);
-		localStorage.setItem('pwa-user-responded', 'true');
+		localStorage.setItem(STORAGE_KEYS.PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT, String(Date.now()));
 		onClose?.();
 	};
 

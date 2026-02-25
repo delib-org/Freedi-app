@@ -68,6 +68,8 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 		if ((window.navigator as any).standalone === true) {
 			return true;
 		}
+
+		return false;
 	}, []);
 	// checkShouldShowPrompt removed as it was only used for automatic triggering
 

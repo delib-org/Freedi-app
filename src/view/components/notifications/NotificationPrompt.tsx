@@ -11,7 +11,7 @@ import {
 
 interface NotificationPromptProps {
 	isOpen?: boolean;
-	onClose?: () => void;
+	onClose?: (reason: 'dismissed' | 'requested') => void;
 }
 
 /**
@@ -58,13 +58,13 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false,
 		const result = await requestPermission();
 		trackPermissionRequest(result);
 		setVisible(false);
-		onClose?.();
+		onClose?.('requested');
 	};
 
 	// Handle dismissal
 	const handleDismissClick = (): void => {
 		setVisible(false);
-		onClose?.();
+		onClose?.('dismissed');
 	};
 
 	if (!visible) return null;
