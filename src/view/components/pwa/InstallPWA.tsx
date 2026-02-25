@@ -8,7 +8,12 @@ type BeforeInstallPromptEvent = Event & {
 	userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
-const InstallPWA: React.FC = () => {
+interface InstallPWAProps {
+	isOpen?: boolean;
+	onClose?: () => void;
+}
+
+const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 	const [isInstallable, setIsInstallable] = useState(false);
 
@@ -20,13 +25,13 @@ const InstallPWA: React.FC = () => {
 	useEffect(() => {
 		// Handle the 'beforeinstallprompt' event — fired when the app becomes installable
 		const handleBeforeInstallPrompt = (e: Event) => {
-			// Prevent the automatic mini-infobar (especially in older Chrome)
+			// Prevent the automatic mini-infobar
 			e.preventDefault();
 
 			// Save the event for later so we can trigger it manually on button click
 			setDeferredPrompt(e as BeforeInstallPromptEvent);
 
-			// Show the install button only if the user hasn't already responded
+			// Device can install the app
 			if (!hasUserResponded) {
 				setIsInstallable(true);
 			}
@@ -108,17 +113,35 @@ const InstallPWA: React.FC = () => {
 		}
 	};
 
-	// Hide component if install isn't allowed or already handled
-	if (!isInstallable) {
+	const handleDismissClick = () => {
+		setIsInstallable(false);
+		setHasUserResponded(true);
+		localStorage.setItem('pwa-user-responded', 'true');
+		onClose?.();
+	};
+
+	// Hide component if install isn't allowed, already handled, or not explicitly opened
+	if (!isInstallable || !isOpen) {
 		return null;
 	}
 
 	return (
-		<div className={styles.installPwa}>
-			<button className={styles.installButton} onClick={handleInstallClick}>
-				<InstallAppIcon className={styles.installIcon} />
-				Install App
-			</button>
+		<div className={styles.installPwaOverlay}>
+			<div className={styles.installPwaContent}>
+				<div className={styles.installPwaHeader}>
+					<h3>Install FreeDi</h3>
+					<p>Get quick access to your groups and discussions from your home screen.</p>
+				</div>
+				<div className={styles.installPwaActions}>
+					<button className={styles.dismissButton} onClick={handleDismissClick}>
+						Not Now
+					</button>
+					<button className={styles.installButton} onClick={handleInstallClick}>
+						<InstallAppIcon className={styles.installIcon} />
+						Install App
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 };

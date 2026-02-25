@@ -4,13 +4,12 @@ import {
 	selectOptionsCreated,
 	selectHasCreatedGroup,
 	selectUserResponded,
-	selectLastPromptDismissedAt,
 	setInstallPromptShown,
 	setPromptDismissed,
 	setUserAcceptedInstall,
 } from '@/redux/pwa/pwaSlice';
 import { analyticsService } from '@/services/analytics/analytics';
-import { PWA, TIME } from '@/constants/common';
+
 import { logError } from '@/utils/errorHandling';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -49,7 +48,6 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 	const optionsCreated = useSelector(selectOptionsCreated);
 	const hasCreatedGroup = useSelector(selectHasCreatedGroup);
 	const userResponded = useSelector(selectUserResponded);
-	const lastPromptDismissedAt = useSelector(selectLastPromptDismissedAt);
 
 	// Local state
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -70,84 +68,8 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 		if ((window.navigator as any).standalone === true) {
 			return true;
 		}
-
-		return false;
 	}, []);
-
-	/**
-	 * Check if enough time has passed since last dismissal
-	 */
-	const canShowPromptAgain = useCallback((): boolean => {
-		if (!lastPromptDismissedAt) {
-			return true;
-		}
-
-		const daysSinceDismissal = (Date.now() - lastPromptDismissedAt) / TIME.DAY;
-
-		return daysSinceDismissal >= PWA.PROMPT_COOLDOWN;
-	}, [lastPromptDismissedAt]);
-
-	/**
-	 * Check if conditions are met to show the prompt
-	 */
-	const checkShouldShowPrompt = useCallback((): boolean => {
-		// Don't show if app is already installed
-		if (isAppInstalled) {
-			console.info('[PWA] Not showing prompt - app already installed');
-
-			return false;
-		}
-
-		// Don't show if user already responded
-		if (userResponded) {
-			console.info('[PWA] Not showing prompt - user already responded');
-
-			return false;
-		}
-
-		// Don't show if cooldown period hasn't passed
-		if (!canShowPromptAgain()) {
-			console.info('[PWA] Not showing prompt - cooldown period not passed');
-
-			return false;
-		}
-
-		// Don't show if browser doesn't support install
-		if (!isInstallable) {
-			console.info('[PWA] Not showing prompt - browser not installable');
-
-			return false;
-		}
-
-		// Check if user created a group (if enabled)
-		if (PWA.SHOW_AFTER_GROUP_CREATION && hasCreatedGroup) {
-			console.info('[PWA] Conditions met - user created a group');
-
-			return true;
-		}
-
-		// Check if user created enough options
-		if (optionsCreated >= PWA.MIN_OPTIONS_FOR_PROMPT) {
-			console.info(`[PWA] Conditions met - user created ${optionsCreated} options`);
-
-			return true;
-		}
-
-		console.info('[PWA] Not showing prompt - conditions not met', {
-			hasCreatedGroup,
-			optionsCreated,
-			minRequired: PWA.MIN_OPTIONS_FOR_PROMPT,
-		});
-
-		return false;
-	}, [
-		isAppInstalled,
-		userResponded,
-		canShowPromptAgain,
-		isInstallable,
-		hasCreatedGroup,
-		optionsCreated,
-	]);
+	// checkShouldShowPrompt removed as it was only used for automatic triggering
 
 	/**
 	 * Check if app is installed on mount
@@ -204,28 +126,9 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 	}, [dispatch, hasCreatedGroup, optionsCreated]);
 
 	/**
-	 * Check if prompt should be shown whenever conditions change
+	 * Removed automatic prompt triggering based on time/thresholds.
+	 * Components must now call `showPrompt()` based on explicit user actions.
 	 */
-	useEffect(() => {
-		const shouldShow = checkShouldShowPrompt();
-
-		if (shouldShow) {
-			// Add a small delay before showing the prompt
-			const timer = setTimeout(() => {
-				setShouldShowPrompt(true);
-				dispatch(setInstallPromptShown(true));
-
-				// Track analytics
-				const trigger = hasCreatedGroup ? 'group_created' : 'options_threshold';
-				analyticsService.trackPWAInstallPromptShown(trigger, {
-					optionsCount: optionsCreated,
-					hasCreatedGroup,
-				});
-			}, PWA.PROMPT_DELAY);
-
-			return () => clearTimeout(timer);
-		}
-	}, [checkShouldShowPrompt, dispatch, hasCreatedGroup, optionsCreated]);
 
 	/**
 	 * Manually show the prompt (for testing or manual trigger)

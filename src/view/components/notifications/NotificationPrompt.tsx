@@ -10,6 +10,7 @@ import {
 } from '@/services/notificationAnalytics';
 
 interface NotificationPromptProps {
+	isOpen?: boolean;
 	onClose?: () => void;
 }
 
@@ -17,7 +18,7 @@ interface NotificationPromptProps {
  * A component that prompts the user to enable notifications.
  * Shows iOS-specific guidance for users who need to install the PWA first.
  */
-const NotificationPrompt: React.FC<NotificationPromptProps> = ({ onClose }) => {
+const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false, onClose }) => {
 	const [visible, setVisible] = useState(false);
 	const { permissionState, requestPermission } = useNotifications();
 	const { t } = useTranslation();
@@ -30,27 +31,27 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ onClose }) => {
 	const needsPWAInstall = isIOSDevice && !isPWAInstalled && isIOSVersionSupported;
 	const isIOSUnsupported = isIOSDevice && !isIOSVersionSupported;
 
-	// Check if we should show the notification prompt
+	// Check if we should show the notification prompt based on isOpen and permission state
 	useEffect(() => {
-		// Only show the prompt if permission is not granted and not denied
-		if (permissionState.permission === 'default' && !permissionState.loading) {
-			// Don't show the prompt immediately, wait a bit for better user experience
-			const timer = setTimeout(() => {
-				setVisible(true);
+		if (isOpen && permissionState.permission === 'default' && !permissionState.loading) {
+			setVisible(true);
 
-				// Track iOS-specific prompts
-				if (isIOSUnsupported) {
-					trackIOSUnsupportedPromptShown();
-				} else if (needsPWAInstall) {
-					trackIOSInstallPromptShown();
-				}
-			}, 3000);
-
-			return () => clearTimeout(timer);
+			// Track iOS-specific prompts
+			if (isIOSUnsupported) {
+				trackIOSUnsupportedPromptShown();
+			} else if (needsPWAInstall) {
+				trackIOSInstallPromptShown();
+			}
 		} else {
 			setVisible(false);
 		}
-	}, [permissionState.permission, permissionState.loading, isIOSUnsupported, needsPWAInstall]);
+	}, [
+		isOpen,
+		permissionState.permission,
+		permissionState.loading,
+		isIOSUnsupported,
+		needsPWAInstall,
+	]);
 
 	// Handle permission request
 	const handleEnableClick = async (): Promise<void> => {

@@ -1,37 +1,83 @@
-.installPwa {
+.installPwaOverlay {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 9999;
+}
 
-  @media screen and (max-width: 1024px) {
-    bottom: 115px;
-    right: 50%;
-    transform: translateX(50%);
+.installPwaContent {
+  background: white;
+  padding: 24px;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.installPwaHeader {
+  text-align: center;
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: #333;
+    font-size: 1.25rem;
+  }
+
+  p {
+    margin: 0;
+    color: #666;
+    line-height: 1.5;
+  }
+}
+
+.installPwaActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+
+  button {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+  }
+
+  .dismissButton {
+    background: transparent;
+    border: 1px solid #ddd;
+    color: #666;
+
+    &:hover {
+      background: #f5f5f5;
+    }
   }
 
   .installButton {
     display: flex;
     align-items: center;
+    gap: 8px;
     background-color: #3367d6;
     color: white;
     border: none;
-    border-radius: 4px;
-    padding: 10px 15px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.3s ease;
 
     &:hover {
       background-color: #2a56c6;
     }
 
     .installIcon {
-      margin-inline-end: 8px;
-      width: 22px;
-      height: 22px;
+      width: 18px;
+      height: 18px;
     }
   }
 }

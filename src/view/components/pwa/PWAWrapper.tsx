@@ -4,6 +4,7 @@ import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 import { logError } from '@/utils/errorHandling';
 // import InstallPWA from './InstallPWA';
+import NotificationPrompt from '../notifications/NotificationPrompt';
 
 interface PWAWrapperProps {
 	children: React.ReactNode;
@@ -184,20 +185,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					4 * 60 * 60 * 1000,
 				); // Check every 4 hours to reduce update frequency
 
-				// Check if we should show notification prompt (but not in MassConsensus)
-				if (
-					'Notification' in window &&
-					Notification.permission === 'default' &&
-					!checkIfInMassConsensus()
-				) {
-					// Wait a bit before showing the notification prompt
-					setTimeout(() => {
-						// Double-check we're not in MassConsensus when the timer fires
-						if (!checkIfInMassConsensus()) {
-							setShowNotificationPrompt(true);
-						}
-					}, 5000);
-				}
+				// The notification prompt will now be triggered explicitly by user actions
+				// via the global Notification context or specific action handlers,
+				// rather than a generic timeout.
 
 				// Clean up interval and event listener when component unmounts
 				return () => {
@@ -242,12 +232,10 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		<>
 			{children}
 
-			{/* Auto-update mode: no toast needed */}
-			{/* Hide notification prompt in MassConsensus routes */}
-			{/* Temporarily disabled notification prompt */}
-			{/* {showNotificationPrompt && !checkIfInMassConsensus() && (
-				<NotificationPrompt onClose={() => setShowNotificationPrompt(false)} />
-			)} */}
+			{/* Extracted manual triggers for install and notifications contextually */}
+			{showNotificationPrompt && !checkIfInMassConsensus() && (
+				<NotificationPrompt isOpen={true} onClose={() => setShowNotificationPrompt(false)} />
+			)}
 		</>
 	);
 };
