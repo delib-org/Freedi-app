@@ -50,6 +50,12 @@
 
 .username {
 	color: var(--text-caption);
+	font-weight: 600;
+}
+
+.message {
+	font-weight: 400;
+	color: var(--text-body);
 }
 
 .avatar {

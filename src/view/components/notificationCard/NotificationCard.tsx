@@ -40,8 +40,8 @@ const NotificationCard: React.FC<NotificationType> = (notification) => {
 					{notification.parentStatement && notification.parentStatement !== 'top' && (
 						<span className={styles.discussion}>{notification.parentStatement}</span>
 					)}
-					<span className={styles.username}>{notification.creatorName}</span>
-					{notification.text}
+					<span className={styles.username}>{notification.creatorName}</span>{' '}
+					<span className={styles.message}>{notification.text}</span>
 				</div>
 			</div>
 		</Link>
