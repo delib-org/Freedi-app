@@ -1,16 +1,15 @@
 @use '../mixins' as *;
 
 .segmented-control {
-  display: flex;
+  display: inline-flex;
   align-items: stretch;
-  width: 100%;
+  width: fit-content;
   background: var(--card-default, #f0f0f0);
   border-radius: 8px;
   padding: 3px;
   gap: 2px;
 
   &__segment {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
