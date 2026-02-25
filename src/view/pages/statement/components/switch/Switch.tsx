@@ -54,9 +54,9 @@ const Switch = () => {
 
 	const segments = useMemo(() => {
 		const allSegments = [
-			{ id: 'chat', label: t('Chat'), count: allSubs.length },
+			{ id: 'chat', label: t('Discussion'), count: allSubs.length },
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
-				? [{ id: 'options', label: t('Options'), count: options.length }]
+				? [{ id: 'options', label: t('Solutions'), count: options.length }]
 				: []),
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
 				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
