@@ -1,14 +1,27 @@
-import React, { lazy } from 'react';
+import React from 'react';
 import { RouteObject } from 'react-router';
 import { StatementSkeleton } from '@/view/components/atomic/molecules/StatementSkeleton';
 import withSuspense, { withCustomSuspense } from './withSuspense';
+import lazyWithRetry from './lazyWithRetry';
 
-// Lazy load protected route components
-const StatementMain = lazy(() => import('@/view/pages/statement/StatementMain'));
-const MySuggestions = lazy(() => import('@/view/pages/my-suggestions/MySuggestions'));
-const VotingThankYou = lazy(() => import('@/view/pages/votingThankYou/VotingThankYou'));
-const My = lazy(() => import('@/view/pages/my/My'));
-const CheckNotifications = lazy(() => import('@/view/pages/settings/ChecNotifications'));
+// Lazy load protected route components with retry on chunk failure
+const StatementMain = lazyWithRetry(
+	() => import('@/view/pages/statement/StatementMain'),
+	'StatementMain',
+);
+const MySuggestions = lazyWithRetry(
+	() => import('@/view/pages/my-suggestions/MySuggestions'),
+	'MySuggestions',
+);
+const VotingThankYou = lazyWithRetry(
+	() => import('@/view/pages/votingThankYou/VotingThankYou'),
+	'VotingThankYou',
+);
+const My = lazyWithRetry(() => import('@/view/pages/my/My'), 'My');
+const CheckNotifications = lazyWithRetry(
+	() => import('@/view/pages/settings/ChecNotifications'),
+	'CheckNotifications',
+);
 
 // Helper to wrap with skeleton suspense (first load only)
 const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>

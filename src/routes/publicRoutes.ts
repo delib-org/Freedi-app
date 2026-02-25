@@ -1,13 +1,16 @@
-import { lazy } from 'react';
 import { RouteObject } from 'react-router';
 import withSuspense from './withSuspense';
+import lazyWithRetry from './lazyWithRetry';
 
-const Home = lazy(() => import('@/view/pages/home/Home'));
-const HomeMain = lazy(() => import('@/view/pages/home/main/HomeMain'));
+const Home = lazyWithRetry(() => import('@/view/pages/home/Home'), 'Home');
+const HomeMain = lazyWithRetry(() => import('@/view/pages/home/main/HomeMain'), 'HomeMain');
 
-const Start = lazy(() => import('@/view/pages/start/Start'));
-const LoginPage = lazy(() => import('@/view/pages/login/LoginFirst'));
-const MemberRejection = lazy(() => import('@/view/pages/memberRejection/MemberRejection'));
+const Start = lazyWithRetry(() => import('@/view/pages/start/Start'), 'Start');
+const LoginPage = lazyWithRetry(() => import('@/view/pages/login/LoginFirst'), 'LoginPage');
+const MemberRejection = lazyWithRetry(
+	() => import('@/view/pages/memberRejection/MemberRejection'),
+	'MemberRejection',
+);
 
 export const publicRoutes: RouteObject[] = [
 	{
