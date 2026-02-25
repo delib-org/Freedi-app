@@ -74,12 +74,12 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false,
 		if (isIOSUnsupported) {
 			return (
 				<>
-					<div className="notification-prompt-message">
+					<div className={styles['notificationPrompt-message']}>
 						<h3>{t('notifications.iosUnsupportedTitle')}</h3>
 						<p>{t('notifications.iosUnsupportedMessage')}</p>
 					</div>
-					<div className="notification-prompt-actions">
-						<button onClick={handleDismissClick} className={styles.notificationPromptEnable}>
+					<div className={styles['notificationPrompt-actions']}>
+						<button onClick={handleDismissClick} className={styles['notificationPrompt-enable']}>
 							{t('common.ok')}
 						</button>
 					</div>
@@ -90,7 +90,7 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false,
 		if (needsPWAInstall) {
 			return (
 				<>
-					<div className="notification-prompt-message">
+					<div className={styles['notificationPrompt-message']}>
 						<h3>{t('notifications.installAppTitle')}</h3>
 						<p>{t('notifications.installAppMessage')}</p>
 						<div className={styles.iosInstructions}>
@@ -105,8 +105,8 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false,
 							</ol>
 						</div>
 					</div>
-					<div className="notification-prompt-actions">
-						<button onClick={handleDismissClick} className={styles.notificationPromptEnable}>
+					<div className={styles['notificationPrompt-actions']}>
+						<button onClick={handleDismissClick} className={styles['notificationPrompt-enable']}>
 							{t('common.gotIt')}
 						</button>
 					</div>
@@ -120,15 +120,15 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false,
 	// Render standard notification prompt
 	const renderStandardContent = (): React.ReactNode => (
 		<>
-			<div className="notification-prompt-message">
+			<div className={styles['notificationPrompt-message']}>
 				<h3>{t('notifications.stayUpdated')}</h3>
 				<p>{t('notifications.enablePrompt')}</p>
 			</div>
-			<div className="notification-prompt-actions">
-				<button onClick={handleDismissClick} className={styles.notificationPromptDismiss}>
+			<div className={styles['notificationPrompt-actions']}>
+				<button onClick={handleDismissClick} className={styles['notificationPrompt-dismiss']}>
 					{t('common.notNow')}
 				</button>
-				<button onClick={handleEnableClick} className={styles.notificationPromptEnable}>
+				<button onClick={handleEnableClick} className={styles['notificationPrompt-enable']}>
 					{t('notifications.enable')}
 				</button>
 			</div>
@@ -137,8 +137,8 @@ const NotificationPrompt: React.FC<NotificationPromptProps> = ({ isOpen = false,
 
 	return (
 		<div className={styles.notificationPrompt}>
-			<div className="notification-prompt-content">
-				<div className="notification-prompt-icon">
+			<div className={styles['notificationPrompt-content']}>
+				<div className={styles['notificationPrompt-icon']}>
 					<img src="/icons/logo-96px.png" alt="FreeDi App" />
 				</div>
 				{isIOSUnsupported || needsPWAInstall ? renderIOSContent() : renderStandardContent()}

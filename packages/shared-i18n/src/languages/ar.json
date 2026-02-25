@@ -1844,5 +1844,9 @@
   "Default View": "العرض الافتراضي",
   "Choose which view participants see first": "اختر العرض الذي يراه المشاركون أولاً",
   "No questions yet": "لا توجد أسئلة بعد",
-  "Add a question": "أضف سؤالاً"
+  "Add a question": "أضف سؤالاً",
+
+  "pwa.installTitle": "تثبيت FreeDi",
+  "pwa.installDescription": "احصل على وصول سريع إلى مجموعاتك ومناقشاتك من شاشتك الرئيسية.",
+  "pwa.installButton": "تثبيت التطبيق"
 }

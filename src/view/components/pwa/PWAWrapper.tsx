@@ -160,50 +160,57 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 
 		if (shouldRegisterFirebaseSW) {
 			// First check if it's already registered
-			navigator.serviceWorker.getRegistrations().then((registrations) => {
-				const firebaseSW = registrations.find(
-					(r) =>
-						r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
-						r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
-						r.waiting?.scriptURL.includes('firebase-messaging-sw.js'),
-				);
+			navigator.serviceWorker
+				.getRegistrations()
+				.then((registrations) => {
+					const firebaseSW = registrations.find(
+						(r) =>
+							r.active?.scriptURL.includes('firebase-messaging-sw.js') ||
+							r.installing?.scriptURL.includes('firebase-messaging-sw.js') ||
+							r.waiting?.scriptURL.includes('firebase-messaging-sw.js'),
+					);
 
-				if (!firebaseSW) {
-					// Register Firebase Messaging SW with Firebase's default scope
-					// This allows it to coexist with the PWA's main sw.js at root scope
-					navigator.serviceWorker
-						.register('/firebase-messaging-sw.js', {
-							scope: '/firebase-cloud-messaging-push-scope',
-						})
-						.then((registration) => {
-							console.info(
-								'[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope',
-							);
+					if (!firebaseSW) {
+						// Register Firebase Messaging SW with Firebase's default scope
+						// This allows it to coexist with the PWA's main sw.js at root scope
+						navigator.serviceWorker
+							.register('/firebase-messaging-sw.js', {
+								scope: '/firebase-cloud-messaging-push-scope',
+							})
+							.then((registration) => {
+								console.info(
+									'[PWAWrapper] Firebase Messaging SW registered with firebase-cloud-messaging-push-scope',
+								);
 
-							// Wait for activation
-							if (registration.installing) {
-								registration.installing.addEventListener('statechange', function () {
-									if (this.state === 'activated') {
-										console.info('[PWAWrapper] Firebase Messaging SW activated');
-									}
+								// Wait for activation
+								if (registration.installing) {
+									registration.installing.addEventListener('statechange', function () {
+										if (this.state === 'activated') {
+											console.info('[PWAWrapper] Firebase Messaging SW activated');
+										}
+									});
+								}
+							})
+							.catch((error) => {
+								logError(error, {
+									operation: 'pwa.PWAWrapper.firebaseSW',
+									metadata: {
+										message: '[PWAWrapper] Firebase Messaging SW registration failed:',
+									},
 								});
-							}
-						})
-						.catch((error) => {
-							logError(error, {
-								operation: 'pwa.PWAWrapper.firebaseSW',
-								metadata: { message: '[PWAWrapper] Firebase Messaging SW registration failed:' },
 							});
-						});
-				} else {
-					console.info('[PWAWrapper] Firebase Messaging SW already registered');
-				}
-			});
+					} else {
+						console.info('[PWAWrapper] Firebase Messaging SW already registered');
+					}
+				})
+				.catch((error: unknown) => logError(error, { operation: 'PWAWrapper.getRegistrations' }));
 		} else if (isIOS() && !isInstalledPWA()) {
 			console.info(
 				'[PWAWrapper] iOS detected but not installed as PWA - push notifications require installing the app to home screen',
 			);
 		}
+
+		let updateInterval: ReturnType<typeof setInterval> | undefined;
 
 		registerSW({
 			immediate: true, // Register immediately
@@ -228,33 +235,15 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			onRegisteredSW(_swUrl, registration) {
 				// Service Worker registered
 
-				// Check for updates periodically
-				// Using a reasonable interval to avoid excessive update prompts
-				const updateInterval = setInterval(
-					() => {
-						// Check for Service Worker updates
-						registration?.update().catch((err) => {
-							logError(err, {
-								operation: 'pwa.PWAWrapper.updateInterval',
-								metadata: { message: 'Error updating service worker:' },
-							});
+				// Check for updates periodically (every 4 hours)
+				updateInterval = setInterval(() => {
+					registration?.update().catch((err) => {
+						logError(err, {
+							operation: 'pwa.PWAWrapper.updateInterval',
+							metadata: { message: 'Error updating service worker:' },
 						});
-					},
-					4 * 60 * 60 * 1000,
-				); // Check every 4 hours to reduce update frequency
-
-				// The notification prompt will now be triggered explicitly by user actions
-				// via the global Notification context or specific action handlers,
-				// rather than a generic timeout.
-
-				// Clean up interval and event listener when component unmounts
-				return () => {
-					clearInterval(updateInterval);
-					document.removeEventListener('visibilitychange', handleVisibilityChange);
-					if ('serviceWorker' in navigator) {
-						navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
-					}
-				};
+					});
+				}, 4 * TIME.HOUR);
 			},
 			onRegisterError(error) {
 				logError(error, {
@@ -263,10 +252,6 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				});
 			},
 		});
-
-		// Store update function for manual updates if needed
-
-		// Note: Removed automatic update on online event to prevent refresh loops
 
 		// Listen for notification permission changes
 		const handlePermissionChange = () => {
@@ -307,6 +292,13 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 		}
 
 		return () => {
+			if (updateInterval) {
+				clearInterval(updateInterval);
+			}
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
+			if ('serviceWorker' in navigator) {
+				navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+			}
 			window.removeEventListener('freedi:open-notification-prompt', handleOpenNotificationPrompt);
 			window.removeEventListener('freedi:open-install-prompt', handleOpenInstallPrompt);
 		};

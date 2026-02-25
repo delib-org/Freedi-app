@@ -2554,5 +2554,9 @@
   "Default View": "Default View",
   "Choose which view participants see first": "Choose which view participants see first",
   "No questions yet": "No questions yet",
-  "Add a question": "Add a question"
+  "Add a question": "Add a question",
+
+  "pwa.installTitle": "Install FreeDi",
+  "pwa.installDescription": "Get quick access to your groups and discussions from your home screen.",
+  "pwa.installButton": "Install App"
 }

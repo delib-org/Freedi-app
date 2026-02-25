@@ -9,7 +9,7 @@ import {
 	setUserAcceptedInstall,
 } from '@/redux/pwa/pwaSlice';
 import { analyticsService } from '@/services/analytics/analytics';
-
+import { isInstalledPWA } from '@/services/platformService';
 import { logError } from '@/utils/errorHandling';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -59,17 +59,7 @@ export const usePWAInstallPrompt = (): UsePWAInstallPromptResult => {
 	 * Check if app is already installed (running in standalone mode)
 	 */
 	const checkAppInstalled = useCallback((): boolean => {
-		// Check if running in standalone mode (iOS)
-		if (window.matchMedia('(display-mode: standalone)').matches) {
-			return true;
-		}
-		// Check if running as installed PWA (Android/iOS)
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		if ((window.navigator as any).standalone === true) {
-			return true;
-		}
-
-		return false;
+		return isInstalledPWA();
 	}, []);
 	// checkShouldShowPrompt removed as it was only used for automatic triggering
 

@@ -2542,5 +2542,9 @@
   "Default View": "תצוגת ברירת מחדל",
   "Choose which view participants see first": "בחר איזו תצוגה המשתתפים יראו ראשונה",
   "No questions yet": "אין שאלות עדיין",
-  "Add a question": "הוסף שאלה"
+  "Add a question": "הוסף שאלה",
+
+  "pwa.installTitle": "התקנת FreeDi",
+  "pwa.installDescription": "קבל גישה מהירה לקבוצות ולדיונים שלך ממסך הבית.",
+  "pwa.installButton": "התקן אפליקציה"
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './installPWA.module.scss';
 import InstallAppIcon from '@/assets/icons/installIconW.svg?react';
 import { STORAGE_KEYS } from '@/constants/common';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logError } from '@/utils/errorHandling';
 
 type BeforeInstallPromptEvent = Event & {
@@ -17,6 +18,7 @@ interface InstallPWAProps {
 const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 	const [isInstallable, setIsInstallable] = useState(false);
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		// Handle the 'beforeinstallprompt' event — fired when the app becomes installable
@@ -33,7 +35,7 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 
 		// Handle the 'appinstalled' event — fired when the app is actually installed
 		const handleAppInstalled = () => {
-			console.info('✅ App was installed via native prompt');
+			console.info('[PWA] App was installed via native prompt');
 
 			// Clean up the prompt and hide the install button
 			setDeferredPrompt(null);
@@ -62,7 +64,7 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 		if (!deferredPrompt) return;
 
 		// Show the install prompt
-		deferredPrompt.prompt();
+		await deferredPrompt.prompt();
 
 		let settled = false;
 
@@ -113,16 +115,16 @@ const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 		<div className={styles.installPwaOverlay}>
 			<div className={styles.installPwaContent}>
 				<div className={styles.installPwaHeader}>
-					<h3>Install FreeDi</h3>
-					<p>Get quick access to your groups and discussions from your home screen.</p>
+					<h3>{t('pwa.installTitle')}</h3>
+					<p>{t('pwa.installDescription')}</p>
 				</div>
 				<div className={styles.installPwaActions}>
 					<button className={styles.dismissButton} onClick={handleDismissClick}>
-						Not Now
+						{t('common.notNow')}
 					</button>
 					<button className={styles.installButton} onClick={handleInstallClick}>
 						<InstallAppIcon className={styles.installIcon} />
-						Install App
+						{t('pwa.installButton')}
 					</button>
 				</div>
 			</div>

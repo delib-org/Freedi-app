@@ -1820,5 +1820,9 @@
   "Default View": "Standardansicht",
   "Choose which view participants see first": "Wählen Sie, welche Ansicht die Teilnehmer zuerst sehen",
   "No questions yet": "Noch keine Fragen",
-  "Add a question": "Frage hinzufügen"
+  "Add a question": "Frage hinzufügen",
+
+  "pwa.installTitle": "FreeDi installieren",
+  "pwa.installDescription": "Erhalten Sie schnellen Zugriff auf Ihre Gruppen und Diskussionen von Ihrem Startbildschirm.",
+  "pwa.installButton": "App installieren"
 }

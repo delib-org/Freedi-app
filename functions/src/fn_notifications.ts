@@ -97,7 +97,7 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
 	const fetchPromises = userIds.map(async (userId) => {
 		try {
 			const tokensSnapshot = await db
-				.collection('pushNotifications')
+				.collection(Collections.pushNotifications)
 				.where('userId', '==', userId)
 				.limit(1)
 				.get();
@@ -189,7 +189,7 @@ export async function updateInAppNotifications(
 		}
 
 		// Combine subscribers from direct parent and all ancestors
-		const seenUserIds = new Set();
+		const seenUserIds = new Set<string>();
 		const allSubscribers = [...subscribersInApp, ...allParentSubscribers].filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
 				return false;
@@ -407,7 +407,7 @@ async function removeInvalidTokens(invalidTokens: FcmSubscriber[]): Promise<void
 		}
 
 		// Remove from pushNotifications collection
-		const pushNotificationRef = db.doc(`pushNotifications/${subscriber.token}`);
+		const pushNotificationRef = db.doc(`${Collections.pushNotifications}/${subscriber.token}`);
 		batch.delete(pushNotificationRef);
 	}
 

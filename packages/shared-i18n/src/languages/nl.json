@@ -1820,5 +1820,9 @@
   "Default View": "Standaardweergave",
   "Choose which view participants see first": "Kies welke weergave deelnemers als eerste zien",
   "No questions yet": "Nog geen vragen",
-  "Add a question": "Vraag toevoegen"
+  "Add a question": "Vraag toevoegen",
+
+  "pwa.installTitle": "FreeDi installeren",
+  "pwa.installDescription": "Krijg snel toegang tot je groepen en discussies vanaf je startscherm.",
+  "pwa.installButton": "App installeren"
 }
