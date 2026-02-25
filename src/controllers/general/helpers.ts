@@ -309,27 +309,41 @@ export function getLastElements(array: Array<unknown>, number: number): Array<un
 	return array.slice(Math.max(array.length - number, 1));
 }
 
-export function getTime(time: number): string {
-	const timeEvent = new Date(time);
-	const hours = timeEvent.getHours();
-	const minutes = timeEvent.getMinutes();
-	const paddedMinutes = minutes?.toString().length === 1 ? '0' + minutes : minutes;
+const dateParts = new Intl.DateTimeFormat('en-GB', {
+	day: 'numeric',
+	month: 'numeric',
+	year: 'numeric',
+	hour: '2-digit',
+	minute: '2-digit',
+	hour12: false,
+});
 
-	const timeDay = timeEvent.getDate();
-	const timeMonth = timeEvent.getMonth() + 1;
-	const timeYear = timeEvent.getFullYear();
+function getPart(parts: Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes): string {
+	return parts.find((p) => p.type === type)?.value || '';
+}
 
-	const currentTime = new Date();
-	const currentDay = currentTime.getDate();
-	const currentMonth = currentTime.getMonth() + 1;
-	const currentYear = currentTime.getFullYear();
+export function getTime(timeMs: number): string {
+	const nowMs = Date.now();
 
-	if (currentYear !== timeYear) {
-		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${paddedMinutes}`;
-	} else if (currentDay === timeDay && currentMonth === timeMonth) {
-		return `${hours}:${paddedMinutes}`;
+	const timeParts = dateParts.formatToParts(timeMs);
+	const nowParts = dateParts.formatToParts(nowMs);
+
+	const timeDay = getPart(timeParts, 'day');
+	const timeMonth = getPart(timeParts, 'month');
+	const timeYear = getPart(timeParts, 'year');
+	const timeHour = getPart(timeParts, 'hour');
+	const timeMinute = getPart(timeParts, 'minute');
+
+	const nowDay = getPart(nowParts, 'day');
+	const nowMonth = getPart(nowParts, 'month');
+	const nowYear = getPart(nowParts, 'year');
+
+	if (nowYear !== timeYear) {
+		return `${timeDay}/${timeMonth}/${timeYear} ${timeHour}:${timeMinute}`;
+	} else if (nowDay === timeDay && nowMonth === timeMonth) {
+		return `${timeHour}:${timeMinute}`;
 	} else {
-		return `${timeDay}/${timeMonth} ${hours}:${paddedMinutes}`;
+		return `${timeDay}/${timeMonth} ${timeHour}:${timeMinute}`;
 	}
 }
 
