@@ -1,6 +1,7 @@
 import React, { FC, useState, useEffect, useRef, KeyboardEvent, ChangeEvent } from 'react';
 import { Statement } from '@freedi/shared-types';
-import Save from '@/assets/icons/saveIcon.svg?react';
+import CheckIcon from '@/assets/icons/checkIcon.svg?react';
+import XIcon from '@/assets/icons/x.svg?react';
 import Text from '../text/Text';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logError } from '@/utils/errorHandling';
@@ -179,12 +180,7 @@ const EditText: FC<EditTextProps> = ({
 				style={{
 					direction,
 					textAlign: align,
-					cursor: editable && !editing ? 'pointer' : 'default',
 				}}
-				onClick={editable && !editing ? handleStartEdit : undefined}
-				role={editable && !editing ? 'button' : undefined}
-				tabIndex={editable && !editing ? 0 : undefined}
-				onKeyDown={editable && !editing ? (e) => e.key === 'Enter' && handleStartEdit() : undefined}
 			>
 				{variant === 'description' ? (
 					<Text description={secondaryText} fontSize={fontSize} statementObj={statementObj} />
@@ -318,10 +314,10 @@ const EditText: FC<EditTextProps> = ({
 				{renderEditContent()}
 				<div className={saveButtonClassName}>
 					<button onClick={handleSave} aria-label="Save" type="button">
-						<Save />
+						<CheckIcon />
 					</button>
 					<button onClick={handleCancel} aria-label="Cancel" type="button">
-						Cancel
+						<XIcon />
 					</button>
 				</div>
 			</div>
