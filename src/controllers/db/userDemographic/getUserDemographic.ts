@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { createCollectionRef, createSubscriptionRef } from '@/utils/firebaseUtils';
+import { getPseudoName } from '@/utils/temporalNameGenerator';
 import { parse } from 'valibot';
 
 // Use string literal for scope until delib-npm exports the enum value
@@ -202,7 +203,7 @@ export async function getUserDemographicResponses(
 						responseData.user ||
 						({
 							uid: response.userId,
-							displayName: 'Anonymous',
+							displayName: getPseudoName(response.userId),
 						} as User),
 					role: undefined, // Will be fetched separately
 					responses: [],

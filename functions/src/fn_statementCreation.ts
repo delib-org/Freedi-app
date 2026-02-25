@@ -410,11 +410,20 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 		});
 
 		// Create notifications for subscribers
+		// Use deterministic IDs to prevent duplicates if the function fires more than once
+		// (Firebase Functions have at-least-once delivery guarantee)
 		if (subscribers.length > 0) {
 			const batch = db.batch();
+			const seenUserIds = new Set<string>();
 
 			subscribers.forEach((subscriber: StatementSubscription) => {
-				const notificationRef = db.collection(Collections.inAppNotifications).doc();
+				// Skip duplicate subscribers (same user with multiple subscription docs)
+				if (seenUserIds.has(subscriber.user.uid)) return;
+				seenUserIds.add(subscriber.user.uid);
+
+				// Deterministic ID: ensures idempotency if function retries
+				const notificationId = `${subscriber.user.uid}_${statement.statementId}`;
+				const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
 				const questionType = statement.questionSettings?.questionType ?? getDefaultQuestionType();
 
 				const newNotification: NotificationType = {
@@ -429,13 +438,13 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 					creatorImage: statement.creator.photoURL,
 					createdAt: statement.createdAt,
 					read: false,
-					notificationId: notificationRef.id,
+					notificationId: notificationId,
 					statementId: statement.statementId,
 					viewedInList: false,
 					viewedInContext: false,
 				};
 
-				batch.create(notificationRef, newNotification);
+				batch.set(notificationRef, newNotification);
 			});
 
 			await batch.commit();

@@ -1,13 +1,11 @@
 import { FC } from 'react';
 import { Link } from 'react-router';
 import styles from './MainCard.module.scss';
-//img
-import UpdateMainCard from './updateMainCard/UpdateMainCard';
 import ImgThumb from '@/assets/images/ImgThumb.png';
-import Text from '@/view/components/text/Text';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { SimpleStatement, StatementSubscription } from '@freedi/shared-types';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { getTime } from '@/controllers/general/helpers';
+import { getTitle } from './updateMainCard/UpdateMainCard';
 
 interface Props {
 	subscription: StatementSubscription;
@@ -15,52 +13,42 @@ interface Props {
 
 const MainCard: FC<Props> = ({ subscription }) => {
 	const { statement: simpleStatement } = subscription;
-	const { t } = useTranslation();
-
-	// Use lastSubStatements from subscription if available, otherwise fall back to old method
 	const subStatements = subscription.lastSubStatements || [];
-
 	const statementImgUrl = simpleStatement.imageURL || undefined;
-	const description =
-		simpleStatement.description?.length > 30
-			? `${simpleStatement.description.slice(0, 144)} ...`
-			: simpleStatement.description;
 
-	// No longer need to listen to sub-statements as they come from subscription.lastSubStatements
+	const latestUpdate: SimpleStatement | undefined = subStatements[0];
 
 	return (
-		<div className={styles.mainCard}>
-			<Link
-				to={`/statement/${simpleStatement.statementId}/`}
-				className={styles.link}
-				state={{ from: window.location.pathname }}
-			>
-				<div className={styles.content}>
-					<div
-						style={{
-							backgroundImage: `url(${statementImgUrl ?? ImgThumb})`,
-						}}
-						className={styles.img}
-					></div>
-					<div onClick={(e) => e.stopPropagation()}>
-						<StatementChatMore statement={simpleStatement} />
+		<Link
+			className={styles.chatItem}
+			to={`/statement/${simpleStatement.statementId}/`}
+			state={{ from: window.location.pathname }}
+		>
+			<div
+				className={styles.avatar}
+				style={{
+					backgroundImage: `url(${statementImgUrl ?? ImgThumb})`,
+				}}
+			/>
+			<div className={styles.body}>
+				<div className={styles.topRow}>
+					<div className={styles.title}>{simpleStatement.statement}</div>
+					<div className={styles.actions}>
+						{latestUpdate?.lastUpdate && (
+							<span className={styles.time}>{getTime(latestUpdate.lastUpdate)}</span>
+						)}
+						<div onClick={(e) => e.stopPropagation()}>
+							<StatementChatMore statement={simpleStatement} />
+						</div>
 					</div>
 				</div>
-
-				<div className={styles.contentText}>
-					<h2>{simpleStatement.statement}</h2>
-					<div className={styles['contentText__description']}>
-						<Text description={description} />
+				{latestUpdate && (
+					<div className={styles.lastMessage}>
+						<span className={styles.parentName}>{getTitle(latestUpdate.statement)}</span>
 					</div>
-				</div>
-			</Link>
-			<div className={styles.updates}>
-				{subStatements.length > 0 && <h3>{t('Last Updates')}</h3>}
-				{subStatements.map((subStatement: SimpleStatement) => (
-					<UpdateMainCard key={subStatement.statementId} statement={subStatement} />
-				))}
+				)}
 			</div>
-		</div>
+		</Link>
 	);
 };
 

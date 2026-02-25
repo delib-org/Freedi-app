@@ -11,6 +11,7 @@ import styles from './enterNameModal.module.scss';
 // Functions
 import { signAnonymously } from '@/controllers/db/authenticationUtils';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { generateTemporalName } from '@/utils/temporalNameGenerator';
 
 interface Props {
 	closeModal: VoidFunction;
@@ -34,7 +35,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 
 		try {
 			signAnonymously();
-			const _displayName = displayName || 'Anonymous';
+			const _displayName = displayName || generateTemporalName();
 			localStorage.setItem('displayName', _displayName);
 			closeModal();
 		} catch (error) {
@@ -46,7 +47,7 @@ const EnterNameModal: FC<Props> = ({ closeModal }) => {
 		try {
 			if (isReadyToStart(displayName)) {
 				signAnonymously();
-				const _displayName = displayName || 'Anonymous';
+				const _displayName = displayName || generateTemporalName();
 				localStorage.setItem('displayName', _displayName);
 				closeModal();
 			}

@@ -137,6 +137,14 @@ export const ROUTES = {
 } as const;
 
 /**
+ * Chat constants
+ */
+export const CHAT = {
+	INITIAL_MESSAGES_LIMIT: 30,
+	LOAD_MORE_BATCH_SIZE: 30,
+} as const;
+
+/**
  * Feature flags
  */
 export const FEATURES = {

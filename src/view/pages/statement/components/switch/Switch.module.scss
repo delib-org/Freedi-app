@@ -9,7 +9,10 @@
 	position: sticky;
 	top: 0;
 	z-index: 2;
+	width: 100%;
+	align-self: stretch;
 	background-color: var(--statementBackground);
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 
 	// Mobile scroll-to-hide animation
 	@media screen and (max-width: 600px) {
@@ -44,8 +47,8 @@
 	h1 {
 		width: 100%;
 		text-align: start;
-		max-width: 40rem;
 		margin: .5rem 0;
+		padding: 0 1rem;
 		line-height: 2rem;
 
 		input {
@@ -61,6 +64,8 @@
 }
 
 .segmentedControlWrapper {
+	display: flex;
+	justify-content: center;
 	padding: 0.5rem 1rem;
 
 	@media screen and (max-width: 600px) {

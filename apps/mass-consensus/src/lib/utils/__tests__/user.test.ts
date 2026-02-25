@@ -223,27 +223,27 @@ describe('user utilities', () => {
   });
 
   describe('getAnonymousDisplayName', () => {
-    it('should extract last 6 digits of timestamp for display name', () => {
+    it('should generate an Adjective Noun Number format name', () => {
       const userId = 'anon_1704067200123_abc123';
       const displayName = getAnonymousDisplayName(userId);
-      expect(displayName).toBe('User 200123');
+      expect(displayName).toMatch(/^\w+ \w+ \d+$/);
     });
 
-    it('should return "Anonymous User" for invalid format', () => {
+    it('should generate a distinguished name for any format', () => {
       const userId = 'invalid_format';
       const displayName = getAnonymousDisplayName(userId);
-      expect(displayName).toBe('Anonymous User');
+      expect(displayName).toMatch(/^\w+ \w+ \d+$/);
     });
 
-    it('should handle userId without timestamp', () => {
+    it('should handle any userId format', () => {
       const userId = 'some_random_id';
       const displayName = getAnonymousDisplayName(userId);
-      expect(displayName).toBe('Anonymous User');
+      expect(displayName).toMatch(/^\w+ \w+ \d+$/);
     });
 
     it('should handle empty string', () => {
       const displayName = getAnonymousDisplayName('');
-      expect(displayName).toBe('Anonymous User');
+      expect(displayName).toMatch(/^\w+ \w+ \d+$/);
     });
 
     it('should generate consistent display names for same userId', () => {
@@ -253,7 +253,7 @@ describe('user utilities', () => {
       expect(name1).toBe(name2);
     });
 
-    it('should generate different display names for different timestamps', () => {
+    it('should generate different display names for different userIds', () => {
       const userId1 = 'anon_1704067200111_abc';
       const userId2 = 'anon_1704067200222_abc';
       const name1 = getAnonymousDisplayName(userId1);
@@ -264,7 +264,7 @@ describe('user utilities', () => {
     it('should handle real generated userId', () => {
       const userId = generateAnonymousUserId();
       const displayName = getAnonymousDisplayName(userId);
-      expect(displayName).toMatch(/^User \d{6}$/);
+      expect(displayName).toMatch(/^\w+ \w+ \d+$/);
     });
   });
 
@@ -272,7 +272,7 @@ describe('user utilities', () => {
     it('should generate userId that can be parsed for display name', () => {
       const userId = generateAnonymousUserId();
       const displayName = getAnonymousDisplayName(userId);
-      expect(displayName).toMatch(/^User \d+$/);
+      expect(displayName).toMatch(/^\w+ \w+ \d+$/);
     });
   });
 });

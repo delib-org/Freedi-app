@@ -9,9 +9,9 @@
 	width: fit-content;
 	max-width: 30rem;
 	color: var(--text-title);
-	text-wrap: nowrap;
 	transform: translateX(-50%);
 	left: 50%;
+	z-index: 100;
 
 	a {
 		text-align: start;
@@ -22,14 +22,53 @@
 	}
 
 	@media screen and (max-width: 768px) {
-		max-width: 80vw;
+		position: fixed;
+		top: 3.5rem;
+		left: 0.5rem;
+		right: 0.5rem;
+		max-width: none;
+		width: auto;
+		transform: none;
 	}
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem;
+	border-bottom: 1px solid var(--border-color, #e0e0e0);
+	margin-bottom: 0.5rem;
 }
 
 .notificationTitle {
 	font-weight: bold;
-	font-size: 1.5rem;
-	margin: 1rem;
+	font-size: 1.2rem;
+	white-space: nowrap;
+}
+
+.actions {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.actionBtn {
+	font-size: 0.75rem;
+	padding: 0.25rem 0.5rem;
+	border-radius: 8px;
+	border: 1px solid var(--border-color, #e0e0e0);
+	background: transparent;
+	color: var(--text-body, #555);
+	cursor: pointer;
+	white-space: nowrap;
+	transition: background 0.15s, color 0.15s;
+
+	&:hover {
+		background: var(--btn-primary, #5f88e5);
+		color: white;
+	}
 }
 
 .noNotifications {

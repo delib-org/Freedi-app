@@ -145,7 +145,7 @@ service cloud.firestore {
       allow read: if request.auth != null;
       // Only allow updates and deletes by the owner of the notification
       allow update: if request.auth != null && resource.data.get('userId', '') == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.get('userId', '') == request.auth.uid;
+      allow delete: if request.auth != null && (resource == null || resource.data.get('userId', '') == request.auth.uid);
     }
 
     match /pushNotifications/{pushNotificationId=**} {

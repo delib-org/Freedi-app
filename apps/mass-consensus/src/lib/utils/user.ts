@@ -56,18 +56,36 @@ export function getUserIdFromCookies(cookieStore: { get: (name: string) => { val
   return userIdCookie?.value ?? null;
 }
 
+const pseudoNameAdjectives = [
+  'Clear', 'Thoughtful', 'Curious', 'Insightful', 'Creative',
+  'Analytical', 'Observant', 'Mindful', 'Reflective', 'Intuitive',
+  'Logical', 'Wise', 'Bright', 'Deep', 'Fair',
+  'Open', 'Sharp', 'Quick', 'Keen', 'Bold',
+];
+
+const pseudoNameNouns = [
+  'Thought', 'Mind', 'Voice', 'Perspective', 'View',
+  'Insight', 'Question', 'Explorer', 'Thinker', 'Observer',
+  'Analyst', 'Contributor', 'Participant', 'Learner', 'Seeker',
+  'Scholar', 'Listener', 'Speaker', 'Idea', 'Vision',
+];
+
 /**
- * Generate a display name for anonymous users
+ * Generate a deterministic display name for anonymous users.
+ * Same userId always produces the same distinguished name.
  * @param userId - Anonymous user ID
  */
 export function getAnonymousDisplayName(userId: string): string {
-  // Extract timestamp from userId for consistent naming
-  const match = userId.match(/anon_(\d+)_/);
-  if (match) {
-    const timestamp = parseInt(match[1]);
-    
-return `User ${timestamp.toString().slice(-6)}`;
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+    hash |= 0;
   }
-  
-return 'Anonymous User';
+  hash = Math.abs(hash);
+
+  const adjIdx = hash % pseudoNameAdjectives.length;
+  const nounIdx = Math.floor(hash / pseudoNameAdjectives.length) % pseudoNameNouns.length;
+  const number = (hash % 999) + 1;
+
+  return `${pseudoNameAdjectives[adjIdx]} ${pseudoNameNouns[nounIdx]} ${number}`;
 }

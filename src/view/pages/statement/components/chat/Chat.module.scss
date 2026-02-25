@@ -19,6 +19,29 @@
 	scroll-behavior: smooth;
 }
 
+.sentinel {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	min-height: 2rem;
+	padding: 0.5rem 0;
+}
+
+.spinner {
+	width: 1.25rem;
+	height: 1.25rem;
+	border: 2px solid var(--border-color, #ddd);
+	border-top-color: var(--btn-primary, #5f88e5);
+	border-radius: 50%;
+	animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
 .messageWrapper {
 	animation: fadeSlideIn 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	opacity: 0;
