@@ -313,6 +313,7 @@ export function getTime(time: number): string {
 	const timeEvent = new Date(time);
 	const hours = timeEvent.getHours();
 	const minutes = timeEvent.getMinutes();
+	const paddedMinutes = minutes?.toString().length === 1 ? '0' + minutes : minutes;
 
 	const timeDay = timeEvent.getDate();
 	const timeMonth = timeEvent.getMonth() + 1;
@@ -324,14 +325,12 @@ export function getTime(time: number): string {
 	const currentYear = currentTime.getFullYear();
 
 	if (currentYear !== timeYear) {
-		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
-	} else if (currentDay !== timeDay && currentMonth === timeMonth && currentYear === timeYear) {
-		return `${timeDay}/${timeMonth} ${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
-	} else if (currentDay === timeDay && currentMonth === timeMonth && currentYear === timeYear) {
-		return `${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
+		return `${timeDay}/${timeMonth}/${timeYear} ${hours}:${paddedMinutes}`;
+	} else if (currentDay === timeDay && currentMonth === timeMonth) {
+		return `${hours}:${paddedMinutes}`;
+	} else {
+		return `${timeDay}/${timeMonth} ${hours}:${paddedMinutes}`;
 	}
-
-	return `${hours}:${minutes?.toString().length === 1 ? '0' + minutes : minutes}`;
 }
 
 export function truncateString(text: string, maxLength = 20): string {
