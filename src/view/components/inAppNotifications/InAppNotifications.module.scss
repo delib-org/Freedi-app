@@ -32,6 +32,15 @@
 	}
 }
 
+.notificationsList {
+	overflow-y: auto;
+	max-height: 60vh;
+
+	@media screen and (max-width: 768px) {
+		max-height: calc(100vh - 10rem);
+	}
+}
+
 .header {
 	display: flex;
 	justify-content: space-between;

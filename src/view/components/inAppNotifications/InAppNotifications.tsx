@@ -64,9 +64,11 @@ const InAppNotifications = () => {
 							</button>
 						</div>
 					</div>
-					{inAppNotifications.map((notification) => {
-						return <NotificationCard key={notification.notificationId} {...notification} />;
-					})}
+					<div className={styles.notificationsList}>
+						{inAppNotifications.map((notification) => {
+							return <NotificationCard key={notification.notificationId} {...notification} />;
+						})}
+					</div>
 				</>
 			) : (
 				<div className={styles.noNotifications}>{t('You have no new notifications')}</div>
