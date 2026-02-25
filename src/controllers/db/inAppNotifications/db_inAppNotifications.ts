@@ -20,6 +20,7 @@ import {
 	markNotificationAsRead,
 	markNotificationsAsRead,
 	markStatementNotificationsAsRead,
+	clearAllInAppNotifications,
 } from '@/redux/notificationsSlice/notificationsSlice';
 import { logError } from '@/utils/errorHandling';
 
@@ -57,7 +58,10 @@ export function listenToInAppNotifications(): Unsubscribe {
 					});
 					store.dispatch(setInAppNotificationsAll(notifications));
 				} catch (error) {
-					logError(error, { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { message: 'Error processing notifications snapshot:' } });
+					logError(error, {
+						operation: 'inAppNotifications.db_inAppNotifications.unknown',
+						metadata: { message: 'Error processing notifications snapshot:' },
+					});
 					// Still allow the listener to continue functioning
 				}
 			},
@@ -71,11 +75,17 @@ export function listenToInAppNotifications(): Unsubscribe {
 					return;
 				}
 
-				logError(error, { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { message: 'Error in notifications snapshot listener:' } });
+				logError(error, {
+					operation: 'inAppNotifications.db_inAppNotifications.unknown',
+					metadata: { message: 'Error in notifications snapshot listener:' },
+				});
 			},
 		);
 	} catch (error) {
-		logError(new Error('In listenToInAppNotifications'), { operation: 'inAppNotifications.db_inAppNotifications.unknown', metadata: { detail: error.message } });
+		logError(new Error('In listenToInAppNotifications'), {
+			operation: 'inAppNotifications.db_inAppNotifications.unknown',
+			metadata: { detail: error.message },
+		});
 
 		return () => {
 			return;
@@ -86,14 +96,18 @@ export function listenToInAppNotifications(): Unsubscribe {
 export async function clearInAppNotifications(statementId: string) {
 	try {
 		if (!statementId) {
-			logError(new Error('clearInAppNotifications: statementId is required'), { operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications' });
+			logError(new Error('clearInAppNotifications: statementId is required'), {
+				operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications',
+			});
 
 			return;
 		}
 
 		const user = store.getState().creator.creator;
 		if (!user) {
-			logError(new Error('clearInAppNotifications: User not found'), { operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications' });
+			logError(new Error('clearInAppNotifications: User not found'), {
+				operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications',
+			});
 
 			return;
 		}
@@ -106,12 +120,17 @@ export async function clearInAppNotifications(statementId: string) {
 		);
 
 		const snapshot = await getDocs(q);
-		const deletePromises = snapshot.docs.map((ntf) => deleteDoc(ntf.ref).catch(() => {
-			// Ignore errors from already-deleted documents
-		}));
+		const deletePromises = snapshot.docs.map((ntf) =>
+			deleteDoc(ntf.ref).catch(() => {
+				// Ignore errors from already-deleted documents
+			}),
+		);
 		await Promise.all(deletePromises);
 	} catch (error) {
-		logError(new Error('In clearInAppNotifications'), { operation: 'inAppNotifications.db_inAppNotifications.snapshot', metadata: { detail: error.message } });
+		logError(new Error('In clearInAppNotifications'), {
+			operation: 'inAppNotifications.db_inAppNotifications.snapshot',
+			metadata: { detail: error.message },
+		});
 	}
 }
 
@@ -120,7 +139,9 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 	try {
 		const user = store.getState().creator.creator;
 		if (!user) {
-			logError(new Error('markNotificationAsReadDB: User not found'), { operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB' });
+			logError(new Error('markNotificationAsReadDB: User not found'), {
+				operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB',
+			});
 
 			return;
 		}
@@ -135,7 +156,10 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 		// Update in Redux
 		store.dispatch(markNotificationAsRead(notificationId));
 	} catch (error) {
-		logError(new Error('In markNotificationAsReadDB'), { operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB', metadata: { detail: error.message } });
+		logError(new Error('In markNotificationAsReadDB'), {
+			operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB',
+			metadata: { detail: error.message },
+		});
 	}
 }
 
@@ -144,7 +168,10 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			logError(new Error('markMultipleNotificationsAsReadDB: User not found or no notification IDs'), { operation: 'inAppNotifications.db_inAppNotifications.markMultipleNotificationsAsReadDB' });
+			logError(
+				new Error('markMultipleNotificationsAsReadDB: User not found or no notification IDs'),
+				{ operation: 'inAppNotifications.db_inAppNotifications.markMultipleNotificationsAsReadDB' },
+			);
 
 			return;
 		}
@@ -164,7 +191,10 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 		// Update in Redux
 		store.dispatch(markNotificationsAsRead(notificationIds));
 	} catch (error) {
-		logError(new Error('In markMultipleNotificationsAsReadDB'), { operation: 'inAppNotifications.db_inAppNotifications.now', metadata: { detail: error.message } });
+		logError(new Error('In markMultipleNotificationsAsReadDB'), {
+			operation: 'inAppNotifications.db_inAppNotifications.now',
+			metadata: { detail: error.message },
+		});
 	}
 }
 
@@ -173,7 +203,9 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !statementId) {
-			logError(new Error('markStatementNotificationsAsReadDB: User not found or no statement ID'), { operation: 'inAppNotifications.db_inAppNotifications.markStatementNotificationsAsReadDB' });
+			logError(new Error('markStatementNotificationsAsReadDB: User not found or no statement ID'), {
+				operation: 'inAppNotifications.db_inAppNotifications.markStatementNotificationsAsReadDB',
+			});
 
 			return;
 		}
@@ -206,7 +238,10 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 			store.dispatch(markStatementNotificationsAsRead(statementId));
 		}
 	} catch (error) {
-		logError(new Error('In markStatementNotificationsAsReadDB'), { operation: 'inAppNotifications.db_inAppNotifications.now', metadata: { detail: error.message } });
+		logError(new Error('In markStatementNotificationsAsReadDB'), {
+			operation: 'inAppNotifications.db_inAppNotifications.now',
+			metadata: { detail: error.message },
+		});
 	}
 }
 
@@ -215,7 +250,10 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			logError(new Error('markNotificationsAsViewedInListDB: User not found or no notification IDs'), { operation: 'inAppNotifications.db_inAppNotifications.markNotificationsAsViewedInListDB' });
+			logError(
+				new Error('markNotificationsAsViewedInListDB: User not found or no notification IDs'),
+				{ operation: 'inAppNotifications.db_inAppNotifications.markNotificationsAsViewedInListDB' },
+			);
 
 			return;
 		}
@@ -230,6 +268,51 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 		});
 		await batch.commit();
 	} catch (error) {
-		logError(new Error('In markNotificationsAsViewedInListDB'), { operation: 'inAppNotifications.db_inAppNotifications.batch', metadata: { detail: error.message } });
+		logError(new Error('In markNotificationsAsViewedInListDB'), {
+			operation: 'inAppNotifications.db_inAppNotifications.batch',
+			metadata: { detail: error.message },
+		});
+	}
+}
+
+// Clear all notifications for the current user from Firestore and Redux
+export async function clearAllInAppNotificationsDB(): Promise<void> {
+	try {
+		const user = store.getState().creator.creator;
+		if (!user) {
+			logError(new Error('clearAllInAppNotificationsDB: User not found'), {
+				operation: 'inAppNotifications.db_inAppNotifications.clearAllInAppNotificationsDB',
+			});
+
+			return;
+		}
+
+		const inAppNotificationsRef = collection(DB, Collections.inAppNotifications);
+		const q = query(inAppNotificationsRef, where('userId', '==', user.uid));
+
+		const snapshot = await getDocs(q);
+
+		if (snapshot.empty) return;
+
+		// Delete in batches of 500 (Firestore limit)
+		const batchSize = 500;
+		const docs = snapshot.docs;
+
+		for (let i = 0; i < docs.length; i += batchSize) {
+			const batch = writeBatch(DB);
+			const chunk = docs.slice(i, i + batchSize);
+			chunk.forEach((docSnapshot) => {
+				batch.delete(docSnapshot.ref);
+			});
+			await batch.commit();
+		}
+
+		// Clear from Redux
+		store.dispatch(clearAllInAppNotifications());
+	} catch (error) {
+		logError(new Error('In clearAllInAppNotificationsDB'), {
+			operation: 'inAppNotifications.db_inAppNotifications.clearAllInAppNotificationsDB',
+			metadata: { detail: error.message },
+		});
 	}
 }

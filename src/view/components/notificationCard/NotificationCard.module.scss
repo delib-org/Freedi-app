@@ -37,6 +37,17 @@
 	}
 }
 
+.discussion {
+	display: block;
+	font-size: 0.75rem;
+	color: var(--icons-blue-dark);
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	margin-bottom: 2px;
+}
+
 .username {
 	color: var(--text-caption);
 }

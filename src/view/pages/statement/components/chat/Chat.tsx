@@ -5,7 +5,6 @@ import styles from './Chat.module.scss';
 import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
 import ChatInput from './components/input/ChatInput';
 import NewMessages from './components/newMessages/NewMessages';
-import { listenToSubStatements } from '@/controllers/db/statements/listenToStatements';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import Description from '../evaluations/components/description/Description';
@@ -88,13 +87,7 @@ const Chat: FC<ChatProps> = ({
 
 	useEffect(() => {
 		firstTime = true;
-
-		const unsubscribe = listenToSubStatements(statementId);
-
-		return () => {
-			unsubscribe();
-		};
-	}, []);
+	}, [statementId]);
 
 	//effects
 	useEffect(() => {
