@@ -33,7 +33,10 @@ const FCMTokenDisplay: React.FC = () => {
 					}
 				}
 			} catch (error) {
-				logError(error, { operation: 'notifications.FCMTokenDisplay.getAndDisplayToken', metadata: { message: 'Error getting FCM token:' } });
+				logError(error, {
+					operation: 'notifications.FCMTokenDisplay.getAndDisplayToken',
+					metadata: { message: 'Error getting FCM token:' },
+				});
 			}
 		};
 
@@ -53,7 +56,10 @@ const FCMTokenDisplay: React.FC = () => {
 				}
 			}
 		} catch (error) {
-			logError(error, { operation: 'notifications.FCMTokenDisplay.handleRequestPermission', metadata: { message: 'Error requesting notification permission:' } });
+			logError(error, {
+				operation: 'notifications.FCMTokenDisplay.handleRequestPermission',
+				metadata: { message: 'Error requesting notification permission:' },
+			});
 		}
 	};
 
@@ -66,7 +72,10 @@ const FCMTokenDisplay: React.FC = () => {
 					alert('Token copied to clipboard!');
 				})
 				.catch((err) => {
-					logError(err, { operation: 'notifications.FCMTokenDisplay.handleCopyToken', metadata: { message: 'Error copying token:' } });
+					logError(err, {
+						operation: 'notifications.FCMTokenDisplay.handleCopyToken',
+						metadata: { message: 'Error copying token:' },
+					});
 				});
 		}
 	};

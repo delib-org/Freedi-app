@@ -241,7 +241,9 @@ describe('Firebase Utilities (Extended)', () => {
 
 		it('createSubscriptionRef should use statementsSubscribe collection', () => {
 			const ref = createSubscriptionRef('sub-123');
-			expect((ref as unknown as { collection: string }).collection).toBe(Collections.statementsSubscribe);
+			expect((ref as unknown as { collection: string }).collection).toBe(
+				Collections.statementsSubscribe,
+			);
 		});
 	});
 });

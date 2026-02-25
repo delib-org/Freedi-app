@@ -81,7 +81,10 @@ export function logNotificationEvent(
 		});
 	} catch (error) {
 		// Silently fail - analytics should never break the app
-		logError(error, { operation: 'services.notificationAnalytics.logNotificationEvent', metadata: { message: '[NotificationAnalytics] Failed to log event:' } });
+		logError(error, {
+			operation: 'services.notificationAnalytics.logNotificationEvent',
+			metadata: { message: '[NotificationAnalytics] Failed to log event:' },
+		});
 	}
 }
 

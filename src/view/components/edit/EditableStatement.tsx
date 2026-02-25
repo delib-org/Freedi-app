@@ -40,7 +40,10 @@ const EditableStatement: FC<EditableStatementProps> = ({
 			await updateStatementText(statement, title);
 			onSaveSuccess?.();
 		} catch (error) {
-			logError(error, { operation: 'edit.EditableStatement.handleSave', metadata: { message: 'Error updating statement:' } });
+			logError(error, {
+				operation: 'edit.EditableStatement.handleSave',
+				metadata: { message: 'Error updating statement:' },
+			});
 			onSaveError?.(error as Error);
 		}
 	};

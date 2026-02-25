@@ -23,7 +23,10 @@ export const useDocumentTitle = ({ statement }: UseDocumentTitleProps) => {
 			);
 			document.title = `${APP_CONSTANTS.DOCUMENT_TITLE_PREFIX} - ${shortVersion}`;
 		} catch (error) {
-			logError(error, { operation: 'hooks.useDocumentTitle.useDocumentTitle', metadata: { message: 'Error setting document title:' } });
+			logError(error, {
+				operation: 'hooks.useDocumentTitle.useDocumentTitle',
+				metadata: { message: 'Error setting document title:' },
+			});
 			document.title = APP_CONSTANTS.DOCUMENT_TITLE_PREFIX;
 		}
 	}, [statement]);

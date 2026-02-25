@@ -51,7 +51,10 @@ export async function handleGetNonVoters(
 
 		setClicked(true);
 	} catch (error) {
-		logError(error, { operation: 'settings.statementSettingsCont.nonVoters', metadata: { message: 'Error fetching non-voters:' } });
+		logError(error, {
+			operation: 'settings.statementSettingsCont.nonVoters',
+			metadata: { message: 'Error fetching non-voters:' },
+		});
 	}
 }
 

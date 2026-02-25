@@ -52,7 +52,10 @@ function getUserLanguage(): string {
 			}
 		}
 	} catch (error) {
-		logError(error, { operation: 'popperHebbian.evidenceController.getUserLanguage', metadata: { message: '[Link Summary] Error reading userConfig from localStorage:' } });
+		logError(error, {
+			operation: 'popperHebbian.evidenceController.getUserLanguage',
+			metadata: { message: '[Link Summary] Error reading userConfig from localStorage:' },
+		});
 	}
 
 	// Fallback to browser language

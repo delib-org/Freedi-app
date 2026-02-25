@@ -185,7 +185,10 @@ const StatementBottomNav: FC<Props> = () => {
 				dispatch,
 			});
 		} catch (error) {
-			logError(error, { operation: 'bottom.StatementBottomNav.paragraphs', metadata: { message: 'Failed to publish refined idea:' } });
+			logError(error, {
+				operation: 'bottom.StatementBottomNav.paragraphs',
+				metadata: { message: 'Failed to publish refined idea:' },
+			});
 		}
 	}
 

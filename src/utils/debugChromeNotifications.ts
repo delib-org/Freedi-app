@@ -62,11 +62,17 @@ export async function debugChromeNotifications() {
 				const token2 = await getToken(messaging, { vapidKey });
 				console.info('   - Direct VAPID:', token2 ? 'Success' : 'Failed');
 			} catch (e) {
-				logError(e, { operation: 'utils.debugChromeNotifications.vapidTest', metadata: { message: 'Direct VAPID error' } });
+				logError(e, {
+					operation: 'utils.debugChromeNotifications.vapidTest',
+					metadata: { message: 'Direct VAPID error' },
+				});
 			}
 		}
 	} catch (error) {
-		logError(error, { operation: 'utils.debugChromeNotifications.tokenGeneration', metadata: { name: (error as Error).name, message: (error as Error).message } });
+		logError(error, {
+			operation: 'utils.debugChromeNotifications.tokenGeneration',
+			metadata: { name: (error as Error).name, message: (error as Error).message },
+		});
 	}
 
 	// 4. Check Push API
@@ -82,7 +88,10 @@ export async function debugChromeNotifications() {
 				console.info('   - P256dh:', subscription.toJSON().keys?.p256dh);
 			}
 		} catch (error) {
-			logError(error, { operation: 'utils.debugChromeNotifications.unknown', metadata: { message: '   - Push API error:' } });
+			logError(error, {
+				operation: 'utils.debugChromeNotifications.unknown',
+				metadata: { message: '   - Push API error:' },
+			});
 		}
 	}
 
@@ -101,7 +110,10 @@ export async function debugChromeNotifications() {
 			console.info('   - Check chrome://flags for notification settings');
 			console.info('   - Check chrome://settings/content/notifications');
 		} catch (error) {
-			logError(error, { operation: 'utils.debugChromeNotifications.unknown', metadata: { message: '   - Permission query error:' } });
+			logError(error, {
+				operation: 'utils.debugChromeNotifications.unknown',
+				metadata: { message: '   - Permission query error:' },
+			});
 		}
 	}
 

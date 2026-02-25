@@ -15,8 +15,14 @@ const sliceModule = require('../subscriptionsSlice');
 
 // Get the slice from the named export (statementsSlicer) or iterate to find it
 const sliceExport = Object.values(sliceModule).find(
-	(val: unknown) => val !== null && typeof val === 'object' && 'reducer' in (val as Record<string, unknown>),
-) as { reducer: Function; getInitialState: () => { waitingList: MockWaitingMember[] } } | undefined;
+	(val: unknown) =>
+		val !== null && typeof val === 'object' && 'reducer' in (val as Record<string, unknown>),
+) as
+	| {
+			reducer: (...args: unknown[]) => unknown;
+			getInitialState: () => { waitingList: MockWaitingMember[] };
+	  }
+	| undefined;
 
 const {
 	setWaitingMember,

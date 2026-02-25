@@ -179,7 +179,7 @@ describe('useOnlineStatus', () => {
 		});
 
 		it('should not update state after unmount', () => {
-			const { result, unmount } = renderHook(() => useOnlineStatus());
+			const { unmount } = renderHook(() => useOnlineStatus());
 
 			unmount();
 

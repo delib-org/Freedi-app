@@ -21,11 +21,7 @@ interface ChatProps {
 	showInput?: boolean;
 }
 
-const Chat: FC<ChatProps> = ({
-	sideChat = false,
-	numberOfSubStatements = 0,
-	showInput = true,
-}) => {
+const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, showInput = true }) => {
 	const chatRef = useRef<HTMLDivElement>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);

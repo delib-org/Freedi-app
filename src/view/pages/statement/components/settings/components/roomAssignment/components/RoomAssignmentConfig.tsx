@@ -115,7 +115,10 @@ const RoomAssignmentConfig: FC<RoomAssignmentConfigProps> = ({
 				onCreateSuccess();
 			}
 		} catch (error) {
-			logError(error, { operation: 'components.RoomAssignmentConfig.handleCreate', metadata: { message: 'Failed to create room assignments:' } });
+			logError(error, {
+				operation: 'components.RoomAssignmentConfig.handleCreate',
+				metadata: { message: 'Failed to create room assignments:' },
+			});
 		} finally {
 			setIsCreating(false);
 		}

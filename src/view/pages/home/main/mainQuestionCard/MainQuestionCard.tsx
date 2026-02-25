@@ -105,12 +105,17 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 			</div>
 			{statement?.lastSubStatements && statement.lastSubStatements.length > 0 && (
 				<div className={styles.messages}>
-					{[...statement.lastSubStatements].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0)).slice(0, 3).map((sub) => (
-						<div key={sub.statementId} className={styles.lastMessage}>
-							<span className={styles.creator}>{sub.creator.displayName}:</span> {sub.statement}
-							{sub.createdAt && <span className={styles.messageTime}>{getTime(sub.createdAt)}</span>}
-						</div>
-					))}
+					{[...statement.lastSubStatements]
+						.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0))
+						.slice(0, 3)
+						.map((sub) => (
+							<div key={sub.statementId} className={styles.lastMessage}>
+								<span className={styles.creator}>{sub.creator.displayName}:</span> {sub.statement}
+								{sub.createdAt && (
+									<span className={styles.messageTime}>{getTime(sub.createdAt)}</span>
+								)}
+							</div>
+						))}
 				</div>
 			)}
 		</Link>

@@ -16,7 +16,7 @@ interface VectorSearchOptions {
 }
 
 const DEFAULT_LIMIT = 10;
-const DEFAULT_THRESHOLD = 0.80;
+const DEFAULT_THRESHOLD = 0.8;
 
 /**
  * Service for performing vector-based similarity search using Firestore

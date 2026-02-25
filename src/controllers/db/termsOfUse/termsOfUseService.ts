@@ -23,7 +23,10 @@ export async function getLatestTermsAcceptance(
 
 		return doc;
 	} catch (error) {
-		logError(error, { operation: 'termsOfUse.termsOfUseService.getLatestTermsAcceptance', metadata: { message: 'Error fetching terms acceptance:' } });
+		logError(error, {
+			operation: 'termsOfUse.termsOfUseService.getLatestTermsAcceptance',
+			metadata: { message: 'Error fetching terms acceptance:' },
+		});
 
 		return null;
 	}
@@ -40,7 +43,10 @@ export async function saveTermsAcceptance(acceptance: TermsOfUseAcceptance): Pro
 
 		return true;
 	} catch (error) {
-		logError(error, { operation: 'termsOfUse.termsOfUseService.saveTermsAcceptance', metadata: { message: 'Error saving terms acceptance:' } });
+		logError(error, {
+			operation: 'termsOfUse.termsOfUseService.saveTermsAcceptance',
+			metadata: { message: 'Error saving terms acceptance:' },
+		});
 
 		return false;
 	}

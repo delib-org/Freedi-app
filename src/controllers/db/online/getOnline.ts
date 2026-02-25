@@ -29,7 +29,10 @@ export function ListenToOnlineUsers(
 				const validated = parse(OnlineSchema, data);
 				users.push(validated);
 			} catch (err) {
-				logError(err, { operation: 'online.getOnline.unsubscribe', metadata: { message: 'Error validating online user data:' } });
+				logError(err, {
+					operation: 'online.getOnline.unsubscribe',
+					metadata: { message: 'Error validating online user data:' },
+				});
 			}
 		});
 

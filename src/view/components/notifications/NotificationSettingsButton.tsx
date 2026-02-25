@@ -76,7 +76,10 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 					setAllNotificationsOff(allOff);
 				}
 			} catch (error) {
-				logError(error, { operation: 'notifications.NotificationSettingsButton.checkNotificationPreferences', metadata: { message: 'Error checking notification preferences:' } });
+				logError(error, {
+					operation: 'notifications.NotificationSettingsButton.checkNotificationPreferences',
+					metadata: { message: 'Error checking notification preferences:' },
+				});
 			}
 		};
 
@@ -137,7 +140,10 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 				}
 			}
 		} catch (error) {
-			logError(error, { operation: 'notifications.NotificationSettingsButton.handleRequestPermission', metadata: { message: 'Error requesting notification permission:' } });
+			logError(error, {
+				operation: 'notifications.NotificationSettingsButton.handleRequestPermission',
+				metadata: { message: 'Error requesting notification permission:' },
+			});
 		}
 	};
 

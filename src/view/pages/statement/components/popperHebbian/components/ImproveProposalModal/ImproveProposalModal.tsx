@@ -59,7 +59,10 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClos
 				const response = await requestProposalImprovement(statement.statementId, currentLanguage);
 				setModalState({ status: 'preview', data: response });
 			} catch (error) {
-				logError(error, { operation: 'ImproveProposalModal.ImproveProposalModal.fetchImprovement', metadata: { message: 'Failed to get AI improvement:' } });
+				logError(error, {
+					operation: 'ImproveProposalModal.ImproveProposalModal.fetchImprovement',
+					metadata: { message: 'Failed to get AI improvement:' },
+				});
 				setModalState({
 					status: 'error',
 					error: t('Failed to generate improvement. Please try again.'),
@@ -106,7 +109,10 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClos
 				onClose();
 			}, 1500);
 		} catch (error) {
-			logError(error, { operation: 'ImproveProposalModal.ImproveProposalModal.handleApply', metadata: { message: 'Failed to apply improvement:' } });
+			logError(error, {
+				operation: 'ImproveProposalModal.ImproveProposalModal.handleApply',
+				metadata: { message: 'Failed to apply improvement:' },
+			});
 			setModalState({
 				status: 'error',
 				error: t('Failed to apply improvement. Please try again.'),
@@ -125,7 +131,10 @@ const ImproveProposalModal: FC<ImproveProposalModalProps> = ({ statement, onClos
 			const response = await requestProposalImprovement(statement.statementId, currentLanguage);
 			setModalState({ status: 'preview', data: response });
 		} catch (error) {
-			logError(error, { operation: 'ImproveProposalModal.ImproveProposalModal.handleRetry', metadata: { message: 'Failed to get AI improvement:' } });
+			logError(error, {
+				operation: 'ImproveProposalModal.ImproveProposalModal.handleRetry',
+				metadata: { message: 'Failed to get AI improvement:' },
+			});
 			setModalState({
 				status: 'error',
 				error: t('Failed to generate improvement. Please try again.'),

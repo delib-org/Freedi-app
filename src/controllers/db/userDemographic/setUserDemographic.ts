@@ -23,7 +23,7 @@ import {
 	deleteUserDemographicQuestion as deleteUserDemographicQuestionAction,
 	setUserDemographicQuestion as setUserDemographicQuestionAction,
 } from '@/redux/userDemographic/userDemographicSlice';
-import type { BaseSchema } from 'valibot';
+import type { BaseIssue, BaseSchema } from 'valibot';
 
 export async function setUserDemographicQuestion(
 	statement: Statement,
@@ -75,13 +75,19 @@ export async function setUserDemographicOption(
 
 		const results = safeParse(UserDemographicQuestionSchema, question);
 		if (!results.success) {
-			logError(new Error('Invalid question data'), { operation: 'userDemographic.setUserDemographicOption', metadata: { issues: results.issues } });
+			logError(new Error('Invalid question data'), {
+				operation: 'userDemographic.setUserDemographicOption',
+				metadata: { issues: results.issues },
+			});
 			throw new Error('Invalid question data');
 		}
 
 		const resultsOption = safeParse(DemographicOptionSchema, option);
 		if (!resultsOption.success) {
-			logError(new Error('Invalid option data'), { operation: 'userDemographic.setUserDemographicOption', metadata: { issues: resultsOption.issues } });
+			logError(new Error('Invalid option data'), {
+				operation: 'userDemographic.setUserDemographicOption',
+				metadata: { issues: resultsOption.issues },
+			});
 			throw new Error('Invalid option data');
 		}
 
@@ -155,7 +161,7 @@ export async function setUserAnswers(answers: UserDemographicQuestion[]) {
 }
 
 export function validateDataAndLogIssues<T>(
-	schema: BaseSchema<any, T, any>,
+	schema: BaseSchema<unknown, T, BaseIssue<unknown>>,
 	data: unknown,
 ): { isValid: boolean; validData?: T } {
 	const result = safeParse(schema, data);
@@ -190,7 +196,10 @@ export function setDemographicOptionColor(
 
 	const results = safeParse(UserDemographicQuestionSchema, userQuestion);
 	if (!results.success) {
-		logError(new Error('Invalid user question data'), { operation: 'userDemographic.setDemographicOptionColor', metadata: { issues: results.issues } });
+		logError(new Error('Invalid user question data'), {
+			operation: 'userDemographic.setDemographicOptionColor',
+			metadata: { issues: results.issues },
+		});
 		throw new Error('Invalid user question data');
 	}
 

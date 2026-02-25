@@ -56,17 +56,13 @@ describe('temporalNameGenerator', () => {
 		it('should allow previously generated names to be generated again', () => {
 			// Mock to get a deterministic name
 			const originalRandom = Math.random;
-			let callCount = 0;
 			Math.random = jest.fn().mockImplementation(() => {
-				callCount++;
-
 				// Return deterministic values for first name
 				return 0.1;
 			});
 
 			const name1 = generateTemporalName();
 			clearUsedNames();
-			callCount = 0;
 
 			const name2 = generateTemporalName();
 

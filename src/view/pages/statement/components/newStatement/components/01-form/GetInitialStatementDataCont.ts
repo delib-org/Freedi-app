@@ -51,7 +51,10 @@ export async function getSimilarOptions(
 			userText: string | null;
 		};
 	} catch (error) {
-		logError(error, { operation: '01-form.GetInitialStatementDataCont.unknown', metadata: { message: 'Error fetching similar options:' } });
+		logError(error, {
+			operation: '01-form.GetInitialStatementDataCont.unknown',
+			metadata: { message: 'Error fetching similar options:' },
+		});
 		setError(`${error.message}`);
 
 		return null;

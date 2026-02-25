@@ -44,7 +44,9 @@ const PWAUpdateToast: React.FC<PWAUpdateToastProps> = ({ registerUpdate }) => {
 
 	const handleUpdate = () => {
 		// Update the service worker with reload
-		registerUpdate(true).catch((error: unknown) => logError(error, { operation: 'PWAUpdateToast.handleUpdate' }));
+		registerUpdate(true).catch((error: unknown) =>
+			logError(error, { operation: 'PWAUpdateToast.handleUpdate' }),
+		);
 		setNeedsUpdate(false);
 	};
 

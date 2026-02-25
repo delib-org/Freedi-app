@@ -44,7 +44,9 @@ export default function UploadImage({
 		try {
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
-				logError(new Error('Unauthorized: Only admins can upload images'), { operation: 'uploadImage.UploadImage.handleFileChange' });
+				logError(new Error('Unauthorized: Only admins can upload images'), {
+					operation: 'uploadImage.UploadImage.handleFileChange',
+				});
 
 				return;
 			}
@@ -68,7 +70,9 @@ export default function UploadImage({
 		try {
 			if (!statement) throw new Error('statement is undefined');
 			if (!isAdmin) {
-				logError(new Error('Unauthorized: Only admins can upload images'), { operation: 'uploadImage.UploadImage.handleDrop' });
+				logError(new Error('Unauthorized: Only admins can upload images'), {
+					operation: 'uploadImage.UploadImage.handleDrop',
+				});
 
 				return;
 			}

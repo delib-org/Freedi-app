@@ -33,7 +33,10 @@ export function useDecreaseLearningRemain() {
 
 			return true;
 		} catch (error) {
-			logError(error, { operation: 'hooks.useDecreaseLearningRemain.decreaseLearning', metadata: { message: 'Error decreasing learning remain:' } });
+			logError(error, {
+				operation: 'hooks.useDecreaseLearningRemain.decreaseLearning',
+				metadata: { message: 'Error decreasing learning remain:' },
+			});
 
 			return false;
 		}

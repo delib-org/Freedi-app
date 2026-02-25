@@ -101,12 +101,18 @@ export async function ensureFirebaseServiceWorker() {
 				// Failed to get FCM token
 			}
 		} catch (error) {
-			logError(error, { operation: 'utils.ensureFirebaseServiceWorker.unknown', metadata: { message: '[FirebaseSW] Error getting token:' } });
+			logError(error, {
+				operation: 'utils.ensureFirebaseServiceWorker.unknown',
+				metadata: { message: '[FirebaseSW] Error getting token:' },
+			});
 		}
 
 		return registration;
 	} catch (error) {
-		logError(error, { operation: 'utils.ensureFirebaseServiceWorker.unknown', metadata: { message: '[FirebaseSW] Registration failed:' } });
+		logError(error, {
+			operation: 'utils.ensureFirebaseServiceWorker.unknown',
+			metadata: { message: '[FirebaseSW] Registration failed:' },
+		});
 		// Don't throw - fail gracefully to avoid unhandled rejections
 
 		return undefined;
@@ -131,11 +137,17 @@ export function startFirebaseServiceWorkerMonitor() {
 			if (!hasFirebaseSW) {
 				// Firebase SW missing, re-registering
 				ensureFirebaseServiceWorker().catch((error) => {
-					logError(error, { operation: 'utils.ensureFirebaseServiceWorker.hasFirebaseSW', metadata: { message: '[FirebaseSW] Monitor re-registration failed:' } });
+					logError(error, {
+						operation: 'utils.ensureFirebaseServiceWorker.hasFirebaseSW',
+						metadata: { message: '[FirebaseSW] Monitor re-registration failed:' },
+					});
 				});
 			}
 		} catch (error) {
-			logError(error, { operation: 'utils.ensureFirebaseServiceWorker.hasFirebaseSW', metadata: { message: '[FirebaseSW] Monitor check failed:' } });
+			logError(error, {
+				operation: 'utils.ensureFirebaseServiceWorker.hasFirebaseSW',
+				metadata: { message: '[FirebaseSW] Monitor check failed:' },
+			});
 		}
 	}, 30000); // Check every 30 seconds
 }
@@ -153,7 +165,10 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS()) {
 	// Ensure registration on various events
 	const registerFirebaseSW = () => {
 		ensureFirebaseServiceWorker().catch((error) => {
-			logError(error, { operation: 'utils.ensureFirebaseServiceWorker.registerFirebaseSW', metadata: { message: '[FirebaseSW] Initial registration failed:' } });
+			logError(error, {
+				operation: 'utils.ensureFirebaseServiceWorker.registerFirebaseSW',
+				metadata: { message: '[FirebaseSW] Initial registration failed:' },
+			});
 		});
 		startFirebaseServiceWorkerMonitor();
 	};
@@ -169,7 +184,10 @@ if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS()) {
 	document.addEventListener('visibilitychange', () => {
 		if (!document.hidden) {
 			ensureFirebaseServiceWorker().catch((error) => {
-				logError(error, { operation: 'utils.ensureFirebaseServiceWorker.registerFirebaseSW', metadata: { message: '[FirebaseSW] Visibility change registration failed:' } });
+				logError(error, {
+					operation: 'utils.ensureFirebaseServiceWorker.registerFirebaseSW',
+					metadata: { message: '[FirebaseSW] Visibility change registration failed:' },
+				});
 			});
 		}
 	});

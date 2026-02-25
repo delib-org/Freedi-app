@@ -10,7 +10,9 @@ export function listenToFeedback(
 ): () => void {
 	try {
 		if (!statementId) {
-			logError(new Error('No statementId provided to listenToFeedback'), { operation: 'feedback.listenToFeedback.listenToFeedback' });
+			logError(new Error('No statementId provided to listenToFeedback'), {
+				operation: 'feedback.listenToFeedback.listenToFeedback',
+			});
 
 			return () => {};
 		}
@@ -52,12 +54,18 @@ export function listenToFeedback(
 
 					callback(feedbackList);
 				} catch (error) {
-					logError(error, { operation: 'feedback.listenToFeedback.unknown', metadata: { message: 'Error processing feedback snapshot:' } });
+					logError(error, {
+						operation: 'feedback.listenToFeedback.unknown',
+						metadata: { message: 'Error processing feedback snapshot:' },
+					});
 					callback([]);
 				}
 			},
 			(error) => {
-				logError(error, { operation: 'feedback.listenToFeedback.unknown', metadata: { message: 'Error in feedback listener:' } });
+				logError(error, {
+					operation: 'feedback.listenToFeedback.unknown',
+					metadata: { message: 'Error in feedback listener:' },
+				});
 				// If it's an index error, provide helpful message
 				if (error.message?.includes('index')) {
 					console.info('Consider adding a composite index for better performance');
@@ -68,7 +76,10 @@ export function listenToFeedback(
 
 		return unsubscribe;
 	} catch (error) {
-		logError(error, { operation: 'feedback.listenToFeedback.unknown', metadata: { message: 'Error setting up feedback listener:' } });
+		logError(error, {
+			operation: 'feedback.listenToFeedback.unknown',
+			metadata: { message: 'Error setting up feedback listener:' },
+		});
 		callback([]);
 
 		return () => {};

@@ -1,4 +1,5 @@
 import { logError } from '@/utils/errorHandling';
+
 export async function fixChromeServiceWorker() {
 	console.info(
 		'%c=== FIXING CHROME SERVICE WORKER ===',
@@ -28,7 +29,9 @@ export async function fixChromeServiceWorker() {
 	);
 
 	if (!firebaseSW) {
-		logError(new Error('❌ Firebase messaging service worker NOT FOUND!'), { operation: 'utils.fixChromeServiceWorker.firebaseSW' });
+		logError(new Error('❌ Firebase messaging service worker NOT FOUND!'), {
+			operation: 'utils.fixChromeServiceWorker.firebaseSW',
+		});
 
 		// 3. Try to register it manually
 		console.info('\n2. Attempting to register Firebase SW manually...');
@@ -100,10 +103,15 @@ export async function fixChromeServiceWorker() {
 				console.info('   2. Have Firefox send a test message');
 				console.info('   3. Check if notifications work now');
 			} else {
-				logError(new Error('❌ Failed to generate new token'), { operation: 'utils.fixChromeServiceWorker.unknown' });
+				logError(new Error('❌ Failed to generate new token'), {
+					operation: 'utils.fixChromeServiceWorker.unknown',
+				});
 			}
 		} catch (error) {
-			logError(error, { operation: 'utils.fixChromeServiceWorker.registerSW', metadata: { name: (error as Error).name, message: (error as Error).message } });
+			logError(error, {
+				operation: 'utils.fixChromeServiceWorker.registerSW',
+				metadata: { name: (error as Error).name, message: (error as Error).message },
+			});
 		}
 	} else {
 		console.info('✅ Firebase SW is already registered');
@@ -112,7 +120,10 @@ export async function fixChromeServiceWorker() {
 
 		// Check if it's the correct one
 		if (!firebaseSW.active?.scriptURL.includes('/firebase-messaging-sw.js')) {
-			logError(new Error('⚠️ Firebase SW URL looks incorrect:'), { operation: 'utils.fixChromeServiceWorker.unknown', metadata: { detail: firebaseSW.active?.scriptURL } });
+			logError(new Error('⚠️ Firebase SW URL looks incorrect:'), {
+				operation: 'utils.fixChromeServiceWorker.unknown',
+				metadata: { detail: firebaseSW.active?.scriptURL },
+			});
 		}
 	}
 

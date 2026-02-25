@@ -131,7 +131,10 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 							}
 						})
 						.catch((error) => {
-							logError(error, { operation: 'pwa.PWAWrapper.firebaseSW', metadata: { message: '[PWAWrapper] Firebase Messaging SW registration failed:' } });
+							logError(error, {
+								operation: 'pwa.PWAWrapper.firebaseSW',
+								metadata: { message: '[PWAWrapper] Firebase Messaging SW registration failed:' },
+							});
 						});
 				} else {
 					console.info('[PWAWrapper] Firebase Messaging SW already registered');
@@ -172,7 +175,10 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 					() => {
 						// Check for Service Worker updates
 						registration?.update().catch((err) => {
-							logError(err, { operation: 'pwa.PWAWrapper.updateInterval', metadata: { message: 'Error updating service worker:' } });
+							logError(err, {
+								operation: 'pwa.PWAWrapper.updateInterval',
+								metadata: { message: 'Error updating service worker:' },
+							});
 						});
 					},
 					4 * 60 * 60 * 1000,
@@ -203,7 +209,10 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				};
 			},
 			onRegisterError(error) {
-				logError(error, { operation: 'pwa.PWAWrapper.unknown', metadata: { message: 'Service worker registration error:' } });
+				logError(error, {
+					operation: 'pwa.PWAWrapper.unknown',
+					metadata: { message: 'Service worker registration error:' },
+				});
 			},
 		});
 

@@ -25,33 +25,25 @@ describe('googleDocsUtils', () => {
 		});
 
 		it('should parse a Google Docs view URL', () => {
-			const result = parseGoogleDocsUrl(
-				'https://docs.google.com/document/d/abc123_-xyz/view',
-			);
+			const result = parseGoogleDocsUrl('https://docs.google.com/document/d/abc123_-xyz/view');
 			expect(result.isValid).toBe(true);
 			expect(result.documentId).toBe('abc123_-xyz');
 		});
 
 		it('should parse a Google Docs URL without suffix', () => {
-			const result = parseGoogleDocsUrl(
-				'https://docs.google.com/document/d/myDocId123',
-			);
+			const result = parseGoogleDocsUrl('https://docs.google.com/document/d/myDocId123');
 			expect(result.isValid).toBe(true);
 			expect(result.documentId).toBe('myDocId123');
 		});
 
 		it('should parse a Google Drive open URL', () => {
-			const result = parseGoogleDocsUrl(
-				'https://drive.google.com/open?id=docId456',
-			);
+			const result = parseGoogleDocsUrl('https://drive.google.com/open?id=docId456');
 			expect(result.isValid).toBe(true);
 			expect(result.documentId).toBe('docId456');
 		});
 
 		it('should handle http:// prefix', () => {
-			const result = parseGoogleDocsUrl(
-				'http://docs.google.com/document/d/docId789/edit',
-			);
+			const result = parseGoogleDocsUrl('http://docs.google.com/document/d/docId789/edit');
 			expect(result.isValid).toBe(true);
 			expect(result.documentId).toBe('docId789');
 		});
@@ -88,9 +80,7 @@ describe('googleDocsUtils', () => {
 		});
 
 		it('should trim whitespace before parsing', () => {
-			const result = parseGoogleDocsUrl(
-				'  https://docs.google.com/document/d/trimmedDoc/edit  ',
-			);
+			const result = parseGoogleDocsUrl('  https://docs.google.com/document/d/trimmedDoc/edit  ');
 			expect(result.isValid).toBe(true);
 			expect(result.documentId).toBe('trimmedDoc');
 		});
@@ -98,9 +88,7 @@ describe('googleDocsUtils', () => {
 
 	describe('isValidGoogleDocsUrl', () => {
 		it('should return true for valid URLs', () => {
-			expect(
-				isValidGoogleDocsUrl('https://docs.google.com/document/d/abc123/edit'),
-			).toBe(true);
+			expect(isValidGoogleDocsUrl('https://docs.google.com/document/d/abc123/edit')).toBe(true);
 		});
 
 		it('should return false for invalid URLs', () => {
@@ -111,9 +99,7 @@ describe('googleDocsUtils', () => {
 
 	describe('extractDocumentId', () => {
 		it('should return document ID for valid URL', () => {
-			expect(
-				extractDocumentId('https://docs.google.com/document/d/myDoc/edit'),
-			).toBe('myDoc');
+			expect(extractDocumentId('https://docs.google.com/document/d/myDoc/edit')).toBe('myDoc');
 		});
 
 		it('should return null for invalid URL', () => {
@@ -123,9 +109,7 @@ describe('googleDocsUtils', () => {
 
 	describe('buildGoogleDocsUrl', () => {
 		it('should build a view URL from document ID', () => {
-			expect(buildGoogleDocsUrl('abc123')).toBe(
-				'https://docs.google.com/document/d/abc123/view',
-			);
+			expect(buildGoogleDocsUrl('abc123')).toBe('https://docs.google.com/document/d/abc123/view');
 		});
 	});
 

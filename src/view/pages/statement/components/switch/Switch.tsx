@@ -36,17 +36,29 @@ const Switch = () => {
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
 
-	const handleTabChange = useCallback((tabId: string) => {
-		setActiveView(tabId);
-		setSearchParams({ tab: tabId }, { replace: true });
-	}, [setSearchParams]);
+	const handleTabChange = useCallback(
+		(tabId: string) => {
+			setActiveView(tabId);
+			setSearchParams({ tab: tabId }, { replace: true });
+		},
+		[setSearchParams],
+	);
 
 	const mainRef = useRef<HTMLElement>(null);
 	useHeaderHideOnScroll(mainRef);
 
-	const subsSelect = useMemo(() => statementSubsSelector(statement?.statementId), [statement?.statementId]);
-	const optionsSelect = useMemo(() => statementOptionsSelector(statement?.statementId), [statement?.statementId]);
-	const questionsSelect = useMemo(() => questionsSelector(statement?.statementId), [statement?.statementId]);
+	const subsSelect = useMemo(
+		() => statementSubsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const optionsSelect = useMemo(
+		() => statementOptionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const questionsSelect = useMemo(
+		() => questionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
 
 	const allSubs = useSelector(subsSelect);
 	const options = useSelector(optionsSelect);
@@ -110,7 +122,11 @@ const Switch = () => {
 
 					{showSegmentedControl && (
 						<div className={styles.segmentedControlWrapper}>
-							<SegmentedControl segments={segments} activeId={activeView} onChange={handleTabChange} />
+							<SegmentedControl
+								segments={segments}
+								activeId={activeView}
+								onChange={handleTabChange}
+							/>
 						</div>
 					)}
 				</div>

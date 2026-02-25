@@ -68,7 +68,10 @@ export function usePublicAccess(statementId?: string): UsePublicAccessResult {
 				const access = statement?.membership?.access || topParentStatement?.membership?.access;
 				setEffectiveAccess(access || null);
 			} catch (error) {
-				logError(error, { operation: 'hooks.usePublicAccess.unknown', metadata: { message: 'Error checking public access:' } });
+				logError(error, {
+					operation: 'hooks.usePublicAccess.unknown',
+					metadata: { message: 'Error checking public access:' },
+				});
 			} finally {
 				if (isMounted) setIsCheckingAccess(false);
 			}

@@ -143,7 +143,10 @@ describe('newStatementSlice', () => {
 			it('should set parent statement to null (clearing)', () => {
 				const stateWithParent = { ...getInitialState(), parentStatement: mockStatement };
 
-				const result = newStatementSlice.reducer(stateWithParent as never, setParentStatement(null));
+				const result = newStatementSlice.reducer(
+					stateWithParent as never,
+					setParentStatement(null),
+				);
 
 				expect(result.parentStatement).toBeNull();
 			});
@@ -202,14 +205,16 @@ describe('newStatementSlice', () => {
 					setNewQuestionType(QuestionType.multipleChoice as never),
 				);
 
-				const settings = (result.newStatement as Record<string, unknown>)?.questionSettings as Record<string, unknown>;
+				const settings = (result.newStatement as Record<string, unknown>)
+					?.questionSettings as Record<string, unknown>;
 				expect(settings?.questionType).toBe(QuestionType.multipleChoice);
 			});
 
 			it('should use default question type when null is passed', () => {
 				const result = newStatementSlice.reducer(getInitialState(), setNewQuestionType(null));
 
-				const settings = (result.newStatement as Record<string, unknown>)?.questionSettings as Record<string, unknown>;
+				const settings = (result.newStatement as Record<string, unknown>)
+					?.questionSettings as Record<string, unknown>;
 				// getDefaultQuestionType is mocked to return 'simple'
 				expect(settings?.questionType).toBe('simple');
 			});
@@ -227,7 +232,8 @@ describe('newStatementSlice', () => {
 					setNewQuestionType(QuestionType.simple as never),
 				);
 
-				const settings = (result.newStatement as Record<string, unknown>)?.questionSettings as Record<string, unknown>;
+				const settings = (result.newStatement as Record<string, unknown>)
+					?.questionSettings as Record<string, unknown>;
 				expect(settings?.someOtherSetting).toBe(true);
 				expect(settings?.questionType).toBe(QuestionType.simple);
 			});

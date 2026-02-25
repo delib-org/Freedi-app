@@ -88,7 +88,10 @@ async function createAnonymousUser(): Promise<User> {
 
 		return user;
 	} catch (error) {
-		logError(error, { operation: 'auth.publicAuthHandler.createAnonymousUser', metadata: { message: 'Failed to create anonymous user:' } });
+		logError(error, {
+			operation: 'auth.publicAuthHandler.createAnonymousUser',
+			metadata: { message: 'Failed to create anonymous user:' },
+		});
 		throw error;
 	}
 }
@@ -117,7 +120,10 @@ export async function handlePublicAutoAuth(): Promise<void> {
 		// Fall back to anonymous authentication
 		await createAnonymousUser();
 	} catch (error) {
-		logError(error, { operation: 'auth.publicAuthHandler.handlePublicAutoAuth', metadata: { message: 'Public auto-authentication failed:' } });
+		logError(error, {
+			operation: 'auth.publicAuthHandler.handlePublicAutoAuth',
+			metadata: { message: 'Public auto-authentication failed:' },
+		});
 		// Don't throw - let the user see the content even if auth fails
 		// The useAuthorization hook will handle the lack of authentication
 	}
@@ -166,7 +172,10 @@ export async function upgradeAnonymousUser(credential: AuthCredential): Promise<
 
 		console.info('Anonymous user successfully upgraded');
 	} catch (error) {
-		logError(error, { operation: 'auth.publicAuthHandler.upgradeAnonymousUser', metadata: { message: 'Failed to upgrade anonymous user:' } });
+		logError(error, {
+			operation: 'auth.publicAuthHandler.upgradeAnonymousUser',
+			metadata: { message: 'Failed to upgrade anonymous user:' },
+		});
 		throw error;
 	}
 }

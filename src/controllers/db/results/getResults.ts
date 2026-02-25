@@ -104,7 +104,10 @@ export function listenToDescendants(statementId: string) {
 						dispatch(deleteStatement(statement.statementId));
 					}
 				} catch (error) {
-					logError(error, { operation: 'results.listenToDescendants.parseStatement', metadata: { documentData: change.doc.data() } });
+					logError(error, {
+						operation: 'results.listenToDescendants.parseStatement',
+						metadata: { documentData: change.doc.data() },
+					});
 				}
 			});
 		});

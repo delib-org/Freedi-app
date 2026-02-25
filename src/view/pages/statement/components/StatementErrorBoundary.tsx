@@ -34,7 +34,10 @@ export class StatementErrorBoundary extends Component<Props, State> {
 	}
 
 	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-		logError(new Error('StatementErrorBoundary caught an error:'), { operation: 'components.StatementErrorBoundary.unknown', metadata: { detail: error, errorInfo } });
+		logError(new Error('StatementErrorBoundary caught an error:'), {
+			operation: 'components.StatementErrorBoundary.unknown',
+			metadata: { detail: error, errorInfo },
+		});
 		this.setState({ errorInfo });
 		this.props.onError?.(error, errorInfo);
 	}

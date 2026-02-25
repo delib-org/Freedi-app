@@ -81,10 +81,6 @@ interface Statement {
 	};
 }
 
-// Mock runTransaction to allow us to control the transaction behavior
-const mockRunTransaction = jest.fn();
-const mockDoc = jest.fn();
-
 // Mock Firebase - use runTransaction
 jest.mock('firebase/firestore', () => ({
 	doc: jest.fn(),

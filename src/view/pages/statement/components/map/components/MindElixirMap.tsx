@@ -358,7 +358,9 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				const parsedData = JSON.parse(savedData);
 				mindRef.current.init(parsedData);
 			} catch {
-				logError(new Error('Failed to restore mind map data'), { operation: 'components.MindElixirMap.handleRestore' });
+				logError(new Error('Failed to restore mind map data'), {
+					operation: 'components.MindElixirMap.handleRestore',
+				});
 			}
 		}
 	}, []);

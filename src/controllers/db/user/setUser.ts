@@ -18,7 +18,10 @@ export async function setUserAdvanceUserToDB(advanceUser: boolean) {
 			advanceUser: advanceUser,
 		});
 	} catch (error) {
-		logError(error, { operation: 'user.setUser.setUserAdvanceUserToDB', metadata: { message: 'Error setting user advance status:' } });
+		logError(error, {
+			operation: 'user.setUser.setUserAdvanceUserToDB',
+			metadata: { message: 'Error setting user advance status:' },
+		});
 	}
 }
 
@@ -54,9 +57,15 @@ export async function setUserToDB(user: Creator) {
 			}
 		} catch (error) {
 			// Non-critical error, just log it
-			logError(error, { operation: 'user.setUser.unknown', metadata: { message: 'Error fetching user advanceUser status:' } });
+			logError(error, {
+				operation: 'user.setUser.unknown',
+				metadata: { message: 'Error fetching user advanceUser status:' },
+			});
 		}
 	} catch (error) {
-		logError(error, { operation: 'user.setUser.unknown', metadata: { message: 'Error updating user in DB:' } });
+		logError(error, {
+			operation: 'user.setUser.unknown',
+			metadata: { message: 'Error updating user in DB:' },
+		});
 	}
 }

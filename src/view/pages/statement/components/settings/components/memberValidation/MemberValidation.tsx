@@ -38,7 +38,10 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 			// This will be implemented with actual data fetching
 			setMembers(responses as MemberReviewData[]);
 		} catch (error) {
-			logError(error, { operation: 'memberValidation.MemberValidation.loadMemberResponses', metadata: { message: 'Error loading member responses:' } });
+			logError(error, {
+				operation: 'memberValidation.MemberValidation.loadMemberResponses',
+				metadata: { message: 'Error loading member responses:' },
+			});
 		} finally {
 			setLoading(false);
 		}
@@ -82,7 +85,10 @@ const MemberValidation: FC<Props> = ({ statement }) => {
 
 			console.info(`Action ${action} for user ${userId} saved successfully`);
 		} catch (error) {
-			logError(error, { operation: 'memberValidation.MemberValidation.unknown', metadata: { message: 'Error performing action ${action} for user ${userId}:' } });
+			logError(error, {
+				operation: 'memberValidation.MemberValidation.unknown',
+				metadata: { message: 'Error performing action ${action} for user ${userId}:' },
+			});
 		}
 	};
 

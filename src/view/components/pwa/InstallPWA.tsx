@@ -95,7 +95,10 @@ const InstallPWA: React.FC = () => {
 				settled = true;
 			}
 		} catch (err) {
-			logError(err, { operation: 'pwa.InstallPWA.fallbackTimeout', metadata: { message: 'Prompt error:' } });
+			logError(err, {
+				operation: 'pwa.InstallPWA.fallbackTimeout',
+				metadata: { message: 'Prompt error:' },
+			});
 			if (!settled) {
 				setIsInstallable(false);
 				setDeferredPrompt(null);

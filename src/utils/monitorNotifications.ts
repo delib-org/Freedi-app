@@ -13,7 +13,10 @@ export function monitorNotifications() {
 			// console.info('[FC MESSAGE]', { data: message });
 		});
 	} catch (error) {
-		logError(error, { operation: 'utils.monitorNotifications.monitorNotifications', metadata: { message: 'Error setting up monitor:' } });
+		logError(error, {
+			operation: 'utils.monitorNotifications.monitorNotifications',
+			metadata: { message: 'Error setting up monitor:' },
+		});
 	}
 }
 

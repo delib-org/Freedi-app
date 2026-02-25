@@ -138,7 +138,12 @@ function initializeFirestoreWithCache(app: ReturnType<typeof initializeApp>): Fi
 			}),
 		});
 	} catch (error) {
-		logError(error, { operation: 'config.initializeFirestoreDB', metadata: { message: 'Failed to initialize with persistent cache, falling back to memory cache' } });
+		logError(error, {
+			operation: 'config.initializeFirestoreDB',
+			metadata: {
+				message: 'Failed to initialize with persistent cache, falling back to memory cache',
+			},
+		});
 		recordIndexedDBError();
 
 		return initializeFirestore(app, {
@@ -157,7 +162,10 @@ export async function clearFirestorePersistence(): Promise<void> {
 		localStorage.removeItem(INDEXEDDB_ERROR_KEY);
 		console.info('Firestore IndexedDB persistence cleared successfully');
 	} catch (error) {
-		logError(error, { operation: 'config.clearFirestorePersistence', metadata: { message: 'Failed to clear Firestore persistence:' } });
+		logError(error, {
+			operation: 'config.clearFirestorePersistence',
+			metadata: { message: 'Failed to clear Firestore persistence:' },
+		});
 	}
 }
 
@@ -167,7 +175,9 @@ export async function clearFirestorePersistence(): Promise<void> {
  */
 export function handleFirestoreAssertionError(error: Error): void {
 	if (error.message?.includes('INTERNAL ASSERTION FAILED')) {
-		logError(new Error('Firestore assertion error detected, recording for memory cache fallback'), { operation: 'config.handleFirestoreAssertionError' });
+		logError(new Error('Firestore assertion error detected, recording for memory cache fallback'), {
+			operation: 'config.handleFirestoreAssertionError',
+		});
 		recordIndexedDBError();
 	}
 }
@@ -207,7 +217,10 @@ if (isProduction) {
 				try {
 					analytics = getAnalytics(app);
 				} catch (error) {
-					logError(error, { operation: 'config.unknown', metadata: { message: 'Failed to initialize Analytics:' } });
+					logError(error, {
+						operation: 'config.unknown',
+						metadata: { message: 'Failed to initialize Analytics:' },
+					});
 					// Analytics initialization failed, but app continues
 				}
 			} else {
@@ -220,7 +233,10 @@ if (isProduction) {
 			}
 		})
 		.catch((error) => {
-			logError(error, { operation: 'config.unknown', metadata: { message: 'Analytics initialization check failed:' } });
+			logError(error, {
+				operation: 'config.unknown',
+				metadata: { message: 'Analytics initialization check failed:' },
+			});
 			// Analytics not supported or error occurred
 		});
 }
@@ -230,7 +246,10 @@ setPersistence(auth, browserLocalPersistence)
 		// Persistence set to local storage
 	})
 	.catch((error) => {
-		logError(error, { operation: 'config.unknown', metadata: { message: 'Error setting persistence:' } });
+		logError(error, {
+			operation: 'config.unknown',
+			metadata: { message: 'Error setting persistence:' },
+		});
 	});
 
 //development
@@ -245,28 +264,40 @@ if (!isProduction) {
 			console.info('Connected to Firestore emulator on localhost:8081');
 		}
 	} catch (error) {
-		logError(error, { operation: 'config.unknown', metadata: { message: 'Failed to connect to Firestore emulator:' } });
+		logError(error, {
+			operation: 'config.unknown',
+			metadata: { message: 'Failed to connect to Firestore emulator:' },
+		});
 	}
 
 	try {
 		connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
 		console.info('Connected to Auth emulator on localhost:9099');
 	} catch (error) {
-		logError(error, { operation: 'config.unknown', metadata: { message: 'Failed to connect to Auth emulator:' } });
+		logError(error, {
+			operation: 'config.unknown',
+			metadata: { message: 'Failed to connect to Auth emulator:' },
+		});
 	}
 
 	try {
 		connectStorageEmulator(storage, 'localhost', 9199);
 		console.info('Connected to Storage emulator on localhost:9199');
 	} catch (error) {
-		logError(error, { operation: 'config.unknown', metadata: { message: 'Failed to connect to Storage emulator:' } });
+		logError(error, {
+			operation: 'config.unknown',
+			metadata: { message: 'Failed to connect to Storage emulator:' },
+		});
 	}
 
 	try {
 		connectFunctionsEmulator(functions, 'localhost', 5001);
 		console.info('Connected to Functions emulator on localhost:5001');
 	} catch (error) {
-		logError(error, { operation: 'config.unknown', metadata: { message: 'Failed to connect to Functions emulator:' } });
+		logError(error, {
+			operation: 'config.unknown',
+			metadata: { message: 'Failed to connect to Functions emulator:' },
+		});
 	}
 }
 

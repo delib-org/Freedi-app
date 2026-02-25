@@ -113,7 +113,10 @@ const MembershipSettings: FC<Props> = ({ statement, setStatementToEdit }) => {
 
 		// Validate the new access value
 		if (!newAccess && newAccess !== Access.public) {
-			logError(newAccess, { operation: 'membershipSettings.MembershipSettings.handleAccessChange', metadata: { message: 'Invalid access value:' } });
+			logError(newAccess, {
+				operation: 'membershipSettings.MembershipSettings.handleAccessChange',
+				metadata: { message: 'Invalid access value:' },
+			});
 
 			return;
 		}

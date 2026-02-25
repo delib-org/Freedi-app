@@ -39,7 +39,10 @@ const loadPWATriggerData = (): Partial<PWAState> => {
 			};
 		}
 	} catch (error) {
-		logError(error, { operation: 'redux.pwa.pwaSlice.loadPWATriggerData', metadata: { message: 'Failed to load PWA trigger data:' } });
+		logError(error, {
+			operation: 'redux.pwa.pwaSlice.loadPWATriggerData',
+			metadata: { message: 'Failed to load PWA trigger data:' },
+		});
 	}
 
 	return {};
@@ -58,7 +61,10 @@ const savePWATriggerData = (state: PWAState): void => {
 		};
 		localStorage.setItem(STORAGE_KEYS.PWA_INSTALL_TRIGGER_DATA, JSON.stringify(data));
 	} catch (error) {
-		logError(error, { operation: 'redux.pwa.pwaSlice.savePWATriggerData', metadata: { message: 'Failed to save PWA trigger data:' } });
+		logError(error, {
+			operation: 'redux.pwa.pwaSlice.savePWATriggerData',
+			metadata: { message: 'Failed to save PWA trigger data:' },
+		});
 	}
 };
 

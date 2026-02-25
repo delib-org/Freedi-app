@@ -44,7 +44,10 @@ interface Props {
 
 const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 	// Hooks
-	if (!parentStatement) logError(new Error('parentStatement is not defined'), { operation: 'suggestionCard.SuggestionCard.unknown' });
+	if (!parentStatement)
+		logError(new Error('parentStatement is not defined'), {
+			operation: 'suggestionCard.SuggestionCard.unknown',
+		});
 
 	const { t, dir } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
@@ -190,14 +193,19 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 			if (!result.success) {
 				// If the API call fails, revert the optimistic update
 				setHasJoinedOptimistic(hasJoinedOptimistic);
-				logError(new Error(result.error ?? t('Failed to toggle joining')), { operation: 'SuggestionCard.handleJoinToggle' });
+				logError(new Error(result.error ?? t('Failed to toggle joining')), {
+					operation: 'SuggestionCard.handleJoinToggle',
+				});
 			} else if (result.leftStatementTitle && singleJoinOnly) {
 				// Show notification that user left another option
 				console.info(t('You left') + ` "${result.leftStatementTitle}" ` + t('to join this option'));
 			}
 		} catch (error) {
 			// If the API call fails, revert the optimistic update
-			logError(error, { operation: 'suggestionCard.SuggestionCard.with', metadata: { message: 'Failed to toggle joining:' } });
+			logError(error, {
+				operation: 'suggestionCard.SuggestionCard.with',
+				metadata: { message: 'Failed to toggle joining:' },
+			});
 			setHasJoinedOptimistic(hasJoinedOptimistic);
 		} finally {
 			setIsJoinLoading(false);
@@ -233,7 +241,10 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 			setHasBeenImproved(true);
 			setIsEdit(true);
 		} catch (error) {
-			logError(error, { operation: 'suggestionCard.SuggestionCard.handleImprove', metadata: { message: 'Failed to improve suggestion:' } });
+			logError(error, {
+				operation: 'suggestionCard.SuggestionCard.handleImprove',
+				metadata: { message: 'Failed to improve suggestion:' },
+			});
 			// Show more specific error message based on the error type
 			let errorMessage = t('Failed to improve suggestion. Please try again.');
 			if (error instanceof Error) {

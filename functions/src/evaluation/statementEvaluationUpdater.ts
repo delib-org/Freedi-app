@@ -23,11 +23,7 @@ import {
 	type UpdateStatementEvaluationProps,
 	type StatementWithPopper,
 } from './evaluationTypes';
-import {
-	calcDiffEvaluation,
-	calcSquaredDiff,
-	calculateEvaluation,
-} from './agreementCalculation';
+import { calcDiffEvaluation, calcSquaredDiff, calculateEvaluation } from './agreementCalculation';
 
 // ============================================================================
 // CORE BUSINESS LOGIC
@@ -177,7 +173,12 @@ async function updateStatementInTransaction(
 	statementId: string,
 	evaluationDiff: number,
 	addEvaluator: number,
-	proConDiff: { proDiff: number; conDiff: number; proEvaluatorsDiff: number; conEvaluatorsDiff: number },
+	proConDiff: {
+		proDiff: number;
+		conDiff: number;
+		proEvaluatorsDiff: number;
+		conEvaluatorsDiff: number;
+	},
 	squaredEvaluationDiff: number,
 ): Promise<void> {
 	await db.runTransaction(async (transaction) => {

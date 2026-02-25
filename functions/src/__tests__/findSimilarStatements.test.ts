@@ -117,16 +117,14 @@ describe('findSimilarStatements - Optimized', () => {
 				generatedDescription: 'cached description',
 			};
 
-			jest
-				.spyOn(cachedAiService, 'getCachedSimilarityResponse')
-				.mockResolvedValue(
-					cachedData as {
-						similarStatements: Statement[];
-						userText: string;
-						generatedTitle?: string;
-						generatedDescription?: string;
-					},
-				);
+			jest.spyOn(cachedAiService, 'getCachedSimilarityResponse').mockResolvedValue(
+				cachedData as {
+					similarStatements: Statement[];
+					userText: string;
+					generatedTitle?: string;
+					generatedDescription?: string;
+				},
+			);
 
 			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
 

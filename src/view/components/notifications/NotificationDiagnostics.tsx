@@ -27,7 +27,10 @@ export const NotificationDiagnostics: React.FC = () => {
 			const info = await notificationService.getDiagnostics();
 			setDiagnostics(info);
 		} catch (error) {
-			logError(error, { operation: 'notifications.NotificationDiagnostics.loadDiagnostics', metadata: { message: 'Error loading diagnostics:' } });
+			logError(error, {
+				operation: 'notifications.NotificationDiagnostics.loadDiagnostics',
+				metadata: { message: 'Error loading diagnostics:' },
+			});
 		} finally {
 			setIsLoading(false);
 		}
@@ -58,7 +61,10 @@ export const NotificationDiagnostics: React.FC = () => {
 				alert('Failed to send test notification. Check console for details.');
 			}
 		} catch (error) {
-			logError(error, { operation: 'notifications.NotificationDiagnostics.handleTestNotification', metadata: { message: 'Error sending test notification:' } });
+			logError(error, {
+				operation: 'notifications.NotificationDiagnostics.handleTestNotification',
+				metadata: { message: 'Error sending test notification:' },
+			});
 			alert('Error sending test notification. Check console for details.');
 		} finally {
 			setTestSending(false);
@@ -82,7 +88,10 @@ export const NotificationDiagnostics: React.FC = () => {
 				alert('Failed to refresh token. Check console for details.');
 			}
 		} catch (error) {
-			logError(error, { operation: 'notifications.NotificationDiagnostics.handleRefreshToken', metadata: { message: 'Error refreshing token:' } });
+			logError(error, {
+				operation: 'notifications.NotificationDiagnostics.handleRefreshToken',
+				metadata: { message: 'Error refreshing token:' },
+			});
 			alert('Error refreshing token. Check console for details.');
 		} finally {
 			setRefreshing(false);

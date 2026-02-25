@@ -178,12 +178,7 @@ describe('Input', () => {
 
 		it('should show error text instead of helper text when both provided', () => {
 			render(
-				<Input
-					name="test"
-					state="error"
-					helperText="Normal help"
-					errorText="Error happened"
-				/>,
+				<Input name="test" state="error" helperText="Normal help" errorText="Error happened" />,
 			);
 
 			expect(screen.getByText('Error happened')).toBeInTheDocument();

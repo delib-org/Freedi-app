@@ -72,7 +72,10 @@ export const useStatementListeners = ({
 						unsubscribe();
 					}
 				} catch (error) {
-					logError(error, { operation: 'hooks.useStatementListeners.cleanup', metadata: { message: 'Error while unsubscribing:' } });
+					logError(error, {
+						operation: 'hooks.useStatementListeners.cleanup',
+						metadata: { message: 'Error while unsubscribing:' },
+					});
 					setError(error instanceof Error ? error.message : 'Unsubscribe error');
 				}
 			});
@@ -112,7 +115,10 @@ export const useStatementListeners = ({
 				unsubscribersRef.current.push(listenToStatement(stageId, setIsStatementNotFound));
 			}
 		} catch (error) {
-			logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error setting up listeners:' } });
+			logError(error, {
+				operation: 'hooks.useStatementListeners.unknown',
+				metadata: { message: 'Error setting up listeners:' },
+			});
 			setError(error instanceof Error ? error.message : 'Setup error');
 		}
 
@@ -144,7 +150,10 @@ export const useStatementListeners = ({
 						unsubscribe();
 					}
 				} catch (error) {
-					logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error while unsubscribing from group listeners:' } });
+					logError(error, {
+						operation: 'hooks.useStatementListeners.unknown',
+						metadata: { message: 'Error while unsubscribing from group listeners:' },
+					});
 				}
 			});
 		};

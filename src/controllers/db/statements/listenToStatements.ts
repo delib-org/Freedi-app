@@ -143,7 +143,10 @@ export const listenToStatement = (
 				}
 			},
 			(error) => {
-				logError(error, { operation: 'statements.listenToStatements.listenToStatement', metadata: { message: 'Error in statement listener:' } });
+				logError(error, {
+					operation: 'statements.listenToStatements.listenToStatement',
+					metadata: { message: 'Error in statement listener:' },
+				});
 				if (setIsStatementNotFound) setIsStatementNotFound(true);
 			},
 		);
@@ -236,7 +239,11 @@ export const listenToSubStatements = (
 					});
 				}
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in sub-statements listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error in sub-statements listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -331,7 +338,11 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 					}
 				});
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in members listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error in members listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -415,7 +426,11 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 					}
 				});
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in all sub-statements listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error in all sub-statements listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -487,11 +502,18 @@ export const listenToUserSuggestions = (
 					});
 				}
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error listening to user suggestions:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error listening to user suggestions:' },
+				}),
 			'query',
 		);
 	} catch (error) {
-		logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error setting up user suggestions listener:' } });
+		logError(error, {
+			operation: 'statements.listenToStatements.unknown',
+			metadata: { message: 'Error setting up user suggestions listener:' },
+		});
 
 		return () => {};
 	}

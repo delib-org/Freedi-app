@@ -43,7 +43,9 @@ import {
 } from '../notificationsSlice';
 
 /** Helper to create a full NotificationType with defaults */
-function mockNotif(overrides: Partial<NotificationType> & { notificationId: string; parentId: string; text: string }): NotificationType {
+function mockNotif(
+	overrides: Partial<NotificationType> & { notificationId: string; parentId: string; text: string },
+): NotificationType {
 	return {
 		userId: 'user-1',
 		statementId: overrides.parentId,
@@ -225,10 +227,7 @@ describe('notificationsSlice', () => {
 			it('should mark notifications as viewed in list', () => {
 				const stateWithNotifs = {
 					...initialState,
-					inAppNotifications: [
-						{ ...mockNotification1 },
-						{ ...mockNotification2 },
-					],
+					inAppNotifications: [{ ...mockNotification1 }, { ...mockNotification2 }],
 				};
 				const newState = notificationsSlice.reducer(
 					stateWithNotifs,
@@ -249,10 +248,7 @@ describe('notificationsSlice', () => {
 						{ ...mockNotification3 },
 					],
 				};
-				const newState = notificationsSlice.reducer(
-					stateWithNotifs,
-					markAllNotificationsAsRead(),
-				);
+				const newState = notificationsSlice.reducer(stateWithNotifs, markAllNotificationsAsRead());
 				expect(newState.inAppNotifications.every((n) => n.read === true)).toBe(true);
 			});
 		});

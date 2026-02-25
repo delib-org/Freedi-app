@@ -109,7 +109,10 @@ const EvidencePost: FC<EvidencePostProps> = ({ statement }) => {
 				setUserVote(voteType);
 			}
 		} catch (error) {
-			logError(error, { operation: 'EvidencePost.EvidencePost.handleVote', metadata: { message: 'Error voting on evidence:' } });
+			logError(error, {
+				operation: 'EvidencePost.EvidencePost.handleVote',
+				metadata: { message: 'Error voting on evidence:' },
+			});
 		}
 	};
 

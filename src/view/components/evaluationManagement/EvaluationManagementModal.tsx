@@ -58,7 +58,10 @@ const EvaluationManagementModal: FC<Props> = ({
 			// Close modal after successful removal
 			onClose();
 		} catch (error) {
-			logError(error, { operation: 'evaluationManagement.EvaluationManagementModal.statement', metadata: { message: 'Error removing vote:' } });
+			logError(error, {
+				operation: 'evaluationManagement.EvaluationManagementModal.statement',
+				metadata: { message: 'Error removing vote:' },
+			});
 		}
 	};
 

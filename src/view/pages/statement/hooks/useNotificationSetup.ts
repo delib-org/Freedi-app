@@ -34,7 +34,10 @@ export const useNotificationSetup = ({ statement, setError }: UseNotificationSet
 					await notificationService.initialize(creator.uid);
 				}
 			} catch (error) {
-				logError(error, { operation: 'hooks.useNotificationSetup.timeoutId', metadata: { message: 'Error in notification setup:' } });
+				logError(error, {
+					operation: 'hooks.useNotificationSetup.timeoutId',
+					metadata: { message: 'Error in notification setup:' },
+				});
 				const errorMessage =
 					error instanceof Error ? error.message : ERROR_MESSAGES.NOTIFICATION_SETUP;
 				setError(errorMessage);

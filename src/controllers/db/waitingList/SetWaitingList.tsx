@@ -14,7 +14,9 @@ const SetWaitingList: FC = () => {
 	const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		const files = event.target.files;
 		if (files && files.length > 0) {
-			logError(new Error('File uploaded'), { operation: 'waitingList.SetWaitingList.handleFileChange' });
+			logError(new Error('File uploaded'), {
+				operation: 'waitingList.SetWaitingList.handleFileChange',
+			});
 		}
 	};
 

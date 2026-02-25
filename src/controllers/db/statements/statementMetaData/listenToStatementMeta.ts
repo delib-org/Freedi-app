@@ -25,15 +25,21 @@ export function listenToStatementMetaData(statementId: string): Unsubscribe {
 
 				dispatch(setStatementMetaData(statementMetaData));
 			} catch (error) {
-				logError(error, { operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData' });
+				logError(error, {
+					operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData',
+				});
 			}
 		});
 	} catch (error) {
-		logError(error, { operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData' });
+		logError(error, {
+			operation: 'statements.statementMetaData.listenToStatementMeta.listenToStatementMetaData',
+		});
 
 		//@ts-ignore
 		return () => {
-			logError(new Error('Unsubscribe function not returned'), { operation: 'statements.statementMetaData.listenToStatementMeta.not' });
+			logError(new Error('Unsubscribe function not returned'), {
+				operation: 'statements.statementMetaData.listenToStatementMeta.not',
+			});
 		};
 	}
 }

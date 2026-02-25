@@ -73,12 +73,12 @@ export async function updateParentStatementWithChosenOptions(
 
 	try {
 		const parentStatement = await getParentStatement(parentId);
-		
+
 		// Use defaultResultsSettings if parent has no resultsSettings configured
 		const resultsSettings = parentStatement.resultsSettings || defaultResultsSettings;
-		
+
 		const chosenOptions = await choseTopOptions(parentId, resultsSettings);
-		
+
 		if (chosenOptions.length > 0) {
 			await updateParentWithResults(parentId, chosenOptions);
 		} else {
@@ -335,7 +335,6 @@ async function updateParentWithResults(
 	parentId: string,
 	chosenOptions: Statement[],
 ): Promise<void> {
-
 	const childStatementsSimple = chosenOptions.map(statementToSimpleStatement);
 
 	try {

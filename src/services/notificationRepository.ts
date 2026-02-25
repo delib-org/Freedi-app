@@ -130,7 +130,10 @@ export const deleteToken = async (token: string): Promise<void> => {
 		// Silently handle if document doesn't exist
 		const err = error as { code?: string };
 		if (err?.code !== 'permission-denied' && err?.code !== 'not-found') {
-			logError(error, { operation: 'services.notificationRepository.deleteToken', metadata: { message: 'Error deleting push notification doc:' } });
+			logError(error, {
+				operation: 'services.notificationRepository.deleteToken',
+				metadata: { message: 'Error deleting push notification doc:' },
+			});
 		}
 	}
 };
@@ -186,7 +189,10 @@ export const unregisterFromStatementNotifications = async (
 		// Silently handle if document doesn't exist in legacy collection
 		const err = error as { code?: string };
 		if (err?.code !== 'not-found') {
-			logError(error, { operation: 'services.notificationRepository.unregisterFromStatementNotifications', metadata: { message: 'Error cleaning up legacy notification doc:' } });
+			logError(error, {
+				operation: 'services.notificationRepository.unregisterFromStatementNotifications',
+				metadata: { message: 'Error cleaning up legacy notification doc:' },
+			});
 		}
 	}
 };
@@ -218,7 +224,10 @@ export const syncTokenWithSubscriptions = async (
 		const statementId = subscription.statementId || subscription.statement?.statementId;
 
 		if (!statementId) {
-			logError(new Error('No statementId found in subscription:'), { operation: 'services.notificationRepository.syncTokenWithSubscriptions', metadata: { detail: docSnapshot.id } });
+			logError(new Error('No statementId found in subscription:'), {
+				operation: 'services.notificationRepository.syncTokenWithSubscriptions',
+				metadata: { detail: docSnapshot.id },
+			});
 			continue;
 		}
 
@@ -283,7 +292,10 @@ export const removeTokenFromAllSubscriptions = async (
 		return removeTokenFromSubscription(statementId, userId, token).catch((err) => {
 			// Silently handle individual subscription errors
 			if (!err?.message?.includes('Null value error')) {
-				logError(err, { operation: 'services.notificationRepository.removePromises', metadata: { message: 'Error removing token from subscription ${statementId}:' } });
+				logError(err, {
+					operation: 'services.notificationRepository.removePromises',
+					metadata: { message: 'Error removing token from subscription ${statementId}:' },
+				});
 			}
 		});
 	});
@@ -376,7 +388,10 @@ export const isInQuietHours = (config: QuietHoursConfig): boolean => {
 			return currentMinutes >= startMinutes && currentMinutes < endMinutes;
 		}
 	} catch (error) {
-		logError(error, { operation: 'services.notificationRepository.unknown', metadata: { message: 'Error checking quiet hours:' } });
+		logError(error, {
+			operation: 'services.notificationRepository.unknown',
+			metadata: { message: 'Error checking quiet hours:' },
+		});
 
 		return false;
 	}

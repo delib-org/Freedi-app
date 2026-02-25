@@ -115,7 +115,10 @@ const SingleLikeEvaluation: FC<Props> = ({
 				setShowSnackbar(true);
 			}
 		} catch (error) {
-			logError(error, { operation: 'singleLikeEvaluation.SingleLikeEvaluation.unknown', metadata: { message: 'Error setting evaluation:' } });
+			logError(error, {
+				operation: 'singleLikeEvaluation.SingleLikeEvaluation.unknown',
+				metadata: { message: 'Error setting evaluation:' },
+			});
 			// Rollback on error
 			const rollbackLikes = statement.evaluation?.sumPro || statement.pro || 0;
 			const rollbackEvaluators =

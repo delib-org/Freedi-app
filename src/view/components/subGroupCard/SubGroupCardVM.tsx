@@ -38,7 +38,10 @@ export default function useSubGroupCard(statement: Statement): SubGroupCardRetur
 			text: statement.statement,
 		};
 	} catch (error) {
-		logError(error, { operation: 'subGroupCard.SubGroupCardVM.useSubGroupCard', metadata: { message: 'Error in useSubGroupCard:' } });
+		logError(error, {
+			operation: 'subGroupCard.SubGroupCardVM.useSubGroupCard',
+			metadata: { message: 'Error in useSubGroupCard:' },
+		});
 
 		return {
 			Icon: <DocumentIcon />,

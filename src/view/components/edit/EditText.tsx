@@ -116,7 +116,10 @@ const EditText: FC<EditTextProps> = ({
 			setIsEditing(false);
 			onEditEnd?.();
 		} catch (error) {
-			logError(error, { operation: 'edit.EditText.handleSave', metadata: { message: 'Error saving text:' } });
+			logError(error, {
+				operation: 'edit.EditText.handleSave',
+				metadata: { message: 'Error saving text:' },
+			});
 		}
 	};
 

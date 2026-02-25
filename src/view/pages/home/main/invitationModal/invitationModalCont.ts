@@ -13,6 +13,8 @@ export async function handleGetMaxInvitationDigits(
 
 		setNumberOfDigits(numberOfDigits);
 	} catch (error) {
-		logError(error, { operation: 'invitationModal.invitationModalCont.handleGetMaxInvitationDigits' });
+		logError(error, {
+			operation: 'invitationModal.invitationModalCont.handleGetMaxInvitationDigits',
+		});
 	}
 }

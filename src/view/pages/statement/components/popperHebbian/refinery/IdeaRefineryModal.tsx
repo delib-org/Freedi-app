@@ -57,7 +57,10 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 
 				setSession(newSession);
 			} catch (error) {
-				logError(error, { operation: 'refinery.IdeaRefineryModal.initializeSession', metadata: { message: 'Error initializing refinement session:' } });
+				logError(error, {
+					operation: 'refinery.IdeaRefineryModal.initializeSession',
+					metadata: { message: 'Error initializing refinement session:' },
+				});
 			} finally {
 				setIsInitializing(false);
 			}
@@ -81,7 +84,10 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 			setSession(updatedSession);
 			setUserInput('');
 		} catch (error) {
-			logError(error, { operation: 'refinery.IdeaRefineryModal.handleSubmitResponse', metadata: { message: 'Error submitting response:' } });
+			logError(error, {
+				operation: 'refinery.IdeaRefineryModal.handleSubmitResponse',
+				metadata: { message: 'Error submitting response:' },
+			});
 		} finally {
 			setIsProcessing(false);
 		}
@@ -97,7 +103,10 @@ const IdeaRefineryModal: FC<IdeaRefineryModalProps> = ({
 			onPublish(session.refinedIdea, session.sessionId);
 			onClose();
 		} catch (error) {
-			logError(error, { operation: 'refinery.IdeaRefineryModal.handlePublish', metadata: { message: 'Error publishing refined idea:' } });
+			logError(error, {
+				operation: 'refinery.IdeaRefineryModal.handlePublish',
+				metadata: { message: 'Error publishing refined idea:' },
+			});
 			setIsProcessing(false);
 		}
 	};

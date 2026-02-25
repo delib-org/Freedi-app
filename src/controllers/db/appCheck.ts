@@ -110,7 +110,10 @@ export function initializeFirebaseAppCheck(app: FirebaseApp): AppCheck | null {
 
 		return appCheck;
 	} catch (error) {
-		logError(error, { operation: 'appCheck.unknown', metadata: { message: 'App Check: Failed to initialize' } });
+		logError(error, {
+			operation: 'appCheck.unknown',
+			metadata: { message: 'App Check: Failed to initialize' },
+		});
 		// Return null but don't throw - allow the app to continue
 		// Firebase services will work without App Check, just without the extra protection
 

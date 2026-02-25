@@ -144,7 +144,10 @@ export class ListenerManager {
 
 			return true;
 		} catch (error) {
-			logError(error, { operation: 'controllerUtils.ListenerManager.onDocumentCount', metadata: { message: `Error setting up listener '${key}':` } });
+			logError(error, {
+				operation: 'controllerUtils.ListenerManager.onDocumentCount',
+				metadata: { message: `Error setting up listener '${key}':` },
+			});
 			this.pendingListeners.delete(key);
 
 			return false;
@@ -171,7 +174,10 @@ export class ListenerManager {
 
 					return true;
 				} catch (error) {
-					logError(error, { operation: 'controllerUtils.ListenerManager.unknown', metadata: { message: `Error removing listener '${key}':` } });
+					logError(error, {
+						operation: 'controllerUtils.ListenerManager.unknown',
+						metadata: { message: `Error removing listener '${key}':` },
+					});
 					// Still remove from map even if unsubscribe failed
 					this.listeners.delete(key);
 

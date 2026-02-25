@@ -66,7 +66,10 @@ export const useNotifications = (statementId?: string) => {
 						serviceWorkerSupported: true,
 					});
 				} catch (error) {
-					logError(error, { operation: 'hooks.useNotifications.unsubscribe', metadata: { message: 'Error initializing notifications:' } });
+					logError(error, {
+						operation: 'hooks.useNotifications.unsubscribe',
+						metadata: { message: 'Error initializing notifications:' },
+					});
 					setPermissionState((prev) => ({ ...prev, loading: false }));
 				}
 			} else {
@@ -161,9 +164,16 @@ export const useNotifications = (statementId?: string) => {
 		try {
 			const audio = new Audio('/assets/sounds/bell.mp3');
 			audio.volume = 0.5; // 50% volume
-			audio.play().catch((error: unknown) => logError(error, { operation: 'hooks.useNotifications.playNotificationSound' }));
+			audio
+				.play()
+				.catch((error: unknown) =>
+					logError(error, { operation: 'hooks.useNotifications.playNotificationSound' }),
+				);
 		} catch (error) {
-			logError(error, { operation: 'hooks.useNotifications.playNotificationSound', metadata: { message: 'Error playing notification sound:' } });
+			logError(error, {
+				operation: 'hooks.useNotifications.playNotificationSound',
+				metadata: { message: 'Error playing notification sound:' },
+			});
 		}
 	};
 
@@ -176,7 +186,9 @@ export const useNotifications = (statementId?: string) => {
 		}
 
 		if (notificationService.safeGetPermission() !== 'granted') {
-			logError(new Error('Notification permission not granted'), { operation: 'hooks.useNotifications.sendTestNotification' });
+			logError(new Error('Notification permission not granted'), {
+				operation: 'hooks.useNotifications.sendTestNotification',
+			});
 
 			return;
 		}

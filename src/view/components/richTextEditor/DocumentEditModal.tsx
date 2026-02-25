@@ -35,7 +35,10 @@ const DocumentEditModal: React.FC<DocumentEditModalProps> = ({ statement, onClos
 
 				onClose();
 			} catch (err) {
-				logError(err, { operation: 'richTextEditor.DocumentEditModal.handleSave', metadata: { message: 'Error saving paragraphs:' } });
+				logError(err, {
+					operation: 'richTextEditor.DocumentEditModal.handleSave',
+					metadata: { message: 'Error saving paragraphs:' },
+				});
 				setError(t('Failed to save changes. Please try again.'));
 			} finally {
 				setIsLoading(false);

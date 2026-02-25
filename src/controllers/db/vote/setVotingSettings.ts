@@ -18,7 +18,10 @@ export async function setVotingSettingsToDB({
 		const validationResult = safeParse(VotingSettingsSchema, votingSettings);
 
 		if (!validationResult.success) {
-			logError(new Error('Invalid voting settings:'), { operation: 'vote.setVotingSettings.setVotingSettingsToDB', metadata: { detail: validationResult.issues } });
+			logError(new Error('Invalid voting settings:'), {
+				operation: 'vote.setVotingSettings.setVotingSettingsToDB',
+				metadata: { detail: validationResult.issues },
+			});
 			throw new Error(
 				`Validation failed: ${validationResult.issues.map((i) => i.message).join(', ')}`,
 			);
@@ -32,6 +35,9 @@ export async function setVotingSettingsToDB({
 
 		console.info('Voting settings updated successfully');
 	} catch (error) {
-		logError(error, { operation: 'vote.setVotingSettings.setVotingSettingsToDB', metadata: { message: 'Error updating voting settings:' } });
+		logError(error, {
+			operation: 'vote.setVotingSettings.setVotingSettingsToDB',
+			metadata: { message: 'Error updating voting settings:' },
+		});
 	}
 }

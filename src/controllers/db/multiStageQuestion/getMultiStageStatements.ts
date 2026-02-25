@@ -23,7 +23,9 @@ export async function getFirstEvaluationOptions(statement: Statement | undefined
 
 		dispatch(setCurrentMultiStepOptions(randomStatements));
 	} catch (error) {
-		logError(error, { operation: 'multiStageQuestion.getMultiStageStatements.getFirstEvaluationOptions' });
+		logError(error, {
+			operation: 'multiStageQuestion.getMultiStageStatements.getFirstEvaluationOptions',
+		});
 	}
 }
 
@@ -43,6 +45,8 @@ export async function getSecondEvaluationOptions(statement: Statement | undefine
 		v.parse(topSolutions, v.array(StatementSchema));
 		dispatch(setCurrentMultiStepOptions(topSolutions));
 	} catch (error) {
-		logError(error, { operation: 'multiStageQuestion.getMultiStageStatements.getSecondEvaluationOptions' });
+		logError(error, {
+			operation: 'multiStageQuestion.getMultiStageStatements.getSecondEvaluationOptions',
+		});
 	}
 }

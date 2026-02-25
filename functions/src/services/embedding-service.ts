@@ -233,7 +233,7 @@ class EmbeddingService {
 		queryEmbedding: number[],
 		candidates: Array<{ id: string; embedding: number[] }>,
 		topK: number,
-		threshold: number = 0.80,
+		threshold: number = 0.8,
 	): Array<{ id: string; similarity: number }> {
 		const results: Array<{ id: string; similarity: number }> = [];
 

@@ -38,7 +38,10 @@ const BanConfirmationModal: FC<Props> = ({ member, statement, onConfirm, onCance
 	const handleConfirm = () => {
 		// Final safety check before confirming
 		if (!userCanBeBanned) {
-			logError(banDisabledReason, { operation: 'banConfirmationModal.BanConfirmationModal.handleConfirm', metadata: { message: 'Attempted to ban protected user:' } });
+			logError(banDisabledReason, {
+				operation: 'banConfirmationModal.BanConfirmationModal.handleConfirm',
+				metadata: { message: 'Attempted to ban protected user:' },
+			});
 
 			return;
 		}

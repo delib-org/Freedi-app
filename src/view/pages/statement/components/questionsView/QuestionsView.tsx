@@ -21,7 +21,10 @@ const QuestionsView: FC = () => {
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const statementColor = useStatementColor({ statement });
 
-	const questionsSelect = useMemo(() => questionsSelector(statement?.statementId), [statement?.statementId]);
+	const questionsSelect = useMemo(
+		() => questionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
 	const questions = useSelector(questionsSelect);
 	const visibleQuestions = questions.filter((q) => !q.hide || isAdmin);
 

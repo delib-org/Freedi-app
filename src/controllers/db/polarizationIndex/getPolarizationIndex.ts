@@ -31,6 +31,9 @@ export function listenToPolarizationIndex(statementId: string) {
 			});
 		});
 	} catch (error) {
-		logError(error, { operation: 'polarizationIndex.getPolarizationIndex.listenToPolarizationIndex', metadata: { message: 'Error listening to polarization index:' } });
+		logError(error, {
+			operation: 'polarizationIndex.getPolarizationIndex.listenToPolarizationIndex',
+			metadata: { message: 'Error listening to polarization index:' },
+		});
 	}
 }

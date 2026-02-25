@@ -33,7 +33,10 @@ const VersionHistory: FC<VersionHistoryProps> = ({
 			await revertToVersion(statementId, versions, selectedVersion);
 			onRevert();
 		} catch (error) {
-			logError(error, { operation: 'ImproveProposalModal.VersionHistory.handleRevert', metadata: { message: 'Failed to revert:' } });
+			logError(error, {
+				operation: 'ImproveProposalModal.VersionHistory.handleRevert',
+				metadata: { message: 'Failed to revert:' },
+			});
 		} finally {
 			setIsReverting(false);
 		}
