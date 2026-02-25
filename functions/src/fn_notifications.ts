@@ -292,10 +292,18 @@ async function processInAppNotifications(
 	//here we should have all the subscribers for the parent notification
 
 	const batch = db.batch();
+	const seenUserIds = new Set<string>();
 
 	// Create notification for each subscriber
+	// Use deterministic IDs to prevent duplicates if the function fires more than once
 	subscribersInApp.forEach((subscriber: StatementSubscription) => {
-		const notificationRef = db.collection(Collections.inAppNotifications).doc();
+		// Skip duplicate subscribers
+		if (seenUserIds.has(subscriber.user.uid)) return;
+		seenUserIds.add(subscriber.user.uid);
+
+		// Deterministic ID: ensures idempotency if function retries
+		const notificationId = `${subscriber.user.uid}_${newStatement.statementId}`;
+		const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
 
 		const questionType = newStatement.questionSettings?.questionType ?? getDefaultQuestionType();
 
@@ -310,15 +318,13 @@ async function processInAppNotifications(
 			creatorName: newStatement.creator.displayName,
 			creatorImage: newStatement.creator.photoURL,
 			createdAt: newStatement.createdAt,
-			read: false, // ✅ Set as unread by default
-			notificationId: notificationRef.id,
+			read: false,
+			notificationId: notificationId,
 			statementId: newStatement.statementId,
-			// ✅ New optional fields for tracking
 			viewedInList: false,
 			viewedInContext: false,
-			// readAt will be set when notification is marked as read
 		};
-		batch.create(notificationRef, newNotification);
+		batch.set(notificationRef, newNotification);
 	});
 
 	await batch.commit();
