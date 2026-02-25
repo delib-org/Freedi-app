@@ -16,7 +16,7 @@ import {
 import { auth } from '@/controllers/db/config';
 import { generateTemporalName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
-import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { convertFirebaseUserToCreator } from '@/utils/userUtils';
 import { logError } from '@/utils/errorHandling';
 
 /**
