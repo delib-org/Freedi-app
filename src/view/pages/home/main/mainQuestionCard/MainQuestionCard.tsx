@@ -23,8 +23,6 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 	const statement: Statement | undefined = useSelector(
 		statementSelector(simpleStatement.statementId),
 	);
-	const lastMessage = statement?.lastMessage;
-
 	const parentStatement = useSelector(statementSelectorById(statement?.parentId));
 	const topParentStatement = useSelector(statementSelectorById(statement?.topParentId));
 
@@ -100,17 +98,19 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 			<div className={styles.header}>
 				<div className={styles.title}>{simpleStatement.statement}</div>
 				<div className={styles.meta}>
-					{lastMessage?.createdAt && (
-						<span className={styles.time}>{getTime(lastMessage.createdAt)}</span>
-					)}
 					<div onClick={(e) => e.stopPropagation()}>
 						<StatementChatMore statement={simpleStatement} />
 					</div>
 				</div>
 			</div>
-			{lastMessage?.creator && lastMessage?.message && (
-				<div className={styles.lastMessage}>
-					<span className={styles.creator}>{lastMessage.creator}:</span> {lastMessage.message}
+			{statement?.lastSubStatements && statement.lastSubStatements.length > 0 && (
+				<div className={styles.messages}>
+					{[...statement.lastSubStatements].sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0)).slice(0, 3).map((sub) => (
+						<div key={sub.statementId} className={styles.lastMessage}>
+							<span className={styles.creator}>{sub.creator.displayName}:</span> {sub.statement}
+							{sub.createdAt && <span className={styles.messageTime}>{getTime(sub.createdAt)}</span>}
+						</div>
+					))}
 				</div>
 			)}
 		</Link>

@@ -45,20 +45,29 @@
 	flex-shrink: 0;
 }
 
-.time {
-	font-size: 0.75rem;
-	color: var(--text-tertiary);
-	white-space: nowrap;
+.messages {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	margin-top: 0.2rem;
 }
 
 .lastMessage {
+	display: flex;
+	align-items: baseline;
+	gap: 0.25rem;
 	font-size: 0.875rem;
 	color: var(--text-body);
-	margin-top: 0.2rem;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	white-space: nowrap;
 	max-width: 100%;
+}
+
+.messageTime {
+	flex-shrink: 0;
+	font-size: 0.7rem;
+	color: var(--text-tertiary);
+	margin-inline-start: auto;
 }
 
 .creator {
