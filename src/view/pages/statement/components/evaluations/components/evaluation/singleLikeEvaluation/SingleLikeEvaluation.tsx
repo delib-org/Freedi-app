@@ -14,6 +14,7 @@ import EvaluationManagementModal from '@/view/components/evaluationManagement/Ev
 import Snackbar from '@/view/components/snackbar/Snackbar';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
 import { logError } from '@/utils/errorHandling';
+import { getPseudoName } from '@/utils/temporalNameGenerator';
 
 interface Props {
 	statement: Statement;
@@ -88,7 +89,7 @@ const SingleLikeEvaluation: FC<Props> = ({
 		}
 
 		const creator: User = {
-			displayName: user.displayName || 'Anonymous',
+			displayName: user.displayName || getPseudoName(user.uid),
 			email: user.email || '',
 			photoURL: user.photoURL || '',
 			uid: user.uid,

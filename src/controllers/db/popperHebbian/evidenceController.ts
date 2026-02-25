@@ -17,6 +17,7 @@ import { createStatementRef, createDocRef, createCollectionRef } from '@/utils/f
 import { detectUrls } from '@/utils/urlHelpers';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { logError } from '@/utils/errorHandling';
+import { getPseudoName } from '@/utils/temporalNameGenerator';
 
 function generateId(): string {
 	return `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
@@ -147,7 +148,7 @@ export async function createEvidencePost(
 
 		// Create creator object from current user
 		const creator: Creator = {
-			displayName: currentUser.displayName || 'Anonymous',
+			displayName: currentUser.displayName || getPseudoName(currentUser.uid),
 			uid: currentUser.uid,
 			photoURL: currentUser.photoURL || '',
 			email: currentUser.email || '',

@@ -1,5 +1,5 @@
 import { Unsubscribe } from 'firebase/auth';
-import { and, limit, or, orderBy, query, where } from 'firebase/firestore';
+import { and, getDocs, limit, or, orderBy, query, startAfter, where } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
@@ -214,6 +214,11 @@ export const listenToSubStatements = (
 					// After initial load, handle individual changes
 					const changes = statementsDB.docChanges();
 
+					// When using a limited query, "removed" events may be window shifts
+					// (doc pushed out of the limit window by a new doc), not actual deletions.
+					// Only treat as deletion if no additions occur in the same snapshot batch.
+					const hasAdditions = numberOfOptions ? changes.some((c) => c.type === 'added') : false;
+
 					changes.forEach((change) => {
 						// Normalize data to remove non-serializable values (like VectorValue embeddings)
 						const statement = normalizeStatementData(change.doc.data()) as Statement;
@@ -223,7 +228,10 @@ export const listenToSubStatements = (
 						} else if (change.type === 'modified') {
 							dispatch(setStatement(statement));
 						} else if (change.type === 'removed') {
-							dispatch(deleteStatement(statement.statementId));
+							// Skip removal if it's likely a window shift (limited query + additions in same batch)
+							if (!hasAdditions) {
+								dispatch(deleteStatement(statement.statementId));
+							}
 						}
 					});
 				}
@@ -237,6 +245,59 @@ export const listenToSubStatements = (
 		return () => {};
 	}
 };
+
+/**
+ * Fetch older sub-statements for lazy loading (one-time query, not a listener).
+ * Returns the fetched statements and whether there are more to load.
+ */
+export async function fetchOlderSubStatements(
+	statementId: string,
+	oldestCreatedAt: number,
+	batchSize = 30,
+): Promise<{ statements: Statement[]; hasMore: boolean }> {
+	try {
+		const statementsRef = createCollectionRef(Collections.statements);
+
+		// Query for messages older than the oldest loaded one.
+		// Using desc order so startAfter gives us messages with createdAt < oldestCreatedAt.
+		// Note: A composite index on (parentId ASC, createdAt DESC) may be required.
+		const q = query(
+			statementsRef,
+			where('parentId', '==', statementId),
+			orderBy('createdAt', 'desc'),
+			startAfter(oldestCreatedAt),
+			limit(batchSize + 1),
+		);
+
+		const snapshot = await getDocs(q);
+		const statements: Statement[] = [];
+
+		snapshot.forEach((doc) => {
+			const statement = normalizeStatementData(doc.data()) as Statement;
+			// Filter out document types client-side
+			if (statement.statementType !== StatementType.document) {
+				statements.push(statement);
+			}
+		});
+
+		const hasMore = statements.length > batchSize;
+		const resultStatements = hasMore ? statements.slice(0, batchSize) : statements;
+
+		if (resultStatements.length > 0) {
+			store.dispatch(setStatements(resultStatements));
+		}
+
+		return { statements: resultStatements, hasMore };
+	} catch (error) {
+		logError(error, {
+			operation: 'statements.fetchOlderSubStatements',
+			statementId,
+			metadata: { oldestCreatedAt, batchSize },
+		});
+
+		return { statements: [], hasMore: false };
+	}
+}
 
 export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
 	try {

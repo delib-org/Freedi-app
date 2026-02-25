@@ -11,6 +11,7 @@ import {
 	listenToInAppNotifications,
 	clearInAppNotifications,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { CHAT } from '@/constants/common';
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
@@ -98,7 +99,12 @@ export const useStatementListeners = ({
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else {
-				unsubscribersRef.current.push(listenToSubStatements(statementId));
+				// Limit initial load for lazy loading (desc order to get most recent).
+				// The default view is 'chat', so apply the limit for all non-mind-map screens.
+				// The Chat component uses IntersectionObserver to fetch older messages on scroll.
+				unsubscribersRef.current.push(
+					listenToSubStatements(statementId, 'top', CHAT.INITIAL_MESSAGES_LIMIT),
+				);
 			}
 
 			// Stage listener
