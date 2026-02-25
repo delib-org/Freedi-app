@@ -68,7 +68,7 @@ const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 					</div>
 				</div>
 				<span className={`${subPage === 'decisions' ? styles.activeText : ''}`}>
-					{t('Decisions')}
+					{t('Discussions')}
 				</span>
 			</button>
 			<button

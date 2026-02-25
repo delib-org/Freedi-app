@@ -26,7 +26,7 @@ const HomeMain = () => {
 	const showNewStatementModal = useAppSelector(selectNewStatementShowModal);
 	const [loading, setLoading] = useState(true);
 	const [subPage, setSubPage] = useState<'decisions' | 'groups'>('groups');
-	const [subPageTitle, setSubPageTitle] = useState<'Decisions' | 'Groups'>('Decisions');
+	const [subPageTitle, setSubPageTitle] = useState<'Discussions' | 'Groups'>('Discussions');
 	const user = useSelector(creatorSelector);
 	const { t } = useTranslation();
 	const userId = user?.uid || '';
@@ -75,7 +75,7 @@ const HomeMain = () => {
 	}, [userId]);
 
 	useEffect(() => {
-		setSubPageTitle(subPage === 'decisions' ? 'Decisions' : 'Groups');
+		setSubPageTitle(subPage === 'decisions' ? 'Discussions' : 'Groups');
 	}, [subPage]);
 
 	return (
