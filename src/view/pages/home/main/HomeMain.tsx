@@ -94,7 +94,7 @@ const HomeMain = () => {
 						<NewStatement />
 					</div>
 				)}
-				<h2>{t(subPageTitle)}</h2>
+				<h2 className={styles.sectionTitle}>{t(subPageTitle)}</h2>
 				{(() => {
 					if (loading) {
 						return (
