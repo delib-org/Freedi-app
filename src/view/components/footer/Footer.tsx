@@ -20,9 +20,10 @@ import {
 interface Props {
 	subPage: 'decisions' | 'groups';
 	setSubPage: (page: 'decisions' | 'groups') => void;
+	hasGroups: boolean;
 }
 
-const Footer: FC<Props> = ({ setSubPage, subPage }) => {
+const Footer: FC<Props> = ({ setSubPage, subPage, hasGroups }) => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -44,6 +45,14 @@ const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 			dispatch(setNewStatementType(StatementType.question));
 			dispatch(setParentStatement('top'));
 		}
+	}
+
+	if (!hasGroups) {
+		return (
+			<button onClick={addStatement} className={styles.fab} data-cy="add-statement">
+				<AddIcon />
+			</button>
+		);
 	}
 
 	return (

@@ -60,13 +60,15 @@ const HomeMain = () => {
 		return () => clearTimeout(timer);
 	}, []);
 
+	const hasGroups = topSubscriptions.length > 0;
+
 	useEffect(() => {
-		if (userId && user.advanceUser) {
+		if (userId && user.advanceUser && hasGroups) {
 			setSubPage('groups');
 		} else {
 			setSubPage('decisions');
 		}
-	}, [userId]);
+	}, [userId, hasGroups]);
 
 	useEffect(() => {
 		setSubPageTitle(subPage === 'decisions' ? 'Discussions' : 'Groups');
@@ -109,7 +111,7 @@ const HomeMain = () => {
 					);
 				})()}
 			</div>
-			<Footer setSubPage={setSubPage} subPage={subPage} />
+			<Footer setSubPage={setSubPage} subPage={subPage} hasGroups={hasGroups} />
 		</main>
 	);
 };
