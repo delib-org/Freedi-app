@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import styles from './HomeMain.module.scss';
 
 // Redux store
@@ -17,17 +17,23 @@ import { StatementType } from '@freedi/shared-types';
 import MainQuestionCard from './mainQuestionCard/MainQuestionCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import NewStatement from '../../statement/components/newStatement/NewStatement';
-import { selectNewStatementShowModal } from '@/redux/statements/newStatementSlice';
-import { useSelector } from 'react-redux';
+import {
+	selectNewStatementShowModal,
+	setParentStatement,
+	setNewStatementType,
+	setShowNewStatementModal,
+} from '@/redux/statements/newStatementSlice';
+import { useSelector, useDispatch } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 const HomeMain = () => {
 	// Hooks
 	const showNewStatementModal = useAppSelector(selectNewStatementShowModal);
 	const [loading, setLoading] = useState(true);
-	const [subPage, setSubPage] = useState<'decisions' | 'groups'>('groups');
-	const [subPageTitle, setSubPageTitle] = useState<'Discussions' | 'Groups'>('Discussions');
+	const [subPage, setSubPage] = useState<'decisions' | 'topics'>('topics');
+	const [subPageTitle, setSubPageTitle] = useState<'Discussions' | 'Topics'>('Discussions');
 	const user = useSelector(creatorSelector);
+	const dispatch = useDispatch();
 	const { t } = useTranslation();
 	const userId = user?.uid || '';
 
@@ -37,7 +43,10 @@ const HomeMain = () => {
 	const topSubscriptions = useMemo(
 		() =>
 			allTopSubscriptions.filter(
-				(sub) => sub.userId === userId && sub.statement.statementType === StatementType.group,
+				(sub) =>
+					sub.userId === userId &&
+					(sub.statement.statementType === StatementType.group ||
+						sub.statement.statementType === StatementType.question),
 			),
 		[allTopSubscriptions, userId],
 	);
@@ -60,19 +69,25 @@ const HomeMain = () => {
 		return () => clearTimeout(timer);
 	}, []);
 
-	const hasGroups = topSubscriptions.length > 0;
+	const hasTopics = topSubscriptions.length > 0;
 
 	useEffect(() => {
-		if (userId && user.advanceUser && hasGroups) {
-			setSubPage('groups');
+		if (userId && user.advanceUser && hasTopics) {
+			setSubPage('topics');
 		} else {
 			setSubPage('decisions');
 		}
-	}, [userId, hasGroups]);
+	}, [userId, hasTopics]);
 
 	useEffect(() => {
-		setSubPageTitle(subPage === 'decisions' ? 'Discussions' : 'Groups');
+		setSubPageTitle(subPage === 'decisions' ? 'Discussions' : 'Topics');
 	}, [subPage]);
+
+	const handleAddStatement = useCallback(() => {
+		dispatch(setParentStatement('top'));
+		dispatch(setNewStatementType(StatementType.question));
+		dispatch(setShowNewStatementModal(true));
+	}, [dispatch]);
 
 	return (
 		<main className="home-page__main slide-in">
@@ -100,10 +115,10 @@ const HomeMain = () => {
 						);
 					}
 
-					const itemsToRender = subPage === 'groups' ? topSubscriptions : latestDecisions;
+					const itemsToRender = subPage === 'topics' ? topSubscriptions : latestDecisions;
 
 					return itemsToRender.map((sub) =>
-						subPage === 'groups' ? (
+						subPage === 'topics' ? (
 							<MainCard key={sub.statementId} subscription={sub} />
 						) : (
 							<MainQuestionCard key={sub.statementId} simpleStatement={sub.statement} />
@@ -111,7 +126,12 @@ const HomeMain = () => {
 					);
 				})()}
 			</div>
-			<Footer setSubPage={setSubPage} subPage={subPage} hasGroups={hasGroups} />
+			<Footer
+				setSubPage={setSubPage}
+				subPage={subPage}
+				hasTopics={hasTopics}
+				onAddStatement={handleAddStatement}
+			/>
 		</main>
 	);
 };

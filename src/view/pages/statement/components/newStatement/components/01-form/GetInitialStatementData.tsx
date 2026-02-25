@@ -39,7 +39,7 @@ export default function GetInitialStatementData() {
 	const dispatch = useDispatch();
 	const newStatementParent = useSelector(selectParentStatementForNewStatement);
 	const newStatement = useSelector(selectNewStatement);
-	const newStatementType = newStatement?.statementType || StatementType.group;
+	const newStatementType = newStatement?.statementType || StatementType.question;
 	const newStatementQuestionType =
 		newStatement?.questionSettings?.questionType || getDefaultQuestionType();
 	const user = useSelector(creatorSelector);
