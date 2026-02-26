@@ -289,6 +289,7 @@
   "Evidence is mixed - discussion ongoing": "La evidencia es mixta - discusión en curso",
   "Evidence leans toward supporting this idea": "La evidencia tiende a apoyar esta idea",
   "Evidence-based discussion with support/challenge format": "Discusión basada en evidencia con formato de apoyo/desafío",
+  "Fit to screen": "Ajustar a pantalla",
   "Expand All": "Expandir todo",
   "Expand all categories": "Expandir todas las categorías",
   "Explain how to open the notifications": "Explicar cómo abrir las notificaciones",
@@ -625,6 +626,8 @@
   "Selected": "Seleccionado",
   "Selected Options": "Opciones Seleccionadas",
   "Selected by the moderator": "Seleccionado por el moderador",
+  "Selected only": "Solo seleccionados",
+  "Show only selected options": "Mostrar solo opciones seleccionadas",
   "Send": "Enviar",
   "Send a link to anonymous users": "Enviar un enlace a usuarios anónimos",
   "Set up discussion modes and frameworks": "Configure modos y marcos de discusión",
@@ -1835,5 +1838,12 @@
   "onboarding.step2": "Comparte el enlace de la pregunta con otros miembros",
   "onboarding.step3": "Los participantes proponen soluciones e ideas",
   "onboarding.step4": "Todos evalúan las opciones para llegar a un consenso",
-  "onboarding.getStarted": "¡Toca + para iniciar tu primera discusión!"
+  "onboarding.getStarted": "¡Toca + para iniciar tu primera discusión!",
+  "questionOnboarding.whatIsThis": "¿Qué es esto?",
+  "questionOnboarding.whatIsThisDesc": "Un espacio de discusión colaborativo donde tu grupo puede generar ideas, proponer soluciones y evaluarlas juntos.",
+  "questionOnboarding.howToShare": "Invita a otros a unirse",
+  "questionOnboarding.howToShareDesc": "Toca el botón de compartir en el menú superior para copiar el enlace u obtener un código de invitación para los participantes.",
+  "questionOnboarding.howToSolve": "Cómo llegar a una solución",
+  "questionOnboarding.howToSolveDesc": "Los participantes proponen ideas, todos evalúan cada opción y las mejores soluciones suben a la cima.",
+  "questionOnboarding.getStarted": "¡Agrega tu primera sugerencia para comenzar!"
 }

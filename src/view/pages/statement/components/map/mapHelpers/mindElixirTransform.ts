@@ -28,7 +28,7 @@ export function getStyleForType(
 		case StatementType.option:
 			return {
 				background: isSelected
-					? '#76c0b3' // --header-chosen (teal)
+					? '#57c6b2' // --agree (green, same as options screen)
 					: '#ffe16a', // --header-not-chosen (yellow)
 				color: isSelected ? '#ffffff' : '#3b4f7d', // --option-text
 			};
@@ -68,7 +68,9 @@ export function toMindElixirData(
 ): MindElixirData {
 	function transformNode(result: Results): FreediNodeObj {
 		const statement = result.top;
-		const isSelected = selectedStatementIds.includes(statement.statementId);
+		const isSelected =
+			selectedStatementIds.includes(statement.statementId) ||
+			!!(statement.isVoted || statement.isChosen);
 		const style = getStyleForType(statement.statementType, isSelected);
 
 		const node: FreediNodeObj = {

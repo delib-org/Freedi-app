@@ -397,6 +397,7 @@
   "Following Instructor (Auto)": "Following Instructor (Auto)",
   "Power Follow Me": "Power Follow Me",
   "Power Follow Mode Active": "Power Follow Mode Active",
+  "Fit to screen": "Fit to screen",
   "For": "For",
   "For example: We should go to the pool this weekend...": "For example: We should go to the pool this weekend...",
   "For more information, visit our website": "For more information, visit our website",
@@ -833,6 +834,8 @@
   "Selected": "Selected",
   "Selected Options": "Selected Options",
   "Selected by the moderator": "Selected by the moderator",
+  "Selected only": "Selected only",
+  "Show only selected options": "Show only selected options",
   "Send": "Send",
   "Send a link to anonymous users": "Send a link to anonymous users",
   "Set default language for surveys": "Set default language for surveys",
@@ -2567,5 +2570,12 @@
   "onboarding.step2": "Share the question link with other members",
   "onboarding.step3": "Participants suggest solutions and ideas",
   "onboarding.step4": "Everyone evaluates the options to reach consensus",
-  "onboarding.getStarted": "Tap + to start your first discussion!"
+  "onboarding.getStarted": "Tap + to start your first discussion!",
+  "questionOnboarding.whatIsThis": "What is this?",
+  "questionOnboarding.whatIsThisDesc": "A collaborative discussion space where your group can brainstorm ideas, suggest solutions, and evaluate them together.",
+  "questionOnboarding.howToShare": "Invite others to join",
+  "questionOnboarding.howToShareDesc": "Tap the share button in the top menu to copy the link or get an invite code for participants.",
+  "questionOnboarding.howToSolve": "How to reach a solution",
+  "questionOnboarding.howToSolveDesc": "Participants suggest ideas, everyone evaluates each option, and the best solutions rise to the top.",
+  "questionOnboarding.getStarted": "Add your first suggestion to get started!"
 }

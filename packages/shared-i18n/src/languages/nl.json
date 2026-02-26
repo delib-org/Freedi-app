@@ -289,6 +289,7 @@
   "Evidence is mixed - discussion ongoing": "Bewijs is gemengd - discussie loopt",
   "Evidence leans toward supporting this idea": "Bewijs neigt naar ondersteuning van dit idee",
   "Evidence-based discussion with support/challenge format": "Op bewijs gebaseerde discussie met ondersteuning/uitdaging formaat",
+  "Fit to screen": "Passend op scherm",
   "Expand All": "Alles uitvouwen",
   "Expand all categories": "Alle categorieën uitvouwen",
   "Explain how to open the notifications": "Leg uit hoe de meldingen te openen",
@@ -625,6 +626,8 @@
   "Selected": "Geselecteerd",
   "Selected Options": "Geselecteerde Opties",
   "Selected by the moderator": "Geselecteerd door de moderator",
+  "Selected only": "Alleen geselecteerd",
+  "Show only selected options": "Toon alleen geselecteerde opties",
   "Send": "Versturen",
   "Send a link to anonymous users": "Stuur een link naar anonieme gebruikers",
   "Set up discussion modes and frameworks": "Stel discussiemodi en -kaders in",
@@ -1833,5 +1836,12 @@
   "onboarding.step2": "Deel de vraaglink met andere leden",
   "onboarding.step3": "Deelnemers stellen oplossingen en ideeën voor",
   "onboarding.step4": "Iedereen beoordeelt de opties om consensus te bereiken",
-  "onboarding.getStarted": "Tik op + om je eerste discussie te starten!"
+  "onboarding.getStarted": "Tik op + om je eerste discussie te starten!",
+  "questionOnboarding.whatIsThis": "Wat is dit?",
+  "questionOnboarding.whatIsThisDesc": "Een collaboratieve discussieruimte waar je groep samen ideeën kan bedenken, oplossingen kan voorstellen en deze kan evalueren.",
+  "questionOnboarding.howToShare": "Nodig anderen uit om deel te nemen",
+  "questionOnboarding.howToShareDesc": "Tik op de deelknop in het bovenste menu om de link te kopiëren of een uitnodigingscode voor deelnemers te krijgen.",
+  "questionOnboarding.howToSolve": "Hoe je tot een oplossing komt",
+  "questionOnboarding.howToSolveDesc": "Deelnemers stellen ideeën voor, iedereen beoordeelt elke optie en de beste oplossingen stijgen naar de top.",
+  "questionOnboarding.getStarted": "Voeg je eerste suggestie toe om te beginnen!"
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState, memo } from 'react';
+import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from 'react';
 import MindElixir from 'mind-elixir';
 import type { MindElixirInstance, NodeObj, Operation } from 'mind-elixir';
 import { useNavigate } from 'react-router';
@@ -14,17 +14,10 @@ import {
 	createMindMapSibling,
 	updateMindMapNodeText,
 } from '../mapHelpers/mindMapStatements';
+import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { FilterType } from '@/controllers/general/sorting';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
-
-// Icons
-import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
-import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
-import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg';
-import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
-import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
 
 interface Props {
 	descendants: Results;
@@ -71,12 +64,36 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const { mapContext, setMapContext } = useMapContext();
 	const { t } = useTranslation();
 
+	// Remove overflow clipping from ancestors so the 100vw container isn't clipped
+	useEffect(() => {
+		const pageMain = containerRef.current?.closest('.page__main') as HTMLElement | null;
+		const page = containerRef.current?.closest('.page') as HTMLElement | null;
+		const origMain = pageMain?.style.overflowX ?? '';
+		const origPage = page?.style.overflow ?? '';
+		if (pageMain) pageMain.style.overflowX = 'visible';
+		if (page) page.style.overflow = 'visible';
+
+		return () => {
+			if (pageMain) pageMain.style.overflowX = origMain;
+			if (page) page.style.overflow = origPage;
+		};
+	}, []);
+
 	// State for move modal
 	const [draggedNodeId, setDraggedNodeId] = useState('');
 	const [intersectedNodeId, setIntersectedNodeId] = useState('');
 
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
+
+	// State for toolbar overlay (rendered in React, outside MindElixir DOM)
+	const [toolbarState, setToolbarState] = useState<{
+		visible: boolean;
+		top: number;
+		left: number;
+		statementId: string;
+		isRoot: boolean;
+	}>({ visible: false, top: 0, left: 0, statementId: '', isRoot: false });
 
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
@@ -85,11 +102,206 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const descendantsRef = useRef<Results>(descendants);
 	descendantsRef.current = descendants;
 
-	// Apply filter if needed
-	const filteredDescendants =
-		filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
+	// Track injected DOM elements for cleanup
+	const injectedElementsRef = useRef<HTMLElement[]>([]);
 
-	const data = filteredDescendants ? toMindElixirData(filteredDescendants) : null;
+	// Ref for inject function to avoid stale closures in event handlers
+	const injectNodeButtonsRef = useRef<(nodeId: string) => void>(() => {});
+
+	// Refs for toolbar actions (avoids stale closures in injected DOM handlers)
+	const navigateRef = useRef(navigate);
+	navigateRef.current = navigate;
+	const tRef = useRef(t);
+	tRef.current = t;
+	const isAdminRef = useRef(isAdmin);
+	isAdminRef.current = isAdmin;
+
+	// Ref to track node ID pending inline edit (set after creating a node)
+	const pendingEditNodeIdRef = useRef<string | null>(null);
+
+	// Ref to re-select a node after edit finishes and data refreshes
+	const reselectAfterRefreshRef = useRef<string | null>(null);
+
+	// Remove previously injected node buttons
+	const removeNodeButtons = useCallback(() => {
+		injectedElementsRef.current.forEach((el) => el.remove());
+		injectedElementsRef.current = [];
+		setToolbarState((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+	}, []);
+
+	// Position the React toolbar overlay above a selected node
+	const showToolbarForNode = useCallback((nodeId: string) => {
+		if (!containerRef.current) return;
+
+		const tpcEl = containerRef.current.querySelector('me-tpc.selected') as HTMLElement | null;
+		if (!tpcEl) return;
+
+		const nodeRect = tpcEl.getBoundingClientRect();
+		const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
+		const isRoot = tpcEl.parentElement?.tagName === 'ME-ROOT';
+
+		// Use viewport coordinates directly (toolbar is position: fixed)
+		setToolbarState({
+			visible: true,
+			top: nodeRect.top - 44,
+			left: nodeRect.left + nodeRect.width / 2,
+			statementId,
+			isRoot: !!isRoot,
+		});
+	}, []);
+
+	// After creating a node, wait for it to appear in the DOM, then select and edit it
+	const waitAndEditNode = useCallback(
+		(nodeId: string) => {
+			// Store in ref so the refresh useEffect can also trigger edit after DOM rebuild
+			pendingEditNodeIdRef.current = nodeId;
+
+			let attempts = 0;
+			const maxAttempts = 20; // Try for ~2 seconds
+			const tryEdit = () => {
+				attempts++;
+				if (!mindRef.current) return;
+				// If another edit was requested, stop this one
+				if (pendingEditNodeIdRef.current !== nodeId) return;
+				try {
+					const tpc = mindRef.current.findEle(nodeId);
+					pendingEditNodeIdRef.current = null;
+					removeNodeButtons();
+					mindRef.current.selectNode(tpc, true);
+					mindRef.current.beginEdit(tpc);
+				} catch {
+					// Node not in DOM yet - retry
+					if (attempts < maxAttempts) {
+						setTimeout(tryEdit, 100);
+					}
+				}
+			};
+			setTimeout(tryEdit, 100);
+		},
+		[removeNodeButtons],
+	);
+
+	// Inject "+" buttons on a selected MindElixir node
+	const injectNodeButtons = useCallback(
+		(nodeId: string) => {
+			removeNodeButtons();
+
+			if (!containerRef.current) return;
+
+			// Find the selected me-tpc element
+			const tpcElement = containerRef.current.querySelector(
+				'me-tpc.selected',
+			) as HTMLElement | null;
+			if (!tpcElement) return;
+
+			const parentElement = tpcElement.parentElement;
+			if (!parentElement) return;
+
+			// Ensure parent is positioned for absolute children
+			parentElement.style.position = 'relative';
+
+			// MindElixir prefixes node IDs with "me" in the DOM - strip it for statement lookup
+			const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
+			const statement = findStatementById(descendantsRef.current, statementId);
+			if (!statement) return;
+
+			const nodeCanAddChild = canHaveChildren(statement.statementType);
+
+			// Show React toolbar overlay (positioned outside MindElixir DOM)
+			showToolbarForNode(nodeId);
+
+			// Create child "+" button (if allowed)
+			if (nodeCanAddChild) {
+				const childBtn = document.createElement('button');
+				childBtn.className = 'mind-map-add-btn mind-map-add-btn--child';
+				childBtn.textContent = '+';
+				childBtn.setAttribute('aria-label', 'Add child node (Tab)');
+				childBtn.addEventListener('click', async (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					const newChild = await createMindMapChild({ parentStatement: statement });
+					if (newChild) {
+						waitAndEditNode(newChild.statementId);
+					}
+				});
+				parentElement.appendChild(childBtn);
+				injectedElementsRef.current.push(childBtn);
+			}
+
+			// Create sibling "+" button (only if parent is in the tree)
+			const parentOfNode = statement.parentId
+				? findStatementById(descendantsRef.current, statement.parentId)
+				: null;
+
+			if (parentOfNode) {
+				const siblingBtn = document.createElement('button');
+				siblingBtn.className = 'mind-map-add-btn mind-map-add-btn--sibling';
+				siblingBtn.textContent = '+';
+				siblingBtn.setAttribute('aria-label', 'Add sibling node (Enter)');
+				siblingBtn.addEventListener('click', async (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					const newSibling = await createMindMapSibling({
+						currentStatement: statement,
+						parentStatement: parentOfNode,
+					});
+					if (newSibling) {
+						waitAndEditNode(newSibling.statementId);
+					}
+				});
+				parentElement.appendChild(siblingBtn);
+				injectedElementsRef.current.push(siblingBtn);
+			}
+
+			// Create keyboard hints (only for actions that have buttons)
+			const hints = document.createElement('div');
+			hints.className = 'mind-map-hints';
+
+			if (nodeCanAddChild) {
+				const childHint = document.createElement('div');
+				childHint.className = 'mind-map-hint';
+				childHint.innerHTML =
+					'<span class="mind-map-key">Tab</span><span class="mind-map-hint-text">to create child</span>';
+				hints.appendChild(childHint);
+			}
+
+			if (parentOfNode) {
+				const siblingHint = document.createElement('div');
+				siblingHint.className = 'mind-map-hint';
+				siblingHint.innerHTML =
+					'<span class="mind-map-key">Enter</span><span class="mind-map-hint-text">to create sibling</span>';
+				hints.appendChild(siblingHint);
+			}
+
+			if (hints.children.length > 0) {
+				parentElement.appendChild(hints);
+				injectedElementsRef.current.push(hints);
+			}
+
+			// Apply inverse zoom scaling so injected elements stay a consistent size
+			if (mindRef.current) {
+				const scale = 1 / mindRef.current.scaleVal;
+				injectedElementsRef.current.forEach((el) => {
+					el.style.transform = `scale(${scale})`;
+					el.style.transformOrigin = 'center center';
+				});
+			}
+		},
+		[removeNodeButtons, showToolbarForNode],
+	);
+
+	// Keep ref in sync for use inside MindElixir event handlers (avoids stale closures)
+	injectNodeButtonsRef.current = injectNodeButtons;
+
+	// Memoize data to prevent unnecessary refresh calls that rebuild the DOM.
+	// Without memoization, toMindElixirData creates a new object every render,
+	// causing the refresh useEffect to fire and destroy any active inline edit (input-box).
+	const data = useMemo(() => {
+		const filtered =
+			filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
+
+		return filtered ? toMindElixirData(filtered) : null;
+	}, [descendants, filterBy]);
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -111,6 +323,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			return () => clearTimeout(timeoutId);
 		}
 
+		// Space + scroll wheel zoom state (must be before MindElixir constructor)
+		let spaceHeld = false;
+		const SCALE_MIN = 0.2;
+		const SCALE_MAX = 3;
+
 		// Create MindElixir instance
 		const mind = new MindElixir({
 			el: container,
@@ -122,6 +339,27 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			editable: true, // Allow inline editing
 			allowUndo: true,
 			overflowHidden: false,
+			// Custom wheel handler: zoom when Space held, otherwise default pan
+			handleWheel: (e: WheelEvent) => {
+				if (spaceHeld && mindRef.current) {
+					e.preventDefault();
+					// Use continuous delta for smooth zoom (works with both mouse wheel and trackpad)
+					const delta = -e.deltaY * 0.002;
+					const currentScale = mindRef.current.scaleVal;
+					const targetScale = currentScale * (1 + delta);
+					const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
+					const factor = clampedScale / currentScale;
+					if (Math.abs(factor - 1) < 0.001) return;
+					const containerRect = container.getBoundingClientRect();
+					mindRef.current.scale(factor, {
+						x: e.clientX - containerRect.left,
+						y: e.clientY - containerRect.top,
+					});
+				} else if (mindRef.current) {
+					// Default panning behavior
+					mindRef.current.move(-e.deltaX, -e.deltaY);
+				}
+			},
 			// Intercept operations before they happen
 			before: {
 				addChild: async () => {
@@ -157,9 +395,12 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 			if (lastClick.nodeId === nodeObj.id && now - lastClick.time < 300) {
 				// Double click detected - navigate to statement
+				removeNodeButtons();
 				navigate(`/statement/${nodeObj.id}/chat`, {
 					state: { from: window.location.pathname },
 				});
+
+				return;
 			}
 
 			// Update last click
@@ -170,6 +411,26 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				...prev,
 				selectedId: nodeObj.id,
 			}));
+		});
+
+		// MutationObserver to detect node selection and inject buttons
+		// More reliable than relying on MindElixir's event bus timing
+		const selectionObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+					const target = mutation.target as HTMLElement;
+					if (target.tagName === 'ME-TPC' && target.classList.contains('selected')) {
+						const nodeId = target.getAttribute('data-nodeid') || '';
+						injectNodeButtonsRef.current(nodeId);
+					}
+				}
+			}
+		});
+
+		selectionObserver.observe(container, {
+			attributes: true,
+			attributeFilter: ['class'],
+			subtree: true,
 		});
 
 		// Event: Operation happened (for tracking node moves and text edits)
@@ -192,19 +453,36 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			// Handle inline text editing
 			if (operation.name === 'finishEdit' && 'obj' in operation && 'origin' in operation) {
 				const typedOp = operation as { obj: NodeObj; origin: string; name: string };
-				const statement = findStatementById(descendantsRef.current, typedOp.obj.id);
+				const nodeId = typedOp.obj.id;
+				const statement = findStatementById(descendantsRef.current, nodeId);
 				if (statement && typedOp.obj.topic !== typedOp.origin) {
 					await updateMindMapNodeText({
 						statement,
 						newText: typedOp.obj.topic,
 					});
 				}
+
+				// Keep the node selected after editing finishes.
+				// Store in ref so the refresh useEffect can re-select after DOM rebuild.
+				reselectAfterRefreshRef.current = nodeId;
+				setTimeout(() => {
+					try {
+						const tpc = mind.findEle(nodeId);
+						mind.selectNode(tpc);
+					} catch {
+						// Node may have been removed by refresh
+					}
+				}, 50);
 			}
 		});
 
 		// Keyboard handler for Tab (child) and Enter (sibling)
 		const handleKeyDown = async (e: KeyboardEvent) => {
 			if (!mindRef.current?.currentNode) return;
+
+			// Don't intercept keys while editing a node
+			const activeEl = document.activeElement as HTMLElement;
+			if (activeEl?.isContentEditable || activeEl?.id === 'input-box') return;
 
 			const currentNode = mindRef.current.currentNode;
 			const nodeData = currentNode.nodeObj as NodeObj;
@@ -220,8 +498,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 				// Check if this node can have children
 				if (!canHaveChildren(currentStatement.statementType)) {
-					console.info('Options cannot have children');
-
 					return;
 				}
 
@@ -230,8 +506,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				});
 
 				if (newStatement) {
-					// The mind map will update via the data refresh when Firebase listener triggers
-					console.info('Child created:', newStatement.statementId);
+					waitAndEditNode(newStatement.statementId);
 				}
 			}
 
@@ -239,7 +514,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			if (e.key === 'Enter' && !e.shiftKey) {
 				// Don't intercept Enter if we're editing a node
 				const activeElement = document.activeElement;
-				if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') {
+				if (
+					activeElement?.tagName === 'INPUT' ||
+					activeElement?.tagName === 'TEXTAREA' ||
+					(activeElement as HTMLElement)?.isContentEditable
+				) {
 					return;
 				}
 
@@ -251,8 +530,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 					: null;
 
 				if (!parentStatement) {
-					console.info('Cannot create sibling for root node');
-
 					return;
 				}
 
@@ -262,7 +539,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				});
 
 				if (newStatement) {
-					console.info('Sibling created:', newStatement.statementId);
+					waitAndEditNode(newStatement.statementId);
 				}
 			}
 		};
@@ -270,9 +547,108 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		// Add keyboard listener to container
 		container.addEventListener('keydown', handleKeyDown);
 
+		// Click handler to deselect and remove buttons when clicking empty area
+		const handleContainerClick = (e: MouseEvent) => {
+			const target = e.target as HTMLElement;
+
+			// If click was on a me-tpc, toolbar, or add button, let them handle it
+			if (
+				target.closest('me-tpc') ||
+				target.closest('.mind-map-add-btn') ||
+				target.closest('.mind-map-toolbar')
+			)
+				return;
+
+			// Clicked on empty area - remove buttons
+			removeNodeButtons();
+			setMapContext((prev) => ({
+				...prev,
+				selectedId: null,
+			}));
+		};
+
+		container.addEventListener('click', handleContainerClick);
+
+		// Space key tracking for zoom mode (wheel zoom is in handleWheel above)
+		const handleZoomKeyDown = (e: KeyboardEvent) => {
+			if (e.code === 'Space') {
+				const activeEl = document.activeElement as HTMLElement;
+				if (activeEl?.isContentEditable || activeEl?.id === 'input-box') return;
+				if (activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA') return;
+				e.preventDefault();
+				spaceHeld = true;
+				container.style.cursor = 'zoom-in';
+			}
+		};
+
+		const handleZoomKeyUp = (e: KeyboardEvent) => {
+			if (e.code === 'Space') {
+				spaceHeld = false;
+				container.style.cursor = '';
+			}
+		};
+
+		window.addEventListener('keydown', handleZoomKeyDown);
+		window.addEventListener('keyup', handleZoomKeyUp);
+
+		// Pinch to zoom (mobile)
+		let initialPinchDistance = 0;
+		let initialScale = 1;
+
+		const getDistance = (t1: Touch, t2: Touch): number => {
+			const dx = t1.clientX - t2.clientX;
+			const dy = t1.clientY - t2.clientY;
+
+			return Math.sqrt(dx * dx + dy * dy);
+		};
+
+		const handleTouchStart = (e: TouchEvent) => {
+			if (e.touches.length === 2 && mindRef.current) {
+				initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+				initialScale = mindRef.current.scaleVal;
+			}
+		};
+
+		const handleTouchMove = (e: TouchEvent) => {
+			if (e.touches.length !== 2 || !mindRef.current || initialPinchDistance === 0) return;
+			e.preventDefault();
+
+			const currentDistance = getDistance(e.touches[0], e.touches[1]);
+			const pinchRatio = currentDistance / initialPinchDistance;
+			const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, initialScale * pinchRatio));
+			const factor = newScale / mindRef.current.scaleVal;
+
+			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+			const rect = container.getBoundingClientRect();
+
+			mindRef.current.scale(factor, {
+				x: midX - rect.left,
+				y: midY - rect.top,
+			});
+		};
+
+		const handleTouchEnd = (e: TouchEvent) => {
+			if (e.touches.length < 2) {
+				initialPinchDistance = 0;
+			}
+		};
+
+		container.addEventListener('touchstart', handleTouchStart, { passive: true });
+		container.addEventListener('touchmove', handleTouchMove, { passive: false });
+		container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
 		// Cleanup
 		return () => {
+			selectionObserver.disconnect();
 			container.removeEventListener('keydown', handleKeyDown);
+			container.removeEventListener('click', handleContainerClick);
+			window.removeEventListener('keydown', handleZoomKeyDown);
+			window.removeEventListener('keyup', handleZoomKeyUp);
+			container.removeEventListener('touchstart', handleTouchStart);
+			container.removeEventListener('touchmove', handleTouchMove);
+			container.removeEventListener('touchend', handleTouchEnd);
+			removeNodeButtons();
 			mind.destroy();
 			mindRef.current = null;
 		};
@@ -281,6 +657,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Update data when descendants change
 	useEffect(() => {
 		if (!mindRef.current || !data) return;
+
+		// Skip refresh if the user is currently editing a node inline.
+		// MindElixir creates div#input-box for inline editing; refresh would destroy it.
+		const inputBox = document.getElementById('input-box');
+		if (inputBox) return;
 
 		// Save current scale and position before refresh
 		const currentScale = mindRef.current.scaleVal;
@@ -302,7 +683,41 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		if (currentTransform && mapElement) {
 			mapElement.style.transform = currentTransform;
 		}
-	}, [data]);
+
+		// If a node is pending inline edit, trigger it after the DOM rebuild
+		if (pendingEditNodeIdRef.current && mindRef.current) {
+			const nodeId = pendingEditNodeIdRef.current;
+			const mind = mindRef.current;
+			// Let the DOM settle after refresh, then start editing
+			setTimeout(() => {
+				if (pendingEditNodeIdRef.current !== nodeId) return;
+				try {
+					const tpc = mind.findEle(nodeId);
+					pendingEditNodeIdRef.current = null;
+					removeNodeButtons();
+					mind.selectNode(tpc, true);
+					mind.beginEdit(tpc);
+				} catch {
+					// Node not found yet, polling in waitAndEditNode will retry
+				}
+			}, 50);
+		}
+
+		// Re-select node after refresh if user just finished editing
+		if (reselectAfterRefreshRef.current && mindRef.current) {
+			const nodeId = reselectAfterRefreshRef.current;
+			const mind = mindRef.current;
+			reselectAfterRefreshRef.current = null;
+			setTimeout(() => {
+				try {
+					const tpc = mind.findEle(nodeId);
+					mind.selectNode(tpc);
+				} catch {
+					// Node not found after refresh
+				}
+			}, 50);
+		}
+	}, [data, removeNodeButtons]);
 
 	// Handle layout direction change
 	const handleLayoutChange = useCallback((newDirection: 'SIDE' | 'LEFT' | 'RIGHT') => {
@@ -365,19 +780,39 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		}
 	}, []);
 
-	// Handle add sibling from toolbar
-	const handleAddSiblingNode = useCallback(() => {
-		const selectedId = mapContext?.selectedId;
-		const hoveredStatement = selectedId
-			? findStatementById(descendants, selectedId)
-			: descendants.top;
+	// Fit map to screen using built-in scaleFit
+	const handleFitToScreen = useCallback(() => {
+		if (!mindRef.current) return;
+		mindRef.current.scaleFit();
+	}, []);
 
-		setMapContext((prev) => ({
-			...prev,
-			showModal: true,
-			parentStatement: hoveredStatement ?? descendants.top,
-		}));
-	}, [mapContext?.selectedId, descendants, setMapContext]);
+	// Toolbar action handlers
+	const handleToolbarLink = useCallback(() => {
+		if (!toolbarState.statementId) return;
+		navigate(`/statement/${toolbarState.statementId}/chat`, {
+			state: { from: window.location.pathname },
+		});
+	}, [toolbarState.statementId, navigate]);
+
+	const handleToolbarEdit = useCallback(() => {
+		if (!mindRef.current || !toolbarState.statementId) return;
+		try {
+			const tpc = mindRef.current.findEle(toolbarState.statementId);
+			removeNodeButtons();
+			mindRef.current.beginEdit(tpc);
+		} catch {
+			// Node not found
+		}
+	}, [toolbarState.statementId, removeNodeButtons]);
+
+	const handleToolbarDelete = useCallback(() => {
+		if (!toolbarState.statementId) return;
+		const statement = findStatementById(descendants, toolbarState.statementId);
+		if (!statement) return;
+		deleteStatementFromDB(statement, true, t).then(() => {
+			removeNodeButtons();
+		});
+	}, [toolbarState.statementId, descendants, t, removeNodeButtons]);
 
 	if (!data) {
 		return (
@@ -392,28 +827,198 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		<>
 			<div ref={containerRef} className={styles.mindElixirContainer} tabIndex={0} />
 
+			{/* Node toolbar overlay — rendered in React, outside MindElixir's DOM */}
+			{toolbarState.visible && (
+				<div
+					className={styles.toolbar}
+					style={{ top: toolbarState.top, left: toolbarState.left }}
+					onMouseDown={(e) => e.stopPropagation()}
+					onPointerDown={(e) => e.stopPropagation()}
+				>
+					<button
+						className={styles.toolbarBtn}
+						onClick={handleToolbarLink}
+						aria-label="Open statement"
+						title={t('Open')}
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+							<polyline points="15 3 21 3 21 9" />
+							<line x1="10" y1="14" x2="21" y2="3" />
+						</svg>
+					</button>
+					<button
+						className={styles.toolbarBtn}
+						onClick={handleToolbarEdit}
+						aria-label="Edit node"
+						title={t('Edit')}
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+						</svg>
+					</button>
+					{!toolbarState.isRoot && (
+						<>
+							<div className={styles.toolbarDivider} />
+							<button
+								className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
+								onClick={handleToolbarDelete}
+								aria-label="Delete node"
+								title={t('Delete')}
+							>
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<polyline points="3 6 5 6 21 6" />
+									<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+									<line x1="10" y1="11" x2="10" y2="17" />
+									<line x1="14" y1="11" x2="14" y2="17" />
+								</svg>
+							</button>
+						</>
+					)}
+				</div>
+			)}
+
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>
 				{!isButtonVisible ? (
-					<button className={styles.mainButton} onClick={() => setIsButtonVisible(true)}>
-						<img src={MapHamburgerIcon} alt={t('Menu')} />
+					<button
+						className={styles.mainButton}
+						onClick={() => setIsButtonVisible(true)}
+						aria-label={t('Menu')}
+					>
+						<svg
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<line x1="3" y1="6" x2="21" y2="6" />
+							<line x1="3" y1="12" x2="21" y2="12" />
+							<line x1="3" y1="18" x2="21" y2="18" />
+						</svg>
 					</button>
 				) : (
 					<div className={styles.arcButtons}>
-						<button onClick={() => setIsButtonVisible(false)}>
-							<img src={MapCancelIcon} alt={t('Close')} />
+						<button onClick={() => setIsButtonVisible(false)} aria-label={t('Close')}>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<line x1="18" y1="6" x2="6" y2="18" />
+								<line x1="6" y1="6" x2="18" y2="18" />
+							</svg>
 						</button>
-						<button onClick={() => handleLayoutChange('SIDE')} title={t('Side layout')}>
-							<img src={MapVerticalLayoutIcon} alt={t('Side layout')} />
+						<button
+							onClick={() => handleLayoutChange('SIDE')}
+							title={t('Side layout')}
+							aria-label={t('Side layout')}
+						>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="12" cy="12" r="3" />
+								<line x1="15" y1="5" x2="21" y2="5" />
+								<line x1="15" y1="12" x2="21" y2="12" />
+								<line x1="15" y1="19" x2="21" y2="19" />
+								<line x1="3" y1="5" x2="9" y2="5" />
+								<line x1="3" y1="19" x2="9" y2="19" />
+							</svg>
 						</button>
-						<button onClick={() => handleLayoutChange('LEFT')} title={t('Left layout')}>
-							<img src={MapHorizontalLayoutIcon} alt={t('Left layout')} />
+						<button
+							onClick={() => handleLayoutChange('LEFT')}
+							title={t('Left layout')}
+							aria-label={t('Left layout')}
+						>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="5" cy="12" r="3" />
+								<line x1="8" y1="5" x2="21" y2="5" />
+								<line x1="8" y1="12" x2="21" y2="12" />
+								<line x1="8" y1="19" x2="21" y2="19" />
+							</svg>
 						</button>
-						<button onClick={handleRestore} title={t('Restore')}>
-							<img src={MapRestoreIcon} alt={t('Restore')} />
+						<button onClick={handleRestore} title={t('Restore')} aria-label={t('Restore')}>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<polyline points="1 4 1 10 7 10" />
+								<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+							</svg>
 						</button>
-						<button onClick={handleAddSiblingNode} title={t('Add')}>
-							<img src={MapSaveIcon} alt={t('Add')} />
+						<button
+							onClick={handleFitToScreen}
+							title={t('Fit to screen')}
+							aria-label={t('Fit to screen')}
+						>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<path d="M15 3h6v6" />
+								<path d="M9 21H3v-6" />
+								<path d="M21 3l-7 7" />
+								<path d="M3 21l7-7" />
+							</svg>
 						</button>
 					</div>
 				)}
