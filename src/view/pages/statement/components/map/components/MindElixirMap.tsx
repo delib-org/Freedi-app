@@ -665,19 +665,47 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		}
 	}, []);
 
-	// Handle add sibling from toolbar
-	const handleAddSiblingNode = useCallback(() => {
-		const selectedId = mapContext?.selectedId;
-		const hoveredStatement = selectedId
-			? findStatementById(descendants, selectedId)
-			: descendants.top;
+	// Fit map to screen by calculating required scale
+	const handleFitToScreen = useCallback(() => {
+		if (!mindRef.current || !containerRef.current) return;
 
-		setMapContext((prev) => ({
-			...prev,
-			showModal: true,
-			parentStatement: hoveredStatement ?? descendants.top,
-		}));
-	}, [mapContext?.selectedId, descendants, setMapContext]);
+		const mind = mindRef.current;
+		const container = containerRef.current;
+		const mapEl = mind.map;
+		if (!mapEl) return;
+
+		// Get the bounding rect of all nodes inside the map
+		const nodes = mapEl.querySelectorAll('me-tpc');
+		if (nodes.length === 0) return;
+
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+
+		nodes.forEach((node) => {
+			const rect = (node as HTMLElement).getBoundingClientRect();
+			minX = Math.min(minX, rect.left);
+			minY = Math.min(minY, rect.top);
+			maxX = Math.max(maxX, rect.right);
+			maxY = Math.max(maxY, rect.bottom);
+		});
+
+		const contentWidth = (maxX - minX) / mind.scaleVal;
+		const contentHeight = (maxY - minY) / mind.scaleVal;
+
+		const containerRect = container.getBoundingClientRect();
+		const padding = 60;
+		const availableWidth = containerRect.width - padding * 2;
+		const availableHeight = containerRect.height - padding * 2;
+
+		const scaleX = availableWidth / contentWidth;
+		const scaleY = availableHeight / contentHeight;
+		const newScale = Math.min(scaleX, scaleY, 1); // Don't zoom in past 100%
+
+		mind.scale(newScale / mind.scaleVal);
+		mind.toCenter();
+	}, []);
 
 	// Toolbar action handlers
 	const handleToolbarLink = useCallback(() => {
@@ -892,19 +920,25 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 								<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
 							</svg>
 						</button>
-						<button onClick={handleAddSiblingNode} title={t('Add')} aria-label={t('Add')}>
+						<button
+							onClick={handleFitToScreen}
+							title={t('Fit to screen')}
+							aria-label={t('Fit to screen')}
+						>
 							<svg
 								width="24"
 								height="24"
 								viewBox="0 0 24 24"
 								fill="none"
 								stroke="currentColor"
-								strokeWidth="2.5"
+								strokeWidth="2"
 								strokeLinecap="round"
 								strokeLinejoin="round"
 							>
-								<line x1="12" y1="5" x2="12" y2="19" />
-								<line x1="5" y1="12" x2="19" y2="12" />
+								<path d="M15 3h6v6" />
+								<path d="M9 21H3v-6" />
+								<path d="M21 3l-7 7" />
+								<path d="M3 21l7-7" />
 							</svg>
 						</button>
 					</div>
