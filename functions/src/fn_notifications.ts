@@ -97,7 +97,7 @@ async function filterByQuietHours(subscribers: FcmSubscriber[]): Promise<FcmSubs
 	const fetchPromises = userIds.map(async (userId) => {
 		try {
 			const tokensSnapshot = await db
-				.collection('pushNotifications')
+				.collection(Collections.pushNotifications)
 				.where('userId', '==', userId)
 				.limit(1)
 				.get();
@@ -189,7 +189,7 @@ export async function updateInAppNotifications(
 		}
 
 		// Combine subscribers from direct parent and all ancestors
-		const seenUserIds = new Set();
+		const seenUserIds = new Set<string>();
 		const allSubscribers = [...subscribersInApp, ...allParentSubscribers].filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
 				return false;
@@ -248,7 +248,7 @@ export async function updateInAppNotifications(
 		await processInAppNotifications(allSubscribers, newStatement, parentStatement);
 
 		// Process FCM notifications with improved error handling
-		await processFcmNotificationsImproved(fcmSubscribers, newStatement);
+		await processFcmNotificationsImproved(fcmSubscribers, newStatement, parentStatement);
 	} catch (error) {
 		logger.error('Error in updateInAppNotifications:', error);
 	}
@@ -407,7 +407,7 @@ async function removeInvalidTokens(invalidTokens: FcmSubscriber[]): Promise<void
 		}
 
 		// Remove from pushNotifications collection
-		const pushNotificationRef = db.doc(`pushNotifications/${subscriber.token}`);
+		const pushNotificationRef = db.doc(`${Collections.pushNotifications}/${subscriber.token}`);
 		batch.delete(pushNotificationRef);
 	}
 
@@ -504,6 +504,7 @@ async function removeUserTokensFromSubscriptions(userId: string, tokens: string[
 export async function processFcmNotificationsImproved(
 	fcmSubscribers: FcmSubscriber[],
 	newStatement: Statement,
+	parentStatement: Statement | null = null,
 ): Promise<SendResult> {
 	const result: SendResult = {
 		successful: 0,
@@ -561,7 +562,18 @@ export async function processFcmNotificationsImproved(
 	const creatorName = newStatement.creator.displayName || 'Someone';
 	const creatorPhoto = newStatement.creator.photoURL || '';
 	const statementPreview =
-		newStatement.statement.substring(0, 100) + (newStatement.statement.length > 100 ? '...' : '');
+		newStatement.statement.substring(0, 120) + (newStatement.statement.length > 120 ? '...' : '');
+
+	let notificationTitle = `✨ New statement from ${creatorName}`;
+	let notificationBody = `"${statementPreview}"`;
+
+	if (parentStatement?.statement) {
+		const parentPreview =
+			parentStatement.statement.substring(0, 40) +
+			(parentStatement.statement.length > 40 ? '...' : '');
+		notificationTitle = `💬 ${creatorName} replied`;
+		notificationBody = `On: "${parentPreview}"\n\n↳ "${statementPreview}"`;
+	}
 
 	// Build URL for notification click
 	const notificationUrl = `/statement/${newStatement.parentId}?focusId=${newStatement.statementId}`;
@@ -572,8 +584,8 @@ export async function processFcmNotificationsImproved(
 	const fcmMessages = tokensAfterQuietHours.map((subscriber) => ({
 		token: subscriber.token,
 		notification: {
-			title: `New reply from ${creatorName}`,
-			body: statementPreview,
+			title: notificationTitle,
+			body: notificationBody,
 			// Include creator's photo as notification image
 			...(creatorPhoto && { image: creatorPhoto }),
 		},

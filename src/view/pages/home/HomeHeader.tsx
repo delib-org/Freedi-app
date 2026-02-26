@@ -24,19 +24,12 @@ export default function HomeHeader() {
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
 	const { t, dir, currentLanguage } = useTranslation();
-	const { isInstallable, isAppInstalled, handleInstall } = usePWAInstallPrompt();
+	const { isInstallable, isAppInstalled } = usePWAInstallPrompt();
 
-	const currentLabel = LANGUAGES.find((lang) => lang.code === currentLanguage).label;
+	const currentLabel = LANGUAGES.find((lang) => lang.code === currentLanguage)?.label ?? 'English';
 
 	// Only show install icon if app is installable AND not already installed
 	const showInstallIcon = isInstallable && !isAppInstalled;
-
-	// Debug logging for install icon visibility
-	console.info('[HomeHeader] Install icon state:', {
-		isInstallable,
-		isAppInstalled,
-		showInstallIcon,
-	});
 
 	function handlePanel(modal: string) {
 		try {
@@ -50,6 +43,10 @@ export default function HomeHeader() {
 
 	function closeModal() {
 		setShowLanguageModal(false);
+	}
+
+	function handleOpenInstallPrompt() {
+		window.dispatchEvent(new Event('freedi:open-install-prompt'));
 	}
 
 	return (
@@ -87,7 +84,7 @@ export default function HomeHeader() {
 					</Menu>
 
 					{showInstallIcon && (
-						<IconButton onClick={handleInstall}>
+						<IconButton onClick={handleOpenInstallPrompt}>
 							<InstallIcon />
 						</IconButton>
 					)}

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import styles from './installPWA.module.scss';
 import InstallAppIcon from '@/assets/icons/installIconW.svg?react';
+import { STORAGE_KEYS } from '@/constants/common';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { logError } from '@/utils/errorHandling';
 
 type BeforeInstallPromptEvent = Event & {
@@ -8,39 +10,36 @@ type BeforeInstallPromptEvent = Event & {
 	userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 };
 
-const InstallPWA: React.FC = () => {
+interface InstallPWAProps {
+	isOpen?: boolean;
+	onClose?: () => void;
+}
+
+const InstallPWA: React.FC<InstallPWAProps> = ({ isOpen = false, onClose }) => {
 	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 	const [isInstallable, setIsInstallable] = useState(false);
-
-	// Track if the user has already responded to the PWA install prompt
-	const [hasUserResponded, setHasUserResponded] = useState<boolean>(() => {
-		return localStorage.getItem('pwa-user-responded') === 'true';
-	});
+	const { t } = useTranslation();
 
 	useEffect(() => {
 		// Handle the 'beforeinstallprompt' event — fired when the app becomes installable
 		const handleBeforeInstallPrompt = (e: Event) => {
-			// Prevent the automatic mini-infobar (especially in older Chrome)
+			// Prevent the automatic mini-infobar
 			e.preventDefault();
 
 			// Save the event for later so we can trigger it manually on button click
 			setDeferredPrompt(e as BeforeInstallPromptEvent);
 
-			// Show the install button only if the user hasn't already responded
-			if (!hasUserResponded) {
-				setIsInstallable(true);
-			}
+			// Device can install the app
+			setIsInstallable(true);
 		};
 
 		// Handle the 'appinstalled' event — fired when the app is actually installed
 		const handleAppInstalled = () => {
-			console.info('✅ App was installed via native prompt');
+			console.info('[PWA] App was installed via native prompt');
 
 			// Clean up the prompt and hide the install button
 			setDeferredPrompt(null);
 			setIsInstallable(false);
-			setHasUserResponded(true);
-			localStorage.setItem('pwa-user-responded', 'true');
 		};
 
 		// Listen for install prompt availability
@@ -59,13 +58,13 @@ const InstallPWA: React.FC = () => {
 			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('appinstalled', handleAppInstalled);
 		};
-	}, [hasUserResponded]);
+	}, []);
 
 	const handleInstallClick = async () => {
 		if (!deferredPrompt) return;
 
 		// Show the install prompt
-		deferredPrompt.prompt();
+		await deferredPrompt.prompt();
 
 		let settled = false;
 
@@ -75,8 +74,6 @@ const InstallPWA: React.FC = () => {
 				console.info('No response from install prompt — hiding button');
 				setIsInstallable(false);
 				setDeferredPrompt(null);
-				setHasUserResponded(true);
-				localStorage.setItem('pwa-user-responded', 'true');
 				settled = true;
 			}
 		}, 5000);
@@ -90,8 +87,6 @@ const InstallPWA: React.FC = () => {
 				clearTimeout(fallbackTimeout); // clear fallback if user did respond
 				setIsInstallable(false);
 				setDeferredPrompt(null);
-				setHasUserResponded(true);
-				localStorage.setItem('pwa-user-responded', 'true');
 				settled = true;
 			}
 		} catch (err) {
@@ -102,23 +97,37 @@ const InstallPWA: React.FC = () => {
 			if (!settled) {
 				setIsInstallable(false);
 				setDeferredPrompt(null);
-				setHasUserResponded(true);
-				localStorage.setItem('pwa-user-responded', 'true');
 			}
 		}
 	};
 
-	// Hide component if install isn't allowed or already handled
-	if (!isInstallable) {
+	const handleDismissClick = () => {
+		localStorage.setItem(STORAGE_KEYS.PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT, String(Date.now()));
+		onClose?.();
+	};
+
+	// Hide component if install isn't allowed, already handled, or not explicitly opened
+	if (!isInstallable || !isOpen) {
 		return null;
 	}
 
 	return (
-		<div className={styles.installPwa}>
-			<button className={styles.installButton} onClick={handleInstallClick}>
-				<InstallAppIcon className={styles.installIcon} />
-				Install App
-			</button>
+		<div className={styles.installPwaOverlay}>
+			<div className={styles.installPwaContent}>
+				<div className={styles.installPwaHeader}>
+					<h3>{t('pwa.installTitle')}</h3>
+					<p>{t('pwa.installDescription')}</p>
+				</div>
+				<div className={styles.installPwaActions}>
+					<button className={styles.dismissButton} onClick={handleDismissClick}>
+						{t('common.notNow')}
+					</button>
+					<button className={styles.installButton} onClick={handleInstallClick}>
+						<InstallAppIcon className={styles.installIcon} />
+						{t('pwa.installButton')}
+					</button>
+				</div>
+			</div>
 		</div>
 	);
 };

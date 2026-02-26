@@ -1820,5 +1820,18 @@
   "Default View": "Standaardweergave",
   "Choose which view participants see first": "Kies welke weergave deelnemers als eerste zien",
   "No questions yet": "Nog geen vragen",
-  "Add a question": "Vraag toevoegen"
+  "Add a question": "Vraag toevoegen",
+
+  "pwa.installTitle": "FreeDi installeren",
+  "pwa.installDescription": "Krijg snel toegang tot je groepen en discussies vanaf je startscherm.",
+  "pwa.installButton": "App installeren",
+
+  "onboarding.welcome": "Welkom bij WizCol!",
+  "onboarding.description": "WizCol helpt groepen samen beslissingen te nemen door middel van gestructureerde discussies.",
+  "onboarding.howItWorks": "Hoe het werkt:",
+  "onboarding.step1": "Maak een discussieonderwerp of vraag aan",
+  "onboarding.step2": "Deel de vraaglink met andere leden",
+  "onboarding.step3": "Deelnemers stellen oplossingen en ideeën voor",
+  "onboarding.step4": "Iedereen beoordeelt de opties om consensus te bereiken",
+  "onboarding.getStarted": "Tik op + om je eerste discussie te starten!"
 }

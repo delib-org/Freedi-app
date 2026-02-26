@@ -2554,5 +2554,18 @@
   "Default View": "Default View",
   "Choose which view participants see first": "Choose which view participants see first",
   "No questions yet": "No questions yet",
-  "Add a question": "Add a question"
+  "Add a question": "Add a question",
+
+  "pwa.installTitle": "Install FreeDi",
+  "pwa.installDescription": "Get quick access to your groups and discussions from your home screen.",
+  "pwa.installButton": "Install App",
+
+  "onboarding.welcome": "Welcome to WizCol!",
+  "onboarding.description": "WizCol helps groups make decisions together through structured discussions.",
+  "onboarding.howItWorks": "How it works:",
+  "onboarding.step1": "Create a discussion topic or question",
+  "onboarding.step2": "Share the question link with other members",
+  "onboarding.step3": "Participants suggest solutions and ideas",
+  "onboarding.step4": "Everyone evaluates the options to reach consensus",
+  "onboarding.getStarted": "Tap + to start your first discussion!"
 }

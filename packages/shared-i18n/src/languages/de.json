@@ -1820,5 +1820,18 @@
   "Default View": "Standardansicht",
   "Choose which view participants see first": "Wählen Sie, welche Ansicht die Teilnehmer zuerst sehen",
   "No questions yet": "Noch keine Fragen",
-  "Add a question": "Frage hinzufügen"
+  "Add a question": "Frage hinzufügen",
+
+  "pwa.installTitle": "FreeDi installieren",
+  "pwa.installDescription": "Erhalten Sie schnellen Zugriff auf Ihre Gruppen und Diskussionen von Ihrem Startbildschirm.",
+  "pwa.installButton": "App installieren",
+
+  "onboarding.welcome": "Willkommen bei WizCol!",
+  "onboarding.description": "WizCol hilft Gruppen, gemeinsam Entscheidungen durch strukturierte Diskussionen zu treffen.",
+  "onboarding.howItWorks": "So funktioniert es:",
+  "onboarding.step1": "Erstellen Sie ein Diskussionsthema oder eine Frage",
+  "onboarding.step2": "Teilen Sie den Frage-Link mit anderen Mitgliedern",
+  "onboarding.step3": "Teilnehmer schlagen Lösungen und Ideen vor",
+  "onboarding.step4": "Alle bewerten die Optionen, um einen Konsens zu erreichen",
+  "onboarding.getStarted": "Tippen Sie auf +, um Ihre erste Diskussion zu starten!"
 }
