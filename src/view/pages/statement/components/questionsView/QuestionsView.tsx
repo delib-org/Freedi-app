@@ -60,18 +60,16 @@ const QuestionsView: FC = () => {
 				)}
 			</div>
 
-			{isAdmin && (
-				<div className={styles.addButtonWrapper}>
-					<button
-						className={styles.addButton}
-						style={statementColor}
-						onClick={handleAddQuestion}
-						aria-label={t('Add a question')}
-					>
-						<PlusIcon style={{ color: statementColor.color }} />
-					</button>
-				</div>
-			)}
+			<div className={styles.addButtonWrapper}>
+				<button
+					className={styles.addButton}
+					style={statementColor}
+					onClick={handleAddQuestion}
+					aria-label={t('Add a question')}
+				>
+					<PlusIcon style={{ color: statementColor.color }} />
+				</button>
+			</div>
 		</>
 	);
 };
