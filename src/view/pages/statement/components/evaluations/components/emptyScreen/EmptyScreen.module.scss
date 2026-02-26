@@ -5,18 +5,7 @@
   justify-content: center;
   padding: 2rem 1rem;
   text-align: center;
-  min-height: 50vh;
   gap: 1rem;
-}
-
-.ideaImage {
-  width: 10rem;
-  height: auto;
-  margin-bottom: 0.5rem;
-
-  @media (min-width: 1024px) {
-    width: 12rem;
-  }
 }
 
 .title {

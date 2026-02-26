@@ -2555,5 +2555,12 @@
   "onboarding.step2": "שתפו את הקישור לשאלה עם חברים אחרים",
   "onboarding.step3": "המשתתפים מציעים פתרונות ורעיונות",
   "onboarding.step4": "כולם מעריכים את האפשרויות כדי להגיע להסכמה",
-  "onboarding.getStarted": "לחצו על + כדי להתחיל את הדיון הראשון שלכם!"
+  "onboarding.getStarted": "לחצו על + כדי להתחיל את הדיון הראשון שלכם!",
+  "questionOnboarding.whatIsThis": "מה זה?",
+  "questionOnboarding.whatIsThisDesc": "מרחב דיון שיתופי שבו הקבוצה שלכם יכולה לחשוב יחד על רעיונות, להציע פתרונות ולהעריך אותם ביחד.",
+  "questionOnboarding.howToShare": "הזמינו אחרים להצטרף",
+  "questionOnboarding.howToShareDesc": "לחצו על כפתור השיתוף בתפריט העליון כדי להעתיק קישור או לקבל קוד הזמנה למשתתפים.",
+  "questionOnboarding.howToSolve": "איך מגיעים לפתרון",
+  "questionOnboarding.howToSolveDesc": "המשתתפים מציעים רעיונות, כולם מעריכים כל אפשרות, והפתרונות הטובים ביותר עולים לראש.",
+  "questionOnboarding.getStarted": "הוסיפו את ההצעה הראשונה שלכם כדי להתחיל!"
 }

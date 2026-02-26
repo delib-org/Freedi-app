@@ -1857,5 +1857,12 @@
   "onboarding.step2": "شارك رابط السؤال مع الأعضاء الآخرين",
   "onboarding.step3": "يقترح المشاركون الحلول والأفكار",
   "onboarding.step4": "يُقيّم الجميع الخيارات للوصول إلى توافق",
-  "onboarding.getStarted": "اضغط على + لبدء نقاشك الأول!"
+  "onboarding.getStarted": "اضغط على + لبدء نقاشك الأول!",
+  "questionOnboarding.whatIsThis": "ما هذا؟",
+  "questionOnboarding.whatIsThisDesc": "مساحة نقاش تعاونية حيث يمكن لمجموعتك تبادل الأفكار واقتراح الحلول وتقييمها معًا.",
+  "questionOnboarding.howToShare": "ادعُ الآخرين للانضمام",
+  "questionOnboarding.howToShareDesc": "اضغط على زر المشاركة في القائمة العلوية لنسخ الرابط أو الحصول على رمز دعوة للمشاركين.",
+  "questionOnboarding.howToSolve": "كيف تصل إلى حل",
+  "questionOnboarding.howToSolveDesc": "يقترح المشاركون أفكارًا، ويقيّم الجميع كل خيار، وترتفع أفضل الحلول إلى القمة.",
+  "questionOnboarding.getStarted": "أضف اقتراحك الأول للبدء!"
 }

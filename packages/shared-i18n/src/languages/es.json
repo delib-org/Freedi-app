@@ -1835,5 +1835,12 @@
   "onboarding.step2": "Comparte el enlace de la pregunta con otros miembros",
   "onboarding.step3": "Los participantes proponen soluciones e ideas",
   "onboarding.step4": "Todos evalúan las opciones para llegar a un consenso",
-  "onboarding.getStarted": "¡Toca + para iniciar tu primera discusión!"
+  "onboarding.getStarted": "¡Toca + para iniciar tu primera discusión!",
+  "questionOnboarding.whatIsThis": "¿Qué es esto?",
+  "questionOnboarding.whatIsThisDesc": "Un espacio de discusión colaborativo donde tu grupo puede generar ideas, proponer soluciones y evaluarlas juntos.",
+  "questionOnboarding.howToShare": "Invita a otros a unirse",
+  "questionOnboarding.howToShareDesc": "Toca el botón de compartir en el menú superior para copiar el enlace u obtener un código de invitación para los participantes.",
+  "questionOnboarding.howToSolve": "Cómo llegar a una solución",
+  "questionOnboarding.howToSolveDesc": "Los participantes proponen ideas, todos evalúan cada opción y las mejores soluciones suben a la cima.",
+  "questionOnboarding.getStarted": "¡Agrega tu primera sugerencia para comenzar!"
 }
