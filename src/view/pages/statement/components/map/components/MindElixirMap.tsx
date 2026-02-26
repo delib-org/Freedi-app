@@ -85,6 +85,112 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const descendantsRef = useRef<Results>(descendants);
 	descendantsRef.current = descendants;
 
+	// Track injected DOM elements for cleanup
+	const injectedElementsRef = useRef<HTMLElement[]>([]);
+
+	// Ref for inject function to avoid stale closures in event handlers
+	const injectNodeButtonsRef = useRef<(nodeId: string) => void>(() => {});
+
+	// Remove previously injected node buttons
+	const removeNodeButtons = useCallback(() => {
+		injectedElementsRef.current.forEach((el) => el.remove());
+		injectedElementsRef.current = [];
+	}, []);
+
+	// Inject "+" buttons on a selected MindElixir node
+	const injectNodeButtons = useCallback(
+		(nodeId: string) => {
+			removeNodeButtons();
+
+			if (!containerRef.current) return;
+
+			// Find the selected me-tpc element
+			const tpcElement = containerRef.current.querySelector(
+				'me-tpc.selected',
+			) as HTMLElement | null;
+			if (!tpcElement) return;
+
+			const parentElement = tpcElement.parentElement;
+			if (!parentElement) return;
+
+			// Ensure parent is positioned for absolute children
+			parentElement.style.position = 'relative';
+
+			// MindElixir prefixes node IDs with "me" in the DOM - strip it for statement lookup
+			const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
+			const statement = findStatementById(descendantsRef.current, statementId);
+			if (!statement) return;
+
+			const nodeCanAddChild = canHaveChildren(statement.statementType);
+
+			// Create child "+" button (if allowed)
+			if (nodeCanAddChild) {
+				const childBtn = document.createElement('button');
+				childBtn.className = 'mind-map-add-btn mind-map-add-btn--child';
+				childBtn.textContent = '+';
+				childBtn.setAttribute('aria-label', 'Add child node (Tab)');
+				childBtn.addEventListener('click', async (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					await createMindMapChild({ parentStatement: statement });
+				});
+				parentElement.appendChild(childBtn);
+				injectedElementsRef.current.push(childBtn);
+			}
+
+			// Create sibling "+" button (only if parent is in the tree)
+			const parentOfNode = statement.parentId
+				? findStatementById(descendantsRef.current, statement.parentId)
+				: null;
+
+			if (parentOfNode) {
+				const siblingBtn = document.createElement('button');
+				siblingBtn.className = 'mind-map-add-btn mind-map-add-btn--sibling';
+				siblingBtn.textContent = '+';
+				siblingBtn.setAttribute('aria-label', 'Add sibling node (Enter)');
+				siblingBtn.addEventListener('click', async (e) => {
+					e.stopPropagation();
+					e.preventDefault();
+					await createMindMapSibling({
+						currentStatement: statement,
+						parentStatement: parentOfNode,
+					});
+				});
+				parentElement.appendChild(siblingBtn);
+				injectedElementsRef.current.push(siblingBtn);
+			}
+
+			// Create keyboard hints (only for actions that have buttons)
+			const hints = document.createElement('div');
+			hints.className = 'mind-map-hints';
+
+			if (nodeCanAddChild) {
+				const childHint = document.createElement('div');
+				childHint.className = 'mind-map-hint';
+				childHint.innerHTML =
+					'<span class="mind-map-key">Tab</span><span class="mind-map-hint-text">to create child</span>';
+				hints.appendChild(childHint);
+			}
+
+			if (parentOfNode) {
+				const siblingHint = document.createElement('div');
+				siblingHint.className = 'mind-map-hint';
+				siblingHint.innerHTML =
+					'<span class="mind-map-key">Enter</span><span class="mind-map-hint-text">to create sibling</span>';
+				hints.appendChild(siblingHint);
+			}
+
+			if (hints.children.length > 0) {
+				parentElement.appendChild(hints);
+				injectedElementsRef.current.push(hints);
+			}
+		},
+		[removeNodeButtons],
+	);
+
+	// Keep ref in sync for use inside MindElixir event handlers (avoids stale closures)
+	injectNodeButtonsRef.current = injectNodeButtons;
+
 	// Apply filter if needed
 	const filteredDescendants =
 		filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
@@ -157,9 +263,12 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 			if (lastClick.nodeId === nodeObj.id && now - lastClick.time < 300) {
 				// Double click detected - navigate to statement
+				removeNodeButtons();
 				navigate(`/statement/${nodeObj.id}/chat`, {
 					state: { from: window.location.pathname },
 				});
+
+				return;
 			}
 
 			// Update last click
@@ -170,6 +279,26 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				...prev,
 				selectedId: nodeObj.id,
 			}));
+		});
+
+		// MutationObserver to detect node selection and inject buttons
+		// More reliable than relying on MindElixir's event bus timing
+		const selectionObserver = new MutationObserver((mutations) => {
+			for (const mutation of mutations) {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+					const target = mutation.target as HTMLElement;
+					if (target.tagName === 'ME-TPC' && target.classList.contains('selected')) {
+						const nodeId = target.getAttribute('data-nodeid') || '';
+						injectNodeButtonsRef.current(nodeId);
+					}
+				}
+			}
+		});
+
+		selectionObserver.observe(container, {
+			attributes: true,
+			attributeFilter: ['class'],
+			subtree: true,
 		});
 
 		// Event: Operation happened (for tracking node moves and text edits)
@@ -270,9 +399,29 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		// Add keyboard listener to container
 		container.addEventListener('keydown', handleKeyDown);
 
+		// Click handler to deselect and remove buttons when clicking empty area
+		const handleContainerClick = (e: MouseEvent) => {
+			const target = e.target as HTMLElement;
+
+			// If click was on a me-tpc or inside one, let MindElixir handle it
+			if (target.closest('me-tpc') || target.closest('.mind-map-add-btn')) return;
+
+			// Clicked on empty area - remove buttons
+			removeNodeButtons();
+			setMapContext((prev) => ({
+				...prev,
+				selectedId: null,
+			}));
+		};
+
+		container.addEventListener('click', handleContainerClick);
+
 		// Cleanup
 		return () => {
+			selectionObserver.disconnect();
 			container.removeEventListener('keydown', handleKeyDown);
+			container.removeEventListener('click', handleContainerClick);
+			removeNodeButtons();
 			mind.destroy();
 			mindRef.current = null;
 		};

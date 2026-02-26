@@ -32,6 +32,12 @@
 			overflow-wrap: break-word;
 			line-height: 1.4;
 			text-align: start;
+
+			// Blue highlight border when selected
+			&.selected {
+				outline: 3px solid #47b4ef;
+				outline-offset: 2px;
+			}
 		}
 
 		// Root node can be wider
@@ -42,6 +48,151 @@
 		// Main branches (first level) slightly wider
 		me-main > me-tpc {
 			max-width: 280px;
+		}
+
+		// ========================================
+		// Add child/sibling buttons (injected into MindElixir DOM)
+		// ========================================
+		.mind-map-add-btn {
+			position: absolute;
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			background: #47b4ef;
+			border: none;
+			color: white;
+			font-size: 18px;
+			font-weight: 700;
+			line-height: 1;
+			cursor: pointer;
+			z-index: 10;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background 0.15s ease, box-shadow 0.15s ease;
+			animation: mindMapBtnEnter 0.15s ease-out;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+			&:hover {
+				background: #3a9fd6;
+				box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+			}
+
+			&:active {
+				background: #2d8ac0;
+			}
+
+			&:focus-visible {
+				outline: 2px solid #47b4ef;
+				outline-offset: 2px;
+			}
+
+			// Child button: right edge of node
+			&--child {
+				right: -14px;
+				top: 50%;
+				margin-top: -12px;
+			}
+
+			// Sibling button: bottom edge of node
+			&--sibling {
+				bottom: -14px;
+				left: 50%;
+				margin-left: -12px;
+			}
+		}
+
+		// Keyboard shortcut hints
+		.mind-map-hints {
+			position: absolute;
+			left: calc(100% + 20px);
+			top: 50%;
+			transform: translateY(-50%);
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			white-space: nowrap;
+			font-size: 12px;
+			color: #555;
+			animation: mindMapFadeIn 0.2s ease-out;
+			z-index: 5;
+			pointer-events: none;
+		}
+
+		.mind-map-hint {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.mind-map-key {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 28px;
+			height: 22px;
+			padding: 0 6px;
+			background: #f0f0f0;
+			border: 1px solid #ccc;
+			border-bottom: 2px solid #bbb;
+			border-radius: 4px;
+			font-size: 11px;
+			font-weight: 600;
+			font-family: inherit;
+			color: #444;
+		}
+
+		.mind-map-hint-text {
+			color: #666;
+			font-size: 12px;
+		}
+
+		@keyframes mindMapBtnEnter {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+
+		@keyframes mindMapFadeIn {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+
+		// Hide keyboard hints on mobile/touch
+		@media (max-width: 767px) {
+			.mind-map-add-btn {
+				width: 32px;
+				height: 32px;
+				font-size: 20px;
+
+				&--child {
+					right: -18px;
+					margin-top: -16px;
+				}
+
+				&--sibling {
+					bottom: -18px;
+					margin-left: -16px;
+				}
+			}
+
+			.mind-map-hints {
+				display: none;
+			}
+		}
+
+		@media (hover: none) {
+			.mind-map-hints {
+				display: none;
+			}
 		}
 	}
 }
