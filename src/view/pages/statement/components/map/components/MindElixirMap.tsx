@@ -64,6 +64,21 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const { mapContext, setMapContext } = useMapContext();
 	const { t } = useTranslation();
 
+	// Remove overflow clipping from ancestors so the 100vw container isn't clipped
+	useEffect(() => {
+		const pageMain = containerRef.current?.closest('.page__main') as HTMLElement | null;
+		const page = containerRef.current?.closest('.page') as HTMLElement | null;
+		const origMain = pageMain?.style.overflowX ?? '';
+		const origPage = page?.style.overflow ?? '';
+		if (pageMain) pageMain.style.overflowX = 'visible';
+		if (page) page.style.overflow = 'visible';
+
+		return () => {
+			if (pageMain) pageMain.style.overflowX = origMain;
+			if (page) page.style.overflow = origPage;
+		};
+	}, []);
+
 	// State for move modal
 	const [draggedNodeId, setDraggedNodeId] = useState('');
 	const [intersectedNodeId, setIntersectedNodeId] = useState('');
@@ -308,6 +323,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			return () => clearTimeout(timeoutId);
 		}
 
+		// Space + scroll wheel zoom state (must be before MindElixir constructor)
+		let spaceHeld = false;
+		const SCALE_MIN = 0.2;
+		const SCALE_MAX = 3;
+
 		// Create MindElixir instance
 		const mind = new MindElixir({
 			el: container,
@@ -319,6 +339,27 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			editable: true, // Allow inline editing
 			allowUndo: true,
 			overflowHidden: false,
+			// Custom wheel handler: zoom when Space held, otherwise default pan
+			handleWheel: (e: WheelEvent) => {
+				if (spaceHeld && mindRef.current) {
+					e.preventDefault();
+					// Use continuous delta for smooth zoom (works with both mouse wheel and trackpad)
+					const delta = -e.deltaY * 0.002;
+					const currentScale = mindRef.current.scaleVal;
+					const targetScale = currentScale * (1 + delta);
+					const clampedScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, targetScale));
+					const factor = clampedScale / currentScale;
+					if (Math.abs(factor - 1) < 0.001) return;
+					const containerRect = container.getBoundingClientRect();
+					mindRef.current.scale(factor, {
+						x: e.clientX - containerRect.left,
+						y: e.clientY - containerRect.top,
+					});
+				} else if (mindRef.current) {
+					// Default panning behavior
+					mindRef.current.move(-e.deltaX, -e.deltaY);
+				}
+			},
 			// Intercept operations before they happen
 			before: {
 				addChild: async () => {
@@ -528,11 +569,85 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 		container.addEventListener('click', handleContainerClick);
 
+		// Space key tracking for zoom mode (wheel zoom is in handleWheel above)
+		const handleZoomKeyDown = (e: KeyboardEvent) => {
+			if (e.code === 'Space') {
+				const activeEl = document.activeElement as HTMLElement;
+				if (activeEl?.isContentEditable || activeEl?.id === 'input-box') return;
+				if (activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA') return;
+				e.preventDefault();
+				spaceHeld = true;
+				container.style.cursor = 'zoom-in';
+			}
+		};
+
+		const handleZoomKeyUp = (e: KeyboardEvent) => {
+			if (e.code === 'Space') {
+				spaceHeld = false;
+				container.style.cursor = '';
+			}
+		};
+
+		window.addEventListener('keydown', handleZoomKeyDown);
+		window.addEventListener('keyup', handleZoomKeyUp);
+
+		// Pinch to zoom (mobile)
+		let initialPinchDistance = 0;
+		let initialScale = 1;
+
+		const getDistance = (t1: Touch, t2: Touch): number => {
+			const dx = t1.clientX - t2.clientX;
+			const dy = t1.clientY - t2.clientY;
+
+			return Math.sqrt(dx * dx + dy * dy);
+		};
+
+		const handleTouchStart = (e: TouchEvent) => {
+			if (e.touches.length === 2 && mindRef.current) {
+				initialPinchDistance = getDistance(e.touches[0], e.touches[1]);
+				initialScale = mindRef.current.scaleVal;
+			}
+		};
+
+		const handleTouchMove = (e: TouchEvent) => {
+			if (e.touches.length !== 2 || !mindRef.current || initialPinchDistance === 0) return;
+			e.preventDefault();
+
+			const currentDistance = getDistance(e.touches[0], e.touches[1]);
+			const pinchRatio = currentDistance / initialPinchDistance;
+			const newScale = Math.min(SCALE_MAX, Math.max(SCALE_MIN, initialScale * pinchRatio));
+			const factor = newScale / mindRef.current.scaleVal;
+
+			const midX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+			const midY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+			const rect = container.getBoundingClientRect();
+
+			mindRef.current.scale(factor, {
+				x: midX - rect.left,
+				y: midY - rect.top,
+			});
+		};
+
+		const handleTouchEnd = (e: TouchEvent) => {
+			if (e.touches.length < 2) {
+				initialPinchDistance = 0;
+			}
+		};
+
+		container.addEventListener('touchstart', handleTouchStart, { passive: true });
+		container.addEventListener('touchmove', handleTouchMove, { passive: false });
+		container.addEventListener('touchend', handleTouchEnd, { passive: true });
+
 		// Cleanup
 		return () => {
 			selectionObserver.disconnect();
 			container.removeEventListener('keydown', handleKeyDown);
 			container.removeEventListener('click', handleContainerClick);
+			window.removeEventListener('keydown', handleZoomKeyDown);
+			window.removeEventListener('keyup', handleZoomKeyUp);
+			container.removeEventListener('touchstart', handleTouchStart);
+			container.removeEventListener('touchmove', handleTouchMove);
+			container.removeEventListener('touchend', handleTouchEnd);
 			removeNodeButtons();
 			mind.destroy();
 			mindRef.current = null;
@@ -665,46 +780,10 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		}
 	}, []);
 
-	// Fit map to screen by calculating required scale
+	// Fit map to screen using built-in scaleFit
 	const handleFitToScreen = useCallback(() => {
-		if (!mindRef.current || !containerRef.current) return;
-
-		const mind = mindRef.current;
-		const container = containerRef.current;
-		const mapEl = mind.map;
-		if (!mapEl) return;
-
-		// Get the bounding rect of all nodes inside the map
-		const nodes = mapEl.querySelectorAll('me-tpc');
-		if (nodes.length === 0) return;
-
-		let minX = Infinity;
-		let minY = Infinity;
-		let maxX = -Infinity;
-		let maxY = -Infinity;
-
-		nodes.forEach((node) => {
-			const rect = (node as HTMLElement).getBoundingClientRect();
-			minX = Math.min(minX, rect.left);
-			minY = Math.min(minY, rect.top);
-			maxX = Math.max(maxX, rect.right);
-			maxY = Math.max(maxY, rect.bottom);
-		});
-
-		const contentWidth = (maxX - minX) / mind.scaleVal;
-		const contentHeight = (maxY - minY) / mind.scaleVal;
-
-		const containerRect = container.getBoundingClientRect();
-		const padding = 60;
-		const availableWidth = containerRect.width - padding * 2;
-		const availableHeight = containerRect.height - padding * 2;
-
-		const scaleX = availableWidth / contentWidth;
-		const scaleY = availableHeight / contentHeight;
-		const newScale = Math.min(scaleX, scaleY, 1); // Don't zoom in past 100%
-
-		mind.scale(newScale / mind.scaleVal);
-		mind.toCenter();
+		if (!mindRef.current) return;
+		mindRef.current.scaleFit();
 	}, []);
 
 	// Toolbar action handlers
