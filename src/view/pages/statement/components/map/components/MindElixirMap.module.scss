@@ -175,7 +175,7 @@
 			}
 		}
 
-		// Hide keyboard hints on mobile/touch
+		// Mobile/touch adjustments
 		@media (max-width: 767px) {
 			.mind-map-add-btn {
 				width: 32px;
@@ -203,6 +203,77 @@
 				display: none;
 			}
 		}
+	}
+}
+
+// ========================================
+// React toolbar overlay (positioned outside MindElixir DOM)
+// ========================================
+.toolbar {
+	position: fixed;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	background: var(--card-default, #ffffff);
+	border-radius: 8px;
+	padding: 4px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	z-index: 100;
+	animation: toolbarFadeIn 0.15s ease-out;
+	white-space: nowrap;
+}
+
+.toolbarBtn {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--text-body, #555);
+	transition: background 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: var(--btn-primary, #5f88e5);
+		color: white;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: -2px;
+	}
+
+	svg {
+		width: 18px;
+		height: 18px;
+	}
+}
+
+.toolbarBtnDelete {
+	&:hover {
+		background: var(--disagree, #fe6ba2);
+		color: white;
+	}
+}
+
+.toolbarDivider {
+	width: 1px;
+	height: 20px;
+	background: var(--border-color, #ddd);
+	margin: 0 2px;
+}
+
+@keyframes toolbarFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
 	}
 }
 

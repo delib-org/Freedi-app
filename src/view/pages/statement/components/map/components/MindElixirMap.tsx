@@ -14,6 +14,7 @@ import {
 	createMindMapSibling,
 	updateMindMapNodeText,
 } from '../mapHelpers/mindMapStatements';
+import { deleteStatementFromDB } from '@/controllers/db/statements/deleteStatements';
 import { FilterType } from '@/controllers/general/sorting';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
@@ -78,6 +79,15 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// State for controls panel
 	const [isButtonVisible, setIsButtonVisible] = useState(false);
 
+	// State for toolbar overlay (rendered in React, outside MindElixir DOM)
+	const [toolbarState, setToolbarState] = useState<{
+		visible: boolean;
+		top: number;
+		left: number;
+		statementId: string;
+		isRoot: boolean;
+	}>({ visible: false, top: 0, left: 0, statementId: '', isRoot: false });
+
 	// Double click handler ref
 	const lastClickRef = useRef<{ time: number; nodeId: string }>({ time: 0, nodeId: '' });
 
@@ -91,6 +101,14 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Ref for inject function to avoid stale closures in event handlers
 	const injectNodeButtonsRef = useRef<(nodeId: string) => void>(() => {});
 
+	// Refs for toolbar actions (avoids stale closures in injected DOM handlers)
+	const navigateRef = useRef(navigate);
+	navigateRef.current = navigate;
+	const tRef = useRef(t);
+	tRef.current = t;
+	const isAdminRef = useRef(isAdmin);
+	isAdminRef.current = isAdmin;
+
 	// Ref to track node ID pending inline edit (set after creating a node)
 	const pendingEditNodeIdRef = useRef<string | null>(null);
 
@@ -101,6 +119,28 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	const removeNodeButtons = useCallback(() => {
 		injectedElementsRef.current.forEach((el) => el.remove());
 		injectedElementsRef.current = [];
+		setToolbarState((prev) => (prev.visible ? { ...prev, visible: false } : prev));
+	}, []);
+
+	// Position the React toolbar overlay above a selected node
+	const showToolbarForNode = useCallback((nodeId: string) => {
+		if (!containerRef.current) return;
+
+		const tpcEl = containerRef.current.querySelector('me-tpc.selected') as HTMLElement | null;
+		if (!tpcEl) return;
+
+		const nodeRect = tpcEl.getBoundingClientRect();
+		const statementId = nodeId.startsWith('me') ? nodeId.substring(2) : nodeId;
+		const isRoot = tpcEl.parentElement?.tagName === 'ME-ROOT';
+
+		// Use viewport coordinates directly (toolbar is position: fixed)
+		setToolbarState({
+			visible: true,
+			top: nodeRect.top - 44,
+			left: nodeRect.left + nodeRect.width / 2,
+			statementId,
+			isRoot: !!isRoot,
+		});
 	}, []);
 
 	// After creating a node, wait for it to appear in the DOM, then select and edit it
@@ -159,6 +199,9 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			if (!statement) return;
 
 			const nodeCanAddChild = canHaveChildren(statement.statementType);
+
+			// Show React toolbar overlay (positioned outside MindElixir DOM)
+			showToolbarForNode(nodeId);
 
 			// Create child "+" button (if allowed)
 			if (nodeCanAddChild) {
@@ -227,8 +270,17 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				parentElement.appendChild(hints);
 				injectedElementsRef.current.push(hints);
 			}
+
+			// Apply inverse zoom scaling so injected elements stay a consistent size
+			if (mindRef.current) {
+				const scale = 1 / mindRef.current.scaleVal;
+				injectedElementsRef.current.forEach((el) => {
+					el.style.transform = `scale(${scale})`;
+					el.style.transformOrigin = 'center center';
+				});
+			}
 		},
-		[removeNodeButtons],
+		[removeNodeButtons, showToolbarForNode],
 	);
 
 	// Keep ref in sync for use inside MindElixir event handlers (avoids stale closures)
@@ -466,8 +518,13 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		const handleContainerClick = (e: MouseEvent) => {
 			const target = e.target as HTMLElement;
 
-			// If click was on a me-tpc or inside one, let MindElixir handle it
-			if (target.closest('me-tpc') || target.closest('.mind-map-add-btn')) return;
+			// If click was on a me-tpc, toolbar, or add button, let them handle it
+			if (
+				target.closest('me-tpc') ||
+				target.closest('.mind-map-add-btn') ||
+				target.closest('.mind-map-toolbar')
+			)
+				return;
 
 			// Clicked on empty area - remove buttons
 			removeNodeButtons();
@@ -630,6 +687,34 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		}));
 	}, [mapContext?.selectedId, descendants, setMapContext]);
 
+	// Toolbar action handlers
+	const handleToolbarLink = useCallback(() => {
+		if (!toolbarState.statementId) return;
+		navigate(`/statement/${toolbarState.statementId}/chat`, {
+			state: { from: window.location.pathname },
+		});
+	}, [toolbarState.statementId, navigate]);
+
+	const handleToolbarEdit = useCallback(() => {
+		if (!mindRef.current || !toolbarState.statementId) return;
+		try {
+			const tpc = mindRef.current.findEle(toolbarState.statementId);
+			removeNodeButtons();
+			mindRef.current.beginEdit(tpc);
+		} catch {
+			// Node not found
+		}
+	}, [toolbarState.statementId, removeNodeButtons]);
+
+	const handleToolbarDelete = useCallback(() => {
+		if (!toolbarState.statementId) return;
+		const statement = findStatementById(descendants, toolbarState.statementId);
+		if (!statement) return;
+		deleteStatementFromDB(statement, true, t).then(() => {
+			removeNodeButtons();
+		});
+	}, [toolbarState.statementId, descendants, t, removeNodeButtons]);
+
 	if (!data) {
 		return (
 			<div className={styles.loading}>
@@ -642,6 +727,79 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	return (
 		<>
 			<div ref={containerRef} className={styles.mindElixirContainer} tabIndex={0} />
+
+			{/* Node toolbar overlay — rendered in React, outside MindElixir's DOM */}
+			{toolbarState.visible && (
+				<div
+					className={styles.toolbar}
+					style={{ top: toolbarState.top, left: toolbarState.left }}
+					onMouseDown={(e) => e.stopPropagation()}
+					onPointerDown={(e) => e.stopPropagation()}
+				>
+					<button
+						className={styles.toolbarBtn}
+						onClick={handleToolbarLink}
+						aria-label="Open statement"
+						title={t('Open')}
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+							<polyline points="15 3 21 3 21 9" />
+							<line x1="10" y1="14" x2="21" y2="3" />
+						</svg>
+					</button>
+					<button
+						className={styles.toolbarBtn}
+						onClick={handleToolbarEdit}
+						aria-label="Edit node"
+						title={t('Edit')}
+					>
+						<svg
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+							<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+						</svg>
+					</button>
+					{!toolbarState.isRoot && (
+						<>
+							<div className={styles.toolbarDivider} />
+							<button
+								className={`${styles.toolbarBtn} ${styles.toolbarBtnDelete}`}
+								onClick={handleToolbarDelete}
+								aria-label="Delete node"
+								title={t('Delete')}
+							>
+								<svg
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									strokeWidth="2"
+									strokeLinecap="round"
+									strokeLinejoin="round"
+								>
+									<polyline points="3 6 5 6 21 6" />
+									<path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+									<line x1="10" y1="11" x2="10" y2="17" />
+									<line x1="14" y1="11" x2="14" y2="17" />
+								</svg>
+							</button>
+						</>
+					)}
+				</div>
+			)}
 
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>
