@@ -90,12 +90,6 @@ export default function GetInitialStatementData() {
 				}
 			}
 
-			dispatch(setShowNewStatementModal(false));
-			dispatch(clearNewStatement());
-
-			// Close chat panel and map container so user can see the main page
-			closePanels();
-
 			// Convert description text to paragraphs array
 			const paragraphs = description.trim()
 				? description
@@ -109,7 +103,9 @@ export default function GetInitialStatementData() {
 						}))
 				: undefined;
 
-			const statementIdPromise = createStatementWithSubscription({
+			setLoading(true);
+
+			const statementId = await createStatementWithSubscription({
 				newStatementParent,
 				title,
 				paragraphs,
@@ -120,15 +116,23 @@ export default function GetInitialStatementData() {
 				dispatch,
 			});
 
+			setLoading(false);
+			dispatch(setShowNewStatementModal(false));
+			dispatch(clearNewStatement());
+
+			// Close chat panel and map container so user can see the main page
+			closePanels();
+
 			if (isHomePage) {
-				statementIdPromise.then((statementId) => {
-					navigate(`/statement/${statementId}`);
-				});
+				navigate(`/statement/${statementId}`);
 			}
 		} catch (error) {
-			logError(error, { operation: '01-form.GetInitialStatementData.unknown' });
+			setLoading(false);
+			logError(error, { operation: '01-form.GetInitialStatementData.handleSubmit' });
 			if (error instanceof Error) {
 				setError(error.message);
+			} else {
+				setError('Failed to create statement');
 			}
 		}
 	};
