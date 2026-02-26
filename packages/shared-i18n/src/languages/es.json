@@ -1826,5 +1826,14 @@
 
   "pwa.installTitle": "Instalar FreeDi",
   "pwa.installDescription": "Accede rapidamente a tus grupos y discusiones desde tu pantalla de inicio.",
-  "pwa.installButton": "Instalar App"
+  "pwa.installButton": "Instalar App",
+
+  "onboarding.welcome": "¡Bienvenido a WizCol!",
+  "onboarding.description": "WizCol ayuda a los grupos a tomar decisiones juntos mediante discusiones estructuradas.",
+  "onboarding.howItWorks": "Cómo funciona:",
+  "onboarding.step1": "Crea un tema de discusión o pregunta",
+  "onboarding.step2": "Comparte el enlace de la pregunta con otros miembros",
+  "onboarding.step3": "Los participantes proponen soluciones e ideas",
+  "onboarding.step4": "Todos evalúan las opciones para llegar a un consenso",
+  "onboarding.getStarted": "¡Toca + para iniciar tu primera discusión!"
 }
