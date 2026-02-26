@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState, memo } from 'react';
+import React, { useEffect, useRef, useCallback, useState, memo, useMemo } from 'react';
 import MindElixir from 'mind-elixir';
 import type { MindElixirInstance, NodeObj, Operation } from 'mind-elixir';
 import { useNavigate } from 'react-router';
@@ -91,11 +91,48 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Ref for inject function to avoid stale closures in event handlers
 	const injectNodeButtonsRef = useRef<(nodeId: string) => void>(() => {});
 
+	// Ref to track node ID pending inline edit (set after creating a node)
+	const pendingEditNodeIdRef = useRef<string | null>(null);
+
+	// Ref to re-select a node after edit finishes and data refreshes
+	const reselectAfterRefreshRef = useRef<string | null>(null);
+
 	// Remove previously injected node buttons
 	const removeNodeButtons = useCallback(() => {
 		injectedElementsRef.current.forEach((el) => el.remove());
 		injectedElementsRef.current = [];
 	}, []);
+
+	// After creating a node, wait for it to appear in the DOM, then select and edit it
+	const waitAndEditNode = useCallback(
+		(nodeId: string) => {
+			// Store in ref so the refresh useEffect can also trigger edit after DOM rebuild
+			pendingEditNodeIdRef.current = nodeId;
+
+			let attempts = 0;
+			const maxAttempts = 20; // Try for ~2 seconds
+			const tryEdit = () => {
+				attempts++;
+				if (!mindRef.current) return;
+				// If another edit was requested, stop this one
+				if (pendingEditNodeIdRef.current !== nodeId) return;
+				try {
+					const tpc = mindRef.current.findEle(nodeId);
+					pendingEditNodeIdRef.current = null;
+					removeNodeButtons();
+					mindRef.current.selectNode(tpc, true);
+					mindRef.current.beginEdit(tpc);
+				} catch {
+					// Node not in DOM yet - retry
+					if (attempts < maxAttempts) {
+						setTimeout(tryEdit, 100);
+					}
+				}
+			};
+			setTimeout(tryEdit, 100);
+		},
+		[removeNodeButtons],
+	);
 
 	// Inject "+" buttons on a selected MindElixir node
 	const injectNodeButtons = useCallback(
@@ -132,7 +169,10 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				childBtn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 					e.preventDefault();
-					await createMindMapChild({ parentStatement: statement });
+					const newChild = await createMindMapChild({ parentStatement: statement });
+					if (newChild) {
+						waitAndEditNode(newChild.statementId);
+					}
 				});
 				parentElement.appendChild(childBtn);
 				injectedElementsRef.current.push(childBtn);
@@ -151,10 +191,13 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				siblingBtn.addEventListener('click', async (e) => {
 					e.stopPropagation();
 					e.preventDefault();
-					await createMindMapSibling({
+					const newSibling = await createMindMapSibling({
 						currentStatement: statement,
 						parentStatement: parentOfNode,
 					});
+					if (newSibling) {
+						waitAndEditNode(newSibling.statementId);
+					}
 				});
 				parentElement.appendChild(siblingBtn);
 				injectedElementsRef.current.push(siblingBtn);
@@ -191,11 +234,15 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	// Keep ref in sync for use inside MindElixir event handlers (avoids stale closures)
 	injectNodeButtonsRef.current = injectNodeButtons;
 
-	// Apply filter if needed
-	const filteredDescendants =
-		filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
+	// Memoize data to prevent unnecessary refresh calls that rebuild the DOM.
+	// Without memoization, toMindElixirData creates a new object every render,
+	// causing the refresh useEffect to fire and destroy any active inline edit (input-box).
+	const data = useMemo(() => {
+		const filtered =
+			filterBy === FilterType.questionsResults ? filterDescendants(descendants) : descendants;
 
-	const data = filteredDescendants ? toMindElixirData(filteredDescendants) : null;
+		return filtered ? toMindElixirData(filtered) : null;
+	}, [descendants, filterBy]);
 
 	// Initialize MindElixir
 	useEffect(() => {
@@ -321,19 +368,36 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			// Handle inline text editing
 			if (operation.name === 'finishEdit' && 'obj' in operation && 'origin' in operation) {
 				const typedOp = operation as { obj: NodeObj; origin: string; name: string };
-				const statement = findStatementById(descendantsRef.current, typedOp.obj.id);
+				const nodeId = typedOp.obj.id;
+				const statement = findStatementById(descendantsRef.current, nodeId);
 				if (statement && typedOp.obj.topic !== typedOp.origin) {
 					await updateMindMapNodeText({
 						statement,
 						newText: typedOp.obj.topic,
 					});
 				}
+
+				// Keep the node selected after editing finishes.
+				// Store in ref so the refresh useEffect can re-select after DOM rebuild.
+				reselectAfterRefreshRef.current = nodeId;
+				setTimeout(() => {
+					try {
+						const tpc = mind.findEle(nodeId);
+						mind.selectNode(tpc);
+					} catch {
+						// Node may have been removed by refresh
+					}
+				}, 50);
 			}
 		});
 
 		// Keyboard handler for Tab (child) and Enter (sibling)
 		const handleKeyDown = async (e: KeyboardEvent) => {
 			if (!mindRef.current?.currentNode) return;
+
+			// Don't intercept keys while editing a node
+			const activeEl = document.activeElement as HTMLElement;
+			if (activeEl?.isContentEditable || activeEl?.id === 'input-box') return;
 
 			const currentNode = mindRef.current.currentNode;
 			const nodeData = currentNode.nodeObj as NodeObj;
@@ -349,8 +413,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 				// Check if this node can have children
 				if (!canHaveChildren(currentStatement.statementType)) {
-					console.info('Options cannot have children');
-
 					return;
 				}
 
@@ -359,8 +421,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				});
 
 				if (newStatement) {
-					// The mind map will update via the data refresh when Firebase listener triggers
-					console.info('Child created:', newStatement.statementId);
+					waitAndEditNode(newStatement.statementId);
 				}
 			}
 
@@ -368,7 +429,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			if (e.key === 'Enter' && !e.shiftKey) {
 				// Don't intercept Enter if we're editing a node
 				const activeElement = document.activeElement;
-				if (activeElement?.tagName === 'INPUT' || activeElement?.tagName === 'TEXTAREA') {
+				if (
+					activeElement?.tagName === 'INPUT' ||
+					activeElement?.tagName === 'TEXTAREA' ||
+					(activeElement as HTMLElement)?.isContentEditable
+				) {
 					return;
 				}
 
@@ -380,8 +445,6 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 					: null;
 
 				if (!parentStatement) {
-					console.info('Cannot create sibling for root node');
-
 					return;
 				}
 
@@ -391,7 +454,7 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 				});
 
 				if (newStatement) {
-					console.info('Sibling created:', newStatement.statementId);
+					waitAndEditNode(newStatement.statementId);
 				}
 			}
 		};
@@ -431,6 +494,11 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 	useEffect(() => {
 		if (!mindRef.current || !data) return;
 
+		// Skip refresh if the user is currently editing a node inline.
+		// MindElixir creates div#input-box for inline editing; refresh would destroy it.
+		const inputBox = document.getElementById('input-box');
+		if (inputBox) return;
+
 		// Save current scale and position before refresh
 		const currentScale = mindRef.current.scaleVal;
 		const mapElement = mindRef.current.map;
@@ -451,7 +519,41 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 		if (currentTransform && mapElement) {
 			mapElement.style.transform = currentTransform;
 		}
-	}, [data]);
+
+		// If a node is pending inline edit, trigger it after the DOM rebuild
+		if (pendingEditNodeIdRef.current && mindRef.current) {
+			const nodeId = pendingEditNodeIdRef.current;
+			const mind = mindRef.current;
+			// Let the DOM settle after refresh, then start editing
+			setTimeout(() => {
+				if (pendingEditNodeIdRef.current !== nodeId) return;
+				try {
+					const tpc = mind.findEle(nodeId);
+					pendingEditNodeIdRef.current = null;
+					removeNodeButtons();
+					mind.selectNode(tpc, true);
+					mind.beginEdit(tpc);
+				} catch {
+					// Node not found yet, polling in waitAndEditNode will retry
+				}
+			}, 50);
+		}
+
+		// Re-select node after refresh if user just finished editing
+		if (reselectAfterRefreshRef.current && mindRef.current) {
+			const nodeId = reselectAfterRefreshRef.current;
+			const mind = mindRef.current;
+			reselectAfterRefreshRef.current = null;
+			setTimeout(() => {
+				try {
+					const tpc = mind.findEle(nodeId);
+					mind.selectNode(tpc);
+				} catch {
+					// Node not found after refresh
+				}
+			}, 50);
+		}
+	}, [data, removeNodeButtons]);
 
 	// Handle layout direction change
 	const handleLayoutChange = useCallback((newDirection: 'SIDE' | 'LEFT' | 'RIGHT') => {
