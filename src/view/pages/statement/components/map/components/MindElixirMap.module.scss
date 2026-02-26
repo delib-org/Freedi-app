@@ -45,6 +45,15 @@
 			max-width: 300px;
 		}
 
+		// Move expand/collapse button to the left side so it doesn't
+		// overlap with the "+" add-child button on the right.
+		// !important needed to override MindElixir's high-specificity
+		// selectors like .map-container .rhs > me-wrapper > me-parent > me-epd
+		me-epd {
+			right: auto !important;
+			left: -10px !important;
+		}
+
 		// Main branches (first level) slightly wider
 		me-main > me-tpc {
 			max-width: 280px;
