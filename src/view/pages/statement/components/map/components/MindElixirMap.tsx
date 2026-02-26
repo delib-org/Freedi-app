@@ -19,14 +19,6 @@ import { FilterType } from '@/controllers/general/sorting';
 import styles from './MindElixirMap.module.scss';
 import { logError } from '@/utils/errorHandling';
 
-// Icons
-import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
-import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
-import MapHorizontalLayoutIcon from '@/assets/icons/MapHorizontalLayoutIcon.svg';
-import MapVerticalLayoutIcon from '@/assets/icons/MapVerticalLayoutIcon.svg';
-import MapRestoreIcon from '@/assets/icons/MapRestoreIcon.svg';
-import MapSaveIcon from '@/assets/icons/MapSaveIcon.svg';
-
 interface Props {
 	descendants: Results;
 	filterBy: FilterType;
@@ -804,25 +796,116 @@ function MindElixirMap({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 			{/* Controls Panel */}
 			<div className={styles.controlsPanel}>
 				{!isButtonVisible ? (
-					<button className={styles.mainButton} onClick={() => setIsButtonVisible(true)}>
-						<img src={MapHamburgerIcon} alt={t('Menu')} />
+					<button
+						className={styles.mainButton}
+						onClick={() => setIsButtonVisible(true)}
+						aria-label={t('Menu')}
+					>
+						<svg
+							width="24"
+							height="24"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							strokeWidth="2"
+							strokeLinecap="round"
+							strokeLinejoin="round"
+						>
+							<line x1="3" y1="6" x2="21" y2="6" />
+							<line x1="3" y1="12" x2="21" y2="12" />
+							<line x1="3" y1="18" x2="21" y2="18" />
+						</svg>
 					</button>
 				) : (
 					<div className={styles.arcButtons}>
-						<button onClick={() => setIsButtonVisible(false)}>
-							<img src={MapCancelIcon} alt={t('Close')} />
+						<button onClick={() => setIsButtonVisible(false)} aria-label={t('Close')}>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<line x1="18" y1="6" x2="6" y2="18" />
+								<line x1="6" y1="6" x2="18" y2="18" />
+							</svg>
 						</button>
-						<button onClick={() => handleLayoutChange('SIDE')} title={t('Side layout')}>
-							<img src={MapVerticalLayoutIcon} alt={t('Side layout')} />
+						<button
+							onClick={() => handleLayoutChange('SIDE')}
+							title={t('Side layout')}
+							aria-label={t('Side layout')}
+						>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="12" cy="12" r="3" />
+								<line x1="15" y1="5" x2="21" y2="5" />
+								<line x1="15" y1="12" x2="21" y2="12" />
+								<line x1="15" y1="19" x2="21" y2="19" />
+								<line x1="3" y1="5" x2="9" y2="5" />
+								<line x1="3" y1="19" x2="9" y2="19" />
+							</svg>
 						</button>
-						<button onClick={() => handleLayoutChange('LEFT')} title={t('Left layout')}>
-							<img src={MapHorizontalLayoutIcon} alt={t('Left layout')} />
+						<button
+							onClick={() => handleLayoutChange('LEFT')}
+							title={t('Left layout')}
+							aria-label={t('Left layout')}
+						>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<circle cx="5" cy="12" r="3" />
+								<line x1="8" y1="5" x2="21" y2="5" />
+								<line x1="8" y1="12" x2="21" y2="12" />
+								<line x1="8" y1="19" x2="21" y2="19" />
+							</svg>
 						</button>
-						<button onClick={handleRestore} title={t('Restore')}>
-							<img src={MapRestoreIcon} alt={t('Restore')} />
+						<button onClick={handleRestore} title={t('Restore')} aria-label={t('Restore')}>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<polyline points="1 4 1 10 7 10" />
+								<path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+							</svg>
 						</button>
-						<button onClick={handleAddSiblingNode} title={t('Add')}>
-							<img src={MapSaveIcon} alt={t('Add')} />
+						<button onClick={handleAddSiblingNode} title={t('Add')} aria-label={t('Add')}>
+							<svg
+								width="24"
+								height="24"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2.5"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+							>
+								<line x1="12" y1="5" x2="12" y2="19" />
+								<line x1="5" y1="12" x2="19" y2="12" />
+							</svg>
 						</button>
 					</div>
 				)}

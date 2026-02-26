@@ -1,0 +1,60 @@
+// MindMap filter toggle styles
+
+.filterToggle {
+	position: fixed;
+	top: 5.5rem;
+	right: 1rem;
+	z-index: 100;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	background: var(--card-default, #ffffff);
+	padding: 6px 12px;
+	border-radius: 20px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+.filterLabel {
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--text-body, #3d4d71);
+	white-space: nowrap;
+	user-select: none;
+}
+
+.toggleSwitch {
+	position: relative;
+	width: 40px;
+	height: 22px;
+	border-radius: 11px;
+	border: none;
+	background: var(--border-color, #ccc);
+	cursor: pointer;
+	padding: 0;
+	transition: background 0.2s ease;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+}
+
+.toggleSwitchActive {
+	background: var(--agree, #57c6b2);
+}
+
+.toggleKnob {
+	position: absolute;
+	top: 2px;
+	left: 2px;
+	width: 18px;
+	height: 18px;
+	border-radius: 50%;
+	background: white;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	transition: transform 0.2s ease;
+
+	.toggleSwitchActive & {
+		transform: translateX(18px);
+	}
+}

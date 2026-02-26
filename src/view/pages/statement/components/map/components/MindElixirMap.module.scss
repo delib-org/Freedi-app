@@ -327,16 +327,16 @@
 	justify-content: center;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	color: white;
 
 	&:hover {
 		transform: scale(1.1);
 		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 	}
 
-	img {
+	svg {
 		width: 24px;
 		height: 24px;
-		filter: brightness(0) invert(1);
 	}
 }
 
@@ -356,31 +356,25 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background-color 0.2s ease, transform 0.2s ease;
+		transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		color: var(--btn-primary, #5f88e5);
 
 		&:hover {
 			background-color: var(--btn-primary, #5f88e5);
 			transform: scale(1.1);
-
-			img {
-				filter: brightness(0) invert(1);
-			}
+			color: white;
 		}
 
-		img {
-			width: 20px;
-			height: 20px;
-			transition: filter 0.2s ease;
+		svg {
+			width: 22px;
+			height: 22px;
 		}
 
 		&:first-child {
 			background-color: var(--disagree, #fe6ba2);
 			border-color: var(--disagree, #fe6ba2);
-
-			img {
-				filter: brightness(0) invert(1);
-			}
+			color: white;
 
 			&:hover {
 				background-color: color.adjust(#fe6ba2, $lightness: -10%);
@@ -438,9 +432,9 @@
 		width: 40px;
 		height: 40px;
 
-		img {
-			width: 16px;
-			height: 16px;
+		svg {
+			width: 18px;
+			height: 18px;
 		}
 	}
 }
