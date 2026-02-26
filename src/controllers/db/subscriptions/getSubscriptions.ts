@@ -31,6 +31,7 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Helper to check if an error is IndexedDB-related
 function isIndexedDBError(error: unknown): boolean {
@@ -150,7 +151,11 @@ export function listenToStatementSubscriptions(
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					try {
-						const statementSubscription = change.doc.data() as StatementSubscription;
+						const data = change.doc.data();
+						const statementSubscription = parse(
+							StatementSubscriptionSchema,
+							convertTimestampsToMillis(data),
+						) as StatementSubscription;
 
 						if (change.type === 'added' || change.type === 'modified')
 							dispatch(setStatementSubscription(statementSubscription));
@@ -383,10 +388,10 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
-					const statementSubscription = parse(StatementSubscriptionSchema, {
-						...data,
-						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
-					});
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						convertTimestampsToMillis(data),
+					);
 
 					if (change.type === 'added' || change.type === 'modified') {
 						dispatch(setStatementSubscription(statementSubscription));

@@ -6,8 +6,6 @@ import { useAuthRedirect } from './controllers/hooks/useAuthRedirect';
 import LoadingPage from './view/pages/loadingPage/LoadingPage';
 import Accessibility from './view/components/accessibility/Accessibility';
 import { ListenerStats } from './view/components/ListenerStats';
-import PWAInstallPrompt from './view/components/pwa/PWAInstallPrompt';
-import { usePWAInstallPrompt } from './controllers/hooks/usePWAInstallPrompt';
 import OfflineAlert from './view/components/offlineAlert/OfflineAlert';
 
 export default function App() {
@@ -16,8 +14,6 @@ export default function App() {
 
 	// Handle auth-based navigation (redirects unauthenticated users)
 	const { isRedirecting } = useAuthRedirect(authState);
-
-	const { shouldShowPrompt, handleInstall, handleDismiss } = usePWAInstallPrompt();
 
 	// Show loading while auth check is pending or during redirect
 	// This prevents race conditions with Suspense during navigation
@@ -29,11 +25,6 @@ export default function App() {
 		<Suspense fallback={<LoadingPage />}>
 			<Accessibility />
 			<ListenerStats />
-			<PWAInstallPrompt
-				isVisible={shouldShowPrompt}
-				onInstall={handleInstall}
-				onDismiss={handleDismiss}
-			/>
 			<OfflineAlert />
 			<AgreementProvider user={user}>
 				<Outlet />

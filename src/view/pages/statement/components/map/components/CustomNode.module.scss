@@ -1,336 +1,303 @@
-// CustomNode.module.scss - Improved mind map node button styles
+// CustomNode.module.scss - Mind map node with add child/sibling buttons
 
 .nodeContainer {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .nodeContent {
-  min-width: 5ch;
-  max-width: 30ch;
-  margin: 0.2rem;
-  border-radius: 5px;
-  padding: 0.5rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 1rem;
-  text-align: center;
-  white-space: normal;
-  word-break: break-word;
-  transition: transform 0.2s ease;
-  cursor: pointer;
+	min-width: 5ch;
+	max-width: 30ch;
+	margin: 0.2rem;
+	border-radius: 5px;
+	padding: 0.5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 1rem;
+	text-align: center;
+	white-space: normal;
+	word-break: break-word;
+	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	cursor: pointer;
+	border: 2px solid transparent;
 
-  &:hover {
-    transform: scale(1.02);
-  }
+	&:hover {
+		transform: scale(1.02);
+	}
 
-  textarea {
-    background: transparent;
-    border: none;
-    outline: none;
-    resize: none;
-    text-align: center;
-    font-family: inherit;
-    font-size: inherit;
-    color: inherit;
-    width: 100%;
-  }
+	textarea {
+		background: transparent;
+		border: none;
+		outline: none;
+		resize: none;
+		text-align: center;
+		font-family: inherit;
+		font-size: inherit;
+		color: inherit;
+		width: 100%;
+	}
 }
 
-// Floating Action Buttons (FAB) for primary actions
-.nodeFab {
-  position: absolute;
-  width: 44px;
-  height: 44px;
-  border-radius: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--white);
-  border: 2px solid var(--btn-primary);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transition: all 0.2s ease;
-  cursor: pointer;
-  z-index: 10;
-
-  // Remove default button styles
-  padding: 0;
-  font: inherit;
-  color: inherit;
-
-  &:hover {
-    transform: scale(1.1);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  &:focus-visible {
-    outline: 3px solid var(--accent);
-    outline-offset: 2px;
-  }
-
-  svg {
-    width: 24px;
-    height: 24px;
-    color: currentColor;
-  }
-
-  // Add child button - positioned below the node
-  &.addChild {
-    bottom: -54px;
-    left: calc(50% - 22px);
-    background: var(--btn-primary);
-    border-color: var(--btn-primary);
-    color: white;
-
-    &:hover {
-      background: var(--btn-primary-hover);
-      border-color: var(--btn-primary-hover);
-    }
-
-    &:active {
-      background: var(--btn-primary-selected);
-      border-color: var(--btn-primary-selected);
-    }
-  }
-
-  // Add sibling button - positioned to the right of the node
-  &.addSibling {
-    right: -54px;
-    top: calc(50% - 22px);
-    background: var(--white);
-    border-color: var(--btn-secondary);
-    color: var(--btn-secondary);
-
-    &:hover {
-      background: var(--btn-secondary-selected-fill);
-      border-color: var(--btn-secondary-selected-border);
-    }
-  }
-
-  // Alternative positioning for TB (top-bottom) layout
-  &.addChildTB {
-    bottom: -54px;
-    left: calc(50% - 22px);
-  }
-
-  &.addSiblingTB {
-    left: -54px;
-    top: calc(50% - 22px);
-  }
-
-  // Alternative positioning for LR (left-right) layout
-  &.addChildLR {
-    right: -54px;
-    top: calc(50% - 22px);
-  }
-
-  &.addSiblingLR {
-    top: -54px;
-    left: calc(50% - 22px);
-  }
+// Selected node gets a blue highlight border
+.nodeContentSelected {
+	border-color: #47b4ef;
+	box-shadow: 0 0 0 2px rgba(71, 180, 239, 0.3);
 }
 
-// Context menu button
-.menuButton {
-  position: absolute;
-  right: -12px;
-  top: -12px;
-  width: 32px;
-  height: 32px;
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--white);
-  border: 1px solid var(--border-light);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  z-index: 11;
-
-  // Remove default button styles
-  padding: 0;
-  font: inherit;
-  color: var(--text-body);
-
-  &:hover {
-    background: var(--statementBackground);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-    transform: scale(1.05);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  svg {
-    width: 18px;
-    height: 18px;
-    color: var(--text-body);
-  }
-}
-
-// Menu container
-.menuContainer {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 12px);
-  z-index: 999;
-}
-
-// Tooltips for better UX
-.tooltip {
-  position: absolute;
-  padding: 6px 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: white;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 1000;
-
-  &.visible {
-    opacity: 1;
-  }
-
-  &.bottom {
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  &.left {
-    right: calc(100% + 8px);
-    top: 50%;
-    transform: translateY(-50%);
-  }
-
-  &.top {
-    bottom: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%);
-  }
-}
-
-// Entrance animation for buttons
-@keyframes fabEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
+// Actions container (overlay on top of node)
 .nodeActions {
-  .nodeFab,
-  .menuButton {
-    animation: fabEnter 0.2s ease-out;
-  }
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+
+	> * {
+		pointer-events: auto;
+	}
 }
 
-// Mobile responsive adjustments
+// Blue "+" circle button for adding nodes
+.addButton {
+	position: absolute;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: #47b4ef;
+	border: none;
+	color: white;
+	font-size: 18px;
+	font-weight: 700;
+	line-height: 1;
+	cursor: pointer;
+	z-index: 10;
+	padding: 0;
+	transition: background 0.15s ease, transform 0.15s ease;
+	animation: fabEnter 0.15s ease-out;
+
+	&:hover {
+		background: #3a9fd6;
+		transform: scale(1.2);
+	}
+
+	&:active {
+		transform: scale(0.9);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--accent, #47b4ef);
+		outline-offset: 2px;
+	}
+}
+
+// Child button positions per layout direction
+.addButtonChildLR {
+	right: -14px;
+	top: calc(50% - 12px);
+}
+
+.addButtonChildTB {
+	bottom: -14px;
+	left: calc(50% - 12px);
+}
+
+// Sibling button positions per layout direction
+.addButtonSiblingLR {
+	bottom: -14px;
+	left: calc(50% - 12px);
+}
+
+.addButtonSiblingTB {
+	left: -14px;
+	top: calc(50% - 12px);
+}
+
+// Ellipsis menu button
+.menuButton {
+	position: absolute;
+	right: -10px;
+	top: -10px;
+	width: 24px;
+	height: 24px;
+	border-radius: 50%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: var(--white, #fff);
+	border: 1px solid #ddd;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+	cursor: pointer;
+	transition: all 0.15s ease;
+	z-index: 11;
+	padding: 0;
+	color: var(--text-body, #555);
+	animation: fabEnter 0.15s ease-out;
+
+	&:hover {
+		background: #f5f5f5;
+		transform: scale(1.1);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--accent, #47b4ef);
+		outline-offset: 1px;
+	}
+
+	svg {
+		width: 14px;
+		height: 14px;
+	}
+}
+
+// Context menu container
+.menuContainer {
+	position: absolute;
+	z-index: 999;
+}
+
+.menuContainerTB {
+	right: 0;
+	bottom: calc(100% + 10px);
+}
+
+.menuContainerLR {
+	left: 0;
+	top: calc(100% + 10px);
+}
+
+// Keyboard shortcut hints
+.keyboardHints {
+	position: absolute;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	white-space: nowrap;
+	font-size: 12px;
+	color: var(--text-body, #555);
+	animation: fadeIn 0.2s ease-out;
+	z-index: 5;
+	pointer-events: none;
+}
+
+.keyboardHintsLR {
+	left: calc(100% + 24px);
+	top: 50%;
+	transform: translateY(-50%);
+}
+
+.keyboardHintsTB {
+	top: calc(100% + 24px);
+	left: 50%;
+	transform: translateX(-50%);
+	align-items: center;
+}
+
+.keyboardHint {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.keyboardKey {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-width: 28px;
+	height: 22px;
+	padding: 0 6px;
+	background: #f0f0f0;
+	border: 1px solid #ccc;
+	border-bottom: 2px solid #bbb;
+	border-radius: 4px;
+	font-size: 11px;
+	font-weight: 600;
+	font-family: inherit;
+	color: #444;
+}
+
+.keyboardHintText {
+	color: #666;
+	font-size: 12px;
+}
+
+// Animations
+@keyframes fabEnter {
+	from {
+		opacity: 0;
+		transform: scale(0.5);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+// Tremble animation for nodes
+.trembleAnimate {
+	animation: tremble 0.3s ease-in-out infinite;
+}
+
+@keyframes tremble {
+	0% {
+		transform: translateX(0);
+	}
+	25% {
+		transform: translateX(-2px) translateY(2px);
+	}
+	50% {
+		transform: translateX(2px);
+	}
+	75% {
+		transform: translateX(-2px) translateY(2px);
+	}
+	100% {
+		transform: translateX(0);
+	}
+}
+
+// Mobile adjustments
 @media (max-width: 767px) {
-  .nodeFab {
-    width: 48px;
-    height: 48px;
-    border-radius: 24px;
+	.addButton {
+		width: 28px;
+		height: 28px;
+		font-size: 20px;
+	}
 
-    &.addChild {
-      bottom: -60px;
-    }
-
-    &.addSibling {
-      right: -60px;
-    }
-
-    svg {
-      width: 26px;
-      height: 26px;
-    }
-  }
-
-  .menuButton {
-    width: 36px;
-    height: 36px;
-    border-radius: 18px;
-    right: -14px;
-    top: -14px;
-
-    svg {
-      width: 20px;
-      height: 20px;
-    }
-  }
+	// Hide keyboard hints on mobile (no keyboard)
+	.keyboardHints {
+		display: none;
+	}
 }
 
 // Touch device optimizations
 @media (hover: none) {
-  .nodeFab {
-    &:hover {
-      transform: none;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-    }
+	.addButton {
+		width: 32px;
+		height: 32px;
+		font-size: 20px;
 
-    // Larger touch target
-    &::after {
-      content: '';
-      position: absolute;
-      inset: -4px;
-    }
-  }
+		// Larger touch target
+		&::after {
+			content: '';
+			position: absolute;
+			inset: -6px;
+		}
+	}
 
-  .menuButton {
-    &:hover {
-      transform: none;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    // Larger touch target
-    &::after {
-      content: '';
-      position: absolute;
-      inset: -4px;
-    }
-  }
-}
-
-// Animation for node selection
-.nodeContent.trembleAnimate {
-  animation: tremble 0.3s ease-in-out infinite;
-}
-
-@keyframes tremble {
-  0% {
-    transform: translateX(0);
-  }
-  25% {
-    transform: translateX(-2px) translateY(2px);
-  }
-  50% {
-    transform: translateX(2px);
-  }
-  75% {
-    transform: translateX(-2px) translateY(2px);
-  }
-  100% {
-    transform: translateX(0);
-  }
+	.keyboardHints {
+		display: none;
+	}
 }

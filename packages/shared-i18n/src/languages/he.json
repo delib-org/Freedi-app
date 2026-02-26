@@ -396,6 +396,7 @@
   "Following Instructor (Auto)": "עוקב אחרי המדריך/ה (אוטומטי)",
   "Power Follow Me": "עקוב אחרי (כוח)",
   "Power Follow Mode Active": "מצב עקיבה כפויה פעיל",
+  "Fit to screen": "התאם למסך",
   "For more information, visit our website": "למידע נוסף, בקרו באתר שלנו",
   "Formulate here the description. Add as much detail as you can to help others understand your suggestion": "כתוב/י כאן את התיאור. הוסף/י כמה שיותר פרטים כדי לעזור לאחרים להבין את ההצעה שלך",
   "Force survey language (override browser preferences)": "כפה שפת סקר (דרוס העדפות דפדפן)",
@@ -819,6 +820,8 @@
   "Selected": "נבחר",
   "Selected Options": "אופציות נבחרות",
   "Selected by the moderator": "נבחר על ידי המנחה",
+  "Selected only": "נבחרים בלבד",
+  "Show only selected options": "הצג רק אפשרויות נבחרות",
   "Send": "שלח",
   "Send a link to anonymous users": "שליחת קישור למשתמשים אנונימיים",
   "Set default language for surveys": "הגדר שפת ברירת מחדל לסקרים",
@@ -2542,5 +2545,25 @@
   "Default View": "תצוגת ברירת מחדל",
   "Choose which view participants see first": "בחר איזו תצוגה המשתתפים יראו ראשונה",
   "No questions yet": "אין שאלות עדיין",
-  "Add a question": "הוסף שאלה"
+  "Add a question": "הוסף שאלה",
+
+  "pwa.installTitle": "התקנת FreeDi",
+  "pwa.installDescription": "קבל גישה מהירה לקבוצות ולדיונים שלך ממסך הבית.",
+  "pwa.installButton": "התקן אפליקציה",
+
+  "onboarding.welcome": "ברוכים הבאים ל-WizCol!",
+  "onboarding.description": "WizCol עוזר לקבוצות לקבל החלטות יחד באמצעות דיונים מובנים.",
+  "onboarding.howItWorks": "איך זה עובד:",
+  "onboarding.step1": "צרו נושא לדיון או שאלה",
+  "onboarding.step2": "שתפו את הקישור לשאלה עם חברים אחרים",
+  "onboarding.step3": "המשתתפים מציעים פתרונות ורעיונות",
+  "onboarding.step4": "כולם מעריכים את האפשרויות כדי להגיע להסכמה",
+  "onboarding.getStarted": "לחצו על + כדי להתחיל את הדיון הראשון שלכם!",
+  "questionOnboarding.whatIsThis": "מה זה?",
+  "questionOnboarding.whatIsThisDesc": "מרחב דיון שיתופי שבו הקבוצה שלכם יכולה לחשוב יחד על רעיונות, להציע פתרונות ולהעריך אותם ביחד.",
+  "questionOnboarding.howToShare": "הזמינו אחרים להצטרף",
+  "questionOnboarding.howToShareDesc": "לחצו על כפתור השיתוף בתפריט העליון כדי להעתיק קישור או לקבל קוד הזמנה למשתתפים.",
+  "questionOnboarding.howToSolve": "איך מגיעים לפתרון",
+  "questionOnboarding.howToSolveDesc": "המשתתפים מציעים רעיונות, כולם מעריכים כל אפשרות, והפתרונות הטובים ביותר עולים לראש.",
+  "questionOnboarding.getStarted": "הוסיפו את ההצעה הראשונה שלכם כדי להתחיל!"
 }

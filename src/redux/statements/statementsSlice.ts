@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createSelector } from '@reduxjs/toolkit';
 import {
 	Statement,
 	StatementSubscription,
+	SimpleStatement,
 	SelectionFunction,
 	StatementType,
 	updateArray,
@@ -399,20 +400,69 @@ export const statementsRoomSolutions =
 			)
 			.sort((a, b) => a.createdAt - b.createdAt);
 
+/**
+ * Gets the latest child-activity timestamp for a subscription.
+ * Uses a fallback chain:
+ * 1. Statement's lastChildUpdate (from full Statement in Redux, most reliable)
+ * 2. Most recent timestamp from subscription's lastSubStatements
+ * 3. Subscription's lastUpdate (fallback)
+ */
+function getLatestChildActivity(
+	sub: StatementSubscription,
+	statementsMap: Map<string, Statement>,
+): number {
+	// Priority 1: Use full Statement's lastChildUpdate if loaded
+	const statement = statementsMap.get(sub.statementId);
+	if (statement?.lastChildUpdate) return statement.lastChildUpdate;
+
+	// Priority 2: Use the most recent timestamp from lastSubStatements
+	const subStatements: SimpleStatement[] =
+		statement?.lastSubStatements || sub.lastSubStatements || [];
+	if (subStatements.length > 0) {
+		let latest = 0;
+		for (const s of subStatements) {
+			latest = Math.max(latest, s.createdAt || 0, s.lastUpdate || 0);
+		}
+		if (latest > 0) return latest;
+	}
+
+	// Fallback: subscription's own lastUpdate
+	return sub.lastUpdate || 0;
+}
+
 export const statementsSubscriptionsSelector = createSelector(
-	(state: { statements: StatementsState }) => state.statements.statementSubscription,
-	(statementSubscription) => [...statementSubscription].sort((a, b) => b.lastUpdate - a.lastUpdate),
+	[
+		(state: { statements: StatementsState }) => state.statements.statementSubscription,
+		(state: { statements: StatementsState }) => state.statements.statements,
+	],
+	(statementSubscription, statements) => {
+		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
+
+		return [...statementSubscription].sort(
+			(a, b) => getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),
+		);
+	},
 );
+
 export const statementSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
 		state.statements.statements.find((statement) => statement.statementId === statementId);
 
 export const topSubscriptionsSelector = createSelector(
-	(state: { statements: StatementsState }) => state.statements.statementSubscription,
-	(statementSubscription) =>
-		statementSubscription
+	[
+		(state: { statements: StatementsState }) => state.statements.statementSubscription,
+		(state: { statements: StatementsState }) => state.statements.statements,
+	],
+	(statementSubscription, statements) => {
+		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
+
+		return statementSubscription
 			.filter((sub: StatementSubscription) => sub.statement.parentId === 'top')
-			.sort((a, b) => b.lastUpdate - a.lastUpdate),
+			.sort(
+				(a, b) =>
+					getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),
+			);
+	},
 );
 
 const selectStatements = (state: { statements: StatementsState }) => state.statements.statements;

@@ -289,6 +289,7 @@
   "Evidence is mixed - discussion ongoing": "Beweis ist gemischt - Diskussion läuft",
   "Evidence leans toward supporting this idea": "Beweis tendiert dazu, diese Idee zu unterstützen",
   "Evidence-based discussion with support/challenge format": "Evidenzbasierte Diskussion mit Unterstützungs-/Herausforderungsformat",
+  "Fit to screen": "An Bildschirm anpassen",
   "Expand All": "Alles erweitern",
   "Expand all categories": "Alle Kategorien erweitern",
   "Explain how to open the notifications": "Erklären, wie man Benachrichtigungen öffnet",
@@ -625,6 +626,8 @@
   "Selected": "Ausgewählt",
   "Selected Options": "Ausgewählte Optionen",
   "Selected by the moderator": "Vom Moderator ausgewählt",
+  "Selected only": "Nur ausgewählte",
+  "Show only selected options": "Nur ausgewählte Optionen anzeigen",
   "Send": "Senden",
   "Send a link to anonymous users": "Link an anonyme Benutzer senden",
   "Set up discussion modes and frameworks": "Diskussionsmodi und -rahmen einrichten",
@@ -1820,5 +1823,25 @@
   "Default View": "Standardansicht",
   "Choose which view participants see first": "Wählen Sie, welche Ansicht die Teilnehmer zuerst sehen",
   "No questions yet": "Noch keine Fragen",
-  "Add a question": "Frage hinzufügen"
+  "Add a question": "Frage hinzufügen",
+
+  "pwa.installTitle": "FreeDi installieren",
+  "pwa.installDescription": "Erhalten Sie schnellen Zugriff auf Ihre Gruppen und Diskussionen von Ihrem Startbildschirm.",
+  "pwa.installButton": "App installieren",
+
+  "onboarding.welcome": "Willkommen bei WizCol!",
+  "onboarding.description": "WizCol hilft Gruppen, gemeinsam Entscheidungen durch strukturierte Diskussionen zu treffen.",
+  "onboarding.howItWorks": "So funktioniert es:",
+  "onboarding.step1": "Erstellen Sie ein Diskussionsthema oder eine Frage",
+  "onboarding.step2": "Teilen Sie den Frage-Link mit anderen Mitgliedern",
+  "onboarding.step3": "Teilnehmer schlagen Lösungen und Ideen vor",
+  "onboarding.step4": "Alle bewerten die Optionen, um einen Konsens zu erreichen",
+  "onboarding.getStarted": "Tippen Sie auf +, um Ihre erste Diskussion zu starten!",
+  "questionOnboarding.whatIsThis": "Was ist das?",
+  "questionOnboarding.whatIsThisDesc": "Ein kollaborativer Diskussionsraum, in dem Ihre Gruppe gemeinsam Ideen entwickeln, Lösungen vorschlagen und diese bewerten kann.",
+  "questionOnboarding.howToShare": "Andere zum Mitmachen einladen",
+  "questionOnboarding.howToShareDesc": "Tippen Sie auf die Teilen-Schaltfläche im oberen Menü, um den Link zu kopieren oder einen Einladungscode für Teilnehmer zu erhalten.",
+  "questionOnboarding.howToSolve": "Wie man zu einer Lösung kommt",
+  "questionOnboarding.howToSolveDesc": "Teilnehmer schlagen Ideen vor, alle bewerten jede Option und die besten Lösungen steigen nach oben.",
+  "questionOnboarding.getStarted": "Fügen Sie Ihren ersten Vorschlag hinzu, um loszulegen!"
 }

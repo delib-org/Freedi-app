@@ -121,6 +121,8 @@ export const STORAGE_KEYS = {
 	LAST_VISITED: 'lastVisited',
 	PWA_USER_RESPONDED: 'pwa-user-responded',
 	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
+	PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT: 'pwa-install-soft-prompt-dismissed-at',
+	NOTIFICATION_SOFT_PROMPT_DISMISSED_AT: 'notification-soft-prompt-dismissed-at',
 	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
 } as const;
 

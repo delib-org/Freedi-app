@@ -28,6 +28,11 @@ const NotificationBtn = () => {
 	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 
 	function handleShowInAppNotifications() {
+		// Prompt for browser notification permission only after explicit user intent.
+		if ('Notification' in window && Notification.permission === 'default') {
+			window.dispatchEvent(new Event('freedi:open-notification-prompt'));
+		}
+
 		setShowInAppNotifications(!showInAppNotifications);
 
 		// ✅ Mark unread notifications as viewed after 2 seconds

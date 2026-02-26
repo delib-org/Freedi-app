@@ -16,7 +16,6 @@ import {
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 import SuggestionCard from './suggestionCard/SuggestionCard';
-import EmptyScreen from '../emptyScreen/EmptyScreen';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import styles from './SuggestionCards.module.scss';
@@ -202,7 +201,7 @@ const SuggestionCards: FC<Props> = ({
 	}, [sort, location.search]);
 
 	if ((!sortedStatements || sortedStatements.length === 0) && isQuestion) {
-		return <EmptyScreen statement={statement} />;
+		return null;
 	}
 
 	if (!statement) return null;

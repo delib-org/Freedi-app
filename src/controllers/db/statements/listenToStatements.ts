@@ -1,7 +1,7 @@
 import { Unsubscribe } from 'firebase/auth';
 import { and, getDocs, limit, or, orderBy, query, startAfter, where } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
-import { normalizeStatementData } from '@/helpers/timestampHelpers';
+import { normalizeStatementData, convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Redux Store
 import {
@@ -20,6 +20,7 @@ import {
 import { AppDispatch, store } from '@/redux/store';
 import {
 	StatementSubscription,
+	StatementSubscriptionSchema,
 	Role,
 	Collections,
 	StatementType,
@@ -66,7 +67,10 @@ export const listenToStatementSubscription = (
 
 						return;
 					}
-					const statementSubscription = statementSubscriptionDB.data() as StatementSubscription;
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						convertTimestampsToMillis(statementSubscriptionDB.data()),
+					) as StatementSubscription;
 
 					const { role } = statementSubscription;
 

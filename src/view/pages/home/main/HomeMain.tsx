@@ -117,6 +117,35 @@ const HomeMain = () => {
 
 					const itemsToRender = subPage === 'topics' ? topSubscriptions : latestDecisions;
 
+					if (itemsToRender.length === 0) {
+						return (
+							<div className={styles.onboarding}>
+								<h2 className={styles.onboarding__title}>{t('onboarding.welcome')}</h2>
+								<p className={styles.onboarding__description}>{t('onboarding.description')}</p>
+								<p className={styles.onboarding__description}>{t('onboarding.howItWorks')}</p>
+								<div className={styles.onboarding__steps}>
+									<div className={styles.onboarding__step}>
+										<span className={styles.onboarding__stepNumber}>1</span>
+										<span className={styles.onboarding__stepText}>{t('onboarding.step1')}</span>
+									</div>
+									<div className={styles.onboarding__step}>
+										<span className={styles.onboarding__stepNumber}>2</span>
+										<span className={styles.onboarding__stepText}>{t('onboarding.step2')}</span>
+									</div>
+									<div className={styles.onboarding__step}>
+										<span className={styles.onboarding__stepNumber}>3</span>
+										<span className={styles.onboarding__stepText}>{t('onboarding.step3')}</span>
+									</div>
+									<div className={styles.onboarding__step}>
+										<span className={styles.onboarding__stepNumber}>4</span>
+										<span className={styles.onboarding__stepText}>{t('onboarding.step4')}</span>
+									</div>
+								</div>
+								<p className={styles.onboarding__cta}>{t('onboarding.getStarted')}</p>
+							</div>
+						);
+					}
+
 					return itemsToRender.map((sub) =>
 						subPage === 'topics' ? (
 							<MainCard key={sub.statementId} subscription={sub} />

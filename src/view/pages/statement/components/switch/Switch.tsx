@@ -20,6 +20,7 @@ import {
 	statementOptionsSelector,
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
+import { Lightbulb, Share2, TrendingUp } from 'lucide-react';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -133,6 +134,44 @@ const Switch = () => {
 			</div>
 
 			<OnlineUsers statementId={statement?.statementId} />
+			{allSubs.length === 0 && (
+				<div className={styles.onboarding}>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Lightbulb size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>{t('questionOnboarding.whatIsThis')}</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.whatIsThisDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Share2 size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>{t('questionOnboarding.howToShare')}</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.howToShareDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<TrendingUp size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>{t('questionOnboarding.howToSolve')}</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.howToSolveDesc')}
+							</p>
+						</div>
+					</div>
+					<p className={styles.onboarding__cta}>{t('questionOnboarding.getStarted')}</p>
+				</div>
+			)}
 			<SwitchScreen statement={statement} role={role} activeView={activeView} />
 		</main>
 	);

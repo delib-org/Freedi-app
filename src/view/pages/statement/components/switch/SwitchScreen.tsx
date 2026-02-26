@@ -1,10 +1,11 @@
 import { Statement, Role, StatementType, Screen } from '@freedi/shared-types';
-import { ReactNode, useEffect, lazy, Suspense } from 'react';
+import { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { statementSelectorById, setStatement } from '@/redux/statements/statementsSlice';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { logError } from '@/utils/errorHandling';
+import lazyWithRetry from '@/routes/lazyWithRetry';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Chat from '../chat/Chat';
 import StagePage from '../statementTypes/stage/StagePage';
@@ -13,13 +14,23 @@ import GroupPage from '../statementTypes/group/GroupPage';
 import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
 
 // Lazy load heavy screen components
-const Triangle = lazy(() => import('@/view/components/maps/triangle/Triangle'));
-const MindMap = lazy(() => import('../map/MindMap'));
-const StatementSettings = lazy(() => import('../settings/StatementSettings'));
-const PolarizationIndexComp = lazy(
-	() => import('@/view/components/maps/polarizationIndex/PolarizationIndex'),
+const Triangle = lazyWithRetry(
+	() => import('@/view/components/maps/triangle/Triangle'),
+	'Triangle',
 );
-const SubQuestionsMap = lazy(() => import('../subQuestionsMap/SubQuestionsMap'));
+const MindMap = lazyWithRetry(() => import('../map/MindMap'), 'MindMap');
+const StatementSettings = lazyWithRetry(
+	() => import('../settings/StatementSettings'),
+	'StatementSettings',
+);
+const PolarizationIndexComp = lazyWithRetry(
+	() => import('@/view/components/maps/polarizationIndex/PolarizationIndex'),
+	'PolarizationIndex',
+);
+const SubQuestionsMap = lazyWithRetry(
+	() => import('../subQuestionsMap/SubQuestionsMap'),
+	'SubQuestionsMap',
+);
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
