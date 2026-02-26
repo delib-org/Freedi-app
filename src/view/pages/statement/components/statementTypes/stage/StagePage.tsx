@@ -1,4 +1,5 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
 import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
@@ -11,6 +12,7 @@ import { useSummarization } from '@/controllers/hooks/useSummarization';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import SummarizeModal from '../question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	showStageTitle?: boolean;
@@ -24,6 +26,12 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	const { isGenerating, generateSummary } = useSummarization();
 	const { isAdmin } = useEditPermission(statement);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const subsSelect = useMemo(
+		() => statementSubsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const allSubs = useSelector(subsSelect);
+	const hasSubStatements = allSubs.length > 0;
 
 	useEffect(() => {
 		const updateHeight = () => {
@@ -62,6 +70,10 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
 	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
+
+	if (!hasSubStatements) {
+		return null;
+	}
 
 	return (
 		<>
