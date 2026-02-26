@@ -71,42 +71,40 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	const stageName = statement?.statement ? `: ${t(statement.statement)}` : '';
 	const isClustering = statement?.evaluationSettings?.evaluationUI === EvaluationUI.clustering;
 
-	if (!hasSubStatements) {
-		return null;
-	}
-
 	return (
 		<>
-			<div className={`${styles['stage-page']} wrapper`}>
-				{!isClustering && showStageTitle && (
-					<h2>
-						{t('Stage')}
-						{statement?.statement && stageName}
-					</h2>
-				)}
+			{hasSubStatements && (
+				<div className={`${styles['stage-page']} wrapper`}>
+					{!isClustering && showStageTitle && (
+						<h2>
+							{t('Stage')}
+							{statement?.statement && stageName}
+						</h2>
+					)}
 
-				{/* Summary Display */}
-				<SummaryDisplay
-					summary={statementWithSummary?.summary}
-					generatedAt={statementWithSummary?.summaryGeneratedAt}
-				/>
+					{/* Summary Display */}
+					<SummaryDisplay
+						summary={statementWithSummary?.summary}
+						generatedAt={statementWithSummary?.summaryGeneratedAt}
+					/>
 
-				{/* Summarize Button - Only visible to admins */}
-				{statement && isAdmin && (
-					<div className={styles.summarizeWrapper}>
-						<button
-							className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
-							onClick={() => setIsModalOpen(true)}
-							disabled={isGenerating}
-							aria-label={t('Generate AI summary of the discussion')}
-						>
-							{isGenerating ? t('Generating...') : t('Summarize Discussion')}
-						</button>
-					</div>
-				)}
+					{/* Summarize Button - Only visible to admins */}
+					{statement && isAdmin && (
+						<div className={styles.summarizeWrapper}>
+							<button
+								className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
+								onClick={() => setIsModalOpen(true)}
+								disabled={isGenerating}
+								aria-label={t('Generate AI summary of the discussion')}
+							>
+								{isGenerating ? t('Generating...') : t('Summarize Discussion')}
+							</button>
+						</div>
+					)}
 
-				<StagePageSwitch statement={statement} />
-			</div>
+					<StagePageSwitch statement={statement} />
+				</div>
+			)}
 			{showBottomNav && (
 				<div className={styles.bottomNav}>
 					<StatementBottomNav />
