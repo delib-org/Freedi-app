@@ -1850,12 +1850,12 @@
   "pwa.installDescription": "احصل على وصول سريع إلى مجموعاتك ومناقشاتك من شاشتك الرئيسية.",
   "pwa.installButton": "تثبيت التطبيق",
 
-  "onboarding.welcome": "!مرحباً بكم في WizCol",
+  "onboarding.welcome": "مرحباً بكم في WizCol!",
   "onboarding.description": "يساعد WizCol المجموعات على اتخاذ القرارات معاً من خلال نقاشات منظمة.",
-  "onboarding.howItWorks": ":كيف يعمل",
+  "onboarding.howItWorks": "كيف يعمل:",
   "onboarding.step1": "أنشئ موضوع نقاش أو سؤال",
   "onboarding.step2": "شارك رابط السؤال مع الأعضاء الآخرين",
   "onboarding.step3": "يقترح المشاركون الحلول والأفكار",
   "onboarding.step4": "يُقيّم الجميع الخيارات للوصول إلى توافق",
-  "onboarding.getStarted": "!اضغط على + لبدء نقاشك الأول"
+  "onboarding.getStarted": "اضغط على + لبدء نقاشك الأول!"
 }

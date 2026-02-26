@@ -2548,12 +2548,12 @@
   "pwa.installDescription": "קבל גישה מהירה לקבוצות ולדיונים שלך ממסך הבית.",
   "pwa.installButton": "התקן אפליקציה",
 
-  "onboarding.welcome": "!ברוכים הבאים ל-WizCol",
+  "onboarding.welcome": "ברוכים הבאים ל-WizCol!",
   "onboarding.description": "WizCol עוזר לקבוצות לקבל החלטות יחד באמצעות דיונים מובנים.",
-  "onboarding.howItWorks": ":איך זה עובד",
+  "onboarding.howItWorks": "איך זה עובד:",
   "onboarding.step1": "צרו נושא לדיון או שאלה",
   "onboarding.step2": "שתפו את הקישור לשאלה עם חברים אחרים",
   "onboarding.step3": "המשתתפים מציעים פתרונות ורעיונות",
   "onboarding.step4": "כולם מעריכים את האפשרויות כדי להגיע להסכמה",
-  "onboarding.getStarted": "!לחצו על + כדי להתחיל את הדיון הראשון שלכם"
+  "onboarding.getStarted": "לחצו על + כדי להתחיל את הדיון הראשון שלכם!"
 }
