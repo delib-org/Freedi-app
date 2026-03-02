@@ -6,6 +6,7 @@ import { PWA, STORAGE_KEYS, TIME } from '@/constants/common';
 import { selectHasCreatedGroup, selectOptionsCreated } from '@/redux/pwa/pwaSlice';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 import { logError } from '@/utils/errorHandling';
+import { isBot } from '@/utils/botDetection';
 import InstallPWA from './InstallPWA';
 import NotificationPrompt from '../notifications/NotificationPrompt';
 
@@ -101,15 +102,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	}, [hasCreatedGroup, optionsCreated]);
 
 	useEffect(() => {
-		// Initialize PWA wrapper
-
-		// Set up the service worker in both production and development
-		// Note: In development, service workers might behave differently
-		// Always register service worker for notification support
-
-		// Note: Badge count is managed by useBadgeSync hook which syncs with Redux state.
-		// We don't manually clear badge here to avoid race conditions.
-		// The badge will reflect the actual unread count from Redux.
+		// Skip all service worker operations for bots/crawlers.
+		// They report serviceWorker support but can't register, causing false Sentry errors.
+		if (isBot()) return;
 
 		// Set up visibility change listener to sync badge and clear displayed notifications
 		const handleVisibilityChange = () => {

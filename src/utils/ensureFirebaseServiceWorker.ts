@@ -2,6 +2,7 @@ import type { Messaging } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
 import { logError } from '@/utils/errorHandling';
+import { isBot } from '@/utils/botDetection';
 
 let isRegistering = false;
 let checkInterval: ReturnType<typeof setInterval> | null = null;
@@ -14,14 +15,6 @@ const isIOS = (): boolean => {
 		/iphone|ipad|ipod/.test(userAgent) ||
 		(navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
 	);
-};
-
-// Helper function to detect bots/crawlers that report serviceWorker support
-// but can't actually register service workers
-const isBot = (): boolean => {
-	const userAgent = navigator.userAgent.toLowerCase();
-
-	return /bot|crawl|spider|slurp|google-read-aloud|mediapartners|adsbot|bingpreview|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot/.test(userAgent);
 };
 
 /**
