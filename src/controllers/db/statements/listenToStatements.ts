@@ -135,7 +135,8 @@ export const listenToStatement = (
 				try {
 					if (!statementDB.exists()) {
 						if (setIsStatementNotFound) setIsStatementNotFound(true);
-						throw new Error('Statement does not exist');
+
+						return;
 					}
 					// Normalize data to remove non-serializable values (like VectorValue embeddings)
 					const statement = normalizeStatementData(statementDB.data()) as Statement;
