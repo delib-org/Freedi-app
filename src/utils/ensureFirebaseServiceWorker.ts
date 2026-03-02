@@ -16,6 +16,14 @@ const isIOS = (): boolean => {
 	);
 };
 
+// Helper function to detect bots/crawlers that report serviceWorker support
+// but can't actually register service workers
+const isBot = (): boolean => {
+	const userAgent = navigator.userAgent.toLowerCase();
+
+	return /bot|crawl|spider|slurp|google-read-aloud|mediapartners|adsbot|bingpreview|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot/.test(userAgent);
+};
+
 /**
  * Ensures Firebase Messaging Service Worker is registered
  * This is a safety fallback in case PWAWrapper fails to register it
@@ -31,6 +39,11 @@ export async function ensureFirebaseServiceWorker() {
 	if (isIOS()) {
 		console.info('[FirebaseSW] Skipping on iOS - Firebase Messaging not supported');
 
+		return;
+	}
+
+	// Don't run for bots/crawlers - they can't register service workers
+	if (isBot()) {
 		return;
 	}
 
@@ -160,8 +173,8 @@ export function stopFirebaseServiceWorkerMonitor() {
 	}
 }
 
-// Auto-start on load (but not on iOS)
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS()) {
+// Auto-start on load (but not on iOS or bots)
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS() && !isBot()) {
 	// Ensure registration on various events
 	const registerFirebaseSW = () => {
 		ensureFirebaseServiceWorker().catch((error) => {
