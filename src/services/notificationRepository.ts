@@ -25,7 +25,7 @@ import {
 	arrayUnion,
 } from 'firebase/firestore';
 import { Collections } from '@freedi/shared-types';
-import { DB } from '@/controllers/db/config';
+import { DB, auth } from '@/controllers/db/config';
 import {
 	removeTokenFromSubscription,
 	addTokenToSubscription,
@@ -205,6 +205,13 @@ export const syncTokenWithSubscriptions = async (
 	userId: string,
 	token: string,
 ): Promise<number> => {
+	// Guard: skip if user is no longer authenticated (prevents "Missing or insufficient permissions")
+	if (!auth.currentUser) {
+		console.info('[NotificationRepository] Skipping token sync - user not authenticated');
+
+		return 0;
+	}
+
 	const subscriptionsQuery = query(
 		collection(DB, Collections.statementsSubscribe),
 		where('userId', '==', userId),
@@ -269,6 +276,13 @@ export const removeTokenFromAllSubscriptions = async (
 ): Promise<void> => {
 	// Validate inputs
 	if (!userId || !token) {
+		return;
+	}
+
+	// Guard: skip if user is no longer authenticated (prevents "Missing or insufficient permissions")
+	if (!auth.currentUser) {
+		console.info('[NotificationRepository] Skipping token removal - user not authenticated');
+
 		return;
 	}
 
@@ -389,7 +403,7 @@ export const isInQuietHours = (config: QuietHoursConfig): boolean => {
 		}
 	} catch (error) {
 		logError(error, {
-			operation: 'services.notificationRepository.unknown',
+			operation: 'services.notificationRepository.isInQuietHours',
 			metadata: { message: 'Error checking quiet hours:' },
 		});
 

@@ -100,7 +100,7 @@ export class NotificationService {
 			// Initialize Firebase Messaging
 			if (!(await initializeMessaging())) {
 				logError(new Error('[NotificationService] Failed to initialize messaging'), {
-					operation: 'services.notificationService.unknown',
+					operation: 'services.notificationService.initialize',
 				});
 
 				return;
@@ -129,7 +129,7 @@ export class NotificationService {
 					console.info('[NotificationService] Token synced with existing subscriptions');
 				} catch (error) {
 					logError(error, {
-						operation: 'services.notificationService.unknown',
+						operation: 'services.notificationService.initialize.syncToken',
 						metadata: { message: '[NotificationService] Error syncing token with subscriptions:' },
 					});
 				}
@@ -140,7 +140,7 @@ export class NotificationService {
 			}
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.initialize',
 				metadata: { message: '[NotificationService] Error during initialization:' },
 			});
 		}
@@ -189,7 +189,7 @@ export class NotificationService {
 			}
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.checkTokenFreshness',
 				metadata: { message: 'Error checking token freshness:' },
 			});
 		}
@@ -224,7 +224,7 @@ export class NotificationService {
 			}
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.getOrRefreshToken',
 				metadata: { message: '[NotificationService] Error getting FCM token:' },
 			});
 
@@ -253,7 +253,7 @@ export class NotificationService {
 
 			if (!tokenToUse) {
 				logError(new Error('No FCM token available to register for notifications'), {
-					operation: 'services.notificationService.unknown',
+					operation: 'services.notificationService.registerForStatementNotifications',
 				});
 
 				return false;
@@ -264,7 +264,7 @@ export class NotificationService {
 			return true;
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.registerForStatementNotifications',
 				metadata: { message: 'Error registering for statement notifications:' },
 			});
 
@@ -279,7 +279,7 @@ export class NotificationService {
 		try {
 			if (!this.token || !this.userId) {
 				logError(new Error('No token or user available to unregister'), {
-					operation: 'services.notificationService.unknown',
+					operation: 'services.notificationService.unregisterFromStatementNotifications',
 				});
 
 				return false;
@@ -290,7 +290,7 @@ export class NotificationService {
 			return true;
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.unregisterFromStatementNotifications',
 				metadata: { message: 'Error unregistering from statement notifications:' },
 			});
 
@@ -330,7 +330,7 @@ export class NotificationService {
 					removeTokenFromAllSubs(userIdToClean, tokenToClean).catch((error) => {
 						if (!error?.message?.includes('Null value error')) {
 							logError(error, {
-								operation: 'services.notificationService.unknown',
+								operation: 'services.notificationService.cleanup',
 								metadata: { message: 'Error removing token from subscriptions:' },
 							});
 						}
@@ -344,7 +344,7 @@ export class NotificationService {
 			await Promise.allSettled(cleanupPromises);
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.cleanup',
 				metadata: { message: 'Error during cleanup:' },
 			});
 		}
@@ -391,7 +391,7 @@ export class NotificationService {
 	public async syncTokenWithSubscriptions(userId: string): Promise<void> {
 		if (!this.token) {
 			logError(new Error('No token available to sync'), {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.syncTokenWithSubscriptions',
 			});
 
 			return;
@@ -401,7 +401,7 @@ export class NotificationService {
 			await syncTokenInDb(userId, this.token);
 		} catch (error) {
 			logError(error, {
-				operation: 'services.notificationService.unknown',
+				operation: 'services.notificationService.syncTokenWithSubscriptions',
 				metadata: { message: 'Error syncing token with subscriptions:' },
 			});
 		}
@@ -417,7 +417,7 @@ export class NotificationService {
 			const err = error as { message?: string };
 			if (err?.message && !err.message.includes('Null value error')) {
 				logError(error, {
-					operation: 'services.notificationService.unknown',
+					operation: 'services.notificationService.removeTokenFromAllSubscriptions',
 					metadata: { message: 'Error removing token from subscriptions:' },
 				});
 			}
@@ -459,7 +459,7 @@ export class NotificationService {
 				diagnostics.serviceWorkerReady = !!registration?.active;
 			} catch (error) {
 				logError(error, {
-					operation: 'services.notificationService.unknown',
+					operation: 'services.notificationService.getDiagnostics',
 					metadata: { message: 'Error checking service worker:' },
 				});
 			}
@@ -475,7 +475,7 @@ export class NotificationService {
 				}
 			} catch (error) {
 				logError(error, {
-					operation: 'services.notificationService.unknown',
+					operation: 'services.notificationService.getDiagnostics',
 					metadata: { message: 'Error getting token age:' },
 				});
 			}
