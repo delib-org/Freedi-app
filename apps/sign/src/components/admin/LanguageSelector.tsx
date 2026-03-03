@@ -12,6 +12,7 @@ const FLAG_EMOJIS: Record<LanguagesEnum, string> = {
   [LanguagesEnum.de]: '\u{1F1E9}\u{1F1EA}', // Germany flag
   [LanguagesEnum.es]: '\u{1F1EA}\u{1F1F8}', // Spain flag
   [LanguagesEnum.nl]: '\u{1F1F3}\u{1F1F1}', // Netherlands flag
+  [LanguagesEnum.fa]: '\u{1F1EE}\u{1F1F7}', // Iran flag
 };
 
 // Available languages in order
@@ -22,6 +23,7 @@ const AVAILABLE_LANGUAGES = [
   LanguagesEnum.de,
   LanguagesEnum.es,
   LanguagesEnum.nl,
+  LanguagesEnum.fa,
 ];
 
 interface LanguageSelectorProps {
