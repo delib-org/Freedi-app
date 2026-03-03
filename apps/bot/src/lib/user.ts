@@ -151,6 +151,41 @@ export function initAuth(): void {
   });
 }
 
+/**
+ * Sign in with Google from the Home screen.
+ * Handles all scenarios:
+ * - Anonymous user (Tier 0) → linkWithRedirect to merge anon account
+ * - No user yet → signInWithRedirect directly
+ * - Already Google (Tier 2) → no-op
+ */
+export async function signInWithGoogle(): Promise<void> {
+  if (state.tier === 2) return; // Already signed in with Google
+
+  const provider = new GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+  sessionStorage.setItem('bot_auth_upgrading', '1');
+
+  const currentUser = auth.currentUser;
+
+  if (currentUser && currentUser.isAnonymous) {
+    // Tier 0 anonymous → link with Google
+    try {
+      await linkWithRedirect(currentUser, provider);
+    } catch (error: unknown) {
+      const firebaseError = error as { code?: string };
+      if (firebaseError.code === 'auth/credential-already-in-use') {
+        await signInWithRedirect(auth, provider);
+      } else {
+        sessionStorage.removeItem('bot_auth_upgrading');
+        throw error;
+      }
+    }
+  } else {
+    // No user yet → direct Google sign-in
+    await signInWithRedirect(auth, provider);
+  }
+}
+
 /** Check if we're returning from a Google redirect */
 export function isReturningFromRedirect(): boolean {
   return sessionStorage.getItem('bot_auth_upgrading') === '1';

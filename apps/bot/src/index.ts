@@ -1,8 +1,9 @@
 import m from 'mithril';
 import './styles/global.scss';
 import './styles/components.scss';
-import { initAuth, ensureUser, getUserState } from './lib/user';
+import { initAuth, ensureUser, getUserState, signInWithGoogle } from './lib/user';
 import { initI18n } from './lib/i18n';
+import { LanguagePicker } from './components/LanguagePicker';
 import {
   Deliberation,
   loadDeliberation,
@@ -244,7 +245,7 @@ function GoBackSearch(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id: 
 }
 
 // ---------------------------------------------------------------------------
-// Home / Landing (Updated with Initiator CTA + Link Paste + Recent)
+// Home / Landing (Redesigned with language picker, sign-in, app explanation)
 // ---------------------------------------------------------------------------
 function Home(): m.Component {
   let linkInput = '';
@@ -274,19 +275,48 @@ function Home(): m.Component {
     }
   }
 
+  function handleSignIn(): void {
+    signInWithGoogle().catch((err) => {
+      console.error('[Home] Sign in failed:', err);
+    });
+  }
+
   return {
     oninit() {
       loadRecent();
     },
 
     view() {
+      const { user, tier } = getUserState();
+      const isGoogleUser = tier === 2 && user !== null;
+      const displayName = user?.displayName ?? '';
+      const initial = displayName ? displayName.charAt(0).toUpperCase() : '';
+
       return m('.shell', [
+        // Header bar: language picker (left) + sign-in/avatar (right)
+        m('.home-header', [
+          m(LanguagePicker),
+
+          isGoogleUser
+            ? m('.home-avatar', [
+                m('.home-avatar__circle', initial),
+                m('.home-avatar__name', t('home.welcome_user', { name: displayName.split(' ')[0] })),
+              ])
+            : m('button.btn.btn--ghost', {
+                onclick: handleSignIn,
+                'aria-label': t('home.sign_in'),
+              }, t('home.sign_in')),
+        ]),
+
         m('.shell__content', { style: { justifyContent: 'center', gap: 'var(--space-lg)' } }, [
           // Hero
           m('.home-hero', [
             m('h1.home-hero__title', 'Freedi'),
             m('p.home-hero__tagline', t('home.tagline')),
           ]),
+
+          // App explanation
+          m('p.home-explanation', t('home.explanation')),
 
           // Initiator CTA
           m('.home-card', [

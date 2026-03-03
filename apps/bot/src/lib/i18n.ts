@@ -113,6 +113,9 @@ const translations: Record<string, Record<string, string>> = {
     'offline.pending': '{{count}} pending (offline)',
     // Home
     'home.tagline': 'Collective Decision Making',
+    'home.explanation': 'Freedi helps groups make better decisions together. Share your needs, propose solutions, and find consensus.',
+    'home.sign_in': 'Sign in',
+    'home.welcome_user': 'Hi, {{name}}',
     'home.have_challenge': 'I have a challenge I need to solve',
     'home.start_deliberation': 'Start a Deliberation',
     'home.or': 'or',
@@ -337,6 +340,9 @@ const translations: Record<string, Record<string, string>> = {
     'offline.pending': '{{count}} ממתינות (לא מקוון)',
     // Home
     'home.tagline': 'קבלת החלטות קולקטיבית',
+    'home.explanation': 'Freedi עוזר לקבוצות לקבל החלטות טובות יותר יחד. שתפו את הצרכים שלכם, הציעו פתרונות ומצאו הסכמה.',
+    'home.sign_in': 'התחברות',
+    'home.welcome_user': 'שלום, {{name}}',
     'home.have_challenge': 'יש לי אתגר שאני צריך לפתור',
     'home.start_deliberation': 'התחל דיון',
     'home.or': 'או',
@@ -460,6 +466,10 @@ const translations: Record<string, Record<string, string>> = {
     'back.welcome': 'مرحباً بعودتك!',
     'common.loading': 'جارٍ التحميل...',
     'common.continue': 'متابعة',
+    'home.tagline': 'صنع القرار الجماعي',
+    'home.explanation': 'يساعد Freedi المجموعات على اتخاذ قرارات أفضل معًا. شاركوا احتياجاتكم واقترحوا حلولاً وتوصلوا إلى توافق.',
+    'home.sign_in': 'تسجيل الدخول',
+    'home.welcome_user': 'مرحباً، {{name}}',
   },
 };
 

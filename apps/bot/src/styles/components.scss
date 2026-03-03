@@ -1,4 +1,9 @@
-// Button
+// ==========================================================================
+// Components — Soft Candy / Lollipop Aesthetic
+// Everything is round, bubbly, and pastel. Like unwrapping a sweet.
+// ==========================================================================
+
+// Button — puffy pill shapes
 .btn {
   display: inline-flex;
   align-items: center;
@@ -12,27 +17,29 @@
   border: none;
   border-radius: var(--radius-full);
   cursor: pointer;
-  transition: background-color var(--duration-fast) var(--easing),
-    transform var(--duration-fast) var(--easing);
-  min-height: 48px;
+  transition: all var(--duration-fast) var(--easing);
+  min-height: 50px;
   width: 100%;
+  letter-spacing: 0.02em;
 
   &:active {
-    transform: scale(0.97);
+    transform: scale(0.96);
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
     transform: none;
   }
 
   &--primary {
-    background-color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
     color: var(--text-inverse);
+    box-shadow: 0 4px 14px rgba(232, 145, 185, 0.3);
 
     &:hover:not(:disabled) {
-      background-color: var(--color-primary-dark);
+      box-shadow: 0 6px 20px rgba(232, 145, 185, 0.4);
+      transform: translateY(-1px);
     }
   }
 
@@ -43,29 +50,47 @@
 
     &:hover:not(:disabled) {
       background-color: var(--bg-card-hover);
+      border-color: var(--color-primary-light);
     }
   }
 
   &--agree {
-    background-color: var(--color-agree);
-    color: var(--text-inverse);
+    background: linear-gradient(135deg, var(--color-agree), var(--color-accent-mint));
+    color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(168, 230, 207, 0.3);
   }
 
   &--disagree {
-    background-color: var(--color-disagree);
-    color: var(--text-inverse);
+    background: linear-gradient(135deg, var(--color-disagree), var(--color-disagree-light));
+    color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(248, 165, 165, 0.3);
   }
 
   &--ghost {
     background: transparent;
     color: var(--text-secondary);
-    padding: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
     min-height: auto;
     width: auto;
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--bg-card-hover);
+    }
+  }
+
+  &--sm {
+    min-height: 36px;
+    font-size: var(--font-size-sm);
+    padding: var(--space-xs) var(--space-md);
+  }
+
+  &--full {
+    width: 100%;
   }
 }
 
-// Card
+// Card — soft bubble
 .card {
   background: var(--bg-card);
   border-radius: var(--radius-md);
@@ -89,14 +114,14 @@
   }
 }
 
-// Progress bar
+// Progress bar — candy stripe feel
 .progress {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
 
   &__bar {
-    height: 4px;
+    height: 6px;
     background: var(--border-light);
     border-radius: var(--radius-full);
     overflow: hidden;
@@ -104,9 +129,9 @@
 
   &__fill {
     height: 100%;
-    background: var(--color-primary);
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent-lavender));
     border-radius: var(--radius-full);
-    transition: width var(--duration-normal) var(--easing);
+    transition: width var(--duration-normal) var(--easing-smooth);
   }
 
   &__label {
@@ -116,7 +141,7 @@
   }
 }
 
-// Rating buttons row
+// Rating buttons — soft candy dots
 .rating {
   display: flex;
   gap: var(--space-sm);
@@ -126,8 +151,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 48px;
-    height: 48px;
+    min-width: 50px;
+    height: 50px;
     padding: 0 var(--space-sm);
     border-radius: var(--radius-full);
     border: 2px solid var(--border-light);
@@ -137,53 +162,69 @@
     transition: all var(--duration-fast) var(--easing);
 
     &:hover {
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-light);
+      transform: scale(1.05);
     }
 
     &--active {
       border-color: var(--color-primary);
       background: var(--color-primary);
       color: var(--text-inverse);
+      box-shadow: var(--shadow-glow);
+      transform: scale(1.05);
     }
 
-    &--sd { // Strongly disagree
+    // Strongly disagree — soft coral
+    &--sd {
       &.rating__btn--active {
         background: var(--color-disagree);
         border-color: var(--color-disagree);
+        box-shadow: 0 0 16px rgba(248, 165, 165, 0.4);
       }
     }
 
-    &--d { // Disagree
+    // Disagree — pale rose
+    &--d {
       &.rating__btn--active {
-        background: #ef9a9a;
-        border-color: #ef9a9a;
+        background: var(--color-disagree-light);
+        border-color: var(--color-disagree-light);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(252, 208, 208, 0.4);
       }
     }
 
-    &--n { // Neutral
+    // Neutral — soft lavender-gray
+    &--n {
       &.rating__btn--active {
         background: var(--color-neutral);
         border-color: var(--color-neutral);
+        box-shadow: 0 0 16px rgba(212, 197, 224, 0.4);
       }
     }
 
-    &--a { // Agree
-      &.rating__btn--active {
-        background: #81c784;
-        border-color: #81c784;
-      }
-    }
-
-    &--sa { // Strongly agree
+    // Agree — pastel mint
+    &--a {
       &.rating__btn--active {
         background: var(--color-agree);
         border-color: var(--color-agree);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(168, 230, 207, 0.4);
+      }
+    }
+
+    // Strongly agree — deeper mint
+    &--sa {
+      &.rating__btn--active {
+        background: var(--color-agree-strong);
+        border-color: var(--color-agree-strong);
+        color: var(--text-inverse);
+        box-shadow: 0 0 16px rgba(125, 214, 179, 0.4);
       }
     }
   }
 }
 
-// Text input area
+// Text input — soft bubbly textarea
 .text-input {
   width: 100%;
 
@@ -199,7 +240,7 @@
     color: var(--text-primary);
     background: var(--bg-card);
     resize: vertical;
-    transition: border-color var(--duration-fast) var(--easing);
+    transition: all var(--duration-fast) var(--easing-smooth);
 
     &::placeholder {
       color: var(--text-muted);
@@ -207,7 +248,8 @@
 
     &:focus {
       outline: none;
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-light);
+      box-shadow: 0 0 0 4px rgba(232, 145, 185, 0.12);
     }
   }
 
@@ -219,7 +261,31 @@
   }
 }
 
-// Evaluation card (for swipe-style evaluation)
+// Single-line input override (for paste-link field etc.)
+input.text-input {
+  min-height: auto;
+  height: 50px;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-full);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transition: all var(--duration-fast) var(--easing-smooth);
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 4px rgba(232, 145, 185, 0.12);
+  }
+}
+
+// Evaluation card — floating candy card
 .eval-card {
   background: var(--bg-card);
   border-radius: var(--radius-lg);
@@ -263,7 +329,7 @@
 
     &:hover {
       background: var(--bg-card-hover);
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-light);
       color: var(--color-primary);
     }
   }
@@ -275,7 +341,7 @@
   }
 }
 
-// Process strip (intro page)
+// Process strip (intro page) — candy dot trail
 .process-strip {
   display: flex;
   justify-content: space-between;
@@ -288,8 +354,10 @@
     top: calc(var(--space-md) + 16px);
     left: 16px;
     right: 16px;
-    height: 2px;
-    background: var(--border-light);
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary-light), var(--color-accent-lavender), var(--color-accent-mint));
+    border-radius: var(--radius-full);
+    opacity: 0.4;
   }
 
   &__step {
@@ -302,8 +370,8 @@
   }
 
   &__dot {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: var(--radius-full);
     background: var(--bg-card);
     border: 2px solid var(--border-medium);
@@ -313,17 +381,20 @@
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold);
     color: var(--text-muted);
+    transition: all var(--duration-normal) var(--easing);
 
     &--active {
       border-color: var(--color-primary);
       background: var(--color-primary);
       color: var(--text-inverse);
+      box-shadow: 0 0 12px rgba(232, 145, 185, 0.35);
     }
 
     &--done {
       border-color: var(--color-agree);
       background: var(--color-agree);
-      color: var(--text-inverse);
+      color: var(--text-primary);
+      box-shadow: 0 0 12px rgba(168, 230, 207, 0.35);
     }
   }
 
@@ -335,7 +406,7 @@
   }
 }
 
-// Modal overlay
+// Modal overlay — frosted candy
 .modal {
   position: fixed;
   inset: 0;
@@ -344,7 +415,8 @@
   align-items: flex-end;
   justify-content: center;
   background: var(--bg-overlay);
-  animation: fade-in var(--duration-fast) var(--easing);
+  backdrop-filter: blur(4px);
+  animation: fade-in var(--duration-fast) var(--easing-smooth);
 
   &__content {
     background: var(--bg-card);
@@ -376,6 +448,12 @@
     cursor: pointer;
     color: var(--text-muted);
     padding: var(--space-xs);
+    border-radius: var(--radius-full);
+    transition: background var(--duration-fast) var(--easing);
+
+    &:hover {
+      background: var(--bg-card-hover);
+    }
   }
 }
 
@@ -389,7 +467,7 @@
   to { transform: translateY(0); }
 }
 
-// Results / ranked list
+// Results / ranked list — candy shelf
 .ranked-list {
   display: flex;
   flex-direction: column;
@@ -408,7 +486,7 @@
   &__rank {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-bold);
-    color: var(--text-muted);
+    color: var(--color-primary);
     min-width: 32px;
     text-align: center;
   }
@@ -429,7 +507,7 @@
   }
 
   &__bar {
-    height: 4px;
+    height: 5px;
     background: var(--border-light);
     border-radius: var(--radius-full);
     margin-top: var(--space-xs);
@@ -438,19 +516,20 @@
 
   &__bar-fill {
     height: 100%;
-    background: var(--color-agree);
+    background: linear-gradient(90deg, var(--color-agree), var(--color-accent-mint));
     border-radius: var(--radius-full);
   }
 }
 
-// Impact summary (current state page)
+// Impact summary — bubbly stat pills
 .impact {
   display: flex;
   justify-content: space-around;
   padding: var(--space-md);
   background: var(--bg-card);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
 
   &__stat {
     display: flex;
@@ -471,7 +550,7 @@
   }
 }
 
-// Navigation cards (go back hub)
+// Navigation cards — puffy tap targets
 .nav-cards {
   display: flex;
   flex-direction: column;
@@ -492,18 +571,19 @@
 
     &:hover {
       box-shadow: var(--shadow-md);
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-light);
+      transform: translateY(-2px);
     }
   }
 
   &__icon {
     font-size: var(--font-size-2xl);
-    width: 48px;
-    height: 48px;
+    width: 50px;
+    height: 50px;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-lg);
     background: var(--bg-card-hover);
   }
 
@@ -527,7 +607,7 @@
   }
 }
 
-// Similarity warning (pre-submission duplicate detection)
+// Similarity warning — soft peach alert
 .similarity-warning {
   background: var(--bg-card-hover);
   border: 2px solid var(--color-warning);
@@ -539,7 +619,7 @@
 
   &__title {
     font-weight: var(--font-weight-bold);
-    color: var(--color-warning);
+    color: var(--color-primary-dark);
     font-size: var(--font-size-sm);
   }
 
@@ -571,7 +651,7 @@
   margin-inline-start: var(--space-sm);
 
   &--up {
-    color: var(--color-agree);
+    color: var(--color-agree-strong);
 
     &::before {
       content: '↑ ';
@@ -593,14 +673,14 @@
   }
 }
 
-// Similarity badge
+// Similarity badge — candy pill
 .similarity-badge {
   display: inline-block;
   font-size: var(--font-size-xs);
   font-weight: var(--font-weight-medium);
-  color: var(--color-primary);
+  color: var(--color-primary-dark);
   background: var(--bg-card-hover);
-  padding: 2px var(--space-sm);
+  padding: 3px var(--space-sm);
   border-radius: var(--radius-full);
   margin-inline-start: var(--space-sm);
 }
@@ -627,10 +707,11 @@
   }
 
   &__item--interactive {
-    transition: box-shadow var(--duration-fast) var(--easing);
+    transition: all var(--duration-fast) var(--easing);
 
     &:hover {
       box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
     }
   }
 
@@ -645,14 +726,14 @@
     }
 
     .rating__btn {
-      min-width: 36px;
-      height: 36px;
+      min-width: 38px;
+      height: 38px;
       font-size: 1rem;
     }
   }
 }
 
-// Merge proposal preview
+// Merge proposal preview — stacked candy cards
 .merge-preview {
   display: flex;
   flex-direction: column;
@@ -663,7 +744,7 @@
   &__item {
     width: 100%;
     background: var(--bg-card-hover);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     padding: var(--space-md);
   }
 
@@ -684,19 +765,19 @@
   &__equals {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-bold);
-    color: var(--text-muted);
+    color: var(--color-primary);
   }
 }
 
-// Offline indicator
+// Offline indicator — soft peach / mint pill
 .offline-indicator {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   padding: var(--space-sm) var(--space-md);
   background: var(--color-warning);
-  color: var(--text-inverse);
-  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  border-radius: var(--radius-full);
   font-size: var(--font-size-sm);
 
   &--success {
@@ -734,15 +815,105 @@
   color: var(--text-inverse);
   font-weight: var(--font-weight-bold);
   text-decoration: none;
+  border-radius: 0 0 var(--radius-sm) 0;
 
   &:focus {
     top: 0;
   }
 }
 
-// ---------------------------------------------------------------------------
-// Initiator Flow — Home
-// ---------------------------------------------------------------------------
+// ===========================================================================
+// Home — Landing page
+// ===========================================================================
+
+// Home header bar (language picker + sign-in/avatar)
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-sm);
+}
+
+// Language picker — candy pills
+.lang-picker {
+  display: flex;
+  gap: 6px;
+
+  &__pill {
+    padding: 6px var(--space-md);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-full);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
+    line-height: 1;
+
+    &:hover {
+      border-color: var(--color-primary-light);
+      color: var(--color-primary);
+      background: var(--bg-card-hover);
+    }
+
+    &--active {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+      border-color: transparent;
+      color: var(--text-inverse);
+      box-shadow: 0 2px 8px rgba(232, 145, 185, 0.25);
+
+      &:hover {
+        color: var(--text-inverse);
+      }
+    }
+  }
+}
+
+// Home sign-in button / avatar
+.home-signin {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  white-space: nowrap;
+}
+
+.home-avatar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__circle {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+    box-shadow: 0 2px 8px rgba(232, 145, 185, 0.25);
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+// App explanation text
+.home-explanation {
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+  font-size: var(--font-size-base);
+  max-width: 320px;
+  margin: 0 auto;
+}
 
 .home-hero {
   text-align: center;
@@ -750,7 +921,10 @@
   &__title {
     font-size: var(--font-size-2xl);
     font-weight: var(--font-weight-bold);
-    color: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   &__tagline {
@@ -762,8 +936,9 @@
 .home-card {
   background: var(--bg-card);
   border-radius: var(--radius-md);
-  padding: var(--space-md);
+  padding: var(--space-lg);
   box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
 
   &__text {
     margin-bottom: var(--space-sm);
@@ -774,8 +949,14 @@
     display: flex;
     gap: var(--space-sm);
 
-    .text-input {
+    .text-input,
+    input.text-input {
       flex: 1;
+    }
+
+    .btn--secondary {
+      width: auto;
+      min-width: 70px;
     }
   }
 }
@@ -792,7 +973,7 @@
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--border-default);
+    background: linear-gradient(90deg, transparent, var(--border-light), transparent);
   }
 }
 
@@ -804,9 +985,9 @@
   }
 }
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Create Flow — Challenge Input
-// ---------------------------------------------------------------------------
+// ===========================================================================
 
 .create-title {
   font-size: var(--font-size-xl);
@@ -862,25 +1043,27 @@
 
 .example-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
   text-align: left;
   font-size: var(--font-size-sm);
   color: var(--text-secondary);
   cursor: pointer;
-  transition: border-color var(--duration-fast) var(--easing);
+  transition: all var(--duration-fast) var(--easing);
 
   &:hover,
   &:focus-visible {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-light);
     color: var(--color-primary);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
   }
 }
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Wizard Steps
-// ---------------------------------------------------------------------------
+// ===========================================================================
 
 .wizard-header {
   display: flex;
@@ -908,7 +1091,7 @@
 
   &__context {
     background: var(--bg-subtle);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-md);
     padding: var(--space-sm) var(--space-md);
   }
 
@@ -937,7 +1120,7 @@
   gap: var(--space-sm);
 }
 
-// Checkbox cards
+// Checkbox cards — soft selectable pills
 .checkbox-card-list {
   display: flex;
   flex-direction: column;
@@ -946,9 +1129,10 @@
 
 .checkbox-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
   padding: var(--space-md);
+  transition: border-color var(--duration-fast) var(--easing);
 
   &--disabled {
     opacity: 0.6;
@@ -961,9 +1145,10 @@
     cursor: pointer;
 
     input[type='checkbox'] {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       accent-color: var(--color-primary);
+      border-radius: 6px;
     }
   }
 
@@ -975,7 +1160,7 @@
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
     margin-top: var(--space-xs);
-    padding-left: 28px;
+    padding-left: 30px;
   }
 }
 
@@ -991,14 +1176,19 @@
   align-items: flex-start;
   gap: var(--space-sm);
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
   padding: var(--space-md);
   cursor: pointer;
+  transition: all var(--duration-fast) var(--easing);
+
+  &:hover {
+    border-color: var(--color-primary-light);
+  }
 
   input[type='radio'] {
-    width: 20px;
-    height: 20px;
+    width: 22px;
+    height: 22px;
     accent-color: var(--color-primary);
     margin-top: 2px;
   }
@@ -1017,7 +1207,7 @@
   }
 }
 
-// Stepper
+// Stepper — bubbly +/- controls
 .stepper-row {
   display: flex;
   align-items: center;
@@ -1038,13 +1228,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: var(--radius-full);
-    border: 1px solid var(--border-default);
+    border: 1.5px solid var(--border-medium);
     background: var(--bg-card);
     font-size: var(--font-size-lg);
     cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
 
     &:disabled {
       opacity: 0.3;
@@ -1054,6 +1245,7 @@
     &:hover:not(:disabled) {
       border-color: var(--color-primary);
       color: var(--color-primary);
+      background: var(--bg-card-hover);
     }
   }
 
@@ -1062,17 +1254,18 @@
     text-align: center;
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
   }
 }
 
-// Time estimate
+// Time estimate — pastel info pill
 .time-estimate {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
   background: var(--bg-subtle);
-  border-radius: var(--radius-sm);
-  padding: var(--space-md);
+  border-radius: var(--radius-full);
+  padding: var(--space-sm) var(--space-md);
 
   &__icon {
     font-size: var(--font-size-xl);
@@ -1089,7 +1282,8 @@
   display: flex;
   gap: var(--space-sm);
 
-  .text-input {
+  .text-input,
+  input.text-input {
     flex: 1;
   }
 }
@@ -1104,8 +1298,8 @@
     align-items: center;
     justify-content: space-between;
     background: var(--bg-card);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
     padding: var(--space-sm) var(--space-md);
   }
 
@@ -1121,15 +1315,21 @@
     font-size: var(--font-size-lg);
     cursor: pointer;
     padding: 0 var(--space-xs);
+    border-radius: var(--radius-full);
+    transition: background var(--duration-fast) var(--easing);
+
+    &:hover {
+      background: rgba(248, 165, 165, 0.15);
+    }
   }
 }
 
-// Tab bar
+// Tab bar — candy switcher
 .tab-bar {
   display: flex;
   background: var(--bg-subtle);
-  border-radius: var(--radius-sm);
-  padding: 2px;
+  border-radius: var(--radius-full);
+  padding: 3px;
 
   &--sm {
     font-size: var(--font-size-sm);
@@ -1139,16 +1339,16 @@
     flex: 1;
     padding: var(--space-sm) var(--space-md);
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     background: transparent;
     font-weight: var(--font-weight-medium);
     cursor: pointer;
     color: var(--text-secondary);
-    transition: background var(--duration-fast) var(--easing);
+    transition: all var(--duration-fast) var(--easing);
 
     &--active {
       background: var(--bg-card);
-      color: var(--text-primary);
+      color: var(--color-primary);
       box-shadow: var(--shadow-sm);
     }
   }
@@ -1161,13 +1361,13 @@
   font-weight: var(--font-weight-medium);
 }
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Review & Launch
-// ---------------------------------------------------------------------------
+// ===========================================================================
 
 .review-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: var(--space-md);
 
@@ -1193,6 +1393,11 @@
     cursor: pointer;
     font-size: var(--font-size-base);
     padding: var(--space-xs);
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background: var(--bg-card-hover);
+    }
   }
 
   &__value {
@@ -1210,6 +1415,7 @@
   background: var(--bg-subtle);
   border-radius: var(--radius-md);
   padding: var(--space-md);
+  border: 1px solid var(--border-light);
 
   &__actions {
     display: flex;
@@ -1225,9 +1431,9 @@
   text-align: center;
 }
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Share Screen
-// ---------------------------------------------------------------------------
+// ===========================================================================
 
 .share-subtitle {
   font-size: var(--font-size-lg);
@@ -1245,8 +1451,8 @@
   width: 200px;
   height: 200px;
   background: var(--bg-card);
-  border: 2px dashed var(--border-default);
-  border-radius: var(--radius-md);
+  border: 2px dashed var(--border-medium);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1286,15 +1492,17 @@
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
   cursor: pointer;
   text-decoration: none;
   color: var(--text-primary);
   min-width: 72px;
+  transition: all var(--duration-fast) var(--easing);
 
   &:hover {
-    border-color: var(--color-primary);
+    border-color: var(--color-primary-light);
+    background: var(--bg-card-hover);
   }
 
   &__icon {
@@ -1323,7 +1531,7 @@
     flex: 1;
     background: var(--bg-subtle);
     padding: var(--space-sm) var(--space-md);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius-full);
     font-size: var(--font-size-sm);
     color: var(--text-secondary);
     overflow: hidden;
@@ -1333,14 +1541,14 @@
 
   &__feedback {
     font-size: var(--font-size-sm);
-    color: var(--color-agree);
+    color: var(--color-agree-strong);
     margin-top: var(--space-xs);
   }
 }
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Dashboard
-// ---------------------------------------------------------------------------
+// ===========================================================================
 
 .dashboard-header {
   display: flex;
@@ -1354,32 +1562,35 @@
   }
 
   &__avatar {
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: var(--radius-full);
-    background: var(--color-primary);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
     color: var(--text-inverse);
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: var(--font-weight-bold);
     font-size: var(--font-size-sm);
+    box-shadow: 0 2px 8px rgba(232, 145, 185, 0.25);
   }
 }
 
 .delib-card {
   background: var(--bg-card);
-  border: 1px solid var(--border-default);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   padding: var(--space-md);
 
   &--compact {
     cursor: pointer;
-    transition: border-color var(--duration-fast) var(--easing);
+    transition: all var(--duration-fast) var(--easing);
 
     &:hover,
     &:focus-visible {
-      border-color: var(--color-primary);
+      border-color: var(--color-primary-light);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
     }
   }
 
@@ -1417,9 +1628,9 @@
   }
 }
 
-// ---------------------------------------------------------------------------
+// ===========================================================================
 // Deliberation Detail
-// ---------------------------------------------------------------------------
+// ===========================================================================
 
 .detail-title {
   font-size: var(--font-size-xl);
@@ -1432,7 +1643,8 @@
   gap: var(--space-lg);
   padding: var(--space-md);
   background: var(--bg-card);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
 }
 
 .stat {
@@ -1474,16 +1686,16 @@
   border-bottom: 1px solid var(--border-light);
 
   &__rank {
-    width: 24px;
-    height: 24px;
+    width: 26px;
+    height: 26px;
     border-radius: var(--radius-full);
-    background: var(--bg-subtle);
+    background: var(--bg-card-hover);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: var(--font-size-sm);
     font-weight: var(--font-weight-bold);
-    color: var(--text-secondary);
+    color: var(--color-primary);
     flex-shrink: 0;
   }
 
