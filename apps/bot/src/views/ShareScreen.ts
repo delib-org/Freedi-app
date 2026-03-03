@@ -1,4 +1,5 @@
 import m from 'mithril';
+import QRCode from 'qrcode';
 import { t } from '../lib/i18n';
 import { loadDeliberation, Deliberation } from '../lib/deliberation';
 
@@ -11,6 +12,7 @@ export function ShareScreen(): m.Component<ShareScreenAttrs> {
   let loading = true;
   let copied = false;
   let copyTimeout: ReturnType<typeof setTimeout> | null = null;
+  let qrRendered = false;
 
   function getShareUrl(id: string): string {
     const origin = window.location.origin;
@@ -19,6 +21,23 @@ export function ShareScreen(): m.Component<ShareScreenAttrs> {
 
   function getShareMessage(title: string, url: string): string {
     return `${t('share.invite_message')}: ${title}\n${t('share.join')}: ${url}`;
+  }
+
+  function renderQR(canvas: HTMLCanvasElement, url: string): void {
+    if (qrRendered) return;
+    qrRendered = true;
+
+    QRCode.toCanvas(canvas, url, {
+      width: 240,
+      margin: 2,
+      color: {
+        dark: '#4a3347',
+        light: '#ffffff',
+      },
+      errorCorrectionLevel: 'M',
+    }).catch((err: unknown) => {
+      console.error('[Share] QR render failed:', err);
+    });
   }
 
   async function copyLink(url: string): Promise<void> {
@@ -76,21 +95,22 @@ export function ShareScreen(): m.Component<ShareScreenAttrs> {
       const title = deliberation?.title ?? '';
       const message = getShareMessage(title, url);
       const encodedMessage = encodeURIComponent(message);
-      const encodedUrl = encodeURIComponent(url);
 
       return m('.shell', [
         m('.shell__content', { style: { gap: 'var(--space-lg)', textAlign: 'center' } }, [
           m('h1.create-title', t('share.live_title')),
           m('p.share-subtitle', `"${title}"`),
 
-          // QR Code placeholder (rendered as a styled box with the URL)
+          // QR Code — scannable from screen
           m('.qr-container', [
-            m('.qr-placeholder', [
-              m('.qr-placeholder__icon', 'QR'),
-              m('.qr-placeholder__text', t('share.scan_to_join')),
+            m('.qr-box', [
+              m('canvas.qr-box__canvas', {
+                oncreate(vnode: m.VnodeDOM) {
+                  renderQR(vnode.dom as HTMLCanvasElement, url);
+                },
+              }),
             ]),
-            // The actual QR can be generated with a library — this is a placeholder
-            m('canvas#qr-canvas', { style: { display: 'none' } }),
+            m('p.qr-box__hint', t('share.scan_to_join')),
           ]),
 
           // Share buttons

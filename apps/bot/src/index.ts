@@ -124,33 +124,38 @@ function FlowController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id
         m.redraw();
       };
 
+      let stageView: m.Children;
+
       switch (session.currentStage) {
         case 'intro':
-          return m(Intro, {
+          stageView = m(Intro, {
             deliberation: delib,
             participantCount: delib.participantCount,
             onBegin: advance,
           });
+          break;
 
         case 'needs-write':
-          return m(NeedsWrite, {
+          stageView = m(NeedsWrite, {
             questionId: delib.needsQuestionId,
             topParentId: delib.deliberationId,
             session,
             maxNeeds: settings.maxNeedsPerUser,
             onDone: advance,
           });
+          break;
 
         case 'needs-evaluate':
-          return m(NeedsEvaluate, {
+          stageView = m(NeedsEvaluate, {
             questionId: delib.needsQuestionId,
             session,
             maxEvaluations: settings.evaluationsPerStage,
             onDone: advance,
           });
+          break;
 
         case 'solutions-write':
-          return m(SolutionsWrite, {
+          stageView = m(SolutionsWrite, {
             needsQuestionId: delib.needsQuestionId,
             solutionsQuestionId: delib.solutionsQuestionId,
             topParentId: delib.deliberationId,
@@ -158,33 +163,43 @@ function FlowController(initialVnode: m.Vnode<{ id: string }>): m.Component<{ id
             maxSolutions: settings.maxSolutionsPerUser,
             onDone: advance,
           });
+          break;
 
         case 'solutions-evaluate':
-          return m(SolutionsEvaluate, {
+          stageView = m(SolutionsEvaluate, {
             questionId: delib.solutionsQuestionId,
             session,
             maxEvaluations: settings.evaluationsPerStage,
             onDone: advance,
           });
+          break;
 
         case 'state':
-          return m(CurrentState, {
+          stageView = m(CurrentState, {
             needsQuestionId: delib.needsQuestionId,
             solutionsQuestionId: delib.solutionsQuestionId,
             session,
             onContinue: advance,
           });
+          break;
 
         case 'done':
-          return m(SignIn, {
+          stageView = m(SignIn, {
             session,
             onSkip: () => m.route.set('/'),
             onDone: () => m.route.set('/'),
           });
+          break;
 
         default:
           return m('.shell', m('.shell__content.text-center', 'Unknown stage'));
       }
+
+      // Wrap stage view with a floating language picker
+      return m('.flow-wrapper', [
+        m('.flow-wrapper__lang', m(LanguagePicker)),
+        stageView,
+      ]);
     },
   };
 }

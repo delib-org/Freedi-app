@@ -285,6 +285,32 @@ input.text-input {
   }
 }
 
+// Bare textarea override (used directly as textarea.text-input)
+textarea.text-input {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-md);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  resize: vertical;
+  transition: all var(--duration-fast) var(--easing-smooth);
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 4px rgba(232, 145, 185, 0.12);
+  }
+}
+
 // Evaluation card — floating candy card
 .eval-card {
   background: var(--bg-card);
@@ -789,6 +815,19 @@ input.text-input {
   }
 }
 
+// Flow wrapper — adds floating language picker over stage views
+.flow-wrapper {
+  position: relative;
+  min-height: 100dvh;
+
+  &__lang {
+    position: absolute;
+    top: var(--space-sm);
+    inset-inline-start: var(--space-md);
+    z-index: 20;
+  }
+}
+
 // RTL support
 [dir='rtl'] {
   .nav-cards__arrow {
@@ -1280,11 +1319,21 @@ input.text-input {
 // Seed list
 .seed-input-row {
   display: flex;
+  align-items: flex-start;
   gap: var(--space-sm);
 
+  textarea.text-input,
   .text-input,
   input.text-input {
     flex: 1;
+    min-width: 0;
+    min-height: 60px;
+  }
+
+  .btn {
+    width: auto;
+    flex-shrink: 0;
+    min-width: 70px;
   }
 }
 
@@ -1447,27 +1496,26 @@ input.text-input {
   align-items: center;
 }
 
-.qr-placeholder {
-  width: 200px;
-  height: 200px;
-  background: var(--bg-card);
-  border: 2px dashed var(--border-medium);
-  border-radius: var(--radius-lg);
-  display: flex;
-  flex-direction: column;
+// QR code box — prominent scannable area
+.qr-box {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-sm);
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
 
-  &__icon {
-    font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-bold);
-    color: var(--text-muted);
+  &__canvas {
+    display: block;
+    border-radius: var(--radius-sm);
   }
 
-  &__text {
+  &__hint {
     font-size: var(--font-size-sm);
     color: var(--text-muted);
+    margin-top: var(--space-sm);
   }
 }
 

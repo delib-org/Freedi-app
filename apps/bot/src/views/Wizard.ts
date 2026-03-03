@@ -230,20 +230,13 @@ export function Wizard(): m.Component<WizardAttrs> {
         : null,
 
       m('.seed-input-row', [
-        m('input.text-input', {
-          type: 'text',
+        m('textarea.text-input', {
           value: seedInput,
+          rows: 2,
           placeholder: seedType === 'need' ? t('wizard.seed_need_placeholder') : t('wizard.seed_solution_placeholder'),
           maxlength: 200,
           oninput: (e: InputEvent) => {
-            seedInput = (e.target as HTMLInputElement).value;
-          },
-          onkeydown: (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && seedInput.trim().length >= 3 && seeds.length < maxSeeds) {
-              seeds.push(seedInput.trim());
-              seedInput = '';
-              save();
-            }
+            seedInput = (e.target as HTMLTextAreaElement).value;
           },
         }),
         m('button.btn.btn--primary.btn--sm', {
