@@ -178,8 +178,11 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 		[_isAuthorized, dir, statement],
 	);
 
+	const isQuestion = statement.statementType === StatementType.question;
+
 	const nodeClassName = [
 		styles['tree-message-node'],
+		isQuestion ? styles['tree-message-node--question'] : '',
 		swipeClass ? styles[`tree-message-node--${swipeClass}`] : '',
 	]
 		.filter(Boolean)
@@ -195,6 +198,9 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					<span className={styles['tree-message-node__author']}>
 						{statement.creator.displayName}
 					</span>
+					{isQuestion && (
+						<span className={styles['tree-message-node__badge']}>{t('Question')}</span>
+					)}
 					<span className={styles['tree-message-node__time']}>{timeString}</span>
 					<div className={styles['tree-message-node__menu']}>
 						<ChatMessageMenu

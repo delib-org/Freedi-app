@@ -7,6 +7,12 @@
 	transition: background-color 0.3s ease;
 	border-radius: 6px;
 
+	&--question {
+		border-inline-start: 3px solid var(--header-question, #47b4ef);
+		padding-inline-start: 8px;
+		background-color: rgba(71, 180, 239, 0.05);
+	}
+
 	&--swiping-right {
 		background-color: rgba(76, 175, 80, 0.12);
 	}
@@ -40,6 +46,17 @@
 	&__time {
 		font-size: 0.75rem;
 		color: var(--text-secondary, #999);
+	}
+
+	&__badge {
+		font-size: 0.7rem;
+		font-weight: 600;
+		padding: 1px 6px;
+		border-radius: 4px;
+		background-color: var(--header-question, #47b4ef);
+		color: #fff;
+		line-height: 1.4;
+		white-space: nowrap;
 	}
 
 	&__menu {
