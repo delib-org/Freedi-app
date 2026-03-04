@@ -6,7 +6,7 @@ import {
   estimateTime,
   WizardState,
 } from '../lib/deliberation';
-import { ensureUser, getUserState, upgradeToGoogle } from '../lib/user';
+import { ensureUser, getUserState, signInWithGoogle, didReturnFromRedirect, consumeRedirectReturn } from '../lib/user';
 
 export interface ReviewLaunchAttrs {
   onLaunched: (deliberationId: string) => void;
@@ -18,6 +18,7 @@ export function ReviewLaunch(): m.Component<ReviewLaunchAttrs> {
   let launching = false;
   let error = '';
   let showAuthPrompt = false;
+  let autoLaunched = false;
 
   async function launch(onLaunched: (id: string) => void): Promise<void> {
     if (!wizard || launching) return;
@@ -46,6 +47,15 @@ export function ReviewLaunch(): m.Component<ReviewLaunchAttrs> {
       }
 
       const { tier } = getUserState();
+
+      // Auto-launch after returning from Google sign-in redirect.
+      // Checked in view() because getRedirectResult resolves async
+      // and triggers m.redraw() — oninit fires too early.
+      if (!autoLaunched && !launching && didReturnFromRedirect() && tier === 2) {
+        autoLaunched = true;
+        consumeRedirectReturn();
+        launch(onLaunched);
+      }
       const time = estimateTime(wizard);
 
       const stages: string[] = [];
@@ -150,7 +160,7 @@ export function ReviewLaunch(): m.Component<ReviewLaunchAttrs> {
                   m('button.btn.btn--primary.btn--full', {
                     onclick: async () => {
                       try {
-                        await upgradeToGoogle();
+                        await signInWithGoogle();
                       } catch (err: unknown) {
                         console.error('[ReviewLaunch] Google sign-in failed:', err);
                       }

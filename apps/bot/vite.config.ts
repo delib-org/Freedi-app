@@ -44,8 +44,8 @@ export default defineConfig({
         name: 'Freedi Deliberation',
         short_name: 'Freedi',
         description: 'Participate in collective deliberation',
-        theme_color: '#5f88e5',
-        background_color: '#f8f9fb',
+        theme_color: '#fef6fa',
+        background_color: '#fef6fa',
         display: 'standalone',
         start_url: '/',
         icons: [

@@ -109,6 +109,7 @@ export function initAuth(): void {
     .then((result) => {
       if (result) {
         state.tier = 2;
+        _returnedFromRedirect = sessionStorage.getItem('bot_auth_upgrading') === '1';
         sessionStorage.removeItem('bot_auth_upgrading');
         m.redraw();
       }
@@ -186,7 +187,24 @@ export async function signInWithGoogle(): Promise<void> {
   }
 }
 
-/** Check if we're returning from a Google redirect */
+/**
+ * True once when the user has just returned from a successful Google redirect.
+ * Stays true until `consumeRedirectReturn()` is called, so that views
+ * can read it after the redraw triggered by `getRedirectResult`.
+ */
+let _returnedFromRedirect = false;
+
+/** Check if we just returned from a successful Google redirect */
+export function didReturnFromRedirect(): boolean {
+  return _returnedFromRedirect;
+}
+
+/** Consume the redirect-return flag (call after acting on it) */
+export function consumeRedirectReturn(): void {
+  _returnedFromRedirect = false;
+}
+
+/** Check if a redirect is in progress (page hasn't reloaded yet) */
 export function isReturningFromRedirect(): boolean {
   return sessionStorage.getItem('bot_auth_upgrading') === '1';
 }
