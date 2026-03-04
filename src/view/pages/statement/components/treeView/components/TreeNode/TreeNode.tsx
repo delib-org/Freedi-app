@@ -38,6 +38,15 @@ const TreeNode: FC<TreeNodeProps> = ({
 				className={styles['tree-node__content']}
 				style={{ '--depth': depth } as React.CSSProperties}
 			>
+				{hasChildren && (
+					<div className={styles['tree-node__toggle']}>
+						<CollapseToggle
+							childCount={children.length}
+							isExpanded={isExpanded}
+							onToggle={() => toggleNode(statement.statementId)}
+						/>
+					</div>
+				)}
 				{isOption ? (
 					<TreeOptionNode statement={statement} parentStatement={parentStatement} />
 				) : (
@@ -45,46 +54,21 @@ const TreeNode: FC<TreeNodeProps> = ({
 				)}
 			</div>
 
-			{hasChildren && !isExpanded && (
-				<div
-					className={styles['tree-node__collapse']}
-					style={{ '--depth': depth } as React.CSSProperties}
-				>
-					<CollapseToggle
-						childCount={children.length}
-						isExpanded={false}
-						onToggle={() => toggleNode(statement.statementId)}
-					/>
-				</div>
-			)}
-
 			{hasChildren && isExpanded && (
-				<>
-					<div
-						className={styles['tree-node__collapse']}
-						style={{ '--depth': depth } as React.CSSProperties}
-					>
-						<CollapseToggle
-							childCount={children.length}
-							isExpanded={true}
-							onToggle={() => toggleNode(statement.statementId)}
+				<div className={styles['tree-node__children']}>
+					<TreeThreadLine />
+					{children.map((child) => (
+						<TreeNode
+							key={child.statementId}
+							statement={child}
+							parentStatement={statement}
+							depth={depth + 1}
+							childrenMap={childrenMap}
+							expandedNodes={expandedNodes}
+							toggleNode={toggleNode}
 						/>
-					</div>
-					<div className={styles['tree-node__children']}>
-						{depth < MAX_TREE_DEPTH && <TreeThreadLine />}
-						{children.map((child) => (
-							<TreeNode
-								key={child.statementId}
-								statement={child}
-								parentStatement={statement}
-								depth={depth + 1}
-								childrenMap={childrenMap}
-								expandedNodes={expandedNodes}
-								toggleNode={toggleNode}
-							/>
-						))}
-					</div>
-				</>
+					))}
+				</div>
 			)}
 		</div>
 	);

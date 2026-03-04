@@ -2,15 +2,19 @@
 	position: relative;
 
 	&__content {
+		display: flex;
+		align-items: flex-start;
+		gap: 2px;
 		padding-inline-start: calc(var(--tree-indent, 24px) * var(--depth, 0));
+	}
+
+	&__toggle {
+		flex-shrink: 0;
+		padding-top: 10px;
 	}
 
 	&__children {
 		position: relative;
-	}
-
-	&__collapse {
-		padding-inline-start: calc(var(--tree-indent, 24px) * (var(--depth, 0) + 1));
 	}
 
 	@media (max-width: 600px) {

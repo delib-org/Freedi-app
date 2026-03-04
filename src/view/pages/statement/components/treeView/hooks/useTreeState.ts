@@ -20,7 +20,9 @@ export function useTreeState(
 ): UseTreeStateReturn {
 	const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 
-	// Auto-expand nodes up to MAX_VISIBLE_LEVELS depth on mount or when data changes
+	// Auto-expand nodes so that the top MAX_VISIBLE_LEVELS of visible content are open.
+	// The root node itself is not rendered, so we start counting from -1 to ensure
+	// 3 visible levels of children are expanded.
 	useEffect(() => {
 		const initialExpanded = new Set<string>();
 
@@ -34,7 +36,8 @@ export function useTreeState(
 			});
 		}
 
-		expandToDepth(rootId, 0);
+		// Start at -1 so the root doesn't count as a visible level
+		expandToDepth(rootId, -1);
 		setExpandedNodes(initialExpanded);
 	}, [childrenMap, rootId]);
 

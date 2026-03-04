@@ -1,21 +1,20 @@
 .collapse-toggle {
 	display: inline-flex;
 	align-items: center;
-	gap: 4px;
-	min-width: 44px;
-	min-height: 44px;
-	padding: 8px 12px;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
 	border: none;
-	border-radius: 8px;
-	background: var(--card-default, #f5f5f5);
-	color: var(--btn-primary, #5f88e5);
-	font-size: 0.85rem;
-	font-weight: 500;
+	border-radius: 4px;
+	background: none;
+	color: var(--text-secondary, #999);
 	cursor: pointer;
-	transition: background-color 0.15s ease;
+	transition: background-color 0.15s ease, color 0.15s ease;
 
 	&:hover {
-		background: var(--card-hover, #eee);
+		background: var(--card-default, #f5f5f5);
+		color: var(--text-body, #444);
 	}
 
 	&:focus-visible {
@@ -24,7 +23,7 @@
 	}
 
 	&__icon {
-		font-size: 0.75rem;
+		font-size: 0.6rem;
 		transition: transform 0.15s ease;
 	}
 

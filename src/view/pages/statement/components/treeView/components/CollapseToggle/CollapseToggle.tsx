@@ -23,7 +23,6 @@ const CollapseToggle: FC<CollapseToggleProps> = ({ childCount, isExpanded, onTog
 			aria-label={label}
 		>
 			<span className={styles['collapse-toggle__icon']}>&#9654;</span>
-			<span>{label}</span>
 		</button>
 	);
 };
