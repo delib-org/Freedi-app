@@ -22,7 +22,16 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 
-const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
+const MAIN_SCREENS = new Set([
+	'main',
+	undefined,
+	'chat',
+	'options',
+	'questions',
+	'solutions',
+	'suggestions',
+	'current',
+]);
 
 const Switch = () => {
 	const { t } = useTranslation();
@@ -65,19 +74,36 @@ const Switch = () => {
 	const options = useSelector(optionsSelect);
 	const questions = useSelector(questionsSelect);
 
+	const selectedOptionsCount = statement?.results?.length ?? 0;
+
 	const segments = useMemo(() => {
+		const showOptions =
+			statement && isStatementTypeAllowedAsChildren(statement, StatementType.option);
 		const allSegments = [
 			{ id: 'chat', label: t('Discussion'), count: allSubs.length },
-			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
-				? [{ id: 'options', label: t('Solutions'), count: options.length }]
+			...(showOptions
+				? [
+						{
+							id: 'suggestions',
+							label: t('Suggestions'),
+							count: questions.length + options.length,
+						},
+					]
 				: []),
-			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
-				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
+			...(showOptions
+				? [
+						{
+							id: 'solutions',
+							label: t('Solutions'),
+							count: questions.length + selectedOptionsCount,
+						},
+					]
 				: []),
+			...(showOptions ? [{ id: 'current', label: t('Current'), count: options.length }] : []),
 		];
 
 		return allSegments;
-	}, [t, allSubs.length, options.length, questions.length, statement]);
+	}, [t, allSubs.length, options.length, questions.length, selectedOptionsCount, statement]);
 
 	const showSegmentedControl = MAIN_SCREENS.has(screen);
 

@@ -5,6 +5,8 @@ export {
   LANGUAGE_NAMES,
   STORAGE_KEY,
   COOKIE_KEY,
+  isValidLanguage,
+  detectBrowserLanguage,
   getDirection,
   getRowDirection,
   isRTL,

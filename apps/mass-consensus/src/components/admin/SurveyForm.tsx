@@ -36,7 +36,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     existingSurvey?.questionSettings || {}
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
-  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
+  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? false);
   const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
     existingSurvey?.demographicPages || []
   );
