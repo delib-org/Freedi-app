@@ -4,7 +4,10 @@ export {
   LANGUAGE_NAMES,
   STORAGE_KEY,
   COOKIE_KEY,
+  isValidLanguage,
 } from './constants';
+
+export { detectBrowserLanguage } from './detectBrowserLanguage';
 
 export {
   getDirection,

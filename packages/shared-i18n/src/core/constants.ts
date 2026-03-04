@@ -8,7 +8,11 @@ export enum LanguagesEnum {
   fa = 'fa',
 }
 
-export const DEFAULT_LANGUAGE = LanguagesEnum.he;
+export const DEFAULT_LANGUAGE = LanguagesEnum.en;
+
+export function isValidLanguage(lang: string): lang is LanguagesEnum {
+  return Object.values(LanguagesEnum).includes(lang as LanguagesEnum);
+}
 
 export const LANGUAGE_NAMES: Record<LanguagesEnum, string> = {
   [LanguagesEnum.en]: 'English',

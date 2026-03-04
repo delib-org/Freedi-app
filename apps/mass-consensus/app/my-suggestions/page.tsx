@@ -122,7 +122,7 @@ export default async function MySuggestionsRoute({ searchParams }: PageProps) {
         questionSections: sections,
         stats,
         adminLanguage: survey.defaultLanguage,
-        forceLanguage: survey.forceLanguage ?? true,
+        forceLanguage: survey.forceLanguage ?? false,
       };
     } else {
       // Question mode: single question
@@ -141,7 +141,7 @@ export default async function MySuggestionsRoute({ searchParams }: PageProps) {
         questionSections: sections,
         stats,
         adminLanguage: question.defaultLanguage,
-        forceLanguage: (question as { forceLanguage?: boolean }).forceLanguage ?? true,
+        forceLanguage: (question as { forceLanguage?: boolean }).forceLanguage ?? false,
       };
     }
 
