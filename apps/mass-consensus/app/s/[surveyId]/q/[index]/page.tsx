@@ -108,7 +108,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
       return (
         <LanguageOverrideProvider
           adminLanguage={survey.defaultLanguage}
-          forceLanguage={survey.forceLanguage ?? true}
+          forceLanguage={survey.forceLanguage ?? false}
         >
           <SurveyDemographicPage
             survey={survey}
@@ -129,7 +129,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
       return (
         <LanguageOverrideProvider
           adminLanguage={survey.defaultLanguage}
-          forceLanguage={survey.forceLanguage ?? true}
+          forceLanguage={survey.forceLanguage ?? false}
         >
           <SurveyExplanationPage
             survey={survey}
@@ -169,7 +169,7 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
       return (
         <LanguageOverrideProvider
           adminLanguage={survey.defaultLanguage}
-          forceLanguage={survey.forceLanguage ?? true}
+          forceLanguage={survey.forceLanguage ?? false}
         >
           <SurveyQuestionWrapper
             survey={survey}
