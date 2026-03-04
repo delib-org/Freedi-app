@@ -1,4 +1,4 @@
-import { FC, useContext, useMemo } from 'react';
+import { FC, useContext, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
@@ -23,6 +23,9 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 	const { statementId, sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
+	const treeViewRef = useRef<HTMLDivElement>(null);
+	const prevCountRef = useRef(0);
+	const isFirstRenderRef = useRef(true);
 
 	const treeOptions: TreeDataOptions = {
 		typeFilter,
@@ -35,8 +38,65 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 
 	const flipKey = useMemo(() => rootChildren.map((c) => c.statementId).join(','), [rootChildren]);
 
+	// Total statement count across the entire tree (root + all nested children)
+	const totalStatementCount = useMemo(() => {
+		let count = rootChildren.length;
+		childrenMap.forEach((children) => {
+			count += children.length;
+		});
+
+		return count;
+	}, [rootChildren, childrenMap]);
+
+	// Find the nearest scrollable ancestor (page__main)
+	const getScrollContainer = useCallback((): HTMLElement | null => {
+		let el = treeViewRef.current?.parentElement ?? null;
+		while (el) {
+			const style = window.getComputedStyle(el);
+			if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+				return el;
+			}
+			el = el.parentElement;
+		}
+
+		return null;
+	}, []);
+
+	// Auto-scroll to bottom when new messages or replies are added
+	useEffect(() => {
+		if (totalStatementCount === 0) return;
+
+		const isNewMessage = totalStatementCount > prevCountRef.current;
+		prevCountRef.current = totalStatementCount;
+
+		if (isFirstRenderRef.current) {
+			isFirstRenderRef.current = false;
+			const container = getScrollContainer();
+			if (container) {
+				container.scrollTop = container.scrollHeight;
+			}
+
+			return;
+		}
+
+		if (isNewMessage) {
+			setTimeout(() => {
+				const container = getScrollContainer();
+				if (container) {
+					container.scrollTo({ top: container.scrollHeight, behavior: 'smooth' });
+				}
+			}, 150);
+		}
+	}, [totalStatementCount, getScrollContainer]);
+
+	// Reset on statement change
+	useEffect(() => {
+		isFirstRenderRef.current = true;
+		prevCountRef.current = 0;
+	}, [statementId]);
+
 	return (
-		<div className={styles['tree-view']}>
+		<div ref={treeViewRef} className={styles['tree-view']}>
 			<div className={styles['tree-view__list']}>
 				{rootChildren.length === 0 ? (
 					<div className={styles['tree-view__empty']}>{t('No replies yet')}</div>

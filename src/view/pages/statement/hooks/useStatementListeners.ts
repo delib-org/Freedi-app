@@ -13,6 +13,7 @@ import {
 	clearInAppNotifications,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { CHAT, FEATURES } from '@/constants/common';
+import { TREE_INITIAL_LIMIT } from '@/constants/treeView';
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
@@ -103,8 +104,8 @@ export const useStatementListeners = ({
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else if (FEATURES.ENABLE_TREE_VIEW) {
-				// Tree view loads all descendant types for threaded display
-				unsubscribersRef.current.push(listenToTreeDescendants(statementId));
+				// Tree view loads descendant types for threaded display (lazy: initial batch)
+				unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
 				// The default view is 'chat', so apply the limit for all non-mind-map screens.

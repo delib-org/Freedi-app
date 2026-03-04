@@ -41,6 +41,16 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
 	}
 }
 
+/** Find a statement by ID inside a childrenMap */
+function findInMap(map: Map<string, Statement[]>, id: string): Statement | undefined {
+	for (const children of map.values()) {
+		const found = children.find((c) => c.statementId === id);
+		if (found) return found;
+	}
+
+	return undefined;
+}
+
 /**
  * Provides tree data from Redux with O(1) child lookups.
  * Supports type filtering, sorting, and selected-only option filtering.
@@ -69,14 +79,61 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 		let resultMap = fullChildrenMap;
 		let resultRoot = fullRootChildren;
 
-		// Apply type filter and/or selected-only filter
-		if (typeFilter || selectedOptionIds) {
+		if (typeFilter) {
+			const matchesFilter = (c: Statement): boolean => {
+				if (!typeFilter.includes(c.statementType)) return false;
+				if (
+					selectedOptionIds &&
+					c.statementType === StatementType.option &&
+					!selectedOptionIds.has(c.statementId)
+				)
+					return false;
+
+				return true;
+			};
+
+			// Build set of all matching statement IDs
+			const matchingIds = new Set<string>();
+			fullChildrenMap.forEach((children) => {
+				children.forEach((c) => {
+					if (matchesFilter(c)) matchingIds.add(c.statementId);
+				});
+			});
+			fullRootChildren.forEach((c) => {
+				if (matchesFilter(c)) matchingIds.add(c.statementId);
+			});
+
+			// Build filtered childrenMap: only keep matching children,
+			// and only under matching parents
+			resultMap = new Map<string, Statement[]>();
+			fullChildrenMap.forEach((children, parentId) => {
+				if (!matchingIds.has(parentId)) return;
+				const filtered = children.filter((c) => matchingIds.has(c.statementId));
+				if (filtered.length > 0) resultMap.set(parentId, filtered);
+			});
+
+			// Root children: matching items from root level + matching items
+			// whose parent is NOT a matching item (promote orphans)
+			const childOfMatchingParent = new Set<string>();
+			resultMap.forEach((children) => {
+				children.forEach((c) => childOfMatchingParent.add(c.statementId));
+			});
+
+			resultRoot = [];
+			matchingIds.forEach((id) => {
+				if (!childOfMatchingParent.has(id)) {
+					// Find the statement object
+					const found =
+						fullRootChildren.find((c) => c.statementId === id) ||
+						findInMap(fullChildrenMap, id);
+					if (found) resultRoot.push(found);
+				}
+			});
+		} else if (selectedOptionIds) {
 			resultMap = new Map<string, Statement[]>();
 			fullChildrenMap.forEach((children, key) => {
 				const filtered = children.filter((c) => {
-					if (typeFilter && !typeFilter.includes(c.statementType)) return false;
 					if (
-						selectedOptionIds &&
 						c.statementType === StatementType.option &&
 						!selectedOptionIds.has(c.statementId)
 					)
@@ -87,9 +144,7 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 				if (filtered.length > 0) resultMap.set(key, filtered);
 			});
 			resultRoot = fullRootChildren.filter((c) => {
-				if (typeFilter && !typeFilter.includes(c.statementType)) return false;
 				if (
-					selectedOptionIds &&
 					c.statementType === StatementType.option &&
 					!selectedOptionIds.has(c.statementId)
 				)

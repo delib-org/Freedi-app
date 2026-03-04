@@ -37,8 +37,9 @@ export function ListenToOnlineUsers(
 		});
 
 		const now = Date.now();
+		const STALENESS_THRESHOLD = 3 * 60 * 1000; // 3 minutes
 		const validUsers = users.filter(
-			(u) => typeof u.lastUpdated === 'number' && now - u.lastUpdated < 60000,
+			(u) => typeof u.lastUpdated === 'number' && now - u.lastUpdated < STALENESS_THRESHOLD,
 		);
 
 		setOnlineUsers(validUsers);

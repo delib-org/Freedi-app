@@ -641,14 +641,14 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
  * Unlike listenToAllDescendants which filters by question/group/option,
  * this loads all types including plain statements (chat messages).
  */
-export function listenToTreeDescendants(statementId: string): Unsubscribe {
+export function listenToTreeDescendants(statementId: string, queryLimit = MAX_DESCENDANTS_LIMIT): Unsubscribe {
 	try {
 		const statementsRef = createCollectionRef(Collections.statements);
 		const q = query(
 			statementsRef,
 			where('parents', 'array-contains', statementId),
 			orderBy('createdAt', 'desc'),
-			limit(MAX_DESCENDANTS_LIMIT),
+			limit(queryLimit),
 		);
 
 		const listenerKey = generateListenerKey('tree-descendants', 'statement', statementId);
@@ -733,5 +733,58 @@ export function listenToTreeDescendants(statementId: string): Unsubscribe {
 		return (): void => {
 			return;
 		};
+	}
+}
+
+/**
+ * Fetch older tree descendants beyond the initial real-time listener.
+ * Uses the same `parents array-contains` query but with a cursor.
+ */
+export async function fetchOlderTreeDescendants(
+	statementId: string,
+	oldestCreatedAt: number,
+	batchSize = 50,
+): Promise<{ statements: Statement[]; hasMore: boolean }> {
+	try {
+		const statementsRef = createCollectionRef(Collections.statements);
+		const q = query(
+			statementsRef,
+			where('parents', 'array-contains', statementId),
+			orderBy('createdAt', 'desc'),
+			startAfter(oldestCreatedAt),
+			limit(batchSize + 1),
+		);
+
+		const snapshot = await getDocs(q);
+		const statements: Statement[] = [];
+
+		snapshot.forEach((doc) => {
+			try {
+				const stmt = parse(StatementSchema, normalizeStatementData(doc.data()));
+				statements.push(stmt);
+			} catch (error) {
+				logError(error, {
+					operation: 'fetchOlderTreeDescendants.parse',
+					statementId: doc.id,
+				});
+			}
+		});
+
+		const hasMore = statements.length > batchSize;
+		const resultStatements = hasMore ? statements.slice(0, batchSize) : statements;
+
+		if (resultStatements.length > 0) {
+			store.dispatch(setStatements(resultStatements));
+		}
+
+		return { statements: resultStatements, hasMore };
+	} catch (error) {
+		logError(error, {
+			operation: 'fetchOlderTreeDescendants',
+			statementId,
+			metadata: { oldestCreatedAt, batchSize },
+		});
+
+		return { statements: [], hasMore: false };
 	}
 }
