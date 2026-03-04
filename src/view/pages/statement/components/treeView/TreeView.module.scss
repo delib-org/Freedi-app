@@ -1,0 +1,29 @@
+.tree-view {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow-y: auto;
+
+	&__list {
+		flex: 1;
+		padding: var(--padding, 16px);
+		padding-bottom: 80px;
+	}
+
+	&__empty {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 2rem;
+		color: var(--text-secondary, #999);
+		font-size: 0.9rem;
+	}
+
+	&__input {
+		position: sticky;
+		bottom: 0;
+		z-index: 10;
+		width: 100%;
+		background: var(--bg-page, #fff);
+	}
+}

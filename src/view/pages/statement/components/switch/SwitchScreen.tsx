@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { statementSelectorById, setStatement } from '@/redux/statements/statementsSlice';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { logError } from '@/utils/errorHandling';
+import { FEATURES } from '@/constants/common';
 import lazyWithRetry from '@/routes/lazyWithRetry';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Chat from '../chat/Chat';
@@ -31,6 +32,7 @@ const SubQuestionsMap = lazyWithRetry(
 	() => import('../subQuestionsMap/SubQuestionsMap'),
 	'SubQuestionsMap',
 );
+const TreeView = lazyWithRetry(() => import('../treeView/TreeView'), 'TreeView');
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -135,7 +137,15 @@ function ViewByActiveTab({
 	isPopperHebbianEnabled,
 }: Readonly<ViewByActiveTabProps>): ReactNode {
 	switch (activeView) {
-		case 'chat':
+		case 'chat': {
+			const chatComponent = FEATURES.ENABLE_TREE_VIEW ? (
+				<Suspense fallback={<LoadingPage />}>
+					<TreeView />
+				</Suspense>
+			) : (
+				<Chat />
+			);
+
 			if (isPopperHebbianEnabled && statement) {
 				return (
 					<>
@@ -145,12 +155,13 @@ function ViewByActiveTab({
 								// Could trigger a new refinement session
 							}}
 						/>
-						<Chat />
+						{chatComponent}
 					</>
 				);
 			}
 
-			return <Chat />;
+			return chatComponent;
+		}
 		case 'options':
 			return <StagePage />;
 		case 'questions':

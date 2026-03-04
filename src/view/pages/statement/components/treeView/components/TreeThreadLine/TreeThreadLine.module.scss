@@ -1,0 +1,12 @@
+.tree-thread-line {
+	position: absolute;
+	inset-inline-start: 16px;
+	top: 0;
+	bottom: 0;
+	width: 2px;
+	background-color: var(--border-color, #ddd);
+
+	@media (max-width: 600px) {
+		inset-inline-start: 10px;
+	}
+}
