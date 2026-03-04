@@ -16,6 +16,7 @@ interface TreeNodeProps {
 	childrenMap: Map<string, Statement[]>;
 	expandedNodes: Set<string>;
 	toggleNode: (id: string) => void;
+	expandNode: (id: string) => void;
 }
 
 const TreeNode: FC<TreeNodeProps> = ({
@@ -25,6 +26,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	childrenMap,
 	expandedNodes,
 	toggleNode,
+	expandNode,
 }) => {
 	const children = childrenMap.get(statement.statementId) || [];
 	const hasChildren = children.length > 0;
@@ -51,11 +53,14 @@ const TreeNode: FC<TreeNodeProps> = ({
 				{isOption ? (
 					<TreeOptionNode statement={statement} parentStatement={parentStatement} />
 				) : (
-					<TreeMessageNode statement={statement} hasChildren={hasChildren} />
+					<TreeMessageNode
+						statement={statement}
+						hasChildren={hasChildren}
+						onReplySubmitted={() => expandNode(statement.statementId)}
+					/>
 				)}
 			</div>
 
-			{/* At max depth, show a "dive in" prompt instead of rendering more children */}
 			{hasChildren && isAtMaxDepth && (
 				<div
 					className={styles['tree-node__dive-in']}
@@ -77,6 +82,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 							childrenMap={childrenMap}
 							expandedNodes={expandedNodes}
 							toggleNode={toggleNode}
+							expandNode={expandNode}
 						/>
 					))}
 				</div>

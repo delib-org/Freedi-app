@@ -5,6 +5,7 @@ import { MAX_VISIBLE_LEVELS } from '@/constants/treeView';
 interface UseTreeStateReturn {
 	expandedNodes: Set<string>;
 	toggleNode: (id: string) => void;
+	expandNode: (id: string) => void;
 	expandAll: () => void;
 	collapseAll: () => void;
 	isExpanded: (id: string) => boolean;
@@ -14,22 +15,41 @@ interface UseTreeStateReturn {
  * Manages expand/collapse state for tree nodes.
  * Auto-expands nodes up to MAX_VISIBLE_LEVELS on initial mount.
  * Preserves user toggle state when new data arrives.
+ * Auto-expands any node that newly gains children.
  */
 export function useTreeState(
 	childrenMap: Map<string, Statement[]>,
 	rootId: string,
 ): UseTreeStateReturn {
 	const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
-	// Track which nodes the user has manually toggled so we don't override them
 	const userToggledRef = useRef<Set<string>>(new Set());
 	const prevRootIdRef = useRef<string>('');
+	// Track which nodes had children last time, to detect newly-parent nodes
+	const prevParentNodesRef = useRef<Set<string>>(new Set());
 
 	useEffect(() => {
-		// When navigating to a different root, reset everything
 		if (rootId !== prevRootIdRef.current) {
 			userToggledRef.current = new Set();
+			prevParentNodesRef.current = new Set();
 			prevRootIdRef.current = rootId;
 		}
+
+		// Find which nodes currently have children
+		const currentParentNodes = new Set<string>();
+		childrenMap.forEach((children, parentId) => {
+			if (children.length > 0) {
+				currentParentNodes.add(parentId);
+			}
+		});
+
+		// Detect nodes that just became parents (had no children before)
+		const newlyParentNodes = new Set<string>();
+		currentParentNodes.forEach((id) => {
+			if (!prevParentNodesRef.current.has(id)) {
+				newlyParentNodes.add(id);
+			}
+		});
+		prevParentNodesRef.current = currentParentNodes;
 
 		// Compute which nodes should be auto-expanded (within top N levels)
 		const autoExpanded = new Set<string>();
@@ -44,28 +64,30 @@ export function useTreeState(
 			});
 		}
 
-		// Start at -1 so the root doesn't count as a visible level
 		expandToDepth(rootId, -1);
 
 		setExpandedNodes((prev) => {
 			const next = new Set<string>();
 
-			// For each node that should be auto-expanded:
-			// only add it if the user hasn't manually toggled it
+			// Auto-expand nodes within the initial depth range
 			autoExpanded.forEach((id) => {
 				if (!userToggledRef.current.has(id)) {
 					next.add(id);
-				} else {
-					// User toggled this node - preserve their choice
-					if (prev.has(id)) {
-						next.add(id);
-					}
+				} else if (prev.has(id)) {
+					next.add(id);
 				}
 			});
 
-			// Also preserve any user-expanded nodes outside auto-expand range
+			// Preserve user-expanded nodes outside auto-expand range
 			prev.forEach((id) => {
 				if (userToggledRef.current.has(id) && !autoExpanded.has(id)) {
+					next.add(id);
+				}
+			});
+
+			// Auto-expand any node that just gained children for the first time
+			newlyParentNodes.forEach((id) => {
+				if (!userToggledRef.current.has(id)) {
 					next.add(id);
 				}
 			});
@@ -88,6 +110,16 @@ export function useTreeState(
 		});
 	}, []);
 
+	const expandNode = useCallback((id: string) => {
+		setExpandedNodes((prev) => {
+			if (prev.has(id)) return prev;
+			const next = new Set(prev);
+			next.add(id);
+
+			return next;
+		});
+	}, []);
+
 	const expandAll = useCallback(() => {
 		const allIds = new Set<string>();
 		childrenMap.forEach((_, key) => {
@@ -102,5 +134,5 @@ export function useTreeState(
 
 	const isExpanded = useCallback((id: string) => expandedNodes.has(id), [expandedNodes]);
 
-	return { expandedNodes, toggleNode, expandAll, collapseAll, isExpanded };
+	return { expandedNodes, toggleNode, expandNode, expandAll, collapseAll, isExpanded };
 }

@@ -2,6 +2,8 @@
 	display: flex;
 	gap: 8px;
 	padding: 6px 0;
+	flex: 1;
+	min-width: 0;
 
 	&__avatar {
 		flex-shrink: 0;
@@ -73,6 +75,7 @@
 		align-items: flex-end;
 		gap: 4px;
 		margin-top: 6px;
+		width: 100%;
 		border: 1px solid var(--border-color, #ddd);
 		border-radius: 8px;
 		overflow: hidden;
@@ -81,6 +84,8 @@
 
 	&__reply-input {
 		flex: 1;
+		width: 100%;
+		box-sizing: border-box;
 		padding: 10px 12px;
 		border: none;
 		outline: none;
@@ -102,8 +107,8 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 36px;
-		height: 36px;
+		width: 44px;
+		height: 44px;
 		flex-shrink: 0;
 		border: none;
 		background: none;

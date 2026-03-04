@@ -14,7 +14,7 @@ const TreeView: FC = () => {
 	const { t } = useTranslation();
 
 	const { childrenMap, rootChildren } = useTreeData(statementId || '');
-	const { expandedNodes, toggleNode } = useTreeState(childrenMap, statementId || '');
+	const { expandedNodes, toggleNode, expandNode } = useTreeState(childrenMap, statementId || '');
 
 	return (
 		<div className={styles['tree-view']}>
@@ -31,6 +31,7 @@ const TreeView: FC = () => {
 							childrenMap={childrenMap}
 							expandedNodes={expandedNodes}
 							toggleNode={toggleNode}
+							expandNode={expandNode}
 						/>
 					))
 				)}

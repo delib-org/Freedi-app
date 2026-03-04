@@ -11,6 +11,7 @@ import styles from './TreeMessageNode.module.scss';
 interface TreeMessageNodeProps {
 	statement: Statement;
 	hasChildren: boolean;
+	onReplySubmitted?: () => void;
 }
 
 function formatMessageTime(timestamp: number): string {
@@ -19,7 +20,11 @@ function formatMessageTime(timestamp: number): string {
 	return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-const TreeMessageNode: FC<TreeMessageNodeProps> = ({ statement, hasChildren }) => {
+const TreeMessageNode: FC<TreeMessageNodeProps> = ({
+	statement,
+	hasChildren,
+	onReplySubmitted,
+}) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
@@ -60,6 +65,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({ statement, hasChildren }) =
 			handleAddStatement(replyText, statement);
 			setReplyText('');
 			setShowReplyInput(false);
+			onReplySubmitted?.();
 		} catch (error) {
 			logError(error, {
 				operation: 'TreeMessageNode.handleReplySubmit',
