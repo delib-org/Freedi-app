@@ -84,18 +84,18 @@ const Switch = () => {
 			...(showOptions
 				? [
 						{
-							id: 'solutions',
-							label: t('Solutions'),
-							count: questions.length + selectedOptionsCount,
+							id: 'suggestions',
+							label: t('Suggestions'),
+							count: questions.length + options.length,
 						},
 					]
 				: []),
 			...(showOptions
 				? [
 						{
-							id: 'suggestions',
-							label: t('Suggestions'),
-							count: questions.length + options.length,
+							id: 'solutions',
+							label: t('Solutions'),
+							count: questions.length + selectedOptionsCount,
 						},
 					]
 				: []),

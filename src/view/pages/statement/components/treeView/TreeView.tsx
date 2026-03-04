@@ -52,7 +52,9 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 			</div>
 
 			{showSortNav ? (
-				<StatementBottomNav />
+				<div className={styles['tree-view__bottom-nav']}>
+					<StatementBottomNav />
+				</div>
 			) : (
 				statement && (
 					<div className={styles['tree-view__input']}>
