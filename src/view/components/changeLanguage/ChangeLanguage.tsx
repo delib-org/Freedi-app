@@ -27,7 +27,7 @@ const ChangeLanguage: FC<ChangeLanguageProps> = ({
 
 		changeLanguage(lang);
 
-		if (lang === 'he' || lang === 'ar') {
+		if (lang === 'he' || lang === 'ar' || lang === 'fa') {
 			document.body.style.direction = 'rtl';
 		} else {
 			document.body.style.direction = 'ltr';

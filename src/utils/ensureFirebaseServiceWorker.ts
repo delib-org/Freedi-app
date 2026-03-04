@@ -2,6 +2,7 @@ import type { Messaging } from 'firebase/messaging';
 import { app } from '@/controllers/db/config';
 import { vapidKey } from '@/controllers/db/configKey';
 import { logError } from '@/utils/errorHandling';
+import { isBot } from '@/utils/botDetection';
 
 let isRegistering = false;
 let checkInterval: ReturnType<typeof setInterval> | null = null;
@@ -31,6 +32,11 @@ export async function ensureFirebaseServiceWorker() {
 	if (isIOS()) {
 		console.info('[FirebaseSW] Skipping on iOS - Firebase Messaging not supported');
 
+		return;
+	}
+
+	// Don't run for bots/crawlers - they can't register service workers
+	if (isBot()) {
 		return;
 	}
 
@@ -160,8 +166,8 @@ export function stopFirebaseServiceWorkerMonitor() {
 	}
 }
 
-// Auto-start on load (but not on iOS)
-if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS()) {
+// Auto-start on load (but not on iOS or bots)
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !isIOS() && !isBot()) {
 	// Ensure registration on various events
 	const registerFirebaseSW = () => {
 		ensureFirebaseServiceWorker().catch((error) => {

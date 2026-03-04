@@ -39,7 +39,7 @@ export async function checkNotificationStatus() {
 			});
 		} catch (error) {
 			logError(error, {
-				operation: 'utils.notificationStatus.unknown',
+				operation: 'utils.notificationStatus.checkNotificationStatus',
 				metadata: { message: 'Failed to initialize:' },
 			});
 		}
@@ -66,7 +66,7 @@ export async function checkNotificationStatus() {
 		});
 	} catch (error) {
 		logError(error, {
-			operation: 'utils.notificationStatus.unknown',
+			operation: 'utils.notificationStatus.checkNotificationStatus',
 			metadata: { message: 'Error getting diagnostics:' },
 		});
 	}

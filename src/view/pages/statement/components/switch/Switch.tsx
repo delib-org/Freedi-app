@@ -20,7 +20,7 @@ import {
 	statementOptionsSelector,
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
-import { Lightbulb, Share2, TrendingUp } from 'lucide-react';
+import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -134,38 +134,44 @@ const Switch = () => {
 			</div>
 
 			<OnlineUsers statementId={statement?.statementId} />
-			{allSubs.length === 0 && (
+			{allSubs.length === 0 && activeView === 'chat' && (
 				<div className={styles.onboarding}>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<MessageSquare size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('questionOnboarding.startConversation')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.startConversationDesc')}
+							</p>
+						</div>
+					</div>
 					<div className={styles.onboarding__step}>
 						<span className={styles.onboarding__icon}>
 							<Lightbulb size={20} />
 						</span>
 						<div className={styles.onboarding__content}>
-							<h3 className={styles.onboarding__stepTitle}>{t('questionOnboarding.whatIsThis')}</h3>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('questionOnboarding.addSolutions')}
+							</h3>
 							<p className={styles.onboarding__stepText}>
-								{t('questionOnboarding.whatIsThisDesc')}
+								{t('questionOnboarding.addSolutionsDesc')}
 							</p>
 						</div>
 					</div>
 					<div className={styles.onboarding__step}>
 						<span className={styles.onboarding__icon}>
-							<Share2 size={20} />
+							<HelpCircle size={20} />
 						</span>
 						<div className={styles.onboarding__content}>
-							<h3 className={styles.onboarding__stepTitle}>{t('questionOnboarding.howToShare')}</h3>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('questionOnboarding.askQuestions')}
+							</h3>
 							<p className={styles.onboarding__stepText}>
-								{t('questionOnboarding.howToShareDesc')}
-							</p>
-						</div>
-					</div>
-					<div className={styles.onboarding__step}>
-						<span className={styles.onboarding__icon}>
-							<TrendingUp size={20} />
-						</span>
-						<div className={styles.onboarding__content}>
-							<h3 className={styles.onboarding__stepTitle}>{t('questionOnboarding.howToSolve')}</h3>
-							<p className={styles.onboarding__stepText}>
-								{t('questionOnboarding.howToSolveDesc')}
+								{t('questionOnboarding.askQuestionsDesc')}
 							</p>
 						</div>
 					</div>

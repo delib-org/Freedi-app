@@ -13,6 +13,7 @@ import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import SummarizeModal from '../question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { Lightbulb, Plus, MessageSquare } from 'lucide-react';
 
 interface Props {
 	showStageTitle?: boolean;
@@ -73,7 +74,7 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 
 	return (
 		<>
-			{hasSubStatements && (
+			{hasSubStatements ? (
 				<div className={`${styles['stage-page']} wrapper`}>
 					{!isClustering && showStageTitle && (
 						<h2>
@@ -103,6 +104,48 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 					)}
 
 					<StagePageSwitch statement={statement} />
+				</div>
+			) : (
+				<div className={styles.onboarding}>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Lightbulb size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('solutionsOnboarding.shareSolution')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('solutionsOnboarding.shareSolutionDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Plus size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('solutionsOnboarding.addSolution')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('solutionsOnboarding.addSolutionDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<MessageSquare size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('solutionsOnboarding.convertFromDiscussion')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('solutionsOnboarding.convertFromDiscussionDesc')}
+							</p>
+						</div>
+					</div>
 				</div>
 			)}
 			{showBottomNav && (
