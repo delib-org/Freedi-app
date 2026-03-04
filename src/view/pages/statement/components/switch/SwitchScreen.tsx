@@ -1,5 +1,5 @@
 import { Statement, Role, StatementType, Screen } from '@freedi/shared-types';
-import { ReactNode, useEffect, Suspense } from 'react';
+import React, { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { statementSelectorById, setStatement } from '@/redux/statements/statementsSlice';
@@ -32,7 +32,10 @@ const SubQuestionsMap = lazyWithRetry(
 	() => import('../subQuestionsMap/SubQuestionsMap'),
 	'SubQuestionsMap',
 );
-const TreeView = lazyWithRetry(() => import('../treeView/TreeView'), 'TreeView');
+const TreeView = lazyWithRetry(
+	() => import('../treeView/TreeView'),
+	'TreeView',
+) as React.LazyExoticComponent<React.FC<{ typeFilter?: readonly StatementType[] }>>;
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -131,6 +134,11 @@ interface ViewByActiveTabProps {
 	isPopperHebbianEnabled: boolean;
 }
 
+const QA_TYPE_FILTER: readonly StatementType[] = [
+	StatementType.question,
+	StatementType.option,
+] as const;
+
 function ViewByActiveTab({
 	activeView,
 	statement,
@@ -162,6 +170,13 @@ function ViewByActiveTab({
 
 			return chatComponent;
 		}
+		case 'solutions':
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<TreeView typeFilter={QA_TYPE_FILTER} />
+				</Suspense>
+			);
+		case 'current':
 		case 'options':
 			return <StagePage />;
 		case 'questions':

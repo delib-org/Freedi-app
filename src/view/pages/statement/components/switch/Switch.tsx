@@ -22,7 +22,15 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 
-const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
+const MAIN_SCREENS = new Set([
+	'main',
+	undefined,
+	'chat',
+	'options',
+	'questions',
+	'solutions',
+	'current',
+]);
 
 const Switch = () => {
 	const { t } = useTranslation();
@@ -69,10 +77,10 @@ const Switch = () => {
 		const allSegments = [
 			{ id: 'chat', label: t('Discussion'), count: allSubs.length },
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
-				? [{ id: 'options', label: t('Solutions'), count: options.length }]
+				? [{ id: 'solutions', label: t('Solutions'), count: questions.length + options.length }]
 				: []),
-			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
-				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
+			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
+				? [{ id: 'current', label: t('Current'), count: options.length }]
 				: []),
 		];
 

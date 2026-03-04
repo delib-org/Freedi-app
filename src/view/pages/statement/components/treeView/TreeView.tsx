@@ -7,13 +7,18 @@ import { useTreeData } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
+import { StatementType } from '@freedi/shared-types';
 
-const TreeView: FC = () => {
+interface TreeViewProps {
+	typeFilter?: readonly StatementType[];
+}
+
+const TreeView: FC<TreeViewProps> = ({ typeFilter }) => {
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
 
-	const { childrenMap, rootChildren } = useTreeData(statementId || '');
+	const { childrenMap, rootChildren } = useTreeData(statementId || '', typeFilter);
 	const { expandedNodes, toggleNode, expandNode } = useTreeState(childrenMap, statementId || '');
 
 	return (
