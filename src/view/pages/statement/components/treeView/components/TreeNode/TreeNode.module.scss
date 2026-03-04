@@ -17,6 +17,35 @@
 		position: relative;
 	}
 
+	&__dive-in {
+		padding-inline-start: calc(var(--tree-indent, 24px) * (var(--depth, 0) + 1));
+		padding-top: 2px;
+		padding-bottom: 4px;
+	}
+
+	&__dive-in-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 10px;
+		border: 1px dashed var(--border-color, #ccc);
+		border-radius: 6px;
+		background: none;
+		color: var(--btn-primary, #5f88e5);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			background: var(--card-default, #f5f5f5);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+	}
+
 	@media (max-width: 600px) {
 		--tree-indent: 12px;
 	}
