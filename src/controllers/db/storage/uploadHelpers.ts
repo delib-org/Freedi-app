@@ -141,7 +141,10 @@ export async function deleteAnchorIcon(path: string): Promise<void> {
 		const storageRef = ref(storage, path);
 		await deleteObject(storageRef);
 	} catch (error) {
-		logError(error, { operation: 'storage.uploadHelpers.deleteAnchorIcon', metadata: { message: 'Error deleting anchor icon:' } });
+		logError(error, {
+			operation: 'storage.uploadHelpers.deleteAnchorIcon',
+			metadata: { message: 'Error deleting anchor icon:' },
+		});
 		// Don't throw - deletion failures shouldn't break the UI
 	}
 }

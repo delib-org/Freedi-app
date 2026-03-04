@@ -78,7 +78,10 @@ export async function improveSuggestion(
 
 		return data;
 	} catch (error) {
-		logError(error, { operation: 'services.suggestionImprovement.errorData', metadata: { message: 'Error improving suggestion:' } });
+		logError(error, {
+			operation: 'services.suggestionImprovement.errorData',
+			metadata: { message: 'Error improving suggestion:' },
+		});
 		throw error;
 	}
 }
@@ -112,7 +115,9 @@ export async function improveSuggestionWithTimeout(
 		]);
 	} catch (error) {
 		if (error instanceof Error && error.message === 'Improvement request timed out') {
-			logError(new Error('Suggestion improvement timed out'), { operation: 'services.suggestionImprovement.timeoutPromise' });
+			logError(new Error('Suggestion improvement timed out'), {
+				operation: 'services.suggestionImprovement.timeoutPromise',
+			});
 		}
 		throw error;
 	}

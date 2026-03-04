@@ -50,17 +50,8 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 	try {
 		// Check for email configuration
 		// Support both Gmail (via app password) and custom SMTP
-		const emailUser =
-			process.env.EMAIL_USER ||
-			(process.env.FUNCTIONS_EMULATOR
-				? null
-				: (await import('firebase-functions')).config().email?.user);
-
-		const emailPassword =
-			process.env.EMAIL_PASSWORD ||
-			(process.env.FUNCTIONS_EMULATOR
-				? null
-				: (await import('firebase-functions')).config().email?.password);
+		const emailUser = process.env.EMAIL_USER;
+		const emailPassword = process.env.EMAIL_PASSWORD;
 
 		if (!emailUser || !emailPassword) {
 			logger.warn('Email credentials not configured. Email notification skipped.');

@@ -41,7 +41,10 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 					setShowSignAgreement(true);
 				}
 			} catch (error) {
-				logError(error, { operation: 'context.AgreementProvider.checkTermsAcceptance', metadata: { message: 'Error checking terms acceptance:' } });
+				logError(error, {
+					operation: 'context.AgreementProvider.checkTermsAcceptance',
+					metadata: { message: 'Error checking terms acceptance:' },
+				});
 			} finally {
 				setLoading(false);
 			}
@@ -73,7 +76,10 @@ export const AgreementProvider: FC<AgreementProviderProps> = ({ children, user }
 				await logOut();
 			}
 		} catch (error) {
-			logError(error, { operation: 'context.AgreementProvider.handleAgreement', metadata: { message: 'Agreement handling error:' } });
+			logError(error, {
+				operation: 'context.AgreementProvider.handleAgreement',
+				metadata: { message: 'Agreement handling error:' },
+			});
 		}
 	};
 

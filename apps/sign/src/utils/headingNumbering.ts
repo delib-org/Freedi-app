@@ -27,7 +27,7 @@ function isHeading(type: ParagraphType): boolean {
  * Checks if a paragraph type should be numbered (headings and regular paragraphs)
  */
 function isNumberable(type: ParagraphType): boolean {
-  return isHeading(type) || type === ParagraphType.paragraph;
+  return isHeading(type) || type === ParagraphType.paragraph || type === ParagraphType.li;
 }
 
 /**

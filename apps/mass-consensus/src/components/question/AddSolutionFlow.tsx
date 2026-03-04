@@ -160,6 +160,18 @@ export default function AddSolutionFlow({
             questionId,
           });
         }
+      } else if (multiResponse.status === 400) {
+        // Content moderation blocked this input — do NOT allow submission
+        const multiErrorData = await multiResponse.json().catch(() => ({ error: '' }));
+        const errorMessage = multiErrorData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+        showToast({
+          type: 'error',
+          title: t('Invalid Content'),
+          message: errorMessage,
+        });
+        setFlowState({ step: 'input' });
+
+        return;
       } else {
         logError(new Error('Multi-suggestion detection failed'), {
           operation: 'AddSolutionFlow.handleCheckSimilar.multiDetection',

@@ -220,25 +220,32 @@ export async function checkForInappropriateContent(
 	userInput: string,
 ): Promise<{ isInappropriate: boolean; error?: string }> {
 	const prompt = `
-    You are a content moderator for a collaborative discussion platform.
-    Your job is to protect users from genuinely harmful content.
+    You are a strict content moderator for a collaborative discussion platform.
+    Your job is to protect users from harmful, disrespectful, and abusive content.
+    You must moderate content in ALL languages including Hebrew, Arabic, English, Spanish, German, and Dutch.
 
-    Check if the following text contains ANY of these:
-    - Profanity, curse words, or vulgar language
+    Flag the text as inappropriate if it contains ANY of these:
+    - Profanity, curse words, or vulgar language (in any language)
     - Slurs or derogatory terms targeting any group
     - Hate speech or discriminatory language
-    - Personal attacks, insults, or harassment
+    - Personal attacks, insults, name-calling, or belittling language — even indirect. Examples in multiple languages:
+      English: "idiots", "fools", "stupid people", "moron", "shut up"
+      Hebrew: "טיפשים", "מטומטם", "אידיוט", "מעשה של טיפשים", "תפסיק להיות אידיוט", "טמבל", "דביל"
+      Arabic: "أغبياء", "غبي", "حمار"
     - Sexually explicit or suggestive content
-    - Violence, threats, or harmful content
-    - Spam or gibberish text
+    - Violence, threats, or incitement to harm
+    - Spam, gibberish, or meaningless text
 
     Text to analyze: "${userInput}"
 
-    IMPORTANT: Only flag content that is CLEARLY inappropriate. Normal suggestions, opinions, and ideas should be allowed even if they are unusual or you disagree with them. We want to minimize false positives.
+    IMPORTANT RULES:
+    - Genuine opinions, disagreements, and unusual ideas are ALLOWED (e.g., "I think this policy is wrong" is fine).
+    - Insults disguised as opinions are NOT allowed (e.g., "only idiots would support this" must be flagged).
+    - When in doubt, flag the content. Prefer safety over permissiveness.
 
     Return ONLY this JSON format (no markdown, no code blocks):
-    - If clearly inappropriate: { "inappropriate": true }
-    - If acceptable or unclear: { "inappropriate": false }
+    - If inappropriate: { "inappropriate": true }
+    - If acceptable: { "inappropriate": false }
   `;
 
 	try {
@@ -284,11 +291,10 @@ export async function checkForInappropriateContent(
 			return { isInappropriate: true, error: 'Content blocked by safety filters' };
 		}
 
-		// On error, allow the content through rather than blocking legitimate content
-		// The actual content safety is also handled by Google's AI safety filters
-		logger.warn('Content moderation failed, allowing content through');
+		// On error, block the content — fail closed to prevent abuse
+		logger.warn('Content moderation failed, blocking content for safety');
 
-		return { isInappropriate: false, error: 'Unable to verify content - allowing through' };
+		return { isInappropriate: true, error: 'Content moderation unavailable — blocked for safety' };
 	}
 }
 /**

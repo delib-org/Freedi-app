@@ -140,6 +140,14 @@ export const notificationsSlice = createSlice({
 				logError(error, { operation: 'redux.notificationsSlice.notificationsSlice.now' });
 			}
 		},
+		// Clear all notifications (remove from state)
+		clearAllInAppNotifications: (state) => {
+			try {
+				state.inAppNotifications = [];
+			} catch (error) {
+				logError(error, { operation: 'redux.notificationsSlice.clearAllInAppNotifications' });
+			}
+		},
 	},
 });
 
@@ -154,6 +162,7 @@ export const {
 	markStatementNotificationsAsRead,
 	markNotificationsAsViewedInList,
 	markAllNotificationsAsRead,
+	clearAllInAppNotifications,
 } = notificationsSlice.actions;
 
 // Selectors use narrowly-typed state parameters to avoid circular dependencies with store.ts

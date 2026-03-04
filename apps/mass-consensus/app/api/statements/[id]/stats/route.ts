@@ -9,10 +9,10 @@ import { logError } from '@/lib/utils/errorHandling';
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const statementId = params.id;
+    const { id: statementId } = await params;
     const db = getFirestoreAdmin();
 
     // Count unique evaluators (participants who have evaluated solutions for this question)
@@ -57,7 +57,6 @@ export async function GET(
   } catch (error) {
     logError(error, {
       operation: 'api.stats',
-      metadata: { statementId: params.id },
     });
 
     return NextResponse.json(

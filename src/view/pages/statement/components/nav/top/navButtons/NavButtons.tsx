@@ -1,12 +1,12 @@
-import { Screen, Statement } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { FC } from 'react';
 
 // Components
 import ApproveMembers from '@/view/components/approveMembers/WaitingList';
 import NotificationSettingsButton from '@/view/components/notifications/NotificationSettingsButton';
+import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import Back from '../../../header/Back';
 import HomeButton from '../../../header/HomeButton';
-import ViewsDropdown from '../viewsDropdown/ViewsDropdown';
 
 // Styles
 import styles from './NavButtons.module.scss';
@@ -14,23 +14,12 @@ import styles from './NavButtons.module.scss';
 interface NavButtonsProps {
 	parentStatement?: Statement;
 	screen: string | undefined;
-	handleNavigation: (path: string, screen?: 'screen') => void;
 	headerStyle: { color: string; backgroundColor: string };
 	allowNavigation: boolean;
 	statement?: Statement;
 }
 
-const NavButtons: FC<NavButtonsProps> = ({
-	screen,
-	handleNavigation,
-	headerStyle,
-	allowNavigation,
-	statement,
-}) => {
-	const handleNavigateToScreen = (targetScreen: Screen) => {
-		handleNavigation(targetScreen);
-	};
-
+const NavButtons: FC<NavButtonsProps> = ({ headerStyle, allowNavigation, statement }) => {
 	return (
 		<div className={styles.navRow}>
 			{allowNavigation && (
@@ -43,12 +32,7 @@ const NavButtons: FC<NavButtonsProps> = ({
 
 			{statement && (
 				<>
-					<ViewsDropdown
-						statement={statement}
-						screen={screen}
-						headerStyle={headerStyle}
-						onNavigate={handleNavigateToScreen}
-					/>
+					<NotificationBtn />
 					<NotificationSettingsButton
 						statementId={statement.statementId}
 						headerStyle={headerStyle}

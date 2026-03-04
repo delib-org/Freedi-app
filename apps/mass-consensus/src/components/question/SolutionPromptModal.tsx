@@ -194,6 +194,14 @@ export default function SolutionPromptModal({
             questionId,
           });
         }
+      } else if (multiResponse.status === 400) {
+        // Content moderation blocked this input — do NOT allow submission
+        const multiErrorData = await multiResponse.json().catch(() => ({ error: '' }));
+        const errorMessage = multiErrorData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+        setError(errorMessage);
+        setFlowState({ step: 'input' });
+
+        return;
       } else {
         logError(new Error('Multi-suggestion detection failed'), {
           operation: 'SolutionPromptModal.handleCheckSimilar.multiDetection',

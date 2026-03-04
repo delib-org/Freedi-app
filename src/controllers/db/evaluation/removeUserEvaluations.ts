@@ -76,7 +76,10 @@ export async function removeUserEvaluations(
 
 		return { evaluationsRemoved, votesRemoved };
 	} catch (error) {
-		logError(error, { operation: 'evaluation.removeUserEvaluations.deleteEvaluation', metadata: { message: 'Error removing user evaluations:' } });
+		logError(error, {
+			operation: 'evaluation.removeUserEvaluations.deleteEvaluation',
+			metadata: { message: 'Error removing user evaluations:' },
+		});
 		throw error;
 	}
 }
@@ -130,7 +133,10 @@ export async function removeAllUserEvaluations(userId: string): Promise<number> 
 
 		return evaluationsRemoved;
 	} catch (error) {
-		logError(error, { operation: 'evaluation.removeUserEvaluations.unknown', metadata: { message: 'Error removing all user evaluations:' } });
+		logError(error, {
+			operation: 'evaluation.removeUserEvaluations.unknown',
+			metadata: { message: 'Error removing all user evaluations:' },
+		});
 		throw error;
 	}
 }

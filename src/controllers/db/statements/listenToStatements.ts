@@ -1,7 +1,7 @@
 import { Unsubscribe } from 'firebase/auth';
-import { and, limit, or, orderBy, query, where } from 'firebase/firestore';
+import { and, getDocs, limit, or, orderBy, query, startAfter, where } from 'firebase/firestore';
 import { logError } from '@/utils/errorHandling';
-import { normalizeStatementData } from '@/helpers/timestampHelpers';
+import { normalizeStatementData, convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Redux Store
 import {
@@ -20,6 +20,7 @@ import {
 import { AppDispatch, store } from '@/redux/store';
 import {
 	StatementSubscription,
+	StatementSubscriptionSchema,
 	Role,
 	Collections,
 	StatementType,
@@ -66,7 +67,10 @@ export const listenToStatementSubscription = (
 
 						return;
 					}
-					const statementSubscription = statementSubscriptionDB.data() as StatementSubscription;
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						convertTimestampsToMillis(statementSubscriptionDB.data()),
+					) as StatementSubscription;
 
 					const { role } = statementSubscription;
 
@@ -131,7 +135,8 @@ export const listenToStatement = (
 				try {
 					if (!statementDB.exists()) {
 						if (setIsStatementNotFound) setIsStatementNotFound(true);
-						throw new Error('Statement does not exist');
+
+						return;
 					}
 					// Normalize data to remove non-serializable values (like VectorValue embeddings)
 					const statement = normalizeStatementData(statementDB.data()) as Statement;
@@ -143,7 +148,10 @@ export const listenToStatement = (
 				}
 			},
 			(error) => {
-				logError(error, { operation: 'statements.listenToStatements.listenToStatement', metadata: { message: 'Error in statement listener:' } });
+				logError(error, {
+					operation: 'statements.listenToStatements.listenToStatement',
+					metadata: { message: 'Error in statement listener:' },
+				});
 				if (setIsStatementNotFound) setIsStatementNotFound(true);
 			},
 		);
@@ -214,6 +222,11 @@ export const listenToSubStatements = (
 					// After initial load, handle individual changes
 					const changes = statementsDB.docChanges();
 
+					// When using a limited query, "removed" events may be window shifts
+					// (doc pushed out of the limit window by a new doc), not actual deletions.
+					// Only treat as deletion if no additions occur in the same snapshot batch.
+					const hasAdditions = numberOfOptions ? changes.some((c) => c.type === 'added') : false;
+
 					changes.forEach((change) => {
 						// Normalize data to remove non-serializable values (like VectorValue embeddings)
 						const statement = normalizeStatementData(change.doc.data()) as Statement;
@@ -223,12 +236,19 @@ export const listenToSubStatements = (
 						} else if (change.type === 'modified') {
 							dispatch(setStatement(statement));
 						} else if (change.type === 'removed') {
-							dispatch(deleteStatement(statement.statementId));
+							// Skip removal if it's likely a window shift (limited query + additions in same batch)
+							if (!hasAdditions) {
+								dispatch(deleteStatement(statement.statementId));
+							}
 						}
 					});
 				}
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in sub-statements listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error in sub-statements listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -237,6 +257,59 @@ export const listenToSubStatements = (
 		return () => {};
 	}
 };
+
+/**
+ * Fetch older sub-statements for lazy loading (one-time query, not a listener).
+ * Returns the fetched statements and whether there are more to load.
+ */
+export async function fetchOlderSubStatements(
+	statementId: string,
+	oldestCreatedAt: number,
+	batchSize = 30,
+): Promise<{ statements: Statement[]; hasMore: boolean }> {
+	try {
+		const statementsRef = createCollectionRef(Collections.statements);
+
+		// Query for messages older than the oldest loaded one.
+		// Using desc order so startAfter gives us messages with createdAt < oldestCreatedAt.
+		// Note: A composite index on (parentId ASC, createdAt DESC) may be required.
+		const q = query(
+			statementsRef,
+			where('parentId', '==', statementId),
+			orderBy('createdAt', 'desc'),
+			startAfter(oldestCreatedAt),
+			limit(batchSize + 1),
+		);
+
+		const snapshot = await getDocs(q);
+		const statements: Statement[] = [];
+
+		snapshot.forEach((doc) => {
+			const statement = normalizeStatementData(doc.data()) as Statement;
+			// Filter out document types client-side
+			if (statement.statementType !== StatementType.document) {
+				statements.push(statement);
+			}
+		});
+
+		const hasMore = statements.length > batchSize;
+		const resultStatements = hasMore ? statements.slice(0, batchSize) : statements;
+
+		if (resultStatements.length > 0) {
+			store.dispatch(setStatements(resultStatements));
+		}
+
+		return { statements: resultStatements, hasMore };
+	} catch (error) {
+		logError(error, {
+			operation: 'statements.fetchOlderSubStatements',
+			statementId,
+			metadata: { oldestCreatedAt, batchSize },
+		});
+
+		return { statements: [], hasMore: false };
+	}
+}
 
 export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) => {
 	try {
@@ -270,7 +343,11 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 					}
 				});
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in members listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error in members listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -354,7 +431,11 @@ export function listenToAllSubStatements(statementId: string, numberOfLastMessag
 					}
 				});
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error in all sub-statements listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error in all sub-statements listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -426,11 +507,18 @@ export const listenToUserSuggestions = (
 					});
 				}
 			},
-			(error) => logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error listening to user suggestions:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'statements.listenToStatements.unknown',
+					metadata: { message: 'Error listening to user suggestions:' },
+				}),
 			'query',
 		);
 	} catch (error) {
-		logError(error, { operation: 'statements.listenToStatements.unknown', metadata: { message: 'Error setting up user suggestions listener:' } });
+		logError(error, {
+			operation: 'statements.listenToStatements.unknown',
+			metadata: { message: 'Error setting up user suggestions listener:' },
+		});
 
 		return () => {};
 	}

@@ -243,7 +243,7 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 						title={t('Toggle chat')}
 					>
 						<MessageCircle size={18} />
-						<span>{t('Chat')}</span>
+						<span>{t('Discussion')}</span>
 					</button>
 					<button
 						className={`${styles.quickAction} ${settings.enableEvaluation ? styles['quickAction--active'] : ''}`}

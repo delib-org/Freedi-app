@@ -57,18 +57,22 @@ describe('Subscription Cascade Prevention', () => {
 			};
 
 			// Check if only metadata changed (using object destructuring)
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 			const {
-				lastUpdate: _b1,
-				lastSubStatements: _b2,
+				lastUpdate: _b1Before,
+				lastSubStatements: _b2Before,
 				...beforeCopy
 			} = beforeData as typeof beforeData & { lastSubStatements?: unknown };
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			void _b1Before;
+			void _b2Before;
+
 			const {
-				lastUpdate: _a1,
-				lastSubStatements: _a2,
+				lastUpdate: _a1Before,
+				lastSubStatements: _a2Before,
 				...afterCopy
 			} = afterData as typeof afterData & { lastSubStatements?: unknown };
+			void _a1Before;
+			void _a2Before;
 
 			const onlyMetadataChanged = JSON.stringify(beforeCopy) === JSON.stringify(afterCopy);
 
@@ -93,18 +97,22 @@ describe('Subscription Cascade Prevention', () => {
 			};
 
 			// Check if only metadata changed (using object destructuring)
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 			const {
-				lastUpdate: _b1,
-				lastSubStatements: _b2,
+				lastUpdate: _b1Content,
+				lastSubStatements: _b2Content,
 				...beforeCopy
 			} = beforeData as typeof beforeData & { lastSubStatements?: unknown };
-			// eslint-disable-next-line @typescript-eslint/no-unused-vars
+			void _b1Content;
+			void _b2Content;
+
 			const {
-				lastUpdate: _a1,
-				lastSubStatements: _a2,
+				lastUpdate: _a1Content,
+				lastSubStatements: _a2Content,
 				...afterCopy
 			} = afterData as typeof afterData & { lastSubStatements?: unknown };
+			void _a1Content;
+			void _a2Content;
 
 			const onlyMetadataChanged = JSON.stringify(beforeCopy) === JSON.stringify(afterCopy);
 

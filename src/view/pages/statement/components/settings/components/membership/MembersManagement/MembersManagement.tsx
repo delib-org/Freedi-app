@@ -77,7 +77,10 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 
 		if (navigator.share) {
 			navigator.share(shareData).catch((error) => {
-				logError(error, { operation: 'MembersManagement.MembersManagement.handleShare', metadata: { message: 'Error sharing:' } });
+				logError(error, {
+					operation: 'MembersManagement.MembersManagement.handleShare',
+					metadata: { message: 'Error sharing:' },
+				});
 			});
 		} else {
 			// Fallback: Copy to clipboard
@@ -87,7 +90,10 @@ const MembersManagement: FC<MembersManagementProps> = ({ statement }) => {
 					console.info('Link copied to clipboard');
 				},
 				(error) => {
-					logError(error, { operation: 'MembersManagement.MembersManagement.handleShare', metadata: { message: 'Failed to copy link:' } });
+					logError(error, {
+						operation: 'MembersManagement.MembersManagement.handleShare',
+						metadata: { message: 'Failed to copy link:' },
+					});
 				},
 			);
 		}

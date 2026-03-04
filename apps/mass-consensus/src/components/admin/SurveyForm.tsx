@@ -208,6 +208,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
                 options: q.options,
                 order: q.order,
                 required: q.required,
+                allowOther: q.allowOther,
                 // Range-specific fields
                 min: q.min,
                 max: q.max,

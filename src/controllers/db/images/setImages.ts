@@ -43,7 +43,10 @@ export function uploadImageToStorage(
 					const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 					resolve(downloadURL);
 				} catch (error) {
-					logError(error, { operation: 'images.setImages.progress', metadata: { message: 'Error retrieving download URL:' } });
+					logError(error, {
+						operation: 'images.setImages.progress',
+						metadata: { message: 'Error retrieving download URL:' },
+					});
 					reject(error);
 				}
 			},

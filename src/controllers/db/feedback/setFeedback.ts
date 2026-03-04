@@ -22,7 +22,10 @@ export async function setFeedbackToDB(feedback: Feedback): Promise<void> {
 
 		console.info('Feedback saved successfully:', feedback.feedbackId);
 	} catch (error) {
-		logError(error, { operation: 'feedback.setFeedback.setFeedbackToDB', metadata: { message: 'Error saving feedback to database:' } });
+		logError(error, {
+			operation: 'feedback.setFeedback.setFeedbackToDB',
+			metadata: { message: 'Error saving feedback to database:' },
+		});
 		throw error;
 	}
 }

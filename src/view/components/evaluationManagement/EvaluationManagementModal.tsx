@@ -9,6 +9,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EvaluationManagementModal.module.scss';
 import CloseIcon from '@/assets/icons/close.svg?react';
 import { logError } from '@/utils/errorHandling';
+import { getPseudoName } from '@/utils/temporalNameGenerator';
 
 interface Props {
 	parentStatement: Statement;
@@ -36,7 +37,7 @@ const EvaluationManagementModal: FC<Props> = ({
 		if (!user) return;
 
 		const creator: User = {
-			displayName: user.displayName || 'Anonymous',
+			displayName: user.displayName || getPseudoName(user.uid),
 			email: user.email || '',
 			photoURL: user.photoURL || '',
 			uid: user.uid,
@@ -57,7 +58,10 @@ const EvaluationManagementModal: FC<Props> = ({
 			// Close modal after successful removal
 			onClose();
 		} catch (error) {
-			logError(error, { operation: 'evaluationManagement.EvaluationManagementModal.statement', metadata: { message: 'Error removing vote:' } });
+			logError(error, {
+				operation: 'evaluationManagement.EvaluationManagementModal.statement',
+				metadata: { message: 'Error removing vote:' },
+			});
 		}
 	};
 

@@ -3,7 +3,7 @@ import { LanguagesEnum } from './constants';
 export type Direction = 'ltr' | 'rtl';
 export type RowDirection = 'row' | 'row-reverse';
 
-const RTL_LANGUAGES = new Set([LanguagesEnum.ar, LanguagesEnum.he]);
+const RTL_LANGUAGES = new Set([LanguagesEnum.ar, LanguagesEnum.he, LanguagesEnum.fa]);
 
 export function getDirection(language: LanguagesEnum): Direction {
   return RTL_LANGUAGES.has(language) ? 'rtl' : 'ltr';

@@ -62,13 +62,7 @@ const Loader: React.FC<LoaderProps> = ({
 	);
 
 	return (
-		<div
-			id={id}
-			className={loaderClasses}
-			role="status"
-			aria-label={ariaLabel}
-			aria-busy="true"
-		>
+		<div id={id} className={loaderClasses} role="status" aria-label={ariaLabel} aria-busy="true">
 			<span className="loader__spinner" aria-hidden="true" />
 			{text && <span className="loader__text">{text}</span>}
 		</div>

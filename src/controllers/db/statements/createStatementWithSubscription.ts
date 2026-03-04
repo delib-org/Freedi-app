@@ -41,7 +41,7 @@ export async function createStatementWithSubscription({
 		text: title,
 		paragraphs,
 		defaultLanguage: lang,
-		statementType: newStatement?.statementType || StatementType.group,
+		statementType: newStatement?.statementType || StatementType.question,
 		questionType: newStatementQuestionType,
 	});
 

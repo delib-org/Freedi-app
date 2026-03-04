@@ -337,7 +337,7 @@ const UserQuestionComp = ({
 				<div className={styles.allowOtherToggle}>
 					<label className={styles.allowOtherLabel}>
 						<input
-							type='checkbox'
+							type="checkbox"
 							checked={userQuestions.allowOther ?? false}
 							onChange={(e) => {
 								if (onUpdateQuestion) {

@@ -24,7 +24,10 @@ export function getExplanationPreferences(): ExplanationPreferences {
 			return JSON.parse(stored);
 		}
 	} catch (error) {
-		logError(error, { operation: 'localStorage.explanationPreferences.getExplanationPreferences', metadata: { message: 'Error loading explanation preferences:' } });
+		logError(error, {
+			operation: 'localStorage.explanationPreferences.getExplanationPreferences',
+			metadata: { message: 'Error loading explanation preferences:' },
+		});
 	}
 
 	return {
@@ -39,7 +42,10 @@ export function saveExplanationPreferences(prefs: ExplanationPreferences): void 
 	try {
 		localStorage.setItem(GLOBAL_PREFS_KEY, JSON.stringify(prefs));
 	} catch (error) {
-		logError(error, { operation: 'localStorage.explanationPreferences.saveExplanationPreferences', metadata: { message: 'Error saving explanation preferences:' } });
+		logError(error, {
+			operation: 'localStorage.explanationPreferences.saveExplanationPreferences',
+			metadata: { message: 'Error saving explanation preferences:' },
+		});
 	}
 }
 

@@ -7,7 +7,7 @@ import { resetResults } from '@/redux/results/resultsSlice';
 import { resetStatements } from '@/redux/statements/statementsSlice';
 import { resetVotes } from '@/redux/vote/votesSlice';
 import { Creator } from '@freedi/shared-types';
-import { convertFirebaseUserToCreator } from '@/types/user/userUtils';
+import { convertFirebaseUserToCreator } from '@/utils/userUtils';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { setCreator } from '@/redux/creator/creatorSlice';
 import { setUserToDB } from '@/controllers/db/user/setUser';

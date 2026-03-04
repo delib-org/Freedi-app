@@ -34,7 +34,9 @@ export function setStatementSettingToDB({
 			{ merge: true },
 		);
 	} catch (error) {
-		logError(error, { operation: 'statementSettings.setStatementSettings.setStatementSettingToDB' });
+		logError(error, {
+			operation: 'statementSettings.setStatementSettings.setStatementSettingToDB',
+		});
 	}
 }
 

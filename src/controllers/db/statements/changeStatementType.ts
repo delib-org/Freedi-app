@@ -100,7 +100,10 @@ export async function changeStatementType(
 
 		return { success: true };
 	} catch (error) {
-		logError(error, { operation: 'statements.changeStatementType.unknown', metadata: { message: 'Error changing statement type:' } });
+		logError(error, {
+			operation: 'statements.changeStatementType.unknown',
+			metadata: { message: 'Error changing statement type:' },
+		});
 
 		return {
 			success: false,

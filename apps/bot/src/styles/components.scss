@@ -1,0 +1,1760 @@
+// ==========================================================================
+// Components — Soft Candy / Lollipop Aesthetic
+// Everything is round, bubbly, and pastel. Like unwrapping a sweet.
+// ==========================================================================
+
+// Button — puffy pill shapes
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
+  border: none;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing);
+  min-height: 50px;
+  width: 100%;
+  letter-spacing: 0.02em;
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  &--primary {
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+    color: var(--text-inverse);
+    box-shadow: 0 4px 14px rgba(232, 145, 185, 0.3);
+
+    &:hover:not(:disabled) {
+      box-shadow: 0 6px 20px rgba(232, 145, 185, 0.4);
+      transform: translateY(-1px);
+    }
+  }
+
+  &--secondary {
+    background-color: transparent;
+    color: var(--color-primary);
+    border: 2px solid var(--border-medium);
+
+    &:hover:not(:disabled) {
+      background-color: var(--bg-card-hover);
+      border-color: var(--color-primary-light);
+    }
+  }
+
+  &--agree {
+    background: linear-gradient(135deg, var(--color-agree), var(--color-accent-mint));
+    color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(168, 230, 207, 0.3);
+  }
+
+  &--disagree {
+    background: linear-gradient(135deg, var(--color-disagree), var(--color-disagree-light));
+    color: var(--text-primary);
+    box-shadow: 0 4px 14px rgba(248, 165, 165, 0.3);
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    padding: var(--space-sm) var(--space-md);
+    min-height: auto;
+    width: auto;
+
+    &:hover {
+      color: var(--color-primary);
+      background: var(--bg-card-hover);
+    }
+  }
+
+  &--sm {
+    min-height: 36px;
+    font-size: var(--font-size-sm);
+    padding: var(--space-xs) var(--space-md);
+  }
+
+  &--full {
+    width: 100%;
+  }
+}
+
+// Card — soft bubble
+.card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+
+  &--elevated {
+    box-shadow: var(--shadow-md);
+  }
+
+  &__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__text {
+    color: var(--text-secondary);
+    line-height: var(--line-height-normal);
+  }
+}
+
+// Progress bar — candy stripe feel
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+
+  &__bar {
+    height: 6px;
+    background: var(--border-light);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+  }
+
+  &__fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-primary), var(--color-accent-lavender));
+    border-radius: var(--radius-full);
+    transition: width var(--duration-normal) var(--easing-smooth);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: center;
+  }
+}
+
+// Rating buttons — soft candy dots
+.rating {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 50px;
+    height: 50px;
+    padding: 0 var(--space-sm);
+    border-radius: var(--radius-full);
+    border: 2px solid var(--border-light);
+    background: var(--bg-card);
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: all var(--duration-fast) var(--easing);
+
+    &:hover {
+      border-color: var(--color-primary-light);
+      transform: scale(1.05);
+    }
+
+    &--active {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: var(--text-inverse);
+      box-shadow: var(--shadow-glow);
+      transform: scale(1.05);
+    }
+
+    // Strongly disagree — soft coral
+    &--sd {
+      &.rating__btn--active {
+        background: var(--color-disagree);
+        border-color: var(--color-disagree);
+        box-shadow: 0 0 16px rgba(248, 165, 165, 0.4);
+      }
+    }
+
+    // Disagree — pale rose
+    &--d {
+      &.rating__btn--active {
+        background: var(--color-disagree-light);
+        border-color: var(--color-disagree-light);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(252, 208, 208, 0.4);
+      }
+    }
+
+    // Neutral — soft lavender-gray
+    &--n {
+      &.rating__btn--active {
+        background: var(--color-neutral);
+        border-color: var(--color-neutral);
+        box-shadow: 0 0 16px rgba(212, 197, 224, 0.4);
+      }
+    }
+
+    // Agree — pastel mint
+    &--a {
+      &.rating__btn--active {
+        background: var(--color-agree);
+        border-color: var(--color-agree);
+        color: var(--text-primary);
+        box-shadow: 0 0 16px rgba(168, 230, 207, 0.4);
+      }
+    }
+
+    // Strongly agree — deeper mint
+    &--sa {
+      &.rating__btn--active {
+        background: var(--color-agree-strong);
+        border-color: var(--color-agree-strong);
+        color: var(--text-inverse);
+        box-shadow: 0 0 16px rgba(125, 214, 179, 0.4);
+      }
+    }
+  }
+}
+
+// Text input — soft bubbly textarea
+.text-input {
+  width: 100%;
+
+  &__field {
+    width: 100%;
+    min-height: 120px;
+    padding: var(--space-md);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    font-family: var(--font-family);
+    font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
+    color: var(--text-primary);
+    background: var(--bg-card);
+    resize: vertical;
+    transition: all var(--duration-fast) var(--easing-smooth);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--color-primary-light);
+      box-shadow: 0 0 0 4px rgba(232, 145, 185, 0.12);
+    }
+  }
+
+  &__counter {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: right;
+    margin-top: var(--space-xs);
+  }
+}
+
+// Single-line input override (for paste-link field etc.)
+input.text-input {
+  min-height: auto;
+  height: 50px;
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-full);
+  padding: var(--space-sm) var(--space-lg);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transition: all var(--duration-fast) var(--easing-smooth);
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 4px rgba(232, 145, 185, 0.12);
+  }
+}
+
+// Bare textarea override (used directly as textarea.text-input)
+textarea.text-input {
+  width: 100%;
+  min-height: 120px;
+  padding: var(--space-md);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-normal);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  resize: vertical;
+  transition: all var(--duration-fast) var(--easing-smooth);
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--color-primary-light);
+    box-shadow: 0 0 0 4px rgba(232, 145, 185, 0.12);
+  }
+}
+
+// Evaluation card — floating candy card
+.eval-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__statement {
+    font-size: var(--font-size-lg);
+    line-height: var(--line-height-normal);
+    color: var(--text-primary);
+    text-align: center;
+    padding: var(--space-md) 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+  }
+
+  &__action-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
+
+    &:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--color-primary-light);
+      color: var(--color-primary);
+    }
+  }
+
+  &__counter {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: center;
+  }
+}
+
+// Process strip (intro page) — candy dot trail
+.process-strip {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-md) 0;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: calc(var(--space-md) + 16px);
+    left: 16px;
+    right: 16px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--color-primary-light), var(--color-accent-lavender), var(--color-accent-mint));
+    border-radius: var(--radius-full);
+    opacity: 0.4;
+  }
+
+  &__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+    position: relative;
+    z-index: 1;
+  }
+
+  &__dot {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
+    background: var(--bg-card);
+    border: 2px solid var(--border-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--text-muted);
+    transition: all var(--duration-normal) var(--easing);
+
+    &--active {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: var(--text-inverse);
+      box-shadow: 0 0 12px rgba(232, 145, 185, 0.35);
+    }
+
+    &--done {
+      border-color: var(--color-agree);
+      background: var(--color-agree);
+      color: var(--text-primary);
+      box-shadow: 0 0 12px rgba(168, 230, 207, 0.35);
+    }
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 64px;
+  }
+}
+
+// Modal overlay — frosted candy
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: var(--bg-overlay);
+  backdrop-filter: blur(4px);
+  animation: fade-in var(--duration-fast) var(--easing-smooth);
+
+  &__content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: var(--space-lg);
+    width: 100%;
+    max-width: var(--max-width);
+    max-height: 80dvh;
+    overflow-y: auto;
+    animation: slide-up var(--duration-normal) var(--easing);
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-md);
+  }
+
+  &__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__close {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: var(--space-xs);
+    border-radius: var(--radius-full);
+    transition: background var(--duration-fast) var(--easing);
+
+    &:hover {
+      background: var(--bg-card-hover);
+    }
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+// Results / ranked list — candy shelf
+.ranked-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+  }
+
+  &__rank {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    min-width: 32px;
+    text-align: center;
+  }
+
+  &__body {
+    flex: 1;
+  }
+
+  &__text {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+  }
+
+  &__consensus {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    margin-top: var(--space-xs);
+  }
+
+  &__bar {
+    height: 5px;
+    background: var(--border-light);
+    border-radius: var(--radius-full);
+    margin-top: var(--space-xs);
+    overflow: hidden;
+  }
+
+  &__bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-agree), var(--color-accent-mint));
+    border-radius: var(--radius-full);
+  }
+}
+
+// Impact summary — bubbly stat pills
+.impact {
+  display: flex;
+  justify-content: space-around;
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+
+  &__stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-xs);
+  }
+
+  &__number {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+  }
+}
+
+// Navigation cards — puffy tap targets
+.nav-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-lg);
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-light);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
+    text-decoration: none;
+    color: inherit;
+
+    &:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--color-primary-light);
+      transform: translateY(-2px);
+    }
+  }
+
+  &__icon {
+    font-size: var(--font-size-2xl);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card-hover);
+  }
+
+  &__body {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__desc {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+  }
+
+  &__arrow {
+    color: var(--text-muted);
+    font-size: var(--font-size-lg);
+  }
+}
+
+// Similarity warning — soft peach alert
+.similarity-warning {
+  background: var(--bg-card-hover);
+  border: 2px solid var(--color-warning);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__title {
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary-dark);
+    font-size: var(--font-size-sm);
+  }
+
+  &__text {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+  }
+
+  &__match {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-style: italic;
+    padding: var(--space-sm);
+    background: var(--bg-card);
+    border-radius: var(--radius-sm);
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+  }
+}
+
+// Score trend indicators
+.score-trend {
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-bold);
+  margin-inline-start: var(--space-sm);
+
+  &--up {
+    color: var(--color-agree-strong);
+
+    &::before {
+      content: '↑ ';
+    }
+  }
+
+  &--down {
+    color: var(--color-disagree);
+
+    &::before {
+      content: '↓ ';
+    }
+  }
+
+  &--new {
+    color: var(--text-muted);
+    font-weight: var(--font-weight-normal);
+    font-style: italic;
+  }
+}
+
+// Similarity badge — candy pill
+.similarity-badge {
+  display: inline-block;
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-primary-dark);
+  background: var(--bg-card-hover);
+  padding: 3px var(--space-sm);
+  border-radius: var(--radius-full);
+  margin-inline-start: var(--space-sm);
+}
+
+// Ranked list extensions
+.ranked-list {
+  &__consensus-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-xs);
+  }
+
+  &__similar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border-light);
+    font-size: var(--font-size-xs);
+  }
+
+  &__item--interactive {
+    transition: all var(--duration-fast) var(--easing);
+
+    &:hover {
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+  }
+
+  &__inline-rating {
+    margin-top: var(--space-sm);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--border-light);
+
+    .rating {
+      justify-content: flex-start;
+      gap: var(--space-xs);
+    }
+
+    .rating__btn {
+      min-width: 38px;
+      height: 38px;
+      font-size: 1rem;
+    }
+  }
+}
+
+// Merge proposal preview — stacked candy cards
+.merge-preview {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  align-items: center;
+  margin-top: var(--space-md);
+
+  &__item {
+    width: 100%;
+    background: var(--bg-card-hover);
+    border-radius: var(--radius-md);
+    padding: var(--space-md);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-bold);
+    margin-bottom: var(--space-xs);
+  }
+
+  &__text {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    line-height: var(--line-height-normal);
+  }
+
+  &__plus,
+  &__equals {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }
+}
+
+// Offline indicator — soft peach / mint pill
+.offline-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-warning);
+  color: var(--text-primary);
+  border-radius: var(--radius-full);
+  font-size: var(--font-size-sm);
+
+  &--success {
+    background: var(--color-agree);
+  }
+
+  &__text {
+    flex: 1;
+  }
+}
+
+// Flow wrapper — adds floating language picker over stage views
+.flow-wrapper {
+  position: relative;
+  min-height: 100dvh;
+
+  &__lang {
+    position: absolute;
+    top: var(--space-sm);
+    inset-inline-start: var(--space-md);
+    z-index: 20;
+  }
+}
+
+// RTL support
+[dir='rtl'] {
+  .nav-cards__arrow {
+    transform: scaleX(-1);
+  }
+
+  .ranked-list__rank {
+    order: 1;
+  }
+
+  .text-input__counter {
+    text-align: left;
+  }
+}
+
+// Skip link (accessibility)
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 0;
+  z-index: 200;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--color-primary);
+  color: var(--text-inverse);
+  font-weight: var(--font-weight-bold);
+  text-decoration: none;
+  border-radius: 0 0 var(--radius-sm) 0;
+
+  &:focus {
+    top: 0;
+  }
+}
+
+// ===========================================================================
+// Home — Landing page
+// ===========================================================================
+
+// Home header bar (language picker + sign-in/avatar)
+.home-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) var(--space-md);
+  gap: var(--space-sm);
+}
+
+// Language picker — candy pills
+.lang-picker {
+  display: flex;
+  gap: 6px;
+
+  &__pill {
+    padding: 6px var(--space-md);
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-full);
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
+    line-height: 1;
+
+    &:hover {
+      border-color: var(--color-primary-light);
+      color: var(--color-primary);
+      background: var(--bg-card-hover);
+    }
+
+    &--active {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+      border-color: transparent;
+      color: var(--text-inverse);
+      box-shadow: 0 2px 8px rgba(232, 145, 185, 0.25);
+
+      &:hover {
+        color: var(--text-inverse);
+      }
+    }
+  }
+}
+
+// Home sign-in button / avatar
+.home-signin {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  white-space: nowrap;
+}
+
+.home-avatar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__circle {
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+    box-shadow: 0 2px 8px rgba(232, 145, 185, 0.25);
+  }
+
+  &__name {
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+// App explanation text
+.home-explanation {
+  text-align: center;
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+  font-size: var(--font-size-base);
+  max-width: 320px;
+  margin: 0 auto;
+}
+
+.home-hero {
+  text-align: center;
+
+  &__title {
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  &__tagline {
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+  }
+}
+
+.home-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+
+  &__text {
+    margin-bottom: var(--space-sm);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__row {
+    display: flex;
+    gap: var(--space-sm);
+
+    .text-input,
+    input.text-input {
+      flex: 1;
+    }
+
+    .btn--secondary {
+      width: auto;
+      min-width: 70px;
+    }
+  }
+}
+
+.home-divider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  color: var(--text-muted);
+  font-size: var(--font-size-sm);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+  }
+}
+
+.home-recent {
+  &__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-sm);
+  }
+}
+
+// ===========================================================================
+// Create Flow — Challenge Input
+// ===========================================================================
+
+.create-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.create-subtitle {
+  color: var(--text-secondary);
+  line-height: var(--line-height-normal);
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.form-label {
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.form-hint {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.char-count {
+  text-align: right;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+}
+
+.text-input--lg {
+  font-size: var(--font-size-lg);
+  padding: var(--space-md);
+  min-height: 120px;
+}
+
+.example-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+
+  &__label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.example-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--color-primary-light);
+    color: var(--color-primary);
+    background: var(--bg-card-hover);
+    transform: translateY(-1px);
+  }
+}
+
+// ===========================================================================
+// Wizard Steps
+// ===========================================================================
+
+.wizard-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__progress {
+    flex: 1;
+  }
+}
+
+.wizard-step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+
+  &__heading {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+  }
+
+  &__desc {
+    color: var(--text-secondary);
+  }
+
+  &__context {
+    background: var(--bg-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__quote {
+    font-style: italic;
+    color: var(--text-primary);
+    margin-top: var(--space-xs);
+  }
+
+  &__tip {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    font-style: italic;
+  }
+}
+
+.wizard-footer--dual {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+// Checkbox cards — soft selectable pills
+.checkbox-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.checkbox-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  transition: border-color var(--duration-fast) var(--easing);
+
+  &--disabled {
+    opacity: 0.6;
+  }
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    cursor: pointer;
+
+    input[type='checkbox'] {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--color-primary);
+      border-radius: 6px;
+    }
+  }
+
+  &__title {
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__desc {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+    padding-left: 30px;
+  }
+}
+
+// Radio cards
+.radio-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.radio-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--easing);
+
+  &:hover {
+    border-color: var(--color-primary-light);
+  }
+
+  input[type='radio'] {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--color-primary);
+    margin-top: 2px;
+  }
+
+  &__content {
+    flex: 1;
+  }
+
+  &__title {
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+}
+
+// Stepper — bubbly +/- controls
+.stepper-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-sm) 0;
+
+  &__label {
+    font-weight: var(--font-weight-medium);
+  }
+}
+
+.stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--border-medium);
+    background: var(--bg-card);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
+
+    &:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    &:hover:not(:disabled) {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+      background: var(--bg-card-hover);
+    }
+  }
+
+  &__value {
+    min-width: 32px;
+    text-align: center;
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }
+}
+
+// Time estimate — pastel info pill
+.time-estimate {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  padding: var(--space-sm) var(--space-md);
+
+  &__icon {
+    font-size: var(--font-size-xl);
+  }
+
+  &__text {
+    font-weight: var(--font-weight-medium);
+    color: var(--text-secondary);
+  }
+}
+
+// Seed list
+.seed-input-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+
+  textarea.text-input,
+  .text-input,
+  input.text-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 60px;
+  }
+
+  .btn {
+    width: auto;
+    flex-shrink: 0;
+    min-width: 70px;
+  }
+}
+
+.seed-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+
+  &__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  &__text {
+    flex: 1;
+    font-size: var(--font-size-sm);
+  }
+
+  &__remove {
+    background: none;
+    border: none;
+    color: var(--color-disagree);
+    font-size: var(--font-size-lg);
+    cursor: pointer;
+    padding: 0 var(--space-xs);
+    border-radius: var(--radius-full);
+    transition: background var(--duration-fast) var(--easing);
+
+    &:hover {
+      background: rgba(248, 165, 165, 0.15);
+    }
+  }
+}
+
+// Tab bar — candy switcher
+.tab-bar {
+  display: flex;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-full);
+  padding: 3px;
+
+  &--sm {
+    font-size: var(--font-size-sm);
+  }
+
+  &__tab {
+    flex: 1;
+    padding: var(--space-sm) var(--space-md);
+    border: none;
+    border-radius: var(--radius-full);
+    background: transparent;
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    color: var(--text-secondary);
+    transition: all var(--duration-fast) var(--easing);
+
+    &--active {
+      background: var(--bg-card);
+      color: var(--color-primary);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+}
+
+// Validation message
+.validation-msg {
+  color: var(--color-disagree);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+}
+
+// ===========================================================================
+// Review & Launch
+// ===========================================================================
+
+.review-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+
+  &__header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-xs);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  &__edit {
+    background: none;
+    border: none;
+    color: var(--color-primary);
+    cursor: pointer;
+    font-size: var(--font-size-base);
+    padding: var(--space-xs);
+    border-radius: var(--radius-full);
+
+    &:hover {
+      background: var(--bg-card-hover);
+    }
+  }
+
+  &__value {
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__sub {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: var(--space-xs);
+  }
+}
+
+.auth-prompt {
+  background: var(--bg-subtle);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+  border: 1px solid var(--border-light);
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-top: var(--space-md);
+  }
+}
+
+.error-msg {
+  color: var(--color-disagree);
+  font-weight: var(--font-weight-medium);
+  text-align: center;
+}
+
+// ===========================================================================
+// Share Screen
+// ===========================================================================
+
+.share-subtitle {
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+}
+
+.qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+// QR code box — prominent scannable area
+.qr-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+
+  &__canvas {
+    display: block;
+    border-radius: var(--radius-sm);
+  }
+
+  &__hint {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: var(--space-sm);
+  }
+}
+
+.share-buttons {
+  &__label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__row {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-md);
+  }
+}
+
+.share-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--text-primary);
+  min-width: 72px;
+  transition: all var(--duration-fast) var(--easing);
+
+  &:hover {
+    border-color: var(--color-primary-light);
+    background: var(--bg-card-hover);
+  }
+
+  &__icon {
+    font-size: var(--font-size-xl);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+  }
+}
+
+.copy-link {
+  &__label {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__row {
+    display: flex;
+    gap: var(--space-sm);
+    align-items: center;
+  }
+
+  &__url {
+    flex: 1;
+    background: var(--bg-subtle);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-full);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__feedback {
+    font-size: var(--font-size-sm);
+    color: var(--color-agree-strong);
+    margin-top: var(--space-xs);
+  }
+}
+
+// ===========================================================================
+// Dashboard
+// ===========================================================================
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  &__title {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }
+
+  &__avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-full);
+    background: linear-gradient(135deg, var(--color-primary), var(--color-accent-lavender));
+    color: var(--text-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-sm);
+    box-shadow: 0 2px 8px rgba(232, 145, 185, 0.25);
+  }
+}
+
+.delib-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-md);
+
+  &--compact {
+    cursor: pointer;
+    transition: all var(--duration-fast) var(--easing);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--color-primary-light);
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+  }
+
+  &__title {
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-xs);
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+  }
+
+  &__dot {
+    color: var(--text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: var(--space-sm);
+    margin-top: var(--space-sm);
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-xl) var(--space-md);
+
+  &__text {
+    color: var(--text-muted);
+    margin-bottom: var(--space-md);
+  }
+}
+
+// ===========================================================================
+// Deliberation Detail
+// ===========================================================================
+
+.detail-title {
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+}
+
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.stat {
+  text-align: center;
+
+  &__value {
+    font-size: var(--font-size-xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+  }
+
+  &__label {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+.action-bar {
+  display: flex;
+  gap: var(--space-sm);
+  justify-content: center;
+}
+
+.detail-section {
+  &__title {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    margin-bottom: var(--space-sm);
+  }
+}
+
+.ranked-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--border-light);
+
+  &__rank {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-full);
+    background: var(--bg-card-hover);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-primary);
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1;
+    font-size: var(--font-size-sm);
+  }
+
+  &__score {
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+}

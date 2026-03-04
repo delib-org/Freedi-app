@@ -49,7 +49,10 @@ export async function checkIfUserIsAdmin(userId: string): Promise<boolean> {
 		if (err?.code === 'permission-denied') {
 			return false; // User is not admin
 		}
-		logError(error, { operation: 'membership.getMembership.checkIfUserIsAdmin', metadata: { message: 'Error checking admin status:' } });
+		logError(error, {
+			operation: 'membership.getMembership.checkIfUserIsAdmin',
+			metadata: { message: 'Error checking admin status:' },
+		});
 
 		return false;
 	}
@@ -97,11 +100,17 @@ export function listenToWaitingForMembership(): Unsubscribe {
 									}
 								});
 							} catch (error) {
-								logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error processing waiting members snapshot:' } });
+								logError(error, {
+									operation: 'membership.getMembership.unknown',
+									metadata: { message: 'Error processing waiting members snapshot:' },
+								});
 							}
 						},
 						(error) => {
-							logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error in waiting members listener:' } });
+							logError(error, {
+								operation: 'membership.getMembership.unknown',
+								metadata: { message: 'Error in waiting members listener:' },
+							});
 						},
 						'query',
 					);
@@ -120,7 +129,10 @@ export function listenToWaitingForMembership(): Unsubscribe {
 			}
 		};
 	} catch (error) {
-		logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error setting up waiting members listener:' } });
+		logError(error, {
+			operation: 'membership.getMembership.unknown',
+			metadata: { message: 'Error setting up waiting members listener:' },
+		});
 
 		return () => {};
 	}
@@ -195,7 +207,10 @@ export async function searchMembers(
 
 		return { members, lastDoc: newLastDoc, hasMore };
 	} catch (error) {
-		logError(error, { operation: 'membership.getMembership.members', metadata: { message: 'Error searching members:' } });
+		logError(error, {
+			operation: 'membership.getMembership.members',
+			metadata: { message: 'Error searching members:' },
+		});
 
 		return { members: [], lastDoc: null, hasMore: false };
 	}
@@ -252,7 +267,10 @@ export async function getMembersCounts(
 			banned: bannedSnap.size,
 		};
 	} catch (error) {
-		logError(error, { operation: 'membership.getMembership.unknown', metadata: { message: 'Error getting members counts:' } });
+		logError(error, {
+			operation: 'membership.getMembership.unknown',
+			metadata: { message: 'Error getting members counts:' },
+		});
 
 		return { total: 0, admins: 0, members: 0, banned: 0 };
 	}

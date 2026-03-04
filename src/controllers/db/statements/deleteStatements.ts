@@ -1,5 +1,4 @@
-import { deleteDoc, getDoc, getDocs, query, where, writeBatch } from 'firebase/firestore';
-import { FireStore } from '../config';
+import { deleteDoc, getDoc, getDocs, query, updateDoc, where } from 'firebase/firestore';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { createStatementRef, createCollectionRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
@@ -16,7 +15,6 @@ export async function deleteStatementFromDB(
 
 		if (statement.statementType === StatementType.group) return alert(t('cannot delete group'));
 
-		if (!statement) throw new Error('No statement');
 		const confirmed = confirm(`${t('Are you sure you want to delete')} ${statement.statement}?`);
 		if (!confirmed) {
 			return;
@@ -48,17 +46,31 @@ export async function deleteStatementFromDB(
 				}
 			}
 		}
-		// Update each child's parentId to the deleted statement's parentId
-		const batch = writeBatch(FireStore);
-		children.docs.forEach((child) => {
-			const childRef = createStatementRef(child.id);
-			batch.update(childRef, { parentId: statement.parentId });
-		});
-		await batch.commit();
 
+		// Reparent each child individually so one failure doesn't block others.
+		// Some children (e.g. system-created) may not be updatable by this user.
+		await Promise.allSettled(
+			children.docs.map(async (child) => {
+				try {
+					const childRef = createStatementRef(child.id);
+					await updateDoc(childRef, { parentId: statement.parentId });
+				} catch (updateError) {
+					logError(updateError, {
+						operation: 'statements.deleteStatements.reparentChild',
+						statementId: statement.statementId,
+						metadata: { childId: child.id },
+					});
+				}
+			}),
+		);
+
+		// Always proceed to delete the statement itself
 		const statementRef = createStatementRef(statement.statementId);
 		await deleteDoc(statementRef);
 	} catch (error) {
-		logError(error, { operation: 'statements.deleteStatements.batch' });
+		logError(error, {
+			operation: 'statements.deleteStatements',
+			statementId: statement.statementId,
+		});
 	}
 }

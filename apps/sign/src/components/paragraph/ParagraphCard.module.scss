@@ -133,6 +133,20 @@
 }
 
 // Heading types - keep them distinctive
+// Headings: make inner <p> tags inline so numbering stays on the same line
+// (the editor wraps content in <p> tags which are block-level)
+.type-h1,
+.type-h2,
+.type-h3,
+.type-h4,
+.type-h5,
+.type-h6 {
+  .content p {
+    display: inline;
+    margin: 0;
+  }
+}
+
 .type-h1 {
   padding-top: var(--spacing-md);
   padding-bottom: var(--spacing-xs);
@@ -182,37 +196,11 @@
   color: var(--text-primary);
 }
 
-// Heading number prefix (e.g., "1.2.3")
-.headingNumber {
-  font-weight: 600;
-  margin-right: 0.5rem;
+// Inline number prefix (e.g., "1.2.3.") - inherits all styles from parent element
+// LRM characters in the HTML ensure correct LTR rendering in RTL documents
+.inlineNumber {
   user-select: none; // Don't include in copy/paste
-
-  // Inherit color from parent heading
-  color: inherit;
-
-  // RTL support - keep numbers LTR but adjust spacing
-  direction: ltr;
-  unicode-bidi: bidi-override;
-
-  [dir="rtl"] & {
-    margin-right: 0;
-    margin-left: 0.5rem;
-  }
-}
-
-// Paragraph number prefix - inherits paragraph text style
-.paragraphNumber {
-  user-select: none;
-
-  // RTL support - keep numbers LTR but adjust spacing
-  direction: ltr;
-  unicode-bidi: bidi-override;
-
-  [dir="rtl"] & {
-    margin-right: 0;
-    margin-left: 0.25rem;
-  }
+  margin-inline-end: 0.3em;
 }
 
 // List item type

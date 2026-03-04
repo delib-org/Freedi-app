@@ -7,7 +7,9 @@ export async function testNotificationSend() {
 	try {
 		// First, check if we have notification permission
 		if (Notification.permission !== 'granted') {
-			logError(new Error('Notification permission not granted'), { operation: 'utils.testNotification.testNotificationSend' });
+			logError(new Error('Notification permission not granted'), {
+				operation: 'utils.testNotification.testNotificationSend',
+			});
 
 			return;
 		}
@@ -47,7 +49,10 @@ export async function testNotificationSend() {
 		console.info('2. System notification settings');
 		console.info('3. Do Not Disturb mode');
 	} catch (error) {
-		logError(error, { operation: 'utils.testNotification.unknown', metadata: { message: 'Error testing notification:' } });
+		logError(error, {
+			operation: 'utils.testNotification.unknown',
+			metadata: { message: 'Error testing notification:' },
+		});
 	}
 }
 

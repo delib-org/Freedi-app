@@ -8,6 +8,7 @@ import {
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { createCollectionRef, createSubscriptionRef } from '@/utils/firebaseUtils';
+import { getPseudoName } from '@/utils/temporalNameGenerator';
 import { parse } from 'valibot';
 
 // Use string literal for scope until delib-npm exports the enum value
@@ -56,7 +57,10 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 
 					return parse(UserDemographicQuestionSchema, data);
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.getUserDemographicQuestions.validation', metadata: { documentId: doc.id } });
+					logError(validationError, {
+						operation: 'userDemographic.getUserDemographicQuestions.validation',
+						metadata: { documentId: doc.id },
+					});
 
 					return null;
 				}
@@ -66,7 +70,10 @@ export async function getUserDemographicQuestions(statementId: string): Promise<
 		// Dispatch the questions to Redux store
 		dispatch(setUserDemographicQuestions(userQuestions));
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching user demographic questions:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error fetching user demographic questions:' },
+		});
 		// Dispatch empty array in case of error to clear any stale data
 		store.dispatch(setUserDemographicQuestions([]));
 	}
@@ -93,12 +100,18 @@ export function listenToUserDemographicQuestions(statementId: string): () => voi
 						store.dispatch(deleteUserDemographicQuestion(change.doc.id));
 					}
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.listenToUserDemographicQuestions.validation', metadata: { documentId: change.doc.id } });
+					logError(validationError, {
+						operation: 'userDemographic.listenToUserDemographicQuestions.validation',
+						metadata: { documentId: change.doc.id },
+					});
 				}
 			});
 		});
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.listenToUserDemographicQuestions', metadata: { message: 'Error setting up listener for user demographic questions:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.listenToUserDemographicQuestions',
+			metadata: { message: 'Error setting up listener for user demographic questions:' },
+		});
 
 		return () => {
 			return;
@@ -133,12 +146,18 @@ export function listenToUserDemographicAnswers(statementId: string) {
 						store.dispatch(deleteUserDemographic(data.userQuestionId));
 					}
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.listenToUserDemographicAnswers.validation', metadata: { documentId: change.doc.id } });
+					logError(validationError, {
+						operation: 'userDemographic.listenToUserDemographicAnswers.validation',
+						metadata: { documentId: change.doc.id },
+					});
 				}
 			});
 		});
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error setting up listener for user demographic answers:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error setting up listener for user demographic answers:' },
+		});
 
 		return () => {
 			return;
@@ -172,7 +191,10 @@ export async function getUserDemographicResponses(
 				const validatedQuestion = parse(UserDemographicQuestionSchema, data);
 				questions.push(validatedQuestion);
 			} catch (error) {
-				logError(error, { operation: 'userDemographic.getUserDemographic.getUserDemographicResponses', metadata: { message: 'Error validating question:' } });
+				logError(error, {
+					operation: 'userDemographic.getUserDemographic.getUserDemographicResponses',
+					metadata: { message: 'Error validating question:' },
+				});
 			}
 		});
 
@@ -202,7 +224,7 @@ export async function getUserDemographicResponses(
 						responseData.user ||
 						({
 							uid: response.userId,
-							displayName: 'Anonymous',
+							displayName: getPseudoName(response.userId),
 						} as User),
 					role: undefined, // Will be fetched separately
 					responses: [],
@@ -244,14 +266,20 @@ export async function getUserDemographicResponses(
 						member.role = subscriptionDoc.data()?.role as Role;
 					}
 				} catch (error) {
-					logError(error, { operation: 'userDemographic.getUserDemographic.question', metadata: { message: 'Error fetching role for user ${member.userId}:' } });
+					logError(error, {
+						operation: 'userDemographic.getUserDemographic.question',
+						metadata: { message: 'Error fetching role for user ${member.userId}:' },
+					});
 				}
 			}),
 		);
 
 		return memberReviews;
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching user demographic responses for review:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error fetching user demographic responses for review:' },
+		});
 
 		return [];
 	}
@@ -288,12 +316,18 @@ export function listenToGroupDemographicQuestions(topParentId: string): () => vo
 						store.dispatch(deleteUserDemographicQuestion(change.doc.id));
 					}
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.listenToGroupDemographicQuestions.validation', metadata: { documentId: change.doc.id } });
+					logError(validationError, {
+						operation: 'userDemographic.listenToGroupDemographicQuestions.validation',
+						metadata: { documentId: change.doc.id },
+					});
 				}
 			});
 		});
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error setting up listener for group demographic questions:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error setting up listener for group demographic questions:' },
+		});
 
 		return () => {
 			return;
@@ -334,12 +368,18 @@ export function listenToGroupDemographicAnswers(topParentId: string): () => void
 						store.dispatch(deleteUserDemographic(data.userQuestionId));
 					}
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.listenToGroupDemographicAnswers.validation', metadata: { documentId: change.doc.id } });
+					logError(validationError, {
+						operation: 'userDemographic.listenToGroupDemographicAnswers.validation',
+						metadata: { documentId: change.doc.id },
+					});
 				}
 			});
 		});
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error setting up listener for group demographic answers:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error setting up listener for group demographic answers:' },
+		});
 
 		return () => {
 			return;
@@ -376,7 +416,10 @@ export async function getGroupDemographicQuestions(
 
 					return parse(UserDemographicQuestionSchema, data);
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.getGroupDemographicQuestions.validation', metadata: { documentId: docSnap.id } });
+					logError(validationError, {
+						operation: 'userDemographic.getGroupDemographicQuestions.validation',
+						metadata: { documentId: docSnap.id },
+					});
 
 					return null;
 				}
@@ -385,7 +428,10 @@ export async function getGroupDemographicQuestions(
 
 		return questions;
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching group demographic questions:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error fetching group demographic questions:' },
+		});
 
 		return [];
 	}
@@ -423,7 +469,10 @@ export async function getUserGroupAnswers(
 
 					return parse(UserDemographicQuestionSchema, data);
 				} catch (validationError) {
-					logError(validationError, { operation: 'userDemographic.getUserGroupAnswers.validation', metadata: { documentId: docSnap.id } });
+					logError(validationError, {
+						operation: 'userDemographic.getUserGroupAnswers.validation',
+						metadata: { documentId: docSnap.id },
+					});
 
 					return null;
 				}
@@ -432,7 +481,10 @@ export async function getUserGroupAnswers(
 
 		return answers;
 	} catch (error) {
-		logError(error, { operation: 'userDemographic.getUserDemographic.unknown', metadata: { message: 'Error fetching user group demographic answers:' } });
+		logError(error, {
+			operation: 'userDemographic.getUserDemographic.unknown',
+			metadata: { message: 'Error fetching user group demographic answers:' },
+		});
 
 		return [];
 	}

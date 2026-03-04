@@ -34,7 +34,10 @@ export function getAgreementColor(agreement: number): string {
 
 		return agreementColors[Math.max(0, Math.min(index, agreementColors.length - 1))];
 	} catch (error) {
-		logError(error, { operation: 'utils.consensusColors.adjustedAgreement', metadata: { message: 'Error calculating agreement color:' } });
+		logError(error, {
+			operation: 'utils.consensusColors.adjustedAgreement',
+			metadata: { message: 'Error calculating agreement color:' },
+		});
 
 		return agreementColors[4]; // Default to neutral color
 	}

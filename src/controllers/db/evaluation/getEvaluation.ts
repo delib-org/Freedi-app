@@ -70,7 +70,11 @@ export const listenToEvaluations = (
 					logError(error, { operation: 'evaluation.getEvaluation.unknown' });
 				}
 			},
-			(error) => logError(error, { operation: 'evaluation.getEvaluation.unknown', metadata: { message: 'Error in evaluations listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'evaluation.getEvaluation.unknown',
+					metadata: { message: 'Error in evaluations listener:' },
+				}),
 			'query',
 		);
 	} catch (error) {
@@ -103,7 +107,11 @@ export function listenToEvaluation(statementId: string, userId: string): () => v
 					logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation' });
 				}
 			},
-			(error) => logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation', metadata: { message: 'Error in evaluation listener:' } }),
+			(error) =>
+				logError(error, {
+					operation: 'evaluation.getEvaluation.listenToEvaluation',
+					metadata: { message: 'Error in evaluation listener:' },
+				}),
 		);
 	} catch (error) {
 		logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation' });

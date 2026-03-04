@@ -91,7 +91,11 @@ function renderParagraph(para: Paragraph): React.ReactNode {
 			return <h6 key={key}>{content}</h6>;
 		case ParagraphType.table:
 			return (
-				<div key={key} className={styles.table} dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }} />
+				<div
+					key={key}
+					className={styles.table}
+					dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(content) }}
+				/>
 			);
 		case ParagraphType.paragraph:
 		default:

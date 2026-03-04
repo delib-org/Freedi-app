@@ -41,7 +41,10 @@ export function useNotificationActions() {
 				// Then sync with database
 				await markNotificationAsReadDB(notificationId);
 			} catch (error) {
-				logError(error, { operation: 'hooks.useNotificationActions.markAsRead', metadata: { message: 'Error marking notification as read:' } });
+				logError(error, {
+					operation: 'hooks.useNotificationActions.markAsRead',
+					metadata: { message: 'Error marking notification as read:' },
+				});
 			}
 		},
 		[dispatch],
@@ -58,7 +61,10 @@ export function useNotificationActions() {
 				// Then sync with database
 				await markMultipleNotificationsAsReadDB(notificationIds);
 			} catch (error) {
-				logError(error, { operation: 'hooks.useNotificationActions.markMultipleAsRead', metadata: { message: 'Error marking multiple notifications as read:' } });
+				logError(error, {
+					operation: 'hooks.useNotificationActions.markMultipleAsRead',
+					metadata: { message: 'Error marking multiple notifications as read:' },
+				});
 			}
 		},
 		[dispatch],
@@ -75,7 +81,10 @@ export function useNotificationActions() {
 				// Then sync with database
 				await markStatementNotificationsAsReadDB(statementId);
 			} catch (error) {
-				logError(error, { operation: 'hooks.useNotificationActions.markStatementAsRead', metadata: { message: 'Error marking statement notifications as read:' } });
+				logError(error, {
+					operation: 'hooks.useNotificationActions.markStatementAsRead',
+					metadata: { message: 'Error marking statement notifications as read:' },
+				});
 			}
 		},
 		[dispatch],
@@ -96,7 +105,10 @@ export function useNotificationActions() {
 			// Then sync with database
 			await markMultipleNotificationsAsReadDB(unreadIds);
 		} catch (error) {
-			logError(error, { operation: 'hooks.useNotificationActions.unreadIds', metadata: { message: 'Error marking all notifications as read:' } });
+			logError(error, {
+				operation: 'hooks.useNotificationActions.unreadIds',
+				metadata: { message: 'Error marking all notifications as read:' },
+			});
 		}
 	}, [dispatch, userUnreadNotifications]);
 

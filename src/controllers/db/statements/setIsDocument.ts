@@ -19,7 +19,9 @@ export async function toggleIsDocument(statementId: string): Promise<boolean | u
 		const statementData = statementDB.data() as Statement;
 
 		if (statementData.statementType !== StatementType.option) {
-			logError(new Error('Only options can be marked as documents'), { operation: 'statements.setIsDocument.toggleIsDocument' });
+			logError(new Error('Only options can be marked as documents'), {
+				operation: 'statements.setIsDocument.toggleIsDocument',
+			});
 
 			return undefined;
 		}

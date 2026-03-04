@@ -104,7 +104,10 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 				};
 			}
 		} catch (error) {
-			logError(error, { operation: 'context.UserConfigContext.unknown', metadata: { message: 'Error reading from localStorage:' } });
+			logError(error, {
+				operation: 'context.UserConfigContext.unknown',
+				metadata: { message: 'Error reading from localStorage:' },
+			});
 		}
 
 		return DEFAULT_CONFIG;
@@ -119,7 +122,10 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 		try {
 			localStorage.setItem(LocalStorageObjects.UserConfig, JSON.stringify(config));
 		} catch (error) {
-			logError(error, { operation: 'context.UserConfigContext.unknown', metadata: { message: 'Error saving to localStorage:' } });
+			logError(error, {
+				operation: 'context.UserConfigContext.unknown',
+				metadata: { message: 'Error saving to localStorage:' },
+			});
 		}
 	}, [config]);
 

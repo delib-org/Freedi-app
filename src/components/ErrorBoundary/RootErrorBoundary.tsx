@@ -46,7 +46,10 @@ export class RootErrorBoundary extends Component<Props, State> {
 	componentDidCatch(error: Error, errorInfo: ErrorInfo) {
 		// Log to console in development
 		if (import.meta.env.DEV) {
-			logError(new Error('Error caught by boundary:'), { operation: 'components.ErrorBoundary.RootErrorBoundary.unknown', metadata: { detail: error, errorInfo } });
+			logError(new Error('Error caught by boundary:'), {
+				operation: 'components.ErrorBoundary.RootErrorBoundary.unknown',
+				metadata: { detail: error, errorInfo },
+			});
 		}
 
 		// Check for chunk loading errors (stale cache after deployment)

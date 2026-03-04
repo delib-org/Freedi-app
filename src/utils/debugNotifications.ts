@@ -47,7 +47,10 @@ export async function debugNotifications() {
 						console.info(`     Endpoint: ${subscription.endpoint.substring(0, 50)}...`);
 					}
 				} catch (e) {
-					logError(e, { operation: 'utils.debugNotifications.unknown', metadata: { message: '     Push subscription error:' } });
+					logError(e, {
+						operation: 'utils.debugNotifications.unknown',
+						metadata: { message: '     Push subscription error:' },
+					});
 				}
 			}
 		}
@@ -95,7 +98,10 @@ export async function debugNotifications() {
 
 			setTimeout(() => notification.close(), 5000);
 		} catch (e) {
-			logError(e, { operation: 'utils.debugNotifications.unknown', metadata: { message: '   - ❌ Local notification error:' } });
+			logError(e, {
+				operation: 'utils.debugNotifications.unknown',
+				metadata: { message: '   - ❌ Local notification error:' },
+			});
 		}
 	} else {
 		console.info('   - ❌ Permission not granted');
@@ -107,7 +113,10 @@ export async function debugNotifications() {
 		const diagnostics = await notificationService.getDiagnostics();
 		console.info('   - Diagnostics:', diagnostics);
 	} catch (e) {
-		logError(e, { operation: 'utils.debugNotifications.unknown', metadata: { message: '   - Error getting diagnostics:' } });
+		logError(e, {
+			operation: 'utils.debugNotifications.unknown',
+			metadata: { message: '   - Error getting diagnostics:' },
+		});
 	}
 
 	console.info('\n=== NOTIFICATION DEBUG END ===');

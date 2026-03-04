@@ -25,23 +25,15 @@ function isValidEmail(email: string): boolean {
 
 /**
  * Gets email transporter configuration
+ * Uses process.env variables (EMAIL_USER, EMAIL_PASSWORD, EMAIL_SERVICE)
  */
 async function getEmailTransporter(): Promise<nodemailer.Transporter | null> {
 	try {
-		const emailUser =
-			process.env.EMAIL_USER ||
-			(process.env.FUNCTIONS_EMULATOR
-				? null
-				: (await import('firebase-functions')).config().email?.user);
-
-		const emailPassword =
-			process.env.EMAIL_PASSWORD ||
-			(process.env.FUNCTIONS_EMULATOR
-				? null
-				: (await import('firebase-functions')).config().email?.password);
+		const emailUser = process.env.EMAIL_USER;
+		const emailPassword = process.env.EMAIL_PASSWORD;
 
 		if (!emailUser || !emailPassword) {
-			logger.warn('Email credentials not configured. Email notification skipped.');
+			logger.warn('Email credentials not configured (EMAIL_USER / EMAIL_PASSWORD missing)');
 
 			return null;
 		}
@@ -266,8 +258,7 @@ export const sendEmailToSubscribers = async (req: Request, res: Response): Promi
 			return;
 		}
 
-		const emailUser =
-			process.env.EMAIL_USER || (await import('firebase-functions')).config().email?.user;
+		const emailUser = process.env.EMAIL_USER;
 
 		// Send emails to all subscribers
 		let sentCount = 0;

@@ -68,7 +68,10 @@ export function initSentry() {
 // Enhanced error capture with context
 export function captureException(error: Error, context?: Record<string, unknown>) {
 	if (import.meta.env.DEV) {
-		logError(new Error('Error captured:'), { operation: 'services.monitoring.sentry.captureException', metadata: { detail: error, context } });
+		logError(new Error('Error captured:'), {
+			operation: 'services.monitoring.sentry.captureException',
+			metadata: { detail: error, context },
+		});
 
 		return;
 	}

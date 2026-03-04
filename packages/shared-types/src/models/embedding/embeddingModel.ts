@@ -4,9 +4,9 @@ import * as v from "valibot";
  * Constants for embedding configuration
  */
 export const EMBEDDING_CONFIG = {
-  MODEL: "text-embedding-004",
-  DIMENSIONS: 768,
-  DEFAULT_SIMILARITY_THRESHOLD: 0.65,
+  MODEL: "text-embedding-3-small",
+  DIMENSIONS: 1536,
+  DEFAULT_SIMILARITY_THRESHOLD: 0.80,
   MAX_BATCH_SIZE: 100,
   CACHE_TTL_MS: 30 * 24 * 60 * 60 * 1000, // 30 days - embeddings rarely change
 } as const;
@@ -56,8 +56,8 @@ export const SimilaritySearchMethodSchema = v.picklist([
  * Stored in the statements collection as optional fields
  */
 export const StatementEmbeddingSchema = v.object({
-  embedding: v.array(v.number()), // 768-dimensional vector
-  embeddingModel: v.string(), // Model used (e.g., "text-embedding-004")
+  embedding: v.array(v.number()), // 1536-dimensional vector
+  embeddingModel: v.string(), // Model used (e.g., "text-embedding-3-small")
   embeddingContext: v.optional(v.string()), // Parent question used for context
   embeddingCreatedAt: v.number(), // Timestamp in milliseconds
 });

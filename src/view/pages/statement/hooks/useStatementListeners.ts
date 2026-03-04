@@ -11,6 +11,7 @@ import {
 	listenToInAppNotifications,
 	clearInAppNotifications,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { CHAT } from '@/constants/common';
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
@@ -71,7 +72,10 @@ export const useStatementListeners = ({
 						unsubscribe();
 					}
 				} catch (error) {
-					logError(error, { operation: 'hooks.useStatementListeners.cleanup', metadata: { message: 'Error while unsubscribing:' } });
+					logError(error, {
+						operation: 'hooks.useStatementListeners.cleanup',
+						metadata: { message: 'Error while unsubscribing:' },
+					});
 					setError(error instanceof Error ? error.message : 'Unsubscribe error');
 				}
 			});
@@ -98,7 +102,12 @@ export const useStatementListeners = ({
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else {
-				unsubscribersRef.current.push(listenToSubStatements(statementId));
+				// Limit initial load for lazy loading (desc order to get most recent).
+				// The default view is 'chat', so apply the limit for all non-mind-map screens.
+				// The Chat component uses IntersectionObserver to fetch older messages on scroll.
+				unsubscribersRef.current.push(
+					listenToSubStatements(statementId, 'top', CHAT.INITIAL_MESSAGES_LIMIT),
+				);
 			}
 
 			// Stage listener
@@ -106,7 +115,10 @@ export const useStatementListeners = ({
 				unsubscribersRef.current.push(listenToStatement(stageId, setIsStatementNotFound));
 			}
 		} catch (error) {
-			logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error setting up listeners:' } });
+			logError(error, {
+				operation: 'hooks.useStatementListeners.unknown',
+				metadata: { message: 'Error setting up listeners:' },
+			});
 			setError(error instanceof Error ? error.message : 'Setup error');
 		}
 
@@ -138,7 +150,10 @@ export const useStatementListeners = ({
 						unsubscribe();
 					}
 				} catch (error) {
-					logError(error, { operation: 'hooks.useStatementListeners.unknown', metadata: { message: 'Error while unsubscribing from group listeners:' } });
+					logError(error, {
+						operation: 'hooks.useStatementListeners.unknown',
+						metadata: { message: 'Error while unsubscribing from group listeners:' },
+					});
 				}
 			});
 		};

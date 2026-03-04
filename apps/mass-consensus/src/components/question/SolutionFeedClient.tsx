@@ -307,6 +307,13 @@ export default function SolutionFeedClient({
       });
 
       if (!response.ok) {
+        if (response.status === 404) {
+          // Solution no longer exists - remove it from the list
+          setSolutions((prev) => prev.filter((s) => s.statementId !== solutionId));
+          setError(t('This solution is no longer available and has been removed.'));
+
+          return;
+        }
         throw new Error('Failed to save evaluation');
       }
 

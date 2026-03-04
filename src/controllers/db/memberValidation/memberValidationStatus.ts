@@ -48,7 +48,10 @@ export async function saveMemberValidationStatus(
 
 		await setDoc(validationRef, validationData, { merge: true });
 	} catch (error) {
-		logError(error, { operation: 'memberValidation.memberValidationStatus.unknown', metadata: { message: 'Error saving member validation status:' } });
+		logError(error, {
+			operation: 'memberValidation.memberValidationStatus.unknown',
+			metadata: { message: 'Error saving member validation status:' },
+		});
 		throw error;
 	}
 }
@@ -71,7 +74,10 @@ export async function getMemberValidationStatus(
 
 		return null;
 	} catch (error) {
-		logError(error, { operation: 'memberValidation.memberValidationStatus.getMemberValidationStatus', metadata: { message: 'Error getting member validation status:' } });
+		logError(error, {
+			operation: 'memberValidation.memberValidationStatus.getMemberValidationStatus',
+			metadata: { message: 'Error getting member validation status:' },
+		});
 
 		return null;
 	}
@@ -97,7 +103,10 @@ export async function getAllMemberValidationStatuses(
 
 		return statusMap;
 	} catch (error) {
-		logError(error, { operation: 'memberValidation.memberValidationStatus.getAllMemberValidationStatuses', metadata: { message: 'Error getting all member validation statuses:' } });
+		logError(error, {
+			operation: 'memberValidation.memberValidationStatus.getAllMemberValidationStatuses',
+			metadata: { message: 'Error getting all member validation statuses:' },
+		});
 
 		return new Map();
 	}

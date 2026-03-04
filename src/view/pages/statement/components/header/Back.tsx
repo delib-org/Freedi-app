@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import BackArrowIcon from '@/assets/icons/chevronLeftIcon.svg?react';
 import { StyleProps } from '@/controllers/hooks/useStatementColor';
 import { Statement } from '@freedi/shared-types';
-import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { logError } from '@/utils/errorHandling';
 
 interface Props {
@@ -13,7 +12,6 @@ interface Props {
 
 const Back: FC<Props> = ({ statement, headerColor }) => {
 	const navigate = useNavigate();
-	const { initialRoute } = useAuthentication();
 
 	function handleBack() {
 		try {
@@ -38,18 +36,7 @@ const Back: FC<Props> = ({ statement, headerColor }) => {
 				});
 			}
 
-			if (initialRoute === undefined) {
-				return navigate(`/statement/${statement?.parentId}`, {
-					state: { from: window.location.pathname },
-				});
-			}
-
-			if (!initialRoute || !statement)
-				return navigate('/home', {
-					state: { from: window.location.pathname },
-				});
-
-			return navigate(initialRoute, {
+			return navigate(`/statement/${statement.parentId}`, {
 				state: { from: window.location.pathname },
 			});
 		} catch (error) {

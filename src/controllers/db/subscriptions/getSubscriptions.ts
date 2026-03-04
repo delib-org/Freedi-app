@@ -31,6 +31,7 @@ import {
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
+import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
 
 // Helper to check if an error is IndexedDB-related
 function isIndexedDBError(error: unknown): boolean {
@@ -104,7 +105,10 @@ export const listenToStatementSubSubscriptions = (
 			(error) => {
 				// Handle IndexedDB errors with retry
 				if (isIndexedDBError(error)) {
-					logError(error, { operation: 'subscriptions.listenToStatementSubSubscriptions', metadata: { message: 'IndexedDB connection lost in subscription listener' } });
+					logError(error, {
+						operation: 'subscriptions.listenToStatementSubSubscriptions',
+						metadata: { message: 'IndexedDB connection lost in subscription listener' },
+					});
 					// IndexedDB errors are handled globally by indexedDBErrorHandler
 
 					return;
@@ -113,7 +117,10 @@ export const listenToStatementSubSubscriptions = (
 				// Handle permission errors silently for subscriptions
 				const err = error as { code?: string };
 				if (err?.code !== 'permission-denied') {
-					logError(error, { operation: 'subscriptions.getSubscriptions.unknown', metadata: { message: 'Subscription listener error:' } });
+					logError(error, {
+						operation: 'subscriptions.getSubscriptions.unknown',
+						metadata: { message: 'Subscription listener error:' },
+					});
 				}
 			},
 		);
@@ -144,7 +151,11 @@ export function listenToStatementSubscriptions(
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					try {
-						const statementSubscription = change.doc.data() as StatementSubscription;
+						const data = change.doc.data();
+						const statementSubscription = parse(
+							StatementSubscriptionSchema,
+							convertTimestampsToMillis(data),
+						) as StatementSubscription;
 
 						if (change.type === 'added' || change.type === 'modified')
 							dispatch(setStatementSubscription(statementSubscription));
@@ -152,14 +163,20 @@ export function listenToStatementSubscriptions(
 						if (change.type === 'removed')
 							dispatch(deleteSubscribedStatement(statementSubscription.statementId));
 					} catch (error) {
-						logError(error, { operation: 'subscriptions.getSubscriptions.listenToStatementSubscriptions', metadata: { message: 'Listen to statement subscriptions each error' } });
+						logError(error, {
+							operation: 'subscriptions.getSubscriptions.listenToStatementSubscriptions',
+							metadata: { message: 'Listen to statement subscriptions each error' },
+						});
 					}
 				});
 			},
 			(error) => {
 				// Handle IndexedDB errors
 				if (isIndexedDBError(error)) {
-					logError(error, { operation: 'subscriptions.listenToStatementSubscriptions', metadata: { message: 'IndexedDB connection lost in statement subscriptions listener' } });
+					logError(error, {
+						operation: 'subscriptions.listenToStatementSubscriptions',
+						metadata: { message: 'IndexedDB connection lost in statement subscriptions listener' },
+					});
 					// IndexedDB errors are handled globally by indexedDBErrorHandler
 
 					return;
@@ -168,12 +185,18 @@ export function listenToStatementSubscriptions(
 				// Handle permission errors silently for subscriptions
 				const err = error as { code?: string };
 				if (err?.code !== 'permission-denied') {
-					logError(error, { operation: 'subscriptions.getSubscriptions.unknown', metadata: { message: 'Statement subscriptions listener error:' } });
+					logError(error, {
+						operation: 'subscriptions.getSubscriptions.unknown',
+						metadata: { message: 'Statement subscriptions listener error:' },
+					});
 				}
 			},
 		);
 	} catch (error) {
-		logError(error, { operation: 'subscriptions.getSubscriptions.unknown', metadata: { message: 'Listen to statement subscriptions error' } });
+		logError(error, {
+			operation: 'subscriptions.getSubscriptions.unknown',
+			metadata: { message: 'Listen to statement subscriptions error' },
+		});
 
 		return () => {};
 	}
@@ -240,7 +263,9 @@ export async function getTopParentSubscriptionFromDByStatement(
 
 		return subscription;
 	} catch (error) {
-		logError(error, { operation: 'subscriptions.getSubscriptions.getTopParentSubscriptionFromDByStatement' });
+		logError(error, {
+			operation: 'subscriptions.getSubscriptions.getTopParentSubscriptionFromDByStatement',
+		});
 	}
 }
 
@@ -363,10 +388,10 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			(subscriptionsDB) => {
 				subscriptionsDB.docChanges().forEach((change) => {
 					const data = change.doc.data();
-					const statementSubscription = parse(StatementSubscriptionSchema, {
-						...data,
-						lastUpdated: data.lastUpdated?.toDate?.() ?? null,
-					});
+					const statementSubscription = parse(
+						StatementSubscriptionSchema,
+						convertTimestampsToMillis(data),
+					);
 
 					if (change.type === 'added' || change.type === 'modified') {
 						dispatch(setStatementSubscription(statementSubscription));
@@ -379,7 +404,10 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			(error) => {
 				// Handle IndexedDB errors
 				if (isIndexedDBError(error)) {
-					logError(error, { operation: 'subscriptions.getNewStatementsFromSubscriptions', metadata: { message: 'IndexedDB connection lost in new statements listener' } });
+					logError(error, {
+						operation: 'subscriptions.getNewStatementsFromSubscriptions',
+						metadata: { message: 'IndexedDB connection lost in new statements listener' },
+					});
 					// IndexedDB errors are handled globally by indexedDBErrorHandler
 
 					return;
@@ -388,7 +416,10 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 				// Handle permission errors silently
 				const err = error as { code?: string };
 				if (err?.code !== 'permission-denied') {
-					logError(error, { operation: 'subscriptions.getSubscriptions.unknown', metadata: { message: 'New statements listener error:' } });
+					logError(error, {
+						operation: 'subscriptions.getSubscriptions.unknown',
+						metadata: { message: 'New statements listener error:' },
+					});
 				}
 			},
 		);

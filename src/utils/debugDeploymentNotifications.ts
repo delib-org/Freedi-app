@@ -43,7 +43,10 @@ export async function debugDeploymentNotifications() {
 			console.info('   - Sender ID:', expectedSenderId || 'NOT SET');
 		}
 	} catch (error) {
-		logError(error, { operation: 'utils.debugDeploymentNotifications.unknown', metadata: { message: '   - Failed to load firebase-config.json:' } });
+		logError(error, {
+			operation: 'utils.debugDeploymentNotifications.unknown',
+			metadata: { message: '   - Failed to load firebase-config.json:' },
+		});
 	}
 
 	if (!expectedProjectId || !expectedSenderId) {
@@ -85,9 +88,17 @@ export async function debugDeploymentNotifications() {
 	);
 
 	if (!projectIdMatch || !senderIdMatch) {
-		logError(new Error('%c   ❌ CRITICAL: Firebase config mismatch!'), { operation: 'utils.debugDeploymentNotifications.unknown', metadata: { detail: 'color: red; font-weight: bold' } });
-		logError(new Error('   The service worker and main app are using different Firebase projects!'), { operation: 'utils.debugDeploymentNotifications.unknown' });
-		logError(new Error('   This will cause FCM tokens to be invalid.'), { operation: 'utils.debugDeploymentNotifications.unknown' });
+		logError(new Error('%c   ❌ CRITICAL: Firebase config mismatch!'), {
+			operation: 'utils.debugDeploymentNotifications.unknown',
+			metadata: { detail: 'color: red; font-weight: bold' },
+		});
+		logError(
+			new Error('   The service worker and main app are using different Firebase projects!'),
+			{ operation: 'utils.debugDeploymentNotifications.unknown' },
+		);
+		logError(new Error('   This will cause FCM tokens to be invalid.'), {
+			operation: 'utils.debugDeploymentNotifications.unknown',
+		});
 	}
 
 	// 5. Check service worker registration
@@ -109,7 +120,9 @@ export async function debugDeploymentNotifications() {
 				firebaseSW.active.postMessage({ type: 'PING' });
 			}
 		} else {
-			logError(new Error('   - Firebase SW: ❌ Not found'), { operation: 'utils.debugDeploymentNotifications.firebaseSW' });
+			logError(new Error('   - Firebase SW: ❌ Not found'), {
+				operation: 'utils.debugDeploymentNotifications.firebaseSW',
+			});
 		}
 	}
 

@@ -62,7 +62,10 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 
 				setIsLoading(false);
 			} catch (error) {
-				logError(error, { operation: 'notifications.NotificationSubscriptionButton.checkSubscription', metadata: { message: 'Error checking notification subscription:' } });
+				logError(error, {
+					operation: 'notifications.NotificationSubscriptionButton.checkSubscription',
+					metadata: { message: 'Error checking notification subscription:' },
+				});
 				setIsLoading(false);
 			}
 		};
@@ -106,7 +109,9 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 			const token = notificationService.getToken();
 
 			if (!token) {
-				logError(new Error('No FCM token available'), { operation: 'notifications.NotificationSubscriptionButton.unknown' });
+				logError(new Error('No FCM token available'), {
+					operation: 'notifications.NotificationSubscriptionButton.unknown',
+				});
 				setIsLoading(false);
 
 				return;
@@ -136,7 +141,10 @@ const NotificationSubscriptionButton: FC<NotificationSubscriptionButtonProps> = 
 
 			setIsLoading(false);
 		} catch (error) {
-			logError(error, { operation: 'notifications.NotificationSubscriptionButton.unknown', metadata: { message: 'Error toggling notification subscription:' } });
+			logError(error, {
+				operation: 'notifications.NotificationSubscriptionButton.unknown',
+				metadata: { message: 'Error toggling notification subscription:' },
+			});
 			setIsLoading(false);
 		}
 	};

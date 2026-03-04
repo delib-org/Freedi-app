@@ -7,6 +7,7 @@ import ar from './ar.json';
 import de from './de.json';
 import es from './es.json';
 import nl from './nl.json';
+import fa from './fa.json';
 
 export const languages: Record<LanguagesEnum, TranslationDictionary> = {
   [LanguagesEnum.en]: en,
@@ -15,10 +16,11 @@ export const languages: Record<LanguagesEnum, TranslationDictionary> = {
   [LanguagesEnum.de]: de,
   [LanguagesEnum.es]: es,
   [LanguagesEnum.nl]: nl,
+  [LanguagesEnum.fa]: fa,
 };
 
 export function getLanguageData(language: LanguagesEnum): TranslationDictionary {
   return languages[language] ?? languages[LanguagesEnum.en];
 }
 
-export { en, he, ar, de, es, nl };
+export { en, he, ar, de, es, nl, fa };

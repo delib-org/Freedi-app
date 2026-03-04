@@ -2,53 +2,39 @@ import { FC } from 'react';
 // icons
 import AddIcon from '@/assets/icons/plusIcon.svg?react';
 import GroupIcon from '@/assets/icons/group.svg?react';
-// import GravelIcon from "@/assets/icons/gravel.svg?react";
 import TargetIcon from '@/assets/icons/target.svg?react';
 import styles from './Footer.module.scss';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { NotificationType, StatementType } from '@freedi/shared-types';
-import { useDispatch, useSelector } from 'react-redux';
+import { NotificationType } from '@freedi/shared-types';
+import { useSelector } from 'react-redux';
 import { inAppNotificationsSelector } from '@/redux/notificationsSlice/notificationsSlice';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
-import { useNavigate } from 'react-router';
-import {
-	setNewStatementType,
-	setParentStatement,
-	setShowNewStatementModal,
-} from '@/redux/statements/newStatementSlice';
 
 interface Props {
-	subPage: 'decisions' | 'groups';
-	setSubPage: (page: 'decisions' | 'groups') => void;
+	subPage: 'decisions' | 'topics';
+	setSubPage: (page: 'decisions' | 'topics') => void;
+	hasTopics: boolean;
+	onAddStatement: () => void;
 }
 
-const Footer: FC<Props> = ({ setSubPage, subPage }) => {
-	const dispatch = useDispatch();
-	const navigate = useNavigate();
+const Footer: FC<Props> = ({ setSubPage, subPage, hasTopics, onAddStatement }) => {
 	const { t } = useTranslation();
 	const creator = useSelector(creatorSelector);
 	const inAppNotificationsList: NotificationType[] = useSelector(inAppNotificationsSelector).filter(
 		(n) => n.creatorId !== creator?.uid,
 	);
-	const user = useSelector(creatorSelector);
-	const isAdvanceUser = user?.advanceUser || false;
 
-	function addStatement() {
-		if (isAdvanceUser) {
-			navigate('/home/addStatement', {
-				state: { from: window.location.pathname },
-			});
-		} else {
-			// open new statement for question
-			dispatch(setShowNewStatementModal(true));
-			dispatch(setNewStatementType(StatementType.question));
-			dispatch(setParentStatement('top'));
-		}
+	if (!hasTopics) {
+		return (
+			<button onClick={onAddStatement} className={styles.fab} data-cy="add-statement">
+				<AddIcon />
+			</button>
+		);
 	}
 
 	return (
 		<div className={styles.footer} data-cy="add-statement">
-			<button onClick={addStatement} className={styles.addStatementButton}>
+			<button onClick={onAddStatement} className={styles.addStatementButton}>
 				<AddIcon />
 			</button>
 			<button
@@ -68,17 +54,17 @@ const Footer: FC<Props> = ({ setSubPage, subPage }) => {
 					</div>
 				</div>
 				<span className={`${subPage === 'decisions' ? styles.activeText : ''}`}>
-					{t('Decisions')}
+					{t('Discussions')}
 				</span>
 			</button>
 			<button
-				onClick={() => setSubPage('groups')}
-				className={`${styles.button} ${subPage === 'groups' ? styles.buttonActive : ''}`}
+				onClick={() => setSubPage('topics')}
+				className={`${styles.button} ${subPage === 'topics' ? styles.buttonActive : ''}`}
 			>
 				<div className={styles.buttonIcon}>
 					<GroupIcon />
 				</div>
-				<span className={`${subPage === 'groups' ? styles.activeText : ''}`}>{t('Groups')}</span>
+				<span className={`${subPage === 'topics' ? styles.activeText : ''}`}>{t('Topics')}</span>
 			</button>
 		</div>
 	);
