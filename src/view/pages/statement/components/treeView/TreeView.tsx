@@ -2,23 +2,32 @@ import { FC, useContext } from 'react';
 import { useParams } from 'react-router';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import ChatInput from '@/view/pages/statement/components/chat/components/input/ChatInput';
+import StatementBottomNav from '@/view/pages/statement/components/nav/bottom/StatementBottomNav';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useTreeData } from './hooks/useTreeData';
+import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
-import { StatementType } from '@freedi/shared-types';
+import { StatementType, SortType } from '@freedi/shared-types';
 
 interface TreeViewProps {
 	typeFilter?: readonly StatementType[];
+	showSortNav?: boolean;
+	onlySelectedOptions?: boolean;
 }
 
-const TreeView: FC<TreeViewProps> = ({ typeFilter }) => {
-	const { statementId } = useParams();
+const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOptions }) => {
+	const { statementId, sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
 
-	const { childrenMap, rootChildren } = useTreeData(statementId || '', typeFilter);
+	const treeOptions: TreeDataOptions = {
+		typeFilter,
+		sortType: showSortNav ? (sort as SortType) || undefined : undefined,
+		onlySelectedOptions,
+	};
+
+	const { childrenMap, rootChildren } = useTreeData(statementId || '', treeOptions);
 	const { expandedNodes, toggleNode, expandNode } = useTreeState(childrenMap, statementId || '');
 
 	return (
@@ -42,10 +51,14 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter }) => {
 				)}
 			</div>
 
-			{statement && (
-				<div className={styles['tree-view__input']}>
-					<ChatInput statement={statement} />
-				</div>
+			{showSortNav ? (
+				<StatementBottomNav />
+			) : (
+				statement && (
+					<div className={styles['tree-view__input']}>
+						<ChatInput statement={statement} />
+					</div>
+				)
 			)}
 		</div>
 	);

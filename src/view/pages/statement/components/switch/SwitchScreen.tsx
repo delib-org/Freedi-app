@@ -35,7 +35,13 @@ const SubQuestionsMap = lazyWithRetry(
 const TreeView = lazyWithRetry(
 	() => import('../treeView/TreeView'),
 	'TreeView',
-) as React.LazyExoticComponent<React.FC<{ typeFilter?: readonly StatementType[] }>>;
+) as React.LazyExoticComponent<
+	React.FC<{
+		typeFilter?: readonly StatementType[];
+		showSortNav?: boolean;
+		onlySelectedOptions?: boolean;
+	}>
+>;
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -173,7 +179,13 @@ function ViewByActiveTab({
 		case 'solutions':
 			return (
 				<Suspense fallback={<LoadingPage />}>
-					<TreeView typeFilter={QA_TYPE_FILTER} />
+					<TreeView typeFilter={QA_TYPE_FILTER} showSortNav onlySelectedOptions />
+				</Suspense>
+			);
+		case 'suggestions':
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<TreeView typeFilter={QA_TYPE_FILTER} showSortNav />
 				</Suspense>
 			);
 		case 'current':
