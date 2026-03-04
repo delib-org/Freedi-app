@@ -145,6 +145,8 @@ const QA_TYPE_FILTER: readonly StatementType[] = [
 	StatementType.option,
 ] as const;
 
+const OPTIONS_ONLY_FILTER: readonly StatementType[] = [StatementType.option] as const;
+
 function ViewByActiveTab({
 	activeView,
 	statement,
@@ -189,6 +191,11 @@ function ViewByActiveTab({
 				</Suspense>
 			);
 		case 'current':
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<TreeView typeFilter={OPTIONS_ONLY_FILTER} showSortNav />
+				</Suspense>
+			);
 		case 'options':
 			return <StagePage />;
 		case 'questions':
