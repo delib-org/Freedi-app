@@ -394,7 +394,10 @@ function calculatePosition(
 
 		return { x, y };
 	} catch (error) {
-		logError(error, { operation: 'polarizationIndex.PolarizationIndex.x', metadata: { message: 'Error calculating points:' } });
+		logError(error, {
+			operation: 'polarizationIndex.PolarizationIndex.x',
+			metadata: { message: 'Error calculating points:' },
+		});
 
 		return { x: 0, y: 0 };
 	}
@@ -466,11 +469,17 @@ function calculatePositions(
 					})),
 				};
 			} catch (error) {
-				logError(error, { operation: 'polarizationIndex.PolarizationIndex.unknown', metadata: { message: 'Error calculating point:' } });
+				logError(error, {
+					operation: 'polarizationIndex.PolarizationIndex.unknown',
+					metadata: { message: 'Error calculating point:' },
+				});
 			}
 		});
 	} catch (error) {
-		logError(error, { operation: 'polarizationIndex.PolarizationIndex.unknown', metadata: { message: 'Error calculating positions:' } });
+		logError(error, {
+			operation: 'polarizationIndex.PolarizationIndex.unknown',
+			metadata: { message: 'Error calculating positions:' },
+		});
 
 		return [];
 	}

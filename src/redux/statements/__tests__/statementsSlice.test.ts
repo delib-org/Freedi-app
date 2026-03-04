@@ -239,10 +239,7 @@ describe('statementsSlice', () => {
 			it('should update screen to chat', () => {
 				const stateWithOptions = { ...initialState, screen: StatementScreen.options };
 
-				const newState = statementsSlice.reducer(
-					stateWithOptions,
-					setScreen(StatementScreen.chat),
-				);
+				const newState = statementsSlice.reducer(stateWithOptions, setScreen(StatementScreen.chat));
 
 				expect(newState.screen).toBe(StatementScreen.chat);
 			});

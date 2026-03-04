@@ -34,7 +34,10 @@ export async function debugFCMDelivery() {
 			// Send a test message to SW
 			sw.active?.postMessage({ type: 'CHECK_PUSH_SUPPORT' });
 		} catch (error) {
-			logError(error, { operation: 'utils.debugFCMDelivery.unknown', metadata: { message: 'SW communication error:' } });
+			logError(error, {
+				operation: 'utils.debugFCMDelivery.unknown',
+				metadata: { message: 'SW communication error:' },
+			});
 		}
 	}
 

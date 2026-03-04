@@ -4,13 +4,12 @@
 
 // Container styling for MindElixir
 .mindElixirContainer {
-	// Fill the entire viewport width
 	width: 100vw;
 	height: 100%;
 	flex: 1;
 	direction: ltr;
 	position: relative;
-	// Offset the centering from page__main by using negative margin
+	// Break out of centered parent to fill full viewport width
 	margin-left: calc(-50vw + 50%);
 
 	// Custom enhancements on top of MindElixir's default styles
@@ -32,6 +31,12 @@
 			overflow-wrap: break-word;
 			line-height: 1.4;
 			text-align: start;
+
+			// Blue highlight border when selected
+			&.selected {
+				outline: 3px solid #47b4ef;
+				outline-offset: 2px;
+			}
 		}
 
 		// Root node can be wider
@@ -39,10 +44,235 @@
 			max-width: 300px;
 		}
 
+		// Move expand/collapse button to the left side so it doesn't
+		// overlap with the "+" add-child button on the right.
+		// !important needed to override MindElixir's high-specificity
+		// selectors like .map-container .rhs > me-wrapper > me-parent > me-epd
+		me-epd {
+			right: auto !important;
+			left: -10px !important;
+		}
+
 		// Main branches (first level) slightly wider
 		me-main > me-tpc {
 			max-width: 280px;
 		}
+
+		// ========================================
+		// Add child/sibling buttons (injected into MindElixir DOM)
+		// ========================================
+		.mind-map-add-btn {
+			position: absolute;
+			width: 24px;
+			height: 24px;
+			border-radius: 50%;
+			background: #47b4ef;
+			border: none;
+			color: white;
+			font-size: 18px;
+			font-weight: 700;
+			line-height: 1;
+			cursor: pointer;
+			z-index: 10;
+			padding: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background 0.15s ease, box-shadow 0.15s ease;
+			animation: mindMapBtnEnter 0.15s ease-out;
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+
+			&:hover {
+				background: #3a9fd6;
+				box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+			}
+
+			&:active {
+				background: #2d8ac0;
+			}
+
+			&:focus-visible {
+				outline: 2px solid #47b4ef;
+				outline-offset: 2px;
+			}
+
+			// Child button: right edge of node
+			&--child {
+				right: -14px;
+				top: 50%;
+				margin-top: -12px;
+			}
+
+			// Sibling button: bottom edge of node
+			&--sibling {
+				bottom: -14px;
+				left: 50%;
+				margin-left: -12px;
+			}
+		}
+
+		// Keyboard shortcut hints
+		.mind-map-hints {
+			position: absolute;
+			left: calc(100% + 20px);
+			top: 50%;
+			transform: translateY(-50%);
+			display: flex;
+			flex-direction: column;
+			gap: 6px;
+			white-space: nowrap;
+			font-size: 12px;
+			color: #555;
+			animation: mindMapFadeIn 0.2s ease-out;
+			z-index: 5;
+			pointer-events: none;
+		}
+
+		.mind-map-hint {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+		}
+
+		.mind-map-key {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			min-width: 28px;
+			height: 22px;
+			padding: 0 6px;
+			background: #f0f0f0;
+			border: 1px solid #ccc;
+			border-bottom: 2px solid #bbb;
+			border-radius: 4px;
+			font-size: 11px;
+			font-weight: 600;
+			font-family: inherit;
+			color: #444;
+		}
+
+		.mind-map-hint-text {
+			color: #666;
+			font-size: 12px;
+		}
+
+		@keyframes mindMapBtnEnter {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+
+		@keyframes mindMapFadeIn {
+			from {
+				opacity: 0;
+			}
+			to {
+				opacity: 1;
+			}
+		}
+
+		// Mobile/touch adjustments
+		@media (max-width: 767px) {
+			.mind-map-add-btn {
+				width: 32px;
+				height: 32px;
+				font-size: 20px;
+
+				&--child {
+					right: -18px;
+					margin-top: -16px;
+				}
+
+				&--sibling {
+					bottom: -18px;
+					margin-left: -16px;
+				}
+			}
+
+			.mind-map-hints {
+				display: none;
+			}
+		}
+
+		@media (hover: none) {
+			.mind-map-hints {
+				display: none;
+			}
+		}
+	}
+}
+
+// ========================================
+// React toolbar overlay (positioned outside MindElixir DOM)
+// ========================================
+.toolbar {
+	position: fixed;
+	transform: translateX(-50%);
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	background: var(--card-default, #ffffff);
+	border-radius: 8px;
+	padding: 4px;
+	box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+	z-index: 100;
+	animation: toolbarFadeIn 0.15s ease-out;
+	white-space: nowrap;
+}
+
+.toolbarBtn {
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+	border: none;
+	background: transparent;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	color: var(--text-body, #555);
+	transition: background 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: var(--btn-primary, #5f88e5);
+		color: white;
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: -2px;
+	}
+
+	svg {
+		width: 18px;
+		height: 18px;
+	}
+}
+
+.toolbarBtnDelete {
+	&:hover {
+		background: var(--disagree, #fe6ba2);
+		color: white;
+	}
+}
+
+.toolbarDivider {
+	width: 1px;
+	height: 20px;
+	background: var(--border-color, #ddd);
+	margin: 0 2px;
+}
+
+@keyframes toolbarFadeIn {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
 	}
 }
 
@@ -96,16 +326,16 @@
 	justify-content: center;
 	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 	transition: transform 0.2s ease, box-shadow 0.2s ease;
+	color: white;
 
 	&:hover {
 		transform: scale(1.1);
 		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 	}
 
-	img {
+	svg {
 		width: 24px;
 		height: 24px;
-		filter: brightness(0) invert(1);
 	}
 }
 
@@ -125,31 +355,25 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transition: background-color 0.2s ease, transform 0.2s ease;
+		transition: background-color 0.2s ease, transform 0.2s ease, color 0.2s ease;
 		box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+		color: var(--btn-primary, #5f88e5);
 
 		&:hover {
 			background-color: var(--btn-primary, #5f88e5);
 			transform: scale(1.1);
-
-			img {
-				filter: brightness(0) invert(1);
-			}
+			color: white;
 		}
 
-		img {
-			width: 20px;
-			height: 20px;
-			transition: filter 0.2s ease;
+		svg {
+			width: 22px;
+			height: 22px;
 		}
 
 		&:first-child {
 			background-color: var(--disagree, #fe6ba2);
 			border-color: var(--disagree, #fe6ba2);
-
-			img {
-				filter: brightness(0) invert(1);
-			}
+			color: white;
 
 			&:hover {
 				background-color: color.adjust(#fe6ba2, $lightness: -10%);
@@ -207,9 +431,9 @@
 		width: 40px;
 		height: 40px;
 
-		img {
-			width: 16px;
-			height: 16px;
+		svg {
+			width: 18px;
+			height: 18px;
 		}
 	}
 }

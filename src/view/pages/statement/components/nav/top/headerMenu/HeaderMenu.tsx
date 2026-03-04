@@ -1,5 +1,5 @@
 import { FC, useState } from 'react';
-import { Statement } from '@freedi/shared-types';
+import { Statement, Screen } from '@freedi/shared-types';
 
 // Icons
 import DisconnectIcon from '@/assets/icons/disconnectIcon.svg?react';
@@ -8,6 +8,8 @@ import InvitationIcon from '@/assets/icons/invitation.svg?react';
 import ShareIcon from '@/assets/icons/shareIcon.svg?react';
 import LanguagesIcon from '@/assets/icons/languagesIcon.svg?react';
 import SettingsIcon from '@/assets/icons/settings.svg?react';
+import TriangleIcon from '@/assets/icons/triangle.svg?react';
+import MapIcon from '@/assets/icons/navMainPageIcon.svg?react';
 
 // Components
 import Menu from '@/view/components/menu/Menu';
@@ -31,6 +33,7 @@ interface HeaderMenuProps {
 	onFollowMe: () => void;
 	onInvitePanel: () => void;
 	onNavigateToSettings: () => void;
+	onNavigateToScreen: (screen: Screen) => void;
 }
 
 const HeaderMenu: FC<HeaderMenuProps> = ({
@@ -46,6 +49,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onFollowMe,
 	onInvitePanel,
 	onNavigateToSettings,
+	onNavigateToScreen,
 }) => {
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -57,6 +61,11 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	const menuHeaderStyle = {
 		backgroundColor: headerStyle.backgroundColor,
 		color: headerStyle.color,
+	};
+
+	const handleNavigateToMap = (screen: Screen) => {
+		onNavigateToScreen(screen);
+		setIsMenuOpen(false);
 	};
 
 	return (
@@ -83,6 +92,29 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 					icon={<ShareIcon style={menuIconStyle} />}
 					onOptionClick={onShare}
 				/>
+
+				<MenuOption
+					label={t('Agreement Map')}
+					icon={<TriangleIcon style={menuIconStyle} />}
+					onOptionClick={() => handleNavigateToMap(Screen.agreementMap)}
+				/>
+				<MenuOption
+					label={t('Collaboration Index')}
+					icon={<TriangleIcon style={menuIconStyle} />}
+					onOptionClick={() => handleNavigateToMap(Screen.polarizationIndex)}
+				/>
+				<MenuOption
+					label={t('Mind Map')}
+					icon={<MapIcon style={menuIconStyle} />}
+					onOptionClick={() => handleNavigateToMap(Screen.mindMap)}
+				/>
+				{statement.statementSettings?.enableSubQuestionsMap !== false && (
+					<MenuOption
+						label={t('Statement Map')}
+						icon={<MapIcon style={menuIconStyle} />}
+						onOptionClick={() => handleNavigateToMap(Screen.subQuestionsMap)}
+					/>
+				)}
 
 				{!isAdmin && (
 					<MenuOption

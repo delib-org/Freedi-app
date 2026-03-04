@@ -59,7 +59,10 @@ export function createManagedDocumentListener(
 
 	// Add listener to manager (we already registered intent synchronously)
 	listenerManager.addListener(key, setupFn, { type: 'document' }).catch((error) => {
-		logError(error, { operation: 'controllerUtils.firestoreListenerHelpers.setupFn', metadata: { message: 'Failed to add listener ${key}:' } });
+		logError(error, {
+			operation: 'controllerUtils.firestoreListenerHelpers.setupFn',
+			metadata: { message: 'Failed to add listener ${key}:' },
+		});
 		// Clean up pending state if setup fails
 		listenerManager.removeListener(key);
 	});
@@ -127,7 +130,10 @@ export function createManagedCollectionListener(
 
 	// Add listener to manager (we already registered intent synchronously)
 	listenerManager.addListener(key, setupFn, { type }).catch((error) => {
-		logError(error, { operation: 'controllerUtils.firestoreListenerHelpers.addedCount', metadata: { message: 'Failed to add listener ${key}:' } });
+		logError(error, {
+			operation: 'controllerUtils.firestoreListenerHelpers.addedCount',
+			metadata: { message: 'Failed to add listener ${key}:' },
+		});
 		// Clean up pending state if setup fails
 		listenerManager.removeListener(key);
 	});

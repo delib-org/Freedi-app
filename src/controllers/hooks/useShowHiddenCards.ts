@@ -39,7 +39,10 @@ export function useShowHiddenCards(): UseShowHiddenCardsReturn {
 			// Dispatch custom event for other components to listen
 			window.dispatchEvent(new CustomEvent(SHOW_HIDDEN_CARDS_CHANGE_EVENT, { detail: value }));
 		} catch (error) {
-			logError(error, { operation: 'hooks.useShowHiddenCards.setShowHiddenCards', metadata: { message: 'Failed to save showHiddenCards preference:' } });
+			logError(error, {
+				operation: 'hooks.useShowHiddenCards.setShowHiddenCards',
+				metadata: { message: 'Failed to save showHiddenCards preference:' },
+			});
 		}
 	}, []);
 

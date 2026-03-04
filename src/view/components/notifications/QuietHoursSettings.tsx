@@ -39,7 +39,10 @@ const QuietHoursSettings: React.FC<QuietHoursSettingsProps> = ({ disabled = fals
 				}
 				setIsLoading(false);
 			} catch (error) {
-				logError(error, { operation: 'notifications.QuietHoursSettings.loadConfig', metadata: { message: 'Error loading quiet hours config:' } });
+				logError(error, {
+					operation: 'notifications.QuietHoursSettings.loadConfig',
+					metadata: { message: 'Error loading quiet hours config:' },
+				});
 				setIsLoading(false);
 			}
 		};
@@ -62,7 +65,10 @@ const QuietHoursSettings: React.FC<QuietHoursSettingsProps> = ({ disabled = fals
 			setConfig(newConfig);
 			setIsSaving(false);
 		} catch (error) {
-			logError(error, { operation: 'notifications.QuietHoursSettings.handleSave', metadata: { message: 'Error saving quiet hours:' } });
+			logError(error, {
+				operation: 'notifications.QuietHoursSettings.handleSave',
+				metadata: { message: 'Error saving quiet hours:' },
+			});
 			setIsSaving(false);
 		}
 	};

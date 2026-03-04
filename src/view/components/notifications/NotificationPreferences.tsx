@@ -73,7 +73,10 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 				setIsLoading(false);
 			} catch (error) {
-				logError(error, { operation: 'notifications.NotificationPreferences.unknown', metadata: { message: 'Error loading notification preferences:' } });
+				logError(error, {
+					operation: 'notifications.NotificationPreferences.unknown',
+					metadata: { message: 'Error loading notification preferences:' },
+				});
 				setIsLoading(false);
 			}
 		};
@@ -120,7 +123,10 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 			setIsSaving(false);
 		} catch (error) {
-			logError(error, { operation: 'notifications.NotificationPreferences.unknown', metadata: { message: 'Error updating notification preference:' } });
+			logError(error, {
+				operation: 'notifications.NotificationPreferences.unknown',
+				metadata: { message: 'Error updating notification preference:' },
+			});
 			// Revert on error
 			setPreferences(preferences);
 			setIsSaving(false);

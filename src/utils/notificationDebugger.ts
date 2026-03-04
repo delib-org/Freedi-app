@@ -135,7 +135,9 @@ export async function comprehensiveNotificationDebug() {
 					isFirebaseMessaging: true,
 				});
 			} else {
-				logError(new Error('❌ Firebase messaging SW not found or not active'), { operation: 'utils.notificationDebugger.firebaseSW' });
+				logError(new Error('❌ Firebase messaging SW not found or not active'), {
+					operation: 'utils.notificationDebugger.firebaseSW',
+				});
 			}
 		}
 	}
@@ -173,7 +175,10 @@ export async function comprehensiveNotificationDebug() {
 			console.info('FCM Token Result:', { data: JSON.stringify(results.fcmToken, null, 2) });
 		}
 	} catch (error) {
-		logError(error, { operation: 'utils.notificationDebugger.unknown', metadata: { message: 'Error getting notification diagnostics:' } });
+		logError(error, {
+			operation: 'utils.notificationDebugger.unknown',
+			metadata: { message: 'Error getting notification diagnostics:' },
+		});
 		results.notificationServiceError = {
 			error: (error as Error).message,
 			stack: (error as Error).stack,
@@ -215,7 +220,9 @@ export async function comprehensiveNotificationDebug() {
 
 	if (issues.length > 0) {
 		logError(new Error('Issues Found:'), { operation: 'utils.notificationDebugger.firebaseSW' });
-		issues.forEach((issue) => logError(issue, { operation: 'utils.notificationDebugger.firebaseSW' }));
+		issues.forEach((issue) =>
+			logError(issue, { operation: 'utils.notificationDebugger.firebaseSW' }),
+		);
 	} else {
 		console.info('✅ No obvious issues found');
 	}

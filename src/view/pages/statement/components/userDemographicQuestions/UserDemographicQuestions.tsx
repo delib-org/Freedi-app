@@ -54,9 +54,7 @@ const UserDemographicQuestions: FC<Props> = ({
 
 		// Also update the otherText on the demographic answer
 		setUserDemographic((prevData) =>
-			prevData.map((q) =>
-				q.userQuestionId === questionId ? { ...q, otherText: text } : q
-			)
+			prevData.map((q) => (q.userQuestionId === questionId ? { ...q, otherText: text } : q)),
 		);
 	};
 
@@ -111,7 +109,7 @@ const UserDemographicQuestions: FC<Props> = ({
 									answerOptions: arrayValue,
 									otherText: hasOther ? currentOtherText : undefined,
 								}
-							: q
+							: q,
 					);
 				}
 
@@ -184,7 +182,10 @@ const UserDemographicQuestions: FC<Props> = ({
 			await setUserAnswers(userDemographic);
 			closeModal?.();
 		} catch (error) {
-			logError(error, { operation: 'userDemographicQuestions.UserDemographicQuestions.handleSubmit', metadata: { message: 'Error saving user answers:' } });
+			logError(error, {
+				operation: 'userDemographicQuestions.UserDemographicQuestions.handleSubmit',
+				metadata: { message: 'Error saving user answers:' },
+			});
 			// You might want to show an error message to the user here
 		} finally {
 			setIsSubmitting(false);

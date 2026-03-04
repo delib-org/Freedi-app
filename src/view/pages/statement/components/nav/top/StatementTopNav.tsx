@@ -69,6 +69,10 @@ const StatementTopNav: FC<Props> = ({
 		handleNavigation('settings');
 	}
 
+	function handleNavigateToScreen(targetScreen: Screen) {
+		handleNavigation(targetScreen);
+	}
+
 	return (
 		<nav
 			className="app-header app-header--sticky"
@@ -91,13 +95,13 @@ const StatementTopNav: FC<Props> = ({
 						onFollowMe={handleFollowMe}
 						onInvitePanel={handleInvitePanel}
 						onNavigateToSettings={handleNavigateToSettings}
+						onNavigateToScreen={handleNavigateToScreen}
 					/>
 				)}
 				<NavButtons
 					statement={statement}
 					parentStatement={parentStatement}
 					screen={screen}
-					handleNavigation={handleNavigation}
 					headerStyle={headerStyle}
 					allowNavigation={true}
 				/>

@@ -211,11 +211,9 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 
 		// Validate input
 		if (!optionStatementId || !parentStatementId || !roomSize || !adminId) {
-			res
-				.status(400)
-				.json({
-					error: 'Missing required fields: optionStatementId, parentStatementId, roomSize, adminId',
-				});
+			res.status(400).json({
+				error: 'Missing required fields: optionStatementId, parentStatementId, roomSize, adminId',
+			});
 
 			return;
 		}
@@ -252,11 +250,9 @@ export async function splitJoinedOption(req: Request, res: Response): Promise<vo
 		}
 
 		if (joinedMembers.length < roomSize) {
-			res
-				.status(400)
-				.json({
-					error: `Not enough members to split. Need at least ${roomSize} members, have ${joinedMembers.length}`,
-				});
+			res.status(400).json({
+				error: `Not enough members to split. Need at least ${roomSize} members, have ${joinedMembers.length}`,
+			});
 
 			return;
 		}

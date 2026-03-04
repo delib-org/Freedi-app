@@ -62,7 +62,10 @@ export default function SimilarStatements() {
 			dispatch(clearNewStatement());
 			closePanels();
 		} catch (error) {
-			logError(error, { operation: 'components.SimilarStatements.handleSelectSimilarStatement', metadata: { message: 'Failed to set evaluation:' } });
+			logError(error, {
+				operation: 'components.SimilarStatements.handleSelectSimilarStatement',
+				metadata: { message: 'Failed to set evaluation:' },
+			});
 		}
 	};
 

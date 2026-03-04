@@ -13,10 +13,11 @@ import ProtectedLayout from './ProtectedLayout';
 import ErrorPage from '@/view/pages/error/ErrorPage';
 
 // Start page (needs to be available at root level for /start route)
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
+import lazyWithRetry from './lazyWithRetry';
 
-const Start = lazy(() => import('@/view/pages/start/Start'));
+const Start = lazyWithRetry(() => import('@/view/pages/start/Start'), 'Start-root');
 
 // Combine all routes into a single router
 export const router = createBrowserRouter([

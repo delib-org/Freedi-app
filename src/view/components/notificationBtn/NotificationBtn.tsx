@@ -28,6 +28,11 @@ const NotificationBtn = () => {
 	const [showInAppNotifications, setShowInAppNotifications] = useState(false);
 
 	function handleShowInAppNotifications() {
+		// Prompt for browser notification permission only after explicit user intent.
+		if ('Notification' in window && Notification.permission === 'default') {
+			window.dispatchEvent(new Event('freedi:open-notification-prompt'));
+		}
+
 		setShowInAppNotifications(!showInAppNotifications);
 
 		// ✅ Mark unread notifications as viewed after 2 seconds
@@ -52,8 +57,15 @@ const NotificationBtn = () => {
 	const notifRef = useClickOutside(handleClickOutside);
 
 	return (
-		<button onClick={handleShowInAppNotifications} className={styles.notificationBtn}>
-			{/* ✅ Show badge only if there are UNREAD notifications */}
+		<div
+			onClick={handleShowInAppNotifications}
+			className={styles.notificationBtn}
+			role="button"
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if (e.key === 'Enter' || e.key === ' ') handleShowInAppNotifications();
+			}}
+		>
 			{unreadCount > 0 && (
 				<UnreadBadge
 					count={unreadCount}
@@ -71,7 +83,7 @@ const NotificationBtn = () => {
 					<InAppNotifications />
 				</div>
 			)}
-		</button>
+		</div>
 	);
 };
 

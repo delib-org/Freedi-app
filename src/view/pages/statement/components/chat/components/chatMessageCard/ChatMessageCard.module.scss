@@ -441,38 +441,28 @@
   justify-content: flex-end;
 
   button {
-    padding: 0.25rem 0.5rem;
+    padding: 0.25rem;
     border: none;
-    border-radius: 4px;
-    background: transparent;
+    background: none;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    font-size: 0.875rem;
-    color: var(--text-body);
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
 
     &:first-child {
-      background: var(--approve, #4caf50);
-      color: white;
-
-      svg {
-        width: 0.875rem;
-        height: 0.875rem;
-        fill: white;
-      }
+      color: var(--approve);
     }
 
     &:last-child {
-      background: var(--inputBackground);
-
-      &:hover {
-        background: var(--border-color);
-      }
+      color: var(--reject);
     }
 
     &:hover {
-      opacity: 0.9;
+      opacity: 0.7;
     }
   }
 }

@@ -12,6 +12,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './QuestionsView.module.scss';
+import { HelpCircle, Plus, MessageSquare } from 'lucide-react';
 
 const QuestionsView: FC = () => {
 	const { t } = useTranslation();
@@ -21,7 +22,10 @@ const QuestionsView: FC = () => {
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const statementColor = useStatementColor({ statement });
 
-	const questionsSelect = useMemo(() => questionsSelector(statement?.statementId), [statement?.statementId]);
+	const questionsSelect = useMemo(
+		() => questionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
 	const questions = useSelector(questionsSelect);
 	const visibleQuestions = questions.filter((q) => !q.hide || isAdmin);
 
@@ -43,8 +47,46 @@ const QuestionsView: FC = () => {
 		<>
 			<div className={styles.questionsView}>
 				{visibleQuestions.length === 0 ? (
-					<div className={styles.empty}>
-						<p>{t('No questions yet')}</p>
+					<div className={styles.onboarding}>
+						<div className={styles.onboarding__step}>
+							<span className={styles.onboarding__icon}>
+								<HelpCircle size={20} />
+							</span>
+							<div className={styles.onboarding__content}>
+								<h3 className={styles.onboarding__stepTitle}>
+									{t('questionsOnboarding.breakItDown')}
+								</h3>
+								<p className={styles.onboarding__stepText}>
+									{t('questionsOnboarding.breakItDownDesc')}
+								</p>
+							</div>
+						</div>
+						<div className={styles.onboarding__step}>
+							<span className={styles.onboarding__icon}>
+								<Plus size={20} />
+							</span>
+							<div className={styles.onboarding__content}>
+								<h3 className={styles.onboarding__stepTitle}>
+									{t('questionsOnboarding.addQuestion')}
+								</h3>
+								<p className={styles.onboarding__stepText}>
+									{t('questionsOnboarding.addQuestionDesc')}
+								</p>
+							</div>
+						</div>
+						<div className={styles.onboarding__step}>
+							<span className={styles.onboarding__icon}>
+								<MessageSquare size={20} />
+							</span>
+							<div className={styles.onboarding__content}>
+								<h3 className={styles.onboarding__stepTitle}>
+									{t('questionsOnboarding.convertFromDiscussion')}
+								</h3>
+								<p className={styles.onboarding__stepText}>
+									{t('questionsOnboarding.convertFromDiscussionDesc')}
+								</p>
+							</div>
+						</div>
 					</div>
 				) : (
 					<div className="wrapper">
@@ -57,18 +99,16 @@ const QuestionsView: FC = () => {
 				)}
 			</div>
 
-			{isAdmin && (
-				<div className={styles.addButtonWrapper}>
-					<button
-						className={styles.addButton}
-						style={statementColor}
-						onClick={handleAddQuestion}
-						aria-label={t('Add a question')}
-					>
-						<PlusIcon style={{ color: statementColor.color }} />
-					</button>
-				</div>
-			)}
+			<div className={styles.addButtonWrapper}>
+				<button
+					className={styles.addButton}
+					style={statementColor}
+					onClick={handleAddQuestion}
+					aria-label={t('Add a question')}
+				>
+					<PlusIcon style={{ color: statementColor.color }} />
+				</button>
+			</div>
 		</>
 	);
 };

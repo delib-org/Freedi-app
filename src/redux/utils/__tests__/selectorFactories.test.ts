@@ -384,7 +384,10 @@ describe('Selector Factories', () => {
 			const s3 = buildStatement({ statementId: 's3', createdAt: 200 });
 			const state = buildRootState([s1, s2, s3]);
 
-			const selector = factory(() => true, (a, b) => a.createdAt - b.createdAt);
+			const selector = factory(
+				() => true,
+				(a, b) => a.createdAt - b.createdAt,
+			);
 			const result = selector(state as never);
 
 			expect(result.map((s) => s.createdAt)).toEqual([100, 200, 300]);

@@ -74,7 +74,10 @@ export async function banMember(
 			bannedAt: new Date().toISOString(),
 		});
 	} catch (error) {
-		logError(error, { operation: 'membership.banMember.unknown', metadata: { message: 'Error banning member:' } });
+		logError(error, {
+			operation: 'membership.banMember.unknown',
+			metadata: { message: 'Error banning member:' },
+		});
 		throw error;
 	}
 }
@@ -106,7 +109,10 @@ export async function unbanMember(statementId: string, userId: string): Promise<
 			unbannedAt: new Date().toISOString(),
 		});
 	} catch (error) {
-		logError(error, { operation: 'membership.banMember.unbanMember', metadata: { message: 'Error unbanning member:' } });
+		logError(error, {
+			operation: 'membership.banMember.unbanMember',
+			metadata: { message: 'Error unbanning member:' },
+		});
 		throw error;
 	}
 }

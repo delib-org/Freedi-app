@@ -1,4 +1,5 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useSelector } from 'react-redux';
 import SuggestionCards from '../../evaluations/components/suggestionCards/SuggestionCards';
 import styles from './StagePage.module.scss';
 import StatementBottomNav from '../../nav/bottom/StatementBottomNav';
@@ -11,6 +12,8 @@ import { useSummarization } from '@/controllers/hooks/useSummarization';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import SummaryDisplay from '../question/document/MultiStageQuestion/components/SummaryDisplay/SummaryDisplay';
 import SummarizeModal from '../question/document/MultiStageQuestion/components/SummarizeModal/SummarizeModal';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { Lightbulb, Plus, MessageSquare } from 'lucide-react';
 
 interface Props {
 	showStageTitle?: boolean;
@@ -24,6 +27,12 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 	const { isGenerating, generateSummary } = useSummarization();
 	const { isAdmin } = useEditPermission(statement);
 	const [isModalOpen, setIsModalOpen] = useState(false);
+	const subsSelect = useMemo(
+		() => statementSubsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const allSubs = useSelector(subsSelect);
+	const hasSubStatements = allSubs.length > 0;
 
 	useEffect(() => {
 		const updateHeight = () => {
@@ -65,36 +74,80 @@ const StagePage = ({ showStageTitle = true, showBottomNav = true }: Props) => {
 
 	return (
 		<>
-			<div className={`${styles['stage-page']} wrapper`}>
-				{!isClustering && showStageTitle && (
-					<h2>
-						{t('Stage')}
-						{statement?.statement && stageName}
-					</h2>
-				)}
+			{hasSubStatements ? (
+				<div className={`${styles['stage-page']} wrapper`}>
+					{!isClustering && showStageTitle && (
+						<h2>
+							{t('Stage')}
+							{statement?.statement && stageName}
+						</h2>
+					)}
 
-				{/* Summary Display */}
-				<SummaryDisplay
-					summary={statementWithSummary?.summary}
-					generatedAt={statementWithSummary?.summaryGeneratedAt}
-				/>
+					{/* Summary Display */}
+					<SummaryDisplay
+						summary={statementWithSummary?.summary}
+						generatedAt={statementWithSummary?.summaryGeneratedAt}
+					/>
 
-				{/* Summarize Button - Only visible to admins */}
-				{statement && isAdmin && (
-					<div className={styles.summarizeWrapper}>
-						<button
-							className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
-							onClick={() => setIsModalOpen(true)}
-							disabled={isGenerating}
-							aria-label={t('Generate AI summary of the discussion')}
-						>
-							{isGenerating ? t('Generating...') : t('Summarize Discussion')}
-						</button>
+					{/* Summarize Button - Only visible to admins */}
+					{statement && isAdmin && (
+						<div className={styles.summarizeWrapper}>
+							<button
+								className={`btn btn--secondary ${isGenerating ? 'btn--disabled' : ''}`}
+								onClick={() => setIsModalOpen(true)}
+								disabled={isGenerating}
+								aria-label={t('Generate AI summary of the discussion')}
+							>
+								{isGenerating ? t('Generating...') : t('Summarize Discussion')}
+							</button>
+						</div>
+					)}
+
+					<StagePageSwitch statement={statement} />
+				</div>
+			) : (
+				<div className={styles.onboarding}>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Lightbulb size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('solutionsOnboarding.shareSolution')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('solutionsOnboarding.shareSolutionDesc')}
+							</p>
+						</div>
 					</div>
-				)}
-
-				<StagePageSwitch statement={statement} />
-			</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Plus size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('solutionsOnboarding.addSolution')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('solutionsOnboarding.addSolutionDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<MessageSquare size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('solutionsOnboarding.convertFromDiscussion')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('solutionsOnboarding.convertFromDiscussionDesc')}
+							</p>
+						</div>
+					</div>
+				</div>
+			)}
 			{showBottomNav && (
 				<div className={styles.bottomNav}>
 					<StatementBottomNav />

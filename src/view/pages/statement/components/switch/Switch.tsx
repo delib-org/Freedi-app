@@ -20,6 +20,7 @@ import {
 	statementOptionsSelector,
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
+import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -36,17 +37,29 @@ const Switch = () => {
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
 
-	const handleTabChange = useCallback((tabId: string) => {
-		setActiveView(tabId);
-		setSearchParams({ tab: tabId }, { replace: true });
-	}, [setSearchParams]);
+	const handleTabChange = useCallback(
+		(tabId: string) => {
+			setActiveView(tabId);
+			setSearchParams({ tab: tabId }, { replace: true });
+		},
+		[setSearchParams],
+	);
 
 	const mainRef = useRef<HTMLElement>(null);
 	useHeaderHideOnScroll(mainRef);
 
-	const subsSelect = useMemo(() => statementSubsSelector(statement?.statementId), [statement?.statementId]);
-	const optionsSelect = useMemo(() => statementOptionsSelector(statement?.statementId), [statement?.statementId]);
-	const questionsSelect = useMemo(() => questionsSelector(statement?.statementId), [statement?.statementId]);
+	const subsSelect = useMemo(
+		() => statementSubsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const optionsSelect = useMemo(
+		() => statementOptionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
+	const questionsSelect = useMemo(
+		() => questionsSelector(statement?.statementId),
+		[statement?.statementId],
+	);
 
 	const allSubs = useSelector(subsSelect);
 	const options = useSelector(optionsSelect);
@@ -54,9 +67,9 @@ const Switch = () => {
 
 	const segments = useMemo(() => {
 		const allSegments = [
-			{ id: 'chat', label: t('Chat'), count: allSubs.length },
+			{ id: 'chat', label: t('Discussion'), count: allSubs.length },
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.option)
-				? [{ id: 'options', label: t('Options'), count: options.length }]
+				? [{ id: 'options', label: t('Solutions'), count: options.length }]
 				: []),
 			...(statement && isStatementTypeAllowedAsChildren(statement, StatementType.question)
 				? [{ id: 'questions', label: t('Questions'), count: questions.length }]
@@ -110,13 +123,61 @@ const Switch = () => {
 
 					{showSegmentedControl && (
 						<div className={styles.segmentedControlWrapper}>
-							<SegmentedControl segments={segments} activeId={activeView} onChange={handleTabChange} />
+							<SegmentedControl
+								segments={segments}
+								activeId={activeView}
+								onChange={handleTabChange}
+							/>
 						</div>
 					)}
 				</div>
 			</div>
 
 			<OnlineUsers statementId={statement?.statementId} />
+			{allSubs.length === 0 && activeView === 'chat' && (
+				<div className={styles.onboarding}>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<MessageSquare size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('questionOnboarding.startConversation')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.startConversationDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<Lightbulb size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('questionOnboarding.addSolutions')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.addSolutionsDesc')}
+							</p>
+						</div>
+					</div>
+					<div className={styles.onboarding__step}>
+						<span className={styles.onboarding__icon}>
+							<HelpCircle size={20} />
+						</span>
+						<div className={styles.onboarding__content}>
+							<h3 className={styles.onboarding__stepTitle}>
+								{t('questionOnboarding.askQuestions')}
+							</h3>
+							<p className={styles.onboarding__stepText}>
+								{t('questionOnboarding.askQuestionsDesc')}
+							</p>
+						</div>
+					</div>
+					<p className={styles.onboarding__cta}>{t('questionOnboarding.getStarted')}</p>
+				</div>
+			)}
 			<SwitchScreen statement={statement} role={role} activeView={activeView} />
 		</main>
 	);

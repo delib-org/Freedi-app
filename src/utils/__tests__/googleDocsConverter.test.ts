@@ -185,10 +185,7 @@ describe('googleDocsConverter', () => {
 					content: [
 						{
 							paragraph: {
-								elements: [
-									{ textRun: { content: 'Hello ' } },
-									{ textRun: { content: 'World' } },
-								],
+								elements: [{ textRun: { content: 'Hello ' } }, { textRun: { content: 'World' } }],
 								paragraphStyle: { namedStyleType: 'NORMAL_TEXT' },
 							},
 						},

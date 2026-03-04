@@ -50,7 +50,10 @@ export async function setImageLocally(
 							URL.revokeObjectURL(previewURL);
 						}, 1000);
 					} catch (error) {
-						logError(error, { operation: 'uploadImage.uploadImageCont.compressedFile', metadata: { message: 'Error uploading image:' } });
+						logError(error, {
+							operation: 'uploadImage.uploadImageCont.compressedFile',
+							metadata: { message: 'Error uploading image:' },
+						});
 						setProgress(0);
 					}
 				};

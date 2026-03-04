@@ -20,7 +20,10 @@ export function setupIndexedDBErrorHandler(): void {
 
 		// Check if this is an IndexedDB-related error
 		if (isIndexedDBError(error)) {
-			logError(error, { operation: 'utils.indexedDBErrorHandler.setupIndexedDBErrorHandler', metadata: { message: 'IndexedDB error detected:' } });
+			logError(error, {
+				operation: 'utils.indexedDBErrorHandler.setupIndexedDBErrorHandler',
+				metadata: { message: 'IndexedDB error detected:' },
+			});
 
 			// Prevent the error from crashing the app
 			event.preventDefault();
@@ -44,7 +47,10 @@ export function setupIndexedDBErrorHandler(): void {
 	window.addEventListener('error', (event) => {
 		const error = event.error;
 		if (isFirestoreAssertionError(error)) {
-			logError(error, { operation: 'utils.indexedDBErrorHandler.unknown', metadata: { message: 'Firestore assertion error detected:' } });
+			logError(error, {
+				operation: 'utils.indexedDBErrorHandler.unknown',
+				metadata: { message: 'Firestore assertion error detected:' },
+			});
 			event.preventDefault();
 			recordIndexedDBError();
 			attemptRecovery();
@@ -69,7 +75,10 @@ function attemptRecovery(): void {
 
 	// Check if we're in cooldown period
 	if (now - lastAttempt < RECOVERY_COOLDOWN_MS && attemptCount >= MAX_RECOVERY_ATTEMPTS) {
-		logError(new Error('Max recovery attempts reached. Please close other tabs and refresh manually.'), { operation: 'indexedDBErrorHandler.attemptRecovery' });
+		logError(
+			new Error('Max recovery attempts reached. Please close other tabs and refresh manually.'),
+			{ operation: 'indexedDBErrorHandler.attemptRecovery' },
+		);
 		logUserFriendlyError();
 
 		return;

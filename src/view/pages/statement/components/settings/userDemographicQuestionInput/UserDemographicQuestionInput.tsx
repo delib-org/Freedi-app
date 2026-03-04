@@ -27,7 +27,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const [validationError, setValidationError] = useState('');
-	const [isChosen, setIsChosen] = useState<number | null>(null);
+	const [, setIsChosen] = useState<number | null>(null);
 	const otherInputRef = useRef<HTMLInputElement>(null);
 
 	const isOtherSelectedRadio = value === OTHER_SENTINEL;
@@ -89,7 +89,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 		const currentValues = Array.isArray(value) ? value : [];
 		const newValues = checked
 			? [...currentValues, OTHER_SENTINEL]
-			: currentValues.filter(v => v !== OTHER_SENTINEL);
+			: currentValues.filter((v) => v !== OTHER_SENTINEL);
 
 		if (!checked && onOtherTextChange) {
 			onOtherTextChange(question.userQuestionId || '', '');
@@ -111,7 +111,6 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 		if (required) {
 			validateInput(value);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [value, required]);
 
 	const renderOtherOption = (type: 'radio' | 'checkbox') => {
@@ -127,12 +126,17 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 				>
 					<input
 						type={type}
-						name={type === 'radio' ? `radio-${question.userQuestionId}` : `checkbox-${question.userQuestionId}`}
+						name={
+							type === 'radio'
+								? `radio-${question.userQuestionId}`
+								: `checkbox-${question.userQuestionId}`
+						}
 						value={OTHER_SENTINEL}
 						checked={isSelected}
-						onChange={type === 'radio'
-							? handleOtherRadioSelect
-							: (e) => handleOtherCheckboxToggle(e.target.checked)
+						onChange={
+							type === 'radio'
+								? handleOtherRadioSelect
+								: (e) => handleOtherCheckboxToggle(e.target.checked)
 						}
 						className={type === 'radio' ? styles.radioInput : styles.checkboxInput}
 					/>
@@ -140,10 +144,12 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 						{t('Other')}
 					</span>
 				</label>
-				<div className={`${styles.otherInputWrapper} ${isSelected ? styles.otherInputVisible : ''}`}>
+				<div
+					className={`${styles.otherInputWrapper} ${isSelected ? styles.otherInputVisible : ''}`}
+				>
 					<input
 						ref={otherInputRef}
-						type='text'
+						type="text"
 						value={otherText}
 						onChange={(e) => onOtherTextChange?.(question.userQuestionId || '', e.target.value)}
 						placeholder={t('Please specify...')}
@@ -152,9 +158,7 @@ const UserDemographicQuestionInput: FC<UserDemographicQuestionInputProps> = ({
 						tabIndex={isSelected ? 0 : -1}
 					/>
 					{showOtherError && (
-						<span className={styles.otherErrorMessage}>
-							{t('Please specify your answer')}
-						</span>
+						<span className={styles.otherErrorMessage}>{t('Please specify your answer')}</span>
 					)}
 				</div>
 			</div>

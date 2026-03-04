@@ -20,6 +20,7 @@ import {
   updateParagraphStatementToDB,
   deleteParagraphStatementToDB,
   bulkDeleteParagraphStatementsToDB,
+  reorderParagraphsToDB,
 } from '@/controllers/db/paragraphs/setParagraphStatement';
 import styles from './editor.module.scss';
 
@@ -248,6 +249,14 @@ export default function EditorPage() {
       // Calculate order - insert at position or end
       const order = insertAtIndex !== null ? insertAtIndex : paragraphs.length;
 
+      // When inserting mid-document, shift existing paragraphs at and after the insert position
+      if (insertAtIndex !== null && insertAtIndex < paragraphs.length) {
+        const toShift = paragraphs
+          .filter((_, i) => i >= insertAtIndex)
+          .map((p, i) => ({ paragraphId: p.paragraphId, order: insertAtIndex + 1 + i }));
+        await reorderParagraphsToDB(toShift);
+      }
+
       // Create paragraph
       await createParagraphStatementToDB({
         content: data.content,
@@ -300,13 +309,18 @@ export default function EditorPage() {
     setDraggedIndex(index);
   }, [draggedIndex, paragraphs]);
 
-  const handleDragEnd = useCallback(() => {
+  const handleDragEnd = useCallback(async () => {
     if (draggedIndex === null) return;
 
-    console.info('[EditorPage] Drag ended - reorder not yet implemented', {
-      draggedIndex,
-      newOrder: paragraphs.map(p => p.paragraphId),
-    });
+    // Persist the new order to Firestore
+    const newOrders = paragraphs.map((p, i) => ({ paragraphId: p.paragraphId, order: i }));
+
+    try {
+      await reorderParagraphsToDB(newOrders);
+      console.info('[EditorPage] Paragraphs reordered successfully');
+    } catch (error) {
+      console.error('[EditorPage] Failed to persist reorder:', error);
+    }
 
     setDraggedIndex(null);
   }, [draggedIndex, paragraphs]);

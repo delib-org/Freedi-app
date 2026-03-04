@@ -116,7 +116,10 @@ const MemberReviewList: FC<Props> = ({
 				// Show success feedback
 				console.info('Member banned successfully');
 			} catch (error) {
-				logError(error, { operation: 'memberReviewList.MemberReviewList.handleBanConfirm', metadata: { message: 'Error banning member:' } });
+				logError(error, {
+					operation: 'memberReviewList.MemberReviewList.handleBanConfirm',
+					metadata: { message: 'Error banning member:' },
+				});
 				// TODO: Show error notification to user
 			}
 		}

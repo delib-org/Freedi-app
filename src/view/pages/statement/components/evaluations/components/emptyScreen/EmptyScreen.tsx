@@ -1,6 +1,5 @@
 import { FC } from 'react';
 import styles from './EmptyScreen.module.scss';
-import ideaImage from '@/assets/images/manWithIdeaLamp.png';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { ChevronDown } from 'lucide-react';
 import { Statement } from '@freedi/shared-types';
@@ -17,8 +16,6 @@ const EmptyScreen: FC<Props> = ({ statement: _statement }) => {
 
 	return (
 		<div className={styles.emptyScreen}>
-			<img src={ideaImage} alt={t('Compose your suggestion')} className={styles.ideaImage} />
-
 			<h1 className={styles.title}>
 				{isLearning ? t('Be the first to share your idea!') : t('No suggestions yet')}
 			</h1>

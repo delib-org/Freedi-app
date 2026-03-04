@@ -44,7 +44,10 @@ const AddEvidenceModal: FC<AddEvidenceModalProps> = ({
 
 			onClose();
 		} catch (error) {
-			logError(error, { operation: 'AddEvidenceModal.AddEvidenceModal.handleSubmit', metadata: { message: `Error ${isEditMode ? 'updating' : 'creating'} evidence post:` } });
+			logError(error, {
+				operation: 'AddEvidenceModal.AddEvidenceModal.handleSubmit',
+				metadata: { message: `Error ${isEditMode ? 'updating' : 'creating'} evidence post:` },
+			});
 		} finally {
 			setIsSubmitting(false);
 		}

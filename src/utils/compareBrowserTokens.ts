@@ -27,7 +27,9 @@ export async function compareBrowserTokens() {
 	// Get all tokens for current user
 	const user = JSON.parse(localStorage.getItem('userAuth') || '{}');
 	if (!user.uid) {
-		logError(new Error('No user logged in'), { operation: 'utils.compareBrowserTokens.compareBrowserTokens' });
+		logError(new Error('No user logged in'), {
+			operation: 'utils.compareBrowserTokens.compareBrowserTokens',
+		});
 
 		return;
 	}
@@ -80,7 +82,9 @@ export async function compareBrowserTokens() {
 			console.info('   - Matches current token:', fcmMatch[1] === currentToken);
 		}
 	} else {
-		logError(new Error('   - No push subscription found!'), { operation: 'utils.compareBrowserTokens.unknown' });
+		logError(new Error('   - No push subscription found!'), {
+			operation: 'utils.compareBrowserTokens.unknown',
+		});
 	}
 
 	console.info('\n%c=== END COMPARISON ===', 'color: purple; font-weight: bold');

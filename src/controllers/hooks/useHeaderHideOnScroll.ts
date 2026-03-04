@@ -96,7 +96,11 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 				if (Math.abs(diff) > SCROLL_THRESHOLD) {
 					const scrollableDistance = scrollElement.scrollHeight - scrollElement.clientHeight;
 
-					if (diff > 0 && currentScrollTop > MIN_SCROLL_TOP && scrollableDistance > MIN_SCROLLABLE_DISTANCE) {
+					if (
+						diff > 0 &&
+						currentScrollTop > MIN_SCROLL_TOP &&
+						scrollableDistance > MIN_SCROLLABLE_DISTANCE
+					) {
 						hideHeader();
 					} else if (diff < 0) {
 						showHeader();
@@ -120,6 +124,5 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 			mediaQuery.removeEventListener('change', handleMediaChange);
 			showHeader();
 		};
-	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 }

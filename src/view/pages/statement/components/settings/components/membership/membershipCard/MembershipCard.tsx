@@ -34,7 +34,10 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	async function handleRemoveMember() {
 		// If trying to ban, check if user can be banned
 		if (role !== Role.banned && !userCanBeBanned) {
-			logError(banDisabledReason, { operation: 'membershipCard.MembershipCard.handleRemoveMember', metadata: { message: 'Cannot ban this user:' } });
+			logError(banDisabledReason, {
+				operation: 'membershipCard.MembershipCard.handleRemoveMember',
+				metadata: { message: 'Cannot ban this user:' },
+			});
 
 			return;
 		}
@@ -44,7 +47,10 @@ const MembershipCard: FC<Props> = ({ member }) => {
 			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			logError(error, { operation: 'membershipCard.MembershipCard.handleRemoveMember', metadata: { message: 'Error removing member:' } });
+			logError(error, {
+				operation: 'membershipCard.MembershipCard.handleRemoveMember',
+				metadata: { message: 'Error removing member:' },
+			});
 		}
 	}
 
@@ -55,7 +61,10 @@ const MembershipCard: FC<Props> = ({ member }) => {
 			await updateMemberRole(member.statementId, member.user?.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			logError(error, { operation: 'membershipCard.MembershipCard.handleSetRole', metadata: { message: 'Error setting role:' } });
+			logError(error, {
+				operation: 'membershipCard.MembershipCard.handleSetRole',
+				metadata: { message: 'Error setting role:' },
+			});
 		}
 	}
 

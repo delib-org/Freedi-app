@@ -1,9 +1,10 @@
 import { Creator } from '@freedi/shared-types';
 import { User } from 'firebase/auth';
+import { getPseudoName } from '@/utils/temporalNameGenerator';
 
 export function convertFirebaseUserToCreator(user: User | Creator): Creator {
 	const sessionDisplayName = localStorage.getItem('displayName');
-	const displayName = user.displayName ?? sessionDisplayName ?? 'Anonymous';
+	const displayName = user.displayName ?? sessionDisplayName ?? getPseudoName(user.uid);
 
 	return {
 		displayName,

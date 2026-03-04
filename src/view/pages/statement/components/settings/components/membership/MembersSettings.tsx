@@ -70,7 +70,10 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 				const usersSnapshot = await getDocs(awaitingUsersQuery);
 				setUserCount(usersSnapshot.docs.length);
 			} catch (error) {
-				logError(error, { operation: 'membership.MembersSettings.fetchAwaitingUsers', metadata: { message: 'Error fetching awaiting users:' } });
+				logError(error, {
+					operation: 'membership.MembersSettings.fetchAwaitingUsers',
+					metadata: { message: 'Error fetching awaiting users:' },
+				});
 				setUserCount(0);
 			}
 		};

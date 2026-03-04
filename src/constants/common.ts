@@ -121,6 +121,8 @@ export const STORAGE_KEYS = {
 	LAST_VISITED: 'lastVisited',
 	PWA_USER_RESPONDED: 'pwa-user-responded',
 	PWA_INSTALL_TRIGGER_DATA: 'pwa-install-trigger-data',
+	PWA_INSTALL_SOFT_PROMPT_DISMISSED_AT: 'pwa-install-soft-prompt-dismissed-at',
+	NOTIFICATION_SOFT_PROMPT_DISMISSED_AT: 'notification-soft-prompt-dismissed-at',
 	SHOW_HIDDEN_CARDS: 'freedi_showHiddenCards',
 } as const;
 
@@ -134,6 +136,14 @@ export const ROUTES = {
 	MY_SUGGESTIONS: '/my-suggestions',
 	PROFILE: '/my',
 	MASS_CONSENSUS: '/mass-consensus',
+} as const;
+
+/**
+ * Chat constants
+ */
+export const CHAT = {
+	INITIAL_MESSAGES_LIMIT: 30,
+	LOAD_MORE_BATCH_SIZE: 30,
 } as const;
 
 /**

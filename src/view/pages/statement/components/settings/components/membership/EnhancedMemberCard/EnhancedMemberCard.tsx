@@ -79,7 +79,10 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 			await updateMemberRole(member.statementId, member.user?.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			logError(error, { operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleRole', metadata: { message: 'Error updating role:' } });
+			logError(error, {
+				operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleRole',
+				metadata: { message: 'Error updating role:' },
+			});
 		} finally {
 			setIsUpdating(false);
 		}
@@ -90,7 +93,10 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 
 		// If trying to ban, check if user can be banned
 		if (role !== Role.banned && !userCanBeBanned) {
-			logError(banDisabledReason, { operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleBan', metadata: { message: 'Cannot ban this user:' } });
+			logError(banDisabledReason, {
+				operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleBan',
+				metadata: { message: 'Cannot ban this user:' },
+			});
 
 			return;
 		}
@@ -102,7 +108,10 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
-			logError(error, { operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleBan', metadata: { message: 'Error toggling ban:' } });
+			logError(error, {
+				operation: 'EnhancedMemberCard.EnhancedMemberCard.handleToggleBan',
+				metadata: { message: 'Error toggling ban:' },
+			});
 		} finally {
 			setIsUpdating(false);
 		}

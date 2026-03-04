@@ -21,7 +21,9 @@ export async function setQuestionStage({
 		};
 		await updateDoc(statementRef, { questionSettings });
 	} catch (error) {
-		logError(error, { operation: 'statements.statementMetaData.setStatementMetaData.setQuestionStage' });
+		logError(error, {
+			operation: 'statements.statementMetaData.setStatementMetaData.setQuestionStage',
+		});
 	}
 }
 
@@ -45,6 +47,8 @@ export async function setQuestionType({
 		};
 		await updateDoc(statementRef, { questionSettings });
 	} catch (error) {
-		logError(error, { operation: 'statements.statementMetaData.setStatementMetaData.setQuestionType' });
+		logError(error, {
+			operation: 'statements.statementMetaData.setStatementMetaData.setQuestionType',
+		});
 	}
 }

@@ -307,7 +307,7 @@ const ImprovedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 						title={t('Toggle chat')}
 					>
 						<MessageSquare size={18} />
-						<span>{t('Chat')}</span>
+						<span>{t('Discussion')}</span>
 					</button>
 					<button
 						type="button"
@@ -352,7 +352,7 @@ const ImprovedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 							<span className={styles.quickStatLabel}>{t('Features')}</span>
 							<span className={styles.quickStatValue}>
 								{[
-									settings.hasChat && t('Chat'),
+									settings.hasChat && t('Discussion'),
 									settings.hasChildren && t('Sub-items'),
 									settings.enableAIImprovement && t('AI'),
 								]

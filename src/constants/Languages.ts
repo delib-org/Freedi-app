@@ -4,6 +4,7 @@ import FlagEs from '@/assets/icons/flagEs.svg?react';
 import FlagNl from '@/assets/icons/flagNl.svg?react';
 import FlagAR from '@/assets/icons/flagAR.svg?react';
 import FlagDe from '@/assets/icons/flagDe.svg?react';
+import FlagFa from '@/assets/icons/flagFa.svg?react';
 
 export const LANGUAGES = [
 	{ label: 'עברית', code: 'he', icon: FlagHeb },
@@ -12,4 +13,5 @@ export const LANGUAGES = [
 	{ label: 'العربية', code: 'ar', icon: FlagAR },
 	{ label: 'Español', code: 'es', icon: FlagEs },
 	{ label: 'Deutsch', code: 'de', icon: FlagDe },
+	{ label: 'فارسی', code: 'fa', icon: FlagFa },
 ];

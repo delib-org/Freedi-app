@@ -65,7 +65,10 @@ export default function Home() {
 
 				unsubscribeInAppNotifications = listenToInAppNotifications();
 			} catch (error) {
-				logError(error, { operation: 'home.Home.setupListenersSequentially', metadata: { message: 'Error setting up listeners:' } });
+				logError(error, {
+					operation: 'home.Home.setupListenersSequentially',
+					metadata: { message: 'Error setting up listeners:' },
+				});
 			}
 		}
 

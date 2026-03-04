@@ -16,6 +16,7 @@ import { StatementType, Role } from '@freedi/shared-types';
 import { useParams } from 'react-router';
 import { useMindMap } from './MindMapMV';
 import { MINDMAP_CONFIG } from '@/constants/mindMap';
+import styles from './MindMap.module.scss';
 
 const MindMap: FC = () => {
 	// Add a render counter for debugging - remove in production
@@ -154,26 +155,30 @@ const MindMap: FC = () => {
 		}
 	`;
 
+	const showOnlySelected = filterBy === FilterType.questionsResults;
+
 	return (
 		<>
 			<style>{spinnerStyle}</style>
-			<select
-				aria-label="Select filter type for"
-				onChange={(ev) => setFilterBy(ev.target.value as FilterType)}
-				value={filterBy}
-				style={{
-					maxWidth: '300px',
-					position: 'absolute',
-					top: '1rem',
-					right: '1rem',
-					zIndex: 100,
-				}}
-			>
-				<option value={FilterType.questionsResults}>{t('Questions and Results')}</option>
-				<option value={FilterType.questionsResultsOptions}>
-					{t('Questions, options and Results')}
-				</option>
-			</select>
+			<div className={styles.filterToggle}>
+				<span className={styles.filterLabel}>
+					{showOnlySelected ? t('Selected only') : t('All')}
+				</span>
+				<button
+					type="button"
+					role="switch"
+					aria-checked={showOnlySelected}
+					aria-label={t('Show only selected options')}
+					className={`${styles.toggleSwitch} ${showOnlySelected ? styles.toggleSwitchActive : ''}`}
+					onClick={() =>
+						setFilterBy(
+							showOnlySelected ? FilterType.questionsResultsOptions : FilterType.questionsResults,
+						)
+					}
+				>
+					<span className={styles.toggleKnob} />
+				</button>
+			</div>
 			{/* Only render map when results are available */}
 			{results ? (
 				<MindElixirMap descendants={results} isAdmin={_isAdmin} filterBy={filterBy} />

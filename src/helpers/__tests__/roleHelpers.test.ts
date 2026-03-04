@@ -124,13 +124,21 @@ describe('getBanDisabledReason', () => {
 		});
 
 		it('should return "Cannot ban administrators" for admin role', () => {
-			const reason = getBanDisabledReason(Role.admin as never, 'admin-user', buildStatement() as never);
+			const reason = getBanDisabledReason(
+				Role.admin as never,
+				'admin-user',
+				buildStatement() as never,
+			);
 			expect(reason).toBe('Cannot ban administrators');
 		});
 
 		it('should return "Cannot ban statement creators" for creator role', () => {
 			const statement = buildStatement({ creator: { uid: 'other-uid' } });
-			const reason = getBanDisabledReason(Role.creator as never, 'creator-role-user', statement as never);
+			const reason = getBanDisabledReason(
+				Role.creator as never,
+				'creator-role-user',
+				statement as never,
+			);
 			expect(reason).toBe('Cannot ban statement creators');
 		});
 
@@ -150,7 +158,11 @@ describe('getBanDisabledReason', () => {
 
 		it('should return null for a waiting user', () => {
 			const statement = buildStatement({ creator: { uid: 'other-creator' } });
-			const reason = getBanDisabledReason(Role.waiting as never, 'waiting-user', statement as never);
+			const reason = getBanDisabledReason(
+				Role.waiting as never,
+				'waiting-user',
+				statement as never,
+			);
 			expect(reason).toBeNull();
 		});
 

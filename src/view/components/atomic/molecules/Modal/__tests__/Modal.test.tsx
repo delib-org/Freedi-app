@@ -141,10 +141,7 @@ describe('Modal', () => {
 	describe('footer', () => {
 		it('should render footer when provided', () => {
 			render(
-				<Modal
-					{...defaultProps}
-					footer={<button>Confirm</button>}
-				>
+				<Modal {...defaultProps} footer={<button>Confirm</button>}>
 					<p>Content</p>
 				</Modal>,
 			);
@@ -154,10 +151,7 @@ describe('Modal', () => {
 
 		it('should render footer with correct class', () => {
 			render(
-				<Modal
-					{...defaultProps}
-					footer={<button>OK</button>}
-				>
+				<Modal {...defaultProps} footer={<button>OK</button>}>
 					<p>Content</p>
 				</Modal>,
 			);
@@ -168,11 +162,7 @@ describe('Modal', () => {
 
 		it('should apply footer alignment class', () => {
 			render(
-				<Modal
-					{...defaultProps}
-					footer={<button>OK</button>}
-					footerAlign="center"
-				>
+				<Modal {...defaultProps} footer={<button>OK</button>} footerAlign="center">
 					<p>Content</p>
 				</Modal>,
 			);

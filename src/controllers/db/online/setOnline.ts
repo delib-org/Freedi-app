@@ -42,7 +42,10 @@ export async function setUserOnlineToDB(
 
 		return onlineId;
 	} catch (error) {
-		logError(error, { operation: 'online.setOnline.unknown', metadata: { message: 'Error setting user online:' } });
+		logError(error, {
+			operation: 'online.setOnline.unknown',
+			metadata: { message: 'Error setting user online:' },
+		});
 
 		return undefined;
 	}
@@ -70,7 +73,10 @@ export async function updateUserTabFocusToDB(
 			{ merge: true },
 		);
 	} catch (error) {
-		logError(error, { operation: 'online.setOnline.updateUserTabFocusToDB', metadata: { message: 'Error updating tab focus:' } });
+		logError(error, {
+			operation: 'online.setOnline.updateUserTabFocusToDB',
+			metadata: { message: 'Error updating tab focus:' },
+		});
 	}
 }
 
@@ -88,14 +94,18 @@ export async function removeUserFromOnlineToDB(
 
 		// Validate that parameters are valid strings
 		if (typeof statementId !== 'string' || typeof userId !== 'string') {
-			logError(new Error('removeUserFromOnlineToDB: Invalid parameter types'), { operation: 'online.setOnline.removeUserFromOnlineToDB' });
+			logError(new Error('removeUserFromOnlineToDB: Invalid parameter types'), {
+				operation: 'online.setOnline.removeUserFromOnlineToDB',
+			});
 
 			return;
 		}
 
 		// Additional validation to prevent empty strings
 		if (statementId.trim() === '' || userId.trim() === '') {
-			logError(new Error('removeUserFromOnlineToDB: Empty statementId or userId'), { operation: 'online.setOnline.removeUserFromOnlineToDB' });
+			logError(new Error('removeUserFromOnlineToDB: Empty statementId or userId'), {
+				operation: 'online.setOnline.removeUserFromOnlineToDB',
+			});
 
 			return;
 		}
@@ -113,7 +123,10 @@ export async function removeUserFromOnlineToDB(
 		// Only log actual errors, not permission issues from non-existent docs
 		const err = error as { code?: string; message?: string };
 		if (err?.code !== 'permission-denied' || err?.message?.includes('document does not exist')) {
-			logError(error, { operation: 'online.setOnline.unknown', metadata: { message: 'Error removing user from online:' } });
+			logError(error, {
+				operation: 'online.setOnline.unknown',
+				metadata: { message: 'Error removing user from online:' },
+			});
 		}
 	}
 }
