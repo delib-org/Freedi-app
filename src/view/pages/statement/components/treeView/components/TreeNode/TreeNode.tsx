@@ -1,5 +1,6 @@
-import React, { FC } from 'react';
+import React, { FC, useMemo } from 'react';
 import { useNavigate } from 'react-router';
+import { Flipper, Flipped } from 'react-flip-toolkit';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { MAX_TREE_DEPTH } from '@/constants/treeView';
@@ -9,6 +10,8 @@ import CollapseToggle from '../CollapseToggle/CollapseToggle';
 import TreeThreadLine from '../TreeThreadLine/TreeThreadLine';
 import styles from './TreeNode.module.scss';
 
+const FLIP_SPRING = { stiffness: 300, damping: 30 };
+
 interface TreeNodeProps {
 	statement: Statement;
 	parentStatement: Statement | undefined;
@@ -17,6 +20,7 @@ interface TreeNodeProps {
 	expandedNodes: Set<string>;
 	toggleNode: (id: string) => void;
 	expandNode: (id: string) => void;
+	animate?: boolean;
 }
 
 const TreeNode: FC<TreeNodeProps> = ({
@@ -27,6 +31,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	expandedNodes,
 	toggleNode,
 	expandNode,
+	animate,
 }) => {
 	const children = childrenMap.get(statement.statementId) || [];
 	const hasChildren = children.length > 0;
@@ -34,6 +39,25 @@ const TreeNode: FC<TreeNodeProps> = ({
 	const isAtMaxDepth = depth >= MAX_TREE_DEPTH;
 
 	const isOption = statement.statementType === StatementType.option;
+
+	const childFlipKey = useMemo(
+		() => (animate ? children.map((c) => c.statementId).join(',') : ''),
+		[animate, children],
+	);
+
+	const childNodes = children.map((child) => (
+		<TreeNode
+			key={child.statementId}
+			statement={child}
+			parentStatement={statement}
+			depth={depth + 1}
+			childrenMap={childrenMap}
+			expandedNodes={expandedNodes}
+			toggleNode={toggleNode}
+			expandNode={expandNode}
+			animate={animate}
+		/>
+	));
 
 	return (
 		<div className={styles['tree-node']}>
@@ -74,18 +98,28 @@ const TreeNode: FC<TreeNodeProps> = ({
 			{hasChildren && isExpanded && !isAtMaxDepth && (
 				<div className={styles['tree-node__children']}>
 					<TreeThreadLine />
-					{children.map((child) => (
-						<TreeNode
-							key={child.statementId}
-							statement={child}
-							parentStatement={statement}
-							depth={depth + 1}
-							childrenMap={childrenMap}
-							expandedNodes={expandedNodes}
-							toggleNode={toggleNode}
-							expandNode={expandNode}
-						/>
-					))}
+					{animate ? (
+						<Flipper flipKey={childFlipKey} spring={FLIP_SPRING}>
+							{children.map((child) => (
+								<Flipped key={child.statementId} flipId={child.statementId}>
+									<div>
+										<TreeNode
+											statement={child}
+											parentStatement={statement}
+											depth={depth + 1}
+											childrenMap={childrenMap}
+											expandedNodes={expandedNodes}
+											toggleNode={toggleNode}
+											expandNode={expandNode}
+											animate
+										/>
+									</div>
+								</Flipped>
+							))}
+						</Flipper>
+					) : (
+						childNodes
+					)}
 				</div>
 			)}
 		</div>
