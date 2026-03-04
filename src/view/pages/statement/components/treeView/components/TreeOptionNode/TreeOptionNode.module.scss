@@ -43,6 +43,12 @@
 		color: var(--text-secondary, #999);
 	}
 
+	&__menu {
+		margin-inline-start: auto;
+		flex-shrink: 0;
+		align-self: center;
+	}
+
 	&__badge {
 		font-size: 0.7rem;
 		font-weight: 600;
