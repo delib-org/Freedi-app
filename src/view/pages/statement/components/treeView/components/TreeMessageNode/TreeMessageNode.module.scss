@@ -4,6 +4,16 @@
 	padding: 6px 0;
 	flex: 1;
 	min-width: 0;
+	transition: background-color 0.3s ease;
+	border-radius: 6px;
+
+	&--swiping-right {
+		background-color: rgba(76, 175, 80, 0.12);
+	}
+
+	&--swiping-left {
+		background-color: rgba(33, 150, 243, 0.12);
+	}
 
 	&__avatar {
 		flex-shrink: 0;
@@ -30,6 +40,12 @@
 	&__time {
 		font-size: 0.75rem;
 		color: var(--text-secondary, #999);
+	}
+
+	&__menu {
+		margin-inline-start: auto;
+		flex-shrink: 0;
+		align-self: center;
 	}
 
 	&__text {

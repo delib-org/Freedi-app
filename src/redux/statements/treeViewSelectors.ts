@@ -7,42 +7,36 @@ import { Statement } from '@freedi/shared-types';
  * Groups all statements by parentId for O(1) child lookups.
  */
 export const createTreeViewSelector = () => {
-	let cachedChildrenMap: Map<string, Statement[]> | null = null;
-	let lastStatementsLength = 0;
-
 	return createSelector(
 		[
 			(state: RootState) => state.statements.statements,
 			(_: RootState, statementId: string) => statementId,
 		],
 		(statements, statementId) => {
-			if (!cachedChildrenMap || statements.length !== lastStatementsLength) {
-				cachedChildrenMap = new Map<string, Statement[]>();
-				lastStatementsLength = statements.length;
+			const childrenMap = new Map<string, Statement[]>();
 
-				// Build parent-child map in single pass O(n)
-				statements.forEach((stmt) => {
-					if (stmt.parentId) {
-						const siblings = cachedChildrenMap!.get(stmt.parentId) || [];
-						siblings.push(stmt);
-						cachedChildrenMap!.set(stmt.parentId, siblings);
-					}
-				});
+			// Build parent-child map in single pass O(n)
+			statements.forEach((stmt) => {
+				if (stmt.parentId) {
+					const siblings = childrenMap.get(stmt.parentId) || [];
+					siblings.push(stmt);
+					childrenMap.set(stmt.parentId, siblings);
+				}
+			});
 
-				// Sort each group by createdAt ascending
-				cachedChildrenMap.forEach((children, key) => {
-					cachedChildrenMap!.set(
-						key,
-						children.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)),
-					);
-				});
-			}
+			// Sort each group by createdAt ascending
+			childrenMap.forEach((children, key) => {
+				childrenMap.set(
+					key,
+					children.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)),
+				);
+			});
 
 			// Get direct children of root
-			const rootChildren = cachedChildrenMap.get(statementId) || [];
+			const rootChildren = childrenMap.get(statementId) || [];
 
 			return {
-				childrenMap: cachedChildrenMap,
+				childrenMap,
 				rootChildren,
 			};
 		},

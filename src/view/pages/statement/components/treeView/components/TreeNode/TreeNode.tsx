@@ -33,7 +33,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	const isExpanded = expandedNodes.has(statement.statementId);
 	const isAtMaxDepth = depth >= MAX_TREE_DEPTH;
 
-	const isOption = depth === 1 && statement.statementType === StatementType.option;
+	const isOption = statement.statementType === StatementType.option;
 
 	return (
 		<div className={styles['tree-node']}>
@@ -55,6 +55,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 				) : (
 					<TreeMessageNode
 						statement={statement}
+						parentStatement={parentStatement}
 						hasChildren={hasChildren}
 						onReplySubmitted={() => expandNode(statement.statementId)}
 					/>
