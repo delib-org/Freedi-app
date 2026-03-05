@@ -103,6 +103,10 @@ export const useStatementListeners = ({
 			if (currentScreen === 'mind-map') {
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
+			} else if (currentScreen === 'agreement-map') {
+				// Agreement map needs ALL direct child options loaded (no limit),
+				// otherwise the tree descendant limit may exclude options
+				unsubscribersRef.current.push(listenToSubStatements(statementId));
 			} else if (FEATURES.ENABLE_TREE_VIEW) {
 				// Tree view loads descendant types for threaded display (lazy: initial batch)
 				unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
