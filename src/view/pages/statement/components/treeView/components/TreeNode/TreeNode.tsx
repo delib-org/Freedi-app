@@ -65,6 +65,12 @@ const TreeNode: FC<TreeNodeProps> = ({
 				className={styles['tree-node__content']}
 				style={{ '--depth': depth } as React.CSSProperties}
 			>
+				{depth > 0 && (
+					<div
+						className={styles['tree-node__branch']}
+						style={{ '--depth': depth } as React.CSSProperties}
+					/>
+				)}
 				{hasChildren && !isAtMaxDepth && (
 					<div className={styles['tree-node__toggle']}>
 						<CollapseToggle
@@ -97,7 +103,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 
 			{hasChildren && isExpanded && !isAtMaxDepth && (
 				<div className={styles['tree-node__children']}>
-					<TreeThreadLine />
+					<TreeThreadLine depth={depth} />
 					{animate ? (
 						<Flipper flipKey={childFlipKey} spring={FLIP_SPRING}>
 							{children.map((child) => (

@@ -8,6 +8,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import TreeNode from './components/TreeNode/TreeNode';
+import TreeThreadLine from './components/TreeThreadLine/TreeThreadLine';
 import styles from './TreeView.module.scss';
 import { StatementType, SortType } from '@freedi/shared-types';
 
@@ -101,37 +102,43 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 				{rootChildren.length === 0 ? (
 					<div className={styles['tree-view__empty']}>{t('No replies yet')}</div>
 				) : showSortNav ? (
-					<Flipper flipKey={flipKey} spring={FLIP_SPRING}>
-						{rootChildren.map((child) => (
-							<Flipped key={child.statementId} flipId={child.statementId}>
-								<div>
-									<TreeNode
-										statement={child}
-										parentStatement={statement}
-										depth={1}
-										childrenMap={childrenMap}
-										expandedNodes={expandedNodes}
-										toggleNode={toggleNode}
-										expandNode={expandNode}
-										animate
-									/>
-								</div>
-							</Flipped>
-						))}
-					</Flipper>
+					<>
+						<TreeThreadLine depth={0} />
+						<Flipper flipKey={flipKey} spring={FLIP_SPRING}>
+							{rootChildren.map((child) => (
+								<Flipped key={child.statementId} flipId={child.statementId}>
+									<div>
+										<TreeNode
+											statement={child}
+											parentStatement={statement}
+											depth={1}
+											childrenMap={childrenMap}
+											expandedNodes={expandedNodes}
+											toggleNode={toggleNode}
+											expandNode={expandNode}
+											animate
+										/>
+									</div>
+								</Flipped>
+							))}
+						</Flipper>
+					</>
 				) : (
-					rootChildren.map((child) => (
-						<TreeNode
-							key={child.statementId}
-							statement={child}
-							parentStatement={statement}
-							depth={1}
-							childrenMap={childrenMap}
-							expandedNodes={expandedNodes}
-							toggleNode={toggleNode}
-							expandNode={expandNode}
-						/>
-					))
+					<>
+						<TreeThreadLine depth={0} />
+						{rootChildren.map((child) => (
+							<TreeNode
+								key={child.statementId}
+								statement={child}
+								parentStatement={statement}
+								depth={1}
+								childrenMap={childrenMap}
+								expandedNodes={expandedNodes}
+								toggleNode={toggleNode}
+								expandNode={expandNode}
+							/>
+						))}
+					</>
 				)}
 			</div>
 
