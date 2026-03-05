@@ -454,3 +454,21 @@ export {
   ReplacementQueueStatus,
   AuditAction,
 } from "./models/version/replacementQueueModel";
+
+// Coherence models (document coherence engine)
+export type {
+  IncoherenceRecord,
+  ParagraphReasoningPath,
+  FeedbackAddressed,
+  CoherenceAnalysisResult,
+} from "./models/version/coherenceModel";
+
+export {
+  IncoherenceRecordSchema,
+  ParagraphReasoningPathSchema,
+  FeedbackAddressedSchema,
+  IncoherenceType,
+  IncoherenceSeverity,
+  ParagraphAction,
+  getCoherenceRecordId,
+} from "./models/version/coherenceModel";
