@@ -1,7 +1,7 @@
 // termsOfUseService.ts
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { TermsOfUseAcceptanceSchema, type TermsOfUseAcceptance } from '@/types/agreement/Agreement';
-import { DB } from '../config';
+import { DB, auth } from '../config';
 import { Collections } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
@@ -10,6 +10,14 @@ export async function getLatestTermsAcceptance(
 	userId: string,
 ): Promise<TermsOfUseAcceptance | null> {
 	try {
+		// Ensure the auth token is ready before querying Firestore
+		// This prevents "Missing or insufficient permissions" errors
+		// when the user object exists but the token hasn't been sent to Firestore yet
+		if (!auth.currentUser) {
+			return null;
+		}
+		await auth.currentUser.getIdToken();
+
 		const q = query(
 			collection(DB, Collections.termsOfUseAcceptance),
 			where('userId', '==', userId),

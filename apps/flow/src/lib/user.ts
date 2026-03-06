@@ -3,6 +3,8 @@ import {
   auth,
   signInAnonymously,
   GoogleAuthProvider,
+  signInWithPopup,
+  linkWithPopup,
   signInWithRedirect,
   linkWithRedirect,
   getRedirectResult,
@@ -79,20 +81,19 @@ export async function upgradeToGoogle(): Promise<void> {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
 
-  // Flag that we're in the middle of a redirect upgrade so we can
-  // detect the result when the page reloads.
-  sessionStorage.setItem('bot_auth_upgrading', '1');
-
   try {
-    // Try to link anonymous account with Google via redirect
-    await linkWithRedirect(currentUser, provider);
+    // Try to link anonymous account with Google via popup
+    await linkWithPopup(currentUser, provider);
+    state.tier = 2;
+    m.redraw();
   } catch (error: unknown) {
     const firebaseError = error as { code?: string };
     if (firebaseError.code === 'auth/credential-already-in-use') {
-      // Account already exists — sign in directly via redirect
-      await signInWithRedirect(auth, provider);
+      // Account already exists — sign in directly via popup
+      await signInWithPopup(auth, provider);
+      state.tier = 2;
+      m.redraw();
     } else {
-      sessionStorage.removeItem('bot_auth_upgrading');
       throw error;
     }
   }
@@ -109,14 +110,14 @@ export function initAuth(): void {
     .then((result) => {
       if (result) {
         state.tier = 2;
-        _returnedFromRedirect = sessionStorage.getItem('bot_auth_upgrading') === '1';
-        sessionStorage.removeItem('bot_auth_upgrading');
+        _returnedFromRedirect = sessionStorage.getItem('flow_auth_upgrading') === '1';
+        sessionStorage.removeItem('flow_auth_upgrading');
         m.redraw();
       }
     })
     .catch((error: unknown) => {
       console.error('[Auth] Redirect result error:', error);
-      sessionStorage.removeItem('bot_auth_upgrading');
+      sessionStorage.removeItem('flow_auth_upgrading');
 
       // If link failed because credential already in use, try direct sign-in
       const firebaseError = error as { code?: string };
@@ -164,26 +165,30 @@ export async function signInWithGoogle(): Promise<void> {
 
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  sessionStorage.setItem('bot_auth_upgrading', '1');
 
   const currentUser = auth.currentUser;
 
   if (currentUser && currentUser.isAnonymous) {
     // Tier 0 anonymous → link with Google
     try {
-      await linkWithRedirect(currentUser, provider);
+      await linkWithPopup(currentUser, provider);
+      state.tier = 2;
+      m.redraw();
     } catch (error: unknown) {
       const firebaseError = error as { code?: string };
       if (firebaseError.code === 'auth/credential-already-in-use') {
-        await signInWithRedirect(auth, provider);
+        await signInWithPopup(auth, provider);
+        state.tier = 2;
+        m.redraw();
       } else {
-        sessionStorage.removeItem('bot_auth_upgrading');
         throw error;
       }
     }
   } else {
     // No user yet → direct Google sign-in
-    await signInWithRedirect(auth, provider);
+    await signInWithPopup(auth, provider);
+    state.tier = 2;
+    m.redraw();
   }
 }
 
@@ -206,5 +211,5 @@ export function consumeRedirectReturn(): void {
 
 /** Check if a redirect is in progress (page hasn't reloaded yet) */
 export function isReturningFromRedirect(): boolean {
-  return sessionStorage.getItem('bot_auth_upgrading') === '1';
+  return sessionStorage.getItem('flow_auth_upgrading') === '1';
 }

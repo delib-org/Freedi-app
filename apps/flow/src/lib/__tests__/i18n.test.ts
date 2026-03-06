@@ -105,11 +105,11 @@ describe('language management', () => {
 
   it('setLang persists to localStorage', () => {
     setLang('he');
-    expect(localStorage.getItem('bot_lang')).toBe('he');
+    expect(localStorage.getItem('flow_lang')).toBe('he');
   });
 
   it('initI18n detects from localStorage', () => {
-    localStorage.setItem('bot_lang', 'he');
+    localStorage.setItem('flow_lang', 'he');
     initI18n();
     expect(getLang()).toBe('he');
   });

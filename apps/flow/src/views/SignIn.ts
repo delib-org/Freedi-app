@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { upgradeToGoogle, getUserState, isReturningFromRedirect } from '../lib/user';
+import { upgradeToGoogle, getUserState } from '../lib/user';
 import { SessionState, saveSession } from '../lib/deliberation';
 import { t } from '../lib/i18n';
 
@@ -11,7 +11,7 @@ export interface SignInAttrs {
 
 export function SignIn(): m.Component<SignInAttrs> {
   let error: string | null = null;
-  let waitingForRedirect = isReturningFromRedirect();
+  let upgradeCompleted = false;
 
   return {
     view(vnode) {
@@ -19,8 +19,8 @@ export function SignIn(): m.Component<SignInAttrs> {
       const { tier } = getUserState();
 
       if (tier === 2) {
-        if (waitingForRedirect) {
-          waitingForRedirect = false;
+        if (!upgradeCompleted) {
+          upgradeCompleted = true;
           session.completedAt = Date.now();
           saveSession(session);
         }
@@ -39,16 +39,6 @@ export function SignIn(): m.Component<SignInAttrs> {
           ]),
           m('.shell__footer', [
             m('button.btn.btn--primary', { onclick: onDone }, t('signin.done')),
-          ]),
-        ]);
-      }
-
-      if (waitingForRedirect) {
-        return m('.shell', [
-          m('.shell__content', { style: { justifyContent: 'center', textAlign: 'center', gap: 'var(--space-lg)' } }, [
-            m('div', { style: { fontSize: '3rem' } }, '🔄'),
-            m('h2', t('signin.signing_in')),
-            m('p', { style: { color: 'var(--text-secondary)' } }, t('signin.completing')),
           ]),
         ]);
       }
