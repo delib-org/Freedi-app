@@ -386,6 +386,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
           setSelectedQuestions((prev) => [...prev, question]);
           setIsCreateQuestionModalOpen(false);
         }}
+        defaultParentId={selectedQuestions.length > 0 ? selectedQuestions[0].parentId : undefined}
       />
 
       {/* Step 3: Unified Flow Editor (Questions, Demographics, Explanations) */}
