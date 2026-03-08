@@ -356,6 +356,11 @@ export function useRealtimeParagraphs(
                 positiveEvaluations: stmtWithEvals.positiveEvaluations,
                 negativeEvaluations: stmtWithEvals.negativeEvaluations,
                 consensus: statement.consensus,
+                // Insertion point fields
+                isInsertionPoint: statement.doc?.isInsertionPoint,
+                insertionBetween: statement.doc?.insertionBetween,
+                consumed: statement.doc?.consumed,
+                removed: statement.doc?.removed,
               };
               updatedParagraphs.push(paragraph);
             }

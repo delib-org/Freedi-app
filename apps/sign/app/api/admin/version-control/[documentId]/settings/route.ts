@@ -134,6 +134,7 @@ export async function PUT(
 			enableVersionHistory,
 			maxRecentVersions,
 			maxTotalVersions,
+			consensusSettings,
 		} = body;
 
 		// Validate settings
@@ -143,8 +144,22 @@ export async function PUT(
 			maxTotalVersions,
 		});
 
+		// Validate consensus settings if provided
+		if (consensusSettings) {
+			const { removalThreshold, additionThreshold, minEvaluators } = consensusSettings;
+			if (removalThreshold !== undefined && (removalThreshold < -1 || removalThreshold > 0)) {
+				return NextResponse.json({ error: 'removalThreshold must be between -1 and 0' }, { status: 400 });
+			}
+			if (additionThreshold !== undefined && (additionThreshold < 0 || additionThreshold > 1)) {
+				return NextResponse.json({ error: 'additionThreshold must be between 0 and 1' }, { status: 400 });
+			}
+			if (minEvaluators !== undefined && (minEvaluators < 1 || !Number.isInteger(minEvaluators))) {
+				return NextResponse.json({ error: 'minEvaluators must be a positive integer' }, { status: 400 });
+			}
+		}
+
 		// Prepare update object
-		const settingsUpdate = {
+		const settingsUpdate: Record<string, unknown> = {
 			'doc.versionControlSettings': {
 				enabled: enabled ?? DEFAULT_SETTINGS.enabled,
 				reviewThreshold: reviewThreshold ?? DEFAULT_SETTINGS.reviewThreshold,
@@ -152,6 +167,7 @@ export async function PUT(
 				enableVersionHistory: enableVersionHistory ?? DEFAULT_SETTINGS.enableVersionHistory,
 				maxRecentVersions: maxRecentVersions ?? DEFAULT_SETTINGS.maxRecentVersions,
 				maxTotalVersions: maxTotalVersions ?? DEFAULT_SETTINGS.maxTotalVersions,
+				...(consensusSettings && { consensusSettings }),
 				lastSettingsUpdate: Date.now(),
 				updatedBy: userId,
 			},

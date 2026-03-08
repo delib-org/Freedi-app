@@ -148,6 +148,7 @@ import { fn_createReplacementQueueItem } from './fn_createReplacementQueueItem';
 import { fn_updateQueueConsensus } from './fn_updateQueueConsensus';
 import { fn_pruneVersionHistory } from './fn_pruneVersionHistory';
 import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPending';
+import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
@@ -696,6 +697,8 @@ exports.fn_createReplacementQueueItem = fn_createReplacementQueueItem;
 exports.fn_updateQueueConsensus = fn_updateQueueConsensus;
 exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
+exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
+exports.fn_autoAddParagraph = fn_autoAddParagraph;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

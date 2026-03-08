@@ -96,6 +96,18 @@ export const StatementSchema = object({
 			imageUrl: optional(string()), // Firebase Storage URL for image paragraphs
 			imageAlt: optional(string()), // Alt text for accessibility
 			imageCaption: optional(string()), // Optional caption for images
+
+			// Removal tracking
+			removed: optional(boolean()), // true if paragraph was auto-removed by consensus
+
+			// Insertion point fields
+			isInsertionPoint: optional(boolean()), // true if this is an insertion point (not a real paragraph)
+			insertionBetween: optional(object({
+				beforeParagraphId: optional(string()), // null/undefined = beginning of document
+				afterParagraphId: optional(string()),  // null/undefined = end of document
+			})),
+			consumed: optional(boolean()), // true after a suggestion on this insertion point was accepted
+
 			versionControlSettings: optional(object({
 				// MVP: Manual mode only
 				enabled: boolean(), // default: false (opt-in per document)
@@ -107,6 +119,14 @@ export const StatementSchema = object({
 				enableVersionHistory: optional(boolean()), // default: true
 				maxRecentVersions: optional(number()), // default: 4 (full storage)
 				maxTotalVersions: optional(number()), // default: 50 (including compressed)
+
+				// Consensus-driven action settings
+				consensusSettings: optional(object({
+					removalThreshold: optional(number()),  // default: -0.4
+					additionThreshold: optional(number()), // default: 0.4
+					minEvaluators: optional(number()),     // default: 3
+				})),
+
 				// Tracking
 				lastSettingsUpdate: optional(number()),
 				updatedBy: optional(string()), // userId
