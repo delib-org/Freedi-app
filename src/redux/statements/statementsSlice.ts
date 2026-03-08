@@ -476,14 +476,6 @@ const selectStatementsByParentAndType = createStatementsByParentAndTypeSelector(
 export const statementOptionsSelector = (statementId: string | undefined) =>
 	selectStatementsByParentAndType(statementId, StatementType.option);
 
-// Selector that counts all descendant options (options anywhere in the tree, not just direct children)
-export const statementDescendantOptionsSelector = (statementId: string | undefined) =>
-	createSelector([statementsSelector], (statements) =>
-		statements.filter(
-			(s) => s.topParentId === statementId && s.statementType === StatementType.option,
-		),
-	);
-
 export const questionsSelector = (statementId: string | undefined) =>
 	selectStatementsByParentAndType(statementId, StatementType.question);
 

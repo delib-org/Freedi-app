@@ -56,6 +56,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 			try {
 				setIsLoading(true);
 				await setUserOnlineToDB(statementId, currentUser);
+				if (isMounted) setIsInitialized(true);
 			} catch (err) {
 				logError(err, {
 					operation: 'hooks.useOnlineUsers.initializeOnlineUser',
@@ -63,12 +64,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 				});
 				if (isMounted) setError(err instanceof Error ? err : new Error(String(err)));
 			} finally {
-				// Always mark as initialized so the listener starts,
-				// even if registration failed (we can still see other users)
-				if (isMounted) {
-					setIsInitialized(true);
-					setIsLoading(false);
-				}
+				if (isMounted) setIsLoading(false);
 			}
 		};
 
@@ -87,24 +83,6 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 
 		return () => unsubscribe();
 	}, [statementId, isInitialized]);
-
-	// Heartbeat: periodically update lastUpdated so the staleness filter doesn't remove the user
-	useEffect(() => {
-		if (!statementId || !currentUser || !isInitialized) return;
-
-		const HEARTBEAT_INTERVAL = 60 * 1000; // 60 seconds
-		const intervalId = setInterval(() => {
-			const isVisible = typeof document !== 'undefined' && document.visibilityState === 'visible';
-			updateUserTabFocusToDB(statementId, currentUser.uid, isVisible).catch((err) =>
-				logError(err, {
-					operation: 'hooks.useOnlineUsers.heartbeat',
-					metadata: { message: 'Error in heartbeat update:' },
-				}),
-			);
-		}, HEARTBEAT_INTERVAL);
-
-		return () => clearInterval(intervalId);
-	}, [statementId, currentUser, isInitialized]);
 
 	// Handle tab focus/blur events
 	useEffect(() => {
@@ -155,11 +133,9 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 		};
 	}, [statementId, currentUser, isInitialized]);
 
-	// Cleanup on window close and component unmount
-	// IMPORTANT: Depends on isInitialized to avoid React Strict Mode race condition
-	// where the cleanup deletes the online doc before initialization completes
+	// Cleanup on window close
 	useEffect(() => {
-		if (!statementId || !currentUser || !isInitialized) return;
+		if (!statementId || !currentUser) return;
 
 		const handleBeforeUnload = () => {
 			cleanup(statementId, currentUser);
@@ -174,7 +150,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 			window.removeEventListener('unload', handleBeforeUnload);
 			cleanup(statementId, currentUser);
 		};
-	}, [statementId, currentUser, isInitialized]);
+	}, [statementId, currentUser]);
 
 	// Helper functions for component use
 	const getActiveUsers = () => {
