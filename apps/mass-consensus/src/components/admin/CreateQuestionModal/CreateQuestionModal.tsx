@@ -106,8 +106,8 @@ export default function CreateQuestionModal({
     if (isOpen) {
       fetchGroups();
       // Reset state when modal opens
-      setCurrentStep(1);
-      setSelectedGroupId(null);
+      setCurrentStep(defaultParentId ? 2 : 1);
+      setSelectedGroupId(defaultParentId ?? null);
       setQuestionText('');
       setEvaluationType('suggestions');
       setMaxVotes(3);
