@@ -1,0 +1,33 @@
+.collapse-toggle {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	border: none;
+	border-radius: 4px;
+	background: none;
+	color: var(--text-secondary, #999);
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+
+	&:hover {
+		background: var(--card-default, #f5f5f5);
+		color: var(--text-body, #444);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary, #5f88e5);
+		outline-offset: 2px;
+	}
+
+	&__icon {
+		font-size: 0.6rem;
+		transition: transform 0.15s ease;
+	}
+
+	&--expanded &__icon {
+		transform: rotate(90deg);
+	}
+}

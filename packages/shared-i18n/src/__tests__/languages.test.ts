@@ -43,8 +43,8 @@ describe('languages', () => {
 			expect(typeof languages[LanguagesEnum.nl]).toBe('object');
 		});
 
-		it('should have 6 language dictionaries', () => {
-			expect(Object.keys(languages)).toHaveLength(6);
+		it('should have 7 language dictionaries', () => {
+			expect(Object.keys(languages)).toHaveLength(7);
 		});
 	});
 
@@ -133,14 +133,14 @@ describe('languages', () => {
 				expect(LanguagesEnum.nl).toBe('nl');
 			});
 
-			it('should have 6 languages', () => {
-				expect(Object.keys(LanguagesEnum)).toHaveLength(6);
+			it('should have 7 languages', () => {
+				expect(Object.keys(LanguagesEnum)).toHaveLength(7);
 			});
 		});
 
 		describe('DEFAULT_LANGUAGE', () => {
-			it('should be Hebrew', () => {
-				expect(DEFAULT_LANGUAGE).toBe(LanguagesEnum.he);
+			it('should be English', () => {
+				expect(DEFAULT_LANGUAGE).toBe(LanguagesEnum.en);
 			});
 		});
 
@@ -154,8 +154,8 @@ describe('languages', () => {
 				expect(LANGUAGE_NAMES[LanguagesEnum.nl]).toBe('Nederlands');
 			});
 
-			it('should have 6 language names', () => {
-				expect(Object.keys(LANGUAGE_NAMES)).toHaveLength(6);
+			it('should have 7 language names', () => {
+				expect(Object.keys(LANGUAGE_NAMES)).toHaveLength(7);
 			});
 		});
 

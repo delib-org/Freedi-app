@@ -262,7 +262,7 @@ describe('offline queue', () => {
   });
 
   it('tracks count from localStorage', () => {
-    localStorage.setItem('bot_offline_queue', JSON.stringify([
+    localStorage.setItem('flow_offline_queue', JSON.stringify([
       { evaluationId: 'e1', evaluatorId: 'u1', statementId: 's1', parentId: 'p1', evaluation: 0.5, updatedAt: 1000 },
       { evaluationId: 'e2', evaluatorId: 'u1', statementId: 's2', parentId: 'p1', evaluation: -0.5, updatedAt: 2000 },
     ]));

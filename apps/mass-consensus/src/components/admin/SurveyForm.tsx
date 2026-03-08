@@ -36,7 +36,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
     existingSurvey?.questionSettings || {}
   );
   const [defaultLanguage, setDefaultLanguage] = useState(existingSurvey?.defaultLanguage || '');
-  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? true);
+  const [forceLanguage, setForceLanguage] = useState(existingSurvey?.forceLanguage ?? false);
   const [demographicPages, setDemographicPages] = useState<SurveyDemographicPage[]>(
     existingSurvey?.demographicPages || []
   );
@@ -386,6 +386,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
           setSelectedQuestions((prev) => [...prev, question]);
           setIsCreateQuestionModalOpen(false);
         }}
+        defaultParentId={selectedQuestions.length > 0 ? selectedQuestions[0].parentId : undefined}
       />
 
       {/* Step 3: Unified Flow Editor (Questions, Demographics, Explanations) */}

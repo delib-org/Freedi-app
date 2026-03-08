@@ -485,7 +485,7 @@ function detectLanguage(): LangCode {
   if (urlLang && translations[urlLang]) return urlLang;
 
   // Check localStorage
-  const stored = localStorage.getItem('bot_lang');
+  const stored = localStorage.getItem('flow_lang');
   if (stored && translations[stored]) return stored;
 
   // Check browser language
@@ -509,7 +509,7 @@ export function getLang(): LangCode {
 /** Set language */
 export function setLang(lang: LangCode): void {
   currentLang = lang;
-  localStorage.setItem('bot_lang', lang);
+  localStorage.setItem('flow_lang', lang);
   updateDocumentDirection();
   m.redraw();
 }

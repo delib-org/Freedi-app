@@ -291,9 +291,15 @@ function Home(): m.Component {
   }
 
   function handleSignIn(): void {
-    signInWithGoogle().catch((err) => {
-      console.error('[Home] Sign in failed:', err);
-    });
+    signInWithGoogle()
+      .then(() => {
+        // Reload deliberations now that we're signed in
+        loadRecent();
+        m.redraw();
+      })
+      .catch((err: unknown) => {
+        console.error('[Home] Sign in failed:', err);
+      });
   }
 
   return {
@@ -313,7 +319,12 @@ function Home(): m.Component {
           m(LanguagePicker),
 
           isGoogleUser
-            ? m('.home-avatar', [
+            ? m('.home-avatar', {
+                onclick: () => m.route.set('/my'),
+                role: 'button',
+                tabindex: 0,
+                style: { cursor: 'pointer' },
+              }, [
                 m('.home-avatar__circle', initial),
                 m('.home-avatar__name', t('home.welcome_user', { name: displayName.split(' ')[0] })),
               ])

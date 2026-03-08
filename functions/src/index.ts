@@ -140,6 +140,9 @@ import { importGoogleDoc } from './fn_importGoogleDocs';
 // Document Version AI Processing
 import { processVersionAI } from './fn_versionAI';
 
+// Auto-Generate Version on Suggestion Threshold
+import { onSuggestionCreatedAutoGenerate } from './fn_autoGenerateVersion';
+
 // Paragraph Version Control (MVP)
 import { fn_createReplacementQueueItem } from './fn_createReplacementQueueItem';
 import { fn_updateQueueConsensus } from './fn_updateQueueConsensus';
@@ -615,6 +618,14 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
 exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
+
+// Auto-Generate Version on Suggestion Threshold
+exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
+	`/${Collections.suggestions}/{suggestionId}`,
+	onDocumentCreated,
+	onSuggestionCreatedAutoGenerate,
+	'onSuggestionCreatedAutoGenerate',
+);
 
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;

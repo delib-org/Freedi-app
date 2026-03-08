@@ -128,6 +128,8 @@ export async function POST(
 			processedChanges: result.processedChanges,
 			totalChanges: result.totalChanges,
 			message: result.message,
+			coherenceScore: result.coherenceScore,
+			coherenceRecordCount: result.coherenceRecordCount,
 		});
 	} catch (error) {
 		logger.error('[Process AI] Error:', error);

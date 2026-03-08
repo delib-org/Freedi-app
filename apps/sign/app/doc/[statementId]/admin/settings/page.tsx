@@ -90,7 +90,7 @@ export default function AdminSettingsPage() {
     surveyTrigger: 'on_interaction',
     textDirection: 'auto',
     defaultLanguage: '',
-    forceLanguage: true,
+    forceLanguage: false,
     logoUrl: DEFAULT_LOGO_URL,
     brandName: DEFAULT_BRAND_NAME,
     tocEnabled: false,

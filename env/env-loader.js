@@ -143,8 +143,8 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     ],
     extra: ''
   },
-  bot: {
-    path: path.join(ROOT_DIR, 'apps', 'bot'),
+  flow: {
+    path: path.join(ROOT_DIR, 'apps', 'flow'),
     filename: '.env.local',
     // Map generic vars to Vite-prefixed vars (client-only app)
     mapping: {

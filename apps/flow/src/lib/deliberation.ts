@@ -49,7 +49,7 @@ export interface WizardState {
   facilitatorName: string;
 }
 
-const WIZARD_KEY = 'bot_wizard_state';
+const WIZARD_KEY = 'flow_wizard_state';
 
 /** Save wizard state to sessionStorage */
 export function saveWizardState(state: WizardState): void {
@@ -293,7 +293,7 @@ export interface SessionState {
   lastVisit: number;
 }
 
-const SESSION_KEY = 'bot_session';
+const SESSION_KEY = 'flow_session';
 
 /**
  * Load deliberation data from Firestore.
@@ -584,7 +584,7 @@ export function findSimilar(
 // Score Trends — track consensus changes between visits
 // ---------------------------------------------------------------------------
 
-const SCORES_KEY = 'bot_scores';
+const SCORES_KEY = 'flow_scores';
 
 export interface ScoreSnapshot {
   [statementId: string]: number;
@@ -617,7 +617,7 @@ export function getScoreTrend(statementId: string, currentScore: number, snapsho
 // Offline Queue — queue evaluations when offline, sync when back online
 // ---------------------------------------------------------------------------
 
-const OFFLINE_QUEUE_KEY = 'bot_offline_queue';
+const OFFLINE_QUEUE_KEY = 'flow_offline_queue';
 
 interface OfflineEvaluation {
   evaluationId: string;

@@ -136,6 +136,7 @@ export default function SurveyNavigation({
               disabled={isNavigating}
             >
               <PlusIcon />
+              <span className={styles.navActionLabel}>{t('Add an answer')}</span>
             </button>
           )}
           {showViewProgress && onViewProgress && (
