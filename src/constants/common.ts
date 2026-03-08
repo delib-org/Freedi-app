@@ -154,7 +154,6 @@ export const FEATURES = {
 	ENABLE_SENTRY: true,
 	ENABLE_PWA: true,
 	ENABLE_NOTIFICATIONS: true,
-	ENABLE_TREE_VIEW: true,
 } as const;
 
 /**

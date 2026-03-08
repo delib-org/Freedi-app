@@ -147,19 +147,22 @@ export default function SurveyQuestionWrapper({
     setShowViewProgress(false);
     // Update showAddSuggestion based on merged settings for the new question
     setShowAddSuggestion(mergedSettings.allowParticipantsToAddSuggestions);
-  }, [questionId, mergedSettings.allowParticipantsToAddSuggestions]);
+  }, [questionId, mergedSettings.allowParticipantsToAddSuggestions, mergedSettings.showViewProgress]);
 
   // Listen for show-view-progress events from SolutionFeedClient
+  // Only allow showing if admin has enabled it in per-question settings
   useEffect(() => {
     const handleShowViewProgress = (event: CustomEvent<{ show: boolean }>) => {
-      setShowViewProgress(event.detail.show);
+      if (mergedSettings.showViewProgress) {
+        setShowViewProgress(event.detail.show);
+      }
     };
 
     window.addEventListener('show-view-progress', handleShowViewProgress);
     return () => {
       window.removeEventListener('show-view-progress', handleShowViewProgress);
     };
-  }, []);
+  }, [mergedSettings.showViewProgress]);
 
   // Callbacks to trigger actions in SolutionFeedClient
   const handleAddSuggestion = useCallback(() => {

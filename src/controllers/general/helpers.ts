@@ -123,7 +123,10 @@ export const TYPE_RESTRICTIONS: Record<
 		disallowedChildren: [StatementType.option],
 		reason: 'Options cannot contain other options',
 	},
-	[StatementType.group]: {},
+	[StatementType.group]: {
+		disallowedChildren: [StatementType.option],
+		reason: 'Groups cannot contain options',
+	},
 	[StatementType.statement]: {},
 	[StatementType.question]: {},
 	[StatementType.document]: {},

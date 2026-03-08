@@ -1,0 +1,433 @@
+/**
+ * Coherence Panel - Document coherence analysis display
+ */
+
+.panel {
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--spacing-lg);
+	cursor: pointer;
+	user-select: none;
+	transition: background 0.2s;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.02);
+	}
+}
+
+.headerLeft {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-md);
+}
+
+.title {
+	font-size: 1.1rem;
+	font-weight: 600;
+	color: var(--text-heading);
+	margin: 0;
+}
+
+.scoreBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.25rem 0.75rem;
+	border-radius: 999px;
+	font-size: 0.875rem;
+	font-weight: 600;
+
+	&--good {
+		background: rgba(34, 197, 94, 0.1);
+		color: #16a34a;
+	}
+
+	&--warning {
+		background: rgba(234, 179, 8, 0.1);
+		color: #ca8a04;
+	}
+
+	&--bad {
+		background: rgba(239, 68, 68, 0.1);
+		color: #dc2626;
+	}
+
+	&--unavailable {
+		background: rgba(156, 163, 175, 0.1);
+		color: #6b7280;
+	}
+}
+
+.chevron {
+	transition: transform 0.2s;
+	color: var(--text-muted);
+
+	&--open {
+		transform: rotate(180deg);
+	}
+}
+
+.body {
+	padding: 0 var(--spacing-lg) var(--spacing-lg);
+}
+
+.summary {
+	color: var(--text-muted);
+	font-size: 0.9rem;
+	margin-bottom: var(--spacing-lg);
+	line-height: 1.5;
+}
+
+.list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--spacing-md);
+}
+
+.empty {
+	text-align: center;
+	padding: var(--spacing-xl);
+	color: var(--text-muted);
+
+	svg {
+		margin-bottom: var(--spacing-sm);
+		color: #16a34a;
+	}
+}
+
+.loading {
+	text-align: center;
+	padding: var(--spacing-xl);
+	color: var(--text-muted);
+}
+
+.error {
+	text-align: center;
+	padding: var(--spacing-lg);
+	color: #dc2626;
+	background: rgba(239, 68, 68, 0.05);
+	border-radius: var(--radius-sm);
+}
+
+/* Incoherence Card */
+
+.incoherenceCard {
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-sm);
+	overflow: hidden;
+
+	&--high {
+		border-left: 4px solid #dc2626;
+	}
+
+	&--medium {
+		border-left: 4px solid #ca8a04;
+	}
+
+	&--low {
+		border-left: 4px solid #3b82f6;
+	}
+
+	&--reviewed {
+		opacity: 0.7;
+	}
+}
+
+.incoherenceHeader {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	padding: var(--spacing-md);
+}
+
+.typeIcon {
+	width: 20px;
+	height: 20px;
+	flex-shrink: 0;
+}
+
+.typeBadge {
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	padding: 0.125rem 0.5rem;
+	border-radius: 4px;
+
+	&--contradiction {
+		background: rgba(239, 68, 68, 0.1);
+		color: #dc2626;
+	}
+
+	&--redundancy {
+		background: rgba(234, 179, 8, 0.1);
+		color: #ca8a04;
+	}
+
+	&--gap {
+		background: rgba(59, 130, 246, 0.1);
+		color: #3b82f6;
+	}
+
+	&--scopeDrift {
+		background: rgba(168, 85, 247, 0.1);
+		color: #9333ea;
+	}
+}
+
+.severityBadge {
+	font-size: 0.75rem;
+	font-weight: 500;
+	margin-inline-start: auto;
+}
+
+.incoherenceBody {
+	padding: 0 var(--spacing-md) var(--spacing-md);
+}
+
+.description {
+	font-size: 0.9rem;
+	color: var(--text-body);
+	line-height: 1.5;
+	margin-bottom: var(--spacing-md);
+}
+
+.affectedParagraphs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--spacing-xs);
+	margin-bottom: var(--spacing-md);
+}
+
+.paragraphSnippet {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	background: rgba(0, 0, 0, 0.03);
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	max-width: 250px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.fixSection {
+	background: rgba(34, 197, 94, 0.04);
+	border: 1px solid rgba(34, 197, 94, 0.15);
+	border-radius: var(--radius-sm);
+	padding: var(--spacing-md);
+	margin-bottom: var(--spacing-md);
+}
+
+.fixLabel {
+	font-size: 0.8rem;
+	font-weight: 600;
+	color: #16a34a;
+	margin-bottom: var(--spacing-xs);
+}
+
+.reasoningToggle {
+	background: none;
+	border: none;
+	color: var(--btn-primary);
+	font-size: 0.85rem;
+	cursor: pointer;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	margin-bottom: var(--spacing-sm);
+
+	&:hover {
+		text-decoration: underline;
+	}
+}
+
+.reasoning {
+	font-size: 0.85rem;
+	color: var(--text-muted);
+	background: rgba(0, 0, 0, 0.02);
+	padding: var(--spacing-sm);
+	border-radius: var(--radius-sm);
+	line-height: 1.5;
+	margin-bottom: var(--spacing-md);
+}
+
+.actions {
+	display: flex;
+	gap: var(--spacing-sm);
+	flex-wrap: wrap;
+}
+
+.actionButton {
+	padding: 0.4rem 0.8rem;
+	border-radius: 6px;
+	font-size: 0.85rem;
+	font-weight: 500;
+	cursor: pointer;
+	border: 1px solid transparent;
+	transition: all 0.15s;
+
+	&--accept {
+		background: #16a34a;
+		color: white;
+
+		&:hover {
+			background: #15803d;
+		}
+	}
+
+	&--reject {
+		background: transparent;
+		border-color: var(--border);
+		color: var(--text-body);
+
+		&:hover {
+			background: rgba(0, 0, 0, 0.04);
+		}
+	}
+
+	&--modify {
+		background: transparent;
+		border-color: var(--btn-primary);
+		color: var(--btn-primary);
+
+		&:hover {
+			background: rgba(95, 136, 229, 0.08);
+		}
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.decisionBadge {
+	font-size: 0.8rem;
+	font-weight: 500;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+
+	&--approved {
+		background: rgba(34, 197, 94, 0.1);
+		color: #16a34a;
+	}
+
+	&--rejected {
+		background: rgba(239, 68, 68, 0.1);
+		color: #dc2626;
+	}
+
+	&--modified {
+		background: rgba(59, 130, 246, 0.1);
+		color: #3b82f6;
+	}
+}
+
+/* Reasoning Path View */
+
+.reasoningPathView {
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+}
+
+.reasoningPathHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: var(--spacing-md) var(--spacing-lg);
+	cursor: pointer;
+	user-select: none;
+
+	&:hover {
+		background: rgba(0, 0, 0, 0.02);
+	}
+}
+
+.reasoningPathTitle {
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-heading);
+	margin: 0;
+}
+
+.reasoningPathBody {
+	padding: 0 var(--spacing-lg) var(--spacing-lg);
+}
+
+.pathItem {
+	padding: var(--spacing-sm) var(--spacing-md);
+	border-left: 3px solid var(--border-light);
+	margin-bottom: var(--spacing-sm);
+
+	&--modified {
+		border-left-color: #3b82f6;
+	}
+
+	&--added {
+		border-left-color: #16a34a;
+	}
+
+	&--removed {
+		border-left-color: #dc2626;
+	}
+
+	&--kept {
+		border-left-color: var(--border-light);
+	}
+}
+
+.pathParagraphId {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	font-family: monospace;
+}
+
+.pathAction {
+	font-size: 0.85rem;
+	font-weight: 500;
+	text-transform: capitalize;
+}
+
+.pathSummary {
+	font-size: 0.85rem;
+	color: var(--text-body);
+	margin-top: 0.25rem;
+}
+
+.pathFeedback {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	margin-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+	.header {
+		padding: var(--spacing-md);
+	}
+
+	.body {
+		padding: 0 var(--spacing-md) var(--spacing-md);
+	}
+
+	.actions {
+		flex-direction: column;
+
+		.actionButton {
+			width: 100%;
+			text-align: center;
+		}
+	}
+}

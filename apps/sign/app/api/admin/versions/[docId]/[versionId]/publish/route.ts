@@ -7,6 +7,9 @@ import {
 	AdminPermissionLevel,
 	DocumentVersion,
 	VersionStatus,
+	ChangeDecision,
+	IncoherenceRecord,
+	Paragraph,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import * as v from 'valibot';
@@ -101,6 +104,58 @@ export async function POST(
 
 		const applyToDocument = body.applyToDocument ?? true;
 
+		// Apply approved coherence fixes to paragraphs before publishing
+		let finalParagraphs: Paragraph[] = version.paragraphs || [];
+
+		const approvedFixesSnapshot = await db
+			.collection(Collections.coherenceRecords)
+			.where('versionId', '==', versionId)
+			.where('adminDecision', '==', ChangeDecision.approved)
+			.get();
+
+		if (!approvedFixesSnapshot.empty) {
+			const approvedFixes = approvedFixesSnapshot.docs.map(
+				(doc) => doc.data() as IncoherenceRecord
+			);
+
+			finalParagraphs = finalParagraphs.map((paragraph) => {
+				const fix = approvedFixes.find(
+					(f) => f.primaryParagraphId === paragraph.paragraphId
+				);
+
+				if (fix && fix.suggestedFix) {
+					return { ...paragraph, content: fix.suggestedFix };
+				}
+
+				return paragraph;
+			});
+
+			// Also check for "modified" decisions (admin edited the fix)
+			const modifiedFixesSnapshot = await db
+				.collection(Collections.coherenceRecords)
+				.where('versionId', '==', versionId)
+				.where('adminDecision', '==', ChangeDecision.modified)
+				.get();
+
+			if (!modifiedFixesSnapshot.empty) {
+				const modifiedFixes = modifiedFixesSnapshot.docs.map(
+					(doc) => doc.data() as IncoherenceRecord
+				);
+
+				finalParagraphs = finalParagraphs.map((paragraph) => {
+					const fix = modifiedFixes.find(
+						(f) => f.primaryParagraphId === paragraph.paragraphId
+					);
+
+					if (fix && fix.suggestedFix) {
+						return { ...paragraph, content: fix.suggestedFix };
+					}
+
+					return paragraph;
+				});
+			}
+		}
+
 		const batch = db.batch();
 		const now = Date.now();
 
@@ -115,18 +170,19 @@ export async function POST(
 			batch.update(doc.ref, { status: VersionStatus.archived });
 		});
 
-		// Publish this version
+		// Publish this version (with coherence fixes applied)
 		batch.update(versionRef, {
 			status: VersionStatus.published,
 			publishedAt: now,
 			publishedBy: userId,
+			paragraphs: finalParagraphs,
 		});
 
 		// Optionally apply paragraphs to the main document
-		if (applyToDocument && version.paragraphs?.length) {
+		if (applyToDocument && finalParagraphs.length) {
 			const docRef = db.collection(Collections.statements).doc(docId);
 			batch.update(docRef, {
-				paragraphs: version.paragraphs,
+				paragraphs: finalParagraphs,
 				lastUpdate: now,
 			});
 		}

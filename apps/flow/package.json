@@ -1,0 +1,36 @@
+{
+  "name": "@freedi/flow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "env:dev": "cd ../.. && npm run env:dev",
+    "dev": "npm run env:dev && vite --port 3004",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 3004",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "check-all": "npm run lint && npm run typecheck && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "npx tsx scripts/seed.ts",
+    "seed:clear": "npx tsx scripts/seed.ts --clear"
+  },
+  "dependencies": {
+    "@freedi/shared-types": "file:../../packages/shared-types",
+    "firebase": "^11.0.2",
+    "mithril": "^2.2.8",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@types/mithril": "^2.2.7",
+    "@types/qrcode": "^1.5.6",
+    "firebase-admin": "^13.6.0",
+    "sass": "^1.94.2",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.0.18"
+  }
+}

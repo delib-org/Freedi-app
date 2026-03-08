@@ -10,6 +10,7 @@ import {
 	nullable,
 } from 'valibot';
 import { ParagraphSchema } from '../paragraph/paragraphModel';
+import { ParagraphReasoningPathSchema } from './coherenceModel';
 
 // ============================================================================
 // ENUMS
@@ -161,6 +162,11 @@ export const DocumentVersionSchema = object({
 
 	// Summary
 	summary: optional(string()), // AI-generated summary of changes
+
+	// Coherence analysis
+	coherenceScore: optional(number()), // 0-1 document coherence score
+	coherenceRecordCount: optional(number()), // Number of incoherence records
+	reasoningPaths: optional(array(ParagraphReasoningPathSchema)), // Per-paragraph reasoning
 });
 
 export type DocumentVersion = InferOutput<typeof DocumentVersionSchema>;

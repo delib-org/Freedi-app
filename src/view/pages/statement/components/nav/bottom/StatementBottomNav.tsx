@@ -26,7 +26,6 @@ import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import {
 	statementSubscriptionSelector,
 	statementOptionsSelector,
-	statementDescendantOptionsSelector,
 } from '@/redux/statements/statementsSlice';
 import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
@@ -49,13 +48,11 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const options = useSelector(statementOptionsSelector(statementId));
-	const descendantOptions = useSelector(statementDescendantOptionsSelector(statementId));
 	const role = subscription?.role;
 	const isAdmin = role === 'admin' || role === Role.creator;
 
-	// Count all options in the tree (direct + nested under questions) for sort eligibility
-	const allOptionsCount = Math.max(options.length, descendantOptions.length);
-	const hasEnoughOptionsToSort = allOptionsCount >= 2;
+	// Only show sort buttons when there are at least 2 answers
+	const hasEnoughOptionsToSort = options.length >= 2;
 
 	const { dir, learning, t, currentLanguage } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();

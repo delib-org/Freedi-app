@@ -1,11 +1,10 @@
 import { Statement, Role, StatementType, Screen } from '@freedi/shared-types';
-import React, { ReactNode, useEffect, Suspense } from 'react';
+import { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
 import { statementSelectorById, setStatement } from '@/redux/statements/statementsSlice';
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import { logError } from '@/utils/errorHandling';
-import { FEATURES } from '@/constants/common';
 import lazyWithRetry from '@/routes/lazyWithRetry';
 import LoadingPage from '@/view/pages/loadingPage/LoadingPage';
 import Chat from '../chat/Chat';
@@ -32,16 +31,6 @@ const SubQuestionsMap = lazyWithRetry(
 	() => import('../subQuestionsMap/SubQuestionsMap'),
 	'SubQuestionsMap',
 );
-const TreeView = lazyWithRetry(
-	() => import('../treeView/TreeView'),
-	'TreeView',
-) as React.LazyExoticComponent<
-	React.FC<{
-		typeFilter?: readonly StatementType[];
-		showSortNav?: boolean;
-		onlySelectedOptions?: boolean;
-	}>
->;
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -140,28 +129,13 @@ interface ViewByActiveTabProps {
 	isPopperHebbianEnabled: boolean;
 }
 
-const QA_TYPE_FILTER: readonly StatementType[] = [
-	StatementType.question,
-	StatementType.option,
-] as const;
-
-const OPTIONS_ONLY_FILTER: readonly StatementType[] = [StatementType.option] as const;
-
 function ViewByActiveTab({
 	activeView,
 	statement,
 	isPopperHebbianEnabled,
 }: Readonly<ViewByActiveTabProps>): ReactNode {
 	switch (activeView) {
-		case 'chat': {
-			const chatComponent = FEATURES.ENABLE_TREE_VIEW ? (
-				<Suspense fallback={<LoadingPage />}>
-					<TreeView />
-				</Suspense>
-			) : (
-				<Chat />
-			);
-
+		case 'chat':
 			if (isPopperHebbianEnabled && statement) {
 				return (
 					<>
@@ -171,31 +145,12 @@ function ViewByActiveTab({
 								// Could trigger a new refinement session
 							}}
 						/>
-						{chatComponent}
+						<Chat />
 					</>
 				);
 			}
 
-			return chatComponent;
-		}
-		case 'solutions':
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<TreeView typeFilter={QA_TYPE_FILTER} showSortNav onlySelectedOptions />
-				</Suspense>
-			);
-		case 'suggestions':
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<TreeView typeFilter={QA_TYPE_FILTER} showSortNav />
-				</Suspense>
-			);
-		case 'current':
-			return (
-				<Suspense fallback={<LoadingPage />}>
-					<TreeView typeFilter={OPTIONS_ONLY_FILTER} showSortNav />
-				</Suspense>
-			);
+			return <Chat />;
 		case 'options':
 			return <StagePage />;
 		case 'questions':

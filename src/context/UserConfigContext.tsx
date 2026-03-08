@@ -6,7 +6,6 @@ import { logError } from '@/utils/errorHandling';
 import {
 	LanguagesEnum,
 	DEFAULT_LANGUAGE as SHARED_DEFAULT_LANGUAGE,
-	detectBrowserLanguage,
 	getDirection,
 	getRowDirection,
 	getLanguageData,
@@ -111,10 +110,7 @@ export const UserConfigProvider: React.FC<UserConfigProviderProps> = ({ children
 			});
 		}
 
-		return {
-			...DEFAULT_CONFIG,
-			chosenLanguage: detectBrowserLanguage(),
-		};
+		return DEFAULT_CONFIG;
 	});
 
 	const [languageData, setLanguageData] = useState<Record<string, string>>(() =>
