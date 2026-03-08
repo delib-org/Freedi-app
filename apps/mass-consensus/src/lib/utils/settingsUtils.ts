@@ -14,6 +14,10 @@ export interface MergedQuestionSettings {
   suggestionMode: SuggestionMode;
   /** Display mode: swipe for tinder-style, classic for multi-card */
   displayMode: DisplayMode;
+  /** Show view progress / status button for this question */
+  showViewProgress: boolean;
+  /** Ask user for a solution after completing minimum evaluations */
+  askUserForASolutionAfterEvaluation: boolean;
 }
 
 /**
@@ -66,6 +70,12 @@ export function getMergedSettings(
 
     // Display mode (survey-level only, no per-question override)
     displayMode: surveySettings.displayMode ?? DisplayMode.swipe,
+
+    // Show view progress / status button (per-question, defaults to true for backward compatibility)
+    showViewProgress: questionOverrides?.showViewProgress ?? true,
+
+    // Ask user for a solution after completing minimum evaluations (defaults to false)
+    askUserForASolutionAfterEvaluation: questionOverrides?.askUserForASolutionAfterEvaluation ?? false,
   };
 }
 
@@ -91,6 +101,8 @@ export function isSurveyLevelOverride(
     case 'minEvaluationsPerQuestion':
     case 'randomizeOptions':
     case 'suggestionMode':
+    case 'showViewProgress':
+    case 'askUserForASolutionAfterEvaluation':
       return false;
     default:
       return false;

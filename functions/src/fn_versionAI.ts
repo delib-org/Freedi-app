@@ -19,6 +19,7 @@ const db = getFirestore();
 const SignCollections = {
 	documentVersions: 'documentVersions',
 	versionChanges: 'versionChanges',
+	coherenceRecords: 'coherenceRecords',
 } as const;
 
 // Enums
@@ -376,6 +377,270 @@ async function analyzeParagraph(
 	}
 }
 
+// ============================================================================
+// COHERENCE ANALYSIS
+// ============================================================================
+
+enum IncoherenceType {
+	contradiction = 'contradiction',
+	redundancy = 'redundancy',
+	gap = 'gap',
+	scopeDrift = 'scopeDrift',
+}
+
+enum IncoherenceSeverity {
+	high = 'high',
+	medium = 'medium',
+	low = 'low',
+}
+
+enum ParagraphAction {
+	kept = 'kept',
+	modified = 'modified',
+	removed = 'removed',
+	added = 'added',
+}
+
+enum ChangeDecision {
+	pending = 'pending',
+	approved = 'approved',
+	rejected = 'rejected',
+	modified = 'modified',
+}
+
+interface IncoherenceRecord {
+	recordId: string;
+	versionId: string;
+	documentId: string;
+	affectedParagraphIds: string[];
+	primaryParagraphId: string;
+	type: IncoherenceType;
+	severity: IncoherenceSeverity;
+	description: string;
+	suggestedFix: string;
+	aiReasoning: string;
+	adminDecision: ChangeDecision;
+	adminNote?: string;
+	adminReviewedAt?: number;
+	adminReviewedBy?: string;
+	createdAt: number;
+}
+
+interface ParagraphReasoningPath {
+	paragraphId: string;
+	action: ParagraphAction;
+	feedbackAddressed: Array<{
+		sourceId: string;
+		sourceType: ChangeSourceType;
+		summary: string;
+		impact: number;
+	}>;
+	coherenceIssuesResolved: string[];
+	coherenceIssuesCreated: string[];
+	aiDecisionSummary: string;
+	previousContent?: string;
+	newContent?: string;
+}
+
+const COHERENCE_SYSTEM_PROMPT = `You are an expert document coherence analyst. Your task is to cross-check an entire document for internal consistency after proposed changes have been applied.
+
+You detect four types of incoherence:
+1. **Contradiction**: Two paragraphs make conflicting claims or statements
+2. **Redundancy**: Two or more paragraphs say essentially the same thing
+3. **Gap**: A logical connection is missing between paragraphs
+4. **Scope Drift**: A paragraph's content doesn't align with the document's overall topic
+
+Guidelines:
+- Be CONSERVATIVE - only flag genuine issues, not stylistic preferences
+- Each issue must reference specific paragraphs by their ID
+- For each issue, identify ONE primary paragraph where the fix should be applied
+- Suggest a concrete fix (revised content for the primary paragraph)
+- Rate severity: high (must fix), medium (should fix), low (minor)
+
+LANGUAGE REQUIREMENT:
+- ALWAYS respond in the SAME LANGUAGE as the document content`;
+
+const COHERENCE_USER_PROMPT = `Analyze this document for internal coherence issues.
+
+**Full Document (with proposed changes applied):**
+{documentContent}
+
+**Changes that were made:**
+{changesSummary}
+
+Respond in JSON format:
+{
+  "incoherences": [
+    {
+      "type": "contradiction|redundancy|gap|scopeDrift",
+      "severity": "high|medium|low",
+      "affectedParagraphIds": ["id1", "id2"],
+      "primaryParagraphId": "id1",
+      "description": "Clear explanation of the issue",
+      "suggestedFix": "Revised content for the primary paragraph",
+      "aiReasoning": "Why this fix resolves the issue"
+    }
+  ],
+  "coherenceScore": 0.85,
+  "summary": "Overall coherence assessment"
+}
+
+IMPORTANT:
+- If the document is coherent, return empty incoherences array with high score
+- coherenceScore: 1.0 = perfectly coherent, 0.0 = severely incoherent
+- Only flag real issues
+- RESPOND IN THE SAME LANGUAGE AS THE DOCUMENT`;
+
+/**
+ * Run coherence analysis on the full document
+ * Non-blocking: if this fails, version processing still succeeds
+ */
+async function runCoherenceAnalysis(
+	paragraphs: Paragraph[],
+	changes: VersionChange[],
+	versionId: string,
+	documentId: string,
+): Promise<{
+	incoherences: IncoherenceRecord[];
+	coherenceScore: number;
+	reasoningPaths: ParagraphReasoningPath[];
+	summary: string;
+} | null> {
+	try {
+		const documentContent = paragraphs
+			.map(
+				(p, i) =>
+					`[Paragraph ${i + 1}] (ID: ${p.paragraphId}, Type: ${p.type})
+${p.content || '(empty)'}`,
+			)
+			.join('\n\n---\n\n');
+
+		const changesSummary = changes
+			.filter((c) => c.changeType !== ChangeType.unchanged)
+			.map(
+				(c) =>
+					`Paragraph ${c.paragraphId}: ${c.changeType} - "${c.originalContent?.substring(0, 80)}..."`,
+			)
+			.join('\n');
+
+		const userPrompt = COHERENCE_USER_PROMPT
+			.replace('{documentContent}', documentContent)
+			.replace('{changesSummary}', changesSummary || 'No changes were made.');
+
+		console.info(`[coherenceAnalysis] Starting analysis for version ${versionId} with ${paragraphs.length} paragraphs`);
+
+		const response = await callGemini(COHERENCE_SYSTEM_PROMPT, userPrompt);
+
+		const parsed = extractJSON<{
+			incoherences?: Array<{
+				type?: string;
+				severity?: string;
+				affectedParagraphIds?: string[];
+				primaryParagraphId?: string;
+				description?: string;
+				suggestedFix?: string;
+				aiReasoning?: string;
+			}>;
+			coherenceScore?: number;
+			summary?: string;
+		}>(response);
+
+		const typeMap: Record<string, IncoherenceType> = {
+			contradiction: IncoherenceType.contradiction,
+			redundancy: IncoherenceType.redundancy,
+			gap: IncoherenceType.gap,
+			scopedrift: IncoherenceType.scopeDrift,
+			scopeDrift: IncoherenceType.scopeDrift,
+		};
+
+		const severityMap: Record<string, IncoherenceSeverity> = {
+			high: IncoherenceSeverity.high,
+			medium: IncoherenceSeverity.medium,
+			low: IncoherenceSeverity.low,
+		};
+
+		const incoherences: IncoherenceRecord[] = (parsed.incoherences || [])
+			.filter(
+				(item) =>
+					item.type && item.affectedParagraphIds?.length && item.primaryParagraphId && item.description,
+			)
+			.map((item, index) => ({
+				recordId: `${versionId}--coh--${index}`,
+				versionId,
+				documentId,
+				affectedParagraphIds: item.affectedParagraphIds || [],
+				primaryParagraphId: item.primaryParagraphId || '',
+				type: typeMap[item.type?.toLowerCase() || ''] || IncoherenceType.gap,
+				severity: severityMap[item.severity?.toLowerCase() || ''] || IncoherenceSeverity.medium,
+				description: item.description || '',
+				suggestedFix: item.suggestedFix || '',
+				aiReasoning: item.aiReasoning || '',
+				adminDecision: ChangeDecision.pending,
+				createdAt: Date.now(),
+			}));
+
+		const coherenceScore =
+			typeof parsed.coherenceScore === 'number'
+				? Math.max(0, Math.min(1, parsed.coherenceScore))
+				: 1.0;
+
+		// Build reasoning paths
+		const reasoningPaths: ParagraphReasoningPath[] = paragraphs.map((paragraph) => {
+			const change = changes.find((c) => c.paragraphId === paragraph.paragraphId);
+			const relatedIssues = incoherences.filter((inc) =>
+				inc.affectedParagraphIds.includes(paragraph.paragraphId),
+			);
+
+			let action = ParagraphAction.kept;
+			if (change) {
+				switch (change.changeType) {
+					case ChangeType.modified: action = ParagraphAction.modified; break;
+					case ChangeType.added: action = ParagraphAction.added; break;
+					case ChangeType.removed: action = ParagraphAction.removed; break;
+					default: action = ParagraphAction.kept;
+				}
+			}
+
+			return {
+				paragraphId: paragraph.paragraphId,
+				action,
+				feedbackAddressed: change
+					? change.sources.map((source) => ({
+						sourceId: source.sourceId,
+						sourceType: source.type,
+						summary: source.content.substring(0, 100),
+						impact: source.impact,
+					}))
+					: [],
+				coherenceIssuesResolved: [],
+				coherenceIssuesCreated: relatedIssues.map((inc) => inc.recordId),
+				aiDecisionSummary: change?.aiReasoning || 'No changes needed.',
+				previousContent: action !== ParagraphAction.kept ? change?.originalContent : undefined,
+				newContent: action !== ParagraphAction.kept ? change?.proposedContent : undefined,
+			};
+		});
+
+		console.info(
+			`[coherenceAnalysis] Completed: score=${coherenceScore}, issues=${incoherences.length}`,
+		);
+
+		return {
+			incoherences,
+			coherenceScore,
+			reasoningPaths,
+			summary: parsed.summary || 'Coherence analysis completed.',
+		};
+	} catch (error) {
+		logError(error, {
+			operation: 'versionAI.runCoherenceAnalysis',
+			metadata: { versionId, documentId, paragraphCount: paragraphs.length },
+		});
+
+		// Non-blocking - return null so the version is still usable
+		return null;
+	}
+}
+
 /**
  * HTTP handler for processing version AI
  */
@@ -524,12 +789,47 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 
 		await batch.commit();
 
+		// Step 2: Run coherence analysis (non-blocking on failure)
+		let coherenceScore: number | undefined;
+		let coherenceRecordCount = 0;
+
+		const coherenceResult = await runCoherenceAnalysis(
+			updatedParagraphs,
+			changes,
+			versionId,
+			documentId,
+		);
+
+		if (coherenceResult) {
+			coherenceScore = coherenceResult.coherenceScore;
+			coherenceRecordCount = coherenceResult.incoherences.length;
+
+			// Store coherence records
+			if (coherenceResult.incoherences.length > 0) {
+				const cohBatch = db.batch();
+				for (const record of coherenceResult.incoherences) {
+					const recordRef = db.collection(SignCollections.coherenceRecords).doc(record.recordId);
+					cohBatch.set(recordRef, record);
+				}
+				await cohBatch.commit();
+			}
+
+			// Update version with coherence data
+			await versionRef.update({
+				coherenceScore: coherenceResult.coherenceScore,
+				coherenceRecordCount: coherenceResult.incoherences.length,
+				reasoningPaths: coherenceResult.reasoningPaths,
+			});
+		}
+
 		console.info(`[processVersionAI] Completed for version ${versionId}`);
 
 		res.json({
 			success: true,
 			processedChanges: analysisResults.length,
 			totalChanges: changes.length,
+			coherenceScore,
+			coherenceRecordCount,
 		});
 	} catch (error) {
 		logError(error, {

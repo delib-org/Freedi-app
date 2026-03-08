@@ -56,7 +56,7 @@ export default async function QuestionPage({ params }: PageProps) {
     return (
       <LanguageOverrideProvider
         adminLanguage={question.defaultLanguage}
-        forceLanguage={(question as { forceLanguage?: boolean }).forceLanguage ?? true}
+        forceLanguage={(question as { forceLanguage?: boolean }).forceLanguage ?? false}
       >
         <div className="page">
           {/* Server Component - Static header */}

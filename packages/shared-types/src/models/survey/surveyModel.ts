@@ -118,6 +118,10 @@ export const QuestionOverrideSettingsSchema = object({
   randomizeOptions: optional(boolean()),
   /** Override suggestion mode for THIS question */
   suggestionMode: optional(SuggestionModeSchema),
+  /** Show view progress / status button for THIS question */
+  showViewProgress: optional(boolean()),
+  /** Ask user for a solution AFTER completing minimum evaluations for THIS question */
+  askUserForASolutionAfterEvaluation: optional(boolean()),
 });
 
 export type QuestionOverrideSettings = InferOutput<typeof QuestionOverrideSettingsSchema>;
@@ -327,4 +331,6 @@ export const DEFAULT_QUESTION_OVERRIDE_SETTINGS: QuestionOverrideSettings = {
   minEvaluationsPerQuestion: undefined,
   randomizeOptions: undefined,
   suggestionMode: undefined,
+  showViewProgress: undefined,
+  askUserForASolutionAfterEvaluation: undefined,
 };

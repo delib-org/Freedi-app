@@ -11,6 +11,8 @@ interface CreateQuestionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onQuestionCreated: (question: Statement) => void;
+  /** Default parent group ID to pre-select (e.g. from existing questions in the survey) */
+  defaultParentId?: string;
 }
 
 type Step = 1 | 2 | 3;
@@ -30,6 +32,7 @@ export default function CreateQuestionModal({
   isOpen,
   onClose,
   onQuestionCreated,
+  defaultParentId,
 }: CreateQuestionModalProps) {
   const { t } = useTranslation();
   const { refreshToken } = useAuth();
@@ -82,7 +85,13 @@ export default function CreateQuestionModal({
       }
 
       const data = await response.json();
-      setGroups(data.groups || []);
+      const fetchedGroups: GroupData[] = data.groups || [];
+      setGroups(fetchedGroups);
+
+      // Auto-select the default parent group if provided and exists in the fetched groups
+      if (defaultParentId && fetchedGroups.some(g => g.statementId === defaultParentId)) {
+        setSelectedGroupId(defaultParentId);
+      }
     } catch (err) {
       logError(err, {
         operation: 'CreateQuestionModal.fetchGroups',
@@ -91,14 +100,14 @@ export default function CreateQuestionModal({
     } finally {
       setGroupsLoading(false);
     }
-  }, [refreshToken, t]);
+  }, [refreshToken, t, defaultParentId]);
 
   useEffect(() => {
     if (isOpen) {
       fetchGroups();
       // Reset state when modal opens
-      setCurrentStep(1);
-      setSelectedGroupId(null);
+      setCurrentStep(defaultParentId ? 2 : 1);
+      setSelectedGroupId(defaultParentId ?? null);
       setQuestionText('');
       setEvaluationType('suggestions');
       setMaxVotes(3);
@@ -280,7 +289,7 @@ export default function CreateQuestionModal({
                     : ''
               }`}
             >
-              {t('group') || 'Group'}
+              {t('parentQuestion') || 'Parent Question'}
             </span>
           </div>
 
@@ -334,15 +343,15 @@ export default function CreateQuestionModal({
           {/* Step 1: Group Selection */}
           {currentStep === 1 && (
             <div>
-              <h3 className={styles.stepTitle}>{t('selectParentGroup') || 'Select Parent Group'}</h3>
+              <h3 className={styles.stepTitle}>{t('selectParentQuestion') || 'Select Parent Question'}</h3>
               <p className={styles.stepDescription}>
-                {t('selectGroupDescription') || 'Choose where this question will be created'}
+                {t('selectParentQuestionDescription') || 'Choose the parent question for this new question'}
               </p>
 
               {groupsLoading ? (
                 <div className={styles.loading}>
                   <div className={styles.spinner} />
-                  <span>{t('loadingGroups') || 'Loading groups...'}</span>
+                  <span>{t('loadingQuestions') || 'Loading questions...'}</span>
                 </div>
               ) : groupsError ? (
                 <div className={styles.emptyState}>
@@ -353,17 +362,17 @@ export default function CreateQuestionModal({
                 </div>
               ) : groups.length === 0 && !isCreatingGroup ? (
                 <div className={styles.emptyState}>
-                  <p>{t('noGroupsFound') || 'No Groups Found'}</p>
+                  <p>{t('noParentQuestionsFound') || 'No Parent Questions Found'}</p>
                   <p className={styles.hint}>
-                    {t('noGroupsDescription') ||
-                      'Create your first group to start adding questions.'}
+                    {t('noParentQuestionsDescription') ||
+                      'Create your first parent question to start adding sub-questions.'}
                   </p>
                   <button
                     type="button"
                     className={styles.createGroupButton}
                     onClick={() => setIsCreatingGroup(true)}
                   >
-                    {t('createFirstGroup') || 'Create Your First Group'}
+                    {t('createFirstParentQuestion') || 'Create Your First Parent Question'}
                   </button>
                 </div>
               ) : (
@@ -373,7 +382,7 @@ export default function CreateQuestionModal({
                       <input
                         type="text"
                         className={styles.searchInput}
-                        placeholder={t('searchGroups') || 'Search groups...'}
+                        placeholder={t('searchParentQuestions') || 'Search questions...'}
                         value={groupSearchQuery}
                         onChange={(e) => setGroupSearchQuery(e.target.value)}
                         onKeyDown={(e) => {
@@ -420,7 +429,7 @@ export default function CreateQuestionModal({
                         className={styles.createGroupButton}
                         onClick={() => setIsCreatingGroup(true)}
                       >
-                        {t('createNewGroup') || '+ Create New Group'}
+                        {t('createNewParentQuestion') || '+ Create New Parent Question'}
                       </button>
                     </>
                   )}
@@ -430,7 +439,7 @@ export default function CreateQuestionModal({
                       <input
                         type="text"
                         className={styles.createGroupInput}
-                        placeholder={t('groupNamePlaceholder') || 'Enter group name...'}
+                        placeholder={t('parentQuestionPlaceholder') || 'Enter parent question name...'}
                         value={newGroupName}
                         onChange={(e) => setNewGroupName(e.target.value)}
                         onKeyDown={(e) => {

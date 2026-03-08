@@ -70,4 +70,6 @@ export enum Collections {
     versioningSettings = 'versioningSettings',
     paragraphReplacementQueue = 'paragraphReplacementQueue',
     versionControlAudit = 'versionControlAudit',
+    coherenceRecords = 'coherenceRecords',
+    documentActionHistory = 'documentActionHistory',
 }

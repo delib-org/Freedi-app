@@ -28,6 +28,14 @@ export interface Paragraph extends SharedParagraph {
     totalVoters: number;
     averageApproval: number;
   };
+  // Insertion point fields (from Statement.doc)
+  isInsertionPoint?: boolean;
+  insertionBetween?: {
+    beforeParagraphId?: string;
+    afterParagraphId?: string;
+  };
+  consumed?: boolean;
+  removed?: boolean;
 }
 
 /**

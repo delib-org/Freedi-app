@@ -352,6 +352,11 @@ export {
   calcStandardError,
   calcAgreement,
   calcBinaryConsensus,
+  DEFAULT_REMOVAL_THRESHOLD,
+  DEFAULT_ADDITION_THRESHOLD,
+  DEFAULT_MIN_EVALUATORS,
+  meetsRemovalThreshold,
+  meetsAdditionThreshold,
 } from "./utils/consensusCalculation";
 
 // Framing models
@@ -445,12 +450,33 @@ export type {
   PendingReplacement,
   VersionControlAudit,
   VersionArchive,
+  DocumentActionHistory,
 } from "./models/version/replacementQueueModel";
 
 export {
   PendingReplacementSchema,
   VersionControlAuditSchema,
   VersionArchiveSchema,
+  DocumentActionHistorySchema,
   ReplacementQueueStatus,
   AuditAction,
+  DocumentActionType,
 } from "./models/version/replacementQueueModel";
+
+// Coherence models (document coherence engine)
+export type {
+  IncoherenceRecord,
+  ParagraphReasoningPath,
+  FeedbackAddressed,
+  CoherenceAnalysisResult,
+} from "./models/version/coherenceModel";
+
+export {
+  IncoherenceRecordSchema,
+  ParagraphReasoningPathSchema,
+  FeedbackAddressedSchema,
+  IncoherenceType,
+  IncoherenceSeverity,
+  ParagraphAction,
+  getCoherenceRecordId,
+} from "./models/version/coherenceModel";

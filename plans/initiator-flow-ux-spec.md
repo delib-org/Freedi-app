@@ -57,7 +57,7 @@ The initiator persona is distinct from the participant. They are:
 
 ### Design Tokens (Same as Participant Flow)
 
-All designs use the established bot app design tokens from `tokens.scss`:
+All designs use the established flow app design tokens from `tokens.scss`:
 
 ```
 Colors:
@@ -766,7 +766,7 @@ The initiator's home base showing all their deliberations and deliberations they
 
 **Data sources:**
 - Created: Firestore query on `statements` collection where `creatorId === user.uid && deliberationConfig exists`
-- Participated: localStorage scan for `bot_session_*` keys, combined with Firestore reads for titles/stats
+- Participated: localStorage scan for `flow_session_*` keys, combined with Firestore reads for titles/stats
 
 ---
 
@@ -1068,7 +1068,7 @@ Each card in the dashboard displays:
 
 1. **Created deliberations**: Firestore query -- requires the user to be signed in (Google auth, tier 2). If anonymous, show a "Sign in to see your created deliberations" prompt.
 
-2. **Participated deliberations**: Scan localStorage for `bot_session_*` keys. For each found session, load the deliberation data from Firestore to get the title and current stats. Cache results to avoid repeated reads.
+2. **Participated deliberations**: Scan localStorage for `flow_session_*` keys. For each found session, load the deliberation data from Firestore to get the title and current stats. Cache results to avoid repeated reads.
 
 3. **Merge strategy**: If the user signs in after creating deliberations anonymously, we need to migrate their anonymous `creatorId` to their Google UID. This happens automatically during the auth upgrade (linkWithRedirect merges accounts).
 
@@ -1144,7 +1144,7 @@ Use a simple relative time formatter:
 
 ### State Persistence
 
-The wizard state is stored in `sessionStorage` under the key `bot_wizard_state`. This means:
+The wizard state is stored in `sessionStorage` under the key `flow_wizard_state`. This means:
 - Refreshing the page preserves progress within the wizard
 - Closing the tab/browser discards incomplete wizard state (intentional -- incomplete deliberations should not linger)
 - After successful creation, the wizard state is cleared
@@ -2451,7 +2451,7 @@ async function createDeliberation(input: CreateDeliberationInput): Promise<strin
 
 ### Dependencies
 
-- **QR code library**: Need to add a vanilla JS QR code generator (e.g., `qrcode` npm package). The main app uses `qrcode.react` but the bot app uses Mithril, not React.
+- **QR code library**: Need to add a vanilla JS QR code generator (e.g., `qrcode` npm package). The main app uses `qrcode.react` but the flow app uses Mithril, not React.
 - **No new Firebase dependencies**: The existing Firebase setup covers all needs.
 - **No backend changes**: All writes use the existing `statements` and `evaluations` collections.
 
@@ -2540,5 +2540,5 @@ async function createDeliberation(input: CreateDeliberationInput): Promise<strin
 
 *Document version: 1.0*
 *Created: 2026-03-03*
-*Scope: Bot app (apps/bot/) initiator flow*
+*Scope: Flow app (apps/flow/) initiator flow*
 *Related: participant-journey-ux-spec.md (participant flow)*

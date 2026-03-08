@@ -3,6 +3,7 @@ import {
 	string,
 	number,
 	optional,
+	boolean,
 	enum_,
 	InferOutput,
 } from 'valibot';
@@ -15,6 +16,15 @@ export enum ReplacementQueueStatus {
 	approved = 'approved',
 	rejected = 'rejected',
 	superseded = 'superseded', // Replaced by newer suggestion
+}
+
+/**
+ * Type of document action (consensus-driven)
+ */
+export enum DocumentActionType {
+	replace = 'replace', // Existing: replace paragraph text with suggestion
+	remove = 'remove',   // New: auto-remove paragraph when consensus drops below threshold
+	add = 'add',         // New: auto-add paragraph from insertion point suggestion
 }
 
 /**
@@ -59,6 +69,17 @@ export const PendingReplacementSchema = object({
 	reviewedAt: optional(number()),
 	adminNotes: optional(string()),
 	adminEditedText: optional(string()), // if admin modified before approval
+
+	// Action type (defaults to 'replace' for backward compatibility)
+	actionType: optional(enum_(DocumentActionType)), // 'replace' | 'remove' | 'add'
+
+	// For 'add' actions: insertion point context
+	insertionPointId: optional(string()),       // statementId of the insertion point
+	insertAfterParagraphId: optional(string()), // paragraph after which to insert
+
+	// Auto-execution tracking
+	autoExecuted: optional(boolean()),  // true if auto-executed by Cloud Function
+	autoExecutedAt: optional(number()), // timestamp of auto-execution
 });
 
 export type PendingReplacement = InferOutput<typeof PendingReplacementSchema>;
@@ -116,3 +137,49 @@ export const VersionArchiveSchema = object({
 });
 
 export type VersionArchive = InferOutput<typeof VersionArchiveSchema>;
+
+// ============================================================================
+// DOCUMENT ACTION HISTORY
+// ============================================================================
+
+/**
+ * Document Action History Schema
+ *
+ * Records all automatic consensus-driven actions (removal, addition, replacement)
+ * for audit trail and undo functionality.
+ *
+ * Stored in collection: documentActionHistory
+ */
+export const DocumentActionHistorySchema = object({
+	actionId: string(),
+	documentId: string(),
+	paragraphId: string(), // The affected paragraph (or insertion point for 'add')
+
+	actionType: enum_(DocumentActionType), // 'replace' | 'remove' | 'add'
+
+	// Content snapshots for undo
+	previousContent: optional(string()), // For 'remove': the removed text; for 'replace': old text
+	newContent: optional(string()),       // For 'add': the added text; for 'replace': new text
+
+	// Consensus data at time of action
+	consensus: number(),
+	evaluatorCount: number(),
+
+	// Execution info
+	executedAt: number(),
+	queueItemId: optional(string()), // Reference to PendingReplacement if applicable
+
+	// For 'add' actions: context
+	insertionPointId: optional(string()),
+	insertAfterParagraphId: optional(string()),
+	newParagraphId: optional(string()), // The created paragraph's statementId
+
+	// Undo tracking
+	undoneAt: optional(number()),   // Set when admin undoes this action
+	undoneBy: optional(string()),   // Admin userId who undid
+
+	// Cooldown: after undo, prevent re-triggering for 24h
+	cooldownUntil: optional(number()), // timestamp; auto-actions blocked until this time
+});
+
+export type DocumentActionHistory = InferOutput<typeof DocumentActionHistorySchema>;

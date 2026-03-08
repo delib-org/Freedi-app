@@ -77,6 +77,14 @@ export default function SolutionFeedClient({
   // Check if participants can add suggestions
   const canAddSuggestions = hasNoSolutions || (mergedSettings?.allowParticipantsToAddSuggestions ?? true);
 
+  // Check if view progress button should be shown (admin per-question setting, defaults to true)
+  const showViewProgressEnabled = mergedSettings?.showViewProgress !== false;
+
+  // Ask user for solution after minimum evaluations
+  const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
+  const minEvaluationsForPrompt = mergedSettings?.minEvaluationsPerQuestion ?? 0;
+  const [hasShownAfterEvalPrompt, setHasShownAfterEvalPrompt] = useState(false);
+
   // Count how many solutions in the current batch have been evaluated
   const evaluatedInBatch = solutions.filter(
     s => evaluationScores.has(s.statementId) || allEvaluatedIds.has(s.statementId)
@@ -274,11 +282,24 @@ export default function SolutionFeedClient({
   useEffect(() => {
     if (inSurveyContext) {
       const event = new CustomEvent('show-view-progress', {
-        detail: { show: allEvaluatedIds.size > 0 }
+        detail: { show: allEvaluatedIds.size > 0 && showViewProgressEnabled }
       });
       window.dispatchEvent(event);
     }
-  }, [allEvaluatedIds.size, inSurveyContext]);
+  }, [allEvaluatedIds.size, inSurveyContext, showViewProgressEnabled]);
+
+  // Show solution prompt after completing minimum evaluations (if admin enabled)
+  useEffect(() => {
+    if (
+      askAfterEvaluation &&
+      !hasShownAfterEvalPrompt &&
+      minEvaluationsForPrompt > 0 &&
+      allEvaluatedIds.size >= minEvaluationsForPrompt
+    ) {
+      setHasShownAfterEvalPrompt(true);
+      setShowSolutionPrompt(true);
+    }
+  }, [askAfterEvaluation, hasShownAfterEvalPrompt, minEvaluationsForPrompt, allEvaluatedIds.size]);
 
   /**
    * Handle evaluation from SolutionCard
@@ -547,7 +568,7 @@ export default function SolutionFeedClient({
         {/* Action buttons - only show when NOT in survey context */}
         {!inSurveyContext && !hasNoSolutions && (
           <div className={styles.actionButtons}>
-            {allEvaluatedIds.size > 0 && (
+            {allEvaluatedIds.size > 0 && showViewProgressEnabled && (
               <button
                 className={styles.viewProgressButton}
                 onClick={handleViewProgress}

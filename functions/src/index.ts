@@ -140,11 +140,15 @@ import { importGoogleDoc } from './fn_importGoogleDocs';
 // Document Version AI Processing
 import { processVersionAI } from './fn_versionAI';
 
+// Auto-Generate Version on Suggestion Threshold
+import { onSuggestionCreatedAutoGenerate } from './fn_autoGenerateVersion';
+
 // Paragraph Version Control (MVP)
 import { fn_createReplacementQueueItem } from './fn_createReplacementQueueItem';
 import { fn_updateQueueConsensus } from './fn_updateQueueConsensus';
 import { fn_pruneVersionHistory } from './fn_pruneVersionHistory';
 import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPending';
+import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
@@ -616,6 +620,14 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
 exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
 
+// Auto-Generate Version on Suggestion Threshold
+exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
+	`/${Collections.suggestions}/{suggestionId}`,
+	onDocumentCreated,
+	onSuggestionCreatedAutoGenerate,
+	'onSuggestionCreatedAutoGenerate',
+);
+
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
@@ -685,6 +697,8 @@ exports.fn_createReplacementQueueItem = fn_createReplacementQueueItem;
 exports.fn_updateQueueConsensus = fn_updateQueueConsensus;
 exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
+exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
+exports.fn_autoAddParagraph = fn_autoAddParagraph;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

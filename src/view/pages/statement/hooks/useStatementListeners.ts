@@ -5,14 +5,13 @@ import {
 	listenToStatement,
 	listenToSubStatements,
 	listenToStatementSubscription,
-	listenToTreeDescendants,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import {
 	listenToInAppNotifications,
 	clearInAppNotifications,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
-import { CHAT, FEATURES } from '@/constants/common';
+import { CHAT } from '@/constants/common';
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
@@ -102,9 +101,6 @@ export const useStatementListeners = ({
 			if (currentScreen === 'mind-map') {
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
-			} else if (FEATURES.ENABLE_TREE_VIEW) {
-				// Tree view loads all descendant types for threaded display
-				unsubscribersRef.current.push(listenToTreeDescendants(statementId));
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
 				// The default view is 'chat', so apply the limit for all non-mind-map screens.

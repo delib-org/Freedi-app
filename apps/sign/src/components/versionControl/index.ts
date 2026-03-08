@@ -17,3 +17,7 @@ export { EnhancedReviewModal } from './EnhancedReviewModal';
 export { DiffView } from './DiffView';
 export { DocumentContextPanel } from './DocumentContextPanel';
 export { ActionConfirmation } from './ActionConfirmation';
+export { CoherencePanel } from './CoherencePanel';
+export { IncoherenceCard } from './IncoherenceCard';
+export { ReasoningPathView } from './ReasoningPathView';
+export { ActionHistoryPanel } from './ActionHistoryPanel';

@@ -2,6 +2,7 @@ import {
   LanguagesEnum,
   DEFAULT_LANGUAGE,
   COOKIE_KEY,
+  isValidLanguage,
   getDirection,
   getRowDirection,
   type Direction,
@@ -10,6 +11,9 @@ import {
 } from '../core';
 import { languages, getLanguageData } from '../languages';
 
+// Re-export isValidLanguage for backward compatibility
+export { isValidLanguage };
+
 export interface ServerTranslations {
   t: (key: string) => string;
   tWithParams: (key: string, params: Record<string, string | number>) => string;
@@ -17,10 +21,6 @@ export interface ServerTranslations {
   dir: Direction;
   rowDirection: RowDirection;
   dictionary: TranslationDictionary;
-}
-
-export function isValidLanguage(lang: string): lang is LanguagesEnum {
-  return Object.values(LanguagesEnum).includes(lang as LanguagesEnum);
 }
 
 /**

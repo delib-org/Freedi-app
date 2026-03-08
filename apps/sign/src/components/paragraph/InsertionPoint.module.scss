@@ -1,0 +1,168 @@
+// InsertionPoint - subtle "+" button between paragraphs for suggesting new content
+// Default: thin line only. Hover/focus: reveals circular trigger. Expanded: shows form area.
+
+.insertionPoint {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 0;
+  cursor: pointer;
+  user-select: none;
+
+  // Consumed state: insertion point already used, hide entirely
+  &--consumed {
+    display: none;
+  }
+
+  // Expanded state: suggestion form is open
+  &--expanded {
+    padding: var(--spacing-sm) 0;
+    cursor: default;
+
+    .insertionPoint__line {
+      opacity: 0;
+    }
+
+    .insertionPoint__trigger {
+      opacity: 0;
+      pointer-events: none;
+      width: 0;
+      height: 0;
+      padding: 0;
+    }
+  }
+}
+
+// The thin horizontal line between paragraphs
+.insertionPoint__line {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  height: 1px;
+  background: var(--border-light);
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+
+  .insertionPoint:hover &,
+  .insertionPoint:focus-within & {
+    opacity: 0.8;
+  }
+}
+
+// The circular "+" trigger button
+.insertionPoint__trigger {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-height: 44px; // WCAG touch target (visual size is 28px, hit area is 44px)
+  min-width: 44px;
+  padding: 0;
+  border: 1px solid var(--border-light);
+  border-radius: 50%;
+  background: var(--card-default);
+  color: var(--text-caption);
+  font-size: 1.125rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  // Reveal on parent hover (desktop)
+  @media (hover: hover) {
+    .insertionPoint:hover & {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  // Always show on keyboard focus
+  &:focus-visible {
+    opacity: 1;
+    transform: scale(1);
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  // Hover state on the button itself
+  &:hover {
+    background: var(--btn-primary);
+    border-color: var(--btn-primary);
+    color: white;
+  }
+
+  // Press feedback
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+// Expanded form container (suggestion thread rendered inside)
+.insertionPoint__body {
+  width: 100%;
+  padding: var(--spacing-sm) 0;
+  animation: expandIn 0.2s ease-out;
+}
+
+@keyframes expandIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Reduced motion: disable all animations and transitions
+@media (prefers-reduced-motion: reduce) {
+  .insertionPoint__line,
+  .insertionPoint__trigger {
+    transition: none;
+  }
+
+  .insertionPoint__trigger:active {
+    transform: none;
+  }
+
+  .insertionPoint__body {
+    animation: none;
+  }
+}
+
+// Mobile: always show trigger at lower opacity so users know it exists
+@media (hover: none) {
+  .insertionPoint__trigger {
+    opacity: 0.5;
+    transform: scale(0.85);
+
+    &:active {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+// RTL support via data-text-dir attribute (matches ParagraphCard pattern)
+:global([data-text-dir="rtl"]) {
+  .insertionPoint {
+    direction: rtl;
+  }
+}
+
+:global([data-text-dir="ltr"]) {
+  .insertionPoint {
+    direction: ltr;
+  }
+}
