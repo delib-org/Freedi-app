@@ -1365,6 +1365,7 @@
   "askForSuggestionBeforeEvaluation": "בקש הצעה לפני הצגת האפשרויות",
   "allowSkippingThisQuestion": "אפשר לדלג על שאלה זו",
   "minEvaluationsThisQuestion": "מינימום הערכות לשאלה זו",
+  "showViewProgress": "הצג כפתור צפייה בהתקדמות / סטטוס",
   "randomizeOptionsOrder": "סדר אפשרויות אקראי",
   "surveySettingEnabled": "הגדרת סקר מופעלת",
   "leaveEmptyForDefault": "השאר ריק לשימוש בברירת מחדל של הסקר",

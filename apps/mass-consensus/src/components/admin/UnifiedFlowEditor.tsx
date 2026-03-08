@@ -431,6 +431,17 @@ function QuestionSettingsPanel({
           />
         </label>
       </div>
+
+      <div className={styles.settingRow}>
+        <label className={styles.settingLabel}>
+          <input
+            type="checkbox"
+            checked={questionSetting?.showViewProgress ?? true}
+            onChange={(e) => handleToggle('showViewProgress', e.target.checked)}
+          />
+          <span>{t('showViewProgress') || 'Show view progress / status button'}</span>
+        </label>
+      </div>
     </div>
   );
 }

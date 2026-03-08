@@ -368,6 +368,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 0.25rem;
   width: 44px;
   height: 44px;
   border-radius: 50%;
@@ -376,6 +377,13 @@
   color: var(--btn-primary, #5f88e5);
   cursor: pointer;
   transition: all 0.2s ease;
+
+  @media (min-width: 480px) {
+    width: auto;
+    height: auto;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+  }
 
   &:hover {
     background: var(--btn-primary, #5f88e5);
@@ -390,6 +398,18 @@
   svg {
     width: 20px;
     height: 20px;
+    flex-shrink: 0;
+  }
+}
+
+.navActionLabel {
+  display: none;
+  font-size: 0.875rem;
+  font-weight: 600;
+  white-space: nowrap;
+
+  @media (min-width: 480px) {
+    display: inline;
   }
 }
 
