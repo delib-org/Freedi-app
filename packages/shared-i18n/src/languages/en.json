@@ -1373,6 +1373,7 @@
   "allowSkippingThisQuestion": "Allow skipping this question",
   "minEvaluationsThisQuestion": "Minimum evaluations for this question",
   "showViewProgress": "Show view progress / status button",
+  "askForSuggestionAfterEvaluation": "Ask user to add an answer after completing evaluations",
   "randomizeOptionsOrder": "Randomize options order",
   "surveySettingEnabled": "Survey setting enabled",
   "leaveEmptyForDefault": "Leave empty to use survey default",

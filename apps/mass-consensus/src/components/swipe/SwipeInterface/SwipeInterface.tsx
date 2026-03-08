@@ -205,6 +205,23 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     }
   }, [showProposalPrompt, question.statementId, userId, evaluatedCount]);
 
+  // Show solution prompt after completing minimum evaluations (if admin enabled)
+  const askAfterEvaluation = mergedSettings?.askUserForASolutionAfterEvaluation ?? false;
+  const minEvaluations = mergedSettings?.minEvaluationsPerQuestion ?? 0;
+  const [hasShownAfterEvalPrompt, setHasShownAfterEvalPrompt] = useState(false);
+
+  useEffect(() => {
+    if (
+      askAfterEvaluation &&
+      !hasShownAfterEvalPrompt &&
+      minEvaluations > 0 &&
+      evaluatedCount >= minEvaluations
+    ) {
+      setHasShownAfterEvalPrompt(true);
+      setShowProposalModal(true);
+    }
+  }, [askAfterEvaluation, hasShownAfterEvalPrompt, minEvaluations, evaluatedCount]);
+
   // Handle completion
   useEffect(() => {
     if (totalCount > 0 && evaluatedCount >= totalCount && onComplete) {

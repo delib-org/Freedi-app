@@ -1366,6 +1366,7 @@
   "allowSkippingThisQuestion": "אפשר לדלג על שאלה זו",
   "minEvaluationsThisQuestion": "מינימום הערכות לשאלה זו",
   "showViewProgress": "הצג כפתור צפייה בהתקדמות / סטטוס",
+  "askForSuggestionAfterEvaluation": "בקש מהמשתמש להוסיף תשובה לאחר השלמת ההערכות",
   "randomizeOptionsOrder": "סדר אפשרויות אקראי",
   "surveySettingEnabled": "הגדרת סקר מופעלת",
   "leaveEmptyForDefault": "השאר ריק לשימוש בברירת מחדל של הסקר",
