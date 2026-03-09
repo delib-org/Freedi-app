@@ -3,7 +3,7 @@
 import { useTranslation } from '@freedi/shared-i18n/next';
 import styles from './EmptyState.module.scss';
 
-type EmptyStateVariant = 'noDocuments' | 'noResults' | 'emptyCreated' | 'emptyCollaborating' | 'emptySigned';
+type EmptyStateVariant = 'noDocuments' | 'noResults' | 'emptyCreated' | 'emptyCollaborating' | 'emptySigned' | 'emptyParticipated';
 
 interface EmptyStateProps {
   variant: EmptyStateVariant;
@@ -69,6 +69,12 @@ function getConfig(
         icon: '\u{2705}',
         title: t('No signed documents'),
         message: t('Documents you sign will appear here'),
+      };
+    case 'emptyParticipated':
+      return {
+        icon: '\u{1F441}\u{FE0F}',
+        title: t('No participated documents'),
+        message: t('Documents you view will appear here'),
       };
   }
 }

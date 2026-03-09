@@ -19,7 +19,7 @@ export interface HomeDocument {
   parentId: string;
   topParentId: string;
   groupName?: string;
-  relationship: 'created' | 'collaborator' | 'invited' | 'signed';
+  relationship: 'created' | 'collaborator' | 'invited' | 'signed' | 'participant';
   userRole: 'owner' | 'admin' | 'viewer' | 'signer';
   signatureStatus?: 'signed' | 'rejected' | 'viewed' | null;
   signedCount: number;
@@ -48,18 +48,24 @@ export async function getUserHomeDocuments(
     const db = getFirestoreAdmin();
 
     // Run queries in parallel
-    const [createdDocs, collaboratedDocs, invitedDocs, signedDocs, groups] = await Promise.all([
+    const [createdDocs, collaboratedDocs, invitedDocs, signedDocs, subscribedDocs, groups] = await Promise.all([
       getCreatedDocuments(db, userId),
       getCollaboratedDocuments(db, userId),
       userEmail ? getInvitedDocuments(db, userEmail) : Promise.resolve([]),
       getSignedDocuments(db, userId),
+      getSubscribedDocuments(db, userId),
       getUserGroups(db, userId),
     ]);
 
-    // Merge into a Map keyed by statementId, priority: created > collaborator > invited > signed
+    // Merge into a Map keyed by statementId, priority: created > collaborator > invited > signed > subscribed
     const documentMap = new Map<string, HomeDocument>();
 
-    // Add signed first (lowest priority)
+    // Add subscribed first (lowest priority)
+    for (const doc of subscribedDocs) {
+      documentMap.set(doc.statementId, doc);
+    }
+
+    // Add signed (overrides subscribed)
     for (const doc of signedDocs) {
       documentMap.set(doc.statementId, doc);
     }
@@ -309,6 +315,42 @@ async function getUserGroups(
     });
   } catch (error) {
     logError(error, { operation: 'homeQueries.getUserGroups', userId });
+
+    return [];
+  }
+}
+
+/**
+ * Get documents the user has visited (subscribed with isDocument flag)
+ */
+async function getSubscribedDocuments(
+  db: FirebaseFirestore.Firestore,
+  userId: string
+): Promise<HomeDocument[]> {
+  try {
+    const snapshot = await db
+      .collection(Collections.statementsSubscribe)
+      .where('userId', '==', userId)
+      .where('isDocument', '==', true)
+      .orderBy('lastUpdate', 'desc')
+      .limit(QUERY_LIMITS.HOME_DOCUMENTS)
+      .get();
+
+    if (snapshot.empty) return [];
+
+    const docIds = snapshot.docs
+      .map((doc) => doc.data().statementId as string | undefined)
+      .filter((id): id is string => !!id);
+
+    if (docIds.length === 0) return [];
+
+    const documents = await batchGetDocuments(db, docIds);
+
+    return documents
+      .map((data) => statementToHomeDocument(data, 'participant', 'viewer'))
+      .filter((doc): doc is HomeDocument => doc !== null);
+  } catch (error) {
+    logError(error, { operation: 'homeQueries.getSubscribedDocuments', userId });
 
     return [];
   }

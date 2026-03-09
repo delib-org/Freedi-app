@@ -124,6 +124,7 @@ async function createSubscription(
     lastUpdate: now,
     createdAt: now,
     statementsSubscribeId: subscriptionId,
+    isDocument: true,
     statement: statementData,
     user: {
       displayName,
