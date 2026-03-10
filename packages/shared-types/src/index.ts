@@ -416,6 +416,7 @@ export type {
   ChangeSource,
   VersionGenerationSettings,
   DocumentVersioningSettings,
+  DocumentFeedbackSummary,
 } from "./models/version/versionModel";
 
 export {
@@ -424,10 +425,12 @@ export {
   ChangeSourceSchema,
   VersionGenerationSettingsSchema,
   DocumentVersioningSettingsSchema,
+  DocumentFeedbackSummarySchema,
   VersionStatus,
   ChangeDecision,
   ChangeType,
   ChangeSourceType,
+  RevisionStrategy,
   DEFAULT_VERSION_GENERATION_SETTINGS,
   DEFAULT_VERSIONING_SETTINGS,
   getVersionId,

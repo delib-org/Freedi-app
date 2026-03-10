@@ -1084,3 +1084,139 @@
     }
   }
 }
+
+/* Strategy & Feedback Styles */
+.strategyBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 152, 0, 0.15);
+  color: #e65100;
+  margin-top: var(--spacing-xs);
+}
+
+.strategyBanner {
+  background: rgba(255, 152, 0, 0.08);
+  border: 1px solid rgba(255, 152, 0, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+
+  strong {
+    display: block;
+    color: #e65100;
+    margin-bottom: var(--spacing-xs);
+  }
+
+  p {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-body);
+  }
+}
+
+.feedbackStats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 80px;
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.statValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+.rejectionReasonsSection {
+  margin-top: var(--spacing-md);
+  border-top: 1px solid var(--border-light);
+  padding-top: var(--spacing-sm);
+}
+
+.collapsibleToggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  padding: var(--spacing-xs) 0;
+
+  &:hover {
+    color: var(--text-body);
+  }
+}
+
+.rejectionReasonsList {
+  list-style: disc;
+  padding-left: var(--spacing-lg);
+  margin: var(--spacing-sm) 0 0 0;
+
+  li {
+    font-size: 0.875rem;
+    color: var(--text-body);
+    padding: var(--spacing-xs) 0;
+  }
+}
+
+.changeAdded {
+  border-left: 3px solid var(--agree);
+}
+
+.changeRemoved {
+  border-left: 3px solid var(--disagree);
+}
+
+.changeTypeBadge {
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+
+  .changeAdded & {
+    background: rgba(76, 175, 80, 0.15);
+    color: var(--agree);
+  }
+
+  .changeRemoved & {
+    background: rgba(244, 67, 54, 0.15);
+    color: var(--disagree);
+  }
+}
+
+.approvalBadge {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.sourceConsensus {
+  color: #9c27b0;
+  font-weight: 500;
+  font-size: 0.75rem;
+}
+
+.strikethrough {
+  text-decoration: line-through;
+  opacity: 0.6;
+}

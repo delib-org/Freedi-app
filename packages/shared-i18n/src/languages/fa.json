@@ -2436,5 +2436,21 @@
   "noIncoherencesFound": "مشکلی در انسجام یافت نشد",
   "coherenceCheckFailed": "تحلیل انسجام در دسترس نیست",
   "feedback items addressed": "موارد بازخورد رسیدگی‌شده",
-  "No versions found": "نسخه‌ای یافت نشد"
+  "No versions found": "نسخه‌ای یافت نشد",
+  "Get Recommendations for Change": "دریافت پیشنهادات برای تغییر",
+  "Full Revision": "بازنگری کامل",
+  "Full Document Revision Recommended": "بازنگری کامل سند توصیه می‌شود",
+  "Document rejection rate is high": "نرخ رد سند بالاست",
+  "Document Feedback Summary": "خلاصه بازخورد سند",
+  "Rejection Rate": "نرخ رد",
+  "{{count}} Rejection Reasons": "{{count}} دلایل رد",
+  "Rejection Reason": "دلیل رد",
+  "Paragraph Approval Rate": "نرخ تأیید پاراگراف‌ها",
+  "Revision Strategy": "استراتژی بازنگری",
+  "Amend Paragraphs": "اصلاح پاراگراف‌ها",
+  "New Paragraph": "پاراگراف جدید",
+  "Remove Paragraph": "حذف پاراگراف",
+  "Unchanged": "بدون تغییر",
+  "Approval: {{rate}}%": "تأیید: {{rate}}%",
+  "Consensus: {{score}}": "توافق: {{score}}"
 }

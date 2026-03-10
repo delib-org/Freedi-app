@@ -13,8 +13,10 @@
 import {
 	VersionChange,
 	ChangeSource,
+	ChangeSourceType,
 	Paragraph,
 	ChangeType,
+	DocumentFeedbackSummary,
 } from '@freedi/shared-types';
 import {
 	logError,
@@ -40,6 +42,8 @@ export interface ParagraphAnalysisInput {
 	paragraph: Paragraph;
 	sources: ChangeSource[];
 	approvalRate?: number;
+	approvalVoters?: number;
+	documentContext?: string;
 }
 
 export interface ParagraphAnalysisOutput {
@@ -156,7 +160,9 @@ Your role is to:
 5. Make targeted, meaningful changes - neither too conservative nor too aggressive
 
 Guidelines:
-- PRIORITIZE feedback with higher impact scores (these represent community consensus)
+- PRIORITIZE feedback with higher consensus scores - these represent stronger community agreement
+- Feedback items with higher consensus scores represent stronger community agreement. A consensus of 0.8 with 20 evaluators is a much stronger signal than 0.8 with 2 evaluators.
+- Document Rejection Reasons represent document-level concerns from signers who rejected the entire document - give these special weight
 - Preserve the original meaning unless feedback specifically requests changes
 - Use clear, professional language appropriate to the document's context
 - If feedback is contradictory, favor the higher-impact suggestions
@@ -183,7 +189,9 @@ Analyze this paragraph and the public feedback, then propose a revision.
 **Public Feedback (sorted by impact score - higher means more community support):**
 {feedbackList}
 
-**Paragraph Approval Rate:** {approvalRate}%
+**Paragraph Approval Rate:** {approvalRate}% ({approvalVoters} voters)
+
+{documentContext}
 
 Respond in JSON format:
 {
@@ -349,8 +357,8 @@ async function callGemini(
 	userPrompt: string,
 	config: AIConfig
 ): Promise<string> {
-	// Use Gemini 3 Flash Preview as default - latest model for document analysis
-	const model = config.model || 'gemini-3-flash-preview';
+	// Use Gemini 2.5 Pro as default - high-quality model for document analysis
+	const model = config.model || 'gemini-2.5-pro';
 	const maxTokens = config.maxTokens || 8192;
 	const temperature = config.temperature || 0.3;
 
@@ -478,7 +486,7 @@ export function isAIConfigured(): boolean {
 }
 
 /**
- * Format feedback sources for the AI prompt
+ * Format feedback sources for the AI prompt (enhanced with consensus scores)
  */
 function formatFeedback(sources: ChangeSource[]): string {
 	if (sources.length === 0) {
@@ -487,18 +495,60 @@ function formatFeedback(sources: ChangeSource[]): string {
 
 	return sources
 		.map((source, index) => {
-			const type = source.type === 'suggestion' ? 'Suggestion' : 'Comment';
+			let type: string;
+			switch (source.type) {
+				case ChangeSourceType.suggestion:
+					type = 'Suggestion';
+					break;
+				case ChangeSourceType.rejectionReason:
+					type = 'Document Rejection Reason';
+					break;
+				default:
+					type = 'Comment';
+			}
+
+			const consensusStr = source.consensus !== undefined
+				? `Consensus: ${source.consensus.toFixed(2)}, `
+				: '';
 			const support =
 				source.supporters > 0 || source.objectors > 0
-					? ` (${source.supporters} supporters, ${source.objectors} objectors)`
+					? `, ${source.supporters} supporters, ${source.objectors} objectors`
 					: '';
 
-			return `${index + 1}. [${type}] (Impact: ${source.impact.toFixed(2)}${support})
+			return `${index + 1}. [${type}] (${consensusStr}Impact: ${source.impact.toFixed(2)}${support})
    "${source.content}"
    - By: ${source.creatorDisplayName}`;
 		})
 		.join('\n\n');
 }
+
+/**
+ * Format document-level context for AI prompt
+ */
+function formatDocumentContext(summary: DocumentFeedbackSummary): string {
+	const lines = [
+		'**Document-Level Feedback:**',
+		`- Signatures: ${summary.signedCount} signed, ${summary.rejectedCount} rejected, ${summary.viewedCount} viewed`,
+		`- Rejection Rate: ${(summary.rejectionRate * 100).toFixed(0)}%`,
+		`- Overall Paragraph Approval Rate: ${(summary.overallApprovalRate * 100).toFixed(0)}%`,
+		`- Revision Strategy: ${summary.revisionStrategy}`,
+	];
+
+	if (summary.rejectionReasons.length > 0) {
+		lines.push('', '**Key Rejection Reasons:**');
+		for (const [i, r] of summary.rejectionReasons.entries()) {
+			if (i >= 5) {
+				lines.push(`  ... and ${summary.rejectionReasons.length - 5} more`);
+				break;
+			}
+			lines.push(`  ${i + 1}. "${r.reason}"`);
+		}
+	}
+
+	return lines.join('\n');
+}
+
+export { formatDocumentContext };
 
 /**
  * Analyze a single paragraph and generate a proposed revision
@@ -530,7 +580,12 @@ export async function analyzeParagraph(
 		.replace(
 			'{approvalRate}',
 			input.approvalRate !== undefined ? input.approvalRate.toFixed(0) : 'N/A'
-		);
+		)
+		.replace(
+			'{approvalVoters}',
+			input.approvalVoters !== undefined ? String(input.approvalVoters) : 'N/A'
+		)
+		.replace('{documentContext}', input.documentContext || '');
 
 	try {
 		const response = await callAI(
@@ -712,6 +767,8 @@ export async function processVersionChanges(
 			{
 				paragraph,
 				sources: change.sources,
+				approvalRate: change.approvalRate,
+				approvalVoters: change.approvalVoters,
 			},
 			aiConfig
 		);
