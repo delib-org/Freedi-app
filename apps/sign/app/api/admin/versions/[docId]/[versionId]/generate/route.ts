@@ -414,10 +414,6 @@ export async function POST(
 
 			// Get per-paragraph approval data
 			const approvalData = paragraphApprovals.get(paragraphId);
-			const approvalRate = approvalData && approvalData.total > 0
-				? (approvalData.approved / approvalData.total) * 100
-				: undefined;
-			const approvalVoters = approvalData?.total;
 
 			const change: VersionChange = {
 				changeId,
@@ -430,8 +426,13 @@ export async function POST(
 				sources,
 				aiReasoning: '', // Will be filled by AI
 				combinedImpact,
-				approvalRate,
-				approvalVoters,
+				// Only set approval fields when data exists (Firestore rejects undefined)
+				...(approvalData && approvalData.total > 0
+					? {
+						approvalRate: (approvalData.approved / approvalData.total) * 100,
+						approvalVoters: approvalData.total,
+					}
+					: {}),
 			};
 
 			changes.push(change);
