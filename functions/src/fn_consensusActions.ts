@@ -90,8 +90,18 @@ export const fn_autoRemoveParagraph = onDocumentUpdated(
 			const evaluatorCount = after.totalEvaluators || 0;
 
 			// Check if consensus just crossed the removal threshold
-			const wasAbove = !meetsRemovalThreshold(before.consensus, before.totalEvaluators || 0, removalThreshold, minEvaluators);
-			const isBelow = meetsRemovalThreshold(after.consensus, evaluatorCount, removalThreshold, minEvaluators);
+			const wasAbove = !meetsRemovalThreshold(
+				before.consensus,
+				before.totalEvaluators || 0,
+				removalThreshold,
+				minEvaluators,
+			);
+			const isBelow = meetsRemovalThreshold(
+				after.consensus,
+				evaluatorCount,
+				removalThreshold,
+				minEvaluators,
+			);
 
 			if (!wasAbove || !isBelow) return null;
 
@@ -298,8 +308,18 @@ export const fn_autoAddParagraph = onDocumentUpdated(
 			const evaluatorCount = after.totalEvaluators || 0;
 
 			// Check if consensus just crossed the addition threshold
-			const wasBelowThreshold = !meetsAdditionThreshold(before.consensus, before.totalEvaluators || 0, additionThreshold, minEvaluators);
-			const isAboveThreshold = meetsAdditionThreshold(after.consensus, evaluatorCount, additionThreshold, minEvaluators);
+			const wasBelowThreshold = !meetsAdditionThreshold(
+				before.consensus,
+				before.totalEvaluators || 0,
+				additionThreshold,
+				minEvaluators,
+			);
+			const isAboveThreshold = meetsAdditionThreshold(
+				after.consensus,
+				evaluatorCount,
+				additionThreshold,
+				minEvaluators,
+			);
 
 			if (!wasBelowThreshold || !isAboveThreshold) return null;
 
@@ -321,9 +341,16 @@ export const fn_autoAddParagraph = onDocumentUpdated(
 			const higherConsensusSibling = siblingsSuggestions.docs.find((doc) => {
 				const sibling = doc.data() as Statement;
 
-				return sibling.statementId !== after.statementId
-					&& sibling.consensus > after.consensus
-					&& meetsAdditionThreshold(sibling.consensus, sibling.totalEvaluators || 0, additionThreshold, minEvaluators);
+				return (
+					sibling.statementId !== after.statementId &&
+					sibling.consensus > after.consensus &&
+					meetsAdditionThreshold(
+						sibling.consensus,
+						sibling.totalEvaluators || 0,
+						additionThreshold,
+						minEvaluators,
+					)
+				);
 			});
 
 			if (higherConsensusSibling) {
