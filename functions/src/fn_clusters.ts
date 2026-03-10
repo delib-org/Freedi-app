@@ -26,11 +26,11 @@ let genAI: GoogleGenerativeAI;
 
 onInit(() => {
 	try {
-		if (!process.env.GOOGLE_API_KEY) {
-			throw new Error('Missing GOOGLE_API_KEY environment variable');
+		if (!process.env.GEMINI_API_KEY) {
+			throw new Error('Missing GEMINI_API_KEY environment variable');
 		}
 
-		genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
+		genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 	} catch (error) {
 		logError(error, { operation: 'clusters.initGenAI' });
 	}

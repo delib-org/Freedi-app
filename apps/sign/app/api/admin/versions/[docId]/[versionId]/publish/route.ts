@@ -6,8 +6,10 @@ import {
 	Collections,
 	AdminPermissionLevel,
 	DocumentVersion,
+	VersionChange,
 	VersionStatus,
 	ChangeDecision,
+	ChangeType,
 	IncoherenceRecord,
 	Paragraph,
 } from '@freedi/shared-types';
@@ -104,9 +106,61 @@ export async function POST(
 
 		const applyToDocument = body.applyToDocument ?? true;
 
-		// Apply approved coherence fixes to paragraphs before publishing
-		let finalParagraphs: Paragraph[] = version.paragraphs || [];
+		// Get the original document paragraphs as the base
+		const docRef = db.collection(Collections.statements).doc(docId);
+		const docSnap = await docRef.get();
+		const originalParagraphs: Paragraph[] = docSnap.exists ? (docSnap.data()?.paragraphs || []) : (version.paragraphs || []);
 
+		// Get all version changes and apply only approved/modified ones
+		const changesSnapshot = await db
+			.collection(Collections.versionChanges)
+			.where('versionId', '==', versionId)
+			.get();
+
+		const changes = changesSnapshot.docs.map((doc) => doc.data() as VersionChange);
+
+		// Build final paragraphs: start with original, apply approved changes
+		let finalParagraphs: Paragraph[] = originalParagraphs.map((paragraph) => {
+			const change = changes.find((c) => c.paragraphId === paragraph.paragraphId);
+
+			if (!change) return paragraph;
+
+			// Only apply approved or modified changes
+			if (change.adminDecision === ChangeDecision.approved) {
+				return { ...paragraph, content: change.proposedContent };
+			}
+
+			if (change.adminDecision === ChangeDecision.modified && change.finalContent) {
+				return { ...paragraph, content: change.finalContent };
+			}
+
+			// Rejected or pending changes: keep original content
+			return paragraph;
+		});
+
+		// Handle added paragraphs (approved new paragraphs from holistic analysis)
+		const addedChanges = changes.filter(
+			(c) => c.changeType === ChangeType.added && c.adminDecision === ChangeDecision.approved
+		);
+		for (const addedChange of addedChanges) {
+			finalParagraphs.push({
+				paragraphId: addedChange.paragraphId,
+				content: addedChange.proposedContent,
+				order: finalParagraphs.length,
+			} as Paragraph);
+		}
+
+		// Handle removed paragraphs (approved removals)
+		const removedParagraphIds = new Set(
+			changes
+				.filter((c) => c.changeType === ChangeType.removed && c.adminDecision === ChangeDecision.approved)
+				.map((c) => c.paragraphId)
+		);
+		if (removedParagraphIds.size > 0) {
+			finalParagraphs = finalParagraphs.filter((p) => !removedParagraphIds.has(p.paragraphId));
+		}
+
+		// Apply approved coherence fixes on top
 		const approvedFixesSnapshot = await db
 			.collection(Collections.coherenceRecords)
 			.where('versionId', '==', versionId)
@@ -129,31 +183,31 @@ export async function POST(
 
 				return paragraph;
 			});
+		}
 
-			// Also check for "modified" decisions (admin edited the fix)
-			const modifiedFixesSnapshot = await db
-				.collection(Collections.coherenceRecords)
-				.where('versionId', '==', versionId)
-				.where('adminDecision', '==', ChangeDecision.modified)
-				.get();
+		// Apply modified coherence fixes
+		const modifiedFixesSnapshot = await db
+			.collection(Collections.coherenceRecords)
+			.where('versionId', '==', versionId)
+			.where('adminDecision', '==', ChangeDecision.modified)
+			.get();
 
-			if (!modifiedFixesSnapshot.empty) {
-				const modifiedFixes = modifiedFixesSnapshot.docs.map(
-					(doc) => doc.data() as IncoherenceRecord
+		if (!modifiedFixesSnapshot.empty) {
+			const modifiedFixes = modifiedFixesSnapshot.docs.map(
+				(doc) => doc.data() as IncoherenceRecord
+			);
+
+			finalParagraphs = finalParagraphs.map((paragraph) => {
+				const fix = modifiedFixes.find(
+					(f) => f.primaryParagraphId === paragraph.paragraphId
 				);
 
-				finalParagraphs = finalParagraphs.map((paragraph) => {
-					const fix = modifiedFixes.find(
-						(f) => f.primaryParagraphId === paragraph.paragraphId
-					);
+				if (fix && fix.suggestedFix) {
+					return { ...paragraph, content: fix.suggestedFix };
+				}
 
-					if (fix && fix.suggestedFix) {
-						return { ...paragraph, content: fix.suggestedFix };
-					}
-
-					return paragraph;
-				});
-			}
+				return paragraph;
+			});
 		}
 
 		const batch = db.batch();
