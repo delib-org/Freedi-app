@@ -1,12 +1,13 @@
 'use client';
 
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useState, useMemo, useCallback } from 'react';
 import { Suggestion as SuggestionType } from '@freedi/shared-types';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { useOptimisticVote } from '@/hooks/useOptimisticVote';
 import VotingBar from './VotingBar';
+import CommentThread from '../comments/CommentThread';
 import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './Suggestion.module.scss';
 
@@ -15,6 +16,7 @@ interface SuggestionProps {
   userId: string | null;
   userDisplayName: string | null;
   paragraphId: string;
+  documentId: string;
   onDelete: (suggestionId: string) => void;
   onEdit: (suggestion: SuggestionType) => void;
   isCurrent?: boolean; // Mark as current official version
@@ -56,12 +58,14 @@ const Suggestion = memo(function Suggestion({
   userId,
   userDisplayName,
   paragraphId,
+  documentId,
   onDelete,
   onEdit,
   isCurrent = false,
   hideUserIdentity = false,
 }: SuggestionProps) {
   const { t } = useTranslation();
+  const [showComments, setShowComments] = useState(false);
 
   // Debug: Log suggestion data
   console.info('[Suggestion] Rendering suggestion:', {
@@ -234,6 +238,28 @@ const Suggestion = memo(function Suggestion({
         onVote={handleVote}
         disabled={isOwner}
       />
+
+      {/* Comment toggle */}
+      <button
+        type="button"
+        className={styles.commentToggle}
+        onClick={() => setShowComments(!showComments)}
+      >
+        {showComments ? t('Hide Comments') : t('Comments')}
+      </button>
+
+      {/* Inline comment thread (lazy-loaded when toggled) */}
+      {showComments && (
+        <div className={styles.commentSection}>
+          <CommentThread
+            paragraphId={suggestion.suggestionId}
+            documentId={documentId}
+            isLoggedIn={!!userId}
+            userId={userId}
+            hideUserIdentity={hideUserIdentity}
+          />
+        </div>
+      )}
     </article>
   );
 });

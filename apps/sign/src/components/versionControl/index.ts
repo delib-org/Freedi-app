@@ -20,3 +20,4 @@ export { ActionConfirmation } from './ActionConfirmation';
 export { CoherencePanel } from './CoherencePanel';
 export { IncoherenceCard } from './IncoherenceCard';
 export { ReasoningPathView } from './ReasoningPathView';
+export { ActionHistoryPanel } from './ActionHistoryPanel';

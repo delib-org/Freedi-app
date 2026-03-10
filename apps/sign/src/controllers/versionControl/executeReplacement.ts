@@ -1,10 +1,11 @@
 /**
  * Execute Replacement Controller
  * Handles paragraph replacement with transaction safety
+ * Preserves winning suggestion and marks old suggestions with forVersion
  */
 
 import { Firestore } from 'firebase-admin/firestore';
-import { Collections, Statement, PendingReplacement } from '@freedi/shared-types';
+import { Collections, Statement, PendingReplacement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { createVersionHistory } from './createVersionHistory';
 
@@ -33,9 +34,11 @@ export interface ExecuteReplacementResult {
  * Uses Firestore transaction to ensure atomicity
  *
  * Steps:
- * 1. Create version history entry for current version
- * 2. Update paragraph with new text and increment version
- * 3. Mark suggestion as applied
+ * 1. Snapshot evaluation data from paragraph before overwriting
+ * 2. Create version history entry with evaluation snapshot
+ * 3. Update paragraph with new text, increment version, reset evaluations
+ * 4. Mark winning suggestion as promoted (NOT hidden) — preserves its comments + evaluations
+ * 5. After transaction: batch-mark remaining suggestions with forVersion
  *
  * @param params - Replacement execution parameters
  * @returns Execution result with new version number
@@ -44,6 +47,9 @@ export async function executeReplacement(
 	params: ExecuteReplacementParams
 ): Promise<ExecuteReplacementResult> {
 	const { db, queueItem, adminEditedText, adminNotes, userId } = params;
+
+	let currentVersion = 1;
+	let newVersion = 2;
 
 	try {
 		// Use transaction to ensure atomicity
@@ -71,8 +77,16 @@ export async function executeReplacement(
 			// Determine final text (admin-edited or original suggestion)
 			const finalText = adminEditedText || suggestion.statement;
 
-			// Create version history entry for current version
-			const currentVersion = paragraph.versionControl?.currentVersion || 1;
+			// Step 1: Snapshot evaluation data before overwriting
+			const evaluationSnapshot = {
+				numberOfProEvaluators: paragraph.evaluation?.numberOfProEvaluators || 0,
+				numberOfConEvaluators: paragraph.evaluation?.numberOfConEvaluators || 0,
+				numberOfEvaluators: paragraph.evaluation?.numberOfEvaluators || 0,
+				consensus: paragraph.consensus || 0,
+			};
+
+			// Step 2: Create version history entry with evaluation snapshot
+			currentVersion = paragraph.versionControl?.currentVersion || 1;
 			await createVersionHistory({
 				db,
 				transaction,
@@ -84,12 +98,13 @@ export async function executeReplacement(
 				finalizedBy: userId,
 				adminEdited: !!adminEditedText,
 				adminNotes,
+				evaluationSnapshot,
 			});
 
 			// Calculate new version number
-			const newVersion = currentVersion + 1;
+			newVersion = currentVersion + 1;
 
-			// Update paragraph
+			// Step 3: Update paragraph — new text + reset evaluations for fresh start
 			transaction.update(paragraphRef, {
 				statement: finalText,
 				lastUpdate: Date.now(),
@@ -99,6 +114,18 @@ export async function executeReplacement(
 				'versionControl.finalizedBy': userId,
 				'versionControl.finalizedAt': Date.now(),
 				'versionControl.finalizedReason': 'manual_approval',
+				// Reset evaluations for fresh start on new text
+				'evaluation.sumEvaluations': 0,
+				'evaluation.numberOfEvaluators': 0,
+				'evaluation.numberOfProEvaluators': 0,
+				'evaluation.numberOfConEvaluators': 0,
+				'evaluation.sumSquaredEvaluations': 0,
+				'evaluation.averageEvaluation': 0,
+				'evaluation.agreement': 0,
+				'evaluation.sumPro': 0,
+				'evaluation.sumCon': 0,
+				consensus: 0,
+				totalEvaluators: 0,
 				...(adminEditedText && {
 					'versionControl.adminEditedContent': adminEditedText,
 					'versionControl.adminEditedAt': Date.now(),
@@ -108,14 +135,54 @@ export async function executeReplacement(
 				}),
 			});
 
-			// Mark suggestion as applied (hide it from active suggestions)
+			// Step 4: Mark winning suggestion as promoted (NOT hidden)
+			// This preserves its comments and evaluations
 			transaction.update(suggestionRef, {
-				hide: true,
 				lastUpdate: Date.now(),
+				'versionControl.promotedToVersion': newVersion,
+				'versionControl.promotedAt': Date.now(),
 			});
 
 			return { success: true, newVersion };
 		});
+
+		// Step 5: After transaction — batch-mark remaining active suggestions with forVersion
+		try {
+			const activeSuggestions = await db.collection(Collections.statements)
+				.where('parentId', '==', queueItem.paragraphId)
+				.where('statementType', '==', StatementType.option)
+				.where('hide', '==', false)
+				.get();
+
+			if (!activeSuggestions.empty) {
+				const batch = db.batch();
+				let batchCount = 0;
+
+				for (const docSnap of activeSuggestions.docs) {
+					const data = docSnap.data() as Statement;
+					// Skip the promoted suggestion and already-versioned suggestions
+					if (
+						!data.versionControl?.promotedToVersion &&
+						!data.versionControl?.forVersion
+					) {
+						batch.update(docSnap.ref, {
+							'versionControl.forVersion': currentVersion,
+						});
+						batchCount++;
+					}
+				}
+
+				if (batchCount > 0) {
+					await batch.commit();
+				}
+			}
+		} catch (batchError) {
+			// Non-critical: log but don't fail the replacement
+			logError(batchError, {
+				operation: 'executeReplacement.markOldSuggestions',
+				metadata: { paragraphId: queueItem.paragraphId, currentVersion },
+			});
+		}
 
 		return result;
 	} catch (error) {

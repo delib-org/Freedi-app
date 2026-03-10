@@ -71,4 +71,5 @@ export enum Collections {
     paragraphReplacementQueue = 'paragraphReplacementQueue',
     versionControlAudit = 'versionControlAudit',
     coherenceRecords = 'coherenceRecords',
+    documentActionHistory = 'documentActionHistory',
 }

@@ -14,6 +14,7 @@ import { getUserFromCookies } from '@/lib/utils/user';
 import { checkAdminAccess, checkDocumentAccess } from '@/lib/utils/adminAccess';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import DocumentView from '@/components/document/DocumentView';
+import DocumentVisitTracker from '@/components/document/DocumentVisitTracker';
 import PrivateDocumentNotice from '@/components/document/PrivateDocumentNotice';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { TextDirection, TocSettings, TocPosition, ExplanationVideoMode, DEFAULT_LOGO_URL, DEFAULT_BRAND_NAME, HeaderColors, DEFAULT_HEADER_COLORS } from '@/types';
@@ -226,6 +227,9 @@ export default async function DocumentPage({ params }: PageProps) {
       adminLanguage={defaultLanguage}
       forceLanguage={forceLanguage}
     >
+      {user && !user.isAnonymous && (
+        <DocumentVisitTracker statementId={statementId} />
+      )}
       <DocumentView
         document={serializedDocument}
         paragraphs={serializedParagraphs}

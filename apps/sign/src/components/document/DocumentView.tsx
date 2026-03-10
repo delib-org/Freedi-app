@@ -19,6 +19,9 @@ const ParagraphCard = dynamic(() => import('../paragraph/ParagraphCard'), {
   ssr: false,
   loading: () => <div style={{ minHeight: '100px', background: 'var(--card-default, #f5f5f5)', borderRadius: '8px', margin: '1rem 0' }} />,
 });
+const InsertionPoint = dynamic(() => import('../paragraph/InsertionPoint'), {
+  ssr: false,
+});
 import RejectButton from './RejectButton';
 import ExplanationButton from './ExplanationButton';
 import ExplanationVideoOverlay from './ExplanationVideoOverlay';
@@ -233,27 +236,40 @@ export default function DocumentView({
               <p>{t('noParagraphsYet') || 'No paragraphs in this document yet.'}</p>
             </div>
           ) : (
-            paragraphs.map((paragraph) => (
-              <ParagraphCard
-                key={paragraph.paragraphId}
-                paragraph={paragraph}
-                documentId={document.statementId}
-                userEvaluation={userEvaluations[paragraph.paragraphId]}
-                isLoggedIn={!!user}
-                isAdmin={isAdmin}
-                commentCount={commentCounts[paragraph.paragraphId] || 0}
-                suggestionCount={suggestionCounts[paragraph.paragraphId] || 0}
-                enableSuggestions={enableSuggestions}
-                hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
-                enhancedVisibility={enhancedVisibility}
-                allowHeaderReactions={allowHeaderReactions}
-                headerColors={headerColors}
-                nonInteractiveNormalStyle={nonInteractiveNormalStyle}
-                headingNumber={headingNumbers.get(paragraph.paragraphId)}
-                requireGoogleLogin={requireGoogleLogin}
-                isAnonymous={!user || user.isAnonymous}
-              />
-            ))
+            paragraphs.map((paragraph) =>
+              paragraph.isInsertionPoint ? (
+                <InsertionPoint
+                  key={paragraph.paragraphId}
+                  paragraph={paragraph}
+                  documentId={document.statementId}
+                  isLoggedIn={!!user}
+                  enableSuggestions={enableSuggestions}
+                  hideUserIdentity={hideUserIdentity}
+                  requireGoogleLogin={requireGoogleLogin}
+                  isAnonymous={!user || user.isAnonymous}
+                />
+              ) : (
+                <ParagraphCard
+                  key={paragraph.paragraphId}
+                  paragraph={paragraph}
+                  documentId={document.statementId}
+                  userEvaluation={userEvaluations[paragraph.paragraphId]}
+                  isLoggedIn={!!user}
+                  isAdmin={isAdmin}
+                  commentCount={commentCounts[paragraph.paragraphId] || 0}
+                  suggestionCount={suggestionCounts[paragraph.paragraphId] || 0}
+                  enableSuggestions={enableSuggestions}
+                  hasInteracted={userInteractionsSet.has(paragraph.paragraphId)}
+                  enhancedVisibility={enhancedVisibility}
+                  allowHeaderReactions={allowHeaderReactions}
+                  headerColors={headerColors}
+                  nonInteractiveNormalStyle={nonInteractiveNormalStyle}
+                  headingNumber={headingNumbers.get(paragraph.paragraphId)}
+                  requireGoogleLogin={requireGoogleLogin}
+                  isAnonymous={!user || user.isAnonymous}
+                />
+              )
+            )
           )}
             </main>
 

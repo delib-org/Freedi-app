@@ -21,6 +21,12 @@ export interface CreateVersionHistoryParams {
 	finalizedBy: string;
 	adminEdited?: boolean;
 	adminNotes?: string;
+	evaluationSnapshot?: {
+		numberOfProEvaluators?: number;
+		numberOfConEvaluators?: number;
+		numberOfEvaluators?: number;
+		consensus?: number;
+	};
 }
 
 /**
@@ -49,6 +55,7 @@ export async function createVersionHistory(
 		finalizedBy,
 		adminEdited,
 		adminNotes,
+		evaluationSnapshot,
 	} = params;
 
 	try {
@@ -95,6 +102,7 @@ export async function createVersionHistory(
 				finalizedReason: 'manual_approval',
 				...(adminEdited && { adminEditedContent: text }),
 				...(adminNotes && { adminNotes }),
+				...(evaluationSnapshot && { evaluationSnapshot }),
 			},
 
 			// Keep document metadata

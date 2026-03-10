@@ -30,7 +30,7 @@ export const StatementSubscriptionSchema = object({
 	getEmailNotification: optional(boolean()),
 	getPushNotification: optional(boolean()),
 	coins: optional(number()), // In fair-Division, the coins the user has in this statement
-	
+	isDocument: optional(boolean()), // Marks this subscription as a Sign document for home page display
 });
  
 export type StatementSubscription = InferOutput<

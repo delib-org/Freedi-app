@@ -90,6 +90,14 @@ export function normalizeStatementData(data: unknown): unknown {
 
 	const obj = converted as Record<string, unknown>;
 
+	// Fix legacy doc objects missing required isDoc field
+	if (obj.doc && typeof obj.doc === 'object') {
+		const docObj = obj.doc as Record<string, unknown>;
+		if (docObj.isDoc === undefined) {
+			docObj.isDoc = false;
+		}
+	}
+
 	// Fill in missing topParentId for legacy data
 	if (obj.statementId && !obj.topParentId) {
 		// For top-level statements (where parentId equals statementId or parentId is 'top'),

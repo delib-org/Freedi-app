@@ -8,6 +8,9 @@ import {
 	VersionStatus,
 	VersionChange,
 	ChangeDecision,
+	ChangeType,
+	DocumentFeedbackSummary,
+	RevisionStrategy,
 } from '@freedi/shared-types';
 import { API_ROUTES, VERSIONING, UI } from '@/constants/common';
 import { useAdminContext } from '../AdminContext';
@@ -32,6 +35,14 @@ interface VersionWithChanges extends DocumentVersion {
 	changes?: VersionChange[];
 }
 
+interface GenerateResponseData {
+	changesNeedingAI: number;
+	revisionStrategy?: RevisionStrategy;
+	rejectionRate?: number;
+	overallApprovalRate?: number;
+	documentFeedbackSummary?: DocumentFeedbackSummary;
+}
+
 export default function AdminVersionsPage() {
 	const params = useParams();
 	const router = useRouter();
@@ -44,6 +55,7 @@ export default function AdminVersionsPage() {
 	const [loading, setLoading] = useState(true);
 	const [generationStep, setGenerationStep] = useState<GenerationStep>('idle');
 	const [generationMessage, setGenerationMessage] = useState('');
+	const [showRejectionReasons, setShowRejectionReasons] = useState(false);
 
 	// Settings for generation
 	const [settings, setSettings] = useState<{
@@ -134,6 +146,8 @@ export default function AdminVersionsPage() {
 						minImpactThreshold: settings.minImpactThreshold,
 						includeComments: true,
 						includeSuggestions: true,
+						includeApprovals: true,
+						includeSignatures: true,
 					}),
 				}
 			);
@@ -142,7 +156,7 @@ export default function AdminVersionsPage() {
 				throw new Error('Failed to generate changes');
 			}
 
-			const generateData = await generateResponse.json();
+			const generateData: GenerateResponseData = await generateResponse.json();
 
 			if (generateData.changesNeedingAI > 0) {
 				setGenerationStep('processing-ai');
@@ -160,7 +174,6 @@ export default function AdminVersionsPage() {
 				);
 
 				if (!aiResponse.ok) {
-					// AI processing failed, but version is still created
 					logVersionError('processAI', new Error('AI processing failed'), { versionId: version.versionId });
 				}
 			}
@@ -280,6 +293,21 @@ export default function AdminVersionsPage() {
 		});
 	};
 
+	const getChangeTypeLabel = (changeType: ChangeType): string => {
+		switch (changeType) {
+			case ChangeType.added:
+				return t('New Paragraph');
+			case ChangeType.removed:
+				return t('Remove Paragraph');
+			case ChangeType.modified:
+				return t('Modified');
+			default:
+				return t('Unchanged');
+		}
+	};
+
+	const feedbackSummary = selectedVersion?.documentFeedbackSummary as DocumentFeedbackSummary | undefined;
+
 	if (loading) {
 		return (
 			<div className={styles.settingsPage}>
@@ -379,7 +407,7 @@ export default function AdminVersionsPage() {
 							>
 								<path d="M12 5v14M5 12h14" />
 							</svg>
-							{t('Create New Version')}
+							{t('Get Recommendations for Change')}
 						</>
 					) : (
 						<>
@@ -419,6 +447,12 @@ export default function AdminVersionsPage() {
 										<span className={styles.aiBadge}>{t('AI Generated')}</span>
 									)}
 								</div>
+
+								{version.revisionStrategy === RevisionStrategy.fullRevision && (
+									<span className={styles.strategyBadge}>
+										{t('Full Revision')}
+									</span>
+								)}
 
 								{version.summary && (
 									<p className={styles.versionSummary}>{version.summary}</p>
@@ -467,6 +501,73 @@ export default function AdminVersionsPage() {
 						{tWithParams('Version {{number}} Details', { number: selectedVersion.versionNumber })}
 					</h2>
 
+					{/* Strategy Banner */}
+					{selectedVersion.revisionStrategy === RevisionStrategy.fullRevision && (
+						<div className={styles.strategyBanner}>
+							<strong>{t('Full Document Revision Recommended')}</strong>
+							<p>{feedbackSummary?.strategyReasoning || t('Document rejection rate is high')}</p>
+						</div>
+					)}
+
+					{/* Document Feedback Summary */}
+					{feedbackSummary && (
+						<div className={styles.versionDetailBox}>
+							<h3>{t('Document Feedback Summary')}</h3>
+							<div className={styles.feedbackStats}>
+								<div className={styles.statItem}>
+									<span className={styles.statLabel}>{t('Signed')}</span>
+									<span className={styles.statValue}>{feedbackSummary.signedCount}</span>
+								</div>
+								<div className={styles.statItem}>
+									<span className={styles.statLabel}>{t('Rejected')}</span>
+									<span className={styles.statValue}>{feedbackSummary.rejectedCount}</span>
+								</div>
+								<div className={styles.statItem}>
+									<span className={styles.statLabel}>{t('Rejection Rate')}</span>
+									<span className={styles.statValue}>
+										{(feedbackSummary.rejectionRate * 100).toFixed(0)}%
+									</span>
+								</div>
+								<div className={styles.statItem}>
+									<span className={styles.statLabel}>{t('Paragraph Approval Rate')}</span>
+									<span className={styles.statValue}>
+										{(feedbackSummary.overallApprovalRate * 100).toFixed(0)}%
+									</span>
+								</div>
+								<div className={styles.statItem}>
+									<span className={styles.statLabel}>{t('Revision Strategy')}</span>
+									<span className={styles.statValue}>
+										{feedbackSummary.revisionStrategy === RevisionStrategy.fullRevision
+											? t('Full Revision')
+											: t('Amend Paragraphs')}
+									</span>
+								</div>
+							</div>
+
+							{/* Rejection Reasons */}
+							{feedbackSummary.rejectionReasons.length > 0 && (
+								<div className={styles.rejectionReasonsSection}>
+									<button
+										className={styles.collapsibleToggle}
+										onClick={() => setShowRejectionReasons(!showRejectionReasons)}
+									>
+										{tWithParams('{{count}} Rejection Reasons', {
+											count: feedbackSummary.rejectionReasons.length,
+										})}
+										<span>{showRejectionReasons ? '\u25B2' : '\u25BC'}</span>
+									</button>
+									{showRejectionReasons && (
+										<ul className={styles.rejectionReasonsList}>
+											{feedbackSummary.rejectionReasons.map((r, i) => (
+												<li key={i}>{r.reason}</li>
+											))}
+										</ul>
+									)}
+								</div>
+							)}
+						</div>
+					)}
+
 					{selectedVersion.summary && (
 						<div className={styles.versionDetailBox}>
 							<h3>{t('Summary')}</h3>
@@ -479,15 +580,37 @@ export default function AdminVersionsPage() {
 							<h3>{t('Proposed Changes')}</h3>
 
 							{selectedVersion.changes
-								.filter((c) => c.sources.length > 0)
+								.filter((c) => c.sources.length > 0 || c.changeType === ChangeType.added || c.changeType === ChangeType.removed)
 								.map((change) => (
-									<div key={change.changeId} className={styles.changeCard}>
+									<div
+										key={change.changeId}
+										className={`${styles.changeCard} ${
+											change.changeType === ChangeType.added ? styles.changeAdded : ''
+										} ${
+											change.changeType === ChangeType.removed ? styles.changeRemoved : ''
+										}`}
+									>
 										<div className={styles.changeHeader}>
 											<span className={styles.impactScore}>
 												{tWithParams('Impact: {{score}}', {
 													score: change.combinedImpact.toFixed(2),
 												})}
 											</span>
+											{change.changeType !== ChangeType.modified && (
+												<span className={styles.changeTypeBadge}>
+													{getChangeTypeLabel(change.changeType)}
+												</span>
+											)}
+											{change.approvalRate !== undefined && (
+												<span className={styles.approvalBadge}>
+													{tWithParams('Approval: {{rate}}%', {
+														rate: change.approvalRate.toFixed(0),
+													})}
+													{change.approvalVoters !== undefined && (
+														<> ({change.approvalVoters})</>
+													)}
+												</span>
+											)}
 											<span
 												className={`${styles.decisionBadge} ${
 													styles[`decision${change.adminDecision}`]
@@ -498,14 +621,24 @@ export default function AdminVersionsPage() {
 										</div>
 
 										<div className={styles.contentComparison}>
-											<div className={styles.originalContent}>
-												<h4>{t('Original')}</h4>
-												<p>{change.originalContent}</p>
-											</div>
-											<div className={styles.proposedContent}>
-												<h4>{t('Proposed')}</h4>
-												<p>{change.finalContent || change.proposedContent}</p>
-											</div>
+											{change.changeType !== ChangeType.added && (
+												<div className={styles.originalContent}>
+													<h4>{t('Original')}</h4>
+													<p className={change.changeType === ChangeType.removed ? styles.strikethrough : ''}>
+														{change.originalContent}
+													</p>
+												</div>
+											)}
+											{change.changeType !== ChangeType.removed && (
+												<div className={styles.proposedContent}>
+													<h4>
+														{change.changeType === ChangeType.added
+															? t('New Paragraph')
+															: t('Proposed')}
+													</h4>
+													<p>{change.finalContent || change.proposedContent}</p>
+												</div>
+											)}
 										</div>
 
 										{change.aiReasoning && (
@@ -515,25 +648,38 @@ export default function AdminVersionsPage() {
 											</div>
 										)}
 
-										<div className={styles.sourcesInfo}>
-											<h4>{tWithParams('Based on {{count}} feedback items', { count: change.sources.length })}</h4>
-											<ul>
-												{change.sources.slice(0, 3).map((source) => (
-													<li key={source.sourceId}>
-														<span className={styles.sourceType}>
-															{source.type === 'suggestion' ? t('Suggestion') : t('Comment')}
-														</span>
-														<span className={styles.sourceImpact}>
-															{tWithParams('Impact: {{score}}', { score: source.impact.toFixed(2) })}
-														</span>
-														<q>{source.content.substring(0, 100)}...</q>
-														<span className={styles.sourceAuthor}>
-															- {source.creatorDisplayName}
-														</span>
-													</li>
-												))}
-											</ul>
-										</div>
+										{change.sources.length > 0 && (
+											<div className={styles.sourcesInfo}>
+												<h4>{tWithParams('Based on {{count}} feedback items', { count: change.sources.length })}</h4>
+												<ul>
+													{change.sources.slice(0, 3).map((source) => (
+														<li key={source.sourceId}>
+															<span className={styles.sourceType}>
+																{source.type === 'suggestion'
+																	? t('Suggestion')
+																	: source.type === 'rejectionReason'
+																		? t('Rejection Reason')
+																		: t('Comment')}
+															</span>
+															{source.consensus !== undefined && (
+																<span className={styles.sourceConsensus}>
+																	{tWithParams('Consensus: {{score}}', {
+																		score: source.consensus.toFixed(2),
+																	})}
+																</span>
+															)}
+															<span className={styles.sourceImpact}>
+																{tWithParams('Impact: {{score}}', { score: source.impact.toFixed(2) })}
+															</span>
+															<q>{source.content.substring(0, 100)}...</q>
+															<span className={styles.sourceAuthor}>
+																- {source.creatorDisplayName}
+															</span>
+														</li>
+													))}
+												</ul>
+											</div>
+										)}
 
 										{selectedVersion.status === VersionStatus.draft && (
 											<div className={styles.decisionButtons}>

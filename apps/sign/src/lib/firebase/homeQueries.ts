@@ -19,7 +19,7 @@ export interface HomeDocument {
   parentId: string;
   topParentId: string;
   groupName?: string;
-  relationship: 'created' | 'collaborator' | 'invited' | 'signed';
+  relationship: 'created' | 'collaborator' | 'invited' | 'signed' | 'participant';
   userRole: 'owner' | 'admin' | 'viewer' | 'signer';
   signatureStatus?: 'signed' | 'rejected' | 'viewed' | null;
   signedCount: number;
@@ -48,18 +48,24 @@ export async function getUserHomeDocuments(
     const db = getFirestoreAdmin();
 
     // Run queries in parallel
-    const [createdDocs, collaboratedDocs, invitedDocs, signedDocs, groups] = await Promise.all([
+    const [createdDocs, collaboratedDocs, invitedDocs, signedDocs, subscribedDocs, groups] = await Promise.all([
       getCreatedDocuments(db, userId),
       getCollaboratedDocuments(db, userId),
       userEmail ? getInvitedDocuments(db, userEmail) : Promise.resolve([]),
       getSignedDocuments(db, userId),
+      getSubscribedDocuments(db, userId),
       getUserGroups(db, userId),
     ]);
 
-    // Merge into a Map keyed by statementId, priority: created > collaborator > invited > signed
+    // Merge into a Map keyed by statementId, priority: created > collaborator > invited > signed > subscribed
     const documentMap = new Map<string, HomeDocument>();
 
-    // Add signed first (lowest priority)
+    // Add subscribed first (lowest priority)
+    for (const doc of subscribedDocs) {
+      documentMap.set(doc.statementId, doc);
+    }
+
+    // Add signed (overrides subscribed)
     for (const doc of signedDocs) {
       documentMap.set(doc.statementId, doc);
     }
@@ -132,13 +138,12 @@ async function getCreatedDocuments(
   userId: string
 ): Promise<HomeDocument[]> {
   try {
+    // Query documents the user created that are marked as Sign documents
+    // This includes options (new hierarchy) and legacy document types
     const snapshot = await db
       .collection(Collections.statements)
       .where('creatorId', '==', userId)
-      .where('statementType', 'in', [
-        StatementType.option,
-        StatementType.document,
-      ])
+      .where('isDocument', '==', true)
       .orderBy('lastUpdate', 'desc')
       .limit(QUERY_LIMITS.HOME_DOCUMENTS)
       .get();
@@ -146,11 +151,6 @@ async function getCreatedDocuments(
     return snapshot.docs
       .map((doc) => {
         const data = doc.data() as Statement;
-
-        // Options only appear if explicitly marked as documents
-        if (data.statementType === StatementType.option && data.isDocument !== true) {
-          return null;
-        }
 
         return statementToHomeDocument(data, 'created', 'owner');
       })
@@ -315,6 +315,42 @@ async function getUserGroups(
 }
 
 /**
+ * Get documents the user has visited (subscribed with isDocument flag)
+ */
+async function getSubscribedDocuments(
+  db: FirebaseFirestore.Firestore,
+  userId: string
+): Promise<HomeDocument[]> {
+  try {
+    const snapshot = await db
+      .collection(Collections.statementsSubscribe)
+      .where('userId', '==', userId)
+      .where('isDocument', '==', true)
+      .orderBy('lastUpdate', 'desc')
+      .limit(QUERY_LIMITS.HOME_DOCUMENTS)
+      .get();
+
+    if (snapshot.empty) return [];
+
+    const docIds = snapshot.docs
+      .map((doc) => doc.data().statementId as string | undefined)
+      .filter((id): id is string => !!id);
+
+    if (docIds.length === 0) return [];
+
+    const documents = await batchGetDocuments(db, docIds);
+
+    return documents
+      .map((data) => statementToHomeDocument(data, 'participant', 'viewer'))
+      .filter((doc): doc is HomeDocument => doc !== null);
+  } catch (error) {
+    logError(error, { operation: 'homeQueries.getSubscribedDocuments', userId });
+
+    return [];
+  }
+}
+
+/**
  * Batch fetch documents by IDs using Firestore 'in' queries
  */
 async function batchGetDocuments(
@@ -334,11 +370,9 @@ async function batchGetDocuments(
 
     for (const doc of snapshot.docs) {
       const data = doc.data() as Statement;
-      // Include legacy documents and options marked as documents
-      if (
-        data.statementType === StatementType.document ||
-        (data.statementType === StatementType.option && data.isDocument === true)
-      ) {
+      // All callers already validate document relevance via their own collections
+      // (subscriptions, signatures, collaborators, invitations), so no type filter needed
+      if (data.statementId && data.statement) {
         results.push(data);
       }
     }

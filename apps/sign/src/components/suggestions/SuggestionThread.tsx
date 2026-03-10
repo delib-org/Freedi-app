@@ -321,6 +321,7 @@ export default function SuggestionThread({
           userId={user?.uid || null}
           userDisplayName={user?.displayName || null}
           paragraphId={paragraphId}
+          documentId={documentId}
           onDelete={handleDelete}
           onEdit={handleEdit}
           isCurrent={true}
@@ -357,6 +358,7 @@ export default function SuggestionThread({
                   userId={user?.uid || null}
                   userDisplayName={user?.displayName || null}
                   paragraphId={paragraphId}
+                  documentId={documentId}
                   onDelete={handleDelete}
                   onEdit={handleEdit}
                   isCurrent={false}

@@ -145,6 +145,30 @@
   }
 }
 
+/* Comment toggle button */
+.commentToggle {
+  background: none;
+  border: none;
+  color: var(--text-caption);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  margin-top: 4px;
+  border-radius: var(--radius-sm);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--text-body);
+  }
+}
+
+/* Inline comment section */
+.commentSection {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+}
+
 /* Voting bar */
 .votingBar {
   display: flex;

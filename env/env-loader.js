@@ -94,7 +94,7 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
     filename: '.env',
     // Cloud functions vars
     mapping: {
-      'GEMINI_API_KEY': 'GOOGLE_API_KEY',
+      // Note: GEMINI_API_KEY is managed as a Firebase secret, not in .env
       'OPENAI_API_KEY': 'OPENAI_API_KEY',
       'ENVIRONMENT': 'ENVIRONMENT',
       'AI_MODEL_NAME': 'AI_MODEL_NAME',

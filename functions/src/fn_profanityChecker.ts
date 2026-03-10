@@ -5,12 +5,12 @@ import { functionConfig } from '@freedi/shared-types';
 import { logError } from './utils/errorHandling';
 
 function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GOOGLE_API_KEY;
+	const apiKey = process.env.GEMINI_API_KEY;
 	if (!apiKey) {
-		logError(new Error('GOOGLE_API_KEY missing (waiting for secret setup)'), {
+		logError(new Error('GEMINI_API_KEY missing (waiting for secret setup)'), {
 			operation: 'profanityChecker.getGenAI',
 		});
-		throw new Error('Missing GOOGLE_API_KEY');
+		throw new Error('Missing GEMINI_API_KEY');
 	}
 
 	return new GoogleGenerativeAI(apiKey);
