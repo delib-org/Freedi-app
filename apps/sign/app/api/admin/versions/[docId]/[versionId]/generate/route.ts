@@ -161,19 +161,26 @@ export async function POST(
 		const includeApprovals = body.includeApprovals ?? true;
 		const includeSignatures = body.includeSignatures ?? true;
 
-		// Get the document paragraphs
-		const docRef = db.collection(Collections.statements).doc(docId);
-		const docSnap = await docRef.get();
+		// Get the document paragraphs from Statement documents (not the legacy array)
+		const paragraphsSnapshot = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', docId)
+			.where('doc.isOfficialParagraph', '==', true)
+			.orderBy('doc.order', 'asc')
+			.get();
 
-		if (!docSnap.exists) {
-			return NextResponse.json(
-				{ error: 'Document not found' },
-				{ status: 404 }
-			);
-		}
+		const paragraphs: Paragraph[] = paragraphsSnapshot.docs
+			.filter(doc => !doc.data().hide)
+			.map(doc => {
+				const data = doc.data();
 
-		const document = docSnap.data();
-		const paragraphs: Paragraph[] = document?.paragraphs || [];
+				return {
+					paragraphId: data.statementId,
+					content: data.statement,
+					order: data.doc?.order ?? 0,
+					type: data.doc?.paragraphType,
+				} as Paragraph;
+			});
 
 		if (paragraphs.length === 0) {
 			return NextResponse.json(
@@ -182,7 +189,7 @@ export async function POST(
 			);
 		}
 
-		logger.info(`[Versions API] Document paragraphIds: ${paragraphs.map((p: Paragraph) => p.paragraphId).join(', ')}`);
+		logger.info(`[Versions API] Found ${paragraphs.length} official paragraph statements for document ${docId}`);
 
 		// Get total viewers for the document (for impact calculation)
 		const viewsSnapshot = await db

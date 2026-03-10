@@ -10,7 +10,6 @@ import {
 	VersionStatus,
 	ChangeDecision,
 	ChangeType,
-	IncoherenceRecord,
 	Paragraph,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -106,11 +105,6 @@ export async function POST(
 
 		const applyToDocument = body.applyToDocument ?? true;
 
-		// Get the original document paragraphs as the base
-		const docRef = db.collection(Collections.statements).doc(docId);
-		const docSnap = await docRef.get();
-		const originalParagraphs: Paragraph[] = docSnap.exists ? (docSnap.data()?.paragraphs || []) : (version.paragraphs || []);
-
 		// Get all version changes and apply only approved/modified ones
 		const changesSnapshot = await db
 			.collection(Collections.versionChanges)
@@ -118,97 +112,6 @@ export async function POST(
 			.get();
 
 		const changes = changesSnapshot.docs.map((doc) => doc.data() as VersionChange);
-
-		// Build final paragraphs: start with original, apply approved changes
-		let finalParagraphs: Paragraph[] = originalParagraphs.map((paragraph) => {
-			const change = changes.find((c) => c.paragraphId === paragraph.paragraphId);
-
-			if (!change) return paragraph;
-
-			// Only apply approved or modified changes
-			if (change.adminDecision === ChangeDecision.approved) {
-				return { ...paragraph, content: change.proposedContent };
-			}
-
-			if (change.adminDecision === ChangeDecision.modified && change.finalContent) {
-				return { ...paragraph, content: change.finalContent };
-			}
-
-			// Rejected or pending changes: keep original content
-			return paragraph;
-		});
-
-		// Handle added paragraphs (approved new paragraphs from holistic analysis)
-		const addedChanges = changes.filter(
-			(c) => c.changeType === ChangeType.added && c.adminDecision === ChangeDecision.approved
-		);
-		for (const addedChange of addedChanges) {
-			finalParagraphs.push({
-				paragraphId: addedChange.paragraphId,
-				content: addedChange.proposedContent,
-				order: finalParagraphs.length,
-			} as Paragraph);
-		}
-
-		// Handle removed paragraphs (approved removals)
-		const removedParagraphIds = new Set(
-			changes
-				.filter((c) => c.changeType === ChangeType.removed && c.adminDecision === ChangeDecision.approved)
-				.map((c) => c.paragraphId)
-		);
-		if (removedParagraphIds.size > 0) {
-			finalParagraphs = finalParagraphs.filter((p) => !removedParagraphIds.has(p.paragraphId));
-		}
-
-		// Apply approved coherence fixes on top
-		const approvedFixesSnapshot = await db
-			.collection(Collections.coherenceRecords)
-			.where('versionId', '==', versionId)
-			.where('adminDecision', '==', ChangeDecision.approved)
-			.get();
-
-		if (!approvedFixesSnapshot.empty) {
-			const approvedFixes = approvedFixesSnapshot.docs.map(
-				(doc) => doc.data() as IncoherenceRecord
-			);
-
-			finalParagraphs = finalParagraphs.map((paragraph) => {
-				const fix = approvedFixes.find(
-					(f) => f.primaryParagraphId === paragraph.paragraphId
-				);
-
-				if (fix && fix.suggestedFix) {
-					return { ...paragraph, content: fix.suggestedFix };
-				}
-
-				return paragraph;
-			});
-		}
-
-		// Apply modified coherence fixes
-		const modifiedFixesSnapshot = await db
-			.collection(Collections.coherenceRecords)
-			.where('versionId', '==', versionId)
-			.where('adminDecision', '==', ChangeDecision.modified)
-			.get();
-
-		if (!modifiedFixesSnapshot.empty) {
-			const modifiedFixes = modifiedFixesSnapshot.docs.map(
-				(doc) => doc.data() as IncoherenceRecord
-			);
-
-			finalParagraphs = finalParagraphs.map((paragraph) => {
-				const fix = modifiedFixes.find(
-					(f) => f.primaryParagraphId === paragraph.paragraphId
-				);
-
-				if (fix && fix.suggestedFix) {
-					return { ...paragraph, content: fix.suggestedFix };
-				}
-
-				return paragraph;
-			});
-		}
 
 		const batch = db.batch();
 		const now = Date.now();
@@ -224,22 +127,57 @@ export async function POST(
 			batch.update(doc.ref, { status: VersionStatus.archived });
 		});
 
-		// Publish this version (with coherence fixes applied)
+		// Apply approved/modified changes to individual paragraph Statement documents
+		if (applyToDocument) {
+			for (const change of changes) {
+				if (change.adminDecision === ChangeDecision.approved || change.adminDecision === ChangeDecision.modified) {
+					const finalContent = change.adminDecision === ChangeDecision.modified && change.finalContent
+						? change.finalContent
+						: change.proposedContent;
+
+					if (change.changeType === ChangeType.removed) {
+						// Hide the paragraph statement
+						const paragraphRef = db.collection(Collections.statements).doc(change.paragraphId);
+						batch.update(paragraphRef, { hide: true, lastUpdate: now });
+					} else {
+						// Update the paragraph Statement document's text
+						const paragraphRef = db.collection(Collections.statements).doc(change.paragraphId);
+						batch.update(paragraphRef, {
+							statement: finalContent,
+							lastUpdate: now,
+						});
+					}
+				}
+			}
+		}
+
+		// Get final state of paragraphs for storing on the version record
+		const paragraphsSnapshot = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', docId)
+			.where('doc.isOfficialParagraph', '==', true)
+			.orderBy('doc.order', 'asc')
+			.get();
+
+		const finalParagraphs: Paragraph[] = paragraphsSnapshot.docs
+			.filter(doc => !doc.data().hide)
+			.map(doc => {
+				const data = doc.data();
+
+				return {
+					paragraphId: data.statementId,
+					content: data.statement,
+					order: data.doc?.order ?? 0,
+				} as Paragraph;
+			});
+
+		// Publish this version
 		batch.update(versionRef, {
 			status: VersionStatus.published,
 			publishedAt: now,
 			publishedBy: userId,
 			paragraphs: finalParagraphs,
 		});
-
-		// Optionally apply paragraphs to the main document
-		if (applyToDocument && finalParagraphs.length) {
-			const docRef = db.collection(Collections.statements).doc(docId);
-			batch.update(docRef, {
-				paragraphs: finalParagraphs,
-				lastUpdate: now,
-			});
-		}
 
 		await batch.commit();
 
