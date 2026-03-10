@@ -63,8 +63,17 @@ export function useParagraphSuggestions(
           snapshot.forEach((doc) => {
             const statement = doc.data() as Statement;
 
-            // Filter out official paragraphs and hidden statements
-            if (!statement.doc?.isOfficialParagraph && !statement.hide) {
+            // Filter out:
+            // 1. Official paragraphs
+            // 2. Hidden statements
+            // 3. Promoted suggestions (they became the current version)
+            // 4. Suggestions for older paragraph versions
+            if (
+              !statement.doc?.isOfficialParagraph &&
+              !statement.hide &&
+              !statement.versionControl?.promotedToVersion &&
+              !statement.versionControl?.forVersion
+            ) {
               updatedSuggestions.push(statement);
             }
           });
@@ -141,8 +150,13 @@ export function useDocumentSuggestions(
           snapshot.forEach((doc) => {
             const statement = doc.data() as Statement;
 
-            // Filter out official paragraphs and hidden statements
-            if (statement.doc?.isOfficialParagraph || statement.hide) {
+            // Filter out official paragraphs, hidden, promoted, and old-version suggestions
+            if (
+              statement.doc?.isOfficialParagraph ||
+              statement.hide ||
+              statement.versionControl?.promotedToVersion ||
+              statement.versionControl?.forVersion
+            ) {
               return;
             }
 
@@ -247,8 +261,13 @@ export function useRealtimeSuggestionCounts(
           snapshot.forEach((doc) => {
             const statement = doc.data() as Statement;
 
-            // Filter out official paragraphs and hidden statements
-            if (statement.doc?.isOfficialParagraph || statement.hide) {
+            // Filter out official paragraphs, hidden, promoted, and old-version suggestions
+            if (
+              statement.doc?.isOfficialParagraph ||
+              statement.hide ||
+              statement.versionControl?.promotedToVersion ||
+              statement.versionControl?.forVersion
+            ) {
               return;
             }
 

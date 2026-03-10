@@ -232,6 +232,16 @@ export const StatementSchema = object({
 		adminEditedContent: optional(string()), // if admin modified before approval
 		adminEditedAt: optional(number()),
 		adminNotes: optional(string()),
+		// Suggestion versioning (for preservation on replacement)
+		forVersion: optional(number()), // For suggestions: which paragraph version this was an alternative for
+		promotedToVersion: optional(number()), // For winning suggestions: which version number they became
+		promotedAt: optional(number()), // Timestamp when promoted to official
+		evaluationSnapshot: optional(object({ // Snapshot of evaluation state at time of archival
+			numberOfProEvaluators: optional(number()),
+			numberOfConEvaluators: optional(number()),
+			numberOfEvaluators: optional(number()),
+			consensus: optional(number()),
+		})),
 	})),
 });
 
