@@ -253,6 +253,8 @@
   "Enable AI suggestion improvement": "Habilitar mejora de sugerencias con IA",
   "Enable Anchored Sampling": "Habilitar Muestreo Anclado",
   "Enable Chat": "Habilitar Chat",
+  "Tree View Discussion": "Vista de Arbol de Discusion",
+  "Show threaded tree discussion instead of flat chat": "Mostrar discusion en vista de arbol en lugar de chat plano",
   "Show Chat Side Panel": "Mostrar panel lateral de chat",
   "Display the collapsible chat panel alongside the main content": "Mostrar el panel de chat plegable junto al contenido principal",
   "Show Sub-Questions Map": "Mostrar mapa de sub-preguntas",

@@ -252,6 +252,8 @@
   "Enable AI suggestion improvement": "تمكين تحسين الاقتراحات بالذكاء الاصطناعي",
   "Enable Anchored Sampling": "تفعيل العينة المثبتة",
   "Enable Chat": "تمكين المحادثة",
+  "Tree View Discussion": "عرض شجري للنقاش",
+  "Show threaded tree discussion instead of flat chat": "عرض النقاش بشكل شجري متسلسل بدلاً من المحادثة المسطحة",
   "Show Chat Side Panel": "إظهار لوحة المحادثة الجانبية",
   "Display the collapsible chat panel alongside the main content": "عرض لوحة المحادثة القابلة للطي بجانب المحتوى الرئيسي",
   "Show Sub-Questions Map": "إظهار خريطة الأسئلة الفرعية",
