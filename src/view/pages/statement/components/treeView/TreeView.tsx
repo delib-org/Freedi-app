@@ -8,7 +8,6 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import TreeNode from './components/TreeNode/TreeNode';
-import TreeThreadLine from './components/TreeThreadLine/TreeThreadLine';
 import styles from './TreeView.module.scss';
 import { StatementType, SortType } from '@freedi/shared-types';
 
@@ -103,7 +102,6 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 					<div className={styles['tree-view__empty']}>{t('No replies yet')}</div>
 				) : showSortNav ? (
 					<>
-						<TreeThreadLine depth={0} />
 						<Flipper flipKey={flipKey} spring={FLIP_SPRING}>
 							{rootChildren.map((child) => (
 								<Flipped key={child.statementId} flipId={child.statementId}>
@@ -125,7 +123,6 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 					</>
 				) : (
 					<>
-						<TreeThreadLine depth={0} />
 						{rootChildren.map((child) => (
 							<TreeNode
 								key={child.statementId}
