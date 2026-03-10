@@ -138,13 +138,12 @@ async function getCreatedDocuments(
   userId: string
 ): Promise<HomeDocument[]> {
   try {
+    // Query documents the user created that are marked as Sign documents
+    // This includes options (new hierarchy) and legacy document types
     const snapshot = await db
       .collection(Collections.statements)
       .where('creatorId', '==', userId)
-      .where('statementType', 'in', [
-        StatementType.option,
-        StatementType.document,
-      ])
+      .where('isDocument', '==', true)
       .orderBy('lastUpdate', 'desc')
       .limit(QUERY_LIMITS.HOME_DOCUMENTS)
       .get();
@@ -152,11 +151,6 @@ async function getCreatedDocuments(
     return snapshot.docs
       .map((doc) => {
         const data = doc.data() as Statement;
-
-        // Options only appear if explicitly marked as documents
-        if (data.statementType === StatementType.option && data.isDocument !== true) {
-          return null;
-        }
 
         return statementToHomeDocument(data, 'created', 'owner');
       })
@@ -376,11 +370,9 @@ async function batchGetDocuments(
 
     for (const doc of snapshot.docs) {
       const data = doc.data() as Statement;
-      // Include legacy documents and options marked as documents
-      if (
-        data.statementType === StatementType.document ||
-        (data.statementType === StatementType.option && data.isDocument === true)
-      ) {
+      // All callers already validate document relevance via their own collections
+      // (subscriptions, signatures, collaborators, invitations), so no type filter needed
+      if (data.statementId && data.statement) {
         results.push(data);
       }
     }

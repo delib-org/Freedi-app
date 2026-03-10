@@ -47,24 +47,28 @@ export async function POST(request: NextRequest) {
     const subRef = db.collection(Collections.statementsSubscribe).doc(subscriptionId);
     const subSnap = await subRef.get();
 
+    // Fetch the statement (needed for new subscriptions and to set isDocument flag)
+    const statementRef = db.collection(Collections.statements).doc(statementId);
+    const statementDoc = await statementRef.get();
+
+    if (!statementDoc.exists) {
+      return NextResponse.json(
+        { error: 'Document not found' },
+        { status: 404 }
+      );
+    }
+
+    const statementData = statementDoc.data();
+
+    // Mark the statement itself as a Sign document (if not already)
+    if (statementData && !statementData.isDocument) {
+      await statementRef.update({ isDocument: true });
+    }
+
     if (subSnap.exists) {
       // Subscription exists - just set isDocument flag
       await subRef.update({ isDocument: true, lastUpdate: now });
     } else {
-      // Fetch the statement to embed in the subscription
-      const statementDoc = await db
-        .collection(Collections.statements)
-        .doc(statementId)
-        .get();
-
-      if (!statementDoc.exists) {
-        return NextResponse.json(
-          { error: 'Document not found' },
-          { status: 404 }
-        );
-      }
-
-      const statementData = statementDoc.data();
       const displayName = getUserDisplayNameFromCookie(cookieHeader) || 'Anonymous';
 
       await subRef.set({
