@@ -18,9 +18,10 @@ import NotificationBtn from '@/view/components/notificationBtn/NotificationBtn';
 import WaitingList from '@/view/components/approveMembers/WaitingList';
 import { usePWAInstallPrompt } from '@/controllers/hooks/usePWAInstallPrompt';
 import { logError } from '@/utils/errorHandling';
-import LevelBadge from '@/view/components/atomic/atoms/LevelBadge/LevelBadge';
+import ProfileAvatar from '@/view/components/atomic/atoms/ProfileAvatar/ProfileAvatar';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { userLevelSelector } from '@/redux/engagement/engagementSlice';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 
 export default function HomeHeader() {
 	const [isHomeMenuOpen, setIsHomeMenuOpen] = useState(false);
@@ -30,6 +31,7 @@ export default function HomeHeader() {
 	const { t, dir, currentLanguage } = useTranslation();
 	const { isInstallable, isAppInstalled } = usePWAInstallPrompt();
 	const level = useAppSelector(userLevelSelector);
+	const creator = useAppSelector(creatorSelector);
 
 	const currentLabel = LANGUAGES.find((lang) => lang.code === currentLanguage)?.label ?? 'English';
 
@@ -61,7 +63,11 @@ export default function HomeHeader() {
 				<WaitingList />
 				<div className="homePage__header__wrapper__icons">
 					<Link to="/my/engagement" aria-label={t('engagement.myImpact')}>
-						<LevelBadge level={level} size="small" iconOnly />
+						<ProfileAvatar
+							photoURL={creator?.photoURL}
+							displayName={creator?.displayName}
+							level={level}
+						/>
 					</Link>
 					<Menu
 						isMenuOpen={isHomeMenuOpen}
