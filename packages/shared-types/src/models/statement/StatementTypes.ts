@@ -88,7 +88,7 @@ export const StatementSchema = object({
 	doc: optional(
 		object({
 			isDoc: boolean(),
-			order: number(),
+			order: optional(number()),
 			isOfficialParagraph: optional(boolean()), // Sign app: marks standing paragraphs (vs suggestions)
 			// Paragraph type info (for official paragraphs converted from embedded array)
 			paragraphType: optional(enum_(ParagraphType)), // h1, h2, paragraph, li, etc.
