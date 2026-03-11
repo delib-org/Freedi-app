@@ -3,7 +3,13 @@ import { registerSW } from 'virtual:pwa-register';
 import { useSelector } from 'react-redux';
 import { useBadgeSync } from '@/controllers/hooks/useBadgeSync';
 import { PWA, STORAGE_KEYS, TIME } from '@/constants/common';
-import { selectHasCreatedGroup, selectOptionsCreated } from '@/redux/pwa/pwaSlice';
+import {
+	selectHasCreatedGroup,
+	selectOptionsCreated,
+	selectNotificationPromptDiscussionId,
+	clearNotificationPromptTrigger,
+} from '@/redux/pwa/pwaSlice';
+import { useDispatch } from 'react-redux';
 import { isIOS, isIOSWebPushSupported, isInstalledPWA } from '@/services/platformService';
 import { logError } from '@/utils/errorHandling';
 import { isBot } from '@/utils/botDetection';
@@ -17,8 +23,10 @@ interface PWAWrapperProps {
 const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 	const [showInstallPrompt, setShowInstallPrompt] = useState(false);
 	const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+	const dispatch = useDispatch();
 	const hasCreatedGroup = useSelector(selectHasCreatedGroup);
 	const optionsCreated = useSelector(selectOptionsCreated);
+	const notificationPromptDiscussionId = useSelector(selectNotificationPromptDiscussionId);
 	const previousIntentRef = useRef({ hasCreatedGroup, optionsCreated });
 
 	const getStoredTimestamp = (key: string): number => {
@@ -89,6 +97,8 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			setShowInstallPrompt(true);
 		}
 
+		// Note: notification prompt for intent milestones (group/options) still triggers here,
+		// but the primary trigger is now discussion actions (see effect below).
 		if (
 			'Notification' in window &&
 			Notification.permission === 'default' &&
@@ -100,6 +110,28 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 			setShowNotificationPrompt(true);
 		}
 	}, [hasCreatedGroup, optionsCreated]);
+
+	// Show notification prompt after 3 actions in the same discussion.
+	// This is the primary engagement-based trigger per the Hooked UX plan.
+	useEffect(() => {
+		if (!notificationPromptDiscussionId || checkIfInMassConsensus()) {
+			return;
+		}
+
+		if (
+			'Notification' in window &&
+			Notification.permission === 'default' &&
+			canShowByCooldown(
+				STORAGE_KEYS.NOTIFICATION_SOFT_PROMPT_DISMISSED_AT,
+				PWA.PROMPT_COOLDOWN * TIME.DAY,
+			)
+		) {
+			setShowNotificationPrompt(true);
+		}
+
+		// Clear the trigger so it doesn't fire again in this session for the same discussion
+		dispatch(clearNotificationPromptTrigger());
+	}, [notificationPromptDiscussionId, dispatch]);
 
 	useEffect(() => {
 		// Skip all service worker operations for bots/crawlers.
