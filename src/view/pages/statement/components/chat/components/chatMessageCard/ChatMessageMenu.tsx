@@ -43,11 +43,6 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
 
 	async function handleSetOption() {
 		try {
-			if (statement.statementType === StatementType.option) {
-				const cancelOption = window.confirm('Are you sure you want to cancel this option?');
-				if (!cancelOption) return;
-			}
-
 			const newType =
 				statement.statementType === StatementType.option
 					? StatementType.statement
@@ -55,7 +50,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
 
 			const result = await changeStatementType(statement, newType, isAuthorized);
 			if (!result.success && result.error) {
-				alert(result.error);
+				console.info(result.error);
 			}
 		} catch (error) {
 			logError(error, { operation: 'chatMessageCard.ChatMessageMenu.handleSetOption' });
@@ -111,7 +106,7 @@ const ChatMessageMenu: FC<ChatMessageMenuProps> = ({
 								: StatementType.question;
 						const result = await changeStatementType(statement, newType, isAuthorized);
 						if (!result.success && result.error) {
-							alert(result.error);
+							console.info(result.error);
 						}
 						setIsCardMenuOpen(false);
 					}}

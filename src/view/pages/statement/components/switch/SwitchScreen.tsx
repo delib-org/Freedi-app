@@ -125,7 +125,7 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 }
 
 const QA_TYPE_FILTER = [StatementType.question, StatementType.option] as const;
-const OPTIONS_ONLY_FILTER = [StatementType.option] as const;
+const QUESTIONS_ONLY_FILTER = [StatementType.question] as const;
 
 interface ViewByActiveTabProps {
 	activeView: string;
@@ -162,13 +162,13 @@ function ViewByActiveTab({
 			return <Chat />;
 		case 'options':
 			if (isTreeView) {
-				return <TreeView typeFilter={OPTIONS_ONLY_FILTER} showSortNav />;
+				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav />;
 			}
 
 			return <StagePage />;
 		case 'questions':
 			if (isTreeView) {
-				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav />;
+				return <TreeView typeFilter={QUESTIONS_ONLY_FILTER} showSortNav />;
 			}
 
 			return <QuestionsView />;
