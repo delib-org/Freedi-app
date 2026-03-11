@@ -1,5 +1,6 @@
 import { FC } from 'react';
 import { StatementType } from '@freedi/shared-types';
+import ChatBubbleIcon from '@/assets/icons/chat.svg?react';
 import styles from './StatementTypeIcon.module.scss';
 
 interface StatementTypeIconProps {
@@ -28,7 +29,7 @@ const StatementTypeIcon: FC<StatementTypeIconProps> = ({ type, isSelected }) => 
 
 	return (
 		<div className={`${styles['statement-type-icon']} ${styles['statement-type-icon--statement']}`}>
-			&#128172;
+			<ChatBubbleIcon />
 		</div>
 	);
 };

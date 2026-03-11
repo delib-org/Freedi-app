@@ -14,7 +14,11 @@
 	&--statement {
 		background-color: rgba(95, 136, 229, 0.15);
 		color: var(--btn-primary, #5f88e5);
-		font-size: 1rem;
+
+		svg {
+			width: 16px;
+			height: 16px;
+		}
 	}
 
 	&--question {
