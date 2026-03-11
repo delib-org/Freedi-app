@@ -28,7 +28,7 @@ const StatementTypeIcon: FC<StatementTypeIconProps> = ({ type, isSelected }) => 
 
 	return (
 		<div className={`${styles['statement-type-icon']} ${styles['statement-type-icon--statement']}`}>
-			&#9993;
+			&#128172;
 		</div>
 	);
 };

@@ -9,9 +9,12 @@ import { isAuthorized } from '@/controllers/general/helpers';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { handleAddStatement } from '@/view/pages/statement/components/chat/components/input/StatementInputCont';
 import { logError } from '@/utils/errorHandling';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useStatementTypeDetection } from '@/controllers/hooks/useStatementTypeDetection';
 import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
+import TypeSuggestionBanner from '@/view/pages/statement/components/chat/components/chatMessageCard/TypeSuggestionBanner';
 import SendIcon from '@/view/components/icons/SendIcon';
 import styles from './TreeMessageNode.module.scss';
 
@@ -39,14 +42,23 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const { dir } = useUserConfig();
+	const { user } = useAuthentication();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
 	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
+	const isMe = user?.uid === statement.creator?.uid;
 
 	const _isAuthorized = isAuthorized(
 		statement,
 		statementSubscription,
 		parentStatement?.creator?.uid,
 	);
+
+	// AI type detection for the creator's own statements
+	const {
+		suggestedType,
+		isVisible: showTypeSuggestion,
+		dismiss: dismissTypeSuggestion,
+	} = useStatementTypeDetection(statement, isMe);
 
 	const [showReplyInput, setShowReplyInput] = useState(false);
 	const [replyText, setReplyText] = useState('');
@@ -244,6 +256,15 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 						</button>
 					)}
 				</div>
+
+				{showTypeSuggestion && suggestedType && (
+					<TypeSuggestionBanner
+						statement={statement}
+						suggestedType={suggestedType}
+						isAuthorized={_isAuthorized}
+						onDismiss={dismissTypeSuggestion}
+					/>
+				)}
 
 				{showReplyInput && (
 					<form className={styles['tree-message-node__reply-form']} onSubmit={handleReplySubmit}>

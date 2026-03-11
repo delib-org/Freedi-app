@@ -128,6 +128,9 @@ import {
 	cleanupDuplicateRoomSettings,
 } from './fn_splitJoinedOption';
 
+// Statement Type Detection
+import { detectStatementType } from './fn_detectStatementType';
+
 // Discussion Summarization
 import { summarizeDiscussion } from './fn_summarizeDiscussion';
 
@@ -365,6 +368,7 @@ exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
+exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementType);
 
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
