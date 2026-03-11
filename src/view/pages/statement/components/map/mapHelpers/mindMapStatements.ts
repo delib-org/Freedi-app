@@ -7,6 +7,8 @@ import { Statement, StatementType } from '@freedi/shared-types';
 import { saveStatementToDB, updateStatementText } from '@/controllers/db/statements/setStatements';
 import { logError } from '@/utils/errorHandling';
 import { canHaveChildren } from './mindElixirTransform';
+import { store } from '@/redux/store';
+import { setStatement } from '@/redux/statements/statementsSlice';
 
 /**
  * Default text for new nodes based on statement type
@@ -73,16 +75,12 @@ export async function createMindMapChild({
 	try {
 		// Check if parent can have children
 		if (!canHaveChildren(parentStatement.statementType)) {
-			console.info('Options cannot have children');
-
 			return undefined;
 		}
 
 		// Determine child type based on parent
 		const childType = getDefaultChildType(parentStatement.statementType);
 		if (!childType) {
-			console.info('Cannot determine child type for parent:', parentStatement.statementType);
-
 			return undefined;
 		}
 
@@ -93,6 +91,11 @@ export async function createMindMapChild({
 			parentStatement,
 			statementType: childType,
 		});
+
+		// Dispatch to Redux immediately so the mind map re-renders without waiting for Firestore listener
+		if (statement) {
+			store.dispatch(setStatement(statement));
+		}
 
 		return statement;
 	} catch (error) {
@@ -131,6 +134,11 @@ export async function createMindMapSibling({
 			parentStatement,
 			statementType: siblingType,
 		});
+
+		// Dispatch to Redux immediately so the mind map re-renders without waiting for Firestore listener
+		if (statement) {
+			store.dispatch(setStatement(statement));
+		}
 
 		return statement;
 	} catch (error) {
