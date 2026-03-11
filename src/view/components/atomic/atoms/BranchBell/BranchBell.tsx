@@ -75,6 +75,7 @@ const BranchBell: React.FC<BranchBellProps> = ({
 }) => {
 	const [isOpen, setIsOpen] = useState(false);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const buttonRef = useRef<HTMLButtonElement>(null);
 
 	const bellClasses = clsx(
 		'branch-bell',
@@ -101,24 +102,27 @@ const BranchBell: React.FC<BranchBellProps> = ({
 		(frequency: NotificationFrequency) => {
 			onFrequencyChange(frequency);
 			setIsOpen(false);
+			buttonRef.current?.focus();
 		},
 		[onFrequencyChange],
 	);
 
 	const handleClose = useCallback(() => {
 		setIsOpen(false);
+		buttonRef.current?.focus();
 	}, []);
 
 	return (
 		<div ref={containerRef} style={{ position: 'relative', display: 'inline-flex' }}>
 			<button
+				ref={buttonRef}
 				type="button"
 				className={bellClasses}
 				onClick={handleClick}
 				disabled={disabled}
 				aria-label={ariaLabel || `Notification settings: ${state}`}
 				aria-expanded={isOpen}
-				aria-haspopup="true"
+				aria-haspopup="listbox"
 			>
 				<span className="branch-bell__icon">
 					{isMuted ? <BellSlashIcon /> : <BellIcon />}

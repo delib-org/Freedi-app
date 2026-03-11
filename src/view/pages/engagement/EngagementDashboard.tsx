@@ -96,23 +96,23 @@ const EngagementDashboard = () => {
 				</div>
 			</div>
 
-			<div className="engagement-dashboard">
+			<div className="engagement-dashboard" role="region" aria-label={t('engagement.myImpact')}>
 				{/* Level + Streak header */}
-				<div className="engagement-dashboard__header">
+				<section className="engagement-dashboard__header" aria-label={t('engagement.currentLevel')}>
 					<div className="engagement-dashboard__level-section">
 						<LevelBadge level={level} size="large" />
-						<div className="engagement-dashboard__level-info">
-							<span className="engagement-dashboard__level-label">
+						<dl className="engagement-dashboard__level-info">
+							<dt className="engagement-dashboard__level-label">
 								{t('engagement.currentLevel')}
-							</span>
-							<span className="engagement-dashboard__level-name">{levelName}</span>
-						</div>
+							</dt>
+							<dd className="engagement-dashboard__level-name">{levelName}</dd>
+						</dl>
 					</div>
 					<StreakIndicator
 						count={currentStreak}
 						lastActiveDate={engagement?.streak?.lastActiveDate}
 					/>
-				</div>
+				</section>
 
 				{/* Progress to next level */}
 				<div className="engagement-dashboard__progress-section">
@@ -131,14 +131,14 @@ const EngagementDashboard = () => {
 				</div>
 
 				{/* Stats grid */}
-				<div className="engagement-dashboard__stats">
-					<div className="engagement-dashboard__stat">
+				<section className="engagement-dashboard__stats" aria-label={t('engagement.impactStats')}>
+					<div className="engagement-dashboard__stat" role="group" aria-label={t('engagement.totalCredits')}>
 						<span className="engagement-dashboard__stat-value">{totalCredits}</span>
 						<span className="engagement-dashboard__stat-label">
 							{t('engagement.totalCredits')}
 						</span>
 					</div>
-					<div className="engagement-dashboard__stat">
+					<div className="engagement-dashboard__stat" role="group" aria-label={t('engagement.evaluationsGiven')}>
 						<span className="engagement-dashboard__stat-value">
 							{engagement?.totalEvaluations ?? 0}
 						</span>
@@ -146,7 +146,7 @@ const EngagementDashboard = () => {
 							{t('engagement.evaluationsGiven')}
 						</span>
 					</div>
-					<div className="engagement-dashboard__stat">
+					<div className="engagement-dashboard__stat" role="group" aria-label={t('engagement.optionsCreated')}>
 						<span className="engagement-dashboard__stat-value">
 							{engagement?.totalOptions ?? 0}
 						</span>
@@ -154,18 +154,18 @@ const EngagementDashboard = () => {
 							{t('engagement.optionsCreated')}
 						</span>
 					</div>
-				</div>
+				</section>
 
 				{/* Badges */}
-				<div className="engagement-dashboard__section">
+				<section className="engagement-dashboard__section" aria-label={t('engagement.badges')}>
 					<h2 className="engagement-dashboard__section-title">
 						{t('engagement.badges')}
 					</h2>
 					{badges.length > 0 ? (
-						<div className="engagement-dashboard__badges-grid">
+						<div className="engagement-dashboard__badges-grid" role="list">
 							{badges.map((badge) => (
-								<div key={badge.badgeId} className="engagement-dashboard__badge" title={badge.description}>
-									<span className="engagement-dashboard__badge-icon">{badge.icon}</span>
+								<div key={badge.badgeId} className="engagement-dashboard__badge" role="listitem" aria-label={`${badge.name}: ${badge.description}`}>
+									<span className="engagement-dashboard__badge-icon" aria-hidden="true">{badge.icon}</span>
 									<span className="engagement-dashboard__badge-name">{badge.name}</span>
 								</div>
 							))}
@@ -176,26 +176,26 @@ const EngagementDashboard = () => {
 							<p>{t('engagement.keepParticipating')}</p>
 						</div>
 					)}
-				</div>
+				</section>
 
 				{/* Recent activity */}
-				<div className="engagement-dashboard__section">
+				<section className="engagement-dashboard__section" aria-label={t('engagement.recentActivity')}>
 					<h2 className="engagement-dashboard__section-title">
 						{t('engagement.recentActivity')}
 					</h2>
 					{recentCredits.length > 0 ? (
-						<div className="engagement-dashboard__activity-list">
+						<div className="engagement-dashboard__activity-list" role="list">
 							{recentCredits.slice(0, 10).map((credit) => (
-								<div key={credit.transactionId} className="engagement-dashboard__activity-item">
+								<div key={credit.transactionId} className="engagement-dashboard__activity-item" role="listitem">
 									<span className="engagement-dashboard__activity-action">
 										{ACTION_LABELS[credit.action] ?? credit.action}
 									</span>
-									<span className="engagement-dashboard__activity-amount">
+									<span className="engagement-dashboard__activity-amount" aria-label={`plus ${credit.amount} credits`}>
 										+{credit.amount}
 									</span>
-									<span className="engagement-dashboard__activity-time">
+									<time className="engagement-dashboard__activity-time">
 										{formatTimeAgo(credit.createdAt)}
-									</span>
+									</time>
 								</div>
 							))}
 						</div>
@@ -204,7 +204,7 @@ const EngagementDashboard = () => {
 							{t('engagement.noActivity')}
 						</div>
 					)}
-				</div>
+				</section>
 			</div>
 		</div>
 	);

@@ -104,10 +104,10 @@
 		}
 	}
 
-	// Muted: slash icon, gray
+	// Muted: slash icon, gray (opacity 0.75 for AA contrast compliance)
 	&--muted {
 		color: var(--text-caption);
-		opacity: 0.6;
+		opacity: 0.75;
 	}
 
 	// Size variants

@@ -47,8 +47,8 @@ const EngagementNotificationCard: React.FC<EngagementNotificationCardProps> = ({
 	const icon = TRIGGER_ICONS[triggerType] ?? 'N';
 
 	return (
-		<div className={`${styles.card} ${isLevelUp ? styles.levelUp : ''}`}>
-			<div className={styles.iconWrapper}>
+		<article className={`${styles.card} ${isLevelUp ? styles.levelUp : ''}`} aria-label={title}>
+			<div className={styles.iconWrapper} aria-hidden="true">
 				{isLevelUp && metadata?.level ? (
 					<LevelBadge
 						level={Number(metadata.level) as EngagementLevel}
@@ -62,11 +62,11 @@ const EngagementNotificationCard: React.FC<EngagementNotificationCardProps> = ({
 				)}
 			</div>
 			<div className={styles.content}>
-				<span className={styles.title}>{title}</span>
+				<strong className={styles.title}>{title}</strong>
 				<span className={styles.body}>{body}</span>
 			</div>
-			<span className={styles.time}>{formatTime(createdAt)}</span>
-		</div>
+			<time className={styles.time}>{formatTime(createdAt)}</time>
+		</article>
 	);
 };
 

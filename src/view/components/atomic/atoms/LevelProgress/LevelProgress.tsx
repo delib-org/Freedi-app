@@ -45,7 +45,7 @@ const LevelProgress: React.FC<LevelProgressProps> = ({
 	);
 
 	return (
-		<div className={classes} role="progressbar" aria-valuenow={clampedProgress} aria-valuemin={0} aria-valuemax={100}>
+		<div className={classes} role="progressbar" aria-valuenow={clampedProgress} aria-valuemin={0} aria-valuemax={100} aria-label={`Level progress: ${clampedProgress}% complete, ${currentCredits} of ${nextThreshold} credits`}>
 			<div className="level-progress__bar">
 				<div
 					className="level-progress__fill"
