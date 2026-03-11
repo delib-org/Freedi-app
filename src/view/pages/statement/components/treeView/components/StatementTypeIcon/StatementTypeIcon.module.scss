@@ -1,0 +1,38 @@
+.statement-type-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	border-radius: 50%;
+	flex-shrink: 0;
+	font-weight: 700;
+	font-size: 0.85rem;
+	line-height: 1;
+	user-select: none;
+
+	&--statement {
+		background-color: rgba(95, 136, 229, 0.15);
+		color: var(--btn-primary, #5f88e5);
+		font-size: 1rem;
+	}
+
+	&--question {
+		background-color: rgba(71, 180, 239, 0.15);
+		color: var(--header-question, #47b4ef);
+		font-size: 1.1rem;
+	}
+
+	&--option {
+		background-color: rgba(255, 225, 106, 0.2);
+		color: var(--option-text, #3b4f7d);
+		font-size: 1.1rem;
+	}
+
+	&--selected {
+		background-color: rgba(87, 198, 178, 0.2);
+		color: var(--approve, #57c6b2);
+		font-size: 0.85rem;
+		letter-spacing: -1px;
+	}
+}

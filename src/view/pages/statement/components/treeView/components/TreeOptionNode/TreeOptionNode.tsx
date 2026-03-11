@@ -4,7 +4,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { isAuthorized } from '@/controllers/general/helpers';
-import UserAvatar from '@/view/pages/statement/components/chat/components/userAvatar/UserAvatar';
+import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
@@ -54,17 +54,10 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement })
 	return (
 		<div className={nodeClassName}>
 			<div className={styles['tree-option-node__avatar']}>
-				<UserAvatar user={statement.creator} />
+				<StatementTypeIcon type={statement.statementType} isSelected={isInResults} />
 			</div>
 			<div className={styles['tree-option-node__body']}>
 				<div className={styles['tree-option-node__header']}>
-					<span className={styles['tree-option-node__author']}>
-						{statement.creator.displayName}
-					</span>
-					<span className={styles['tree-option-node__badge']}>
-						{isInResults ? t('Selected Solution') : t('Solution')}
-					</span>
-					<span className={styles['tree-option-node__time']}>{timeString}</span>
 					<div className={styles['tree-option-node__menu']}>
 						<ChatMessageMenu
 							statement={statement}

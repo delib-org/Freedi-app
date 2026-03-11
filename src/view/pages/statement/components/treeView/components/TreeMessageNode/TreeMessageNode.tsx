@@ -9,7 +9,7 @@ import { isAuthorized } from '@/controllers/general/helpers';
 import { changeStatementType } from '@/controllers/db/statements/changeStatementType';
 import { handleAddStatement } from '@/view/pages/statement/components/chat/components/input/StatementInputCont';
 import { logError } from '@/utils/errorHandling';
-import UserAvatar from '@/view/pages/statement/components/chat/components/userAvatar/UserAvatar';
+import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import SendIcon from '@/view/components/icons/SendIcon';
@@ -191,17 +191,18 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	return (
 		<div className={nodeClassName} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
 			<div className={styles['tree-message-node__avatar']}>
-				<UserAvatar user={statement.creator} />
+				<StatementTypeIcon type={statement.statementType} />
 			</div>
 			<div className={styles['tree-message-node__body']}>
 				<div className={styles['tree-message-node__header']}>
-					<span className={styles['tree-message-node__author']}>
-						{statement.creator.displayName}
-					</span>
-					{isQuestion && (
-						<span className={styles['tree-message-node__badge']}>{t('Question')}</span>
+					{!isQuestion && (
+						<>
+							<span className={styles['tree-message-node__author']}>
+								{statement.creator.displayName}
+							</span>
+							<span className={styles['tree-message-node__time']}>{timeString}</span>
+						</>
 					)}
-					<span className={styles['tree-message-node__time']}>{timeString}</span>
 					<div className={styles['tree-message-node__menu']}>
 						<ChatMessageMenu
 							statement={statement}

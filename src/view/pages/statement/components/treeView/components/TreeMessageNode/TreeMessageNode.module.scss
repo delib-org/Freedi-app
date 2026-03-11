@@ -1,5 +1,6 @@
 .tree-message-node {
 	display: flex;
+	align-items: flex-start;
 	gap: 8px;
 	padding: 6px 0;
 	flex: 1;
@@ -12,6 +13,17 @@
 		padding-inline-start: 8px;
 		margin-top: 6px;
 		background-color: rgba(71, 180, 239, 0.05);
+
+		.tree-message-node__body {
+			position: relative;
+		}
+
+		.tree-message-node__header {
+			position: absolute;
+			top: 0;
+			inset-inline-end: 0;
+			z-index: 1;
+		}
 	}
 
 	&--swiping-right {
@@ -24,6 +36,7 @@
 
 	&__avatar {
 		flex-shrink: 0;
+		margin-top: -3px;
 	}
 
 	&__body {
@@ -45,19 +58,8 @@
 	}
 
 	&__time {
-		font-size: 0.75rem;
-		color: var(--text-secondary, #999);
-	}
-
-	&__badge {
-		font-size: 0.7rem;
-		font-weight: 600;
-		padding: 1px 6px;
-		border-radius: 4px;
-		background-color: var(--header-question, #47b4ef);
-		color: #fff;
-		line-height: 1.4;
-		white-space: nowrap;
+		font-size: 0.65rem;
+		color: #ccc;
 	}
 
 	&__menu {
