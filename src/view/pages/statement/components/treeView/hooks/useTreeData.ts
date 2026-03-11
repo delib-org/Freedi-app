@@ -25,11 +25,16 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
 		case SortType.mostUpdated:
 			return sorted.sort((a, b) => b.lastUpdate - a.lastUpdate);
 		case SortType.accepted:
-			return sorted.sort(
-				(a, b) =>
+			return sorted.sort((a, b) => {
+				const aIsOption = a.statementType === StatementType.option ? 0 : 1;
+				const bIsOption = b.statementType === StatementType.option ? 0 : 1;
+				if (aIsOption !== bIsOption) return aIsOption - bIsOption;
+
+				return (
 					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0),
-			);
+					(a.evaluation?.agreement ?? a.consensus ?? 0)
+				);
+			});
 		case SortType.random:
 			return sorted.sort(() => Math.random() - 0.5);
 		case SortType.mostJoined:
