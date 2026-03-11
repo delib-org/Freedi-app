@@ -1,0 +1,13 @@
+.wrapper {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	cursor: default;
+}
+
+.credits {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--text-secondary, #6b7280);
+	white-space: nowrap;
+}

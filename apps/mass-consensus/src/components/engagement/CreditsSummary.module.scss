@@ -1,0 +1,46 @@
+.creditsSummary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.25rem 1.5rem;
+  background: linear-gradient(135deg, #f0f4ff 0%, #e8f4fd 100%);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.amount {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #5f88e5;
+  line-height: 1;
+  animation: countUp 0.8s ease-out forwards;
+}
+
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.8);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.05);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .amount {
+    animation: none;
+  }
+}

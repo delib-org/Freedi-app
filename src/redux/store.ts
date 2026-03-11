@@ -12,6 +12,7 @@ import { userDemographicSlice } from './userDemographic/userDemographicSlice';
 import { newStatementSlice } from './statements/newStatementSlice';
 import { pwaSlice } from './pwa/pwaSlice';
 import { roomAssignmentSlice } from './roomAssignment/roomAssignmentSlice';
+import { engagementSlice } from './engagement/engagementSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -28,6 +29,7 @@ export const store = configureStore({
 		newStatement: newStatementSlice.reducer,
 		pwa: pwaSlice.reducer,
 		roomAssignment: roomAssignmentSlice.reducer,
+		engagement: engagementSlice.reducer,
 	},
 });
 

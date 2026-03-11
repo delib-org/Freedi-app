@@ -22,6 +22,14 @@ const CheckNotifications = lazyWithRetry(
 	() => import('@/view/pages/settings/ChecNotifications'),
 	'CheckNotifications',
 );
+const EngagementDashboard = lazyWithRetry(
+	() => import('@/view/pages/engagement/EngagementDashboard'),
+	'EngagementDashboard',
+);
+const SubscriptionManager = lazyWithRetry(
+	() => import('@/view/pages/subscriptions/SubscriptionManager'),
+	'SubscriptionManager',
+);
 
 // Helper to wrap with skeleton suspense (first load only)
 const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>
@@ -80,5 +88,13 @@ export const userRoutes: RouteObject[] = [
 	{
 		path: 'my/check-notifications',
 		element: withLoadingSuspense(CheckNotifications),
+	},
+	{
+		path: 'my/engagement',
+		element: withLoadingSuspense(EngagementDashboard),
+	},
+	{
+		path: 'my/subscriptions',
+		element: withLoadingSuspense(SubscriptionManager),
 	},
 ];
