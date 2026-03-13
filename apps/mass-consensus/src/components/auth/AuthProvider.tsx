@@ -51,8 +51,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
           logError(error, { operation: 'AuthProvider.refreshToken' });
         }
       } else {
-        // Clear userId cookie on sign out
-        document.cookie = 'userId=; path=/; max-age=0';
+        // Only clear the cookie if it was set by Firebase auth (not anonymous)
+        // Anonymous userId cookies are managed by getOrCreateAnonymousUser()
+        const existingCookie = document.cookie.match(/userId=([^;]+)/);
+        if (existingCookie && !existingCookie[1].startsWith('anon_')) {
+          document.cookie = 'userId=; path=/; max-age=0';
+        }
       }
 
       setIsLoading(false);
