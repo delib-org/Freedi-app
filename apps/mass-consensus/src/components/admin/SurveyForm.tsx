@@ -274,6 +274,9 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
       )
     );
 
+    // Don't save empty text to database
+    if (!newText.trim()) return;
+
     // Save to database
     try {
       const token = await refreshToken();
