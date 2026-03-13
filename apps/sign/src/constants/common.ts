@@ -125,6 +125,10 @@ export const VERSIONING = {
   MAX_SUMMARY_LENGTH: 2000,
   /** Maximum AI reasoning length */
   MAX_AI_REASONING_LENGTH: 1000,
+  /** Rejection rate above which full revision is recommended */
+  FULL_REVISION_REJECTION_THRESHOLD: 0.5,
+  /** Average approval rate below which full revision is recommended */
+  FULL_REVISION_APPROVAL_THRESHOLD: 0.4,
 } as const;
 
 /**

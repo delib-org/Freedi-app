@@ -8,6 +8,7 @@ import {
 	VersionChange,
 	DocumentVersion,
 	ChangeDecision,
+	ChangeType,
 	VersionStatus,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -220,6 +221,53 @@ export async function PUT(
 
 		logger.info(`[Changes API] Updated change ${changeId} with decision ${body.adminDecision}`);
 
+		// Apply approved/modified changes immediately to the paragraph Statement document
+		let appliedToDocument = false;
+		if (body.adminDecision === ChangeDecision.approved || body.adminDecision === ChangeDecision.modified) {
+			const finalContent = body.adminDecision === ChangeDecision.modified
+				? body.finalContent!.trim()
+				: change.proposedContent;
+
+			if (change.changeType === ChangeType.removed) {
+				// Hide the paragraph statement
+				const paragraphRef = db.collection(Collections.statements).doc(change.paragraphId);
+				const paragraphSnap = await paragraphRef.get();
+				if (paragraphSnap.exists) {
+					await paragraphRef.update({ hide: true, lastUpdate: Date.now() });
+					appliedToDocument = true;
+				}
+			} else {
+				// Update the paragraph Statement document's text (modified or added)
+				const paragraphRef = db.collection(Collections.statements).doc(change.paragraphId);
+				const paragraphSnap = await paragraphRef.get();
+				if (paragraphSnap.exists) {
+					await paragraphRef.update({
+						statement: finalContent,
+						lastUpdate: Date.now(),
+					});
+					appliedToDocument = true;
+				}
+			}
+
+			if (appliedToDocument) {
+				logger.info(`[Changes API] Applied change ${changeId} to paragraph ${change.paragraphId}`);
+			}
+		}
+
+		// If rejected, revert to original content (in case previously approved)
+		if (body.adminDecision === ChangeDecision.rejected) {
+			const paragraphRef = db.collection(Collections.statements).doc(change.paragraphId);
+			const paragraphSnap = await paragraphRef.get();
+
+			if (paragraphSnap.exists) {
+				await paragraphRef.update({
+					statement: change.originalContent,
+					lastUpdate: Date.now(),
+				});
+				logger.info(`[Changes API] Reverted paragraph ${change.paragraphId} to original content`);
+			}
+		}
+
 		// Return updated change
 		const updatedChangeSnap = await changeRef.get();
 		const updatedChange = updatedChangeSnap.data() as VersionChange;
@@ -227,6 +275,7 @@ export async function PUT(
 		return NextResponse.json({
 			success: true,
 			change: updatedChange,
+			appliedToDocument,
 		});
 	} catch (error) {
 		logger.error('[Changes API] PUT error:', error);

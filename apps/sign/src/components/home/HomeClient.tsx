@@ -11,7 +11,7 @@ import type { HomeDocument, GroupInfo } from '@/lib/firebase/homeQueries';
 import type { SignUser } from '@/lib/utils/user';
 import { UI } from '@/constants/common';
 
-type FilterType = 'all' | 'created' | 'collaborating' | 'signed';
+type FilterType = 'all' | 'created' | 'collaborating' | 'signed' | 'participated';
 
 interface HomeClientProps {
   documents: HomeDocument[];
@@ -72,8 +72,9 @@ export default function HomeClient({ documents, groups: initialGroups, user }: H
       (d) => d.relationship === 'collaborator' || d.relationship === 'invited'
     ).length;
     const signed = documents.filter((d) => d.relationship === 'signed').length;
+    const participated = documents.filter((d) => d.relationship === 'participant').length;
 
-    return { all: documents.length, created, collaborating, signed };
+    return { all: documents.length, created, collaborating, signed, participated };
   }, [documents]);
 
   // Filtered documents
@@ -89,6 +90,8 @@ export default function HomeClient({ documents, groups: initialGroups, user }: H
       );
     } else if (activeFilter === 'signed') {
       result = result.filter((d) => d.relationship === 'signed');
+    } else if (activeFilter === 'participated') {
+      result = result.filter((d) => d.relationship === 'participant');
     }
 
     // Apply search
@@ -117,6 +120,8 @@ export default function HomeClient({ documents, groups: initialGroups, user }: H
         return 'emptyCollaborating' as const;
       case 'signed':
         return 'emptySigned' as const;
+      case 'participated':
+        return 'emptyParticipated' as const;
       default:
         return 'noDocuments' as const;
     }
@@ -127,6 +132,7 @@ export default function HomeClient({ documents, groups: initialGroups, user }: H
     { key: 'created', label: t('Created'), count: counts.created },
     { key: 'collaborating', label: t('Collaborating'), count: counts.collaborating },
     { key: 'signed', label: t('Signed'), count: counts.signed },
+    { key: 'participated', label: t('Participated'), count: counts.participated },
   ];
 
   return (

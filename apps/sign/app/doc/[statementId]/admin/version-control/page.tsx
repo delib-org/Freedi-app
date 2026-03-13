@@ -8,6 +8,7 @@ import { ReviewQueueListEnhanced } from '@/components/versionControl/ReviewQueue
 import { CoherencePanel } from '@/components/versionControl/CoherencePanel';
 import { ReasoningPathView } from '@/components/versionControl/ReasoningPathView';
 import { ToastNotification } from '@/components/versionControl/ToastNotification';
+import { ActionHistoryPanel } from '@/components/versionControl/ActionHistoryPanel';
 import { Statement, Paragraph, ParagraphType, ParagraphReasoningPath, DocumentVersion } from '@freedi/shared-types';
 import styles from './version-control.module.scss';
 
@@ -21,7 +22,7 @@ export default function VersionControlPage() {
 	const documentId = params.statementId as string;
 	const { t } = useTranslation();
 
-	const [activeTab, setActiveTab] = useState<'settings' | 'queue' | 'coherence'>('queue');
+	const [activeTab, setActiveTab] = useState<'settings' | 'queue' | 'coherence' | 'history'>('queue');
 	const [document, setDocument] = useState<Statement | null>(null);
 	const [paragraphs, setParagraphs] = useState<Paragraph[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
@@ -144,6 +145,17 @@ export default function VersionControlPage() {
 				</button>
 
 				<button
+					className={`${styles.tab} ${activeTab === 'history' ? styles['tab--active'] : ''}`}
+					onClick={() => setActiveTab('history')}
+				>
+					<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+						<circle cx="12" cy="12" r="10" />
+						<polyline points="12 6 12 12 16 14" />
+					</svg>
+					{t('actionHistory') || 'Action History'}
+				</button>
+
+				<button
 					className={`${styles.tab} ${activeTab === 'settings' ? styles['tab--active'] : ''}`}
 					onClick={() => setActiveTab('settings')}
 				>
@@ -187,6 +199,12 @@ export default function VersionControlPage() {
 								{t('No versions found')}
 							</div>
 						)}
+					</div>
+				)}
+
+				{activeTab === 'history' && (
+					<div className={styles.tabPanel}>
+						<ActionHistoryPanel documentId={documentId} />
 					</div>
 				)}
 

@@ -131,3 +131,59 @@ export function calcBinaryConsensus(
 
   return calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 }
+
+// ============================================================================
+// CONSENSUS THRESHOLD HELPERS
+// ============================================================================
+
+/** Default threshold for automatic paragraph removal */
+export const DEFAULT_REMOVAL_THRESHOLD = -0.4;
+
+/** Default threshold for automatic paragraph addition */
+export const DEFAULT_ADDITION_THRESHOLD = 0.4;
+
+/** Default minimum evaluators required for automatic actions */
+export const DEFAULT_MIN_EVALUATORS = 3;
+
+/**
+ * Checks if a paragraph's consensus meets the automatic removal threshold.
+ *
+ * A paragraph is eligible for removal when its consensus score drops below
+ * the removal threshold AND enough evaluators have participated.
+ *
+ * @param consensus - Current consensus score of the paragraph
+ * @param evaluatorCount - Number of evaluators who voted
+ * @param removalThreshold - Threshold below which removal triggers (default: -0.4)
+ * @param minEvaluators - Minimum evaluators required (default: 3)
+ * @returns true if the paragraph should be auto-removed
+ */
+export function meetsRemovalThreshold(
+  consensus: number,
+  evaluatorCount: number,
+  removalThreshold: number = DEFAULT_REMOVAL_THRESHOLD,
+  minEvaluators: number = DEFAULT_MIN_EVALUATORS
+): boolean {
+  return consensus <= removalThreshold && evaluatorCount >= minEvaluators;
+}
+
+/**
+ * Checks if a suggestion's consensus meets the automatic addition threshold.
+ *
+ * A suggestion on an insertion point is eligible for addition when its
+ * consensus score exceeds the addition threshold AND enough evaluators
+ * have participated.
+ *
+ * @param consensus - Current consensus score of the suggestion
+ * @param evaluatorCount - Number of evaluators who voted
+ * @param additionThreshold - Threshold above which addition triggers (default: 0.4)
+ * @param minEvaluators - Minimum evaluators required (default: 3)
+ * @returns true if the suggestion should be auto-added as a new paragraph
+ */
+export function meetsAdditionThreshold(
+  consensus: number,
+  evaluatorCount: number,
+  additionThreshold: number = DEFAULT_ADDITION_THRESHOLD,
+  minEvaluators: number = DEFAULT_MIN_EVALUATORS
+): boolean {
+  return consensus >= additionThreshold && evaluatorCount >= minEvaluators;
+}

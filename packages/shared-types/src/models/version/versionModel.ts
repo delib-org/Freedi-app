@@ -51,6 +51,15 @@ export enum ChangeType {
 export enum ChangeSourceType {
 	suggestion = 'suggestion', // From a user suggestion
 	comment = 'comment', // From a user comment
+	rejectionReason = 'rejectionReason', // From document-level rejection feedback
+}
+
+/**
+ * Revision strategy - determines how the AI should approach changes
+ */
+export enum RevisionStrategy {
+	amendParagraphs = 'amendParagraphs', // Per-paragraph targeted amendments
+	fullRevision = 'fullRevision', // Holistic document revision
 }
 
 // ============================================================================
@@ -95,9 +104,27 @@ export const ChangeSourceSchema = object({
 	objectors: number(), // Number of users who objected
 	creatorId: string(),
 	creatorDisplayName: string(),
+	consensus: optional(number()), // Pre-computed Mean-SEM consensus score
 });
 
 export type ChangeSource = InferOutput<typeof ChangeSourceSchema>;
+
+/**
+ * Document feedback summary - aggregated feedback data for version generation
+ */
+export const DocumentFeedbackSummarySchema = object({
+	totalSignatures: number(),
+	signedCount: number(),
+	rejectedCount: number(),
+	viewedCount: number(),
+	rejectionRate: number(), // rejectedCount / (signedCount + rejectedCount)
+	rejectionReasons: array(object({ reason: string() })),
+	overallApprovalRate: number(), // Average approval rate across paragraphs
+	revisionStrategy: enum_(RevisionStrategy),
+	strategyReasoning: string(),
+});
+
+export type DocumentFeedbackSummary = InferOutput<typeof DocumentFeedbackSummarySchema>;
 
 /**
  * A single change proposed for a paragraph
@@ -122,6 +149,10 @@ export const VersionChangeSchema = object({
 	// AI reasoning
 	aiReasoning: string(), // Explanation from AI for the change
 	combinedImpact: number(), // Sum of all source impacts
+
+	// Approval data
+	approvalRate: optional(number()), // Paragraph approval rate (0-100)
+	approvalVoters: optional(number()), // Number of approval voters
 
 	// Admin tracking
 	adminModifiedAt: optional(number()),
@@ -162,6 +193,10 @@ export const DocumentVersionSchema = object({
 
 	// Summary
 	summary: optional(string()), // AI-generated summary of changes
+
+	// Document feedback
+	documentFeedbackSummary: optional(DocumentFeedbackSummarySchema),
+	revisionStrategy: optional(enum_(RevisionStrategy)),
 
 	// Coherence analysis
 	coherenceScore: optional(number()), // 0-1 document coherence score

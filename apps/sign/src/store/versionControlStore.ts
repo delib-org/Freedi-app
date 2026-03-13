@@ -11,6 +11,12 @@ import { Collections, Statement } from '@freedi/shared-types';
 /**
  * Version Control Settings Interface
  */
+export interface ConsensusSettings {
+	removalThreshold?: number;  // default: -0.4
+	additionThreshold?: number; // default: 0.4
+	minEvaluators?: number;     // default: 3
+}
+
 export interface VersionControlSettings {
 	enabled: boolean;
 	reviewThreshold: number;
@@ -18,6 +24,7 @@ export interface VersionControlSettings {
 	enableVersionHistory: boolean;
 	maxRecentVersions: number;
 	maxTotalVersions: number;
+	consensusSettings?: ConsensusSettings;
 	lastSettingsUpdate?: number;
 	updatedBy?: string;
 }
@@ -103,6 +110,7 @@ export const useVersionControlStore = create<VersionControlStore>((set, get) => 
 						maxRecentVersions:
 							settingsData?.maxRecentVersions ?? DEFAULT_SETTINGS.maxRecentVersions,
 						maxTotalVersions: settingsData?.maxTotalVersions ?? DEFAULT_SETTINGS.maxTotalVersions,
+						consensusSettings: settingsData?.consensusSettings,
 						lastSettingsUpdate: settingsData?.lastSettingsUpdate,
 						updatedBy: settingsData?.updatedBy,
 					};

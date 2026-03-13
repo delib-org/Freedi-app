@@ -25,6 +25,9 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 	const [enabled, setEnabled] = useState(currentSettings.enabled);
 	const [reviewThreshold, setReviewThreshold] = useState(currentSettings.reviewThreshold * 100);
 	const [allowAdminEdit, setAllowAdminEdit] = useState(currentSettings.allowAdminEdit);
+	const [removalThreshold, setRemovalThreshold] = useState((currentSettings.consensusSettings?.removalThreshold ?? -0.4) * 100);
+	const [additionThreshold, setAdditionThreshold] = useState((currentSettings.consensusSettings?.additionThreshold ?? 0.4) * 100);
+	const [minEvaluators, setMinEvaluators] = useState(currentSettings.consensusSettings?.minEvaluators ?? 3);
 	const [isSaving, setIsSaving] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
 	const [saveSuccess, setSaveSuccess] = useState(false);
@@ -42,6 +45,9 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 		setEnabled(currentSettings.enabled);
 		setReviewThreshold(currentSettings.reviewThreshold * 100);
 		setAllowAdminEdit(currentSettings.allowAdminEdit);
+		setRemovalThreshold((currentSettings.consensusSettings?.removalThreshold ?? -0.4) * 100);
+		setAdditionThreshold((currentSettings.consensusSettings?.additionThreshold ?? 0.4) * 100);
+		setMinEvaluators(currentSettings.consensusSettings?.minEvaluators ?? 3);
 	}, [currentSettings]);
 
 	const handleSave = async () => {
@@ -54,6 +60,11 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 				enabled,
 				reviewThreshold: reviewThreshold / 100,
 				allowAdminEdit,
+				consensusSettings: {
+					removalThreshold: removalThreshold / 100,
+					additionThreshold: additionThreshold / 100,
+					minEvaluators,
+				},
 			});
 			setSaveSuccess(true);
 			setTimeout(() => setSaveSuccess(false), 3000);
@@ -171,6 +182,81 @@ export function AdminSettingsPanel({ documentId }: AdminSettingsPanelProps) {
 					{t('Admins can modify suggestions before applying them to the document')}
 				</p>
 			</div>
+
+			{/* Consensus-Driven Actions Section */}
+			{enabled && (
+				<>
+					<h3 className={styles['settings-panel__subtitle']} style={{ marginTop: '1.5rem' }}>
+						{t('consensusDrivenActions') || 'Consensus-Driven Actions'}
+					</h3>
+					<p className={styles['settings-panel__help']}>
+						{t('consensusDrivenActionsDescription') || 'Configure automatic paragraph removal and addition based on community consensus.'}
+					</p>
+
+					{/* Removal Threshold */}
+					<div className={styles['settings-panel__field']}>
+						<label className={styles['settings-panel__label']}>
+							<span className={styles['settings-panel__label-text']}>
+								{t('removalThreshold') || 'Removal Threshold'}: {removalThreshold}%
+							</span>
+						</label>
+						<input
+							type="range"
+							min="-100"
+							max="0"
+							step="5"
+							value={removalThreshold}
+							onChange={(e) => setRemovalThreshold(Number(e.target.value))}
+							className={styles['settings-panel__slider']}
+						/>
+						<p className={styles['settings-panel__help']}>
+							{t('removalThresholdHelp') || `Paragraphs with consensus ≤ ${removalThreshold}% will be auto-removed`}
+						</p>
+					</div>
+
+					{/* Addition Threshold */}
+					<div className={styles['settings-panel__field']}>
+						<label className={styles['settings-panel__label']}>
+							<span className={styles['settings-panel__label-text']}>
+								{t('additionThreshold') || 'Addition Threshold'}: {additionThreshold}%
+							</span>
+						</label>
+						<input
+							type="range"
+							min="0"
+							max="100"
+							step="5"
+							value={additionThreshold}
+							onChange={(e) => setAdditionThreshold(Number(e.target.value))}
+							className={styles['settings-panel__slider']}
+						/>
+						<p className={styles['settings-panel__help']}>
+							{t('additionThresholdHelp') || `Suggestions on insertion points with consensus ≥ ${additionThreshold}% will be auto-added`}
+						</p>
+					</div>
+
+					{/* Min Evaluators */}
+					<div className={styles['settings-panel__field']}>
+						<label className={styles['settings-panel__label']}>
+							<span className={styles['settings-panel__label-text']}>
+								{t('minEvaluators') || 'Minimum Evaluators'}: {minEvaluators}
+							</span>
+						</label>
+						<input
+							type="number"
+							min="1"
+							max="100"
+							value={minEvaluators}
+							onChange={(e) => setMinEvaluators(Math.max(1, parseInt(e.target.value) || 1))}
+							className={styles['settings-panel__checkbox']}
+							style={{ width: '80px', padding: '4px 8px' }}
+						/>
+						<p className={styles['settings-panel__help']}>
+							{t('minEvaluatorsHelp') || 'Minimum number of evaluators before automatic actions can trigger'}
+						</p>
+					</div>
+				</>
+			)}
 
 			{/* Sync Queue Button */}
 			{enabled && (

@@ -14,11 +14,12 @@ import {
 	ChangeSourceType,
 	Paragraph,
 	Suggestion,
-	calculateImpact,
 	getChangeId,
+	RevisionStrategy,
+	DocumentFeedbackSummary,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
-import { VERSIONING, FIREBASE } from '@/constants/common';
+import { VERSIONING } from '@/constants/common';
 import * as v from 'valibot';
 
 interface CommentData {
@@ -27,11 +28,18 @@ interface CommentData {
 	creatorId: string;
 	creatorDisplayName: string;
 	parentId: string;
+	consensus: number;
 }
 
-interface EvaluationData {
+interface ApprovalData {
 	statementId: string;
-	evaluation: number;
+	userId: string;
+	approval: boolean;
+}
+
+interface SignatureData {
+	signed: 'signed' | 'rejected' | 'viewed';
+	rejectionReason?: string;
 }
 
 /**
@@ -43,42 +51,27 @@ const GenerationInputSchema = v.object({
 	minImpactThreshold: v.optional(v.pipe(v.number(), v.minValue(0), v.maxValue(1))),
 	includeComments: v.optional(v.boolean()),
 	includeSuggestions: v.optional(v.boolean()),
+	includeApprovals: v.optional(v.boolean()),
+	includeSignatures: v.optional(v.boolean()),
 });
 
 type GenerationInput = v.InferOutput<typeof GenerationInputSchema>;
 
 /**
- * Calculate impact for a suggestion or comment based on evaluations
+ * Calculate impact using pre-computed consensus score.
+ * consensus already encodes agreement strength via Mean-SEM.
+ * We normalize by totalViewers to weight by engagement.
  */
-function calculateItemImpact(
-	supporters: number,
-	objectors: number,
+function calculateConsensusImpact(
+	consensus: number,
 	totalViewers: number,
-	k1: number,
-	k2: number
+	k1: number
 ): number {
-	return calculateImpact(supporters, objectors, totalViewers, k1, k2);
-}
+	if (totalViewers <= 0) return 0;
 
-/**
- * Group evaluations by statement ID
- */
-function groupEvaluationsByStatement(evaluations: EvaluationData[]): Map<string, { supporters: number; objectors: number }> {
-	const grouped = new Map<string, { supporters: number; objectors: number }>();
+	const impact = (Math.abs(consensus) * k1) / totalViewers;
 
-	for (const evaluation of evaluations) {
-		const existing = grouped.get(evaluation.statementId) || { supporters: 0, objectors: 0 };
-
-		if (evaluation.evaluation > 0) {
-			existing.supporters++;
-		} else if (evaluation.evaluation < 0) {
-			existing.objectors++;
-		}
-
-		grouped.set(evaluation.statementId, existing);
-	}
-
-	return grouped;
+	return Math.max(0, impact);
 }
 
 /**
@@ -165,20 +158,29 @@ export async function POST(
 		const minImpactThreshold = body.minImpactThreshold ?? VERSIONING.DEFAULT_MIN_IMPACT_THRESHOLD;
 		const includeComments = body.includeComments ?? true;
 		const includeSuggestions = body.includeSuggestions ?? true;
+		const includeApprovals = body.includeApprovals ?? true;
+		const includeSignatures = body.includeSignatures ?? true;
 
-		// Get the document paragraphs
-		const docRef = db.collection(Collections.statements).doc(docId);
-		const docSnap = await docRef.get();
+		// Get the document paragraphs from Statement documents (not the legacy array)
+		const paragraphsSnapshot = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', docId)
+			.where('doc.isOfficialParagraph', '==', true)
+			.orderBy('doc.order', 'asc')
+			.get();
 
-		if (!docSnap.exists) {
-			return NextResponse.json(
-				{ error: 'Document not found' },
-				{ status: 404 }
-			);
-		}
+		const paragraphs: Paragraph[] = paragraphsSnapshot.docs
+			.filter(doc => !doc.data().hide)
+			.map(doc => {
+				const data = doc.data();
 
-		const document = docSnap.data();
-		const paragraphs: Paragraph[] = document?.paragraphs || [];
+				return {
+					paragraphId: data.statementId,
+					content: data.statement,
+					order: data.doc?.order ?? 0,
+					type: data.doc?.paragraphType,
+				} as Paragraph;
+			});
 
 		if (paragraphs.length === 0) {
 			return NextResponse.json(
@@ -187,7 +189,7 @@ export async function POST(
 			);
 		}
 
-		logger.info(`[Versions API] Document paragraphIds: ${paragraphs.map((p: Paragraph) => p.paragraphId).join(', ')}`);
+		logger.info(`[Versions API] Found ${paragraphs.length} official paragraph statements for document ${docId}`);
 
 		// Get total viewers for the document (for impact calculation)
 		const viewsSnapshot = await db
@@ -197,11 +199,11 @@ export async function POST(
 
 		// Count unique visitors
 		const uniqueVisitors = new Set(viewsSnapshot.docs.map(doc => doc.data().visitorId));
-		const totalViewers = Math.max(uniqueVisitors.size, 1); // At least 1 to avoid division by zero
+		const totalViewers = Math.max(uniqueVisitors.size, 1);
 
 		logger.info(`[Versions API] Document ${docId}: ${totalViewers} unique viewers`);
 
-		// Get suggestions for all paragraphs
+		// Get suggestions for all paragraphs (with pre-computed consensus)
 		let suggestions: Suggestion[] = [];
 		if (includeSuggestions) {
 			const suggestionsSnapshot = await db
@@ -212,15 +214,11 @@ export async function POST(
 
 			suggestions = suggestionsSnapshot.docs.map(doc => doc.data() as Suggestion);
 			logger.info(`[Versions API] Found ${suggestions.length} suggestions for document ${docId}`);
-			if (suggestions.length > 0) {
-				logger.info(`[Versions API] Suggestion paragraphIds: ${suggestions.map(s => s.paragraphId).join(', ')}`);
-			}
 		}
 
-		// Get comments for all paragraphs
+		// Get comments for all paragraphs (with pre-computed consensus)
 		let comments: CommentData[] = [];
 		if (includeComments) {
-			// Comments are stored as statements with parentId = paragraphId
 			const commentsSnapshot = await db
 				.collection(Collections.statements)
 				.where('topParentId', '==', docId)
@@ -236,66 +234,104 @@ export async function POST(
 					creatorId: data.creatorId,
 					creatorDisplayName: data.creatorDisplayName || 'Anonymous',
 					parentId: data.parentId,
+					consensus: data.consensus ?? 0,
 				};
 			});
 			logger.info(`[Versions API] Found ${comments.length} comments for document ${docId}`);
-			if (comments.length > 0) {
-				logger.info(`[Versions API] Comment parentIds: ${comments.map(c => c.parentId).join(', ')}`);
-			}
 		}
 
-		// Get evaluations for suggestions
-		const suggestionIds = suggestions.map(s => s.suggestionId);
-		let suggestionEvaluations = new Map<string, { supporters: number; objectors: number }>();
+		// Fetch paragraph-level approvals
+		const paragraphApprovals = new Map<string, { approved: number; total: number }>();
+		if (includeApprovals) {
+			const approvalsSnapshot = await db
+				.collection(Collections.approval)
+				.where('documentId', '==', docId)
+				.get();
 
-		if (suggestionIds.length > 0) {
-			// Firestore 'in' query limit
-			const allEvaluations: EvaluationData[] = [];
-
-			for (let i = 0; i < suggestionIds.length; i += FIREBASE.IN_QUERY_LIMIT) {
-				const batch = suggestionIds.slice(i, i + FIREBASE.IN_QUERY_LIMIT);
-				const evalSnapshot = await db
-					.collection(Collections.evaluations)
-					.where('statementId', 'in', batch)
-					.get();
-
-				evalSnapshot.docs.forEach(doc => {
-					const data = doc.data();
-					allEvaluations.push({
-						statementId: data.statementId,
-						evaluation: data.evaluation,
-					});
-				});
+			for (const doc of approvalsSnapshot.docs) {
+				const data = doc.data() as ApprovalData;
+				const existing = paragraphApprovals.get(data.statementId) || { approved: 0, total: 0 };
+				existing.total++;
+				if (data.approval) {
+					existing.approved++;
+				}
+				paragraphApprovals.set(data.statementId, existing);
 			}
 
-			suggestionEvaluations = groupEvaluationsByStatement(allEvaluations);
+			logger.info(`[Versions API] Found approvals for ${paragraphApprovals.size} paragraphs`);
 		}
 
-		// Get evaluations for comments (if any)
-		const commentIds = comments.map(c => c.statementId);
-		let commentEvaluations = new Map<string, { supporters: number; objectors: number }>();
+		// Fetch document-level signatures with rejection reasons
+		let signedCount = 0;
+		let rejectedCount = 0;
+		let viewedCount = 0;
+		const rejectionReasons: { reason: string }[] = [];
 
-		if (commentIds.length > 0) {
-			const allEvaluations: EvaluationData[] = [];
+		if (includeSignatures) {
+			const signaturesSnapshot = await db
+				.collection(Collections.signatures)
+				.where('documentId', '==', docId)
+				.get();
 
-			for (let i = 0; i < commentIds.length; i += FIREBASE.IN_QUERY_LIMIT) {
-				const batch = commentIds.slice(i, i + FIREBASE.IN_QUERY_LIMIT);
-				const evalSnapshot = await db
-					.collection(Collections.evaluations)
-					.where('statementId', 'in', batch)
-					.get();
-
-				evalSnapshot.docs.forEach(doc => {
-					const data = doc.data();
-					allEvaluations.push({
-						statementId: data.statementId,
-						evaluation: data.evaluation,
-					});
-				});
+			for (const doc of signaturesSnapshot.docs) {
+				const data = doc.data() as SignatureData;
+				if (data.signed === 'signed') {
+					signedCount++;
+				} else if (data.signed === 'rejected') {
+					rejectedCount++;
+					if (data.rejectionReason && data.rejectionReason.trim()) {
+						rejectionReasons.push({ reason: data.rejectionReason.trim() });
+					}
+				} else if (data.signed === 'viewed') {
+					viewedCount++;
+				}
 			}
 
-			commentEvaluations = groupEvaluationsByStatement(allEvaluations);
+			logger.info(`[Versions API] Signatures: ${signedCount} signed, ${rejectedCount} rejected, ${viewedCount} viewed, ${rejectionReasons.length} with reasons`);
 		}
+
+		// Compute overall approval rate
+		let overallApprovalRate = 0;
+		if (paragraphApprovals.size > 0) {
+			let totalApprovalRate = 0;
+			for (const [, data] of paragraphApprovals) {
+				totalApprovalRate += data.total > 0 ? (data.approved / data.total) : 0;
+			}
+			overallApprovalRate = totalApprovalRate / paragraphApprovals.size;
+		}
+
+		// Compute rejection rate
+		const totalSignatures = signedCount + rejectedCount + viewedCount;
+		const rejectionRate = (signedCount + rejectedCount) > 0
+			? rejectedCount / (signedCount + rejectedCount)
+			: 0;
+
+		// Determine revision strategy
+		let revisionStrategy = RevisionStrategy.amendParagraphs;
+		let strategyReasoning = 'Default per-paragraph amendment strategy.';
+
+		if (rejectionRate > VERSIONING.FULL_REVISION_REJECTION_THRESHOLD) {
+			revisionStrategy = RevisionStrategy.fullRevision;
+			strategyReasoning = `High rejection rate (${(rejectionRate * 100).toFixed(0)}%) exceeds ${(VERSIONING.FULL_REVISION_REJECTION_THRESHOLD * 100).toFixed(0)}% threshold. Full document revision recommended.`;
+		} else if (overallApprovalRate < VERSIONING.FULL_REVISION_APPROVAL_THRESHOLD && paragraphApprovals.size > 0) {
+			revisionStrategy = RevisionStrategy.fullRevision;
+			strategyReasoning = `Low overall approval rate (${(overallApprovalRate * 100).toFixed(0)}%) below ${(VERSIONING.FULL_REVISION_APPROVAL_THRESHOLD * 100).toFixed(0)}% threshold. Full document revision recommended.`;
+		}
+
+		logger.info(`[Versions API] Strategy: ${revisionStrategy} - ${strategyReasoning}`);
+
+		// Build document feedback summary
+		const documentFeedbackSummary: DocumentFeedbackSummary = {
+			totalSignatures,
+			signedCount,
+			rejectedCount,
+			viewedCount,
+			rejectionRate,
+			rejectionReasons,
+			overallApprovalRate,
+			revisionStrategy,
+			strategyReasoning,
+		};
 
 		// Build changes for each paragraph
 		const changes: VersionChange[] = [];
@@ -305,14 +341,16 @@ export async function POST(
 			const paragraphId = paragraph.paragraphId;
 			const sources: ChangeSource[] = [];
 
-			// Process suggestions for this paragraph
+			// Process suggestions for this paragraph (using pre-computed consensus)
 			const paragraphSuggestions = suggestions.filter(s => s.paragraphId === paragraphId);
 
 			for (const suggestion of paragraphSuggestions) {
-				const evals = suggestionEvaluations.get(suggestion.suggestionId) || { supporters: 0, objectors: 0 };
-				const impact = calculateItemImpact(evals.supporters, evals.objectors, totalViewers, k1, k2);
+				const consensus = suggestion.consensus ?? 0;
+				const impact = calculateConsensusImpact(consensus, totalViewers, k1);
+				const supporters = suggestion.positiveEvaluations ?? 0;
+				const objectors = suggestion.negativeEvaluations ?? 0;
 
-				logger.info(`[Versions API] Suggestion ${suggestion.suggestionId}: supporters=${evals.supporters}, objectors=${evals.objectors}, impact=${impact.toFixed(3)}, threshold=${minImpactThreshold}`);
+				logger.info(`[Versions API] Suggestion ${suggestion.suggestionId}: consensus=${consensus.toFixed(3)}, impact=${impact.toFixed(3)}, threshold=${minImpactThreshold}`);
 
 				if (impact >= minImpactThreshold) {
 					sources.push({
@@ -320,26 +358,23 @@ export async function POST(
 						sourceId: suggestion.suggestionId,
 						content: suggestion.suggestedContent,
 						impact,
-						supporters: evals.supporters,
-						objectors: evals.objectors,
+						supporters,
+						objectors,
 						creatorId: suggestion.creatorId,
 						creatorDisplayName: suggestion.creatorDisplayName,
+						consensus,
 					});
 				}
 			}
 
-			// Process comments for this paragraph
+			// Process comments for this paragraph (using pre-computed consensus)
 			const paragraphComments = comments.filter(c => c.parentId === paragraphId);
 
-			if (paragraphComments.length > 0) {
-				logger.info(`[Versions API] Paragraph ${paragraphId}: found ${paragraphComments.length} comments`);
-			}
-
 			for (const comment of paragraphComments) {
-				const evals = commentEvaluations.get(comment.statementId) || { supporters: 0, objectors: 0 };
-				const impact = calculateItemImpact(evals.supporters, evals.objectors, totalViewers, k1, k2);
+				const consensus = comment.consensus ?? 0;
+				const impact = calculateConsensusImpact(consensus, totalViewers, k1);
 
-				logger.info(`[Versions API] Comment ${comment.statementId}: supporters=${evals.supporters}, objectors=${evals.objectors}, impact=${impact.toFixed(3)}, threshold=${minImpactThreshold}`);
+				logger.info(`[Versions API] Comment ${comment.statementId}: consensus=${consensus.toFixed(3)}, impact=${impact.toFixed(3)}, threshold=${minImpactThreshold}`);
 
 				if (impact >= minImpactThreshold) {
 					sources.push({
@@ -347,10 +382,28 @@ export async function POST(
 						sourceId: comment.statementId,
 						content: comment.statement,
 						impact,
-						supporters: evals.supporters,
-						objectors: evals.objectors,
+						supporters: 0,
+						objectors: 0,
 						creatorId: comment.creatorId,
 						creatorDisplayName: comment.creatorDisplayName,
+						consensus,
+					});
+				}
+			}
+
+			// Add rejection reasons as sources (applied to all paragraphs with other feedback)
+			if (rejectionReasons.length > 0 && sources.length > 0) {
+				for (const rejection of rejectionReasons) {
+					sources.push({
+						type: ChangeSourceType.rejectionReason,
+						sourceId: `rejection-${paragraphId}-${rejectionReasons.indexOf(rejection)}`,
+						content: rejection.reason,
+						impact: rejectionRate * k1,
+						supporters: rejectedCount,
+						objectors: signedCount,
+						creatorId: 'document-rejection',
+						creatorDisplayName: 'Document Rejection',
+						consensus: -rejectionRate,
 					});
 				}
 			}
@@ -366,6 +419,9 @@ export async function POST(
 
 			const changeId = getChangeId(versionId, paragraphId);
 
+			// Get per-paragraph approval data
+			const approvalData = paragraphApprovals.get(paragraphId);
+
 			const change: VersionChange = {
 				changeId,
 				versionId,
@@ -377,6 +433,13 @@ export async function POST(
 				sources,
 				aiReasoning: '', // Will be filled by AI
 				combinedImpact,
+				// Only set approval fields when data exists (Firestore rejects undefined)
+				...(approvalData && approvalData.total > 0
+					? {
+						approvalRate: (approvalData.approved / approvalData.total) * 100,
+						approvalVoters: approvalData.total,
+					}
+					: {}),
 			};
 
 			changes.push(change);
@@ -386,7 +449,7 @@ export async function POST(
 			batch.set(changeRef, change);
 		}
 
-		// Update version with generation metadata
+		// Update version with generation metadata and feedback summary
 		batch.update(versionRef, {
 			aiGenerated: true,
 			generationSettings: {
@@ -400,6 +463,8 @@ export async function POST(
 			totalSuggestions: suggestions.length,
 			totalComments: comments.length,
 			changesCount: changes.filter(c => c.changeType !== ChangeType.unchanged).length,
+			documentFeedbackSummary,
+			revisionStrategy,
 		});
 
 		await batch.commit();
@@ -417,8 +482,12 @@ export async function POST(
 			totalComments: comments.length,
 			totalChanges: changes.length,
 			changesNeedingAI: changesNeedingAI.length,
-			changes: changesNeedingAI, // Return only changes that need AI processing
+			changes: changesNeedingAI,
 			settings: { k1, k2, minImpactThreshold },
+			revisionStrategy,
+			rejectionRate,
+			overallApprovalRate,
+			documentFeedbackSummary,
 		});
 	} catch (error) {
 		logger.error('[Versions API] Generate error:', error);

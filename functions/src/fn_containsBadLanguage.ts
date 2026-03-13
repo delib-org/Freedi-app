@@ -3,8 +3,8 @@ import { GEMINI_MODEL } from './config/gemini';
 import { logError } from './utils/errorHandling';
 
 function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GOOGLE_API_KEY;
-	if (!apiKey) throw new Error('Missing GOOGLE_API_KEY');
+	const apiKey = process.env.GEMINI_API_KEY;
+	if (!apiKey) throw new Error('Missing GEMINI_API_KEY');
 
 	return new GoogleGenerativeAI(apiKey);
 }
