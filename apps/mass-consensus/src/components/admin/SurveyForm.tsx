@@ -158,7 +158,7 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         questionSettings: cleanedQuestionSettings,
         defaultLanguage: defaultLanguage || undefined,
         forceLanguage: forceLanguage || undefined,
-        demographicPages: demographicPages.length > 0 ? demographicPages : undefined,
+        demographicPages: demographicPages,
         explanationPages: explanationPages,
         showEmailSignup: showEmailSignup,
         customEmailTitle: customEmailTitle.trim() || undefined,
