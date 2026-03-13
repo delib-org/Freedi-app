@@ -240,8 +240,9 @@ export async function checkForInappropriateContent(
 
     IMPORTANT RULES:
     - Genuine opinions, disagreements, and unusual ideas are ALLOWED (e.g., "I think this policy is wrong" is fine).
+    - Everyday language describing real-world problems is ALLOWED, even if it mentions bodily functions, waste, mess, etc. (e.g., "dog poop in my yard", "the sewage smells terrible", "trash everywhere" are all fine).
     - Insults disguised as opinions are NOT allowed (e.g., "only idiots would support this" must be flagged).
-    - When in doubt, flag the content. Prefer safety over permissiveness.
+    - Only flag content that is clearly and intentionally offensive, hateful, or abusive. When in doubt, allow the content. Prefer permissiveness over false positives.
 
     Return ONLY this JSON format (no markdown, no code blocks):
     - If inappropriate: { "inappropriate": true }

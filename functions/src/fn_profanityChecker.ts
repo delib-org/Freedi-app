@@ -37,7 +37,8 @@ async function containsBadLanguage(text: string): Promise<boolean> {
       - Violence, threats, or incitement to harm
 
       Genuine opinions and disagreements are ALLOWED. Insults disguised as opinions are NOT.
-      When in doubt, flag the content.
+      Everyday language describing real-world problems is ALLOWED, even if it mentions bodily functions, waste, mess, etc. (e.g., "dog poop in my yard", "the sewage smells terrible" are fine).
+      Only flag content that is clearly and intentionally offensive, hateful, or abusive. When in doubt, allow the content.
 
       Return only true or false. Text: "${text}"
     `;
