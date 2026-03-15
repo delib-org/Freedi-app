@@ -83,6 +83,7 @@ const Suggestion = memo(function Suggestion({
     userEvaluation,
     positiveCount,
     negativeCount,
+    consensus,
     isConsensusLoading,
     isVoting,
     handleVote,
@@ -93,6 +94,7 @@ const Suggestion = memo(function Suggestion({
     userDisplayName,
     initialPositiveCount: suggestion.positiveEvaluations || 0,
     initialNegativeCount: suggestion.negativeEvaluations || 0,
+    initialConsensus: suggestion.consensus || 0,
     isOwner,
   });
 
@@ -231,7 +233,7 @@ const Suggestion = memo(function Suggestion({
         userEvaluation={userEvaluation}
         positiveCount={positiveCount}
         negativeCount={negativeCount}
-        consensus={suggestion.consensus || 0}
+        consensus={consensus}
         isConsensusLoading={isConsensusLoading}
         isVoting={isVoting}
         userId={userId}

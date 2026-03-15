@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
@@ -7,6 +8,25 @@ import { logger } from '@/lib/utils/logger';
 interface EvaluationInput {
   evaluation: number; // -1 or 1
   visitorId?: string; // For anonymous users
+}
+
+/**
+ * Atomically updates the comment's consensus score using FieldValue.increment
+ * and a transaction to read back the final value.
+ * Comments use simple sum consensus (not Mean-SEM like suggestions).
+ */
+async function atomicUpdateCommentConsensus(
+  db: FirebaseFirestore.Firestore,
+  commentId: string,
+  evalDiff: number,
+): Promise<void> {
+  const statementRef = db.collection(Collections.statements).doc(commentId);
+
+  // Atomic increment for consensus (simple sum for comments)
+  await statementRef.update({
+    consensus: FieldValue.increment(evalDiff),
+    lastUpdate: Date.now(),
+  });
 }
 
 /**
@@ -23,16 +43,12 @@ export async function GET(
     const cookieHeader = request.headers.get('cookie');
     const userId = getUserIdFromCookie(cookieHeader);
 
-    // Get visitorId from query params for anonymous users
     const { searchParams } = new URL(request.url);
     const visitorId = searchParams.get('visitorId');
-
-    // Use userId if authenticated, otherwise use visitorId
     const effectiveId = userId || visitorId;
 
     const db = getFirestoreAdmin();
 
-    // Get all evaluations for this comment
     const snapshot = await db
       .collection(Collections.evaluations)
       .where('statementId', '==', commentId)
@@ -45,7 +61,6 @@ export async function GET(
       const evalData = doc.data();
       sumEvaluation += evalData.evaluation || 0;
 
-      // Check if this is the current user's/visitor's evaluation
       if (effectiveId && evalData.evaluatorId === effectiveId) {
         userEvaluation = evalData.evaluation;
       }
@@ -68,8 +83,8 @@ export async function GET(
 
 /**
  * POST /api/evaluations/[commentId]
- * Create or update an evaluation for a comment
- * Supports both authenticated users and anonymous visitors
+ * Create or update an evaluation for a comment.
+ * Uses atomic FieldValue.increment for consensus (simple sum).
  */
 export async function POST(
   request: NextRequest,
@@ -83,7 +98,6 @@ export async function POST(
     const body: EvaluationInput = await request.json();
     const { evaluation, visitorId } = body;
 
-    // Use userId if authenticated, otherwise use visitorId for anonymous users
     const effectiveId = userId || visitorId;
 
     if (!effectiveId) {
@@ -93,7 +107,6 @@ export async function POST(
       );
     }
 
-    // Validate evaluation value (-1 or 1)
     if (evaluation !== -1 && evaluation !== 1) {
       return NextResponse.json(
         { error: 'Evaluation must be -1 or 1' },
@@ -103,9 +116,7 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Get the comment to verify it exists and get parentId
     const commentRef = await db.collection(Collections.statements).doc(commentId).get();
-
     if (!commentRef.exists) {
       return NextResponse.json(
         { error: 'Comment not found' },
@@ -115,7 +126,6 @@ export async function POST(
 
     const comment = commentRef.data();
 
-    // Users cannot evaluate their own comments
     if (comment?.creatorId === effectiveId) {
       return NextResponse.json(
         { error: 'Cannot evaluate your own comment' },
@@ -123,14 +133,16 @@ export async function POST(
       );
     }
 
-    // Get display name - for anonymous users, generate one from visitorId
+    // Read old evaluation to compute diff
+    const evaluationId = `${effectiveId}--${commentId}`;
+    const oldEvalSnap = await db.collection(Collections.evaluations).doc(evaluationId).get();
+    const oldEval = oldEvalSnap.exists ? (oldEvalSnap.data()?.evaluation || 0) : 0;
+    const evalDiff = evaluation - oldEval;
+
     const isAnonymous = !userId;
     const displayName = isAnonymous
       ? getAnonymousDisplayName(effectiveId)
       : getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(effectiveId);
-
-    // Evaluation ID follows main app pattern: ${effectiveId}--${statementId}
-    const evaluationId = `${effectiveId}--${commentId}`;
 
     const evaluationData = {
       evaluationId,
@@ -141,37 +153,24 @@ export async function POST(
       evaluation,
       updatedAt: Date.now(),
       isAnonymous,
+      source: 'sign' as const,
       evaluator: {
         displayName,
         uid: effectiveId,
       },
     };
 
+    // Write evaluation doc
     await db.collection(Collections.evaluations).doc(evaluationId).set(evaluationData);
 
-    // Recalculate consensus from all evaluations (more reliable than incremental updates)
-    const allEvaluationsSnapshot = await db
-      .collection(Collections.evaluations)
-      .where('statementId', '==', commentId)
-      .get();
+    // Atomically update consensus
+    await atomicUpdateCommentConsensus(db, commentId, evalDiff);
 
-    let newConsensus = 0;
-    allEvaluationsSnapshot.docs.forEach((doc) => {
-      const evalData = doc.data();
-      newConsensus += evalData.evaluation || 0;
-    });
-
-    await db.collection(Collections.statements).doc(commentId).update({
-      consensus: newConsensus,
-      lastUpdate: Date.now(),
-    });
-
-    logger.info(`[Evaluations API] Created/updated evaluation: ${evaluationId} (anonymous: ${isAnonymous})`);
+    logger.info(`[Evaluations API] ${oldEvalSnap.exists ? 'Updated' : 'Created'} evaluation: ${evaluationId} (anonymous: ${isAnonymous}, diff: ${evalDiff})`);
 
     return NextResponse.json({
       success: true,
       evaluation: evaluationData,
-      newConsensus,
     });
   } catch (error) {
     logger.error('[Evaluations API] POST error:', error);
@@ -185,8 +184,8 @@ export async function POST(
 
 /**
  * DELETE /api/evaluations/[commentId]
- * Remove user's evaluation from a comment
- * Supports both authenticated users and anonymous visitors
+ * Remove user's evaluation from a comment.
+ * Uses atomic FieldValue.increment to reverse the evaluation's contribution to consensus.
  */
 export async function DELETE(
   request: NextRequest,
@@ -196,11 +195,8 @@ export async function DELETE(
     const { commentId } = await params;
     const userId = getUserIdFromCookie(request.headers.get('cookie'));
 
-    // Get visitorId from query params for anonymous users
     const { searchParams } = new URL(request.url);
     const visitorId = searchParams.get('visitorId');
-
-    // Use userId if authenticated, otherwise use visitorId
     const effectiveId = userId || visitorId;
 
     if (!effectiveId) {
@@ -211,40 +207,27 @@ export async function DELETE(
     }
 
     const db = getFirestoreAdmin();
-
     const evaluationId = `${effectiveId}--${commentId}`;
 
-    // Get existing evaluation
-    const evalRef = await db.collection(Collections.evaluations).doc(evaluationId).get();
-
-    if (!evalRef.exists) {
+    // Read existing evaluation to compute reverse diff
+    const evalSnap = await db.collection(Collections.evaluations).doc(evaluationId).get();
+    if (!evalSnap.exists) {
       return NextResponse.json(
         { error: 'Evaluation not found' },
         { status: 404 }
       );
     }
 
-    // Delete the evaluation
+    const oldEval = evalSnap.data()?.evaluation || 0;
+
+    // Mark with source before deleting so Firebase function skips the trigger
+    await db.collection(Collections.evaluations).doc(evaluationId).update({ source: 'sign' });
     await db.collection(Collections.evaluations).doc(evaluationId).delete();
 
-    // Recalculate consensus from remaining evaluations
-    const remainingEvaluationsSnapshot = await db
-      .collection(Collections.evaluations)
-      .where('statementId', '==', commentId)
-      .get();
+    // Atomically reverse the evaluation's contribution to consensus
+    await atomicUpdateCommentConsensus(db, commentId, -oldEval);
 
-    let newConsensus = 0;
-    remainingEvaluationsSnapshot.docs.forEach((doc) => {
-      const evalData = doc.data();
-      newConsensus += evalData.evaluation || 0;
-    });
-
-    await db.collection(Collections.statements).doc(commentId).update({
-      consensus: newConsensus,
-      lastUpdate: Date.now(),
-    });
-
-    logger.info(`[Evaluations API] Deleted evaluation: ${evaluationId}`);
+    logger.info(`[Evaluations API] Deleted evaluation: ${evaluationId} (reversed: ${-oldEval})`);
 
     return NextResponse.json({ success: true });
   } catch (error) {
