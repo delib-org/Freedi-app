@@ -497,11 +497,10 @@ export default function AdminSettingsPage() {
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>
             <label htmlFor="enableHeadingNumbering" className={styles.settingLabel}>
-              {t('settings.enableHeadingNumbering.label') || 'Enable Heading Numbering'}
+              {t('Enable Heading Numbering')}
             </label>
             <p className={styles.settingDescription}>
-              {t('settings.enableHeadingNumbering.description') ||
-               'Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)'}
+              {t('Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)')}
             </p>
           </div>
           <button
@@ -510,7 +509,7 @@ export default function AdminSettingsPage() {
             className={`${styles.toggle} ${settings.enableHeadingNumbering ? styles.active : ''}`}
             onClick={() => handleToggle('enableHeadingNumbering')}
             aria-pressed={settings.enableHeadingNumbering}
-            aria-label={t('settings.enableHeadingNumbering.label') || 'Enable Heading Numbering'}
+            aria-label={t('Enable Heading Numbering')}
           >
             <span className={styles.toggleSlider} />
           </button>

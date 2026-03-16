@@ -26,6 +26,8 @@ interface SuggestionThreadProps {
   onClose: () => void;
   /** When true, hide display names in suggestions */
   hideUserIdentity?: boolean;
+  /** Heading number of the paragraph (e.g., "1.2.3") for suggestion numbering */
+  headingNumber?: string;
 }
 
 // Seeded random for consistent random order during session
@@ -42,6 +44,7 @@ export default function SuggestionThread({
   originalContent,
   onClose: _onClose,
   hideUserIdentity = false,
+  headingNumber,
 }: SuggestionThreadProps) {
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
@@ -55,7 +58,7 @@ export default function SuggestionThread({
   const [frozenSuggestions, setFrozenSuggestions] = useState<SuggestionType[]>([]);
 
   // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
-  const suggestionStatements = useParagraphSuggestions(paragraphId);
+  const { suggestions: suggestionStatements, isLoading: isSuggestionsLoading } = useParagraphSuggestions(paragraphId);
 
   // Real-time typing status
   const { typingUsers } = useTypingStatus({
@@ -171,7 +174,7 @@ export default function SuggestionThread({
     [sortedSuggestions]
   );
 
-  const isLoading = false; // Real-time hook handles loading internally
+  const isLoading = isSuggestionsLoading;
 
   // Convert the official paragraph Statement to a Suggestion for display
   // This allows users to vote on the current version alongside alternatives
@@ -326,6 +329,7 @@ export default function SuggestionThread({
           onEdit={handleEdit}
           isCurrent={true}
           hideUserIdentity={hideUserIdentity}
+          suggestionNumber={headingNumber ? `#${headingNumber}` : undefined}
         />
       </div>
 
@@ -350,7 +354,7 @@ export default function SuggestionThread({
         ) : sortedSuggestions.length === 0 ? (
           <p className={styles.empty}>{t('No suggestions yet')}</p>
         ) : (
-          sortedSuggestions.map((suggestion) => (
+          sortedSuggestions.map((suggestion, index) => (
             <Flipped key={suggestion.suggestionId} flipId={suggestion.suggestionId}>
               <div>
                 <Suggestion
@@ -363,6 +367,7 @@ export default function SuggestionThread({
                   onEdit={handleEdit}
                   isCurrent={false}
                   hideUserIdentity={hideUserIdentity}
+                  suggestionNumber={headingNumber ? `#${headingNumber}-${index + 1}` : undefined}
                 />
               </div>
             </Flipped>

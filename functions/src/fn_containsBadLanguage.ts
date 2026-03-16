@@ -14,7 +14,9 @@ export async function containsBadLanguage(text: string): Promise<boolean> {
 		const model = getGenAI().getGenerativeModel({ model: GEMINI_MODEL });
 
 		const prompt = `
-      Detect if the following text contains any offensive, hateful, or inappropriate language. 
+      Detect if the following text contains clearly offensive, hateful, or abusive language (slurs, hate speech, personal attacks, threats, sexually explicit content).
+      Everyday language describing real-world problems is NOT offensive, even if it mentions bodily functions, waste, mess, etc.
+      Only return true for content that is clearly and intentionally harmful. When in doubt, return false.
       Return only true or false. Text: "${text}"
     `;
 

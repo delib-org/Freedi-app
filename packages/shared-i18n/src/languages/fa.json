@@ -645,6 +645,7 @@
   "Enable Anchored Sampling": "فعال‌سازی نمونه‌گیری لنگری",
   "Enable Chat": "فعال‌سازی گفتگو",
   "Enable Heading Numbering": "فعال‌سازی شماره‌گذاری عناوین",
+  "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "شماره‌گذاری سلسله‌مراتبی عناوین (1، 1.1، 1.1.1 و غیره)",
   "Enable intelligent features and automation": "فعال‌سازی ویژگی‌های هوشمند و اتوماسیون",
   "Enable interactions": "فعال‌سازی تعاملات",
   "Enable Joining an option": "فعال‌سازی پیوستن به یک گزینه",

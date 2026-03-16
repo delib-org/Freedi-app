@@ -44,6 +44,8 @@ interface DocumentClientProps {
   requireGoogleLogin?: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity?: boolean;
+  /** Map of paragraphId to heading number string (e.g., "1.2.1") */
+  headingNumbers?: Map<string, string>;
   children: React.ReactNode;
 }
 
@@ -60,6 +62,7 @@ export default function DocumentClient({
   textDirection = 'ltr',
   requireGoogleLogin = false,
   hideUserIdentity = true,
+  headingNumbers = new Map(),
   children,
 }: DocumentClientProps) {
   const { t } = useTranslation();
@@ -498,6 +501,7 @@ export default function DocumentClient({
             originalContent={currentParagraph?.content || ''}
             onClose={closeModal}
             hideUserIdentity={hideUserIdentity}
+            headingNumber={headingNumbers.get(modalContext.paragraphId)}
           />
         </Modal>
       )}

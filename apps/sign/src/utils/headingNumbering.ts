@@ -31,23 +31,26 @@ function isNumberable(type: ParagraphType): boolean {
 }
 
 /**
- * Calculates hierarchical numbering for document headings and paragraphs
+ * Calculates hierarchical numbering for document headings and paragraphs.
+ * All items (headings and paragraphs) share a single sequential counter
+ * at each depth level. A sub-heading opens a new depth level.
  *
  * @param paragraphs - Array of paragraphs sorted by order
  * @returns Map of paragraphId -> number string (e.g., "1.2.1")
  *
  * Examples:
- * - h1, h2, h3 → "1", "1.1", "1.1.1"
- * - h1, paragraph, paragraph → "1", "1.1", "1.2"
- * - h1, h2, paragraph, paragraph, h2 → "1", "1.1", "1.1.1", "1.1.2", "1.2"
- * - h1, h3 (skip h2) → "1", "1.0.1"
- * - h1, h2, h1, h2 → "1", "1.1", "2", "2.1"
+ * - h1, p, p, h2, p → "1", "1.1", "1.2", "1.3", "1.3.1"
+ * - h1, h2, p, p, h2 → "1", "1.1", "1.1.1", "1.1.2", "1.2"
+ * - h1, p, p, h1, p → "1", "1.1", "1.2", "2", "2.1"
  */
 export function calculateHeadingNumbers(paragraphs: Paragraph[]): Map<string, string> {
   const numbers = new Map<string, string>();
-  const counters = [0, 0, 0, 0, 0, 0]; // Counters for h1-h6
-  let lastLevel = -1; // Track last heading level (-1 = no headings yet)
-  let paragraphCounter = 0; // Counter for paragraphs under current heading
+
+  // Stack tracks [headingLevel, childCounter] at each nesting depth
+  // headingLevel: the ParagraphType heading level (0-5) that opened this depth
+  // childCounter: sequential counter for all children at this depth
+  const stack: Array<{ headingLevel: number; counter: number }> = [];
+  let topCounter = 0; // Counter for top-level items (before or at h1 level)
 
   for (const para of paragraphs) {
     if (!isNumberable(para.type)) continue;
@@ -56,47 +59,64 @@ export function calculateHeadingNumbers(paragraphs: Paragraph[]): Map<string, st
       const level = getHeadingLevel(para.type);
       if (level === null) continue;
 
-      // Reset paragraph counter when encountering a new heading
-      paragraphCounter = 0;
-
-      // Reset deeper counters when returning to a higher/same level
-      if (level <= lastLevel) {
-        for (let i = level + 1; i < 6; i++) {
-          counters[i] = 0;
-        }
-      }
-
-      // Fill skipped levels with 0
-      if (lastLevel >= 0 && level > lastLevel + 1) {
-        for (let i = lastLevel + 1; i < level; i++) {
-          counters[i] = 0;
-        }
-      }
-
-      // Increment counter for current level
-      counters[level]++;
-      lastLevel = level;
-
-      // Build number string: join all counters up to current level
-      const numberParts = counters.slice(0, level + 1);
-      const numberString = numberParts.join('.');
-
-      numbers.set(para.paragraphId, numberString);
-    } else {
-      // Regular paragraph: number as sub-item under the last heading
-      paragraphCounter++;
-
-      if (lastLevel >= 0) {
-        // Under a heading: e.g., "1.1" heading → "1.1.1", "1.1.2" paragraphs
-        const headingParts = counters.slice(0, lastLevel + 1);
-        const numberString = `${headingParts.join('.')}.${paragraphCounter}`;
-        numbers.set(para.paragraphId, numberString);
+      if (level === 0) {
+        // Top-level heading (h1): reset stack, increment top counter
+        stack.length = 0;
+        topCounter++;
+        numbers.set(para.paragraphId, String(topCounter));
+        // Push this h1 onto stack so children nest under it
+        stack.push({ headingLevel: 0, counter: 0 });
       } else {
-        // Before any heading: just sequential numbers
-        numbers.set(para.paragraphId, String(paragraphCounter));
+        // Sub-heading: it's a child item at the current depth
+        // Pop stack back to the appropriate depth for this heading level
+        while (stack.length > 0 && stack[stack.length - 1].headingLevel >= level) {
+          stack.pop();
+        }
+
+        if (stack.length === 0) {
+          // No parent heading — treat as top-level
+          topCounter++;
+          numbers.set(para.paragraphId, String(topCounter));
+          stack.push({ headingLevel: level, counter: 0 });
+        } else {
+          // Increment parent's child counter (this heading is a sibling of paragraphs)
+          stack[stack.length - 1].counter++;
+          const parentNumber = buildNumber(topCounter, stack);
+          numbers.set(para.paragraphId, parentNumber);
+          // Push this heading so deeper items nest under it
+          stack.push({ headingLevel: level, counter: 0 });
+        }
+      }
+    } else {
+      // Regular paragraph or list item: child at current depth
+      if (stack.length === 0) {
+        // Before any heading
+        topCounter++;
+        numbers.set(para.paragraphId, String(topCounter));
+      } else {
+        stack[stack.length - 1].counter++;
+        const numberString = buildNumber(topCounter, stack);
+        numbers.set(para.paragraphId, numberString);
       }
     }
   }
 
   return numbers;
+}
+
+/**
+ * Builds the number string from the top counter and stack state.
+ */
+function buildNumber(
+  topCounter: number,
+  stack: Array<{ headingLevel: number; counter: number }>
+): string {
+  const parts = [String(topCounter)];
+  for (const frame of stack) {
+    if (frame.counter > 0) {
+      parts.push(String(frame.counter));
+    }
+  }
+
+  return parts.join('.');
 }

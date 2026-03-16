@@ -1535,6 +1535,8 @@
   "Suggestion updated": "Suggestie bijgewerkt",
   "Failed to submit suggestion": "Suggestie indienen mislukt",
   "Edit Suggestion": "Suggestie Bewerken",
+  "Enable Heading Numbering": "Kopnummering Inschakelen",
+  "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "Koppen automatisch hiërarchisch nummeren (1, 1.1, 1.1.1, enz.)",
   "Enable Suggestions": "Suggesties Inschakelen",
   "Allow users to suggest alternative text": "Gebruikers toestaan alternatieve tekst voor te stellen",
   "Vote up": "Omhoog stemmen",

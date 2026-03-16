@@ -55,9 +55,17 @@
   text-overflow: ellipsis;
 }
 
+.suggestionNumber {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
 .date {
   font-size: 0.75rem;
   color: var(--text-caption);
+  margin-inline-start: auto; // Push date to the end
 }
 
 .ownerActions {

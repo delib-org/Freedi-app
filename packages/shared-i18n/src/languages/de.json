@@ -1535,6 +1535,8 @@
   "Suggestion updated": "Vorschlag aktualisiert",
   "Failed to submit suggestion": "Vorschlag konnte nicht eingereicht werden",
   "Edit Suggestion": "Vorschlag bearbeiten",
+  "Enable Heading Numbering": "Überschriftennummerierung aktivieren",
+  "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "Überschriften automatisch hierarchisch nummerieren (1, 1.1, 1.1.1 usw.)",
   "Enable Suggestions": "Vorschläge aktivieren",
   "Allow users to suggest alternative text": "Benutzern erlauben, alternativen Text vorzuschlagen",
   "Vote up": "Hochstimmen",

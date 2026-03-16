@@ -14,6 +14,7 @@ import {
   removeSuggestionEvaluation,
   getUserEvaluation,
 } from '@/controllers/db/evaluations/setSuggestionEvaluation';
+import { calcBinaryConsensus } from '@freedi/shared-types';
 import { useUIStore } from '@/store/uiStore';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -24,6 +25,7 @@ interface UseOptimisticVoteParams {
   userDisplayName: string | null;
   initialPositiveCount?: number;
   initialNegativeCount?: number;
+  initialConsensus?: number;
   isOwner: boolean;
 }
 
@@ -34,6 +36,8 @@ interface OptimisticVoteState {
   positiveCount: number;
   /** Optimistic negative vote count */
   negativeCount: number;
+  /** Optimistic consensus score */
+  consensus: number;
   /** Whether consensus is being recalculated (show loader) */
   isConsensusLoading: boolean;
   /** Whether a vote operation is in progress */
@@ -70,12 +74,14 @@ export function useOptimisticVote({
   userDisplayName,
   initialPositiveCount = 0,
   initialNegativeCount = 0,
+  initialConsensus = 0,
   isOwner,
 }: UseOptimisticVoteParams): OptimisticVoteState {
   // Optimistic state (what we show immediately)
   const [optimisticEvaluation, setOptimisticEvaluation] = useState<number | null>(null);
   const [optimisticPositive, setOptimisticPositive] = useState(initialPositiveCount);
   const [optimisticNegative, setOptimisticNegative] = useState(initialNegativeCount);
+  const [optimisticConsensus, setOptimisticConsensus] = useState(initialConsensus);
 
   // Loading states
   const [isConsensusLoading, setIsConsensusLoading] = useState(false);
@@ -96,8 +102,9 @@ export function useOptimisticVote({
     if (pendingVoteCount.current === 0) {
       setOptimisticPositive(initialPositiveCount);
       setOptimisticNegative(initialNegativeCount);
+      setOptimisticConsensus(initialConsensus);
     }
-  }, [initialPositiveCount, initialNegativeCount]);
+  }, [initialPositiveCount, initialNegativeCount, initialConsensus]);
 
   // Fetch user's existing evaluation from Firestore on mount
   useEffect(() => {
@@ -172,6 +179,7 @@ export function useOptimisticVote({
       const previousEvaluation = optimisticEvaluation;
       const previousPositive = optimisticPositive;
       const previousNegative = optimisticNegative;
+      const previousConsensus = optimisticConsensus;
 
       // Determine new evaluation: toggle off if same vote, otherwise set new vote
       const newEvaluation = previousEvaluation === vote ? null : vote;
@@ -186,11 +194,12 @@ export function useOptimisticVote({
       pendingVoteCount.current += 1;
       setIsVoting(true);
       setOptimisticEvaluation(newEvaluation);
-      setOptimisticPositive((prev) => Math.max(0, prev + positiveDelta));
-      setOptimisticNegative((prev) => Math.max(0, prev + negativeDelta));
-
-      // Show consensus loading indicator
-      setIsConsensusLoading(true);
+      const newPositive = Math.max(0, optimisticPositive + positiveDelta);
+      const newNegative = Math.max(0, optimisticNegative + negativeDelta);
+      setOptimisticPositive(newPositive);
+      setOptimisticNegative(newNegative);
+      // Calculate optimistic consensus immediately using the same formula as the server
+      setOptimisticConsensus(calcBinaryConsensus(newPositive, newNegative));
 
       try {
         const displayName = userDisplayName || 'Anonymous';
@@ -213,13 +222,12 @@ export function useOptimisticVote({
           addUserInteraction(paragraphId);
         }
 
-        // Clear consensus loading after a short delay to allow real-time update
+        // API now updates Statement directly, so consensus loading can clear immediately
+        setIsConsensusLoading(false);
+        // Allow server values to sync after a short delay for the real-time listener
         setTimeout(() => {
           pendingVoteCount.current = Math.max(0, pendingVoteCount.current - 1);
-          if (pendingVoteCount.current === 0) {
-            setIsConsensusLoading(false);
-          }
-        }, 1500);
+        }, 500);
       } catch (err) {
         // ROLLBACK: Revert optimistic update on failure
         logError(err, {
@@ -231,10 +239,9 @@ export function useOptimisticVote({
         setOptimisticEvaluation(previousEvaluation);
         setOptimisticPositive(previousPositive);
         setOptimisticNegative(previousNegative);
+        setOptimisticConsensus(previousConsensus);
         pendingVoteCount.current = Math.max(0, pendingVoteCount.current - 1);
-        if (pendingVoteCount.current === 0) {
-          setIsConsensusLoading(false);
-        }
+        setIsConsensusLoading(false);
 
         // Show error feedback
         showToast('error', 'Failed to save your vote. Please try again.');
@@ -249,6 +256,7 @@ export function useOptimisticVote({
       optimisticEvaluation,
       optimisticPositive,
       optimisticNegative,
+      optimisticConsensus,
       calculateVoteDelta,
       suggestionId,
       userDisplayName,
@@ -262,6 +270,7 @@ export function useOptimisticVote({
     userEvaluation: optimisticEvaluation,
     positiveCount: optimisticPositive,
     negativeCount: optimisticNegative,
+    consensus: optimisticConsensus,
     isConsensusLoading,
     isVoting,
     handleVote,
