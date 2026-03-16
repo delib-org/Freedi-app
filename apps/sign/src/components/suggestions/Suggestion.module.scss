@@ -158,6 +158,38 @@
   }
 }
 
+/* Accept suggestion button - admin action */
+.acceptButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 16px;
+  margin-top: var(--spacing-xs);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--agree, #4caf50);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
 /* Comment toggle button */
 .commentToggle {
   background: none;

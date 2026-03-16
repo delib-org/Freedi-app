@@ -316,6 +316,38 @@ export default function SuggestionThread({
     setShowAddModal(true);
   };
 
+  // Handle accept suggestion (admin replaces paragraph content)
+  const handleAccept = useCallback(async (suggestion: SuggestionType) => {
+    if (!window.confirm(t('Are you sure you want to replace the paragraph with this suggestion?'))) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/paragraphs/${paragraphId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId,
+          content: suggestion.suggestedContent,
+          type: 'paragraph',
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to accept suggestion');
+      }
+
+      // Real-time listener will update the paragraph content automatically
+    } catch (err) {
+      logError(err, {
+        operation: 'SuggestionThread.handleAccept',
+        userId: user?.uid || undefined,
+        metadata: { paragraphId, suggestionId: suggestion.suggestionId },
+      });
+    }
+  }, [paragraphId, documentId, user, t]);
+
   // Handle add/edit success
   const handleModalSuccess = () => {
     setShowAddModal(false);
@@ -474,6 +506,8 @@ export default function SuggestionThread({
                     isRefinementPhase &&
                     (isAdmin || (!!user && suggestion.creatorId === user.uid))
                   }
+                  showAcceptButton={isAdmin}
+                  onAccept={handleAccept}
                 />
                 {/* AI Improve Panel inline below the suggestion being improved */}
                 {improvingSuggestionId === suggestion.suggestionId && improveResult && (

@@ -33,6 +33,10 @@ interface SuggestionProps {
   onImproveWithAI?: (suggestionId: string) => void;
   /** Whether improve button should be shown */
   showImproveButton?: boolean;
+  /** Whether to show the "Accept" button (admin only, non-current suggestions) */
+  showAcceptButton?: boolean;
+  /** Callback when admin accepts this suggestion to replace the paragraph */
+  onAccept?: (suggestion: SuggestionType) => void;
 }
 
 /**
@@ -80,6 +84,8 @@ const Suggestion = memo(function Suggestion({
   isLateAddition = false,
   onImproveWithAI,
   showImproveButton = false,
+  showAcceptButton = false,
+  onAccept,
 }: SuggestionProps) {
   const { t, tWithParams } = useTranslation();
   const [showComments, setShowComments] = useState(false);
@@ -282,6 +288,20 @@ const Suggestion = memo(function Suggestion({
         onVote={handleVote}
         disabled={isOwner}
       />
+
+      {/* Accept suggestion button - admin only, non-current suggestions */}
+      {showAcceptButton && onAccept && !isCurrent && (
+        <button
+          type="button"
+          className={styles.acceptButton}
+          onClick={() => onAccept(suggestion)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+          </svg>
+          {t('Accept Suggestion')}
+        </button>
+      )}
 
       {/* Comment toggle */}
       <button
