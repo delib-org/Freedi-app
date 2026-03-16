@@ -56,6 +56,13 @@
 // Content wrapper for proper layout
 .contentWrapper {
   position: relative;
+
+  // When numbered, use flex to keep number and content on the same line
+  &.numbered {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3em;
+  }
 }
 
 .content {
@@ -196,11 +203,11 @@
   color: var(--text-primary);
 }
 
-// Inline number prefix (e.g., "1.2.3.") - inherits all styles from parent element
-// LRM characters in the HTML ensure correct LTR rendering in RTL documents
+// Inline number prefix (e.g., "1.2.3.") rendered as a separate flex item
 .inlineNumber {
   user-select: none; // Don't include in copy/paste
-  margin-inline-end: 0.3em;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 // List item type

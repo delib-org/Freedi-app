@@ -1559,6 +1559,8 @@
   "Suggestion updated": "تم تحديث الاقتراح",
   "Failed to submit suggestion": "فشل في إرسال الاقتراح",
   "Edit Suggestion": "تعديل الاقتراح",
+  "Enable Heading Numbering": "تفعيل ترقيم العناوين",
+  "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "ترقيم العناوين تلقائيًا بشكل هرمي (1، 1.1، 1.1.1، إلخ)",
   "Enable Suggestions": "تفعيل الاقتراحات",
   "Allow users to suggest alternative text": "السماح للمستخدمين باقتراح نص بديل",
   "Vote up": "تصويت إيجابي",

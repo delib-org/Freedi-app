@@ -238,14 +238,6 @@ export default function ParagraphCard({
     [paragraph.content]
   );
 
-  // Build content HTML with inline number prefix when needed
-  // Uses LRM (\u200E) characters to ensure correct LTR rendering of numbers in RTL
-  const numberedContent = useMemo(() => {
-    if (!headingNumber) return sanitizedContent;
-    const LRM = '\u200E';
-
-    return `<span class="${styles.inlineNumber}">${LRM}${headingNumber}.${LRM}</span> ${sanitizedContent}`;
-  }, [headingNumber, sanitizedContent]);
 
   // Render content based on paragraph type
   // Content may contain HTML formatting tags (bold, italic, etc.)
@@ -257,33 +249,33 @@ export default function ParagraphCard({
     switch (paragraphType) {
       case ParagraphType.h1:
         return (
-          <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <h1 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h2:
         return (
-          <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <h2 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h3:
         return (
-          <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <h3 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h4:
         return (
-          <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <h4 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h5:
         return (
-          <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <h5 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
       case ParagraphType.h6:
         return (
-          <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <h6 className={styles.content} style={headerStyle} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
       case ParagraphType.li:
         return (
           <div className={styles.listItem}>
             <span className={styles.bullet} aria-hidden="true">•</span>
-            <p className={styles.content} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+            <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
           </div>
         );
       case ParagraphType.table:
@@ -335,7 +327,7 @@ export default function ParagraphCard({
       }
       default:
         return (
-          <p className={styles.content} dangerouslySetInnerHTML={{ __html: numberedContent }} suppressHydrationWarning />
+          <p className={styles.content} dangerouslySetInnerHTML={{ __html: sanitizedContent }} suppressHydrationWarning />
         );
     }
   };
@@ -371,7 +363,10 @@ export default function ParagraphCard({
         </div>
       )}
 
-      <div className={styles.contentWrapper} suppressHydrationWarning>
+      <div className={clsx(styles.contentWrapper, headingNumber && styles.numbered)} suppressHydrationWarning>
+        {headingNumber && (
+          <span className={styles.inlineNumber}>{headingNumber}.</span>
+        )}
         {renderContent()}
       </div>
 
