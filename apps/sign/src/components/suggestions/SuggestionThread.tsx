@@ -317,20 +317,19 @@ export default function SuggestionThread({
     setShowAddModal(true);
   };
 
-  // Handle accept suggestion (admin replaces paragraph content)
+  // Handle accept suggestion (admin replaces paragraph with versioning)
   const handleAccept = useCallback(async (suggestion: SuggestionType) => {
     if (!window.confirm(t('Are you sure you want to replace the paragraph with this suggestion?'))) {
       return;
     }
 
     try {
-      const response = await fetch(`/api/admin/paragraphs/${paragraphId}`, {
-        method: 'PATCH',
+      const response = await fetch(`/api/admin/suggestions/${suggestion.suggestionId}/accept`, {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           documentId,
-          content: suggestion.suggestedContent,
-          type: 'paragraph',
+          paragraphId,
         }),
       });
 
@@ -340,6 +339,8 @@ export default function SuggestionThread({
       }
 
       // Real-time listener will update the paragraph content automatically
+      // Accepted suggestion will be filtered out (promotedToVersion is set)
+      // Other suggestions will be marked with forVersion
     } catch (err) {
       logError(err, {
         operation: 'SuggestionThread.handleAccept',
