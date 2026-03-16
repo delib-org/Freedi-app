@@ -30,14 +30,18 @@ import { QUERY_LIMITS } from '@/constants/common';
 export function useParagraphSuggestions(
   paragraphId: string | null,
   enabled: boolean = true
-): Statement[] {
+): { suggestions: Statement[]; isLoading: boolean } {
   const [suggestions, setSuggestions] = useState<Statement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!enabled || !paragraphId) {
       setSuggestions([]);
+      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
 
     let unsubscribe: Unsubscribe | null = null;
 
@@ -79,12 +83,14 @@ export function useParagraphSuggestions(
           });
 
           setSuggestions(updatedSuggestions);
+          setIsLoading(false);
         },
         (error) => {
           logError(error, {
             operation: 'hooks.useParagraphSuggestions',
             paragraphId,
           });
+          setIsLoading(false);
         }
       );
     } catch (error) {
@@ -92,6 +98,7 @@ export function useParagraphSuggestions(
         operation: 'hooks.useParagraphSuggestions.setup',
         paragraphId,
       });
+      setIsLoading(false);
     }
 
     // Cleanup on unmount
@@ -102,7 +109,7 @@ export function useParagraphSuggestions(
     };
   }, [paragraphId, enabled]);
 
-  return suggestions;
+  return { suggestions, isLoading };
 }
 
 /**
@@ -212,7 +219,7 @@ export function useWinningSuggestion(
   paragraphId: string | null,
   enabled: boolean = true
 ): Statement | null {
-  const suggestions = useParagraphSuggestions(paragraphId, enabled);
+  const { suggestions } = useParagraphSuggestions(paragraphId, enabled);
 
   // First suggestion is winning (already sorted by consensus descending)
   return suggestions.length > 0 ? suggestions[0]! : null;

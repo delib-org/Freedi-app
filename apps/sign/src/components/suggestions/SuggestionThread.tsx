@@ -55,7 +55,7 @@ export default function SuggestionThread({
   const [frozenSuggestions, setFrozenSuggestions] = useState<SuggestionType[]>([]);
 
   // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
-  const suggestionStatements = useParagraphSuggestions(paragraphId);
+  const { suggestions: suggestionStatements, isLoading: isSuggestionsLoading } = useParagraphSuggestions(paragraphId);
 
   // Real-time typing status
   const { typingUsers } = useTypingStatus({
@@ -171,7 +171,7 @@ export default function SuggestionThread({
     [sortedSuggestions]
   );
 
-  const isLoading = false; // Real-time hook handles loading internally
+  const isLoading = isSuggestionsLoading;
 
   // Convert the official paragraph Statement to a Suggestion for display
   // This allows users to vote on the current version alongside alternatives
