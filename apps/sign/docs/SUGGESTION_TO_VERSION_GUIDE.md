@@ -25,27 +25,64 @@ This means every paragraph change is tracked, reversible, and transparent.
 
 | # | Pathway | When to use | Complexity |
 |---|---------|------------|------------|
-| 1 | **Accept Suggestion** | A good suggestion exists - accept it now | Simplest |
-| 2 | **Refinement + AI Synthesis** | Many suggestions - use AI to combine the best ideas first | Medium |
+| 1 | **Accept Top / Accept** | A good suggestion exists - accept it from the Admin Action Bar or per-suggestion | Simplest |
+| 2 | **AI Synthesize** | Many suggestions - AI combines the best ideas, you review and accept in one step | Simple |
 | 3 | **Review Queue** | Auto-surface suggestions that reach consensus threshold | Medium |
 | 4 | **AI Version Generation** | Revise the entire document at once based on all feedback | Advanced |
 
 ---
 
-## Pathway 1: Accept Suggestion
+## The Admin Action Bar
 
-**Best for:** A paragraph has a suggestion you like. One click to make it official.
+When an admin opens a Suggestion Thread, the **Admin Action Bar** appears at the top. It replaces the old Phase Controls + separate AI Synthesis Panel with a single, guided interface.
 
-### Steps
+### What it shows
+
+The bar adapts based on the state of community feedback:
+
+**Collecting** (few/no suggestions, or low consensus):
+```
+📊 2 suggestions · Top consensus: 15%
+Waiting for more community input
+```
+No action buttons — just status. Wait for more community votes.
+
+**Ready to Review** (suggestions exist with consensus >= 30%):
+```
+📊 5 suggestions · Top consensus: 78%
+[✓ Accept Top]  [⚡ AI Synthesize]  [···]
+```
+Two primary actions appear:
+- **Accept Top** — accept the highest-consensus suggestion (with inline diff preview)
+- **AI Synthesize** — combine top suggestions with AI, edit, then accept the result directly
+- **[···]** overflow menu — "Enter Refinement Phase" (advanced workflow, requires Refinement enabled in settings)
+
+### How the actions work
+
+Each action flows through inline panels — no separate modals or pages needed.
+
+---
+
+## Pathway 1: Accept Top / Accept Suggestion
+
+**Best for:** A paragraph has a suggestion you like. Two clicks to make it official.
+
+### Via the Admin Action Bar ("Accept Top")
 
 1. Open the document and click on a paragraph to open its **Suggestion Thread**
-2. At the top you see the **Current Version** (the official paragraph text, also voteable)
-3. Below it, see all **Suggested Alternatives** with their consensus scores
-4. Click the green **"Accept Suggestion"** button on the one you want
-5. Confirm in the dialog
-6. Done - the paragraph updates for all users in real-time
+2. The **Admin Action Bar** at the top shows suggestion count and top consensus score
+3. Click **"Accept Top"** (or just **"Accept"** when there's only 1 suggestion)
+4. The bar expands to show an **inline diff**:
+   - **Current** (red) — the existing paragraph text
+   - **New** (green) — the top suggestion text
+5. Click **"Confirm Accept"**
+6. The bar briefly shows a success message, then returns to status
 
-### What happens
+### Via individual suggestion ("Accept" button)
+
+Each suggestion card also has a green **"Accept"** button (admin-only). Clicking it shows a confirmation dialog and accepts that specific suggestion.
+
+### What happens on accept
 
 - Old paragraph text -> **version history** (preserved, not lost)
 - Suggestion text -> **new official paragraph**
@@ -54,58 +91,39 @@ This means every paragraph change is tracked, reversible, and transparent.
 - Votes -> **reset to zero** on the new paragraph text
 - Version number -> incremented (e.g., v1 -> v2)
 
-### When NOT to use this
-
-- When there are many competing suggestions and you're not sure which is best (use Pathway 2 instead)
-- When you want to combine ideas from multiple suggestions (use Pathway 2 with AI synthesis)
-
 ---
 
-## Pathway 2: Refinement + AI Synthesis
+## Pathway 2: AI Synthesize
 
-**Best for:** A paragraph has many suggestions. You want AI to combine the best ideas into one, then accept that.
+**Best for:** A paragraph has many suggestions. AI combines the best ideas into one text that you review and accept in a single flow.
 
-### Setup (one-time)
-
-1. Go to **Admin Panel > Settings**
-2. Enable **"Suggestions"** (if not already on)
-3. Enable **"Refinement"** (appears when suggestions are enabled)
-
-### Workflow
-
-#### Step A: Synthesize
+### Steps
 
 1. Open the **Suggestion Thread** for a paragraph
-2. You'll see **Phase Controls** at the top (admin-only)
-3. Click **"Synthesize with AI"**
-4. A panel expands showing:
-   - A **consensus threshold slider** - controls which suggestions feed the AI (e.g., only suggestions with >20% consensus)
-   - A **preview** of which suggestions are above the threshold
-5. Click **"Generate"**
-6. AI produces a **synthesized suggestion** combining the strongest ideas
-7. **Edit** the result if you want to adjust it
-8. Click **"Publish as AI Suggestion"** - this adds it to the thread with a blue "AI Synthesis" badge
-9. The community can now vote on the AI synthesis alongside other suggestions
+2. In the **Admin Action Bar**, click **"AI Synthesize"**
+3. The bar shows a loading state while AI processes the top suggestions
+4. When done, the bar expands with:
+   - An **editable textarea** containing the AI-synthesized text
+   - A **"Show AI Reasoning"** toggle to see why the AI made its choices
+5. **Edit** the synthesized text if you want to adjust it
+6. Click **"Accept Synthesis"**
+7. The system creates the suggestion and accepts it in one step (versioning, history, and evaluation reset all happen automatically)
+8. The bar briefly shows a success message
 
-#### Step B: Refinement Phase (optional)
+### Key difference from the old workflow
 
-If you want to narrow the field before accepting:
+Previously, AI synthesis was a multi-step process: Synthesize → Publish as AI Suggestion → Wait for votes → Accept. Now it's a single flow: Synthesize → Edit → Accept. The admin decides right away.
 
-1. Click **"Enter Refinement Phase"**
-2. Low-consensus suggestions are **hidden** from regular users (you can still see them in a collapsed section)
-3. Only top suggestions + the AI synthesis remain visible
-4. Users can still:
-   - **Vote** on the visible suggestions
-   - **Comment** on them
-   - **Add new suggestions** (shown with a "Late Addition" badge)
-5. Use **"Improve with AI"** on any suggestion to refine it based on its comments
+### Refinement Phase (advanced, optional)
 
-#### Step C: Accept
+For admins who want the community to vote on the AI synthesis before accepting, the overflow menu (**[···]**) offers **"Enter Refinement Phase"**. This requires Refinement to be enabled in Settings.
 
-1. Once you're satisfied with a suggestion (AI-synthesized or community-written):
-2. Click **"Accept Suggestion"** on it
-3. Same versioning as Pathway 1 (history preserved, votes reset, version incremented)
-4. Click **"End Refinement"** to restore normal mode for this paragraph
+In refinement mode:
+- Low-consensus suggestions are **hidden** from regular users
+- Only top suggestions + AI synthesis remain visible
+- Users can still **vote**, **comment**, and **add new suggestions** (shown with a "Late Addition" badge)
+- Use **"Improve with AI"** on any suggestion to refine it based on its comments
+- Click **"End Refinement"** to restore normal mode
 
 ---
 
@@ -224,10 +242,13 @@ This means:
 
 ## Tips
 
-- **Start with Pathway 1** - it's the simplest and covers most cases
-- **Use Pathway 2 (Refinement)** when a paragraph has 5+ competing suggestions
+- **Start with the Admin Action Bar** - it guides you with the right actions based on community feedback state
+- **Accept Top** when a clear winner emerges (high consensus)
+- **AI Synthesize** when multiple suggestions have good ideas you want combined
+- **Refinement Phase** (overflow menu) when you want the community to vote on the AI synthesis first
 - **Use Pathway 3 (Review Queue)** when you want a more structured, ongoing workflow
 - **Use Pathway 4 (AI Versions)** for periodic comprehensive revisions (e.g., monthly review)
 - The **consensus score** reflects community agreement: higher = more net support
+- Actions appear only when consensus reaches 30% — below that, the bar shows "Waiting for more community input"
 - After accepting a suggestion, the community **votes again** on the new text - this creates a continuous improvement loop
 - You can view **version history** for any paragraph to see how it evolved over time

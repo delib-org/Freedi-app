@@ -1956,5 +1956,17 @@
   "Modified": "معدّل",
   "Unchanged": "بدون تغيير",
   "Approval: {{rate}}%": "الموافقة: {{rate}}%",
-  "Consensus: {{score}}": "التوافق: {{score}}"
+  "Consensus: {{score}}": "التوافق: {{score}}",
+  "Accept Top": "قبول الأعلى",
+  "AI Synthesize": "تجميع ذكي",
+  "Accept Synthesis": "قبول التجميع",
+  "Confirm Accept": "تأكيد القبول",
+  "Top consensus": "أعلى توافق",
+  "Combining top suggestions...": "يتم دمج أفضل الاقتراحات...",
+  "Waiting for more community input": "في انتظار مزيد من مشاركة المجتمع",
+  "More options": "خيارات إضافية",
+  "Accepting...": "جاري القبول...",
+  "Suggestion accepted": "تم قبول الاقتراح",
+  "Synthesis accepted": "تم قبول التجميع",
+  "Review: Accept this suggestion?": "مراجعة: هل تريد قبول هذا الاقتراح؟"
 }

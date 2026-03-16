@@ -19,8 +19,7 @@ import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
 import SortControls, { SortType } from './SortControls';
 import TypingIndicator from './TypingIndicator';
-import PhaseControls from './PhaseControls';
-import AISynthesisPanel from './AISynthesisPanel';
+import AdminActionBar from './AdminActionBar';
 import AIImprovePanel from './AIImprovePanel';
 import HiddenSuggestions from './HiddenSuggestions';
 import Modal from '../shared/Modal';
@@ -75,7 +74,6 @@ export default function SuggestionThread({
   const { refinement } = useRefinementPhase(paragraphId, enableRefinement);
   const {
     isLoading: isAILoading,
-    synthesisResult,
     improveResult,
     synthesize,
     improve,
@@ -391,28 +389,17 @@ export default function SuggestionThread({
 
   return (
     <div className={styles.container}>
-      {/* Phase Controls - admin only when refinement is enabled */}
-      {isAdmin && enableRefinement && (
-        <PhaseControls
-          paragraphId={paragraphId}
-          refinement={refinement}
-          suggestions={suggestions}
-          originalContent={originalContent}
-          onSynthesize={synthesize}
-          onSetPhase={setPhase}
-          isLoading={isAILoading}
-        />
-      )}
-
-      {/* AI Synthesis Result Panel */}
-      {synthesisResult && (
-        <AISynthesisPanel
-          synthesisResult={synthesisResult}
+      {/* Admin Action Bar - replaces PhaseControls + AISynthesisPanel */}
+      {isAdmin && (
+        <AdminActionBar
           paragraphId={paragraphId}
           documentId={documentId}
           originalContent={originalContent}
-          onPublished={() => resetAI()}
-          onDismiss={() => resetAI()}
+          suggestions={suggestions}
+          enableRefinement={enableRefinement}
+          onSynthesize={synthesize}
+          onSetPhase={setPhase}
+          isAILoading={isAILoading}
         />
       )}
 

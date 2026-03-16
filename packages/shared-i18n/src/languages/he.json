@@ -2661,5 +2661,17 @@
   "noIncoherencesFound": "לא נמצאו בעיות קוהרנטיות",
   "coherenceCheckFailed": "ניתוח קוהרנטיות לא זמין",
   "feedback items addressed": "פריטי משוב שטופלו",
-  "No versions found": "לא נמצאו גרסאות"
+  "No versions found": "לא נמצאו גרסאות",
+  "Accept Top": "אשר מוביל",
+  "AI Synthesize": "סנתז AI",
+  "Accept Synthesis": "אשר סנתזה",
+  "Confirm Accept": "אשר קבלה",
+  "Top consensus": "קונצנזוס מוביל",
+  "Combining top suggestions...": "משלב הצעות מובילות...",
+  "Waiting for more community input": "ממתין לקלט נוסף מהקהילה",
+  "More options": "אפשרויות נוספות",
+  "Accepting...": "מאשר...",
+  "Suggestion accepted": "ההצעה אושרה",
+  "Synthesis accepted": "הסנתזה אושרה",
+  "Review: Accept this suggestion?": "סקירה: לאשר הצעה זו?"
 }

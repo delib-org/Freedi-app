@@ -1932,5 +1932,17 @@
   "Modified": "Gewijzigd",
   "Unchanged": "Ongewijzigd",
   "Approval: {{rate}}%": "Goedkeuring: {{rate}}%",
-  "Consensus: {{score}}": "Consensus: {{score}}"
+  "Consensus: {{score}}": "Consensus: {{score}}",
+  "Accept Top": "Top accepteren",
+  "AI Synthesize": "AI-synthese",
+  "Accept Synthesis": "Synthese accepteren",
+  "Confirm Accept": "Accepteren bevestigen",
+  "Top consensus": "Hoogste consensus",
+  "Combining top suggestions...": "Topvoorstellen worden gecombineerd...",
+  "Waiting for more community input": "Wachten op meer input van de gemeenschap",
+  "More options": "Meer opties",
+  "Accepting...": "Wordt geaccepteerd...",
+  "Suggestion accepted": "Voorstel geaccepteerd",
+  "Synthesis accepted": "Synthese geaccepteerd",
+  "Review: Accept this suggestion?": "Beoordelen: Dit voorstel accepteren?"
 }

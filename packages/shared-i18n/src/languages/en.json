@@ -2674,5 +2674,17 @@
   "solutionsOnboarding.addSolution": "Add a solution",
   "solutionsOnboarding.addSolutionDesc": "Tap the + button below to add your solution directly.",
   "solutionsOnboarding.convertFromDiscussion": "Or convert from discussion",
-  "solutionsOnboarding.convertFromDiscussionDesc": "You can also write in the Discussion tab and convert any message to a solution using the message menu."
+  "solutionsOnboarding.convertFromDiscussionDesc": "You can also write in the Discussion tab and convert any message to a solution using the message menu.",
+  "Accept Top": "Accept Top",
+  "AI Synthesize": "AI Synthesize",
+  "Accept Synthesis": "Accept Synthesis",
+  "Confirm Accept": "Confirm Accept",
+  "Top consensus": "Top consensus",
+  "Combining top suggestions...": "Combining top suggestions...",
+  "Waiting for more community input": "Waiting for more community input",
+  "More options": "More options",
+  "Accepting...": "Accepting...",
+  "Suggestion accepted": "Suggestion accepted",
+  "Synthesis accepted": "Synthesis accepted",
+  "Review: Accept this suggestion?": "Review: Accept this suggestion?"
 }

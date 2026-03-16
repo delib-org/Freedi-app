@@ -1932,5 +1932,17 @@
   "Modified": "Geändert",
   "Unchanged": "Unverändert",
   "Approval: {{rate}}%": "Genehmigung: {{rate}}%",
-  "Consensus: {{score}}": "Konsens: {{score}}"
+  "Consensus: {{score}}": "Konsens: {{score}}",
+  "Accept Top": "Top akzeptieren",
+  "AI Synthesize": "KI-Synthese",
+  "Accept Synthesis": "Synthese akzeptieren",
+  "Confirm Accept": "Akzeptieren bestätigen",
+  "Top consensus": "Höchster Konsens",
+  "Combining top suggestions...": "Top-Vorschläge werden kombiniert...",
+  "Waiting for more community input": "Warten auf weitere Beiträge der Community",
+  "More options": "Weitere Optionen",
+  "Accepting...": "Wird akzeptiert...",
+  "Suggestion accepted": "Vorschlag akzeptiert",
+  "Synthesis accepted": "Synthese akzeptiert",
+  "Review: Accept this suggestion?": "Überprüfen: Diesen Vorschlag annehmen?"
 }

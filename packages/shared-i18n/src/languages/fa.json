@@ -2454,5 +2454,17 @@
   "Remove Paragraph": "حذف پاراگراف",
   "Unchanged": "بدون تغییر",
   "Approval: {{rate}}%": "تأیید: {{rate}}%",
-  "Consensus: {{score}}": "توافق: {{score}}"
+  "Consensus: {{score}}": "توافق: {{score}}",
+  "Accept Top": "پذیرش برتر",
+  "AI Synthesize": "ترکیب هوشمند",
+  "Accept Synthesis": "پذیرش ترکیب",
+  "Confirm Accept": "تأیید پذیرش",
+  "Top consensus": "بالاترین اجماع",
+  "Combining top suggestions...": "در حال ترکیب پیشنهادات برتر...",
+  "Waiting for more community input": "در انتظار مشارکت بیشتر جامعه",
+  "More options": "گزینه‌های بیشتر",
+  "Accepting...": "در حال پذیرش...",
+  "Suggestion accepted": "پیشنهاد پذیرفته شد",
+  "Synthesis accepted": "ترکیب پذیرفته شد",
+  "Review: Accept this suggestion?": "بررسی: آیا این پیشنهاد را می‌پذیرید؟"
 }
