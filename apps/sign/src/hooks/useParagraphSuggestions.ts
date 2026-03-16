@@ -9,8 +9,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, Unsubscribe } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { useUIStore } from '@/store/uiStore';
@@ -59,7 +60,7 @@ export function useParagraphSuggestions(
       );
 
       // Set up real-time listener
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const updatedSuggestions: Statement[] = [];
@@ -149,7 +150,7 @@ export function useDocumentSuggestions(
         orderBy('consensus', 'desc')
       );
 
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const newSuggestionMap: Record<string, Statement[]> = {};
@@ -259,7 +260,7 @@ export function useRealtimeSuggestionCounts(
         where('statementType', '==', StatementType.option)
       );
 
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           // Count suggestions per paragraph
@@ -356,7 +357,7 @@ export function useRealtimeParagraphs(
         orderBy('doc.order', 'asc')
       );
 
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const updatedParagraphs: Paragraph[] = [];

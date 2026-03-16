@@ -8,8 +8,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeDocSnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, Statement } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -48,7 +49,7 @@ export function useRefinementPhase(
 		const firestore = getFirebaseFirestore();
 		const statementRef = doc(firestore, Collections.statements, paragraphId);
 
-		const unsubscribe = onSnapshot(
+		const unsubscribe = safeDocSnapshot(
 			statementRef,
 			(docSnap) => {
 				if (docSnap.exists()) {

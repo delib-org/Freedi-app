@@ -4,9 +4,10 @@
  */
 
 import { create } from 'zustand';
-import { collection, query, where, orderBy, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, query, where, orderBy, Unsubscribe } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getFirebaseFirestore, getFirebaseAuth } from '@/lib/firebase/client';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, PendingReplacement, ReplacementQueueStatus } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -96,7 +97,7 @@ export const useReplacementQueueStore = create<ReplacementQueueStore>((set, get)
 					);
 
 					// Set up real-time listener
-					firestoreUnsubscribe = onSnapshot(
+					firestoreUnsubscribe = safeQuerySnapshot(
 						q,
 						(snapshot) => {
 							const queue: PendingReplacement[] = [];

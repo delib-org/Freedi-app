@@ -4,8 +4,9 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion as SuggestionType, Statement, Collections } from '@freedi/shared-types';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeDocSnapshot } from '@/lib/firebase/safeSnapshot';
 import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
@@ -102,7 +103,7 @@ export default function SuggestionThread({
     const firestore = getFirebaseFirestore();
     const statementRef = doc(firestore, Collections.statements, paragraphId);
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe = safeDocSnapshot(
       statementRef,
       (docSnap) => {
         if (docSnap.exists()) {

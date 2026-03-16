@@ -9,9 +9,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, query, where, Unsubscribe } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getFirebaseFirestore, getFirebaseAuth } from '@/lib/firebase/client';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -67,7 +68,7 @@ export function useRealtimeSignatureCounts(documentId: string): SignatureCounts 
           where('documentId', '==', documentId)
         );
 
-        snapshotUnsubscribe = onSnapshot(
+        snapshotUnsubscribe = safeQuerySnapshot(
           q,
           (snapshot) => {
             let signedCount = 0;
