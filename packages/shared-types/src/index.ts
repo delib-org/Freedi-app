@@ -45,6 +45,10 @@ export { ApprovalSchema } from "./models/approval/Approval";
 export type { Suggestion, TypingStatus } from "./models/suggestion/suggestionModel";
 export { SuggestionSchema, TypingStatusSchema } from "./models/suggestion/suggestionModel";
 
+// Refinement models
+export type { RefinementState, RefinementPhase } from "./models/suggestion/refinementModel";
+export { RefinementStateSchema, RefinementPhaseEnum } from "./models/suggestion/refinementModel";
+
 // ChoseBy models
 export type {
   ChoseBy
