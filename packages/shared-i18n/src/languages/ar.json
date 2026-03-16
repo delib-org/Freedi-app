@@ -260,6 +260,7 @@
   "Edit Text": "تعديل النص",
   "Enable AI Pre-Check for Options": "تمكين الفحص المسبق بالذكاء الاصطناعي للخيارات",
   "Enable AI suggestion improvement": "تمكين تحسين الاقتراحات بالذكاء الاصطناعي",
+  "Enable AI synthesis and refinement phases for suggestions": "تمكين مراحل التجميع والتنقيح بالذكاء الاصطناعي للاقتراحات",
   "Enable Anchored Sampling": "تفعيل العينة المثبتة",
   "Enable Chat": "تمكين المحادثة",
   "Show Chat Side Panel": "إظهار لوحة المحادثة الجانبية",
