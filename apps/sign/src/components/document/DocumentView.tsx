@@ -163,6 +163,7 @@ export default function DocumentView({
         textDirection={resolvedDirection}
         requireGoogleLogin={requireGoogleLogin}
         hideUserIdentity={hideUserIdentity}
+        headingNumbers={headingNumbers}
       >
         <div
           className={`${styles.pageLayout} ${showToc ? styles.pageLayoutWithToc : ''}`}

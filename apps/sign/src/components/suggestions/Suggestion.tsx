@@ -8,7 +8,6 @@ import { markdownToHtml } from '@/lib/utils/htmlToMarkdown';
 import { useOptimisticVote } from '@/hooks/useOptimisticVote';
 import VotingBar from './VotingBar';
 import CommentThread from '../comments/CommentThread';
-import { getPseudoName } from '@/lib/utils/pseudoName';
 import styles from './Suggestion.module.scss';
 
 interface SuggestionProps {
@@ -22,6 +21,8 @@ interface SuggestionProps {
   isCurrent?: boolean; // Mark as current official version
   /** When true, hide display names and show generic "Contributor" */
   hideUserIdentity?: boolean;
+  /** Suggestion number label (e.g., "#1.2.3-1") */
+  suggestionNumber?: string;
 }
 
 /**
@@ -63,6 +64,7 @@ const Suggestion = memo(function Suggestion({
   onEdit,
   isCurrent = false,
   hideUserIdentity = false,
+  suggestionNumber,
 }: SuggestionProps) {
   const { t } = useTranslation();
   const [showComments, setShowComments] = useState(false);
@@ -139,25 +141,15 @@ const Suggestion = memo(function Suggestion({
     onEdit(suggestion);
   }, [onEdit, suggestion]);
 
-  // Get display name for avatar (skip identity hiding for "current version" entries)
-  const shouldHideIdentity = hideUserIdentity && !isCurrent;
-  const pseudoName = shouldHideIdentity ? getPseudoName(suggestion.creatorId) : '';
-  const avatarLetter = shouldHideIdentity ? pseudoName.charAt(0).toUpperCase() : (suggestion.creatorDisplayName?.charAt(0).toUpperCase() || '?');
-  const displayName = shouldHideIdentity ? pseudoName : (suggestion.creatorDisplayName || (isCurrent ? t('Official') : t('Anonymous')));
-
   return (
     <article
       className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''}`}
-      aria-label={isCurrent ? t('Current official version') : undefined}
+      aria-label={isCurrent ? t('Current official version') : suggestionNumber || undefined}
     >
       <header className={styles.header}>
-        <div className={`${styles.avatar} ${isCurrent ? styles['avatar--current'] : ''}`}>
-          {avatarLetter}
-        </div>
-        <div className={styles.meta}>
-          <span className={styles.author}>{displayName}</span>
-          <span className={styles.date}>{formattedDate}</span>
-        </div>
+        {suggestionNumber && (
+          <span className={styles.suggestionNumber}>{suggestionNumber}</span>
+        )}
         {isCurrent && (
           <div className={styles.currentBadge}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -166,6 +158,7 @@ const Suggestion = memo(function Suggestion({
             {t('Current Version')}
           </div>
         )}
+        <span className={styles.date}>{formattedDate}</span>
         {isOwner && !isCurrent && (
           <div className={styles.ownerActions}>
             <button
