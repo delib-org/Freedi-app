@@ -204,10 +204,47 @@
 }
 
 // Inline number prefix (e.g., "1.2.3.") rendered as a separate flex item
+// Inherits heading styles from parent card type so number matches the heading
 .inlineNumber {
   user-select: none; // Don't include in copy/paste
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.type-h1 .inlineNumber {
+  font-size: var(--h1-font-size);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.type-h2 .inlineNumber {
+  font-size: var(--h2-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-h3 .inlineNumber {
+  font-size: var(--h3-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-h4 .inlineNumber {
+  font-size: var(--h4-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-h5 .inlineNumber {
+  font-size: var(--h5-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.type-h6 .inlineNumber {
+  font-size: var(--h6-font-size);
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 // List item type
@@ -611,11 +648,13 @@
     padding-inline-start: 1rem; // Increased space for state indicator on mobile (16px)
   }
 
-  .type-h1 .content {
+  .type-h1 .content,
+  .type-h1 .inlineNumber {
     font-size: 1.4rem;
   }
 
-  .type-h2 .content {
+  .type-h2 .content,
+  .type-h2 .inlineNumber {
     font-size: 1.2rem;
   }
 

@@ -365,7 +365,7 @@ export default function ParagraphCard({
 
       <div className={clsx(styles.contentWrapper, headingNumber && styles.numbered)} suppressHydrationWarning>
         {headingNumber && (
-          <span className={styles.inlineNumber}>{headingNumber}.</span>
+          <span className={styles.inlineNumber} style={headerColor ? { color: headerColor } : undefined}>{headingNumber}.</span>
         )}
         {renderContent()}
       </div>
