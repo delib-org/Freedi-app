@@ -47,6 +47,8 @@ interface DocumentViewProps {
   isAdmin?: boolean;
   tocSettings?: TocSettings;
   enableSuggestions?: boolean;
+  /** Whether refinement workflow is enabled */
+  enableRefinement?: boolean;
   /** When true, shows ghosted interaction buttons always (for elderly users / accessibility) */
   enhancedVisibility?: boolean;
   /** YouTube video URL for explanation video */
@@ -84,6 +86,7 @@ export default function DocumentView({
   isAdmin = false,
   tocSettings,
   enableSuggestions = false,
+  enableRefinement = false,
   enhancedVisibility = false,
   explanationVideoUrl = '',
   explanationVideoMode = 'optional',
@@ -159,6 +162,7 @@ export default function DocumentView({
         userInteractions={userInteractions}
         isAdmin={isAdmin}
         enableSuggestions={enableSuggestions}
+        enableRefinement={enableRefinement}
         paragraphs={paragraphs}
         textDirection={resolvedDirection}
         requireGoogleLogin={requireGoogleLogin}

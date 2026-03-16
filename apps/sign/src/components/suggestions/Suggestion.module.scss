@@ -18,6 +18,11 @@
   border-left-color: var(--btn-primary, #1B2650);
 }
 
+:global(body.a11y-contrast-light) .suggestion--ai,
+:global(body.a11y-contrast-dark) .suggestion--ai {
+  border-left-color: var(--btn-primary, #5f88e5);
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -351,6 +356,54 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+}
+
+/* AI-generated suggestion variant */
+.suggestion--ai {
+  border-left-color: var(--btn-primary, #5f88e5);
+  background: rgba(95, 136, 229, 0.03);
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.aiSourceLabel {
+  font-size: 0.75rem;
+  color: var(--text-caption);
+  margin-top: 2px;
+}
+
+/* Late addition badge */
+.lateAdditionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(240, 173, 78, 0.15);
+  color: var(--warning, #f0ad4e);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 /* Current paragraph variant - "Standing Champion" styling */
