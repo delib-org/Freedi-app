@@ -612,7 +612,7 @@ export default function SuggestionThread({
       )}
 
       {/* Add suggestion button or notice */}
-      {userSuggestion ? (
+      {userSuggestion && !isAdmin ? (
         <div className={styles.hasNotice}>
           <p>{t('You have already suggested an alternative. You can edit your suggestion above.')}</p>
         </div>
