@@ -12,6 +12,7 @@ type ActionBarMode =
 	| { type: 'reviewing'; suggestion: SuggestionType }
 	| { type: 'synthesizing' }
 	| { type: 'editSynthesis'; text: string; reasoning: string }
+	| { type: 'mergeInstructions' }
 	| { type: 'merging' }
 	| { type: 'editMerge'; text: string; reasoning: string; sourceSuggestionIds: string[] }
 	| { type: 'success'; message: string };
@@ -31,6 +32,7 @@ interface AdminActionBarProps {
 			consensus: number;
 			creatorDisplayName: string;
 		}>,
+		customInstructions?: string,
 	) => Promise<{ synthesizedText: string; reasoning: string; sourceSuggestionIds: string[] } | null>;
 	onSetPhase: (paragraphId: string, phase: 'open' | 'refinement', threshold?: number) => Promise<boolean>;
 	isAILoading: boolean;
@@ -50,6 +52,12 @@ interface AdminActionBarProps {
 		reasoning: string,
 		sourceSuggestionIds: string[],
 	) => Promise<boolean>;
+	/** Hide all unselected suggestions (show only selected) */
+	onShowOnlySelected: (selectedIds: Set<string>) => Promise<boolean>;
+	/** Unhide all suggestions */
+	onShowAll: () => Promise<boolean>;
+	/** Whether some suggestions are currently admin-hidden */
+	hasHiddenSuggestions: boolean;
 }
 
 const CONSENSUS_THRESHOLD = 0.3;
@@ -69,6 +77,9 @@ export default function AdminActionBar({
 	onEnterSelectionMode,
 	onClearSelection,
 	onPublishMerge,
+	onShowOnlySelected,
+	onShowAll,
+	hasHiddenSuggestions,
 }: AdminActionBarProps) {
 	const { t } = useTranslation();
 	const [mode, setMode] = useState<ActionBarMode>({ type: 'status' });
@@ -156,8 +167,13 @@ export default function AdminActionBar({
 		}
 	}, [suggestions, paragraphId, originalContent, onSynthesize]);
 
-	// Handle "AI Merge Selected" click
-	const handleMergeSelected = useCallback(async () => {
+	// Handle "AI Merge" click — open instructions panel
+	const handleStartMerge = useCallback(() => {
+		setMode({ type: 'mergeInstructions' });
+	}, []);
+
+	// Handle "Generate Merge" from instructions panel
+	const handleGenerateMerge = useCallback(async (customInstructions: string) => {
 		setMode({ type: 'merging' });
 
 		const selectedSuggestions = suggestions
@@ -169,7 +185,8 @@ export default function AdminActionBar({
 				creatorDisplayName: s.creatorDisplayName,
 			}));
 
-		const result = await onSynthesize(paragraphId, originalContent, selectedSuggestions);
+		const instructions = customInstructions.trim() || undefined;
+		const result = await onSynthesize(paragraphId, originalContent, selectedSuggestions, instructions);
 
 		if (result) {
 			setMode({
@@ -254,6 +271,45 @@ export default function AdminActionBar({
 		}
 	}, [paragraphId, documentId, mode, t, onPublishMerge, onClearSelection]);
 
+	// Handle "Show Only Selected" - hide all unselected suggestions
+	const handleShowOnlySelected = useCallback(async () => {
+		setIsAccepting(true);
+		try {
+			const success = await onShowOnlySelected(selectedIds);
+			if (success) {
+				setMode({ type: 'success', message: t('Showing selected suggestions only') });
+				onClearSelection();
+				setTimeout(() => setMode({ type: 'status' }), SUCCESS_DISPLAY_MS);
+			}
+		} catch (error) {
+			logError(error, {
+				operation: 'AdminActionBar.handleShowOnlySelected',
+				metadata: { paragraphId, selectedCount: selectedIds.size },
+			});
+		} finally {
+			setIsAccepting(false);
+		}
+	}, [selectedIds, paragraphId, onShowOnlySelected, onClearSelection, t]);
+
+	// Handle "Show All" - unhide all suggestions
+	const handleShowAll = useCallback(async () => {
+		setIsAccepting(true);
+		try {
+			const success = await onShowAll();
+			if (success) {
+				setMode({ type: 'success', message: t('All suggestions are now visible') });
+				setTimeout(() => setMode({ type: 'status' }), SUCCESS_DISPLAY_MS);
+			}
+		} catch (error) {
+			logError(error, {
+				operation: 'AdminActionBar.handleShowAll',
+				metadata: { paragraphId },
+			});
+		} finally {
+			setIsAccepting(false);
+		}
+	}, [paragraphId, onShowAll, t]);
+
 	// Handle entering refinement phase
 	const handleEnterRefinement = useCallback(async () => {
 		setShowOverflow(false);
@@ -262,6 +318,29 @@ export default function AdminActionBar({
 
 	return (
 		<div className={styles.bar}>
+			{/* Filter active banner — always visible when suggestions are hidden */}
+			{hasHiddenSuggestions && mode.type === 'status' && !selectionMode && (
+				<div className={styles.filterBanner} role="status" aria-live="polite">
+					<div className={styles.filterBannerContent}>
+						<svg className={styles.filterIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+							<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+						</svg>
+						<div className={styles.filterText}>
+							<span className={styles.filterTitle}>{t('Filtered view')}</span>
+							<span className={styles.filterDesc}>{t('Some suggestions are hidden from users')}</span>
+						</div>
+					</div>
+					<button
+						type="button"
+						className={styles.showAllInline}
+						onClick={handleShowAll}
+						disabled={isAccepting}
+					>
+						{t('Show All')}
+					</button>
+				</div>
+			)}
+
 			{/* Status mode */}
 			{mode.type === 'status' && (
 				<>
@@ -272,80 +351,105 @@ export default function AdminActionBar({
 						<span className={styles.statusText}>{statusText}</span>
 					</div>
 
-					{/* Selection mode info bar */}
+					{/* Selection mode toolbar */}
 					{selectionMode && (
 						<div className={styles.selectionInfo}>
-							<span className={styles.selectionCount}>
-								{selectedIds.size} {t('selected')}
-							</span>
-							{selectedIds.size < 2 && (
-								<span className={styles.selectionHint}>
-									{t('Select 2 or more suggestions to merge')}
+							<div className={styles.selectionHeader}>
+								<span className={styles.selectionCount}>
+									{selectedIds.size} {t('selected')}
 								</span>
-							)}
-							<div className={styles.selectionActions}>
-								{selectedIds.size >= 2 && (
-									<button
-										type="button"
-										className={styles.mergeButton}
-										onClick={handleMergeSelected}
-										disabled={isAILoading}
-									>
-										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-											<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-										</svg>
-										{t('AI Merge Selected')} ({selectedIds.size})
-									</button>
-								)}
 								<button
 									type="button"
-									className={styles.cancelButton}
+									className={styles.cancelIcon}
 									onClick={onClearSelection}
+									aria-label={t('Exit selection mode')}
 								>
-									{t('Cancel Selection')}
+									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+										<path d="M18 6L6 18M6 6l12 12" />
+									</svg>
 								</button>
 							</div>
+							{selectedIds.size === 0 && (
+								<span className={styles.selectionHint}>
+									{t('Tap suggestions to select them')}
+								</span>
+							)}
+							{selectedIds.size >= 1 && (
+								<div className={styles.selectionActions}>
+									<button
+										type="button"
+										className={styles.showOnlyButton}
+										onClick={handleShowOnlySelected}
+										disabled={isAccepting}
+									>
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+											<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+											<circle cx="12" cy="12" r="3" />
+										</svg>
+										{t('Show Only Selected')}
+									</button>
+									{selectedIds.size >= 2 && (
+										<button
+											type="button"
+											className={styles.mergeButton}
+											onClick={handleStartMerge}
+											disabled={isAILoading}
+										>
+											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+												<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+											</svg>
+											{t('AI Merge')} ({selectedIds.size})
+										</button>
+									)}
+								</div>
+							)}
 						</div>
 					)}
 
 					{/* Normal action buttons (hidden during selection mode) */}
-					{!selectionMode && hasActionableConsensus && suggestions.length > 0 && (
+					{!selectionMode && suggestions.length > 0 && (
 						<div className={styles.actions}>
+							{hasActionableConsensus && (
+								<>
+									<button
+										type="button"
+										className={styles.acceptTopButton}
+										onClick={handleAcceptTop}
+										disabled={isAILoading}
+									>
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+											<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+										</svg>
+										{suggestions.length === 1 ? t('Accept') : t('Accept Top')}
+									</button>
+									{suggestions.length >= 2 && (
+										<button
+											type="button"
+											className={styles.synthesizeButton}
+											onClick={handleSynthesize}
+											disabled={isAILoading}
+										>
+											<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+												<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+											</svg>
+											{t('AI Synthesize')}
+										</button>
+									)}
+								</>
+							)}
 							<button
 								type="button"
-								className={styles.acceptTopButton}
-								onClick={handleAcceptTop}
+								className={styles.selectButton}
+								onClick={onEnterSelectionMode}
 								disabled={isAILoading}
 							>
-								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-									<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
-								</svg>
-								{suggestions.length === 1 ? t('Accept') : t('Accept Top')}
-							</button>
-							<button
-								type="button"
-								className={styles.synthesizeButton}
-								onClick={handleSynthesize}
-								disabled={isAILoading || suggestions.length < 2}
-							>
 								<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-									<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+									<rect x="3" y="3" width="7" height="7" rx="1" />
+									<rect x="3" y="14" width="7" height="7" rx="1" />
+									<path d="M14 5h7M14 16h7" />
 								</svg>
-								{t('AI Synthesize')}
+								{t('Select')}
 							</button>
-							{suggestions.length >= 2 && (
-								<button
-									type="button"
-									className={styles.selectToMergeButton}
-									onClick={onEnterSelectionMode}
-									disabled={isAILoading}
-								>
-									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-										<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
-									</svg>
-									{t('Select to Merge')}
-								</button>
-							)}
 							{enableRefinement && (
 								<div className={styles.overflowWrapper}>
 									<button
@@ -375,12 +479,22 @@ export default function AdminActionBar({
 					)}
 
 					{/* Waiting line (hidden during selection mode) */}
-					{!selectionMode && !hasActionableConsensus && suggestions.length > 0 && (
+					{!selectionMode && !hasActionableConsensus && suggestions.length > 0 && !suggestions.some(() => true && suggestions.length < 2) && (
 						<div className={styles.waitingLine}>
 							{t('Waiting for more community input')}
 						</div>
 					)}
 				</>
+			)}
+
+			{/* Merge instructions mode — admin provides optional guidance */}
+			{mode.type === 'mergeInstructions' && (
+				<MergeInstructionsPanel
+					selectedCount={selectedIds.size}
+					isLoading={isAILoading}
+					onGenerate={handleGenerateMerge}
+					onBack={() => setMode({ type: 'status' })}
+				/>
 			)}
 
 			{/* Reviewing mode - inline diff */}
@@ -450,7 +564,7 @@ export default function AdminActionBar({
 				<div className={styles.synthesizingPanel}>
 					<div className={styles.synthesizingHeader}>
 						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-							<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+							<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
 						</svg>
 						{t('AI Merge')}
 					</div>
@@ -501,6 +615,70 @@ export default function AdminActionBar({
 					<span>{mode.message}</span>
 				</div>
 			)}
+		</div>
+	);
+}
+
+/** Merge instructions panel — lets admin optionally guide the AI */
+function MergeInstructionsPanel({
+	selectedCount,
+	isLoading,
+	onGenerate,
+	onBack,
+}: {
+	selectedCount: number;
+	isLoading: boolean;
+	onGenerate: (instructions: string) => void;
+	onBack: () => void;
+}) {
+	const { t } = useTranslation();
+	const [instructions, setInstructions] = useState('');
+
+	return (
+		<div className={styles.mergeInstructionsPanel}>
+			<div className={styles.mergeInstructionsHeader}>
+				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+					<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+				</svg>
+				{t('AI Merge')} ({selectedCount} {t('selected')})
+			</div>
+
+			<textarea
+				className={styles.instructionsTextarea}
+				value={instructions}
+				onChange={e => setInstructions(e.target.value)}
+				placeholder={t('Optional: Guide the AI')}
+				rows={3}
+				aria-label={t('Custom instructions for AI merge')}
+			/>
+
+			<div className={styles.mergeInstructionsActions}>
+				<button
+					type="button"
+					className={styles.confirmButton}
+					onClick={() => onGenerate(instructions)}
+					disabled={isLoading}
+				>
+					{isLoading ? (
+						<><span className={styles.spinner} /> {t('Generating...')}</>
+					) : (
+						<>
+							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+								<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+							</svg>
+							{t('Generate Merge')}
+						</>
+					)}
+				</button>
+				<button
+					type="button"
+					className={styles.cancelButton}
+					onClick={onBack}
+					disabled={isLoading}
+				>
+					{t('Back')}
+				</button>
+			</div>
 		</div>
 	);
 }

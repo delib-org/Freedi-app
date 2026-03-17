@@ -179,4 +179,6 @@ export const API_ROUTES = {
   ADMIN_REFINEMENT: (paragraphId: string) => `/api/admin/refinement/${paragraphId}`,
   // Merge suggestions route
   ADMIN_MERGE_SUGGESTION: '/api/admin/suggestions/merge',
+  // Suggestion visibility route
+  ADMIN_SUGGESTION_VISIBILITY: '/api/admin/suggestions/visibility',
 } as const;
