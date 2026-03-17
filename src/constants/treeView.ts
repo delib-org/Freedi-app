@@ -17,7 +17,7 @@ export const TREE_INDENT_PX = 24;
 export const TREE_INDENT_MOBILE_PX = 12;
 
 /** Initial descendants to load for tree view (lazy-loading) */
-export const TREE_INITIAL_LIMIT = 50;
+export const TREE_INITIAL_LIMIT = 200;
 
 /** Batch size for loading more descendants on scroll-up */
 export const TREE_LOAD_MORE_BATCH = 50;

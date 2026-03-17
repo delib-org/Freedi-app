@@ -105,12 +105,10 @@ export const useStatementListeners = ({
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else if (enableTreeView) {
-				// Tree view: load all descendant types for hierarchical rendering
+				// Tree view: single descendants listener covers all levels including direct children.
+				// No need for a separate listenToSubStatements — it was redundant and the two
+				// listeners competed for the same data, causing incomplete initial loads.
 				unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
-				// Also keep flat sub-statement listener for agreement map and options views
-				unsubscribersRef.current.push(
-					listenToSubStatements(statementId, 'top', CHAT.INITIAL_MESSAGES_LIMIT),
-				);
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
 				// The default view is 'chat', so apply the limit for all non-mind-map screens.
