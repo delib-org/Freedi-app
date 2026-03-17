@@ -740,6 +740,98 @@ export function listenToTreeDescendants(
 }
 
 /**
+ * Listen to all statements in a discussion tree using topParentId.
+ * More reliable than 'parents array-contains' because topParentId is set
+ * during statement creation, while the parents array may be missing on
+ * older statements.
+ */
+export function listenToTreeByTopParent(
+	topParentId: string,
+	queryLimit = MAX_DESCENDANTS_LIMIT,
+): Unsubscribe {
+	try {
+		const statementsRef = createCollectionRef(Collections.statements);
+		const q = query(
+			statementsRef,
+			where('topParentId', '==', topParentId),
+			orderBy('createdAt', 'desc'),
+			limit(queryLimit),
+		);
+
+		const listenerKey = generateListenerKey('tree-by-top-parent', 'statement', topParentId);
+
+		let isFirstBatch = true;
+		const statementsArr: Statement[] = [];
+
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(statementsDB) => {
+				if (isFirstBatch) {
+					statementsDB.forEach((doc) => {
+						try {
+							const stmt = normalizeStatementData(doc.data()) as Statement;
+							statementsArr.push(stmt);
+						} catch (error) {
+							logError(error, {
+								operation: 'listenToTreeByTopParent.parseInitial',
+								statementId: doc.id,
+								metadata: { topParentId },
+							});
+						}
+					});
+
+					if (statementsArr.length > 0) {
+						store.dispatch(setStatements(statementsArr));
+						console.info(
+							`[listenToTreeByTopParent] Loaded ${statementsArr.length} statements for tree ${topParentId}`,
+						);
+					}
+
+					isFirstBatch = false;
+				} else {
+					const changes = statementsDB.docChanges();
+
+					changes.forEach((change) => {
+						try {
+							const stmt = normalizeStatementData(change.doc.data()) as Statement;
+
+							if (change.type === 'added' || change.type === 'modified') {
+								store.dispatch(setStatement(stmt));
+							} else if (change.type === 'removed') {
+								store.dispatch(deleteStatement(stmt.statementId));
+							}
+						} catch (error) {
+							logError(error, {
+								operation: 'listenToTreeByTopParent.processChange',
+								statementId: change.doc.id,
+								metadata: { topParentId, changeType: change.type },
+							});
+						}
+					});
+				}
+			},
+			(error) => {
+				logError(error, {
+					operation: 'listenToTreeByTopParent.listener',
+					metadata: { topParentId },
+				});
+			},
+			'query',
+		);
+	} catch (error) {
+		logError(error, {
+			operation: 'listenToTreeByTopParent.setup',
+			metadata: { topParentId },
+		});
+
+		return (): void => {
+			return;
+		};
+	}
+}
+
+/**
  * Fetch older tree descendants beyond the initial real-time listener.
  * Uses the same `parents array-contains` query but with a cursor.
  */

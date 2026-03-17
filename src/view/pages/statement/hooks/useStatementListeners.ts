@@ -5,7 +5,7 @@ import {
 	listenToStatement,
 	listenToSubStatements,
 	listenToStatementSubscription,
-	listenToTreeDescendants,
+	listenToTreeByTopParent,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import {
@@ -105,14 +105,17 @@ export const useStatementListeners = ({
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else if (enableTreeView) {
-				// Tree view: load descendants for nested hierarchy
-				unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
-				// Also load direct children WITHOUT a limit — the parentId query is more
-				// reliable than 'parents' array-contains for older statements that may
-				// lack a properly populated parents array.
+				// Tree view: load direct children (reliable via parentId) with no limit
 				unsubscribersRef.current.push(
 					listenToSubStatements(statementId, 'top'),
 				);
+				// At the top level, also load all nested descendants via topParentId.
+				// For sub-statements, the parent's tree already loaded these.
+				if (!topParentId || topParentId === statementId) {
+					unsubscribersRef.current.push(
+						listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT),
+					);
+				}
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
 				// The default view is 'chat', so apply the limit for all non-mind-map screens.
@@ -135,7 +138,7 @@ export const useStatementListeners = ({
 		}
 
 		return cleanup;
-	}, [creator, statementId, stageId, screen, enableTreeView, setIsStatementNotFound, setError]);
+	}, [creator, statementId, stageId, screen, enableTreeView, topParentId, setIsStatementNotFound, setError]);
 
 	// Effect for top parent statement and group-level demographic questions
 	// This effect now properly depends on topParentId from Redux selector
