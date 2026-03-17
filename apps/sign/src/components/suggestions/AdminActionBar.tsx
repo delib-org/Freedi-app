@@ -12,6 +12,8 @@ type ActionBarMode =
 	| { type: 'reviewing'; suggestion: SuggestionType }
 	| { type: 'synthesizing' }
 	| { type: 'editSynthesis'; text: string; reasoning: string }
+	| { type: 'merging' }
+	| { type: 'editMerge'; text: string; reasoning: string; sourceSuggestionIds: string[] }
 	| { type: 'success'; message: string };
 
 interface AdminActionBarProps {
@@ -32,6 +34,22 @@ interface AdminActionBarProps {
 	) => Promise<{ synthesizedText: string; reasoning: string; sourceSuggestionIds: string[] } | null>;
 	onSetPhase: (paragraphId: string, phase: 'open' | 'refinement', threshold?: number) => Promise<boolean>;
 	isAILoading: boolean;
+	/** Whether selection mode is active */
+	selectionMode: boolean;
+	/** Set of selected suggestion IDs */
+	selectedIds: Set<string>;
+	/** Enter selection mode */
+	onEnterSelectionMode: () => void;
+	/** Exit selection mode and clear selections */
+	onClearSelection: () => void;
+	/** Publish merged text as a new suggestion */
+	onPublishMerge: (
+		paragraphId: string,
+		documentId: string,
+		mergedText: string,
+		reasoning: string,
+		sourceSuggestionIds: string[],
+	) => Promise<boolean>;
 }
 
 const CONSENSUS_THRESHOLD = 0.3;
@@ -46,6 +64,11 @@ export default function AdminActionBar({
 	onSynthesize,
 	onSetPhase,
 	isAILoading,
+	selectionMode,
+	selectedIds,
+	onEnterSelectionMode,
+	onClearSelection,
+	onPublishMerge,
 }: AdminActionBarProps) {
 	const { t } = useTranslation();
 	const [mode, setMode] = useState<ActionBarMode>({ type: 'status' });
@@ -133,6 +156,34 @@ export default function AdminActionBar({
 		}
 	}, [suggestions, paragraphId, originalContent, onSynthesize]);
 
+	// Handle "AI Merge Selected" click
+	const handleMergeSelected = useCallback(async () => {
+		setMode({ type: 'merging' });
+
+		const selectedSuggestions = suggestions
+			.filter(s => selectedIds.has(s.suggestionId))
+			.map(s => ({
+				suggestionId: s.suggestionId,
+				suggestedContent: s.suggestedContent,
+				consensus: s.consensus,
+				creatorDisplayName: s.creatorDisplayName,
+			}));
+
+		const result = await onSynthesize(paragraphId, originalContent, selectedSuggestions);
+
+		if (result) {
+			setMode({
+				type: 'editMerge',
+				text: result.synthesizedText,
+				reasoning: result.reasoning,
+				sourceSuggestionIds: result.sourceSuggestionIds,
+			});
+		} else {
+			setMode({ type: 'status' });
+			onClearSelection();
+		}
+	}, [suggestions, selectedIds, paragraphId, originalContent, onSynthesize, onClearSelection]);
+
 	// Handle accepting synthesis — creates suggestion + accepts in one API call
 	const handleAcceptSynthesis = useCallback(async (text: string) => {
 		if (!text.trim() || text.trim().length < SUGGESTIONS.MIN_LENGTH) return;
@@ -170,6 +221,39 @@ export default function AdminActionBar({
 		}
 	}, [paragraphId, documentId, mode, t]);
 
+	// Handle publishing merge as a new suggestion
+	const handlePublishMerge = useCallback(async (text: string) => {
+		if (!text.trim() || text.trim().length < SUGGESTIONS.MIN_LENGTH) return;
+		if (mode.type !== 'editMerge') return;
+
+		setIsAccepting(true);
+		try {
+			const success = await onPublishMerge(
+				paragraphId,
+				documentId,
+				text.trim(),
+				`AI Merge: ${mode.reasoning}`,
+				mode.sourceSuggestionIds,
+			);
+
+			if (success) {
+				setMode({ type: 'success', message: t('Merge published as suggestion') });
+				onClearSelection();
+				setTimeout(() => setMode({ type: 'status' }), SUCCESS_DISPLAY_MS);
+			} else {
+				setMode({ type: 'status' });
+			}
+		} catch (error) {
+			logError(error, {
+				operation: 'AdminActionBar.handlePublishMerge',
+				metadata: { paragraphId },
+			});
+			setMode({ type: 'status' });
+		} finally {
+			setIsAccepting(false);
+		}
+	}, [paragraphId, documentId, mode, t, onPublishMerge, onClearSelection]);
+
 	// Handle entering refinement phase
 	const handleEnterRefinement = useCallback(async () => {
 		setShowOverflow(false);
@@ -188,7 +272,44 @@ export default function AdminActionBar({
 						<span className={styles.statusText}>{statusText}</span>
 					</div>
 
-					{hasActionableConsensus && suggestions.length > 0 && (
+					{/* Selection mode info bar */}
+					{selectionMode && (
+						<div className={styles.selectionInfo}>
+							<span className={styles.selectionCount}>
+								{selectedIds.size} {t('selected')}
+							</span>
+							{selectedIds.size < 2 && (
+								<span className={styles.selectionHint}>
+									{t('Select 2 or more suggestions to merge')}
+								</span>
+							)}
+							<div className={styles.selectionActions}>
+								{selectedIds.size >= 2 && (
+									<button
+										type="button"
+										className={styles.mergeButton}
+										onClick={handleMergeSelected}
+										disabled={isAILoading}
+									>
+										<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+											<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+										</svg>
+										{t('AI Merge Selected')} ({selectedIds.size})
+									</button>
+								)}
+								<button
+									type="button"
+									className={styles.cancelButton}
+									onClick={onClearSelection}
+								>
+									{t('Cancel Selection')}
+								</button>
+							</div>
+						</div>
+					)}
+
+					{/* Normal action buttons (hidden during selection mode) */}
+					{!selectionMode && hasActionableConsensus && suggestions.length > 0 && (
 						<div className={styles.actions}>
 							<button
 								type="button"
@@ -212,6 +333,19 @@ export default function AdminActionBar({
 								</svg>
 								{t('AI Synthesize')}
 							</button>
+							{suggestions.length >= 2 && (
+								<button
+									type="button"
+									className={styles.selectToMergeButton}
+									onClick={onEnterSelectionMode}
+									disabled={isAILoading}
+								>
+									<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+										<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+									</svg>
+									{t('Select to Merge')}
+								</button>
+							)}
 							{enableRefinement && (
 								<div className={styles.overflowWrapper}>
 									<button
@@ -240,7 +374,8 @@ export default function AdminActionBar({
 						</div>
 					)}
 
-					{!hasActionableConsensus && suggestions.length > 0 && (
+					{/* Waiting line (hidden during selection mode) */}
+					{!selectionMode && !hasActionableConsensus && suggestions.length > 0 && (
 						<div className={styles.waitingLine}>
 							{t('Waiting for more community input')}
 						</div>
@@ -310,6 +445,22 @@ export default function AdminActionBar({
 				</div>
 			)}
 
+			{/* Merging mode - loading */}
+			{mode.type === 'merging' && (
+				<div className={styles.synthesizingPanel}>
+					<div className={styles.synthesizingHeader}>
+						<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+							<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" />
+						</svg>
+						{t('AI Merge')}
+					</div>
+					<div className={styles.loadingState}>
+						<span className={styles.spinner} />
+						<span>{t('Merging selected suggestions...')}</span>
+					</div>
+				</div>
+			)}
+
 			{/* Edit Synthesis mode */}
 			{mode.type === 'editSynthesis' && (
 				<EditSynthesisPanel
@@ -318,6 +469,26 @@ export default function AdminActionBar({
 					isAccepting={isAccepting}
 					onAccept={handleAcceptSynthesis}
 					onCancel={() => setMode({ type: 'status' })}
+					headerLabel={t('AI Synthesis')}
+					confirmLabel={t('Accept Synthesis')}
+					acceptingLabel={t('Accepting...')}
+				/>
+			)}
+
+			{/* Edit Merge mode */}
+			{mode.type === 'editMerge' && (
+				<EditSynthesisPanel
+					initialText={mode.text}
+					reasoning={mode.reasoning}
+					isAccepting={isAccepting}
+					onAccept={handlePublishMerge}
+					onCancel={() => {
+						setMode({ type: 'status' });
+						onClearSelection();
+					}}
+					headerLabel={t('AI Merge')}
+					confirmLabel={t('Publish as Suggestion')}
+					acceptingLabel={t('Publishing...')}
 				/>
 			)}
 
@@ -341,12 +512,18 @@ function EditSynthesisPanel({
 	isAccepting,
 	onAccept,
 	onCancel,
+	headerLabel,
+	confirmLabel,
+	acceptingLabel,
 }: {
 	initialText: string;
 	reasoning: string;
 	isAccepting: boolean;
 	onAccept: (text: string) => void;
 	onCancel: () => void;
+	headerLabel: string;
+	confirmLabel: string;
+	acceptingLabel: string;
 }) {
 	const { t } = useTranslation();
 	const [editedText, setEditedText] = useState(initialText);
@@ -358,7 +535,7 @@ function EditSynthesisPanel({
 				<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
 					<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
 				</svg>
-				{t('AI Synthesis')}
+				{headerLabel}
 			</div>
 
 			<textarea
@@ -391,13 +568,13 @@ function EditSynthesisPanel({
 					disabled={isAccepting || !editedText.trim() || editedText.trim().length < SUGGESTIONS.MIN_LENGTH}
 				>
 					{isAccepting ? (
-						<><span className={styles.spinner} /> {t('Accepting...')}</>
+						<><span className={styles.spinner} /> {acceptingLabel}</>
 					) : (
 						<>
 							<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
 								<path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
 							</svg>
-							{t('Accept Synthesis')}
+							{confirmLabel}
 						</>
 					)}
 				</button>

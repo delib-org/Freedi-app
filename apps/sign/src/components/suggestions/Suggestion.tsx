@@ -37,6 +37,12 @@ interface SuggestionProps {
   showAcceptButton?: boolean;
   /** Callback when admin accepts this suggestion to replace the paragraph */
   onAccept?: (suggestion: SuggestionType) => void;
+  /** Whether this suggestion can be selected for merge (admin in selection mode) */
+  isSelectable?: boolean;
+  /** Whether this suggestion is currently selected */
+  isSelected?: boolean;
+  /** Callback when selection is toggled */
+  onToggleSelect?: (suggestionId: string) => void;
 }
 
 /**
@@ -86,6 +92,9 @@ const Suggestion = memo(function Suggestion({
   showImproveButton = false,
   showAcceptButton = false,
   onAccept,
+  isSelectable = false,
+  isSelected = false,
+  onToggleSelect,
 }: SuggestionProps) {
   const { t, tWithParams } = useTranslation();
   const [showComments, setShowComments] = useState(false);
@@ -164,10 +173,21 @@ const Suggestion = memo(function Suggestion({
 
   return (
     <article
-      className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''} ${isAIGenerated ? styles['suggestion--ai'] : ''}`}
+      className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''} ${isAIGenerated ? styles['suggestion--ai'] : ''} ${isSelected ? styles['suggestion--selected'] : ''}`}
       aria-label={isCurrent ? t('Current official version') : isAIGenerated ? t('AI Synthesis') : suggestionNumber || undefined}
     >
       <header className={styles.header}>
+        {isSelectable && onToggleSelect && (
+          <label className={styles.selectionCheckbox}>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggleSelect(suggestion.suggestionId)}
+              aria-label={t('Select for merge')}
+            />
+            <span className={styles.checkboxMark} />
+          </label>
+        )}
         {suggestionNumber && (
           <span className={styles.suggestionNumber}>{suggestionNumber}</span>
         )}

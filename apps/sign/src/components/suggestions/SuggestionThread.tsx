@@ -70,6 +70,10 @@ export default function SuggestionThread({
   const [frozenSuggestions, setFrozenSuggestions] = useState<SuggestionType[]>([]);
   const [improvingSuggestionId, setImprovingSuggestionId] = useState<string | null>(null);
 
+  // Selection mode state for AI merge
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Refinement phase state
   const { refinement } = useRefinementPhase(paragraphId, enableRefinement);
   const {
@@ -387,6 +391,66 @@ export default function SuggestionThread({
     }
   }, [suggestions, paragraphId, originalContent, improve]);
 
+  // Selection mode handlers
+  const handleEnterSelectionMode = useCallback(() => {
+    setSelectionMode(true);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleToggleSelect = useCallback((suggestionId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(suggestionId)) {
+        next.delete(suggestionId);
+      } else {
+        next.add(suggestionId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Publish merged text as a new suggestion
+  const handlePublishMerge = useCallback(async (
+    _paragraphId: string,
+    _documentId: string,
+    mergedText: string,
+    reasoning: string,
+    sourceSuggestionIds: string[],
+  ): Promise<boolean> => {
+    try {
+      const response = await fetch(API_ROUTES.ADMIN_MERGE_SUGGESTION, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paragraphId,
+          documentId,
+          mergedText,
+          reasoning,
+          sourceSuggestionIds,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to publish merge');
+      }
+
+      return true;
+    } catch (error) {
+      logError(error, {
+        operation: 'SuggestionThread.handlePublishMerge',
+        userId: user?.uid || undefined,
+        metadata: { paragraphId, sourceCount: sourceSuggestionIds.length },
+      });
+      return false;
+    }
+  }, [paragraphId, documentId, user]);
+
   return (
     <div className={styles.container}>
       {/* Admin Action Bar - replaces PhaseControls + AISynthesisPanel */}
@@ -400,6 +464,11 @@ export default function SuggestionThread({
           onSynthesize={synthesize}
           onSetPhase={setPhase}
           isAILoading={isAILoading}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onEnterSelectionMode={handleEnterSelectionMode}
+          onClearSelection={handleClearSelection}
+          onPublishMerge={handlePublishMerge}
         />
       )}
 
@@ -497,6 +566,9 @@ export default function SuggestionThread({
                   }
                   showAcceptButton={isAdmin}
                   onAccept={handleAccept}
+                  isSelectable={selectionMode}
+                  isSelected={selectedIds.has(suggestion.suggestionId)}
+                  onToggleSelect={handleToggleSelect}
                 />
                 {/* AI Improve Panel inline below the suggestion being improved */}
                 {improvingSuggestionId === suggestion.suggestionId && improveResult && (

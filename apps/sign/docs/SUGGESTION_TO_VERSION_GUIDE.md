@@ -21,14 +21,16 @@ This means every paragraph change is tracked, reversible, and transparent.
 
 ---
 
-## Overview: Four Pathways
+## Overview: Five Pathways
 
-| # | Pathway | When to use | Complexity |
-|---|---------|------------|------------|
-| 1 | **Accept Top / Accept** | A good suggestion exists - accept it from the Admin Action Bar or per-suggestion | Simplest |
-| 2 | **AI Synthesize** | Many suggestions - AI combines the best ideas, you review and accept in one step | Simple |
-| 3 | **Review Queue** | Auto-surface suggestions that reach consensus threshold | Medium |
-| 4 | **AI Version Generation** | Revise the entire document at once based on all feedback | Advanced |
+| # | Pathway | Who uses it | When to use | Complexity |
+|---|---------|-------------|------------|------------|
+| 1 | **Accept Top / Accept** | Admin | A good suggestion exists - accept it from the Admin Action Bar or per-suggestion | Simplest |
+| 2 | **AI Comment Assistant** | Suggestion author / Admin | Your suggestion received comments - AI helps you improve it based on the feedback | Simple |
+| 3 | **AI Synthesize** | Admin | Many suggestions - AI combines the best ideas, you review and accept in one step | Simple |
+| 3b | **AI Merge Selected** | Admin | Hand-pick specific suggestions, AI merges them, result is published as a new suggestion for community voting | Simple |
+| 4 | **Review Queue** | Admin | Auto-surface suggestions that reach consensus threshold | Medium |
+| 5 | **AI Version Generation** | Admin | Revise the entire document at once based on all feedback | Advanced |
 
 ---
 
@@ -93,7 +95,85 @@ Each suggestion card also has a green **"Accept"** button (admin-only). Clicking
 
 ---
 
-## Pathway 2: AI Synthesize
+## Pathway 2: AI Comment Assistant
+
+**Best for:** Your suggestion received comments from the community. AI reads all the feedback and helps you write an improved version that addresses their concerns.
+
+**Who can use it:** The suggestion author (logged in) or any admin. Requires 2+ comments on the suggestion.
+
+### How it works
+
+1. Open a paragraph's **Suggestion Thread** and find your suggestion
+2. Click **"Comments"** to expand the comment thread
+3. Below the comments, you'll see an AI assist bar:
+   ```
+   [sparkle] Improve your suggestion using community feedback    [Improve]
+   ```
+4. Click **"Improve"**
+5. AI reads all comments and generates an improved version. You'll see a loading state:
+   ```
+   [sparkle] Reading 4 comments and generating improvements...   [Cancel]
+   ```
+6. When ready, an inline panel appears with:
+   - **Changes list** — each improvement the AI made, linked to the comment that inspired it
+   - **Editable textarea** — the improved suggestion text, fully editable
+   - **"Regenerate"** link — try again if you want a different result
+7. **Edit** the text however you like — the AI is a starting point, not the final word
+8. Click **"Apply Changes"** to replace your suggestion with the improved version
+9. A brief success message appears, then the panel collapses
+
+### What the result looks like
+
+```
+[sparkle AI SUGGESTION]
+
+Improvements based on feedback:
+  * Changed "quarterly" to "monthly"
+    -- Based on: "I think quarterly is too infrequent..."
+  * Added emergency session provision
+    -- Based on: "Consider adding emergency sessions..."
+  * Clarified quorum requirements
+    -- Based on: "The quorum requirements are unclear..."
+  * Added chair authority to call meetings
+    -- Based on: "Should specify who can call meetings."
+
+[Regenerate]
+
+┌──────────────────────────────────────────────┐
+│ The committee shall convene monthly to       │
+│ review progress. Emergency sessions may be   │
+│ called by the chair with 48 hours notice.    │
+│ A quorum of 60% of members is required...    │
+│ (editable textarea)                          │
+└──────────────────────────────────────────────┘
+
+[ Apply Changes ]  [ Dismiss ]
+```
+
+### What happens when you apply
+
+- Your **original suggestion is updated** in-place (same ID, same vote history, same comment thread)
+- The `lastUpdate` timestamp refreshes so others see the suggestion changed
+- The community can continue voting and commenting on the improved version
+- No version history is affected — this is just an edit to an existing suggestion
+
+### When you don't like the result
+
+- **Edit it** — the textarea is fully editable, change whatever you want
+- **Regenerate** — click "Regenerate" to get a fresh AI take with the same comments
+- **Dismiss** — click "Dismiss" to close the panel with no changes at all
+
+### Visibility rules
+
+The AI assist bar only appears when:
+- The suggestion has **2 or more comments** (one comment isn't enough signal)
+- You are the **suggestion author** or an **admin**
+- You are **logged in** (not anonymous/guest)
+- The paragraph is **not in refinement phase** (use "Improve with AI" during refinement instead)
+
+---
+
+## Pathway 3: AI Synthesize
 
 **Best for:** A paragraph has many suggestions. AI combines the best ideas into one text that you review and accept in a single flow.
 
@@ -127,7 +207,50 @@ In refinement mode:
 
 ---
 
-## Pathway 3: Review Queue
+## Pathway 3b: AI Merge Selected
+
+**Best for:** You want to hand-pick specific suggestions, have AI merge them, and let the community vote on the result before it becomes official.
+
+### Key difference from AI Synthesize (Pathway 3)
+
+| | AI Synthesize | AI Merge Selected |
+|---|---|---|
+| **Input** | Auto-selects top suggestions by consensus | Admin manually picks which suggestions |
+| **Output** | Immediately accepted as new version | Published as a new suggestion for voting |
+| **Community input** | Skipped — admin decides | Community votes on the merged suggestion |
+
+### Steps
+
+1. Open the **Suggestion Thread** for a paragraph
+2. In the **Admin Action Bar**, click **"Select to Merge"**
+3. Checkboxes appear on all suggestion cards — check the ones you want to combine (minimum 2)
+4. The bar shows how many are selected and a **"AI Merge Selected (N)"** button appears
+5. Click **"AI Merge Selected"** — AI processes and merges the selected suggestions
+6. When done, an **editable textarea** appears with the merged text:
+   - **Edit** the text however you like
+   - **"Show AI Reasoning"** to see why the AI made its choices
+7. Click **"Publish as Suggestion"** — the merged text appears as a new AI-generated suggestion
+8. The community can now **vote** on the merged suggestion alongside the original ones
+9. When it gains enough consensus, you can **Accept** it via Pathway 1
+
+### What happens on publish
+
+- A **new suggestion** is created in the thread (marked with the "AI Synthesis" badge)
+- It is attributed to the admin who created it
+- It starts with **zero votes** — the community evaluates it fresh
+- The original selected suggestions remain unchanged
+- The real-time listener picks it up instantly — all connected users see it immediately
+
+### When to use this instead of AI Synthesize
+
+- When you want **community buy-in** before accepting a change
+- When the suggestions are from **different perspectives** and you want voters to weigh in on the merge
+- When you want to **combine specific suggestions** rather than just the top ones by consensus
+- When the document topic is **sensitive** and unilateral admin acceptance would be inappropriate
+
+---
+
+## Pathway 4: Review Queue
 
 **Best for:** Hands-off approach. Suggestions automatically surface for your review once the community reaches consensus.
 
@@ -158,13 +281,13 @@ In refinement mode:
 
 ### What happens on approval
 
-Same as Pathway 1 (version history, promoted suggestion, reset votes, version increment), plus:
+Same as Pathway 1 (version history, promoted suggestion, reset votes, version increment) plus:
 - Suggestion creator receives an **in-app notification** ("Your suggestion was approved")
 - An **audit trail entry** is created
 
 ---
 
-## Pathway 4: AI Version Generation
+## Pathway 5: AI Version Generation
 
 **Best for:** Periodic comprehensive revision of the entire document using all community feedback at once.
 
@@ -244,11 +367,118 @@ This means:
 
 - **Start with the Admin Action Bar** - it guides you with the right actions based on community feedback state
 - **Accept Top** when a clear winner emerges (high consensus)
+- **AI Comment Assistant** (Pathway 2) - tell suggestion authors about this! When their suggestion gets feedback, they can use AI to improve it themselves instead of waiting for an admin
 - **AI Synthesize** when multiple suggestions have good ideas you want combined
 - **Refinement Phase** (overflow menu) when you want the community to vote on the AI synthesis first
-- **Use Pathway 3 (Review Queue)** when you want a more structured, ongoing workflow
-- **Use Pathway 4 (AI Versions)** for periodic comprehensive revisions (e.g., monthly review)
+- **Use Pathway 4 (Review Queue)** when you want a more structured, ongoing workflow
+- **Use Pathway 5 (AI Versions)** for periodic comprehensive revisions (e.g., monthly review)
 - The **consensus score** reflects community agreement: higher = more net support
 - Actions appear only when consensus reaches 30% — below that, the bar shows "Waiting for more community input"
 - After accepting a suggestion, the community **votes again** on the new text - this creates a continuous improvement loop
 - You can view **version history** for any paragraph to see how it evolved over time
+
+---
+
+## AI Comment Assistant — Technical Implementation
+
+### Component Architecture
+
+```
+CommentThread.tsx (modified)
+  ├── Comment[]
+  ├── AIAssistBar.tsx (NEW — trigger + loading state)
+  │   └── AIAssistPanel.tsx (NEW — result + editing + actions)
+  └── CommentForm
+```
+
+### New Files
+
+| File | Purpose |
+|------|---------|
+| `src/components/comments/AIAssistBar.tsx` | Trigger button + loading/error states |
+| `src/components/comments/AIAssistBar.module.scss` | Styles (BEM: `.ai-assist-bar`) |
+| `src/components/comments/AIAssistPanel.tsx` | Result display + editable textarea + actions |
+| `src/components/comments/AIAssistPanel.module.scss` | Styles (BEM: `.ai-assist-panel`) |
+| `src/hooks/useAICommentAssist.ts` | Hook: manages AI call state, abort controller |
+
+### API Endpoint
+
+```
+POST /api/suggestions/:paragraphId/ai-assist
+Body: { suggestionId, suggestionContent, originalParagraphContent }
+Response: { improvedText: string, changes: Array<{ description: string, fromComment?: string }> }
+```
+
+The server fetches comments internally (no need to send from client). Validates the requester is the suggestion author or an admin.
+
+### State Machine
+
+```
+idle ──[click Improve]──> loading
+loading ──[success]──> complete/reviewing
+loading ──[failure]──> error
+loading ──[click Cancel]──> idle
+error ──[click Try Again]──> loading
+error ──[click Dismiss]──> idle
+reviewing ──[click Apply]──> saving
+reviewing ──[click Dismiss]──> idle
+reviewing ──[click Regenerate]──> loading
+saving ──[success]──> success ──[1.5s auto]──> idle
+saving ──[failure]──> save-error
+```
+
+### Props Flow
+
+```typescript
+// Suggestion.tsx passes to CommentThread:
+<CommentThread
+  paragraphId={suggestion.suggestionId}
+  documentId={documentId}
+  // ... existing props ...
+  suggestionId={suggestion.suggestionId}         // NEW
+  suggestionContent={suggestion.suggestedContent} // NEW
+  isSuggestionOwner={isOwner}                     // NEW
+  isAdmin={isAdmin}                               // NEW
+  originalParagraphContent={originalContent}       // NEW
+  onSuggestionImproved={() => {}}                 // NEW callback
+/>
+```
+
+### Accessibility
+
+- **Focus management**: On trigger -> focus Cancel; on result -> focus changes region; on complete -> focus Comments toggle
+- **ARIA**: `role="region"` on bar, `aria-live="polite"` on loading, `aria-live="assertive"` on success/error
+- **Keyboard**: Tab order flows naturally; Escape key dismisses the panel
+- **Reduced motion**: Shimmer/slide animations replaced with instant visibility when `prefers-reduced-motion: reduce`
+- **High contrast**: Uses existing high-contrast CSS variable overrides
+
+### Translation Keys
+
+All user-facing text uses `useTranslation()`. Keys to add to all language files:
+
+| Key | English |
+|-----|---------|
+| `ai-assist-cta` | "Improve your suggestion using community feedback" |
+| `ai-assist-button` | "Improve" |
+| `ai-assist-loading` | "Reading {{count}} comments and generating improvements..." |
+| `ai-assist-cancel` | "Cancel" |
+| `ai-assist-error` | "Could not generate improvements. Please try again." |
+| `ai-assist-try-again` | "Try Again" |
+| `ai-assist-badge` | "AI Suggestion" |
+| `ai-assist-changes-title` | "Improvements based on feedback:" |
+| `ai-assist-change-source` | "Based on comment by {{name}}" |
+| `ai-assist-edit-label` | "Review and edit the improved text" |
+| `ai-assist-apply` | "Apply Changes" |
+| `ai-assist-applying` | "Applying..." |
+| `ai-assist-dismiss` | "Dismiss" |
+| `ai-assist-regenerate` | "Regenerate" |
+| `ai-assist-success` | "Changes applied successfully" |
+| `ai-assist-save-error` | "Failed to apply changes. Please try again." |
+
+### Edge Cases
+
+- **Comments deleted during AI processing** — AI already captured them server-side, result is still valid
+- **Another user edits suggestion while reviewing** — PUT overwrites; future: add `expectedLastUpdate` conflict detection
+- **AI returns no meaningful changes** — Show "No significant improvements found" message, disable Apply
+- **20+ comments** — All processed, loading may take 2-5 seconds instead of 1-2
+- **User collapses comments during loading** — `AbortController` cancels the fetch on unmount
