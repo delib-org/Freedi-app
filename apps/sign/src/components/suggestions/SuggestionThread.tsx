@@ -4,18 +4,25 @@ import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { Suggestion as SuggestionType, Statement, Collections } from '@freedi/shared-types';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeDocSnapshot } from '@/lib/firebase/safeSnapshot';
 import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
+import { useSuggestionVisibility } from '@/hooks/useSuggestionVisibility';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { useTypingStatus } from '@/hooks/useTypingStatus';
+import { useRefinementPhase } from '@/hooks/useRefinementPhase';
+import { useAISynthesis } from '@/hooks/useAISynthesis';
 import { logError } from '@/lib/utils/errorHandling';
 import Suggestion from './Suggestion';
 import SuggestionModal from './SuggestionModal';
 import SortControls, { SortType } from './SortControls';
 import TypingIndicator from './TypingIndicator';
+import AdminActionBar from './AdminActionBar';
+import AIImprovePanel from './AIImprovePanel';
+import HiddenSuggestions from './HiddenSuggestions';
 import Modal from '../shared/Modal';
 import styles from './SuggestionThread.module.scss';
 
@@ -26,6 +33,12 @@ interface SuggestionThreadProps {
   onClose: () => void;
   /** When true, hide display names in suggestions */
   hideUserIdentity?: boolean;
+  /** Heading number of the paragraph (e.g., "1.2.3") for suggestion numbering */
+  headingNumber?: string;
+  /** Whether the current user is an admin */
+  isAdmin?: boolean;
+  /** Whether refinement feature is enabled for this document */
+  enableRefinement?: boolean;
 }
 
 // Seeded random for consistent random order during session
@@ -42,6 +55,9 @@ export default function SuggestionThread({
   originalContent,
   onClose: _onClose,
   hideUserIdentity = false,
+  headingNumber,
+  isAdmin = false,
+  enableRefinement = false,
 }: SuggestionThreadProps) {
   const { t } = useTranslation();
   const { decrementSuggestionCount } = useUIStore();
@@ -53,9 +69,28 @@ export default function SuggestionThread({
   const [randomSeed] = useState(() => Date.now());
   const [isFrozen, setIsFrozen] = useState(false); // Stop real-time reordering
   const [frozenSuggestions, setFrozenSuggestions] = useState<SuggestionType[]>([]);
+  const [improvingSuggestionId, setImprovingSuggestionId] = useState<string | null>(null);
+
+  // Selection mode state for AI merge
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Refinement phase state
+  const { refinement } = useRefinementPhase(paragraphId, enableRefinement);
+  const {
+    isLoading: isAILoading,
+    improveResult,
+    synthesize,
+    improve,
+    setPhase,
+    reset: resetAI,
+  } = useAISynthesis();
+
+  const isRefinementPhase = enableRefinement && refinement.phase === 'refinement';
+  const consensusThreshold = refinement.consensusThreshold ?? 0.2;
 
   // Real-time suggestions from Firestore (updates instantly when anyone votes or creates suggestions)
-  const suggestionStatements = useParagraphSuggestions(paragraphId);
+  const { suggestions: suggestionStatements, isLoading: isSuggestionsLoading } = useParagraphSuggestions(paragraphId);
 
   // Real-time typing status
   const { typingUsers } = useTypingStatus({
@@ -68,12 +103,10 @@ export default function SuggestionThread({
   const [officialParagraph, setOfficialParagraph] = useState<Statement | null>(null);
 
   useEffect(() => {
-    // Real-time listener for the official paragraph Statement
-    // Updates instantly when consensus changes from voting
     const firestore = getFirebaseFirestore();
     const statementRef = doc(firestore, Collections.statements, paragraphId);
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe = safeDocSnapshot(
       statementRef,
       (docSnap) => {
         if (docSnap.exists()) {
@@ -88,19 +121,16 @@ export default function SuggestionThread({
       }
     );
 
-    // Cleanup listener on unmount
     return () => unsubscribe();
   }, [paragraphId]);
 
   // Convert Statement[] to legacy Suggestion[] format for compatibility
   const suggestions: SuggestionType[] = useMemo(() => {
     const converted = suggestionStatements.map((statement: Statement) => {
-      console.info('[SuggestionThread] Converting statement:', {
-        id: statement.statementId,
-        hasReasoning: !!statement.reasoning,
-        reasoning: statement.reasoning,
-        creator: statement.creator?.displayName,
-      });
+      // Check for AI-generated marker on the statement
+      const stmtDoc = statement.doc as Record<string, unknown> | undefined;
+      const isAI = !!(stmtDoc?.isAIGenerated);
+      const isLate = !!(stmtDoc?.isLateAddition);
 
       return {
         suggestionId: statement.statementId,
@@ -116,9 +146,11 @@ export default function SuggestionThread({
         lastUpdate: statement.lastUpdate || statement.createdAt,
         consensus: statement.consensus || 0,
         hide: statement.hide || false,
-        // Include evaluation counts for vote breakdown display
         positiveEvaluations: statement.evaluation?.numberOfProEvaluators || 0,
         negativeEvaluations: statement.evaluation?.numberOfConEvaluators || 0,
+        // AI + late addition fields
+        isAIGenerated: isAI,
+        isLateAddition: isLate,
       };
     });
 
@@ -127,7 +159,7 @@ export default function SuggestionThread({
       const existingIds = new Set(frozenSuggestions.map(s => s.suggestionId));
       const newItems = converted.filter(s => !existingIds.has(s.suggestionId));
       if (newItems.length > 0) {
-        setFrozenSuggestions(prev => [...newItems, ...prev]); // Add new items at top
+        setFrozenSuggestions(prev => [...newItems, ...prev]);
       }
       return frozenSuggestions;
     }
@@ -135,18 +167,43 @@ export default function SuggestionThread({
     return converted;
   }, [suggestionStatements, paragraphId, documentId, originalContent, isFrozen, frozenSuggestions]);
 
-  // Log when suggestions change
-  console.info('[SuggestionThread] Render - suggestions:', suggestions.length);
-  if (suggestions.length > 0) {
-    console.info('[SuggestionThread] Suggestions list:', suggestions.map(s => ({
-      id: s.suggestionId,
-      creator: s.creatorDisplayName,
-    })));
-  }
+  // Phase-aware filtering: split visible vs hidden suggestions
+  const { visibleSuggestions, hiddenSuggestions } = useMemo(() => {
+    if (!isRefinementPhase) {
+      return { visibleSuggestions: suggestions, hiddenSuggestions: [] };
+    }
 
-  // Sort suggestions based on selected sort type
+    const visible: SuggestionType[] = [];
+    const hidden: SuggestionType[] = [];
+
+    for (const s of suggestions) {
+      // AI suggestions and late additions are always visible
+      if (s.isAIGenerated || s.isLateAddition || s.consensus >= consensusThreshold) {
+        visible.push(s);
+      } else {
+        hidden.push(s);
+      }
+    }
+
+    // Sort: AI suggestions first, then by consensus, late additions at bottom
+    visible.sort((a, b) => {
+      if (a.isAIGenerated && !b.isAIGenerated) return -1;
+      if (!a.isAIGenerated && b.isAIGenerated) return 1;
+      if (a.isLateAddition && !b.isLateAddition) return 1;
+      if (!a.isLateAddition && b.isLateAddition) return -1;
+      return (b.consensus || 0) - (a.consensus || 0);
+    });
+
+    return { visibleSuggestions: visible, hiddenSuggestions: hidden };
+  }, [suggestions, isRefinementPhase, consensusThreshold]);
+
+  // Sort suggestions based on selected sort type (only for non-refinement phase)
   const sortedSuggestions = useMemo(() => {
-    const sorted = [...suggestions];
+    if (isRefinementPhase) {
+      return visibleSuggestions; // Already sorted by phase logic
+    }
+
+    const sorted = [...visibleSuggestions];
 
     switch (sortType) {
       case 'consensus':
@@ -163,7 +220,7 @@ export default function SuggestionThread({
       default:
         return sorted;
     }
-  }, [suggestions, sortType, randomSeed]);
+  }, [visibleSuggestions, sortType, randomSeed, isRefinementPhase]);
 
   // Generate flip key from sorted order
   const flipKey = useMemo(
@@ -171,15 +228,13 @@ export default function SuggestionThread({
     [sortedSuggestions]
   );
 
-  const isLoading = false; // Real-time hook handles loading internally
+  const isLoading = isSuggestionsLoading;
 
   // Convert the official paragraph Statement to a Suggestion for display
-  // This allows users to vote on the current version alongside alternatives
   const currentParagraphSuggestion = useMemo((): SuggestionType => {
     if (!officialParagraph) {
-      // Fallback: create pseudo-suggestion if official paragraph not loaded yet
       return {
-        suggestionId: paragraphId, // Use actual paragraphId (which is the statementId)
+        suggestionId: paragraphId,
         paragraphId: paragraphId,
         documentId: documentId,
         topParentId: documentId,
@@ -190,14 +245,13 @@ export default function SuggestionThread({
         creatorDisplayName: t('Official'),
         createdAt: Date.now(),
         lastUpdate: Date.now(),
-        consensus: 1.0, // Official paragraphs start with full consensus
+        consensus: 1.0,
         hide: false,
         positiveEvaluations: undefined,
         negativeEvaluations: undefined,
       };
     }
 
-    // Use the actual official paragraph Statement
     return {
       suggestionId: officialParagraph.statementId,
       paragraphId: paragraphId,
@@ -212,7 +266,6 @@ export default function SuggestionThread({
       lastUpdate: officialParagraph.lastUpdate || officialParagraph.createdAt,
       consensus: officialParagraph.consensus || 1.0,
       hide: officialParagraph.hide || false,
-      // Include evaluation counts for vote breakdown display
       positiveEvaluations: officialParagraph.evaluation?.numberOfProEvaluators || 0,
       negativeEvaluations: officialParagraph.evaluation?.numberOfConEvaluators || 0,
     };
@@ -227,7 +280,6 @@ export default function SuggestionThread({
   // Handle sort change
   const handleSortChange = useCallback((newSort: SortType) => {
     setSortType(newSort);
-    // Unfreeze if changing sort order
     if (isFrozen) {
       setIsFrozen(false);
     }
@@ -236,7 +288,6 @@ export default function SuggestionThread({
   // Handle freeze/unfreeze
   const handleToggleFreeze = useCallback(() => {
     if (!isFrozen) {
-      // Freeze: Save current sorted order
       setFrozenSuggestions(sortedSuggestions);
     }
     setIsFrozen(!isFrozen);
@@ -247,14 +298,11 @@ export default function SuggestionThread({
     try {
       const response = await fetch(API_ROUTES.SUGGESTIONS(paragraphId), {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ suggestionId }),
       });
 
       if (response.ok) {
-        // Real-time listener will update suggestions automatically
         decrementSuggestionCount(paragraphId);
       }
     } catch (err) {
@@ -272,21 +320,171 @@ export default function SuggestionThread({
     setShowAddModal(true);
   };
 
+  // Handle accept suggestion (admin replaces paragraph with versioning)
+  const handleAccept = useCallback(async (suggestion: SuggestionType) => {
+    if (!window.confirm(t('Are you sure you want to replace the paragraph with this suggestion?'))) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/suggestions/${suggestion.suggestionId}/accept`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          documentId,
+          paragraphId,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to accept suggestion');
+      }
+
+      // Real-time listener will update the paragraph content automatically
+      // Accepted suggestion will be filtered out (promotedToVersion is set)
+      // Other suggestions will be marked with forVersion
+    } catch (err) {
+      logError(err, {
+        operation: 'SuggestionThread.handleAccept',
+        userId: user?.uid || undefined,
+        metadata: { paragraphId, suggestionId: suggestion.suggestionId },
+      });
+    }
+  }, [paragraphId, documentId, user, t]);
+
   // Handle add/edit success
   const handleModalSuccess = () => {
-    // No need to fetch - real-time listener will update automatically
     setShowAddModal(false);
     setEditingSuggestion(null);
   };
 
+  // Handle "Improve with AI" for a specific suggestion
+  const handleImproveWithAI = useCallback(async (suggestionId: string) => {
+    setImprovingSuggestionId(suggestionId);
+
+    // Find the suggestion
+    const suggestion = suggestions.find(s => s.suggestionId === suggestionId);
+    if (!suggestion) return;
+
+    // We need to fetch comments for this suggestion - they're loaded when CommentThread renders
+    // For now, call the API which will fetch them server-side
+    try {
+      const commentsResponse = await fetch(`/api/comments/${suggestionId}`);
+      if (!commentsResponse.ok) return;
+
+      const commentsData = await commentsResponse.json();
+      const comments = (commentsData.comments || []).map((c: { statementId: string; statement: string; consensus?: number; creator?: { displayName?: string } }) => ({
+        commentId: c.statementId,
+        content: c.statement,
+        consensus: c.consensus || 0,
+        creatorDisplayName: c.creator?.displayName || 'Anonymous',
+      }));
+
+      if (comments.length === 0) return;
+
+      await improve(paragraphId, suggestionId, suggestion.suggestedContent, comments, originalContent);
+    } catch (error) {
+      logError(error, {
+        operation: 'SuggestionThread.handleImproveWithAI',
+        metadata: { paragraphId, suggestionId },
+      });
+    }
+  }, [suggestions, paragraphId, originalContent, improve]);
+
+  // Selection mode handlers
+  const handleEnterSelectionMode = useCallback(() => {
+    setSelectionMode(true);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectionMode(false);
+    setSelectedIds(new Set());
+  }, []);
+
+  const handleToggleSelect = useCallback((suggestionId: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(suggestionId)) {
+        next.delete(suggestionId);
+      } else {
+        next.add(suggestionId);
+      }
+      return next;
+    });
+  }, []);
+
+  // Suggestion visibility (admin hide/show)
+  const { showOnlySelected, showAll, hasHiddenSuggestions } = useSuggestionVisibility(paragraphId, documentId);
+
+  // Publish merged text as a new suggestion
+  const handlePublishMerge = useCallback(async (
+    _paragraphId: string,
+    _documentId: string,
+    mergedText: string,
+    reasoning: string,
+    sourceSuggestionIds: string[],
+  ): Promise<boolean> => {
+    try {
+      const response = await fetch(API_ROUTES.ADMIN_MERGE_SUGGESTION, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paragraphId,
+          documentId,
+          mergedText,
+          reasoning,
+          sourceSuggestionIds,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to publish merge');
+      }
+
+      return true;
+    } catch (error) {
+      logError(error, {
+        operation: 'SuggestionThread.handlePublishMerge',
+        userId: user?.uid || undefined,
+        metadata: { paragraphId, sourceCount: sourceSuggestionIds.length },
+      });
+      return false;
+    }
+  }, [paragraphId, documentId, user]);
+
   return (
     <div className={styles.container}>
+      {/* Admin Action Bar - replaces PhaseControls + AISynthesisPanel */}
+      {isAdmin && (
+        <AdminActionBar
+          paragraphId={paragraphId}
+          documentId={documentId}
+          originalContent={originalContent}
+          suggestions={suggestions}
+          enableRefinement={enableRefinement}
+          onSynthesize={synthesize}
+          onSetPhase={setPhase}
+          isAILoading={isAILoading}
+          selectionMode={selectionMode}
+          selectedIds={selectedIds}
+          onEnterSelectionMode={handleEnterSelectionMode}
+          onClearSelection={handleClearSelection}
+          onPublishMerge={handlePublishMerge}
+          onShowOnlySelected={showOnlySelected}
+          onShowAll={showAll}
+          hasHiddenSuggestions={hasHiddenSuggestions}
+        />
+      )}
+
       {/* Sort Controls with Stop/Resume Button */}
       <div className={styles.controls}>
         <SortControls
           activeSort={sortType}
           onSortChange={handleSortChange}
-          disabled={suggestions.length <= 1 || isFrozen}
+          disabled={suggestions.length <= 1 || isFrozen || isRefinementPhase}
         />
         <button
           type="button"
@@ -326,6 +524,7 @@ export default function SuggestionThread({
           onEdit={handleEdit}
           isCurrent={true}
           hideUserIdentity={hideUserIdentity}
+          suggestionNumber={headingNumber ? `#${headingNumber}` : undefined}
         />
       </div>
 
@@ -350,7 +549,7 @@ export default function SuggestionThread({
         ) : sortedSuggestions.length === 0 ? (
           <p className={styles.empty}>{t('No suggestions yet')}</p>
         ) : (
-          sortedSuggestions.map((suggestion) => (
+          sortedSuggestions.map((suggestion, index) => (
             <Flipped key={suggestion.suggestionId} flipId={suggestion.suggestionId}>
               <div>
                 <Suggestion
@@ -363,12 +562,56 @@ export default function SuggestionThread({
                   onEdit={handleEdit}
                   isCurrent={false}
                   hideUserIdentity={hideUserIdentity}
+                  suggestionNumber={headingNumber ? `#${headingNumber}-${index + 1}` : undefined}
+                  isAIGenerated={!!suggestion.isAIGenerated}
+                  aiSourceCount={suggestion.aiSourceSuggestionIds?.length}
+                  isLateAddition={!!suggestion.isLateAddition}
+                  onImproveWithAI={handleImproveWithAI}
+                  showImproveButton={
+                    isRefinementPhase &&
+                    (isAdmin || (!!user && suggestion.creatorId === user.uid))
+                  }
+                  showAcceptButton={isAdmin}
+                  onAccept={handleAccept}
+                  isSelectable={selectionMode}
+                  isSelected={selectedIds.has(suggestion.suggestionId)}
+                  onToggleSelect={handleToggleSelect}
                 />
+                {/* AI Improve Panel inline below the suggestion being improved */}
+                {improvingSuggestionId === suggestion.suggestionId && improveResult && (
+                  <AIImprovePanel
+                    improveResult={improveResult}
+                    suggestionId={suggestion.suggestionId}
+                    paragraphId={paragraphId}
+                    onSaved={() => {
+                      setImprovingSuggestionId(null);
+                      resetAI();
+                    }}
+                    onDismiss={() => {
+                      setImprovingSuggestionId(null);
+                      resetAI();
+                    }}
+                  />
+                )}
               </div>
             </Flipped>
           ))
         )}
       </Flipper>
+
+      {/* Hidden suggestions section - admin only during refinement */}
+      {isRefinementPhase && isAdmin && hiddenSuggestions.length > 0 && (
+        <HiddenSuggestions
+          suggestions={hiddenSuggestions}
+          userId={user?.uid || null}
+          userDisplayName={user?.displayName || null}
+          paragraphId={paragraphId}
+          documentId={documentId}
+          onDelete={handleDelete}
+          onEdit={handleEdit}
+          hideUserIdentity={hideUserIdentity}
+        />
+      )}
 
       {/* Typing indicator - shows when others are writing */}
       {typingUsers.length > 0 && (
@@ -376,7 +619,7 @@ export default function SuggestionThread({
       )}
 
       {/* Add suggestion button or notice */}
-      {userSuggestion ? (
+      {userSuggestion && !isAdmin ? (
         <div className={styles.hasNotice}>
           <p>{t('You have already suggested an alternative. You can edit your suggestion above.')}</p>
         </div>
@@ -396,7 +639,7 @@ export default function SuggestionThread({
           >
             <path d="M12 5v14M5 12h14" />
           </svg>
-          {t('Add Your Suggestion')}
+          {isRefinementPhase ? t('Add Late Suggestion') : t('Add Your Suggestion')}
         </button>
       )}
 

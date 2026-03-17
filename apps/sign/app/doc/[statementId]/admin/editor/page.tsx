@@ -14,7 +14,8 @@ import { useAdminContext } from '../AdminContext';
 import { sanitizeHTML } from '@/lib/utils/sanitize';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { collection, query, where, orderBy, onSnapshot, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, orderBy, doc, getDoc } from 'firebase/firestore';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import {
   createParagraphStatementToDB,
   updateParagraphStatementToDB,
@@ -94,7 +95,7 @@ export default function EditorPage() {
       orderBy('doc.order', 'asc')
     );
 
-    const unsubscribe = onSnapshot(
+    const unsubscribe = safeQuerySnapshot(
       q,
       (snapshot) => {
         const paragraphStatements: Paragraph[] = [];

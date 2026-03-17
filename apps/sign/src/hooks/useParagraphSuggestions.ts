@@ -9,8 +9,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, Unsubscribe } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { useUIStore } from '@/store/uiStore';
@@ -30,14 +31,18 @@ import { QUERY_LIMITS } from '@/constants/common';
 export function useParagraphSuggestions(
   paragraphId: string | null,
   enabled: boolean = true
-): Statement[] {
+): { suggestions: Statement[]; isLoading: boolean } {
   const [suggestions, setSuggestions] = useState<Statement[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (!enabled || !paragraphId) {
       setSuggestions([]);
+      setIsLoading(false);
       return;
     }
+
+    setIsLoading(true);
 
     let unsubscribe: Unsubscribe | null = null;
 
@@ -55,7 +60,7 @@ export function useParagraphSuggestions(
       );
 
       // Set up real-time listener
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const updatedSuggestions: Statement[] = [];
@@ -79,12 +84,14 @@ export function useParagraphSuggestions(
           });
 
           setSuggestions(updatedSuggestions);
+          setIsLoading(false);
         },
         (error) => {
           logError(error, {
             operation: 'hooks.useParagraphSuggestions',
             paragraphId,
           });
+          setIsLoading(false);
         }
       );
     } catch (error) {
@@ -92,6 +99,7 @@ export function useParagraphSuggestions(
         operation: 'hooks.useParagraphSuggestions.setup',
         paragraphId,
       });
+      setIsLoading(false);
     }
 
     // Cleanup on unmount
@@ -102,7 +110,7 @@ export function useParagraphSuggestions(
     };
   }, [paragraphId, enabled]);
 
-  return suggestions;
+  return { suggestions, isLoading };
 }
 
 /**
@@ -142,7 +150,7 @@ export function useDocumentSuggestions(
         orderBy('consensus', 'desc')
       );
 
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const newSuggestionMap: Record<string, Statement[]> = {};
@@ -212,7 +220,7 @@ export function useWinningSuggestion(
   paragraphId: string | null,
   enabled: boolean = true
 ): Statement | null {
-  const suggestions = useParagraphSuggestions(paragraphId, enabled);
+  const { suggestions } = useParagraphSuggestions(paragraphId, enabled);
 
   // First suggestion is winning (already sorted by consensus descending)
   return suggestions.length > 0 ? suggestions[0]! : null;
@@ -252,7 +260,7 @@ export function useRealtimeSuggestionCounts(
         where('statementType', '==', StatementType.option)
       );
 
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           // Count suggestions per paragraph
@@ -349,7 +357,7 @@ export function useRealtimeParagraphs(
         orderBy('doc.order', 'asc')
       );
 
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const updatedParagraphs: Paragraph[] = [];

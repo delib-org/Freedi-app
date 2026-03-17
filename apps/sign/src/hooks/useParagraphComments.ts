@@ -10,8 +10,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { collection, query, where, orderBy, limit, onSnapshot, Unsubscribe } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, Unsubscribe } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { QUERY_LIMITS } from '@/constants/common';
@@ -58,7 +59,7 @@ export function useParagraphComments(
       );
 
       // Set up real-time listener
-      unsubscribe = onSnapshot(
+      unsubscribe = safeQuerySnapshot(
         q,
         (snapshot) => {
           const updatedComments: Statement[] = [];

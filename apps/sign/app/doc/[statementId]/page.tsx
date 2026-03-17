@@ -137,6 +137,7 @@ export default async function DocumentPage({ params }: PageProps) {
     requireGoogleLogin?: boolean;
     hideUserIdentity?: boolean;
     showSignatureCounts?: boolean;
+    enableRefinement?: boolean;
   } }).signSettings;
   const textDirection: TextDirection = signSettings?.textDirection || 'auto';
   const defaultLanguage = signSettings?.defaultLanguage || '';
@@ -153,6 +154,9 @@ export default async function DocumentPage({ params }: PageProps) {
 
   // Suggestions feature setting
   const enableSuggestions = signSettings?.enableSuggestions ?? false;
+
+  // Refinement workflow setting
+  const enableRefinement = signSettings?.enableRefinement ?? false;
 
   // Accessibility setting - show ghosted buttons always for elderly users
   const enhancedVisibility = signSettings?.enhancedVisibility ?? false;
@@ -245,6 +249,7 @@ export default async function DocumentPage({ params }: PageProps) {
         isAdmin={isAdmin}
         tocSettings={tocSettings}
         enableSuggestions={enableSuggestions}
+        enableRefinement={enableRefinement}
         enhancedVisibility={enhancedVisibility}
         explanationVideoUrl={explanationVideoUrl}
         explanationVideoMode={explanationVideoMode}

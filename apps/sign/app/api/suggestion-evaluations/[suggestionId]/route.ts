@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { FieldValue } from 'firebase-admin/firestore';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, calcBinaryConsensus } from '@freedi/shared-types';
-import type { Statement } from '@freedi/shared-types';
+import type { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
 interface EvaluationInput {
@@ -10,67 +11,86 @@ interface EvaluationInput {
 }
 
 /**
- * Lazy migration: ensures the Statement has a standard `evaluation` object.
- * If the Statement only has the old `positiveEvaluations`/`negativeEvaluations` fields,
- * this counts all existing evaluations and initializes the `evaluation` object
- * so the Firebase function can atomically increment from correct base values.
+ * Computes the diff between old and new evaluations for atomic increment updates.
  */
-async function ensureEvaluationObjectExists(
+function computeEvalDiffs(oldEval: number, newEval: number) {
+  const proDiff = (newEval > 0 ? 1 : 0) - (oldEval > 0 ? 1 : 0);
+  const conDiff = (newEval < 0 ? 1 : 0) - (oldEval < 0 ? 1 : 0);
+  const evalDiff = newEval - oldEval;
+  const squaredDiff = newEval * newEval - oldEval * oldEval;
+  const evaluatorDiff = (newEval !== 0 ? 1 : 0) - (oldEval !== 0 ? 1 : 0);
+
+  return { proDiff, conDiff, evalDiff, squaredDiff, evaluatorDiff };
+}
+
+/**
+ * Atomically increments the Statement's evaluation counters using FieldValue.increment,
+ * then recalculates consensus in a Firestore transaction from the updated values.
+ * This is race-condition-safe: increments are atomic, and consensus is calculated
+ * inside a transaction from the authoritative counter values.
+ */
+async function atomicUpdateStatement(
   db: FirebaseFirestore.Firestore,
-  suggestionId: string
+  suggestionId: string,
+  diffs: ReturnType<typeof computeEvalDiffs>,
+  ensureEvaluationObject: boolean,
 ): Promise<void> {
   const statementRef = db.collection(Collections.statements).doc(suggestionId);
-  const statementSnap = await statementRef.get();
 
-  if (!statementSnap.exists) return;
-
-  const statementData = statementSnap.data() as Record<string, unknown>;
-
-  // If the evaluation object already exists, no migration needed
-  if (statementData.evaluation && typeof statementData.evaluation === 'object') {
-    return;
+  // If the statement doesn't have an evaluation object yet, initialize it
+  // before using FieldValue.increment (which requires the fields to exist)
+  if (ensureEvaluationObject) {
+    const snap = await statementRef.get();
+    const data = snap.data() as Record<string, unknown> | undefined;
+    if (!data?.evaluation || typeof data.evaluation !== 'object') {
+      await statementRef.update({
+        evaluation: {
+          sumEvaluations: 0,
+          numberOfEvaluators: 0,
+          agreement: 0,
+          sumPro: 0,
+          sumCon: 0,
+          numberOfProEvaluators: 0,
+          numberOfConEvaluators: 0,
+          sumSquaredEvaluations: 0,
+          averageEvaluation: 0,
+          evaluationRandomNumber: Math.random(),
+          viewed: 0,
+        },
+      });
+    }
   }
 
-  // Count all existing evaluations for this suggestion
-  const evaluationsSnap = await db
-    .collection(Collections.evaluations)
-    .where('statementId', '==', suggestionId)
-    .get();
-
-  let positiveCount = 0;
-  let negativeCount = 0;
-
-  evaluationsSnap.docs.forEach((evalDoc) => {
-    const evalData = evalDoc.data();
-    const evalValue = evalData.evaluation || 0;
-    if (evalValue > 0) positiveCount++;
-    else if (evalValue < 0) negativeCount++;
-  });
-
-  const numberOfEvaluators = positiveCount + negativeCount;
-  const sumEvaluations = positiveCount - negativeCount;
-  const sumSquaredEvaluations = positiveCount + negativeCount; // since 1² = (-1)² = 1
-  const consensus = calcBinaryConsensus(positiveCount, negativeCount);
-
+  // Step 1: Atomic increments for all counting fields
   await statementRef.update({
-    evaluation: {
-      sumEvaluations,
-      numberOfEvaluators,
-      agreement: consensus,
-      sumPro: positiveCount,
-      sumCon: negativeCount,
-      numberOfProEvaluators: positiveCount,
-      numberOfConEvaluators: negativeCount,
-      sumSquaredEvaluations,
-      averageEvaluation: numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0,
-      evaluationRandomNumber: Math.random(),
-      viewed: 0,
-    },
-    consensus,
-    totalEvaluators: numberOfEvaluators,
+    'evaluation.numberOfProEvaluators': FieldValue.increment(diffs.proDiff),
+    'evaluation.numberOfConEvaluators': FieldValue.increment(diffs.conDiff),
+    'evaluation.sumEvaluations': FieldValue.increment(diffs.evalDiff),
+    'evaluation.numberOfEvaluators': FieldValue.increment(diffs.evaluatorDiff),
+    'evaluation.sumSquaredEvaluations': FieldValue.increment(diffs.squaredDiff),
+    'evaluation.sumPro': FieldValue.increment(Math.max(diffs.proDiff, 0)),
+    'evaluation.sumCon': FieldValue.increment(Math.max(diffs.conDiff, 0)),
+    totalEvaluators: FieldValue.increment(diffs.evaluatorDiff),
+    lastUpdate: Date.now(),
   });
 
-  logger.info(`[Suggestion Evaluations API] Lazy migration: initialized evaluation object for ${suggestionId} (pro=${positiveCount}, con=${negativeCount})`);
+  // Step 2: Transaction to read updated counters and write consensus
+  await db.runTransaction(async (transaction) => {
+    const doc = await transaction.get(statementRef);
+    const evaluation = doc.data()?.evaluation as StatementEvaluation | undefined;
+
+    const pro = Math.max(0, evaluation?.numberOfProEvaluators || 0);
+    const con = Math.max(0, evaluation?.numberOfConEvaluators || 0);
+    const numEvals = evaluation?.numberOfEvaluators || 0;
+    const sumEvals = evaluation?.sumEvaluations || 0;
+    const consensus = calcBinaryConsensus(pro, con);
+
+    transaction.update(statementRef, {
+      consensus,
+      'evaluation.agreement': consensus,
+      'evaluation.averageEvaluation': numEvals > 0 ? sumEvals / numEvals : 0,
+    });
+  });
 }
 
 /**
@@ -88,7 +108,6 @@ export async function GET(
 
     const db = getFirestoreAdmin();
 
-    // Read counts from the Statement's evaluation object (populated by Firebase function)
     const statementSnap = await db.collection(Collections.statements).doc(suggestionId).get();
     const statementData = statementSnap.data() as Statement | undefined;
 
@@ -96,7 +115,7 @@ export async function GET(
     const positiveEvaluations = evaluation?.numberOfProEvaluators || 0;
     const negativeEvaluations = evaluation?.numberOfConEvaluators || 0;
     const sumEvaluation = evaluation?.sumEvaluations || 0;
-    const evaluationCount = (evaluation?.numberOfEvaluators || 0);
+    const evaluationCount = evaluation?.numberOfEvaluators || 0;
 
     // Check if the current user has an evaluation
     let userEvaluation: number | null = null;
@@ -129,8 +148,7 @@ export async function GET(
 /**
  * POST /api/suggestion-evaluations/[suggestionId]
  * Create or update an evaluation for a suggestion.
- * The Firebase function (fn_evaluation.ts) handles updating the Statement's
- * evaluation object and consensus atomically.
+ * Uses atomic FieldValue.increment for counters and a transaction for consensus.
  */
 export async function POST(
   request: NextRequest,
@@ -151,7 +169,6 @@ export async function POST(
     const body: EvaluationInput = await request.json();
     const { evaluation } = body;
 
-    // Validate evaluation value (-1 or 1)
     if (evaluation !== -1 && evaluation !== 1) {
       return NextResponse.json(
         { error: 'Evaluation must be -1 or 1' },
@@ -161,19 +178,17 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Get the suggestion (stored as Statement) to verify it exists and get parentId
-    const suggestionRef = await db.collection(Collections.statements).doc(suggestionId).get();
-
-    if (!suggestionRef.exists) {
+    // Verify suggestion exists
+    const suggestionSnap = await db.collection(Collections.statements).doc(suggestionId).get();
+    if (!suggestionSnap.exists) {
       return NextResponse.json(
         { error: 'Suggestion not found' },
         { status: 404 }
       );
     }
 
-    const suggestion = suggestionRef.data() as Statement | undefined;
+    const suggestion = suggestionSnap.data() as Statement | undefined;
 
-    // Users cannot evaluate their own suggestions
     if (suggestion?.creatorId === userId) {
       return NextResponse.json(
         { error: 'Cannot evaluate your own suggestion' },
@@ -181,15 +196,13 @@ export async function POST(
       );
     }
 
-    // Ensure the Statement has a standard evaluation object before writing
-    // so the Firebase function can atomically increment from correct base values
-    await ensureEvaluationObjectExists(db, suggestionId);
-
-    // Get display name
-    const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
-
-    // Evaluation ID follows pattern: ${userId}--${suggestionId}
+    // Read old evaluation to compute diff
     const evaluationId = `${userId}--${suggestionId}`;
+    const oldEvalSnap = await db.collection(Collections.evaluations).doc(evaluationId).get();
+    const oldEval = oldEvalSnap.exists ? (oldEvalSnap.data()?.evaluation || 0) : 0;
+    const isNew = !oldEvalSnap.exists;
+
+    const displayName = getUserDisplayNameFromCookie(cookieHeader) || getAnonymousDisplayName(userId);
 
     const evaluationData = {
       evaluationId,
@@ -200,15 +213,21 @@ export async function POST(
       evaluatorId: userId,
       evaluation,
       updatedAt: Date.now(),
+      source: 'sign' as const,
       evaluator: {
         displayName,
         uid: userId,
       },
     };
 
+    // Write evaluation doc
     await db.collection(Collections.evaluations).doc(evaluationId).set(evaluationData);
 
-    logger.info(`[Suggestion Evaluations API] Created/updated evaluation: ${evaluationId}`);
+    // Compute diffs and atomically update statement
+    const diffs = computeEvalDiffs(oldEval, evaluation);
+    await atomicUpdateStatement(db, suggestionId, diffs, isNew);
+
+    logger.info(`[Suggestion Evaluations API] ${isNew ? 'Created' : 'Updated'} evaluation: ${evaluationId} (diff: pro=${diffs.proDiff}, con=${diffs.conDiff})`);
 
     return NextResponse.json({
       success: true,
@@ -227,8 +246,7 @@ export async function POST(
 /**
  * DELETE /api/suggestion-evaluations/[suggestionId]
  * Remove user's evaluation from a suggestion.
- * The Firebase function (fn_evaluation.ts) handles updating the Statement's
- * evaluation object and consensus atomically.
+ * Uses atomic FieldValue.increment to reverse counters and a transaction for consensus.
  */
 export async function DELETE(
   request: NextRequest,
@@ -246,23 +264,28 @@ export async function DELETE(
     }
 
     const db = getFirestoreAdmin();
-
     const evaluationId = `${userId}--${suggestionId}`;
 
-    // Get existing evaluation
-    const evalRef = await db.collection(Collections.evaluations).doc(evaluationId).get();
-
-    if (!evalRef.exists) {
+    // Read existing evaluation to compute reverse diff
+    const evalSnap = await db.collection(Collections.evaluations).doc(evaluationId).get();
+    if (!evalSnap.exists) {
       return NextResponse.json(
         { error: 'Evaluation not found' },
         { status: 404 }
       );
     }
 
-    // Delete the evaluation — Firebase function handles Statement update
+    const oldEval = evalSnap.data()?.evaluation || 0;
+
+    // Mark with source before deleting so Firebase function skips the trigger
+    await db.collection(Collections.evaluations).doc(evaluationId).update({ source: 'sign' });
     await db.collection(Collections.evaluations).doc(evaluationId).delete();
 
-    logger.info(`[Suggestion Evaluations API] Deleted evaluation: ${evaluationId}`);
+    // Compute reverse diffs (newEval = 0 since we're removing) and atomically update
+    const diffs = computeEvalDiffs(oldEval, 0);
+    await atomicUpdateStatement(db, suggestionId, diffs, false);
+
+    logger.info(`[Suggestion Evaluations API] Deleted evaluation: ${evaluationId} (reversed: pro=${diffs.proDiff}, con=${diffs.conDiff})`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

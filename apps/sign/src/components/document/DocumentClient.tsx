@@ -38,12 +38,16 @@ interface DocumentClientProps {
   userInteractions?: string[];
   isAdmin?: boolean;
   enableSuggestions?: boolean;
+  /** Whether refinement workflow is enabled */
+  enableRefinement?: boolean;
   paragraphs?: Paragraph[];
   textDirection?: 'ltr' | 'rtl';
   /** When true, users must sign in with Google to interact (comment, suggest, approve, sign) */
   requireGoogleLogin?: boolean;
   /** When true, hide display names in comments, suggestions, and interactions */
   hideUserIdentity?: boolean;
+  /** Map of paragraphId to heading number string (e.g., "1.2.1") */
+  headingNumbers?: Map<string, string>;
   children: React.ReactNode;
 }
 
@@ -56,10 +60,12 @@ export default function DocumentClient({
   userInteractions = [],
   isAdmin,
   enableSuggestions = false,
+  enableRefinement = false,
   paragraphs = [],
   textDirection = 'ltr',
   requireGoogleLogin = false,
   hideUserIdentity = true,
+  headingNumbers = new Map(),
   children,
 }: DocumentClientProps) {
   const { t } = useTranslation();
@@ -498,6 +504,9 @@ export default function DocumentClient({
             originalContent={currentParagraph?.content || ''}
             onClose={closeModal}
             hideUserIdentity={hideUserIdentity}
+            headingNumber={headingNumbers.get(modalContext.paragraphId)}
+            isAdmin={isAdmin}
+            enableRefinement={enableRefinement}
           />
         </Modal>
       )}

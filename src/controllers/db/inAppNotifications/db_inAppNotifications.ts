@@ -250,11 +250,6 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 	try {
 		const user = store.getState().creator.creator;
 		if (!user || !notificationIds.length) {
-			logError(
-				new Error('markNotificationsAsViewedInListDB: User not found or no notification IDs'),
-				{ operation: 'inAppNotifications.db_inAppNotifications.markNotificationsAsViewedInListDB' },
-			);
-
 			return;
 		}
 
@@ -267,10 +262,17 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 			});
 		});
 		await batch.commit();
-	} catch (error) {
+	} catch (error: unknown) {
+		// Permission errors are expected when the user signs out or navigates away
+		// before the delayed batch commit fires — silently ignore them
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes('Missing or insufficient permissions')) {
+			return;
+		}
+
 		logError(new Error('In markNotificationsAsViewedInListDB'), {
 			operation: 'inAppNotifications.db_inAppNotifications.batch',
-			metadata: { detail: error.message },
+			metadata: { detail: errorMessage },
 		});
 	}
 }

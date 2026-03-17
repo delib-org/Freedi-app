@@ -7,7 +7,7 @@ import styles from './Switch.module.scss';
 import { Role, StatementType } from '@freedi/shared-types';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import SwitchScreen from './SwitchScreen';
-import { updateStatementText } from '@/controllers/db/statements/setStatements';
+import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
 import OnlineUsers from '../nav/online/OnlineUsers';
 

@@ -4,8 +4,9 @@
  */
 
 import { create } from 'zustand';
-import { onSnapshot, doc } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeDocSnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, Statement } from '@freedi/shared-types';
 
 /**
@@ -93,7 +94,7 @@ export const useVersionControlStore = create<VersionControlStore>((set, get) => 
 		// Create Firebase listener (lazy-init to prevent SSR crashes)
 		const db = getFirebaseFirestore();
 		const docRef = doc(db, Collections.statements, documentId);
-		const unsubscribe = onSnapshot(
+		const unsubscribe = safeDocSnapshot(
 			docRef,
 			(snapshot) => {
 				if (snapshot.exists()) {
