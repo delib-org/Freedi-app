@@ -20,7 +20,7 @@ import {
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { buildWeeklyDigest, getWeeklyDigestUsers } from '../notifications/digestAggregator';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /**
  * Scheduled function: runs daily at 10:00 UTC.
@@ -108,7 +108,7 @@ export async function processWeeklyDigests(): Promise<{
 					createdAt: Date.now(),
 				};
 
-				await db
+				await getDb()
 					.collection(Collections.notificationQueue)
 					.doc(queueItemId)
 					.set(notification);

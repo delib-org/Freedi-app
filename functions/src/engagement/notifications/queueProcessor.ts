@@ -19,7 +19,7 @@ import {
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { routeToChannels } from './channelRouter';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /** Max age for a 'processing' item before it's considered stuck (5 minutes) */
 const STUCK_PROCESSING_MS = 5 * 60 * 1000;
@@ -35,7 +35,7 @@ export async function processQueueItem(
 	queueItemId: string,
 	item: NotificationQueueItem,
 ): Promise<void> {
-	const docRef = db.collection(Collections.notificationQueue).doc(queueItemId);
+	const docRef = getDb().collection(Collections.notificationQueue).doc(queueItemId);
 
 	try {
 		// Skip if not pending
@@ -140,7 +140,7 @@ export async function processPendingQueueItems(): Promise<{
 
 	try {
 		// Get pending items (immediate delivery)
-		const pendingSnapshot = await db
+		const pendingSnapshot = await getDb()
 			.collection(Collections.notificationQueue)
 			.where('status', '==', NotificationQueueStatus.PENDING)
 			.limit(100)
@@ -148,7 +148,7 @@ export async function processPendingQueueItems(): Promise<{
 
 		// Get stuck items (processing for too long)
 		const stuckThreshold = Date.now() - STUCK_PROCESSING_MS;
-		const stuckSnapshot = await db
+		const stuckSnapshot = await getDb()
 			.collection(Collections.notificationQueue)
 			.where('status', '==', NotificationQueueStatus.PROCESSING)
 			.limit(50)

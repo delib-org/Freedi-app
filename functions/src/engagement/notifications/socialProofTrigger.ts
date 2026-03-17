@@ -20,7 +20,7 @@ import {
 } from '@freedi/shared-types';
 import type { NotificationQueueItem, Statement } from '@freedi/shared-types';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /** Evaluation count milestones that trigger notifications */
 const MILESTONES = [5, 10, 25, 50, 100];
@@ -68,7 +68,7 @@ export async function checkSocialProofMilestone(
 			createdAt: Date.now(),
 		};
 
-		await db.collection(Collections.notificationQueue).doc(queueItemId).set(notification);
+		await getDb().collection(Collections.notificationQueue).doc(queueItemId).set(notification);
 
 		logger.info(`Social proof milestone ${milestone} for statement ${statement.statementId}`);
 	} catch (error) {
@@ -129,7 +129,7 @@ export async function checkConsensusShift(
 			createdAt: Date.now(),
 		};
 
-		await db.collection(Collections.notificationQueue).doc(queueItemId).set(notification);
+		await getDb().collection(Collections.notificationQueue).doc(queueItemId).set(notification);
 
 		logger.info(`Consensus shift ${direction} ${shiftPercent}% on ${statement.statementId}`);
 	} catch (error) {

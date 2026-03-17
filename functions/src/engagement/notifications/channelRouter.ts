@@ -15,7 +15,7 @@ import { logger } from 'firebase-functions';
 import { Collections, NotificationChannel } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 interface ChannelResult {
 	channel: NotificationChannel;
@@ -78,7 +78,7 @@ export async function routeToChannels(
  */
 async function sendPushNotification(item: NotificationQueueItem): Promise<void> {
 	// Get user's push tokens
-	const tokensSnapshot = await db
+	const tokensSnapshot = await getDb()
 		.collection(Collections.pushNotifications)
 		.where('userId', '==', item.userId)
 		.get();
@@ -143,7 +143,7 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
 				errorCode === 'messaging/invalid-registration-token'
 			) {
 				logger.info(`Removing invalid token for user ${item.userId}`);
-				await db
+				await getDb()
 					.collection(Collections.pushNotifications)
 					.doc(token)
 					.delete()
@@ -163,7 +163,7 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
  */
 async function writeInAppNotification(item: NotificationQueueItem): Promise<void> {
 	const notificationId = `eng_${item.userId}_${item.queueItemId}`;
-	const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
+	const notificationRef = getDb().collection(Collections.inAppNotifications).doc(notificationId);
 
 	await notificationRef.set({
 		userId: item.userId,
@@ -193,7 +193,7 @@ async function writeInAppNotification(item: NotificationQueueItem): Promise<void
  */
 async function sendEmailNotification(item: NotificationQueueItem): Promise<void> {
 	// Check if user has an email on file
-	const userDoc = await db.collection('usersV2').doc(item.userId).get();
+	const userDoc = await getDb().collection('usersV2').doc(item.userId).get();
 
 	if (!userDoc.exists) {
 		logger.info(`No user doc for ${item.userId}, skipping email`);

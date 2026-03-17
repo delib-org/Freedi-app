@@ -6,6 +6,7 @@ import {
 	listenToSubStatements,
 	listenToStatementSubscription,
 	listenToTreeByTopParent,
+	listenToTreeDescendants,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import {
@@ -109,11 +110,15 @@ export const useStatementListeners = ({
 				unsubscribersRef.current.push(
 					listenToSubStatements(statementId, 'top'),
 				);
-				// At the top level, also load all nested descendants via topParentId.
-				// For sub-statements, the parent's tree already loaded these.
 				if (!topParentId || topParentId === statementId) {
+					// Top level: load entire tree via topParentId
 					unsubscribersRef.current.push(
 						listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT),
+					);
+				} else {
+					// Sub-statement: load descendants via parents array-contains
+					unsubscribersRef.current.push(
+						listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT),
 					);
 				}
 			} else {

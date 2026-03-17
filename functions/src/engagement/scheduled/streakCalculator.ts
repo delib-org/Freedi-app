@@ -12,7 +12,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { Collections } from '@freedi/shared-types';
 import type { UserEngagement, StreakData } from '@freedi/shared-types';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /**
  * Scheduled function that runs daily at 00:05 UTC to update streaks.
@@ -68,7 +68,7 @@ export async function performStreakCalculation(): Promise<StreakCalculationResul
 
 		// eslint-disable-next-line no-constant-condition
 		while (true) {
-			let query = db
+			let query = getDb()
 				.collection(Collections.userEngagement)
 				.orderBy('userId')
 				.limit(BATCH_SIZE);
@@ -83,7 +83,7 @@ export async function performStreakCalculation(): Promise<StreakCalculationResul
 				break;
 			}
 
-			const batch = db.batch();
+			const batch = getDb().batch();
 
 			for (const doc of snapshot.docs) {
 				try {

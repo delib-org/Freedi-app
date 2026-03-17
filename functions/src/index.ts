@@ -49,6 +49,7 @@ import {
 	recalculateEvaluations,
 	addRandomSeed,
 	backfillEvaluationType,
+	backfillParentsArray,
 } from './fn_httpRequests';
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
@@ -394,6 +395,7 @@ exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
 exports.addRandomSeed = wrapHttpFunction(addRandomSeed);
 exports.backfillEvaluationType = wrapHttpFunction(backfillEvaluationType);
+exports.backfillParentsArray = wrapHttpFunction(backfillParentsArray);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS

@@ -16,7 +16,7 @@ import {
 import type { Statement } from '@freedi/shared-types';
 import { awardCredit, getOrCreateUserEngagement } from './creditEngine';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /**
  * Track statement creation engagement.
@@ -164,7 +164,7 @@ export async function trackDailyLogin(
  */
 async function updateStreakForUser(userId: string): Promise<void> {
 	const today = formatDate(new Date());
-	const ref = db.collection(Collections.userEngagement).doc(userId);
+	const ref = getDb().collection(Collections.userEngagement).doc(userId);
 	const doc = await ref.get();
 
 	if (!doc.exists) {
