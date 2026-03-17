@@ -6,11 +6,22 @@ import { Collections, AdminPermissionLevel } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
 /**
- * Firebase Function URL for AI processing
+ * Firebase Function URL for AI processing.
+ * Uses emulator URL when USE_FIREBASE_EMULATOR is set, otherwise production.
  */
-const FIREBASE_FUNCTION_URL =
-	process.env.FIREBASE_FUNCTIONS_URL ||
-	'https://me-west1-wizcol-app.cloudfunctions.net';
+function getFirebaseFunctionUrl(): string {
+	if (process.env.FIREBASE_FUNCTIONS_URL) {
+		return process.env.FIREBASE_FUNCTIONS_URL;
+	}
+
+	if (process.env.USE_FIREBASE_EMULATOR === 'true') {
+		const projectId = process.env.FIREBASE_PROJECT_ID || 'freedi-test';
+
+		return `http://localhost:5001/${projectId}/me-west1`;
+	}
+
+	return 'https://me-west1-wizcol-app.cloudfunctions.net';
+}
 
 /**
  * GET /api/admin/refinement/[paragraphId]
@@ -176,9 +187,10 @@ async function handleSynthesize(
 			consensus: number;
 			creatorDisplayName: string;
 		}>;
+		customInstructions?: string;
 	},
 ): Promise<NextResponse> {
-	const { originalContent, suggestions } = body;
+	const { originalContent, suggestions, customInstructions } = body;
 
 	if (!originalContent || !suggestions?.length) {
 		return NextResponse.json(
@@ -187,7 +199,7 @@ async function handleSynthesize(
 		);
 	}
 
-	const functionUrl = `${FIREBASE_FUNCTION_URL}/processRefinementAI`;
+	const functionUrl = `${getFirebaseFunctionUrl()}/processRefinementAI`;
 
 	const response = await fetch(functionUrl, {
 		method: 'POST',
@@ -197,6 +209,7 @@ async function handleSynthesize(
 			paragraphId,
 			originalContent,
 			suggestions,
+			...(customInstructions && { customInstructions }),
 		}),
 	});
 
@@ -246,7 +259,7 @@ async function handleImprove(
 		);
 	}
 
-	const functionUrl = `${FIREBASE_FUNCTION_URL}/processRefinementAI`;
+	const functionUrl = `${getFirebaseFunctionUrl()}/processRefinementAI`;
 
 	const response = await fetch(functionUrl, {
 		method: 'POST',

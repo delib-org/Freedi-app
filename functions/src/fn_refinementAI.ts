@@ -33,6 +33,7 @@ interface SynthesizeRequest {
 	paragraphId: string;
 	originalContent: string;
 	suggestions: SuggestionInput[];
+	customInstructions?: string;
 }
 
 interface ImproveRequest {
@@ -160,14 +161,14 @@ export async function processRefinementAI(req: Request, res: Response): Promise<
  */
 async function handleSynthesize(req: Request, res: Response): Promise<void> {
 	const body = req.body as SynthesizeRequest;
-	const { paragraphId, originalContent, suggestions } = body;
+	const { paragraphId, originalContent, suggestions, customInstructions } = body;
 
 	if (!paragraphId || !originalContent || !suggestions?.length) {
 		res.status(400).json({ error: 'paragraphId, originalContent, and suggestions are required' });
 		return;
 	}
 
-	console.info(`[refinementAI.synthesize] Starting for paragraph ${paragraphId} with ${suggestions.length} suggestions`);
+	console.info(`[refinementAI.synthesize] Starting for paragraph ${paragraphId} with ${suggestions.length} suggestions${customInstructions ? ' (with custom instructions)' : ''}`);
 
 	// Format suggestions list
 	const suggestionsList = suggestions
@@ -175,11 +176,16 @@ async function handleSynthesize(req: Request, res: Response): Promise<void> {
 		.map((s, i) => `${i + 1}. [Consensus: ${s.consensus.toFixed(2)}] (ID: ${s.suggestionId})\n   "${s.suggestedContent}"`)
 		.join('\n\n');
 
+	// Build system prompt, appending custom instructions if provided
+	const systemPrompt = customInstructions
+		? `${SYNTHESIZE_SYSTEM_PROMPT}\n\nADDITIONAL INSTRUCTIONS FROM THE DOCUMENT ADMIN (you MUST follow these):\n${customInstructions}`
+		: SYNTHESIZE_SYSTEM_PROMPT;
+
 	const userPrompt = SYNTHESIZE_USER_PROMPT
 		.replace('{originalContent}', originalContent)
 		.replace('{suggestionsList}', suggestionsList);
 
-	const response = await callGemini(SYNTHESIZE_SYSTEM_PROMPT, userPrompt);
+	const response = await callGemini(systemPrompt, userPrompt);
 
 	const parsed = extractJSON<{
 		synthesizedText?: string;

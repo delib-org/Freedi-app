@@ -9,6 +9,7 @@ import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { safeDocSnapshot } from '@/lib/firebase/safeSnapshot';
 import { useUIStore } from '@/store/uiStore';
 import { API_ROUTES } from '@/constants/common';
+import { useSuggestionVisibility } from '@/hooks/useSuggestionVisibility';
 import { useParagraphSuggestions } from '@/hooks/useParagraphSuggestions';
 import { useAutoLogin } from '@/hooks/useAutoLogin';
 import { useTypingStatus } from '@/hooks/useTypingStatus';
@@ -414,6 +415,9 @@ export default function SuggestionThread({
     });
   }, []);
 
+  // Suggestion visibility (admin hide/show)
+  const { showOnlySelected, showAll, hasHiddenSuggestions } = useSuggestionVisibility(paragraphId, documentId);
+
   // Publish merged text as a new suggestion
   const handlePublishMerge = useCallback(async (
     _paragraphId: string,
@@ -469,6 +473,9 @@ export default function SuggestionThread({
           onEnterSelectionMode={handleEnterSelectionMode}
           onClearSelection={handleClearSelection}
           onPublishMerge={handlePublishMerge}
+          onShowOnlySelected={showOnlySelected}
+          onShowAll={showAll}
+          hasHiddenSuggestions={hasHiddenSuggestions}
         />
       )}
 
@@ -612,7 +619,7 @@ export default function SuggestionThread({
       )}
 
       {/* Add suggestion button or notice */}
-      {userSuggestion ? (
+      {userSuggestion && !isAdmin ? (
         <div className={styles.hasNotice}>
           <p>{t('You have already suggested an alternative. You can edit your suggestion above.')}</p>
         </div>

@@ -45,6 +45,7 @@ export function useAISynthesis() {
 		paragraphId: string,
 		originalContent: string,
 		suggestions: SuggestionInput[],
+		customInstructions?: string,
 	): Promise<SynthesisResult | null> => {
 		setIsLoading(true);
 		setError(null);
@@ -58,6 +59,7 @@ export function useAISynthesis() {
 					action: 'synthesize',
 					originalContent,
 					suggestions,
+					...(customInstructions && { customInstructions }),
 				}),
 			});
 
