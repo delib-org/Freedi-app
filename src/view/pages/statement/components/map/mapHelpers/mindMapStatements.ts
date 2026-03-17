@@ -4,7 +4,8 @@
  */
 
 import { Statement, StatementType } from '@freedi/shared-types';
-import { saveStatementToDB, updateStatementText } from '@/controllers/db/statements/setStatements';
+import { saveStatementToDB } from '@/controllers/db/statements/setStatements';
+import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
 import { logError } from '@/utils/errorHandling';
 import { canHaveChildren } from './mindElixirTransform';
 
