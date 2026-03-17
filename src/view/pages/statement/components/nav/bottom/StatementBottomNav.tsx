@@ -26,6 +26,7 @@ import { setNewStatementModal } from '@/redux/statements/newStatementSlice';
 import {
 	statementSubscriptionSelector,
 	statementOptionsSelector,
+	statementSubsSelector,
 } from '@/redux/statements/statementsSlice';
 import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
@@ -48,11 +49,13 @@ const StatementBottomNav: FC<Props> = () => {
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
 	const options = useSelector(statementOptionsSelector(statementId));
+	const allSubs = useSelector(statementSubsSelector(statementId));
 	const role = subscription?.role;
 	const isAdmin = role === 'admin' || role === Role.creator;
 
-	// Only show sort buttons when there are at least 2 answers
-	const hasEnoughOptionsToSort = options.length >= 2;
+	// Show sort when there are at least 2 direct children (options or any type)
+	// In tree view, options may be nested under sub-groups, so count all children too
+	const hasEnoughOptionsToSort = options.length >= 2 || allSubs.length >= 2;
 
 	const { dir, learning, t, currentLanguage } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
