@@ -13,6 +13,8 @@ import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import ChatMessageMenu from './ChatMessageMenu';
+import TypeSuggestionBanner from './TypeSuggestionBanner';
+import { useStatementTypeDetection } from '@/controllers/hooks/useStatementTypeDetection';
 
 function formatMessageTime(timestamp: number): string {
 	const date = new Date(timestamp);
@@ -83,6 +85,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	function handleSaveSuccess() {
 		setIsEdit(false);
 	}
+
+	// AI type detection for the creator's own statements
+	const {
+		suggestedType,
+		isVisible: showTypeSuggestion,
+		dismiss: dismissTypeSuggestion,
+	} = useStatementTypeDetection(statement, isMe);
 
 	const isGeneral =
 		statement.statementType === StatementType.statement || statement.statementType === undefined;
@@ -162,6 +171,15 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 				</div>
 
 				<span className={styles.timestamp}>{timeString}</span>
+
+				{showTypeSuggestion && suggestedType && (
+					<TypeSuggestionBanner
+						statement={statement}
+						suggestedType={suggestedType}
+						isAuthorized={_isAuthorized}
+						onDismiss={dismissTypeSuggestion}
+					/>
+				)}
 
 				{isNewStatementModalOpen && (
 					<CreateStatementModal

@@ -11,6 +11,7 @@ import {
 
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
+import { trackVoteEngagement } from './engagement/credits/trackEngagement';
 
 export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> | undefined>) {
 	if (!event?.data) return;
@@ -68,6 +69,16 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 			});
 
 			logger.info(`Vote updated successfully for parentId: ${newVote.parentId}`);
+		}
+
+		// Track engagement (non-blocking)
+		if (newVote.userId) {
+			trackVoteEngagement(
+				newVoteOptionId,
+				newVote.userId,
+				newVote.parentId,
+				parentStatement.topParentId,
+			).catch((err) => logger.warn('Engagement tracking failed:', err));
 		}
 
 		return true;

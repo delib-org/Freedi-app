@@ -13,6 +13,10 @@ interface PWAState {
 	lastPromptDismissedAt: number | null;
 	/** Whether the user has responded to the install prompt */
 	userResponded: boolean;
+	/** Per-discussion action counts for the current session (not persisted) */
+	discussionActions: Record<string, number>;
+	/** Discussion ID that crossed the notification prompt threshold (session-only) */
+	notificationPromptDiscussionId: string | null;
 }
 
 interface PWATriggerData {
@@ -68,12 +72,17 @@ const savePWATriggerData = (state: PWAState): void => {
 	}
 };
 
+/** Minimum actions in a single discussion before showing the notification prompt */
+const MIN_DISCUSSION_ACTIONS_FOR_PROMPT = 3;
+
 const initialState: PWAState = {
 	optionsCreated: 0,
 	hasCreatedGroup: false,
 	installPromptShown: false,
 	lastPromptDismissedAt: null,
 	userResponded: false,
+	discussionActions: {},
+	notificationPromptDiscussionId: null,
 	...loadPWATriggerData(),
 };
 
@@ -122,6 +131,29 @@ export const pwaSlice = createSlice({
 		},
 
 		/**
+		 * Track an action in a specific discussion.
+		 * When actions reach the threshold, sets notificationPromptDiscussionId
+		 * so the notification prompt can be shown.
+		 */
+		trackDiscussionAction: (state, action: PayloadAction<string>) => {
+			const discussionId = action.payload;
+			const current = state.discussionActions[discussionId] ?? 0;
+			const newCount = current + 1;
+			state.discussionActions[discussionId] = newCount;
+
+			if (newCount >= MIN_DISCUSSION_ACTIONS_FOR_PROMPT && !state.notificationPromptDiscussionId) {
+				state.notificationPromptDiscussionId = discussionId;
+			}
+		},
+
+		/**
+		 * Clear the notification prompt discussion trigger (after prompt is shown/dismissed)
+		 */
+		clearNotificationPromptTrigger: (state) => {
+			state.notificationPromptDiscussionId = null;
+		},
+
+		/**
 		 * Reset PWA tracking data
 		 */
 		resetPWATracking: (state) => {
@@ -130,6 +162,8 @@ export const pwaSlice = createSlice({
 			state.installPromptShown = false;
 			state.lastPromptDismissedAt = null;
 			state.userResponded = false;
+			state.discussionActions = {};
+			state.notificationPromptDiscussionId = null;
 			savePWATriggerData(state);
 		},
 	},
@@ -141,6 +175,8 @@ export const {
 	setInstallPromptShown,
 	setPromptDismissed,
 	setUserAcceptedInstall,
+	trackDiscussionAction,
+	clearNotificationPromptTrigger,
 	resetPWATracking,
 } = pwaSlice.actions;
 
@@ -154,3 +190,9 @@ export const selectInstallPromptShown = (state: { pwa: PWAState }): boolean =>
 export const selectUserResponded = (state: { pwa: PWAState }): boolean => state.pwa.userResponded;
 export const selectLastPromptDismissedAt = (state: { pwa: PWAState }): number | null =>
 	state.pwa.lastPromptDismissedAt;
+export const selectNotificationPromptDiscussionId = (state: { pwa: PWAState }): string | null =>
+	state.pwa.notificationPromptDiscussionId;
+export const selectDiscussionActionCount = (
+	state: { pwa: PWAState },
+	discussionId: string,
+): number => state.pwa.discussionActions[discussionId] ?? 0;

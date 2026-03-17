@@ -19,7 +19,11 @@ import {
 import { parse } from 'valibot';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
-import { incrementOptionsCreated, setHasCreatedGroup } from '@/redux/pwa/pwaSlice';
+import {
+	incrementOptionsCreated,
+	setHasCreatedGroup,
+	trackDiscussionAction,
+} from '@/redux/pwa/pwaSlice';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { resultsSettingsDefault } from './setStatements';
@@ -139,6 +143,12 @@ export const setStatementToDB = async ({
 		// Track if user created a top-level group
 		if (statement.parentId === 'top') {
 			store.dispatch(setHasCreatedGroup(true));
+		}
+
+		// Track discussion action for notification prompt timing
+		const discussionId = statement.topParentId ?? statement.parentId;
+		if (discussionId && discussionId !== 'top') {
+			store.dispatch(trackDiscussionAction(discussionId));
 		}
 
 		return { statementId: statement.statementId, statement };

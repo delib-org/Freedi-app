@@ -754,5 +754,39 @@ service cloud.firestore {
       // Writes handled by Cloud Functions only
       allow write: if false;
     }
+
+    // Engagement System Collections
+
+    // User engagement profile - users can only read their own
+    match /userEngagement/{userId} {
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
+
+    // Credit ledger - users can only read their own transactions
+    match /creditLedger/{transactionId} {
+      allow read: if request.auth != null &&
+                    resource.data.userId == request.auth.uid;
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
+
+    // Notification queue - no client access (Functions only)
+    match /notificationQueue/{queueItemId} {
+      allow read, write: if false;
+    }
+
+    // Engagement events - no client access (Functions only)
+    match /engagementEvents/{eventId} {
+      allow read, write: if false;
+    }
+
+    // Credit rules - authenticated users can read, admin-only write
+    match /creditRules/{ruleId} {
+      allow read: if request.auth != null;
+      // Writes handled by admin tools / Cloud Functions only
+      allow write: if false;
+    }
   }
 }

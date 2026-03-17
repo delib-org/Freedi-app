@@ -5,11 +5,14 @@ import {
 	optional,
 	array,
 	enum_,
+	record,
 	InferOutput,
 	boolean,
 } from 'valibot';
 import { Creator, CreatorSchema, User, UserSchema } from '../user/User';
 import { Role } from '../user/UserSettings';
+import { NotificationFrequency } from '../engagement/NotificationFrequency';
+import { BranchPreferenceSchema } from '../engagement/EngagementModel';
 import { StatementSchema } from './StatementTypes';
 import { SimpleStatementSchema } from './SimpleStatement';
 
@@ -31,6 +34,10 @@ export const StatementSubscriptionSchema = object({
 	getPushNotification: optional(boolean()),
 	coins: optional(number()), // In fair-Division, the coins the user has in this statement
 	isDocument: optional(boolean()), // Marks this subscription as a Sign document for home page display
+
+	// Engagement system extensions (backwards-compatible)
+	notificationFrequency: optional(enum_(NotificationFrequency)), // Default frequency for this discussion
+	branchPreferences: optional(record(string(), BranchPreferenceSchema)), // Per-branch overrides keyed by branchStatementId
 });
  
 export type StatementSubscription = InferOutput<

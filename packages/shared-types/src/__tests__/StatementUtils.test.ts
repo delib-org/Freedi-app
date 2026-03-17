@@ -206,10 +206,11 @@ describe('StatementUtils', () => {
 			expect(result?.paragraphs).toEqual(paragraphs);
 		});
 
-		it('should set empty parents array by default', () => {
+		it('should auto-build parents array from parentId when not provided', () => {
 			const result = createStatementObject(baseParams);
 
-			expect(result?.parents).toEqual([]);
+			// parentId is 'parent-123', so parents should include it
+			expect(result?.parents).toEqual(['parent-123']);
 		});
 
 		it('should use provided parents array', () => {
@@ -318,14 +319,14 @@ describe('StatementUtils', () => {
 			expect(result?.topParentId).toBe('parent-statement-id');
 		});
 
-		it('should copy parent parents array', () => {
+		it('should copy parent parents array and add parent statementId', () => {
 			const result = createBasicStatement({
 				parentStatement: mockParentStatement,
 				user: mockUser,
 				statement: 'Child statement',
 			});
 
-			expect(result?.parents).toEqual(['grandparent-id']);
+			expect(result?.parents).toEqual(['grandparent-id', 'parent-statement-id']);
 		});
 
 		it('should default to StatementType.statement', () => {
@@ -384,7 +385,8 @@ describe('StatementUtils', () => {
 				statement: 'Child statement',
 			});
 
-			expect(result?.parents).toEqual([]);
+			// Even with no parents on parent, the parent's own ID is always included
+			expect(result?.parents).toEqual(['parent-statement-id']);
 		});
 	});
 });

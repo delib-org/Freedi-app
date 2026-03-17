@@ -72,4 +72,11 @@ export enum Collections {
     versionControlAudit = 'versionControlAudit',
     coherenceRecords = 'coherenceRecords',
     documentActionHistory = 'documentActionHistory',
+
+    // Engagement system
+    notificationQueue = 'notificationQueue',
+    creditLedger = 'creditLedger',
+    userEngagement = 'userEngagement',
+    engagementEvents = 'engagementEvents',
+    creditRules = 'creditRules',
 }

@@ -51,6 +51,8 @@ export const StatementSettingsSchema = object({
 	enableChatPanel: optional(boolean()), // if false, the chat side panel is hidden (default: true)
 	enableSubQuestionsMap: optional(boolean()), // if false, the sub-questions map side panel is hidden (default: true)
 	defaultView: optional(string()), // 'chat' | 'options' | 'questions' - default view for the segmented control
+	enableTreeView: optional(boolean()), // if true, show threaded tree discussion instead of flat chat
 });
+
 
 export type StatementSettings = InferOutput<typeof StatementSettingsSchema>;

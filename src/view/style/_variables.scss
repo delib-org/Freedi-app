@@ -651,4 +651,15 @@
   // Skeleton loading colors
   --skeleton-base: #e0e0e0;
   --skeleton-shine: #f0f0f0;
+
+  // --- ENGAGEMENT SYSTEM ---
+  --engagement-level-0: var(--lighter);        // Observer (gray)
+  --engagement-level-1: var(--btn-primary);    // Participant (blue)
+  --engagement-level-2: var(--agree);          // Contributor (teal)
+  --engagement-level-3: #d4a017;              // Advocate (gold)
+  --engagement-level-4: #7b5ea7;              // Leader (purple)
+  --streak-flame: #ff6b35;
+  --credit-earn: var(--agree);
+  --progress-track: var(--border-color);
+  --progress-fill: var(--btn-primary);
 }

@@ -20,6 +20,7 @@ import { getDefaultQuestionType } from './model/questionTypeDefaults';
 import { embeddingService } from './services/embedding-service';
 import { embeddingCache } from './services/embedding-cache-service';
 import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notifications';
+import { trackStatementCreation } from './engagement/credits/trackEngagement';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -79,6 +80,13 @@ export async function onStatementCreated(
 		if (statement.statementType === 'option') {
 			tasks.push(generateEmbeddingForStatement(statement));
 		}
+
+		// Task 7: Track engagement (non-blocking)
+		tasks.push(
+			trackStatementCreation(statement).catch((err) =>
+				logger.warn('Engagement tracking failed:', err),
+			),
+		);
 
 		// Execute all tasks in parallel
 		await Promise.all(tasks);
