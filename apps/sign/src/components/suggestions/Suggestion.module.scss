@@ -18,6 +18,72 @@
   border-left-color: var(--btn-primary, #1B2650);
 }
 
+:global(body.a11y-contrast-light) .suggestion--ai,
+:global(body.a11y-contrast-dark) .suggestion--ai {
+  border-left-color: var(--btn-primary, #5f88e5);
+}
+
+:global(body.a11y-contrast-light) .suggestion--selected,
+:global(body.a11y-contrast-dark) .suggestion--selected {
+  border-left-color: var(--btn-primary, #5f88e5);
+  box-shadow: 0 0 0 2px var(--btn-primary, #5f88e5);
+}
+
+/* Selected suggestion variant */
+.suggestion--selected {
+  border-left-color: var(--btn-primary, #5f88e5);
+  background: rgba(95, 136, 229, 0.06);
+  box-shadow: 0 0 0 1px rgba(95, 136, 229, 0.25);
+}
+
+/* Selection checkbox */
+.selectionCheckbox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+
+  input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+}
+
+.checkboxMark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--border-light, #e5e7eb);
+  border-radius: 4px;
+  background: var(--background, #fff);
+  transition: all 0.15s ease;
+
+  input:checked + & {
+    background: var(--btn-primary, #5f88e5);
+    border-color: var(--btn-primary, #5f88e5);
+
+    &::after {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+      margin-top: -2px;
+    }
+  }
+
+  input:focus-visible + & {
+    box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.4);
+  }
+}
+
 .header {
   display: flex;
   align-items: center;
@@ -150,6 +216,38 @@
 
   li {
     margin-bottom: 0.15em;
+  }
+}
+
+/* Accept suggestion button - admin action */
+.acceptButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 8px 16px;
+  margin-top: var(--spacing-xs);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: var(--agree, #4caf50);
+  color: white;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  svg {
+    flex-shrink: 0;
   }
 }
 
@@ -351,6 +449,54 @@
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
+}
+
+/* AI-generated suggestion variant */
+.suggestion--ai {
+  border-left-color: var(--btn-primary, #5f88e5);
+  background: rgba(95, 136, 229, 0.03);
+}
+
+.aiBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.aiSourceLabel {
+  font-size: 0.75rem;
+  color: var(--text-caption);
+  margin-top: 2px;
+}
+
+/* Late addition badge */
+.lateAdditionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: rgba(240, 173, 78, 0.15);
+  color: var(--warning, #f0ad4e);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
 }
 
 /* Current paragraph variant - "Standing Champion" styling */

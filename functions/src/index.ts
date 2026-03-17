@@ -102,6 +102,15 @@ import {
 // Token Cleanup Scheduled Function
 import { cleanupStaleTokens, performTokenCleanup } from './fn_tokenCleanup';
 
+// Engagement System (Phase 1-3: Credits, Levels, Badges, Streaks, Notification Queue, Digests)
+import { calculateStreaks, performStreakCalculation } from './engagement/scheduled/streakCalculator';
+import { seedDefaultCreditRules } from './engagement/credits/creditRules';
+import { trackDailyLogin } from './engagement/credits/trackEngagement';
+import { processQueueItem, processPendingQueueItems } from './engagement/notifications/queueProcessor';
+import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/dailyDigest';
+import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
+import type { NotificationQueueItem } from '@freedi/shared-types';
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
@@ -128,6 +137,9 @@ import {
 	cleanupDuplicateRoomSettings,
 } from './fn_splitJoinedOption';
 
+// Statement Type Detection
+import { detectStatementType } from './fn_detectStatementType';
+
 // Discussion Summarization
 import { summarizeDiscussion } from './fn_summarizeDiscussion';
 
@@ -139,6 +151,9 @@ import { importGoogleDoc } from './fn_importGoogleDocs';
 
 // Document Version AI Processing
 import { processVersionAI } from './fn_versionAI';
+
+// Suggestion Refinement AI (per-suggestion synthesis + improvement)
+import { processRefinementAI } from './fn_refinementAI';
 
 // Auto-Generate Version on Suggestion Threshold
 import { onSuggestionCreatedAutoGenerate } from './fn_autoGenerateVersion';
@@ -365,6 +380,7 @@ exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
 exports.mergeStatements = wrapMemoryIntensiveHttpFunction(mergeStatements);
+exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementType);
 
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
@@ -620,6 +636,9 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
 exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
 
+// Suggestion Refinement AI (per-suggestion synthesis + improvement from comments)
+exports.processRefinementAI = wrapMemoryIntensiveHttpFunction(processRefinementAI);
+
 // Auto-Generate Version on Suggestion Threshold
 exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
 	`/${Collections.suggestions}/{suggestionId}`,
@@ -710,5 +729,77 @@ exports.cleanupStaleTokens = cleanupStaleTokens;
 // HTTP endpoint for manual token cleanup
 exports.manualTokenCleanup = wrapHttpFunction(async (req: Request, res: Response) => {
 	const result = await performTokenCleanup();
+	res.json(result);
+});
+
+// --------------------------
+// ENGAGEMENT SYSTEM (Phase 1)
+// --------------------------
+
+// Scheduled function to update streaks daily at 00:05 UTC
+exports.calculateStreaks = calculateStreaks;
+
+// HTTP endpoint for manual streak calculation
+exports.manualStreakCalculation = wrapHttpFunction(async (req: Request, res: Response) => {
+	const result = await performStreakCalculation();
+	res.json(result);
+});
+
+// HTTP endpoint to seed default credit rules into Firestore
+exports.seedCreditRules = wrapHttpFunction(async (req: Request, res: Response) => {
+	const seeded = await seedDefaultCreditRules();
+	res.json({ seeded, message: `Seeded ${seeded} new credit rules` });
+});
+
+// HTTP endpoint for tracking daily login (called by client on app open)
+exports.trackDailyLogin = wrapHttpFunction(async (req: Request, res: Response) => {
+	const { userId, sourceApp } = req.body;
+	if (!userId) {
+		res.status(400).json({ error: 'userId is required' });
+
+		return;
+	}
+	await trackDailyLogin(userId, sourceApp || 'main');
+	res.json({ success: true });
+});
+
+// Notification Queue Processor - Firestore trigger on new queue items (Phase 2)
+exports.onNotificationQueued = createFirestoreFunction(
+	`/${Collections.notificationQueue}/{queueItemId}`,
+	onDocumentCreated,
+	async (event: Parameters<Parameters<typeof onDocumentCreated>[1]>[0]) => {
+		if (!event.data) return;
+		const item = event.data.data() as NotificationQueueItem;
+		const queueItemId = event.params.queueItemId;
+		await processQueueItem(queueItemId, item);
+	},
+	'onNotificationQueued',
+);
+
+// HTTP endpoint to manually process pending notification queue items
+exports.processNotificationQueue = wrapHttpFunction(async (req: Request, res: Response) => {
+	const result = await processPendingQueueItems();
+	res.json(result);
+});
+
+// ENGAGEMENT SYSTEM (Phase 3 - Digests)
+// --------------------------------------
+
+// Scheduled function: daily digest (every hour, checks per-user timezone)
+exports.sendDailyDigests = sendDailyDigests;
+
+// Scheduled function: weekly digest (daily at 10:00 UTC, checks per-user day preference)
+exports.sendWeeklyDigests = sendWeeklyDigests;
+
+// HTTP endpoint for manual daily digest processing
+exports.manualDailyDigest = wrapHttpFunction(async (req: Request, res: Response) => {
+	const hour = req.body?.hour ?? new Date().getUTCHours();
+	const result = await processDailyDigests(hour);
+	res.json(result);
+});
+
+// HTTP endpoint for manual weekly digest processing
+exports.manualWeeklyDigest = wrapHttpFunction(async (req: Request, res: Response) => {
+	const result = await processWeeklyDigests();
 	res.json(result);
 });

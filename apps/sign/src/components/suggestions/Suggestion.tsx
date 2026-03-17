@@ -23,6 +23,26 @@ interface SuggestionProps {
   hideUserIdentity?: boolean;
   /** Suggestion number label (e.g., "#1.2.3-1") */
   suggestionNumber?: string;
+  /** Whether this is an AI-generated suggestion */
+  isAIGenerated?: boolean;
+  /** Number of source suggestions used for AI synthesis */
+  aiSourceCount?: number;
+  /** Whether this suggestion was added during refinement phase */
+  isLateAddition?: boolean;
+  /** Callback for "Improve with AI" button */
+  onImproveWithAI?: (suggestionId: string) => void;
+  /** Whether improve button should be shown */
+  showImproveButton?: boolean;
+  /** Whether to show the "Accept" button (admin only, non-current suggestions) */
+  showAcceptButton?: boolean;
+  /** Callback when admin accepts this suggestion to replace the paragraph */
+  onAccept?: (suggestion: SuggestionType) => void;
+  /** Whether this suggestion can be selected for merge (admin in selection mode) */
+  isSelectable?: boolean;
+  /** Whether this suggestion is currently selected */
+  isSelected?: boolean;
+  /** Callback when selection is toggled */
+  onToggleSelect?: (suggestionId: string) => void;
 }
 
 /**
@@ -65,8 +85,18 @@ const Suggestion = memo(function Suggestion({
   isCurrent = false,
   hideUserIdentity = false,
   suggestionNumber,
+  isAIGenerated = false,
+  aiSourceCount,
+  isLateAddition = false,
+  onImproveWithAI,
+  showImproveButton = false,
+  showAcceptButton = false,
+  onAccept,
+  isSelectable = false,
+  isSelected = false,
+  onToggleSelect,
 }: SuggestionProps) {
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
   const [showComments, setShowComments] = useState(false);
 
   // Debug: Log suggestion data
@@ -143,10 +173,21 @@ const Suggestion = memo(function Suggestion({
 
   return (
     <article
-      className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''}`}
-      aria-label={isCurrent ? t('Current official version') : suggestionNumber || undefined}
+      className={`${styles.suggestion} ${isCurrent ? styles['suggestion--current'] : ''} ${isAIGenerated ? styles['suggestion--ai'] : ''} ${isSelected ? styles['suggestion--selected'] : ''}`}
+      aria-label={isCurrent ? t('Current official version') : isAIGenerated ? t('AI Synthesis') : suggestionNumber || undefined}
     >
       <header className={styles.header}>
+        {isSelectable && onToggleSelect && (
+          <label className={styles.selectionCheckbox}>
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => onToggleSelect(suggestion.suggestionId)}
+              aria-label={t('Select for merge')}
+            />
+            <span className={styles.checkboxMark} />
+          </label>
+        )}
         {suggestionNumber && (
           <span className={styles.suggestionNumber}>{suggestionNumber}</span>
         )}
@@ -157,6 +198,19 @@ const Suggestion = memo(function Suggestion({
             </svg>
             {t('Current Version')}
           </div>
+        )}
+        {isAIGenerated && (
+          <div className={styles.aiBadge}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            {t('AI Synthesis')}
+          </div>
+        )}
+        {isLateAddition && (
+          <span className={styles.lateAdditionBadge}>
+            {t('Late Addition')}
+          </span>
         )}
         <span className={styles.date}>{formattedDate}</span>
         {isOwner && !isCurrent && (
@@ -221,6 +275,27 @@ const Suggestion = memo(function Suggestion({
         )}
       </div>
 
+      {/* AI source label */}
+      {isAIGenerated && aiSourceCount && (
+        <p className={styles.aiSourceLabel}>
+          {tWithParams('Based on community suggestions', { count: aiSourceCount })}
+        </p>
+      )}
+
+      {/* Improve with AI button */}
+      {showImproveButton && onImproveWithAI && (
+        <button
+          type="button"
+          className={styles.commentToggle}
+          onClick={() => onImproveWithAI(suggestion.suggestionId)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: 4, verticalAlign: 'middle' }}>
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          {t('Improve with AI')}
+        </button>
+      )}
+
       {/* Voting bar - show for all users, disabled for owners */}
       <VotingBar
         userEvaluation={userEvaluation}
@@ -233,6 +308,20 @@ const Suggestion = memo(function Suggestion({
         onVote={handleVote}
         disabled={isOwner}
       />
+
+      {/* Accept suggestion button - admin only, non-current suggestions */}
+      {showAcceptButton && onAccept && !isCurrent && (
+        <button
+          type="button"
+          className={styles.acceptButton}
+          onClick={() => onAccept(suggestion)}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" />
+          </svg>
+          {t('Accept')}
+        </button>
+      )}
 
       {/* Comment toggle */}
       <button

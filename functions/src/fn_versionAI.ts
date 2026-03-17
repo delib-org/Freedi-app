@@ -8,6 +8,7 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { getFirestore } from 'firebase-admin/firestore';
 import { logError } from './utils/errorHandling';
+import { callGemini, extractJSON, GEMINI_MODEL } from './ai/callGemini';
 
 const db = getFirestore();
 
@@ -133,10 +134,6 @@ interface DocumentVersion {
 // AI CONFIGURATION
 // ============================================================================
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
-const MAX_TOKENS = 8192;
-const TEMPERATURE = 0.3;
-
 interface ParagraphAnalysisOutput {
 	proposedContent: string;
 	reasoning: string;
@@ -153,120 +150,6 @@ interface HolisticAnalysisOutput {
 		insertAfterParagraphId?: string; // For 'add' actions
 	}>;
 	overallReasoning: string;
-}
-
-/**
- * Extract and parse JSON from AI response
- */
-function extractJSON<T>(response: string, fallback?: T): T {
-	let cleanedResponse = response.trim();
-
-	// Remove markdown code blocks
-	const codeBlockMatch = cleanedResponse.match(/```(?:json)?\s*([\s\S]*?)```/);
-	if (codeBlockMatch) {
-		cleanedResponse = codeBlockMatch[1].trim();
-	}
-
-	// Try to find JSON object or array
-	const jsonMatch = cleanedResponse.match(/(\{[\s\S]*\}|\[[\s\S]*\])/);
-	if (jsonMatch) {
-		cleanedResponse = jsonMatch[1];
-	}
-
-	try {
-		return JSON.parse(cleanedResponse);
-	} catch (parseError) {
-		if (fallback !== undefined) {
-			return fallback;
-		}
-
-		// Try to fix truncation
-		let fixedResponse = cleanedResponse;
-		const openBraces = (fixedResponse.match(/\{/g) || []).length;
-		const closeBraces = (fixedResponse.match(/\}/g) || []).length;
-		const openBrackets = (fixedResponse.match(/\[/g) || []).length;
-		const closeBrackets = (fixedResponse.match(/\]/g) || []).length;
-
-		for (let i = 0; i < openBrackets - closeBrackets; i++) {
-			fixedResponse += ']';
-		}
-		for (let i = 0; i < openBraces - closeBraces; i++) {
-			fixedResponse += '}';
-		}
-
-		try {
-			return JSON.parse(fixedResponse);
-		} catch {
-			// Try to extract partial content
-			const proposedContentMatch = cleanedResponse.match(
-				/"proposedContent"\s*:\s*"([^"]*(?:\\.[^"]*)*)"/,
-			);
-			if (proposedContentMatch) {
-				return {
-					proposedContent: proposedContentMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n'),
-					reasoning: 'Response was truncated - partial recovery',
-					confidence: 0.7,
-				} as T;
-			}
-			throw parseError;
-		}
-	}
-}
-
-/**
- * Call Gemini API
- */
-async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
-	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) {
-		console.error('[callGemini] GEMINI_API_KEY is NOT configured in environment');
-		throw new Error('GEMINI_API_KEY not configured');
-	}
-
-	const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey.substring(0, 8)}...`;
-	console.info(`[callGemini] Calling model: ${GEMINI_MODEL}, URL pattern: ${url}`);
-
-	const response = await fetch(
-		`https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				contents: [
-					{
-						role: 'user',
-						parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-					},
-				],
-				generationConfig: {
-					temperature: TEMPERATURE,
-					maxOutputTokens: MAX_TOKENS,
-					responseMimeType: 'application/json',
-				},
-			}),
-		},
-	);
-
-	if (!response.ok) {
-		const errorText = await response.text();
-		console.error(`[callGemini] API error: status=${response.status}, body=${errorText.substring(0, 500)}`);
-		logError(new Error(`Gemini API error: ${response.status}`), {
-			operation: 'versionAI.callGemini',
-			metadata: { status: response.status, errorText: errorText.substring(0, 500), model: GEMINI_MODEL },
-		});
-		throw new Error(`Gemini API error: ${response.status} - ${errorText.substring(0, 200)}`);
-	}
-
-	const data = await response.json();
-	const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-	if (!text) {
-		console.error(`[callGemini] Empty response from Gemini. Candidates: ${JSON.stringify(data.candidates?.length)}, finishReason: ${data.candidates?.[0]?.finishReason}`);
-	}
-
-	return text;
 }
 
 /**
@@ -294,9 +177,8 @@ function formatFeedback(sources: ChangeSource[]): string {
 					type = 'Feedback';
 			}
 
-			const consensusStr = source.consensus !== undefined
-				? `Consensus: ${source.consensus.toFixed(2)}, `
-				: '';
+			const consensusStr =
+				source.consensus !== undefined ? `Consensus: ${source.consensus.toFixed(2)}, ` : '';
 			const support =
 				source.supporters > 0 || source.objectors > 0
 					? `, ${source.supporters} supporters, ${source.objectors} objectors`
@@ -468,8 +350,10 @@ async function analyzeParagraph(
 		};
 	}
 
-	const userPrompt = PARAGRAPH_ANALYSIS_USER_PROMPT
-		.replace('{originalContent}', paragraph.content || '')
+	const userPrompt = PARAGRAPH_ANALYSIS_USER_PROMPT.replace(
+		'{originalContent}',
+		paragraph.content || '',
+	)
 		.replace('{feedbackList}', formatFeedback(sources))
 		.replace('{approvalRate}', approvalRate !== undefined ? approvalRate.toFixed(0) : 'N/A')
 		.replace('{approvalVoters}', approvalVoters !== undefined ? String(approvalVoters) : 'N/A')
@@ -535,26 +419,32 @@ async function analyzeDocumentHolistically(
 	documentContext: string,
 ): Promise<HolisticAnalysisOutput> {
 	const documentContent = paragraphs
-		.map((p, i) => `[Paragraph ${i + 1}] (ID: ${p.paragraphId}, Type: ${p.type})\n${p.content || '(empty)'}`)
+		.map(
+			(p, i) =>
+				`[Paragraph ${i + 1}] (ID: ${p.paragraphId}, Type: ${p.type})\n${p.content || '(empty)'}`,
+		)
 		.join('\n\n---\n\n');
 
 	const allFeedback = changes
-		.filter(c => c.sources.length > 0)
-		.map(c => {
-			const para = paragraphs.find(p => p.paragraphId === c.paragraphId);
-			const paraLabel = para ? `Paragraph "${(para.content || '').substring(0, 60)}..."` : `Paragraph ${c.paragraphId}`;
+		.filter((c) => c.sources.length > 0)
+		.map((c) => {
+			const para = paragraphs.find((p) => p.paragraphId === c.paragraphId);
+			const paraLabel = para
+				? `Paragraph "${(para.content || '').substring(0, 60)}..."`
+				: `Paragraph ${c.paragraphId}`;
 
 			return `### ${paraLabel}\nApproval Rate: ${c.approvalRate !== undefined ? `${c.approvalRate.toFixed(0)}%` : 'N/A'}\n${formatFeedback(c.sources)}`;
 		})
 		.join('\n\n===\n\n');
 
-	const userPrompt = HOLISTIC_ANALYSIS_USER_PROMPT
-		.replace('{documentContent}', documentContent)
+	const userPrompt = HOLISTIC_ANALYSIS_USER_PROMPT.replace('{documentContent}', documentContent)
 		.replace('{allFeedback}', allFeedback || 'No paragraph-level feedback.')
 		.replace('{documentContext}', documentContext);
 
 	try {
-		console.info(`[analyzeDocumentHolistically] Starting holistic analysis for ${paragraphs.length} paragraphs`);
+		console.info(
+			`[analyzeDocumentHolistically] Starting holistic analysis for ${paragraphs.length} paragraphs`,
+		);
 
 		const response = await callGemini(HOLISTIC_ANALYSIS_SYSTEM_PROMPT, userPrompt);
 
@@ -571,8 +461,8 @@ async function analyzeDocumentHolistically(
 		}>(response);
 
 		const paragraphActions = (parsed.paragraphActions || [])
-			.filter(a => a.paragraphId && a.action)
-			.map(a => ({
+			.filter((a) => a.paragraphId && a.action)
+			.map((a) => ({
 				paragraphId: a.paragraphId!,
 				action: (a.action as 'modify' | 'add' | 'remove' | 'keep') || 'keep',
 				proposedContent: a.proposedContent || '',
@@ -746,11 +636,14 @@ ${p.content || '(empty)'}`,
 			)
 			.join('\n');
 
-		const userPrompt = COHERENCE_USER_PROMPT
-			.replace('{documentContent}', documentContent)
-			.replace('{changesSummary}', changesSummary || 'No changes were made.');
+		const userPrompt = COHERENCE_USER_PROMPT.replace('{documentContent}', documentContent).replace(
+			'{changesSummary}',
+			changesSummary || 'No changes were made.',
+		);
 
-		console.info(`[coherenceAnalysis] Starting analysis for version ${versionId} with ${paragraphs.length} paragraphs`);
+		console.info(
+			`[coherenceAnalysis] Starting analysis for version ${versionId} with ${paragraphs.length} paragraphs`,
+		);
 
 		const response = await callGemini(COHERENCE_SYSTEM_PROMPT, userPrompt);
 
@@ -785,7 +678,10 @@ ${p.content || '(empty)'}`,
 		const incoherences: IncoherenceRecord[] = (parsed.incoherences || [])
 			.filter(
 				(item) =>
-					item.type && item.affectedParagraphIds?.length && item.primaryParagraphId && item.description,
+					item.type &&
+					item.affectedParagraphIds?.length &&
+					item.primaryParagraphId &&
+					item.description,
 			)
 			.map((item, index) => ({
 				recordId: `${versionId}--coh--${index}`,
@@ -817,10 +713,17 @@ ${p.content || '(empty)'}`,
 			let action = ParagraphAction.kept;
 			if (change) {
 				switch (change.changeType) {
-					case ChangeType.modified: action = ParagraphAction.modified; break;
-					case ChangeType.added: action = ParagraphAction.added; break;
-					case ChangeType.removed: action = ParagraphAction.removed; break;
-					default: action = ParagraphAction.kept;
+					case ChangeType.modified:
+						action = ParagraphAction.modified;
+						break;
+					case ChangeType.added:
+						action = ParagraphAction.added;
+						break;
+					case ChangeType.removed:
+						action = ParagraphAction.removed;
+						break;
+					default:
+						action = ParagraphAction.kept;
 				}
 			}
 
@@ -829,11 +732,11 @@ ${p.content || '(empty)'}`,
 				action,
 				feedbackAddressed: change
 					? change.sources.map((source) => ({
-						sourceId: source.sourceId,
-						sourceType: source.type,
-						summary: source.content.substring(0, 100),
-						impact: source.impact,
-					}))
+							sourceId: source.sourceId,
+							sourceType: source.type,
+							summary: source.content.substring(0, 100),
+							impact: source.impact,
+						}))
 					: [],
 				coherenceIssuesResolved: [],
 				coherenceIssuesCreated: relatedIssues.map((inc) => inc.recordId),
@@ -936,20 +839,32 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 		const revisionStrategy = version.revisionStrategy || RevisionStrategy.amendParagraphs;
 		const documentContext = feedbackSummary ? formatDocumentContext(feedbackSummary) : '';
 
-		console.info(`[processVersionAI] Strategy: ${revisionStrategy}, Total changes: ${changes.length}`);
+		console.info(
+			`[processVersionAI] Strategy: ${revisionStrategy}, Total changes: ${changes.length}`,
+		);
 
-		let analysisResults: Array<{ changeId: string; paragraphId: string; result: ParagraphAnalysisOutput }>;
+		let analysisResults: Array<{
+			changeId: string;
+			paragraphId: string;
+			result: ParagraphAnalysisOutput;
+		}>;
 		let newParagraphChanges: VersionChange[] = [];
 
 		if (revisionStrategy === RevisionStrategy.fullRevision) {
 			// Holistic document analysis
 			console.info(`[processVersionAI] Running holistic document analysis`);
 
-			const holisticResult = await analyzeDocumentHolistically(paragraphs, changes, documentContext);
+			const holisticResult = await analyzeDocumentHolistically(
+				paragraphs,
+				changes,
+				documentContext,
+			);
 
 			if (holisticResult.paragraphActions.length === 0) {
 				// Fallback to per-paragraph if holistic fails
-				console.info(`[processVersionAI] Holistic analysis returned no actions, falling back to per-paragraph`);
+				console.info(
+					`[processVersionAI] Holistic analysis returned no actions, falling back to per-paragraph`,
+				);
 				analysisResults = await runPerParagraphAnalysis(changes, paragraphs, documentContext);
 			} else {
 				// Process holistic results
@@ -957,15 +872,16 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 
 				for (const action of holisticResult.paragraphActions) {
 					if (action.action === 'modify' || action.action === 'keep') {
-						const existingChange = changes.find(c => c.paragraphId === action.paragraphId);
+						const existingChange = changes.find((c) => c.paragraphId === action.paragraphId);
 						if (existingChange) {
 							analysisResults.push({
 								changeId: existingChange.changeId,
 								paragraphId: action.paragraphId,
 								result: {
-									proposedContent: action.action === 'keep'
-										? (existingChange.originalContent || '')
-										: action.proposedContent,
+									proposedContent:
+										action.action === 'keep'
+											? existingChange.originalContent || ''
+											: action.proposedContent,
 									reasoning: action.reasoning || holisticResult.overallReasoning,
 									confidence: action.confidence,
 								},
@@ -986,7 +902,7 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 							combinedImpact: 0,
 						});
 					} else if (action.action === 'remove') {
-						const existingChange = changes.find(c => c.paragraphId === action.paragraphId);
+						const existingChange = changes.find((c) => c.paragraphId === action.paragraphId);
 						if (existingChange) {
 							analysisResults.push({
 								changeId: existingChange.changeId,
@@ -998,7 +914,9 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 								},
 							});
 							// Mark as removed
-							const changeRef = db.collection(SignCollections.versionChanges).doc(existingChange.changeId);
+							const changeRef = db
+								.collection(SignCollections.versionChanges)
+								.doc(existingChange.changeId);
 							await changeRef.update({ changeType: ChangeType.removed });
 						}
 					}

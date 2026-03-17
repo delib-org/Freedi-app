@@ -175,4 +175,10 @@ export const API_ROUTES = {
   ADMIN_VERSION_PUBLISH: (documentId: string, versionId: string) => `/api/admin/versions/${documentId}/${versionId}/publish`,
   ADMIN_VERSION_SETTINGS: (documentId: string) => `/api/admin/version-settings/${documentId}`,
   ADMIN_CHANGE: (changeId: string) => `/api/admin/changes/${changeId}`,
+  // Refinement API routes
+  ADMIN_REFINEMENT: (paragraphId: string) => `/api/admin/refinement/${paragraphId}`,
+  // Merge suggestions route
+  ADMIN_MERGE_SUGGESTION: '/api/admin/suggestions/merge',
+  // Suggestion visibility route
+  ADMIN_SUGGESTION_VISIBILITY: '/api/admin/suggestions/visibility',
 } as const;

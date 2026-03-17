@@ -1,6 +1,3 @@
-import type { Messaging } from 'firebase/messaging';
-import { app } from '@/controllers/db/config';
-import { vapidKey } from '@/controllers/db/configKey';
 import { logError } from '@/utils/errorHandling';
 import { isBot } from '@/utils/botDetection';
 
@@ -91,27 +88,11 @@ export async function ensureFirebaseServiceWorker() {
 			// Firebase SW already active
 		}
 
-		// Initialize FCM with the registered service worker
-		try {
-			// Dynamically import Firebase messaging functions to avoid loading on iOS
-			const { getMessaging, getToken } = await import('firebase/messaging');
-			const messaging: Messaging = getMessaging(app);
-			const token = await getToken(messaging, {
-				vapidKey,
-				serviceWorkerRegistration: registration,
-			});
-
-			if (token) {
-				// FCM token obtained successfully
-			} else {
-				// Failed to get FCM token
-			}
-		} catch (error) {
-			logError(error, {
-				operation: 'utils.ensureFirebaseServiceWorker.unknown',
-				metadata: { message: '[FirebaseSW] Error getting token:' },
-			});
-		}
+		// NOTE: Do NOT acquire FCM token here.
+		// Token acquisition is deferred until the user has shown intent
+		// (e.g., 3 actions in a discussion, or explicit notification prompt interaction).
+		// The service worker registration alone is sufficient for receiving push
+		// messages once a token is obtained later through NotificationService.
 
 		return registration;
 	} catch (error) {

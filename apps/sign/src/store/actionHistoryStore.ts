@@ -4,8 +4,9 @@
  */
 
 import { create } from 'zustand';
-import { onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
+import { collection, query, where, orderBy } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { Collections, DocumentActionType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
@@ -82,7 +83,7 @@ export const useActionHistoryStore = create<ActionHistoryStore>((set, get) => ({
 				orderBy('executedAt', 'desc')
 			);
 
-			const unsubscribe = onSnapshot(
+			const unsubscribe = safeQuerySnapshot(
 				q,
 				(snapshot) => {
 					const entries: ActionHistoryEntry[] = [];

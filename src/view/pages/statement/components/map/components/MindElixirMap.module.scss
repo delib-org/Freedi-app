@@ -75,6 +75,8 @@
 			cursor: pointer;
 			z-index: 10;
 			padding: 0;
+			// Override MindElixir's pointer-events:none on me-wrapper ancestors
+			pointer-events: all !important;
 			display: flex;
 			align-items: center;
 			justify-content: center;

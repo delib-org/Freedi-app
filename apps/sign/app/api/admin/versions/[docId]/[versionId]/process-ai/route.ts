@@ -23,9 +23,19 @@ const ADMIN_PERMISSION_LEVEL = {
  * Firebase Function URL for AI processing
  * Uses Firebase Functions for longer timeout (540s vs Vercel's 30s)
  */
-const FIREBASE_FUNCTION_URL =
-	process.env.FIREBASE_FUNCTIONS_URL ||
-	'https://me-west1-wizcol-app.cloudfunctions.net';
+function getFirebaseFunctionUrl(): string {
+	if (process.env.FIREBASE_FUNCTIONS_URL) {
+		return process.env.FIREBASE_FUNCTIONS_URL;
+	}
+
+	if (process.env.USE_FIREBASE_EMULATOR === 'true') {
+		const projectId = process.env.FIREBASE_PROJECT_ID || 'freedi-test';
+
+		return `http://localhost:5001/${projectId}/me-west1`;
+	}
+
+	return 'https://me-west1-wizcol-app.cloudfunctions.net';
+}
 
 /**
  * POST /api/admin/versions/[docId]/[versionId]/process-ai
@@ -89,7 +99,7 @@ export async function POST(
 		// Call Firebase Function for AI processing (has 540s timeout vs Vercel's 30s)
 		logger.info(`[Process AI] Calling Firebase Function for version ${versionId}`);
 
-		const functionUrl = `${FIREBASE_FUNCTION_URL}/processVersionAI`;
+		const functionUrl = `${getFirebaseFunctionUrl()}/processVersionAI`;
 
 		const response = await fetch(functionUrl, {
 			method: 'POST',

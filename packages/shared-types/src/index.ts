@@ -45,6 +45,10 @@ export { ApprovalSchema } from "./models/approval/Approval";
 export type { Suggestion, TypingStatus } from "./models/suggestion/suggestionModel";
 export { SuggestionSchema, TypingStatusSchema } from "./models/suggestion/suggestionModel";
 
+// Refinement models
+export type { RefinementState, RefinementPhase } from "./models/suggestion/refinementModel";
+export { RefinementStateSchema, RefinementPhaseEnum } from "./models/suggestion/refinementModel";
+
 // ChoseBy models
 export type {
   ChoseBy
@@ -483,3 +487,51 @@ export {
   ParagraphAction,
   getCoherenceRecordId,
 } from "./models/version/coherenceModel";
+
+// Engagement models
+export {
+  // Enums
+  NotificationChannel,
+  NotificationFrequency,
+  NotificationTriggerType,
+  SourceApp,
+  CreditAction,
+  HookPhase,
+  ActionLevel,
+  NotificationQueueStatus,
+  EngagementLevel,
+  LEVEL_THRESHOLDS,
+  LEVEL_NAMES,
+
+  // Schemas
+  NotificationQueueItemSchema,
+  CreditRuleSchema,
+  CreditTransactionSchema,
+  UserEngagementSchema,
+  BadgeSchema,
+  DigestPreferencesSchema,
+  StreakDataSchema,
+  BranchPreferenceSchema,
+  DigestItemSchema,
+  DigestContentSchema,
+
+  // Pure functions
+  canPerformAction,
+  getRequiredLevel,
+  ACTION_LEVEL_REQUIREMENTS,
+  APP_DEEP_LINKS,
+  buildDeepLink,
+} from "./models/engagement";
+
+export type {
+  NotificationQueueItem,
+  CreditRule,
+  CreditTransaction,
+  UserEngagement,
+  Badge,
+  DigestPreferences,
+  StreakData,
+  BranchPreference,
+  DigestItem,
+  DigestContent,
+} from "./models/engagement";

@@ -6,6 +6,8 @@ import StatementChatMore from '@/view/pages/statement/components/chat/components
 import { SimpleStatement, StatementSubscription } from '@freedi/shared-types';
 import { getTime } from '@/controllers/general/helpers';
 import { getTitle } from './updateMainCard/UpdateMainCard';
+import BranchBell from '@/view/components/atomic/atoms/BranchBell/BranchBell';
+import { useBranchBell } from '@/controllers/hooks/useBranchBell';
 
 interface Props {
 	subscription: StatementSubscription;
@@ -15,6 +17,7 @@ const MainCard: FC<Props> = ({ subscription }) => {
 	const { statement: simpleStatement } = subscription;
 	const subStatements = subscription.lastSubStatements || [];
 	const statementImgUrl = simpleStatement.imageURL || undefined;
+	const { state: bellState, onFrequencyChange } = useBranchBell(simpleStatement.statementId);
 
 	const latestUpdate: SimpleStatement | undefined = subStatements[0];
 
@@ -37,6 +40,13 @@ const MainCard: FC<Props> = ({ subscription }) => {
 						{latestUpdate?.lastUpdate && (
 							<span className={styles.time}>{getTime(latestUpdate.lastUpdate)}</span>
 						)}
+						<div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+							<BranchBell
+								state={bellState}
+								size="small"
+								onFrequencyChange={onFrequencyChange}
+							/>
+						</div>
 						<div onClick={(e) => e.stopPropagation()}>
 							<StatementChatMore statement={simpleStatement} />
 						</div>

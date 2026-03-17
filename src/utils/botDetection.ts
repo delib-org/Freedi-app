@@ -5,5 +5,7 @@
 export const isBot = (): boolean => {
 	const userAgent = navigator.userAgent.toLowerCase();
 
-	return /bot|crawl|spider|slurp|google-read-aloud|mediapartners|adsbot|bingpreview|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot/.test(userAgent);
+	return /bot|crawl|spider|slurp|google-read-aloud|mediapartners|adsbot|bingpreview|facebookexternalhit|linkedinbot|twitterbot|whatsapp|telegrambot/.test(
+		userAgent,
+	);
 };

@@ -1,4 +1,4 @@
-import { object, string, boolean, number, optional, InferOutput } from 'valibot';
+import { object, string, boolean, number, optional, array, InferOutput } from 'valibot';
 
 export const SuggestionSchema = object({
 	suggestionId: string(),
@@ -17,6 +17,13 @@ export const SuggestionSchema = object({
 	// Evaluation counts for displaying vote breakdown
 	positiveEvaluations: optional(number()),
 	negativeEvaluations: optional(number()),
+	// AI-generated suggestion fields
+	isAIGenerated: optional(boolean()),
+	aiSourceSuggestionIds: optional(array(string())),
+	aiModel: optional(string()),
+	aiGeneratedAt: optional(number()),
+	// Late addition marker (added during refinement phase)
+	isLateAddition: optional(boolean()),
 });
 
 export type Suggestion = InferOutput<typeof SuggestionSchema>;

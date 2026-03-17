@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
+import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, StatementType, Statement } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
@@ -137,20 +138,25 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Check if user already has a suggestion on this paragraph (check statements collection)
-    const existingSuggestionSnapshot = await db
-      .collection(Collections.statements)
-      .where('parentId', '==', paragraphId)
-      .where('statementType', '==', StatementType.option)
-      .where('creatorId', '==', userId)
-      .limit(1)
-      .get();
+    // Check if user is admin (admins can create unlimited suggestions)
+    const adminAccess = await checkAdminAccess(db, documentId, userId);
 
-    if (!existingSuggestionSnapshot.empty) {
-      return NextResponse.json(
-        { error: 'You already have a suggestion on this paragraph. Please edit your existing suggestion.' },
-        { status: 409 }
-      );
+    // Non-admin users are limited to one suggestion per paragraph
+    if (!adminAccess.isAdmin) {
+      const existingSuggestionSnapshot = await db
+        .collection(Collections.statements)
+        .where('parentId', '==', paragraphId)
+        .where('statementType', '==', StatementType.option)
+        .where('creatorId', '==', userId)
+        .limit(1)
+        .get();
+
+      if (!existingSuggestionSnapshot.empty) {
+        return NextResponse.json(
+          { error: 'You already have a suggestion on this paragraph. Please edit your existing suggestion.' },
+          { status: 409 }
+        );
+      }
     }
 
     // Get display name

@@ -4,6 +4,8 @@ import { Statement, getVoteId, Vote, VoteSchema, User } from '@freedi/shared-typ
 import { parse } from 'valibot';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { store } from '@/redux/store';
+import { trackDiscussionAction } from '@/redux/pwa/pwaSlice';
 import { createDocRef, createTimestamps } from '@/utils/firebaseUtils';
 import { Collections } from '@freedi/shared-types';
 
@@ -54,6 +56,12 @@ export async function setVoteToDB(option: Statement, creator: User) {
 				1, // Vote value (1 for voting for this option)
 				'button', // Default to button, could be passed as parameter
 			);
+
+			// Track discussion action for notification prompt timing
+			const discussionId = option.topParentId ?? option.parentId;
+			if (discussionId && discussionId !== 'top') {
+				store.dispatch(trackDiscussionAction(discussionId));
+			}
 		} else {
 			logger.info('Vote removed', {
 				statementId: option.statementId,

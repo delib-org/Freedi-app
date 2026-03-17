@@ -3,6 +3,8 @@ import { number, parse } from 'valibot';
 import { EvaluationSchema, Statement, User, EvaluationUI } from '@freedi/shared-types';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { store } from '@/redux/store';
+import { trackDiscussionAction } from '@/redux/pwa/pwaSlice';
 import {
 	createEvaluationRef,
 	createStatementRef,
@@ -56,6 +58,12 @@ export async function setEvaluationToDB(
 			evaluation, // -1 to 1 scale
 			'button', // Could be passed as parameter if needed
 		);
+
+		// Track discussion action for notification prompt timing
+		const discussionId = statement.topParentId ?? statement.parentId;
+		if (discussionId && discussionId !== 'top') {
+			store.dispatch(trackDiscussionAction(discussionId));
+		}
 	} catch (error) {
 		logger.error('Failed to set evaluation', error, {
 			statementId: statement.statementId,

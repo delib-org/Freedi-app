@@ -1,0 +1,151 @@
+// Branch Bell Atom - BEM Methodology
+// Usage: <button class="branch-bell branch-bell--instant">
+//          <span class="branch-bell__icon">...</span>
+//        </button>
+//
+// 5-state bell: unsubscribed, instant, daily, weekly, muted
+
+@use '../mixins' as *;
+
+// ============================================================================
+// BRANCH BELL BLOCK
+// ============================================================================
+
+.branch-bell {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 2rem;
+	height: 2rem;
+	padding: 0;
+	border: none;
+	border-radius: 50%;
+	background: transparent;
+	cursor: pointer;
+	transition: background-color 0.15s ease, color 0.15s ease;
+	color: var(--text-caption);
+
+	&:hover {
+		background-color: var(--border-light);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	// ============================================================================
+	// ELEMENTS
+	// ============================================================================
+
+	&__icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.25rem;
+		height: 1.25rem;
+
+		svg {
+			width: 100%;
+			height: 100%;
+			stroke-width: 1.5;
+		}
+	}
+
+	&__dot {
+		position: absolute;
+		top: 4px;
+		right: 4px;
+		width: 6px;
+		height: 6px;
+		border-radius: 50%;
+		background-color: var(--btn-primary);
+
+		@include rtl {
+			right: auto;
+			left: 4px;
+		}
+	}
+
+	// ============================================================================
+	// MODIFIERS (Subscription states)
+	// ============================================================================
+
+	// Unsubscribed: gray, no dot
+	&--unsubscribed {
+		color: var(--text-caption);
+	}
+
+	// Instant: active blue, with dot
+	&--instant {
+		color: var(--btn-primary);
+
+		.branch-bell__dot {
+			background-color: var(--btn-primary);
+		}
+	}
+
+	// Daily: teal, with dot
+	&--daily {
+		color: var(--agree);
+
+		.branch-bell__dot {
+			background-color: var(--agree);
+		}
+	}
+
+	// Weekly: gold/option, with dot
+	&--weekly {
+		color: var(--option);
+
+		.branch-bell__dot {
+			background-color: var(--option);
+		}
+	}
+
+	// Muted: slash icon, gray (opacity 0.75 for AA contrast compliance)
+	&--muted {
+		color: var(--text-caption);
+		opacity: 0.75;
+	}
+
+	// Size variants
+	&--small {
+		width: 1.5rem;
+		height: 1.5rem;
+
+		.branch-bell__icon {
+			width: 1rem;
+			height: 1rem;
+		}
+
+		.branch-bell__dot {
+			width: 5px;
+			height: 5px;
+			top: 2px;
+			right: 2px;
+
+			@include rtl {
+				right: auto;
+				left: 2px;
+			}
+		}
+	}
+
+	&--large {
+		width: 2.5rem;
+		height: 2.5rem;
+
+		.branch-bell__icon {
+			width: 1.5rem;
+			height: 1.5rem;
+		}
+	}
+
+	// Disabled state
+	&--disabled {
+		pointer-events: none;
+		opacity: 0.4;
+	}
+}

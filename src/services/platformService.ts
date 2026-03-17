@@ -132,9 +132,33 @@ export const isFirebaseMessagingSupported = (): boolean => {
 };
 
 /**
- * Get the current platform name.
+ * Check if the app is running inside a Capacitor native container.
+ * When Capacitor ships, it sets window.Capacitor.isNativePlatform().
  */
-export const getPlatformName = (): 'ios' | 'android' | 'web' => {
+export const isCapacitorNative = (): boolean => {
+	const win = window as Window & { Capacitor?: { isNativePlatform?: () => boolean } };
+
+	return win.Capacitor?.isNativePlatform?.() === true;
+};
+
+/**
+ * Platform types for push token registration.
+ * - 'web': Standard web browser (FCM web push)
+ * - 'ios': iOS web browser or PWA (FCM web push)
+ * - 'android': Android web browser (FCM web push)
+ * - 'ios-native': Capacitor iOS app (APNs via native plugin)
+ * - 'android-native': Capacitor Android app (FCM via native plugin)
+ */
+export type PushPlatform = 'web' | 'ios' | 'android' | 'ios-native' | 'android-native';
+
+/**
+ * Get the current platform name for push token storage.
+ * Distinguishes between web and native Capacitor platforms.
+ */
+export const getPlatformName = (): PushPlatform => {
+	if (isCapacitorNative()) {
+		return isIOS() ? 'ios-native' : 'android-native';
+	}
 	if (isIOS()) return 'ios';
 	if (isAndroid()) return 'android';
 
@@ -147,7 +171,7 @@ export const getPlatformName = (): 'ios' | 'android' | 'web' => {
 export const getDeviceInfo = (): {
 	userAgent: string;
 	language: string;
-	platform: string;
+	platform: PushPlatform;
 } => ({
 	userAgent: navigator.userAgent,
 	language: navigator.language,
@@ -164,6 +188,7 @@ export const PlatformService = {
 	isIOS,
 	isAndroid,
 	isInstalledPWA,
+	isCapacitorNative,
 	getIOSVersion,
 	isIOSWebPushSupported,
 	isBrowserNotificationsSupported,

@@ -93,13 +93,31 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 	try {
 		const now = Date.now();
 
+		// Build parents array automatically if not provided.
+		// This ensures all ancestors are discoverable via 'array-contains' queries
+		// even when callers don't pass it explicitly.
+		const topParentId = params.topParentId || params.parentId;
+		let parents: string[];
+		if (params.parents && params.parents.length > 0) {
+			parents = params.parents;
+		} else if (params.parentId === 'top' || !params.parentId) {
+			parents = [];
+		} else {
+			// At minimum, include parentId so the direct parent can find this statement.
+			// Also include topParentId if different, so the root can find all descendants.
+			const set = new Set<string>();
+			if (topParentId && topParentId !== 'top') set.add(topParentId);
+			set.add(params.parentId);
+			parents = [...set];
+		}
+
 		const newStatement: Statement = {
 			// Required fields
 			statementId: params.statementId || getRandomUID(),
 			statement: params.statement,
 			statementType: params.statementType,
 			parentId: params.parentId,
-			topParentId: params.topParentId || params.parentId,
+			topParentId,
 			creatorId: params.creatorId,
 			creator: params.creator,
 			createdAt: now,
@@ -108,7 +126,7 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 
 			// Optional fields with defaults
 			paragraphs: params.paragraphs ?? [],
-			parents: params.parents ?? [],
+			parents,
 			statementSettings: params.statementSettings ?? defaultStatementSettings,
 			stageSelectionType: params.stageSelectionType ?? StageSelectionType.consensus,
 			randomSeed: params.randomSeed ?? Math.random(),
@@ -161,7 +179,7 @@ export function createBasicStatement({
 		statementType: statementType ?? StatementType.statement,
 		parentId: parentStatement.statementId,
 		topParentId: parentStatement.topParentId || parentStatement.statementId,
-		parents: parentStatement.parents ? [...parentStatement.parents] : [],
+		parents: [...(parentStatement.parents || []), parentStatement.statementId],
 		creatorId: user.uid,
 		creator: user,
 		stageSelectionType,

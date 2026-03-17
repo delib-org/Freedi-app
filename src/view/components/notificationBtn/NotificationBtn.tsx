@@ -11,6 +11,7 @@ import {
 import styles from './NotificationBtn.module.scss';
 import useClickOutside from '@/controllers/hooks/useClickOutside';
 import { markNotificationsAsViewedInListDB } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
+import { store } from '@/redux/store';
 import UnreadBadge from '../unreadBadge/UnreadBadge';
 
 const NotificationBtn = () => {
@@ -38,6 +39,10 @@ const NotificationBtn = () => {
 		// ✅ Mark unread notifications as viewed after 2 seconds
 		if (!showInAppNotifications && unreadCount > 0) {
 			setTimeout(() => {
+				// Re-check auth state after the delay — user may have signed out
+				const currentUser = store.getState().creator.creator;
+				if (!currentUser) return;
+
 				const unreadIds = allNotificationsList
 					.filter((n) => !n.read && !n.viewedInList)
 					.map((n) => n.notificationId);
