@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { Collections } from '@freedi/shared-types';
+import { Collections, createParagraphStatement, Statement } from '@freedi/shared-types';
 import { getFirebaseAdmin, uploadImageFromUrl } from '@/lib/firebase/admin';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { fetchGoogleDoc, getServiceAccountEmail } from '@/lib/google-docs/client';
@@ -245,11 +245,67 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
       .join(' ')
       .slice(0, 200);
 
-    // Save to Firestore
+    // Delete existing paragraphs before importing new ones
+    const existingParagraphs = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', statementId)
+      .where('doc.isOfficialParagraph', '==', true)
+      .get();
+
+    if (!existingParagraphs.empty) {
+      const deleteBatch = db.batch();
+      existingParagraphs.docs.forEach((doc) => {
+        deleteBatch.delete(doc.ref);
+      });
+      await deleteBatch.commit();
+      logger.info(`[Import] Deleted ${existingParagraphs.size} existing paragraphs`);
+    }
+
+    // Get document creator info for the paragraph statements
+    const docData = docSnap.data() as Statement;
+    const creator = {
+      uid: userId,
+      displayName: docData?.creator?.displayName || 'Admin',
+      email: docData?.creator?.email || '',
+      photoURL: docData?.creator?.photoURL || '',
+      isAnonymous: false,
+    };
+
+    // Create individual Statement documents for each paragraph
+    // The Sign app reads paragraphs as child statements with doc.isOfficialParagraph == true
+    const BATCH_SIZE = 500;
+    const paragraphIds: string[] = [];
+
+    for (let i = 0; i < paragraphs.length; i += BATCH_SIZE) {
+      const batch = db.batch();
+      const chunk = paragraphs.slice(i, i + BATCH_SIZE);
+
+      for (const paragraph of chunk) {
+        const paragraphStatement = createParagraphStatement(
+          paragraph,
+          statementId,
+          creator
+        );
+
+        if (paragraphStatement) {
+          batch.set(
+            db.collection(Collections.statements).doc(paragraphStatement.statementId),
+            paragraphStatement
+          );
+          paragraphIds.push(paragraphStatement.statementId);
+        }
+      }
+
+      await batch.commit();
+    }
+
+    logger.info(`[Import] Created ${paragraphIds.length} paragraph statements for document ${statementId}`);
+
+    // Update parent document with description and title
     await docRef.update({
-      paragraphs,
       description: description.length === 200 ? description + '...' : description,
       lastUpdate: Date.now(),
+      ...(documentTitle && { statement: documentTitle }),
     });
 
     return NextResponse.json({

@@ -140,6 +140,9 @@ import { importGoogleDoc } from './fn_importGoogleDocs';
 // Document Version AI Processing
 import { processVersionAI } from './fn_versionAI';
 
+// Suggestion Refinement AI (per-suggestion synthesis + improvement)
+import { processRefinementAI } from './fn_refinementAI';
+
 // Auto-Generate Version on Suggestion Threshold
 import { onSuggestionCreatedAutoGenerate } from './fn_autoGenerateVersion';
 
@@ -619,6 +622,9 @@ exports.importGoogleDoc = wrapHttpFunction(importGoogleDoc);
 
 // Document Version AI Processing (for Sign app - uses 540s timeout vs Vercel's 30s limit)
 exports.processVersionAI = wrapMemoryIntensiveHttpFunction(processVersionAI);
+
+// Suggestion Refinement AI (per-suggestion synthesis + improvement from comments)
+exports.processRefinementAI = wrapMemoryIntensiveHttpFunction(processRefinementAI);
 
 // Auto-Generate Version on Suggestion Threshold
 exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(

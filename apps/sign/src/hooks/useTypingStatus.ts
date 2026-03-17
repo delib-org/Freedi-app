@@ -5,13 +5,13 @@ import {
   collection,
   query,
   where,
-  onSnapshot,
   doc,
   setDoc,
   deleteDoc,
   QuerySnapshot,
   DocumentData,
 } from 'firebase/firestore';
+import { safeQuerySnapshot } from '@/lib/firebase/safeSnapshot';
 import { TypingStatus } from '@freedi/shared-types';
 import { getFirestoreClient } from '@/lib/firebase/client';
 import { logError } from '@/lib/utils/errorHandling';
@@ -224,7 +224,7 @@ export function useTypingStatus({
 
       console.info('[useTypingStatus] Setting up listener for paragraph:', paragraphId);
 
-      unsubscribeRef.current = onSnapshot(
+      unsubscribeRef.current = safeQuerySnapshot(
         q,
         (snapshot: QuerySnapshot<DocumentData>) => {
           const now = Date.now();

@@ -41,6 +41,10 @@ export interface DocumentSettings {
   enableHeadingNumbering: boolean;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts: boolean;
+  /** When true, enables the suggestion refinement workflow (AI synthesis + phase controls) */
+  enableRefinement: boolean;
+  /** Default consensus threshold for filtering suggestions in refinement phase (0-1, default 0.2) */
+  defaultConsensusThreshold: number;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -70,6 +74,8 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   headerColors: DEFAULT_HEADER_COLORS,
   enableHeadingNumbering: false,
   showSignatureCounts: true,
+  enableRefinement: false,
+  defaultConsensusThreshold: 0.2,
 };
 
 /**
@@ -144,6 +150,8 @@ export async function GET(
       headerColors: document?.signSettings?.headerColors ?? DEFAULT_SETTINGS.headerColors,
       enableHeadingNumbering: document?.signSettings?.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering,
       showSignatureCounts: document?.signSettings?.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts,
+      enableRefinement: document?.signSettings?.enableRefinement ?? DEFAULT_SETTINGS.enableRefinement,
+      defaultConsensusThreshold: document?.signSettings?.defaultConsensusThreshold ?? DEFAULT_SETTINGS.defaultConsensusThreshold,
     };
 
     return NextResponse.json(settings);
@@ -295,6 +303,10 @@ export async function PUT(
       headerColors,
       enableHeadingNumbering: body.enableHeadingNumbering !== undefined ? Boolean(body.enableHeadingNumbering) : (existingSettings.enableHeadingNumbering ?? DEFAULT_SETTINGS.enableHeadingNumbering),
       showSignatureCounts: body.showSignatureCounts !== undefined ? Boolean(body.showSignatureCounts) : (existingSettings.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts),
+      enableRefinement: body.enableRefinement !== undefined ? Boolean(body.enableRefinement) : (existingSettings.enableRefinement ?? DEFAULT_SETTINGS.enableRefinement),
+      defaultConsensusThreshold: body.defaultConsensusThreshold !== undefined && typeof body.defaultConsensusThreshold === 'number' && body.defaultConsensusThreshold >= 0 && body.defaultConsensusThreshold <= 1
+        ? body.defaultConsensusThreshold
+        : (existingSettings.defaultConsensusThreshold ?? DEFAULT_SETTINGS.defaultConsensusThreshold),
     };
 
     // Update document with new settings

@@ -67,6 +67,10 @@ interface Settings {
   enableHeadingNumbering: boolean;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts: boolean;
+  /** When true, enables the suggestion refinement workflow */
+  enableRefinement: boolean;
+  /** Default consensus threshold for refinement filtering (0-1) */
+  defaultConsensusThreshold: number;
 }
 
 export default function AdminSettingsPage() {
@@ -104,6 +108,8 @@ export default function AdminSettingsPage() {
     nonInteractiveNormalStyle: false,
     enableHeadingNumbering: false,
     showSignatureCounts: true,
+    enableRefinement: false,
+    defaultConsensusThreshold: 0.2,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -296,6 +302,23 @@ export default function AdminSettingsPage() {
             aria-pressed={settings.enableSuggestions}
           />
         </div>
+
+        {settings.enableSuggestions && (
+          <div className={styles.settingRow}>
+            <div className={styles.settingInfo}>
+              <p className={styles.settingLabel}>{t('Enable Refinement')}</p>
+              <p className={styles.settingDescription}>
+                {t('Enable AI synthesis and refinement phases for suggestions')}
+              </p>
+            </div>
+            <button
+              type="button"
+              className={`${styles.toggle} ${settings.enableRefinement ? styles.active : ''}`}
+              onClick={() => handleToggle('enableRefinement')}
+              aria-pressed={settings.enableRefinement}
+            />
+          </div>
+        )}
 
         <div className={styles.settingRow}>
           <div className={styles.settingInfo}>

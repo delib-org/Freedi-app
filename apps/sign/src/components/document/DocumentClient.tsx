@@ -38,6 +38,8 @@ interface DocumentClientProps {
   userInteractions?: string[];
   isAdmin?: boolean;
   enableSuggestions?: boolean;
+  /** Whether refinement workflow is enabled */
+  enableRefinement?: boolean;
   paragraphs?: Paragraph[];
   textDirection?: 'ltr' | 'rtl';
   /** When true, users must sign in with Google to interact (comment, suggest, approve, sign) */
@@ -58,6 +60,7 @@ export default function DocumentClient({
   userInteractions = [],
   isAdmin,
   enableSuggestions = false,
+  enableRefinement = false,
   paragraphs = [],
   textDirection = 'ltr',
   requireGoogleLogin = false,
@@ -502,6 +505,8 @@ export default function DocumentClient({
             onClose={closeModal}
             hideUserIdentity={hideUserIdentity}
             headingNumber={headingNumbers.get(modalContext.paragraphId)}
+            isAdmin={isAdmin}
+            enableRefinement={enableRefinement}
           />
         </Modal>
       )}

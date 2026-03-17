@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 import { getFirebaseAuth, anonymousLogin } from '@/lib/firebase/client';
+import { installFirestoreErrorFilter } from '@/lib/firebase/safeSnapshot';
 import { logError } from '@/lib/utils/errorHandling';
 
 /**
@@ -24,6 +25,11 @@ export function AuthSync() {
 	const isCreatingAnonymousRef = useRef(false);
 	const isMountedRef = useRef(true);
 	const authRestoreTimeout = useRef<NodeJS.Timeout | null>(null);
+
+	// Suppress non-fatal Firestore internal assertion errors globally
+	useEffect(() => {
+		return installFirestoreErrorFilter();
+	}, []);
 
 	useEffect(() => {
 		isMountedRef.current = true;
