@@ -1,0 +1,70 @@
+.tree-node {
+	--tree-indent: 32px;
+	--tree-line-color: var(--btn-primary, #5f88e5);
+	position: relative;
+
+	&__content {
+		position: relative;
+		display: flex;
+		align-items: flex-start;
+		gap: 2px;
+		padding-inline-start: calc(var(--tree-indent) * var(--depth, 0));
+	}
+
+	// Horizontal branch connector from vertical thread line to node content
+	&__branch {
+		position: absolute;
+		top: 18px;
+		height: 2px;
+		background-color: var(--tree-line-color);
+		opacity: 0.35;
+		border-radius: 1px;
+		z-index: 1;
+		pointer-events: none;
+		inset-inline-start: calc(var(--tree-indent) * (var(--depth, 1) - 1) + 14px);
+		width: calc(var(--tree-indent) - 14px);
+	}
+
+	&__toggle {
+		flex-shrink: 0;
+		padding-top: 10px;
+	}
+
+	&__children {
+		position: relative;
+		margin-inline-start: 0;
+	}
+
+	&__dive-in {
+		padding-inline-start: calc(var(--tree-indent) * (var(--depth, 0) + 1));
+		padding-top: 2px;
+		padding-bottom: 4px;
+	}
+
+	&__dive-in-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 10px;
+		border: 1px dashed var(--border-color, #ccc);
+		border-radius: 6px;
+		background: none;
+		color: var(--btn-primary, #5f88e5);
+		font-size: 0.8rem;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			background: var(--card-default, #f5f5f5);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+	}
+
+	@media (max-width: 600px) {
+		--tree-indent: 32px;
+	}
+}

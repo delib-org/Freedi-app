@@ -635,3 +635,159 @@ export function listenToAllDescendants(statementId: string): Unsubscribe {
 		};
 	}
 }
+
+/**
+ * Listen to ALL descendant types for the tree view (no statementType filter).
+ * Unlike listenToAllDescendants which filters by question/group/option,
+ * this loads all types including plain statements (chat messages).
+ */
+export function listenToTreeDescendants(
+	statementId: string,
+	queryLimit = MAX_DESCENDANTS_LIMIT,
+): Unsubscribe {
+	try {
+		const statementsRef = createCollectionRef(Collections.statements);
+		const q = query(
+			statementsRef,
+			where('parents', 'array-contains', statementId),
+			orderBy('createdAt', 'desc'),
+			limit(queryLimit),
+		);
+
+		const listenerKey = generateListenerKey('tree-descendants', 'statement', statementId);
+
+		let isFirstBatch = true;
+		const statementsArr: Statement[] = [];
+		let loadedCount = 0;
+
+		return createManagedCollectionListener(
+			q,
+			listenerKey,
+			(statementsDB) => {
+				if (isFirstBatch) {
+					statementsDB.forEach((doc) => {
+						try {
+							const stmt = parse(StatementSchema, normalizeStatementData(doc.data()));
+							statementsArr.push(stmt);
+							loadedCount++;
+						} catch (error) {
+							logError(error, {
+								operation: 'listenToTreeDescendants.parseInitial',
+								statementId: doc.id,
+								metadata: {
+									parentStatementId: statementId,
+									loadedCount,
+								},
+							});
+						}
+					});
+
+					if (statementsArr.length > 0) {
+						store.dispatch(setStatements(statementsArr));
+						console.info(
+							`[listenToTreeDescendants] Loaded ${statementsArr.length} descendants for statement ${statementId}`,
+						);
+					}
+
+					isFirstBatch = false;
+				} else {
+					const changes = statementsDB.docChanges();
+
+					changes.forEach((change) => {
+						try {
+							const stmt = parse(StatementSchema, normalizeStatementData(change.doc.data()));
+
+							if (change.type === 'added' || change.type === 'modified') {
+								store.dispatch(setStatement(stmt));
+							} else if (change.type === 'removed') {
+								store.dispatch(deleteStatement(stmt.statementId));
+							}
+						} catch (error) {
+							logError(error, {
+								operation: 'listenToTreeDescendants.processChange',
+								statementId: change.doc.id,
+								metadata: {
+									parentStatementId: statementId,
+									changeType: change.type,
+									loadedCount,
+								},
+							});
+						}
+					});
+				}
+			},
+			(error) => {
+				logError(error, {
+					operation: 'listenToTreeDescendants.listener',
+					metadata: {
+						parentStatementId: statementId,
+						loadedCount,
+					},
+				});
+			},
+			'query',
+		);
+	} catch (error) {
+		logError(error, {
+			operation: 'listenToTreeDescendants.setup',
+			metadata: { parentStatementId: statementId },
+		});
+
+		return (): void => {
+			return;
+		};
+	}
+}
+
+/**
+ * Fetch older tree descendants beyond the initial real-time listener.
+ * Uses the same `parents array-contains` query but with a cursor.
+ */
+export async function fetchOlderTreeDescendants(
+	statementId: string,
+	oldestCreatedAt: number,
+	batchSize = 50,
+): Promise<{ statements: Statement[]; hasMore: boolean }> {
+	try {
+		const statementsRef = createCollectionRef(Collections.statements);
+		const q = query(
+			statementsRef,
+			where('parents', 'array-contains', statementId),
+			orderBy('createdAt', 'desc'),
+			startAfter(oldestCreatedAt),
+			limit(batchSize + 1),
+		);
+
+		const snapshot = await getDocs(q);
+		const statements: Statement[] = [];
+
+		snapshot.forEach((doc) => {
+			try {
+				const stmt = parse(StatementSchema, normalizeStatementData(doc.data()));
+				statements.push(stmt);
+			} catch (error) {
+				logError(error, {
+					operation: 'fetchOlderTreeDescendants.parse',
+					statementId: doc.id,
+				});
+			}
+		});
+
+		const hasMore = statements.length > batchSize;
+		const resultStatements = hasMore ? statements.slice(0, batchSize) : statements;
+
+		if (resultStatements.length > 0) {
+			store.dispatch(setStatements(resultStatements));
+		}
+
+		return { statements: resultStatements, hasMore };
+	} catch (error) {
+		logError(error, {
+			operation: 'fetchOlderTreeDescendants',
+			statementId,
+			metadata: { oldestCreatedAt, batchSize },
+		});
+
+		return { statements: [], hasMore: false };
+	}
+}

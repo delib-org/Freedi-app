@@ -337,6 +337,8 @@
   "Enable AI synthesis and refinement phases for suggestions": "אפשר סינתזת AI ושלבי זיקוק להצעות",
   "Enable Anchored Sampling": "הפעל דגימה מעוגנת",
   "Enable Chat": "אפשר צ'אט",
+  "Tree View Discussion": "תצוגת עץ דיון",
+  "Show threaded tree discussion instead of flat chat": "הצג דיון בתצוגת עץ מקונן במקום צ'אט שטוח",
   "Show Chat Side Panel": "הצג פאנל צ'אט צדדי",
   "Display the collapsible chat panel alongside the main content": "הצג את פאנל הצ'אט המתקפל לצד התוכן הראשי",
   "Show Sub-Questions Map": "הצג מפת תת-שאלות",

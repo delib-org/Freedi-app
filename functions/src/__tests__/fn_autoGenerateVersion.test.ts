@@ -63,8 +63,6 @@ describe('fn_autoGenerateVersion', () => {
 		} as unknown as Parameters<typeof onSuggestionCreatedAutoGenerate>[0];
 
 		// Should not throw - errors are caught and logged
-		await expect(
-			onSuggestionCreatedAutoGenerate(event),
-		).resolves.not.toThrow();
+		await expect(onSuggestionCreatedAutoGenerate(event)).resolves.not.toThrow();
 	});
 });

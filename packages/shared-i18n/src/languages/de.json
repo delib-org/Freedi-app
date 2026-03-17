@@ -264,6 +264,8 @@
   "Enable AI synthesis and refinement phases for suggestions": "KI-Synthese und Verfeinerungsphasen für Vorschläge aktivieren",
   "Enable Anchored Sampling": "Verankerte Stichprobe aktivieren",
   "Enable Chat": "Chat aktivieren",
+  "Tree View Discussion": "Baumanzeige-Diskussion",
+  "Show threaded tree discussion instead of flat chat": "Verschachtelte Baumdiskussion statt flachem Chat anzeigen",
   "Show Chat Side Panel": "Chat-Seitenpanel anzeigen",
   "Display the collapsible chat panel alongside the main content": "Das einklappbare Chat-Panel neben dem Hauptinhalt anzeigen",
   "Show Sub-Questions Map": "Unterfragen-Karte anzeigen",

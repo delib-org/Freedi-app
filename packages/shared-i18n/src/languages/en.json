@@ -343,6 +343,8 @@
   "Enable AI synthesis and refinement phases for suggestions": "Enable AI synthesis and refinement phases for suggestions",
   "Enable Anchored Sampling": "Enable Anchored Sampling",
   "Enable Chat": "Enable Chat",
+  "Tree View Discussion": "Tree View Discussion",
+  "Show threaded tree discussion instead of flat chat": "Show threaded tree discussion instead of flat chat",
   "Show Chat Side Panel": "Show Chat Side Panel",
   "Display the collapsible chat panel alongside the main content": "Display the collapsible chat panel alongside the main content",
   "Show Sub-Questions Map": "Show Sub-Questions Map",

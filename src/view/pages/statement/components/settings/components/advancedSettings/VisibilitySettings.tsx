@@ -8,6 +8,7 @@ import {
 	FileText,
 	ExternalLink,
 	Layout,
+	TreePine,
 } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getSignDocumentUrl } from '@/utils/urlHelpers';
@@ -59,6 +60,13 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 				description={t('Allow members to chat and discuss')}
 				icon={MessageCircle}
 				badge="recommended"
+			/>
+			<ToggleSwitch
+				isChecked={settings.enableTreeView !== false}
+				onChange={(checked) => handleSettingChange('enableTreeView', checked)}
+				label={t('Tree View Discussion')}
+				description={t('Show threaded tree discussion instead of flat chat')}
+				icon={TreePine}
 			/>
 			<div className={styles.toggleItem}>
 				<div className={styles.toggleContent}>

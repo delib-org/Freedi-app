@@ -177,9 +177,8 @@ function formatFeedback(sources: ChangeSource[]): string {
 					type = 'Feedback';
 			}
 
-			const consensusStr = source.consensus !== undefined
-				? `Consensus: ${source.consensus.toFixed(2)}, `
-				: '';
+			const consensusStr =
+				source.consensus !== undefined ? `Consensus: ${source.consensus.toFixed(2)}, ` : '';
 			const support =
 				source.supporters > 0 || source.objectors > 0
 					? `, ${source.supporters} supporters, ${source.objectors} objectors`
@@ -351,8 +350,10 @@ async function analyzeParagraph(
 		};
 	}
 
-	const userPrompt = PARAGRAPH_ANALYSIS_USER_PROMPT
-		.replace('{originalContent}', paragraph.content || '')
+	const userPrompt = PARAGRAPH_ANALYSIS_USER_PROMPT.replace(
+		'{originalContent}',
+		paragraph.content || '',
+	)
 		.replace('{feedbackList}', formatFeedback(sources))
 		.replace('{approvalRate}', approvalRate !== undefined ? approvalRate.toFixed(0) : 'N/A')
 		.replace('{approvalVoters}', approvalVoters !== undefined ? String(approvalVoters) : 'N/A')
@@ -418,26 +419,32 @@ async function analyzeDocumentHolistically(
 	documentContext: string,
 ): Promise<HolisticAnalysisOutput> {
 	const documentContent = paragraphs
-		.map((p, i) => `[Paragraph ${i + 1}] (ID: ${p.paragraphId}, Type: ${p.type})\n${p.content || '(empty)'}`)
+		.map(
+			(p, i) =>
+				`[Paragraph ${i + 1}] (ID: ${p.paragraphId}, Type: ${p.type})\n${p.content || '(empty)'}`,
+		)
 		.join('\n\n---\n\n');
 
 	const allFeedback = changes
-		.filter(c => c.sources.length > 0)
-		.map(c => {
-			const para = paragraphs.find(p => p.paragraphId === c.paragraphId);
-			const paraLabel = para ? `Paragraph "${(para.content || '').substring(0, 60)}..."` : `Paragraph ${c.paragraphId}`;
+		.filter((c) => c.sources.length > 0)
+		.map((c) => {
+			const para = paragraphs.find((p) => p.paragraphId === c.paragraphId);
+			const paraLabel = para
+				? `Paragraph "${(para.content || '').substring(0, 60)}..."`
+				: `Paragraph ${c.paragraphId}`;
 
 			return `### ${paraLabel}\nApproval Rate: ${c.approvalRate !== undefined ? `${c.approvalRate.toFixed(0)}%` : 'N/A'}\n${formatFeedback(c.sources)}`;
 		})
 		.join('\n\n===\n\n');
 
-	const userPrompt = HOLISTIC_ANALYSIS_USER_PROMPT
-		.replace('{documentContent}', documentContent)
+	const userPrompt = HOLISTIC_ANALYSIS_USER_PROMPT.replace('{documentContent}', documentContent)
 		.replace('{allFeedback}', allFeedback || 'No paragraph-level feedback.')
 		.replace('{documentContext}', documentContext);
 
 	try {
-		console.info(`[analyzeDocumentHolistically] Starting holistic analysis for ${paragraphs.length} paragraphs`);
+		console.info(
+			`[analyzeDocumentHolistically] Starting holistic analysis for ${paragraphs.length} paragraphs`,
+		);
 
 		const response = await callGemini(HOLISTIC_ANALYSIS_SYSTEM_PROMPT, userPrompt);
 
@@ -454,8 +461,8 @@ async function analyzeDocumentHolistically(
 		}>(response);
 
 		const paragraphActions = (parsed.paragraphActions || [])
-			.filter(a => a.paragraphId && a.action)
-			.map(a => ({
+			.filter((a) => a.paragraphId && a.action)
+			.map((a) => ({
 				paragraphId: a.paragraphId!,
 				action: (a.action as 'modify' | 'add' | 'remove' | 'keep') || 'keep',
 				proposedContent: a.proposedContent || '',
@@ -629,11 +636,14 @@ ${p.content || '(empty)'}`,
 			)
 			.join('\n');
 
-		const userPrompt = COHERENCE_USER_PROMPT
-			.replace('{documentContent}', documentContent)
-			.replace('{changesSummary}', changesSummary || 'No changes were made.');
+		const userPrompt = COHERENCE_USER_PROMPT.replace('{documentContent}', documentContent).replace(
+			'{changesSummary}',
+			changesSummary || 'No changes were made.',
+		);
 
-		console.info(`[coherenceAnalysis] Starting analysis for version ${versionId} with ${paragraphs.length} paragraphs`);
+		console.info(
+			`[coherenceAnalysis] Starting analysis for version ${versionId} with ${paragraphs.length} paragraphs`,
+		);
 
 		const response = await callGemini(COHERENCE_SYSTEM_PROMPT, userPrompt);
 
@@ -668,7 +678,10 @@ ${p.content || '(empty)'}`,
 		const incoherences: IncoherenceRecord[] = (parsed.incoherences || [])
 			.filter(
 				(item) =>
-					item.type && item.affectedParagraphIds?.length && item.primaryParagraphId && item.description,
+					item.type &&
+					item.affectedParagraphIds?.length &&
+					item.primaryParagraphId &&
+					item.description,
 			)
 			.map((item, index) => ({
 				recordId: `${versionId}--coh--${index}`,
@@ -700,10 +713,17 @@ ${p.content || '(empty)'}`,
 			let action = ParagraphAction.kept;
 			if (change) {
 				switch (change.changeType) {
-					case ChangeType.modified: action = ParagraphAction.modified; break;
-					case ChangeType.added: action = ParagraphAction.added; break;
-					case ChangeType.removed: action = ParagraphAction.removed; break;
-					default: action = ParagraphAction.kept;
+					case ChangeType.modified:
+						action = ParagraphAction.modified;
+						break;
+					case ChangeType.added:
+						action = ParagraphAction.added;
+						break;
+					case ChangeType.removed:
+						action = ParagraphAction.removed;
+						break;
+					default:
+						action = ParagraphAction.kept;
 				}
 			}
 
@@ -712,11 +732,11 @@ ${p.content || '(empty)'}`,
 				action,
 				feedbackAddressed: change
 					? change.sources.map((source) => ({
-						sourceId: source.sourceId,
-						sourceType: source.type,
-						summary: source.content.substring(0, 100),
-						impact: source.impact,
-					}))
+							sourceId: source.sourceId,
+							sourceType: source.type,
+							summary: source.content.substring(0, 100),
+							impact: source.impact,
+						}))
 					: [],
 				coherenceIssuesResolved: [],
 				coherenceIssuesCreated: relatedIssues.map((inc) => inc.recordId),
@@ -819,20 +839,32 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 		const revisionStrategy = version.revisionStrategy || RevisionStrategy.amendParagraphs;
 		const documentContext = feedbackSummary ? formatDocumentContext(feedbackSummary) : '';
 
-		console.info(`[processVersionAI] Strategy: ${revisionStrategy}, Total changes: ${changes.length}`);
+		console.info(
+			`[processVersionAI] Strategy: ${revisionStrategy}, Total changes: ${changes.length}`,
+		);
 
-		let analysisResults: Array<{ changeId: string; paragraphId: string; result: ParagraphAnalysisOutput }>;
+		let analysisResults: Array<{
+			changeId: string;
+			paragraphId: string;
+			result: ParagraphAnalysisOutput;
+		}>;
 		let newParagraphChanges: VersionChange[] = [];
 
 		if (revisionStrategy === RevisionStrategy.fullRevision) {
 			// Holistic document analysis
 			console.info(`[processVersionAI] Running holistic document analysis`);
 
-			const holisticResult = await analyzeDocumentHolistically(paragraphs, changes, documentContext);
+			const holisticResult = await analyzeDocumentHolistically(
+				paragraphs,
+				changes,
+				documentContext,
+			);
 
 			if (holisticResult.paragraphActions.length === 0) {
 				// Fallback to per-paragraph if holistic fails
-				console.info(`[processVersionAI] Holistic analysis returned no actions, falling back to per-paragraph`);
+				console.info(
+					`[processVersionAI] Holistic analysis returned no actions, falling back to per-paragraph`,
+				);
 				analysisResults = await runPerParagraphAnalysis(changes, paragraphs, documentContext);
 			} else {
 				// Process holistic results
@@ -840,15 +872,16 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 
 				for (const action of holisticResult.paragraphActions) {
 					if (action.action === 'modify' || action.action === 'keep') {
-						const existingChange = changes.find(c => c.paragraphId === action.paragraphId);
+						const existingChange = changes.find((c) => c.paragraphId === action.paragraphId);
 						if (existingChange) {
 							analysisResults.push({
 								changeId: existingChange.changeId,
 								paragraphId: action.paragraphId,
 								result: {
-									proposedContent: action.action === 'keep'
-										? (existingChange.originalContent || '')
-										: action.proposedContent,
+									proposedContent:
+										action.action === 'keep'
+											? existingChange.originalContent || ''
+											: action.proposedContent,
 									reasoning: action.reasoning || holisticResult.overallReasoning,
 									confidence: action.confidence,
 								},
@@ -869,7 +902,7 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 							combinedImpact: 0,
 						});
 					} else if (action.action === 'remove') {
-						const existingChange = changes.find(c => c.paragraphId === action.paragraphId);
+						const existingChange = changes.find((c) => c.paragraphId === action.paragraphId);
 						if (existingChange) {
 							analysisResults.push({
 								changeId: existingChange.changeId,
@@ -881,7 +914,9 @@ export async function processVersionAI(req: Request, res: Response): Promise<voi
 								},
 							});
 							// Mark as removed
-							const changeRef = db.collection(SignCollections.versionChanges).doc(existingChange.changeId);
+							const changeRef = db
+								.collection(SignCollections.versionChanges)
+								.doc(existingChange.changeId);
 							await changeRef.update({ changeType: ChangeType.removed });
 						}
 					}

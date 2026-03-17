@@ -264,6 +264,8 @@
   "Enable AI synthesis and refinement phases for suggestions": "AI-synthese en verfijningsfasen voor suggesties inschakelen",
   "Enable Anchored Sampling": "Verankerde Steekproef Inschakelen",
   "Enable Chat": "Chat inschakelen",
+  "Tree View Discussion": "Boomweergave Discussie",
+  "Show threaded tree discussion instead of flat chat": "Toon geneste boomdiscussie in plaats van platte chat",
   "Show Chat Side Panel": "Chat-zijpaneel tonen",
   "Display the collapsible chat panel alongside the main content": "Het inklapbare chatpaneel naast de hoofdinhoud weergeven",
   "Show Sub-Questions Map": "Subvragen-kaart tonen",

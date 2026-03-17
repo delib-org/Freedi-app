@@ -644,6 +644,8 @@
   "Enable AI suggestion improvement": "فعال‌سازی بهبود پیشنهاد با AI",
   "Enable Anchored Sampling": "فعال‌سازی نمونه‌گیری لنگری",
   "Enable Chat": "فعال‌سازی گفتگو",
+  "Tree View Discussion": "نمای درختی بحث",
+  "Show threaded tree discussion instead of flat chat": "نمایش بحث درختی رشته‌ای به جای گفتگوی مسطح",
   "Enable Heading Numbering": "فعال‌سازی شماره‌گذاری عناوین",
   "Automatically number headings hierarchically (1, 1.1, 1.1.1, etc.)": "شماره‌گذاری سلسله‌مراتبی عناوین (1، 1.1، 1.1.1 و غیره)",
   "Enable intelligent features and automation": "فعال‌سازی ویژگی‌های هوشمند و اتوماسیون",

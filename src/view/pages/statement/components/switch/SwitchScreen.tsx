@@ -12,6 +12,7 @@ import StagePage from '../statementTypes/stage/StagePage';
 import QuestionsView from '../questionsView/QuestionsView';
 import GroupPage from '../statementTypes/group/GroupPage';
 import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
+import TreeView from '../treeView/TreeView';
 
 // Lazy load heavy screen components
 const Triangle = lazyWithRetry(
@@ -123,6 +124,9 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 	}
 }
 
+const QA_TYPE_FILTER = [StatementType.question, StatementType.option] as const;
+const OPTIONS_ONLY_FILTER = [StatementType.option] as const;
+
 interface ViewByActiveTabProps {
 	activeView: string;
 	statement: Statement | undefined;
@@ -134,8 +138,13 @@ function ViewByActiveTab({
 	statement,
 	isPopperHebbianEnabled,
 }: Readonly<ViewByActiveTabProps>): ReactNode {
+	const isTreeView = statement?.statementSettings?.enableTreeView !== false;
+
 	switch (activeView) {
 		case 'chat':
+			if (isTreeView) {
+				return <TreeView />;
+			}
 			if (isPopperHebbianEnabled && statement) {
 				return (
 					<>
@@ -152,8 +161,16 @@ function ViewByActiveTab({
 
 			return <Chat />;
 		case 'options':
+			if (isTreeView) {
+				return <TreeView typeFilter={OPTIONS_ONLY_FILTER} showSortNav />;
+			}
+
 			return <StagePage />;
 		case 'questions':
+			if (isTreeView) {
+				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav />;
+			}
+
 			return <QuestionsView />;
 		default:
 			// Fallback for group-type statements

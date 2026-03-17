@@ -5,6 +5,7 @@ import {
 	listenToStatement,
 	listenToSubStatements,
 	listenToStatementSubscription,
+	listenToTreeDescendants,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
 import {
@@ -12,6 +13,7 @@ import {
 	clearInAppNotifications,
 } from '@/controllers/db/inAppNotifications/db_inAppNotifications';
 import { CHAT } from '@/constants/common';
+import { TREE_INITIAL_LIMIT } from '@/constants/treeView';
 import {
 	listenToUserDemographicAnswers,
 	listenToUserDemographicQuestions,
@@ -48,6 +50,7 @@ export const useStatementListeners = ({
 	// Subscribe to statement from Redux to get topParentId reactively
 	const statement = useSelector(statementSelector(statementId));
 	const topParentId = statement?.topParentId;
+	const enableTreeView = statement?.statementSettings?.enableTreeView !== false;
 
 	// Reset listener stats when navigating to a different statement
 	useEffect(() => {
@@ -101,6 +104,13 @@ export const useStatementListeners = ({
 			if (currentScreen === 'mind-map') {
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
+			} else if (enableTreeView) {
+				// Tree view: load all descendant types for hierarchical rendering
+				unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
+				// Also keep flat sub-statement listener for agreement map and options views
+				unsubscribersRef.current.push(
+					listenToSubStatements(statementId, 'top', CHAT.INITIAL_MESSAGES_LIMIT),
+				);
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
 				// The default view is 'chat', so apply the limit for all non-mind-map screens.
@@ -123,7 +133,7 @@ export const useStatementListeners = ({
 		}
 
 		return cleanup;
-	}, [creator, statementId, stageId, screen, setIsStatementNotFound, setError]);
+	}, [creator, statementId, stageId, screen, enableTreeView, setIsStatementNotFound, setError]);
 
 	// Effect for top parent statement and group-level demographic questions
 	// This effect now properly depends on topParentId from Redux selector
