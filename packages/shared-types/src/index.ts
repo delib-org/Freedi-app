@@ -487,3 +487,51 @@ export {
   ParagraphAction,
   getCoherenceRecordId,
 } from "./models/version/coherenceModel";
+
+// Engagement models
+export {
+  // Enums
+  NotificationChannel,
+  NotificationFrequency,
+  NotificationTriggerType,
+  SourceApp,
+  CreditAction,
+  HookPhase,
+  ActionLevel,
+  NotificationQueueStatus,
+  EngagementLevel,
+  LEVEL_THRESHOLDS,
+  LEVEL_NAMES,
+
+  // Schemas
+  NotificationQueueItemSchema,
+  CreditRuleSchema,
+  CreditTransactionSchema,
+  UserEngagementSchema,
+  BadgeSchema,
+  DigestPreferencesSchema,
+  StreakDataSchema,
+  BranchPreferenceSchema,
+  DigestItemSchema,
+  DigestContentSchema,
+
+  // Pure functions
+  canPerformAction,
+  getRequiredLevel,
+  ACTION_LEVEL_REQUIREMENTS,
+  APP_DEEP_LINKS,
+  buildDeepLink,
+} from "./models/engagement";
+
+export type {
+  NotificationQueueItem,
+  CreditRule,
+  CreditTransaction,
+  UserEngagement,
+  Badge,
+  DigestPreferences,
+  StreakData,
+  BranchPreference,
+  DigestItem,
+  DigestContent,
+} from "./models/engagement";

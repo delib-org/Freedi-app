@@ -17,6 +17,7 @@
     "seed:clear": "npx tsx scripts/seed.ts --clear"
   },
   "dependencies": {
+    "@freedi/engagement-core": "file:../../packages/engagement-core",
     "@freedi/shared-types": "file:../../packages/shared-types",
     "firebase": "^11.0.2",
     "mithril": "^2.2.8",

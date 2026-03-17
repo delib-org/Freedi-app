@@ -7,7 +7,6 @@ import { MAX_TREE_DEPTH } from '@/constants/treeView';
 import TreeMessageNode from '../TreeMessageNode/TreeMessageNode';
 import TreeOptionNode from '../TreeOptionNode/TreeOptionNode';
 import CollapseToggle from '../CollapseToggle/CollapseToggle';
-import TreeThreadLine from '../TreeThreadLine/TreeThreadLine';
 import styles from './TreeNode.module.scss';
 
 const FLIP_SPRING = { stiffness: 300, damping: 30 };
@@ -65,12 +64,6 @@ const TreeNode: FC<TreeNodeProps> = ({
 				className={styles['tree-node__content']}
 				style={{ '--depth': depth } as React.CSSProperties}
 			>
-				{depth > 0 && (
-					<div
-						className={styles['tree-node__branch']}
-						style={{ '--depth': depth } as React.CSSProperties}
-					/>
-				)}
 				{hasChildren && !isAtMaxDepth && (
 					<div className={styles['tree-node__toggle']}>
 						<CollapseToggle
@@ -103,7 +96,6 @@ const TreeNode: FC<TreeNodeProps> = ({
 
 			{hasChildren && isExpanded && !isAtMaxDepth && (
 				<div className={styles['tree-node__children']}>
-					<TreeThreadLine depth={depth} />
 					{animate ? (
 						<Flipper flipKey={childFlipKey} spring={FLIP_SPRING}>
 							{children.map((child) => (

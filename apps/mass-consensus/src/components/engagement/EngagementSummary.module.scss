@@ -1,0 +1,38 @@
+.engagementSummary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: #f8f9fa;
+  border-radius: 10px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  color: #444;
+}
+
+.statIcon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.statValue {
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.statLabel {
+  color: #888;
+}
+
+.divider {
+  width: 1px;
+  height: 18px;
+  background: #ddd;
+  flex-shrink: 0;
+}

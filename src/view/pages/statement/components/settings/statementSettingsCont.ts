@@ -20,6 +20,8 @@ import {
 } from '@freedi/shared-types';
 import { Dispatch, SetStateAction } from 'react';
 import { logError } from '@/utils/errorHandling';
+import { store } from '@/redux/store';
+import { setStatement } from '@/redux/statements/statementsSlice';
 
 // Get users that voted on options in this statement
 export async function handleGetVoters(
@@ -249,10 +251,8 @@ export async function createStatementFromModal({
 			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
 		});
 
-		await setStatementToDB({
-			statement: newStatement,
-			parentStatement: parentStatement === 'top' ? 'top' : parentStatement,
-		});
+		// Dispatch to Redux immediately so the UI updates without waiting for Firestore listener
+		store.dispatch(setStatement(newStatement));
 	} catch (error) {
 		logError(error, { operation: 'settings.statementSettingsCont.unknown' });
 	}

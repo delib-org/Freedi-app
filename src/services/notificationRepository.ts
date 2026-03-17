@@ -30,7 +30,7 @@ import {
 	removeTokenFromSubscription,
 	addTokenToSubscription,
 } from '@/controllers/db/subscriptions/setSubscriptions';
-import { getDeviceInfo } from './platformService';
+import { getDeviceInfo, type PushPlatform } from './platformService';
 import { FIREBASE } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
 
@@ -52,7 +52,7 @@ export interface TokenMetadata {
 	userId: string;
 	lastUpdate: Date | Timestamp;
 	lastRefresh: Date | Timestamp;
-	platform: string;
+	platform: PushPlatform;
 	deviceInfo: {
 		userAgent: string;
 		language: string;
