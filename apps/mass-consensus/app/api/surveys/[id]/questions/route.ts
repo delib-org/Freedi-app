@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Statement, StatementType, Collections, createStatementObject } from '@freedi/shared-types';
+import { Statement, StatementType, Collections, createStatementObject, SourceApp } from '@freedi/shared-types';
 import { getSurveyById, addQuestionToSurvey } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
@@ -82,6 +82,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         photoURL: '',
         isAnonymous: false,
       },
+      sourceApp: SourceApp.MASS_CONSENSUS,
     });
 
     if (!newQuestion) {

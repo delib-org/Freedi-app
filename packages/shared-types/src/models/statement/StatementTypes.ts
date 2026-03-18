@@ -31,6 +31,7 @@ import { EvidenceType } from '../evidence/evidenceModel';
 import { ParagraphType, ListTypeSchema } from '../paragraph/paragraphModel';
 import { PopperHebbianScoreSchema } from '../popper/popperTypes';
 import { ParagraphSchema } from '../paragraph/paragraphModel';
+import { SourceApp } from '../engagement/SourceApp';
 
 /*
 Statement is everything in this app. It is a statement in a chat, an option in a solution, a group, a stage, etc.
@@ -214,6 +215,7 @@ export const StatementSchema = object({
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
 	randomSeed: optional(number()), // an optional random seed for the statement
+	sourceApp: optional(enum_(SourceApp)), // which app created this statement: main, sign, mass-consensus, flow
 	versionControl: optional(object({
 		// Version info
 		currentVersion: number(), // increments on each replacement (starts at 1)

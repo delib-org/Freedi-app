@@ -21,8 +21,8 @@ export const UserSchema = object({
 	fontSize: optional(nullable(number())),
 	color: optional(string()),
 	agreement: optional(nullable(AgreementSchema)),
-	role: optional(string())
-	
+	role: optional(string()),
+	systemAdmin: optional(boolean()),
 });
 
 export type User = InferOutput<typeof UserSchema>;
