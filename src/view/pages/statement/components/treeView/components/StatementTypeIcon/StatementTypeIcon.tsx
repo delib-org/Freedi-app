@@ -13,7 +13,9 @@ const StatementTypeIcon: FC<StatementTypeIconProps> = ({ type, isSelected }) => 
 		const modifier = isSelected ? 'selected' : 'option';
 
 		return (
-			<div className={`${styles['statement-type-icon']} ${styles[`statement-type-icon--${modifier}`]}`}>
+			<div
+				className={`${styles['statement-type-icon']} ${styles[`statement-type-icon--${modifier}`]}`}
+			>
 				{isSelected ? '!!' : '!'}
 			</div>
 		);
@@ -21,7 +23,9 @@ const StatementTypeIcon: FC<StatementTypeIconProps> = ({ type, isSelected }) => 
 
 	if (type === StatementType.question) {
 		return (
-			<div className={`${styles['statement-type-icon']} ${styles['statement-type-icon--question']}`}>
+			<div
+				className={`${styles['statement-type-icon']} ${styles['statement-type-icon--question']}`}
+			>
 				?
 			</div>
 		);

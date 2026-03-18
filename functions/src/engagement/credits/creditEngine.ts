@@ -15,18 +15,13 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import {
-	Collections,
-	CreditAction,
-	EngagementLevel,
-	SourceApp,
-} from '@freedi/shared-types';
+import { Collections, CreditAction, EngagementLevel, SourceApp } from '@freedi/shared-types';
 import type { CreditRule, CreditTransaction, UserEngagement } from '@freedi/shared-types';
 import { getCreditRule } from './creditRules';
 import { checkAndNotifyLevelUp } from './levelProgression';
 import { checkAndAwardBadges } from './badgeEngine';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 const DAILY_CREDIT_CAP = 100;
 const DIMINISHING_FACTOR = 0.9;
@@ -77,10 +72,10 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 		}
 
 		const today = formatDate(new Date());
-		const engagementRef = db.collection(Collections.userEngagement).doc(userId);
+		const engagementRef = getDb().collection(Collections.userEngagement).doc(userId);
 
 		// Run the credit award in a transaction
-		const result = await db.runTransaction(async (transaction) => {
+		const result = await getDb().runTransaction(async (transaction) => {
 			// Load user engagement doc
 			const engagementDoc = await transaction.get(engagementRef);
 			let engagement: UserEngagement;
@@ -155,7 +150,7 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 				createdAt: Date.now(),
 			};
 
-			const txRef = db.collection(Collections.creditLedger).doc(transactionId);
+			const txRef = getDb().collection(Collections.creditLedger).doc(transactionId);
 			transaction.set(txRef, creditTx);
 
 			// 10. Update user engagement
@@ -220,19 +215,20 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 		}
 
 		// Check badges (non-blocking)
-		checkAndAwardBadges(userId, txResult.engagement, sourceApp).then((newBadges) => {
-			if (newBadges.length > 0) {
-				// Append badges to engagement doc
-				db.collection(Collections.userEngagement)
-					.doc(userId)
-					.update({
-						badges: FieldValue.arrayUnion(...newBadges),
-					})
-					.catch((error: unknown) =>
-						logger.error('Badge update failed', { userId, error }),
-					);
-			}
-		}).catch((error: unknown) => logger.error('Badge check failed', { userId, error }));
+		checkAndAwardBadges(userId, txResult.engagement, sourceApp)
+			.then((newBadges) => {
+				if (newBadges.length > 0) {
+					// Append badges to engagement doc
+					getDb()
+						.collection(Collections.userEngagement)
+						.doc(userId)
+						.update({
+							badges: FieldValue.arrayUnion(...newBadges),
+						})
+						.catch((error: unknown) => logger.error('Badge update failed', { userId, error }));
+				}
+			})
+			.catch((error: unknown) => logger.error('Badge check failed', { userId, error }));
 
 		return {
 			success: true,
@@ -252,7 +248,7 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
  * Used by external callers that need to read engagement state.
  */
 export async function getOrCreateUserEngagement(userId: string): Promise<UserEngagement> {
-	const ref = db.collection(Collections.userEngagement).doc(userId);
+	const ref = getDb().collection(Collections.userEngagement).doc(userId);
 	const doc = await ref.get();
 
 	if (doc.exists) {
@@ -324,7 +320,7 @@ async function isCooldownElapsed(
 	cooldownMs: number,
 ): Promise<boolean> {
 	const cutoff = Date.now() - cooldownMs;
-	const recentTx = await db
+	const recentTx = await getDb()
 		.collection(Collections.creditLedger)
 		.where('userId', '==', userId)
 		.where('action', '==', action)
@@ -344,7 +340,7 @@ async function getDailyActionCount(
 	const dayStart = new Date(today).getTime();
 	const dayEnd = dayStart + 24 * 60 * 60 * 1000;
 
-	const snapshot = await db
+	const snapshot = await getDb()
 		.collection(Collections.creditLedger)
 		.where('userId', '==', userId)
 		.where('action', '==', action)

@@ -1,6 +1,5 @@
-import React, { FC, useMemo, useState, useRef, useCallback } from 'react';
+import React, { FC, useState, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { isAuthorized } from '@/controllers/general/helpers';
@@ -15,16 +14,8 @@ interface TreeOptionNodeProps {
 	parentStatement: Statement | undefined;
 }
 
-function formatMessageTime(timestamp: number): string {
-	const date = new Date(timestamp);
-
-	return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement }) => {
-	const { t } = useTranslation();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
-	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
 
 	const _isAuthorized = isAuthorized(
 		statement,

@@ -30,7 +30,12 @@ const CreditToast: React.FC<CreditToastProps> = ({ amount, onComplete }) => {
 	if (!visible || amount <= 0) return null;
 
 	return (
-		<span className="credit-toast" role="status" aria-live="polite" aria-label={`You earned ${amount} credits`}>
+		<span
+			className="credit-toast"
+			role="status"
+			aria-live="polite"
+			aria-label={`You earned ${amount} credits`}
+		>
 			+{amount}
 		</span>
 	);

@@ -12,7 +12,8 @@ import { Collections, CreditAction } from '@freedi/shared-types';
 import type { CreditRule } from '@freedi/shared-types';
 import { DEFAULT_CREDIT_RULES } from './defaultCreditRules';
 
-const db = getFirestore();
+// Lazy init to avoid calling getFirestore() before initializeApp()
+const getDb = () => getFirestore();
 
 /** In-memory cache of credit rules (refreshed every 5 minutes) */
 let rulesCache: Map<CreditAction, CreditRule> | null = null;
@@ -30,7 +31,7 @@ export async function loadCreditRules(): Promise<Map<CreditAction, CreditRule>> 
 	}
 
 	try {
-		const snapshot = await db.collection(Collections.creditRules).get();
+		const snapshot = await getDb().collection(Collections.creditRules).get();
 
 		if (snapshot.empty) {
 			logger.info('No credit rules in Firestore, using defaults');
@@ -74,11 +75,11 @@ export async function getCreditRule(action: CreditAction): Promise<CreditRule | 
  * Only writes rules that don't already exist (safe to run multiple times).
  */
 export async function seedDefaultCreditRules(): Promise<number> {
-	const batch = db.batch();
+	const batch = getDb().batch();
 	let seeded = 0;
 
 	for (const rule of DEFAULT_CREDIT_RULES) {
-		const docRef = db.collection(Collections.creditRules).doc(rule.ruleId);
+		const docRef = getDb().collection(Collections.creditRules).doc(rule.ruleId);
 		const existing = await docRef.get();
 
 		if (!existing.exists) {

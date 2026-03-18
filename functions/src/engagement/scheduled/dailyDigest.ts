@@ -20,7 +20,7 @@ import {
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { buildDailyDigest, getDailyDigestUsers } from '../notifications/digestAggregator';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /**
  * Scheduled function: runs every hour.
@@ -89,9 +89,7 @@ export async function processDailyDigests(targetHour: number): Promise<{
 				// Build digest summary
 				const itemCount = digest.items.length;
 				const creditsSummary =
-					digest.creditsEarned > 0
-						? ` You earned ${digest.creditsEarned} credits.`
-						: '';
+					digest.creditsEarned > 0 ? ` You earned ${digest.creditsEarned} credits.` : '';
 
 				const queueItemId = `daily_${userId}_${Date.now()}`;
 				const notification: NotificationQueueItem = {
@@ -109,10 +107,7 @@ export async function processDailyDigests(targetHour: number): Promise<{
 					createdAt: Date.now(),
 				};
 
-				await db
-					.collection(Collections.notificationQueue)
-					.doc(queueItemId)
-					.set(notification);
+				await getDb().collection(Collections.notificationQueue).doc(queueItemId).set(notification);
 
 				digestsSent++;
 			} catch (error) {

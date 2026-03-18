@@ -117,7 +117,6 @@ export function useStatementTypeDetection(
 			clearTimeout(timer);
 		};
 		// Only re-run when the statement identity changes
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [statement.statementId]);
 
 	// Hide banner if type was changed externally (e.g., via menu)

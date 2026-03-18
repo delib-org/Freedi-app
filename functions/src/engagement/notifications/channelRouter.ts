@@ -15,7 +15,7 @@ import { logger } from 'firebase-functions';
 import { Collections, NotificationChannel } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 interface ChannelResult {
 	channel: NotificationChannel;
@@ -27,9 +27,7 @@ interface ChannelResult {
  * Route a notification to all specified channels.
  * Returns results per channel.
  */
-export async function routeToChannels(
-	item: NotificationQueueItem,
-): Promise<ChannelResult[]> {
+export async function routeToChannels(item: NotificationQueueItem): Promise<ChannelResult[]> {
 	const results: ChannelResult[] = [];
 
 	const channelHandlers = item.channels.map(async (channel) => {
@@ -78,7 +76,7 @@ export async function routeToChannels(
  */
 async function sendPushNotification(item: NotificationQueueItem): Promise<void> {
 	// Get user's push tokens
-	const tokensSnapshot = await db
+	const tokensSnapshot = await getDb()
 		.collection(Collections.pushNotifications)
 		.where('userId', '==', item.userId)
 		.get();
@@ -133,9 +131,7 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
 			});
 		} catch (error) {
 			const errorCode =
-				error instanceof Error && 'code' in error
-					? (error as { code: string }).code
-					: 'unknown';
+				error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown';
 
 			// Clean up invalid tokens
 			if (
@@ -143,11 +139,13 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
 				errorCode === 'messaging/invalid-registration-token'
 			) {
 				logger.info(`Removing invalid token for user ${item.userId}`);
-				await db
+				await getDb()
 					.collection(Collections.pushNotifications)
 					.doc(token)
 					.delete()
-					.catch(() => { /* ignore cleanup errors */ });
+					.catch(() => {
+						/* ignore cleanup errors */
+					});
 			} else {
 				throw error;
 			}
@@ -163,7 +161,7 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
  */
 async function writeInAppNotification(item: NotificationQueueItem): Promise<void> {
 	const notificationId = `eng_${item.userId}_${item.queueItemId}`;
-	const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
+	const notificationRef = getDb().collection(Collections.inAppNotifications).doc(notificationId);
 
 	await notificationRef.set({
 		userId: item.userId,
@@ -193,7 +191,7 @@ async function writeInAppNotification(item: NotificationQueueItem): Promise<void
  */
 async function sendEmailNotification(item: NotificationQueueItem): Promise<void> {
 	// Check if user has an email on file
-	const userDoc = await db.collection('usersV2').doc(item.userId).get();
+	const userDoc = await getDb().collection('usersV2').doc(item.userId).get();
 
 	if (!userDoc.exists) {
 		logger.info(`No user doc for ${item.userId}, skipping email`);

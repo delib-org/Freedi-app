@@ -22,7 +22,7 @@ import type {
 	NotificationQueueItem,
 } from '@freedi/shared-types';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /**
  * Build daily digest content for a user.
@@ -56,7 +56,7 @@ async function buildDigestForPeriod(
 ): Promise<DigestContent | null> {
 	try {
 		// Get sent notifications for this user in the period
-		const notificationsSnapshot = await db
+		const notificationsSnapshot = await getDb()
 			.collection(Collections.notificationQueue)
 			.where('userId', '==', userId)
 			.where('status', '==', NotificationQueueStatus.SENT)
@@ -96,7 +96,7 @@ async function buildDigestForPeriod(
 		}
 
 		// Get credits earned in the period
-		const creditsSnapshot = await db
+		const creditsSnapshot = await getDb()
 			.collection(Collections.creditLedger)
 			.where('userId', '==', userId)
 			.where('createdAt', '>=', periodStart)
@@ -131,7 +131,7 @@ async function buildDigestForPeriod(
  */
 export async function getDailyDigestUsers(targetHour: number): Promise<string[]> {
 	try {
-		const snapshot = await db
+		const snapshot = await getDb()
 			.collection(Collections.userEngagement)
 			.where('digestPreferences.dailyDigest', '==', true)
 			.limit(500)
@@ -164,7 +164,7 @@ export async function getDailyDigestUsers(targetHour: number): Promise<string[]>
  */
 export async function getWeeklyDigestUsers(): Promise<string[]> {
 	try {
-		const snapshot = await db
+		const snapshot = await getDb()
 			.collection(Collections.userEngagement)
 			.where('digestPreferences.weeklyDigest', '==', true)
 			.limit(500)

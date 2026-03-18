@@ -119,7 +119,9 @@ export async function callGemini(
 
 	if (!response.ok) {
 		const errorText = await response.text();
-		console.error(`[callGemini] API error: status=${response.status}, body=${errorText.substring(0, 500)}`);
+		console.error(
+			`[callGemini] API error: status=${response.status}, body=${errorText.substring(0, 500)}`,
+		);
 		logError(new Error(`Gemini API error: ${response.status}`), {
 			operation: 'ai.callGemini',
 			metadata: { status: response.status, errorText: errorText.substring(0, 500), model },
@@ -131,7 +133,9 @@ export async function callGemini(
 	const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
 	if (!text) {
-		console.error(`[callGemini] Empty response from Gemini. Candidates: ${JSON.stringify(data.candidates?.length)}, finishReason: ${data.candidates?.[0]?.finishReason}`);
+		console.error(
+			`[callGemini] Empty response from Gemini. Candidates: ${JSON.stringify(data.candidates?.length)}, finishReason: ${data.candidates?.[0]?.finishReason}`,
+		);
 	}
 
 	return text;

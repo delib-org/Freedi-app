@@ -666,20 +666,9 @@ export function listenToTreeDescendants(
 			(statementsDB) => {
 				if (isFirstBatch) {
 					statementsDB.forEach((doc) => {
-						try {
-							const stmt = parse(StatementSchema, normalizeStatementData(doc.data()));
-							statementsArr.push(stmt);
-							loadedCount++;
-						} catch (error) {
-							logError(error, {
-								operation: 'listenToTreeDescendants.parseInitial',
-								statementId: doc.id,
-								metadata: {
-									parentStatementId: statementId,
-									loadedCount,
-								},
-							});
-						}
+						const stmt = normalizeStatementData(doc.data()) as Statement;
+						statementsArr.push(stmt);
+						loadedCount++;
 					});
 
 					if (statementsArr.length > 0) {
@@ -694,24 +683,12 @@ export function listenToTreeDescendants(
 					const changes = statementsDB.docChanges();
 
 					changes.forEach((change) => {
-						try {
-							const stmt = parse(StatementSchema, normalizeStatementData(change.doc.data()));
+						const stmt = normalizeStatementData(change.doc.data()) as Statement;
 
-							if (change.type === 'added' || change.type === 'modified') {
-								store.dispatch(setStatement(stmt));
-							} else if (change.type === 'removed') {
-								store.dispatch(deleteStatement(stmt.statementId));
-							}
-						} catch (error) {
-							logError(error, {
-								operation: 'listenToTreeDescendants.processChange',
-								statementId: change.doc.id,
-								metadata: {
-									parentStatementId: statementId,
-									changeType: change.type,
-									loadedCount,
-								},
-							});
+						if (change.type === 'added' || change.type === 'modified') {
+							store.dispatch(setStatement(stmt));
+						} else if (change.type === 'removed') {
+							store.dispatch(deleteStatement(stmt.statementId));
 						}
 					});
 				}

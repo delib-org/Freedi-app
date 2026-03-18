@@ -110,7 +110,11 @@ const Menu: FC<MenuProps> = ({
 	}, [isMenuOpen, setIsOpen]);
 
 	return (
-		<div ref={menuRef} className={`${styles.menu} ${isMenuOpen ? styles['menu--open'] : ''}`} dir={dir}>
+		<div
+			ref={menuRef}
+			className={`${styles.menu} ${isMenuOpen ? styles['menu--open'] : ''}`}
+			dir={dir}
+		>
 			<IconButton
 				ref={buttonRef}
 				onClick={handleToggle}

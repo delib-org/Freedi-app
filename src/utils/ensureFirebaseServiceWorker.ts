@@ -96,10 +96,15 @@ export async function ensureFirebaseServiceWorker() {
 
 		return registration;
 	} catch (error) {
-		logError(error, {
-			operation: 'utils.ensureFirebaseServiceWorker.unknown',
-			metadata: { message: '[FirebaseSW] Registration failed:' },
-		});
+		// permission-blocked is expected when users deny notifications — don't report to Sentry
+		const isPermissionBlocked =
+			error instanceof Error && error.message.includes('permission-blocked');
+		if (!isPermissionBlocked) {
+			logError(error, {
+				operation: 'utils.ensureFirebaseServiceWorker.unknown',
+				metadata: { message: '[FirebaseSW] Registration failed:' },
+			});
+		}
 		// Don't throw - fail gracefully to avoid unhandled rejections
 
 		return undefined;

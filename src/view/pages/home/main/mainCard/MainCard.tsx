@@ -40,12 +40,13 @@ const MainCard: FC<Props> = ({ subscription }) => {
 						{latestUpdate?.lastUpdate && (
 							<span className={styles.time}>{getTime(latestUpdate.lastUpdate)}</span>
 						)}
-						<div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-							<BranchBell
-								state={bellState}
-								size="small"
-								onFrequencyChange={onFrequencyChange}
-							/>
+						<div
+							onClick={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+							}}
+						>
+							<BranchBell state={bellState} size="small" onFrequencyChange={onFrequencyChange} />
 						</div>
 						<div onClick={(e) => e.stopPropagation()}>
 							<StatementChatMore statement={simpleStatement} />

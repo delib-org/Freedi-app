@@ -49,6 +49,7 @@ import {
 	recalculateEvaluations,
 	addRandomSeed,
 	backfillEvaluationType,
+	backfillParentsArray,
 } from './fn_httpRequests';
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
@@ -103,10 +104,16 @@ import {
 import { cleanupStaleTokens, performTokenCleanup } from './fn_tokenCleanup';
 
 // Engagement System (Phase 1-3: Credits, Levels, Badges, Streaks, Notification Queue, Digests)
-import { calculateStreaks, performStreakCalculation } from './engagement/scheduled/streakCalculator';
+import {
+	calculateStreaks,
+	performStreakCalculation,
+} from './engagement/scheduled/streakCalculator';
 import { seedDefaultCreditRules } from './engagement/credits/creditRules';
 import { trackDailyLogin } from './engagement/credits/trackEngagement';
-import { processQueueItem, processPendingQueueItems } from './engagement/notifications/queueProcessor';
+import {
+	processQueueItem,
+	processPendingQueueItems,
+} from './engagement/notifications/queueProcessor';
 import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/dailyDigest';
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
 import type { NotificationQueueItem } from '@freedi/shared-types';
@@ -394,6 +401,7 @@ exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
 exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
 exports.addRandomSeed = wrapHttpFunction(addRandomSeed);
 exports.backfillEvaluationType = wrapHttpFunction(backfillEvaluationType);
+exports.backfillParentsArray = wrapHttpFunction(backfillParentsArray);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
