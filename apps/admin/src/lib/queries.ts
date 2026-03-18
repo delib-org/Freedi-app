@@ -22,6 +22,24 @@ export interface DayBucket {
 	count: number;
 }
 
+/**
+ * Resolve a Firestore field value to milliseconds.
+ * Handles: plain numbers, Firestore Timestamp objects, and Date objects.
+ */
+function toMillis(val: unknown): number {
+	if (typeof val === 'number') return val;
+	if (val && typeof val === 'object') {
+		if ('toMillis' in val && typeof (val as Record<string, unknown>).toMillis === 'function') {
+			return (val as { toMillis(): number }).toMillis();
+		}
+		if ('seconds' in val && typeof (val as Record<string, unknown>).seconds === 'number') {
+			return (val as { seconds: number }).seconds * 1000;
+		}
+		if (val instanceof Date) return val.getTime();
+	}
+	return 0;
+}
+
 /** Build an empty map of date→0 for every day in [startMs, endMs]. */
 function emptyBuckets(startMs: number, endMs: number): Map<string, number> {
 	const map = new Map<string, number>();
@@ -37,13 +55,12 @@ function emptyBuckets(startMs: number, endMs: number): Map<string, number> {
 }
 
 function bucketize(
-	docs: Array<{ createdAt?: number; updatedAt?: number; lastUpdate?: number }>,
+	timestamps: number[],
 	startMs: number,
 	endMs: number,
 ): DayBucket[] {
 	const map = emptyBuckets(startMs, endMs);
-	for (const d of docs) {
-		const ts = d.createdAt ?? d.updatedAt ?? d.lastUpdate ?? 0;
+	for (const ts of timestamps) {
 		if (ts < startMs || ts > endMs) continue;
 		const key = new Date(ts).toISOString().slice(0, 10);
 		map.set(key, (map.get(key) || 0) + 1);
@@ -54,25 +71,25 @@ function bucketize(
 }
 
 /**
- * Fetch documents from a collection within a date range using a timestamp field.
- * Returns raw doc data for client-side bucketing.
+ * Fetch recent documents from a collection, ordered by a timestamp field.
+ * Uses orderBy + limit (no where range) to avoid Firestore Timestamp vs number
+ * type mismatch issues. Filters to the date range client-side.
  */
-async function fetchInRange(
+async function fetchRecentDocs(
 	collectionName: string,
 	timestampField: string,
 	startMs: number,
-	endMs: number,
 	maxDocs: number = 5000,
 ): Promise<Record<string, unknown>[]> {
 	const q = query(
 		collection(db, collectionName),
-		where(timestampField, '>=', startMs),
-		where(timestampField, '<=', endMs),
-		orderBy(timestampField, 'asc'),
+		orderBy(timestampField, 'desc'),
 		limit(maxDocs),
 	);
 	const snap = await getDocs(q);
-	return snap.docs.map((d) => d.data() as Record<string, unknown>);
+	return snap.docs
+		.map((d) => d.data() as Record<string, unknown>)
+		.filter((d) => toMillis(d[timestampField]) >= startMs);
 }
 
 // ── Public time-series queries ───────────────────────────────────────
@@ -80,8 +97,9 @@ async function fetchInRange(
 export async function fetchStatementsPerDay(days: number = 30): Promise<DayBucket[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchInRange(Collections.statements, 'createdAt', startMs, endMs);
-	return bucketize(docs as Array<{ createdAt: number }>, startMs, endMs);
+	const docs = await fetchRecentDocs(Collections.statements, 'createdAt', startMs);
+	const timestamps = docs.map((d) => toMillis(d.createdAt));
+	return bucketize(timestamps, startMs, endMs);
 }
 
 export interface StatementsByTypePerDay {
@@ -92,62 +110,54 @@ export interface StatementsByTypePerDay {
 export async function fetchStatementsByTypePerDay(days: number = 30): Promise<StatementsByTypePerDay[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchInRange(Collections.statements, 'createdAt', startMs, endMs);
+	const docs = await fetchRecentDocs(Collections.statements, 'createdAt', startMs);
 
-	// Group by statementType
-	const groups = new Map<string, Array<{ createdAt: number }>>();
+	const groups = new Map<string, number[]>();
 	for (const d of docs) {
-		const stmt = d as { createdAt: number; statementType?: string };
-		const type = stmt.statementType || 'unknown';
+		const type = (d.statementType as string) || 'unknown';
 		if (!groups.has(type)) groups.set(type, []);
-		groups.get(type)!.push(stmt);
+		groups.get(type)!.push(toMillis(d.createdAt));
 	}
 
-	return Array.from(groups.entries()).map(([type, typeDocs]) => ({
+	return Array.from(groups.entries()).map(([type, ts]) => ({
 		type,
-		data: bucketize(typeDocs, startMs, endMs),
+		data: bucketize(ts, startMs, endMs),
 	}));
 }
 
 export async function fetchTopStatementsPerDay(days: number = 30): Promise<DayBucket[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const q = query(
-		collection(db, Collections.statements),
-		where('createdAt', '>=', startMs),
-		where('createdAt', '<=', endMs),
-		where('parentId', '==', 'top'),
-		orderBy('createdAt', 'asc'),
-		limit(5000),
-	);
-	const snap = await getDocs(q);
-	const docs = snap.docs.map((d) => d.data() as { createdAt: number });
-	return bucketize(docs, startMs, endMs);
+	// Fetch recent statements and filter to top-level (parentId === 'top') client-side
+	const docs = await fetchRecentDocs(Collections.statements, 'createdAt', startMs);
+	const timestamps = docs
+		.filter((d) => d.parentId === 'top')
+		.map((d) => toMillis(d.createdAt));
+	return bucketize(timestamps, startMs, endMs);
 }
 
 export async function fetchEvaluationsPerDay(days: number = 30): Promise<DayBucket[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchInRange(Collections.evaluations, 'updatedAt', startMs, endMs);
-	return bucketize(
-		docs.map((d) => ({ createdAt: (d as { updatedAt: number }).updatedAt })),
-		startMs,
-		endMs,
-	);
+	const docs = await fetchRecentDocs(Collections.evaluations, 'updatedAt', startMs);
+	const timestamps = docs.map((d) => toMillis(d.updatedAt));
+	return bucketize(timestamps, startMs, endMs);
 }
 
 export async function fetchVotesPerDay(days: number = 30): Promise<DayBucket[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchInRange(Collections.votes, 'createdAt', startMs, endMs);
-	return bucketize(docs as Array<{ createdAt: number }>, startMs, endMs);
+	const docs = await fetchRecentDocs(Collections.votes, 'createdAt', startMs);
+	const timestamps = docs.map((d) => toMillis(d.createdAt));
+	return bucketize(timestamps, startMs, endMs);
 }
 
 export async function fetchSubscriptionsPerDay(days: number = 30): Promise<DayBucket[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchInRange(Collections.statementsSubscribe, 'createdAt', startMs, endMs);
-	return bucketize(docs as Array<{ createdAt: number }>, startMs, endMs);
+	const docs = await fetchRecentDocs(Collections.statementsSubscribe, 'createdAt', startMs);
+	const timestamps = docs.map((d) => toMillis(d.createdAt));
+	return bucketize(timestamps, startMs, endMs);
 }
 
 export interface SourceAppPerDay {
@@ -158,19 +168,18 @@ export interface SourceAppPerDay {
 export async function fetchStatementsByAppPerDay(days: number = 30): Promise<SourceAppPerDay[]> {
 	const endMs = Date.now();
 	const startMs = endMs - days * 86_400_000;
-	const docs = await fetchInRange(Collections.statements, 'createdAt', startMs, endMs);
+	const docs = await fetchRecentDocs(Collections.statements, 'createdAt', startMs);
 
-	const groups = new Map<string, Array<{ createdAt: number }>>();
+	const groups = new Map<string, number[]>();
 	for (const d of docs) {
-		const stmt = d as { createdAt: number; sourceApp?: string };
-		const app = stmt.sourceApp || 'unknown';
+		const app = (d.sourceApp as string) || 'unknown';
 		if (!groups.has(app)) groups.set(app, []);
-		groups.get(app)!.push(stmt);
+		groups.get(app)!.push(toMillis(d.createdAt));
 	}
 
-	return Array.from(groups.entries()).map(([app, appDocs]) => ({
+	return Array.from(groups.entries()).map(([app, ts]) => ({
 		app,
-		data: bucketize(appDocs, startMs, endMs),
+		data: bucketize(ts, startMs, endMs),
 	}));
 }
 
