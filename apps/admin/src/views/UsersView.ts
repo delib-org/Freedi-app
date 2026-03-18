@@ -90,7 +90,7 @@ export function UsersView(): m.Component {
 
 				state.loading
 					? m(Spinner)
-					: [
+					: m('div', [
 							m(UsersTable, {
 								columns,
 								data: state.items,
@@ -101,9 +101,9 @@ export function UsersView(): m.Component {
 								loading: state.loadingMore,
 								onLoadMore: () => loadNextPage(),
 							}),
-						],
+						]),
 
-				state.error && m('.data-table__empty', state.error),
+				state.error ? m('.data-table__empty', state.error) : null,
 			]);
 		},
 	};

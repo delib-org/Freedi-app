@@ -127,7 +127,7 @@ export function StatementsView(): m.Component {
 
 				state.loading
 					? m(Spinner)
-					: [
+					: m('div', [
 							m(StatementsTable, {
 								columns,
 								data: state.items,
@@ -135,36 +135,36 @@ export function StatementsView(): m.Component {
 								onRowClick: (s: Statement) => toggleExpand(s),
 							}),
 
-							// Expanded breadcrumb
-							expandedId &&
-								m('.data-table', { style: { marginTop: '-1px' } }, [
-									m('.expand-row', [
-										m('td', { colspan: columns.length }, [
-											m('.expand-row__content', [
-												loadingBreadcrumb
-													? m(Spinner, { inline: true })
-													: m(Breadcrumb, {
-															items:
-																breadcrumbCache.get(expandedId) || [],
-															topParentId:
-																state.items.find(
-																	(s) =>
-																		s.statementId === expandedId
-																)?.topParentId,
-														}),
+							expandedId
+								? m('.data-table', { style: { marginTop: '-1px' } }, [
+										m('.expand-row', [
+											m('td', { colspan: columns.length }, [
+												m('.expand-row__content', [
+													loadingBreadcrumb
+														? m(Spinner, { inline: true })
+														: m(Breadcrumb, {
+																items:
+																	breadcrumbCache.get(expandedId) || [],
+																topParentId:
+																	state.items.find(
+																		(s) =>
+																			s.statementId === expandedId
+																	)?.topParentId,
+															}),
+												]),
 											]),
 										]),
-									]),
-								]),
+									])
+								: null,
 
 							m(Pagination, {
 								hasMore: state.hasMore,
 								loading: state.loadingMore,
 								onLoadMore: () => loadNextPage(),
 							}),
-						],
+						]),
 
-				state.error && m('.data-table__empty', state.error),
+				state.error ? m('.data-table__empty', state.error) : null,
 			]);
 		},
 	};

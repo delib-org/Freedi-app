@@ -92,152 +92,144 @@ export function DashboardView(): m.Component {
 		view() {
 			const state = getDashboardState();
 
+			if (state.loading) {
+				return m(Layout, m(Spinner));
+			}
+
 			return m(Layout, [
 				m('.page-header', [
 					m('h1.page-header__title', 'Dashboard'),
 					m('p.page-header__subtitle', 'System-wide analytics \u2014 last 30 days'),
 				]),
 
-				state.loading
-					? m(Spinner)
-					: [
-							// ── KPI Cards ───────────────────────────────────
-							m('.kpi-row', [
-								m(KpiCard, {
-									title: 'Statements',
-									value: state.totalStatements,
-									icon: '\u{1F4DD}',
-									gradient: 'blue',
+				// KPI Cards
+				m('.kpi-row', [
+					m(KpiCard, {
+						title: 'Statements',
+						value: state.totalStatements,
+						icon: '\u{1F4DD}',
+						gradient: 'blue',
+					}),
+					m(KpiCard, {
+						title: 'Users',
+						value: state.totalUsers,
+						icon: '\u{1F465}',
+						gradient: 'teal',
+					}),
+					m(KpiCard, {
+						title: 'Admins',
+						value: state.totalAdmins,
+						icon: '\u{1F6E1}',
+						gradient: 'violet',
+					}),
+					m(KpiCard, {
+						title: 'Evaluations',
+						value: state.totalEvaluations,
+						icon: '\u{2B50}',
+						gradient: 'rose',
+					}),
+					m(KpiCard, {
+						title: 'Votes',
+						value: state.totalVotes,
+						icon: '\u{1F4CA}',
+						gradient: 'amber',
+					}),
+				]),
+
+				// Activity Charts
+				m('.section-title', 'Activity Over Time'),
+
+				state.chartsLoading
+					? m(Spinner, { inline: true })
+					: m('div', [
+							m('.grid-3', [
+								m(TimeChart, {
+									title: 'Statements / Day',
+									data: state.statementsPerDay,
+									color: '#3B82F6',
+									variant: 'area',
+									height: 180,
 								}),
-								m(KpiCard, {
-									title: 'Users',
-									value: state.totalUsers,
-									icon: '\u{1F465}',
-									gradient: 'teal',
+								m(TimeChart, {
+									title: 'Evaluations / Day',
+									data: state.evaluationsPerDay,
+									color: '#F43F5E',
+									variant: 'area',
+									height: 180,
 								}),
-								m(KpiCard, {
-									title: 'Admins',
-									value: state.totalAdmins,
-									icon: '\u{1F6E1}',
-									gradient: 'violet',
+								m(TimeChart, {
+									title: 'Votes / Day',
+									data: state.votesPerDay,
+									color: '#F59E0B',
+									variant: 'bar',
+									height: 180,
 								}),
-								m(KpiCard, {
-									title: 'Evaluations',
-									value: state.totalEvaluations,
-									icon: '\u{2B50}',
-									gradient: 'rose',
+							]),
+
+							m('.grid-3', [
+								m(TimeChart, {
+									title: 'New Discussions / Day',
+									data: state.topStatementsPerDay,
+									color: '#8B5CF6',
+									variant: 'bar',
+									height: 180,
 								}),
-								m(KpiCard, {
-									title: 'Votes',
-									value: state.totalVotes,
-									icon: '\u{1F4CA}',
-									gradient: 'amber',
+								m(TimeChart, {
+									title: 'New User Subscriptions / Day',
+									data: state.newUsersPerDay,
+									color: '#14B8A6',
+									variant: 'area',
+									height: 180,
+								}),
+								m(MiniChart, {
+									title: 'Statement Types (Recent)',
+									items: Array.from(
+										state.typeBreakdown.entries()
+									).map(
+										([label, value]): ChartItem => ({
+											label,
+											value,
+											color: chartColors[label] || '#94A3B8',
+										})
+									),
 								}),
 							]),
 
-							// ── Activity Charts ─────────────────────────────
-							m('.section-title', 'Activity Over Time'),
-
-							state.chartsLoading
-								? m(Spinner, { inline: true })
-								: [
-										// Row 1: main activity charts
-										m('.grid-3', [
-											m(TimeChart, {
-												title: 'Statements / Day',
-												data: state.statementsPerDay,
-												color: '#3B82F6',
-												variant: 'area',
-												height: 180,
-											}),
-											m(TimeChart, {
-												title: 'Evaluations / Day',
-												data: state.evaluationsPerDay,
-												color: '#F43F5E',
-												variant: 'area',
-												height: 180,
-											}),
-											m(TimeChart, {
-												title: 'Votes / Day',
-												data: state.votesPerDay,
-												color: '#F59E0B',
-												variant: 'bar',
-												height: 180,
-											}),
-										]),
-
-										// Row 2: growth & discussions
-										m('.grid-3', [
-											m(TimeChart, {
-												title: 'New Discussions / Day',
-												data: state.topStatementsPerDay,
-												color: '#8B5CF6',
-												variant: 'bar',
-												height: 180,
-											}),
-											m(TimeChart, {
-												title: 'New User Subscriptions / Day',
-												data: state.newUsersPerDay,
-												color: '#14B8A6',
-												variant: 'area',
-												height: 180,
-											}),
-											// Statement types breakdown bar chart
-											m(MiniChart, {
-												title: 'Statement Types (Recent)',
-												items: Array.from(
-													state.typeBreakdown.entries()
-												).map(
-													([label, value]): ChartItem => ({
-														label,
-														value,
-														color: chartColors[label] || '#94A3B8',
-													})
-												),
-											}),
-										]),
-
-										// Row 3: multi-series charts
-										m('.grid-2', [
-											// Statements by type stacked
-											m(MultiTimeChart, {
-												title: 'Statements by Type / Day',
-												series: state.statementsByType.map(
-													(s): MultiSeriesItem => ({
-														label: s.type,
-														data: s.data,
-														color: chartColors[s.type] || '#94A3B8',
-													})
-												),
-												height: 200,
-											}),
-											// Statements by source app stacked
-											m(MultiTimeChart, {
-												title: 'Statements by App / Day',
-												series: state.statementsByApp.map(
-													(s): MultiSeriesItem => ({
-														label: s.app,
-														data: s.data,
-														color: appColors[s.app] || '#94A3B8',
-													})
-												),
-												height: 200,
-											}),
-										]),
-									],
-
-							// ── Recent Statements Table ─────────────────────
-							m('.section-title', 'Recent Statements'),
-							m('.full-width', [
-								m(RecentTable, {
-									columns: recentColumns,
-									data: state.recentStatements,
-									emptyMessage: 'No statements yet',
+							m('.grid-2', [
+								m(MultiTimeChart, {
+									title: 'Statements by Type / Day',
+									series: state.statementsByType.map(
+										(s): MultiSeriesItem => ({
+											label: s.type,
+											data: s.data,
+											color: chartColors[s.type] || '#94A3B8',
+										})
+									),
+									height: 200,
+								}),
+								m(MultiTimeChart, {
+									title: 'Statements by App / Day',
+									series: state.statementsByApp.map(
+										(s): MultiSeriesItem => ({
+											label: s.app,
+											data: s.data,
+											color: appColors[s.app] || '#94A3B8',
+										})
+									),
+									height: 200,
 								}),
 							]),
-						],
+						]),
 
-				state.error && m('.data-table__empty', state.error),
+				// Recent Statements
+				m('.section-title', 'Recent Statements'),
+				m(RecentTable, {
+					columns: recentColumns,
+					data: state.recentStatements,
+					emptyMessage: 'No statements yet',
+				}),
+
+				state.error ? m('.data-table__empty', state.error) : null,
 			]);
 		},
 	};

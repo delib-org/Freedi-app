@@ -159,7 +159,7 @@ export function AdminsView(): m.Component {
 								]),
 							]),
 
-				state.error && m('.data-table__empty', state.error),
+				state.error ? m('.data-table__empty', state.error) : null,
 			]);
 		},
 	};
