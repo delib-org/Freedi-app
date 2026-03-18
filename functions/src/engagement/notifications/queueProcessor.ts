@@ -12,10 +12,7 @@
 
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import {
-	Collections,
-	NotificationQueueStatus,
-} from '@freedi/shared-types';
+import { Collections, NotificationQueueStatus } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { routeToChannels } from './channelRouter';
 

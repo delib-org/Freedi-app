@@ -47,8 +47,7 @@ export async function checkSocialProofMilestone(
 
 		const queueItemId = `social_${statement.statementId}_${milestone}_${Date.now()}`;
 		const optionPreview =
-			statement.statement.substring(0, 60) +
-			(statement.statement.length > 60 ? '...' : '');
+			statement.statement.substring(0, 60) + (statement.statement.length > 60 ? '...' : '');
 
 		const notification: NotificationQueueItem = {
 			queueItemId,
@@ -107,8 +106,7 @@ export async function checkConsensusShift(
 		const direction = currentConsensus > previousConsensus ? 'increased' : 'decreased';
 		const shiftPercent = Math.round(shift * 100);
 		const optionPreview =
-			statement.statement.substring(0, 60) +
-			(statement.statement.length > 60 ? '...' : '');
+			statement.statement.substring(0, 60) + (statement.statement.length > 60 ? '...' : '');
 
 		const queueItemId = `consensus_${statement.statementId}_${Date.now()}`;
 		const notification: NotificationQueueItem = {

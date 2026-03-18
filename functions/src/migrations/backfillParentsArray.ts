@@ -28,9 +28,14 @@ interface MigrationResult {
  * Fetches a statement by ID from Firestore.
  * Uses a simple in-memory cache to avoid repeated reads during ancestry walks.
  */
-const parentCache = new Map<string, { parentId: string; parents?: string[]; topParentId?: string }>();
+const parentCache = new Map<
+	string,
+	{ parentId: string; parents?: string[]; topParentId?: string }
+>();
 
-async function getParentData(statementId: string): Promise<{ parentId: string; parents?: string[]; topParentId?: string } | null> {
+async function getParentData(
+	statementId: string,
+): Promise<{ parentId: string; parents?: string[]; topParentId?: string } | null> {
 	if (parentCache.has(statementId)) {
 		return parentCache.get(statementId)!;
 	}
@@ -72,7 +77,7 @@ async function buildParentsArray(parentId: string, maxDepth = 20): Promise<strin
 
 		// If this ancestor already has a valid parents array, use it as a shortcut
 		if (parentData.parents && parentData.parents.length > 0) {
-			ancestors.unshift(...parentData.parents.filter(id => !ancestors.includes(id)));
+			ancestors.unshift(...parentData.parents.filter((id) => !ancestors.includes(id)));
 			break;
 		}
 
@@ -239,8 +244,7 @@ export async function getParentsBackfillStats(): Promise<{
 		}
 
 		const withParents = totalRecent - withoutParents;
-		const coveragePercent =
-			totalRecent > 0 ? Math.round((withParents / totalRecent) * 100) : 100;
+		const coveragePercent = totalRecent > 0 ? Math.round((withParents / totalRecent) * 100) : 100;
 
 		return { totalRecent, withParents, withoutParents, coveragePercent };
 	} catch (error) {

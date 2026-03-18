@@ -11,22 +11,14 @@ interface SubscriptionRowProps {
 }
 
 const SubscriptionRow = ({ subscription }: SubscriptionRowProps) => {
-	const { state: bellState, onFrequencyChange } = useBranchBell(
-		subscription.statement.statementId,
-	);
+	const { state: bellState, onFrequencyChange } = useBranchBell(subscription.statement.statementId);
 
 	return (
 		<div className="subscription-manager__item">
 			<div className="subscription-manager__info">
-				<span className="subscription-manager__title">
-					{subscription.statement.statement}
-				</span>
+				<span className="subscription-manager__title">{subscription.statement.statement}</span>
 			</div>
-			<BranchBell
-				state={bellState}
-				size="medium"
-				onFrequencyChange={onFrequencyChange}
-			/>
+			<BranchBell state={bellState} size="medium" onFrequencyChange={onFrequencyChange} />
 		</div>
 	);
 };
@@ -59,16 +51,11 @@ const SubscriptionManager = () => {
 				{subscriptions.length > 0 ? (
 					<div className="subscription-manager__list">
 						{subscriptions.map((sub) => (
-							<SubscriptionRow
-								key={sub.statementId}
-								subscription={sub}
-							/>
+							<SubscriptionRow key={sub.statementId} subscription={sub} />
 						))}
 					</div>
 				) : (
-					<div className="subscription-manager__empty">
-						{t('You have no subscriptions yet')}
-					</div>
+					<div className="subscription-manager__empty">{t('You have no subscriptions yet')}</div>
 				)}
 			</div>
 		</div>

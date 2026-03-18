@@ -8,11 +8,7 @@
 
 import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
-import {
-	CreditAction,
-	SourceApp,
-	Collections,
-} from '@freedi/shared-types';
+import { CreditAction, SourceApp, Collections } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { awardCredit, getOrCreateUserEngagement } from './creditEngine';
 
@@ -172,7 +168,14 @@ async function updateStreakForUser(userId: string): Promise<void> {
 		return;
 	}
 
-	const engagement = doc.data() as { streak?: { lastActiveDate?: string; currentStreak?: number; longestStreak?: number; streakGraceDayUsed?: boolean } };
+	const engagement = doc.data() as {
+		streak?: {
+			lastActiveDate?: string;
+			currentStreak?: number;
+			longestStreak?: number;
+			streakGraceDayUsed?: boolean;
+		};
+	};
 	const streak = engagement.streak;
 
 	if (!streak) return;

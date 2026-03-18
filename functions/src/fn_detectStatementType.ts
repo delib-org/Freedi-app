@@ -47,10 +47,7 @@ export async function detectStatementType(req: Request, res: Response): Promise<
 		if (parentStatementId) {
 			try {
 				const db = getFirestore();
-				const parentDoc = await db
-					.collection(Collections.statements)
-					.doc(parentStatementId)
-					.get();
+				const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
 				if (parentDoc.exists) {
 					const parentData = parentDoc.data();
 					parentContext = parentData?.statement || '';

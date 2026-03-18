@@ -27,9 +27,7 @@ interface ChannelResult {
  * Route a notification to all specified channels.
  * Returns results per channel.
  */
-export async function routeToChannels(
-	item: NotificationQueueItem,
-): Promise<ChannelResult[]> {
+export async function routeToChannels(item: NotificationQueueItem): Promise<ChannelResult[]> {
 	const results: ChannelResult[] = [];
 
 	const channelHandlers = item.channels.map(async (channel) => {
@@ -133,9 +131,7 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
 			});
 		} catch (error) {
 			const errorCode =
-				error instanceof Error && 'code' in error
-					? (error as { code: string }).code
-					: 'unknown';
+				error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown';
 
 			// Clean up invalid tokens
 			if (
@@ -147,7 +143,9 @@ async function sendPushNotification(item: NotificationQueueItem): Promise<void> 
 					.collection(Collections.pushNotifications)
 					.doc(token)
 					.delete()
-					.catch(() => { /* ignore cleanup errors */ });
+					.catch(() => {
+						/* ignore cleanup errors */
+					});
 			} else {
 				throw error;
 			}

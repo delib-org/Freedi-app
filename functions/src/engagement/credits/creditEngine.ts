@@ -15,12 +15,7 @@
 
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import {
-	Collections,
-	CreditAction,
-	EngagementLevel,
-	SourceApp,
-} from '@freedi/shared-types';
+import { Collections, CreditAction, EngagementLevel, SourceApp } from '@freedi/shared-types';
 import type { CreditRule, CreditTransaction, UserEngagement } from '@freedi/shared-types';
 import { getCreditRule } from './creditRules';
 import { checkAndNotifyLevelUp } from './levelProgression';
@@ -220,19 +215,20 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 		}
 
 		// Check badges (non-blocking)
-		checkAndAwardBadges(userId, txResult.engagement, sourceApp).then((newBadges) => {
-			if (newBadges.length > 0) {
-				// Append badges to engagement doc
-				getDb().collection(Collections.userEngagement)
-					.doc(userId)
-					.update({
-						badges: FieldValue.arrayUnion(...newBadges),
-					})
-					.catch((error: unknown) =>
-						logger.error('Badge update failed', { userId, error }),
-					);
-			}
-		}).catch((error: unknown) => logger.error('Badge check failed', { userId, error }));
+		checkAndAwardBadges(userId, txResult.engagement, sourceApp)
+			.then((newBadges) => {
+				if (newBadges.length > 0) {
+					// Append badges to engagement doc
+					getDb()
+						.collection(Collections.userEngagement)
+						.doc(userId)
+						.update({
+							badges: FieldValue.arrayUnion(...newBadges),
+						})
+						.catch((error: unknown) => logger.error('Badge update failed', { userId, error }));
+				}
+			})
+			.catch((error: unknown) => logger.error('Badge check failed', { userId, error }));
 
 		return {
 			success: true,

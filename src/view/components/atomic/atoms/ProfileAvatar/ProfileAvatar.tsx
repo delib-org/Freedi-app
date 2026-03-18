@@ -69,9 +69,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
 					referrerPolicy="no-referrer"
 				/>
 			) : (
-				<span className="profile-avatar__initials">
-					{getInitial(displayName)}
-				</span>
+				<span className="profile-avatar__initials">{getInitial(displayName)}</span>
 			)}
 		</span>
 	);

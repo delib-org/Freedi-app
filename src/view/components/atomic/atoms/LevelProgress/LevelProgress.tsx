@@ -38,19 +38,19 @@ const LevelProgress: React.FC<LevelProgressProps> = ({
 }) => {
 	const clampedProgress = Math.max(0, Math.min(100, progress));
 
-	const classes = clsx(
-		'level-progress',
-		thick && 'level-progress--thick',
-		className,
-	);
+	const classes = clsx('level-progress', thick && 'level-progress--thick', className);
 
 	return (
-		<div className={classes} role="progressbar" aria-valuenow={clampedProgress} aria-valuemin={0} aria-valuemax={100} aria-label={`Level progress: ${clampedProgress}% complete, ${currentCredits} of ${nextThreshold} credits`}>
+		<div
+			className={classes}
+			role="progressbar"
+			aria-valuenow={clampedProgress}
+			aria-valuemin={0}
+			aria-valuemax={100}
+			aria-label={`Level progress: ${clampedProgress}% complete, ${currentCredits} of ${nextThreshold} credits`}
+		>
 			<div className="level-progress__bar">
-				<div
-					className="level-progress__fill"
-					style={{ width: `${clampedProgress}%` }}
-				/>
+				<div className="level-progress__fill" style={{ width: `${clampedProgress}%` }} />
 			</div>
 			{showLabel && nextThreshold !== Infinity && (
 				<div className="level-progress__label">

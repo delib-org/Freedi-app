@@ -23,9 +23,7 @@ export function useBranchBell(
 	state: BranchBellState;
 	onFrequencyChange: (frequency: NotificationFrequency) => void;
 } {
-	const subscriptions = useAppSelector(
-		(state) => state.statements.statementSubscription,
-	);
+	const subscriptions = useAppSelector((state) => state.statements.statementSubscription);
 
 	const state = useMemo((): BranchBellState => {
 		const subscription = subscriptions.find(

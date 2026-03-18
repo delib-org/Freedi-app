@@ -107,19 +107,13 @@ export const useStatementListeners = ({
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else if (enableTreeView) {
 				// Tree view: load direct children (reliable via parentId) with no limit
-				unsubscribersRef.current.push(
-					listenToSubStatements(statementId, 'top'),
-				);
+				unsubscribersRef.current.push(listenToSubStatements(statementId, 'top'));
 				if (!topParentId || topParentId === statementId) {
 					// Top level: load entire tree via topParentId
-					unsubscribersRef.current.push(
-						listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT),
-					);
+					unsubscribersRef.current.push(listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT));
 				} else {
 					// Sub-statement: load descendants via parents array-contains
-					unsubscribersRef.current.push(
-						listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT),
-					);
+					unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
 				}
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
@@ -143,7 +137,16 @@ export const useStatementListeners = ({
 		}
 
 		return cleanup;
-	}, [creator, statementId, stageId, screen, enableTreeView, topParentId, setIsStatementNotFound, setError]);
+	}, [
+		creator,
+		statementId,
+		stageId,
+		screen,
+		enableTreeView,
+		topParentId,
+		setIsStatementNotFound,
+		setError,
+	]);
 
 	// Effect for top parent statement and group-level demographic questions
 	// This effect now properly depends on topParentId from Redux selector

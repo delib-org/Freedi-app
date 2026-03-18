@@ -8,7 +8,7 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
-import { getFirestore } from 'firebase-admin/firestore';
+import { getFirestore, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { Collections } from '@freedi/shared-types';
 import type { UserEngagement, StreakData } from '@freedi/shared-types';
 
@@ -63,10 +63,8 @@ export async function performStreakCalculation(): Promise<StreakCalculationResul
 
 	try {
 		// Process in batches of 500
-		let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+		let lastDoc: QueryDocumentSnapshot | undefined;
 		const BATCH_SIZE = 500;
-
-		// eslint-disable-next-line no-constant-condition
 		while (true) {
 			let query = getDb()
 				.collection(Collections.userEngagement)

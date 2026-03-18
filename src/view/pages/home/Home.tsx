@@ -102,13 +102,7 @@ export default function Home() {
 		<main className="page slide-in">
 			{displayHeader && <HomeHeader />}
 			<Outlet />
-			{toast && (
-				<CreditToast
-					key={toast.id}
-					amount={toast.amount}
-					onComplete={dismissToast}
-				/>
-			)}
+			{toast && <CreditToast key={toast.id} amount={toast.amount} onComplete={dismissToast} />}
 		</main>
 	);
 }
