@@ -291,8 +291,8 @@ export function calcDiffEvaluation({
 				};
 			case 'delete':
 				return {
-					proDiff: Math.min(-oldEvaluation, 0),
-					conDiff: Math.max(oldEvaluation, 0),
+					proDiff: -Math.max(oldEvaluation, 0),
+					conDiff: -Math.max(-oldEvaluation, 0),
 					proEvaluatorsDiff: wasPositive ? -1 : 0,
 					conEvaluatorsDiff: wasNegative ? -1 : 0,
 				};

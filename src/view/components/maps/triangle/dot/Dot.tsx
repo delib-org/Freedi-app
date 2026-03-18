@@ -75,11 +75,10 @@ const agreementColors = [
 
 function fromAgreementToColor(agreement: number, agreementColors: string[]): string | undefined {
 	try {
-		if (agreement < -1 || agreement > 1) {
-			throw new Error('Agreement must be between -1 and 1');
-		}
+		// Clamp to [-1, 1] as defense against corrupted evaluation data
+		const clamped = Math.max(-1, Math.min(1, agreement));
 
-		const adjustAgreement = (agreement + 1) / 2;
+		const adjustAgreement = (clamped + 1) / 2;
 
 		const index = Math.floor(adjustAgreement * agreementColors.length * 0.99);
 
