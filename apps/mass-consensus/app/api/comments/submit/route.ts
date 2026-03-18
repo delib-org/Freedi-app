@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType } from '@freedi/shared-types';
+import { Collections, StatementType, createStatementObject } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { COMMENT } from '@/constants/common';
 
@@ -46,9 +46,8 @@ export async function POST(request: NextRequest) {
 
     const db = getFirestoreAdmin();
     const statementId = `comment_${userId}_${Date.now()}`;
-    const createdAt = Date.now();
 
-    const comment = {
+    const comment = createStatementObject({
       statementId,
       statement: trimmedText,
       statementType: StatementType.comment,
@@ -59,11 +58,15 @@ export async function POST(request: NextRequest) {
         displayName: userName || 'Anonymous',
         uid: userId,
       },
-      createdAt,
-      lastUpdate: createdAt,
-      lastChildUpdate: createdAt,
       ...(reasoning && reasoning !== trimmedText ? { reasoning } : {}),
-    };
+    });
+
+    if (!comment) {
+      return NextResponse.json(
+        { error: 'Failed to create comment object' },
+        { status: 500 }
+      );
+    }
 
     await db.collection(Collections.statements).doc(statementId).set(comment);
 

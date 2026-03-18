@@ -262,10 +262,15 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 			return null;
 		}
 	} catch (error) {
-		logError(error, {
-			operation: 'services.pushService.unknown',
-			metadata: { message: '[PushService] Error getting FCM token:' },
-		});
+		// permission-blocked is expected when users deny notifications — don't report to Sentry
+		const isPermissionBlocked =
+			error instanceof Error && error.message.includes('permission-blocked');
+		if (!isPermissionBlocked) {
+			logError(error, {
+				operation: 'services.pushService.unknown',
+				metadata: { message: '[PushService] Error getting FCM token:' },
+			});
+		}
 
 		return null;
 	}

@@ -98,6 +98,11 @@ export function normalizeStatementData(data: unknown): unknown {
 		}
 	}
 
+	// Fill in missing consensus for documents created without it (e.g., MC comments)
+	if (obj.statementId && obj.consensus === undefined) {
+		obj.consensus = 0;
+	}
+
 	// Fill in missing topParentId for legacy data
 	if (obj.statementId && !obj.topParentId) {
 		// For top-level statements (where parentId equals statementId or parentId is 'top'),
