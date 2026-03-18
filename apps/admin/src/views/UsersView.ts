@@ -5,7 +5,7 @@ import { DataTable, ColumnConfig } from '../components/DataTable';
 import { Pagination } from '../components/Pagination';
 import { Spinner } from '../components/Spinner';
 import { Badge } from '../components/Badge';
-import { loadUsers, loadNextPage, getUsersState } from '../state/users';
+import { subscribeUsers, unsubscribeUsers, loadNextPage, getUsersState } from '../state/users';
 import type { UserDoc } from '../lib/queries';
 
 const columns: ColumnConfig<UserDoc>[] = [
@@ -52,7 +52,11 @@ const UsersTable = DataTable<UserDoc>();
 export function UsersView(): m.Component {
 	return {
 		oninit() {
-			loadUsers();
+			subscribeUsers();
+		},
+
+		onremove() {
+			unsubscribeUsers();
 		},
 
 		view() {

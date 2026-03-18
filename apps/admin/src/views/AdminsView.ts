@@ -4,14 +4,18 @@ import { KpiCard } from '../components/KpiCard';
 import { Spinner } from '../components/Spinner';
 import { Badge } from '../components/Badge';
 import { getMainAppUrl } from '../lib/links';
-import { loadAdminData, getAdminState } from '../state/admins';
+import { subscribeAdmins, unsubscribeAdmins, getAdminState } from '../state/admins';
 
 export function AdminsView(): m.Component {
 	let expandedUserId: string | null = null;
 
 	return {
 		oninit() {
-			loadAdminData();
+			subscribeAdmins();
+		},
+
+		onremove() {
+			unsubscribeAdmins();
 		},
 
 		view() {

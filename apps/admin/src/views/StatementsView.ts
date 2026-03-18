@@ -10,7 +10,8 @@ import { statementTypeBadge, sourceAppBadge } from '../components/Badge';
 import { getMainAppUrl } from '../lib/links';
 import { buildBreadcrumb, BreadcrumbItem } from '../lib/breadcrumb';
 import {
-	loadStatements,
+	subscribeStatements,
+	unsubscribeStatements,
 	loadNextPage,
 	setFilter,
 	getStatementsState,
@@ -105,7 +106,11 @@ export function StatementsView(): m.Component {
 
 	return {
 		oninit() {
-			loadStatements();
+			subscribeStatements();
+		},
+
+		onremove() {
+			unsubscribeStatements();
 		},
 
 		view() {

@@ -1,6 +1,6 @@
 import m from 'mithril';
-import { fetchUsers, fetchUserCount, UserDoc } from '../lib/queries';
-import type { QueryDocumentSnapshot } from '../lib/firebase';
+import { listenToUsers, fetchUsers, fetchUserCount, UserDoc } from '../lib/queries';
+import type { Unsubscribe, QueryDocumentSnapshot } from '../lib/queries';
 
 interface UsersState {
 	items: UserDoc[];
@@ -12,6 +12,8 @@ interface UsersState {
 	hasMore: boolean;
 }
 
+const PAGE_SIZE = 25;
+
 const state: UsersState = {
 	items: [],
 	totalUsers: 0,
@@ -22,41 +24,49 @@ const state: UsersState = {
 	hasMore: false,
 };
 
-export async function loadUsers(): Promise<void> {
+let unsub: Unsubscribe | null = null;
+
+export function subscribeUsers(): void {
+	if (unsub) unsub();
+
 	state.loading = true;
 	state.error = null;
-	state.items = [];
-	state.cursor = null;
 	m.redraw();
 
-	try {
-		const [result, count] = await Promise.all([
-			fetchUsers(null),
-			fetchUserCount(),
-		]);
+	// Count (one-time)
+	fetchUserCount()
+		.then((count) => { state.totalUsers = count; m.redraw(); })
+		.catch((e) => console.error('[Users] count error:', e));
 
-		state.items = result.items;
-		state.cursor = result.lastDoc;
-		state.hasMore = result.hasMore;
-		state.totalUsers = count;
+	// Real-time list
+	unsub = listenToUsers(PAGE_SIZE + 1, (snap) => {
+		const hasMore = snap.docs.length > PAGE_SIZE;
+		const docs = hasMore ? snap.docs.slice(0, PAGE_SIZE) : snap.docs;
+
+		state.items = docs.map((d) => ({ uid: d.id, ...d.data() } as UserDoc));
+		state.cursor = docs.length > 0 ? docs[docs.length - 1] : null;
+		state.hasMore = hasMore;
 		state.loading = false;
-	} catch (error) {
-		console.error('[Users] Failed to load:', error);
-		state.error = 'Failed to load users';
-		state.loading = false;
+		state.error = null;
+		m.redraw();
+	});
+}
+
+export function unsubscribeUsers(): void {
+	if (unsub) {
+		unsub();
+		unsub = null;
 	}
-
-	m.redraw();
 }
 
 export async function loadNextPage(): Promise<void> {
-	if (!state.hasMore || state.loadingMore) return;
+	if (!state.hasMore || state.loadingMore || !state.cursor) return;
 
 	state.loadingMore = true;
 	m.redraw();
 
 	try {
-		const result = await fetchUsers(state.cursor);
+		const result = await fetchUsers(state.cursor, PAGE_SIZE);
 		state.items = [...state.items, ...result.items];
 		state.cursor = result.lastDoc;
 		state.hasMore = result.hasMore;

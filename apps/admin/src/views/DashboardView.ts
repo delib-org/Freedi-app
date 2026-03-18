@@ -7,7 +7,7 @@ import { DataTable, ColumnConfig } from '../components/DataTable';
 import { Spinner } from '../components/Spinner';
 import { TimeChart, MultiTimeChart, MultiSeriesItem } from '../components/TimeChart';
 import { statementTypeBadge, sourceAppBadge } from '../components/Badge';
-import { loadDashboardData, getDashboardState } from '../state/dashboard';
+import { subscribeDashboard, unsubscribeDashboard, getDashboardState } from '../state/dashboard';
 
 // ── Color maps ───────────────────────────────────────────────────────
 
@@ -69,8 +69,6 @@ const recentColumns: ColumnConfig<Statement>[] = [
 	},
 ];
 
-let refreshTimer: ReturnType<typeof setInterval> | null = null;
-
 const RecentTable = DataTable<Statement>();
 
 // ── View ─────────────────────────────────────────────────────────────
@@ -78,15 +76,11 @@ const RecentTable = DataTable<Statement>();
 export function DashboardView(): m.Component {
 	return {
 		oninit() {
-			loadDashboardData();
-			refreshTimer = setInterval(() => loadDashboardData(), 60_000);
+			subscribeDashboard();
 		},
 
 		onremove() {
-			if (refreshTimer) {
-				clearInterval(refreshTimer);
-				refreshTimer = null;
-			}
+			unsubscribeDashboard();
 		},
 
 		view() {

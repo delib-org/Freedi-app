@@ -10,9 +10,11 @@ import {
 	limit,
 	getCountFromServer,
 	startAfter,
+	onSnapshot,
 } from './firebase';
 import type { QueryDocumentSnapshot } from './firebase';
 import { Collections, Statement, StatementType, Role } from '@freedi/shared-types';
+import type { Unsubscribe, QuerySnapshot, DocumentData } from 'firebase/firestore';
 
 // ── Time-series helpers ──────────────────────────────────────────────
 
@@ -327,4 +329,87 @@ export async function fetchVoteCount(): Promise<number> {
 export async function fetchSuggestionCount(): Promise<number> {
 	const snap = await getCountFromServer(collection(db, Collections.suggestions));
 	return snap.data().count;
+}
+
+// ── Real-time listener helpers ───────────────────────────────────────
+
+export { toMillis, bucketize };
+export type { Unsubscribe, QueryDocumentSnapshot };
+
+type SnapshotCallback = (snap: QuerySnapshot<DocumentData>) => void;
+
+/**
+ * Subscribe to the most recent documents in a collection.
+ * Returns an unsubscribe function.
+ */
+export function listenToRecent(
+	collectionName: string,
+	timestampField: string,
+	maxDocs: number,
+	callback: SnapshotCallback,
+): Unsubscribe {
+	const q = query(
+		collection(db, collectionName),
+		orderBy(timestampField, 'desc'),
+		limit(maxDocs),
+	);
+	return onSnapshot(q, callback, (error) => {
+		console.error(`[Listener] ${collectionName} error:`, error);
+	});
+}
+
+/**
+ * Subscribe to admin subscriptions (role == admin or statement-creator).
+ */
+export function listenToAdminSubscriptions(
+	callback: SnapshotCallback,
+): Unsubscribe[] {
+	const adminRoles: string[] = [Role.admin, Role.creator];
+	return adminRoles.map((role) => {
+		const q = query(
+			collection(db, Collections.statementsSubscribe),
+			where('role', '==', role),
+		);
+		return onSnapshot(q, callback, (error) => {
+			console.error(`[Listener] admin subs (${role}) error:`, error);
+		});
+	});
+}
+
+/**
+ * Subscribe to a filtered + ordered statements query.
+ */
+export function listenToStatements(
+	filters: StatementsFilter,
+	pageSize: number,
+	callback: SnapshotCallback,
+): Unsubscribe {
+	const constraints = [];
+	if (filters.statementType) {
+		constraints.push(where('statementType', '==', filters.statementType));
+	}
+	constraints.push(orderBy('createdAt', 'desc'));
+	constraints.push(limit(pageSize));
+
+	const q = query(collection(db, Collections.statements), ...constraints);
+	return onSnapshot(q, callback, (error) => {
+		console.error('[Listener] statements error:', error);
+	});
+}
+
+/**
+ * Subscribe to users ordered by displayName.
+ */
+export function listenToUsers(
+	pageSize: number,
+	callback: SnapshotCallback,
+): Unsubscribe {
+	const q = query(
+		collection(db, Collections.users),
+		orderBy('displayName'),
+		limit(pageSize),
+	);
+	return onSnapshot(q, callback, (error) => {
+		console.error('[Listener] users error:', error);
+	});
 }
