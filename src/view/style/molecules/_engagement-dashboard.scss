@@ -1,0 +1,170 @@
+// Engagement Dashboard molecule
+// Used by the "My Impact" page
+
+.engagement-dashboard {
+	padding: 1rem;
+	max-width: 600px;
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+
+	// Top section: level + streak side by side
+	&__header {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	&__level-section {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+	}
+
+	&__level-info {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	&__level-label {
+		font-size: 0.75rem;
+		color: var(--text-caption);
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+
+	&__level-name {
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	// Progress section
+	&__progress-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	&__progress-label {
+		font-size: 0.875rem;
+		color: var(--text-body);
+	}
+
+	// Stats grid
+	&__stats {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.75rem;
+	}
+
+	&__stat {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.75rem 0.5rem;
+		background: var(--card-default);
+		border-radius: 8px;
+		border: 1px solid var(--border-light);
+	}
+
+	&__stat-value {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--btn-primary);
+	}
+
+	&__stat-label {
+		font-size: 0.75rem;
+		color: var(--text-caption);
+		text-align: center;
+	}
+
+	// Badges section
+	&__section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	&__section-title {
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-primary);
+	}
+
+	&__badges-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+		gap: 0.5rem;
+	}
+
+	&__badge {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.5rem;
+		background: var(--card-default);
+		border-radius: 8px;
+		border: 1px solid var(--border-light);
+	}
+
+	&__badge-icon {
+		font-size: 1.5rem;
+	}
+
+	&__badge-name {
+		font-size: 0.625rem;
+		color: var(--text-caption);
+		text-align: center;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		width: 100%;
+	}
+
+	&__empty {
+		text-align: center;
+		padding: 1.5rem;
+		color: var(--text-caption);
+		font-size: 0.875rem;
+	}
+
+	// Recent activity feed
+	&__activity-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__activity-item {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.5rem 0.75rem;
+		background: var(--card-default);
+		border-radius: 6px;
+		border: 1px solid var(--border-light);
+	}
+
+	&__activity-action {
+		font-size: 0.875rem;
+		color: var(--text-body);
+	}
+
+	&__activity-amount {
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--agree);
+	}
+
+	&__activity-time {
+		font-size: 0.75rem;
+		color: var(--text-caption);
+	}
+}

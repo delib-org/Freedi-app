@@ -1,10 +1,9 @@
-import React, { FC, useMemo, useState, useRef, useCallback } from 'react';
+import React, { FC, useState, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { isAuthorized } from '@/controllers/general/helpers';
-import UserAvatar from '@/view/pages/statement/components/chat/components/userAvatar/UserAvatar';
+import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
@@ -15,16 +14,8 @@ interface TreeOptionNodeProps {
 	parentStatement: Statement | undefined;
 }
 
-function formatMessageTime(timestamp: number): string {
-	const date = new Date(timestamp);
-
-	return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement }) => {
-	const { t } = useTranslation();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
-	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
 
 	const _isAuthorized = isAuthorized(
 		statement,
@@ -54,17 +45,10 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement })
 	return (
 		<div className={nodeClassName}>
 			<div className={styles['tree-option-node__avatar']}>
-				<UserAvatar user={statement.creator} />
+				<StatementTypeIcon type={statement.statementType} isSelected={isInResults} />
 			</div>
 			<div className={styles['tree-option-node__body']}>
 				<div className={styles['tree-option-node__header']}>
-					<span className={styles['tree-option-node__author']}>
-						{statement.creator.displayName}
-					</span>
-					<span className={styles['tree-option-node__badge']}>
-						{isInResults ? t('Selected Solution') : t('Solution')}
-					</span>
-					<span className={styles['tree-option-node__time']}>{timeString}</span>
 					<div className={styles['tree-option-node__menu']}>
 						<ChatMessageMenu
 							statement={statement}

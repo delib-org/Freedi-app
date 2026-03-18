@@ -318,7 +318,10 @@ const EnhancedMindMap: FC = () => {
 					{mapContext.showModal && (
 						<Modal>
 							<CreateStatementModal
-								allowedTypes={[isOptionAllowed && StatementType.option, StatementType.question]}
+								allowedTypes={[
+									...(isOptionAllowed ? [StatementType.option] : []),
+									StatementType.question,
+								]}
 								parentStatement={mapContext.parentStatement}
 								isOption={isDefaultOption}
 								setShowModal={toggleModal}

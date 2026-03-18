@@ -1,0 +1,177 @@
+// Frequency Selector Molecule - BEM Methodology
+// Usage: <div class="frequency-selector">
+//          <button class="frequency-selector__option frequency-selector__option--active">
+//            <span class="frequency-selector__label">Instant</span>
+//          </button>
+//        </div>
+//
+// Popover with notification frequency options
+
+@use '../mixins' as *;
+
+// ============================================================================
+// FREQUENCY SELECTOR BLOCK
+// ============================================================================
+
+.frequency-selector {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 180px;
+	padding: 0.5rem;
+	background: var(--card-default);
+	border-radius: 8px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+	border: 1px solid var(--border-light);
+
+	// ============================================================================
+	// ELEMENTS
+	// ============================================================================
+
+	&__title {
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: var(--text-caption);
+		text-transform: uppercase;
+		letter-spacing: 0.5px;
+		padding: 0.25rem 0.5rem;
+		margin-bottom: 0.25rem;
+	}
+
+	&__option {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.5rem;
+		border: none;
+		border-radius: 6px;
+		background: transparent;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+		text-align: start;
+
+		&:hover {
+			background-color: var(--border-light);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary);
+			outline-offset: -2px;
+		}
+	}
+
+	&__option-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.25rem;
+		height: 1.25rem;
+		flex-shrink: 0;
+		color: var(--text-caption);
+
+		svg {
+			width: 100%;
+			height: 100%;
+		}
+	}
+
+	&__option-content {
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+		flex: 1;
+	}
+
+	&__label {
+		font-size: 0.875rem;
+		font-weight: 500;
+		color: var(--text-body);
+		line-height: 1.3;
+	}
+
+	&__description {
+		font-size: 0.75rem;
+		color: var(--text-caption);
+		line-height: 1.3;
+	}
+
+	&__check {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1rem;
+		height: 1rem;
+		flex-shrink: 0;
+		color: var(--btn-primary);
+		opacity: 0;
+		transition: opacity 0.15s ease;
+	}
+
+	// ============================================================================
+	// MODIFIERS
+	// ============================================================================
+
+	// Active option
+	&__option--active {
+		background-color: rgba(95, 136, 229, 0.08);
+
+		.frequency-selector__option-icon {
+			color: var(--btn-primary);
+		}
+
+		.frequency-selector__label {
+			color: var(--btn-primary);
+			font-weight: 600;
+		}
+
+		.frequency-selector__check {
+			opacity: 1;
+		}
+
+		&:hover {
+			background-color: rgba(95, 136, 229, 0.12);
+		}
+	}
+
+	// Divider between groups
+	&__divider {
+		height: 1px;
+		background-color: var(--border-light);
+		margin: 0.25rem 0;
+	}
+}
+
+// ============================================================================
+// POPOVER WRAPPER (for positioning)
+// ============================================================================
+
+.frequency-popover {
+	position: absolute;
+	z-index: 100;
+	top: calc(100% + 4px);
+	right: 0;
+
+	@include rtl {
+		right: auto;
+		left: 0;
+	}
+
+	// Entrance animation
+	animation: frequencyPopoverIn 0.15s ease-out;
+
+	@media (prefers-reduced-motion: reduce) {
+		animation: none;
+	}
+}
+
+@keyframes frequencyPopoverIn {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}

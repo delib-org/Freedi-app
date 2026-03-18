@@ -94,7 +94,8 @@ const CreateStatementModal: FC<CreateStatementModalProps> = ({
 	};
 
 	// Handle form submission
-	const onFormSubmit = async () => {
+	const onFormSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
 		// Only check for multi-suggestions when:
 		// 1. The setting is enabled
 		// 2. We're creating an option (not a question)

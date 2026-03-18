@@ -135,6 +135,7 @@ export async function processRefinementAI(req: Request, res: Response): Promise<
 	try {
 		if (req.method !== 'POST') {
 			res.status(405).json({ error: 'Method not allowed' });
+
 			return;
 		}
 
@@ -165,15 +166,21 @@ async function handleSynthesize(req: Request, res: Response): Promise<void> {
 
 	if (!paragraphId || !originalContent || !suggestions?.length) {
 		res.status(400).json({ error: 'paragraphId, originalContent, and suggestions are required' });
+
 		return;
 	}
 
-	console.info(`[refinementAI.synthesize] Starting for paragraph ${paragraphId} with ${suggestions.length} suggestions${customInstructions ? ' (with custom instructions)' : ''}`);
+	console.info(
+		`[refinementAI.synthesize] Starting for paragraph ${paragraphId} with ${suggestions.length} suggestions${customInstructions ? ' (with custom instructions)' : ''}`,
+	);
 
 	// Format suggestions list
 	const suggestionsList = suggestions
 		.sort((a, b) => b.consensus - a.consensus)
-		.map((s, i) => `${i + 1}. [Consensus: ${s.consensus.toFixed(2)}] (ID: ${s.suggestionId})\n   "${s.suggestedContent}"`)
+		.map(
+			(s, i) =>
+				`${i + 1}. [Consensus: ${s.consensus.toFixed(2)}] (ID: ${s.suggestionId})\n   "${s.suggestedContent}"`,
+		)
 		.join('\n\n');
 
 	// Build system prompt, appending custom instructions if provided
@@ -181,9 +188,10 @@ async function handleSynthesize(req: Request, res: Response): Promise<void> {
 		? `${SYNTHESIZE_SYSTEM_PROMPT}\n\nADDITIONAL INSTRUCTIONS FROM THE DOCUMENT ADMIN (you MUST follow these):\n${customInstructions}`
 		: SYNTHESIZE_SYSTEM_PROMPT;
 
-	const userPrompt = SYNTHESIZE_USER_PROMPT
-		.replace('{originalContent}', originalContent)
-		.replace('{suggestionsList}', suggestionsList);
+	const userPrompt = SYNTHESIZE_USER_PROMPT.replace('{originalContent}', originalContent).replace(
+		'{suggestionsList}',
+		suggestionsList,
+	);
 
 	const response = await callGemini(systemPrompt, userPrompt);
 
@@ -196,10 +204,12 @@ async function handleSynthesize(req: Request, res: Response): Promise<void> {
 	const result: SynthesizeOutput = {
 		synthesizedText: parsed.synthesizedText || '',
 		reasoning: parsed.reasoning || 'AI synthesis completed.',
-		sourceSuggestionIds: parsed.sourceSuggestionIds || suggestions.map(s => s.suggestionId),
+		sourceSuggestionIds: parsed.sourceSuggestionIds || suggestions.map((s) => s.suggestionId),
 	};
 
-	console.info(`[refinementAI.synthesize] Completed for paragraph ${paragraphId}, output length: ${result.synthesizedText.length}`);
+	console.info(
+		`[refinementAI.synthesize] Completed for paragraph ${paragraphId}, output length: ${result.synthesizedText.length}`,
+	);
 
 	res.json({
 		success: true,
@@ -217,10 +227,13 @@ async function handleImprove(req: Request, res: Response): Promise<void> {
 
 	if (!suggestionId || !suggestionContent || !comments?.length) {
 		res.status(400).json({ error: 'suggestionId, suggestionContent, and comments are required' });
+
 		return;
 	}
 
-	console.info(`[refinementAI.improve] Starting for suggestion ${suggestionId} with ${comments.length} comments`);
+	console.info(
+		`[refinementAI.improve] Starting for suggestion ${suggestionId} with ${comments.length} comments`,
+	);
 
 	// Format comments list
 	const commentsList = comments
@@ -228,8 +241,10 @@ async function handleImprove(req: Request, res: Response): Promise<void> {
 		.map((c, i) => `${i + 1}. [Consensus: ${c.consensus.toFixed(2)}]\n   "${c.content}"`)
 		.join('\n\n');
 
-	const userPrompt = IMPROVE_USER_PROMPT
-		.replace('{originalParagraphContent}', originalParagraphContent || '')
+	const userPrompt = IMPROVE_USER_PROMPT.replace(
+		'{originalParagraphContent}',
+		originalParagraphContent || '',
+	)
 		.replace('{suggestionContent}', suggestionContent)
 		.replace('{commentsList}', commentsList);
 
@@ -242,13 +257,15 @@ async function handleImprove(req: Request, res: Response): Promise<void> {
 
 	const result: ImproveOutput = {
 		improvedText: parsed.improvedText || suggestionContent,
-		changes: (parsed.changes || []).map(c => ({
+		changes: (parsed.changes || []).map((c) => ({
 			description: c.description || '',
 			fromComment: c.fromComment,
 		})),
 	};
 
-	console.info(`[refinementAI.improve] Completed for suggestion ${suggestionId}, ${result.changes.length} changes`);
+	console.info(
+		`[refinementAI.improve] Completed for suggestion ${suggestionId}, ${result.changes.length} changes`,
+	);
 
 	res.json({
 		success: true,

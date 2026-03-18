@@ -40,40 +40,30 @@ export const useNotifications = (statementId?: string) => {
 		? useAppSelector(hasTokenSelector('', currentStatementId))
 		: false;
 
-	// Initialize notifications based on authentication state
+	// Sync permission state and set up SW message listener.
+	// NOTE: We do NOT auto-initialize notifications on auth state change.
+	// Notification permission and token acquisition are deferred until the user
+	// shows intent (e.g., 3 actions in a discussion, or explicit prompt interaction).
+	// If permission was already granted in a previous session, useNotificationSetup
+	// (in StatementMain) handles re-initialization silently.
 	useEffect(() => {
-		// Early return if service workers or notifications aren't supported
 		if (!notificationService.isSupported()) {
-			console.info('Service Workers or Notifications not supported in this browser mode');
-
-			return () => {}; // Empty cleanup function
+			return () => {};
 		}
 
 		const auth = getAuth();
 
-		const unsubscribe = onAuthStateChanged(auth, async (user) => {
+		// Only sync existing state - do NOT call initialize() or requestPermission()
+		const unsubscribe = onAuthStateChanged(auth, (user) => {
 			if (user) {
-				// User is signed in, initialize notification service
-				setPermissionState((prev) => ({ ...prev, loading: true }));
-				try {
-					await notificationService.initialize(user.uid);
-					const token = notificationService.getToken();
-
-					setPermissionState({
-						permission: notificationService.safeGetPermission(),
-						loading: false,
-						token,
-						serviceWorkerSupported: true,
-					});
-				} catch (error) {
-					logError(error, {
-						operation: 'hooks.useNotifications.unsubscribe',
-						metadata: { message: 'Error initializing notifications:' },
-					});
-					setPermissionState((prev) => ({ ...prev, loading: false }));
-				}
+				const token = notificationService.getToken();
+				setPermissionState({
+					permission: notificationService.safeGetPermission(),
+					loading: false,
+					token,
+					serviceWorkerSupported: true,
+				});
 			} else {
-				// User is signed out
 				setPermissionState({
 					permission: notificationService.safeGetPermission(),
 					loading: false,
@@ -87,19 +77,15 @@ export const useNotifications = (statementId?: string) => {
 		const handleServiceWorkerMessage = (event: MessageEvent) => {
 			if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
 				console.info('Notification clicked:', event.data.payload);
-				// Handle notification click - could update UI, navigate to relevant page, etc.
 			} else if (event.data && event.data.type === 'PLAY_NOTIFICATION_SOUND') {
-				// Play notification sound when requested by service worker
 				playNotificationSound();
 			}
 		};
 
-		// Only add event listener if service worker is available
 		if (navigator.serviceWorker) {
 			navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
 		}
 
-		// Clean up listeners on unmount
 		return () => {
 			unsubscribe();
 			if (navigator.serviceWorker) {

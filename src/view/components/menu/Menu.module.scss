@@ -26,6 +26,10 @@
 .menu {
   position: relative;
 
+  &--open {
+    z-index: 10000;
+  }
+
   .menuHeader {
     width: 100%;
     flex-flow: column;

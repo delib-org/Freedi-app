@@ -200,6 +200,34 @@ export class MaintenanceController {
 	}
 
 	/**
+	 * Backfill parents array for statements created in the last month
+	 * Fixes statements from apps (MC, Flow) that didn't populate the parents field
+	 * Query params:
+	 * - stats (optional): If 'true', only return statistics without running migration
+	 */
+	async backfillParentsArray(req: Request, res: Response): Promise<void> {
+		try {
+			const statsOnly = req.query.stats === 'true';
+
+			const { migrateBackfillParents, getParentsBackfillStats } = await import(
+				'../migrations/backfillParentsArray'
+			);
+
+			if (statsOnly) {
+				const stats = await getParentsBackfillStats();
+				res.send({ ok: true, ...stats });
+
+				return;
+			}
+
+			const result = await migrateBackfillParents();
+			res.send({ ok: true, ...result });
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
+	/**
 	 * Handle errors consistently
 	 */
 	private handleError(res: Response, error: unknown): void {

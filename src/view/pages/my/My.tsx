@@ -81,6 +81,12 @@ const My = () => {
 
 				{/* Settings button using SCSS classes */}
 				<div className="btns" style={{ marginTop: '2rem' }}>
+					<Link to="/my/engagement" className="btn btn--seciondary">
+						{t('engagement.myImpact')}
+					</Link>
+					<Link to="/my/subscriptions" className="btn btn--seciondary">
+						{t('Subscriptions')}
+					</Link>
 					<Link to="/my/check-notifications" className="btn btn--seciondary">
 						{t('Check Notifications')}
 					</Link>

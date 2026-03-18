@@ -5,6 +5,7 @@ import {
 	listenToStatement,
 	listenToSubStatements,
 	listenToStatementSubscription,
+	listenToTreeByTopParent,
 	listenToTreeDescendants,
 } from '@/controllers/db/statements/listenToStatements';
 import { listenToMindMapData } from '@/controllers/db/statements/optimizedListeners';
@@ -105,12 +106,15 @@ export const useStatementListeners = ({
 				// Use consolidated listener to avoid dual listener overhead
 				unsubscribersRef.current.push(listenToMindMapData(statementId));
 			} else if (enableTreeView) {
-				// Tree view: load all descendant types for hierarchical rendering
-				unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
-				// Also keep flat sub-statement listener for agreement map and options views
-				unsubscribersRef.current.push(
-					listenToSubStatements(statementId, 'top', CHAT.INITIAL_MESSAGES_LIMIT),
-				);
+				// Tree view: load direct children (reliable via parentId) with no limit
+				unsubscribersRef.current.push(listenToSubStatements(statementId, 'top'));
+				if (!topParentId || topParentId === statementId) {
+					// Top level: load entire tree via topParentId
+					unsubscribersRef.current.push(listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT));
+				} else {
+					// Sub-statement: load descendants via parents array-contains
+					unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
+				}
 			} else {
 				// Limit initial load for lazy loading (desc order to get most recent).
 				// The default view is 'chat', so apply the limit for all non-mind-map screens.
@@ -133,7 +137,16 @@ export const useStatementListeners = ({
 		}
 
 		return cleanup;
-	}, [creator, statementId, stageId, screen, enableTreeView, setIsStatementNotFound, setError]);
+	}, [
+		creator,
+		statementId,
+		stageId,
+		screen,
+		enableTreeView,
+		topParentId,
+		setIsStatementNotFound,
+		setError,
+	]);
 
 	// Effect for top parent statement and group-level demographic questions
 	// This effect now properly depends on topParentId from Redux selector

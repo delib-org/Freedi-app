@@ -40,3 +40,6 @@ export const addRandomSeed = (req: Request, res: Response) =>
 
 export const backfillEvaluationType = (req: Request, res: Response) =>
 	maintenanceController.backfillEvaluationType(req, res);
+
+export const backfillParentsArray = (req: Request, res: Response) =>
+	maintenanceController.backfillParentsArray(req, res);
