@@ -7,15 +7,21 @@ export interface TimeChartAttrs {
 	title: string;
 	data: DayBucket[];
 	color: string;
-	/** 'bar' | 'area' (default: area) */
 	variant?: 'bar' | 'area';
 	height?: number;
 }
 
-const PAD_LEFT = 40;
-const PAD_RIGHT = 12;
-const PAD_TOP = 8;
-const PAD_BOTTOM = 28;
+const VB_W = 600;
+const PAD_LEFT = 50;
+const PAD_RIGHT = 16;
+const PAD_TOP = 10;
+const PAD_BOTTOM = 24;
+const FONT_Y = 10;
+const FONT_X = 9;
+const STROKE_GRID = 1;
+const STROKE_LINE = 2.5;
+const DOT_R = 3;
+const BAR_RX = 2;
 
 function formatDateLabel(iso: string): string {
 	const d = new Date(iso + 'T00:00:00');
@@ -24,7 +30,7 @@ function formatDateLabel(iso: string): string {
 
 export const TimeChart: m.Component<TimeChartAttrs> = {
 	view(vnode) {
-		const { title, data, color, variant = 'area', height = 200 } = vnode.attrs;
+		const { title, data, color, variant = 'area', height = 180 } = vnode.attrs;
 
 		if (data.length === 0) {
 			return m('.chart-card', [
@@ -34,8 +40,7 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 		}
 
 		const maxVal = Math.max(...data.map((d) => d.count), 1);
-		const w = 100;
-		const plotW = w - PAD_LEFT - PAD_RIGHT;
+		const plotW = VB_W - PAD_LEFT - PAD_RIGHT;
 		const plotH = height - PAD_TOP - PAD_BOTTOM;
 		const barW = data.length > 1 ? plotW / data.length : plotW;
 		const total = data.reduce((s, d) => s + d.count, 0);
@@ -50,7 +55,6 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 			.map((d, i) => ({ i, label: formatDateLabel(d.date) }))
 			.filter((_, i) => i % labelStep === 0 || i === data.length - 1);
 
-		// Build all SVG children as a flat array with no keys
 		const svgChildren: m.Children[] = [];
 
 		// Y grid lines
@@ -58,8 +62,8 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 			svgChildren.push(
 				m('line', {
 					x1: PAD_LEFT, y1: t.y,
-					x2: w - PAD_RIGHT, y2: t.y,
-					stroke: 'var(--border-color)', 'stroke-width': 0.2,
+					x2: VB_W - PAD_RIGHT, y2: t.y,
+					stroke: 'var(--border-color)', 'stroke-width': STROKE_GRID,
 				})
 			);
 		}
@@ -68,15 +72,15 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 		for (const t of yTicks) {
 			svgChildren.push(
 				m('text', {
-					x: PAD_LEFT - 3, y: t.y + 1,
+					x: PAD_LEFT - 6, y: t.y + FONT_Y * 0.35,
 					'text-anchor': 'end',
-					fill: 'var(--text-muted)', 'font-size': 2.5,
+					fill: 'var(--text-muted)', 'font-size': FONT_Y,
 					'font-family': 'var(--font-family)',
 				}, t.label)
 			);
 		}
 
-		// Data visualization
+		// Data
 		if (variant === 'bar') {
 			for (let i = 0; i < data.length; i++) {
 				const d = data[i];
@@ -86,20 +90,18 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 				svgChildren.push(
 					m('rect', {
 						x, y: PAD_TOP + plotH - barH,
-						width: Math.max(bw, 0.3), height: barH,
-						fill: color, rx: 0.3, opacity: 0.85,
+						width: Math.max(bw, 1), height: barH,
+						fill: color, rx: BAR_RX, opacity: 0.85,
 					})
 				);
 			}
 		} else {
-			// Area fill
 			svgChildren.push(
 				m('path', {
 					d: areaPath(data, maxVal, plotW, plotH, PAD_LEFT, PAD_TOP),
 					fill: color, opacity: 0.15,
 				})
 			);
-			// Line
 			svgChildren.push(
 				m('polyline', {
 					points: data
@@ -110,17 +112,16 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 						})
 						.join(' '),
 					fill: 'none', stroke: color,
-					'stroke-width': 0.6, 'stroke-linejoin': 'round',
+					'stroke-width': STROKE_LINE, 'stroke-linejoin': 'round',
 				})
 			);
-			// Dots (only for non-zero values)
 			for (let i = 0; i < data.length; i++) {
 				const d = data[i];
 				if (d.count > 0) {
 					const x = PAD_LEFT + (i / Math.max(data.length - 1, 1)) * plotW;
 					const y = PAD_TOP + plotH - (d.count / maxVal) * plotH;
 					svgChildren.push(
-						m('circle', { cx: x, cy: y, r: 0.7, fill: color })
+						m('circle', { cx: x, cy: y, r: DOT_R, fill: color })
 					);
 				}
 			}
@@ -133,9 +134,9 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 				: PAD_LEFT + (i / Math.max(data.length - 1, 1)) * plotW;
 			svgChildren.push(
 				m('text', {
-					x, y: height - 4,
+					x, y: height - 5,
 					'text-anchor': 'middle',
-					fill: 'var(--text-muted)', 'font-size': 2.2,
+					fill: 'var(--text-muted)', 'font-size': FONT_X,
 					'font-family': 'var(--font-family)',
 				}, label)
 			);
@@ -147,9 +148,8 @@ export const TimeChart: m.Component<TimeChartAttrs> = {
 				m('.chart-card__total', `Total: ${total.toLocaleString()}`),
 			]),
 			m('svg.chart-card__svg', {
-				viewBox: `0 0 ${w} ${height}`,
-				preserveAspectRatio: 'none',
-				style: { width: '100%', height: `${height}px` },
+				viewBox: `0 0 ${VB_W} ${height}`,
+				style: { width: '100%', height: 'auto' },
 			}, svgChildren),
 		]);
 	},
@@ -215,8 +215,7 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 		});
 
 		const maxVal = Math.max(...stacked.map((s) => s.total), 1);
-		const w = 100;
-		const plotW = w - PAD_LEFT - PAD_RIGHT;
+		const plotW = VB_W - PAD_LEFT - PAD_RIGHT;
 		const plotH = height - PAD_TOP - PAD_BOTTOM;
 
 		const yTicks = [0, 0.25, 0.5, 0.75, 1].map((pct) => ({
@@ -226,31 +225,28 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 
 		const labelStep = Math.max(1, Math.floor(dates.length / 6));
 
-		// Build all SVG children as a flat array with no keys
 		const svgChildren: m.Children[] = [];
 
-		// Y grid + labels
 		for (const t of yTicks) {
 			svgChildren.push(
 				m('line', {
 					x1: PAD_LEFT, y1: t.y,
-					x2: w - PAD_RIGHT, y2: t.y,
-					stroke: 'var(--border-color)', 'stroke-width': 0.2,
+					x2: VB_W - PAD_RIGHT, y2: t.y,
+					stroke: 'var(--border-color)', 'stroke-width': STROKE_GRID,
 				})
 			);
 		}
 		for (const t of yTicks) {
 			svgChildren.push(
 				m('text', {
-					x: PAD_LEFT - 3, y: t.y + 1,
+					x: PAD_LEFT - 6, y: t.y + FONT_Y * 0.35,
 					'text-anchor': 'end',
-					fill: 'var(--text-muted)', 'font-size': 2.5,
+					fill: 'var(--text-muted)', 'font-size': FONT_Y,
 					'font-family': 'var(--font-family)',
 				}, t.label)
 			);
 		}
 
-		// Stacked bars
 		for (let i = 0; i < stacked.length; i++) {
 			const col = stacked[i];
 			const bw = plotW / dates.length;
@@ -263,25 +259,24 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 					svgChildren.push(
 						m('rect', {
 							x, y,
-							width: Math.max(rectW, 0.3),
-							height: Math.max(h, 0.1),
-							fill: layer.color, rx: 0.15,
+							width: Math.max(rectW, 1),
+							height: Math.max(h, 0.5),
+							fill: layer.color, rx: BAR_RX,
 						})
 					);
 				}
 			}
 		}
 
-		// X labels
 		for (let i = 0; i < dates.length; i++) {
 			if (i % labelStep === 0 || i === dates.length - 1) {
 				const bw = plotW / dates.length;
 				const x = PAD_LEFT + i * bw + bw / 2;
 				svgChildren.push(
 					m('text', {
-						x, y: height - 4,
+						x, y: height - 5,
 						'text-anchor': 'middle',
-						fill: 'var(--text-muted)', 'font-size': 2.2,
+						fill: 'var(--text-muted)', 'font-size': FONT_X,
 						'font-family': 'var(--font-family)',
 					}, formatDateLabel(dates[i]))
 				);
@@ -301,9 +296,8 @@ export const MultiTimeChart: m.Component<MultiTimeChartAttrs> = {
 				),
 			]),
 			m('svg.chart-card__svg', {
-				viewBox: `0 0 ${w} ${height}`,
-				preserveAspectRatio: 'none',
-				style: { width: '100%', height: `${height}px` },
+				viewBox: `0 0 ${VB_W} ${height}`,
+				style: { width: '100%', height: 'auto' },
 			}, svgChildren),
 		]);
 	},
