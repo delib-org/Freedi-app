@@ -69,8 +69,7 @@ type EngagementSliceState = { engagement: EngagementState };
 export const userEngagementSelector = (state: EngagementSliceState) =>
 	state.engagement.userEngagement;
 
-export const engagementLoadingSelector = (state: EngagementSliceState) =>
-	state.engagement.loading;
+export const engagementLoadingSelector = (state: EngagementSliceState) => state.engagement.loading;
 
 export const recentCreditsSelector = (state: EngagementSliceState) =>
 	state.engagement.recentCredits;

@@ -24,6 +24,11 @@ export { routeToChannels } from './notifications/channelRouter';
 export { checkSocialProofMilestone, checkConsensusShift } from './notifications/socialProofTrigger';
 
 // Digest (Phase 3)
-export { buildDailyDigest, buildWeeklyDigest, getDailyDigestUsers, getWeeklyDigestUsers } from './notifications/digestAggregator';
+export {
+	buildDailyDigest,
+	buildWeeklyDigest,
+	getDailyDigestUsers,
+	getWeeklyDigestUsers,
+} from './notifications/digestAggregator';
 export { sendDailyDigests, processDailyDigests } from './scheduled/dailyDigest';
 export { sendWeeklyDigests, processWeeklyDigests } from './scheduled/weeklyDigest';

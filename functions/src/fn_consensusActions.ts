@@ -364,7 +364,7 @@ export const fn_autoAddParagraph = onDocumentUpdated(
 
 			// Execute auto-addition
 			const now = Date.now();
-			const insertionPointOrder = parent.doc.order;
+			const insertionPointOrder = parent.doc.order ?? 0;
 			const newParagraphId = `para_${now}_${after.statementId}`;
 			const actionId = `action_add_${now}_${after.statementId}`;
 

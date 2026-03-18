@@ -73,9 +73,7 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({
 	const optionRefs = useRef<(HTMLButtonElement | null)[]>([]);
 	const { t } = useTranslation();
 
-	const currentIndex = FREQUENCY_OPTIONS.findIndex(
-		(o) => o.frequency === currentFrequency,
-	);
+	const currentIndex = FREQUENCY_OPTIONS.findIndex((o) => o.frequency === currentFrequency);
 	const [focusedIndex, setFocusedIndex] = useState(currentIndex >= 0 ? currentIndex : 0);
 
 	// Focus the active option on mount
@@ -177,7 +175,9 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({
 						<button
 							key={option.frequency}
 							id={`freq-option-${index}`}
-							ref={(el) => { optionRefs.current[index] = el; }}
+							ref={(el) => {
+								optionRefs.current[index] = el;
+							}}
 							type="button"
 							className={`frequency-selector__option ${isActive ? 'frequency-selector__option--active' : ''}`}
 							onClick={() => handleSelect(option.frequency)}
@@ -197,7 +197,14 @@ const FrequencySelector: React.FC<FrequencySelectorProps> = ({
 
 							<span className="frequency-selector__check" aria-hidden="true">
 								{isActive && (
-									<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+									<svg
+										width="16"
+										height="16"
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2.5"
+									>
 										<polyline points="20 6 9 17 4 12" />
 									</svg>
 								)}

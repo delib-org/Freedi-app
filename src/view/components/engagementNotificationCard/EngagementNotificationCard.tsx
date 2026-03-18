@@ -1,6 +1,5 @@
 import React from 'react';
 import styles from './EngagementNotificationCard.module.scss';
-import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { NotificationTriggerType } from '@freedi/shared-types';
 import LevelBadge from '@/view/components/atomic/atoms/LevelBadge/LevelBadge';
 import { EngagementLevel } from '@freedi/shared-types';
@@ -41,7 +40,6 @@ const EngagementNotificationCard: React.FC<EngagementNotificationCardProps> = ({
 	metadata,
 	createdAt,
 }) => {
-	const { t } = useTranslation();
 	const isLevelUp = triggerType === NotificationTriggerType.LEVEL_UP;
 	const isCreditEarned = triggerType === NotificationTriggerType.CREDIT_EARNED;
 	const icon = TRIGGER_ICONS[triggerType] ?? 'N';
@@ -50,11 +48,7 @@ const EngagementNotificationCard: React.FC<EngagementNotificationCardProps> = ({
 		<article className={`${styles.card} ${isLevelUp ? styles.levelUp : ''}`} aria-label={title}>
 			<div className={styles.iconWrapper} aria-hidden="true">
 				{isLevelUp && metadata?.level ? (
-					<LevelBadge
-						level={Number(metadata.level) as EngagementLevel}
-						size="small"
-						iconOnly
-					/>
+					<LevelBadge level={Number(metadata.level) as EngagementLevel} size="small" iconOnly />
 				) : (
 					<span className={`${styles.icon} ${isCreditEarned ? styles.creditIcon : ''}`}>
 						{icon}

@@ -348,6 +348,9 @@ export default function SurveyDemographicPage({
     setIsSubmitting(true);
 
     try {
+      // Ensure userId cookie is fresh before API call (mobile browsers may drop it)
+      getOrCreateAnonymousUser();
+
       const token = localStorage.getItem('firebase_token');
       const formattedAnswers = Object.entries(answers).map(([questionId, data]) => ({
         questionId,

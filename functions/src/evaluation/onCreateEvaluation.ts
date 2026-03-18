@@ -90,17 +90,15 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		updateUserDemographicEvaluation(statement, userEvalData);
 
 		// Track engagement (non-blocking)
-		trackEvaluationEngagement(
-			statementId,
-			userId,
-			parentId,
-			statement.topParentId,
-		).catch((err) => logger.warn('Engagement tracking failed:', err));
+		trackEvaluationEngagement(statementId, userId, parentId, statement.topParentId).catch((err) =>
+			logger.warn('Engagement tracking failed:', err),
+		);
 
 		// Check social proof milestones (non-blocking)
 		const evaluatorCount = statement.evaluation?.numberOfEvaluators ?? 0;
-		checkSocialProofMilestone(statement, evaluatorCount)
-			.catch((err) => logger.warn('Social proof check failed:', err));
+		checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
+			logger.warn('Social proof check failed:', err),
+		);
 	} catch (error) {
 		logger.error('Error in newEvaluation:', error);
 	}

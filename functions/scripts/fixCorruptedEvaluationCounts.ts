@@ -9,25 +9,32 @@
  * GOOGLE_APPLICATION_CREDENTIALS=path/to/serviceAccount.json npx tsx scripts/fixCorruptedEvaluationCounts.ts
  */
 
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { initializeApp, cert, getApps, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Collections, Statement, Evaluation } from '@freedi/shared-types';
 
 // Initialize Firebase Admin
 if (getApps().length === 0) {
 	const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+	const projectId = process.env.FIREBASE_PROJECT_ID;
 	if (serviceAccountPath) {
-		// Production - use service account
+		// Production - use service account key file
 		// eslint-disable-next-line @typescript-eslint/no-require-imports
 		const serviceAccount = require(serviceAccountPath);
 		initializeApp({
 			credential: cert(serviceAccount),
 		});
+	} else if (projectId) {
+		// Use Application Default Credentials with explicit project ID
+		initializeApp({
+			credential: applicationDefault(),
+			projectId,
+		});
 	} else if (process.env.FIRESTORE_EMULATOR_HOST) {
 		// Emulator
 		initializeApp({ projectId: 'demo-test' });
 	} else {
-		console.error('No credentials provided. Set GOOGLE_APPLICATION_CREDENTIALS or FIRESTORE_EMULATOR_HOST');
+		console.error('No credentials provided. Set GOOGLE_APPLICATION_CREDENTIALS, FIREBASE_PROJECT_ID, or FIRESTORE_EMULATOR_HOST');
 		process.exit(1);
 	}
 }

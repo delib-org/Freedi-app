@@ -20,7 +20,7 @@ import {
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { buildWeeklyDigest, getWeeklyDigestUsers } from '../notifications/digestAggregator';
 
-const db = getFirestore();
+const getDb = () => getFirestore();
 
 /**
  * Scheduled function: runs daily at 10:00 UTC.
@@ -88,9 +88,7 @@ export async function processWeeklyDigests(): Promise<{
 				}
 
 				const creditsSummary =
-					digest.creditsEarned > 0
-						? ` You earned ${digest.creditsEarned} credits this week!`
-						: '';
+					digest.creditsEarned > 0 ? ` You earned ${digest.creditsEarned} credits this week!` : '';
 
 				const queueItemId = `weekly_${userId}_${Date.now()}`;
 				const notification: NotificationQueueItem = {
@@ -108,10 +106,7 @@ export async function processWeeklyDigests(): Promise<{
 					createdAt: Date.now(),
 				};
 
-				await db
-					.collection(Collections.notificationQueue)
-					.doc(queueItemId)
-					.set(notification);
+				await getDb().collection(Collections.notificationQueue).doc(queueItemId).set(notification);
 
 				digestsSent++;
 			} catch (error) {

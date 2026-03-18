@@ -124,9 +124,7 @@ const BranchBell: React.FC<BranchBellProps> = ({
 				aria-expanded={isOpen}
 				aria-haspopup="listbox"
 			>
-				<span className="branch-bell__icon">
-					{isMuted ? <BellSlashIcon /> : <BellIcon />}
-				</span>
+				<span className="branch-bell__icon">{isMuted ? <BellSlashIcon /> : <BellIcon />}</span>
 				{showDot && <span className="branch-bell__dot" />}
 			</button>
 

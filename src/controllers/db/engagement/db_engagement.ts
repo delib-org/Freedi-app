@@ -42,12 +42,8 @@ export function listenToUserEngagement(): Unsubscribe {
 						const data = snapshot.data();
 						const engagement: UserEngagement = {
 							...data,
-							createdAt: data.createdAt?.toMillis
-								? data.createdAt.toMillis()
-								: data.createdAt,
-							lastUpdate: data.lastUpdate?.toMillis
-								? data.lastUpdate.toMillis()
-								: data.lastUpdate,
+							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
+							lastUpdate: data.lastUpdate?.toMillis ? data.lastUpdate.toMillis() : data.lastUpdate,
 							trialModeExpiresAt: data.trialModeExpiresAt?.toMillis
 								? data.trialModeExpiresAt.toMillis()
 								: data.trialModeExpiresAt,
@@ -113,9 +109,7 @@ export function listenToRecentCredits(): Unsubscribe {
 						const data = docSnapshot.data();
 						credits.push({
 							...data,
-							createdAt: data.createdAt?.toMillis
-								? data.createdAt.toMillis()
-								: data.createdAt,
+							createdAt: data.createdAt?.toMillis ? data.createdAt.toMillis() : data.createdAt,
 						} as CreditTransaction);
 					});
 					store.dispatch(setRecentCredits(credits));
