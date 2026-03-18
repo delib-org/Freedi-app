@@ -19,7 +19,6 @@ import { Collections } from '@freedi/shared-types';
 import type { UserEngagement, CreditTransaction, Badge } from '@freedi/shared-types';
 import { EngagementLevel } from '@freedi/shared-types';
 import {
-	calculateLevel,
 	getLevelName,
 	getLevelProgress,
 	getNextLevelThreshold,
