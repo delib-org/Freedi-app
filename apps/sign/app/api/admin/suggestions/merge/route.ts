@@ -10,7 +10,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import { Collections } from '@freedi/shared-types';
+import { Collections, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
@@ -83,6 +83,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 				{ status: 500 }
 			);
 		}
+
+		suggestionStatement.sourceApp = SourceApp.SIGN;
 
 		// Mark as AI-generated merge with source IDs
 		const statementWithMerge = {

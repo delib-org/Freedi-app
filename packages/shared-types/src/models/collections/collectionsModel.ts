@@ -73,6 +73,9 @@ export enum Collections {
     coherenceRecords = 'coherenceRecords',
     documentActionHistory = 'documentActionHistory',
 
+    // Admin analytics
+    adminStats = 'adminStats',
+
     // Engagement system
     notificationQueue = 'notificationQueue',
     creditLedger = 'creditLedger',

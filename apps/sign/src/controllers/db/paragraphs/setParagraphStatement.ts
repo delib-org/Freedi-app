@@ -5,7 +5,7 @@
 
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 import { getFirebaseFirestore } from '@/lib/firebase/client';
-import { Collections, createParagraphStatement, ParagraphType, Paragraph } from '@freedi/shared-types';
+import { Collections, createParagraphStatement, ParagraphType, Paragraph, SourceApp } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface CreateParagraphParams {
@@ -56,6 +56,8 @@ export async function createParagraphStatementToDB(params: CreateParagraphParams
     if (!paragraphStatement) {
       throw new Error('Failed to create paragraph statement');
     }
+
+    paragraphStatement.sourceApp = SourceApp.SIGN;
 
     // Write to Firestore
     const statementRef = doc(firestore, Collections.statements, paragraphStatement.statementId);

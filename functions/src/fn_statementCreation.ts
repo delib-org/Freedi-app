@@ -21,6 +21,7 @@ import { embeddingService } from './services/embedding-service';
 import { embeddingCache } from './services/embedding-cache-service';
 import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notifications';
 import { trackStatementCreation } from './engagement/credits/trackEngagement';
+import { onStatementCreatedStats } from './fn_adminStats';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -85,6 +86,13 @@ export async function onStatementCreated(
 		tasks.push(
 			trackStatementCreation(statement).catch((err) =>
 				logger.warn('Engagement tracking failed:', err),
+			),
+		);
+
+		// Task 8: Track admin stats (non-blocking)
+		tasks.push(
+			onStatementCreatedStats(statement).catch((err) =>
+				logger.warn('Admin stats tracking failed:', err),
 			),
 		);
 

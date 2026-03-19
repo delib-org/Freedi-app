@@ -18,6 +18,7 @@ import {
 	EvaluationUI,
 	CutoffBy,
 	Paragraph,
+	SourceApp,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -104,6 +105,7 @@ export function createStatement({
 			creator,
 			...(defaultLanguage && { defaultLanguage: defaultLanguage }),
 			creatorId: creator.uid,
+			sourceApp: SourceApp.MAIN,
 			// Always set membership - either provided, or default to openToAll
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {

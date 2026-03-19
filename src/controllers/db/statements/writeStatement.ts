@@ -14,6 +14,7 @@ import {
 	CutoffBy,
 	Creator,
 	getRandomUID,
+	SourceApp,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -95,6 +96,11 @@ export const setStatementToDB = async ({
 		// Always ensure membership is set - default to openToAll if not provided
 		if (!statement.membership) {
 			statement.membership = { access: Access.openToAll };
+		}
+
+		// Ensure sourceApp is set for all statements written from the main app
+		if (!statement.sourceApp) {
+			statement.sourceApp = SourceApp.MAIN;
 		}
 
 		//statement settings

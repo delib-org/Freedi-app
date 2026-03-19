@@ -6,6 +6,7 @@ import {
   createParagraphStatement,
   Paragraph,
   ParagraphType,
+  SourceApp,
 } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 
@@ -82,6 +83,8 @@ export async function POST(request: NextRequest) {
     if (!paragraphStatement) {
       return NextResponse.json({ error: 'Failed to create paragraph statement' }, { status: 500 });
     }
+
+    paragraphStatement.sourceApp = SourceApp.SIGN;
 
     // Save to Firestore
     await db.collection(Collections.statements).doc(paragraphStatement.statementId).set(paragraphStatement);
