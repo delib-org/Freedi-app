@@ -12,11 +12,20 @@ import {
 	DayBucket,
 	StatementsByTypePerDay,
 	SourceAppPerDay,
+	fetchAdminStats,
+	generateDayKeys,
+	generateMonthKeys,
+	generateYearKeys,
+	computeTrend,
+	statsToBuckets,
 } from '../lib/queries';
 import type { Unsubscribe } from '../lib/queries';
+import type { AdminStatDoc } from '@freedi/shared-types';
 import { Collections } from '@freedi/shared-types';
+import type { PeriodMode } from '../components/PeriodToggle';
 
 interface DashboardState {
+	periodMode: PeriodMode;
 	totalStatements: number;
 	totalUsers: number;
 	totalAdmins: number;
@@ -33,12 +42,19 @@ interface DashboardState {
 	statementsByType: StatementsByTypePerDay[];
 	statementsByApp: SourceAppPerDay[];
 
+	// Trend values for KPI cards
+	statementsTrend: string | null;
+	evaluationsTrend: string | null;
+	votesTrend: string | null;
+	usersTrend: string | null;
+
 	loading: boolean;
 	chartsLoading: boolean;
 	error: string | null;
 }
 
 const state: DashboardState = {
+	periodMode: 'daily',
 	totalStatements: 0,
 	totalUsers: 0,
 	totalAdmins: 0,
@@ -54,6 +70,11 @@ const state: DashboardState = {
 	newUsersPerDay: [],
 	statementsByType: [],
 	statementsByApp: [],
+
+	statementsTrend: null,
+	evaluationsTrend: null,
+	votesTrend: null,
+	usersTrend: null,
 
 	loading: true,
 	chartsLoading: true,
@@ -126,15 +147,7 @@ function processStatements(docs: Record<string, unknown>[]): void {
 	state.chartsLoading = false;
 }
 
-export function subscribeDashboard(): void {
-	state.loading = true;
-	state.chartsLoading = true;
-	state.error = null;
-	m.redraw();
-
-	// Fetch counts once, then periodically (no real-time count API)
-	loadCounts();
-
+function subscribeRealTime(): void {
 	// Real-time: statements
 	unsubs.push(
 		listenToRecent(Collections.statements, 'createdAt', MAX_CHART_DOCS, (snap) => {
@@ -180,8 +193,115 @@ export function subscribeDashboard(): void {
 			m.redraw();
 		})
 	);
+}
 
-	// Real-time: admin subscriptions
+async function loadAggregatedStats(): Promise<void> {
+	state.chartsLoading = true;
+	m.redraw();
+
+	try {
+		const isMonthly = state.periodMode === 'monthly';
+		const periodType = isMonthly ? 'month' as const : 'year' as const;
+		const periodKeys = isMonthly ? generateMonthKeys(12) : generateYearKeys(5);
+
+		const [stmtStats, evalStats, voteStats, subStats, userStats] = await Promise.all([
+			fetchAdminStats('statements', periodType, periodKeys),
+			fetchAdminStats('evaluations', periodType, periodKeys),
+			fetchAdminStats('votes', periodType, periodKeys),
+			fetchAdminStats('statementsSubscribe', periodType, periodKeys),
+			fetchAdminStats('users', periodType, periodKeys),
+		]);
+
+		// Convert to chart buckets
+		state.statementsPerDay = statsToBuckets(stmtStats, periodKeys);
+		state.evaluationsPerDay = statsToBuckets(evalStats, periodKeys);
+		state.votesPerDay = statsToBuckets(voteStats, periodKeys);
+		state.newUsersPerDay = statsToBuckets(subStats, periodKeys);
+
+		// Top statements from statement stats
+		state.topStatementsPerDay = periodKeys.map((key, i) => ({
+			date: key,
+			count: (stmtStats[i] as AdminStatDoc | null)?.topLevel ?? 0,
+		}));
+
+		// By type breakdown from statement stats
+		const allTypes = new Set<string>();
+		for (const stat of stmtStats) {
+			if (stat?.byType) {
+				for (const type of Object.keys(stat.byType)) {
+					allTypes.add(type);
+				}
+			}
+		}
+		state.statementsByType = Array.from(allTypes).map((type) => ({
+			type,
+			data: periodKeys.map((key, i) => ({
+				date: key,
+				count: (stmtStats[i] as AdminStatDoc | null)?.byType?.[type] ?? 0,
+			})),
+		}));
+
+		// By app breakdown from statement stats
+		const allApps = new Set<string>();
+		for (const stat of stmtStats) {
+			if (stat?.byApp) {
+				for (const app of Object.keys(stat.byApp)) {
+					allApps.add(app);
+				}
+			}
+		}
+		state.statementsByApp = Array.from(allApps).map((app) => ({
+			app,
+			data: periodKeys.map((key, i) => ({
+				date: key,
+				count: (stmtStats[i] as AdminStatDoc | null)?.byApp?.[app] ?? 0,
+			})),
+		}));
+
+		// Type breakdown from most recent period
+		const lastStmt = stmtStats.filter((s): s is AdminStatDoc => s !== null).pop();
+		const breakdown = new Map<string, number>();
+		if (lastStmt?.byType) {
+			for (const [type, count] of Object.entries(lastStmt.byType)) {
+				breakdown.set(type, count);
+			}
+		}
+		state.typeBreakdown = breakdown;
+
+		// Trend computation
+		state.statementsTrend = computeTrend(stmtStats);
+		state.evaluationsTrend = computeTrend(evalStats);
+		state.votesTrend = computeTrend(voteStats);
+		state.usersTrend = computeTrend(userStats);
+
+		// Update totals from most recent period's cumulative view
+		// (keep existing counts from loadCounts as they're more accurate)
+
+		state.chartsLoading = false;
+		state.loading = false;
+		m.redraw();
+	} catch (error) {
+		console.error('[Dashboard] Failed to load aggregated stats:', error);
+		state.chartsLoading = false;
+		state.error = 'Failed to load aggregated statistics';
+		m.redraw();
+	}
+}
+
+export function subscribeDashboard(): void {
+	state.loading = true;
+	state.chartsLoading = true;
+	state.error = null;
+	state.statementsTrend = null;
+	state.evaluationsTrend = null;
+	state.votesTrend = null;
+	state.usersTrend = null;
+	m.redraw();
+
+	// Fetch counts once
+	loadCounts();
+
+	// Real-time: admin subscriptions (always active regardless of period)
 	const adminUnsubs = listenToAdminSubscriptions((snap) => {
 		const userIds = new Set<string>();
 		for (const d of snap.docs) {
@@ -192,6 +312,28 @@ export function subscribeDashboard(): void {
 		m.redraw();
 	});
 	unsubs.push(...adminUnsubs);
+
+	if (state.periodMode === 'daily') {
+		subscribeRealTime();
+	} else {
+		loadAggregatedStats();
+	}
+}
+
+/**
+ * Switch between daily/monthly/yearly period modes.
+ * Daily uses real-time listeners; monthly/yearly use pre-computed adminStats.
+ */
+export function setPeriodMode(mode: PeriodMode): void {
+	if (mode === state.periodMode) return;
+
+	// Unsubscribe all current listeners
+	unsubscribeDashboard();
+
+	state.periodMode = mode;
+
+	// Re-subscribe with new mode
+	subscribeDashboard();
 }
 
 async function loadCounts(): Promise<void> {

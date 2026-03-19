@@ -23,7 +23,19 @@ const STROKE_LINE = 2.5;
 const DOT_R = 3;
 const BAR_RX = 2;
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 function formatDateLabel(iso: string): string {
+	// Year only: "2026" → "2026"
+	if (iso.length === 4) return iso;
+
+	// Month: "2026-03" → "Mar 26"
+	if (iso.length === 7) {
+		const [yyyy, mm] = iso.split('-');
+		return `${MONTH_ABBR[parseInt(mm, 10) - 1]} ${yyyy.slice(2)}`;
+	}
+
+	// Day: "2026-03-18" → "18/3"
 	const d = new Date(iso + 'T00:00:00');
 	return `${d.getDate()}/${d.getMonth() + 1}`;
 }

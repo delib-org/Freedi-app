@@ -7,7 +7,8 @@ import { DataTable, ColumnConfig } from '../components/DataTable';
 import { Spinner } from '../components/Spinner';
 import { TimeChart, MultiTimeChart, MultiSeriesItem } from '../components/TimeChart';
 import { statementTypeBadge, sourceAppBadge } from '../components/Badge';
-import { subscribeDashboard, unsubscribeDashboard, getDashboardState } from '../state/dashboard';
+import { PeriodToggle } from '../components/PeriodToggle';
+import { subscribeDashboard, unsubscribeDashboard, getDashboardState, setPeriodMode } from '../state/dashboard';
 
 // ── Color maps ───────────────────────────────────────────────────────
 
@@ -29,6 +30,24 @@ const appColors: Record<string, string> = {
 	flow: '#F59E0B',
 	unknown: '#94A3B8',
 };
+
+// ── Subtitle helpers ─────────────────────────────────────────────────
+
+function getSubtitle(mode: string): string {
+	switch (mode) {
+		case 'monthly': return 'System-wide analytics \u2014 last 12 months';
+		case 'yearly': return 'System-wide analytics \u2014 last 5 years';
+		default: return 'System-wide analytics \u2014 last 30 days';
+	}
+}
+
+function getPeriodLabel(mode: string): string {
+	switch (mode) {
+		case 'monthly': return 'Month';
+		case 'yearly': return 'Year';
+		default: return 'Day';
+	}
+}
 
 // ── Recent statements table config ───────────────────────────────────
 
@@ -85,6 +104,7 @@ export function DashboardView(): m.Component {
 
 		view() {
 			const state = getDashboardState();
+			const periodLabel = getPeriodLabel(state.periodMode);
 
 			if (state.loading) {
 				return m(Layout, m(Spinner));
@@ -92,8 +112,16 @@ export function DashboardView(): m.Component {
 
 			return m(Layout, [
 				m('.page-header', [
-					m('h1.page-header__title', 'Dashboard'),
-					m('p.page-header__subtitle', 'System-wide analytics \u2014 last 30 days'),
+					m('.page-header__row', [
+						m('div', [
+							m('h1.page-header__title', 'Dashboard'),
+							m('p.page-header__subtitle', getSubtitle(state.periodMode)),
+						]),
+						m(PeriodToggle, {
+							value: state.periodMode,
+							onChange: setPeriodMode,
+						}),
+					]),
 				]),
 
 				// KPI Cards
@@ -103,12 +131,14 @@ export function DashboardView(): m.Component {
 						value: state.totalStatements,
 						icon: '\u{1F4DD}',
 						gradient: 'blue',
+						trend: state.statementsTrend || undefined,
 					}),
 					m(KpiCard, {
 						title: 'Users',
 						value: state.totalUsers,
 						icon: '\u{1F465}',
 						gradient: 'teal',
+						trend: state.usersTrend || undefined,
 					}),
 					m(KpiCard, {
 						title: 'Admins',
@@ -121,38 +151,40 @@ export function DashboardView(): m.Component {
 						value: state.totalEvaluations,
 						icon: '\u{2B50}',
 						gradient: 'rose',
+						trend: state.evaluationsTrend || undefined,
 					}),
 					m(KpiCard, {
 						title: 'Votes',
 						value: state.totalVotes,
 						icon: '\u{1F4CA}',
 						gradient: 'amber',
+						trend: state.votesTrend || undefined,
 					}),
 				]),
 
 				// Activity Charts
-				m('.section-title', 'Activity Over Time'),
+				m('.section-title', `Activity Over Time`),
 
 				state.chartsLoading
 					? m(Spinner, { inline: true })
 					: m('div', [
 							m('.grid-3', [
 								m(TimeChart, {
-									title: 'Statements / Day',
+									title: `Statements / ${periodLabel}`,
 									data: state.statementsPerDay,
 									color: '#3B82F6',
 									variant: 'area',
 									height: 180,
 								}),
 								m(TimeChart, {
-									title: 'Evaluations / Day',
+									title: `Evaluations / ${periodLabel}`,
 									data: state.evaluationsPerDay,
 									color: '#F43F5E',
 									variant: 'area',
 									height: 180,
 								}),
 								m(TimeChart, {
-									title: 'Votes / Day',
+									title: `Votes / ${periodLabel}`,
 									data: state.votesPerDay,
 									color: '#F59E0B',
 									variant: 'bar',
@@ -162,14 +194,14 @@ export function DashboardView(): m.Component {
 
 							m('.grid-3', [
 								m(TimeChart, {
-									title: 'New Discussions / Day',
+									title: `New Discussions / ${periodLabel}`,
 									data: state.topStatementsPerDay,
 									color: '#8B5CF6',
 									variant: 'bar',
 									height: 180,
 								}),
 								m(TimeChart, {
-									title: 'New User Subscriptions / Day',
+									title: `New User Subscriptions / ${periodLabel}`,
 									data: state.newUsersPerDay,
 									color: '#14B8A6',
 									variant: 'area',
@@ -191,7 +223,7 @@ export function DashboardView(): m.Component {
 
 							m('.grid-2', [
 								m(MultiTimeChart, {
-									title: 'Statements by Type / Day',
+									title: `Statements by Type / ${periodLabel}`,
 									series: state.statementsByType.map(
 										(s): MultiSeriesItem => ({
 											label: s.type,
@@ -202,7 +234,7 @@ export function DashboardView(): m.Component {
 									height: 200,
 								}),
 								m(MultiTimeChart, {
-									title: 'Statements by App / Day',
+									title: `Statements by App / ${periodLabel}`,
 									series: state.statementsByApp.map(
 										(s): MultiSeriesItem => ({
 											label: s.app,
@@ -215,13 +247,17 @@ export function DashboardView(): m.Component {
 							]),
 						]),
 
-				// Recent Statements
-				m('.section-title', 'Recent Statements'),
-				m(RecentTable, {
-					columns: recentColumns,
-					data: state.recentStatements,
-					emptyMessage: 'No statements yet',
-				}),
+				// Recent Statements (only show in daily mode)
+				state.periodMode === 'daily'
+					? [
+						m('.section-title', 'Recent Statements'),
+						m(RecentTable, {
+							columns: recentColumns,
+							data: state.recentStatements,
+							emptyMessage: 'No statements yet',
+						}),
+					]
+					: null,
 
 				state.error ? m('.data-table__empty', state.error) : null,
 			]);

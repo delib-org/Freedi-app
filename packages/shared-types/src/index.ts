@@ -535,3 +535,7 @@ export type {
   DigestItem,
   DigestContent,
 } from "./models/engagement";
+
+// Analytics models (admin stats)
+export type { AdminStatDoc, StatsPeriodType } from "./models/analytics";
+export { getAdminStatDocId } from "./models/analytics";

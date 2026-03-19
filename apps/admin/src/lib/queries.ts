@@ -13,7 +13,8 @@ import {
 	onSnapshot,
 } from './firebase';
 import type { QueryDocumentSnapshot } from './firebase';
-import { Collections, Statement, StatementType, Role } from '@freedi/shared-types';
+import { Collections, Statement, StatementType, Role, getAdminStatDocId } from '@freedi/shared-types';
+import type { AdminStatDoc, StatsPeriodType } from '@freedi/shared-types';
 import type { Unsubscribe, QuerySnapshot, DocumentData } from 'firebase/firestore';
 
 // ── Time-series helpers ──────────────────────────────────────────────
@@ -329,6 +330,114 @@ export async function fetchVoteCount(): Promise<number> {
 export async function fetchSuggestionCount(): Promise<number> {
 	const snap = await getCountFromServer(collection(db, Collections.suggestions));
 	return snap.data().count;
+}
+
+// ── Admin Stats (pre-computed aggregates) ────────────────────────────
+
+/**
+ * Generate an array of day keys for the last N days (including today).
+ * Each key is in YYYY-MM-DD format.
+ */
+export function generateDayKeys(days: number): string[] {
+	const keys: string[] = [];
+	const now = new Date();
+	for (let i = days - 1; i >= 0; i--) {
+		const d = new Date(now);
+		d.setDate(d.getDate() - i);
+		keys.push(d.toISOString().slice(0, 10));
+	}
+	return keys;
+}
+
+/**
+ * Generate an array of month keys for the last N months (including current).
+ * Each key is in YYYY-MM format.
+ */
+export function generateMonthKeys(months: number): string[] {
+	const keys: string[] = [];
+	const now = new Date();
+	for (let i = months - 1; i >= 0; i--) {
+		const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+		const yyyy = d.getFullYear();
+		const mm = String(d.getMonth() + 1).padStart(2, '0');
+		keys.push(`${yyyy}-${mm}`);
+	}
+	return keys;
+}
+
+/**
+ * Generate an array of year keys for the last N years (including current).
+ * Each key is YYYY format.
+ */
+export function generateYearKeys(years: number): string[] {
+	const keys: string[] = [];
+	const currentYear = new Date().getFullYear();
+	for (let i = years - 1; i >= 0; i--) {
+		keys.push(String(currentYear - i));
+	}
+	return keys;
+}
+
+/**
+ * Fetch pre-computed admin stat docs by their document IDs.
+ * Returns an array aligned with the input periodKeys (null for missing docs).
+ */
+export async function fetchAdminStats(
+	collectionName: string,
+	_periodType: StatsPeriodType,
+	periodKeys: string[],
+): Promise<Array<AdminStatDoc | null>> {
+	const results: Array<AdminStatDoc | null> = [];
+
+	// Firestore getDoc in parallel for all period keys
+	const promises = periodKeys.map(async (key) => {
+		const docId = getAdminStatDocId(collectionName, key);
+		const docSnap = await getDoc(doc(db, Collections.adminStats, docId));
+		return docSnap.exists() ? (docSnap.data() as AdminStatDoc) : null;
+	});
+
+	const resolved = await Promise.all(promises);
+	for (const stat of resolved) {
+		results.push(stat);
+	}
+
+	return results;
+}
+
+/**
+ * Compute percentage change between the last two values in an array of stats.
+ * Returns a formatted string like "+12%" or "-5%" or null if insufficient data.
+ */
+export function computeTrend(stats: Array<AdminStatDoc | null>): string | null {
+	// Find the last two non-null stats
+	const nonNull = stats.filter((s): s is AdminStatDoc => s !== null);
+	if (nonNull.length < 2) return null;
+
+	const current = nonNull[nonNull.length - 1].total;
+	const previous = nonNull[nonNull.length - 2].total;
+
+	if (previous === 0) {
+		return current > 0 ? '+100%' : null;
+	}
+
+	const pctChange = Math.round(((current - previous) / previous) * 100);
+	if (pctChange === 0) return null;
+
+	return pctChange > 0 ? `+${pctChange}%` : `${pctChange}%`;
+}
+
+/**
+ * Convert admin stats into DayBucket array for chart rendering.
+ * Works for any period type (day/month/year).
+ */
+export function statsToBuckets(
+	stats: Array<AdminStatDoc | null>,
+	periodKeys: string[],
+): DayBucket[] {
+	return periodKeys.map((key, i) => ({
+		date: key,
+		count: stats[i]?.total ?? 0,
+	}));
 }
 
 // ── Real-time listener helpers ───────────────────────────────────────
