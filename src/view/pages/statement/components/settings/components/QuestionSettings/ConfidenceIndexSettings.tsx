@@ -54,7 +54,6 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 
 	return (
 		<>
-			<h3 className="title">{t('Sample Representativeness')}</h3>
 			<p className={styles.confidenceIndex__description}>
 				{t('Set target population to enable confidence index')}
 			</p>

@@ -175,16 +175,14 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					currentValue={statement.statementSettings?.evaluationType || evaluationType.range}
 				/>
 
-				<SectionTitle title={t('Question Settings')} />
-
-				<QuestionLinkSection statementId={statement.statementId} />
-
 				<SectionTitle title={t('Mass Consensus Settings')} />
-				<p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+				<p className={styles.sectionDescription}>
 					{t('These settings control the new Mass Consensus app behavior')}
 				</p>
 
-				<h3 className="title">{t('Require original input before viewing others')}</h3>
+				<QuestionLinkSection statementId={statement.statementId} />
+
+				<SectionTitle title={t('Require original input before viewing others')} />
 				<CustomSwitchSmall
 					label={t('Request solution at start')}
 					checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
@@ -198,6 +196,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				/>
 
 				<AnchoredSettings statement={statement} />
+
+				<SectionTitle title={t('Sample Representativeness')} />
 				<ConfidenceIndexSettings statement={statement} />
 			</div>
 		);
