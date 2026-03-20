@@ -1,7 +1,7 @@
 import { FC, useState, useCallback } from 'react';
 import { Statement, DEFAULT_SAMPLING_QUALITY } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { setConfidenceIndexSettings } from '@/controllers/db/evaluation/setEvaluation';
+import { setConfidenceIndexSettings, requestRecalculateIndices } from '@/controllers/db/evaluation/setEvaluation';
 import { logError } from '@/utils/errorHandling';
 import styles from './QuestionSettings.module.scss';
 
@@ -26,6 +26,8 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 		currentN ? String(currentN) : ''
 	);
 	const [samplingQuality, setSamplingQuality] = useState<number>(currentQ);
+	const [isRecalculating, setIsRecalculating] = useState(false);
+	const [recalcResult, setRecalcResult] = useState<string>('');
 
 	const handleTargetPopulationBlur = useCallback(() => {
 		try {
@@ -51,6 +53,22 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 		},
 		[statement.statementId]
 	);
+
+	const handleRecalculate = useCallback(async () => {
+		try {
+			setIsRecalculating(true);
+			setRecalcResult('');
+			const result = await requestRecalculateIndices(statement.statementId);
+			setRecalcResult(
+				`${t('Recalculated indices for')} ${result.optionsUpdated} ${t('options')}`
+			);
+		} catch (error) {
+			logError(error, { operation: 'ConfidenceIndexSettings.handleRecalculate' });
+			setRecalcResult(t('Recalculation failed'));
+		} finally {
+			setIsRecalculating(false);
+		}
+	}, [statement.statementId, t]);
 
 	return (
 		<>
@@ -85,6 +103,25 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 							</option>
 						))}
 					</select>
+				</div>
+
+				<div className={styles.confidenceIndex__field}>
+					<button
+						type="button"
+						className={styles.confidenceIndex__recalcButton}
+						onClick={handleRecalculate}
+						disabled={isRecalculating}
+						data-cy="recalculate-indices-button"
+					>
+						{isRecalculating
+							? t('Recalculating...')
+							: t('Recalculate indices for existing evaluations')}
+					</button>
+					{recalcResult && (
+						<span className={styles.confidenceIndex__resultMessage}>
+							{recalcResult}
+						</span>
+					)}
 				</div>
 			</div>
 		</>
