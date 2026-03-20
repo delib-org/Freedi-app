@@ -140,3 +140,37 @@ export async function setMaxVotesPerUser(
 		throw error;
 	}
 }
+
+export async function setConfidenceIndexSettings(
+	statementId: string,
+	settings: {
+		targetPopulation?: number;
+		samplingQuality?: number;
+	},
+): Promise<void> {
+	try {
+		const statementRef = createStatementRef(statementId);
+
+		const updateData: Record<string, number | null> = {};
+		if (settings.targetPopulation !== undefined) {
+			updateData['evaluationSettings.targetPopulation'] =
+				settings.targetPopulation > 0 ? settings.targetPopulation : null;
+		}
+		if (settings.samplingQuality !== undefined) {
+			updateData['evaluationSettings.samplingQuality'] = settings.samplingQuality;
+		}
+
+		await updateDoc(statementRef, updateData);
+
+		logger.info('Confidence Index Settings Changed', {
+			statementId,
+			...settings,
+		});
+	} catch (error) {
+		logger.error('Error updating confidence index settings', error, {
+			statementId,
+			settings,
+		});
+		throw error;
+	}
+}

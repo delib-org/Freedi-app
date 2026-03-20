@@ -361,6 +361,10 @@ export {
   DEFAULT_MIN_EVALUATORS,
   meetsRemovalThreshold,
   meetsAdditionThreshold,
+  DEFAULT_SAMPLING_QUALITY,
+  CONFIDENCE_CALIBRATION_CONSTANT,
+  calcAgreementIndex,
+  calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 
 // Framing models

@@ -15,6 +15,8 @@ import {
 	StatementSchema,
 	StatementType,
 	StatementEvaluation,
+	calcConfidenceIndex,
+	DEFAULT_SAMPLING_QUALITY,
 } from '@freedi/shared-types';
 import { db } from '../index';
 import { calculateConsensusValid } from '../helpers/consensusValidCalculator';
@@ -244,6 +246,19 @@ async function updateStatementInTransaction(
 			squaredEvaluationDiff,
 		);
 
+		// Calculate Confidence Index if targetPopulation is configured
+		const targetPopulation = statementData.evaluationSettings?.targetPopulation;
+		const samplingQuality = statementData.evaluationSettings?.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
+
+		let confidenceIndex: number | undefined;
+		if (targetPopulation && targetPopulation > 0) {
+			confidenceIndex = calcConfidenceIndex(
+				evaluation.numberOfEvaluators,
+				targetPopulation,
+				samplingQuality,
+			);
+		}
+
 		// Calculate consensusValid by combining consensus with corroborationLevel
 		const consensusValid = calculateConsensusValid(
 			agreement,
@@ -267,6 +282,10 @@ async function updateStatementInTransaction(
 			// Derived values (calculated from sums) - these are fine to overwrite
 			'evaluation.averageEvaluation': evaluation.averageEvaluation,
 			'evaluation.agreement': agreement,
+			'evaluation.agreementIndex': evaluation.agreementIndex,
+			...(confidenceIndex !== undefined && {
+				'evaluation.confidenceIndex': confidenceIndex,
+			}),
 			'evaluation.evaluationRandomNumber': evaluation.evaluationRandomNumber,
 			'evaluation.viewed': evaluation.viewed,
 			proSum: FieldValue.increment(proConDiff.proDiff),

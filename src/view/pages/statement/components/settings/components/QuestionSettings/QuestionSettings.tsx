@@ -27,6 +27,7 @@ import { logError } from '@/utils/errorHandling';
 // Sub-components
 import QuestionLinkSection from './QuestionLinkSection';
 import AnchoredSettings from './AnchoredSettings';
+import ConfidenceIndexSettings from './ConfidenceIndexSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -197,6 +198,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				/>
 
 				<AnchoredSettings statement={statement} />
+				<ConfidenceIndexSettings statement={statement} />
 			</div>
 		);
 	} catch (error: unknown) {
