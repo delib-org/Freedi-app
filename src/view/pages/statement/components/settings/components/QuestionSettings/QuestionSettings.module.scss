@@ -438,4 +438,50 @@
 		color: var(--text-tertiary);
 		margin-top: 0.5rem;
 	}
+
+	.confidenceIndex {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+
+		&__description {
+			font-size: 0.85rem;
+			color: var(--text-secondary);
+			margin-bottom: 1rem;
+		}
+
+		&__field {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			label {
+				font-size: 0.9rem;
+				color: var(--text-secondary);
+				font-weight: 500;
+			}
+
+			input,
+			select {
+				width: 100%;
+				max-width: 300px;
+				padding: 0.5rem;
+				border: 1px solid var(--border-color);
+				border-radius: 4px;
+				font-size: 1rem;
+				background-color: var(--input-background);
+				color: var(--text-primary);
+
+				&:focus {
+					outline: none;
+					border-color: var(--icon-blue);
+				}
+			}
+
+			select {
+				font-size: 0.9rem;
+				cursor: pointer;
+			}
+		}
+	}
 }
