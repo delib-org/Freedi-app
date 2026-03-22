@@ -1,6 +1,7 @@
 'use client';
 
-import { ReactNode, useState, useEffect, useCallback, useMemo } from 'react';
+import { ReactNode, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { SurveyWithQuestions } from '@/types/survey';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { logError } from '@/lib/utils/errorHandling';
@@ -27,6 +28,7 @@ declare global {
     'show-view-progress': CustomEvent<{ show: boolean }>;
     'trigger-add-suggestion': CustomEvent;
     'trigger-view-progress': CustomEvent;
+    'trigger-next-question': CustomEvent;
   }
 }
 
@@ -41,6 +43,8 @@ export default function SurveyQuestionWrapper({
   children,
   mergedSettings,
 }: SurveyQuestionWrapperProps) {
+  const router = useRouter();
+
   // Track completed question indices (stored in localStorage for persistence)
   const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [evaluatedCount, setEvaluatedCount] = useState(0);
@@ -205,6 +209,56 @@ export default function SurveyQuestionWrapper({
       });
     }
   };
+
+  // Listen for "Next Question" event from batch complete banner
+  // Uses refs to avoid stale closures while keeping dependencies minimal
+  const completedIndicesRef = useRef(completedIndices);
+  completedIndicesRef.current = completedIndices;
+
+  useEffect(() => {
+    const handleTriggerNextQuestion = () => {
+      const isLast = currentIndex === totalFlowItems - 1;
+
+      // Mark current question as completed (same logic as handleNavigate('next'))
+      if (!completedIndicesRef.current.includes(currentIndex)) {
+        const newCompleted = [...completedIndicesRef.current, currentIndex];
+        setCompletedIndices(newCompleted);
+
+        const storageKey = `survey_progress_${survey.surveyId}`;
+        localStorage.setItem(storageKey, JSON.stringify({
+          completedIndices: newCompleted,
+          lastUpdated: Date.now(),
+        }));
+
+        fetch(`/api/surveys/${survey.surveyId}/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            currentQuestionIndex: currentIndex + 1,
+            completedQuestionId: questionId,
+            isCompleted: isLast,
+          }),
+        }).catch((error) => {
+          logError(error, {
+            operation: 'SurveyQuestionWrapper.triggerNextQuestion',
+            metadata: { surveyId: survey.surveyId },
+          });
+        });
+      }
+
+      if (isLast) {
+        router.push(`/s/${survey.surveyId}/complete`);
+      } else {
+        router.push(`/s/${survey.surveyId}/q/${currentIndex + 1}`);
+      }
+    };
+
+    window.addEventListener('trigger-next-question', handleTriggerNextQuestion);
+    return () => {
+      window.removeEventListener('trigger-next-question', handleTriggerNextQuestion);
+    };
+  }, [currentIndex, totalFlowItems, survey.surveyId, questionId, router]);
 
   return (
     <div className={styles.questionWrapper}>

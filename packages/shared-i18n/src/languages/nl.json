@@ -2043,5 +2043,18 @@
   "engagement.frequency.weeklyDesc": "Eén overzicht per week",
   "engagement.frequency.muteDesc": "Geen meldingen",
   "Subscriptions": "Abonnementen",
-  "You have no subscriptions yet": "Je hebt nog geen abonnementen"
+  "You have no subscriptions yet": "Je hebt nog geen abonnementen",
+  "batchCompleteTitle": "Goed gedaan!",
+  "batchCompleteSubtitle": "Je hebt {{count}} suggesties beoordeeld!",
+  "goToNextQuestion": "Volgende vraag",
+  "getMoreSuggestions": "Meer suggesties laden",
+  "allOptionsEvaluatedShort": "Je hebt alle beschikbare opties beoordeeld",
+  "optionsRated": "{{evaluated}} van {{total}} beoordeeld",
+  "evaluationProgress": "Beoordelingsvoortgang",
+  "yourEvaluationSummary": "Jouw beoordelingsoverzicht",
+  "sectionCompleted": "Voltooid",
+  "sectionNotCompleted": "Niet voltooid",
+  "optionsEvaluated": "opties beoordeeld",
+  "demographicSections": "Demografische secties",
+  "overallProgress": "Algehele voortgang"
 }

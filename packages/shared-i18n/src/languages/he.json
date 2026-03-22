@@ -2772,5 +2772,18 @@
   "engagement.frequency.weeklyDesc": "סיכום אחד בשבוע",
   "engagement.frequency.muteDesc": "ללא התראות",
   "Subscriptions": "מנויים",
-  "You have no subscriptions yet": "אין לך מנויים עדיין"
+  "You have no subscriptions yet": "אין לך מנויים עדיין",
+  "batchCompleteTitle": "כל הכבוד!",
+  "batchCompleteSubtitle": "הערכת {{count}} הצעות!",
+  "goToNextQuestion": "לשאלה הבאה",
+  "getMoreSuggestions": "קבל עוד הצעות",
+  "allOptionsEvaluatedShort": "הערכת את כל האפשרויות הזמינות",
+  "optionsRated": "{{evaluated}} מתוך {{total}} דורגו",
+  "evaluationProgress": "התקדמות הערכה",
+  "yourEvaluationSummary": "סיכום ההערכה שלך",
+  "sectionCompleted": "הושלם",
+  "sectionNotCompleted": "לא הושלם",
+  "optionsEvaluated": "אפשרויות הוערכו",
+  "demographicSections": "מידע דמוגרפי",
+  "overallProgress": "התקדמות כוללת"
 }
