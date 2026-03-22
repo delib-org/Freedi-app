@@ -56,6 +56,8 @@ export const StatementEvaluationSchema = object({
 	averageEvaluation: optional(number()), //average evaluation
 	sumSquaredEvaluations: optional(number()), //sum of squared evaluations
 	standardDeviation: optional(number()), //standard deviation of evaluations
+	agreementIndex: optional(number()), // 1 - sigma, range [0,1] — how much evaluators align
+	confidenceIndex: optional(number()), // Gamma formula, range [0,1] — how representative the sample is
 	viewed: optional(number()), //number of users who viewed the evaluation
 	evaluationRandomNumber: optional(number()),
 	selectionFunction: optional(enum_(SelectionFunction)), // it is used for selecting in mass consensus random, voting and top suggestions
@@ -73,7 +75,9 @@ export enum EvaluationUI {
 export const StatementEvaluationSettingsSchema = object({
 	maxVotesPerUser: optional(number()),
 	evaluationUI: enum_(EvaluationUI),
-	anchored: optional(object({ //a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options		
+	targetPopulation: optional(number()), // N: target population size for confidence index
+	samplingQuality: optional(number()), // q: sampling quality (0-1], default 0.3
+	anchored: optional(object({ //a two-phase process where users propose options, and evaluations always include admin-selected anchored options alongside randomly chosen user options
 		anchored:optional(boolean()), //if true, some statements are anchored to be represented in the evaluation.
 		numberOfAnchoredStatements: optional(number()), //the number of anchored statements in the evaluation (while the others are not anchored)
 		differentiateBetweenAnchoredAndNot: optional(boolean()), //if true, the evaluation will differentiate between anchored and not anchored statements

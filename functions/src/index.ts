@@ -88,6 +88,7 @@ import {
 } from './fn_clusterAggregation';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
+import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
 import { onStatementCreated } from './fn_statementCreation';
@@ -386,6 +387,7 @@ exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);

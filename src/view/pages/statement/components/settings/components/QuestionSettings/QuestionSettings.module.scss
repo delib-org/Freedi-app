@@ -433,9 +433,90 @@
 		}
 	}
 
+	.sectionDescription {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		margin-bottom: 1rem;
+	}
+
 	.helperText {
 		font-size: 0.75rem;
 		color: var(--text-tertiary);
 		margin-top: 0.5rem;
+	}
+
+	.confidenceIndex {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+
+		&__recalcButton {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 1rem;
+			background-color: var(--btn-primary);
+			color: white;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 0.85rem;
+			font-weight: 500;
+			transition: background-color 0.2s ease;
+
+			&:hover:not(:disabled) {
+				opacity: 0.9;
+			}
+
+			&:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+		}
+
+		&__resultMessage {
+			font-size: 0.8rem;
+			color: var(--text-secondary);
+		}
+
+		&__description {
+			font-size: 0.85rem;
+			color: var(--text-secondary);
+			margin-bottom: 1rem;
+		}
+
+		&__field {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			label {
+				font-size: 0.9rem;
+				color: var(--text-secondary);
+				font-weight: 500;
+			}
+
+			input,
+			select {
+				width: 100%;
+				max-width: 300px;
+				padding: 0.5rem;
+				border: 1px solid var(--border-color);
+				border-radius: 4px;
+				font-size: 1rem;
+				background-color: var(--input-background);
+				color: var(--text-primary);
+
+				&:focus {
+					outline: none;
+					border-color: var(--icon-blue);
+				}
+			}
+
+			select {
+				font-size: 0.9rem;
+				cursor: pointer;
+			}
+		}
 	}
 }

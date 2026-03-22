@@ -133,6 +133,80 @@ export function calcBinaryConsensus(
 }
 
 // ============================================================================
+// AGREEMENT INDEX & CONFIDENCE INDEX
+// ============================================================================
+
+/** Default sampling quality for self-selected (open) participation */
+export const DEFAULT_SAMPLING_QUALITY = 0.3;
+
+/** Calibration constant for confidence index formula */
+export const CONFIDENCE_CALIBRATION_CONSTANT = 5;
+
+/**
+ * Calculates the Agreement Index: how much evaluators align (0-1).
+ *
+ * Formula: A = 1 - σ
+ * where σ = sqrt(max(0, (Σxi²/n) - mean²))
+ *
+ * This metric is independent of sample size — it only measures
+ * how similar the evaluations are to each other.
+ *
+ * @param sumEvaluations - Sum of all evaluation values (Σxi)
+ * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
+ * @param numberOfEvaluators - Number of evaluators (n)
+ * @returns Agreement index in range [0, 1]. 1 = perfect agreement, 0 = max disagreement
+ */
+export function calcAgreementIndex(
+  sumEvaluations: number,
+  sumSquaredEvaluations: number,
+  numberOfEvaluators: number,
+): number {
+  if (numberOfEvaluators <= 0) return 0;
+
+  const mean = sumEvaluations / numberOfEvaluators;
+  const variance = Math.max(0, (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean));
+  const sigma = Math.sqrt(variance);
+
+  return Math.max(0, Math.min(1, 1 - sigma));
+}
+
+/**
+ * Calculates the Confidence Index: how representative the sample is (0-1).
+ *
+ * Formula: Γ = (n·q) / (n·q + c·ln(N)·(N-n)/(N-1))
+ *
+ * Where:
+ * - n = number of evaluators (sample size)
+ * - N = target population size
+ * - q = sampling quality (0-1], how representative the sampling method is
+ * - c = calibration constant (default 5)
+ *
+ * @param numberOfEvaluators - n: number of evaluators
+ * @param targetPopulation - N: target population size
+ * @param samplingQuality - q: sampling quality (0-1]
+ * @param calibrationConstant - c: calibration constant (default 5)
+ * @returns Confidence index in range [0, 1]. 1 = complete census, 0 = no data
+ */
+export function calcConfidenceIndex(
+  numberOfEvaluators: number,
+  targetPopulation: number,
+  samplingQuality: number,
+  calibrationConstant: number = CONFIDENCE_CALIBRATION_CONSTANT,
+): number {
+  if (numberOfEvaluators <= 0) return 0;
+  if (targetPopulation <= 1) return 1;
+  if (numberOfEvaluators >= targetPopulation) return 1;
+
+  const nq = numberOfEvaluators * samplingQuality;
+  const lnN = Math.log(targetPopulation);
+  const denominator = nq + calibrationConstant * lnN * (targetPopulation - numberOfEvaluators) / (targetPopulation - 1);
+
+  if (denominator <= 0) return 0;
+
+  return Math.max(0, Math.min(1, nq / denominator));
+}
+
+// ============================================================================
 // CONSENSUS THRESHOLD HELPERS
 // ============================================================================
 
