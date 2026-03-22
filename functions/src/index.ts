@@ -827,7 +827,8 @@ export const refreshUserStats = onSchedule(
 	{
 		schedule: '10 0 * * *',
 		timeZone: 'UTC',
-		...functionConfig,
+		timeoutSeconds: 300,
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await performUserStatsRefresh();
