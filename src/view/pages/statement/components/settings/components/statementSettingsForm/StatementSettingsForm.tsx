@@ -13,6 +13,7 @@ import {
 	Bell,
 	Network,
 	BarChart3,
+	ShieldAlert,
 } from 'lucide-react';
 
 // Custom components
@@ -43,6 +44,7 @@ import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
 import { ClusteringAdmin } from '../ClusteringAdmin';
 import { OptionRooms } from '../optionRooms';
+import ModerationLog from '../moderationLog/ModerationLog';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -246,6 +248,18 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 								<ClusteringAdmin statement={statement} />
 							</SettingsSection>
 						)}
+
+						{/* Content Moderation Log Section */}
+						<SettingsSection
+							title={t('Content Moderation')}
+							description={t('View content rejected by AI moderation')}
+							icon={ShieldAlert}
+							priority="low"
+							defaultExpanded={false}
+							tooltip={t('Track content that was flagged and rejected by the AI content moderator')}
+						>
+							<ModerationLog statement={statement} />
+						</SettingsSection>
 
 						{/* Participants Data Section */}
 						<SettingsSection

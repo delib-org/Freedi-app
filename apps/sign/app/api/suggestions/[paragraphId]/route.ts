@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
-import { Collections, StatementType, Statement } from '@freedi/shared-types';
+import { Collections, StatementType, Statement, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
 import { SUGGESTIONS, QUERY_LIMITS } from '@/constants/common';
@@ -193,6 +193,8 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    suggestionStatement.sourceApp = SourceApp.SIGN;
 
     // Write to statements collection (new system)
     await db.collection(Collections.statements).doc(suggestionStatement.statementId).set(suggestionStatement);

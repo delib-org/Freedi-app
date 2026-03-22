@@ -12,6 +12,7 @@ import {
   createStatementObject,
   getRandomUID,
   evaluationType,
+  SourceApp,
 } from '@freedi/shared-types';
 import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
 import { verifyToken, extractBearerToken, isAdminOfStatement } from '@/lib/auth/verifyAdmin';
@@ -152,6 +153,7 @@ export async function POST(request: NextRequest) {
         evaluationType: statementEvalType, // For main app evaluation component routing
         enhancedEvaluation: statementEvalType === evaluationType.range, // Backward compatibility
       },
+      sourceApp: SourceApp.MASS_CONSENSUS,
     });
 
     if (!questionStatement) {
@@ -239,6 +241,7 @@ export async function POST(request: NextRequest) {
           photoURL,
           isAnonymous: false,
         },
+        sourceApp: SourceApp.MASS_CONSENSUS,
       });
 
       if (solution) {

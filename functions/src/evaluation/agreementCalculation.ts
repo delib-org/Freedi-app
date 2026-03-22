@@ -69,6 +69,7 @@
 import { logger } from 'firebase-functions/v1';
 import { number, parse } from 'valibot';
 import type { Statement, StatementEvaluation } from '@freedi/shared-types';
+import { calcAgreementIndex } from '@freedi/shared-types';
 import type { ActionTypes, CalcDiff } from './evaluationTypes';
 
 /**
@@ -252,6 +253,13 @@ export function calculateEvaluation(
 		evaluation.numberOfEvaluators,
 	);
 	evaluation.agreement = agreement;
+
+	// Calculate Agreement Index (1 - sigma)
+	evaluation.agreementIndex = calcAgreementIndex(
+		evaluation.sumEvaluations,
+		evaluation.sumSquaredEvaluations || 0,
+		evaluation.numberOfEvaluators,
+	);
 
 	return { agreement, evaluation };
 }

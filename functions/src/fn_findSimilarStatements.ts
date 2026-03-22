@@ -20,6 +20,7 @@ import {
 import { vectorSearchService } from './services/vector-search-service';
 import { embeddingCache } from './services/embedding-cache-service';
 import { SimilaritySearchMethod } from '@freedi/shared-types';
+import { logModerationRejection } from './services/moderation-log-service';
 
 /**
  * Optimized Cloud Function to find or generate similar statements.
@@ -48,9 +49,23 @@ export async function findSimilarStatements(request: Request, response: Response
 
 		if (contentCheck.isInappropriate) {
 			logger.warn('Inappropriate content detected', { creatorId });
+
+			// Log rejection to Firestore (non-blocking)
+			logModerationRejection({
+				originalText: userInput,
+				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				category: contentCheck.category || 'other',
+				userId: creatorId,
+				parentId: statementId,
+				topParentId: statementId,
+				blockedBySafetyFilter: contentCheck.error?.includes('safety filters') || false,
+			}).catch(() => { /* non-blocking */ });
+
 			response.status(400).send({
 				ok: false,
 				error: 'Input contains inappropriate content',
+				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				category: contentCheck.category || 'other',
 			});
 
 			return;

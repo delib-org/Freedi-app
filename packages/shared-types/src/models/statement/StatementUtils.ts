@@ -6,6 +6,7 @@ import { parse, safeParse } from 'valibot';
 import { User } from '../user/User';
 import { Paragraph } from '../paragraph/paragraphModel';
 import { StatementSettings } from './StatementSettings';
+import { SourceApp } from '../engagement/SourceApp';
 
 /**
  * Default statement settings used when creating new statements
@@ -55,6 +56,8 @@ export interface CreateStatementParams {
 	color?: string;
 	/** Optional reasoning/explanation for the statement */
 	reasoning?: string;
+	/** Which app created this statement */
+	sourceApp?: SourceApp;
 }
 
 /**
@@ -135,6 +138,7 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			// Optional fields without defaults (only include if provided)
 			...(params.color && { color: params.color }),
 			...(params.reasoning && { reasoning: params.reasoning }),
+			...(params.sourceApp && { sourceApp: params.sourceApp }),
 		};
 
 		// Validate against schema

@@ -145,6 +145,44 @@ export default function ResultCard({ statement, isUserStatement, totalParticipan
                 <span className={styles.badge__valueText}>{againstCount.toFixed(1)}</span>
               </div>
             </div>
+
+            {/* Agreement Index badge */}
+            {statement.evaluation?.agreementIndex !== undefined && (
+              <div className={clsx(styles.badge, styles['badge--participants'])}>
+                <span className={styles.badge__label}>{t('Agreement Index')}</span>
+                <span className={styles.badge__value}>
+                  <span
+                    className={styles.badge__background}
+                    style={{
+                      backgroundColor: 'var(--option)',
+                      opacity: Math.max(0.3, statement.evaluation.agreementIndex),
+                    }}
+                  />
+                  <span className={styles.badge__number}>
+                    {Math.round(statement.evaluation.agreementIndex * 100)}%
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Confidence Index badge */}
+            {statement.evaluation?.confidenceIndex !== undefined && (
+              <div className={clsx(styles.badge, styles['badge--participants'])}>
+                <span className={styles.badge__label}>{t('Confidence Index')}</span>
+                <span className={styles.badge__value}>
+                  <span
+                    className={styles.badge__background}
+                    style={{
+                      backgroundColor: 'var(--option)',
+                      opacity: Math.max(0.3, statement.evaluation.confidenceIndex),
+                    }}
+                  />
+                  <span className={styles.badge__number}>
+                    {Math.round(statement.evaluation.confidenceIndex * 100)}%
+                  </span>
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>

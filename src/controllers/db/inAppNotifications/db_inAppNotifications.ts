@@ -126,10 +126,17 @@ export async function clearInAppNotifications(statementId: string) {
 			}),
 		);
 		await Promise.all(deletePromises);
-	} catch (error) {
+	} catch (error: unknown) {
+		// Permission errors are expected during sign-out when Firebase
+		// revokes the auth token before React cleanup unsubscribes/unmounts
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (errorMessage.includes('Missing or insufficient permissions')) {
+			return;
+		}
+
 		logError(new Error('In clearInAppNotifications'), {
-			operation: 'inAppNotifications.db_inAppNotifications.snapshot',
-			metadata: { detail: error.message },
+			operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications',
+			metadata: { detail: errorMessage },
 		});
 	}
 }

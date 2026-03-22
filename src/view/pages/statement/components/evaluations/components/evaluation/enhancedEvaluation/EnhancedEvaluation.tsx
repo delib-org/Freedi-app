@@ -110,7 +110,15 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			>
 				{showEvaluation && totalEvaluators && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<Tooltip
-						content={`${t('Number of evaluators for this option / all evaluators')}. ${t('Consensus')}: ${consensus}`}
+						content={`${t('Number of evaluators for this option / all evaluators')}. ${t('Consensus')}: ${consensus}${
+						statement.evaluation?.agreementIndex !== undefined
+							? `. ${t('Agreement Index')}: ${Math.round(statement.evaluation.agreementIndex * 100)}%`
+							: ''
+					}${
+						statement.evaluation?.confidenceIndex !== undefined
+							? `. ${t('Confidence Index')}: ${Math.round(statement.evaluation.confidenceIndex * 100)}%`
+							: ''
+					}`}
 						position="bottom"
 					>
 						<span className={styles['total-evaluators']}>

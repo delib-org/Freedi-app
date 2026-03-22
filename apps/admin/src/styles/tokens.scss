@@ -1,0 +1,81 @@
+:root {
+  // Sidebar
+  --sidebar-bg: #1E1B4B;
+  --sidebar-text: #C7D2FE;
+  --sidebar-text-active: #FFFFFF;
+  --sidebar-hover: #312E81;
+  --sidebar-accent: #818CF8;
+  --sidebar-width: 240px;
+
+  // Page
+  --page-bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --border-color: #E2E8F0;
+  --border-radius: 12px;
+
+  // Typography
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  // KPI gradients
+  --kpi-blue: linear-gradient(135deg, #3B82F6, #1D4ED8);
+  --kpi-teal: linear-gradient(135deg, #14B8A6, #0D9488);
+  --kpi-violet: linear-gradient(135deg, #8B5CF6, #6D28D9);
+  --kpi-rose: linear-gradient(135deg, #F43F5E, #E11D48);
+  --kpi-amber: linear-gradient(135deg, #F59E0B, #D97706);
+
+  // Chart colors
+  --chart-emerald: #10B981;
+  --chart-sky: #0EA5E9;
+  --chart-orange: #F97316;
+  --chart-pink: #EC4899;
+  --chart-cyan: #06B6D4;
+  --chart-indigo: #6366F1;
+  --chart-lime: #84CC16;
+  --chart-red: #EF4444;
+
+  // Badge colors
+  --badge-blue-bg: #DBEAFE;
+  --badge-blue-text: #1E40AF;
+  --badge-teal-bg: #CCFBF1;
+  --badge-teal-text: #0F766E;
+  --badge-violet-bg: #EDE9FE;
+  --badge-violet-text: #5B21B6;
+  --badge-rose-bg: #FFE4E6;
+  --badge-rose-text: #BE123C;
+  --badge-amber-bg: #FEF3C7;
+  --badge-amber-text: #92400E;
+  --badge-emerald-bg: #D1FAE5;
+  --badge-emerald-text: #065F46;
+  --badge-gray-bg: #F1F5F9;
+  --badge-gray-text: #475569;
+
+  // Spacing
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  // Shadows
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --page-bg: #0F172A;
+    --card-bg: #1E293B;
+    --border-color: #334155;
+    --text-primary: #F1F5F9;
+    --text-secondary: #CBD5E1;
+    --text-muted: #64748B;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  }
+}

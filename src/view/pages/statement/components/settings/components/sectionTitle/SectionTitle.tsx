@@ -8,10 +8,10 @@ interface SectionTitleProps {
 
 const SectionTitle: FC<SectionTitleProps> = ({ title }) => {
 	return (
-		<h2 className={styles.sectionTitle}>
+		<h3 className={styles.sectionTitle}>
 			<LightCogIcon />
 			{title}
-		</h2>
+		</h3>
 	);
 };
 
