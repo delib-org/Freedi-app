@@ -413,12 +413,21 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           <p className="swipe-interface__completion-message">
             {t("You've evaluated all proposals.")}
           </p>
-          <button
-            className="swipe-interface__completion-button"
-            onClick={() => setShowProposalModal(true)}
-          >
-            {t('Submit Your Own Idea')}
-          </button>
+          {mergedSettings ? (
+            <button
+              className="swipe-interface__completion-button swipe-interface__completion-button--primary"
+              onClick={() => window.dispatchEvent(new CustomEvent('trigger-next-question'))}
+            >
+              {t('goToNextQuestion')}
+            </button>
+          ) : (
+            <button
+              className="swipe-interface__completion-button"
+              onClick={() => setShowProposalModal(true)}
+            >
+              {t('Submit Your Own Idea')}
+            </button>
+          )}
         </div>
       )}
 

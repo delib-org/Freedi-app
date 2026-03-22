@@ -2067,5 +2067,18 @@
   "engagement.frequency.weeklyDesc": "ملخص واحد أسبوعياً",
   "engagement.frequency.muteDesc": "بدون إشعارات",
   "Subscriptions": "الاشتراكات",
-  "You have no subscriptions yet": "ليس لديك اشتراكات بعد"
+  "You have no subscriptions yet": "ليس لديك اشتراكات بعد",
+  "batchCompleteTitle": "أحسنت!",
+  "batchCompleteSubtitle": "قيّمت {{count}} اقتراحات!",
+  "goToNextQuestion": "السؤال التالي",
+  "getMoreSuggestions": "احصل على المزيد من الاقتراحات",
+  "allOptionsEvaluatedShort": "لقد قيّمت جميع الخيارات المتاحة",
+  "optionsRated": "{{evaluated}} من {{total}} تم تقييمها",
+  "evaluationProgress": "تقدم التقييم",
+  "yourEvaluationSummary": "ملخص تقييمك",
+  "sectionCompleted": "مكتمل",
+  "sectionNotCompleted": "غير مكتمل",
+  "optionsEvaluated": "خيارات تم تقييمها",
+  "demographicSections": "الأقسام الديموغرافية",
+  "overallProgress": "التقدم العام"
 }

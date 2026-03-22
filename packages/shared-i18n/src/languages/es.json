@@ -2043,5 +2043,18 @@
   "engagement.frequency.weeklyDesc": "Un resumen por semana",
   "engagement.frequency.muteDesc": "Sin notificaciones",
   "Subscriptions": "Suscripciones",
-  "You have no subscriptions yet": "Aún no tienes suscripciones"
+  "You have no subscriptions yet": "Aún no tienes suscripciones",
+  "batchCompleteTitle": "¡Buen trabajo!",
+  "batchCompleteSubtitle": "¡Evaluaste {{count}} sugerencias!",
+  "goToNextQuestion": "Siguiente pregunta",
+  "getMoreSuggestions": "Obtener más sugerencias",
+  "allOptionsEvaluatedShort": "Has evaluado todas las opciones disponibles",
+  "optionsRated": "{{evaluated}} de {{total}} evaluadas",
+  "evaluationProgress": "Progreso de evaluación",
+  "yourEvaluationSummary": "Resumen de tu evaluación",
+  "sectionCompleted": "Completado",
+  "sectionNotCompleted": "No completado",
+  "optionsEvaluated": "opciones evaluadas",
+  "demographicSections": "Secciones demográficas",
+  "overallProgress": "Progreso general"
 }

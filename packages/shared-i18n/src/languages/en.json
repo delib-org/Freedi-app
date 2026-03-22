@@ -2785,5 +2785,18 @@
   "engagement.frequency.weeklyDesc": "One summary per week",
   "engagement.frequency.muteDesc": "No notifications",
   "Subscriptions": "Subscriptions",
-  "You have no subscriptions yet": "You have no subscriptions yet"
+  "You have no subscriptions yet": "You have no subscriptions yet",
+  "batchCompleteTitle": "Great job!",
+  "batchCompleteSubtitle": "You evaluated {{count}} suggestions!",
+  "goToNextQuestion": "Next Question",
+  "getMoreSuggestions": "Get More Suggestions",
+  "allOptionsEvaluatedShort": "You've evaluated all available options",
+  "optionsRated": "{{evaluated}} of {{total}} rated",
+  "evaluationProgress": "Evaluation progress",
+  "yourEvaluationSummary": "Your Evaluation Summary",
+  "sectionCompleted": "Completed",
+  "sectionNotCompleted": "Not completed",
+  "optionsEvaluated": "options evaluated",
+  "demographicSections": "Demographic Sections",
+  "overallProgress": "Overall Progress"
 }

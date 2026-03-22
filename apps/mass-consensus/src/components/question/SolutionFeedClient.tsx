@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
@@ -8,6 +8,7 @@ import { ToastProvider } from '@/components/shared/Toast';
 import SolutionCard from './SolutionCard';
 import SocialFeed from './SocialFeed';
 import SolutionPromptModal from './SolutionPromptModal';
+import EvaluationProgress from './EvaluationProgress';
 import CompletionScreen from '@/components/completion/CompletionScreen';
 import styles from './SolutionFeed.module.css';
 import { useTranslation } from '@freedi/shared-i18n/next';
@@ -51,8 +52,11 @@ export default function SolutionFeedClient({
   const [hasSubmittedSolution, setHasSubmittedSolution] = useState(false);
   const [userSolutionCount, setUserSolutionCount] = useState(0);
   const [participantCount, setParticipantCount] = useState(0);
+  const [showBatchCompleteBanner, setShowBatchCompleteBanner] = useState(false);
   const hasTrackedPageView = useRef(false);
   const userIdRef = useRef<string>('');
+  const bannerShownForBatchRef = useRef(0);
+  const bannerRef = useRef<HTMLDivElement>(null);
 
   const questionId = question.statementId;
   const totalOptionsCount = question.numberOfOptions || 0;
@@ -301,6 +305,28 @@ export default function SolutionFeedClient({
     }
   }, [askAfterEvaluation, hasShownAfterEvalPrompt, minEvaluationsForPrompt, allEvaluatedIds.size]);
 
+  // Show batch complete banner when all solutions in current batch are evaluated (survey context)
+  useEffect(() => {
+    if (
+      inSurveyContext &&
+      allBatchEvaluated &&
+      bannerShownForBatchRef.current !== batchCount
+    ) {
+      bannerShownForBatchRef.current = batchCount;
+      setShowBatchCompleteBanner(true);
+
+      // Auto-scroll banner into view
+      setTimeout(() => {
+        bannerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [inSurveyContext, allBatchEvaluated, batchCount]);
+
+  // Handle "Next Question" from banner
+  const handleNextQuestion = useCallback(() => {
+    window.dispatchEvent(new CustomEvent('trigger-next-question'));
+  }, []);
+
   /**
    * Handle evaluation from SolutionCard
    */
@@ -406,6 +432,7 @@ export default function SolutionFeedClient({
       if (data.solutions && data.solutions.length > 0) {
         setSolutions(data.solutions);
         setEvaluationScores(new Map());
+        setShowBatchCompleteBanner(false);
         setBatchCount((prev) => prev + 1);
 
         if (!data.hasMore) {
@@ -516,6 +543,12 @@ export default function SolutionFeedClient({
               <p>{t('rateInstructions')}</p>
             </div>
 
+            {/* Inline evaluation progress */}
+            <EvaluationProgress
+              evaluatedCount={evaluatedInBatch}
+              totalCount={solutions.length}
+            />
+
             {/* Solution cards list */}
             <div className={styles.solutions}>
               {solutions.map((solution) => (
@@ -528,40 +561,73 @@ export default function SolutionFeedClient({
               ))}
             </div>
 
-            {/* Batch controls */}
-            <div className={styles.batchControls}>
-              {allOptionsEvaluated ? (
-                <>
-                  <p className={styles.hint}>
-                    {tWithParams('You have evaluated all {{count}} available options', { count: totalOptionsCount })}
+            {/* Survey context: only show banner after all options are rated */}
+            {inSurveyContext ? (
+              showBatchCompleteBanner && (
+                <div className={styles.batchCompleteBanner} ref={bannerRef}>
+                  <span className={styles.bannerEmoji}>🎉</span>
+                  <h3 className={styles.bannerTitle}>{t('batchCompleteTitle')}</h3>
+                  <p className={styles.bannerSubtitle}>
+                    {tWithParams('batchCompleteSubtitle', { count: evaluatedInBatch })}
                   </p>
                   <button
-                    className={styles.batchButton}
-                    onClick={handleViewProgress}
+                    className={styles.bannerPrimaryButton}
+                    onClick={handleNextQuestion}
                   >
-                    {t('View Results')}
+                    {t('goToNextQuestion')}
                   </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    className={`${styles.batchButton} ${!allBatchEvaluated ? styles.disabled : ''}`}
-                    onClick={handleGetNewBatch}
-                    disabled={isLoadingBatch || !allBatchEvaluated}
-                  >
-                    {isLoadingBatch
-                      ? t('Loading...')
-                      : `${t('Get New Suggestions')} (${evaluatedInBatch}/${solutions.length} ${t('evaluated')})`
-                    }
-                  </button>
-                  {!allBatchEvaluated && (
-                    <p className={styles.hint}>
-                      {t('Rate all suggestions above to get new ones')}
-                    </p>
+                  {allOptionsEvaluated ? (
+                    <p className={styles.hint}>{t('allOptionsEvaluatedShort')}</p>
+                  ) : (
+                    <button
+                      className={styles.bannerSecondaryLink}
+                      onClick={() => {
+                        setShowBatchCompleteBanner(false);
+                        handleGetNewBatch();
+                      }}
+                      disabled={isLoadingBatch}
+                    >
+                      {t('getMoreSuggestions')}
+                    </button>
                   )}
-                </>
-              )}
-            </div>
+                </div>
+              )
+            ) : (
+              /* Non-survey: show batch controls as before */
+              <div className={styles.batchControls}>
+                {allOptionsEvaluated ? (
+                  <>
+                    <p className={styles.hint}>
+                      {tWithParams('You have evaluated all {{count}} available options', { count: totalOptionsCount })}
+                    </p>
+                    <button
+                      className={styles.batchButton}
+                      onClick={handleViewProgress}
+                    >
+                      {t('View Results')}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      className={`${styles.batchButton} ${!allBatchEvaluated ? styles.disabled : ''}`}
+                      onClick={handleGetNewBatch}
+                      disabled={isLoadingBatch || !allBatchEvaluated}
+                    >
+                      {isLoadingBatch
+                        ? t('Loading...')
+                        : `${t('Get New Suggestions')} (${evaluatedInBatch}/${solutions.length} ${t('evaluated')})`
+                      }
+                    </button>
+                    {!allBatchEvaluated && (
+                      <p className={styles.hint}>
+                        {t('Rate all suggestions above to get new ones')}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
           </>
         )}
 
