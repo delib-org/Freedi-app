@@ -80,6 +80,7 @@ const ChoseBySettings: FC<StatementSettingsProps> = ({ statement: _statement }) 
 
 	if (!statement) return null;
 	const { resultsSettings } = statement;
+	if (!resultsSettings) return null;
 
 	function handleEvaluationChange(e: ChangeEvent<HTMLInputElement>) {
 		if (!e.target.id) return;
