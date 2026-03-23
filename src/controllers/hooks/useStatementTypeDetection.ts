@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useSelector } from 'react-redux';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { detectStatementTypeWithTimeout } from '@/services/statementTypeDetection';
 import { logError } from '@/utils/errorHandling';
 import { TIME } from '@/constants/common';
+import { statementSelectorById } from '@/redux/statements/statementsSlice';
 
 const STORAGE_KEY = 'freedi_dismissed_type_suggestions';
 const MAX_DISMISSED_ENTRIES = 200;
@@ -61,6 +63,8 @@ export function useStatementTypeDetection(
 	statement: Statement,
 	isMe: boolean,
 ): TypeDetectionState & { dismiss: () => void } {
+	const parentStatement = useSelector(statementSelectorById(statement.parentId));
+
 	const [state, setState] = useState<TypeDetectionState>({
 		suggestedType: null,
 		isVisible: false,
@@ -99,8 +103,13 @@ export function useStatementTypeDetection(
 
 				// Only suggest if detected as question/option with high confidence
 				if (result.detectedType !== 'statement' && result.confidence >= MIN_CONFIDENCE) {
-					const suggestedType =
+					let suggestedType =
 						result.detectedType === 'question' ? StatementType.question : StatementType.option;
+
+					// If parent is a title question, flip detected questions to options
+					if (parentStatement?.isTitleQuestion && suggestedType === StatementType.question) {
+						suggestedType = StatementType.option;
+					}
 
 					setState({ suggestedType, isVisible: true });
 				}

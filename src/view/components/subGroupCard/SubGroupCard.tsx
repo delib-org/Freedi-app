@@ -1,11 +1,12 @@
 import { FC } from 'react';
 import styles from './SubGroupCard.module.scss';
-import { Link, NavLink } from 'react-router';
+import { Link, NavLink, useNavigate } from 'react-router';
 import useSubGroupCard from './SubGroupCardVM';
 import { EvaluationUI, Statement, StatementType } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
 import { logError } from '@/utils/errorHandling';
+import { ArrowUpRight } from 'lucide-react';
 
 interface Props {
 	statement: Statement;
@@ -13,6 +14,7 @@ interface Props {
 
 const SubGroupCard: FC<Props> = ({ statement }) => {
 	const { t } = useTranslation();
+	const navigate = useNavigate();
 	const { Icon, backgroundColor, text } = useSubGroupCard(statement);
 
 	try {
@@ -64,6 +66,15 @@ const SubGroupCard: FC<Props> = ({ statement }) => {
 							</ul>
 						</div>
 					)
+				)}
+				{statement.statementType === StatementType.question && (
+					<button
+						className={styles.diveIn}
+						onClick={() => navigate(`/statement/${statement.statementId}`)}
+					>
+						<ArrowUpRight size={16} />
+						{t('Drill down')}
+					</button>
 				)}
 			</div>
 		);

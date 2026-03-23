@@ -41,8 +41,15 @@ export async function createTitleDiscussion({
 		await setDoc(discussionRef, {
 			...titleDiscussion,
 			...(scope ? { brief: scope } : {}),
+			isTitleQuestion: true,
 			questionSettings: {
 				questionType: QuestionType.simple,
+			},
+			statementSettings: {
+				subScreens: ['options'],
+				enableAddEvaluationOption: true,
+				showEvaluation: true,
+				enhancedEvaluation: true,
 			},
 		});
 

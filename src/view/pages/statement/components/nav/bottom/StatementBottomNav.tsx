@@ -13,6 +13,7 @@ import XmenuIcon from '@/assets/icons/x-icon.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
 import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
+import QuestionIcon from '@/assets/icons/navQuestionsIcon.svg?react';
 import { Users } from 'lucide-react';
 
 import useStatementColor from '@/controllers/hooks/useStatementColor';
@@ -130,6 +131,20 @@ const StatementBottomNav: FC<Props> = () => {
 			setNewStatementModal({
 				parentStatement: statement,
 				newStatement: { statementType: defaultType },
+				showModal: true,
+				isLoading: false,
+				error: null,
+			}),
+		);
+	}
+
+	function handleCreateSimpleQuestion() {
+		if (!statement) return;
+		setShowAddMenu(false);
+		dispatch(
+			setNewStatementModal({
+				parentStatement: statement,
+				newStatement: { statementType: StatementType.question },
 				showModal: true,
 				isLoading: false,
 				error: null,
@@ -259,14 +274,28 @@ const StatementBottomNav: FC<Props> = () => {
 								<>
 									<button className={styles.addMenuOverlay} onClick={() => setShowAddMenu(false)} />
 									{activeTab !== 'options' && (
-										<button
-											className={styles.compoundButton}
-											onClick={handleCreateCompoundQuestion}
-											aria-label={t('Compound Question')}
-											title={t('Compound Question')}
-										>
-											<CompoundIcon style={{ color: '#fff' }} />
-										</button>
+										<div className={styles.subFabMenu}>
+											{activeTab === 'questions' && (
+												<button
+													className={`${styles.subFabButton} ${styles.subFabButtonQuestion}`}
+													onClick={handleCreateSimpleQuestion}
+													aria-label={t('Add New Question')}
+													title={t('Add New Question')}
+													style={{ animationDelay: '0ms' }}
+												>
+													<QuestionIcon style={{ color: '#fff' }} />
+												</button>
+											)}
+											<button
+												className={`${styles.subFabButton} ${styles.subFabButtonCompound}`}
+												onClick={handleCreateCompoundQuestion}
+												aria-label={t('Compound Question')}
+												title={t('Compound Question')}
+												style={{ animationDelay: activeTab === 'questions' ? '60ms' : '0ms' }}
+											>
+												<CompoundIcon style={{ color: '#fff' }} />
+											</button>
+										</div>
 									)}
 								</>
 							)}
@@ -281,12 +310,14 @@ const StatementBottomNav: FC<Props> = () => {
 								aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
 								style={statementColor}
 								onClick={
-									showAddMenu
-										? () => {
-												setShowAddMenu(false);
-												handleAddOption();
-											}
-										: () => setShowAddMenu(true)
+									activeTab === 'options'
+										? handleAddOption
+										: showAddMenu
+											? () => {
+													setShowAddMenu(false);
+													handleAddOption();
+												}
+											: () => setShowAddMenu(true)
 								}
 								data-cy="bottom-nav-mid-icon"
 							>

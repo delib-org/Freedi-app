@@ -53,6 +53,7 @@ export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
 	brief: optional(string()), // admin-authored context/brief for the statement
+	isTitleQuestion: optional(boolean()), // if true, responses detected as questions are suggested as options instead
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
 	reasoning: optional(string()), // explanation/reasoning for the statement (used in suggestions)
 	statementId: string(), // the id of the statement

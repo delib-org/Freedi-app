@@ -38,6 +38,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	const isAtMaxDepth = depth >= MAX_TREE_DEPTH;
 
 	const isOption = statement.statementType === StatementType.option;
+	const isQuestion = statement.statementType === StatementType.question;
 
 	const childFlipKey = useMemo(
 		() => (animate ? children.map((c) => c.statementId).join(',') : ''),
@@ -85,14 +86,18 @@ const TreeNode: FC<TreeNodeProps> = ({
 				)}
 			</div>
 
-			{hasChildren && isAtMaxDepth && (
+			{(hasChildren && isAtMaxDepth) || isQuestion ? (
 				<div
 					className={styles['tree-node__dive-in']}
 					style={{ '--depth': depth } as React.CSSProperties}
 				>
-					<DiveInPrompt statement={statement} childCount={children.length} />
+					{isQuestion ? (
+						<DiveInPrompt statement={statement} />
+					) : (
+						<DiveInPrompt statement={statement} childCount={children.length} />
+					)}
 				</div>
-			)}
+			) : null}
 
 			{hasChildren && isExpanded && !isAtMaxDepth && (
 				<div className={styles['tree-node__children']}>
@@ -126,7 +131,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 
 interface DiveInPromptProps {
 	statement: Statement;
-	childCount: number;
+	childCount?: number;
 }
 
 const DiveInPrompt: FC<DiveInPromptProps> = ({ statement, childCount }) => {
@@ -138,7 +143,11 @@ const DiveInPrompt: FC<DiveInPromptProps> = ({ statement, childCount }) => {
 			className={styles['tree-node__dive-in-btn']}
 			onClick={() => navigate(`/statement/${statement.statementId}`)}
 		>
-			&#8618; {childCount} {childCount === 1 ? t('reply') : t('replies')} &mdash; {t('Drill down')}
+			&#8618;{' '}
+			{childCount !== undefined
+				? `${childCount} ${childCount === 1 ? t('reply') : t('replies')} — `
+				: ''}
+			{t('Drill down')}
 		</button>
 	);
 };
