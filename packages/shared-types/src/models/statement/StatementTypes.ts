@@ -31,6 +31,7 @@ import { EvidenceType } from '../evidence/evidenceModel';
 import { ParagraphType, ListTypeSchema } from '../paragraph/paragraphModel';
 import { PopperHebbianScoreSchema } from '../popper/popperTypes';
 import { ParagraphSchema } from '../paragraph/paragraphModel';
+import { StatementLockedSchema } from '../question/CompoundQuestionTypes';
 import { SourceApp } from '../engagement/SourceApp';
 
 /*
@@ -51,6 +52,7 @@ export type LastMessage = InferOutput<typeof LastMessageSchema>;
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
+	brief: optional(string()), // admin-authored context/brief for the statement
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
 	reasoning: optional(string()), // explanation/reasoning for the statement (used in suggestions)
 	statementId: string(), // the id of the statement
@@ -215,6 +217,7 @@ export const StatementSchema = object({
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.
 	randomSeed: optional(number()), // an optional random seed for the statement
+	locked: optional(StatementLockedSchema), // generic locking: any admin can lock a statement
 	sourceApp: optional(enum_(SourceApp)), // which app created this statement: main, sign, mass-consensus, flow
 	versionControl: optional(object({
 		// Version info

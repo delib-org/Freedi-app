@@ -21,6 +21,7 @@ import {
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
+import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -119,6 +120,10 @@ const Switch = () => {
 						<div className={styles.header}>
 							<h1>{renderInlineMarkdown(statement?.statement)}</h1>
 						</div>
+					)}
+
+					{statement?.brief && (
+						<StatementDescription brief={statement.brief} />
 					)}
 
 					{showSegmentedControl && (

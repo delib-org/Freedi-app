@@ -1,0 +1,264 @@
+.compoundWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+.phase {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.phaseTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-title);
+  margin: 0;
+}
+
+.phaseDescription {
+  font-size: 0.85rem;
+  color: var(--text-caption);
+  margin: 0;
+}
+
+.phaseSummary {
+  padding: 0.75rem;
+  background: var(--card-default);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--text-body);
+}
+
+.subQuestionList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.subQuestionListTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.subQuestionItem {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.emptyMessage {
+  font-size: 0.85rem;
+  color: var(--text-caption);
+  text-align: center;
+  padding: 2rem 1rem;
+  margin: 0;
+}
+
+.addButton {
+  display: flex;
+  justify-content: center;
+  padding: 0.5rem 0;
+}
+
+.solutionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.solutionCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--card-default);
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px rgba(115, 138, 191, 0.1);
+  gap: 0.75rem;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.solutionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+}
+
+.solutionTitle {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.solutionConsensus {
+  font-size: 0.8rem;
+  color: var(--text-caption);
+}
+
+.solutionActions {
+  flex-shrink: 0;
+}
+
+.sentBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background: rgba(87, 198, 178, 0.15);
+  color: var(--agree);
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+// Phase 1: Scope & Title Discussion
+
+.scopeSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.scopeLabel {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-body);
+}
+
+.scopeTextarea {
+  width: 100%;
+  min-height: 5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: var(--text-body);
+  background: var(--card-default);
+  resize: vertical;
+  text-align: start;
+
+  &:focus {
+    outline: none;
+    border-color: var(--btn-primary);
+    box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.15);
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
+.scopeText {
+  padding: 0.75rem;
+  background: var(--card-default);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-body);
+  white-space: pre-wrap;
+  margin: 0;
+}
+
+.saveIndicator {
+  font-size: 0.8rem;
+  color: var(--text-caption);
+  font-style: italic;
+}
+
+.saveIndicatorSuccess {
+  color: var(--agree);
+  font-style: normal;
+}
+
+.saveIndicatorError {
+  color: var(--against);
+  font-style: normal;
+}
+
+.discussionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-light);
+}
+
+.discussionTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-body);
+  margin: 0;
+}
+
+.discussionActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+  }
+}
+
+.discussionLink,
+.copyLinkBtn,
+.createDiscussionBtn {
+  min-height: 2.75rem;
+  padding: 0.6rem 1.25rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.discussionLink {
+  background: var(--btn-primary);
+  color: white;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.copyLinkBtn {
+  background: transparent;
+  color: var(--btn-primary);
+  border: 1px solid var(--btn-primary);
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.08);
+  }
+}
+
+.createDiscussionBtn {
+  background: var(--btn-primary);
+  color: white;
+
+  &:hover {
+    opacity: 0.9;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

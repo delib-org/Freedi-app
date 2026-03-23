@@ -1,0 +1,57 @@
+@use '../mixins' as *;
+
+.statement-description {
+  margin: 0 1rem 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--statementBackground);
+  border-radius: 8px;
+  border-inline-start: 3px solid var(--accent);
+  text-align: start;
+  position: relative;
+
+  @include mobile {
+    margin: 0 0.75rem 0.5rem;
+    padding: 0.625rem 0.75rem;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-caption);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.25rem;
+  }
+
+  &__content {
+    @include body-text;
+    font-size: 0.9rem;
+    color: var(--text-body);
+    line-height: 1.55;
+    white-space: pre-line;
+    margin: 0;
+
+    &--collapsed {
+      @include line-clamp(3);
+    }
+  }
+
+  &__toggle {
+    display: inline-block;
+    margin-top: 0.25rem;
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-blue);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    @include focus-visible;
+  }
+}

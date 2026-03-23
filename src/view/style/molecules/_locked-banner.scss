@@ -1,0 +1,26 @@
+@use '../mixins';
+
+.locked-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(231, 208, 128, 0.15);
+  border: 1px solid var(--option);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-body);
+
+  &__icon {
+    font-size: 1rem;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1;
+
+    strong {
+      font-weight: 600;
+    }
+  }
+}

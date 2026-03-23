@@ -1,0 +1,195 @@
+import { FC, useContext, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router';
+import { CompoundPhase } from '@freedi/shared-types';
+import { StatementContext } from '@/view/pages/statement/StatementCont';
+import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { saveQuestionScope } from '@/controllers/db/compoundQuestion/saveQuestionScope';
+import { createTitleDiscussion } from '@/controllers/db/compoundQuestion/createTitleDiscussion';
+import LockedBanner from '../components/LockedBanner';
+import styles from '../CompoundQuestion.module.scss';
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
+
+const DefineQuestionPhase: FC = () => {
+	const { t } = useTranslation();
+	const navigate = useNavigate();
+	const { statement } = useContext(StatementContext);
+	const { currentPhase, isAdmin } = useCompoundPhase(statement);
+
+	const compoundSettings = statement?.questionSettings?.compoundSettings;
+	const lockedTitle = compoundSettings?.lockedTitle;
+	const questionScope = compoundSettings?.questionScope ?? '';
+	const titleDiscussionId = compoundSettings?.titleDiscussionId;
+	const isActive = currentPhase === CompoundPhase.defineQuestion;
+
+	const [scopeText, setScopeText] = useState(questionScope);
+	const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
+	const [isCreatingDiscussion, setIsCreatingDiscussion] = useState(false);
+	const [copied, setCopied] = useState(false);
+
+	const handleSaveScope = useCallback(async () => {
+		if (!statement || scopeText === questionScope) return;
+		setSaveStatus('saving');
+		try {
+			await saveQuestionScope({ statement, scope: scopeText });
+			setSaveStatus('saved');
+			setTimeout(() => setSaveStatus('idle'), 2000);
+		} catch {
+			setSaveStatus('error');
+		}
+	}, [statement, scopeText, questionScope]);
+
+	const handleCreateDiscussion = useCallback(async () => {
+		if (!statement) return;
+		setIsCreatingDiscussion(true);
+		await createTitleDiscussion({
+			parentStatement: statement,
+			title: t('What should be the question title?'),
+		});
+		setIsCreatingDiscussion(false);
+	}, [statement, t]);
+
+	const handleGoToDiscussion = useCallback(() => {
+		if (titleDiscussionId) {
+			navigate(`/statement/${titleDiscussionId}`);
+		}
+	}, [titleDiscussionId, navigate]);
+
+	const handleCopyLink = useCallback(async () => {
+		if (!titleDiscussionId) return;
+		const link = `${window.location.origin}/statement/${titleDiscussionId}`;
+		try {
+			await navigator.clipboard.writeText(link);
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
+		} catch {
+			// Clipboard API not available
+		}
+	}, [titleDiscussionId]);
+
+	const handleShare = useCallback(async () => {
+		if (!titleDiscussionId) return;
+		const link = `${window.location.origin}/statement/${titleDiscussionId}`;
+
+		if (navigator.share) {
+			try {
+				await navigator.share({
+					title: t('Join the discussion'),
+					text: t('Help define the question for this deliberation'),
+					url: link,
+				});
+			} catch {
+				await handleCopyLink();
+			}
+		} else {
+			await handleCopyLink();
+		}
+	}, [titleDiscussionId, t, handleCopyLink]);
+
+	return (
+		<div className={styles.phase}>
+			<h3 className={styles.phaseTitle}>{t('Define Question')}</h3>
+			<p className={styles.phaseDescription}>
+				{t('Discuss and refine the main question for this deliberation')}
+			</p>
+
+			{lockedTitle && (
+				<LockedBanner message={t('Title locked')} lockedText={lockedTitle.lockedText} />
+			)}
+
+			{isActive && !lockedTitle && (
+				<>
+					{/* Admin scope textarea */}
+					<div className={styles.scopeSection}>
+						<label className={styles.scopeLabel} htmlFor="question-scope">
+							{t('Question scope')}
+						</label>
+						{isAdmin ? (
+							<>
+								<textarea
+									id="question-scope"
+									className={styles.scopeTextarea}
+									value={scopeText}
+									onChange={(e) => setScopeText(e.target.value)}
+									onBlur={handleSaveScope}
+									placeholder={t('Describe the context and scope of the question...')}
+									rows={4}
+								/>
+								{saveStatus !== 'idle' && (
+									<span
+										className={`${styles.saveIndicator} ${
+											saveStatus === 'saved' ? styles.saveIndicatorSuccess : ''
+										} ${saveStatus === 'error' ? styles.saveIndicatorError : ''}`}
+										role="status"
+										aria-live="polite"
+									>
+										{saveStatus === 'saving' && t('Saving...')}
+										{saveStatus === 'saved' && t('Saved')}
+										{saveStatus === 'error' && t('Failed to save. Try again.')}
+									</span>
+								)}
+							</>
+						) : questionScope ? (
+							<p className={styles.scopeText}>{questionScope}</p>
+						) : (
+							<p className={styles.emptyMessage}>
+								{t('The facilitator has not yet defined the scope for this question.')}
+							</p>
+						)}
+					</div>
+
+					{/* Title discussion link */}
+					<div className={styles.discussionSection}>
+						<h4 className={styles.discussionTitle}>
+							{t('Title discussion')}
+						</h4>
+						<p className={styles.phaseDescription}>
+							{t('Open a discussion where participants suggest what the question title should be')}
+						</p>
+
+						{titleDiscussionId ? (
+							<div className={styles.discussionActions}>
+								<button
+									className={styles.discussionLink}
+									onClick={handleGoToDiscussion}
+								>
+									{t('Go to title discussion')}
+								</button>
+								<button
+									className={styles.copyLinkBtn}
+									onClick={handleShare}
+									aria-label={t('Copy discussion link to clipboard')}
+								>
+									{copied ? t('Copied!') : t('Copy link')}
+								</button>
+							</div>
+						) : isAdmin ? (
+							<button
+								className={styles.createDiscussionBtn}
+								onClick={handleCreateDiscussion}
+								disabled={isCreatingDiscussion}
+							>
+								{isCreatingDiscussion
+									? t('Creating...')
+									: t('Create title discussion')}
+							</button>
+						) : (
+							<p className={styles.emptyMessage}>
+								{t('The facilitator will open a discussion soon where you can suggest question titles.')}
+							</p>
+						)}
+					</div>
+				</>
+			)}
+
+			{!isActive && lockedTitle && (
+				<div className={styles.phaseSummary}>
+					<strong>{lockedTitle.lockedText}</strong>
+				</div>
+			)}
+		</div>
+	);
+};
+
+export default DefineQuestionPhase;

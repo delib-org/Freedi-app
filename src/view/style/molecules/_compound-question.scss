@@ -1,0 +1,14 @@
+@use '../mixins';
+
+.compound-question {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  padding: 0 0.5rem;
+
+  &__phase-content {
+    @include mixins.fade-in;
+    min-height: 200px;
+  }
+}

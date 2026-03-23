@@ -1,0 +1,47 @@
+@use '../mixins';
+
+.phase-admin-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  flex-wrap: wrap;
+
+  &__btn {
+    @include mixins.button-base;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.75rem;
+
+    &--advance {
+      background-color: var(--btn-primary);
+      color: var(--white);
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    &--revert {
+      background-color: var(--white);
+      color: var(--text-body);
+      border-color: var(--border-light);
+
+      &:hover {
+        background-color: var(--bg-hover);
+      }
+    }
+
+    &--lock {
+      background-color: var(--option);
+      color: var(--option-text);
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    &:disabled {
+      @include mixins.button-disabled;
+    }
+  }
+}

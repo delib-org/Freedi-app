@@ -361,3 +361,66 @@ $addOptionSize: 60px;
       inset 0 0 0 2px rgba(87, 198, 178, 0.3);
   }
 }
+
+.addButtonGroup {
+  position: relative;
+}
+
+.addOptionButtonRotated {
+  transform: rotate(-45deg);
+}
+
+.compoundButton {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background-color: #47b4ef;
+  border: none;
+  box-shadow: 2px 2px 5px var(--shadow);
+  z-index: 10001;
+  animation: compoundPopIn 200ms ease;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.addMenuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100svh;
+  background: transparent;
+  z-index: 9999;
+  cursor: default;
+  border: none;
+}
+
+@keyframes compoundPopIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

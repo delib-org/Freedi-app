@@ -12,6 +12,7 @@ import UpdateIcon from '@/assets/icons/updateIcon.svg?react';
 import XmenuIcon from '@/assets/icons/x-icon.svg?react';
 import EyeIcon from '@/assets/icons/eye.svg?react';
 import EyeCrossIcon from '@/assets/icons/eyeCross.svg?react';
+import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
 import { Users } from 'lucide-react';
 
 import useStatementColor from '@/controllers/hooks/useStatementColor';
@@ -32,7 +33,7 @@ import IdeaRefineryModal from '../../popperHebbian/refinery/IdeaRefineryModal';
 import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
-import { QuestionType } from '@freedi/shared-types';
+import { QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 
@@ -79,6 +80,7 @@ const StatementBottomNav: FC<Props> = () => {
 		(canAddOptionVoting && evaluatingSettings === EvaluationUI.voting);
 
 	const [showSorting, setShowSorting] = useState(false);
+	const [showAddMenu, setShowAddMenu] = useState(false);
 
 	// Admin toggle for showing/hiding hidden cards
 	const { showHiddenCards, toggleShowHiddenCards } = useShowHiddenCards();
@@ -125,6 +127,26 @@ const StatementBottomNav: FC<Props> = () => {
 			setNewStatementModal({
 				parentStatement: statement,
 				newStatement: { statementType: defaultType },
+				showModal: true,
+				isLoading: false,
+				error: null,
+			}),
+		);
+	}
+
+	function handleCreateCompoundQuestion() {
+		if (!statement) return;
+		setShowAddMenu(false);
+		dispatch(
+			setNewStatementModal({
+				parentStatement: statement,
+				newStatement: {
+					statementType: StatementType.question,
+					questionSettings: {
+						questionType: QuestionType.compound,
+						compoundSettings: { currentPhase: CompoundPhase.defineQuestion },
+					},
+				},
 				showModal: true,
 				isLoading: false,
 				error: null,
@@ -229,26 +251,48 @@ const StatementBottomNav: FC<Props> = () => {
 					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
 				>
 					{(canAddOption || isAdmin) && (
-						<button
-							className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${
-								showIntro
-									? isRTL
-										? styles.addOptionButtonIntroRTL
-										: styles.addOptionButtonIntroLTR
-									: ''
-							} ${justFinishedLearning ? styles.addOptionButtonShrinking : ''}`}
-							aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
-							style={statementColor}
-							onClick={handleAddOption}
-							data-cy="bottom-nav-mid-icon"
-						>
-							{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
-							{isLearningFace && (
-								<span className={styles.addOptionButtonLabel} dir={dir}>
-									{t('Add an answer')}
-								</span>
+						<div className={styles.addButtonGroup}>
+							{showAddMenu && (
+								<>
+									<button className={styles.addMenuOverlay} onClick={() => setShowAddMenu(false)} />
+									<button
+										className={styles.compoundButton}
+										onClick={handleCreateCompoundQuestion}
+										aria-label={t('Compound Question')}
+										title={t('Compound Question')}
+									>
+										<CompoundIcon style={{ color: '#fff' }} />
+									</button>
+								</>
 							)}
-						</button>
+							<button
+								className={`${styles.addOptionButton} ${isLearningFace ? styles.addOptionButtonPill : ''} ${
+									showIntro
+										? isRTL
+											? styles.addOptionButtonIntroRTL
+											: styles.addOptionButtonIntroLTR
+										: ''
+								} ${justFinishedLearning ? styles.addOptionButtonShrinking : ''} ${showAddMenu ? styles.addOptionButtonRotated : ''}`}
+								aria-label={isLearningFace ? t('addSolution_aria') : t('addOption_aria')}
+								style={statementColor}
+								onClick={
+									showAddMenu
+										? () => {
+												setShowAddMenu(false);
+												handleAddOption();
+											}
+										: () => setShowAddMenu(true)
+								}
+								data-cy="bottom-nav-mid-icon"
+							>
+								{!isLearningFace && <PlusIcon style={{ color: statementColor.color }} />}
+								{isLearningFace && (
+									<span className={styles.addOptionButtonLabel} dir={dir}>
+										{t('Add an answer')}
+									</span>
+								)}
+							</button>
+						</div>
 					)}
 
 					{/* Sort menu (absolute fan-out like main branch) - only show when there are at least 2 answers */}

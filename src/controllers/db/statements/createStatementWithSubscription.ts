@@ -47,6 +47,14 @@ export async function createStatementWithSubscription({
 
 	if (!_newStatement) throw new Error('newStatement is not defined');
 
+	// Carry over compound settings if creating a compound question
+	if (newStatement?.questionSettings?.compoundSettings) {
+		_newStatement.questionSettings = {
+			..._newStatement.questionSettings,
+			compoundSettings: newStatement.questionSettings.compoundSettings,
+		};
+	}
+
 	// Immediately add to Redux with optimistic state
 	const now = new Date().getTime();
 	dispatch(setStatement(_newStatement));

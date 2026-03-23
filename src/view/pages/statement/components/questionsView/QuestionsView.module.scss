@@ -114,7 +114,9 @@ $addButtonSize: 60px;
 	cursor: pointer;
 	pointer-events: auto;
 	box-shadow: 2px 2px 5px var(--shadow);
-	transition: transform 200ms ease;
+	transition:
+		transform 200ms ease,
+		rotate 200ms ease;
 	z-index: 10000;
 
 	svg {
@@ -128,5 +130,66 @@ $addButtonSize: 60px;
 
 	&:active {
 		transform: scale(0.95);
+	}
+}
+
+.addButtonActive {
+	transform: rotate(-45deg);
+}
+
+.secondaryButton {
+	position: absolute;
+	bottom: calc(100% - 1.5rem);
+	left: 0;
+	width: 48px;
+	height: 48px;
+	border-radius: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	pointer-events: auto;
+	background-color: #47b4ef;
+	border: none;
+	box-shadow: 2px 2px 5px var(--shadow);
+	z-index: 10000;
+	animation: popIn 200ms ease;
+
+	svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	&:hover {
+		transform: scale(1.05);
+	}
+
+	&:active {
+		transform: scale(0.95);
+	}
+}
+
+.overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100svh;
+	background: transparent;
+	z-index: 9999;
+	cursor: default;
+	pointer-events: auto;
+	border: none;
+}
+
+@keyframes popIn {
+	from {
+		transform: scale(0);
+		opacity: 0;
+	}
+
+	to {
+		transform: scale(1);
+		opacity: 1;
 	}
 }

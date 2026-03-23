@@ -3,12 +3,21 @@
  * - EvaluationUI (evaluationSettings.evaluationUI) = Evaluation MODE (how users participate: suggestions, voting, checkbox, clustering)
  * - evaluationType (statementSettings.evaluationType) = Rating SCALE (what input UI they see: range/5-point, likeDislike/simple, singleLike/like-only)
  */
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { EvaluationUI, StatementType, evaluationType } from '@freedi/shared-types';
+import {
+	EvaluationUI,
+	StatementType,
+	evaluationType,
+	QuestionType,
+	CompoundPhase,
+} from '@freedi/shared-types';
+import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { createStatementRef } from '@/utils/firebaseUtils';
+import { setDoc } from 'firebase/firestore';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
@@ -100,8 +109,48 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			});
 		}
 
+		function handleQuestionTypeChange(ev: React.ChangeEvent<HTMLSelectElement>) {
+			const newType = ev.target.value as QuestionType;
+			setQuestionTypeToDB({ statement, questionType: newType });
+
+			if (newType === QuestionType.compound && !questionSettings?.compoundSettings) {
+				const ref = createStatementRef(statement.statementId);
+				setDoc(
+					ref,
+					{
+						questionSettings: {
+							compoundSettings: {
+								currentPhase: CompoundPhase.defineQuestion,
+							},
+						},
+					},
+					{ merge: true },
+				);
+			}
+		}
+
+		const isCompound = questionSettings?.questionType === QuestionType.compound;
+
 		return (
 			<div className={styles.questionSettings}>
+				<SectionTitle title={t('Question Type')} />
+				<select
+					className={styles.questionTypeSelect}
+					value={questionSettings?.questionType || QuestionType.multiStage}
+					onChange={handleQuestionTypeChange}
+				>
+					<option value={QuestionType.multiStage}>{t('Simple Question')}</option>
+					<option value={QuestionType.massConsensus}>{t('Mass Consensus')}</option>
+					<option value={QuestionType.compound}>{t('Compound Question')}</option>
+				</select>
+
+				{isCompound && (
+					<p className={styles.sectionDescription}>
+						{t('Compound question phases')}:{' '}
+						{questionSettings?.compoundSettings?.currentPhase || CompoundPhase.defineQuestion}
+					</p>
+				)}
+
 				<SectionTitle title={t('Evaluation Mode')} />
 				<MultiSwitch
 					options={[

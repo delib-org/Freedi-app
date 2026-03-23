@@ -145,6 +145,24 @@ export { NotificationSchema, NotificationReadStatusSchema } from "./models/notif
 export type { QuestionSettings } from "./models/question/QuestionType";
 export { QuestionSettingsSchema } from "./models/question/QuestionType";
 
+// Compound Question models
+export type {
+  CompoundSettings,
+  StatementLocked,
+  LockedTitle,
+  SignDocumentLink,
+  PhaseHistoryEntry,
+} from "./models/question/CompoundQuestionTypes";
+
+export {
+  CompoundPhase,
+  CompoundSettingsSchema,
+  StatementLockedSchema,
+  LockedTitleSchema,
+  SignDocumentLinkSchema,
+  PhaseHistoryEntrySchema,
+} from "./models/question/CompoundQuestionTypes";
+
 // Results models
 export type { Results, ResultsSettings } from "./models/results/Results";
 export { ResultsBy, CutoffBy, ResultsSettingsSchema, defaultResultsSettings } from "./models/results/Results";
