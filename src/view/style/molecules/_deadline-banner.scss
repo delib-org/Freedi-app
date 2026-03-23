@@ -32,6 +32,32 @@
     }
   }
 
+  &--warning {
+    background-color: rgba(231, 168, 48, 0.1);
+    border-inline-start-color: var(--option);
+
+    .deadline-banner__icon {
+      color: darkorange;
+    }
+
+    .deadline-banner__text {
+      color: darkorange;
+    }
+  }
+
+  &--urgent {
+    background-color: rgba(229, 95, 95, 0.1);
+    border-inline-start-color: tomato;
+
+    .deadline-banner__icon {
+      color: tomato;
+    }
+
+    .deadline-banner__text {
+      color: tomato;
+    }
+  }
+
   &--paused {
     background-color: rgba(231, 208, 128, 0.12);
     border-inline-start-color: var(--option);

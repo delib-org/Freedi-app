@@ -44,6 +44,55 @@ const MAX_DAYS = 99;
 const MAX_HOURS = 23;
 const MAX_MINUTES = 59;
 
+const WARNING_THRESHOLD = 2 * TIME.HOUR;
+const URGENT_THRESHOLD = 5 * TIME.MINUTE;
+
+function getUrgencyLevel(timeRemainingMs: number, isRunning: boolean): 'normal' | 'warning' | 'urgent' {
+	if (!isRunning) return 'normal';
+	if (timeRemainingMs <= URGENT_THRESHOLD) return 'urgent';
+	if (timeRemainingMs <= WARNING_THRESHOLD) return 'warning';
+
+	return 'normal';
+}
+
+/** Play a short beep using the Web Audio API */
+function playBeep(frequency: number, duration: number, volume = 0.3) {
+	try {
+		const ctx = new (window.AudioContext || (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)();
+		const oscillator = ctx.createOscillator();
+		const gain = ctx.createGain();
+
+		oscillator.connect(gain);
+		gain.connect(ctx.destination);
+
+		oscillator.frequency.value = frequency;
+		oscillator.type = 'sine';
+		gain.gain.value = volume;
+		gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + duration);
+
+		oscillator.start(ctx.currentTime);
+		oscillator.stop(ctx.currentTime + duration);
+
+		setTimeout(() => ctx.close(), (duration + 0.1) * 1000);
+	} catch {
+		// Audio not available
+	}
+}
+
+function playWarningSound() {
+	playBeep(660, 0.15, 0.2);
+}
+
+function playUrgentSound() {
+	playBeep(880, 0.1, 0.25);
+	setTimeout(() => playBeep(880, 0.1, 0.25), 150);
+}
+
+function playExpiredSound() {
+	playBeep(440, 0.2, 0.3);
+	setTimeout(() => playBeep(330, 0.3, 0.3), 250);
+}
+
 function msToSegments(ms: number): DurationSegments {
 	const totalMinutes = Math.floor(ms / TIME.MINUTE);
 	const days = Math.floor(totalMinutes / (24 * 60));
@@ -84,6 +133,38 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 	const isRunning = hasTimer && !isPaused && !isExpired;
 	const totalMs = segmentsToMs(segments);
 	const canStart = totalMs > 0;
+	const urgency = getUrgencyLevel(timeRemainingMs, isRunning);
+
+	// Track previous urgency level to play sounds at transitions
+	const prevUrgencyRef = useRef<'normal' | 'warning' | 'urgent'>('normal');
+	const prevExpiredRef = useRef(false);
+
+	useEffect(() => {
+		if (!isRunning) {
+			prevUrgencyRef.current = 'normal';
+			prevExpiredRef.current = isExpired;
+
+			return;
+		}
+
+		// Sound on urgency transition
+		if (urgency !== prevUrgencyRef.current) {
+			if (urgency === 'warning' && prevUrgencyRef.current === 'normal') {
+				playWarningSound();
+			} else if (urgency === 'urgent' && prevUrgencyRef.current !== 'urgent') {
+				playUrgentSound();
+			}
+			prevUrgencyRef.current = urgency;
+		}
+	}, [urgency, isRunning, isExpired]);
+
+	// Sound when timer expires
+	useEffect(() => {
+		if (isExpired && !prevExpiredRef.current && hasTimer) {
+			playExpiredSound();
+		}
+		prevExpiredRef.current = isExpired;
+	}, [isExpired, hasTimer]);
 
 	// Reset segments when setup panel opens
 	useEffect(() => {
@@ -414,7 +495,11 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		? 'deadline-banner--expired'
 		: isPaused
 			? 'deadline-banner--paused'
-			: '';
+			: urgency === 'urgent'
+				? 'deadline-banner--urgent'
+				: urgency === 'warning'
+					? 'deadline-banner--warning'
+					: '';
 
 	return (
 		<div className={`deadline-banner ${modifierClass}`} role="timer" aria-live="polite">
