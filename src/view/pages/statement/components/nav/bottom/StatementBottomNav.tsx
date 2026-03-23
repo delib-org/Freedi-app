@@ -35,6 +35,7 @@ import InitialIdeaModal from '../../popperHebbian/refinery/InitialIdeaModal';
 import { createStatementWithSubscription } from '@/controllers/db/statements/createStatementWithSubscription';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { QuestionType, CompoundPhase } from '@freedi/shared-types';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 import { generateParagraphId } from '@/utils/paragraphUtils';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 
@@ -57,6 +58,7 @@ const StatementBottomNav: FC<Props> = () => {
 	const allSubs = useSelector(statementSubsSelector(statementId));
 	const role = subscription?.role;
 	const isAdmin = role === 'admin' || role === Role.creator;
+	const { isHalted } = useIsProcessHalted(statement);
 
 	// Show sort when there are at least 2 direct children (options or any type)
 	// In tree view, options may be nested under sub-groups, so count all children too
@@ -173,6 +175,7 @@ const StatementBottomNav: FC<Props> = () => {
 	}
 
 	const handleAddOption = () => {
+		if (isHalted) return;
 		// If Popper-Hebbian mode is enabled AND pre-check is enabled, show initial idea modal first
 		if (isPopperHebbianEnabled && isPopperPreCheckEnabled) {
 			setShowInitialIdeaModal(true);
@@ -268,7 +271,7 @@ const StatementBottomNav: FC<Props> = () => {
 				<div
 					className={`${styles.addOptionButtonWrapper} ${dir === 'ltr' ? styles.addOptionButtonWrapperLtr : ''}`}
 				>
-					{(canAddOption || isAdmin) && (
+					{(canAddOption || isAdmin) && !(isHalted && activeTab === 'options') && (
 						<div className={styles.addButtonGroup}>
 							{showAddMenu && (
 								<>

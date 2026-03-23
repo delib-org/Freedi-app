@@ -20,6 +20,8 @@ export const QuestionSettingsSchema = object({
 	durationMs: optional(number()), // original duration in ms (for display)
 	pausedAt: optional(number()), // timestamp when the timer was paused (if set, timer is paused)
 	remainingMsAtPause: optional(number()), // remaining ms when paused; used to compute new deadline on resume
+	isHalted: optional(boolean()), // true = democratic process is halted (no options, no evaluation, no voting)
+	haltedAt: optional(number()), // timestamp when halted
 });
 
 export type QuestionSettings = InferOutput<typeof QuestionSettingsSchema>;

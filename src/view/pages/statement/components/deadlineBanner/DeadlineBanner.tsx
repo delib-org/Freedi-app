@@ -17,7 +17,9 @@ import {
 	ChevronDown,
 	ChevronUp,
 	Timer,
+	OctagonX,
 } from 'lucide-react';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 
 interface DeadlineBannerProps {
 	statement: Statement | undefined;
@@ -127,6 +129,7 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 	const minutesRef = useRef<HTMLInputElement>(null);
 
 	const isAdmin = role === Role.admin || role === Role.creator;
+	const { isHalted, isManuallyHalted } = useIsProcessHalted(statement);
 
 	// Determine the timer state
 	const hasTimer = Boolean(deadline);
@@ -173,8 +176,22 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		}
 	}, [showSetup]);
 
-	// Non-admin: show nothing if no timer
-	if (!isAdmin && !hasTimer) return null;
+	// Non-admin: show halted banner if halted, nothing if no timer and not halted
+	if (!isAdmin && !hasTimer && !isHalted) return null;
+	if (!isAdmin && !hasTimer && isManuallyHalted) {
+		return (
+			<div className="deadline-banner deadline-banner--halted" role="status">
+				<div className="deadline-banner__status">
+					<span className="deadline-banner__icon" aria-hidden="true">
+						<OctagonX size={18} />
+					</span>
+					<span className="deadline-banner__text">
+						{t('Process halted')}
+					</span>
+				</div>
+			</div>
+		);
+	}
 
 	function handleSegmentChange(field: keyof DurationSegments, rawValue: string) {
 		const parsed = parseInt(rawValue, 10);
@@ -327,6 +344,51 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		setIsSaving(false);
 	}
 
+	async function handleHaltProcess() {
+		if (!statement) return;
+		setIsSaving(true);
+		try {
+			const ref = createStatementRef(statement.statementId);
+			const now = getCurrentTimestamp();
+			await setDoc(
+				ref,
+				{
+					questionSettings: { isHalted: true, haltedAt: now },
+					lastUpdate: now,
+				},
+				{ merge: true },
+			);
+		} catch (error) {
+			logError(error, {
+				operation: 'DeadlineBanner.handleHaltProcess',
+				statementId: statement.statementId,
+			});
+		}
+		setIsSaving(false);
+	}
+
+	async function handleResumeProcess() {
+		if (!statement) return;
+		setIsSaving(true);
+		try {
+			const ref = createStatementRef(statement.statementId);
+			await setDoc(
+				ref,
+				{
+					questionSettings: { isHalted: null, haltedAt: null },
+					lastUpdate: getCurrentTimestamp(),
+				},
+				{ merge: true },
+			);
+		} catch (error) {
+			logError(error, {
+				operation: 'DeadlineBanner.handleResumeProcess',
+				statementId: statement.statementId,
+			});
+		}
+		setIsSaving(false);
+	}
+
 	async function handleRemove() {
 		if (!statement) return;
 		setIsSaving(true);
@@ -440,24 +502,58 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		);
 	}
 
-	// ── No timer set: show admin trigger ──
+	// ── No timer set: show admin trigger + halt controls ──
 	if (!hasTimer) {
 		return (
-			<div className="deadline-banner deadline-banner--empty">
-				<button
-					className="deadline-banner__trigger"
-					onClick={() => setShowSetup((prev) => !prev)}
-					aria-expanded={showSetup}
-					aria-label={t('Set a timer')}
-				>
-					<Timer size={16} aria-hidden="true" />
-					<span>{t('Set a timer')}</span>
-					{showSetup ? (
-						<ChevronUp size={14} aria-hidden="true" />
-					) : (
-						<ChevronDown size={14} aria-hidden="true" />
-					)}
-				</button>
+			<div className={`deadline-banner deadline-banner--empty ${isManuallyHalted ? 'deadline-banner--halted' : ''}`}>
+				{isManuallyHalted && (
+					<div className="deadline-banner__status">
+						<span className="deadline-banner__icon" aria-hidden="true">
+							<OctagonX size={18} />
+						</span>
+						<span className="deadline-banner__text">
+							{t('Process halted')}
+						</span>
+						<div className="deadline-banner__controls">
+							<button
+								className="deadline-banner__action-btn deadline-banner__action-btn--resume"
+								onClick={handleResumeProcess}
+								disabled={isSaving}
+								aria-label={t('Resume process')}
+								title={t('Resume process')}
+							>
+								<Play size={14} />
+							</button>
+						</div>
+					</div>
+				)}
+				{!isManuallyHalted && (
+					<div className="deadline-banner__admin-row">
+						<button
+							className="deadline-banner__trigger"
+							onClick={() => setShowSetup((prev) => !prev)}
+							aria-expanded={showSetup}
+							aria-label={t('Set a timer')}
+						>
+							<Timer size={16} aria-hidden="true" />
+							<span>{t('Set a timer')}</span>
+							{showSetup ? (
+								<ChevronUp size={14} aria-hidden="true" />
+							) : (
+								<ChevronDown size={14} aria-hidden="true" />
+							)}
+						</button>
+						<button
+							className="deadline-banner__action-btn deadline-banner__action-btn--halt"
+							onClick={handleHaltProcess}
+							disabled={isSaving}
+							aria-label={t('Halt process')}
+							title={t('Halt process')}
+						>
+							<OctagonX size={14} />
+						</button>
+					</div>
+				)}
 
 				{showSetup && (
 					<div className="deadline-banner__setup">
@@ -572,6 +668,30 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 					>
 						<X size={14} />
 					</button>
+
+					{/* Halt / Resume process */}
+					{!isManuallyHalted && !isExpired && (
+						<button
+							className="deadline-banner__action-btn deadline-banner__action-btn--halt"
+							onClick={handleHaltProcess}
+							disabled={isSaving}
+							aria-label={t('Halt process')}
+							title={t('Halt process')}
+						>
+							<OctagonX size={14} />
+						</button>
+					)}
+					{isManuallyHalted && (
+						<button
+							className="deadline-banner__action-btn deadline-banner__action-btn--resume"
+							onClick={handleResumeProcess}
+							disabled={isSaving}
+							aria-label={t('Resume process')}
+							title={t('Resume process')}
+						>
+							<Play size={14} />
+						</button>
+					)}
 				</div>
 			)}
 

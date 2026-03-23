@@ -71,6 +71,21 @@
     }
   }
 
+  &--halted {
+    background-color: rgba(229, 95, 95, 0.06);
+    border-inline-start-color: var(--against);
+    padding: 0.5rem 0.75rem;
+
+    .deadline-banner__icon {
+      color: var(--against);
+    }
+
+    .deadline-banner__text {
+      color: var(--against);
+      font-weight: 700;
+    }
+  }
+
   &--empty {
     background-color: transparent;
     border-inline-start: none;
@@ -168,6 +183,15 @@
       }
     }
 
+    &--halt {
+      color: var(--against);
+      border-color: var(--against);
+
+      &:hover:not(:disabled) {
+        background-color: rgba(229, 95, 95, 0.1);
+      }
+    }
+
     &--remove {
       color: var(--against);
       border-color: var(--against);
@@ -176,6 +200,12 @@
         background-color: rgba(229, 95, 95, 0.1);
       }
     }
+  }
+
+  &__admin-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   &__trigger {
