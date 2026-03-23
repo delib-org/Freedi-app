@@ -22,6 +22,7 @@ import {
 } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
+import DeadlineBanner from '../deadlineBanner/DeadlineBanner';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -128,6 +129,8 @@ const Switch = () => {
 							callToAction={t('Share your thoughts below')}
 						/>
 					)}
+
+					<DeadlineBanner statement={statement} role={role} />
 
 					{showSegmentedControl && (
 						<div className={styles.segmentedControlWrapper}>

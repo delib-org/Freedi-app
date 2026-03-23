@@ -1,4 +1,4 @@
-import { object, optional, enum_, InferOutput, array, boolean } from 'valibot';
+import { object, optional, enum_, InferOutput, array, boolean, number } from 'valibot';
 import {
 	QuestionStage,
 	QuestionStagesType,
@@ -16,6 +16,10 @@ export const QuestionSettingsSchema = object({
 	currentStep: optional(enum_(QuestionStep)),
 	currentStage: optional(enum_(QuestionStage)), //deprecated
 	compoundSettings: optional(CompoundSettingsSchema), // compound question phase tracking
+	deadline: optional(number()), // absolute timestamp in ms when the timer expires
+	durationMs: optional(number()), // original duration in ms (for display)
+	pausedAt: optional(number()), // timestamp when the timer was paused (if set, timer is paused)
+	remainingMsAtPause: optional(number()), // remaining ms when paused; used to compute new deadline on resume
 });
 
 export type QuestionSettings = InferOutput<typeof QuestionSettingsSchema>;

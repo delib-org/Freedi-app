@@ -1,6 +1,8 @@
-import { FC, useContext, useState, useCallback } from 'react';
+import { FC, useContext, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
-import { CompoundPhase } from '@freedi/shared-types';
+import { useSelector } from 'react-redux';
+import { CompoundPhase, StatementType } from '@freedi/shared-types';
+import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -22,6 +24,19 @@ const DefineQuestionPhase: FC = () => {
 	const questionScope = compoundSettings?.questionScope ?? '';
 	const titleDiscussionId = compoundSettings?.titleDiscussionId;
 	const isActive = currentPhase === CompoundPhase.defineQuestion;
+
+	// Get top consensus option from title discussion
+	const titleDiscussionOptions = useSelector(statementSubsSelector(titleDiscussionId ?? ''));
+	const topTitleOption = useMemo(() => {
+		const options = titleDiscussionOptions.filter(
+			(s) => s.statementType === StatementType.option,
+		);
+		if (options.length === 0) return null;
+
+		return options.reduce((best, current) =>
+			(current.consensus ?? 0) > (best.consensus ?? 0) ? current : best,
+		);
+	}, [titleDiscussionOptions]);
 
 	const [scopeText, setScopeText] = useState(questionScope);
 	const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
@@ -149,21 +164,36 @@ const DefineQuestionPhase: FC = () => {
 						</p>
 
 						{titleDiscussionId ? (
-							<div className={styles.discussionActions}>
-								<button
-									className={styles.discussionLink}
-									onClick={handleGoToDiscussion}
-								>
-									{t('Go to title discussion')}
-								</button>
-								<button
-									className={styles.copyLinkBtn}
-									onClick={handleShare}
-									aria-label={t('Copy discussion link to clipboard')}
-								>
-									{copied ? t('Copied!') : t('Copy link')}
-								</button>
-							</div>
+							<>
+								{topTitleOption && (
+									<div className={styles.topSuggestion}>
+										<span className={styles.topSuggestionLabel}>
+											{t('Leading suggestion')}
+										</span>
+										<p className={styles.topSuggestionText}>
+											{topTitleOption.statement}
+										</p>
+										<span className={styles.topSuggestionConsensus}>
+											{t('Consensus')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
+										</span>
+									</div>
+								)}
+								<div className={styles.discussionActions}>
+									<button
+										className={styles.discussionLink}
+										onClick={handleGoToDiscussion}
+									>
+										{t('Go to title discussion')}
+									</button>
+									<button
+										className={styles.copyLinkBtn}
+										onClick={handleShare}
+										aria-label={t('Copy discussion link to clipboard')}
+									>
+										{copied ? t('Copied!') : t('Copy link')}
+									</button>
+								</div>
+							</>
 						) : isAdmin ? (
 							<button
 								className={styles.createDiscussionBtn}

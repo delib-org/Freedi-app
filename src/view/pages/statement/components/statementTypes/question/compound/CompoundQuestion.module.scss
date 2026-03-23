@@ -123,6 +123,38 @@
   font-weight: 600;
 }
 
+// Phase 1: Top suggestion from title discussion
+
+.topSuggestion {
+  padding: 0.75rem 1rem;
+  background: var(--bg-info-light);
+  border-radius: 10px;
+  border-inline-start: 4px solid var(--agree);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.topSuggestionLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--agree);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.topSuggestionText {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-title);
+  margin: 0;
+}
+
+.topSuggestionConsensus {
+  font-size: 0.8rem;
+  color: var(--text-caption);
+}
+
 // Phase 1: Scope & Title Discussion
 
 .scopeSection {
