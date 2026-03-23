@@ -30,6 +30,17 @@ export async function saveQuestionScope({
 			},
 			{ merge: true },
 		);
+
+		// Also update the title discussion's brief if one exists
+		const titleDiscussionId = statement.questionSettings?.compoundSettings?.titleDiscussionId;
+		if (titleDiscussionId) {
+			const discussionRef = createStatementRef(titleDiscussionId);
+			await setDoc(
+				discussionRef,
+				{ brief: scope, lastUpdate: now },
+				{ merge: true },
+			);
+		}
 	} catch (error) {
 		logError(error, {
 			operation: 'compoundQuestion.saveQuestionScope',

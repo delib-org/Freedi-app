@@ -1,5 +1,5 @@
 import { FC, useContext, useEffect, useRef, useState } from 'react';
-import { useParams, useNavigate } from 'react-router';
+import { useParams, useNavigate, useSearchParams } from 'react-router';
 import { logError } from '@/utils/errorHandling';
 
 // Icons
@@ -46,6 +46,9 @@ const StatementBottomNav: FC<Props> = () => {
 	const dispatch = useDispatch();
 	const navigate = useNavigate();
 	const { user } = useAuthentication();
+
+	const [searchParams] = useSearchParams();
+	const activeTab = searchParams.get('tab') ?? 'chat';
 
 	const { statement } = useContext(StatementContext);
 	const subscription = useSelector(statementSubscriptionSelector(statementId));
@@ -255,14 +258,16 @@ const StatementBottomNav: FC<Props> = () => {
 							{showAddMenu && (
 								<>
 									<button className={styles.addMenuOverlay} onClick={() => setShowAddMenu(false)} />
-									<button
-										className={styles.compoundButton}
-										onClick={handleCreateCompoundQuestion}
-										aria-label={t('Compound Question')}
-										title={t('Compound Question')}
-									>
-										<CompoundIcon style={{ color: '#fff' }} />
-									</button>
+									{activeTab !== 'options' && (
+										<button
+											className={styles.compoundButton}
+											onClick={handleCreateCompoundQuestion}
+											aria-label={t('Compound Question')}
+											title={t('Compound Question')}
+										>
+											<CompoundIcon style={{ color: '#fff' }} />
+										</button>
+									)}
 								</>
 							)}
 							<button

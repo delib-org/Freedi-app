@@ -123,7 +123,10 @@ const Switch = () => {
 					)}
 
 					{statement?.brief && (
-						<StatementDescription brief={statement.brief} />
+						<StatementDescription
+							brief={statement.brief}
+							callToAction={t('Share your thoughts below')}
+						/>
 					)}
 
 					{showSegmentedControl && (
