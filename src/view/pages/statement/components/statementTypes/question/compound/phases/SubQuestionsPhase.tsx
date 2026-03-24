@@ -1,6 +1,5 @@
 import { FC, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { updateDoc } from 'firebase/firestore';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
@@ -8,8 +7,7 @@ import { useCompoundSubQuestions } from '@/controllers/hooks/compoundQuestion/us
 import { useSubQuestionDiscussion } from '@/controllers/hooks/compoundQuestion/useSubQuestionDiscussion';
 import { lockStatement } from '@/controllers/db/compoundQuestion/lockStatement';
 import { createSubQuestionDiscussion } from '@/controllers/db/compoundQuestion/createSubQuestionDiscussion';
-import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
-import { logError } from '@/utils/errorHandling';
+import { toggleParticipantAccess } from '@/controllers/db/compoundQuestion/toggleParticipantAccess';
 import { useSelector, useDispatch } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -42,19 +40,8 @@ const SubQuestionsPhase: FC = () => {
 
 	const handleToggleParticipantAccess = useCallback(async () => {
 		if (!statement) return;
-		try {
-			const ref = createStatementRef(statement.statementId);
-			await updateDoc(ref, {
-				'questionSettings.compoundSettings.allowParticipantsToAddSubQuestions': !allowParticipants,
-				lastUpdate: getCurrentTimestamp(),
-			});
-		} catch (error) {
-			logError(error, {
-				operation: 'compound.toggleParticipantSubQuestions',
-				statementId: statement.statementId,
-			});
-		}
-	}, [statement, allowParticipants]);
+		await toggleParticipantAccess({ statement });
+	}, [statement]);
 
 	const handleLockSubQuestion = async (subQuestion: Statement) => {
 		if (!creator?.uid || !statement) return;
