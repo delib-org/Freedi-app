@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
-import { Role, StatementType } from '@freedi/shared-types';
+import { Role, StatementType, QuestionType } from '@freedi/shared-types';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import SwitchScreen from './SwitchScreen';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
@@ -38,6 +38,11 @@ const Switch = () => {
 	const defaultView = statement?.statementSettings?.defaultView ?? 'chat';
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
+	const [headerCollapsed, setHeaderCollapsed] = useState(true);
+
+	const isCompound =
+		statement?.statementType === StatementType.question &&
+		statement?.questionSettings?.questionType === QuestionType.compound;
 
 	const handleTabChange = useCallback(
 		(tabId: string) => {
@@ -123,23 +128,58 @@ const Switch = () => {
 						</div>
 					)}
 
-					{statement?.brief && (
-						<StatementDescription
-							brief={statement.brief}
-							callToAction={t('Share your thoughts below')}
-						/>
-					)}
-
-					<DeadlineBanner statement={statement} role={role} />
-
-					{showSegmentedControl && (
-						<div className={styles.segmentedControlWrapper}>
-							<SegmentedControl
-								segments={segments}
-								activeId={activeView}
-								onChange={handleTabChange}
-							/>
-						</div>
+					{isCompound ? (
+						<>
+							<button
+								className={styles.headerToggle}
+								onClick={() => setHeaderCollapsed((prev) => !prev)}
+								aria-expanded={!headerCollapsed}
+							>
+								<span className={styles.headerToggleText}>{t('Details')}</span>
+								<span className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}>
+									&#9662;
+								</span>
+							</button>
+							{!headerCollapsed && (
+								<div className={styles.headerCollapsible}>
+									{statement?.brief && (
+										<StatementDescription
+											brief={statement.brief}
+											callToAction={t('Share your thoughts below')}
+										/>
+									)}
+									<DeadlineBanner statement={statement} role={role} />
+									{showSegmentedControl && (
+										<div className={styles.segmentedControlWrapper}>
+											<SegmentedControl
+												segments={segments}
+												activeId={activeView}
+												onChange={handleTabChange}
+											/>
+										</div>
+									)}
+								</div>
+							)}
+						</>
+					) : (
+						<>
+							{statement?.brief && (
+								<StatementDescription
+									brief={statement.brief}
+									callToAction={t('Share your thoughts below')}
+								/>
+							)}
+							<DeadlineBanner statement={statement} role={role} />
+							{showSegmentedControl && (
+								<div className={styles.segmentedControlWrapper}>
+									<SegmentedControl
+										segments={segments}
+										activeId={activeView}
+										onChange={handleTabChange}
+									/>
+								</div>
+							)}
+						</>
 					)}
 				</div>
 			</div>
