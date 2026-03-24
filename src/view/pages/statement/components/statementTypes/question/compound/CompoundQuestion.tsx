@@ -7,6 +7,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import CompoundPhaseStepper from './components/CompoundPhaseStepper';
 import PhaseAdminControls from './components/PhaseAdminControls';
 import PhaseSection from './components/PhaseSection';
+import FacilitatorBrief from './components/FacilitatorBrief';
 import DefineQuestionPhase from './phases/DefineQuestionPhase';
 import SubQuestionsPhase from './phases/SubQuestionsPhase';
 import FindSolutionsPhase from './phases/FindSolutionsPhase';
@@ -30,7 +31,7 @@ const PHASE_COMPONENTS: Record<CompoundPhase, FC> = {
 const CompoundQuestion: FC = () => {
 	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
-	const { currentPhase } = useCompoundPhase(statement);
+	const { currentPhase, isAdmin } = useCompoundPhase(statement);
 	const { subQuestions } = useCompoundSubQuestions(statement);
 
 	const currentIndex = PHASE_ORDER.indexOf(currentPhase);
@@ -62,13 +63,13 @@ const CompoundQuestion: FC = () => {
 		<div className={styles.compoundWrapper}>
 			<CompoundPhaseStepper currentPhase={currentPhase} />
 			<PhaseAdminControls statement={statement} />
-			{statement.brief && (
+			{(statement.brief || isAdmin) && (
 				<PhaseSection
 					title={t('Background from the facilitator')}
 					summary=""
 					isCompleted={true}
 				>
-					<p className={styles.facilitatorBrief}>{statement.brief}</p>
+					<FacilitatorBrief statement={statement} isAdmin={isAdmin} />
 				</PhaseSection>
 			)}
 			{PHASE_ORDER.map((phase, index) => {
