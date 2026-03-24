@@ -142,12 +142,6 @@ const Switch = () => {
 							</button>
 							{!headerCollapsed && (
 								<div className={styles.headerCollapsible}>
-									{statement?.brief && (
-										<StatementDescription
-											brief={statement.brief}
-											callToAction={t('Share your thoughts below')}
-										/>
-									)}
 									<DeadlineBanner statement={statement} role={role} />
 									{showSegmentedControl && (
 										<div className={styles.segmentedControlWrapper}>

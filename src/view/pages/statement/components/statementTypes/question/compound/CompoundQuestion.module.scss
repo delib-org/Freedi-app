@@ -136,6 +136,16 @@
   box-shadow: 0 4px 12px rgba(0, 74, 198, 0.04);
 }
 
+// ─── Facilitator brief ──────────────────────────────────
+
+.facilitatorBrief {
+  font-size: 0.88rem;
+  color: var(--text-body);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
 // ─── Phase content ──────────────────────────────────────
 
 .phase {

@@ -62,6 +62,15 @@ const CompoundQuestion: FC = () => {
 		<div className={styles.compoundWrapper}>
 			<CompoundPhaseStepper currentPhase={currentPhase} />
 			<PhaseAdminControls statement={statement} />
+			{statement.brief && (
+				<PhaseSection
+					title={t('Background from the facilitator')}
+					summary=""
+					isCompleted={true}
+				>
+					<p className={styles.facilitatorBrief}>{statement.brief}</p>
+				</PhaseSection>
+			)}
 			{PHASE_ORDER.map((phase, index) => {
 				if (index > currentIndex) return null;
 
