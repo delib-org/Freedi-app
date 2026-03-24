@@ -53,6 +53,8 @@ export const CompoundSettingsSchema = object({
 	signDocumentIds: optional(array(SignDocumentLinkSchema)),
 	mcSurveyId: optional(string()),
 	phaseHistory: optional(array(PhaseHistoryEntrySchema)),
+	subQuestionDiscussionId: optional(string()),
+	promotedOptionIds: optional(array(string())),
 });
 
 export type CompoundSettings = InferOutput<typeof CompoundSettingsSchema>;

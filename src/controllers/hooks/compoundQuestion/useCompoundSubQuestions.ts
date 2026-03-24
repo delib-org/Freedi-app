@@ -15,6 +15,8 @@ export function useCompoundSubQuestions(
 	const children = useSelector(statementSubsSelector(statement?.statementId ?? ''));
 	const solutionQuestionId = statement?.questionSettings?.compoundSettings?.solutionQuestionId;
 	const titleDiscussionId = statement?.questionSettings?.compoundSettings?.titleDiscussionId;
+	const subQuestionDiscussionId =
+		statement?.questionSettings?.compoundSettings?.subQuestionDiscussionId;
 
 	const subQuestions = useMemo(
 		() =>
@@ -23,10 +25,11 @@ export function useCompoundSubQuestions(
 					(child: Statement) =>
 						child.statementType === StatementType.question &&
 						child.statementId !== solutionQuestionId &&
-						child.statementId !== titleDiscussionId,
+						child.statementId !== titleDiscussionId &&
+						child.statementId !== subQuestionDiscussionId,
 				)
 				.sort((a, b) => (a.order ?? 0) - (b.order ?? 0)),
-		[children, solutionQuestionId, titleDiscussionId],
+		[children, solutionQuestionId, titleDiscussionId, subQuestionDiscussionId],
 	);
 
 	const lockedSubQuestions = useMemo(
