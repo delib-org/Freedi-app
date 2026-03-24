@@ -6,11 +6,12 @@ interface PhaseSectionProps {
 	title: string;
 	summary: string;
 	isCompleted: boolean;
+	defaultExpanded?: boolean;
 	children: ReactNode;
 }
 
-const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, children }) => {
-	const [isExpanded, setIsExpanded] = useState(!isCompleted);
+const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, defaultExpanded, children }) => {
+	const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? !isCompleted);
 
 	const stripClass = isCompleted
 		? styles.phaseSummaryStrip
