@@ -100,7 +100,6 @@ const SubQuestionsPhase: FC = () => {
 
 	return (
 		<div className={styles.phase}>
-			<h3 className={styles.phaseTitle}>{t('Sub-Questions')}</h3>
 
 			{lockedSubQuestions.length > 0 && (
 				<div className={styles.subQuestionList}>

@@ -104,7 +104,6 @@ const DefineQuestionPhase: FC = () => {
 
 	return (
 		<div className={styles.phase}>
-			<h3 className={styles.phaseTitle}>{t('Define Question')}</h3>
 
 			{lockedTitle && (
 				<LockedBanner

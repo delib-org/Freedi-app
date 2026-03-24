@@ -73,7 +73,6 @@ const FindSolutionsPhase: FC = () => {
 
 	return (
 		<div className={styles.phase}>
-			<h3 className={styles.phaseTitle}>{t('Find Solutions')}</h3>
 
 			{hasSolutionQuestion ? (
 				<>

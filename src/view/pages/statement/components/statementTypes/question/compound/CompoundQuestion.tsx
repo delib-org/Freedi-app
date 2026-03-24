@@ -35,19 +35,24 @@ const CompoundQuestion: FC = () => {
 
 	const currentIndex = PHASE_ORDER.indexOf(currentPhase);
 
+	const phaseTitles = useMemo((): Record<CompoundPhase, string> => ({
+		[CompoundPhase.defineQuestion]: t('Define Question'),
+		[CompoundPhase.subQuestions]: t('Sub-Questions'),
+		[CompoundPhase.findSolutions]: t('Find Solutions'),
+		[CompoundPhase.resolution]: t('Resolution'),
+	}), [t]);
+
 	const phaseSummaries = useMemo((): Record<CompoundPhase, string> => {
 		const lockedTitle = statement?.questionSettings?.compoundSettings?.lockedTitle?.lockedText;
 		const subCount = subQuestions.length;
 
 		return {
-			[CompoundPhase.defineQuestion]: lockedTitle
-				? `${t('Define Question')}: ${lockedTitle}`
-				: t('Define Question'),
+			[CompoundPhase.defineQuestion]: lockedTitle ?? '',
 			[CompoundPhase.subQuestions]: subCount > 0
-				? `${t('Sub-Questions')}: ${subCount} ${t('defined')}`
-				: t('Sub-Questions'),
-			[CompoundPhase.findSolutions]: t('Find Solutions'),
-			[CompoundPhase.resolution]: t('Resolution'),
+				? `${subCount} ${t('defined')}`
+				: '',
+			[CompoundPhase.findSolutions]: '',
+			[CompoundPhase.resolution]: '',
 		};
 	}, [statement, subQuestions.length, t]);
 
@@ -66,6 +71,7 @@ const CompoundQuestion: FC = () => {
 				return (
 					<PhaseSection
 						key={phase}
+						title={phaseTitles[phase]}
 						summary={phaseSummaries[phase]}
 						isCompleted={isCompleted}
 					>
