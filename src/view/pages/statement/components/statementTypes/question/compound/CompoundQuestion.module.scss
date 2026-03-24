@@ -10,19 +10,28 @@
 
 // ─── Phase Section (collapsible wrapper) ────────────────
 
-.phaseSection {
-  background: var(--white, #fff);
-  border-radius: 16px;
-  padding: 1.25rem;
-  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.06);
-  border-inline-end: 4px solid var(--btn-primary);
+// Active phase uses same accordion but with blue accent
+.phaseSummaryStripActive {
+  border-inline-end-color: var(--btn-primary);
+  border-color: rgba(95, 136, 229, 0.25);
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.06);
+  }
 }
 
-.phaseH2 {
-  font-size: 1.25rem;
+.phaseSummaryIconActive {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
   font-weight: 700;
-  color: var(--text-title);
-  margin: 0 0 0.25rem;
+  flex-shrink: 0;
 }
 
 .phaseSectionCompleted {
@@ -121,9 +130,10 @@
   padding-top: 0.75rem;
   background: var(--white, #fff);
   border-radius: 0 0 12px 12px;
-  border: 1px solid rgba(87, 198, 178, 0.12);
+  border: 1px solid var(--border-light);
   border-top: none;
   margin-top: -4px;
+  box-shadow: 0 4px 12px rgba(0, 74, 198, 0.04);
 }
 
 // ─── Phase content ──────────────────────────────────────

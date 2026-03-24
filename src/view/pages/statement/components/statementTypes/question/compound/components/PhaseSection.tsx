@@ -11,26 +11,25 @@ interface PhaseSectionProps {
 const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, children }) => {
 	const [isExpanded, setIsExpanded] = useState(!isCompleted);
 
-	if (!isCompleted) {
-		return (
-			<div className={styles.phaseSection}>
-				<h2 className={styles.phaseH2}>{title}</h2>
-				{children}
-			</div>
-		);
-	}
+	const stripClass = isCompleted
+		? styles.phaseSummaryStrip
+		: `${styles.phaseSummaryStrip} ${styles.phaseSummaryStripActive}`;
+
+	const iconContent = isCompleted ? '\u2713' : '\u25CF';
 
 	return (
 		<div className={styles.phaseSectionCompleted}>
 			<button
-				className={styles.phaseSummaryStrip}
+				className={stripClass}
 				onClick={() => setIsExpanded((prev) => !prev)}
 				aria-expanded={isExpanded}
 			>
-				<span className={styles.phaseSummaryIcon}>&#10003;</span>
+				<span className={isCompleted ? styles.phaseSummaryIcon : styles.phaseSummaryIconActive}>
+					{iconContent}
+				</span>
 				<div className={styles.phaseSummaryContent}>
 					<h2 className={styles.phaseSummaryTitle}>{title}</h2>
-					{summary !== title && (
+					{summary && (
 						<span className={styles.phaseSummarySubtext}>{summary}</span>
 					)}
 				</div>
