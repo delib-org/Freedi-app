@@ -146,6 +146,82 @@
   white-space: pre-wrap;
 }
 
+.facilitatorBriefEditable {
+  cursor: pointer;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.06);
+  }
+}
+
+.facilitatorEdit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.facilitatorTextarea {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--btn-primary);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--text-body);
+  background: var(--white, #fff);
+  resize: none;
+  overflow: hidden;
+  text-align: start;
+  line-height: 1.6;
+  box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
+.facilitatorEditActions {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-start;
+}
+
+.facilitatorSaveBtn,
+.facilitatorCancelBtn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.facilitatorSaveBtn {
+  background: var(--agree);
+  color: white;
+}
+
+.facilitatorCancelBtn {
+  background: var(--border-light);
+  color: var(--text-body);
+}
+
 // ─── Phase content ──────────────────────────────────────
 
 .phase {
