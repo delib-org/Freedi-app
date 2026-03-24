@@ -1,7 +1,7 @@
 import { FC, useContext, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
-import { CompoundPhase, StatementType } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
@@ -18,13 +18,12 @@ const DefineQuestionPhase: FC = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { statement } = useContext(StatementContext);
-	const { currentPhase, isAdmin } = useCompoundPhase(statement);
+	const { isAdmin } = useCompoundPhase(statement);
 
 	const compoundSettings = statement?.questionSettings?.compoundSettings;
 	const lockedTitle = compoundSettings?.lockedTitle;
 	const questionScope = compoundSettings?.questionScope ?? '';
 	const titleDiscussionId = compoundSettings?.titleDiscussionId;
-	const isActive = currentPhase === CompoundPhase.defineQuestion;
 
 	// Get top consensus option from title discussion
 	const titleDiscussionOptions = useSelector(statementSubsSelector(titleDiscussionId ?? ''));
@@ -123,7 +122,7 @@ const DefineQuestionPhase: FC = () => {
 				/>
 			)}
 
-			{isActive && !lockedTitle && (
+			{!lockedTitle && (
 				<>
 					{/* Admin scope textarea */}
 					<div className={styles.scopeSection}>
@@ -223,12 +222,7 @@ const DefineQuestionPhase: FC = () => {
 				</>
 			)}
 
-			{!isActive && lockedTitle && (
-				<div className={styles.phaseSummary}>
-					<strong>{lockedTitle.lockedText}</strong>
-				</div>
-			)}
-		</div>
+			</div>
 	);
 };
 

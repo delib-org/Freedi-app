@@ -10,32 +10,43 @@ import FindSolutionsPhase from './phases/FindSolutionsPhase';
 import ResolutionPhase from './phases/ResolutionPhase';
 import styles from './CompoundQuestion.module.scss';
 
+const PHASE_ORDER = [
+	CompoundPhase.defineQuestion,
+	CompoundPhase.subQuestions,
+	CompoundPhase.findSolutions,
+	CompoundPhase.resolution,
+] as const;
+
+const PHASE_COMPONENTS: Record<CompoundPhase, FC> = {
+	[CompoundPhase.defineQuestion]: DefineQuestionPhase,
+	[CompoundPhase.subQuestions]: SubQuestionsPhase,
+	[CompoundPhase.findSolutions]: FindSolutionsPhase,
+	[CompoundPhase.resolution]: ResolutionPhase,
+};
+
 const CompoundQuestion: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { currentPhase } = useCompoundPhase(statement);
 
 	if (!statement) return null;
 
-	const renderPhase = () => {
-		switch (currentPhase) {
-			case CompoundPhase.defineQuestion:
-				return <DefineQuestionPhase />;
-			case CompoundPhase.subQuestions:
-				return <SubQuestionsPhase />;
-			case CompoundPhase.findSolutions:
-				return <FindSolutionsPhase />;
-			case CompoundPhase.resolution:
-				return <ResolutionPhase />;
-			default:
-				return <DefineQuestionPhase />;
-		}
-	};
+	const currentIndex = PHASE_ORDER.indexOf(currentPhase);
 
 	return (
 		<div className={styles.compoundWrapper}>
 			<CompoundPhaseStepper currentPhase={currentPhase} />
 			<PhaseAdminControls statement={statement} />
-			<div className="compound-question__phase-content">{renderPhase()}</div>
+			{PHASE_ORDER.map((phase, index) => {
+				if (index > currentIndex) return null;
+
+				const PhaseComponent = PHASE_COMPONENTS[phase];
+
+				return (
+					<div key={phase} className="compound-question__phase-content">
+						<PhaseComponent />
+					</div>
+				);
+			})}
 		</div>
 	);
 };

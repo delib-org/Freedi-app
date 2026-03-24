@@ -1,6 +1,6 @@
 import { FC, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { CompoundPhase, Statement } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
 import { useCompoundSubQuestions } from '@/controllers/hooks/compoundQuestion/useCompoundSubQuestions';
@@ -25,14 +25,12 @@ const SubQuestionsPhase: FC = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { statement } = useContext(StatementContext);
-	const { currentPhase, isAdmin } = useCompoundPhase(statement);
+	const { isAdmin } = useCompoundPhase(statement);
 	const { subQuestions, lockedSubQuestions, unlockedSubQuestions } =
 		useCompoundSubQuestions(statement);
 	const { hasDiscussion, discussionId, promotedCount } = useSubQuestionDiscussion(statement);
 	const creator = useSelector(creatorSelector);
 	const dispatch = useDispatch();
-
-	const isActive = currentPhase === CompoundPhase.subQuestions;
 
 	const [isCreatingDiscussion, setIsCreatingDiscussion] = useState(false);
 	const [copied, setCopied] = useState(false);
@@ -123,7 +121,7 @@ const SubQuestionsPhase: FC = () => {
 					{unlockedSubQuestions.map((sq) => (
 						<div key={sq.statementId} className={styles.subQuestionItem}>
 							<SubGroupCard statement={sq} />
-							{isAdmin && isActive && (
+							{isAdmin && (
 								<button
 									className="phase-admin-controls__btn phase-admin-controls__btn--lock"
 									onClick={() => handleLockSubQuestion(sq)}
@@ -140,59 +138,55 @@ const SubQuestionsPhase: FC = () => {
 				<p className={styles.emptyMessage}>{t('No sub-questions yet')}</p>
 			)}
 
-			{isActive && (
-				<>
-					<div className={styles.addButton}>
-						<button className="btn btn--secondary" onClick={handleAddSubQuestion}>
-							{t('Add Sub-Question')}
-						</button>
-					</div>
+			<div className={styles.addButton}>
+				<button className="btn btn--secondary" onClick={handleAddSubQuestion}>
+					{t('Add Sub-Question')}
+				</button>
+			</div>
 
-					{/* Research Discussion */}
-					<div className={styles.discussionSection}>
-						<h4 className={styles.discussionTitle}>{t('Research Discussion')}</h4>
-						<p className={styles.phaseDescription}>
-							{t('Open a discussion where participants suggest what topics should be researched')}
-						</p>
+			{/* Research Discussion */}
+			<div className={styles.discussionSection}>
+				<h4 className={styles.discussionTitle}>{t('Research Discussion')}</h4>
+				<p className={styles.phaseDescription}>
+					{t('Open a discussion where participants suggest what topics should be researched')}
+				</p>
 
-						{hasDiscussion ? (
-							<>
-								{promotedCount > 0 && (
-									<p className={styles.promotedNote}>
-										{promotedCount} {t('topics promoted to sub-questions')}
-									</p>
-								)}
-								<div className={styles.discussionActions}>
-									<button className={styles.discussionLink} onClick={handleGoToDiscussion}>
-										{t('Go to research discussion')}
-									</button>
-									<button
-										className={styles.copyLinkBtn}
-										onClick={handleShare}
-										aria-label={t('Copy discussion link to clipboard')}
-									>
-										{copied ? t('Copied!') : t('Copy link')}
-									</button>
-								</div>
-							</>
-						) : isAdmin ? (
-							<button
-								className={styles.createDiscussionBtn}
-								onClick={handleCreateDiscussion}
-								disabled={isCreatingDiscussion}
-							>
-								{isCreatingDiscussion ? t('Creating...') : t('Create research discussion')}
-							</button>
-						) : (
-							<p className={styles.emptyMessage}>
-								{t(
-									'The facilitator will open a research discussion soon where you can suggest topics.',
-								)}
+				{hasDiscussion ? (
+					<>
+						{promotedCount > 0 && (
+							<p className={styles.promotedNote}>
+								{promotedCount} {t('topics promoted to sub-questions')}
 							</p>
 						)}
-					</div>
-				</>
-			)}
+						<div className={styles.discussionActions}>
+							<button className={styles.discussionLink} onClick={handleGoToDiscussion}>
+								{t('Go to research discussion')}
+							</button>
+							<button
+								className={styles.copyLinkBtn}
+								onClick={handleShare}
+								aria-label={t('Copy discussion link to clipboard')}
+							>
+								{copied ? t('Copied!') : t('Copy link')}
+							</button>
+						</div>
+					</>
+				) : isAdmin ? (
+					<button
+						className={styles.createDiscussionBtn}
+						onClick={handleCreateDiscussion}
+						disabled={isCreatingDiscussion}
+					>
+						{isCreatingDiscussion ? t('Creating...') : t('Create research discussion')}
+					</button>
+				) : (
+					<p className={styles.emptyMessage}>
+						{t(
+							'The facilitator will open a research discussion soon where you can suggest topics.',
+						)}
+					</p>
+				)}
+			</div>
 		</div>
 	);
 };
