@@ -88,15 +88,7 @@ export async function unlockStatement({ statement }: UnlockStatementProps): Prom
 	}
 }
 
-interface LockCompoundTitleProps {
-	statement: Statement;
-	userId: string;
-}
-
-export async function lockCompoundTitle({
-	statement,
-	userId,
-}: LockCompoundTitleProps): Promise<void> {
+export async function unlockCompoundTitle(statement: Statement): Promise<void> {
 	try {
 		if (!statement.statementId) throw new Error('Statement ID is required');
 
@@ -108,8 +100,52 @@ export async function lockCompoundTitle({
 			{
 				questionSettings: {
 					compoundSettings: {
+						lockedTitle: null,
+					},
+				},
+				locked: {
+					isLocked: false,
+				},
+				lastUpdate: now,
+			},
+			{ merge: true },
+		);
+	} catch (error) {
+		logError(error, {
+			operation: 'compoundQuestion.unlockCompoundTitle',
+			statementId: statement.statementId,
+		});
+	}
+}
+
+interface LockCompoundTitleProps {
+	statement: Statement;
+	userId: string;
+	titleText?: string;
+}
+
+export async function lockCompoundTitle({
+	statement,
+	userId,
+	titleText,
+}: LockCompoundTitleProps): Promise<void> {
+	try {
+		if (!statement.statementId) throw new Error('Statement ID is required');
+
+		const statementRef = createStatementRef(statement.statementId);
+		const now = getCurrentTimestamp();
+		const finalTitle = titleText || statement.statement;
+		const scope = statement.questionSettings?.compoundSettings?.questionScope;
+
+		await setDoc(
+			statementRef,
+			{
+				statement: finalTitle,
+				...(scope ? { brief: scope } : {}),
+				questionSettings: {
+					compoundSettings: {
 						lockedTitle: {
-							lockedText: statement.statement,
+							lockedText: finalTitle,
 							lockedBy: userId,
 							lockedAt: now,
 						},
@@ -119,7 +155,7 @@ export async function lockCompoundTitle({
 					isLocked: true,
 					lockedBy: userId,
 					lockedAt: now,
-					lockedText: statement.statement,
+					lockedText: finalTitle,
 				},
 				lastUpdate: now,
 			},

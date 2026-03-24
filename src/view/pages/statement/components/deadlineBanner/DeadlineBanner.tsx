@@ -508,21 +508,16 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 			<div className={`deadline-banner deadline-banner--empty ${isManuallyHalted ? 'deadline-banner--halted' : ''}`}>
 				{isManuallyHalted && (
 					<div className="deadline-banner__status">
-						<span className="deadline-banner__icon" aria-hidden="true">
-							<OctagonX size={18} />
-						</span>
 						<span className="deadline-banner__text">
 							{t('Process halted')}
 						</span>
 						<div className="deadline-banner__controls">
 							<button
-								className="deadline-banner__action-btn deadline-banner__action-btn--resume"
+								className="phase-admin-controls__btn phase-admin-controls__btn--advance"
 								onClick={handleResumeProcess}
 								disabled={isSaving}
-								aria-label={t('Resume process')}
-								title={t('Resume process')}
 							>
-								<Play size={14} />
+								{t('Resume process')}
 							</button>
 						</div>
 					</div>
@@ -544,13 +539,11 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 							)}
 						</button>
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--halt"
+							className="phase-admin-controls__btn phase-admin-controls__btn--lock"
 							onClick={handleHaltProcess}
 							disabled={isSaving}
-							aria-label={t('Halt process')}
-							title={t('Halt process')}
 						>
-							<OctagonX size={14} />
+							{t('Halt process')}
 						</button>
 					</div>
 				)}
@@ -624,72 +617,59 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 				<div className="deadline-banner__controls">
 					{isRunning && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--pause"
+							className="phase-admin-controls__btn phase-admin-controls__btn--revert"
 							onClick={handlePause}
 							disabled={isSaving}
-							aria-label={t('Pause timer')}
-							title={t('Pause timer')}
 						>
-							<Pause size={14} />
+							{t('Pause timer')}
 						</button>
 					)}
 
 					{isPaused && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--resume"
+							className="phase-admin-controls__btn phase-admin-controls__btn--advance"
 							onClick={handleResume}
 							disabled={isSaving}
-							aria-label={t('Resume timer')}
-							title={t('Resume timer')}
 						>
-							<Play size={14} />
+							{t('Resume timer')}
 						</button>
 					)}
 
 					{isExpired && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--extend"
+							className="phase-admin-controls__btn phase-admin-controls__btn--advance"
 							onClick={() => setShowSetup((prev) => !prev)}
 							disabled={isSaving}
-							aria-expanded={showSetup}
-							aria-label={t('Extend timer')}
-							title={t('Extend timer')}
 						>
-							<TimerReset size={14} />
+							{t('Extend timer')}
 						</button>
 					)}
 
 					<button
-						className="deadline-banner__action-btn deadline-banner__action-btn--remove"
+						className="phase-admin-controls__btn phase-admin-controls__btn--revert"
 						onClick={handleRemove}
 						disabled={isSaving}
-						aria-label={t('Remove timer')}
-						title={t('Remove timer')}
 					>
-						<X size={14} />
+						{t('Remove Timer')}
 					</button>
 
 					{/* Halt / Resume process */}
 					{!isManuallyHalted && !isExpired && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--halt"
+							className="phase-admin-controls__btn phase-admin-controls__btn--lock"
 							onClick={handleHaltProcess}
 							disabled={isSaving}
-							aria-label={t('Halt process')}
-							title={t('Halt process')}
 						>
-							<OctagonX size={14} />
+							{t('Halt process')}
 						</button>
 					)}
 					{isManuallyHalted && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--resume"
+							className="phase-admin-controls__btn phase-admin-controls__btn--advance"
 							onClick={handleResumeProcess}
 							disabled={isSaving}
-							aria-label={t('Resume process')}
-							title={t('Resume process')}
 						>
-							<Play size={14} />
+							{t('Resume process')}
 						</button>
 					)}
 				</div>

@@ -189,32 +189,12 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 		}
 
 		// Case 3: Open group - auto-subscribe as member
-		if (
-			isOpenAccess(effectiveAccess, creatorIsAnonymous, role) &&
-			effectiveStatement &&
-			creator &&
-			!subscriptionAttemptedRef.current
-		) {
-			subscriptionAttemptedRef.current = true;
-
-			const pushNotificationsEnabled =
-				notificationService.isInitialized() &&
-				notificationService.safeGetPermission() === 'granted';
-
-			setStatementSubscriptionToDB({
-				statement: effectiveStatement,
-				creator,
-				role: Role.member,
-				getInAppNotification: true,
-				getEmailNotification: false,
-				getPushNotification: pushNotificationsEnabled,
-			});
-
+		if (isOpenAccess(effectiveAccess, creatorIsAnonymous, role)) {
 			const newState = {
 				isAuthorized: true,
 				loading: false,
-				role: Role.member,
-				isAdmin: false,
+				role: role || Role.member,
+				isAdmin: isAdminRole(role),
 				error: false,
 				errorMessage: '',
 				creator,
@@ -223,6 +203,29 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 
 			if (shouldUpdate(newState)) {
 				setAuthState(newState);
+			}
+
+			// Auto-subscribe only once
+			if (
+				!hasSubscription &&
+				!subscriptionAttemptedRef.current &&
+				effectiveStatement &&
+				creator
+			) {
+				subscriptionAttemptedRef.current = true;
+
+				const pushNotificationsEnabled =
+					notificationService.isInitialized() &&
+					notificationService.safeGetPermission() === 'granted';
+
+				setStatementSubscriptionToDB({
+					statement: effectiveStatement,
+					creator,
+					role: Role.member,
+					getInAppNotification: true,
+					getEmailNotification: false,
+					getPushNotification: pushNotificationsEnabled,
+				});
 			}
 
 			return;
@@ -255,6 +258,26 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 				errorMessage: '',
 				creator,
 				isWaitingForApproval: true,
+			};
+
+			if (shouldUpdate(newState)) {
+				setAuthState(newState);
+			}
+
+			return;
+		}
+
+		// If we don't know the access level yet, stay in loading state
+		if (!effectiveAccess) {
+			const newState = {
+				isAuthorized: false,
+				role: Role.unsubscribed,
+				isAdmin: false,
+				loading: true,
+				error: false,
+				errorMessage: '',
+				creator,
+				isWaitingForApproval: false,
 			};
 
 			if (shouldUpdate(newState)) {

@@ -8,6 +8,7 @@ import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompou
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { saveQuestionScope } from '@/controllers/db/compoundQuestion/saveQuestionScope';
 import { createTitleDiscussion } from '@/controllers/db/compoundQuestion/createTitleDiscussion';
+import { unlockCompoundTitle } from '@/controllers/db/compoundQuestion/lockStatement';
 import LockedBanner from '../components/LockedBanner';
 import styles from '../CompoundQuestion.module.scss';
 
@@ -110,7 +111,16 @@ const DefineQuestionPhase: FC = () => {
 			</p>
 
 			{lockedTitle && (
-				<LockedBanner message={t('Title locked')} lockedText={lockedTitle.lockedText} />
+				<LockedBanner
+					message={t('Title locked')}
+					lockedText={lockedTitle.lockedText}
+					onUnlock={isAdmin ? async () => {
+						if (!statement) return;
+						const confirmed = window.confirm(t('Are you sure you want to unlock the title?'));
+						if (!confirmed) return;
+						await unlockCompoundTitle(statement);
+					} : undefined}
+				/>
 			)}
 
 			{isActive && !lockedTitle && (
