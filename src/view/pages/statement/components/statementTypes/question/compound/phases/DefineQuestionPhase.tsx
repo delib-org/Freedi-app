@@ -8,9 +8,10 @@ import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompou
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { saveQuestionScope } from '@/controllers/db/compoundQuestion/saveQuestionScope';
 import { createTitleDiscussion } from '@/controllers/db/compoundQuestion/createTitleDiscussion';
-import { unlockCompoundTitle } from '@/controllers/db/compoundQuestion/lockStatement';
-import LockedBanner from '../components/LockedBanner';
+import { lockCompoundTitle, unlockCompoundTitle } from '@/controllers/db/compoundQuestion/lockStatement';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import styles from '../CompoundQuestion.module.scss';
+
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
@@ -19,6 +20,7 @@ const DefineQuestionPhase: FC = () => {
 	const navigate = useNavigate();
 	const { statement } = useContext(StatementContext);
 	const { isAdmin } = useCompoundPhase(statement);
+	const creator = useSelector(creatorSelector);
 
 	const compoundSettings = statement?.questionSettings?.compoundSettings;
 	const lockedTitle = compoundSettings?.lockedTitle;
@@ -102,20 +104,41 @@ const DefineQuestionPhase: FC = () => {
 		}
 	}, [titleDiscussionId, t, handleCopyLink]);
 
+	const handleLockTitle = useCallback(async () => {
+		if (!statement || !creator?.uid) return;
+		const titleText = topTitleOption?.statement;
+		const confirmed = window.confirm(
+			titleText
+				? `${t('Lock title as')}: "${titleText}"?`
+				: t('Are you sure you want to lock the current title?'),
+		);
+		if (!confirmed) return;
+		await lockCompoundTitle({ statement, userId: creator.uid, titleText });
+	}, [statement, creator?.uid, topTitleOption, t]);
+
+	const handleUnlockTitle = useCallback(async () => {
+		if (!statement) return;
+		const confirmed = window.confirm(t('Are you sure you want to unlock the title?'));
+		if (!confirmed) return;
+		await unlockCompoundTitle(statement);
+	}, [statement, t]);
+
 	return (
 		<div className={styles.phase}>
 
-			{lockedTitle && (
-				<LockedBanner
-					message={t('Title locked')}
-					lockedText={lockedTitle.lockedText}
-					onUnlock={isAdmin ? async () => {
-						if (!statement) return;
-						const confirmed = window.confirm(t('Are you sure you want to unlock the title?'));
-						if (!confirmed) return;
-						await unlockCompoundTitle(statement);
-					} : undefined}
-				/>
+			{isAdmin && (
+				<button
+					className={`${styles.lockButton} ${lockedTitle ? styles.lockButtonLocked : ''}`}
+					onClick={lockedTitle ? handleUnlockTitle : handleLockTitle}
+				>
+					<span className={styles.lockButtonIcon}>
+						{lockedTitle ? '\u{1F512}' : '\u{1F513}'}
+					</span>
+					{lockedTitle
+						? `${t('Title locked')}: ${lockedTitle.lockedText}`
+						: t('Lock Title')
+					}
+				</button>
 			)}
 
 			{!lockedTitle && (
