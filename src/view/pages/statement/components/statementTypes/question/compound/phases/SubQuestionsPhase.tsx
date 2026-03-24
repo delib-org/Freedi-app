@@ -38,7 +38,7 @@ const SubQuestionsPhase: FC = () => {
 	const [copied, setCopied] = useState(false);
 
 	const allowParticipants = statement?.questionSettings?.compoundSettings?.allowParticipantsToAddSubQuestions ?? false;
-	const canAddSubQuestion = isAdmin || allowParticipants;
+	const showResearchDiscussion = isAdmin || allowParticipants;
 
 	const handleToggleParticipantAccess = useCallback(async () => {
 		if (!statement) return;
@@ -163,13 +163,11 @@ const SubQuestionsPhase: FC = () => {
 				<p className={styles.emptyMessage}>{t('No sub-questions yet')}</p>
 			)}
 
-			<div className={styles.addRow}>
-				{canAddSubQuestion && (
+			{isAdmin && (
+				<div className={styles.addRow}>
 					<button className={styles.addButtonDashed} onClick={handleAddSubQuestion}>
 						+ {t('Add research question')}
 					</button>
-				)}
-				{isAdmin && (
 					<button
 						className={`${styles.toggleButton} ${allowParticipants ? styles.toggleButtonActive : ''}`}
 						onClick={handleToggleParticipantAccess}
@@ -177,49 +175,51 @@ const SubQuestionsPhase: FC = () => {
 					>
 						{allowParticipants ? <Users size={16} /> : <ShieldCheck size={16} />}
 					</button>
-				)}
-			</div>
+				</div>
+			)}
 
-			{/* Research Discussion */}
-			<div className={styles.discussionSection}>
-				<h4 className={styles.discussionTitle}>{t('Research Discussion')}</h4>
+			{/* Research Discussion — visible to admin always, to participants only when allowed */}
+			{showResearchDiscussion && (
+				<div className={styles.discussionSection}>
+					<h4 className={styles.discussionTitle}>{t('Research Discussion')}</h4>
 
-				{hasDiscussion ? (
-					<>
-						{promotedCount > 0 && (
-							<p className={styles.promotedNote}>
-								{promotedCount} {t('topics promoted to sub-questions')}
-							</p>
-						)}
-						<div className={styles.discussionActions}>
-							<button className={styles.discussionLink} onClick={handleGoToDiscussion}>
-								{t('Go to research discussion')}
-							</button>
-							<button
-								className={styles.copyLinkBtn}
-								onClick={handleShare}
-								aria-label={t('Copy discussion link to clipboard')}
-							>
-								{copied ? t('Copied!') : t('Copy link')}
-							</button>
-						</div>
-					</>
-				) : isAdmin ? (
-					<button
-						className={styles.createDiscussionBtn}
-						onClick={handleCreateDiscussion}
-						disabled={isCreatingDiscussion}
-					>
-						{isCreatingDiscussion ? t('Creating...') : t('Create research discussion')}
-					</button>
-				) : (
-					<p className={styles.emptyMessage}>
-						{t(
-							'The facilitator will open a research discussion soon where you can suggest topics.',
-						)}
-					</p>
-				)}
-			</div>
+					{hasDiscussion ? (
+						<>
+							{promotedCount > 0 && (
+								<p className={styles.promotedNote}>
+									{promotedCount} {t('topics promoted to sub-questions')}
+								</p>
+							)}
+							<div className={styles.discussionActions}>
+								<button className={styles.discussionLink} onClick={handleGoToDiscussion}>
+									{t('Go to research discussion')}
+								</button>
+								<button
+									className={styles.copyLinkBtn}
+									onClick={handleShare}
+									aria-label={t('Copy discussion link to clipboard')}
+								>
+									{copied ? t('Copied!') : t('Copy link')}
+								</button>
+							</div>
+						</>
+					) : isAdmin ? (
+						<button
+							className={styles.createDiscussionBtn}
+							onClick={handleCreateDiscussion}
+							disabled={isCreatingDiscussion}
+						>
+							{isCreatingDiscussion ? t('Creating...') : t('Create research discussion')}
+						</button>
+					) : (
+						<p className={styles.emptyMessage}>
+							{t(
+								'The facilitator will open a research discussion soon where you can suggest topics.',
+							)}
+						</p>
+					)}
+				</div>
+			)}
 		</div>
 	);
 };

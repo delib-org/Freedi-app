@@ -35,7 +35,6 @@ const CompoundQuestion: FC = () => {
 	const { subQuestions } = useCompoundSubQuestions(statement);
 
 	const currentIndex = PHASE_ORDER.indexOf(currentPhase);
-	const allowParticipantsToAdd = statement?.questionSettings?.compoundSettings?.allowParticipantsToAddSubQuestions ?? false;
 
 	const phaseTitles = useMemo((): Record<CompoundPhase, string> => ({
 		[CompoundPhase.defineQuestion]: t('Define Question'),
@@ -79,15 +78,12 @@ const CompoundQuestion: FC = () => {
 				const PhaseComponent = PHASE_COMPONENTS[phase];
 				const isCompleted = index < currentIndex;
 
-				const forceExpanded = phase === CompoundPhase.subQuestions && allowParticipantsToAdd && !isAdmin;
-
 				return (
 					<PhaseSection
 						key={phase}
 						title={phaseTitles[phase]}
 						summary={phaseSummaries[phase]}
 						isCompleted={isCompleted}
-						defaultExpanded={forceExpanded || undefined}
 					>
 						<PhaseComponent />
 					</PhaseSection>
