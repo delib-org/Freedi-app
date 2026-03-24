@@ -1,6 +1,6 @@
 import { FC, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { setDoc } from 'firebase/firestore';
+import { updateDoc } from 'firebase/firestore';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
@@ -44,18 +44,10 @@ const SubQuestionsPhase: FC = () => {
 		if (!statement) return;
 		try {
 			const ref = createStatementRef(statement.statementId);
-			await setDoc(
-				ref,
-				{
-					questionSettings: {
-						compoundSettings: {
-							allowParticipantsToAddSubQuestions: !allowParticipants,
-						},
-					},
-					lastUpdate: getCurrentTimestamp(),
-				},
-				{ merge: true },
-			);
+			await updateDoc(ref, {
+				'questionSettings.compoundSettings.allowParticipantsToAddSubQuestions': !allowParticipants,
+				lastUpdate: getCurrentTimestamp(),
+			});
 		} catch (error) {
 			logError(error, {
 				operation: 'compound.toggleParticipantSubQuestions',
