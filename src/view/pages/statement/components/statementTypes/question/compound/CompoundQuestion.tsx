@@ -1,9 +1,12 @@
-import { FC, useContext } from 'react';
+import { FC, useContext, useMemo } from 'react';
 import { CompoundPhase } from '@freedi/shared-types';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
+import { useCompoundSubQuestions } from '@/controllers/hooks/compoundQuestion/useCompoundSubQuestions';
+import { useTranslation } from '@/controllers/hooks/useTranslation';
 import CompoundPhaseStepper from './components/CompoundPhaseStepper';
 import PhaseAdminControls from './components/PhaseAdminControls';
+import PhaseSection from './components/PhaseSection';
 import DefineQuestionPhase from './phases/DefineQuestionPhase';
 import SubQuestionsPhase from './phases/SubQuestionsPhase';
 import FindSolutionsPhase from './phases/FindSolutionsPhase';
@@ -25,12 +28,30 @@ const PHASE_COMPONENTS: Record<CompoundPhase, FC> = {
 };
 
 const CompoundQuestion: FC = () => {
+	const { t } = useTranslation();
 	const { statement } = useContext(StatementContext);
 	const { currentPhase } = useCompoundPhase(statement);
-
-	if (!statement) return null;
+	const { subQuestions } = useCompoundSubQuestions(statement);
 
 	const currentIndex = PHASE_ORDER.indexOf(currentPhase);
+
+	const phaseSummaries = useMemo((): Record<CompoundPhase, string> => {
+		const lockedTitle = statement?.questionSettings?.compoundSettings?.lockedTitle?.lockedText;
+		const subCount = subQuestions.length;
+
+		return {
+			[CompoundPhase.defineQuestion]: lockedTitle
+				? `${t('Define Question')}: ${lockedTitle}`
+				: t('Define Question'),
+			[CompoundPhase.subQuestions]: subCount > 0
+				? `${t('Sub-Questions')}: ${subCount} ${t('defined')}`
+				: t('Sub-Questions'),
+			[CompoundPhase.findSolutions]: t('Find Solutions'),
+			[CompoundPhase.resolution]: t('Resolution'),
+		};
+	}, [statement, subQuestions.length, t]);
+
+	if (!statement) return null;
 
 	return (
 		<div className={styles.compoundWrapper}>
@@ -40,11 +61,16 @@ const CompoundQuestion: FC = () => {
 				if (index > currentIndex) return null;
 
 				const PhaseComponent = PHASE_COMPONENTS[phase];
+				const isCompleted = index < currentIndex;
 
 				return (
-					<div key={phase} className="compound-question__phase-content">
+					<PhaseSection
+						key={phase}
+						summary={phaseSummaries[phase]}
+						isCompleted={isCompleted}
+					>
 						<PhaseComponent />
-					</div>
+					</PhaseSection>
 				);
 			})}
 		</div>

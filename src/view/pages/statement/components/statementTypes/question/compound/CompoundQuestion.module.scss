@@ -1,37 +1,110 @@
+// ─── Layout ─────────────────────────────────────────────
+
 .compoundWrapper {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   width: 100%;
 }
+
+// ─── Phase Section (collapsible wrapper) ────────────────
+
+.phaseSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.phaseSectionCompleted {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.phaseSummaryStrip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-info-light);
+  border: none;
+  border-inline-start: 3px solid var(--agree);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: start;
+  font-family: inherit;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(87, 198, 178, 0.12);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.phaseSummaryCheck {
+  color: var(--agree);
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.phaseSummaryText {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-body);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseSummaryChevron {
+  font-size: 0.6rem;
+  color: var(--text-caption);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  transform: rotate(-90deg);
+
+  [dir="rtl"] & {
+    transform: rotate(90deg);
+  }
+}
+
+.phaseSummaryChevronOpen {
+  transform: rotate(0deg) !important;
+}
+
+.phaseSectionContent {
+  padding: 0.5rem 0.25rem;
+}
+
+// ─── Phase content ──────────────────────────────────────
 
 .phase {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.5rem;
+  padding: 0.25rem;
 }
 
 .phaseTitle {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-title);
   margin: 0;
 }
 
 .phaseDescription {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: var(--text-caption);
   margin: 0;
 }
 
-.phaseSummary {
-  padding: 0.75rem;
-  background: var(--card-default);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: var(--text-body);
-}
+// ─── Sub-questions ──────────────────────────────────────
 
 .subQuestionList {
   display: flex;
@@ -40,7 +113,7 @@
 }
 
 .subQuestionListTitle {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-body);
   margin: 0;
@@ -52,35 +125,39 @@
   gap: 0.5rem;
 }
 
+// ─── Empty & utility ────────────────────────────────────
+
 .emptyMessage {
   font-size: 0.85rem;
   color: var(--text-caption);
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   margin: 0;
 }
 
 .addButton {
   display: flex;
   justify-content: center;
-  padding: 0.5rem 0;
+  padding: 0.25rem 0;
 }
+
+// ─── Solutions ──────────────────────────────────────────
 
 .solutionsList {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .solutionCard {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem;
+  padding: 0.6rem 0.75rem;
   background: var(--card-default);
   border-radius: 8px;
-  box-shadow: 0px 2px 4px rgba(115, 138, 191, 0.1);
-  gap: 0.75rem;
+  box-shadow: 0px 1px 3px rgba(115, 138, 191, 0.1);
+  gap: 0.5rem;
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -91,19 +168,19 @@
 .solutionContent {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
   flex: 1;
 }
 
 .solutionTitle {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 500;
   color: var(--text-body);
   margin: 0;
 }
 
 .solutionConsensus {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-caption);
 }
 
@@ -115,28 +192,28 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
+  padding: 0.2rem 0.5rem;
   background: rgba(87, 198, 178, 0.15);
   color: var(--agree);
   border-radius: 12px;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
 }
 
-// Phase 1: Top suggestion from title discussion
+// ─── Top suggestion (Phase 1) ───────────────────────────
 
 .topSuggestion {
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 0.75rem;
   background: var(--bg-info-light);
-  border-radius: 10px;
-  border-inline-start: 4px solid var(--agree);
+  border-radius: 8px;
+  border-inline-start: 3px solid var(--agree);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.15rem;
 }
 
 .topSuggestionLabel {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--agree);
   text-transform: uppercase;
@@ -144,38 +221,38 @@
 }
 
 .topSuggestionText {
-  font-size: 1.05rem;
+  font-size: 0.95rem;
   font-weight: 600;
   color: var(--text-title);
   margin: 0;
 }
 
 .topSuggestionConsensus {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-caption);
 }
 
-// Phase 1: Scope & Title Discussion
+// ─── Scope (Phase 1) ───────────────────────────────────
 
 .scopeSection {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.4rem;
 }
 
 .scopeLabel {
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-body);
 }
 
 .scopeTextarea {
   width: 100%;
-  min-height: 5rem;
-  padding: 0.75rem;
+  min-height: 4rem;
+  padding: 0.6rem;
   border: 1px solid var(--border-light);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: inherit;
   color: var(--text-body);
   background: var(--card-default);
@@ -194,17 +271,17 @@
 }
 
 .scopeText {
-  padding: 0.75rem;
+  padding: 0.6rem;
   background: var(--card-default);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   color: var(--text-body);
   white-space: pre-wrap;
   margin: 0;
 }
 
 .saveIndicator {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--text-caption);
   font-style: italic;
 }
@@ -219,17 +296,19 @@
   font-style: normal;
 }
 
+// ─── Discussion sections ────────────────────────────────
+
 .discussionSection {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding-top: 0.75rem;
+  gap: 0.4rem;
+  padding-top: 0.5rem;
   margin-top: 0.25rem;
   border-top: 1px solid var(--border-light);
 }
 
 .discussionTitle {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: var(--text-body);
   margin: 0;
@@ -237,7 +316,7 @@
 
 .discussionActions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
 
   @media (max-width: 600px) {
@@ -248,10 +327,10 @@
 .discussionLink,
 .copyLinkBtn,
 .createDiscussionBtn {
-  min-height: 2.75rem;
-  padding: 0.6rem 1.25rem;
+  min-height: 2.5rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
   cursor: pointer;
   border: none;
@@ -296,8 +375,18 @@
 }
 
 .promotedNote {
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   color: var(--agree);
   font-weight: 500;
   margin: 0;
+}
+
+// ─── Summary (legacy) ───────────────────────────────────
+
+.phaseSummary {
+  padding: 0.6rem;
+  background: var(--card-default);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--text-body);
 }

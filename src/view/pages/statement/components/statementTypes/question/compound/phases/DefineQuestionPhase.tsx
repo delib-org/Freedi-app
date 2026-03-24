@@ -221,8 +221,7 @@ const DefineQuestionPhase: FC = () => {
 					</div>
 				</>
 			)}
-
-			</div>
+		</div>
 	);
 };
 
