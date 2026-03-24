@@ -1,4 +1,5 @@
 import { FC, ReactNode, useState } from 'react';
+import { Check, Circle, ChevronDown } from 'lucide-react';
 import styles from '../CompoundQuestion.module.scss';
 
 interface PhaseSectionProps {
@@ -15,8 +16,6 @@ const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, chil
 		? styles.phaseSummaryStrip
 		: `${styles.phaseSummaryStrip} ${styles.phaseSummaryStripActive}`;
 
-	const iconContent = isCompleted ? '\u2713' : '\u25CF';
-
 	return (
 		<div className={styles.phaseSectionCompleted}>
 			<button
@@ -25,7 +24,7 @@ const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, chil
 				aria-expanded={isExpanded}
 			>
 				<span className={isCompleted ? styles.phaseSummaryIcon : styles.phaseSummaryIconActive}>
-					{iconContent}
+					{isCompleted ? <Check size={14} /> : <Circle size={8} />}
 				</span>
 				<div className={styles.phaseSummaryContent}>
 					<h2 className={styles.phaseSummaryTitle}>{title}</h2>
@@ -34,7 +33,7 @@ const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, chil
 					)}
 				</div>
 				<span className={`${styles.phaseSummaryChevron} ${isExpanded ? styles.phaseSummaryChevronOpen : ''}`}>
-					&#9662;
+					<ChevronDown size={16} />
 				</span>
 			</button>
 			{isExpanded && <div className={styles.phaseSectionContent}>{children}</div>}

@@ -10,6 +10,7 @@ import { saveQuestionScope } from '@/controllers/db/compoundQuestion/saveQuestio
 import { createTitleDiscussion } from '@/controllers/db/compoundQuestion/createTitleDiscussion';
 import { lockCompoundTitle, unlockCompoundTitle } from '@/controllers/db/compoundQuestion/lockStatement';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { Lock, LockOpen } from 'lucide-react';
 import styles from '../CompoundQuestion.module.scss';
 
 
@@ -132,7 +133,7 @@ const DefineQuestionPhase: FC = () => {
 					onClick={lockedTitle ? handleUnlockTitle : handleLockTitle}
 				>
 					<span className={styles.lockButtonIcon}>
-						{lockedTitle ? '\u{1F512}' : '\u{1F513}'}
+						{lockedTitle ? <Lock size={18} /> : <LockOpen size={18} />}
 					</span>
 					{lockedTitle
 						? `${t('Title locked')}: ${lockedTitle.lockedText}`

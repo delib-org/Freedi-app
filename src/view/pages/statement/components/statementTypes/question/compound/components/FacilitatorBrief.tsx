@@ -4,6 +4,7 @@ import { Statement } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { Check, X } from 'lucide-react';
 import styles from '../CompoundQuestion.module.scss';
 
 interface FacilitatorBriefProps {
@@ -86,14 +87,14 @@ const FacilitatorBrief: FC<FacilitatorBriefProps> = ({ statement, isAdmin }) => 
 						onClick={handleSave}
 						aria-label={t('Save')}
 					>
-						&#10003;
+						<Check size={16} />
 					</button>
 					<button
 						className={styles.facilitatorCancelBtn}
 						onClick={handleCancel}
 						aria-label={t('Cancel')}
 					>
-						&#10005;
+						<X size={16} />
 					</button>
 				</div>
 			</div>

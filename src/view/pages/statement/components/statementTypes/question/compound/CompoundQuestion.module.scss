@@ -109,11 +109,11 @@
 }
 
 .phaseSummaryChevron {
-  font-size: 1.1rem;
   color: var(--text-caption);
   flex-shrink: 0;
   transition: transform 0.2s ease;
-  line-height: 1;
+  display: flex;
+  align-items: center;
   transform: rotate(-90deg);
 
   [dir="rtl"] & {
@@ -263,9 +263,10 @@
 }
 
 .lockButtonIcon {
-  font-size: 1rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+  color: inherit;
 }
 
 // ─── Phase content ──────────────────────────────────────
