@@ -1,6 +1,6 @@
 import { FC, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { updateDoc } from 'firebase/firestore';
+import { setDoc } from 'firebase/firestore';
 import { Statement, StatementType } from '@freedi/shared-types';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
@@ -44,10 +44,18 @@ const SubQuestionsPhase: FC = () => {
 		if (!statement) return;
 		try {
 			const ref = createStatementRef(statement.statementId);
-			await updateDoc(ref, {
-				'questionSettings.compoundSettings.allowParticipantsToAddSubQuestions': !allowParticipants,
-				lastUpdate: getCurrentTimestamp(),
-			});
+			await setDoc(
+				ref,
+				{
+					questionSettings: {
+						compoundSettings: {
+							allowParticipantsToAddSubQuestions: !allowParticipants,
+						},
+					},
+					lastUpdate: getCurrentTimestamp(),
+				},
+				{ merge: true },
+			);
 		} catch (error) {
 			logError(error, {
 				operation: 'compound.toggleParticipantSubQuestions',
@@ -155,23 +163,22 @@ const SubQuestionsPhase: FC = () => {
 				<p className={styles.emptyMessage}>{t('No sub-questions yet')}</p>
 			)}
 
-			{canAddSubQuestion && (
-				<button className={styles.addButtonDashed} onClick={handleAddSubQuestion}>
-					+ {t('Add Sub-Question')}
-				</button>
-			)}
-
-			{isAdmin && (
-				<button
-					className={`${styles.toggleButton} ${allowParticipants ? styles.toggleButtonActive : ''}`}
-					onClick={handleToggleParticipantAccess}
-				>
-					{allowParticipants
-						? <><Users size={16} /> {t('All participants can add')}</>
-						: <><ShieldCheck size={16} /> {t('Only admin can add')}</>
-					}
-				</button>
-			)}
+			<div className={styles.addRow}>
+				{canAddSubQuestion && (
+					<button className={styles.addButtonDashed} onClick={handleAddSubQuestion}>
+						+ {t('Add research question')}
+					</button>
+				)}
+				{isAdmin && (
+					<button
+						className={`${styles.toggleButton} ${allowParticipants ? styles.toggleButtonActive : ''}`}
+						onClick={handleToggleParticipantAccess}
+						title={allowParticipants ? t('All participants can add') : t('Only admin can add')}
+					>
+						{allowParticipants ? <Users size={16} /> : <ShieldCheck size={16} />}
+					</button>
+				)}
+			</div>
 
 			{/* Research Discussion */}
 			<div className={styles.discussionSection}>
