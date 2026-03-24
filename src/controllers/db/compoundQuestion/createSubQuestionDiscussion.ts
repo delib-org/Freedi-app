@@ -6,6 +6,7 @@ import {
 	ResultsBy,
 	CutoffBy,
 	createStatementObject,
+	evaluationType,
 } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
@@ -51,7 +52,8 @@ export async function createSubQuestionDiscussion({
 				subScreens: ['options'],
 				enableAddEvaluationOption: true,
 				showEvaluation: true,
-				enhancedEvaluation: true,
+				evaluationType: evaluationType.range,
+				enhancedEvaluation: true, // auto-derived from evaluationType
 			},
 			resultsSettings: {
 				resultsBy: ResultsBy.consensus,

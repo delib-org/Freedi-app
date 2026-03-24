@@ -57,7 +57,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 		/**
 		 * Handle evaluation type change - sets both evaluationSettings.evaluationUI
-		 * and statementSettings.evaluationType for main app compatibility
+		 * and statementSettings.evaluationType for main app compatibility.
+		 * enhancedEvaluation is auto-derived from evaluationType for backward compat.
 		 */
 		function handleEvaluationTypeChange(value: EvaluationUI) {
 			setEvaluationUIType(statement.statementId, value);

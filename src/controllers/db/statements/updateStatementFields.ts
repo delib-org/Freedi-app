@@ -9,6 +9,7 @@ import {
 	ResultsBy,
 	EvaluationUI,
 	Paragraph,
+	evaluationType as EvalType,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -23,7 +24,7 @@ interface UpdateStatementProps {
 	statementType?: StatementType;
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
-	enhancedEvaluation?: boolean;
+	evaluationType?: EvalType;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
@@ -34,6 +35,7 @@ interface UpdateStatementProps {
 interface UpdateStatementSettingsReturnType {
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
+	evaluationType?: EvalType;
 	enhancedEvaluation?: boolean;
 	showEvaluation?: boolean;
 }
@@ -42,7 +44,7 @@ interface UpdateStatementSettingsParams {
 	statement: Statement;
 	enableAddEvaluationOption: boolean;
 	enableAddVotingOption: boolean;
-	enhancedEvaluation: boolean;
+	evaluationType: EvalType;
 	showEvaluation: boolean;
 }
 
@@ -50,7 +52,7 @@ function updateStatementSettings({
 	statement,
 	enableAddEvaluationOption,
 	enableAddVotingOption,
-	enhancedEvaluation,
+	evaluationType: evalType,
 	showEvaluation,
 }: UpdateStatementSettingsParams): UpdateStatementSettingsReturnType {
 	const defaultSettings = {
@@ -65,7 +67,8 @@ function updateStatementSettings({
 
 	return {
 		...(statement.statementSettings || defaultSettings),
-		enhancedEvaluation,
+		evaluationType: evalType,
+		enhancedEvaluation: evalType === EvalType.range, // auto-derived from evaluationType
 		showEvaluation,
 		enableAddEvaluationOption,
 		enableAddVotingOption,
@@ -79,7 +82,7 @@ export function updateStatement({
 	statementType,
 	enableAddEvaluationOption,
 	enableAddVotingOption,
-	enhancedEvaluation,
+	evaluationType: evalType,
 	showEvaluation,
 	resultsBy,
 	numberOfResults,
@@ -109,7 +112,7 @@ export function updateStatement({
 			statement,
 			enableAddEvaluationOption,
 			enableAddVotingOption,
-			enhancedEvaluation,
+			evaluationType: evalType,
 			showEvaluation,
 		});
 

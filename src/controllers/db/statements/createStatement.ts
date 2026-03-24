@@ -19,6 +19,7 @@ import {
 	CutoffBy,
 	Paragraph,
 	SourceApp,
+	evaluationType as EvalType,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -36,7 +37,7 @@ export interface CreateStatementProps {
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
 	enableNavigationalElements?: boolean;
-	enhancedEvaluation?: boolean;
+	evaluationType?: EvalType;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
@@ -55,7 +56,7 @@ export function createStatement({
 	enableAddEvaluationOption = true,
 	enableNavigationalElements,
 	enableAddVotingOption = true,
-	enhancedEvaluation = true,
+	evaluationType: evalType = EvalType.range,
 	showEvaluation = true,
 	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
@@ -109,7 +110,8 @@ export function createStatement({
 			// Always set membership - either provided, or default to openToAll
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
-				enhancedEvaluation,
+				evaluationType: evalType,
+				enhancedEvaluation: evalType === EvalType.range, // auto-derived from evaluationType
 				hasChat: true,
 				showEvaluation,
 				enableAddEvaluationOption,

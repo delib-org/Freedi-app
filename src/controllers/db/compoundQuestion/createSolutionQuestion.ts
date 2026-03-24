@@ -4,6 +4,7 @@ import {
 	StatementType,
 	QuestionType,
 	createStatementObject,
+	evaluationType,
 } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
@@ -41,6 +42,13 @@ export async function createSolutionQuestion({
 			...solutionQuestion,
 			questionSettings: {
 				questionType: QuestionType.simple,
+			},
+			statementSettings: {
+				subScreens: ['options'],
+				enableAddEvaluationOption: true,
+				showEvaluation: true,
+				evaluationType: evaluationType.range,
+				enhancedEvaluation: true, // auto-derived from evaluationType
 			},
 		});
 
