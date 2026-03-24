@@ -2087,5 +2087,7 @@
   "Add Sub-Question": "إضافة سؤال فرعي",
   "Details": "تفاصيل",
   "Click to add background context...": "انقر لإضافة سياق...",
-  "Write background context for participants...": "اكتب سياقًا للمشاركين..."
+  "Write background context for participants...": "اكتب سياقًا للمشاركين...",
+  "All participants can add": "يمكن لجميع المشاركين الإضافة",
+  "Only admin can add": "المسؤول فقط يمكنه الإضافة"
 }

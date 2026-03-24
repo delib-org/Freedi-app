@@ -1,25 +1,27 @@
 import { FC, useContext, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router';
-import { Statement } from '@freedi/shared-types';
+import { updateDoc } from 'firebase/firestore';
+import { Statement, StatementType } from '@freedi/shared-types';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
 import { useCompoundSubQuestions } from '@/controllers/hooks/compoundQuestion/useCompoundSubQuestions';
 import { useSubQuestionDiscussion } from '@/controllers/hooks/compoundQuestion/useSubQuestionDiscussion';
 import { lockStatement } from '@/controllers/db/compoundQuestion/lockStatement';
 import { createSubQuestionDiscussion } from '@/controllers/db/compoundQuestion/createSubQuestionDiscussion';
-import { useSelector } from 'react-redux';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
+import { logError } from '@/utils/errorHandling';
+import { useSelector, useDispatch } from 'react-redux';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { Users, ShieldCheck } from 'lucide-react';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import LockedBanner from '../components/LockedBanner';
 import styles from '../CompoundQuestion.module.scss';
-import { useDispatch } from 'react-redux';
 import {
 	setParentStatement,
 	setNewStatementType,
 	setShowNewStatementModal,
 } from '@/redux/statements/newStatementSlice';
-import { StatementType } from '@freedi/shared-types';
 
 const SubQuestionsPhase: FC = () => {
 	const { t } = useTranslation();
@@ -34,6 +36,25 @@ const SubQuestionsPhase: FC = () => {
 
 	const [isCreatingDiscussion, setIsCreatingDiscussion] = useState(false);
 	const [copied, setCopied] = useState(false);
+
+	const allowParticipants = statement?.questionSettings?.compoundSettings?.allowParticipantsToAddSubQuestions ?? false;
+	const canAddSubQuestion = isAdmin || allowParticipants;
+
+	const handleToggleParticipantAccess = useCallback(async () => {
+		if (!statement) return;
+		try {
+			const ref = createStatementRef(statement.statementId);
+			await updateDoc(ref, {
+				'questionSettings.compoundSettings.allowParticipantsToAddSubQuestions': !allowParticipants,
+				lastUpdate: getCurrentTimestamp(),
+			});
+		} catch (error) {
+			logError(error, {
+				operation: 'compound.toggleParticipantSubQuestions',
+				statementId: statement.statementId,
+			});
+		}
+	}, [statement, allowParticipants]);
 
 	const handleLockSubQuestion = async (subQuestion: Statement) => {
 		if (!creator?.uid || !statement) return;
@@ -134,9 +155,23 @@ const SubQuestionsPhase: FC = () => {
 				<p className={styles.emptyMessage}>{t('No sub-questions yet')}</p>
 			)}
 
-			<button className={styles.addButtonDashed} onClick={handleAddSubQuestion}>
-				+ {t('Add Sub-Question')}
-			</button>
+			{canAddSubQuestion && (
+				<button className={styles.addButtonDashed} onClick={handleAddSubQuestion}>
+					+ {t('Add Sub-Question')}
+				</button>
+			)}
+
+			{isAdmin && (
+				<button
+					className={`${styles.toggleButton} ${allowParticipants ? styles.toggleButtonActive : ''}`}
+					onClick={handleToggleParticipantAccess}
+				>
+					{allowParticipants
+						? <><Users size={16} /> {t('All participants can add')}</>
+						: <><ShieldCheck size={16} /> {t('Only admin can add')}</>
+					}
+				</button>
+			)}
 
 			{/* Research Discussion */}
 			<div className={styles.discussionSection}>

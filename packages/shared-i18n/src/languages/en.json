@@ -2697,5 +2697,7 @@
   "Add Sub-Question": "Add Sub-Question",
   "Details": "Details",
   "Click to add background context...": "Click to add background context...",
-  "Write background context for participants...": "Write background context for participants..."
+  "Write background context for participants...": "Write background context for participants...",
+  "All participants can add": "All participants can add",
+  "Only admin can add": "Only admin can add"
 }

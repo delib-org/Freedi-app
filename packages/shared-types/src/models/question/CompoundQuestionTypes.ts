@@ -55,6 +55,7 @@ export const CompoundSettingsSchema = object({
 	phaseHistory: optional(array(PhaseHistoryEntrySchema)),
 	subQuestionDiscussionId: optional(string()),
 	promotedOptionIds: optional(array(string())),
+	allowParticipantsToAddSubQuestions: optional(boolean()),
 });
 
 export type CompoundSettings = InferOutput<typeof CompoundSettingsSchema>;
