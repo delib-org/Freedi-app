@@ -3,7 +3,7 @@
 .compoundWrapper {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
   width: 100%;
   padding-bottom: 1rem;
 }
@@ -11,34 +11,39 @@
 // ─── Phase Section (collapsible wrapper) ────────────────
 
 .phaseSection {
-  background: var(--card-default);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 1px 4px rgba(115, 138, 191, 0.12);
+  background: var(--white, #fff);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 24px rgba(0, 74, 198, 0.06);
+  border-inline-end: 4px solid var(--btn-primary);
 }
 
 .phaseSectionCompleted {
-  border-radius: 10px;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .phaseSummaryStrip {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   width: 100%;
-  padding: 0.55rem 0.75rem;
-  background: transparent;
-  border: 1px solid rgba(87, 198, 178, 0.3);
-  border-inline-start: 3px solid var(--agree);
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  background: var(--card-default, #f3f3f3);
+  border: none;
+  border-inline-end: 4px solid var(--agree);
+  border-radius: 12px;
   cursor: pointer;
   text-align: start;
   font-family: inherit;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.1s ease;
 
   &:hover {
-    background: rgba(87, 198, 178, 0.06);
+    background: rgba(87, 198, 178, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.99);
   }
 
   &:focus-visible {
@@ -47,17 +52,24 @@
   }
 }
 
-.phaseSummaryCheck {
-  color: var(--agree);
-  font-size: 0.75rem;
+.phaseSummaryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--agree);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .phaseSummaryText {
   flex: 1;
-  font-size: 0.82rem;
-  font-weight: 500;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: var(--text-body);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -65,10 +77,11 @@
 }
 
 .phaseSummaryChevron {
-  font-size: 0.55rem;
+  font-size: 1.1rem;
   color: var(--text-caption);
   flex-shrink: 0;
   transition: transform 0.2s ease;
+  line-height: 1;
   transform: rotate(-90deg);
 
   [dir="rtl"] & {
@@ -81,13 +94,13 @@
 }
 
 .phaseSectionContent {
-  padding: 0.75rem;
-  padding-top: 0.5rem;
-  background: var(--card-default);
-  border-radius: 0 0 10px 10px;
-  border: 1px solid rgba(87, 198, 178, 0.15);
+  padding: 1rem;
+  padding-top: 0.75rem;
+  background: var(--white, #fff);
+  border-radius: 0 0 12px 12px;
+  border: 1px solid rgba(87, 198, 178, 0.12);
   border-top: none;
-  margin-top: -2px;
+  margin-top: -4px;
 }
 
 // ─── Phase content ──────────────────────────────────────
@@ -95,12 +108,19 @@
 .phase {
   display: flex;
   flex-direction: column;
-  gap: 0.6rem;
+  gap: 0.75rem;
+}
+
+.phaseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .phaseTitle {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-title);
   margin: 0;
 }
@@ -117,7 +137,7 @@
 .subQuestionList {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .subQuestionListTitle {
@@ -149,27 +169,60 @@
   padding: 0.15rem 0;
 }
 
+.addButtonDashed {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 2px dashed var(--border-light);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-caption);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
 // ─── Solutions ──────────────────────────────────────────
 
 .solutionsList {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
+  gap: 0.5rem;
 }
 
 .solutionCard {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.65rem 0.75rem;
-  background: var(--white);
-  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  background: var(--white, #fff);
+  border-radius: 12px;
   border: 1px solid var(--border-light);
   gap: 0.5rem;
-  transition: box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
 
   &:hover {
-    box-shadow: 0 2px 6px rgba(115, 138, 191, 0.12);
+    box-shadow: 0 4px 12px rgba(115, 138, 191, 0.1);
+  }
+
+  &:active {
+    transform: scale(0.995);
   }
 
   @media (max-width: 600px) {
@@ -181,22 +234,28 @@
 .solutionContent {
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.25rem;
   flex: 1;
   min-width: 0;
 }
 
 .solutionTitle {
   font-size: 0.88rem;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-body);
   margin: 0;
 }
 
 .solutionConsensus {
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  background: rgba(87, 198, 178, 0.1);
   color: var(--agree);
-  font-weight: 500;
+  border-radius: 12px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  width: fit-content;
 }
 
 .solutionActions {
@@ -207,36 +266,36 @@
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  padding: 0.2rem 0.5rem;
-  background: rgba(87, 198, 178, 0.12);
+  padding: 0.2rem 0.6rem;
+  background: rgba(87, 198, 178, 0.1);
   color: var(--agree);
   border-radius: 12px;
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 // ─── Top suggestion (Phase 1) ───────────────────────────
 
 .topSuggestion {
-  padding: 0.6rem 0.75rem;
-  background: rgba(87, 198, 178, 0.06);
-  border-radius: 10px;
-  border-inline-start: 3px solid var(--agree);
+  padding: 0.75rem 1rem;
+  background: rgba(87, 198, 178, 0.05);
+  border-radius: 12px;
+  border-inline-end: 4px solid var(--agree);
   display: flex;
   flex-direction: column;
-  gap: 0.1rem;
+  gap: 0.2rem;
 }
 
 .topSuggestionLabel {
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--agree);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
 }
 
 .topSuggestionText {
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--text-title);
   margin: 0;
@@ -264,13 +323,13 @@
 .scopeTextarea {
   width: 100%;
   min-height: 3.5rem;
-  padding: 0.5rem 0.6rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid var(--border-light);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 0.82rem;
   font-family: inherit;
   color: var(--text-body);
-  background: var(--white);
+  background: var(--white, #fff);
   resize: vertical;
   text-align: start;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -278,7 +337,7 @@
   &:focus {
     outline: none;
     border-color: var(--btn-primary);
-    box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.12);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
   }
 
   &::placeholder {
@@ -287,9 +346,9 @@
 }
 
 .scopeText {
-  padding: 0.5rem 0.6rem;
-  background: var(--white);
-  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  background: var(--white, #fff);
+  border-radius: 10px;
   border: 1px solid var(--border-light);
   font-size: 0.82rem;
   color: var(--text-body);
@@ -318,24 +377,25 @@
 .discussionSection {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
-  padding-top: 0.5rem;
-  margin-top: 0.15rem;
-  border-top: 1px solid var(--border-light);
+  gap: 0.4rem;
+  padding: 0.75rem;
+  margin-top: 0.25rem;
+  background: var(--card-default, #f3f3f3);
+  border-radius: 12px;
 }
 
 .discussionTitle {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--text-body);
   margin: 0;
 }
 
 .discussionActions {
   display: flex;
-  gap: 0.35rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
-  padding-top: 0.15rem;
+  padding-top: 0.25rem;
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -345,14 +405,18 @@
 .discussionLink,
 .copyLinkBtn,
 .createDiscussionBtn {
-  min-height: 2.25rem;
-  padding: 0.4rem 0.9rem;
-  border-radius: 20px;
+  min-height: 2.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
   font-size: 0.82rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   border: none;
-  transition: opacity 0.15s ease, background 0.15s ease;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--btn-primary);
@@ -363,40 +427,51 @@
 .discussionLink {
   background: var(--btn-primary);
   color: white;
+  box-shadow: 0 4px 12px rgba(95, 136, 229, 0.2);
 
   &:hover {
-    opacity: 0.88;
+    opacity: 0.9;
   }
 }
 
 .copyLinkBtn {
   background: transparent;
-  color: var(--btn-primary);
-  border: 1px solid var(--btn-primary);
+  color: var(--text-caption);
+  border: 1px solid var(--border-light);
 
   &:hover {
     background: rgba(95, 136, 229, 0.06);
+    color: var(--btn-primary);
+    border-color: var(--btn-primary);
   }
 }
 
 .createDiscussionBtn {
   background: var(--btn-primary);
   color: white;
+  box-shadow: 0 4px 12px rgba(95, 136, 229, 0.2);
 
   &:hover {
-    opacity: 0.88;
+    opacity: 0.9;
   }
 
   &:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
   }
 }
 
 .promotedNote {
-  font-size: 0.72rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  background: rgba(87, 198, 178, 0.1);
   color: var(--agree);
-  font-weight: 500;
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: fit-content;
   margin: 0;
 }
 

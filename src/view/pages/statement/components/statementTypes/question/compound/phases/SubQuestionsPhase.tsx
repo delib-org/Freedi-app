@@ -135,11 +135,9 @@ const SubQuestionsPhase: FC = () => {
 				<p className={styles.emptyMessage}>{t('No sub-questions yet')}</p>
 			)}
 
-			<div className={styles.addButton}>
-				<button className="btn btn--secondary" onClick={handleAddSubQuestion}>
-					{t('Add Sub-Question')}
-				</button>
-			</div>
+			<button className={styles.addButtonDashed} onClick={handleAddSubQuestion}>
+				+ {t('Add Sub-Question')}
+			</button>
 
 			{/* Research Discussion */}
 			<div className={styles.discussionSection}>

@@ -21,10 +21,10 @@ const PhaseSection: FC<PhaseSectionProps> = ({ summary, isCompleted, children })
 				onClick={() => setIsExpanded((prev) => !prev)}
 				aria-expanded={isExpanded}
 			>
-				<span className={styles.phaseSummaryCheck}>&#10003;</span>
+				<span className={styles.phaseSummaryIcon}>&#10003;</span>
 				<span className={styles.phaseSummaryText}>{summary}</span>
 				<span className={`${styles.phaseSummaryChevron} ${isExpanded ? styles.phaseSummaryChevronOpen : ''}`}>
-					&#9660;
+					&#9662;
 				</span>
 			</button>
 			{isExpanded && <div className={styles.phaseSectionContent}>{children}</div>}
