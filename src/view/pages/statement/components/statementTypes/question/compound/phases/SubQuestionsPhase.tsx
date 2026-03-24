@@ -101,9 +101,6 @@ const SubQuestionsPhase: FC = () => {
 	return (
 		<div className={styles.phase}>
 			<h3 className={styles.phaseTitle}>{t('Sub-Questions')}</h3>
-			<p className={styles.phaseDescription}>
-				{t('Identify and organize the sub-questions that need to be addressed')}
-			</p>
 
 			{lockedSubQuestions.length > 0 && (
 				<div className={styles.subQuestionList}>
@@ -147,9 +144,6 @@ const SubQuestionsPhase: FC = () => {
 			{/* Research Discussion */}
 			<div className={styles.discussionSection}>
 				<h4 className={styles.discussionTitle}>{t('Research Discussion')}</h4>
-				<p className={styles.phaseDescription}>
-					{t('Open a discussion where participants suggest what topics should be researched')}
-				</p>
 
 				{hasDiscussion ? (
 					<>

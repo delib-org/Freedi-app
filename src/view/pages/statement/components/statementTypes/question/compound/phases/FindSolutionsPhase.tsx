@@ -74,15 +74,9 @@ const FindSolutionsPhase: FC = () => {
 	return (
 		<div className={styles.phase}>
 			<h3 className={styles.phaseTitle}>{t('Find Solutions')}</h3>
-			<p className={styles.phaseDescription}>
-				{t('Propose and evaluate solutions to the defined question')}
-			</p>
 
 			{hasSolutionQuestion ? (
-				<div className={styles.discussionSection}>
-					<h4 className={styles.discussionTitle}>
-						{solutionQuestion?.statement ?? t('Proposed Solutions')}
-					</h4>
+				<>
 					{approvedSolutions.length > 0 && (
 						<div className={styles.solutionsList}>
 							{approvedSolutions.map((solution) => (
@@ -90,7 +84,7 @@ const FindSolutionsPhase: FC = () => {
 									<div className={styles.solutionContent}>
 										<h4 className={styles.solutionTitle}>{solution.statement}</h4>
 										<span className={styles.solutionConsensus}>
-											{t('Consensus')}: {Math.round((solution.consensus ?? 0) * 100)}%
+											{Math.round((solution.consensus ?? 0) * 100)}% {t('Consensus')}
 										</span>
 									</div>
 								</div>
@@ -109,17 +103,15 @@ const FindSolutionsPhase: FC = () => {
 							{copied ? t('Copied!') : t('Copy link')}
 						</button>
 					</div>
-				</div>
+				</>
 			) : isAdmin ? (
-				<div className={styles.addButton}>
-					<button
-						className={styles.createDiscussionBtn}
-						onClick={handleCreateSolutionQuestion}
-						disabled={isCreating}
-					>
-						{isCreating ? t('Creating...') : t('Create solutions discussion')}
-					</button>
-				</div>
+				<button
+					className={styles.createDiscussionBtn}
+					onClick={handleCreateSolutionQuestion}
+					disabled={isCreating}
+				>
+					{isCreating ? t('Creating...') : t('Create solutions discussion')}
+				</button>
 			) : (
 				<p className={styles.emptyMessage}>
 					{t(

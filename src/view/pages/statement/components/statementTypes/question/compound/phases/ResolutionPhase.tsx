@@ -29,9 +29,6 @@ const ResolutionPhase: FC = () => {
 	return (
 		<div className={styles.phase}>
 			<h3 className={styles.phaseTitle}>{t('Resolution')}</h3>
-			<p className={styles.phaseDescription}>
-				{t('Review top solutions and send them to Sign for formal approval')}
-			</p>
 
 			{solutions.length > 0 ? (
 				<div className={styles.solutionsList}>

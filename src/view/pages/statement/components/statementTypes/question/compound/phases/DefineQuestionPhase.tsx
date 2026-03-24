@@ -105,9 +105,6 @@ const DefineQuestionPhase: FC = () => {
 	return (
 		<div className={styles.phase}>
 			<h3 className={styles.phaseTitle}>{t('Define Question')}</h3>
-			<p className={styles.phaseDescription}>
-				{t('Discuss and refine the main question for this deliberation')}
-			</p>
 
 			{lockedTitle && (
 				<LockedBanner
@@ -168,9 +165,6 @@ const DefineQuestionPhase: FC = () => {
 						<h4 className={styles.discussionTitle}>
 							{t('Title discussion')}
 						</h4>
-						<p className={styles.phaseDescription}>
-							{t('Open a discussion where participants suggest what the question title should be')}
-						</p>
 
 						{titleDiscussionId ? (
 							<>
