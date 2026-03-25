@@ -171,7 +171,7 @@ function ViewByActiveTab({
 			return <Chat />;
 		case 'options':
 			if (isTreeView) {
-				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav />;
+				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav defaultCollapsed />;
 			}
 
 			return <StagePage />;

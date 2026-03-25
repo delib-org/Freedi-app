@@ -98,13 +98,16 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 				if (matchesFilter(c)) matchingIds.add(c.statementId);
 			});
 
-			// Build filtered childrenMap: keep matching children under
-			// matching parents OR under the root statement itself
+			// Build filtered childrenMap: at root level only keep matching children,
+			// but under matching parents include ALL children (e.g. replies to options)
 			resultMap = new Map<string, Statement[]>();
 			fullChildrenMap.forEach((children, parentId) => {
-				if (parentId !== statementId && !matchingIds.has(parentId)) return;
-				const filtered = children.filter((c) => matchingIds.has(c.statementId));
-				if (filtered.length > 0) resultMap.set(parentId, filtered);
+				if (parentId === statementId) {
+					const filtered = children.filter((c) => matchingIds.has(c.statementId));
+					if (filtered.length > 0) resultMap.set(parentId, filtered);
+				} else if (matchingIds.has(parentId)) {
+					if (children.length > 0) resultMap.set(parentId, [...children]);
+				}
 			});
 
 			// Root children are the matching direct children of statementId

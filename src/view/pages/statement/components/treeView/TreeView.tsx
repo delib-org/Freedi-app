@@ -15,11 +15,12 @@ interface TreeViewProps {
 	typeFilter?: readonly StatementType[];
 	showSortNav?: boolean;
 	onlySelectedOptions?: boolean;
+	defaultCollapsed?: boolean;
 }
 
 const FLIP_SPRING = { stiffness: 300, damping: 30 };
 
-const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOptions }) => {
+const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOptions, defaultCollapsed }) => {
 	const { statementId, sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
@@ -34,7 +35,7 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 	};
 
 	const { childrenMap, rootChildren } = useTreeData(statementId || '', treeOptions);
-	const { expandedNodes, toggleNode, expandNode } = useTreeState(childrenMap, statementId || '');
+	const { expandedNodes, toggleNode, expandNode } = useTreeState(childrenMap, statementId || '', defaultCollapsed);
 
 	const flipKey = useMemo(() => rootChildren.map((c) => c.statementId).join(','), [rootChildren]);
 

@@ -20,6 +20,7 @@ interface UseTreeStateReturn {
 export function useTreeState(
 	childrenMap: Map<string, Statement[]>,
 	rootId: string,
+	defaultCollapsed?: boolean,
 ): UseTreeStateReturn {
 	const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
 	const userToggledRef = useRef<Set<string>>(new Set());
@@ -54,17 +55,19 @@ export function useTreeState(
 		// Compute which nodes should be auto-expanded (within top N levels)
 		const autoExpanded = new Set<string>();
 
-		function expandToDepth(parentId: string, depth: number) {
-			if (depth >= MAX_VISIBLE_LEVELS) return;
-			autoExpanded.add(parentId);
+		if (!defaultCollapsed) {
+			function expandToDepth(parentId: string, depth: number) {
+				if (depth >= MAX_VISIBLE_LEVELS) return;
+				autoExpanded.add(parentId);
 
-			const children = childrenMap.get(parentId) || [];
-			children.forEach((child) => {
-				expandToDepth(child.statementId, depth + 1);
-			});
+				const children = childrenMap.get(parentId) || [];
+				children.forEach((child) => {
+					expandToDepth(child.statementId, depth + 1);
+				});
+			}
+
+			expandToDepth(rootId, -1);
 		}
-
-		expandToDepth(rootId, -1);
 
 		setExpandedNodes((prev) => {
 			const next = new Set<string>();
