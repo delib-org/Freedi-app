@@ -73,11 +73,11 @@ export function createStatement({
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
 		if (!isStatementTypeAllowedAsChildren(parentStatement, statementType)) {
-			return;
+			throw new Error(`Statement type "${statementType}" is not allowed as child of parent`);
 		}
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
-		if (!text || text.trim() === '') return undefined;
+		if (!text || text.trim() === '') throw new Error('Statement text is empty');
 		const statementId = getRandomUID();
 
 		//get default values for simple or advanced users
