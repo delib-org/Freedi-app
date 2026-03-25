@@ -20,6 +20,8 @@ interface TreeOptionNodeProps {
 	parentStatement: Statement | undefined;
 	onReplySubmitted?: () => void;
 	onReply?: (statement: Statement) => void;
+	childCount?: number;
+	onToggleChildren?: () => void;
 }
 
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({
@@ -27,6 +29,8 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	parentStatement,
 	onReplySubmitted,
 	onReply,
+	childCount = 0,
+	onToggleChildren,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -186,6 +190,15 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 							bookmark
 						</span>
 					</button>
+					{childCount > 0 && onToggleChildren && (
+						<button
+							className={styles['tree-option-node__reply-counter']}
+							onClick={onToggleChildren}
+							aria-label={`${childCount} ${childCount === 1 ? t('reply') : t('replies')}`}
+						>
+							{childCount}
+						</button>
+					)}
 				</div>
 				{showReplyInput && (
 					<form className={styles['tree-option-node__reply-form']} onSubmit={handleReplySubmit}>

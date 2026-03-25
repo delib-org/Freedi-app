@@ -109,6 +109,8 @@ const TreeNode: FC<TreeNodeProps> = ({
 						parentStatement={parentStatement}
 						onReplySubmitted={handleExpand}
 						onReply={onReply}
+						childCount={children.length}
+						onToggleChildren={hasChildren && !isAtMaxDepth ? handleToggle : undefined}
 					/>
 				) : (
 					<TreeMessageNode
