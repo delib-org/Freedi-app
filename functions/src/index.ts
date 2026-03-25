@@ -828,6 +828,7 @@ export const refreshUserStats = onSchedule(
 		schedule: '10 0 * * *',
 		timeZone: 'UTC',
 		...functionConfig,
+		region: 'us-central1',
 	},
 	async () => {
 		await performUserStatsRefresh();
