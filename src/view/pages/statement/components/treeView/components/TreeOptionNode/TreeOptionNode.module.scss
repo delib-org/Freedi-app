@@ -78,4 +78,90 @@
 	&__evaluation {
 		margin-top: 4px;
 	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 4px;
+	}
+
+	&__action-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 8px;
+		border: none;
+		border-radius: 4px;
+		background: none;
+		color: var(--text-secondary, #999);
+		font-size: 0.78rem;
+		cursor: pointer;
+		min-height: 32px;
+
+		&:hover {
+			background: var(--card-default, #f5f5f5);
+			color: var(--btn-primary, #5f88e5);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+	}
+
+	&__reply-form {
+		display: flex;
+		align-items: flex-end;
+		gap: 4px;
+		margin-top: 6px;
+		width: 100%;
+		border: 1px solid var(--border-color, #ddd);
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--bg-page, #fff);
+	}
+
+	&__reply-input {
+		flex: 1;
+		width: 100%;
+		box-sizing: border-box;
+		padding: 10px 12px;
+		border: none;
+		outline: none;
+		font-size: 0.9rem;
+		font-family: inherit;
+		resize: none;
+		min-height: 56px;
+		overflow: hidden;
+		background: transparent;
+		color: var(--text-body, #444);
+		line-height: 1.4;
+
+		&::placeholder {
+			color: var(--text-secondary, #999);
+		}
+	}
+
+	&__reply-send {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		border-radius: 4px;
+
+		&:hover {
+			background: var(--card-default, #f5f5f5);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: -2px;
+		}
+	}
 }

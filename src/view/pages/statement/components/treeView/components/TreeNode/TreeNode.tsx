@@ -75,7 +75,11 @@ const TreeNode: FC<TreeNodeProps> = ({
 					</div>
 				)}
 				{isOption ? (
-					<TreeOptionNode statement={statement} parentStatement={parentStatement} />
+					<TreeOptionNode
+						statement={statement}
+						parentStatement={parentStatement}
+						onReplySubmitted={() => expandNode(statement.statementId)}
+					/>
 				) : (
 					<TreeMessageNode
 						statement={statement}
