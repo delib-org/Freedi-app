@@ -18,7 +18,6 @@ import {
 	deleteSubscribedStatement,
 	setStatementSubscription,
 	setStatementsSubscription,
-	setBookmark,
 } from '@/redux/statements/statementsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import {
@@ -33,22 +32,6 @@ import {
 import { parse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
 import { convertTimestampsToMillis } from '@/helpers/timestampHelpers';
-
-/**
- * Extract bookmarkedChildren from raw Firestore subscription data
- * and dispatch setBookmark for each. This field is not part of the
- * StatementSubscription schema so valibot strips it during parse().
- */
-function hydrateBookmarkedChildren(data: Record<string, unknown>, dispatch: AppDispatch): void {
-	const bookmarkedChildren = data.bookmarkedChildren as Record<string, boolean> | undefined;
-	if (!bookmarkedChildren || typeof bookmarkedChildren !== 'object') return;
-
-	for (const [childStatementId, isBookmarked] of Object.entries(bookmarkedChildren)) {
-		if (isBookmarked) {
-			dispatch(setBookmark({ statementId: childStatementId, isBookmarked: true }));
-		}
-	}
-}
 
 // Helper to check if an error is IndexedDB-related
 function isIndexedDBError(error: unknown): boolean {
@@ -176,8 +159,6 @@ export function listenToStatementSubscriptions(
 
 						if (change.type === 'added' || change.type === 'modified') {
 							dispatch(setStatementSubscription(statementSubscription));
-							// Hydrate bookmarked children from raw data (stripped by valibot)
-							hydrateBookmarkedChildren(data, dispatch);
 						}
 
 						if (change.type === 'removed')
@@ -415,7 +396,6 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 
 					if (change.type === 'added' || change.type === 'modified') {
 						dispatch(setStatementSubscription(statementSubscription));
-						hydrateBookmarkedChildren(data, dispatch);
 					}
 					if (change.type === 'removed') {
 						dispatch(deleteSubscribedStatement(statementSubscription.statementId));

@@ -24,6 +24,7 @@ import {
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { logError } from '@/utils/errorHandling';
+import { loadBookmarksForRoom } from '@/controllers/db/bookmarks/bookmarksPersistence';
 
 interface UseStatementListenersProps {
 	statementId?: string;
@@ -165,6 +166,11 @@ export const useStatementListeners = ({
 		// This ensures group surveys work both at the group level and in sub-statements
 		unsubscribers.push(listenToGroupDemographicQuestions(topParentId));
 		unsubscribers.push(listenToGroupDemographicAnswers(topParentId));
+
+		// Load persisted bookmarks for this room
+		if (creator.uid) {
+			loadBookmarksForRoom(creator.uid, topParentId);
+		}
 
 		return () => {
 			unsubscribers.forEach((unsubscribe) => {

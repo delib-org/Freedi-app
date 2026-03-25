@@ -403,6 +403,15 @@ export const statementsSlice = createSlice({
 				delete state.bookmarkedIds[statementId];
 			}
 		},
+		setBookmarks: (state, action: PayloadAction<Record<string, boolean>>) => {
+			for (const [statementId, isBookmarked] of Object.entries(action.payload)) {
+				if (isBookmarked) {
+					state.bookmarkedIds[statementId] = true;
+				} else {
+					delete state.bookmarkedIds[statementId];
+				}
+			}
+		},
 	},
 });
 
@@ -424,6 +433,7 @@ export const {
 	setMassConsensusStatements,
 	updateStoreResultsSettings,
 	setBookmark,
+	setBookmarks,
 } = statementsSlice.actions;
 
 // statements
