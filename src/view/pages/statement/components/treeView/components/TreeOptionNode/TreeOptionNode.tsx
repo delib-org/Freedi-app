@@ -1,4 +1,5 @@
 import React, { FC, useState, useRef, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { Statement } from '@freedi/shared-types';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
@@ -20,6 +21,7 @@ interface TreeOptionNodeProps {
 }
 
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement, onReplySubmitted }) => {
+	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
 
@@ -145,6 +147,13 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement, o
 						aria-label={t('reply')}
 					>
 						{t('reply')}
+					</button>
+					<button
+						className={styles['tree-option-node__action-btn']}
+						onClick={() => navigate(`/statement/${statement.statementId}`)}
+						aria-label={t('Drill down')}
+					>
+						<span className="material-symbols-outlined" style={{ fontSize: 18 }}>jump_to_element</span>
 					</button>
 				</div>
 				{showReplyInput && (

@@ -90,16 +90,12 @@ const TreeNode: FC<TreeNodeProps> = ({
 				)}
 			</div>
 
-			{(hasChildren && isAtMaxDepth) || isQuestion ? (
+			{hasChildren && isAtMaxDepth ? (
 				<div
 					className={styles['tree-node__dive-in']}
 					style={{ '--depth': depth } as React.CSSProperties}
 				>
-					{isQuestion ? (
-						<DiveInPrompt statement={statement} />
-					) : (
-						<DiveInPrompt statement={statement} childCount={children.length} />
-					)}
+					<DiveInPrompt statement={statement} childCount={children.length} />
 				</div>
 			) : null}
 
@@ -146,12 +142,12 @@ const DiveInPrompt: FC<DiveInPromptProps> = ({ statement, childCount }) => {
 		<button
 			className={styles['tree-node__dive-in-btn']}
 			onClick={() => navigate(`/statement/${statement.statementId}`)}
+			aria-label={t('Drill down')}
 		>
-			&#8618;{' '}
+			<span className="material-symbols-outlined" style={{ fontSize: 18 }}>jump_to_element</span>
 			{childCount !== undefined
-				? `${childCount} ${childCount === 1 ? t('reply') : t('replies')} — `
+				? ` ${childCount} ${childCount === 1 ? t('reply') : t('replies')}`
 				: ''}
-			{t('Drill down')}
 		</button>
 	);
 };

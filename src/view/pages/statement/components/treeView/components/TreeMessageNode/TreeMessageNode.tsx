@@ -246,7 +246,16 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					>
 						{t('reply')}
 					</button>
-					{hasChildren && (
+					{isQuestion && (
+						<button
+							className={styles['tree-message-node__action-btn']}
+							onClick={handleDrillDown}
+							aria-label={t('Drill down')}
+						>
+							<span className="material-symbols-outlined" style={{ fontSize: 18 }}>jump_to_element</span>
+						</button>
+					)}
+					{hasChildren && !isQuestion && (
 						<button
 							className={styles['tree-message-node__action-btn']}
 							onClick={handleDrillDown}
