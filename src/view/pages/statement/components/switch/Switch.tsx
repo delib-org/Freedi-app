@@ -1,4 +1,4 @@
-import React, { useContext, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
 
@@ -39,6 +39,14 @@ const Switch = () => {
 	const tabFromUrl = searchParams.get('tab');
 	const defaultView = statement?.statementSettings?.defaultView ?? 'chat';
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
+
+	// Sync activeView when tab search param changes externally (e.g. power follow redirect)
+	useEffect(() => {
+		if (tabFromUrl && tabFromUrl !== activeView) {
+			setActiveView(tabFromUrl);
+		}
+	}, [tabFromUrl]);
+
 	const [edit, setEdit] = useState(false);
 	const [headerCollapsed, setHeaderCollapsed] = useState(true);
 	const treeFilter = useTreeFilterOptional();

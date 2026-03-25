@@ -15,11 +15,45 @@ import { useSelector } from 'react-redux';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
 import { FOLLOW_ME } from '@/constants/common';
 
+/** Extract a human-readable screen/tab name from a statement path (including search params) */
+function getScreenName(path: string | undefined, t: (key: string) => string): string | null {
+	if (!path) return null;
+
+	const screenLabels: Record<string, string> = {
+		chat: t('Chat'),
+		options: t('Solutions'),
+		questions: t('Questions'),
+		vote: t('Vote'),
+		settings: t('Settings'),
+		'mind-map': t('Mind Map'),
+		'agreement-map': t('Agreement Map'),
+		'polarization-index': t('Polarization Index'),
+		'sub-questions-map': t('Sub Questions Map'),
+	};
+
+	// Check search params first (?tab=options)
+	const searchIndex = path.indexOf('?');
+	if (searchIndex !== -1) {
+		const params = new URLSearchParams(path.slice(searchIndex));
+		const tab = params.get('tab');
+		if (tab && screenLabels[tab]) return screenLabels[tab];
+	}
+
+	// Fall back to path segment: /statement/{id}/{screen}
+	const pathname = searchIndex !== -1 ? path.slice(0, searchIndex) : path;
+	const segments = pathname.split('/').filter(Boolean);
+	const screenSegment = segments[2]; // 0=statement, 1=id, 2=screen
+	if (screenSegment && screenLabels[screenSegment]) return screenLabels[screenSegment];
+
+	return null;
+}
+
 const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
 	const { dir, t } = useTranslation();
-	const { pathname } = useLocation();
+	const { pathname, search } = useLocation();
 	const navigate = useNavigate();
+	const fullPath = pathname + search;
 
 	const role = useSelector(statementSubscriptionSelector(statement?.topParentId))?.role;
 	const _isAdmin = role === Role.admin;
@@ -41,6 +75,7 @@ const FollowMeToast: FC = () => {
 	const activePath = isPowerMode ? powerFollowMePath : followMePath;
 
 	// Admin: auto-update the follow path as they navigate (both modes)
+	// Uses fullPath (pathname + search params) so tab changes (?tab=options) are captured
 	useEffect(() => {
 		if (!_isAdmin || !topParentStatement) return;
 
@@ -50,27 +85,27 @@ const FollowMeToast: FC = () => {
 		if (pathname.includes('/settings')) return;
 
 		if (isPowerMode) {
-			if (pathname === powerFollowMePath) return;
-			setPowerFollowMeDB(topParentStatement, pathname);
+			if (fullPath === powerFollowMePath) return;
+			setPowerFollowMeDB(topParentStatement, fullPath);
 		} else {
-			if (pathname === followMePath) return;
-			setFollowMeDB(topParentStatement, pathname);
+			if (fullPath === followMePath) return;
+			setFollowMeDB(topParentStatement, fullPath);
 		}
-	}, [_isAdmin, isPowerMode, pathname, topParentStatement, powerFollowMePath, followMePath]);
+	}, [_isAdmin, isPowerMode, fullPath, pathname, topParentStatement, powerFollowMePath, followMePath]);
 
 	// Auto-redirect for non-admin users in power mode
 	useEffect(() => {
 		if (!isPowerMode || _isAdmin || !powerFollowMePath) return;
 
-		// Don't redirect if already on the target page
-		if (pathname.startsWith(powerFollowMePath)) return;
+		// Don't redirect if already on the target page (compare full path including search params)
+		if (fullPath === powerFollowMePath) return;
 
 		const timer = setTimeout(() => {
 			navigate(powerFollowMePath);
 		}, FOLLOW_ME.REDIRECT_DELAY_MS);
 
 		return () => clearTimeout(timer);
-	}, [isPowerMode, _isAdmin, powerFollowMePath, pathname, navigate]);
+	}, [isPowerMode, _isAdmin, powerFollowMePath, fullPath, navigate]);
 
 	function handleRemoveToast() {
 		if (!_isAdmin) return;
@@ -85,18 +120,19 @@ const FollowMeToast: FC = () => {
 
 	if (!statement) return null;
 
-	// If the user is already on the followed page and not admin, hide toast
-	if (activePath && pathname.startsWith(activePath) && !_isAdmin) return null;
-
 	// If no active follow mode, hide toast
 	if (!activePath || activePath === '') return null;
+
+	// In power mode, always show toast for non-admins (so they know which tab they're on)
+	// In regular mode, hide toast if non-admin is already on the followed page
+	if (!isPowerMode && activePath && fullPath === activePath && !_isAdmin) return null;
 
 	// Admin sees toast they can click to deactivate; non-admin in regular mode gets a link
 	if (_isAdmin) {
 		return <ToastInner />;
 	}
 
-	// In power mode, non-admin is auto-redirected so just show informational toast
+	// In power mode, non-admin sees informational toast with current tab
 	if (isPowerMode) {
 		return <ToastInner />;
 	}
@@ -109,16 +145,23 @@ const FollowMeToast: FC = () => {
 	);
 
 	function ToastInner() {
+		// Extract screen/tab name from the active path
+		const screenName = getScreenName(activePath, t);
+
 		let label: string;
 		if (_isAdmin) {
 			label = isPowerMode ? t('Power Follow Mode Active') : t('Follow Mode Active');
+		} else if (isPowerMode) {
+			label = screenName
+				? `${t('Following Instructor')} - ${screenName}`
+				: t('Following Instructor (Auto)');
 		} else {
-			label = isPowerMode ? t('Following Instructor (Auto)') : t('Follow Instructor');
+			label = t('Follow Instructor');
 		}
 
-		const toastClass = isPowerMode
-			? `${styles.followMeToast} ${styles['followMeToast--power']}`
-			: styles.followMeToast;
+		const userClass = !_isAdmin ? styles['followMeToast--user'] : '';
+		const powerClass = isPowerMode ? styles['followMeToast--power'] : '';
+		const toastClass = `${styles.followMeToast} ${powerClass} ${userClass}`.trim();
 
 		return (
 			<button className={toastClass} onClick={handleRemoveToast}>
