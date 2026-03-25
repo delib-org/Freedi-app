@@ -43,9 +43,9 @@ export interface NewQuestion {
 interface ChatMessageCardProps {
 	parentStatement: Statement | undefined;
 	statement: Statement;
-
 	previousStatement: Statement | undefined;
 	sideChat?: boolean;
+	onReply?: (statement: Statement) => void;
 }
 
 const ChatMessageCard: FC<ChatMessageCardProps> = ({
@@ -53,6 +53,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	statement,
 	previousStatement,
 	sideChat = false,
+	onReply,
 }) => {
 	const imageUrl = statement.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
@@ -67,7 +68,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	// Hooks
 	const { statementType } = statement;
 	const statementColor = useStatementColor({ statement });
-	const { dir } = useTranslation();
+	const { t, dir } = useTranslation();
 	const { user } = useAuthentication();
 
 	// Redux store
@@ -134,6 +135,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	return (
 		<div
+			id={statement.statementId}
 			className={`${styles.chatMessageCard}  ${isAlignedLeft ? styles.alignedLeft : ''} ${styles[dir] || ''}`}
 		>
 			{!isPreviousFromSameAuthor && (
@@ -145,6 +147,22 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 			<div className={messageBoxClassName} style={messageBoxStyle}>
 				<div className={styles.triangle} />
+
+				{statement.replyTo && (
+					<button
+						className={styles.replyQuote}
+						onClick={() => {
+							const el = document.getElementById(statement.replyTo!.statementId);
+							if (el) {
+								el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+							}
+						}}
+						type="button"
+					>
+						<span className={styles.replyQuoteAuthor}>{statement.replyTo.creatorDisplayName}</span>
+						<span className={styles.replyQuoteText}>{statement.replyTo.statement}</span>
+					</button>
+				)}
 
 				<div className={styles.info}>
 					<div className={styles.messageActions}>
@@ -172,6 +190,9 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							containerClassName={styles.editContainer}
 							saveButtonClassName={styles.editButtons}
 						/>
+						{statement.description && (
+							<div className={styles.description}>{statement.description}</div>
+						)}
 					</div>
 					<div className={styles.messageActions}>
 						<div className={styles.chatMoreElement}>
@@ -189,7 +210,22 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					/>
 				</div>
 
-				<span className={styles.timestamp}>{timeString}</span>
+				<div className={styles.bottomRow}>
+					<span className={styles.timestamp}>{timeString}</span>
+					{onReply && (
+						<button
+							className={styles.replyBtn}
+							onClick={() => onReply(statement)}
+							aria-label={t('reply')}
+							type="button"
+						>
+							<span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+								reply
+							</span>
+							{t('reply')}
+						</button>
+					)}
+				</div>
 
 				{showTypeSuggestion && suggestedType && (
 					<TypeSuggestionBanner

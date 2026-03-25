@@ -6,6 +6,7 @@ import { ParagraphSchema } from '../paragraph/paragraphModel';
 export const SimpleStatementSchema: BaseSchema<any, any, any> = object({
 	statementId: string(),
 	statement: string(),
+	description: optional(string()),
 	statementType: enum_(StatementType),
 	paragraphs: optional(array(ParagraphSchema)),
 	creatorId: string(),

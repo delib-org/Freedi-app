@@ -19,6 +19,7 @@ interface TreeNodeProps {
 	expandedNodes: Set<string>;
 	toggleNode: (id: string) => void;
 	expandNode: (id: string) => void;
+	onReply?: (statement: Statement) => void;
 	animate?: boolean;
 }
 
@@ -30,6 +31,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	expandedNodes,
 	toggleNode,
 	expandNode,
+	onReply,
 	animate,
 }) => {
 	const children = childrenMap.get(statement.statementId) || [];
@@ -66,6 +68,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 				expandedNodes={expandedNodes}
 				toggleNode={toggleNode}
 				expandNode={expandNode}
+				onReply={onReply}
 				animate={animate}
 			/>
 		));
@@ -79,6 +82,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 		expandedNodes,
 		toggleNode,
 		expandNode,
+		onReply,
 		animate,
 	]);
 
@@ -104,6 +108,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 						statement={statement}
 						parentStatement={parentStatement}
 						onReplySubmitted={handleExpand}
+						onReply={onReply}
 					/>
 				) : (
 					<TreeMessageNode
@@ -111,6 +116,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 						parentStatement={parentStatement}
 						hasChildren={hasChildren}
 						onReplySubmitted={handleExpand}
+						onReply={onReply}
 					/>
 				)}
 			</div>
@@ -139,6 +145,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 											expandedNodes={expandedNodes}
 											toggleNode={toggleNode}
 											expandNode={expandNode}
+											onReply={onReply}
 											animate
 										/>
 									</div>

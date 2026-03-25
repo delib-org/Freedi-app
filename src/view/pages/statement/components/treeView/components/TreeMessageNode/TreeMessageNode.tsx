@@ -24,6 +24,7 @@ interface TreeMessageNodeProps {
 	parentStatement: Statement | undefined;
 	hasChildren: boolean;
 	onReplySubmitted?: () => void;
+	onReply?: (statement: Statement) => void;
 }
 
 const SWIPE_THRESHOLD = 60;
@@ -39,6 +40,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	parentStatement,
 	hasChildren,
 	onReplySubmitted,
+	onReply,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -243,7 +245,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 				<div className={styles['tree-message-node__actions']}>
 					<button
 						className={styles['tree-message-node__action-btn']}
-						onClick={handleReplyToggle}
+						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
 						aria-label={t('reply')}
 					>
 						{t('reply')}

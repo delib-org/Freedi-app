@@ -19,12 +19,14 @@ interface TreeOptionNodeProps {
 	statement: Statement;
 	parentStatement: Statement | undefined;
 	onReplySubmitted?: () => void;
+	onReply?: (statement: Statement) => void;
 }
 
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	statement,
 	parentStatement,
 	onReplySubmitted,
+	onReply,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -142,7 +144,12 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 						onSaveSuccess={handleSaveSuccess}
 					/>
 				) : (
-					<div className={styles['tree-option-node__text']}>{statement.statement}</div>
+					<>
+						<div className={styles['tree-option-node__text']}>{statement.statement}</div>
+						{statement.description && (
+							<div className={styles['tree-option-node__description']}>{statement.description}</div>
+						)}
+					</>
 				)}
 				<div className={styles['tree-option-node__evaluation']}>
 					<Evaluation statement={statement} />
@@ -150,7 +157,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 				<div className={styles['tree-option-node__actions']}>
 					<button
 						className={styles['tree-option-node__action-btn']}
-						onClick={handleReplyToggle}
+						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
 						aria-label={t('reply')}
 					>
 						{t('reply')}

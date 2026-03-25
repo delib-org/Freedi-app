@@ -52,6 +52,7 @@ export type LastMessage = InferOutput<typeof LastMessageSchema>;
 export const StatementSchema = object({
 	allowAnonymousLogin: optional(boolean()), // if true, allow anonymous login
 	statement: string(), // the text of the statement (title - auto-extracted from first paragraph)
+	description: optional(string()), // auto-generated preview from child paragraph sub-statements (~200 chars)
 	brief: optional(string()), // admin-authored context/brief for the statement
 	isTitleQuestion: optional(boolean()), // if true, responses detected as questions are suggested as options instead
 	paragraphs: optional(array(ParagraphSchema)), // the paragraphs of the statement (rich text content)
@@ -214,6 +215,11 @@ export const StatementSchema = object({
 	hide: optional(boolean()), // if true, the statement is hidden
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
+	replyTo: optional(object({ // reference to the message this is a reply to (chat view threading)
+		statementId: string(),
+		statement: string(), // text preview of the replied-to message
+		creatorDisplayName: string(), // display name of the original author
+	})),
 	questionnaire: optional(QuestionnaireSchema), // if a statement is a questionnaire, it will have this field
 	fairDivision: optional(FairDivisionSelectionSchema), // if true, the statement is a fair division
 	anchored: optional(boolean()), // if true, the statement is anchored to be represented in the evaluation.

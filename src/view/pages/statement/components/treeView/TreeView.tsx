@@ -1,4 +1,4 @@
-import { FC, useContext, useMemo, useRef, useEffect, useCallback } from 'react';
+import { FC, useContext, useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
@@ -14,7 +14,7 @@ import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
-import { StatementType, SortType } from '@freedi/shared-types';
+import { Statement, StatementType, SortType } from '@freedi/shared-types';
 
 interface TreeViewProps {
 	typeFilter?: readonly StatementType[];
@@ -56,6 +56,15 @@ const TreeView: FC<TreeViewProps> = ({
 		statementId || '',
 		defaultCollapsed,
 	);
+
+	const [replyToStatement, setReplyToStatement] = useState<Statement | null>(null);
+
+	const handleClearReply = useCallback(() => {
+		if (replyToStatement) {
+			expandNode(replyToStatement.statementId);
+		}
+		setReplyToStatement(null);
+	}, [replyToStatement, expandNode]);
 
 	// Register collapse/expand so the header can trigger them
 	useEffect(() => {
@@ -178,6 +187,7 @@ const TreeView: FC<TreeViewProps> = ({
 											expandedNodes={expandedNodes}
 											toggleNode={toggleNode}
 											expandNode={expandNode}
+											onReply={setReplyToStatement}
 											animate
 										/>
 									</div>
@@ -197,6 +207,7 @@ const TreeView: FC<TreeViewProps> = ({
 								expandedNodes={expandedNodes}
 								toggleNode={toggleNode}
 								expandNode={expandNode}
+								onReply={setReplyToStatement}
 							/>
 						))}
 					</>
@@ -210,7 +221,12 @@ const TreeView: FC<TreeViewProps> = ({
 			) : (
 				statement && (
 					<div className={styles['tree-view__input']}>
-						<ChatInput statement={statement} />
+						<ChatInput
+							statement={statement}
+							replyToStatement={replyToStatement}
+							onClearReply={handleClearReply}
+							replyAsChild
+						/>
 					</div>
 				)
 			)}
