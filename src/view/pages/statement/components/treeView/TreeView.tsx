@@ -36,7 +36,7 @@ const TreeView: FC<TreeViewProps> = ({
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
 	const bookmarkedIds = useAppSelector(bookmarkedStatementIdsSelector);
-	const { filterMode, registerCollapseAll } = useTreeFilter();
+	const { filterMode, registerCollapseAll, registerExpandAll } = useTreeFilter();
 	const treeViewRef = useRef<HTMLDivElement>(null);
 	const prevCountRef = useRef(0);
 	const isFirstRenderRef = useRef(true);
@@ -51,16 +51,17 @@ const TreeView: FC<TreeViewProps> = ({
 	};
 
 	const { childrenMap, rootChildren } = useTreeData(statementId || '', treeOptions);
-	const { expandedNodes, toggleNode, expandNode, collapseAll } = useTreeState(
+	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll } = useTreeState(
 		childrenMap,
 		statementId || '',
 		defaultCollapsed,
 	);
 
-	// Register collapseAll so the header can trigger it
+	// Register collapse/expand so the header can trigger them
 	useEffect(() => {
 		registerCollapseAll(collapseAll);
-	}, [collapseAll, registerCollapseAll]);
+		registerExpandAll(expandAll);
+	}, [collapseAll, expandAll, registerCollapseAll, registerExpandAll]);
 
 	const flipKey = useMemo(() => rootChildren.map((c) => c.statementId).join(','), [rootChildren]);
 

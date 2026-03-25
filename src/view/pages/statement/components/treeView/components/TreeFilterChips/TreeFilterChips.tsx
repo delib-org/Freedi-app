@@ -6,13 +6,15 @@ import styles from './TreeFilterChips.module.scss';
 interface TreeFilterChipsProps {
 	activeFilter: TreeFilterMode;
 	onFilterChange: (mode: TreeFilterMode) => void;
-	onCollapseAll: () => void;
+	onToggleCollapse: () => void;
+	isCollapsed: boolean;
 }
 
 const TreeFilterChips: FC<TreeFilterChipsProps> = ({
 	activeFilter,
 	onFilterChange,
-	onCollapseAll,
+	onToggleCollapse,
+	isCollapsed,
 }) => {
 	const { t } = useTranslation();
 
@@ -49,11 +51,11 @@ const TreeFilterChips: FC<TreeFilterChipsProps> = ({
 			</div>
 			<button
 				className={styles['tree-filter-chips__collapse-btn']}
-				onClick={onCollapseAll}
-				aria-label={t('Collapse all')}
+				onClick={onToggleCollapse}
+				aria-label={isCollapsed ? t('Expand all') : t('Collapse all')}
 			>
 				<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-					unfold_less
+					{isCollapsed ? 'unfold_more' : 'unfold_less'}
 				</span>
 			</button>
 		</div>

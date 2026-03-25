@@ -14,8 +14,7 @@ export function useBookmark(statementId: string): UseBookmarkReturn {
 	const isBookmarked = useAppSelector(isStatementBookmarkedSelector(statementId));
 
 	const toggle = useCallback(() => {
-		if (!user?.uid) return;
-		toggleBookmark({ statementId, userId: user.uid });
+		toggleBookmark({ statementId, userId: user?.uid ?? '' });
 	}, [statementId, user?.uid]);
 
 	return { isBookmarked, toggle };

@@ -185,7 +185,8 @@ const Switch = () => {
 					<TreeFilterChips
 						activeFilter={treeFilter.filterMode}
 						onFilterChange={treeFilter.setFilterMode}
-						onCollapseAll={treeFilter.collapseAll}
+						onToggleCollapse={treeFilter.toggleCollapseExpand}
+						isCollapsed={treeFilter.isCollapsed}
 					/>
 				)}
 			</div>
