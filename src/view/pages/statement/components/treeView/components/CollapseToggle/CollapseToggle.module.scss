@@ -1,16 +1,16 @@
 .collapse-toggle {
 	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	width: 24px;
+	gap: 4px;
 	height: 24px;
-	padding: 0;
+	padding: 0 6px 0 4px;
 	border: none;
 	border-radius: 4px;
 	background: none;
 	color: var(--text-secondary, #999);
 	cursor: pointer;
 	transition: background-color 0.15s ease, color 0.15s ease;
+	white-space: nowrap;
 
 	&:hover {
 		background: var(--card-default, #f5f5f5);
@@ -29,5 +29,16 @@
 
 	&--expanded &__icon {
 		transform: rotate(90deg);
+	}
+
+	&--expanded {
+		padding: 0;
+		justify-content: center;
+		width: 24px;
+	}
+
+	&__count {
+		font-size: 0.75rem;
+		color: var(--btn-primary, #5f88e5);
 	}
 }
