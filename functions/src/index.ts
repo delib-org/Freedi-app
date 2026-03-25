@@ -823,6 +823,7 @@ exports.manualWeeklyDigest = wrapHttpFunction(async (req: Request, res: Response
 
 // Scheduled function: refresh user count daily at 00:10 UTC
 import { onSchedule } from 'firebase-functions/v2/scheduler';
+
 export const refreshUserStats = onSchedule(
 	{
 		schedule: '10 0 * * *',

@@ -25,7 +25,8 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
 		// Check if evaluation is enabled (defaults to true for backward compatibility)
-		const enableEvaluation = (parentStatement.statementSettings?.enableEvaluation ?? true) && !isHalted;
+		const enableEvaluation =
+			(parentStatement.statementSettings?.enableEvaluation ?? true) && !isHalted;
 
 		// Check for evaluationType first, then fall back to enhancedEvaluation for backward compatibility
 		const evaluationType = parentStatement.statementSettings?.evaluationType;

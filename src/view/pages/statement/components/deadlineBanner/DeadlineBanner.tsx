@@ -12,8 +12,6 @@ import {
 	AlertCircle,
 	Pause,
 	Play,
-	X,
-	TimerReset,
 	ChevronDown,
 	ChevronUp,
 	Timer,
@@ -49,7 +47,10 @@ const MAX_MINUTES = 59;
 const WARNING_THRESHOLD = 2 * TIME.HOUR;
 const URGENT_THRESHOLD = 5 * TIME.MINUTE;
 
-function getUrgencyLevel(timeRemainingMs: number, isRunning: boolean): 'normal' | 'warning' | 'urgent' {
+function getUrgencyLevel(
+	timeRemainingMs: number,
+	isRunning: boolean,
+): 'normal' | 'warning' | 'urgent' {
 	if (!isRunning) return 'normal';
 	if (timeRemainingMs <= URGENT_THRESHOLD) return 'urgent';
 	if (timeRemainingMs <= WARNING_THRESHOLD) return 'warning';
@@ -60,7 +61,8 @@ function getUrgencyLevel(timeRemainingMs: number, isRunning: boolean): 'normal' 
 /** Play a short beep using the Web Audio API */
 function playBeep(frequency: number, duration: number, volume = 0.3) {
 	try {
-		const ctx = new (window.AudioContext || (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)();
+		const ctx = new (window.AudioContext ||
+			(window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)();
 		const oscillator = ctx.createOscillator();
 		const gain = ctx.createGain();
 
@@ -185,9 +187,7 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 					<span className="deadline-banner__icon" aria-hidden="true">
 						<OctagonX size={18} />
 					</span>
-					<span className="deadline-banner__text">
-						{t('Process halted')}
-					</span>
+					<span className="deadline-banner__text">{t('Process halted')}</span>
 				</div>
 			</div>
 		);
@@ -505,12 +505,12 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 	// ── No timer set: show admin trigger + halt controls ──
 	if (!hasTimer) {
 		return (
-			<div className={`deadline-banner deadline-banner--empty ${isManuallyHalted ? 'deadline-banner--halted' : ''}`}>
+			<div
+				className={`deadline-banner deadline-banner--empty ${isManuallyHalted ? 'deadline-banner--halted' : ''}`}
+			>
 				{isManuallyHalted && (
 					<div className="deadline-banner__status">
-						<span className="deadline-banner__text">
-							{t('Process halted')}
-						</span>
+						<span className="deadline-banner__text">{t('Process halted')}</span>
 						<div className="deadline-banner__controls">
 							<button
 								className="phase-admin-controls__btn phase-admin-controls__btn--advance"

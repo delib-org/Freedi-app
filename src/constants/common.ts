@@ -155,6 +155,14 @@ export const REDUX = {
 } as const;
 
 /**
+ * Follow Me feature constants
+ */
+export const FOLLOW_ME = {
+	WRITE_DEBOUNCE_MS: 1000,
+	REDIRECT_DELAY_MS: 300,
+} as const;
+
+/**
  * Feature flags
  */
 export const FEATURES = {

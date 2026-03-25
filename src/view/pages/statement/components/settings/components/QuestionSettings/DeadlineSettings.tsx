@@ -59,9 +59,12 @@ const DeadlineSettings: FC<DeadlineSettingsProps> = ({ statement }) => {
 	const isPaused = Boolean(statement.questionSettings?.pausedAt);
 	const remainingAtPause = statement.questionSettings?.remainingMsAtPause;
 	const isActive = currentDeadline && !isPaused && currentDeadline > Date.now();
-	const timeLeft = isPaused && remainingAtPause
-		? remainingAtPause
-		: currentDeadline ? Math.max(0, currentDeadline - Date.now()) : 0;
+	const timeLeft =
+		isPaused && remainingAtPause
+			? remainingAtPause
+			: currentDeadline
+				? Math.max(0, currentDeadline - Date.now())
+				: 0;
 
 	const totalMs = segmentsToMs(segments);
 
@@ -131,7 +134,10 @@ const DeadlineSettings: FC<DeadlineSettingsProps> = ({ statement }) => {
 		setIsSaving(false);
 	}
 
-	function handleKeyDown(e: React.KeyboardEvent, nextRef?: React.RefObject<HTMLInputElement | null>) {
+	function handleKeyDown(
+		e: React.KeyboardEvent,
+		nextRef?: React.RefObject<HTMLInputElement | null>,
+	) {
 		if (e.key === 'Enter') {
 			handleStart();
 		} else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -170,7 +176,9 @@ const DeadlineSettings: FC<DeadlineSettingsProps> = ({ statement }) => {
 						/>
 						<span className={styles.deadlineSegmentUnit}>{t('d')}</span>
 					</div>
-					<span className={styles.deadlineSegmentSep} aria-hidden="true">:</span>
+					<span className={styles.deadlineSegmentSep} aria-hidden="true">
+						:
+					</span>
 					<div className={styles.deadlineSegment}>
 						<input
 							ref={hoursRef}
@@ -187,7 +195,9 @@ const DeadlineSettings: FC<DeadlineSettingsProps> = ({ statement }) => {
 						/>
 						<span className={styles.deadlineSegmentUnit}>{t('h')}</span>
 					</div>
-					<span className={styles.deadlineSegmentSep} aria-hidden="true">:</span>
+					<span className={styles.deadlineSegmentSep} aria-hidden="true">
+						:
+					</span>
 					<div className={styles.deadlineSegment}>
 						<input
 							ref={minutesRef}
@@ -229,11 +239,7 @@ const DeadlineSettings: FC<DeadlineSettingsProps> = ({ statement }) => {
 			</div>
 
 			{currentDeadline && (
-				<button
-					className={styles.deadlineRemoveBtn}
-					onClick={handleRemove}
-					disabled={isSaving}
-				>
+				<button className={styles.deadlineRemoveBtn} onClick={handleRemove} disabled={isSaving}>
 					{t('Remove Timer')}
 				</button>
 			)}

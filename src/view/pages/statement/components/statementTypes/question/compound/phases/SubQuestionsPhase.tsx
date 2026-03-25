@@ -35,7 +35,8 @@ const SubQuestionsPhase: FC = () => {
 	const [isCreatingDiscussion, setIsCreatingDiscussion] = useState(false);
 	const [copied, setCopied] = useState(false);
 
-	const allowParticipants = statement?.questionSettings?.compoundSettings?.allowParticipantsToAddSubQuestions ?? false;
+	const allowParticipants =
+		statement?.questionSettings?.compoundSettings?.allowParticipantsToAddSubQuestions ?? false;
 	const showResearchDiscussion = isAdmin || allowParticipants;
 
 	const handleToggleParticipantAccess = useCallback(async () => {
@@ -108,7 +109,6 @@ const SubQuestionsPhase: FC = () => {
 
 	return (
 		<div className={styles.phase}>
-
 			{lockedSubQuestions.length > 0 && (
 				<div className={styles.subQuestionList}>
 					<h4 className={styles.subQuestionListTitle}>{t('Locked sub-questions')}</h4>

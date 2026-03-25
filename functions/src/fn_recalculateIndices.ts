@@ -66,11 +66,15 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 		// Verify the caller is the creator or has admin access
 		const userId = request.auth.uid;
 		if (parentData.creatorId !== userId) {
-			throw new HttpsError('permission-denied', 'Only the statement creator can recalculate indices');
+			throw new HttpsError(
+				'permission-denied',
+				'Only the statement creator can recalculate indices',
+			);
 		}
 
 		const targetPopulation = parentData.evaluationSettings?.targetPopulation as number | undefined;
-		const samplingQuality = (parentData.evaluationSettings?.samplingQuality as number) ?? DEFAULT_SAMPLING_QUALITY;
+		const samplingQuality =
+			(parentData.evaluationSettings?.samplingQuality as number) ?? DEFAULT_SAMPLING_QUALITY;
 
 		// Get all option statements under this parent
 		const optionsSnapshot = await db

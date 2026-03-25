@@ -10,7 +10,13 @@ interface PhaseSectionProps {
 	children: ReactNode;
 }
 
-const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, defaultExpanded, children }) => {
+const PhaseSection: FC<PhaseSectionProps> = ({
+	title,
+	summary,
+	isCompleted,
+	defaultExpanded,
+	children,
+}) => {
 	const [isExpanded, setIsExpanded] = useState(defaultExpanded ?? !isCompleted);
 
 	const stripClass = isCompleted
@@ -29,11 +35,11 @@ const PhaseSection: FC<PhaseSectionProps> = ({ title, summary, isCompleted, defa
 				</span>
 				<div className={styles.phaseSummaryContent}>
 					<h2 className={styles.phaseSummaryTitle}>{title}</h2>
-					{summary && (
-						<span className={styles.phaseSummarySubtext}>{summary}</span>
-					)}
+					{summary && <span className={styles.phaseSummarySubtext}>{summary}</span>}
 				</div>
-				<span className={`${styles.phaseSummaryChevron} ${isExpanded ? styles.phaseSummaryChevronOpen : ''}`}>
+				<span
+					className={`${styles.phaseSummaryChevron} ${isExpanded ? styles.phaseSummaryChevronOpen : ''}`}
+				>
 					<ChevronDown size={16} />
 				</span>
 			</button>

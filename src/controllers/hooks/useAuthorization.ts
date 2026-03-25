@@ -206,12 +206,7 @@ export const useAuthorization = (statementId?: string): AuthorizationState => {
 			}
 
 			// Auto-subscribe only once
-			if (
-				!hasSubscription &&
-				!subscriptionAttemptedRef.current &&
-				effectiveStatement &&
-				creator
-			) {
+			if (!hasSubscription && !subscriptionAttemptedRef.current && effectiveStatement && creator) {
 				subscriptionAttemptedRef.current = true;
 
 				const pushNotificationsEnabled =

@@ -6,8 +6,11 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { StatementSettings, Collections } from '@freedi/shared-types';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
+import { setPowerFollowMeDB } from '@/controllers/db/statements/setStatements';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 import {
 	Eye,
 	EyeOff,
@@ -51,6 +54,7 @@ interface CategoryConfig {
 
 const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
+	const topParentStatement = useAppSelector(statementSelector(statement.topParentId));
 
 	const settings: StatementSettings = statement.statementSettings ?? defaultStatementSettings;
 
@@ -184,9 +188,9 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => 
 	}
 
 	function handlePowerFollowMeChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		const powerFollowMePath = newValue ? `/statement/${statement.statementId}/chat` : '';
-		updateDoc(statementRef, { powerFollowMe: powerFollowMePath, lastUpdate: Date.now() });
+		const target = topParentStatement ?? statement;
+		const path = newValue ? `/statement/${target.statementId}/chat` : '';
+		setPowerFollowMeDB(target, path);
 	}
 
 	return (

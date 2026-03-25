@@ -36,12 +36,15 @@ const CompoundQuestion: FC = () => {
 
 	const currentIndex = PHASE_ORDER.indexOf(currentPhase);
 
-	const phaseTitles = useMemo((): Record<CompoundPhase, string> => ({
-		[CompoundPhase.defineQuestion]: t('Define Question'),
-		[CompoundPhase.subQuestions]: t('Sub-Questions'),
-		[CompoundPhase.findSolutions]: t('Find Solutions'),
-		[CompoundPhase.resolution]: t('Resolution'),
-	}), [t]);
+	const phaseTitles = useMemo(
+		(): Record<CompoundPhase, string> => ({
+			[CompoundPhase.defineQuestion]: t('Define Question'),
+			[CompoundPhase.subQuestions]: t('Sub-Questions'),
+			[CompoundPhase.findSolutions]: t('Find Solutions'),
+			[CompoundPhase.resolution]: t('Resolution'),
+		}),
+		[t],
+	);
 
 	const phaseSummaries = useMemo((): Record<CompoundPhase, string> => {
 		const lockedTitle = statement?.questionSettings?.compoundSettings?.lockedTitle?.lockedText;
@@ -49,9 +52,7 @@ const CompoundQuestion: FC = () => {
 
 		return {
 			[CompoundPhase.defineQuestion]: lockedTitle ?? '',
-			[CompoundPhase.subQuestions]: subCount > 0
-				? `${subCount} ${t('defined')}`
-				: '',
+			[CompoundPhase.subQuestions]: subCount > 0 ? `${subCount} ${t('defined')}` : '',
 			[CompoundPhase.findSolutions]: '',
 			[CompoundPhase.resolution]: '',
 		};
@@ -64,11 +65,7 @@ const CompoundQuestion: FC = () => {
 			<CompoundPhaseStepper currentPhase={currentPhase} />
 			<PhaseAdminControls statement={statement} />
 			{(statement.brief || isAdmin) && (
-				<PhaseSection
-					title={t('Background from the facilitator')}
-					summary=""
-					isCompleted={true}
-				>
+				<PhaseSection title={t('Background from the facilitator')} summary="" isCompleted={true}>
 					<FacilitatorBrief statement={statement} isAdmin={isAdmin} />
 				</PhaseSection>
 			)}

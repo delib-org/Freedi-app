@@ -19,9 +19,7 @@ const FindSolutionsPhase: FC = () => {
 	const solutionQuestionId = statement?.questionSettings?.compoundSettings?.solutionQuestionId;
 
 	const approvedSolutions = useMemo(() => {
-		const resultIds = new Set(
-			(solutionQuestion?.results ?? []).map((r) => r.statementId),
-		);
+		const resultIds = new Set((solutionQuestion?.results ?? []).map((r) => r.statementId));
 
 		return solutions.filter((s) => resultIds.has(s.statementId));
 	}, [solutionQuestion?.results, solutions]);
@@ -73,7 +71,6 @@ const FindSolutionsPhase: FC = () => {
 
 	return (
 		<div className={styles.phase}>
-
 			{hasSolutionQuestion ? (
 				<>
 					{approvedSolutions.length > 0 && (

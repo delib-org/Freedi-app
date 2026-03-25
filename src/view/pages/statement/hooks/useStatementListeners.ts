@@ -25,6 +25,7 @@ import { statementSelector } from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { logError } from '@/utils/errorHandling';
 import { loadBookmarksForRoom } from '@/controllers/db/bookmarks/bookmarksPersistence';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
 interface UseStatementListenersProps {
 	statementId?: string;
@@ -97,6 +98,7 @@ export const useStatementListeners = ({
 			unsubscribersRef.current.push(
 				listenToStatement(statementId, setIsStatementNotFound),
 				listenToStatementSubscription(statementId, creator),
+				listenToEvaluations(statementId, undefined, creator.uid),
 				listenToUserDemographicQuestions(statementId),
 				listenToUserDemographicAnswers(statementId),
 				listenToInAppNotifications(),

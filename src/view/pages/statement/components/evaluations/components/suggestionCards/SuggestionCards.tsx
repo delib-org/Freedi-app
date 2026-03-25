@@ -6,7 +6,6 @@ import { Flipper, Flipped } from 'react-flip-toolkit';
 import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	setStatement,
 	statementOptionsSelector,
@@ -175,20 +174,6 @@ const SuggestionCards: FC<Props> = ({
 				dispatch(setStatement(statement)),
 			);
 	}, [statement, statementId, dispatch]);
-
-	// Listen to evaluations - but only when statementId is truly available and stable
-	useEffect(() => {
-		// Only set up listener if we have a real statementId (not undefined or changing)
-		if (!statementId) return;
-
-		const unsubscribe = listenToEvaluations(statementId);
-
-		return () => {
-			if (unsubscribe) {
-				unsubscribe();
-			}
-		};
-	}, [statementId]); // Only re-run if statementId actually changes
 
 	useEffect(() => {
 		// Generate new random seed when switching to random sort

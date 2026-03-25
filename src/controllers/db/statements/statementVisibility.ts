@@ -7,6 +7,34 @@ import { parse, string } from 'valibot';
 import { logger } from '@/services/logger';
 import { createStatementRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+import { FOLLOW_ME } from '@/constants/common';
+
+// Debounce timers for follow-me writes keyed by "statementId-field"
+const debounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+function debouncedUpdateDoc(statementId: string, field: string, value: string): void {
+	const key = `${statementId}-${field}`;
+
+	const existing = debounceTimers.get(key);
+	if (existing) clearTimeout(existing);
+
+	// Clearing (empty string) should be immediate
+	if (!value) {
+		debounceTimers.delete(key);
+		const ref = createStatementRef(statementId);
+		updateDoc(ref, { [field]: value });
+
+		return;
+	}
+
+	const timer = setTimeout(() => {
+		debounceTimers.delete(key);
+		const ref = createStatementRef(statementId);
+		updateDoc(ref, { [field]: value });
+	}, FOLLOW_ME.WRITE_DEBOUNCE_MS);
+
+	debounceTimers.set(key, timer);
+}
 
 export async function toggleStatementHide(statementId: string): Promise<boolean | undefined> {
 	try {
@@ -83,40 +111,24 @@ export async function toggleStatementAnchored(
 	}
 }
 
-export async function setFollowMeDB(
-	topParentStatement: Statement,
-	path: string | undefined,
-): Promise<void> {
+export function setFollowMeDB(topParentStatement: Statement, path: string | undefined): void {
 	try {
 		parse(string(), path);
 
-		const topParentStatementRef = createStatementRef(topParentStatement.statementId);
-
-		if (path) {
-			await updateDoc(topParentStatementRef, { followMe: path });
-		} else {
-			await updateDoc(topParentStatementRef, { followMe: '' });
-		}
+		const value = path || '';
+		debouncedUpdateDoc(topParentStatement.statementId, 'followMe', value);
 	} catch (error) {
 		logError(error, { operation: 'statements.statementVisibility.setFollowMeDB' });
 	}
 }
 
-export async function setPowerFollowMeDB(
-	topParentStatement: Statement,
-	path: string | undefined,
-): Promise<void> {
+export function setPowerFollowMeDB(topParentStatement: Statement, path: string | undefined): void {
 	try {
 		parse(string(), path);
 
-		const topParentStatementRef = createStatementRef(topParentStatement.statementId);
-
-		if (path) {
-			await updateDoc(topParentStatementRef, { powerFollowMe: path });
-		} else {
-			await updateDoc(topParentStatementRef, { powerFollowMe: '' });
-		}
+		const value = path || '';
+		debouncedUpdateDoc(topParentStatement.statementId, 'powerFollowMe', value);
 	} catch (error) {
-		logger.error('Failed to set power follow me', error);
+		logError(error, { operation: 'statements.statementVisibility.setPowerFollowMeDB' });
 	}
 }

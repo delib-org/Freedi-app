@@ -12,9 +12,7 @@ interface UseIsProcessHaltedReturn {
  * Halted means: no options, no evaluation, no voting — but comments and questions are allowed.
  * Only checks the current statement level (not parents).
  */
-export function useIsProcessHalted(
-	statement: Statement | undefined,
-): UseIsProcessHaltedReturn {
+export function useIsProcessHalted(statement: Statement | undefined): UseIsProcessHaltedReturn {
 	const { isExpired } = useQuestionDeadline(statement);
 	const isManuallyHalted = statement?.questionSettings?.isHalted === true;
 	const isTimerExpired = isExpired;

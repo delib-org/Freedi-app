@@ -28,7 +28,6 @@ const ResolutionPhase: FC = () => {
 
 	return (
 		<div className={styles.phase}>
-
 			{solutions.length > 0 ? (
 				<div className={styles.solutionsList}>
 					{solutions.map((solution) => {

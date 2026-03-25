@@ -9,8 +9,7 @@ interface PhaseAdminControlsProps {
 
 const PhaseAdminControls: FC<PhaseAdminControlsProps> = ({ statement }) => {
 	const { t } = useTranslation();
-	const { canAdvance, canRevert, isAdmin, advancePhase, revertPhase } =
-		useCompoundPhase(statement);
+	const { canAdvance, canRevert, isAdmin, advancePhase, revertPhase } = useCompoundPhase(statement);
 
 	if (!isAdmin) return null;
 

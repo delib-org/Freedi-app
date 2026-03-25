@@ -1,4 +1,4 @@
-import { FC, useState, useCallback, useRef, useEffect } from 'react';
+import React, { FC, useState, useCallback, useRef, useEffect } from 'react';
 import { updateDoc } from 'firebase/firestore';
 import { Statement } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
@@ -56,14 +56,17 @@ const FacilitatorBrief: FC<FacilitatorBriefProps> = ({ statement, isAdmin }) => 
 		setEditing(false);
 	}, [statement.brief]);
 
-	const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-		if (e.key === 'Enter' && !e.shiftKey) {
-			e.preventDefault();
-			handleSave();
-		} else if (e.key === 'Escape') {
-			handleCancel();
-		}
-	}, [handleSave, handleCancel]);
+	const handleKeyDown = useCallback(
+		(e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+			if (e.key === 'Enter' && !e.shiftKey) {
+				e.preventDefault();
+				handleSave();
+			} else if (e.key === 'Escape') {
+				handleCancel();
+			}
+		},
+		[handleSave, handleCancel],
+	);
 
 	if (editing) {
 		return (
@@ -82,11 +85,7 @@ const FacilitatorBrief: FC<FacilitatorBriefProps> = ({ statement, isAdmin }) => 
 					rows={2}
 				/>
 				<div className={styles.facilitatorEditActions}>
-					<button
-						className={styles.facilitatorSaveBtn}
-						onClick={handleSave}
-						aria-label={t('Save')}
-					>
+					<button className={styles.facilitatorSaveBtn} onClick={handleSave} aria-label={t('Save')}>
 						<Check size={16} />
 					</button>
 					<button
@@ -111,12 +110,16 @@ const FacilitatorBrief: FC<FacilitatorBriefProps> = ({ statement, isAdmin }) => 
 			onClick={isAdmin ? () => setEditing(true) : undefined}
 			role={isAdmin ? 'button' : undefined}
 			tabIndex={isAdmin ? 0 : undefined}
-			onKeyDown={isAdmin ? (e) => {
-				if (e.key === 'Enter' || e.key === ' ') {
-					e.preventDefault();
-					setEditing(true);
-				}
-			} : undefined}
+			onKeyDown={
+				isAdmin
+					? (e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								e.preventDefault();
+								setEditing(true);
+							}
+						}
+					: undefined
+			}
 		>
 			{briefText || t('Click to add background context...')}
 		</p>

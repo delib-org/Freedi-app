@@ -13,6 +13,7 @@ import styles from './FollowMeToast.module.scss';
 import { StatementContext } from '../../StatementCont';
 import { useSelector } from 'react-redux';
 import { listenToStatement } from '@/controllers/db/statements/listenToStatements';
+import { FOLLOW_ME } from '@/constants/common';
 
 const FollowMeToast: FC = () => {
 	const { statement } = useContext(StatementContext);
@@ -25,17 +26,13 @@ const FollowMeToast: FC = () => {
 
 	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
 
-	// Listen to topParentStatement for followMe updates
+	// Always hold a listener to topParentStatement for followMe updates
 	useEffect(() => {
 		if (!statement?.topParentId) return;
+		const unsubscribe = listenToStatement(statement.topParentId);
 
-		// Only set up listener if topParentStatement doesn't exist yet
-		if (!topParentStatement) {
-			const unsubscribe = listenToStatement(statement.topParentId);
-
-			return () => unsubscribe();
-		}
-	}, [statement?.topParentId, topParentStatement]);
+		return () => unsubscribe();
+	}, [statement?.topParentId]);
 
 	// Determine active mode: power takes precedence
 	const powerFollowMePath = topParentStatement?.powerFollowMe;
@@ -43,18 +40,23 @@ const FollowMeToast: FC = () => {
 	const isPowerMode = !!powerFollowMePath && powerFollowMePath !== '';
 	const activePath = isPowerMode ? powerFollowMePath : followMePath;
 
-	// Admin in power mode: auto-update the powerFollowMe path as they navigate
+	// Admin: auto-update the follow path as they navigate (both modes)
 	useEffect(() => {
-		if (!isPowerMode || !_isAdmin || !topParentStatement) return;
+		if (!_isAdmin || !topParentStatement) return;
 
-		// Don't update if the path hasn't changed
-		if (pathname === powerFollowMePath) return;
+		const hasRegularFollow = !!followMePath && followMePath !== '';
+		if (!isPowerMode && !hasRegularFollow) return;
 
-		// Only update for paths within the statement tree (not settings, etc.)
 		if (pathname.includes('/settings')) return;
 
-		setPowerFollowMeDB(topParentStatement, pathname);
-	}, [isPowerMode, _isAdmin, pathname, topParentStatement, powerFollowMePath]);
+		if (isPowerMode) {
+			if (pathname === powerFollowMePath) return;
+			setPowerFollowMeDB(topParentStatement, pathname);
+		} else {
+			if (pathname === followMePath) return;
+			setFollowMeDB(topParentStatement, pathname);
+		}
+	}, [_isAdmin, isPowerMode, pathname, topParentStatement, powerFollowMePath, followMePath]);
 
 	// Auto-redirect for non-admin users in power mode
 	useEffect(() => {
@@ -65,7 +67,7 @@ const FollowMeToast: FC = () => {
 
 		const timer = setTimeout(() => {
 			navigate(powerFollowMePath);
-		}, 300);
+		}, FOLLOW_ME.REDIRECT_DELAY_MS);
 
 		return () => clearTimeout(timer);
 	}, [isPowerMode, _isAdmin, powerFollowMePath, pathname, navigate]);

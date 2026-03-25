@@ -6,7 +6,7 @@
  */
 
 import { logger } from 'firebase-functions';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, QueryDocumentSnapshot } from 'firebase-admin/firestore';
 import { Collections, getAdminStatDocId } from '@freedi/shared-types';
 import type { Statement } from '@freedi/shared-types';
 import { db } from './index';
@@ -14,9 +14,9 @@ import { db } from './index';
 // ── Helpers ──────────────────────────────────────────────────────────
 
 interface PeriodKeys {
-	day: string;   // 'YYYY-MM-DD'
+	day: string; // 'YYYY-MM-DD'
 	month: string; // 'YYYY-MM'
-	year: string;  // 'YYYY'
+	year: string; // 'YYYY'
 }
 
 /**
@@ -246,13 +246,11 @@ export async function backfillAdminStats(req: Request, res: Response): Promise<v
 
 	const collectionRef = db.collection(targetCollection);
 	const PAGE_SIZE = 500;
-	let lastDoc: FirebaseFirestore.QueryDocumentSnapshot | undefined;
+	let lastDoc: QueryDocumentSnapshot | undefined;
 	let processedCount = 0;
 
 	// Aggregate in memory first, then write all at once
 	const aggregates = new Map<string, Record<string, unknown>>();
-
-	// eslint-disable-next-line no-constant-condition
 	while (true) {
 		let q = collectionRef.orderBy('createdAt', 'asc').limit(PAGE_SIZE);
 		if (lastDoc) {
@@ -264,9 +262,10 @@ export async function backfillAdminStats(req: Request, res: Response): Promise<v
 
 		for (const docSnap of snap.docs) {
 			const data = docSnap.data();
-			const createdAt = typeof data.createdAt === 'number'
-				? data.createdAt
-				: data.createdAt?.toMillis?.() ?? Date.now();
+			const createdAt =
+				typeof data.createdAt === 'number'
+					? data.createdAt
+					: (data.createdAt?.toMillis?.() ?? Date.now());
 
 			const periodKeys = getPeriodKeys(createdAt);
 
@@ -334,7 +333,7 @@ export async function backfillAdminStats(req: Request, res: Response): Promise<v
 
 	logger.info(
 		`Admin stats backfill: completed for ${targetCollection}. ` +
-		`Processed ${processedCount} docs, wrote ${entries.length} stat docs in ${batchCount} batches`,
+			`Processed ${processedCount} docs, wrote ${entries.length} stat docs in ${batchCount} batches`,
 	);
 
 	res.json({
