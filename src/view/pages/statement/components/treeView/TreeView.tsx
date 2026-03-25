@@ -216,7 +216,7 @@ const TreeView: FC<TreeViewProps> = ({
 
 			{showSortNav ? (
 				<>
-					{replyToStatement && statement && (
+					{replyToStatement && statement ? (
 						<div className={styles['tree-view__input']}>
 							<ChatInput
 								statement={statement}
@@ -225,10 +225,11 @@ const TreeView: FC<TreeViewProps> = ({
 								replyAsChild
 							/>
 						</div>
+					) : (
+						<div className={styles['tree-view__bottom-nav']}>
+							<StatementBottomNav />
+						</div>
 					)}
-					<div className={styles['tree-view__bottom-nav']}>
-						<StatementBottomNav />
-					</div>
 				</>
 			) : (
 				statement && (
