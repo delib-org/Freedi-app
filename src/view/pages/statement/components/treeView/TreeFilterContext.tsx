@@ -27,16 +27,13 @@ export const TreeFilterProvider: FC<{ children: ReactNode }> = ({ children }) =>
 	}, []);
 
 	const toggleCollapseExpand = useCallback(() => {
-		setIsCollapsed((prev) => {
-			if (prev) {
-				expandAllRef.current?.();
-			} else {
-				collapseAllRef.current?.();
-			}
-
-			return !prev;
-		});
-	}, []);
+		if (isCollapsed) {
+			expandAllRef.current?.();
+		} else {
+			collapseAllRef.current?.();
+		}
+		setIsCollapsed((prev) => !prev);
+	}, [isCollapsed]);
 
 	return (
 		<TreeFilterContext.Provider
