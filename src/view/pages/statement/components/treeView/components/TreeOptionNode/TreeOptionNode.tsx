@@ -211,4 +211,4 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	);
 };
 
-export default TreeOptionNode;
+export default React.memo(TreeOptionNode);

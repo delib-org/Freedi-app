@@ -1,5 +1,6 @@
-import { FC, useEffect, useState, useRef, useContext, useCallback, useLayoutEffect } from 'react';
+import { FC, useEffect, useState, useRef, useContext, useCallback } from 'react';
 import { useLocation, useParams } from 'react-router';
+import { Virtuoso, VirtuosoHandle } from 'react-virtuoso';
 import { StatementContext } from '../../StatementCont';
 import styles from './Chat.module.scss';
 import ChatMessageCard from './components/chatMessageCard/ChatMessageCard';
@@ -8,7 +9,6 @@ import NewMessages from './components/newMessages/NewMessages';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import Description from '../evaluations/components/description/Description';
-import { Statement } from '@freedi/shared-types';
 import { hasParagraphsContent } from '@/utils/paragraphUtils';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useNotificationActions } from '@/controllers/hooks/useNotificationActions';
@@ -22,13 +22,11 @@ interface ChatProps {
 }
 
 const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, showInput = true }) => {
-	const chatRef = useRef<HTMLDivElement>(null);
+	const virtuosoRef = useRef<VirtuosoHandle>(null);
 	const { statementId } = useParams();
 	const { statement } = useContext(StatementContext);
 	const subStatements = useAppSelector(statementSubsSelector(statementId));
 	const { user } = useAuthentication();
-	const messagesEndRef = useRef<HTMLDivElement>(null);
-	const [scrollContainer, setScrollContainer] = useState<HTMLElement | null>(null);
 	const location = useLocation();
 	const firstTimeRef = useRef(true);
 
@@ -36,11 +34,9 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 	const [hasMore, setHasMore] = useState(true);
 	const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-	// Refs for scroll preservation and lazy loading
+	// Refs for lazy loading
 	const isLoadingMoreRef = useRef(false);
-	const prevScrollHeightRef = useRef(0);
 	const initialCheckDoneRef = useRef(false);
-	// Refs synced with state so the scroll handler always reads current values
 	const hasMoreRef = useRef(true);
 	const isLoadingRef = useRef(false);
 	const oldestCreatedAtRef = useRef<number | null>(null);
@@ -77,6 +73,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		setIsLoadingMore(false);
 		initialCheckDoneRef.current = false;
 		oldestCreatedAtRef.current = null;
+		firstTimeRef.current = true;
 	}, [statementId]);
 
 	// Check if all messages are already loaded (fewer than initial limit)
@@ -89,17 +86,7 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		}
 	}, [subStatements.length]);
 
-	// Preserve scroll position after loading older messages.
-	// NOTE: Do NOT reset isLoadingMoreRef here — the later useEffect that
-	// handles new-message scrolling must still see the flag so it can skip.
-	useLayoutEffect(() => {
-		if (isLoadingMoreRef.current && scrollContainer) {
-			const newScrollHeight = scrollContainer.scrollHeight;
-			scrollContainer.scrollTop = newScrollHeight - prevScrollHeightRef.current;
-		}
-	}, [subStatements, scrollContainer]);
-
-	// Fetch older messages — reads from refs so the callback identity is stable
+	// Fetch older messages when user scrolls to top — called by Virtuoso's startReached
 	const loadMore = useCallback(async () => {
 		if (!statementId || isLoadingRef.current || !hasMoreRef.current) return;
 		if (oldestCreatedAtRef.current === null) return;
@@ -107,7 +94,6 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		setIsLoadingMore(true);
 		isLoadingMoreRef.current = true;
 		isLoadingRef.current = true;
-		prevScrollHeightRef.current = scrollContainer?.scrollHeight ?? 0;
 
 		const result = await fetchOlderSubStatements(
 			statementId,
@@ -118,100 +104,45 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		setHasMore(result.hasMore);
 		setIsLoadingMore(false);
 		isLoadingRef.current = false;
-	}, [statementId, scrollContainer]);
-
-	// Find the nearest scrollable ancestor once on mount
-	useEffect(() => {
-		let el = chatRef.current?.parentElement ?? null;
-		while (el) {
-			const style = window.getComputedStyle(el);
-			if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
-				setScrollContainer(el);
-				break;
-			}
-			el = el.parentElement;
-		}
-	}, []);
-
-	// Scroll listener: when user scrolls near the top, load older messages.
-	// Delayed setup so the initial scroll-to-bottom completes first.
-	useEffect(() => {
-		if (!scrollContainer) return;
-
-		let attached = false;
-
-		const onScroll = () => {
-			if (scrollContainer.scrollTop < 100) {
-				loadMore();
-			}
-		};
-
-		const timerId = setTimeout(() => {
-			scrollContainer.addEventListener('scroll', onScroll, { passive: true });
-			attached = true;
-		}, 800);
-
-		return () => {
-			clearTimeout(timerId);
-			if (attached) {
-				scrollContainer.removeEventListener('scroll', onScroll);
-			}
-		};
-	}, [scrollContainer, loadMore]);
-
-	function scrollToHash() {
-		if (location.hash) {
-			const element = document.querySelector(location.hash);
-
-			if (element) {
-				element.scrollIntoView();
-				firstTimeRef.current = false;
-
-				return;
-			}
-		}
-	}
-
-	const scrollToBottom = () => {
-		if (!messagesEndRef) return;
-		if (!messagesEndRef.current) return;
-		if (location.hash) return;
-		if (firstTimeRef.current) {
-			messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
-			firstTimeRef.current = false;
-		} else {
-			messagesEndRef.current.scrollIntoView({
-				behavior: 'smooth',
-				block: 'end',
-				inline: 'nearest',
-			});
-		}
-	};
-
-	useEffect(() => {
-		firstTimeRef.current = true;
+		isLoadingMoreRef.current = false;
 	}, [statementId]);
 
+	const scrollToBottom = useCallback(() => {
+		if (location.hash) return;
+		virtuosoRef.current?.scrollToIndex({
+			index: 'LAST',
+			behavior: firstTimeRef.current ? 'auto' : 'smooth',
+		});
+		firstTimeRef.current = false;
+	}, [location.hash]);
+
+	// Handle hash navigation
+	useEffect(() => {
+		if (!location.hash || subStatements.length === 0) return;
+
+		const targetId = location.hash.slice(1);
+		const index = subStatements.findIndex((s) => s.statementId === targetId);
+		if (index >= 0) {
+			virtuosoRef.current?.scrollToIndex({ index, behavior: 'auto', align: 'center' });
+			firstTimeRef.current = false;
+		}
+	}, [subStatements, location.hash]);
+
+	// Initial scroll to bottom
 	useEffect(() => {
 		if (!firstTimeRef.current) return;
 		if (isLoadingMoreRef.current) return;
 		if (subStatements.length === 0) return;
 
-		if (location.hash) {
-			scrollToHash();
-		} else {
+		if (!location.hash) {
 			scrollToBottom();
 		}
 		firstTimeRef.current = false;
-	}, [subStatements]);
+	}, [subStatements, location.hash, scrollToBottom]);
 
+	// Handle new messages from other users
 	useEffect(() => {
-		// Skip scroll logic when loading older messages
-		if (isLoadingMoreRef.current) {
-			isLoadingMoreRef.current = false;
-
-			return;
-		}
+		if (isLoadingMoreRef.current) return;
 
 		const lastMessage = subStatements[subStatements.length - 1];
 		if (lastMessage?.creator?.uid !== user?.uid) {
@@ -228,32 +159,56 @@ const Chat: FC<ChatProps> = ({ sideChat = false, numberOfSubStatements = 0, show
 		}
 	}, [subStatements.length]);
 
-	return (
-		<div className={styles.chatContainer}>
-			<div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`} ref={chatRef}>
+	// Render each chat message card — used by Virtuoso
+	const renderItem = useCallback(
+		(index: number) => {
+			const statementSub = subStatements[index];
+
+			return (
+				<ChatMessageCard
+					parentStatement={statement}
+					statement={statementSub}
+					previousStatement={subStatements[index - 1]}
+					sideChat={sideChat}
+				/>
+			);
+		},
+		[subStatements, statement, sideChat],
+	);
+
+	// Header component for description and loading indicator
+	const Header = useCallback(
+		() => (
+			<>
 				{hasParagraphsContent(statement?.paragraphs) && !sideChat && (
 					<div className="wrapper">
 						<Description />
 					</div>
 				)}
-
 				{isLoadingMore && (
 					<div className={styles.sentinel}>
 						<div className={styles.spinner} />
 					</div>
 				)}
+			</>
+		),
+		[statement?.paragraphs, sideChat, isLoadingMore],
+	);
 
-				{subStatements?.map((statementSub: Statement, index) => (
-					<ChatMessageCard
-						key={statementSub.statementId}
-						parentStatement={statement}
-						statement={statementSub}
-						previousStatement={subStatements[index - 1]}
-						sideChat={sideChat}
-					/>
-				))}
-
-				<div ref={messagesEndRef} />
+	return (
+		<div className={styles.chatContainer}>
+			<div className={`${styles.chat} ${sideChat ? styles.sideChat : ''}`}>
+				<Virtuoso
+					ref={virtuosoRef}
+					totalCount={subStatements.length}
+					itemContent={renderItem}
+					startReached={loadMore}
+					followOutput="smooth"
+					initialTopMostItemIndex={subStatements.length > 0 ? subStatements.length - 1 : 0}
+					components={{ Header }}
+					style={{ height: '100%' }}
+					increaseViewportBy={200}
+				/>
 
 				{!sideChat && (
 					<NewMessages

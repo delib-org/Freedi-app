@@ -327,4 +327,4 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	);
 };
 
-export default TreeMessageNode;
+export default React.memo(TreeMessageNode);

@@ -9,6 +9,7 @@ import {
 	ResultsSettings,
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { REDUX } from '@/constants/common';
 import {
 	createStatementByIdSelector,
 	createStatementsByParentSelector,
@@ -52,6 +53,42 @@ const initialState: StatementsState = {
 	bookmarkedIds: {},
 };
 
+/**
+ * Prune oldest statements when state exceeds MAX_STATEMENTS cap.
+ * Keeps statements belonging to the most recently updated topParentIds.
+ */
+function pruneStatements(statements: Statement[]): Statement[] {
+	if (statements.length <= REDUX.MAX_STATEMENTS) return statements;
+
+	// Find the most recent topParentIds by their latest lastUpdate
+	const topParentLastUpdate = new Map<string, number>();
+	for (const stmt of statements) {
+		const topId = stmt.topParentId || stmt.parentId || stmt.statementId;
+		const current = topParentLastUpdate.get(topId) || 0;
+		if (stmt.lastUpdate > current) {
+			topParentLastUpdate.set(topId, stmt.lastUpdate);
+		}
+	}
+
+	// Sort topParentIds by most recently updated first
+	const sortedTopParents = [...topParentLastUpdate.entries()]
+		.sort((a, b) => b[1] - a[1])
+		.map(([id]) => id);
+
+	// Keep adding entire trees until we hit the cap
+	const keepSet = new Set<string>();
+	for (const topId of sortedTopParents) {
+		if (keepSet.size >= REDUX.MAX_STATEMENTS) break;
+		keepSet.add(topId);
+	}
+
+	return statements.filter((stmt) => {
+		const topId = stmt.topParentId || stmt.parentId || stmt.statementId;
+
+		return keepSet.has(topId);
+	});
+}
+
 export const statementsSlice = createSlice({
 	name: 'statements',
 	initialState,
@@ -72,6 +109,9 @@ export const statementsSlice = createSlice({
 				if (newStatement.lastUpdate > state.statementSubscriptionLastUpdate) {
 					state.statementSubscriptionLastUpdate = newStatement.lastUpdate;
 				}
+
+				// Prune if over cap
+				state.statements = pruneStatements(state.statements);
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatement',
@@ -126,6 +166,9 @@ export const statementsSlice = createSlice({
 				statements.forEach((statement) => {
 					state.statements = updateArray(state.statements, statement, 'statementId');
 				});
+
+				// Prune if over cap
+				state.statements = pruneStatements(state.statements);
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatements',
@@ -501,11 +544,22 @@ export const statementOptionsSelector = (statementId: string | undefined) =>
 export const questionsSelector = (statementId: string | undefined) =>
 	selectStatementsByParentAndType(statementId, StatementType.question);
 
+// Memoized map for O(1) subscription lookups
+const selectSubscriptionMap = createSelector(
+	[(state: { statements: StatementsState }) => state.statements.statementSubscription],
+	(subscriptions) => {
+		const map = new Map<string, StatementSubscription>();
+		for (const sub of subscriptions) {
+			map.set(sub.statementId, sub);
+		}
+
+		return map;
+	},
+);
+
 export const statementSubscriptionSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
-		state.statements.statementSubscription.find(
-			(statementSub) => statementSub.statementId === statementId,
-		) || undefined;
+		statementId ? selectSubscriptionMap(state).get(statementId) : undefined;
 export const statementOrderSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
 		state.statements.statements.find((statement) => statement.statementId === statementId)?.order ||

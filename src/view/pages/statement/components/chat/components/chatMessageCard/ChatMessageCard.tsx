@@ -1,4 +1,13 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+	FC,
+	lazy,
+	Suspense,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import StatementChatMore from '../statementChatMore/StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import { isAuthorized } from '@/controllers/general/helpers';
@@ -7,7 +16,6 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
-import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
 import styles from './ChatMessageCard.module.scss';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { StatementType, Statement } from '@freedi/shared-types';
@@ -15,6 +23,10 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import ChatMessageMenu from './ChatMessageMenu';
 import TypeSuggestionBanner from './TypeSuggestionBanner';
 import { useStatementTypeDetection } from '@/controllers/hooks/useStatementTypeDetection';
+
+const CreateStatementModal = lazy(
+	() => import('@/view/pages/statement/components/createStatementModal/CreateStatementModal'),
+);
 
 function formatMessageTime(timestamp: number): string {
 	const date = new Date(timestamp);
@@ -82,9 +94,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	const isAlignedLeft = (isMe && dir === 'ltr') || (!isMe && dir === 'rtl');
 
 	// Handle save callback
-	function handleSaveSuccess() {
+	const handleSaveSuccess = useCallback(() => {
 		setIsEdit(false);
-	}
+	}, []);
+
+	const handleEditEnd = useCallback(() => {
+		setIsEdit(false);
+	}, []);
 
 	// AI type detection for the creator's own statements
 	const {
@@ -98,7 +114,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
 
-	const getMessageBoxClassName = () => {
+	const messageBoxClassName = useMemo(() => {
 		const baseClass = styles.messageBox;
 		const marginClass = sideChat ? '' : styles.messageMargin;
 		if (isStatement) {
@@ -106,9 +122,12 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 		} else {
 			return `${baseClass} ${marginClass}`;
 		}
-	};
+	}, [sideChat, isStatement]);
 
-	const messageBoxStyle = isGeneral ? undefined : { borderColor: statementColor.backgroundColor };
+	const messageBoxStyle = useMemo(
+		() => (isGeneral ? undefined : { borderColor: statementColor.backgroundColor }),
+		[isGeneral, statementColor.backgroundColor],
+	);
 
 	if (!statement) return null;
 	if (!parentStatement) return null;
@@ -124,7 +143,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 				</div>
 			)}
 
-			<div className={getMessageBoxClassName()} style={messageBoxStyle}>
+			<div className={messageBoxClassName} style={messageBoxStyle}>
 				<div className={styles.triangle} />
 
 				<div className={styles.info}>
@@ -147,7 +166,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							multiline={true}
 							forceEditing={isEdit}
 							onSaveSuccess={handleSaveSuccess}
-							onEditEnd={() => setIsEdit(false)}
+							onEditEnd={handleEditEnd}
 							className={styles.editableMessage}
 							inputClassName={styles.editInput}
 							containerClassName={styles.editContainer}
@@ -161,7 +180,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					</div>
 				</div>
 
-				<div style={{ display: image ? 'flex' : 'none' }}>
+				<div className={image ? styles.imageVisible : styles.imageHidden}>
 					<UploadImage
 						statement={statement}
 						fileInputRef={fileInputRef}
@@ -182,15 +201,17 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 				)}
 
 				{isNewStatementModalOpen && (
-					<CreateStatementModal
-						parentStatement={statement}
-						isOption={false}
-						setShowModal={setIsNewStatementModalOpen}
-					/>
+					<Suspense fallback={null}>
+						<CreateStatementModal
+							parentStatement={statement}
+							isOption={false}
+							setShowModal={setIsNewStatementModalOpen}
+						/>
+					</Suspense>
 				)}
 			</div>
 		</div>
 	);
 };
 
-export default ChatMessageCard;
+export default React.memo(ChatMessageCard);

@@ -473,3 +473,11 @@
   align-items: center;
   justify-content: center;
 }
+
+.imageVisible {
+  display: flex;
+}
+
+.imageHidden {
+  display: none;
+}

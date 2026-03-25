@@ -15,8 +15,14 @@ export const createTreeViewSelector = () => {
 		(statements, statementId) => {
 			const childrenMap = new Map<string, Statement[]>();
 
+			// Only include statements belonging to this tree (matching topParentId or direct children)
+			// This avoids iterating 500+ accumulated statements from other rooms
+			const treeStatements = statements.filter(
+				(stmt) => stmt.topParentId === statementId || stmt.parentId === statementId,
+			);
+
 			// Build parent-child map in single pass O(n)
-			statements.forEach((stmt) => {
+			treeStatements.forEach((stmt) => {
 				if (stmt.parentId) {
 					const siblings = childrenMap.get(stmt.parentId) || [];
 					siblings.push(stmt);
