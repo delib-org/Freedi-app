@@ -169,11 +169,9 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 					<button
 						className={styles['tree-option-node__action-btn']}
 						onClick={() => navigate(`/statement/${statement.statementId}`)}
-						aria-label={t('Drill down')}
+						aria-label={t('Dive in')}
 					>
-						<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
-							jump_to_element
-						</span>
+						{t('Dive in')}
 					</button>
 					<button
 						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__bookmark-btn']} ${isBookmarked ? styles['tree-option-node__bookmark-btn--active'] : ''}`}
