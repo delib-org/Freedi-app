@@ -1,7 +1,7 @@
 import { getDoc, updateDoc, runTransaction } from 'firebase/firestore';
 import { FireStore } from '../config';
 import { store } from '@/redux/store';
-import { Statement, StatementSchema } from '@freedi/shared-types';
+import { Statement } from '@freedi/shared-types';
 
 import { parse, string } from 'valibot';
 import { logger } from '@/services/logger';
@@ -89,7 +89,6 @@ export async function setFollowMeDB(
 ): Promise<void> {
 	try {
 		parse(string(), path);
-		parse(StatementSchema, topParentStatement);
 
 		const topParentStatementRef = createStatementRef(topParentStatement.statementId);
 
@@ -109,7 +108,6 @@ export async function setPowerFollowMeDB(
 ): Promise<void> {
 	try {
 		parse(string(), path);
-		parse(StatementSchema, topParentStatement);
 
 		const topParentStatementRef = createStatementRef(topParentStatement.statementId);
 
