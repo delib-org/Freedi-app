@@ -234,13 +234,30 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 				{isEdit ? (
 					<EditableStatement
 						statement={statement}
-						showDescription={false}
+						showDescription={true}
+						multiline={true}
 						forceEditable={true}
 						forceEditing={true}
 						onSaveSuccess={handleSaveSuccess}
 					/>
 				) : (
-					<div className={styles['tree-message-node__text']}>{statement.statement}</div>
+					<div className={styles['tree-message-node__text']}>
+						{statement.statement}
+						{statement.paragraphs && statement.paragraphs.length > 0 && (
+							<div className={styles['tree-message-node__paragraphs']}>
+								{[...statement.paragraphs]
+									.sort((a, b) => a.order - b.order)
+									.map((p) => (
+										<p key={p.paragraphId}>{p.content}</p>
+									))}
+							</div>
+						)}
+						{!statement.paragraphs?.length && statement.description && (
+							<div className={styles['tree-message-node__description']}>
+								{statement.description}
+							</div>
+						)}
+					</div>
 				)}
 				<div className={styles['tree-message-node__actions']}>
 					<button

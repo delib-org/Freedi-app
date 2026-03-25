@@ -75,6 +75,20 @@
 		word-break: break-word;
 	}
 
+	&__paragraphs {
+		margin-top: 4px;
+
+		p {
+			margin: 2px 0;
+			font-size: inherit;
+		}
+	}
+
+	&__description {
+		margin-top: 4px;
+		color: var(--text-secondary, #777);
+	}
+
 	&__actions {
 		display: flex;
 		align-items: center;

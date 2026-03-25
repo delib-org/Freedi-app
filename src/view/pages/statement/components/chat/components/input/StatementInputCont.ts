@@ -1,7 +1,8 @@
-import { StatementType, Statement } from '@freedi/shared-types';
+import { StatementType, Statement, ParagraphType } from '@freedi/shared-types';
 import { defaultStatementSettings } from './../../../settings/emptyStatementModel';
 import { createStatement, setStatementToDB } from '@/controllers/db/statements/setStatements';
 import { logError } from '@/utils/errorHandling';
+import { generateParagraphId } from '@/utils/paragraphUtils';
 
 export function handleAddStatement(
 	message: string,
@@ -22,7 +23,7 @@ export function handleAddStatement(
 		});
 		if (!newStatement) throw new Error('No statement was created');
 
-		// Optimistic: extract first line as title, rest as description preview
+		// Extract first line as title, rest as paragraphs + description preview
 		const lines = trimmed.split('\n');
 		if (lines.length > 1) {
 			const bodyLines = lines.slice(1).filter((line) => line.trim());
@@ -33,6 +34,12 @@ export function handleAddStatement(
 					descriptionPreview.length > 200
 						? descriptionPreview.substring(0, 197) + '...'
 						: descriptionPreview;
+				newStatement.paragraphs = bodyLines.map((line, index) => ({
+					paragraphId: generateParagraphId(),
+					type: ParagraphType.paragraph,
+					content: line.trim(),
+					order: index,
+				}));
 			}
 		}
 

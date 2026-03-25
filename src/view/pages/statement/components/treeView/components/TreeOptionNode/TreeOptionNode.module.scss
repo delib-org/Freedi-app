@@ -98,6 +98,15 @@
 		word-break: break-word;
 	}
 
+	&__paragraphs {
+		margin-top: 4px;
+
+		p {
+			margin: 2px 0;
+			font-size: inherit;
+		}
+	}
+
 	&__evaluation {
 		margin-top: 4px;
 	}

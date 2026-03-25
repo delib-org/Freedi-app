@@ -156,7 +156,8 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 				{isEdit ? (
 					<EditableStatement
 						statement={statement}
-						showDescription={false}
+						showDescription={true}
+						multiline={true}
 						forceEditable={true}
 						forceEditing={true}
 						onSaveSuccess={handleSaveSuccess}
@@ -164,9 +165,17 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 				) : (
 					<>
 						<div className={styles['tree-option-node__text']}>{statement.statement}</div>
-						{statement.description && (
+						{statement.paragraphs && statement.paragraphs.length > 0 ? (
+							<div className={styles['tree-option-node__paragraphs']}>
+								{[...statement.paragraphs]
+									.sort((a, b) => a.order - b.order)
+									.map((p) => (
+										<p key={p.paragraphId}>{p.content}</p>
+									))}
+							</div>
+						) : statement.description ? (
 							<div className={styles['tree-option-node__description']}>{statement.description}</div>
-						)}
+						) : null}
 					</>
 				)}
 				<div className={styles['tree-option-node__evaluation']}>
