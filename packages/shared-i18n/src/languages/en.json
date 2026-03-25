@@ -2700,5 +2700,14 @@
   "Write background context for participants...": "Write background context for participants...",
   "All participants can add": "All participants can add",
   "Only admin can add": "Only admin can add",
-  "Add research question": "Add research question"
+  "Add research question": "Add research question",
+  "Bookmark": "Bookmark",
+  "Remove bookmark": "Remove bookmark",
+  "Bookmarked": "Bookmarked",
+  "My Statements": "My Statements",
+  "No bookmarks yet": "No bookmarks yet",
+  "Tap the bookmark icon on any message to save it for quick access": "Tap the bookmark icon on any message to save it for quick access",
+  "You haven't posted yet": "You haven't posted yet",
+  "Join the discussion by typing a message below": "Join the discussion by typing a message below",
+  "Collapse all": "Collapse all"
 }

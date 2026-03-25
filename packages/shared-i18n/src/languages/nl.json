@@ -2066,5 +2066,14 @@
   "Write background context for participants...": "Schrijf context voor de deelnemers...",
   "All participants can add": "Alle deelnemers kunnen toevoegen",
   "Only admin can add": "Alleen beheerder kan toevoegen",
-  "Add research question": "Onderzoeksvraag toevoegen"
+  "Add research question": "Onderzoeksvraag toevoegen",
+  "Bookmark": "Bladwijzer",
+  "Remove bookmark": "Bladwijzer verwijderen",
+  "Bookmarked": "Opgeslagen",
+  "My Statements": "Mijn berichten",
+  "No bookmarks yet": "Nog geen bladwijzers",
+  "Tap the bookmark icon on any message to save it for quick access": "Tik op het bladwijzerpictogram bij een bericht om het op te slaan voor snelle toegang",
+  "You haven't posted yet": "Je hebt nog niets geplaatst",
+  "Join the discussion by typing a message below": "Doe mee aan de discussie door hieronder een bericht te typen",
+  "Collapse all": "Alles inklappen"
 }

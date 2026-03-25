@@ -29,6 +29,7 @@ interface StatementsState {
 	statementSubscriptionLastUpdate: number;
 	statementMembership: StatementSubscription[];
 	screen: StatementScreen;
+	bookmarkedIds: Record<string, boolean>;
 }
 
 interface StatementOrder {
@@ -48,6 +49,7 @@ const initialState: StatementsState = {
 	statementSubscriptionLastUpdate: 0,
 	statementMembership: [],
 	screen: StatementScreen.chat,
+	bookmarkedIds: {},
 };
 
 export const statementsSlice = createSlice({
@@ -160,6 +162,11 @@ export const statementsSlice = createSlice({
 				if (newStatementSubscription.lastUpdate > state.statementSubscriptionLastUpdate) {
 					state.statementSubscriptionLastUpdate = newStatementSubscription.lastUpdate;
 				}
+
+				// Hydrate bookmark state from subscription
+				if (newStatementSubscription.isBookmarked) {
+					state.bookmarkedIds[newStatementSubscription.statementId] = true;
+				}
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatementSubscription',
@@ -177,6 +184,11 @@ export const statementsSlice = createSlice({
 						statement,
 						'statementsSubscribeId',
 					);
+
+					// Hydrate bookmark state from subscription
+					if (statement.isBookmarked) {
+						state.bookmarkedIds[statement.statementId] = true;
+					}
 				});
 			} catch (error) {
 				logError(error, {
@@ -310,6 +322,7 @@ export const statementsSlice = createSlice({
 			state.statementSubscriptionLastUpdate = 0;
 			state.statementMembership = [];
 			state.screen = StatementScreen.chat;
+			state.bookmarkedIds = {};
 		},
 		setCurrentMultiStepOptions: (state, action: PayloadAction<Statement[]>) => {
 			try {
@@ -339,6 +352,14 @@ export const statementsSlice = createSlice({
 				statement.resultsSettings = resultsSettings;
 			}
 		},
+		setBookmark: (state, action: PayloadAction<{ statementId: string; isBookmarked: boolean }>) => {
+			const { statementId, isBookmarked } = action.payload;
+			if (isBookmarked) {
+				state.bookmarkedIds[statementId] = true;
+			} else {
+				delete state.bookmarkedIds[statementId];
+			}
+		},
 	},
 });
 
@@ -359,6 +380,7 @@ export const {
 	setCurrentMultiStepOptions,
 	setMassConsensusStatements,
 	updateStoreResultsSettings,
+	setBookmark,
 } = statementsSlice.actions;
 
 // statements
@@ -510,6 +532,18 @@ export const hasTokenSelector =
 
 		return subscription?.tokens?.includes(token) || false;
 	};
+
+// Bookmark selectors
+export const bookmarkedStatementIdsSelector = createSelector(
+	[(state: { statements: StatementsState }) => state.statements.bookmarkedIds],
+	(bookmarkedIds) => {
+		return new Set<string>(Object.keys(bookmarkedIds));
+	},
+);
+
+export const isStatementBookmarkedSelector =
+	(statementId: string) => (state: { statements: StatementsState }) =>
+		state.statements.bookmarkedIds[statementId] === true;
 
 export const subscriptionParentStatementSelector = (parentId: string) =>
 	createSelector(

@@ -2611,5 +2611,14 @@
   "Write background context for participants...": "زمینه‌ای برای شرکت‌کنندگان بنویسید...",
   "All participants can add": "همه شرکت‌کنندگان می‌توانند اضافه کنند",
   "Only admin can add": "فقط مدیر می‌تواند اضافه کند",
-  "Add research question": "افزودن سؤال پژوهشی"
+  "Add research question": "افزودن سؤال پژوهشی",
+  "Bookmark": "نشانک",
+  "Remove bookmark": "حذف نشانک",
+  "Bookmarked": "نشانک‌شده",
+  "My Statements": "پیام‌های من",
+  "No bookmarks yet": "هنوز نشانکی نیست",
+  "Tap the bookmark icon on any message to save it for quick access": "برای دسترسی سریع، روی نماد نشانک هر پیام بزنید",
+  "You haven't posted yet": "هنوز چیزی ارسال نکرده‌اید",
+  "Join the discussion by typing a message below": "با تایپ یک پیام در زیر به بحث بپیوندید",
+  "Collapse all": "جمع کردن همه"
 }

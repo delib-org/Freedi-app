@@ -15,6 +15,7 @@ import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import TypeSuggestionBanner from '@/view/pages/statement/components/chat/components/chatMessageCard/TypeSuggestionBanner';
+import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import styles from './TreeMessageNode.module.scss';
 
@@ -45,6 +46,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	const { user } = useAuthentication();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
 	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
+	const { isBookmarked, toggle: toggleBookmark } = useBookmark(statement.statementId);
 	const isMe = user?.uid === statement.creator?.uid;
 
 	const _isAuthorized = isAuthorized(
@@ -252,7 +254,9 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							onClick={handleDrillDown}
 							aria-label={t('Drill down')}
 						>
-							<span className="material-symbols-outlined" style={{ fontSize: 18 }}>jump_to_element</span>
+							<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+								jump_to_element
+							</span>
 						</button>
 					)}
 					{hasChildren && !isQuestion && (
@@ -264,6 +268,21 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							{t('Drill down')}
 						</button>
 					)}
+					<button
+						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__bookmark-btn']} ${isBookmarked ? styles['tree-message-node__bookmark-btn--active'] : ''}`}
+						onClick={toggleBookmark}
+						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
+					>
+						<span
+							className="material-symbols-outlined"
+							style={{
+								fontSize: 18,
+								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
+							}}
+						>
+							bookmark
+						</span>
+					</button>
 				</div>
 
 				{showTypeSuggestion && suggestedType && (

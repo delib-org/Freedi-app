@@ -2699,5 +2699,14 @@
   "Write background context for participants...": "כתבו רקע עבור המשתתפים...",
   "All participants can add": "כל המשתתפים יכולים להוסיף",
   "Only admin can add": "רק מנהל יכול להוסיף",
-  "Add research question": "הוסף שאלת מחקר"
+  "Add research question": "הוסף שאלת מחקר",
+  "Bookmark": "סימניה",
+  "Remove bookmark": "הסר סימניה",
+  "Bookmarked": "מסומנים",
+  "My Statements": "ההודעות שלי",
+  "No bookmarks yet": "אין סימניות עדיין",
+  "Tap the bookmark icon on any message to save it for quick access": "הקש על סמל הסימנייה בכל הודעה כדי לשמור אותה לגישה מהירה",
+  "You haven't posted yet": "עדיין לא פרסמת",
+  "Join the discussion by typing a message below": "הצטרף לדיון על ידי הקלדת הודעה למטה",
+  "Collapse all": "כווץ הכל"
 }

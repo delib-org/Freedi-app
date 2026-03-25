@@ -2090,5 +2090,14 @@
   "Write background context for participants...": "اكتب سياقًا للمشاركين...",
   "All participants can add": "يمكن لجميع المشاركين الإضافة",
   "Only admin can add": "المسؤول فقط يمكنه الإضافة",
-  "Add research question": "إضافة سؤال بحثي"
+  "Add research question": "إضافة سؤال بحثي",
+  "Bookmark": "إشارة مرجعية",
+  "Remove bookmark": "إزالة الإشارة المرجعية",
+  "Bookmarked": "المحفوظة",
+  "My Statements": "منشوراتي",
+  "No bookmarks yet": "لا توجد إشارات مرجعية بعد",
+  "Tap the bookmark icon on any message to save it for quick access": "اضغط على أيقونة الإشارة المرجعية على أي رسالة لحفظها للوصول السريع",
+  "You haven't posted yet": "لم تنشر بعد",
+  "Join the discussion by typing a message below": "انضم إلى النقاش بكتابة رسالة أدناه",
+  "Collapse all": "طي الكل"
 }

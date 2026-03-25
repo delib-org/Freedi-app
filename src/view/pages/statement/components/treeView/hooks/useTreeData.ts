@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
 import { createTreeViewSelector } from '@/redux/statements/treeViewSelectors';
+import { TreeFilterMode } from '../TreeFilterMode';
 
 interface UseTreeDataReturn {
 	childrenMap: Map<string, Statement[]>;
@@ -13,6 +14,9 @@ export interface TreeDataOptions {
 	typeFilter?: readonly StatementType[];
 	sortType?: SortType;
 	onlySelectedOptions?: boolean;
+	filterMode?: TreeFilterMode;
+	userId?: string;
+	bookmarkedIds?: Set<string>;
 }
 
 const selectTreeView = createTreeViewSelector();
@@ -51,7 +55,8 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
  * Supports type filtering, sorting, and selected-only option filtering.
  */
 export function useTreeData(statementId: string, options?: TreeDataOptions): UseTreeDataReturn {
-	const { typeFilter, sortType, onlySelectedOptions } = options || {};
+	const { typeFilter, sortType, onlySelectedOptions, filterMode, userId, bookmarkedIds } =
+		options || {};
 
 	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useAppSelector((state) =>
 		selectTreeView(state, statementId),
@@ -141,8 +146,25 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 			resultMap = sortedMap;
 		}
 
+		// Apply bookmark/mine filter
+		if (filterMode === TreeFilterMode.bookmarked && bookmarkedIds) {
+			resultRoot = resultRoot.filter((c) => bookmarkedIds.has(c.statementId));
+		} else if (filterMode === TreeFilterMode.mine && userId) {
+			resultRoot = resultRoot.filter((c) => c.creatorId === userId);
+		}
+
 		return { childrenMap: resultMap, rootChildren: resultRoot };
-	}, [fullChildrenMap, fullRootChildren, typeFilter, sortType, selectedOptionIds, statementId]);
+	}, [
+		fullChildrenMap,
+		fullRootChildren,
+		typeFilter,
+		sortType,
+		selectedOptionIds,
+		statementId,
+		filterMode,
+		userId,
+		bookmarkedIds,
+	]);
 
 	const getChildren = useMemo(() => {
 		return (parentId: string): Statement[] => {

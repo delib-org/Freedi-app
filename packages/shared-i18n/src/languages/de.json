@@ -2066,5 +2066,14 @@
   "Write background context for participants...": "Schreiben Sie Kontext für die Teilnehmer...",
   "All participants can add": "Alle Teilnehmer können hinzufügen",
   "Only admin can add": "Nur Admin kann hinzufügen",
-  "Add research question": "Forschungsfrage hinzufügen"
+  "Add research question": "Forschungsfrage hinzufügen",
+  "Bookmark": "Lesezeichen",
+  "Remove bookmark": "Lesezeichen entfernen",
+  "Bookmarked": "Gespeichert",
+  "My Statements": "Meine Beiträge",
+  "No bookmarks yet": "Noch keine Lesezeichen",
+  "Tap the bookmark icon on any message to save it for quick access": "Tippe auf das Lesezeichen-Symbol bei einer Nachricht, um sie für schnellen Zugriff zu speichern",
+  "You haven't posted yet": "Du hast noch nichts gepostet",
+  "Join the discussion by typing a message below": "Beteilige dich an der Diskussion, indem du unten eine Nachricht schreibst",
+  "Collapse all": "Alle einklappen"
 }

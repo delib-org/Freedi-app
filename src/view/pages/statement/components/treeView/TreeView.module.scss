@@ -23,6 +23,30 @@
 		font-size: 0.9rem;
 	}
 
+	&__empty-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		padding: 3rem 2rem;
+		text-align: center;
+		gap: 8px;
+	}
+
+	&__empty-title {
+		margin: 0;
+		font-size: 1rem;
+		font-weight: 600;
+		color: var(--text-title, #333);
+	}
+
+	&__empty-subtitle {
+		margin: 0;
+		font-size: 0.85rem;
+		color: var(--text-secondary, #999);
+		max-width: 280px;
+	}
+
 	&__input {
 		position: fixed;
 		bottom: 0;

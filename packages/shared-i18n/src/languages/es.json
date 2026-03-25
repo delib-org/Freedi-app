@@ -2066,5 +2066,14 @@
   "Write background context for participants...": "Escribe contexto para los participantes...",
   "All participants can add": "Todos los participantes pueden agregar",
   "Only admin can add": "Solo el administrador puede agregar",
-  "Add research question": "Agregar pregunta de investigación"
+  "Add research question": "Agregar pregunta de investigación",
+  "Bookmark": "Marcador",
+  "Remove bookmark": "Quitar marcador",
+  "Bookmarked": "Marcados",
+  "My Statements": "Mis publicaciones",
+  "No bookmarks yet": "Sin marcadores aún",
+  "Tap the bookmark icon on any message to save it for quick access": "Toca el icono de marcador en cualquier mensaje para guardarlo y acceder rápidamente",
+  "You haven't posted yet": "Aún no has publicado",
+  "Join the discussion by typing a message below": "Únete a la discusión escribiendo un mensaje abajo",
+  "Collapse all": "Colapsar todo"
 }

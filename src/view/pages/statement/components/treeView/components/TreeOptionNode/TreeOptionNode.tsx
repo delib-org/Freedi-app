@@ -11,6 +11,7 @@ import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
+import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import styles from './TreeOptionNode.module.scss';
 
@@ -20,7 +21,11 @@ interface TreeOptionNodeProps {
 	onReplySubmitted?: () => void;
 }
 
-const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement, onReplySubmitted }) => {
+const TreeOptionNode: FC<TreeOptionNodeProps> = ({
+	statement,
+	parentStatement,
+	onReplySubmitted,
+}) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
@@ -30,6 +35,8 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement, o
 		statementSubscription,
 		parentStatement?.creator?.uid,
 	);
+
+	const { isBookmarked, toggle: toggleBookmarkFn } = useBookmark(statement.statementId);
 
 	const [isEdit, setIsEdit] = useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
@@ -153,7 +160,24 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({ statement, parentStatement, o
 						onClick={() => navigate(`/statement/${statement.statementId}`)}
 						aria-label={t('Drill down')}
 					>
-						<span className="material-symbols-outlined" style={{ fontSize: 18 }}>jump_to_element</span>
+						<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+							jump_to_element
+						</span>
+					</button>
+					<button
+						className={`${styles['tree-option-node__action-btn']} ${styles['tree-option-node__bookmark-btn']} ${isBookmarked ? styles['tree-option-node__bookmark-btn--active'] : ''}`}
+						onClick={toggleBookmarkFn}
+						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
+					>
+						<span
+							className="material-symbols-outlined"
+							style={{
+								fontSize: 18,
+								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
+							}}
+						>
+							bookmark
+						</span>
 					</button>
 				</div>
 				{showReplyInput && (
