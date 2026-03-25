@@ -2,22 +2,7 @@
 	display: flex;
 	align-items: center;
 	gap: 8px;
-	padding: 8px var(--padding, 16px);
-	position: fixed;
-	top: 0;
-	left: 50%;
-	transform: translateX(-50%);
-	z-index: 10;
-	width: 90vw;
-	max-width: var(--wrapper-max-width);
-	box-sizing: border-box;
-	background: var(--bg-page, #fff);
-	border-bottom: 1px solid var(--border-color, #eee);
-
-	@media screen and (max-width: 600px) {
-		width: 100%;
-		max-width: 100%;
-	}
+	padding: 6px var(--padding, 16px);
 
 	&__group {
 		display: flex;

@@ -1,4 +1,4 @@
-import { FC, useContext, useMemo, useRef, useEffect, useCallback, useState } from 'react';
+import { FC, useContext, useMemo, useRef, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
@@ -10,9 +10,9 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { bookmarkedStatementIdsSelector } from '@/redux/statements/statementsSlice';
 import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
+import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
 import TreeNode from './components/TreeNode/TreeNode';
-import TreeFilterChips from './components/TreeFilterChips/TreeFilterChips';
 import styles from './TreeView.module.scss';
 import { StatementType, SortType } from '@freedi/shared-types';
 
@@ -36,11 +36,10 @@ const TreeView: FC<TreeViewProps> = ({
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
 	const bookmarkedIds = useAppSelector(bookmarkedStatementIdsSelector);
+	const { filterMode, registerCollapseAll } = useTreeFilter();
 	const treeViewRef = useRef<HTMLDivElement>(null);
 	const prevCountRef = useRef(0);
 	const isFirstRenderRef = useRef(true);
-
-	const [filterMode, setFilterMode] = useState<TreeFilterMode>(TreeFilterMode.all);
 
 	const treeOptions: TreeDataOptions = {
 		typeFilter,
@@ -57,6 +56,11 @@ const TreeView: FC<TreeViewProps> = ({
 		statementId || '',
 		defaultCollapsed,
 	);
+
+	// Register collapseAll so the header can trigger it
+	useEffect(() => {
+		registerCollapseAll(collapseAll);
+	}, [collapseAll, registerCollapseAll]);
 
 	const flipKey = useMemo(() => rootChildren.map((c) => c.statementId).join(','), [rootChildren]);
 
@@ -156,11 +160,6 @@ const TreeView: FC<TreeViewProps> = ({
 
 	return (
 		<div ref={treeViewRef} className={styles['tree-view']}>
-			<TreeFilterChips
-				activeFilter={filterMode}
-				onFilterChange={setFilterMode}
-				onCollapseAll={collapseAll}
-			/>
 			<div className={styles['tree-view__list']}>
 				{rootChildren.length === 0 ? (
 					renderEmptyState()

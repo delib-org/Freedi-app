@@ -23,6 +23,8 @@ import {
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
 import DeadlineBanner from '../deadlineBanner/DeadlineBanner';
+import TreeFilterChips from '../treeView/components/TreeFilterChips/TreeFilterChips';
+import { useTreeFilterOptional } from '../treeView/TreeFilterContext';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -39,6 +41,7 @@ const Switch = () => {
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
 	const [edit, setEdit] = useState(false);
 	const [headerCollapsed, setHeaderCollapsed] = useState(true);
+	const treeFilter = useTreeFilterOptional();
 
 	const isCompound =
 		statement?.statementType === StatementType.question &&
@@ -136,7 +139,9 @@ const Switch = () => {
 								aria-expanded={!headerCollapsed}
 							>
 								<span className={styles.headerToggleText}>{t('Details')}</span>
-								<span className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}>
+								<span
+									className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}
+								>
 									&#9662;
 								</span>
 							</button>
@@ -176,6 +181,13 @@ const Switch = () => {
 						</>
 					)}
 				</div>
+				{treeFilter && showSegmentedControl && (
+					<TreeFilterChips
+						activeFilter={treeFilter.filterMode}
+						onFilterChange={treeFilter.setFilterMode}
+						onCollapseAll={treeFilter.collapseAll}
+					/>
+				)}
 			</div>
 
 			<OnlineUsers statementId={statement?.statementId} />
