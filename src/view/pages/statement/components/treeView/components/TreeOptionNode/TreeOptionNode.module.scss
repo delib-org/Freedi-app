@@ -17,6 +17,16 @@
 		background-color: rgba(87, 198, 178, 0.06);
 	}
 
+	&--highlight {
+		animation: card-blink 3s ease;
+	}
+
+	@keyframes card-blink {
+		0%, 100% { background-color: rgba(255, 225, 106, 0.06); }
+		15%, 45%, 75% { background-color: rgba(95, 136, 229, 0.15); }
+		30%, 60%, 90% { background-color: rgba(255, 225, 106, 0.06); }
+	}
+
 	&__avatar {
 		flex-shrink: 0;
 		margin-top: -3px;

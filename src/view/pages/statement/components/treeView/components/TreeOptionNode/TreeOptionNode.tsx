@@ -50,6 +50,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	const [replyText, setReplyText] = useState('');
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const replyInputRef = useRef<HTMLTextAreaElement>(null);
+	const cardRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		if (showReplyInput && replyInputRef.current) {
@@ -109,6 +110,19 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		setIsEdit(false);
 	}, []);
 
+	const handleToggleAndScroll = useCallback(() => {
+		onToggleChildren?.();
+		setTimeout(() => {
+			if (cardRef.current) {
+				cardRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+				cardRef.current.classList.add(styles['tree-option-node--highlight']);
+				setTimeout(() => {
+					cardRef.current?.classList.remove(styles['tree-option-node--highlight']);
+				}, 3000);
+			}
+		}, 150);
+	}, [onToggleChildren]);
+
 	const isInResults =
 		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
 		false;
@@ -121,7 +135,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		.join(' ');
 
 	return (
-		<div className={nodeClassName}>
+		<div ref={cardRef} className={nodeClassName}>
 			<div className={styles['tree-option-node__avatar']}>
 				<StatementTypeIcon type={statement.statementType} isSelected={isInResults} />
 			</div>
@@ -191,7 +205,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 					{childCount > 0 && onToggleChildren && (
 						<button
 							className={styles['tree-option-node__reply-counter']}
-							onClick={onToggleChildren}
+							onClick={handleToggleAndScroll}
 							aria-label={`${childCount} ${childCount === 1 ? t('reply') : t('replies')}`}
 						>
 							{childCount}
