@@ -38,10 +38,28 @@ export function initSentry() {
 						msg.includes('IndexedDB') ||
 						msg.includes('indexedDB') ||
 						msg.includes('backing store for indexedDB') ||
-						error.name === 'IndexedDbTransactionError'
+						error.name === 'IndexedDbTransactionError' ||
+						error.name === 'UnknownError' ||
+						error.name === 'QuotaExceededError'
 					) {
 						return null;
 					}
+				}
+
+				// Fallback: check event exception values directly (covers cases where
+				// hint.originalException is undefined or not an Error instance)
+				const exceptionValues = event.exception?.values;
+				if (exceptionValues?.some(exc => {
+					const val = `${exc.type ?? ''}: ${exc.value ?? ''}`;
+
+					return val.includes('IndexedDB') ||
+						val.includes('indexedDB') ||
+						val.includes('backing store') ||
+						val.includes('QuotaExceededError') ||
+						exc.type === 'UnknownError' ||
+						exc.type === 'IndexedDbTransactionError';
+				})) {
+					return null;
 				}
 
 				// Filter out network errors in development
@@ -77,6 +95,9 @@ export function initSentry() {
 				'IndexedDbTransactionError',
 				'IndexedDB transaction',
 				'Internal error opening backing store for indexedDB.open',
+				'QuotaExceededError',
+				/UnknownError.*indexedDB/i,
+				/backing store/i,
 			],
 		});
 	}
