@@ -253,6 +253,7 @@ describe('statementsSlice', () => {
 					statementSubscriptionLastUpdate: 12345,
 					statementMembership: [mockSubscription],
 					screen: StatementScreen.options,
+					bookmarkedIds: {},
 				};
 
 				const newState = statementsSlice.reducer(populatedState, resetStatements());

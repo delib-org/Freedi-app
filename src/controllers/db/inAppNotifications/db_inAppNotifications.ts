@@ -69,14 +69,17 @@ export function listenToInAppNotifications(): Unsubscribe {
 			(error: Error & { code?: string }) => {
 				// Permission errors are expected during sign-out when Firebase
 				// revokes the auth token before React cleanup unsubscribes the listener
-				if (error.code === 'permission-denied') {
+				if (
+					error.code === 'permission-denied' ||
+					error.message?.includes('Missing or insufficient permissions')
+				) {
 					store.dispatch(setInAppNotificationsAll([]));
 
 					return;
 				}
 
 				logError(error, {
-					operation: 'inAppNotifications.db_inAppNotifications.unknown',
+					operation: 'inAppNotifications.db_inAppNotifications.snapshot',
 					metadata: { message: 'Error in notifications snapshot listener:' },
 				});
 			},
@@ -126,10 +129,21 @@ export async function clearInAppNotifications(statementId: string) {
 			}),
 		);
 		await Promise.all(deletePromises);
-	} catch (error) {
+	} catch (error: unknown) {
+		// Permission errors are expected during sign-out when Firebase
+		// revokes the auth token before React cleanup unsubscribes/unmounts
+		const firebaseError = error as { code?: string };
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		if (
+			firebaseError.code === 'permission-denied' ||
+			errorMessage.includes('Missing or insufficient permissions')
+		) {
+			return;
+		}
+
 		logError(new Error('In clearInAppNotifications'), {
-			operation: 'inAppNotifications.db_inAppNotifications.snapshot',
-			metadata: { detail: error.message },
+			operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications',
+			metadata: { detail: errorMessage },
 		});
 	}
 }

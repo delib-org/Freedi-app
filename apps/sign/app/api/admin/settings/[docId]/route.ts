@@ -45,6 +45,10 @@ export interface DocumentSettings {
   enableRefinement: boolean;
   /** Default consensus threshold for filtering suggestions in refinement phase (0-1, default 0.2) */
   defaultConsensusThreshold: number;
+  /** Target population size (N) for confidence index calculation */
+  targetPopulation: number;
+  /** Sampling quality coefficient (0-1] for confidence index calculation */
+  samplingQuality: number;
 }
 
 const DEFAULT_SETTINGS: DocumentSettings = {
@@ -76,6 +80,8 @@ const DEFAULT_SETTINGS: DocumentSettings = {
   showSignatureCounts: true,
   enableRefinement: false,
   defaultConsensusThreshold: 0.2,
+  targetPopulation: 0,
+  samplingQuality: 0.3,
 };
 
 /**
@@ -152,6 +158,8 @@ export async function GET(
       showSignatureCounts: document?.signSettings?.showSignatureCounts ?? DEFAULT_SETTINGS.showSignatureCounts,
       enableRefinement: document?.signSettings?.enableRefinement ?? DEFAULT_SETTINGS.enableRefinement,
       defaultConsensusThreshold: document?.signSettings?.defaultConsensusThreshold ?? DEFAULT_SETTINGS.defaultConsensusThreshold,
+      targetPopulation: document?.signSettings?.targetPopulation ?? DEFAULT_SETTINGS.targetPopulation,
+      samplingQuality: document?.signSettings?.samplingQuality ?? DEFAULT_SETTINGS.samplingQuality,
     };
 
     return NextResponse.json(settings);
@@ -307,6 +315,12 @@ export async function PUT(
       defaultConsensusThreshold: body.defaultConsensusThreshold !== undefined && typeof body.defaultConsensusThreshold === 'number' && body.defaultConsensusThreshold >= 0 && body.defaultConsensusThreshold <= 1
         ? body.defaultConsensusThreshold
         : (existingSettings.defaultConsensusThreshold ?? DEFAULT_SETTINGS.defaultConsensusThreshold),
+      targetPopulation: body.targetPopulation !== undefined && typeof body.targetPopulation === 'number' && body.targetPopulation >= 0
+        ? body.targetPopulation
+        : (existingSettings.targetPopulation ?? DEFAULT_SETTINGS.targetPopulation),
+      samplingQuality: body.samplingQuality !== undefined && typeof body.samplingQuality === 'number' && body.samplingQuality > 0 && body.samplingQuality <= 1
+        ? body.samplingQuality
+        : (existingSettings.samplingQuality ?? DEFAULT_SETTINGS.samplingQuality),
     };
 
     // Update document with new settings

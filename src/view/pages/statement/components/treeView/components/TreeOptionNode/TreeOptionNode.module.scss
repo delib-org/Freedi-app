@@ -17,6 +17,16 @@
 		background-color: rgba(87, 198, 178, 0.06);
 	}
 
+	&--highlight {
+		animation: card-blink 3s ease;
+	}
+
+	@keyframes card-blink {
+		0%, 100% { background-color: rgba(255, 225, 106, 0.06); }
+		15%, 45%, 75% { background-color: rgba(95, 136, 229, 0.15); }
+		30%, 60%, 90% { background-color: rgba(255, 225, 106, 0.06); }
+	}
+
 	&__avatar {
 		flex-shrink: 0;
 		margin-top: -3px;
@@ -75,7 +85,158 @@
 		word-break: break-word;
 	}
 
+	&__description {
+		color: var(--text-secondary, #999);
+		font-size: 0.85rem;
+		line-height: 1.4;
+		margin-top: 0.25rem;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		word-break: break-word;
+	}
+
+	&__paragraphs {
+		margin-top: 4px;
+
+		p {
+			margin: 2px 0;
+			font-size: inherit;
+		}
+	}
+
 	&__evaluation {
 		margin-top: 4px;
+	}
+
+	&__actions {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin-top: 4px;
+	}
+
+	&__action-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px 8px;
+		border: none;
+		border-radius: 4px;
+		background: none;
+		color: #c0c4cc;
+		font-size: 0.75rem;
+		cursor: pointer;
+		min-height: 32px;
+		opacity: 0.7;
+
+		&:hover {
+			background: var(--card-default, #f5f5f5);
+			color: var(--btn-primary, #5f88e5);
+			opacity: 1;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+	}
+
+	&__bookmark-btn {
+		transition: color 0.2s ease;
+
+		&--active {
+			color: var(--btn-primary, #5f88e5);
+			animation: bookmark-pop 0.25s ease;
+		}
+	}
+
+	&__reply-counter {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 22px;
+		height: 22px;
+		padding: 0 6px;
+		border: none;
+		border-radius: 11px;
+		background-color: rgba(95, 136, 229, 0.15);
+		color: var(--btn-primary, #5f88e5);
+		font-size: 0.75rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background-color 0.15s ease;
+
+		&:hover {
+			background-color: var(--btn-primary-hover, #4a73d0);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+	}
+
+	@keyframes bookmark-pop {
+		0% { transform: scale(1); }
+		50% { transform: scale(1.3); }
+		100% { transform: scale(1); }
+	}
+
+	&__reply-form {
+		display: flex;
+		align-items: flex-end;
+		gap: 4px;
+		margin-top: 6px;
+		width: 100%;
+		border: 1px solid var(--border-color, #ddd);
+		border-radius: 8px;
+		overflow: hidden;
+		background: var(--bg-page, #fff);
+	}
+
+	&__reply-input {
+		flex: 1;
+		width: 100%;
+		box-sizing: border-box;
+		padding: 10px 12px;
+		border: none;
+		outline: none;
+		font-size: 0.9rem;
+		font-family: inherit;
+		resize: none;
+		min-height: 56px;
+		overflow: hidden;
+		background: transparent;
+		color: var(--text-body, #444);
+		line-height: 1.4;
+
+		&::placeholder {
+			color: var(--text-secondary, #999);
+		}
+	}
+
+	&__reply-send {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		flex-shrink: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		border-radius: 4px;
+
+		&:hover {
+			background: var(--card-default, #f5f5f5);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: -2px;
+		}
 	}
 }

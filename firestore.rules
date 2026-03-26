@@ -788,5 +788,12 @@ service cloud.firestore {
       // Writes handled by admin tools / Cloud Functions only
       allow write: if false;
     }
+
+    // Admin stats - pre-computed analytics aggregates (read-only for authenticated users)
+    match /adminStats/{docId} {
+      allow read: if request.auth != null;
+      // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
   }
 }

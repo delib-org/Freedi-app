@@ -10,9 +10,13 @@ import { LANGUAGES } from '@/constants/Languages';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor from '@/controllers/hooks/useStatementColor.ts';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 
 // Redux
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementSelector,
+	statementSubscriptionSelector,
+} from '@/redux/statements/statementsSlice';
 
 // Components
 import NavButtons from './navButtons/NavButtons';
@@ -45,6 +49,8 @@ const StatementTopNav: FC<Props> = ({
 	const { screen } = useParams();
 	const role = useSelector(statementSubscriptionSelector(statement?.statementId))?.role;
 	const headerStyle = useStatementColor({ statement });
+	const topParentStatement = useAppSelector(statementSelector(statement?.topParentId));
+	const isFollowMeActive = !!topParentStatement?.followMe && topParentStatement.followMe !== '';
 
 	if (!statement) return null;
 
@@ -96,6 +102,7 @@ const StatementTopNav: FC<Props> = ({
 						onInvitePanel={handleInvitePanel}
 						onNavigateToSettings={handleNavigateToSettings}
 						onNavigateToScreen={handleNavigateToScreen}
+						isFollowMeActive={isFollowMeActive}
 					/>
 				)}
 				<NavButtons

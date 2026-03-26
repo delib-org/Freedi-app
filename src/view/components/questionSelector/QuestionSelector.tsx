@@ -27,6 +27,7 @@ const QuestionSelector: FC = () => {
 			>
 				<option value={QuestionType.multiStage}>{t('Simple Question')}</option>
 				<option value={QuestionType.massConsensus}>{t('Mass Consensus')}</option>
+				<option value={QuestionType.compound}>{t('Compound Question')}</option>
 			</select>
 			{statement?.questionSettings?.questionType === QuestionType.massConsensus && statement && (
 				<a

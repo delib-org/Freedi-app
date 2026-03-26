@@ -8,6 +8,7 @@ import {
   Access,
   createStatementObject,
   getRandomUID,
+  SourceApp,
 } from '@freedi/shared-types';
 import { getFirestoreAdmin, initializeFirebaseAdmin } from '@/lib/firebase/admin';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
@@ -184,6 +185,7 @@ export async function POST(request: NextRequest) {
         hasChat: true,
         hasChildren: true,
       },
+      sourceApp: SourceApp.MASS_CONSENSUS,
     });
 
     if (!groupStatement) {

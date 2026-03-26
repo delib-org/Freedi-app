@@ -6,6 +6,7 @@ import { uploadAnchorIcon, validateImageFile } from '@/controllers/db/storage/up
 import { logError } from '@/utils/errorHandling';
 import CustomSwitchSmall from '@/view/components/switch/customSwitchSmall/CustomSwitchSmall';
 import AnchoredBadge from '@/view/components/badges/AnchoredBadge';
+import SectionTitle from '../sectionTitle/SectionTitle';
 import AnchorIcon from '@/assets/icons/anchor.svg?react';
 import UsersIcon from '@/assets/icons/users20px.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
@@ -213,7 +214,7 @@ const AnchoredSettings: FC<AnchoredSettingsProps> = ({ statement }) => {
 
 	return (
 		<>
-			<h3 className="title">{t('Anchored Sampling')}</h3>
+			<SectionTitle title={t('Anchored Sampling')} />
 			<p>
 				{t(
 					'Anchored sampling allows the admin to insert certain pre-defined options into the evaluation process. These options are prepared in advance and will always appear to participants, no matter what other options are being sampled.',

@@ -26,6 +26,7 @@ export const StatementSettingsSchema = object({
 	defaultLookForSimilarities: optional(boolean()),
 	isSubmitMode: optional(boolean()), // should a submit button appear in the bottom. it transfer to a thank you page when clicked. It is just used for the user to feel that he finished evaluating.
 	enableAddVotingOption: optional(boolean()),
+	/** @deprecated Auto-derived from evaluationType. Do not set directly — use evaluationType instead. */
 	enhancedEvaluation: optional(boolean()),
 	evaluationType: optional(enum_(evaluationType)),
 	joiningEnabled: optional(boolean()),

@@ -22,14 +22,14 @@ import { logError } from '@/utils/errorHandling';
 export const listenToEvaluations = (
 	parentId: string,
 	selectionFunction?: SelectionFunction,
+	userId?: string,
 ): Unsubscribe => {
 	try {
 		const dispatch = store.dispatch as AppDispatch;
 		const evaluationsRef = createCollectionRef(Collections.evaluations);
-		const user = store.getState().creator.creator;
 
-		if (!user) throw new Error('User is undefined');
-		const evaluatorId = user.uid;
+		const evaluatorId = userId ?? store.getState().creator.creator?.uid;
+		if (!evaluatorId) throw new Error('User is undefined');
 
 		const q = selectionFunction
 			? query(

@@ -25,13 +25,16 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
-	const totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators || 0;
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 
-	const { numberOfEvaluators } = statement.evaluation || {
+	const { numberOfEvaluators, sumPro = 0, sumCon = 0 } = statement.evaluation || {
 		numberOfEvaluators: 0,
+		sumPro: 0,
+		sumCon: 0,
 	};
+	const avg = numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
+	const consensusDisplay = Math.round((statement.consensus || 0) * 100);
 
 	return (
 		<div className={styles.evaluation}>
@@ -50,13 +53,13 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 				</div>
 			</div>
 			<div className={styles['evaluation-score']}>
-				{showEvaluation && totalEvaluators && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{showEvaluation && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<Tooltip
-						content={`${t('Number of evaluators for this option / all evaluators')}`}
+						content={`${t('average')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
 						position="bottom"
 					>
-						<span className={styles['total-evaluators']}>
-							({numberOfEvaluators}/{totalEvaluators})
+						<span className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}>
+							{consensusDisplay}
 						</span>
 					</Tooltip>
 				) : null}

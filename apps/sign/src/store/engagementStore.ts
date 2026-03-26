@@ -14,7 +14,7 @@ import {
 	limit,
 	type Unsubscribe,
 } from 'firebase/firestore';
-import { getFirebaseFirestore, getFirebaseAuth } from '@/lib/firebase/client';
+import { getFirebaseFirestore } from '@/lib/firebase/client';
 import { Collections } from '@freedi/shared-types';
 import type { UserEngagement, CreditTransaction, Badge } from '@freedi/shared-types';
 import { EngagementLevel } from '@freedi/shared-types';

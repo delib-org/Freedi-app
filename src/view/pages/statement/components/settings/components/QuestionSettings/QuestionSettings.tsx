@@ -3,12 +3,21 @@
  * - EvaluationUI (evaluationSettings.evaluationUI) = Evaluation MODE (how users participate: suggestions, voting, checkbox, clustering)
  * - evaluationType (statementSettings.evaluationType) = Rating SCALE (what input UI they see: range/5-point, likeDislike/simple, singleLike/like-only)
  */
-import { FC } from 'react';
+import React, { FC } from 'react';
 import { StatementSettingsProps } from '../../settingsTypeHelpers';
 import SectionTitle from '../sectionTitle/SectionTitle';
 import styles from './QuestionSettings.module.scss';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
-import { EvaluationUI, StatementType, evaluationType } from '@freedi/shared-types';
+import {
+	EvaluationUI,
+	StatementType,
+	evaluationType,
+	QuestionType,
+	CompoundPhase,
+} from '@freedi/shared-types';
+import { setQuestionTypeToDB } from '@/controllers/db/statementSettings/setStatementSettings';
+import { createStatementRef } from '@/utils/firebaseUtils';
+import { setDoc } from 'firebase/firestore';
 import ConsentIcon from '@/assets/icons/doubleCheckIcon.svg?react';
 import SuggestionsIcon from '@/assets/icons/smile.svg?react';
 import VotingIcon from '@/assets/icons/votingIcon.svg?react';
@@ -27,6 +36,7 @@ import { logError } from '@/utils/errorHandling';
 // Sub-components
 import QuestionLinkSection from './QuestionLinkSection';
 import AnchoredSettings from './AnchoredSettings';
+import ConfidenceIndexSettings from './ConfidenceIndexSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -47,7 +57,8 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 		/**
 		 * Handle evaluation type change - sets both evaluationSettings.evaluationUI
-		 * and statementSettings.evaluationType for main app compatibility
+		 * and statementSettings.evaluationType for main app compatibility.
+		 * enhancedEvaluation is auto-derived from evaluationType for backward compat.
 		 */
 		function handleEvaluationTypeChange(value: EvaluationUI) {
 			setEvaluationUIType(statement.statementId, value);
@@ -99,8 +110,48 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 			});
 		}
 
+		function handleQuestionTypeChange(ev: React.ChangeEvent<HTMLSelectElement>) {
+			const newType = ev.target.value as QuestionType;
+			setQuestionTypeToDB({ statement, questionType: newType });
+
+			if (newType === QuestionType.compound && !questionSettings?.compoundSettings) {
+				const ref = createStatementRef(statement.statementId);
+				setDoc(
+					ref,
+					{
+						questionSettings: {
+							compoundSettings: {
+								currentPhase: CompoundPhase.defineQuestion,
+							},
+						},
+					},
+					{ merge: true },
+				);
+			}
+		}
+
+		const isCompound = questionSettings?.questionType === QuestionType.compound;
+
 		return (
 			<div className={styles.questionSettings}>
+				<SectionTitle title={t('Question Type')} />
+				<select
+					className={styles.questionTypeSelect}
+					value={questionSettings?.questionType || QuestionType.multiStage}
+					onChange={handleQuestionTypeChange}
+				>
+					<option value={QuestionType.multiStage}>{t('Simple Question')}</option>
+					<option value={QuestionType.massConsensus}>{t('Mass Consensus')}</option>
+					<option value={QuestionType.compound}>{t('Compound Question')}</option>
+				</select>
+
+				{isCompound && (
+					<p className={styles.sectionDescription}>
+						{t('Compound question phases')}:{' '}
+						{questionSettings?.compoundSettings?.currentPhase || CompoundPhase.defineQuestion}
+					</p>
+				)}
+
 				<SectionTitle title={t('Evaluation Mode')} />
 				<MultiSwitch
 					options={[
@@ -174,16 +225,14 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					currentValue={statement.statementSettings?.evaluationType || evaluationType.range}
 				/>
 
-				<SectionTitle title={t('Question Settings')} />
-
-				<QuestionLinkSection statementId={statement.statementId} />
-
 				<SectionTitle title={t('Mass Consensus Settings')} />
-				<p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+				<p className={styles.sectionDescription}>
 					{t('These settings control the new Mass Consensus app behavior')}
 				</p>
 
-				<h3 className="title">{t('Require original input before viewing others')}</h3>
+				<QuestionLinkSection statementId={statement.statementId} />
+
+				<SectionTitle title={t('Require original input before viewing others')} />
 				<CustomSwitchSmall
 					label={t('Request solution at start')}
 					checked={questionSettings?.askUserForASolutionBeforeEvaluation || false}
@@ -197,6 +246,9 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				/>
 
 				<AnchoredSettings statement={statement} />
+
+				<SectionTitle title={t('Sample Representativeness')} />
+				<ConfidenceIndexSettings statement={statement} />
 			</div>
 		);
 	} catch (error: unknown) {

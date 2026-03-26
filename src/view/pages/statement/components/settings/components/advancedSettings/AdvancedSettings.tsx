@@ -12,7 +12,7 @@ import {
 	evaluationType,
 	Collections,
 } from '@freedi/shared-types';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
@@ -23,6 +23,9 @@ import {
 } from '@/controllers/db/joining/splitJoinedOption';
 import { JOINING } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { statementSelector } from '@/redux/statements/statementsSlice';
+import { setPowerFollowMeDB } from '@/controllers/db/statements/setStatements';
 
 interface OptionExceedingMax {
 	statementId: string;
@@ -34,6 +37,7 @@ interface OptionExceedingMax {
 
 const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
+	const topParentStatement = useAppSelector(statementSelector(statement.topParentId));
 
 	// Direct access to settings with defaults - no transformation needed
 	const settings: StatementSettings = statement.statementSettings ?? defaultStatementSettings;
@@ -152,11 +156,11 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 		setDoc(statementRef, { defaultLanguage: newLanguage, lastUpdate: Date.now() }, { merge: true });
 	}
 
-	// Handler for powerFollowMe toggle (root-level property)
+	// Handler for powerFollowMe toggle - writes to top parent
 	function handlePowerFollowMeChange(newValue: boolean) {
-		const statementRef = doc(FireStore, Collections.statements, statement.statementId);
-		const powerFollowMePath = newValue ? `/statement/${statement.statementId}/chat` : '';
-		updateDoc(statementRef, { powerFollowMe: powerFollowMePath, lastUpdate: Date.now() });
+		const target = topParentStatement ?? statement;
+		const path = newValue ? `/statement/${target.statementId}/chat` : '';
+		setPowerFollowMeDB(target, path);
 	}
 
 	// Handler for forceLanguage (root-level property for forcing survey language)

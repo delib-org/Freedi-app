@@ -3,7 +3,7 @@ import { Statement, StatementType, evaluationType } from '@freedi/shared-types';
 
 export const defaultStatementSettings = {
 	hasChat: true,
-	enhancedEvaluation: true, // Keep for backward compatibility
+	enhancedEvaluation: true, // @deprecated — auto-derived from evaluationType
 	evaluationType: evaluationType.range, // Default to range (5-point scale)
 	showEvaluation: true,
 	enableEvaluation: true, // Controls whether users can vote/evaluate

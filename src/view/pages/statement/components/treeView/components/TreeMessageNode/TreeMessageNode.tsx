@@ -15,6 +15,7 @@ import StatementTypeIcon from '../StatementTypeIcon/StatementTypeIcon';
 import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import TypeSuggestionBanner from '@/view/pages/statement/components/chat/components/chatMessageCard/TypeSuggestionBanner';
+import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
 import styles from './TreeMessageNode.module.scss';
 
@@ -23,6 +24,7 @@ interface TreeMessageNodeProps {
 	parentStatement: Statement | undefined;
 	hasChildren: boolean;
 	onReplySubmitted?: () => void;
+	onReply?: (statement: Statement) => void;
 }
 
 const SWIPE_THRESHOLD = 60;
@@ -38,6 +40,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	parentStatement,
 	hasChildren,
 	onReplySubmitted,
+	onReply,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -45,6 +48,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	const { user } = useAuthentication();
 	const statementSubscription = useAppSelector(statementSubscriptionSelector(statement.parentId));
 	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
+	const { isBookmarked, toggle: toggleBookmark } = useBookmark(statement.statementId);
 	const isMe = user?.uid === statement.creator?.uid;
 
 	const _isAuthorized = isAuthorized(
@@ -230,23 +234,51 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 				{isEdit ? (
 					<EditableStatement
 						statement={statement}
-						showDescription={false}
+						showDescription={true}
+						multiline={true}
 						forceEditable={true}
 						forceEditing={true}
 						onSaveSuccess={handleSaveSuccess}
 					/>
 				) : (
-					<div className={styles['tree-message-node__text']}>{statement.statement}</div>
+					<div className={styles['tree-message-node__text']}>
+						{statement.statement}
+						{statement.paragraphs && statement.paragraphs.length > 0 && (
+							<div className={styles['tree-message-node__paragraphs']}>
+								{[...statement.paragraphs]
+									.sort((a, b) => a.order - b.order)
+									.map((p) => (
+										<p key={p.paragraphId}>{p.content}</p>
+									))}
+							</div>
+						)}
+						{!statement.paragraphs?.length && statement.description && (
+							<div className={styles['tree-message-node__description']}>
+								{statement.description}
+							</div>
+						)}
+					</div>
 				)}
 				<div className={styles['tree-message-node__actions']}>
 					<button
 						className={styles['tree-message-node__action-btn']}
-						onClick={handleReplyToggle}
+						onClick={onReply ? () => onReply(statement) : handleReplyToggle}
 						aria-label={t('reply')}
 					>
 						{t('reply')}
 					</button>
-					{hasChildren && (
+					{isQuestion && (
+						<button
+							className={styles['tree-message-node__action-btn']}
+							onClick={handleDrillDown}
+							aria-label={t('Drill down')}
+						>
+							<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+								jump_to_element
+							</span>
+						</button>
+					)}
+					{hasChildren && !isQuestion && (
 						<button
 							className={styles['tree-message-node__action-btn']}
 							onClick={handleDrillDown}
@@ -255,6 +287,21 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 							{t('Drill down')}
 						</button>
 					)}
+					<button
+						className={`${styles['tree-message-node__action-btn']} ${styles['tree-message-node__bookmark-btn']} ${isBookmarked ? styles['tree-message-node__bookmark-btn--active'] : ''}`}
+						onClick={toggleBookmark}
+						aria-label={isBookmarked ? t('Remove bookmark') : t('Bookmark')}
+					>
+						<span
+							className="material-symbols-outlined"
+							style={{
+								fontSize: 18,
+								fontVariationSettings: isBookmarked ? "'FILL' 1" : "'FILL' 0",
+							}}
+						>
+							bookmark
+						</span>
+					</button>
 				</div>
 
 				{showTypeSuggestion && suggestedType && (
@@ -299,4 +346,4 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 	);
 };
 
-export default TreeMessageNode;
+export default React.memo(TreeMessageNode);

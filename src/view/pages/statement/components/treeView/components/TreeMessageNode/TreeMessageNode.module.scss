@@ -75,6 +75,20 @@
 		word-break: break-word;
 	}
 
+	&__paragraphs {
+		margin-top: 4px;
+
+		p {
+			margin: 2px 0;
+			font-size: inherit;
+		}
+	}
+
+	&__description {
+		margin-top: 4px;
+		color: var(--text-secondary, #777);
+	}
+
 	&__actions {
 		display: flex;
 		align-items: center;
@@ -90,20 +104,37 @@
 		border: none;
 		border-radius: 4px;
 		background: none;
-		color: var(--text-secondary, #999);
-		font-size: 0.78rem;
+		color: #c0c4cc;
+		font-size: 0.75rem;
 		cursor: pointer;
 		min-height: 32px;
+		opacity: 0.7;
 
 		&:hover {
 			background: var(--card-default, #f5f5f5);
 			color: var(--btn-primary, #5f88e5);
+			opacity: 1;
 		}
 
 		&:focus-visible {
 			outline: 2px solid var(--btn-primary, #5f88e5);
 			outline-offset: 2px;
 		}
+	}
+
+	&__bookmark-btn {
+		transition: color 0.2s ease;
+
+		&--active {
+			color: var(--btn-primary, #5f88e5);
+			animation: bookmark-pop 0.25s ease;
+		}
+	}
+
+	@keyframes bookmark-pop {
+		0% { transform: scale(1); }
+		50% { transform: scale(1.3); }
+		100% { transform: scale(1); }
 	}
 
 	&__reply-form {

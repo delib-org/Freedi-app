@@ -97,13 +97,20 @@ export async function ensureFirebaseServiceWorker() {
 		return registration;
 	} catch (error) {
 		// permission-blocked is expected when users deny notifications — don't report to Sentry
-		const isPermissionBlocked =
-			error instanceof Error && error.message.includes('permission-blocked');
-		if (!isPermissionBlocked) {
+		// Network/fetch errors are transient — the monitor will retry automatically
+		const message = error instanceof Error ? error.message : '';
+		const isSuppressed =
+			message.includes('permission-blocked') ||
+			message.includes('fetching the script') ||
+			message.includes('Failed to fetch') ||
+			message.includes('network');
+		if (!isSuppressed) {
 			logError(error, {
 				operation: 'utils.ensureFirebaseServiceWorker.unknown',
 				metadata: { message: '[FirebaseSW] Registration failed:' },
 			});
+		} else {
+			console.info('[FirebaseSW] Registration failed (transient), will retry:', message);
 		}
 		// Don't throw - fail gracefully to avoid unhandled rejections
 

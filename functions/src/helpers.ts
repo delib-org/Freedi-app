@@ -71,3 +71,31 @@ export function textToParagraphs(text: string): Paragraph[] | undefined {
 		order: index,
 	}));
 }
+
+const DESCRIPTION_MAX_LENGTH = 200;
+
+/**
+ * Generate a description string (~200 chars) from child paragraph statements.
+ * Children are sorted by createdAt and joined with ' | '.
+ */
+export function generateDescriptionFromChildren(
+	children: { statement: string; createdAt: number }[],
+): string {
+	if (children.length === 0) return '';
+
+	const sorted = [...children].sort((a, b) => a.createdAt - b.createdAt);
+	let description = '';
+
+	for (const child of sorted) {
+		const text = child.statement.trim();
+		if (!text) continue;
+		description += description.length === 0 ? text : ' | ' + text;
+		if (description.length >= DESCRIPTION_MAX_LENGTH) break;
+	}
+
+	if (description.length > DESCRIPTION_MAX_LENGTH) {
+		description = description.substring(0, DESCRIPTION_MAX_LENGTH - 3) + '...';
+	}
+
+	return description;
+}

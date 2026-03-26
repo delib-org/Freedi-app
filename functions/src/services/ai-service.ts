@@ -218,34 +218,35 @@ async function handleError(
 }
 export async function checkForInappropriateContent(
 	userInput: string,
-): Promise<{ isInappropriate: boolean; error?: string }> {
+): Promise<{ isInappropriate: boolean; reason?: string; category?: string; error?: string }> {
 	const prompt = `
-    You are a strict content moderator for a collaborative discussion platform.
+    You are a content moderator for a collaborative discussion platform.
     Your job is to protect users from harmful, disrespectful, and abusive content.
     You must moderate content in ALL languages including Hebrew, Arabic, English, Spanish, German, and Dutch.
 
-    Flag the text as inappropriate if it contains ANY of these:
+    Flag the text as inappropriate ONLY if it contains ANY of these:
     - Profanity, curse words, or vulgar language (in any language)
-    - Slurs or derogatory terms targeting any group
-    - Hate speech or discriminatory language
-    - Personal attacks, insults, name-calling, or belittling language — even indirect. Examples in multiple languages:
+    - Direct slurs or derogatory terms targeting individuals
+    - Direct personal attacks, insults, name-calling, or belittling language — even indirect. Examples in multiple languages:
       English: "idiots", "fools", "stupid people", "moron", "shut up"
       Hebrew: "טיפשים", "מטומטם", "אידיוט", "מעשה של טיפשים", "תפסיק להיות אידיוט", "טמבל", "דביל"
       Arabic: "أغبياء", "غبي", "حمار"
     - Sexually explicit or suggestive content
-    - Violence, threats, or incitement to harm
+    - Direct threats of violence or incitement to harm specific people
     - Spam, gibberish, or meaningless text
 
     Text to analyze: "${userInput}"
 
-    IMPORTANT RULES:
+    IMPORTANT RULES - READ CAREFULLY:
+    - Political opinions, policy positions, and controversial viewpoints are ALWAYS ALLOWED, even if they are unpopular, one-sided, or provocative. A democratic discussion platform must allow the full spectrum of political expression.
+    - Opinions about territorial policy, immigration, ethnic relations, security, settlements, or any other political topic are ALLOWED — as long as they don't include direct personal insults or explicit calls for violence against named individuals.
     - Genuine opinions, disagreements, and unusual ideas are ALLOWED (e.g., "I think this policy is wrong" is fine).
-    - Everyday language describing real-world problems is ALLOWED, even if it mentions bodily functions, waste, mess, etc. (e.g., "dog poop in my yard", "the sewage smells terrible", "trash everywhere" are all fine).
+    - Everyday language describing real-world problems is ALLOWED, even if it mentions bodily functions, waste, mess, etc.
     - Insults disguised as opinions are NOT allowed (e.g., "only idiots would support this" must be flagged).
-    - Only flag content that is clearly and intentionally offensive, hateful, or abusive. When in doubt, allow the content. Prefer permissiveness over false positives.
+    - Only flag content that is clearly and intentionally offensive, hateful, or abusive. When in doubt, ALWAYS allow the content. Strongly prefer permissiveness over false positives.
 
     Return ONLY this JSON format (no markdown, no code blocks):
-    - If inappropriate: { "inappropriate": true }
+    - If inappropriate: { "inappropriate": true, "reason": "Brief explanation in the same language as the input text", "category": "one of: profanity, hate_speech, personal_attack, sexual_content, violence_threats, spam, other" }
     - If acceptable: { "inappropriate": false }
   `;
 
@@ -275,6 +276,8 @@ export async function checkForInappropriateContent(
 
 		return {
 			isInappropriate: parsed.inappropriate === true,
+			reason: parsed.reason,
+			category: parsed.category,
 		};
 	} catch (error) {
 		// Log the error for debugging
@@ -289,13 +292,23 @@ export async function checkForInappropriateContent(
 		) {
 			logger.warn('Content blocked by Google safety filters - treating as inappropriate');
 
-			return { isInappropriate: true, error: 'Content blocked by safety filters' };
+			return {
+				isInappropriate: true,
+				reason: 'Content blocked by safety filters',
+				category: 'other',
+				error: 'Content blocked by safety filters',
+			};
 		}
 
 		// On error, block the content — fail closed to prevent abuse
 		logger.warn('Content moderation failed, blocking content for safety');
 
-		return { isInappropriate: true, error: 'Content moderation unavailable — blocked for safety' };
+		return {
+			isInappropriate: true,
+			reason: 'Content moderation unavailable',
+			category: 'other',
+			error: 'Content moderation unavailable — blocked for safety',
+		};
 	}
 }
 /**

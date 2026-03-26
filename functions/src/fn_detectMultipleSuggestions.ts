@@ -6,6 +6,7 @@ import {
 	DetectedSuggestion,
 } from './services/ai-service';
 import { getCachedParentStatement } from './services/cached-statement-service';
+import { logModerationRejection } from './services/moderation-log-service';
 
 /**
  * Request body for detect multiple suggestions
@@ -69,13 +70,29 @@ export async function detectMultipleSuggestions(
 
 		if (contentCheck.isInappropriate) {
 			logger.warn('Inappropriate content detected in multi-suggestion check', { userId });
+
+			// Log rejection to Firestore (non-blocking)
+			logModerationRejection({
+				originalText: userInput,
+				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				category: contentCheck.category || 'other',
+				userId,
+				parentId: questionId,
+				topParentId: questionId,
+				blockedBySafetyFilter: contentCheck.error?.includes('safety filters') || false,
+			}).catch(() => {
+				/* non-blocking */
+			});
+
 			response.status(400).send({
 				ok: false,
 				error: 'Input contains inappropriate content',
+				reason: contentCheck.reason || 'Content flagged as inappropriate',
+				category: contentCheck.category || 'other',
 				isMultipleSuggestions: false,
 				suggestions: [],
 				originalText: userInput,
-			} as DetectMultipleSuggestionsResponse);
+			} as DetectMultipleSuggestionsResponse & { reason: string; category: string });
 
 			return;
 		}

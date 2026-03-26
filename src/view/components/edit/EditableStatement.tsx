@@ -1,9 +1,9 @@
 import React, { FC } from 'react';
-import { Statement } from '@freedi/shared-types';
+import { Statement, ParagraphType } from '@freedi/shared-types';
 import EditText, { EditTextProps } from './EditText';
 import { useEditPermission } from '@/controllers/hooks/useEditPermission';
 import { updateStatementText } from '@/controllers/db/statements/setStatements';
-import { getParagraphsText } from '@/utils/paragraphUtils';
+import { getParagraphsText, generateParagraphId } from '@/utils/paragraphUtils';
 import { logError } from '@/utils/errorHandling';
 
 interface EditableStatementProps
@@ -31,13 +31,26 @@ const EditableStatement: FC<EditableStatementProps> = ({
 
 	if (!statement) return null;
 
-	const handleSave = async (primary: string) => {
+	const handleSave = async (primary: string, secondary?: string) => {
 		try {
 			if (!statement) throw new Error('Statement is undefined');
 
 			const title = variant === 'description' ? statement.statement : primary;
 
-			await updateStatementText(statement, title);
+			// Convert secondary text lines to paragraphs
+			const paragraphs = secondary?.trim()
+				? secondary
+						.split('\n')
+						.filter((line) => line.trim())
+						.map((line, index) => ({
+							paragraphId: generateParagraphId(),
+							type: ParagraphType.paragraph,
+							content: line,
+							order: index,
+						}))
+				: undefined;
+
+			await updateStatementText(statement, title, paragraphs);
 			onSaveSuccess?.();
 		} catch (error) {
 			logError(error, {
