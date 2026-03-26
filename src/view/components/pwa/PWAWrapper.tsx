@@ -219,12 +219,21 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 								}
 							})
 							.catch((error) => {
-								logError(error, {
-									operation: 'pwa.PWAWrapper.firebaseSW',
-									metadata: {
-										message: '[PWAWrapper] Firebase Messaging SW registration failed:',
-									},
-								});
+								const msg = error instanceof Error ? error.message : '';
+								const isNetworkError =
+									msg.includes('fetching the script') ||
+									msg.includes('Failed to fetch') ||
+									msg.includes('network');
+								if (isNetworkError) {
+									console.info('[PWAWrapper] Firebase SW registration failed (network), will retry');
+								} else {
+									logError(error, {
+										operation: 'pwa.PWAWrapper.firebaseSW',
+										metadata: {
+											message: '[PWAWrapper] Firebase Messaging SW registration failed:',
+										},
+									});
+								}
 							});
 					} else {
 						console.info('[PWAWrapper] Firebase Messaging SW already registered');
@@ -279,10 +288,19 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				}, 4 * TIME.HOUR);
 			},
 			onRegisterError(error) {
-				logError(error, {
-					operation: 'pwa.PWAWrapper.unknown',
-					metadata: { message: 'Service worker registration error:' },
-				});
+				const msg = error instanceof Error ? error.message : '';
+				const isNetworkError =
+					msg.includes('fetching the script') ||
+					msg.includes('Failed to fetch') ||
+					msg.includes('network');
+				if (isNetworkError) {
+					console.info('[PWAWrapper] SW registration failed (network), will retry on next load');
+				} else {
+					logError(error, {
+						operation: 'pwa.PWAWrapper.unknown',
+						metadata: { message: 'Service worker registration error:' },
+					});
+				}
 			},
 		});
 
