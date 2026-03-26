@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { createTreeViewSelector } from '@/redux/statements/treeViewSelectors';
 import { TreeFilterMode } from '../TreeFilterMode';
 
@@ -34,10 +35,7 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
 				const bIsOption = b.statementType === StatementType.option ? 0 : 1;
 				if (aIsOption !== bIsOption) return aIsOption - bIsOption;
 
-				return (
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0)
-				);
+				return sortByConsensus(a, b);
 			});
 		case SortType.random:
 			return sorted.sort(() => Math.random() - 0.5);

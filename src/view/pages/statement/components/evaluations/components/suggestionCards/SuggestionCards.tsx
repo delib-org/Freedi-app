@@ -4,6 +4,7 @@ import { useParams, useLocation, useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 
 import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 import {
@@ -50,9 +51,7 @@ function sortStatements(
 				});
 			}
 
-			return sorted.sort(
-				(a, b) => (b.consensus ?? 0) - (a.consensus ?? 0),
-			);
+			return sorted.sort(sortByConsensus);
 		}
 		case SortType.newest:
 			return sorted.sort((a, b) => b.createdAt - a.createdAt);
