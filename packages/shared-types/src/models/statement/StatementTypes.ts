@@ -9,6 +9,8 @@ import {
 	any,
 	enum_,
 	InferOutput,
+	pipe,
+	transform,
 } from 'valibot';
 import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
@@ -139,7 +141,7 @@ export const StatementSchema = object({
 		})
 	), // I think it is relevant to Freedi-sign
 	numberOfOptions: optional(number()), // the number of options of the statement
-	consensus: number(), // the consensus of the statement
+	consensus: pipe(nullable(number()), transform((v) => v ?? 0)), // the consensus of the statement
 	consensusValid: optional(number()), // gives a combine number of the level of consensus and its validity
 	PopperHebbianScore: optional(PopperHebbianScoreSchema), // the Popper Hebbian score of the statement
 	order: optional(number()), // the order of the statement relative to its siblings

@@ -125,7 +125,7 @@ export async function setStatementSubscriptionToDB({
 		const err = error as { code?: string };
 		if (err?.code !== 'permission-denied') {
 			logError(error, {
-				operation: 'subscriptions.setSubscriptions.hasUnanswered',
+				operation: 'subscriptions.setSubscriptions.setStatementSubscriptionToDB',
 				metadata: { message: 'Error setting subscription:' },
 			});
 		}
