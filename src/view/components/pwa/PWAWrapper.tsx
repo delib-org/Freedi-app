@@ -265,10 +265,16 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				// Check for updates periodically (every 4 hours)
 				updateInterval = setInterval(() => {
 					registration?.update().catch((err) => {
-						logError(err, {
-							operation: 'pwa.PWAWrapper.updateInterval',
-							metadata: { message: 'Error updating service worker:' },
-						});
+						// Network failures during periodic update checks are expected/transient
+						const message = err instanceof TypeError ? err.message : '';
+						if (message.includes('Failed to update a ServiceWorker') || message.includes('fetch')) {
+							console.info('[PWAWrapper] SW update check failed (network), will retry next interval');
+						} else {
+							logError(err, {
+								operation: 'pwa.PWAWrapper.updateInterval',
+								metadata: { message: 'Error updating service worker:' },
+							});
+						}
 					});
 				}, 4 * TIME.HOUR);
 			},
