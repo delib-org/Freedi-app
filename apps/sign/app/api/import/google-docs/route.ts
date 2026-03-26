@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { Collections, createParagraphStatement, Statement } from '@freedi/shared-types';
+import { Collections, createParagraphStatement, Statement, SourceApp } from '@freedi/shared-types';
 import { getFirebaseAdmin, uploadImageFromUrl } from '@/lib/firebase/admin';
 import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { fetchGoogleDoc, getServiceAccountEmail } from '@/lib/google-docs/client';
@@ -288,6 +288,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ImportRes
         );
 
         if (paragraphStatement) {
+          paragraphStatement.sourceApp = SourceApp.SIGN;
           batch.set(
             db.collection(Collections.statements).doc(paragraphStatement.statementId),
             paragraphStatement

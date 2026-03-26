@@ -433,9 +433,264 @@
 		}
 	}
 
+	.questionTypeSelect {
+		width: 100%;
+		max-width: 300px;
+		padding: 0.5rem;
+		border: 1px solid var(--border-color);
+		border-radius: 8px;
+		font-size: 0.9rem;
+		background-color: var(--input-background);
+		color: var(--text-primary);
+		cursor: pointer;
+		margin-bottom: 1rem;
+
+		&:focus {
+			outline: none;
+			border-color: var(--icon-blue);
+		}
+	}
+
+	.sectionDescription {
+		font-size: 0.85rem;
+		color: var(--text-secondary);
+		margin-bottom: 1rem;
+	}
+
 	.helperText {
 		font-size: 0.75rem;
 		color: var(--text-tertiary);
 		margin-top: 0.5rem;
+	}
+
+	.confidenceIndex {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+
+		&__recalcButton {
+			display: inline-flex;
+			align-items: center;
+			gap: 0.5rem;
+			padding: 0.5rem 1rem;
+			background-color: var(--btn-primary);
+			color: white;
+			border: none;
+			border-radius: 6px;
+			cursor: pointer;
+			font-size: 0.85rem;
+			font-weight: 500;
+			transition: background-color 0.2s ease;
+
+			&:hover:not(:disabled) {
+				opacity: 0.9;
+			}
+
+			&:disabled {
+				opacity: 0.6;
+				cursor: not-allowed;
+			}
+		}
+
+		&__resultMessage {
+			font-size: 0.8rem;
+			color: var(--text-secondary);
+		}
+
+		&__description {
+			font-size: 0.85rem;
+			color: var(--text-secondary);
+			margin-bottom: 1rem;
+		}
+
+		&__field {
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+
+			label {
+				font-size: 0.9rem;
+				color: var(--text-secondary);
+				font-weight: 500;
+			}
+
+			input,
+			select {
+				width: 100%;
+				max-width: 300px;
+				padding: 0.5rem;
+				border: 1px solid var(--border-color);
+				border-radius: 4px;
+				font-size: 1rem;
+				background-color: var(--input-background);
+				color: var(--text-primary);
+
+				&:focus {
+					outline: none;
+					border-color: var(--icon-blue);
+				}
+			}
+
+			select {
+				font-size: 0.9rem;
+				cursor: pointer;
+			}
+		}
+	}
+}
+
+// Deadline Timer (rendered outside .questionSettings wrapper)
+// These are top-level so they work when DeadlineSettings renders outside .questionSettings
+
+.deadlineSettings {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.deadlineActive {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.5rem 0.75rem;
+	background: rgba(95, 136, 229, 0.08);
+	border-radius: 8px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	color: var(--btn-primary);
+	font-variant-numeric: tabular-nums;
+}
+
+.deadlineInputRow {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.deadlineSegments {
+	display: flex;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.375rem 0.5rem;
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+}
+
+.deadlineSegment {
+	display: flex;
+	align-items: baseline;
+	gap: 0.125rem;
+}
+
+.deadlineSegmentValue {
+	width: 2.5rem;
+	text-align: center;
+	font-size: 1.1rem;
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+	border: none;
+	background: transparent;
+	color: var(--text-body);
+	padding: 0.25rem;
+	border-radius: 4px;
+
+	// Hide number spinners
+	-moz-appearance: textfield;
+	&::-webkit-inner-spin-button,
+	&::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+
+	&:focus {
+		outline: none;
+		box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.3);
+	}
+}
+
+.deadlineSegmentUnit {
+	font-size: 0.7rem;
+	font-weight: 600;
+	color: var(--text-caption);
+	text-transform: lowercase;
+}
+
+.deadlineSegmentSep {
+	font-size: 1rem;
+	font-weight: 700;
+	color: var(--text-caption);
+	padding: 0 0.125rem;
+}
+
+.deadlineStartBtn {
+	padding: 0.5rem 1rem;
+	background: var(--agree);
+	color: white;
+	border: none;
+	border-radius: 20px;
+	font-size: 0.85rem;
+	font-weight: 600;
+	cursor: pointer;
+	white-space: nowrap;
+
+	&:hover:not(:disabled) {
+		opacity: 0.9;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.deadlinePresets {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+
+.deadlinePresetBtn {
+	padding: 0.5rem 0.75rem;
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: 20px;
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--text-body);
+	cursor: pointer;
+	min-height: 2.5rem;
+
+	&:hover {
+		background: rgba(95, 136, 229, 0.08);
+		border-color: var(--btn-primary);
+		color: var(--btn-primary);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}
+
+.deadlineRemoveBtn {
+	padding: 0.5rem 1rem;
+	background: transparent;
+	border: 1px solid var(--against);
+	border-radius: 20px;
+	font-size: 0.8rem;
+	font-weight: 500;
+	color: var(--against);
+	cursor: pointer;
+	align-self: flex-start;
+
+	&:hover {
+		background: rgba(229, 95, 95, 0.08);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 }

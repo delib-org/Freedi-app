@@ -1,4 +1,4 @@
-import { Statement, Role, StatementType, Screen } from '@freedi/shared-types';
+import { Statement, Role, StatementType, Screen, QuestionType } from '@freedi/shared-types';
 import { ReactNode, useEffect, Suspense } from 'react';
 import { useParams } from 'react-router';
 import { useSelector, useDispatch } from 'react-redux';
@@ -13,6 +13,7 @@ import QuestionsView from '../questionsView/QuestionsView';
 import GroupPage from '../statementTypes/group/GroupPage';
 import PopperHebbianDiscussion from '../popperHebbian/PopperHebbianDiscussion';
 import TreeView from '../treeView/TreeView';
+import { CompoundQuestion } from '../statementTypes/question/compound';
 
 // Lazy load heavy screen components
 const Triangle = lazyWithRetry(
@@ -124,7 +125,7 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 	}
 }
 
-const QA_TYPE_FILTER = [StatementType.question, StatementType.option] as const;
+const QA_TYPE_FILTER = [StatementType.option] as const;
 const QUESTIONS_ONLY_FILTER = [StatementType.question] as const;
 
 interface ViewByActiveTabProps {
@@ -138,6 +139,14 @@ function ViewByActiveTab({
 	statement,
 	isPopperHebbianEnabled,
 }: Readonly<ViewByActiveTabProps>): ReactNode {
+	const isCompound =
+		statement?.statementType === StatementType.question &&
+		statement?.questionSettings?.questionType === QuestionType.compound;
+
+	if (isCompound) {
+		return <CompoundQuestion />;
+	}
+
 	const isTreeView = statement?.statementSettings?.enableTreeView !== false;
 
 	switch (activeView) {
@@ -162,7 +171,7 @@ function ViewByActiveTab({
 			return <Chat />;
 		case 'options':
 			if (isTreeView) {
-				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav />;
+				return <TreeView typeFilter={QA_TYPE_FILTER} showSortNav defaultCollapsed />;
 			}
 
 			return <StagePage />;

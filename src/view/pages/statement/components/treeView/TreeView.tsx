@@ -1,28 +1,42 @@
-import { FC, useContext, useMemo, useRef, useEffect, useCallback } from 'react';
+import { FC, useContext, useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import ChatInput from '@/view/pages/statement/components/chat/components/input/ChatInput';
 import StatementBottomNav from '@/view/pages/statement/components/nav/bottom/StatementBottomNav';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAuthentication } from '@/controllers/hooks/useAuthentication';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { bookmarkedStatementIdsSelector } from '@/redux/statements/statementsSlice';
 import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
+import { useTreeFilter } from './TreeFilterContext';
+import { TreeFilterMode } from './TreeFilterMode';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
-import { StatementType, SortType } from '@freedi/shared-types';
+import { Statement, StatementType, SortType } from '@freedi/shared-types';
 
 interface TreeViewProps {
 	typeFilter?: readonly StatementType[];
 	showSortNav?: boolean;
 	onlySelectedOptions?: boolean;
+	defaultCollapsed?: boolean;
 }
 
 const FLIP_SPRING = { stiffness: 300, damping: 30 };
 
-const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOptions }) => {
+const TreeView: FC<TreeViewProps> = ({
+	typeFilter,
+	showSortNav,
+	onlySelectedOptions,
+	defaultCollapsed,
+}) => {
 	const { statementId, sort } = useParams();
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
+	const { user } = useAuthentication();
+	const bookmarkedIds = useAppSelector(bookmarkedStatementIdsSelector);
+	const { filterMode, registerCollapseAll, registerExpandAll } = useTreeFilter();
 	const treeViewRef = useRef<HTMLDivElement>(null);
 	const prevCountRef = useRef(0);
 	const isFirstRenderRef = useRef(true);
@@ -31,10 +45,32 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 		typeFilter,
 		sortType: showSortNav ? (sort as SortType) || SortType.accepted : undefined,
 		onlySelectedOptions,
+		filterMode,
+		userId: user?.uid,
+		bookmarkedIds,
 	};
 
 	const { childrenMap, rootChildren } = useTreeData(statementId || '', treeOptions);
-	const { expandedNodes, toggleNode, expandNode } = useTreeState(childrenMap, statementId || '');
+	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll } = useTreeState(
+		childrenMap,
+		statementId || '',
+		defaultCollapsed,
+	);
+
+	const [replyToStatement, setReplyToStatement] = useState<Statement | null>(null);
+
+	const handleClearReply = useCallback(() => {
+		if (replyToStatement) {
+			expandNode(replyToStatement.statementId);
+		}
+		setReplyToStatement(null);
+	}, [replyToStatement, expandNode]);
+
+	// Register collapse/expand so the header can trigger them
+	useEffect(() => {
+		registerCollapseAll(collapseAll);
+		registerExpandAll(expandAll);
+	}, [collapseAll, expandAll, registerCollapseAll, registerExpandAll]);
 
 	const flipKey = useMemo(() => rootChildren.map((c) => c.statementId).join(','), [rootChildren]);
 
@@ -95,11 +131,48 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 		prevCountRef.current = 0;
 	}, [statementId]);
 
+	const renderEmptyState = () => {
+		if (filterMode === TreeFilterMode.bookmarked) {
+			return (
+				<div className={styles['tree-view__empty-state']}>
+					<span
+						className="material-symbols-outlined"
+						style={{ fontSize: 48, color: 'var(--text-secondary, #999)' }}
+					>
+						bookmark
+					</span>
+					<p className={styles['tree-view__empty-title']}>{t('No bookmarks yet')}</p>
+					<p className={styles['tree-view__empty-subtitle']}>
+						{t('Tap the bookmark icon on any message to save it for quick access')}
+					</p>
+				</div>
+			);
+		}
+		if (filterMode === TreeFilterMode.mine) {
+			return (
+				<div className={styles['tree-view__empty-state']}>
+					<span
+						className="material-symbols-outlined"
+						style={{ fontSize: 48, color: 'var(--text-secondary, #999)' }}
+					>
+						person
+					</span>
+					<p className={styles['tree-view__empty-title']}>{t("You haven't posted yet")}</p>
+					<p className={styles['tree-view__empty-subtitle']}>
+						{t('Join the discussion by typing a message below')}
+					</p>
+				</div>
+			);
+		}
+
+		return <div className={styles['tree-view__empty']}>{t('No replies yet')}</div>;
+	};
+
 	return (
 		<div ref={treeViewRef} className={styles['tree-view']}>
 			<div className={styles['tree-view__list']}>
 				{rootChildren.length === 0 ? (
-					<div className={styles['tree-view__empty']}>{t('No replies yet')}</div>
+					renderEmptyState()
 				) : showSortNav ? (
 					<>
 						<Flipper flipKey={flipKey} spring={FLIP_SPRING}>
@@ -114,6 +187,7 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 											expandedNodes={expandedNodes}
 											toggleNode={toggleNode}
 											expandNode={expandNode}
+											onReply={setReplyToStatement}
 											animate
 										/>
 									</div>
@@ -133,6 +207,7 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 								expandedNodes={expandedNodes}
 								toggleNode={toggleNode}
 								expandNode={expandNode}
+								onReply={setReplyToStatement}
 							/>
 						))}
 					</>
@@ -140,13 +215,31 @@ const TreeView: FC<TreeViewProps> = ({ typeFilter, showSortNav, onlySelectedOpti
 			</div>
 
 			{showSortNav ? (
-				<div className={styles['tree-view__bottom-nav']}>
-					<StatementBottomNav />
-				</div>
+				<>
+					{replyToStatement && statement ? (
+						<div className={styles['tree-view__input']}>
+							<ChatInput
+								statement={statement}
+								replyToStatement={replyToStatement}
+								onClearReply={handleClearReply}
+								replyAsChild
+							/>
+						</div>
+					) : (
+						<div className={styles['tree-view__bottom-nav']}>
+							<StatementBottomNav />
+						</div>
+					)}
+				</>
 			) : (
 				statement && (
 					<div className={styles['tree-view__input']}>
-						<ChatInput statement={statement} />
+						<ChatInput
+							statement={statement}
+							replyToStatement={replyToStatement}
+							onClearReply={handleClearReply}
+							replyAsChild
+						/>
 					</div>
 				)
 			)}

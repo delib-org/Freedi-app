@@ -93,7 +93,7 @@ export default function AddSolutionFlow({
 
         // Handle specific error codes
         if (similarResponse.status === 400) {
-          const errorMessage = similarData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+          const errorMessage = similarData.reason || similarData.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
           showToast({
             type: 'error',
             title: t('Invalid Content'),
@@ -105,7 +105,7 @@ export default function AddSolutionFlow({
             operation: 'AddSolutionFlow.handleCheckSimilar',
             userId,
             questionId,
-            metadata: { status: similarResponse.status },
+            metadata: { status: similarResponse.status, category: similarData.category },
           });
           return;
         }

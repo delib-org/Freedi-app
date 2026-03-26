@@ -13,6 +13,8 @@ import {
 	Bell,
 	Network,
 	BarChart3,
+	ShieldAlert,
+	Clock,
 } from 'lucide-react';
 
 // Custom components
@@ -43,6 +45,8 @@ import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
 import { ClusteringAdmin } from '../ClusteringAdmin';
 import { OptionRooms } from '../optionRooms';
+import ModerationLog from '../moderationLog/ModerationLog';
+import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -180,6 +184,20 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							</SettingsSection>
 						)}
 
+						{/* Deadline Timer Section - only for questions */}
+						{isQuestion && (
+							<SettingsSection
+								title={t('Deadline Timer')}
+								description={t('Set a countdown timer visible to all participants')}
+								icon={Clock}
+								priority="high"
+								defaultExpanded={true}
+								tooltip={t('Add a deadline timer to this question')}
+							>
+								<DeadlineSettings statement={statement} />
+							</SettingsSection>
+						)}
+
 						{/* Question Structure Section */}
 						<SettingsSection
 							title={t('Question Structure')}
@@ -246,6 +264,18 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 								<ClusteringAdmin statement={statement} />
 							</SettingsSection>
 						)}
+
+						{/* Content Moderation Log Section */}
+						<SettingsSection
+							title={t('Content Moderation')}
+							description={t('View content rejected by AI moderation')}
+							icon={ShieldAlert}
+							priority="low"
+							defaultExpanded={false}
+							tooltip={t('Track content that was flagged and rejected by the AI content moderator')}
+						>
+							<ModerationLog statement={statement} />
+						</SettingsSection>
 
 						{/* Participants Data Section */}
 						<SettingsSection

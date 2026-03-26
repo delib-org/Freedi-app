@@ -137,7 +137,7 @@ export default function SolutionPromptModal({
         const data = await similarResponse.json();
 
         if (similarResponse.status === 400) {
-          const errorMessage = data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
+          const errorMessage = data.reason || data.error || ERROR_MESSAGES.INAPPROPRIATE_CONTENT;
           setError(errorMessage);
           setFlowState({ step: 'input' });
 
@@ -145,7 +145,7 @@ export default function SolutionPromptModal({
             operation: 'SolutionPromptModal.handleCheckSimilar',
             userId,
             questionId,
-            metadata: { status: similarResponse.status },
+            metadata: { status: similarResponse.status, category: data.category },
           });
           return;
         }

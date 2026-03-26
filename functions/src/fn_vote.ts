@@ -12,6 +12,7 @@ import {
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { parse } from 'valibot';
 import { trackVoteEngagement } from './engagement/credits/trackEngagement';
+import { onVoteCreatedStats } from './fn_adminStats';
 
 export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> | undefined>) {
 	if (!event?.data) return;
@@ -79,6 +80,13 @@ export async function updateVote(event: FirestoreEvent<Change<DocumentSnapshot> 
 				newVote.parentId,
 				parentStatement.topParentId,
 			).catch((err) => logger.warn('Engagement tracking failed:', err));
+		}
+
+		// Track admin stats on first vote only (non-blocking)
+		if (!event.data?.before?.data()) {
+			onVoteCreatedStats(newVote.createdAt).catch((err) =>
+				logger.warn('Admin stats tracking failed:', err),
+			);
 		}
 
 		return true;

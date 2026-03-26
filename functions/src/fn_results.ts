@@ -53,14 +53,8 @@ async function resultsByTopOptions(statementId: string): Promise<Statement[]> {
 
 		const topOptions = topOptionsDB.docs.map((doc) => parse(StatementSchema, doc.data()));
 
-		// Sort by evaluation.agreement (falling back to consensus for legacy data)
-		// and return top 5
 		return topOptions
-			.sort(
-				(a, b) =>
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0),
-			)
+			.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0))
 			.slice(0, 5);
 	} catch (error) {
 		logger.error(error);

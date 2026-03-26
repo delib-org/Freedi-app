@@ -18,6 +18,7 @@ import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-functions/v1/f
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { Change } from 'firebase-functions/v1';
 import { getParagraphsText } from './helpers';
+import { onStatementDeletedStats, onSubscriptionCreatedStats } from './fn_adminStats';
 
 export async function onNewSubscription(
 	event: FirestoreEvent<Change<DocumentSnapshot> | undefined>,
@@ -62,6 +63,13 @@ export async function onNewSubscription(
 					return;
 				}
 			}
+		}
+
+		// Track admin stats for new subscriptions (non-blocking)
+		if (isCreate) {
+			onSubscriptionCreatedStats(subscription.createdAt).catch((err) =>
+				logger.warn('Admin stats tracking failed:', err),
+			);
 		}
 
 		// Check if this is a new subscription with waiting role, or an update to waiting role
@@ -252,6 +260,11 @@ export async function onStatementDeletionDeleteSubscriptions(
 		await batch.commit();
 		logger.info(
 			`Successfully deleted ${subscriptionsSnapshot.size} subscriptions for statement ${statementId}`,
+		);
+
+		// Track admin stats (non-blocking)
+		onStatementDeletedStats(deletedStatement).catch((err) =>
+			logger.warn('Admin stats tracking failed:', err),
 		);
 	} catch (error) {
 		logger.error('Error in onStatementDeletionDeleteSubscriptions:', error);

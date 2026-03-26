@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirebaseAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getUserEmailFromCookie } from '@/lib/utils/user';
-import { Collections, StatementType, Access, Role, ResultsBy, CutoffBy } from '@freedi/shared-types';
+import { Collections, StatementType, Access, Role, ResultsBy, CutoffBy, evaluationType } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface CreateGroupBody {
@@ -74,7 +74,8 @@ function buildStatementData({
       access: Access.openToAll,
     },
     statementSettings: {
-      enhancedEvaluation: true,
+      evaluationType: evaluationType.range,
+      enhancedEvaluation: true, // auto-derived from evaluationType
       hasChat: true,
       showEvaluation: true,
       enableAddEvaluationOption: true,

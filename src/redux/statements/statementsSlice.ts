@@ -9,6 +9,7 @@ import {
 	ResultsSettings,
 } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { REDUX } from '@/constants/common';
 import {
 	createStatementByIdSelector,
 	createStatementsByParentSelector,
@@ -29,6 +30,7 @@ interface StatementsState {
 	statementSubscriptionLastUpdate: number;
 	statementMembership: StatementSubscription[];
 	screen: StatementScreen;
+	bookmarkedIds: Record<string, boolean>;
 }
 
 interface StatementOrder {
@@ -48,7 +50,44 @@ const initialState: StatementsState = {
 	statementSubscriptionLastUpdate: 0,
 	statementMembership: [],
 	screen: StatementScreen.chat,
+	bookmarkedIds: {},
 };
+
+/**
+ * Prune oldest statements when state exceeds MAX_STATEMENTS cap.
+ * Keeps statements belonging to the most recently updated topParentIds.
+ */
+function pruneStatements(statements: Statement[]): Statement[] {
+	if (statements.length <= REDUX.MAX_STATEMENTS) return statements;
+
+	// Find the most recent topParentIds by their latest lastUpdate
+	const topParentLastUpdate = new Map<string, number>();
+	for (const stmt of statements) {
+		const topId = stmt.topParentId || stmt.parentId || stmt.statementId;
+		const current = topParentLastUpdate.get(topId) || 0;
+		if (stmt.lastUpdate > current) {
+			topParentLastUpdate.set(topId, stmt.lastUpdate);
+		}
+	}
+
+	// Sort topParentIds by most recently updated first
+	const sortedTopParents = [...topParentLastUpdate.entries()]
+		.sort((a, b) => b[1] - a[1])
+		.map(([id]) => id);
+
+	// Keep adding entire trees until we hit the cap
+	const keepSet = new Set<string>();
+	for (const topId of sortedTopParents) {
+		if (keepSet.size >= REDUX.MAX_STATEMENTS) break;
+		keepSet.add(topId);
+	}
+
+	return statements.filter((stmt) => {
+		const topId = stmt.topParentId || stmt.parentId || stmt.statementId;
+
+		return keepSet.has(topId);
+	});
+}
 
 export const statementsSlice = createSlice({
 	name: 'statements',
@@ -70,6 +109,9 @@ export const statementsSlice = createSlice({
 				if (newStatement.lastUpdate > state.statementSubscriptionLastUpdate) {
 					state.statementSubscriptionLastUpdate = newStatement.lastUpdate;
 				}
+
+				// Prune if over cap
+				state.statements = pruneStatements(state.statements);
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatement',
@@ -124,6 +166,9 @@ export const statementsSlice = createSlice({
 				statements.forEach((statement) => {
 					state.statements = updateArray(state.statements, statement, 'statementId');
 				});
+
+				// Prune if over cap
+				state.statements = pruneStatements(state.statements);
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatements',
@@ -160,6 +205,11 @@ export const statementsSlice = createSlice({
 				if (newStatementSubscription.lastUpdate > state.statementSubscriptionLastUpdate) {
 					state.statementSubscriptionLastUpdate = newStatementSubscription.lastUpdate;
 				}
+
+				// Hydrate bookmark state from subscription
+				if (newStatementSubscription.isBookmarked) {
+					state.bookmarkedIds[newStatementSubscription.statementId] = true;
+				}
 			} catch (error) {
 				logError(error, {
 					operation: 'statementsSlice.setStatementSubscription',
@@ -177,6 +227,11 @@ export const statementsSlice = createSlice({
 						statement,
 						'statementsSubscribeId',
 					);
+
+					// Hydrate bookmark state from subscription
+					if (statement.isBookmarked) {
+						state.bookmarkedIds[statement.statementId] = true;
+					}
 				});
 			} catch (error) {
 				logError(error, {
@@ -310,6 +365,7 @@ export const statementsSlice = createSlice({
 			state.statementSubscriptionLastUpdate = 0;
 			state.statementMembership = [];
 			state.screen = StatementScreen.chat;
+			state.bookmarkedIds = {};
 		},
 		setCurrentMultiStepOptions: (state, action: PayloadAction<Statement[]>) => {
 			try {
@@ -339,6 +395,23 @@ export const statementsSlice = createSlice({
 				statement.resultsSettings = resultsSettings;
 			}
 		},
+		setBookmark: (state, action: PayloadAction<{ statementId: string; isBookmarked: boolean }>) => {
+			const { statementId, isBookmarked } = action.payload;
+			if (isBookmarked) {
+				state.bookmarkedIds[statementId] = true;
+			} else {
+				delete state.bookmarkedIds[statementId];
+			}
+		},
+		setBookmarks: (state, action: PayloadAction<Record<string, boolean>>) => {
+			for (const [statementId, isBookmarked] of Object.entries(action.payload)) {
+				if (isBookmarked) {
+					state.bookmarkedIds[statementId] = true;
+				} else {
+					delete state.bookmarkedIds[statementId];
+				}
+			}
+		},
 	},
 });
 
@@ -359,6 +432,8 @@ export const {
 	setCurrentMultiStepOptions,
 	setMassConsensusStatements,
 	updateStoreResultsSettings,
+	setBookmark,
+	setBookmarks,
 } = statementsSlice.actions;
 
 // statements
@@ -479,11 +554,22 @@ export const statementOptionsSelector = (statementId: string | undefined) =>
 export const questionsSelector = (statementId: string | undefined) =>
 	selectStatementsByParentAndType(statementId, StatementType.question);
 
+// Memoized map for O(1) subscription lookups
+const selectSubscriptionMap = createSelector(
+	[(state: { statements: StatementsState }) => state.statements.statementSubscription],
+	(subscriptions) => {
+		const map = new Map<string, StatementSubscription>();
+		for (const sub of subscriptions) {
+			map.set(sub.statementId, sub);
+		}
+
+		return map;
+	},
+);
+
 export const statementSubscriptionSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
-		state.statements.statementSubscription.find(
-			(statementSub) => statementSub.statementId === statementId,
-		) || undefined;
+		statementId ? selectSubscriptionMap(state).get(statementId) : undefined;
 export const statementOrderSelector =
 	(statementId: string | undefined) => (state: { statements: StatementsState }) =>
 		state.statements.statements.find((statement) => statement.statementId === statementId)?.order ||
@@ -510,6 +596,18 @@ export const hasTokenSelector =
 
 		return subscription?.tokens?.includes(token) || false;
 	};
+
+// Bookmark selectors
+export const bookmarkedStatementIdsSelector = createSelector(
+	[(state: { statements: StatementsState }) => state.statements.bookmarkedIds],
+	(bookmarkedIds) => {
+		return new Set<string>(Object.keys(bookmarkedIds));
+	},
+);
+
+export const isStatementBookmarkedSelector =
+	(statementId: string) => (state: { statements: StatementsState }) =>
+		state.statements.bookmarkedIds[statementId] === true;
 
 export const subscriptionParentStatementSelector = (parentId: string) =>
 	createSelector(

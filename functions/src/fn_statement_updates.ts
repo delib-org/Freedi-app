@@ -14,7 +14,7 @@ import {
 	statementToSimpleStatement,
 	functionConfig,
 } from '@freedi/shared-types';
-import { getParagraphsText } from './helpers';
+import { getParagraphsText, generateDescriptionFromChildren } from './helpers';
 
 /**
  * Updates parent statement when a child statement is created
@@ -78,9 +78,11 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 			delete beforeCopy.lastChildUpdate;
 			delete beforeCopy.lastUpdate;
 			delete beforeCopy.lastSubStatements;
+			delete beforeCopy.description;
 			delete afterCopy.lastChildUpdate;
 			delete afterCopy.lastUpdate;
 			delete afterCopy.lastSubStatements;
+			delete afterCopy.description;
 
 			// If nothing else changed, this is likely our own update
 			if (JSON.stringify(beforeCopy) === JSON.stringify(afterCopy)) {
@@ -174,11 +176,21 @@ async function updateParentWithLatestChildren(parentId: string) {
 
 		const timestamp = Date.now();
 
-		// Update parent with new sub-statements and timestamp
+		// Generate description from child paragraph statements
+		const description = generateDescriptionFromChildren(
+			subStatementsQuery.docs.map((doc) => {
+				const stmt = doc.data() as Statement;
+
+				return { statement: stmt.statement, createdAt: stmt.createdAt };
+			}),
+		);
+
+		// Update parent with new sub-statements, timestamp, and description
 		await parentRef.update({
 			lastSubStatements: lastSubStatements,
 			lastUpdate: timestamp,
 			lastChildUpdate: timestamp,
+			description: description || '',
 		});
 
 		logger.info(`Updated parent ${parentId} with ${lastSubStatements.length} sub-statements`);

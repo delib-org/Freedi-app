@@ -34,7 +34,8 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 		try {
 			if (!topParentStatement) throw new Error('No top parent statement');
 
-			await setFollowMeDB(topParentStatement, pathname);
+			const isActive = !!topParentStatement.followMe && topParentStatement.followMe !== '';
+			setFollowMeDB(topParentStatement, isActive ? '' : pathname);
 		} catch (error) {
 			logError(error, { operation: 'header.StatementHeader.handleFollowMe' });
 		} finally {

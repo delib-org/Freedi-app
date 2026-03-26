@@ -34,6 +34,7 @@ interface HeaderMenuProps {
 	onInvitePanel: () => void;
 	onNavigateToSettings: () => void;
 	onNavigateToScreen: (screen: Screen) => void;
+	isFollowMeActive?: boolean;
 }
 
 const HeaderMenu: FC<HeaderMenuProps> = ({
@@ -50,6 +51,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 	onInvitePanel,
 	onNavigateToSettings,
 	onNavigateToScreen,
+	isFollowMeActive,
 }) => {
 	const [showLanguageModal, setShowLanguageModal] = useState(false);
 
@@ -130,7 +132,7 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 				{isAdmin && (
 					<>
 						<MenuOption
-							label={t('Follow Me')}
+							label={isFollowMeActive ? t('Stop Follow Me') : t('Follow Me')}
 							icon={<FollowMe style={menuIconStyle} />}
 							onOptionClick={onFollowMe}
 						/>

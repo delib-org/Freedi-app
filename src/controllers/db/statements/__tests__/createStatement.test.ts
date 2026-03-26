@@ -43,6 +43,12 @@ jest.mock('@freedi/shared-types', () => ({
 		voting: 'voting',
 		checkbox: 'checkbox',
 	},
+	evaluationType: {
+		likeDislike: 'like-dislike',
+		range: 'range',
+		singleLike: 'single-like',
+		communityVoice: 'community-voice',
+	},
 	Membership: {},
 	StatementSchema: {},
 	UserSchema: {},
@@ -53,6 +59,11 @@ jest.mock('@freedi/shared-types', () => ({
 		statementsSubscribe: 'statementsSubscribe',
 	},
 	Paragraph: {},
+	SourceApp: {
+		MAIN: 'main',
+		MASS_CONSENSUS: 'mass-consensus',
+		SIGN: 'sign',
+	},
 }));
 
 jest.mock('firebase/firestore', () => ({
@@ -122,14 +133,24 @@ jest.mock('@/models/questionTypeDefaults', () => ({
 	getDefaultQuestionType: jest.fn(() => 'simple'),
 }));
 
-// Mock vote color utilities
-jest.mock('@/view/pages/statement/components/vote/statementVoteCont', () => ({
+// Mock color utilities
+jest.mock('@/controllers/utils/colorUtils', () => ({
 	getExistingOptionColors: jest.fn(() => []),
 	getSiblingOptionsByParentId: jest.fn(() => []),
+	getRandomColor: jest.fn(() => '#FF5733'),
 }));
 
-jest.mock('@/view/pages/statement/components/vote/votingColors', () => ({
-	getRandomColor: jest.fn(() => '#FF5733'),
+jest.mock('@/utils/firebaseUtils', () => ({
+	createTimestamps: jest.fn(() => ({
+		createdAt: 1704067200000,
+		lastUpdate: 1704067200000,
+	})),
+	getCurrentTimestamp: jest.fn(() => 1704067200000),
+	createStatementRef: jest.fn(),
+}));
+
+jest.mock('@/utils/errorHandling', () => ({
+	logError: jest.fn(),
 }));
 
 jest.mock('@/context/UserConfigContext', () => ({
@@ -403,15 +424,28 @@ describe('createStatement', () => {
 			expect(result?.statementType).toBe(StatementType.option);
 		});
 
-		it('should default enhancedEvaluation and showEvaluation settings', () => {
+		it('should default evaluationType to range and auto-derive enhancedEvaluation', () => {
 			const result = createStatement({
 				text: 'Valid text',
 				parentStatement: mockParentStatement as never,
 				statementType: StatementType.option as never,
 			});
 
+			expect(result?.statementSettings?.evaluationType).toBe('range');
 			expect(result?.statementSettings?.enhancedEvaluation).toBe(true);
 			expect(result?.statementSettings?.showEvaluation).toBe(true);
+		});
+
+		it('should auto-derive enhancedEvaluation as false when evaluationType is not range', () => {
+			const result = createStatement({
+				text: 'Valid text',
+				parentStatement: mockParentStatement as never,
+				statementType: StatementType.option as never,
+				evaluationType: 'like-dislike' as never,
+			});
+
+			expect(result?.statementSettings?.evaluationType).toBe('like-dislike');
+			expect(result?.statementSettings?.enhancedEvaluation).toBe(false);
 		});
 	});
 
@@ -510,15 +544,13 @@ describe('updateStatement', () => {
 	});
 
 	it('should update lastUpdate timestamp', () => {
-		const now = Date.now();
 		const result = updateStatement({
 			text: 'Updated text',
 			statement: baseStatement as never,
 		} as never);
 
-		// lastUpdate should be a recent Date.now() value
-		expect(result?.lastUpdate).toBeGreaterThanOrEqual(now);
-		expect(result?.lastUpdate).toBeLessThanOrEqual(Date.now());
+		// lastUpdate should be set from getCurrentTimestamp (mocked to 1704067200000)
+		expect(result?.lastUpdate).toBe(1704067200000);
 	});
 
 	it('should not modify the original statement (immutable)', () => {

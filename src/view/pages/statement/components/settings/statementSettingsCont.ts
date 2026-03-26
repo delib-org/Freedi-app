@@ -96,7 +96,7 @@ export async function setNewStatement({
 			numberOfResults,
 			enableAddEvaluationOption,
 			enableAddVotingOption,
-			enhancedEvaluation,
+			evaluationType,
 			showEvaluation,
 			membership,
 		} = getSetStatementData(statement);
@@ -113,7 +113,7 @@ export async function setNewStatement({
 				hasChildren,
 				enableAddEvaluationOption,
 				enableAddVotingOption,
-				enhancedEvaluation,
+				evaluationType,
 				showEvaluation,
 				membership,
 			});
@@ -142,7 +142,7 @@ export async function setNewStatement({
 				hasChildren,
 				enableAddEvaluationOption,
 				enableAddVotingOption,
-				enhancedEvaluation,
+				evaluationType,
 				showEvaluation,
 				membership,
 			});
@@ -188,7 +188,7 @@ export const getStatementSettings = (statement: Statement) => {
 
 const getSetStatementData = (statement: Statement) => {
 	const { resultsBy, numberOfResults } = statement.resultsSettings ?? resultsSettingsDefault;
-	const { enableAddEvaluationOption, enableAddVotingOption, enhancedEvaluation, showEvaluation } =
+	const { enableAddEvaluationOption, enableAddVotingOption, evaluationType, showEvaluation } =
 		getStatementSettings(statement);
 
 	return {
@@ -197,7 +197,7 @@ const getSetStatementData = (statement: Statement) => {
 		numberOfResults,
 		enableAddEvaluationOption,
 		enableAddVotingOption,
-		enhancedEvaluation,
+		evaluationType,
 		showEvaluation,
 		membership: statement.membership,
 	};

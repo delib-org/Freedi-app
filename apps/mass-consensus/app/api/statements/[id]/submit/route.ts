@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, createStatementObject } from '@freedi/shared-types';
+import { Collections, StatementType, createStatementObject, SourceApp } from '@freedi/shared-types';
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
@@ -232,6 +232,7 @@ export async function POST(
         photoURL: '',
         isAnonymous: true,
       },
+      sourceApp: SourceApp.MASS_CONSENSUS,
     });
 
     if (!newSolution) {

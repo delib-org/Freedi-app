@@ -24,14 +24,10 @@ const SubQuestionsMap = () => {
 	// Listen to topParentStatement for followMe updates
 	useEffect(() => {
 		if (!statement?.topParentId) return;
+		const unsubscribe = listenToStatement(statement.topParentId);
 
-		// Only set up listener if topParentStatement doesn't exist yet
-		if (!topParentStatement) {
-			const unsubscribe = listenToStatement(statement.topParentId);
-
-			return () => unsubscribe();
-		}
-	}, [statement?.topParentId, topParentStatement]);
+		return () => unsubscribe();
+	}, [statement?.topParentId]);
 
 	const [nodeHeights, setNodeHeights] = useState(new Map<string, number>());
 	const numberOfElements = nodeHeights.size;

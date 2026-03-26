@@ -1,4 +1,5 @@
 import { setDoc, updateDoc } from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { number, parse } from 'valibot';
 import { EvaluationSchema, Statement, User, EvaluationUI } from '@freedi/shared-types';
 import { analyticsService } from '@/services/analytics';
@@ -10,6 +11,8 @@ import {
 	createStatementRef,
 	getCurrentTimestamp,
 } from '@/utils/firebaseUtils';
+import { functions } from '../config';
+import { logError } from '@/utils/errorHandling';
 
 export async function setEvaluationToDB(
 	statement: Statement,
@@ -136,6 +139,73 @@ export async function setMaxVotesPerUser(
 		logger.error('Error updating max votes per user', error, {
 			statementId,
 			maxVotes,
+		});
+		throw error;
+	}
+}
+
+export async function setConfidenceIndexSettings(
+	statementId: string,
+	settings: {
+		targetPopulation?: number;
+		samplingQuality?: number;
+	},
+): Promise<void> {
+	try {
+		const statementRef = createStatementRef(statementId);
+
+		const updateData: Record<string, number | null> = {};
+		if (settings.targetPopulation !== undefined) {
+			updateData['evaluationSettings.targetPopulation'] =
+				settings.targetPopulation > 0 ? settings.targetPopulation : null;
+		}
+		if (settings.samplingQuality !== undefined) {
+			updateData['evaluationSettings.samplingQuality'] = settings.samplingQuality;
+		}
+
+		await updateDoc(statementRef, updateData);
+
+		logger.info('Confidence Index Settings Changed', {
+			statementId,
+			...settings,
+		});
+	} catch (error) {
+		logger.error('Error updating confidence index settings', error, {
+			statementId,
+			settings,
+		});
+		throw error;
+	}
+}
+
+interface RecalculateIndicesResult {
+	success: boolean;
+	optionsUpdated: number;
+	targetPopulation: number | undefined;
+	samplingQuality: number;
+}
+
+export async function requestRecalculateIndices(
+	statementId: string,
+): Promise<RecalculateIndicesResult> {
+	try {
+		const recalculate = httpsCallable<{ statementId: string }, RecalculateIndicesResult>(
+			functions,
+			'recalculateIndices',
+		);
+
+		const result = await recalculate({ statementId });
+
+		logger.info('Indices recalculated', {
+			statementId,
+			optionsUpdated: result.data.optionsUpdated,
+		});
+
+		return result.data;
+	} catch (error) {
+		logError(error, {
+			operation: 'setEvaluation.requestRecalculateIndices',
+			statementId,
 		});
 		throw error;
 	}

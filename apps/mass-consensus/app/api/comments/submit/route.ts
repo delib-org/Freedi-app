@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
-import { Collections, StatementType, createStatementObject } from '@freedi/shared-types';
+import { Collections, StatementType, createStatementObject, SourceApp } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 import { COMMENT } from '@/constants/common';
 
@@ -58,6 +58,7 @@ export async function POST(request: NextRequest) {
         displayName: userName || 'Anonymous',
         uid: userId,
       },
+      sourceApp: SourceApp.MASS_CONSENSUS,
       ...(reasoning && reasoning !== trimmedText ? { reasoning } : {}),
     });
 

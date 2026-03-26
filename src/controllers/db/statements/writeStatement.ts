@@ -14,6 +14,7 @@ import {
 	CutoffBy,
 	Creator,
 	getRandomUID,
+	SourceApp,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -97,6 +98,11 @@ export const setStatementToDB = async ({
 			statement.membership = { access: Access.openToAll };
 		}
 
+		// Ensure sourceApp is set for all statements written from the main app
+		if (!statement.sourceApp) {
+			statement.sourceApp = SourceApp.MAIN;
+		}
+
 		//statement settings
 		if (!statement.statementSettings)
 			statement.statementSettings = {
@@ -166,7 +172,7 @@ export async function saveStatementToDB({
 	statementType,
 	enableAddEvaluationOption,
 	enableAddVotingOption,
-	enhancedEvaluation,
+	evaluationType,
 	showEvaluation,
 	resultsBy,
 	numberOfResults,
@@ -183,7 +189,7 @@ export async function saveStatementToDB({
 			statementType,
 			enableAddEvaluationOption,
 			enableAddVotingOption,
-			enhancedEvaluation,
+			evaluationType,
 			showEvaluation,
 			resultsBy,
 			numberOfResults,

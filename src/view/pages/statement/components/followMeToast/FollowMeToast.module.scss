@@ -16,6 +16,11 @@
     transition: all 0.3s;
     z-index: 1000;
 
+    &--user {
+        top: 0;
+        transform: translate(-50%, 0.5rem);
+    }
+
     div {
         display: flex;
         align-items: center;

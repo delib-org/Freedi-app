@@ -16,6 +16,7 @@ import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
 import { checkSocialProofMilestone } from '../engagement/notifications/socialProofTrigger';
+import { onEvaluationCreatedStats } from '../fn_adminStats';
 
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
@@ -92,6 +93,11 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		// Track engagement (non-blocking)
 		trackEvaluationEngagement(statementId, userId, parentId, statement.topParentId).catch((err) =>
 			logger.warn('Engagement tracking failed:', err),
+		);
+
+		// Track admin stats (non-blocking)
+		onEvaluationCreatedStats(evaluation.updatedAt).catch((err) =>
+			logger.warn('Admin stats tracking failed:', err),
 		);
 
 		// Check social proof milestones (non-blocking)

@@ -88,6 +88,7 @@ import {
 } from './fn_clusterAggregation';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
+import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
 import { onStatementCreated } from './fn_statementCreation';
@@ -102,6 +103,9 @@ import {
 
 // Token Cleanup Scheduled Function
 import { cleanupStaleTokens, performTokenCleanup } from './fn_tokenCleanup';
+
+// Admin Stats (KPI aggregation)
+import { performUserStatsRefresh, backfillAdminStats } from './fn_adminStats';
 
 // Engagement System (Phase 1-3: Credits, Levels, Badges, Streaks, Notification Queue, Digests)
 import {
@@ -383,6 +387,7 @@ exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
 exports.detectMultipleSuggestions = wrapMemoryIntensiveHttpFunction(detectMultipleSuggestions);
@@ -809,5 +814,33 @@ exports.manualDailyDigest = wrapHttpFunction(async (req: Request, res: Response)
 // HTTP endpoint for manual weekly digest processing
 exports.manualWeeklyDigest = wrapHttpFunction(async (req: Request, res: Response) => {
 	const result = await processWeeklyDigests();
+	res.json(result);
+});
+
+// --------------------------
+// ADMIN STATS (KPI Aggregation)
+// --------------------------
+
+// Scheduled function: refresh user count daily at 00:10 UTC
+import { onSchedule } from 'firebase-functions/v2/scheduler';
+
+export const refreshUserStats = onSchedule(
+	{
+		schedule: '10 0 * * *',
+		timeZone: 'UTC',
+		...functionConfig,
+		region: 'us-central1',
+	},
+	async () => {
+		await performUserStatsRefresh();
+	},
+);
+
+// HTTP endpoint for one-time historical backfill
+exports.backfillAdminStats = wrapHttpFunction(backfillAdminStats);
+
+// HTTP endpoint for manual user stats refresh
+exports.manualRefreshUserStats = wrapHttpFunction(async (req: Request, res: Response) => {
+	const result = await performUserStatsRefresh();
 	res.json(result);
 });

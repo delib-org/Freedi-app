@@ -1,7 +1,9 @@
 import { useMemo } from 'react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { createTreeViewSelector } from '@/redux/statements/treeViewSelectors';
+import { TreeFilterMode } from '../TreeFilterMode';
 
 interface UseTreeDataReturn {
 	childrenMap: Map<string, Statement[]>;
@@ -13,6 +15,9 @@ export interface TreeDataOptions {
 	typeFilter?: readonly StatementType[];
 	sortType?: SortType;
 	onlySelectedOptions?: boolean;
+	filterMode?: TreeFilterMode;
+	userId?: string;
+	bookmarkedIds?: Set<string>;
 }
 
 const selectTreeView = createTreeViewSelector();
@@ -30,10 +35,7 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
 				const bIsOption = b.statementType === StatementType.option ? 0 : 1;
 				if (aIsOption !== bIsOption) return aIsOption - bIsOption;
 
-				return (
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0)
-				);
+				return sortByConsensus(a, b);
 			});
 		case SortType.random:
 			return sorted.sort(() => Math.random() - 0.5);
@@ -51,7 +53,8 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
  * Supports type filtering, sorting, and selected-only option filtering.
  */
 export function useTreeData(statementId: string, options?: TreeDataOptions): UseTreeDataReturn {
-	const { typeFilter, sortType, onlySelectedOptions } = options || {};
+	const { typeFilter, sortType, onlySelectedOptions, filterMode, userId, bookmarkedIds } =
+		options || {};
 
 	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useAppSelector((state) =>
 		selectTreeView(state, statementId),
@@ -98,13 +101,34 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 				if (matchesFilter(c)) matchingIds.add(c.statementId);
 			});
 
-			// Build filtered childrenMap: keep matching children under
-			// matching parents OR under the root statement itself
+			// Build filtered childrenMap: at root level only keep matching children,
+			// but under matching parents include ALL descendants (replies, sub-replies, etc.)
 			resultMap = new Map<string, Statement[]>();
+
+			// Collect all descendant IDs under matching parents
+			const descendantIds = new Set<string>(matchingIds);
+			let changed = true;
+			while (changed) {
+				changed = false;
+				fullChildrenMap.forEach((children, parentId) => {
+					if (descendantIds.has(parentId)) {
+						children.forEach((c) => {
+							if (!descendantIds.has(c.statementId)) {
+								descendantIds.add(c.statementId);
+								changed = true;
+							}
+						});
+					}
+				});
+			}
+
 			fullChildrenMap.forEach((children, parentId) => {
-				if (parentId !== statementId && !matchingIds.has(parentId)) return;
-				const filtered = children.filter((c) => matchingIds.has(c.statementId));
-				if (filtered.length > 0) resultMap.set(parentId, filtered);
+				if (parentId === statementId) {
+					const filtered = children.filter((c) => matchingIds.has(c.statementId));
+					if (filtered.length > 0) resultMap.set(parentId, filtered);
+				} else if (descendantIds.has(parentId)) {
+					if (children.length > 0) resultMap.set(parentId, [...children]);
+				}
 			});
 
 			// Root children are the matching direct children of statementId
@@ -138,8 +162,25 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 			resultMap = sortedMap;
 		}
 
+		// Apply bookmark/mine filter
+		if (filterMode === TreeFilterMode.bookmarked && bookmarkedIds) {
+			resultRoot = resultRoot.filter((c) => bookmarkedIds.has(c.statementId));
+		} else if (filterMode === TreeFilterMode.mine && userId) {
+			resultRoot = resultRoot.filter((c) => c.creatorId === userId);
+		}
+
 		return { childrenMap: resultMap, rootChildren: resultRoot };
-	}, [fullChildrenMap, fullRootChildren, typeFilter, sortType, selectedOptionIds, statementId]);
+	}, [
+		fullChildrenMap,
+		fullRootChildren,
+		typeFilter,
+		sortType,
+		selectedOptionIds,
+		statementId,
+		filterMode,
+		userId,
+		bookmarkedIds,
+	]);
 
 	const getChildren = useMemo(() => {
 		return (parentId: string): Statement[] => {

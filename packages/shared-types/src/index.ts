@@ -145,6 +145,24 @@ export { NotificationSchema, NotificationReadStatusSchema } from "./models/notif
 export type { QuestionSettings } from "./models/question/QuestionType";
 export { QuestionSettingsSchema } from "./models/question/QuestionType";
 
+// Compound Question models
+export type {
+  CompoundSettings,
+  StatementLocked,
+  LockedTitle,
+  SignDocumentLink,
+  PhaseHistoryEntry,
+} from "./models/question/CompoundQuestionTypes";
+
+export {
+  CompoundPhase,
+  CompoundSettingsSchema,
+  StatementLockedSchema,
+  LockedTitleSchema,
+  SignDocumentLinkSchema,
+  PhaseHistoryEntrySchema,
+} from "./models/question/CompoundQuestionTypes";
+
 // Results models
 export type { Results, ResultsSettings } from "./models/results/Results";
 export { ResultsBy, CutoffBy, ResultsSettingsSchema, defaultResultsSettings } from "./models/results/Results";
@@ -361,6 +379,10 @@ export {
   DEFAULT_MIN_EVALUATORS,
   meetsRemovalThreshold,
   meetsAdditionThreshold,
+  DEFAULT_SAMPLING_QUALITY,
+  CONFIDENCE_CALIBRATION_CONSTANT,
+  calcAgreementIndex,
+  calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 
 // Framing models
@@ -535,3 +557,11 @@ export type {
   DigestItem,
   DigestContent,
 } from "./models/engagement";
+
+// Analytics models (admin stats)
+export type { AdminStatDoc, StatsPeriodType } from "./models/analytics";
+export { getAdminStatDocId } from "./models/analytics";
+
+// Content moderation
+export type { ModerationLog } from "./models/moderation/moderationModel";
+export { ModerationLogSchema, ModerationCategory } from "./models/moderation/moderationModel";

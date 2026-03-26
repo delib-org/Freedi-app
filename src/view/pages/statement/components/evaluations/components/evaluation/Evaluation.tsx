@@ -6,6 +6,7 @@ import CommunityVoiceEvaluation from './communityVoiceEvaluation/CommunityVoiceE
 import { Statement } from '@freedi/shared-types';
 import { useEvaluation } from './EvalautionMV';
 import { logError } from '@/utils/errorHandling';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 
 interface EvaluationProps {
 	statement?: Statement;
@@ -13,6 +14,7 @@ interface EvaluationProps {
 
 const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 	const { parentStatement } = useEvaluation(statement);
+	const { isHalted } = useIsProcessHalted(parentStatement);
 
 	if (!statement) return null;
 	try {
@@ -23,7 +25,8 @@ const Evaluation: FC<EvaluationProps> = ({ statement }) => {
 		if (statement.evaluation?.selectionFunction) shouldDisplayScore = false;
 
 		// Check if evaluation is enabled (defaults to true for backward compatibility)
-		const enableEvaluation = parentStatement.statementSettings?.enableEvaluation ?? true;
+		const enableEvaluation =
+			(parentStatement.statementSettings?.enableEvaluation ?? true) && !isHalted;
 
 		// Check for evaluationType first, then fall back to enhancedEvaluation for backward compatibility
 		const evaluationType = parentStatement.statementSettings?.evaluationType;

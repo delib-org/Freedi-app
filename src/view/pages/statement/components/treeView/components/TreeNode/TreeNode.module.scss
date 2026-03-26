@@ -15,6 +15,11 @@
 		padding-top: 10px;
 	}
 
+	&__toggle-placeholder {
+		flex-shrink: 0;
+		width: 24px;
+	}
+
 	&__children {
 		position: relative;
 		margin-inline-start: 0;
