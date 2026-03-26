@@ -123,9 +123,10 @@ const StatementBottomNav: FC<Props> = () => {
 	function handleCreateNewOption() {
 		if (!statement) return;
 
-		// Default to question if parent is an option (options can't be created under options)
+		// Default to question if parent is an option or group (options can't be created under options or groups)
 		const defaultType =
-			statement.statementType === StatementType.option
+			statement.statementType === StatementType.option ||
+			statement.statementType === StatementType.group
 				? StatementType.question
 				: StatementType.option;
 
@@ -205,7 +206,8 @@ const StatementBottomNav: FC<Props> = () => {
 
 			// Automatically create the statement with the refined idea
 			const defaultType =
-				statement.statementType === StatementType.option
+				statement.statementType === StatementType.option ||
+				statement.statementType === StatementType.group
 					? StatementType.question
 					: StatementType.option;
 

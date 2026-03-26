@@ -12,6 +12,7 @@ import { setStatement, setStatementSubscription } from '@/redux/statements/state
 import { Dispatch } from '@reduxjs/toolkit';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { notificationService } from '@/services/notificationService';
+import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
 
 interface CreateStatementWithSubscriptionParams {
 	newStatementParent: Statement | 'top';
@@ -34,6 +35,14 @@ export async function createStatementWithSubscription({
 	user,
 	dispatch,
 }: CreateStatementWithSubscriptionParams): Promise<string> {
+	const statementType = newStatement?.statementType || StatementType.question;
+
+	// Validate type hierarchy before creating the statement
+	const validation = validateStatementTypeHierarchy(newStatementParent, statementType);
+	if (!validation.allowed) {
+		throw new Error(validation.reason || `Cannot create ${statementType} under this parent`);
+	}
+
 	const lang = newStatementQuestionType === QuestionType.massConsensus ? currentLanguage : '';
 
 	const _newStatement: Statement | undefined = createStatement({
@@ -41,11 +50,11 @@ export async function createStatementWithSubscription({
 		text: title,
 		paragraphs,
 		defaultLanguage: lang,
-		statementType: newStatement?.statementType || StatementType.question,
+		statementType,
 		questionType: newStatementQuestionType,
 	});
 
-	if (!_newStatement) throw new Error('newStatement is not defined');
+	if (!_newStatement) throw new Error('Failed to create statement');
 
 	// Carry over compound settings if creating a compound question
 	if (newStatement?.questionSettings?.compoundSettings) {
