@@ -31,6 +31,19 @@ export function initSentry() {
 					return null;
 				}
 
+				// Filter out IndexedDB errors (handled by indexedDBErrorHandler)
+				if (error instanceof Error) {
+					const msg = error.message;
+					if (
+						msg.includes('IndexedDB') ||
+						msg.includes('indexedDB') ||
+						msg.includes('backing store for indexedDB') ||
+						error.name === 'IndexedDbTransactionError'
+					) {
+						return null;
+					}
+				}
+
 				// Filter out network errors in development
 				if (
 					import.meta.env.DEV &&
@@ -60,6 +73,10 @@ export function initSentry() {
 				'Failed to fetch',
 				// Firebase errors that are handled
 				'permission-denied',
+				// IndexedDB errors - handled by indexedDBErrorHandler
+				'IndexedDbTransactionError',
+				'IndexedDB transaction',
+				'Internal error opening backing store for indexedDB.open',
 			],
 		});
 	}
