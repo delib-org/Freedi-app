@@ -51,9 +51,7 @@ function sortStatements(
 			}
 
 			return sorted.sort(
-				(a, b) =>
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0),
+				(a, b) => (b.consensus ?? 0) - (a.consensus ?? 0),
 			);
 		}
 		case SortType.newest:
