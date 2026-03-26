@@ -112,8 +112,9 @@ export const useStatementListeners = ({
 				// Tree view: load direct children (reliable via parentId) with no limit
 				unsubscribersRef.current.push(listenToSubStatements(statementId, 'top'));
 				if (!topParentId || topParentId === statementId) {
-					// Top level: load entire tree via topParentId
+					// Top level: load entire tree via topParentId + parents array fallback
 					unsubscribersRef.current.push(listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT));
+					unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
 				} else {
 					// Sub-statement: load descendants via parents array-contains
 					unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));

@@ -15,15 +15,51 @@ export const createTreeViewSelector = () => {
 		(statements, statementId) => {
 			const childrenMap = new Map<string, Statement[]>();
 
-			// Only include statements belonging to this tree (matching topParentId or direct children)
-			// This avoids iterating 500+ accumulated statements from other rooms
-			const treeStatements = statements.filter(
-				(stmt) => stmt.topParentId === statementId || stmt.parentId === statementId,
-			);
-
-			// Build parent-child map in single pass O(n)
-			treeStatements.forEach((stmt) => {
+			// Build a parentId lookup for all statements
+			const byParent = new Map<string, Statement[]>();
+			const byId = new Map<string, Statement>();
+			statements.forEach((stmt) => {
+				byId.set(stmt.statementId, stmt);
 				if (stmt.parentId) {
+					const siblings = byParent.get(stmt.parentId) || [];
+					siblings.push(stmt);
+					byParent.set(stmt.parentId, siblings);
+				}
+			});
+
+			// Flood-fill: start from root, walk down to collect all descendants
+			const treeIds = new Set<string>();
+			treeIds.add(statementId);
+
+			// Also include statements with topParentId matching (fast path)
+			statements.forEach((stmt) => {
+				if (stmt.topParentId === statementId) {
+					treeIds.add(stmt.statementId);
+				}
+			});
+
+			// Walk children to catch statements missing topParentId
+			let frontier = [statementId];
+			while (frontier.length > 0) {
+				const nextFrontier: string[] = [];
+				for (const parentId of frontier) {
+					const children = byParent.get(parentId);
+					if (children) {
+						for (const child of children) {
+							if (!treeIds.has(child.statementId)) {
+								treeIds.add(child.statementId);
+								nextFrontier.push(child.statementId);
+							}
+						}
+					}
+				}
+				frontier = nextFrontier;
+			}
+
+			// Build parent-child map from tree members
+			treeIds.forEach((id) => {
+				const stmt = byId.get(id);
+				if (stmt?.parentId && treeIds.has(stmt.parentId)) {
 					const siblings = childrenMap.get(stmt.parentId) || [];
 					siblings.push(stmt);
 					childrenMap.set(stmt.parentId, siblings);
