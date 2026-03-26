@@ -147,6 +147,22 @@ export const CHAT = {
 } as const;
 
 /**
+ * Redux state management constants
+ */
+export const REDUX = {
+	/** Maximum statements to keep in Redux store before pruning */
+	MAX_STATEMENTS: 500,
+} as const;
+
+/**
+ * Follow Me feature constants
+ */
+export const FOLLOW_ME = {
+	WRITE_DEBOUNCE_MS: 1000,
+	REDIRECT_DELAY_MS: 300,
+} as const;
+
+/**
  * Feature flags
  */
 export const FEATURES = {

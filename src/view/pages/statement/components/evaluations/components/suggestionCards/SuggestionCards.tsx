@@ -4,9 +4,9 @@ import { useParams, useLocation, useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 
 import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
-import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 import {
 	setStatement,
 	statementOptionsSelector,
@@ -51,11 +51,7 @@ function sortStatements(
 				});
 			}
 
-			return sorted.sort(
-				(a, b) =>
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0),
-			);
+			return sorted.sort(sortByConsensus);
 		}
 		case SortType.newest:
 			return sorted.sort((a, b) => b.createdAt - a.createdAt);
@@ -175,20 +171,6 @@ const SuggestionCards: FC<Props> = ({
 				dispatch(setStatement(statement)),
 			);
 	}, [statement, statementId, dispatch]);
-
-	// Listen to evaluations - but only when statementId is truly available and stable
-	useEffect(() => {
-		// Only set up listener if we have a real statementId (not undefined or changing)
-		if (!statementId) return;
-
-		const unsubscribe = listenToEvaluations(statementId);
-
-		return () => {
-			if (unsubscribe) {
-				unsubscribe();
-			}
-		};
-	}, [statementId]); // Only re-run if statementId actually changes
 
 	useEffect(() => {
 		// Generate new random seed when switching to random sort

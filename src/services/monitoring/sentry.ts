@@ -31,6 +31,37 @@ export function initSentry() {
 					return null;
 				}
 
+				// Filter out IndexedDB errors (handled by indexedDBErrorHandler)
+				if (error instanceof Error) {
+					const msg = error.message;
+					if (
+						msg.includes('IndexedDB') ||
+						msg.includes('indexedDB') ||
+						msg.includes('backing store for indexedDB') ||
+						error.name === 'IndexedDbTransactionError' ||
+						error.name === 'UnknownError' ||
+						error.name === 'QuotaExceededError'
+					) {
+						return null;
+					}
+				}
+
+				// Fallback: check event exception values directly (covers cases where
+				// hint.originalException is undefined or not an Error instance)
+				const exceptionValues = event.exception?.values;
+				if (exceptionValues?.some(exc => {
+					const val = `${exc.type ?? ''}: ${exc.value ?? ''}`;
+
+					return val.includes('IndexedDB') ||
+						val.includes('indexedDB') ||
+						val.includes('backing store') ||
+						val.includes('QuotaExceededError') ||
+						exc.type === 'UnknownError' ||
+						exc.type === 'IndexedDbTransactionError';
+				})) {
+					return null;
+				}
+
 				// Filter out network errors in development
 				if (
 					import.meta.env.DEV &&
@@ -60,6 +91,13 @@ export function initSentry() {
 				'Failed to fetch',
 				// Firebase errors that are handled
 				'permission-denied',
+				// IndexedDB errors - handled by indexedDBErrorHandler
+				'IndexedDbTransactionError',
+				'IndexedDB transaction',
+				'Internal error opening backing store for indexedDB.open',
+				'QuotaExceededError',
+				/UnknownError.*indexedDB/i,
+				/backing store/i,
 			],
 		});
 	}

@@ -1,14 +1,19 @@
 import { FC, useContext, useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector } from 'react-redux';
-import { CompoundPhase, StatementType } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import { useCompoundPhase } from '@/controllers/hooks/compoundQuestion/useCompoundPhase';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { saveQuestionScope } from '@/controllers/db/compoundQuestion/saveQuestionScope';
 import { createTitleDiscussion } from '@/controllers/db/compoundQuestion/createTitleDiscussion';
-import LockedBanner from '../components/LockedBanner';
+import {
+	lockCompoundTitle,
+	unlockCompoundTitle,
+} from '@/controllers/db/compoundQuestion/lockStatement';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
+import { Lock, LockOpen } from 'lucide-react';
 import styles from '../CompoundQuestion.module.scss';
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
@@ -17,20 +22,18 @@ const DefineQuestionPhase: FC = () => {
 	const { t } = useTranslation();
 	const navigate = useNavigate();
 	const { statement } = useContext(StatementContext);
-	const { currentPhase, isAdmin } = useCompoundPhase(statement);
+	const { isAdmin } = useCompoundPhase(statement);
+	const creator = useSelector(creatorSelector);
 
 	const compoundSettings = statement?.questionSettings?.compoundSettings;
 	const lockedTitle = compoundSettings?.lockedTitle;
 	const questionScope = compoundSettings?.questionScope ?? '';
 	const titleDiscussionId = compoundSettings?.titleDiscussionId;
-	const isActive = currentPhase === CompoundPhase.defineQuestion;
 
 	// Get top consensus option from title discussion
 	const titleDiscussionOptions = useSelector(statementSubsSelector(titleDiscussionId ?? ''));
 	const topTitleOption = useMemo(() => {
-		const options = titleDiscussionOptions.filter(
-			(s) => s.statementType === StatementType.option,
-		);
+		const options = titleDiscussionOptions.filter((s) => s.statementType === StatementType.option);
 		if (options.length === 0) return null;
 
 		return options.reduce((best, current) =>
@@ -102,18 +105,40 @@ const DefineQuestionPhase: FC = () => {
 		}
 	}, [titleDiscussionId, t, handleCopyLink]);
 
+	const handleLockTitle = useCallback(async () => {
+		if (!statement || !creator?.uid) return;
+		const titleText = topTitleOption?.statement;
+		const confirmed = window.confirm(
+			titleText
+				? `${t('Lock title as')}: "${titleText}"?`
+				: t('Are you sure you want to lock the current title?'),
+		);
+		if (!confirmed) return;
+		await lockCompoundTitle({ statement, userId: creator.uid, titleText });
+	}, [statement, creator?.uid, topTitleOption, t]);
+
+	const handleUnlockTitle = useCallback(async () => {
+		if (!statement) return;
+		const confirmed = window.confirm(t('Are you sure you want to unlock the title?'));
+		if (!confirmed) return;
+		await unlockCompoundTitle(statement);
+	}, [statement, t]);
+
 	return (
 		<div className={styles.phase}>
-			<h3 className={styles.phaseTitle}>{t('Define Question')}</h3>
-			<p className={styles.phaseDescription}>
-				{t('Discuss and refine the main question for this deliberation')}
-			</p>
-
-			{lockedTitle && (
-				<LockedBanner message={t('Title locked')} lockedText={lockedTitle.lockedText} />
+			{isAdmin && (
+				<button
+					className={`${styles.lockButton} ${lockedTitle ? styles.lockButtonLocked : ''}`}
+					onClick={lockedTitle ? handleUnlockTitle : handleLockTitle}
+				>
+					<span className={styles.lockButtonIcon}>
+						{lockedTitle ? <Lock size={18} /> : <LockOpen size={18} />}
+					</span>
+					{lockedTitle ? `${t('Title locked')}: ${lockedTitle.lockedText}` : t('Lock Title')}
+				</button>
 			)}
 
-			{isActive && !lockedTitle && (
+			{!lockedTitle && (
 				<>
 					{/* Admin scope textarea */}
 					<div className={styles.scopeSection}>
@@ -156,33 +181,21 @@ const DefineQuestionPhase: FC = () => {
 
 					{/* Title discussion link */}
 					<div className={styles.discussionSection}>
-						<h4 className={styles.discussionTitle}>
-							{t('Title discussion')}
-						</h4>
-						<p className={styles.phaseDescription}>
-							{t('Open a discussion where participants suggest what the question title should be')}
-						</p>
+						<h4 className={styles.discussionTitle}>{t('Title discussion')}</h4>
 
 						{titleDiscussionId ? (
 							<>
 								{topTitleOption && (
 									<div className={styles.topSuggestion}>
-										<span className={styles.topSuggestionLabel}>
-											{t('Leading suggestion')}
-										</span>
-										<p className={styles.topSuggestionText}>
-											{topTitleOption.statement}
-										</p>
+										<span className={styles.topSuggestionLabel}>{t('Leading suggestion')}</span>
+										<p className={styles.topSuggestionText}>{topTitleOption.statement}</p>
 										<span className={styles.topSuggestionConsensus}>
 											{t('Consensus')}: {Math.round((topTitleOption.consensus ?? 0) * 100)}%
 										</span>
 									</div>
 								)}
 								<div className={styles.discussionActions}>
-									<button
-										className={styles.discussionLink}
-										onClick={handleGoToDiscussion}
-									>
+									<button className={styles.discussionLink} onClick={handleGoToDiscussion}>
 										{t('Go to title discussion')}
 									</button>
 									<button
@@ -200,23 +213,17 @@ const DefineQuestionPhase: FC = () => {
 								onClick={handleCreateDiscussion}
 								disabled={isCreatingDiscussion}
 							>
-								{isCreatingDiscussion
-									? t('Creating...')
-									: t('Create title discussion')}
+								{isCreatingDiscussion ? t('Creating...') : t('Create title discussion')}
 							</button>
 						) : (
 							<p className={styles.emptyMessage}>
-								{t('The facilitator will open a discussion soon where you can suggest question titles.')}
+								{t(
+									'The facilitator will open a discussion soon where you can suggest question titles.',
+								)}
 							</p>
 						)}
 					</div>
 				</>
-			)}
-
-			{!isActive && lockedTitle && (
-				<div className={styles.phaseSummary}>
-					<strong>{lockedTitle.lockedText}</strong>
-				</div>
 			)}
 		</div>
 	);

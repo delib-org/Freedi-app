@@ -12,12 +12,12 @@ import {
 	AlertCircle,
 	Pause,
 	Play,
-	X,
-	TimerReset,
 	ChevronDown,
 	ChevronUp,
 	Timer,
+	OctagonX,
 } from 'lucide-react';
+import { useIsProcessHalted } from '@/controllers/hooks/useIsProcessHalted';
 
 interface DeadlineBannerProps {
 	statement: Statement | undefined;
@@ -47,7 +47,10 @@ const MAX_MINUTES = 59;
 const WARNING_THRESHOLD = 2 * TIME.HOUR;
 const URGENT_THRESHOLD = 5 * TIME.MINUTE;
 
-function getUrgencyLevel(timeRemainingMs: number, isRunning: boolean): 'normal' | 'warning' | 'urgent' {
+function getUrgencyLevel(
+	timeRemainingMs: number,
+	isRunning: boolean,
+): 'normal' | 'warning' | 'urgent' {
 	if (!isRunning) return 'normal';
 	if (timeRemainingMs <= URGENT_THRESHOLD) return 'urgent';
 	if (timeRemainingMs <= WARNING_THRESHOLD) return 'warning';
@@ -58,7 +61,8 @@ function getUrgencyLevel(timeRemainingMs: number, isRunning: boolean): 'normal' 
 /** Play a short beep using the Web Audio API */
 function playBeep(frequency: number, duration: number, volume = 0.3) {
 	try {
-		const ctx = new (window.AudioContext || (window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)();
+		const ctx = new (window.AudioContext ||
+			(window as unknown as Record<string, typeof AudioContext>).webkitAudioContext)();
 		const oscillator = ctx.createOscillator();
 		const gain = ctx.createGain();
 
@@ -127,6 +131,7 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 	const minutesRef = useRef<HTMLInputElement>(null);
 
 	const isAdmin = role === Role.admin || role === Role.creator;
+	const { isHalted, isManuallyHalted } = useIsProcessHalted(statement);
 
 	// Determine the timer state
 	const hasTimer = Boolean(deadline);
@@ -173,8 +178,20 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		}
 	}, [showSetup]);
 
-	// Non-admin: show nothing if no timer
-	if (!isAdmin && !hasTimer) return null;
+	// Non-admin: show halted banner if halted, nothing if no timer and not halted
+	if (!isAdmin && !hasTimer && !isHalted) return null;
+	if (!isAdmin && !hasTimer && isManuallyHalted) {
+		return (
+			<div className="deadline-banner deadline-banner--halted" role="status">
+				<div className="deadline-banner__status">
+					<span className="deadline-banner__icon" aria-hidden="true">
+						<OctagonX size={18} />
+					</span>
+					<span className="deadline-banner__text">{t('Process halted')}</span>
+				</div>
+			</div>
+		);
+	}
 
 	function handleSegmentChange(field: keyof DurationSegments, rawValue: string) {
 		const parsed = parseInt(rawValue, 10);
@@ -327,6 +344,51 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		setIsSaving(false);
 	}
 
+	async function handleHaltProcess() {
+		if (!statement) return;
+		setIsSaving(true);
+		try {
+			const ref = createStatementRef(statement.statementId);
+			const now = getCurrentTimestamp();
+			await setDoc(
+				ref,
+				{
+					questionSettings: { isHalted: true, haltedAt: now },
+					lastUpdate: now,
+				},
+				{ merge: true },
+			);
+		} catch (error) {
+			logError(error, {
+				operation: 'DeadlineBanner.handleHaltProcess',
+				statementId: statement.statementId,
+			});
+		}
+		setIsSaving(false);
+	}
+
+	async function handleResumeProcess() {
+		if (!statement) return;
+		setIsSaving(true);
+		try {
+			const ref = createStatementRef(statement.statementId);
+			await setDoc(
+				ref,
+				{
+					questionSettings: { isHalted: null, haltedAt: null },
+					lastUpdate: getCurrentTimestamp(),
+				},
+				{ merge: true },
+			);
+		} catch (error) {
+			logError(error, {
+				operation: 'DeadlineBanner.handleResumeProcess',
+				statementId: statement.statementId,
+			});
+		}
+		setIsSaving(false);
+	}
+
 	async function handleRemove() {
 		if (!statement) return;
 		setIsSaving(true);
@@ -440,24 +502,51 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 		);
 	}
 
-	// ── No timer set: show admin trigger ──
+	// ── No timer set: show admin trigger + halt controls ──
 	if (!hasTimer) {
 		return (
-			<div className="deadline-banner deadline-banner--empty">
-				<button
-					className="deadline-banner__trigger"
-					onClick={() => setShowSetup((prev) => !prev)}
-					aria-expanded={showSetup}
-					aria-label={t('Set a timer')}
-				>
-					<Timer size={16} aria-hidden="true" />
-					<span>{t('Set a timer')}</span>
-					{showSetup ? (
-						<ChevronUp size={14} aria-hidden="true" />
-					) : (
-						<ChevronDown size={14} aria-hidden="true" />
-					)}
-				</button>
+			<div
+				className={`deadline-banner deadline-banner--empty ${isManuallyHalted ? 'deadline-banner--halted' : ''}`}
+			>
+				{isManuallyHalted && (
+					<div className="deadline-banner__status">
+						<span className="deadline-banner__text">{t('Process halted')}</span>
+						<div className="deadline-banner__controls">
+							<button
+								className="phase-admin-controls__btn phase-admin-controls__btn--advance"
+								onClick={handleResumeProcess}
+								disabled={isSaving}
+							>
+								{t('Resume process')}
+							</button>
+						</div>
+					</div>
+				)}
+				{!isManuallyHalted && (
+					<div className="deadline-banner__admin-row">
+						<button
+							className="deadline-banner__trigger"
+							onClick={() => setShowSetup((prev) => !prev)}
+							aria-expanded={showSetup}
+							aria-label={t('Set a timer')}
+						>
+							<Timer size={16} aria-hidden="true" />
+							<span>{t('Set a timer')}</span>
+							{showSetup ? (
+								<ChevronUp size={14} aria-hidden="true" />
+							) : (
+								<ChevronDown size={14} aria-hidden="true" />
+							)}
+						</button>
+						<button
+							className="phase-admin-controls__btn phase-admin-controls__btn--lock"
+							onClick={handleHaltProcess}
+							disabled={isSaving}
+						>
+							{t('Halt process')}
+						</button>
+					</div>
+				)}
 
 				{showSetup && (
 					<div className="deadline-banner__setup">
@@ -528,50 +617,61 @@ const DeadlineBanner: FC<DeadlineBannerProps> = ({ statement, role }) => {
 				<div className="deadline-banner__controls">
 					{isRunning && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--pause"
+							className="phase-admin-controls__btn phase-admin-controls__btn--revert"
 							onClick={handlePause}
 							disabled={isSaving}
-							aria-label={t('Pause timer')}
-							title={t('Pause timer')}
 						>
-							<Pause size={14} />
+							{t('Pause timer')}
 						</button>
 					)}
 
 					{isPaused && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--resume"
+							className="phase-admin-controls__btn phase-admin-controls__btn--advance"
 							onClick={handleResume}
 							disabled={isSaving}
-							aria-label={t('Resume timer')}
-							title={t('Resume timer')}
 						>
-							<Play size={14} />
+							{t('Resume timer')}
 						</button>
 					)}
 
 					{isExpired && (
 						<button
-							className="deadline-banner__action-btn deadline-banner__action-btn--extend"
+							className="phase-admin-controls__btn phase-admin-controls__btn--advance"
 							onClick={() => setShowSetup((prev) => !prev)}
 							disabled={isSaving}
-							aria-expanded={showSetup}
-							aria-label={t('Extend timer')}
-							title={t('Extend timer')}
 						>
-							<TimerReset size={14} />
+							{t('Extend timer')}
 						</button>
 					)}
 
 					<button
-						className="deadline-banner__action-btn deadline-banner__action-btn--remove"
+						className="phase-admin-controls__btn phase-admin-controls__btn--revert"
 						onClick={handleRemove}
 						disabled={isSaving}
-						aria-label={t('Remove timer')}
-						title={t('Remove timer')}
 					>
-						<X size={14} />
+						{t('Remove Timer')}
 					</button>
+
+					{/* Halt / Resume process */}
+					{!isManuallyHalted && !isExpired && (
+						<button
+							className="phase-admin-controls__btn phase-admin-controls__btn--lock"
+							onClick={handleHaltProcess}
+							disabled={isSaving}
+						>
+							{t('Halt process')}
+						</button>
+					)}
+					{isManuallyHalted && (
+						<button
+							className="phase-admin-controls__btn phase-admin-controls__btn--advance"
+							onClick={handleResumeProcess}
+							disabled={isSaving}
+						>
+							{t('Resume process')}
+						</button>
+					)}
 				</div>
 			)}
 

@@ -1,7 +1,10 @@
 import { FC, useState, useCallback } from 'react';
 import { Statement, DEFAULT_SAMPLING_QUALITY } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { setConfidenceIndexSettings, requestRecalculateIndices } from '@/controllers/db/evaluation/setEvaluation';
+import {
+	setConfidenceIndexSettings,
+	requestRecalculateIndices,
+} from '@/controllers/db/evaluation/setEvaluation';
 import { logError } from '@/utils/errorHandling';
 import styles from './QuestionSettings.module.scss';
 
@@ -23,7 +26,7 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 	const currentQ = statement.evaluationSettings?.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
 
 	const [targetPopulation, setTargetPopulation] = useState<string>(
-		currentN ? String(currentN) : ''
+		currentN ? String(currentN) : '',
 	);
 	const [samplingQuality, setSamplingQuality] = useState<number>(currentQ);
 	const [isRecalculating, setIsRecalculating] = useState(false);
@@ -51,7 +54,7 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 				logError(error, { operation: 'ConfidenceIndexSettings.handleSamplingQualityChange' });
 			}
 		},
-		[statement.statementId]
+		[statement.statementId],
 	);
 
 	const handleRecalculate = useCallback(async () => {
@@ -59,9 +62,7 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 			setIsRecalculating(true);
 			setRecalcResult('');
 			const result = await requestRecalculateIndices(statement.statementId);
-			setRecalcResult(
-				`${t('Recalculated indices for')} ${result.optionsUpdated} ${t('options')}`
-			);
+			setRecalcResult(`${t('Recalculated indices for')} ${result.optionsUpdated} ${t('options')}`);
 		} catch (error) {
 			logError(error, { operation: 'ConfidenceIndexSettings.handleRecalculate' });
 			setRecalcResult(t('Recalculation failed'));
@@ -118,9 +119,7 @@ const ConfidenceIndexSettings: FC<ConfidenceIndexSettingsProps> = ({ statement }
 							: t('Recalculate indices for existing evaluations')}
 					</button>
 					{recalcResult && (
-						<span className={styles.confidenceIndex__resultMessage}>
-							{recalcResult}
-						</span>
+						<span className={styles.confidenceIndex__resultMessage}>{recalcResult}</span>
 					)}
 				</div>
 			</div>

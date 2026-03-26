@@ -98,9 +98,20 @@ export function normalizeStatementData(data: unknown): unknown {
 		}
 	}
 
-	// Fill in missing consensus for documents created without it (e.g., MC comments)
-	if (obj.statementId && obj.consensus === undefined) {
+	// Fill in missing or null consensus for documents created without it (e.g., MC comments)
+	if (obj.statementId && (obj.consensus === undefined || obj.consensus === null)) {
 		obj.consensus = 0;
+	}
+
+	// Fix null timestamps for required number fields
+	if (obj.statementId) {
+		const now = Date.now();
+		if (obj.createdAt === null || obj.createdAt === undefined) {
+			obj.createdAt = now;
+		}
+		if (obj.lastUpdate === null || obj.lastUpdate === undefined) {
+			obj.lastUpdate = (obj.createdAt as number) ?? now;
+		}
 	}
 
 	// Fill in missing topParentId for legacy data

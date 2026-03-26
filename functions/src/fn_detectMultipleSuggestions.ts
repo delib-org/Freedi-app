@@ -80,7 +80,9 @@ export async function detectMultipleSuggestions(
 				parentId: questionId,
 				topParentId: questionId,
 				blockedBySafetyFilter: contentCheck.error?.includes('safety filters') || false,
-			}).catch(() => { /* non-blocking */ });
+			}).catch(() => {
+				/* non-blocking */
+			});
 
 			response.status(400).send({
 				ok: false,

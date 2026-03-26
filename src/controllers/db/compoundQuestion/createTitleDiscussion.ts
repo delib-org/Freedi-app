@@ -4,6 +4,7 @@ import {
 	StatementType,
 	QuestionType,
 	createStatementObject,
+	evaluationType,
 } from '@freedi/shared-types';
 import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
@@ -49,7 +50,8 @@ export async function createTitleDiscussion({
 				subScreens: ['options'],
 				enableAddEvaluationOption: true,
 				showEvaluation: true,
-				enhancedEvaluation: true,
+				evaluationType: evaluationType.range,
+				enhancedEvaluation: true, // auto-derived from evaluationType
 			},
 		});
 

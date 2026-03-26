@@ -1,4 +1,4 @@
-import React, { FC, useMemo } from 'react';
+import React, { FC, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { Statement, StatementType } from '@freedi/shared-types';
@@ -19,6 +19,7 @@ interface TreeNodeProps {
 	expandedNodes: Set<string>;
 	toggleNode: (id: string) => void;
 	expandNode: (id: string) => void;
+	onReply?: (statement: Statement) => void;
 	animate?: boolean;
 }
 
@@ -30,6 +31,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	expandedNodes,
 	toggleNode,
 	expandNode,
+	onReply,
 	animate,
 }) => {
 	const children = childrenMap.get(statement.statementId) || [];
@@ -38,26 +40,51 @@ const TreeNode: FC<TreeNodeProps> = ({
 	const isAtMaxDepth = depth >= MAX_TREE_DEPTH;
 
 	const isOption = statement.statementType === StatementType.option;
-	const isQuestion = statement.statementType === StatementType.question;
 
 	const childFlipKey = useMemo(
 		() => (animate ? children.map((c) => c.statementId).join(',') : ''),
 		[animate, children],
 	);
 
-	const childNodes = children.map((child) => (
-		<TreeNode
-			key={child.statementId}
-			statement={child}
-			parentStatement={statement}
-			depth={depth + 1}
-			childrenMap={childrenMap}
-			expandedNodes={expandedNodes}
-			toggleNode={toggleNode}
-			expandNode={expandNode}
-			animate={animate}
-		/>
-	));
+	const handleToggle = useCallback(() => {
+		toggleNode(statement.statementId);
+	}, [toggleNode, statement.statementId]);
+
+	const handleExpand = useCallback(() => {
+		expandNode(statement.statementId);
+	}, [expandNode, statement.statementId]);
+
+	// Defer child nodes computation — only build when expanded
+	const childNodes = useMemo(() => {
+		if (!isExpanded || isAtMaxDepth) return null;
+
+		return children.map((child) => (
+			<TreeNode
+				key={child.statementId}
+				statement={child}
+				parentStatement={statement}
+				depth={depth + 1}
+				childrenMap={childrenMap}
+				expandedNodes={expandedNodes}
+				toggleNode={toggleNode}
+				expandNode={expandNode}
+				onReply={onReply}
+				animate={animate}
+			/>
+		));
+	}, [
+		isExpanded,
+		isAtMaxDepth,
+		children,
+		statement,
+		depth,
+		childrenMap,
+		expandedNodes,
+		toggleNode,
+		expandNode,
+		onReply,
+		animate,
+	]);
 
 	return (
 		<div className={styles['tree-node']}>
@@ -65,37 +92,43 @@ const TreeNode: FC<TreeNodeProps> = ({
 				className={styles['tree-node__content']}
 				style={{ '--depth': depth } as React.CSSProperties}
 			>
-				{hasChildren && !isAtMaxDepth && (
+				{hasChildren && !isAtMaxDepth ? (
 					<div className={styles['tree-node__toggle']}>
 						<CollapseToggle
 							childCount={children.length}
 							isExpanded={isExpanded}
-							onToggle={() => toggleNode(statement.statementId)}
+							onToggle={handleToggle}
 						/>
 					</div>
+				) : (
+					<div className={styles['tree-node__toggle-placeholder']} />
 				)}
 				{isOption ? (
-					<TreeOptionNode statement={statement} parentStatement={parentStatement} />
+					<TreeOptionNode
+						statement={statement}
+						parentStatement={parentStatement}
+						onReplySubmitted={handleExpand}
+						onReply={onReply}
+						childCount={children.length}
+						onToggleChildren={hasChildren && !isAtMaxDepth ? handleToggle : undefined}
+					/>
 				) : (
 					<TreeMessageNode
 						statement={statement}
 						parentStatement={parentStatement}
 						hasChildren={hasChildren}
-						onReplySubmitted={() => expandNode(statement.statementId)}
+						onReplySubmitted={handleExpand}
+						onReply={onReply}
 					/>
 				)}
 			</div>
 
-			{(hasChildren && isAtMaxDepth) || isQuestion ? (
+			{hasChildren && isAtMaxDepth ? (
 				<div
 					className={styles['tree-node__dive-in']}
 					style={{ '--depth': depth } as React.CSSProperties}
 				>
-					{isQuestion ? (
-						<DiveInPrompt statement={statement} />
-					) : (
-						<DiveInPrompt statement={statement} childCount={children.length} />
-					)}
+					<DiveInPrompt statement={statement} childCount={children.length} />
 				</div>
 			) : null}
 
@@ -114,6 +147,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 											expandedNodes={expandedNodes}
 											toggleNode={toggleNode}
 											expandNode={expandNode}
+											onReply={onReply}
 											animate
 										/>
 									</div>
@@ -142,14 +176,16 @@ const DiveInPrompt: FC<DiveInPromptProps> = ({ statement, childCount }) => {
 		<button
 			className={styles['tree-node__dive-in-btn']}
 			onClick={() => navigate(`/statement/${statement.statementId}`)}
+			aria-label={t('Drill down')}
 		>
-			&#8618;{' '}
+			<span className="material-symbols-outlined" style={{ fontSize: 18 }}>
+				jump_to_element
+			</span>
 			{childCount !== undefined
-				? `${childCount} ${childCount === 1 ? t('reply') : t('replies')} — `
+				? ` ${childCount} ${childCount === 1 ? t('reply') : t('replies')}`
 				: ''}
-			{t('Drill down')}
 		</button>
 	);
 };
 
-export default TreeNode;
+export default React.memo(TreeNode);

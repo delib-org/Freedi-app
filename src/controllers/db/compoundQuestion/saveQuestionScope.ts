@@ -35,11 +35,7 @@ export async function saveQuestionScope({
 		const titleDiscussionId = statement.questionSettings?.compoundSettings?.titleDiscussionId;
 		if (titleDiscussionId) {
 			const discussionRef = createStatementRef(titleDiscussionId);
-			await setDoc(
-				discussionRef,
-				{ brief: scope, lastUpdate: now },
-				{ merge: true },
-			);
+			await setDoc(discussionRef, { brief: scope, lastUpdate: now }, { merge: true });
 		}
 	} catch (error) {
 		logError(error, {

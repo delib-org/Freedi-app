@@ -1,37 +1,304 @@
+// ─── Layout ─────────────────────────────────────────────
+
 .compoundWrapper {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.5rem;
   width: 100%;
+  padding-bottom: 1rem;
 }
+
+// ─── Phase Section (collapsible wrapper) ────────────────
+
+// Active phase uses same accordion but with blue accent
+.phaseSummaryStripActive {
+  border-inline-end-color: var(--btn-primary);
+  border-color: rgba(95, 136, 229, 0.25);
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.06);
+  }
+}
+
+.phaseSummaryIconActive {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--btn-primary);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.phaseSectionCompleted {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.phaseSummaryStrip {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--card-default, #f3f3f3);
+  border: none;
+  border-inline-end: 4px solid var(--agree);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: start;
+  font-family: inherit;
+  transition: background 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    background: rgba(87, 198, 178, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.99);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.phaseSummaryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--agree);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.phaseSummaryContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.phaseSummaryTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-title);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseSummarySubtext {
+  font-size: 0.72rem;
+  color: var(--text-caption);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.phaseSummaryChevron {
+  color: var(--text-caption);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  display: flex;
+  align-items: center;
+  transform: rotate(-90deg);
+
+  [dir="rtl"] & {
+    transform: rotate(90deg);
+  }
+}
+
+.phaseSummaryChevronOpen {
+  transform: rotate(0deg) !important;
+}
+
+.phaseSectionContent {
+  padding: 1rem;
+  padding-top: 0.75rem;
+  background: var(--white, #fff);
+  border-radius: 0 0 12px 12px;
+  border: 1px solid var(--border-light);
+  border-top: none;
+  margin-top: -4px;
+  box-shadow: 0 4px 12px rgba(0, 74, 198, 0.04);
+}
+
+// ─── Facilitator brief ──────────────────────────────────
+
+.facilitatorBrief {
+  font-size: 0.88rem;
+  color: var(--text-body);
+  line-height: 1.6;
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.facilitatorBriefEditable {
+  cursor: pointer;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.06);
+  }
+}
+
+.facilitatorEdit {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.facilitatorTextarea {
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--btn-primary);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-family: inherit;
+  color: var(--text-body);
+  background: var(--white, #fff);
+  resize: none;
+  overflow: hidden;
+  text-align: start;
+  line-height: 1.6;
+  box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
+
+  &:focus {
+    outline: none;
+  }
+
+  &::placeholder {
+    color: var(--text-caption);
+  }
+}
+
+.facilitatorEditActions {
+  display: flex;
+  gap: 0.35rem;
+  justify-content: flex-start;
+}
+
+.facilitatorSaveBtn,
+.facilitatorCancelBtn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.15s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.facilitatorSaveBtn {
+  background: var(--agree);
+  color: white;
+}
+
+.facilitatorCancelBtn {
+  background: var(--border-light);
+  color: var(--text-body);
+}
+
+// ─── Lock button ────────────────────────────────────────
+
+.lockButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  background: var(--white, #fff);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--text-body);
+  cursor: pointer;
+  text-align: start;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(95, 136, 229, 0.04);
+    border-color: var(--btn-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.lockButtonLocked {
+  border-color: var(--agree);
+  background: rgba(87, 198, 178, 0.05);
+
+  &:hover {
+    background: rgba(87, 198, 178, 0.1);
+    border-color: var(--agree);
+  }
+}
+
+.lockButtonIcon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+// ─── Phase content ──────────────────────────────────────
 
 .phase {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 0.5rem;
+}
+
+.phaseHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .phaseTitle {
-  font-size: 1.1rem;
-  font-weight: 600;
+  font-size: 1.15rem;
+  font-weight: 700;
   color: var(--text-title);
   margin: 0;
 }
 
 .phaseDescription {
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   color: var(--text-caption);
   margin: 0;
+  line-height: 1.4;
 }
 
-.phaseSummary {
-  padding: 0.75rem;
-  background: var(--card-default);
-  border-radius: 8px;
-  font-size: 0.95rem;
-  color: var(--text-body);
-}
+// ─── Sub-questions ──────────────────────────────────────
 
 .subQuestionList {
   display: flex;
@@ -40,7 +307,7 @@
 }
 
 .subQuestionListTitle {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-body);
   margin: 0;
@@ -52,35 +319,123 @@
   gap: 0.5rem;
 }
 
+// ─── Empty & utility ────────────────────────────────────
+
 .emptyMessage {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--text-caption);
   text-align: center;
-  padding: 2rem 1rem;
+  padding: 1.25rem 0.75rem;
   margin: 0;
 }
 
 .addButton {
   display: flex;
   justify-content: center;
-  padding: 0.5rem 0;
+  padding: 0.15rem 0;
 }
+
+.addRow {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.addButtonDashed {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 2px dashed var(--border-light);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text-caption);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+    background: rgba(95, 136, 229, 0.04);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+// ─── Toggle button ──────────────────────────────────────
+
+.toggleButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border: 2px dashed var(--border-light);
+  border-radius: 10px;
+  background: var(--white, #fff);
+  color: var(--text-caption);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    border-color: var(--btn-primary);
+    color: var(--btn-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+}
+
+.toggleButtonActive {
+  border-color: var(--agree);
+  color: var(--agree);
+  background: rgba(87, 198, 178, 0.05);
+  border-style: solid;
+
+  &:hover {
+    background: rgba(87, 198, 178, 0.1);
+  }
+}
+
+// ─── Solutions ──────────────────────────────────────────
 
 .solutionsList {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .solutionCard {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 0.75rem;
-  background: var(--card-default);
-  border-radius: 8px;
-  box-shadow: 0px 2px 4px rgba(115, 138, 191, 0.1);
+  padding: 1rem 1.1rem;
+  background: var(--white, #fff);
+  border-radius: 14px;
+  border: 1px solid var(--border-light);
+  border-inline-end: 5px solid var(--agree);
   gap: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 74, 198, 0.06);
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+
+  &:hover {
+    box-shadow: 0 6px 16px rgba(0, 74, 198, 0.1);
+  }
+
+  &:active {
+    transform: scale(0.995);
+  }
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -91,20 +446,29 @@
 .solutionContent {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.35rem;
   flex: 1;
+  min-width: 0;
 }
 
 .solutionTitle {
   font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--text-body);
+  font-weight: 700;
+  color: var(--text-title);
   margin: 0;
+  line-height: 1.4;
 }
 
 .solutionConsensus {
-  font-size: 0.8rem;
-  color: var(--text-caption);
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.6rem;
+  background: rgba(87, 198, 178, 0.1);
+  color: var(--agree);
+  border-radius: 12px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  width: fit-content;
 }
 
 .solutionActions {
@@ -114,78 +478,79 @@
 .sentBadge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background: rgba(87, 198, 178, 0.15);
+  gap: 0.2rem;
+  padding: 0.2rem 0.6rem;
+  background: rgba(87, 198, 178, 0.1);
   color: var(--agree);
   border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
-// Phase 1: Top suggestion from title discussion
+// ─── Top suggestion (Phase 1) ───────────────────────────
 
 .topSuggestion {
   padding: 0.75rem 1rem;
-  background: var(--bg-info-light);
-  border-radius: 10px;
-  border-inline-start: 4px solid var(--agree);
+  background: rgba(87, 198, 178, 0.05);
+  border-radius: 12px;
+  border-inline-end: 4px solid var(--agree);
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .topSuggestionLabel {
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.65rem;
+  font-weight: 700;
   color: var(--agree);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
 }
 
 .topSuggestionText {
-  font-size: 1.05rem;
+  font-size: 0.92rem;
   font-weight: 600;
   color: var(--text-title);
   margin: 0;
 }
 
 .topSuggestionConsensus {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-caption);
 }
 
-// Phase 1: Scope & Title Discussion
+// ─── Scope (Phase 1) ───────────────────────────────────
 
 .scopeSection {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.35rem;
 }
 
 .scopeLabel {
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-body);
 }
 
 .scopeTextarea {
   width: 100%;
-  min-height: 5rem;
-  padding: 0.75rem;
+  min-height: 3.5rem;
+  padding: 0.6rem 0.75rem;
   border: 1px solid var(--border-light);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  border-radius: 10px;
+  font-size: 0.82rem;
   font-family: inherit;
   color: var(--text-body);
-  background: var(--card-default);
+  background: var(--white, #fff);
   resize: vertical;
   text-align: start;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 
   &:focus {
     outline: none;
     border-color: var(--btn-primary);
-    box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.15);
+    box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.1);
   }
 
   &::placeholder {
@@ -194,17 +559,18 @@
 }
 
 .scopeText {
-  padding: 0.75rem;
-  background: var(--card-default);
-  border-radius: 8px;
-  font-size: 0.9rem;
+  padding: 0.6rem 0.75rem;
+  background: var(--white, #fff);
+  border-radius: 10px;
+  border: 1px solid var(--border-light);
+  font-size: 0.82rem;
   color: var(--text-body);
   white-space: pre-wrap;
   margin: 0;
 }
 
 .saveIndicator {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-caption);
   font-style: italic;
 }
@@ -219,26 +585,30 @@
   font-style: normal;
 }
 
+// ─── Discussion sections ────────────────────────────────
+
 .discussionSection {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  padding-top: 0.75rem;
+  gap: 0.4rem;
+  padding: 0.75rem;
   margin-top: 0.25rem;
-  border-top: 1px solid var(--border-light);
+  background: var(--card-default, #f3f3f3);
+  border-radius: 12px;
 }
 
 .discussionTitle {
-  font-size: 0.95rem;
-  font-weight: 600;
+  font-size: 0.85rem;
+  font-weight: 700;
   color: var(--text-body);
   margin: 0;
 }
 
 .discussionActions {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
+  padding-top: 0.25rem;
 
   @media (max-width: 600px) {
     flex-direction: column;
@@ -248,13 +618,18 @@
 .discussionLink,
 .copyLinkBtn,
 .createDiscussionBtn {
-  min-height: 2.75rem;
-  padding: 0.6rem 1.25rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  min-height: 2.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
   cursor: pointer;
   border: none;
+  transition: opacity 0.15s ease, background 0.15s ease, transform 0.1s ease;
+
+  &:active {
+    transform: scale(0.97);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--btn-primary);
@@ -265,6 +640,7 @@
 .discussionLink {
   background: var(--btn-primary);
   color: white;
+  box-shadow: 0 4px 12px rgba(95, 136, 229, 0.2);
 
   &:hover {
     opacity: 0.9;
@@ -273,24 +649,51 @@
 
 .copyLinkBtn {
   background: transparent;
-  color: var(--btn-primary);
-  border: 1px solid var(--btn-primary);
+  color: var(--text-caption);
+  border: 1px solid var(--border-light);
 
   &:hover {
-    background: rgba(95, 136, 229, 0.08);
+    background: rgba(95, 136, 229, 0.06);
+    color: var(--btn-primary);
+    border-color: var(--btn-primary);
   }
 }
 
 .createDiscussionBtn {
   background: var(--btn-primary);
   color: white;
+  box-shadow: 0 4px 12px rgba(95, 136, 229, 0.2);
 
   &:hover {
     opacity: 0.9;
   }
 
   &:disabled {
-    opacity: 0.6;
+    opacity: 0.5;
     cursor: not-allowed;
+    box-shadow: none;
   }
+}
+
+.promotedNote {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  background: rgba(87, 198, 178, 0.1);
+  color: var(--agree);
+  border-radius: 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  width: fit-content;
+  margin: 0;
+}
+
+// ─── Summary (legacy) ───────────────────────────────────
+
+.phaseSummary {
+  padding: 0.5rem 0.6rem;
+  background: var(--card-default);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-body);
 }

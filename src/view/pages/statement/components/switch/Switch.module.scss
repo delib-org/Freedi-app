@@ -63,6 +63,51 @@
 	}
 }
 
+.headerToggle {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.35rem;
+	width: 100%;
+	padding: 0.3rem 1rem;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	font-family: inherit;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+}
+
+.headerToggleText {
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--text-caption);
+}
+
+.headerToggleChevron {
+	font-size: 0.8rem;
+	color: var(--text-caption);
+	transition: transform 0.2s ease;
+	line-height: 1;
+	transform: rotate(-90deg);
+
+	[dir="rtl"] & {
+		transform: rotate(90deg);
+	}
+}
+
+.headerToggleChevronOpen {
+	transform: rotate(0deg) !important;
+}
+
+.headerCollapsible {
+	display: flex;
+	flex-direction: column;
+}
+
 .segmentedControlWrapper {
 	display: flex;
 	justify-content: center;

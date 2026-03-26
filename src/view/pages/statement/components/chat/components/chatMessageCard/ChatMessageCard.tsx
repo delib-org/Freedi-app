@@ -1,4 +1,13 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+	FC,
+	lazy,
+	Suspense,
+	useCallback,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from 'react';
 import StatementChatMore from '../statementChatMore/StatementChatMore';
 import UserAvatar from '../userAvatar/UserAvatar';
 import { isAuthorized } from '@/controllers/general/helpers';
@@ -7,7 +16,6 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import EditableStatement from '@/view/components/edit/EditableStatement';
-import CreateStatementModal from '@/view/pages/statement/components/createStatementModal/CreateStatementModal';
 import styles from './ChatMessageCard.module.scss';
 import UploadImage from '@/view/components/uploadImage/UploadImage';
 import { StatementType, Statement } from '@freedi/shared-types';
@@ -15,6 +23,10 @@ import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import ChatMessageMenu from './ChatMessageMenu';
 import TypeSuggestionBanner from './TypeSuggestionBanner';
 import { useStatementTypeDetection } from '@/controllers/hooks/useStatementTypeDetection';
+
+const CreateStatementModal = lazy(
+	() => import('@/view/pages/statement/components/createStatementModal/CreateStatementModal'),
+);
 
 function formatMessageTime(timestamp: number): string {
 	const date = new Date(timestamp);
@@ -31,9 +43,9 @@ export interface NewQuestion {
 interface ChatMessageCardProps {
 	parentStatement: Statement | undefined;
 	statement: Statement;
-
 	previousStatement: Statement | undefined;
 	sideChat?: boolean;
+	onReply?: (statement: Statement) => void;
 }
 
 const ChatMessageCard: FC<ChatMessageCardProps> = ({
@@ -41,6 +53,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	statement,
 	previousStatement,
 	sideChat = false,
+	onReply,
 }) => {
 	const imageUrl = statement.imagesURL?.main ?? '';
 	const [image, setImage] = useState<string>(imageUrl);
@@ -55,7 +68,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	// Hooks
 	const { statementType } = statement;
 	const statementColor = useStatementColor({ statement });
-	const { dir } = useTranslation();
+	const { t, dir } = useTranslation();
 	const { user } = useAuthentication();
 
 	// Redux store
@@ -82,9 +95,13 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 	const isAlignedLeft = (isMe && dir === 'ltr') || (!isMe && dir === 'rtl');
 
 	// Handle save callback
-	function handleSaveSuccess() {
+	const handleSaveSuccess = useCallback(() => {
 		setIsEdit(false);
-	}
+	}, []);
+
+	const handleEditEnd = useCallback(() => {
+		setIsEdit(false);
+	}, []);
 
 	// AI type detection for the creator's own statements
 	const {
@@ -98,7 +115,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 
 	const timeString = useMemo(() => formatMessageTime(statement.createdAt), [statement.createdAt]);
 
-	const getMessageBoxClassName = () => {
+	const messageBoxClassName = useMemo(() => {
 		const baseClass = styles.messageBox;
 		const marginClass = sideChat ? '' : styles.messageMargin;
 		if (isStatement) {
@@ -106,15 +123,19 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 		} else {
 			return `${baseClass} ${marginClass}`;
 		}
-	};
+	}, [sideChat, isStatement]);
 
-	const messageBoxStyle = isGeneral ? undefined : { borderColor: statementColor.backgroundColor };
+	const messageBoxStyle = useMemo(
+		() => (isGeneral ? undefined : { borderColor: statementColor.backgroundColor }),
+		[isGeneral, statementColor.backgroundColor],
+	);
 
 	if (!statement) return null;
 	if (!parentStatement) return null;
 
 	return (
 		<div
+			id={statement.statementId}
 			className={`${styles.chatMessageCard}  ${isAlignedLeft ? styles.alignedLeft : ''} ${styles[dir] || ''}`}
 		>
 			{!isPreviousFromSameAuthor && (
@@ -124,8 +145,24 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 				</div>
 			)}
 
-			<div className={getMessageBoxClassName()} style={messageBoxStyle}>
+			<div className={messageBoxClassName} style={messageBoxStyle}>
 				<div className={styles.triangle} />
+
+				{statement.replyTo && (
+					<button
+						className={styles.replyQuote}
+						onClick={() => {
+							const el = document.getElementById(statement.replyTo!.statementId);
+							if (el) {
+								el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+							}
+						}}
+						type="button"
+					>
+						<span className={styles.replyQuoteAuthor}>{statement.replyTo.creatorDisplayName}</span>
+						<span className={styles.replyQuoteText}>{statement.replyTo.statement}</span>
+					</button>
+				)}
 
 				<div className={styles.info}>
 					<div className={styles.messageActions}>
@@ -147,12 +184,15 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 							multiline={true}
 							forceEditing={isEdit}
 							onSaveSuccess={handleSaveSuccess}
-							onEditEnd={() => setIsEdit(false)}
+							onEditEnd={handleEditEnd}
 							className={styles.editableMessage}
 							inputClassName={styles.editInput}
 							containerClassName={styles.editContainer}
 							saveButtonClassName={styles.editButtons}
 						/>
+						{statement.description && (
+							<div className={styles.description}>{statement.description}</div>
+						)}
 					</div>
 					<div className={styles.messageActions}>
 						<div className={styles.chatMoreElement}>
@@ -161,7 +201,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					</div>
 				</div>
 
-				<div style={{ display: image ? 'flex' : 'none' }}>
+				<div className={image ? styles.imageVisible : styles.imageHidden}>
 					<UploadImage
 						statement={statement}
 						fileInputRef={fileInputRef}
@@ -170,7 +210,22 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 					/>
 				</div>
 
-				<span className={styles.timestamp}>{timeString}</span>
+				<div className={styles.bottomRow}>
+					<span className={styles.timestamp}>{timeString}</span>
+					{onReply && (
+						<button
+							className={styles.replyBtn}
+							onClick={() => onReply(statement)}
+							aria-label={t('reply')}
+							type="button"
+						>
+							<span className="material-symbols-outlined" style={{ fontSize: 16 }}>
+								reply
+							</span>
+							{t('reply')}
+						</button>
+					)}
+				</div>
 
 				{showTypeSuggestion && suggestedType && (
 					<TypeSuggestionBanner
@@ -182,15 +237,17 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 				)}
 
 				{isNewStatementModalOpen && (
-					<CreateStatementModal
-						parentStatement={statement}
-						isOption={false}
-						setShowModal={setIsNewStatementModalOpen}
-					/>
+					<Suspense fallback={null}>
+						<CreateStatementModal
+							parentStatement={statement}
+							isOption={false}
+							setShowModal={setIsNewStatementModalOpen}
+						/>
+					</Suspense>
 				)}
 			</div>
 		</div>
 	);
 };
 
-export default ChatMessageCard;
+export default React.memo(ChatMessageCard);

@@ -6,6 +6,7 @@ import { updateStatementTop } from '@/redux/statements/statementsSlice';
 import { store } from '@/redux/store';
 import { Statement, SortType } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 export function sortSubStatements(
 	subStatements: Statement[],
@@ -37,12 +38,7 @@ export function sortSubStatements(
 							return bLikes - aLikes;
 						});
 					} else {
-						// Default: sort by agreement (evaluation.agreement preferred, fallback to consensus)
-						_subStatements = subStatements.sort(
-							(a: Statement, b: Statement) =>
-								(b.evaluation?.agreement ?? b.consensus ?? 0) -
-								(a.evaluation?.agreement ?? a.consensus ?? 0),
-						);
+						_subStatements = subStatements.sort(sortByConsensus);
 					}
 					break;
 				}
