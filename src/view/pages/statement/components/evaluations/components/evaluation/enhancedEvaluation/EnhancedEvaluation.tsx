@@ -31,7 +31,6 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
-	const totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators || 0;
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
@@ -52,7 +51,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	};
 	const avg =
 		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
-	const consensus = Math.round(_consensus * 100) / 100;
+	const consensusDisplay = Math.round(_consensus * 100);
 
 	useEffect(() => {
 		if (evaluationBarRef.current) {
@@ -94,7 +93,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 					))}
 				</div>
 				{showEvaluation && (
-					<Tooltip content={`${t('Average score')}: ${avg}`} position="top">
+					<Tooltip content={`${t('Average score')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`} position="top">
 						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
 							<div
 								className={styles['evaluation-bar__indicator']}
@@ -117,24 +116,23 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				)}
 			</div>
 			<div
-				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
+				className={`${styles['evaluation-score']} ${consensusDisplay < 0 ? styles.negative : ''}`}
 			>
-				{showEvaluation && totalEvaluators && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{showEvaluation && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<Tooltip
-						content={`${t('Number of evaluators for this option / all evaluators')}. ${t('Consensus')}: ${consensus}${
+						content={`${t('Evaluators')}: ${numberOfEvaluators}${
 							statement.evaluation?.agreementIndex !== undefined
-								? `. ${t('Agreement Index')}: ${Math.round(statement.evaluation.agreementIndex * 100)}%`
+								? ` | ${t('Agreement Index')}: ${Math.round(statement.evaluation.agreementIndex * 100)}%`
 								: ''
 						}${
 							statement.evaluation?.confidenceIndex !== undefined
-								? `. ${t('Confidence Index')}: ${Math.round(statement.evaluation.confidenceIndex * 100)}%`
+								? ` | ${t('Confidence Index')}: ${Math.round(statement.evaluation.confidenceIndex * 100)}%`
 								: ''
 						}`}
 						position="bottom"
 					>
-						<span className={styles['total-evaluators']}>
-							{' '}
-							({numberOfEvaluators}/{totalEvaluators})
+						<span className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}>
+							{consensusDisplay}
 						</span>
 					</Tooltip>
 				) : null}

@@ -140,6 +140,23 @@
 			opacity: 1;
 		}
 	}
+
+	.consensus-score {
+		direction: ltr;
+		font-weight: 600;
+		font-size: 0.9rem;
+		color: var(--agree);
+		transition: opacity 0.2s ease;
+		cursor: default;
+
+		&:hover {
+			opacity: 0.8;
+		}
+
+		&--negative {
+			color: var(--reject);
+		}
+	}
 }
 
 .active {
