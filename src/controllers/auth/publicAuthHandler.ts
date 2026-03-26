@@ -18,6 +18,9 @@ import { generateTemporalName } from '@/utils/temporalNameGenerator';
 import { setUserToDB } from '@/controllers/db/user/setUser';
 import { convertFirebaseUserToCreator } from '@/utils/userUtils';
 import { logError } from '@/utils/errorHandling';
+import { RETRY } from '@/constants/common';
+
+const NETWORK_RETRY_ERRORS = ['auth/network-request-failed', 'auth/timeout'];
 
 /**
  * Attempts to silently sign in with Google if user has previous session
@@ -61,11 +64,35 @@ async function trySilentGoogleSignIn(): Promise<boolean> {
  * Creates an anonymous user with a temporal name
  * @returns The created anonymous user
  */
+async function signInAnonymouslyWithRetry(): Promise<User> {
+	let lastError: unknown;
+
+	for (let attempt = 1; attempt <= RETRY.MAX_ATTEMPTS; attempt++) {
+		try {
+			const result = await signInAnonymously(auth);
+
+			return result.user;
+		} catch (error) {
+			lastError = error;
+			const errorCode = (error as { code?: string })?.code;
+			const isRetryable = NETWORK_RETRY_ERRORS.includes(errorCode ?? '');
+
+			if (!isRetryable || attempt === RETRY.MAX_ATTEMPTS) {
+				break;
+			}
+
+			const delay = RETRY.INITIAL_DELAY_MS * Math.pow(RETRY.EXPONENTIAL_BASE, attempt - 1);
+			console.info(`Anonymous sign-in attempt ${attempt} failed (${errorCode}), retrying in ${delay}ms...`);
+			await new Promise(resolve => setTimeout(resolve, delay));
+		}
+	}
+
+	throw lastError;
+}
+
 async function createAnonymousUser(): Promise<User> {
 	try {
-		// Sign in anonymously
-		const result = await signInAnonymously(auth);
-		const user = result.user;
+		const user = await signInAnonymouslyWithRetry();
 
 		// Generate and assign temporal name
 		const temporalName = generateTemporalName();
