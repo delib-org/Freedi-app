@@ -117,21 +117,15 @@ export const summarizeDiscussion = onCall<SummarizeDiscussionRequest>(
 			);
 		}
 
-		// Sort by evaluation.agreement (fallback to consensus for legacy data)
 		const sortedDocs = selectedSnapshot.docs
 			.map((doc) => doc.data() as Statement)
-			.sort(
-				(a, b) =>
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0),
-			);
+			.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0));
 
 		const selectedSolutions: SelectedSolution[] = sortedDocs.map((s) => {
 			return {
 				title: s.statement,
 				description: getParagraphsText(s.paragraphs),
-				// Use evaluation.agreement when available, fallback to consensus for legacy data
-				consensus: s.evaluation?.agreement ?? s.consensus ?? 0,
+				consensus: s.consensus ?? 0,
 				averageEvaluation: s.evaluation?.averageEvaluation || 0,
 				numberOfEvaluators: s.evaluation?.numberOfEvaluators || 0,
 			};

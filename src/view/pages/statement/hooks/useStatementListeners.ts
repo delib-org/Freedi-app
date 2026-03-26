@@ -24,6 +24,8 @@ import {
 import { statementSelector } from '@/redux/statements/statementsSlice';
 import { listenerManager } from '@/controllers/utils/ListenerManager';
 import { logError } from '@/utils/errorHandling';
+import { loadBookmarksForRoom } from '@/controllers/db/bookmarks/bookmarksPersistence';
+import { listenToEvaluations } from '@/controllers/db/evaluation/getEvaluation';
 
 interface UseStatementListenersProps {
 	statementId?: string;
@@ -96,6 +98,7 @@ export const useStatementListeners = ({
 			unsubscribersRef.current.push(
 				listenToStatement(statementId, setIsStatementNotFound),
 				listenToStatementSubscription(statementId, creator),
+				listenToEvaluations(statementId, undefined, creator.uid),
 				listenToUserDemographicQuestions(statementId),
 				listenToUserDemographicAnswers(statementId),
 				listenToInAppNotifications(),
@@ -109,8 +112,9 @@ export const useStatementListeners = ({
 				// Tree view: load direct children (reliable via parentId) with no limit
 				unsubscribersRef.current.push(listenToSubStatements(statementId, 'top'));
 				if (!topParentId || topParentId === statementId) {
-					// Top level: load entire tree via topParentId
+					// Top level: load entire tree via topParentId + parents array fallback
 					unsubscribersRef.current.push(listenToTreeByTopParent(statementId, TREE_INITIAL_LIMIT));
+					unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
 				} else {
 					// Sub-statement: load descendants via parents array-contains
 					unsubscribersRef.current.push(listenToTreeDescendants(statementId, TREE_INITIAL_LIMIT));
@@ -165,6 +169,11 @@ export const useStatementListeners = ({
 		// This ensures group surveys work both at the group level and in sub-statements
 		unsubscribers.push(listenToGroupDemographicQuestions(topParentId));
 		unsubscribers.push(listenToGroupDemographicAnswers(topParentId));
+
+		// Load persisted bookmarks for this room
+		if (creator.uid) {
+			loadBookmarksForRoom(creator.uid, topParentId);
+		}
 
 		return () => {
 			unsubscribers.forEach((unsubscribe) => {

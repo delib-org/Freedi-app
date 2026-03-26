@@ -248,7 +248,8 @@ async function updateStatementInTransaction(
 
 		// Calculate Confidence Index if targetPopulation is configured
 		const targetPopulation = statementData.evaluationSettings?.targetPopulation;
-		const samplingQuality = statementData.evaluationSettings?.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
+		const samplingQuality =
+			statementData.evaluationSettings?.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
 
 		let confidenceIndex: number | undefined;
 		if (targetPopulation && targetPopulation > 0) {

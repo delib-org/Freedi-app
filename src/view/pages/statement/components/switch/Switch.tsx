@@ -1,10 +1,10 @@
-import React, { useContext, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
-import { Role, StatementType } from '@freedi/shared-types';
+import { Role, StatementType, QuestionType } from '@freedi/shared-types';
 import { isStatementTypeAllowedAsChildren } from '@/controllers/general/helpers';
 import SwitchScreen from './SwitchScreen';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
@@ -21,6 +21,10 @@ import {
 	questionsSelector,
 } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
+import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
+import DeadlineBanner from '../deadlineBanner/DeadlineBanner';
+import TreeFilterChips from '../treeView/components/TreeFilterChips/TreeFilterChips';
+import { useTreeFilterOptional } from '../treeView/TreeFilterContext';
 
 const MAIN_SCREENS = new Set(['main', undefined, 'chat', 'options', 'questions']);
 
@@ -35,7 +39,21 @@ const Switch = () => {
 	const tabFromUrl = searchParams.get('tab');
 	const defaultView = statement?.statementSettings?.defaultView ?? 'chat';
 	const [activeView, setActiveView] = useState<string>(tabFromUrl ?? defaultView);
+
+	// Sync activeView when tab search param changes externally (e.g. power follow redirect)
+	useEffect(() => {
+		if (tabFromUrl && tabFromUrl !== activeView) {
+			setActiveView(tabFromUrl);
+		}
+	}, [tabFromUrl]);
+
 	const [edit, setEdit] = useState(false);
+	const [headerCollapsed, setHeaderCollapsed] = useState(true);
+	const treeFilter = useTreeFilterOptional();
+
+	const isCompound =
+		statement?.statementType === StatementType.question &&
+		statement?.questionSettings?.questionType === QuestionType.compound;
 
 	const handleTabChange = useCallback(
 		(tabId: string) => {
@@ -121,16 +139,64 @@ const Switch = () => {
 						</div>
 					)}
 
-					{showSegmentedControl && (
-						<div className={styles.segmentedControlWrapper}>
-							<SegmentedControl
-								segments={segments}
-								activeId={activeView}
-								onChange={handleTabChange}
-							/>
-						</div>
+					{isCompound ? (
+						<>
+							<button
+								className={styles.headerToggle}
+								onClick={() => setHeaderCollapsed((prev) => !prev)}
+								aria-expanded={!headerCollapsed}
+							>
+								<span className={styles.headerToggleText}>{t('Details')}</span>
+								<span
+									className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}
+								>
+									&#9662;
+								</span>
+							</button>
+							{!headerCollapsed && (
+								<div className={styles.headerCollapsible}>
+									<DeadlineBanner statement={statement} role={role} />
+									{showSegmentedControl && (
+										<div className={styles.segmentedControlWrapper}>
+											<SegmentedControl
+												segments={segments}
+												activeId={activeView}
+												onChange={handleTabChange}
+											/>
+										</div>
+									)}
+								</div>
+							)}
+						</>
+					) : (
+						<>
+							{statement?.brief && (
+								<StatementDescription
+									brief={statement.brief}
+									callToAction={t('Share your thoughts below')}
+								/>
+							)}
+							<DeadlineBanner statement={statement} role={role} />
+							{showSegmentedControl && (
+								<div className={styles.segmentedControlWrapper}>
+									<SegmentedControl
+										segments={segments}
+										activeId={activeView}
+										onChange={handleTabChange}
+									/>
+								</div>
+							)}
+						</>
 					)}
 				</div>
+				{treeFilter && showSegmentedControl && (
+					<TreeFilterChips
+						activeFilter={treeFilter.filterMode}
+						onFilterChange={treeFilter.setFilterMode}
+						onToggleCollapse={treeFilter.toggleCollapseExpand}
+						isCollapsed={treeFilter.isCollapsed}
+					/>
+				)}
 			</div>
 
 			<OnlineUsers statementId={statement?.statementId} />

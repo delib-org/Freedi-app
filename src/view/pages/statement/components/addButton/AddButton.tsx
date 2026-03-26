@@ -2,9 +2,9 @@ import React from 'react';
 import IconButton from '@/view/components/iconButton/IconButton';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
 import AddQuestionIcon from '@/assets/icons/questionIcon.svg?react';
-import AddSubGroupIcon from '@/assets/icons/team-group.svg?react';
+import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
 import styles from './AddButton.module.scss';
-import { StatementType } from '@freedi/shared-types';
+import { StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -24,7 +24,7 @@ export default function AddButton() {
 	const { dir } = useTranslation();
 	const radius = 5;
 
-	const handleAction = (action: 'question' | 'subgroup') => {
+	const handleAction = (action: 'question' | 'compound') => {
 		setActionsOpen(false);
 		switch (action) {
 			case 'question':
@@ -42,14 +42,19 @@ export default function AddButton() {
 						showModal: true,
 					}),
 				);
-
 				break;
-			case 'subgroup':
+			case 'compound':
 				dispatch(
 					setNewStatementModal({
 						parentStatement: statement,
 						newStatement: {
-							statementType: StatementType.group,
+							statementType: StatementType.question,
+							questionSettings: {
+								questionType: QuestionType.compound,
+								compoundSettings: {
+									currentPhase: CompoundPhase.defineQuestion,
+								},
+							},
 						},
 						isLoading: false,
 						error: null,
@@ -73,9 +78,9 @@ export default function AddButton() {
 			icon: <AddQuestionIcon />,
 		},
 		{
-			key: 'subgroup',
-			action: 'subgroup' as const,
-			icon: <AddSubGroupIcon />,
+			key: 'compound',
+			action: 'compound' as const,
+			icon: <CompoundIcon />,
 		},
 	];
 
@@ -106,7 +111,7 @@ export default function AddButton() {
 								'--x': `${x}rem`,
 								'--y': `${y}rem`,
 								transitionDelay: `${index * 0.1}s`,
-								backgroundColor: `${action === 'subgroup' ? '#a879e0' : ''}`,
+								backgroundColor: action === 'compound' ? '#47b4ef' : '',
 							} as React.CSSProperties
 						}
 					>
@@ -117,7 +122,7 @@ export default function AddButton() {
 			{actionsOpen && (
 				<button
 					className={`${styles.invisibleBackground}`}
-					onClick={() => dispatch(setShowNewStatementModal(false))} // Close the modal when clicking outside
+					onClick={() => dispatch(setShowNewStatementModal(false))}
 				></button>
 			)}
 			<IconButton

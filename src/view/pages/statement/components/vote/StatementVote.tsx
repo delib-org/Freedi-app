@@ -19,6 +19,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { StatementContext } from '../../StatementCont';
 import { Statement, QuestionStep } from '@freedi/shared-types';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { useSelector } from 'react-redux';
 import { setVoteToStore } from '@/redux/vote/votesSlice';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
@@ -38,11 +39,7 @@ const StatementVote: FC = () => {
 
 	const subStatements = inVotingGetOnlyResults
 		? _subStatements
-				.sort(
-					(b, a) =>
-						(a.evaluation?.agreement ?? a.consensus ?? 0) -
-						(b.evaluation?.agreement ?? b.consensus ?? 0),
-				)
+				.sort(sortByConsensus)
 				.slice(0, topOptionsCount)
 		: _subStatements;
 

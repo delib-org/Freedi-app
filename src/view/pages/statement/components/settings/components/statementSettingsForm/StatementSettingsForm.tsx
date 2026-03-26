@@ -14,6 +14,7 @@ import {
 	Network,
 	BarChart3,
 	ShieldAlert,
+	Clock,
 } from 'lucide-react';
 
 // Custom components
@@ -45,6 +46,7 @@ import EmailNotifications from '../emailNotifications/EmailNotifications';
 import { ClusteringAdmin } from '../ClusteringAdmin';
 import { OptionRooms } from '../optionRooms';
 import ModerationLog from '../moderationLog/ModerationLog';
+import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
 
 interface StatementSettingsFormProps {
 	statement: Statement;
@@ -179,6 +181,20 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 								tooltip={t('Set up voting and selection methods')}
 							>
 								<ChoseBySettings {...statementSettingsProps} />
+							</SettingsSection>
+						)}
+
+						{/* Deadline Timer Section - only for questions */}
+						{isQuestion && (
+							<SettingsSection
+								title={t('Deadline Timer')}
+								description={t('Set a countdown timer visible to all participants')}
+								icon={Clock}
+								priority="high"
+								defaultExpanded={true}
+								tooltip={t('Add a deadline timer to this question')}
+							>
+								<DeadlineSettings statement={statement} />
 							</SettingsSection>
 						)}
 

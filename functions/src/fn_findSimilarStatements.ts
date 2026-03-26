@@ -59,7 +59,9 @@ export async function findSimilarStatements(request: Request, response: Response
 				parentId: statementId,
 				topParentId: statementId,
 				blockedBySafetyFilter: contentCheck.error?.includes('safety filters') || false,
-			}).catch(() => { /* non-blocking */ });
+			}).catch(() => {
+				/* non-blocking */
+			});
 
 			response.status(400).send({
 				ok: false,

@@ -1,6 +1,6 @@
-import { FC, useContext, useMemo } from 'react';
+import { FC, useContext, useMemo, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Role, StatementType } from '@freedi/shared-types';
+import { Role, StatementType, QuestionType, CompoundPhase } from '@freedi/shared-types';
 import {
 	questionsSelector,
 	statementSubscriptionSelector,
@@ -10,8 +10,10 @@ import { StatementContext } from '../../StatementCont';
 import SubGroupCard from '@/view/components/subGroupCard/SubGroupCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import PlusIcon from '@/assets/icons/plusIcon.svg?react';
+import CompoundIcon from '@/assets/icons/stepsIcon.svg?react';
 import useStatementColor from '@/controllers/hooks/useStatementColor';
 import styles from './QuestionsView.module.scss';
+import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
 import { HelpCircle, Plus, MessageSquare } from 'lucide-react';
 
 const QuestionsView: FC = () => {
@@ -21,6 +23,7 @@ const QuestionsView: FC = () => {
 	const subscription = useSelector(statementSubscriptionSelector(statement?.statementId));
 	const isAdmin = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const statementColor = useStatementColor({ statement });
+	const [menuOpen, setMenuOpen] = useState(false);
 
 	const questionsSelect = useMemo(
 		() => questionsSelector(statement?.statementId),
@@ -31,11 +34,36 @@ const QuestionsView: FC = () => {
 
 	function handleAddQuestion() {
 		if (!statement) return;
+		setMenuOpen(false);
 
 		dispatch(
 			setNewStatementModal({
 				parentStatement: statement,
-				newStatement: { statementType: StatementType.question },
+				newStatement: {
+					statementType: StatementType.question,
+					questionSettings: { questionType: getDefaultQuestionType() },
+				},
+				showModal: true,
+				isLoading: false,
+				error: null,
+			}),
+		);
+	}
+
+	function handleAddCompoundQuestion() {
+		if (!statement) return;
+		setMenuOpen(false);
+
+		dispatch(
+			setNewStatementModal({
+				parentStatement: statement,
+				newStatement: {
+					statementType: StatementType.question,
+					questionSettings: {
+						questionType: QuestionType.compound,
+						compoundSettings: { currentPhase: CompoundPhase.defineQuestion },
+					},
+				},
 				showModal: true,
 				isLoading: false,
 				error: null,
@@ -100,10 +128,23 @@ const QuestionsView: FC = () => {
 			</div>
 
 			<div className={styles.addButtonWrapper}>
+				{menuOpen && (
+					<>
+						<button className={styles.overlay} onClick={() => setMenuOpen(false)} />
+						<button
+							className={styles.secondaryButton}
+							onClick={handleAddCompoundQuestion}
+							aria-label={t('Compound Question')}
+							title={t('Compound Question')}
+						>
+							<CompoundIcon style={{ color: '#fff' }} />
+						</button>
+					</>
+				)}
 				<button
-					className={styles.addButton}
+					className={`${styles.addButton} ${menuOpen ? styles.addButtonActive : ''}`}
 					style={statementColor}
-					onClick={handleAddQuestion}
+					onClick={menuOpen ? handleAddQuestion : () => setMenuOpen(true)}
 					aria-label={t('Add a question')}
 				>
 					<PlusIcon style={{ color: statementColor.color }} />

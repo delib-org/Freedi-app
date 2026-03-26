@@ -19,6 +19,7 @@ import {
 	CutoffBy,
 	Paragraph,
 	SourceApp,
+	evaluationType as EvalType,
 } from '@freedi/shared-types';
 
 import { parse } from 'valibot';
@@ -36,7 +37,7 @@ export interface CreateStatementProps {
 	enableAddEvaluationOption?: boolean;
 	enableAddVotingOption?: boolean;
 	enableNavigationalElements?: boolean;
-	enhancedEvaluation?: boolean;
+	evaluationType?: EvalType;
 	showEvaluation?: boolean;
 	resultsBy?: ResultsBy;
 	numberOfResults?: number;
@@ -55,7 +56,7 @@ export function createStatement({
 	enableAddEvaluationOption = true,
 	enableNavigationalElements,
 	enableAddVotingOption = true,
-	enhancedEvaluation = true,
+	evaluationType: evalType = EvalType.range,
 	showEvaluation = true,
 	resultsBy = ResultsBy.consensus,
 	numberOfResults = 1,
@@ -72,11 +73,11 @@ export function createStatement({
 		const storeState = store.getState();
 		const creator = storeState.creator?.creator;
 		if (!isStatementTypeAllowedAsChildren(parentStatement, statementType)) {
-			return;
+			throw new Error(`Statement type "${statementType}" is not allowed as child of parent`);
 		}
 		if (!creator) throw new Error('Creator is undefined');
 		if (!statementType) throw new Error('Statement type is undefined');
-		if (!text || text.trim() === '') return undefined;
+		if (!text || text.trim() === '') throw new Error('Statement text is empty');
 		const statementId = getRandomUID();
 
 		//get default values for simple or advanced users
@@ -109,7 +110,8 @@ export function createStatement({
 			// Always set membership - either provided, or default to openToAll
 			membership: membership || { access: Access.openToAll },
 			statementSettings: {
-				enhancedEvaluation,
+				evaluationType: evalType,
+				enhancedEvaluation: evalType === EvalType.range, // auto-derived from evaluationType
 				hasChat: true,
 				showEvaluation,
 				enableAddEvaluationOption,

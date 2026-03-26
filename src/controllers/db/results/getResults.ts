@@ -8,6 +8,7 @@ import {
 	ResultsBy,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
+import { sortByConsensus } from '@/redux/utils/selectorFactories';
 import { normalizeStatementData } from '@/helpers/timestampHelpers';
 
 import { store } from '@/redux/store';
@@ -59,11 +60,7 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 		// Sort by evaluation.agreement (falling back to consensus for legacy data)
 		// and return top N options
 		return topOptions
-			.sort(
-				(a, b) =>
-					(b.evaluation?.agreement ?? b.consensus ?? 0) -
-					(a.evaluation?.agreement ?? a.consensus ?? 0),
-			)
+			.sort(sortByConsensus)
 			.slice(0, numberOfOptions);
 	} catch (error) {
 		logError(error, { operation: 'results.getResults.topOptions' });

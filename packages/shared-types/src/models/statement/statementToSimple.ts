@@ -7,6 +7,7 @@ export function statementToSimpleStatement(
 	const simple: SimpleStatement = {
 		statementId: statement.statementId,
 		statement: statement.statement,
+		...(statement.description && { description: statement.description }),
 		statementType: statement.statementType,
 		paragraphs: statement.paragraphs ?? [],
 		creatorId: statement.creatorId,

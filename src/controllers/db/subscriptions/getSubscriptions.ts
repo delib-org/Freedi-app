@@ -157,8 +157,9 @@ export function listenToStatementSubscriptions(
 							convertTimestampsToMillis(data),
 						) as StatementSubscription;
 
-						if (change.type === 'added' || change.type === 'modified')
+						if (change.type === 'added' || change.type === 'modified') {
 							dispatch(setStatementSubscription(statementSubscription));
+						}
 
 						if (change.type === 'removed')
 							dispatch(deleteSubscribedStatement(statementSubscription.statementId));

@@ -361,3 +361,86 @@ $addOptionSize: 60px;
       inset 0 0 0 2px rgba(87, 198, 178, 0.3);
   }
 }
+
+.addButtonGroup {
+  position: relative;
+}
+
+.addOptionButtonRotated {
+  transform: rotate(-45deg);
+}
+
+.subFabMenu {
+  position: absolute;
+  bottom: calc(100% + 0.5rem);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 10001;
+}
+
+.subFabButton {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  box-shadow: 2px 2px 5px var(--shadow);
+  animation: subFabPopIn 200ms ease both;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  &:hover {
+    transform: scale(1.08);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.subFabButtonQuestion {
+  background-color: var(--question);
+}
+
+.subFabButtonCompound {
+  background-color: #47b4ef;
+}
+
+.addMenuOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100svh;
+  background: transparent;
+  z-index: 9999;
+  cursor: default;
+  border: none;
+}
+
+@keyframes subFabPopIn {
+  from {
+    transform: translateY(8px) scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subFabButton {
+    animation: none !important;
+  }
+}

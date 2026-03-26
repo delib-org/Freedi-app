@@ -1,4 +1,4 @@
-import { FC, useRef, useEffect, useState } from 'react';
+import { FC, useRef, useEffect, useState, useCallback } from 'react';
 import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
 import styles from './EnhancedEvaluation.module.scss';
 import { enhancedEvaluationsThumbs, EnhancedEvaluationThumb } from './EnhancedEvaluationModel';
@@ -31,9 +31,18 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const parentStatement = useSelector(statementSelectorById(statement.parentId));
 	const evaluationBarRef = useRef<HTMLDivElement>(null);
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
-	const totalEvaluators = parentStatement?.evaluation?.asParentTotalEvaluators || 0;
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
+	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
+
+	useEffect(() => {
+		setOptimisticScore(evaluationScore);
+	}, [evaluationScore]);
+
+	const handleEvaluate = useCallback((score: number) => {
+		setOptimisticScore(score);
+	}, []);
+
 	const { consensus: _consensus } = statement;
 	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
 		sumPro: 0,
@@ -42,7 +51,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	};
 	const avg =
 		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
-	const consensus = Math.round(_consensus * 100) / 100;
+	const consensusDisplay = Math.round(_consensus * 100);
 
 	useEffect(() => {
 		if (evaluationBarRef.current) {
@@ -76,14 +85,15 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 						<EvaluationThumb
 							key={evaluationThumb.id}
 							evaluationThumb={evaluationThumb}
-							evaluationScore={evaluationScore}
+							optimisticScore={optimisticScore}
 							statement={statement}
 							enableEvaluation={enableEvaluation}
+							onEvaluate={handleEvaluate}
 						/>
 					))}
 				</div>
 				{showEvaluation && (
-					<Tooltip content={`${t('Average score')}: ${avg}`} position="top">
+					<Tooltip content={`${t('Average score')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`} position="top">
 						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
 							<div
 								className={styles['evaluation-bar__indicator']}
@@ -106,24 +116,15 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				)}
 			</div>
 			<div
-				className={`${styles['evaluation-score']} ${statement.consensus < 0 ? styles.negative : ''}`}
+				className={`${styles['evaluation-score']} ${consensusDisplay < 0 ? styles.negative : ''}`}
 			>
-				{showEvaluation && totalEvaluators && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{showEvaluation && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<Tooltip
-						content={`${t('Number of evaluators for this option / all evaluators')}. ${t('Consensus')}: ${consensus}${
-						statement.evaluation?.agreementIndex !== undefined
-							? `. ${t('Agreement Index')}: ${Math.round(statement.evaluation.agreementIndex * 100)}%`
-							: ''
-					}${
-						statement.evaluation?.confidenceIndex !== undefined
-							? `. ${t('Confidence Index')}: ${Math.round(statement.evaluation.confidenceIndex * 100)}%`
-							: ''
-					}`}
+						content={`${t('average')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
 						position="bottom"
 					>
-						<span className={styles['total-evaluators']}>
-							{' '}
-							({numberOfEvaluators}/{totalEvaluators})
+						<span className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}>
+							{consensusDisplay}
 						</span>
 					</Tooltip>
 				) : null}
@@ -138,37 +139,27 @@ export default EnhancedEvaluation;
 
 export interface EvaluationThumbProps {
 	statement: Statement;
-	evaluationScore: number | undefined;
+	optimisticScore: number | undefined;
 	evaluationThumb: EnhancedEvaluationThumb;
 	enableEvaluation?: boolean;
+	onEvaluate: (score: number) => void;
 }
 
 export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	evaluationThumb,
-	evaluationScore,
+	optimisticScore,
 	statement,
 	enableEvaluation = true,
+	onEvaluate,
 }) => {
 	const { creator } = useAuthentication();
 	const { t } = useUserConfig();
 	const decreaseLearning = useDecreaseLearningRemain();
-	const [isPending, setIsPending] = useState(false);
-	const [optimisticScore, setOptimisticScore] = useState<number | undefined>(evaluationScore);
-
-	useEffect(() => {
-		setOptimisticScore(evaluationScore);
-		setIsPending(false);
-	}, [evaluationScore]);
 
 	const handleSetEvaluation = (): void => {
-		// Immediate optimistic update
-		setOptimisticScore(evaluationThumb.evaluation);
-		setIsPending(true);
+		onEvaluate(evaluationThumb.evaluation);
 
-		// Database update
-		setEvaluationToDB(statement, creator, evaluationThumb.evaluation).finally(() => {
-			setIsPending(false);
-		});
+		setEvaluationToDB(statement, creator, evaluationThumb.evaluation);
 
 		decreaseLearning({
 			evaluation: true,
@@ -176,18 +167,20 @@ export const EvaluationThumb: FC<EvaluationThumbProps> = ({
 	};
 
 	const isThumbActive =
-		(optimisticScore !== undefined &&
-			evaluationThumb.id === getEvaluationThumbIdByScore(optimisticScore)) ||
-		(isPending && optimisticScore === evaluationThumb.evaluation);
+		optimisticScore !== undefined &&
+		evaluationThumb.id === getEvaluationThumbIdByScore(optimisticScore);
 
 	const button = (
 		<button
-			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${isPending ? styles.pending : ''} ${!enableEvaluation ? styles.disabled : ''}`}
+			className={`${styles['evaluation-thumb']} ${isThumbActive ? styles.active : ''} ${!enableEvaluation ? styles.disabled : ''}`}
 			style={{
 				backgroundColor: isThumbActive ? evaluationThumb.colorSelected : evaluationThumb.color,
+				...(!enableEvaluation && isThumbActive
+					? { opacity: 1, filter: 'none', transform: 'scale(1.2)' }
+					: {}),
 			}}
 			onClick={enableEvaluation ? handleSetEvaluation : undefined}
-			disabled={isPending || !enableEvaluation}
+			disabled={!enableEvaluation}
 			aria-disabled={!enableEvaluation}
 			aria-label={enableEvaluation ? evaluationThumb.alt : t('Voting disabled - view only')}
 		>

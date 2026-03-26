@@ -34,6 +34,7 @@ export const StatementSubscriptionSchema = object({
 	getPushNotification: optional(boolean()),
 	coins: optional(number()), // In fair-Division, the coins the user has in this statement
 	isDocument: optional(boolean()), // Marks this subscription as a Sign document for home page display
+	isBookmarked: optional(boolean()), // User bookmark for quick access filtering
 
 	// Engagement system extensions (backwards-compatible)
 	notificationFrequency: optional(enum_(NotificationFrequency)), // Default frequency for this discussion

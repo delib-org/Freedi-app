@@ -68,3 +68,55 @@
     gap: 1rem;
     width: fit-content;
 }
+
+.replyIndicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    background-color: var(--card-default, #f0f0f0);
+    border-inline-start: 3px solid var(--btn-primary, #5f88e5);
+    border-radius: 4px 4px 0 0;
+    max-width: var(--wrapper);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.replyIndicatorContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+    overflow: hidden;
+    flex: 1;
+    min-width: 0;
+}
+
+.replyIndicatorAuthor {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--btn-primary, #5f88e5);
+}
+
+.replyIndicatorText {
+    font-size: 0.8rem;
+    color: var(--text-paragraph, #666);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.replyIndicatorClose {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    color: var(--text-paragraph, #666);
+    flex-shrink: 0;
+    position: static;
+    width: auto;
+    height: auto;
+
+    &:hover {
+        color: var(--reject, #e74c3c);
+    }
+}

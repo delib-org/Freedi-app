@@ -83,14 +83,18 @@ export async function changeStatementType(
 			lastUpdate: Date.now(),
 		};
 
-		// Add question-specific settings when changing to question
+		// Add question-specific settings when changing to question (only if not already set)
 		if (newType === StatementType.question) {
-			updateData.questionSettings = {
-				questionType: QuestionType.simple,
-			};
-			updateData.evaluationSettings = {
-				evaluationUI: EvaluationUI.suggestions,
-			};
+			if (!statement.questionSettings) {
+				updateData.questionSettings = {
+					questionType: QuestionType.simple,
+				};
+			}
+			if (!statement.evaluationSettings) {
+				updateData.evaluationSettings = {
+					evaluationUI: EvaluationUI.suggestions,
+				};
+			}
 		}
 
 		// Update the statement type

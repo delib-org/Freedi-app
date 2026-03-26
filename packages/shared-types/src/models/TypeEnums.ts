@@ -78,6 +78,7 @@ export enum QuestionType {
 	massConsensus = 'mass-consensus',
 	multiStage = 'multi-stage',
 	questionnaire = 'questionnaire',
+	compound = 'compound',
 }
 
 export enum QuestionStagesType {

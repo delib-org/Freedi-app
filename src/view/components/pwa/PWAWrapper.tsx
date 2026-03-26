@@ -219,12 +219,21 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 								}
 							})
 							.catch((error) => {
-								logError(error, {
-									operation: 'pwa.PWAWrapper.firebaseSW',
-									metadata: {
-										message: '[PWAWrapper] Firebase Messaging SW registration failed:',
-									},
-								});
+								const msg = error instanceof Error ? error.message : '';
+								const isNetworkError =
+									msg.includes('fetching the script') ||
+									msg.includes('Failed to fetch') ||
+									msg.includes('network');
+								if (isNetworkError) {
+									console.info('[PWAWrapper] Firebase SW registration failed (network), will retry');
+								} else {
+									logError(error, {
+										operation: 'pwa.PWAWrapper.firebaseSW',
+										metadata: {
+											message: '[PWAWrapper] Firebase Messaging SW registration failed:',
+										},
+									});
+								}
 							});
 					} else {
 						console.info('[PWAWrapper] Firebase Messaging SW already registered');
@@ -265,18 +274,33 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 				// Check for updates periodically (every 4 hours)
 				updateInterval = setInterval(() => {
 					registration?.update().catch((err) => {
-						logError(err, {
-							operation: 'pwa.PWAWrapper.updateInterval',
-							metadata: { message: 'Error updating service worker:' },
-						});
+						// Network failures during periodic update checks are expected/transient
+						const message = err instanceof TypeError ? err.message : '';
+						if (message.includes('Failed to update a ServiceWorker') || message.includes('fetch')) {
+							console.info('[PWAWrapper] SW update check failed (network), will retry next interval');
+						} else {
+							logError(err, {
+								operation: 'pwa.PWAWrapper.updateInterval',
+								metadata: { message: 'Error updating service worker:' },
+							});
+						}
 					});
 				}, 4 * TIME.HOUR);
 			},
 			onRegisterError(error) {
-				logError(error, {
-					operation: 'pwa.PWAWrapper.unknown',
-					metadata: { message: 'Service worker registration error:' },
-				});
+				const msg = error instanceof Error ? error.message : '';
+				const isNetworkError =
+					msg.includes('fetching the script') ||
+					msg.includes('Failed to fetch') ||
+					msg.includes('network');
+				if (isNetworkError) {
+					console.info('[PWAWrapper] SW registration failed (network), will retry on next load');
+				} else {
+					logError(error, {
+						operation: 'pwa.PWAWrapper.unknown',
+						metadata: { message: 'Service worker registration error:' },
+					});
+				}
 			},
 		});
 
