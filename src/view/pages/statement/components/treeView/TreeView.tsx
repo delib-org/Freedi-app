@@ -12,6 +12,8 @@ import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
+import { useNewSolutionsBuffer, MAX_DISPLAY_COUNT } from './hooks/useNewSolutionsBuffer';
+import NewSolutionsPill from './components/NewSolutionsPill/NewSolutionsPill';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
@@ -50,7 +52,20 @@ const TreeView: FC<TreeViewProps> = ({
 		bookmarkedIds,
 	};
 
-	const { childrenMap, rootChildren } = useTreeData(statementId || '', treeOptions);
+	const { childrenMap, rootChildren: allRootChildren } = useTreeData(
+		statementId || '',
+		treeOptions,
+	);
+
+	// Buffer new solutions during live events so the list doesn't jump
+	const isBufferingActive = !!showSortNav;
+	const { visibleChildren, pendingCount, showPending } = useNewSolutionsBuffer(
+		allRootChildren,
+		isBufferingActive,
+		user?.uid,
+	);
+	const rootChildren = isBufferingActive ? visibleChildren : allRootChildren;
+
 	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll } = useTreeState(
 		childrenMap,
 		statementId || '',
@@ -97,6 +112,15 @@ const TreeView: FC<TreeViewProps> = ({
 
 		return null;
 	}, []);
+
+	// Flush buffer + scroll to top so user sees the new solutions
+	const handleShowPending = useCallback(() => {
+		showPending();
+		const container = getScrollContainer();
+		if (container) {
+			container.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}, [showPending, getScrollContainer]);
 
 	// Auto-scroll to bottom when new messages or replies are added
 	useEffect(() => {
@@ -171,10 +195,17 @@ const TreeView: FC<TreeViewProps> = ({
 	return (
 		<div ref={treeViewRef} className={styles['tree-view']}>
 			<div className={styles['tree-view__list']}>
-				{rootChildren.length === 0 ? (
+				{rootChildren.length === 0 && pendingCount === 0 ? (
 					renderEmptyState()
 				) : showSortNav ? (
 					<>
+						{pendingCount > 0 && (
+							<NewSolutionsPill
+								count={pendingCount}
+								maxDisplayCount={MAX_DISPLAY_COUNT}
+								onClick={handleShowPending}
+							/>
+						)}
 						<Flipper flipKey={flipKey} spring={FLIP_SPRING}>
 							{rootChildren.map((child) => (
 								<Flipped key={child.statementId} flipId={child.statementId}>
