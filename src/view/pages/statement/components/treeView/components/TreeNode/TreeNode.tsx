@@ -21,6 +21,7 @@ interface TreeNodeProps {
 	expandNode: (id: string) => void;
 	onReply?: (statement: Statement) => void;
 	animate?: boolean;
+	isNew?: boolean;
 }
 
 const TreeNode: FC<TreeNodeProps> = ({
@@ -33,6 +34,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 	expandNode,
 	onReply,
 	animate,
+	isNew,
 }) => {
 	const children = childrenMap.get(statement.statementId) || [];
 	const hasChildren = children.length > 0;
@@ -111,6 +113,7 @@ const TreeNode: FC<TreeNodeProps> = ({
 						onReply={onReply}
 						childCount={children.length}
 						onToggleChildren={hasChildren && !isAtMaxDepth ? handleToggle : undefined}
+						isNew={isNew}
 					/>
 				) : (
 					<TreeMessageNode
