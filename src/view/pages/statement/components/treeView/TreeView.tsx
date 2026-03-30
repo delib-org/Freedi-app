@@ -12,11 +12,7 @@ import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
-import {
-	useNewSolutionsBuffer,
-	useNewSolutionsHighlight,
-	MAX_DISPLAY_COUNT,
-} from './hooks/useNewSolutionsBuffer';
+import { useNewSolutionsBuffer, MAX_DISPLAY_COUNT } from './hooks/useNewSolutionsBuffer';
 import NewSolutionsPill from './components/NewSolutionsPill/NewSolutionsPill';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
@@ -68,15 +64,12 @@ const TreeView: FC<TreeViewProps> = ({
 
 	// Buffer new solutions during live events so the list doesn't jump
 	const isBufferingActive = !!showSortNav;
-	const { visibleChildren, pendingCount, showPending } = useNewSolutionsBuffer(
+	const { visibleChildren, pendingCount, showPending, highlightedIds } = useNewSolutionsBuffer(
 		allRootChildren,
 		isBufferingActive,
 		user?.uid,
 	);
 	const rootChildren = isBufferingActive ? visibleChildren : allRootChildren;
-
-	// Highlight solutions that just appeared (after flush or direct arrival)
-	const highlightedIds = useNewSolutionsHighlight(rootChildren, !!showSortNav);
 
 	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll } = useTreeState(
 		childrenMap,
