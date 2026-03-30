@@ -22,6 +22,7 @@ interface TreeOptionNodeProps {
 	onReply?: (statement: Statement) => void;
 	childCount?: number;
 	onToggleChildren?: () => void;
+	isNew?: boolean;
 }
 
 const TreeOptionNode: FC<TreeOptionNodeProps> = ({
@@ -31,6 +32,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	onReply,
 	childCount = 0,
 	onToggleChildren,
+	isNew,
 }) => {
 	const navigate = useNavigate();
 	const { t } = useTranslation();
@@ -130,6 +132,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	const nodeClassName = [
 		styles['tree-option-node'],
 		isInResults ? styles['tree-option-node--selected'] : '',
+		isNew ? styles['tree-option-node--new'] : '',
 	]
 		.filter(Boolean)
 		.join(' ');

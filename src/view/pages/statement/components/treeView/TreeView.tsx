@@ -1,5 +1,5 @@
 import { FC, useContext, useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 import { StatementContext } from '@/view/pages/statement/StatementCont';
 import ChatInput from '@/view/pages/statement/components/chat/components/input/ChatInput';
@@ -12,6 +12,8 @@ import { useTreeData, TreeDataOptions } from './hooks/useTreeData';
 import { useTreeState } from './hooks/useTreeState';
 import { useTreeFilter } from './TreeFilterContext';
 import { TreeFilterMode } from './TreeFilterMode';
+import { useNewSolutionsBuffer, MAX_DISPLAY_COUNT } from './hooks/useNewSolutionsBuffer';
+import NewSolutionsPill from './components/NewSolutionsPill/NewSolutionsPill';
 import TreeNode from './components/TreeNode/TreeNode';
 import styles from './TreeView.module.scss';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
@@ -32,6 +34,7 @@ const TreeView: FC<TreeViewProps> = ({
 	defaultCollapsed,
 }) => {
 	const { statementId, sort } = useParams();
+	const [searchParams] = useSearchParams();
 	const { statement } = useContext(StatementContext);
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
@@ -41,6 +44,9 @@ const TreeView: FC<TreeViewProps> = ({
 	const prevCountRef = useRef(0);
 	const isFirstRenderRef = useRef(true);
 
+	const tParam = searchParams.get('t');
+	const randomSeed = tParam ? Number(tParam) : undefined;
+
 	const treeOptions: TreeDataOptions = {
 		typeFilter,
 		sortType: showSortNav ? (sort as SortType) || SortType.accepted : undefined,
@@ -48,9 +54,23 @@ const TreeView: FC<TreeViewProps> = ({
 		filterMode,
 		userId: user?.uid,
 		bookmarkedIds,
+		randomSeed,
 	};
 
-	const { childrenMap, rootChildren } = useTreeData(statementId || '', treeOptions);
+	const { childrenMap, rootChildren: allRootChildren } = useTreeData(
+		statementId || '',
+		treeOptions,
+	);
+
+	// Buffer new solutions during live events so the list doesn't jump
+	const isBufferingActive = !!showSortNav;
+	const { visibleChildren, pendingCount, showPending, highlightedIds } = useNewSolutionsBuffer(
+		allRootChildren,
+		isBufferingActive,
+		user?.uid,
+	);
+	const rootChildren = isBufferingActive ? visibleChildren : allRootChildren;
+
 	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll } = useTreeState(
 		childrenMap,
 		statementId || '',
@@ -97,6 +117,15 @@ const TreeView: FC<TreeViewProps> = ({
 
 		return null;
 	}, []);
+
+	// Flush buffer + scroll to top so user sees the new solutions
+	const handleShowPending = useCallback(() => {
+		showPending();
+		const container = getScrollContainer();
+		if (container) {
+			container.scrollTo({ top: 0, behavior: 'smooth' });
+		}
+	}, [showPending, getScrollContainer]);
 
 	// Auto-scroll to bottom when new messages or replies are added
 	useEffect(() => {
@@ -171,7 +200,14 @@ const TreeView: FC<TreeViewProps> = ({
 	return (
 		<div ref={treeViewRef} className={styles['tree-view']}>
 			<div className={styles['tree-view__list']}>
-				{rootChildren.length === 0 ? (
+				{pendingCount > 0 && showSortNav && (
+					<NewSolutionsPill
+						count={pendingCount}
+						maxDisplayCount={MAX_DISPLAY_COUNT}
+						onClick={handleShowPending}
+					/>
+				)}
+				{rootChildren.length === 0 && pendingCount === 0 ? (
 					renderEmptyState()
 				) : showSortNav ? (
 					<>
@@ -188,6 +224,7 @@ const TreeView: FC<TreeViewProps> = ({
 											toggleNode={toggleNode}
 											expandNode={expandNode}
 											onReply={setReplyToStatement}
+											isNew={highlightedIds.has(child.statementId)}
 											animate
 										/>
 									</div>

@@ -18,11 +18,29 @@ export interface TreeDataOptions {
 	filterMode?: TreeFilterMode;
 	userId?: string;
 	bookmarkedIds?: Set<string>;
+	randomSeed?: number;
 }
 
 const selectTreeView = createTreeViewSelector();
 
-function applySortToStatements(statements: Statement[], sortType: SortType): Statement[] {
+/**
+ * Simple hash that turns a seed + string into a deterministic number.
+ * Used so that the same `t` param always produces the same card order.
+ */
+function seededHash(seed: number, str: string): number {
+	let hash = seed;
+	for (let i = 0; i < str.length; i++) {
+		hash = (hash * 31 + str.charCodeAt(i)) | 0;
+	}
+
+	return hash;
+}
+
+function applySortToStatements(
+	statements: Statement[],
+	sortType: SortType,
+	randomSeed?: number,
+): Statement[] {
 	const sorted = [...statements];
 	switch (sortType) {
 		case SortType.newest:
@@ -37,8 +55,13 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
 
 				return sortByConsensus(a, b);
 			});
-		case SortType.random:
-			return sorted.sort(() => Math.random() - 0.5);
+		case SortType.random: {
+			const seed = randomSeed ?? 0;
+
+			return sorted.sort(
+				(a, b) => seededHash(seed, a.statementId) - seededHash(seed, b.statementId),
+			);
+		}
 		case SortType.mostJoined:
 			return sorted.sort(
 				(a, b) => (b.evaluation?.sumPro || b.pro || 0) - (a.evaluation?.sumPro || a.pro || 0),
@@ -53,7 +76,7 @@ function applySortToStatements(statements: Statement[], sortType: SortType): Sta
  * Supports type filtering, sorting, and selected-only option filtering.
  */
 export function useTreeData(statementId: string, options?: TreeDataOptions): UseTreeDataReturn {
-	const { typeFilter, sortType, onlySelectedOptions, filterMode, userId, bookmarkedIds } =
+	const { typeFilter, sortType, onlySelectedOptions, filterMode, userId, bookmarkedIds, randomSeed } =
 		options || {};
 
 	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useAppSelector((state) =>
@@ -156,9 +179,9 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 		if (sortType) {
 			const sortedMap = new Map<string, Statement[]>();
 			resultMap.forEach((children, key) => {
-				sortedMap.set(key, applySortToStatements(children, sortType));
+				sortedMap.set(key, applySortToStatements(children, sortType, randomSeed));
 			});
-			resultRoot = applySortToStatements(resultRoot, sortType);
+			resultRoot = applySortToStatements(resultRoot, sortType, randomSeed);
 			resultMap = sortedMap;
 		}
 
@@ -180,6 +203,7 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 		filterMode,
 		userId,
 		bookmarkedIds,
+		randomSeed,
 	]);
 
 	const getChildren = useMemo(() => {

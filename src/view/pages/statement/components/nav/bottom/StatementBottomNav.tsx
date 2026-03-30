@@ -252,11 +252,12 @@ const StatementBottomNav: FC<Props> = () => {
 
 	function handleSortClick(navItem: (typeof filteredSortItems)[0]) {
 		setShowSorting(false);
-		if (navItem.link === SortType.random) {
-			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}?t=${Date.now()}`);
-		} else {
-			navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}`);
-		}
+		const tab = searchParams.get('tab');
+		const params = new URLSearchParams();
+		if (tab) params.set('tab', tab);
+		if (navItem.link === SortType.random) params.set('t', String(Date.now()));
+		const query = params.toString();
+		navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}${query ? `?${query}` : ''}`);
 	}
 
 	// Add mobile-only class that hides the Add button when menu is open
