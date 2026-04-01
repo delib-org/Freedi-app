@@ -302,7 +302,7 @@ export async function exportStatementData(
 ): Promise<void> {
 	try {
 		const timestamp = new Date().toISOString().split('T')[0];
-		const safeTitle = mainStatement.statement.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
+		const safeTitle = mainStatement.statement.slice(0, 30).replace(/[^\p{L}\p{N}]/gu, '_');
 
 		if (format === 'json') {
 			const content = createJSONExport(mainStatement, subStatements);
