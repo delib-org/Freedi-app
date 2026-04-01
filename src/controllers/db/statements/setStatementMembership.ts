@@ -2,6 +2,7 @@ import { Access, Collections, Statement } from '@freedi/shared-types';
 import { doc, updateDoc, deleteField } from 'firebase/firestore';
 import { DB } from '../config';
 import { logError } from '@/utils/errorHandling';
+import { getCurrentTimestamp } from '@/utils/firebaseUtils';
 
 interface Props {
 	statement: Statement;
@@ -21,6 +22,7 @@ export async function setStatementMembership({
 			// Clear membership to inherit from parent
 			await updateDoc(statementRef, {
 				membership: deleteField(),
+				lastUpdate: getCurrentTimestamp(),
 			});
 		} else if (membershipAccess) {
 			// Validate that membershipAccess is defined and valid
@@ -37,6 +39,7 @@ export async function setStatementMembership({
 				membership: {
 					access: membershipAccess,
 				},
+				lastUpdate: getCurrentTimestamp(),
 			});
 		} else {
 			logError(new Error('Undefined membership access value'), {

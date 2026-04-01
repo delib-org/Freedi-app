@@ -59,7 +59,9 @@ export default function HomeHeader() {
 	return (
 		<div className={`homePage__header ${dir}`}>
 			<div className="homePage__header__wrapper">
-				<h1 className="homePage__header__wrapper__title">Delib.Org</h1>
+				<a href="https://wizcol.com" target="_blank" rel="noopener noreferrer">
+					<h1 className="homePage__header__wrapper__title">WizCol.com</h1>
+				</a>
 				<WaitingList />
 				<div className="homePage__header__wrapper__icons">
 					<Link to="/my/engagement" aria-label={t('engagement.myImpact')}>

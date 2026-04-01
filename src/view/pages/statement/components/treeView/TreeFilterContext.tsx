@@ -8,6 +8,7 @@ interface TreeFilterContextValue {
 	isCollapsed: boolean;
 	registerCollapseAll: (fn: () => void) => void;
 	registerExpandAll: (fn: () => void) => void;
+	registerHasExpandedNodes: (fn: () => boolean) => void;
 }
 
 const TreeFilterContext = createContext<TreeFilterContextValue | null>(null);
@@ -17,6 +18,7 @@ export const TreeFilterProvider: FC<{ children: ReactNode }> = ({ children }) =>
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const collapseAllRef = useRef<(() => void) | null>(null);
 	const expandAllRef = useRef<(() => void) | null>(null);
+	const hasExpandedNodesRef = useRef<(() => boolean) | null>(null);
 
 	const registerCollapseAll = useCallback((fn: () => void) => {
 		collapseAllRef.current = fn;
@@ -26,14 +28,20 @@ export const TreeFilterProvider: FC<{ children: ReactNode }> = ({ children }) =>
 		expandAllRef.current = fn;
 	}, []);
 
+	const registerHasExpandedNodes = useCallback((fn: () => boolean) => {
+		hasExpandedNodesRef.current = fn;
+	}, []);
+
 	const toggleCollapseExpand = useCallback(() => {
-		if (isCollapsed) {
-			expandAllRef.current?.();
-		} else {
+		const hasExpanded = hasExpandedNodesRef.current?.() ?? false;
+		if (hasExpanded) {
 			collapseAllRef.current?.();
+			setIsCollapsed(true);
+		} else {
+			expandAllRef.current?.();
+			setIsCollapsed(false);
 		}
-		setIsCollapsed((prev) => !prev);
-	}, [isCollapsed]);
+	}, []);
 
 	return (
 		<TreeFilterContext.Provider
@@ -44,6 +52,7 @@ export const TreeFilterProvider: FC<{ children: ReactNode }> = ({ children }) =>
 				isCollapsed,
 				registerCollapseAll,
 				registerExpandAll,
+				registerHasExpandedNodes,
 			}}
 		>
 			{children}

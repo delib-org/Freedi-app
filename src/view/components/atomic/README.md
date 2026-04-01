@@ -631,7 +631,7 @@ import { Button } from '@/view/components/atomic/atoms/Button';
 
 ## Resources
 
-- [Design Guide](../../../../docs/design-guide.md) - Complete design system documentation
+- [Design Guide](../../../../docs/guides/design-guide.md) - Complete design system documentation
 - [BEM Methodology](http://getbem.com/) - Official BEM documentation
 - [Atomic Design](https://bradfrost.com/blog/post/atomic-web-design/) - Brad Frost's original article
 

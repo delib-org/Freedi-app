@@ -742,7 +742,7 @@ window.fixChromeServiceWorker()
 ### Existing Documentation
 
 ✅ **Comprehensive:**
-- `/docs/NOTIFICATIONS.md` (585 lines) - Full technical documentation
+- `/docs/features/NOTIFICATIONS.md` (585 lines) - Full technical documentation
 - Inline code comments in key files
 - Debug tool usage documentation
 - Troubleshooting guide
@@ -929,7 +929,7 @@ The Freedi notification system is **production-ready and well-architected** with
 | `/src/view/components/pwa/PWAWrapper.tsx` | 260 | SW registration & PWA setup |
 | `/functions/src/fn_notifications.ts` | 489 | Backend notification function |
 | `/src/controllers/hooks/useNotifications.ts` | 232 | React notification hook |
-| `/docs/NOTIFICATIONS.md` | 585 | Technical documentation |
+| `/docs/features/NOTIFICATIONS.md` | 585 | Technical documentation |
 | `/vite.config.ts` | 119 | PWA configuration |
 
 ---

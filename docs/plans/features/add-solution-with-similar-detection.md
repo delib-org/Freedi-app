@@ -399,5 +399,5 @@ After deployment, monitor:
 
 - Main app implementation: `/src/view/pages/massConsensus/`
 - Cloud Function: `/functions/src/fn_findSimilarStatements.ts`
-- Design guide: `/docs/design-guide.md`
+- Design guide: `/docs/guides/design-guide.md`
 - Error handling: `/src/utils/errorHandling.ts`

@@ -53,9 +53,7 @@ async function resultsByTopOptions(statementId: string): Promise<Statement[]> {
 
 		const topOptions = topOptionsDB.docs.map((doc) => parse(StatementSchema, doc.data()));
 
-		return topOptions
-			.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0))
-			.slice(0, 5);
+		return topOptions.sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0)).slice(0, 5);
 	} catch (error) {
 		logger.error(error);
 

@@ -4,33 +4,30 @@ service firebase.storage {
   match /b/{bucket}/o {
     match /statements/{statementId}/{imagePath=**} {
       allow read;
-      // Allow write if user is authenticated
-      // In production, add more specific checks for statement ownership
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
 
-    // Rules for anchor icons - simplified for development
     match /anchor_icons/{statementId}/{imagePath=**} {
       allow read;
-      // Allow write if user is authenticated
-      // In production, you may want to check if user is admin of the statement
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
 
-    // Rules for logos (Sign app branding)
     match /logos/{documentId}/{imagePath=**} {
       allow read;
-      // Allow write if user is authenticated
-      // In production, you may want to check if user is admin of the document
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
 
-    // Rules for survey logos (Mass Consensus app)
     match /surveys/{surveyId}/logos/{imagePath=**} {
       allow read;
-      // Allow write if user is authenticated
-      // In production, check if user is survey creator or admin
-      allow write: if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
     }
   }
 }
