@@ -7,10 +7,6 @@
 	--font-size: 22px;
 }
 
-body {
-	background: #f2f6ff;
-}
-
 .splashPage {
 	background: #f2f6ff;
 	display: flex;
@@ -19,6 +15,7 @@ body {
 	transition: all 0.3s;
 	justify-content: space-between;
 	gap: var(--font-size);
+	min-height: 100svh;
 
 	.version {
 		margin-top: 3vh;
