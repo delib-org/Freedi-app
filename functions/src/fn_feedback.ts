@@ -78,7 +78,7 @@ async function sendFeedbackEmail(feedback: Feedback): Promise<void> {
 
 		const emailData = {
 			from: emailUser, // Sender will be the configured email account
-			to: 'tal.yaron@gmail.com',
+			to: process.env.FEEDBACK_EMAIL || 'tal.yaron@gmail.com',
 			subject: `New Feedback: ${feedback.statementTitle}`,
 			html: `
 				<!DOCTYPE html>
@@ -157,7 +157,7 @@ ${feedback.feedbackText}
 		// Send email using nodemailer
 		const info = await transporter.sendMail(emailData);
 		logger.info('Feedback email sent successfully', {
-			to: 'tal.yaron@gmail.com',
+			to: process.env.FEEDBACK_EMAIL || 'tal.yaron@gmail.com',
 			messageId: info.messageId,
 		});
 	} catch (error) {

@@ -8,6 +8,7 @@ import { onRequest } from 'firebase-functions/v2/https';
 import { Request, Response } from 'firebase-functions/v1';
 // The Firebase Admin SDK
 import { initializeApp, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
 // Import collection constants
@@ -183,7 +184,6 @@ import {
 	getEmbeddingStatus,
 	regenerateEmbedding,
 	deleteEmbedding,
-	testEmbeddingGeneration,
 } from './fn_embeddingOperations';
 
 // Initialize Firebase only if not already initialized
@@ -308,6 +308,68 @@ const wrapMemoryIntensiveHttpFunction = (
 };
 
 /**
+ * Verifies Firebase ID token from Authorization header.
+ * Returns the authenticated user's UID, or sends 401 and returns null.
+ */
+async function verifyAuthToken(req: Request, res: Response): Promise<string | null> {
+	const authHeader = req.headers.authorization;
+	if (!authHeader?.startsWith('Bearer ')) {
+		res.status(401).send({ error: 'Missing or invalid Authorization header' });
+
+		return null;
+	}
+	try {
+		const token = authHeader.split('Bearer ')[1];
+		const decoded = await getAuth().verifyIdToken(token);
+
+		return decoded.uid;
+	} catch {
+		res.status(401).send({ error: 'Invalid or expired token' });
+
+		return null;
+	}
+}
+
+/**
+ * Creates a wrapper for admin/maintenance HTTP functions with authentication.
+ * Requires a valid Firebase ID token in the Authorization header.
+ * @param {Function} handler - The function handler to wrap (receives uid as third argument)
+ * @returns {Function} - Wrapped function with auth and error handling
+ */
+const wrapAdminHttpFunction = (handler: (req: Request, res: Response) => Promise<void>) => {
+	return onRequest(
+		{
+			...functionConfig,
+			cors: corsConfig,
+		},
+		async (req, res) => {
+			const uid = await verifyAuthToken(req, res);
+			if (!uid) return;
+
+			const startTime = Date.now();
+			const startTimestamp = getTimestamp();
+			const functionName = handler.name || 'Admin HTTP function';
+			console.info(`[${startTimestamp}] ▶ Starting ${functionName} (admin, uid: ${uid})`);
+
+			try {
+				await handler(req, res);
+				const duration = Date.now() - startTime;
+				const endTimestamp = getTimestamp();
+				console.info(`[${endTimestamp}] ✓ Completed ${functionName} in ${duration}ms`);
+			} catch (error) {
+				const duration = Date.now() - startTime;
+				const endTimestamp = getTimestamp();
+				logError(error, {
+					operation: `adminHttpFunction.${functionName}`,
+					metadata: { duration, endTimestamp, uid },
+				});
+				res.status(500).send('Internal Server Error');
+			}
+		},
+	);
+};
+
+/**
  * Creates a wrapper for Firestore triggers with standardized error handling.
  *
  * Note: Firebase trigger types (onDocumentCreated, onDocumentUpdated, onDocumentWritten,
@@ -397,16 +459,16 @@ exports.detectStatementType = wrapMemoryIntensiveHttpFunction(detectStatementTyp
 // PHASE 4 FIX: Metrics and monitoring functions
 exports.analyzeSubscriptionPatterns = analyzeSubscriptionPatterns;
 
-// Maintenance HTTP functions
-exports.maintainRole = wrapHttpFunction(maintainRole);
-exports.maintainDeliberativeElement = wrapHttpFunction(maintainDeliberativeElement);
-exports.maintainStatement = wrapHttpFunction(maintainStatement);
-exports.maintainSubscriptionToken = wrapHttpFunction(maintainSubscriptionToken);
-exports.updateAverageEvaluation = wrapHttpFunction(updateAverageEvaluation);
-exports.recalculateEvaluations = wrapHttpFunction(recalculateEvaluations);
-exports.addRandomSeed = wrapHttpFunction(addRandomSeed);
-exports.backfillEvaluationType = wrapHttpFunction(backfillEvaluationType);
-exports.backfillParentsArray = wrapHttpFunction(backfillParentsArray);
+// Maintenance HTTP functions (admin auth required)
+exports.maintainRole = wrapAdminHttpFunction(maintainRole);
+exports.maintainDeliberativeElement = wrapAdminHttpFunction(maintainDeliberativeElement);
+exports.maintainStatement = wrapAdminHttpFunction(maintainStatement);
+exports.maintainSubscriptionToken = wrapAdminHttpFunction(maintainSubscriptionToken);
+exports.updateAverageEvaluation = wrapAdminHttpFunction(updateAverageEvaluation);
+exports.recalculateEvaluations = wrapAdminHttpFunction(recalculateEvaluations);
+exports.addRandomSeed = wrapAdminHttpFunction(addRandomSeed);
+exports.backfillEvaluationType = wrapAdminHttpFunction(backfillEvaluationType);
+exports.backfillParentsArray = wrapAdminHttpFunction(backfillParentsArray);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
@@ -682,7 +744,6 @@ exports.generateBulkEmbeddings = wrapHttpFunction(generateBulkEmbeddings);
 exports.getEmbeddingStatus = wrapHttpFunction(getEmbeddingStatus);
 exports.regenerateEmbedding = wrapHttpFunction(regenerateEmbedding);
 exports.deleteEmbedding = wrapHttpFunction(deleteEmbedding);
-exports.testEmbeddingGeneration = wrapHttpFunction(testEmbeddingGeneration);
 
 // Polarization Index Migration (for recalculating with demographic data)
 exports.recalculatePolarizationIndexForStatement = wrapHttpFunction(
@@ -739,8 +800,8 @@ exports.fn_autoAddParagraph = fn_autoAddParagraph;
 // Scheduled function to clean up stale FCM tokens (runs daily at 3:00 AM UTC)
 exports.cleanupStaleTokens = cleanupStaleTokens;
 
-// HTTP endpoint for manual token cleanup
-exports.manualTokenCleanup = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint for manual token cleanup (admin auth required)
+exports.manualTokenCleanup = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const result = await performTokenCleanup();
 	res.json(result);
 });
@@ -752,20 +813,20 @@ exports.manualTokenCleanup = wrapHttpFunction(async (req: Request, res: Response
 // Scheduled function to update streaks daily at 00:05 UTC
 exports.calculateStreaks = calculateStreaks;
 
-// HTTP endpoint for manual streak calculation
-exports.manualStreakCalculation = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint for manual streak calculation (admin auth required)
+exports.manualStreakCalculation = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const result = await performStreakCalculation();
 	res.json(result);
 });
 
-// HTTP endpoint to seed default credit rules into Firestore
-exports.seedCreditRules = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint to seed default credit rules into Firestore (admin auth required)
+exports.seedCreditRules = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const seeded = await seedDefaultCreditRules();
 	res.json({ seeded, message: `Seeded ${seeded} new credit rules` });
 });
 
 // HTTP endpoint for tracking daily login (called by client on app open)
-exports.trackDailyLogin = wrapHttpFunction(async (req: Request, res: Response) => {
+exports.trackDailyLogin = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const { userId, sourceApp } = req.body;
 	if (!userId) {
 		res.status(400).json({ error: 'userId is required' });
@@ -789,8 +850,8 @@ exports.onNotificationQueued = createFirestoreFunction(
 	'onNotificationQueued',
 );
 
-// HTTP endpoint to manually process pending notification queue items
-exports.processNotificationQueue = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint to manually process pending notification queue items (admin auth required)
+exports.processNotificationQueue = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const result = await processPendingQueueItems();
 	res.json(result);
 });
@@ -804,15 +865,15 @@ exports.sendDailyDigests = sendDailyDigests;
 // Scheduled function: weekly digest (daily at 10:00 UTC, checks per-user day preference)
 exports.sendWeeklyDigests = sendWeeklyDigests;
 
-// HTTP endpoint for manual daily digest processing
-exports.manualDailyDigest = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint for manual daily digest processing (admin auth required)
+exports.manualDailyDigest = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const hour = req.body?.hour ?? new Date().getUTCHours();
 	const result = await processDailyDigests(hour);
 	res.json(result);
 });
 
-// HTTP endpoint for manual weekly digest processing
-exports.manualWeeklyDigest = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint for manual weekly digest processing (admin auth required)
+exports.manualWeeklyDigest = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const result = await processWeeklyDigests();
 	res.json(result);
 });
@@ -838,11 +899,11 @@ export const refreshUserStats = onSchedule(
 	},
 );
 
-// HTTP endpoint for one-time historical backfill
-exports.backfillAdminStats = wrapHttpFunction(backfillAdminStats);
+// HTTP endpoint for one-time historical backfill (admin auth required)
+exports.backfillAdminStats = wrapAdminHttpFunction(backfillAdminStats);
 
-// HTTP endpoint for manual user stats refresh
-exports.manualRefreshUserStats = wrapHttpFunction(async (req: Request, res: Response) => {
+// HTTP endpoint for manual user stats refresh (admin auth required)
+exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res: Response) => {
 	const result = await performUserStatsRefresh();
 	res.json(result);
 });

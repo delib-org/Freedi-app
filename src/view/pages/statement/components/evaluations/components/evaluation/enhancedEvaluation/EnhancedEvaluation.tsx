@@ -93,7 +93,10 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 					))}
 				</div>
 				{showEvaluation && (
-					<Tooltip content={`${t('Average score')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`} position="top">
+					<Tooltip
+						content={`${t('Average score')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
+						position="top"
+					>
 						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
 							<div
 								className={styles['evaluation-bar__indicator']}
@@ -123,7 +126,9 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 						content={`${t('average')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
 						position="bottom"
 					>
-						<span className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}>
+						<span
+							className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}
+						>
 							{consensusDisplay}
 						</span>
 					</Tooltip>

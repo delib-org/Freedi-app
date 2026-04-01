@@ -17,7 +17,7 @@ interface Props {
 
 const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentStatement }) => {
 	// Hooks
-	const { pathname } = useLocation();
+	const { pathname, search } = useLocation();
 	const navigate = useNavigate();
 	const [isHeaderMenuOpen, setIsHeaderMenuOpen] = useState(false);
 	const [showInvitationPanel, setShowInvitationPanel] = useState(false);
@@ -35,7 +35,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 			if (!topParentStatement) throw new Error('No top parent statement');
 
 			const isActive = !!topParentStatement.followMe && topParentStatement.followMe !== '';
-			setFollowMeDB(topParentStatement, isActive ? '' : pathname);
+			setFollowMeDB(topParentStatement, isActive ? '' : `${pathname}${search}`);
 		} catch (error) {
 			logError(error, { operation: 'header.StatementHeader.handleFollowMe' });
 		} finally {
@@ -86,7 +86,7 @@ const StatementHeader: FC<Props> = ({ statement, topParentStatement, parentState
 			<ShareModal
 				isOpen={showShareModal}
 				onClose={() => setShowShareModal(false)}
-				url={pathname}
+				url={`${pathname}${search}`}
 				title={t('Share this link')}
 			/>
 		</>

@@ -9,6 +9,7 @@ interface UseTreeStateReturn {
 	expandAll: () => void;
 	collapseAll: () => void;
 	isExpanded: (id: string) => boolean;
+	hasExpandedNodes: () => boolean;
 }
 
 /**
@@ -137,5 +138,15 @@ export function useTreeState(
 
 	const isExpanded = useCallback((id: string) => expandedNodes.has(id), [expandedNodes]);
 
-	return { expandedNodes, toggleNode, expandNode, expandAll, collapseAll, isExpanded };
+	const hasExpandedNodes = useCallback(() => expandedNodes.size > 0, [expandedNodes]);
+
+	return {
+		expandedNodes,
+		toggleNode,
+		expandNode,
+		expandAll,
+		collapseAll,
+		isExpanded,
+		hasExpandedNodes,
+	};
 }
