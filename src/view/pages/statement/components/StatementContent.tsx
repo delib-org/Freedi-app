@@ -1,5 +1,6 @@
 import React from 'react';
 import { Statement, UserDemographicQuestion, Role } from '@freedi/shared-types';
+import Headroom from 'react-headroom';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';
@@ -67,11 +68,13 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 						overflow: 'hidden',
 					}}
 				>
-					<StatementHeader
-						statement={statement}
-						parentStatement={undefined}
-						topParentStatement={topParentStatement}
-					/>
+					<Headroom disableInlineStyles className="page__headroom">
+						<StatementHeader
+							statement={statement}
+							parentStatement={undefined}
+							topParentStatement={topParentStatement}
+						/>
+					</Headroom>
 
 					<MapProvider>
 						<Switch />

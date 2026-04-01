@@ -7,27 +7,33 @@
 	background-color: var(--statementBackground);
 	overflow: hidden;
 
-	// Mobile scroll-to-hide: when this class is toggled by JS,
-	// the header collapses via negative margin
-	&--header-hidden {
-		@media screen and (max-width: 600px) {
-			.page__header {
-				margin-top: -4.2rem;
-				opacity: 0;
-				pointer-events: none;
-			}
+	// react-headroom wrapper styles
+	&__headroom {
+		z-index: 999;
+
+		.headroom {
+			transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+		}
+
+		.headroom--unfixed {
+			position: relative;
+			transform: translateY(0);
+		}
+
+		.headroom--unpinned {
+			position: fixed;
+			transform: translateY(-100%);
+		}
+
+		.headroom--pinned {
+			position: fixed;
+			transform: translateY(0);
 		}
 	}
 
 	&__header {
 		width: 100%;
 		z-index: 999;
-
-		// Mobile scroll-to-hide animation
-		@media screen and (max-width: 600px) {
-			transition: margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-				opacity 0.25s ease;
-		}
 
 		&.rtl {
 			border-bottom-right-radius: 0;

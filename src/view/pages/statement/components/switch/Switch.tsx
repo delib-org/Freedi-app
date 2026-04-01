@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 import { useSelector } from 'react-redux';
 
@@ -14,7 +14,6 @@ import OnlineUsers from '../nav/online/OnlineUsers';
 import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/SegmentedControl';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { useHeaderHideOnScroll } from '@/controllers/hooks/useHeaderHideOnScroll';
 import {
 	statementSubsSelector,
 	statementOptionsSelector,
@@ -62,9 +61,6 @@ const Switch = () => {
 		},
 		[setSearchParams],
 	);
-
-	const mainRef = useRef<HTMLElement>(null);
-	useHeaderHideOnScroll(mainRef);
 
 	const subsSelect = useMemo(
 		() => statementSubsSelector(statement?.statementId),
@@ -115,7 +111,7 @@ const Switch = () => {
 	}
 
 	return (
-		<main ref={mainRef} className="page__main">
+		<main className="page__main">
 			<div className={styles.stickyTop}>
 				<div className={styles.stickyTopInner}>
 					{isAdmin ? (
