@@ -257,7 +257,9 @@ const StatementBottomNav: FC<Props> = () => {
 		if (tab) params.set('tab', tab);
 		if (navItem.link === SortType.random) params.set('t', String(Date.now()));
 		const query = params.toString();
-		navigate(`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}${query ? `?${query}` : ''}`);
+		navigate(
+			`/${getBaseRoute()}/${statement?.statementId}/${navItem.link}${query ? `?${query}` : ''}`,
+		);
 	}
 
 	// Add mobile-only class that hides the Add button when menu is open

@@ -49,16 +49,20 @@ export function initSentry() {
 				// Fallback: check event exception values directly (covers cases where
 				// hint.originalException is undefined or not an Error instance)
 				const exceptionValues = event.exception?.values;
-				if (exceptionValues?.some(exc => {
-					const val = `${exc.type ?? ''}: ${exc.value ?? ''}`;
+				if (
+					exceptionValues?.some((exc) => {
+						const val = `${exc.type ?? ''}: ${exc.value ?? ''}`;
 
-					return val.includes('IndexedDB') ||
-						val.includes('indexedDB') ||
-						val.includes('backing store') ||
-						val.includes('QuotaExceededError') ||
-						exc.type === 'UnknownError' ||
-						exc.type === 'IndexedDbTransactionError';
-				})) {
+						return (
+							val.includes('IndexedDB') ||
+							val.includes('indexedDB') ||
+							val.includes('backing store') ||
+							val.includes('QuotaExceededError') ||
+							exc.type === 'UnknownError' ||
+							exc.type === 'IndexedDbTransactionError'
+						);
+					})
+				) {
 					return null;
 				}
 

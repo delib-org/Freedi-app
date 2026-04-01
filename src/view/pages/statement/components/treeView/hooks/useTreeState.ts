@@ -140,5 +140,13 @@ export function useTreeState(
 
 	const hasExpandedNodes = useCallback(() => expandedNodes.size > 0, [expandedNodes]);
 
-	return { expandedNodes, toggleNode, expandNode, expandAll, collapseAll, isExpanded, hasExpandedNodes };
+	return {
+		expandedNodes,
+		toggleNode,
+		expandNode,
+		expandAll,
+		collapseAll,
+		isExpanded,
+		hasExpandedNodes,
+	};
 }

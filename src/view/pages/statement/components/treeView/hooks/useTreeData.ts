@@ -76,8 +76,15 @@ function applySortToStatements(
  * Supports type filtering, sorting, and selected-only option filtering.
  */
 export function useTreeData(statementId: string, options?: TreeDataOptions): UseTreeDataReturn {
-	const { typeFilter, sortType, onlySelectedOptions, filterMode, userId, bookmarkedIds, randomSeed } =
-		options || {};
+	const {
+		typeFilter,
+		sortType,
+		onlySelectedOptions,
+		filterMode,
+		userId,
+		bookmarkedIds,
+		randomSeed,
+	} = options || {};
 
 	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useAppSelector((state) =>
 		selectTreeView(state, statementId),

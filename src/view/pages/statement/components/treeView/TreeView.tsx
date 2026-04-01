@@ -39,7 +39,8 @@ const TreeView: FC<TreeViewProps> = ({
 	const { t } = useTranslation();
 	const { user } = useAuthentication();
 	const bookmarkedIds = useAppSelector(bookmarkedStatementIdsSelector);
-	const { filterMode, registerCollapseAll, registerExpandAll, registerHasExpandedNodes } = useTreeFilter();
+	const { filterMode, registerCollapseAll, registerExpandAll, registerHasExpandedNodes } =
+		useTreeFilter();
 	const treeViewRef = useRef<HTMLDivElement>(null);
 	const prevCountRef = useRef(0);
 	const isFirstRenderRef = useRef(true);
@@ -71,11 +72,8 @@ const TreeView: FC<TreeViewProps> = ({
 	);
 	const rootChildren = isBufferingActive ? visibleChildren : allRootChildren;
 
-	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll, hasExpandedNodes } = useTreeState(
-		childrenMap,
-		statementId || '',
-		defaultCollapsed,
-	);
+	const { expandedNodes, toggleNode, expandNode, collapseAll, expandAll, hasExpandedNodes } =
+		useTreeState(childrenMap, statementId || '', defaultCollapsed);
 
 	const [replyToStatement, setReplyToStatement] = useState<Statement | null>(null);
 
@@ -91,7 +89,14 @@ const TreeView: FC<TreeViewProps> = ({
 		registerCollapseAll(collapseAll);
 		registerExpandAll(expandAll);
 		registerHasExpandedNodes(hasExpandedNodes);
-	}, [collapseAll, expandAll, hasExpandedNodes, registerCollapseAll, registerExpandAll, registerHasExpandedNodes]);
+	}, [
+		collapseAll,
+		expandAll,
+		hasExpandedNodes,
+		registerCollapseAll,
+		registerExpandAll,
+		registerHasExpandedNodes,
+	]);
 
 	const flipKey = useMemo(() => rootChildren.map((c) => c.statementId).join(','), [rootChildren]);
 

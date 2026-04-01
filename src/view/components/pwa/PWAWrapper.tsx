@@ -225,7 +225,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 									msg.includes('Failed to fetch') ||
 									msg.includes('network');
 								if (isNetworkError) {
-									console.info('[PWAWrapper] Firebase SW registration failed (network), will retry');
+									console.info(
+										'[PWAWrapper] Firebase SW registration failed (network), will retry',
+									);
 								} else {
 									logError(error, {
 										operation: 'pwa.PWAWrapper.firebaseSW',
@@ -277,7 +279,9 @@ const PWAWrapper: React.FC<PWAWrapperProps> = ({ children }) => {
 						// Network failures during periodic update checks are expected/transient
 						const message = err instanceof TypeError ? err.message : '';
 						if (message.includes('Failed to update a ServiceWorker') || message.includes('fetch')) {
-							console.info('[PWAWrapper] SW update check failed (network), will retry next interval');
+							console.info(
+								'[PWAWrapper] SW update check failed (network), will retry next interval',
+							);
 						} else {
 							logError(err, {
 								operation: 'pwa.PWAWrapper.updateInterval',

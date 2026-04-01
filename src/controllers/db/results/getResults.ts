@@ -59,9 +59,7 @@ async function getTopOptionsDB(statement: Statement): Promise<Statement[]> {
 
 		// Sort by evaluation.agreement (falling back to consensus for legacy data)
 		// and return top N options
-		return topOptions
-			.sort(sortByConsensus)
-			.slice(0, numberOfOptions);
+		return topOptions.sort(sortByConsensus).slice(0, numberOfOptions);
 	} catch (error) {
 		logError(error, { operation: 'results.getResults.topOptions' });
 
