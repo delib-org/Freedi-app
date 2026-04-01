@@ -3,7 +3,7 @@ import { FireStore } from '../config';
 import { Statement, StatementSchema } from '@freedi/shared-types';
 
 import { number, parse } from 'valibot';
-import { createStatementRef } from '@/utils/firebaseUtils';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 
 export async function updateStatementsOrderToDB(statements: Statement[]) {
@@ -15,7 +15,7 @@ export async function updateStatementsOrderToDB(statements: Statement[]) {
 
 			const statementRef = createStatementRef(statement.statementId);
 
-			batch.update(statementRef, { order: statement.order });
+			batch.update(statementRef, { order: statement.order, lastUpdate: getCurrentTimestamp() });
 		}
 
 		await batch.commit();
@@ -29,8 +29,7 @@ export function setRoomSizeInStatementDB(statement: Statement, roomSize: number)
 		parse(number(), roomSize);
 		parse(StatementSchema, statement);
 		const statementRef = createStatementRef(statement.statementId);
-		const newRoomSize = { roomSize };
-		updateDoc(statementRef, newRoomSize);
+		updateDoc(statementRef, { roomSize, lastUpdate: getCurrentTimestamp() });
 	} catch (error) {
 		logError(error, { operation: 'statements.statementOrdering.setRoomSizeInStatementDB' });
 	}

@@ -28,12 +28,17 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 
 	const evaluationScore = useAppSelector(evaluationSelector(statement.statementId));
 
-	const { numberOfEvaluators, sumPro = 0, sumCon = 0 } = statement.evaluation || {
+	const {
+		numberOfEvaluators,
+		sumPro = 0,
+		sumCon = 0,
+	} = statement.evaluation || {
 		numberOfEvaluators: 0,
 		sumPro: 0,
 		sumCon: 0,
 	};
-	const avg = numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
+	const avg =
+		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
 	const consensusDisplay = Math.round((statement.consensus || 0) * 100);
 
 	return (
@@ -58,7 +63,9 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 						content={`${t('average')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
 						position="bottom"
 					>
-						<span className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}>
+						<span
+							className={`${styles['consensus-score']} ${consensusDisplay < 0 ? styles['consensus-score--negative'] : ''}`}
+						>
 							{consensusDisplay}
 						</span>
 					</Tooltip>

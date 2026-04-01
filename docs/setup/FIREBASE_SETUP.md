@@ -209,7 +209,7 @@ When setting up your Firebase project:
 Once your development environment is running:
 1. Read the [Branch Naming Convention](./Branch-naming-convention.md)
 2. Check the [Development Guidelines](./CLAUDE.md)
-3. Review the [Architecture Documentation](./docs/FREEDI_ARCHITECTURE.md)
+3. Review the [Architecture Documentation](./docs/architecture/FREEDI_ARCHITECTURE.md)
 4. Explore the codebase and make your first contribution!
 
 Happy coding! 🚀

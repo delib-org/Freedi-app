@@ -1,6 +1,6 @@
 import { getDoc, updateDoc } from 'firebase/firestore';
 import { Statement, StatementType } from '@freedi/shared-types';
-import { createStatementRef } from '@/utils/firebaseUtils';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 
 /**
@@ -28,7 +28,7 @@ export async function toggleIsDocument(statementId: string): Promise<boolean | u
 
 		const isDocument = !(statementData.isDocument === true);
 
-		await updateDoc(statementRef, { isDocument });
+		await updateDoc(statementRef, { isDocument, lastUpdate: getCurrentTimestamp() });
 
 		return isDocument;
 	} catch (error) {

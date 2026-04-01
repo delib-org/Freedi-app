@@ -303,6 +303,9 @@ export async function clearAllInAppNotificationsDB(): Promise<void> {
 			return;
 		}
 
+		// Clear from Redux immediately so UI updates right away
+		store.dispatch(clearAllInAppNotifications());
+
 		const inAppNotificationsRef = collection(DB, Collections.inAppNotifications);
 		const q = query(inAppNotificationsRef, where('userId', '==', user.uid));
 
@@ -322,13 +325,10 @@ export async function clearAllInAppNotificationsDB(): Promise<void> {
 			});
 			await batch.commit();
 		}
-
-		// Clear from Redux
-		store.dispatch(clearAllInAppNotifications());
 	} catch (error) {
-		logError(new Error('In clearAllInAppNotificationsDB'), {
+		logError(error, {
 			operation: 'inAppNotifications.db_inAppNotifications.clearAllInAppNotificationsDB',
-			metadata: { detail: error.message },
+			userId: store.getState().creator.creator?.uid,
 		});
 	}
 }

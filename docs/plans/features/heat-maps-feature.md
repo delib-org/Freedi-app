@@ -322,4 +322,4 @@ useViewportTracking(paragraphId, cardRef); // Track 5+ second views
 - Existing comments API: `apps/sign/app/api/comments/`
 - Existing evaluations: `apps/sign/app/api/evaluations/`
 - UI Store: `apps/sign/src/store/uiStore.ts`
-- Design guide: `docs/design-guide.md`
+- Design guide: `docs/guides/design-guide.md`

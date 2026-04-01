@@ -3,6 +3,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { DB } from '../config';
 import { safeParse } from 'valibot';
 import { logError } from '@/utils/errorHandling';
+import { getCurrentTimestamp } from '@/utils/firebaseUtils';
 
 export async function setVotingSettingsToDB({
 	statementId,
@@ -31,6 +32,7 @@ export async function setVotingSettingsToDB({
 
 		await updateDoc(statementRef, {
 			votingSettings: validationResult.output,
+			lastUpdate: getCurrentTimestamp(),
 		});
 
 		console.info('Voting settings updated successfully');

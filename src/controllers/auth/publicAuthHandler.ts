@@ -82,8 +82,10 @@ async function signInAnonymouslyWithRetry(): Promise<User> {
 			}
 
 			const delay = RETRY.INITIAL_DELAY_MS * Math.pow(RETRY.EXPONENTIAL_BASE, attempt - 1);
-			console.info(`Anonymous sign-in attempt ${attempt} failed (${errorCode}), retrying in ${delay}ms...`);
-			await new Promise(resolve => setTimeout(resolve, delay));
+			console.info(
+				`Anonymous sign-in attempt ${attempt} failed (${errorCode}), retrying in ${delay}ms...`,
+			);
+			await new Promise((resolve) => setTimeout(resolve, delay));
 		}
 	}
 

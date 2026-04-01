@@ -51,7 +51,7 @@ Instead of filling out surveys, users "play" with ideas - swiping through propos
 
 ### Design System Integration
 
-**CRITICAL**: All styling must align with `/docs/design-guide.md`
+**CRITICAL**: All styling must align with `/docs/guides/design-guide.md`
 
 #### Proposed Color Palette Extension
 Add these pastel colors to the existing design system tokens:
@@ -2220,7 +2220,7 @@ npm run check-all
 ## Resources
 
 - **CLAUDE.md Guidelines**: `/Users/talyaron/Documents/Freedi-app/CLAUDE.md`
-- **Design Guide**: `/Users/talyaron/Documents/Freedi-app/docs/design-guide.md`
+- **Design Guide**: `/Users/talyaron/Documents/Freedi-app/docs/guides/design-guide.md`
 - **Atomic Design System**: `/Users/talyaron/Documents/Freedi-app/ATOMIC-DESIGN-SYSTEM.md`
 - **Error Handling Utilities**: `/Users/talyaron/Documents/Freedi-app/src/utils/errorHandling.ts`
 - **Firebase Utilities**: `/Users/talyaron/Documents/Freedi-app/src/utils/firebaseUtils.ts`

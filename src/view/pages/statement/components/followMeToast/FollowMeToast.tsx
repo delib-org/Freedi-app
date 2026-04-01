@@ -91,7 +91,15 @@ const FollowMeToast: FC = () => {
 			if (fullPath === followMePath) return;
 			setFollowMeDB(topParentStatement, fullPath);
 		}
-	}, [_isAdmin, isPowerMode, fullPath, pathname, topParentStatement, powerFollowMePath, followMePath]);
+	}, [
+		_isAdmin,
+		isPowerMode,
+		fullPath,
+		pathname,
+		topParentStatement,
+		powerFollowMePath,
+		followMePath,
+	]);
 
 	// Auto-redirect for non-admin users in power mode
 	useEffect(() => {

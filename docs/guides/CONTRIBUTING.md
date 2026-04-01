@@ -253,7 +253,7 @@ npm run build -- --analyze
 - Check existing [issues](https://github.com/delib-org/Freedi-app/issues)
 - Join our [discussions](https://github.com/delib-org/Freedi-app/discussions)
 - Read the [wiki](https://github.com/delib-org/delib-5/wiki)
-- Review [Architecture Docs](./docs/FREEDI_ARCHITECTURE.md)
+- Review [Architecture Docs](./docs/architecture/FREEDI_ARCHITECTURE.md)
 - Ask in PR comments
 - Check [CLAUDE.md](./CLAUDE.md) for AI-assisted development tips
 

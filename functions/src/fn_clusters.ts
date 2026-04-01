@@ -152,6 +152,7 @@ export async function getCluster(req: Request, res: Response) {
 				batch.update(statementRef, {
 					parentId: id,
 					parents: [...(topic.parents || []), topic.statementId],
+					lastUpdate: Date.now(),
 				});
 			});
 		});
@@ -225,6 +226,7 @@ export const recoverLastSnapshot = async (req: Request, res: Response) => {
 				parentId: snapshotData.topic.statementId,
 				parents: [...(snapshotData.topic.parents || []), snapshotData.topic.statementId],
 				topParentId: snapshotData.topic.topParentId,
+				lastUpdate: Date.now(),
 			});
 		});
 
