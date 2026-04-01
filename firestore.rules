@@ -29,7 +29,7 @@ service cloud.firestore {
 	}
 
     match /councils/{councilId=**} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
 
@@ -179,7 +179,7 @@ service cloud.firestore {
     }
 
     match /approval/{approvalId=**} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
     
@@ -402,8 +402,9 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
+    // INTENTIONALLY PUBLIC: Mass consensus requires unauthenticated read access for anonymous participants
     match /evaluations/{evluationId=**} {
-      allow read: if true; // Allow public read for mass consensus
+      allow read: if true;
       allow create: if request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
                     && request.resource.data.evaluationId is string
                     && request.resource.data.parentId is string
@@ -423,9 +424,7 @@ service cloud.firestore {
 
     // Typing status for real-time collaboration indicators
     match /typingStatus/{typingId} {
-      // Anyone authenticated can read typing status
-      // DEBUG: Allow public read to investigate permission error
-      allow read: if true;
+      allow read: if request.auth != null;
       // Users can only write their own typing status (document ID includes their userId)
       allow create, update: if request.auth != null &&
                               request.resource.data.userId == request.auth.uid;
@@ -437,9 +436,7 @@ service cloud.firestore {
 
     // Suggestions for document paragraphs (Sign app)
     match /suggestions/{suggestionId} {
-      // Anyone authenticated can read suggestions
-      // DEBUG: Allow public read to investigate permission error
-      allow read: if true;
+      allow read: if request.auth != null;
       // Users can create suggestions
       allow create: if request.auth != null &&
                       request.resource.data.creatorId == request.auth.uid;
@@ -484,17 +481,17 @@ service cloud.firestore {
     }
     
     match /posts/{postId=**} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
     
     match /chatMessages/{chatMessageId} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
     
     match /groups/{group=**} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
     
@@ -503,14 +500,17 @@ service cloud.firestore {
       allow write: if request.auth.uid == resource.data.creator.uid;
     }
 
-    match /usersSettings/{userId=**} {
+    match /usersSettings/{settingId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      allow write: if request.auth.uid != null
+        && request.resource.data.userId == request.auth.uid;
     }
 
-    match /usersData/{userId=**} {
+    match /usersData/{dataId=**} {
       allow read: if request.auth.uid != null;
-      allow write: if request.auth.uid != null;
+      // Ensure users can only write documents where userId matches their auth uid
+      allow write: if request.auth.uid != null
+        && request.resource.data.userId == request.auth.uid;
     }
 
     match /usersV2/{userId} {
@@ -581,12 +581,12 @@ service cloud.firestore {
     }
     
     match /messages/{message=**} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
     
     match /tokens/{token=**} {
-      allow read;
+      allow read: if request.auth.uid != null;
       allow write: if request.auth.uid != null;
     }
       
