@@ -1,7 +1,7 @@
 import { updateDoc } from 'firebase/firestore';
 import { QuestionStage, QuestionType, QuestionSettings, QuestionStep } from '@freedi/shared-types';
 import { getDefaultQuestionType } from '@/models/questionTypeDefaults';
-import { createStatementRef } from '@/utils/firebaseUtils';
+import { createStatementRef, getCurrentTimestamp } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
 
 interface SetStatementStageParams {
@@ -19,7 +19,7 @@ export async function setQuestionStage({
 			currentStep: step,
 			questionType: getDefaultQuestionType(),
 		};
-		await updateDoc(statementRef, { questionSettings });
+		await updateDoc(statementRef, { questionSettings, lastUpdate: getCurrentTimestamp() });
 	} catch (error) {
 		logError(error, {
 			operation: 'statements.statementMetaData.setStatementMetaData.setQuestionStage',
@@ -45,7 +45,7 @@ export async function setQuestionType({
 			currentStage: stage,
 			questionType: type,
 		};
-		await updateDoc(statementRef, { questionSettings });
+		await updateDoc(statementRef, { questionSettings, lastUpdate: getCurrentTimestamp() });
 	} catch (error) {
 		logError(error, {
 			operation: 'statements.statementMetaData.setStatementMetaData.setQuestionType',

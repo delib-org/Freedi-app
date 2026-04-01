@@ -477,32 +477,29 @@ export const statementsRoomSolutions =
 
 /**
  * Gets the latest child-activity timestamp for a subscription.
- * Uses a fallback chain:
- * 1. Statement's lastChildUpdate (from full Statement in Redux, most reliable)
- * 2. Most recent timestamp from subscription's lastSubStatements
- * 3. Subscription's lastUpdate (fallback)
+ * Takes the maximum across all available timestamp sources:
+ * - Statement's lastChildUpdate (from full Statement in Redux)
+ * - Most recent timestamp from lastSubStatements
+ * - Subscription's lastUpdate
  */
 function getLatestChildActivity(
 	sub: StatementSubscription,
 	statementsMap: Map<string, Statement>,
 ): number {
-	// Priority 1: Use full Statement's lastChildUpdate if loaded
-	const statement = statementsMap.get(sub.statementId);
-	if (statement?.lastChildUpdate) return statement.lastChildUpdate;
+	let latest = sub.lastUpdate || 0;
 
-	// Priority 2: Use the most recent timestamp from lastSubStatements
-	const subStatements: SimpleStatement[] =
-		statement?.lastSubStatements || sub.lastSubStatements || [];
-	if (subStatements.length > 0) {
-		let latest = 0;
-		for (const s of subStatements) {
-			latest = Math.max(latest, s.createdAt || 0, s.lastUpdate || 0);
-		}
-		if (latest > 0) return latest;
+	const statement = statementsMap.get(sub.statementId);
+	if (statement?.lastChildUpdate) {
+		latest = Math.max(latest, statement.lastChildUpdate);
 	}
 
-	// Fallback: subscription's own lastUpdate
-	return sub.lastUpdate || 0;
+	const subStatements: SimpleStatement[] =
+		statement?.lastSubStatements || sub.lastSubStatements || [];
+	for (const s of subStatements) {
+		latest = Math.max(latest, s.createdAt || 0, s.lastUpdate || 0);
+	}
+
+	return latest;
 }
 
 export const statementsSubscriptionsSelector = createSelector(
