@@ -43,7 +43,7 @@
   ```
 
 ### Design System Guidelines
-- **ALWAYS follow design system guidelines** from `docs/design-guide.md`
+- **ALWAYS follow design system guidelines** from `docs/guides/design-guide.md`
 - **All UI/UX decisions must align** with the design guide
 - **Color palette**: Use only CSS variables from the design system (e.g., `var(--btn-primary)`, `var(--agree)`)
   - Never hardcode colors: `#5f88e5` ❌, use `var(--btn-primary)` ✅
@@ -287,7 +287,7 @@ import { Button } from '@/view/components/atomic/atoms/Button';
 #### Resources
 - **Implementation Guide**: `ATOMIC-DESIGN-SYSTEM.md` - Complete system overview
 - **Component Docs**: `src/view/components/atomic/README.md` - Usage examples
-- **Design Guide**: `docs/design-guide.md` - Atomic Design & BEM sections
+- **Design Guide**: `docs/guides/design-guide.md` - Atomic Design & BEM sections
 - **Mixins**: `src/view/style/_mixins.scss` - All reusable patterns
 
 ## Commands
@@ -694,8 +694,8 @@ Never import upward (e.g., Controllers should NOT import from View)
 ### Documentation
 - **Code Quality Review**: `CODE_QUALITY_REVIEW.md`
 - **Implementation Guide**: `CODE_QUALITY_IMPROVEMENTS.md`
-- **Design Guide**: `docs/design-guide.md`
-- **Architecture**: `docs/FREEDI_ARCHITECTURE.md`
+- **Design Guide**: `docs/guides/design-guide.md`
+- **Architecture**: `docs/architecture/FREEDI_ARCHITECTURE.md`
 
 ---
 

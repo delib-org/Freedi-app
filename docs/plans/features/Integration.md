@@ -164,7 +164,7 @@ Displays:
 #### 3.4 Create Styles
 **File:** `src/view/components/integrateSuggestions/IntegrateSuggestions.module.scss`
 
-Use BEM naming and design tokens from `docs/design-guide.md`
+Use BEM naming and design tokens from `docs/guides/design-guide.md`
 
 ---
 

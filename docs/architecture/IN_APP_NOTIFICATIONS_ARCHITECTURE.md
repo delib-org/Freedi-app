@@ -283,7 +283,7 @@ Server-side notification creation:
 
 ## Related Documentation
 
-- [NOTIFICATIONS.md](/docs/NOTIFICATIONS.md) - User-facing notification guide
+- [NOTIFICATIONS.md](/docs/features/NOTIFICATIONS.md) - User-facing notification guide
 - [Firebase Cloud Messaging Docs](https://firebase.google.com/docs/cloud-messaging)
 - [Web Push Protocol](https://developers.google.com/web/fundamentals/push-notifications)
 - [Service Worker API](https://developer.mozilla.org/en-US/docs/Web/API/Service_Worker_API)
