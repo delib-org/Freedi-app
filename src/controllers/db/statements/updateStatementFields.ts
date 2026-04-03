@@ -65,10 +65,12 @@ function updateStatementSettings({
 		return defaultSettings;
 	}
 
+	const resolvedEvalType = evalType ?? statement.statementSettings?.evaluationType ?? EvalType.range;
+
 	return {
 		...(statement.statementSettings || defaultSettings),
-		evaluationType: evalType,
-		enhancedEvaluation: evalType === EvalType.range, // auto-derived from evaluationType
+		evaluationType: resolvedEvalType,
+		enhancedEvaluation: resolvedEvalType === EvalType.range, // auto-derived from evaluationType
 		showEvaluation,
 		enableAddEvaluationOption,
 		enableAddVotingOption,
