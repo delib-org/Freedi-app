@@ -7,33 +7,60 @@
 	background-color: var(--statementBackground);
 	overflow: hidden;
 
-	// react-headroom wrapper styles
-	&__headroom {
-		z-index: 999;
-
-		.headroom {
-			transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-		}
-
-		.headroom--unfixed {
-			position: relative;
-			transform: translateY(0);
-		}
-
-		.headroom--unpinned {
-			position: fixed;
-			transform: translateY(-100%);
-		}
-
-		.headroom--pinned {
-			position: fixed;
-			transform: translateY(0);
-		}
-	}
-
 	&__header {
 		width: 100%;
 		z-index: 999;
+		position: relative;
+
+		&__full {
+			@media screen and (max-width: 600px) {
+				transition: opacity 0.25s ease;
+			}
+		}
+
+		&__mini {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 2.5rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: var(--header-question, #123def);
+			color: var(--question-text, #fff);
+			opacity: 0;
+			pointer-events: none;
+
+			@media screen and (max-width: 600px) {
+				transition: opacity 0.25s ease;
+			}
+
+			&__title {
+				font-size: 0.9rem;
+				font-weight: 600;
+				padding: 0.5rem 1rem;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				max-width: 90%;
+			}
+		}
+
+		// Minimized state: crossfade full nav ↔ compact title (no layout change)
+		&--minimized {
+			@media screen and (max-width: 600px) {
+				.page__header__full {
+					opacity: 0;
+					pointer-events: none;
+				}
+
+				.page__header__mini {
+					opacity: 1;
+					pointer-events: auto;
+				}
+			}
+		}
 
 		&.rtl {
 			border-bottom-right-radius: 0;

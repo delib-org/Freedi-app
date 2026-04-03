@@ -46,6 +46,10 @@ Sentry.init({
     // Third-party libraries (Vercel Analytics, etc.) may attempt native bridge calls
     /window\.webkit\.messageHandlers/,
     "undefined is not an object (evaluating 'window.webkit.messageHandlers",
+    // Browser-injected scripts (Firefox reader mode, Brave, crypto wallets)
+    /window\.__firefox__/,
+    /Can't find variable: __firefox__/,
+    /window\.ethereum/,
   ],
 
   // Don't send PII

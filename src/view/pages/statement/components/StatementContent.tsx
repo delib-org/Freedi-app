@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Statement, UserDemographicQuestion, Role } from '@freedi/shared-types';
-import Headroom from 'react-headroom';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
 import { MapProvider } from '@/controllers/hooks/useMap';
@@ -35,6 +34,12 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 		statement?.statementId,
 	);
 
+	const [activeView, setActiveView] = useState('chat');
+
+	const handleActiveViewChange = useCallback((view: string) => {
+		setActiveView(view);
+	}, []);
+
 	// Apply animation class when navigating between statements
 	const pageClassName = toSlide ? `page ${slideInOrOut}` : 'page';
 
@@ -68,16 +73,13 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 						overflow: 'hidden',
 					}}
 				>
-					<Headroom disableInlineStyles className="page__headroom">
-						<StatementHeader
-							statement={statement}
-							parentStatement={undefined}
-							topParentStatement={topParentStatement}
-						/>
-					</Headroom>
+					<StatementHeader
+						topParentStatement={topParentStatement}
+						onActiveViewChange={handleActiveViewChange}
+					/>
 
 					<MapProvider>
-						<Switch />
+						<Switch activeView={activeView} />
 					</MapProvider>
 				</div>
 			</TreeFilterProvider>
