@@ -21,17 +21,6 @@ The `functions/` subdirectory contains critical documentation about scaling issu
 - **[functions/new-subscription-architecture.md](./functions/new-subscription-architecture.md)** — Redesigned subscription system
 - **[functions/implementation-guide-new-subscriptions.md](./functions/implementation-guide-new-subscriptions.md)** — Step-by-step implementation guide
 
-## Legacy Documents
+## Archive
 
-The following files contain detailed technical recommendations that have been summarized in the main ARCHITECTURE.md (Sections 10–11). They are kept for reference but the main document is the authoritative source:
-
-- `01-critical-issues.md` — TypeScript strict mode, security, bundle size
-- `02-redux-optimization.md` — Redux refactoring strategies
-- `03-performance-optimization.md` — Bundle, rendering, and query optimization
-- `04-error-handling-monitoring.md` — Error boundaries, Sentry, logging
-- `05-component-architecture.md` — Component standardization, icon system, CSS Modules
-- `06-testing-strategy.md` — Unit, integration, and E2E testing plans
-- `07-developer-experience.md` — Deployment, git hooks, tooling
-- `ARCHITECTURE_PHILOSOPHY.md` — Design patterns and recommended improvements
-- `FREEDI_ARCHITECTURE.md` — Statement model details (now in ARCHITECTURE.md Section 4)
-- `SYSTEM_ARCHITECTURE.md` — System overview (now in ARCHITECTURE.md Sections 1–6)
+The `_archive/` folder contains the original detailed recommendation files (01 through 07) and the older architecture documents (FREEDI_ARCHITECTURE, SYSTEM_ARCHITECTURE, ARCHITECTURE_PHILOSOPHY). Their content has been consolidated into the main ARCHITECTURE.md.
