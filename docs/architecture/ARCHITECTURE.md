@@ -342,7 +342,7 @@ The original architecture embedded a full `SimpleStatement` in each subscription
 
 **Top-level query fields.** Immutable fields (`parentId`, `statementType`, `topParentId`) have been promoted to top-level fields on subscription documents. Firestore queries now use these directly instead of nested `statement.parentId` paths. This decouples queries from the embedded statement data.
 
-**Lightweight parent subscription updates.** The `updateParentSubscriptions` function now writes only a `lastUpdate` timestamp instead of the full `lastSubStatements` array, reducing payload from ~2KB to ~50 bytes per write.
+**Zero parent subscription fan-out.** The `updateParentSubscriptions` and `updateTopParentSubscriptions` functions have been removed entirely. The parent Statement document's `lastChildUpdate` field (a single doc write) is now the sole source of truth for child activity. The client sorts subscriptions using `getLatestChildActivity()` which reads `lastChildUpdate` from Redux.
 
 **Admin inheritance cap.** `setupAdminsForStatement()` now limits inherited admins to 20 per statement, preventing exponential growth in deep hierarchies.
 
@@ -352,7 +352,7 @@ The original architecture embedded a full `SimpleStatement` in each subscription
 
 **Full normalization.** The `statement` field still exists on subscription documents (as a frozen snapshot). A future optimization could remove it entirely, reducing document size by ~1-2KB. This would save storage costs but requires all clients to handle the case where `subscription.statement` is undefined.
 
-**Parent subscription fan-out.** The `updateParentSubscriptions` function still does O(M) writes (one per subscriber) to update `lastUpdate` timestamps. This is lightweight but could be replaced by a dirty-flag pattern if subscriber counts grow very large.
+**Firestore query ordering for power users.** The home screen query uses `orderBy('lastUpdate', 'desc'), limit(100)` on subscriptions. Since subscription `lastUpdate` is no longer kept fresh by fan-out, Firestore returns subscriptions ordered by the user's last personal interaction rather than by discussion activity. For users with fewer than 100 subscriptions this has zero impact (client-side sorting handles it). For users with 100+ subscriptions, a very active discussion the user hasn't visited recently might not appear in the initial Firestore result.
 
 **Evaluation trigger chains.** Evaluation triggers still create chains (evaluation → statement update → parent update). These are less costly now that subscription fan-out is removed, but could still be optimized with debouncing.
 
