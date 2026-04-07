@@ -1,10 +1,18 @@
-# Freedi App - Code Analysis and Recommendations
+# Freedi App - Architecture & Recommendations
 
-This directory contains comprehensive recommendations for improving the Freedi app codebase based on a thorough analysis of the current implementation.
+## System Architecture
 
-## 📋 Analysis Summary
+**Start here:** [SYSTEM_ARCHITECTURE.md](./SYSTEM_ARCHITECTURE.md) -- High-level system architecture covering the deliberation methodology, multi-app structure, shared components, and the Popperian-Bayesian evaluation framework.
 
-The Freedi app is a React-based collaborative decision-making platform using Firebase as the backend. While the codebase demonstrates good practices in many areas, there are significant opportunities for improvement in performance, security, code organization, and developer experience.
+**Data Model:** [FREEDI_ARCHITECTURE.md](./FREEDI_ARCHITECTURE.md) -- The unified Statement model, semantic hierarchy rules, and real-world examples.
+
+**Design Patterns:** [ARCHITECTURE_PHILOSOPHY.md](./ARCHITECTURE_PHILOSOPHY.md) -- Core design patterns and recommended improvements.
+
+---
+
+## Code Analysis and Recommendations
+
+This directory also contains comprehensive recommendations for improving the Freedi app codebase based on a thorough analysis of the current implementation.
 
 ## 🚨 Critical Issues Requiring Immediate Attention
 
