@@ -235,12 +235,12 @@ async function updateParentSubscriptions(
 
 		logger.info(`Updating ${subscriptionsQuery.size} subscriptions for statement ${statementId}`);
 
-		// Batch update for efficiency
+		// Batch update — only write lightweight timestamp, not the full lastSubStatements array.
+		// The client reads lastSubStatements from the Statement doc via Redux (Snapshot + Overlay pattern).
 		const batch = db.batch();
 		subscriptionsQuery.docs.forEach((doc) => {
 			batch.update(doc.ref, {
 				lastUpdate: timestamp,
-				lastSubStatements: lastSubStatements,
 			});
 		});
 

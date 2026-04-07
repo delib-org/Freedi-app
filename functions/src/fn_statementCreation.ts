@@ -157,8 +157,18 @@ async function setupAdminsForStatement(statement: Statement): Promise<void> {
 		}
 
 		// Batch create all admin subscriptions
+		const MAX_INHERITED_ADMINS = 20;
 		const batch = db.batch();
-		const adminUserIds = Array.from(adminsToAdd);
+		let adminUserIds = Array.from(adminsToAdd);
+
+		// Cap inherited admins to prevent escalation in deep hierarchies
+		const otherAdmins = adminUserIds.filter((uid) => uid !== statement.creator.uid);
+		if (otherAdmins.length > MAX_INHERITED_ADMINS) {
+			logger.warn(
+				`Admin cap hit: ${otherAdmins.length} inherited admins for statement ${statement.statementId}, limiting to ${MAX_INHERITED_ADMINS}`,
+			);
+			adminUserIds = [statement.creator.uid, ...otherAdmins.slice(0, MAX_INHERITED_ADMINS)];
+		}
 
 		// Always add creator subscription first
 		const creatorSubscription = createSubscription({

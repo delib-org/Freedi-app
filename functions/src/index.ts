@@ -33,7 +33,6 @@ import { updateVote } from './fn_vote';
 import {
 	onNewSubscription,
 	onStatementDeletionDeleteSubscriptions,
-	updateSubscriptionsSimpleStatement,
 	validateRoleChange,
 	updateStatementMemberCount,
 } from './fn_subscriptions';
@@ -575,7 +574,7 @@ exports.updateStatementMemberCount = createFirestoreFunction(
 // exports.updateParentOnChildCreate = updateParentOnChildCreate;
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
 exports.updateParentOnChildDelete = updateParentOnChildDelete;
-exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
+// REMOVED: updateSubscriptionsSimpleStatement — replaced by Snapshot + Overlay pattern
 
 // DEPRECATED: This function is no longer needed
 // exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;

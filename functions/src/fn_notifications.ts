@@ -164,12 +164,14 @@ export async function updateInAppNotifications(
 			// Get all parent statement IDs from the parents array
 			const parentIds = statement.parents.filter((id) => id !== 'top');
 
-			// Fetch subscribers for all parent statements in parallel
+			// Fetch subscribers for all parent statements in parallel (capped to prevent explosion)
+			const MAX_NOTIFICATION_SUBSCRIBERS = 500;
 			const parentSubscriberPromises = parentIds.map(async (parentId) => {
 				const subscribersDB = await db
 					.collection(Collections.statementsSubscribe)
 					.where('statementId', '==', parentId)
 					.where('getInAppNotification', '==', true)
+					.limit(MAX_NOTIFICATION_SUBSCRIBERS)
 					.get();
 
 				return subscribersDB.docs.map(
@@ -188,7 +190,8 @@ export async function updateInAppNotifications(
 			);
 		}
 
-		// Combine subscribers from direct parent and all ancestors
+		// Combine subscribers from direct parent and all ancestors (capped to prevent explosion)
+		const MAX_TOTAL_SUBSCRIBERS = 500;
 		const seenUserIds = new Set<string>();
 		const allSubscribers = [...subscribersInApp, ...allParentSubscribers].filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
@@ -198,6 +201,13 @@ export async function updateInAppNotifications(
 
 			return true;
 		});
+
+		if (allSubscribers.length > MAX_TOTAL_SUBSCRIBERS) {
+			logger.warn(
+				`Notification cap: ${allSubscribers.length} subscribers for statement ${statement.statementId}, processing first ${MAX_TOTAL_SUBSCRIBERS}`,
+			);
+			allSubscribers.length = MAX_TOTAL_SUBSCRIBERS;
+		}
 
 		// Get push notification subscribers
 		const pushSubscribers = pushSubscribersDB.docs.map(

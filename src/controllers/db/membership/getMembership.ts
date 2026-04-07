@@ -164,8 +164,8 @@ export async function searchMembers(
 		// Build query constraints
 		const constraints: QueryConstraint[] = [
 			where('statementId', '==', statementId),
-			where('statement.statementType', '!=', StatementType.document),
-			orderBy('statement.statementType', 'asc'), // Required for != operator
+			where('statementType', '!=', StatementType.document),
+			orderBy('statementType', 'asc'), // Required for != operator
 		];
 
 		// Add role filter if specified
@@ -242,8 +242,8 @@ export async function getMembersCounts(
 		const membersRef = collection(FireStore, Collections.statementsSubscribe);
 		const baseConstraints = [
 			where('statementId', '==', statementId),
-			where('statement.statementType', '!=', StatementType.document),
-			orderBy('statement.statementType', 'asc'),
+			where('statementType', '!=', StatementType.document),
+			orderBy('statementType', 'asc'),
 		];
 
 		// Count admins

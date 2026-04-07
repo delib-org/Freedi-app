@@ -65,7 +65,7 @@ export const listenToStatementSubSubscriptions = (
 		const statementsSubscribeRef = collection(FireStore, Collections.statementsSubscribe);
 		const q = query(
 			statementsSubscribeRef,
-			where('statement.parentId', '==', statementId),
+			where('parentId', '==', statementId),
 			where('userId', '==', user.uid),
 			limit(20),
 		);
@@ -141,7 +141,7 @@ export function listenToStatementSubscriptions(
 		const q = query(
 			statementsSubscribeRef,
 			where('userId', '==', userId),
-			where('statement.parentId', '==', 'top'),
+			where('parentId', '==', 'top'),
 			orderBy('lastUpdate', 'desc'),
 			limit(numberOfStatements),
 		);
@@ -373,7 +373,7 @@ export function getNewStatementsFromSubscriptions(userId: string): Unsubscribe {
 			subscriptionsRef,
 			and(
 				where('userId', '==', userId),
-				where('statement.statementType', '!=', 'document'),
+				where('statementType', '!=', 'document'),
 				or(
 					where('role', '==', Role.admin),
 					where('role', '==', Role.creator),
