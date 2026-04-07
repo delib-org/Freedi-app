@@ -346,7 +346,7 @@ The original architecture embedded a full `SimpleStatement` in each subscription
 
 **Admin inheritance cap.** `setupAdminsForStatement()` now limits inherited admins to 20 per statement, preventing exponential growth in deep hierarchies.
 
-**Notification subscriber cap.** `updateInAppNotifications()` now caps subscribers at 500 per notification batch, with `.limit()` on all parent subscriber queries.
+**Notification optimization.** `updateInAppNotifications()` now fetches subscribers from the direct parent only (not all ancestors — the hierarchy walk was redundant since subscribers inherit via the subscription system). All queries are capped with `.limit(500)`. FCM push notifications use `sendEach()` batch API (1 API call per 500 tokens) instead of individual `send()` calls with 50ms delays. Token pre-validation (dry-run FCM messages) has been removed — invalid tokens are detected from `sendEach()` error responses directly, cutting FCM API calls in half.
 
 ### Remaining Architectural Debt
 
