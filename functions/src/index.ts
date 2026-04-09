@@ -50,6 +50,7 @@ import {
 	addRandomSeed,
 	backfillEvaluationType,
 	backfillParentsArray,
+	backfillSubscriptionFields,
 } from './fn_httpRequests';
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
@@ -468,6 +469,7 @@ exports.recalculateEvaluations = wrapAdminHttpFunction(recalculateEvaluations);
 exports.addRandomSeed = wrapAdminHttpFunction(addRandomSeed);
 exports.backfillEvaluationType = wrapAdminHttpFunction(backfillEvaluationType);
 exports.backfillParentsArray = wrapAdminHttpFunction(backfillParentsArray);
+exports.backfillSubscriptionFields = wrapAdminHttpFunction(backfillSubscriptionFields);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS

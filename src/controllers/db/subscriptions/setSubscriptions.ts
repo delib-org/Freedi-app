@@ -73,6 +73,10 @@ export async function setStatementSubscriptionToDB({
 			getInAppNotification,
 			getEmailNotification,
 			getPushNotification,
+			// Top-level query fields (promoted from embedded statement for efficient Firestore queries)
+			parentId: statement.parentId,
+			statementType: statement.statementType,
+			topParentId: statement.topParentId || statement.parentId,
 		};
 
 		if (creator.uid && statement.creator?.uid && creator.uid === statement.creator.uid)
