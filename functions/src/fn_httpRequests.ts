@@ -43,3 +43,6 @@ export const backfillEvaluationType = (req: Request, res: Response) =>
 
 export const backfillParentsArray = (req: Request, res: Response) =>
 	maintenanceController.backfillParentsArray(req, res);
+
+export const backfillSubscriptionFields = (req: Request, res: Response) =>
+	maintenanceController.backfillSubscriptionFields(req, res);
