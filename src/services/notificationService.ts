@@ -98,8 +98,9 @@ export class NotificationService {
 			await waitForServiceWorker();
 
 			// Initialize Firebase Messaging
-			if (!(await initializeMessaging())) {
-				logError(new Error('[NotificationService] Failed to initialize messaging'), {
+			const messagingResult = await initializeMessaging();
+			if (!messagingResult.success) {
+				logError(new Error(`[NotificationService] Failed to initialize messaging: ${messagingResult.reason}`), {
 					operation: 'services.notificationService.initialize',
 				});
 
