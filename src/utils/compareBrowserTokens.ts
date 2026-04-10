@@ -90,8 +90,8 @@ export async function compareBrowserTokens() {
 	console.info('\n%c=== END COMPARISON ===', 'color: purple; font-weight: bold');
 }
 
-// Add to window
-if (typeof window !== 'undefined') {
+// Add to window — only in development to avoid PII exposure in production
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
 	(window as { compareBrowserTokens?: typeof compareBrowserTokens }).compareBrowserTokens =
 		compareBrowserTokens;
 }
