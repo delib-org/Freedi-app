@@ -275,12 +275,14 @@ export async function POST(
 
     await writeBatch.commit();
 
-    // Research logging
-    const researchEnabled = questionData?.statementSettings?.enableResearchLogging === true;
+    // Research logging — check top-level document's settings
+    const topParentId = questionData?.topParentId || questionId;
+    const topDocForResearch = await db.collection(Collections.statements).doc(topParentId).get();
+    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
     logResearchAction(userId, ResearchAction.CREATE_STATEMENT, researchEnabled, {
       statementId: statementRef.id,
       parentId: questionId,
-      topParentId: questionData?.topParentId || questionId,
+      topParentId,
     });
 
     return NextResponse.json({

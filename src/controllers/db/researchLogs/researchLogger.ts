@@ -42,14 +42,43 @@ function getUserId(): string | undefined {
 }
 
 /**
- * Check if research logging is enabled for a statement (or its top parent).
- * Looks up the topParentId statement in Redux.
+ * In-memory cache for research-enabled status per topParentId.
+ * TTL keeps it fresh so admin changes propagate without a page reload.
  */
-function isResearchEnabled(topParentId: string): boolean {
+const researchEnabledCache = new Map<string, { enabled: boolean; expiresAt: number }>();
+const RESEARCH_CACHE_TTL_MS = 60_000; // 1 minute
+
+/**
+ * Check if research logging is enabled for a statement (or its top parent).
+ * Checks Redux first, then Firestore (with cache) for freshness.
+ */
+async function isResearchEnabled(topParentId: string): Promise<boolean> {
+	// 1. Check Redux (always up-to-date if the statement is being listened to)
 	const statements = store.getState().statements.statements;
 	const statement = statements.find((s) => s.statementId === topParentId);
+	if (statement?.statementSettings?.enableResearchLogging === true) return true;
 
-	return statement?.statementSettings?.enableResearchLogging === true;
+	// 2. Check the cache (covers cases where the top parent isn't in Redux)
+	const cached = researchEnabledCache.get(topParentId);
+	if (cached && Date.now() < cached.expiresAt) return cached.enabled;
+
+	// 3. Fetch from Firestore directly
+	try {
+		const docRef = createDocRef(Collections.statements, topParentId);
+		const { getDoc } = await import('firebase/firestore');
+		const snap = await getDoc(docRef);
+		const enabled = snap.exists()
+			? snap.data()?.statementSettings?.enableResearchLogging === true
+			: false;
+		researchEnabledCache.set(topParentId, {
+			enabled,
+			expiresAt: Date.now() + RESEARCH_CACHE_TTL_MS,
+		});
+
+		return enabled;
+	} catch {
+		return cached?.enabled ?? false;
+	}
 }
 
 /**
@@ -80,7 +109,8 @@ export async function logResearchAction(
 		const isGlobal = RESEARCH_GLOBAL_ACTIONS.includes(action);
 		if (!isGlobal) {
 			const topParentId = data?.topParentId;
-			if (!topParentId || !isResearchEnabled(topParentId)) return;
+			if (!topParentId) return;
+			if (!(await isResearchEnabled(topParentId))) return;
 
 			// Check user consent (skip if opted out)
 			const consent = getCachedConsent(userId, topParentId);

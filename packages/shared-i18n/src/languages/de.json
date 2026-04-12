@@ -2099,5 +2099,11 @@
   "You haven't posted yet": "Du hast noch nichts gepostet",
   "Join the discussion by typing a message below": "Beteilige dich an der Diskussion, indem du unten eine Nachricht schreibst",
   "Collapse all": "Alle einklappen",
-  "Expand all": "Alle ausklappen"
+  "Expand all": "Alle ausklappen",
+  "Academic Research": "Akademische Forschung",
+  "This discussion is part of academic research aimed at improving democratic decision-making. By consenting, you help improve our democracy.": "Diese Diskussion ist Teil einer akademischen Forschung zur Verbesserung demokratischer Entscheidungsfindung. Mit Ihrer Zustimmung helfen Sie, unsere Demokratie zu verbessern.",
+  "All data is collected anonymously — no personal information is stored.": "Alle Daten werden anonym erhoben — es werden keine persönlichen Informationen gespeichert.",
+  "You may opt out and continue participating without being tracked.": "Sie können ablehnen und ohne Nachverfolgung weiter teilnehmen.",
+  "I Consent": "Ich stimme zu",
+  "No Thanks": "Nein, danke"
 }

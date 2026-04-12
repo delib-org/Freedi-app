@@ -38,12 +38,16 @@ function formatNumber(n: number): string {
 /** Animated counter that rolls up to its target value */
 const AnimatedCounter: FC<{ value: number; duration?: number }> = ({ value, duration = 600 }) => {
 	const [displayed, setDisplayed] = useState(0);
+	const [bumping, setBumping] = useState(false);
 	const prevValue = useRef(0);
 
 	useEffect(() => {
 		const start = prevValue.current;
 		const diff = value - start;
 		if (diff === 0) return;
+
+		setBumping(true);
+		const bumpTimer = setTimeout(() => setBumping(false), 400);
 
 		const startTime = performance.now();
 
@@ -61,9 +65,15 @@ const AnimatedCounter: FC<{ value: number; duration?: number }> = ({ value, dura
 		}
 
 		requestAnimationFrame(tick);
+
+		return () => clearTimeout(bumpTimer);
 	}, [value, duration]);
 
-	return <span className={styles.counterValue}>{formatNumber(displayed)}</span>;
+	return (
+		<span className={`${styles.counterValue} ${bumping ? styles.counterBump : ''}`}>
+			{formatNumber(displayed)}
+		</span>
+	);
 };
 
 /** Pulsing dot to show live status */

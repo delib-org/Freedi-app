@@ -97,9 +97,15 @@ service cloud.firestore {
                (get(topSubPath).data.role == 'admin' || get(topSubPath).data.role == 'statement-creator');
       }
 
-      // Combined check: direct admin, creator, parent admin, or topParent admin
+      // Check if user is a system-wide admin (usersV2 document)
+      function isSystemAdmin() {
+        return exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
+               get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+      }
+
+      // Combined check: direct admin, creator, parent admin, topParent admin, or system admin
       function isAuthorized() {
-        return isAdmin() || isCreator() ||
+        return isAdmin() || isCreator() || isSystemAdmin() ||
                (resource.data.keys().hasAll(['parentId']) &&
                 resource.data.parentId != null &&
                 checkParentAdmin()) ||
@@ -789,9 +795,13 @@ service cloud.firestore {
     match /researchConsent/{consentId} {
       allow create: if request.auth != null &&
                      request.auth.uid == request.resource.data.userId;
+      // Allow get on non-existent docs (resource == null returns "not found")
+      // and reads for the owning user or system admins
       allow read: if request.auth != null &&
-                   (request.auth.uid == resource.data.userId ||
-                    get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true);
+                   (resource == null ||
+                    request.auth.uid == resource.data.userId ||
+                    (exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
+                     get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true));
       allow update: if request.auth != null &&
                      request.auth.uid == resource.data.userId;
       allow delete: if false;

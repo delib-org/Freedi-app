@@ -133,26 +133,34 @@ export const ResearchChart: m.Component<ResearchChartAttrs> = {
 				` L${points[points.length - 1].x},${PAD_T + PLOT_H}` +
 				` L${points[0].x},${PAD_T + PLOT_H} Z`;
 			svgChildren.push(
-				m('path', { d: areaD, fill: s.color, opacity: 0.08 }),
+				m('path', {
+					d: areaD, fill: s.color, opacity: 0.08,
+					style: { transition: 'd 0.6s ease' },
+				}),
 			);
 
-			// Line
+			// Line path (using path instead of polyline for smooth d transitions)
+			const lineD = `M${points.map((p) => `${p.x},${p.y}`).join(' L')}`;
 			svgChildren.push(
-				m('polyline', {
-					points: points.map((p) => `${p.x},${p.y}`).join(' '),
+				m('path', {
+					d: lineD,
 					fill: 'none',
 					stroke: s.color,
 					'stroke-width': 2,
 					'stroke-linejoin': 'round',
 					'stroke-linecap': 'round',
+					style: { transition: 'd 0.6s ease' },
 				}),
 			);
 
-			// Dots at non-zero points
+			// Dots at non-zero points with animated position
 			for (const p of points) {
 				if (p.val > 0) {
 					svgChildren.push(
-						m('circle', { cx: p.x, cy: p.y, r: 3, fill: s.color }),
+						m('circle', {
+							cx: p.x, cy: p.y, r: 3, fill: s.color,
+							style: { transition: 'cx 0.6s ease, cy 0.6s ease' },
+						}),
 					);
 				}
 			}

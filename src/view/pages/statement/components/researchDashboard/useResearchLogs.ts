@@ -156,6 +156,17 @@ export function useResearchLogs(
 		}
 	}, [computeStats]);
 
+	// Recompute stats every 60s so actionsPerMinute stays accurate
+	useEffect(() => {
+		const interval = setInterval(() => {
+			if (!isFirstSnapshot.current) {
+				mergeAndCompute();
+			}
+		}, RATE_WINDOW_MS);
+
+		return () => clearInterval(interval);
+	}, [mergeAndCompute]);
+
 	// Listener 1: scoped logs (by topParentId or parentId)
 	useEffect(() => {
 		const filterValue = scope === 'parent' ? parentId : topParentId;

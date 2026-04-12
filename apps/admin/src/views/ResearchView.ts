@@ -6,6 +6,7 @@ import { subscribeResearch, unsubscribeResearch, getResearchState } from '../sta
 import { ResearchChart } from '../components/ResearchChart';
 import { getResearchActionLabel, normalizeScreenPath } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
+import { setResearchLogging, getResearchLoggingStatus } from '../lib/queries';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -63,6 +64,142 @@ function ActivityRow(log: ResearchLog, isNew: boolean): m.Vnode {
 	]);
 }
 
+// ── Research Config Panel ────────────────────────────────────────────
+
+interface ConfigEntry {
+	statementId: string;
+	title: string;
+	enabled: boolean;
+}
+
+const STORAGE_KEY = 'freedi_research_config_entries';
+
+function loadPersistedEntries(): ConfigEntry[] {
+	try {
+		const raw = localStorage.getItem(STORAGE_KEY);
+		if (raw) return JSON.parse(raw) as ConfigEntry[];
+	} catch { /* ignore */ }
+
+	return [];
+}
+
+function persistEntries(entries: ConfigEntry[]): void {
+	try {
+		localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+	} catch { /* ignore */ }
+}
+
+const configState = {
+	inputId: '',
+	entries: loadPersistedEntries(),
+	loading: false,
+	error: null as string | null,
+	success: null as string | null,
+};
+
+async function handleLookup(): Promise<void> {
+	const id = configState.inputId.trim();
+	if (!id) return;
+
+	configState.loading = true;
+	configState.error = null;
+	configState.success = null;
+	m.redraw();
+
+	try {
+		const result = await getResearchLoggingStatus(id);
+		if (!result) {
+			configState.error = `Statement "${id}" not found`;
+		} else {
+			// Avoid duplicates
+			const existing = configState.entries.find((e) => e.statementId === id);
+			if (existing) {
+				existing.enabled = result.enabled;
+				existing.title = result.title;
+			} else {
+				configState.entries.unshift({ statementId: id, title: result.title, enabled: result.enabled });
+			}
+			persistEntries(configState.entries);
+			configState.inputId = '';
+		}
+	} catch (err) {
+		configState.error = err instanceof Error ? err.message : 'Lookup failed';
+	} finally {
+		configState.loading = false;
+		m.redraw();
+	}
+}
+
+async function handleToggle(entry: ConfigEntry): Promise<void> {
+	const newValue = !entry.enabled;
+	try {
+		await setResearchLogging(entry.statementId, newValue);
+		entry.enabled = newValue;
+		persistEntries(configState.entries);
+		configState.success = `${newValue ? 'Enabled' : 'Disabled'} research logging for "${entry.title}"`;
+		configState.error = null;
+	} catch (err) {
+		configState.error = err instanceof Error ? err.message : 'Update failed';
+		configState.success = null;
+	}
+	m.redraw();
+}
+
+function ResearchConfigPanel(): m.Vnode {
+	return m('.research__panel', [
+		m('.section-title', 'Research Logging Config'),
+
+		// Input row
+		m('.research__config-row', [
+			m('input.research__config-input', {
+				type: 'text',
+				placeholder: 'Enter top-level statement ID...',
+				value: configState.inputId,
+				oninput: (e: InputEvent) => {
+					configState.inputId = (e.target as HTMLInputElement).value;
+				},
+				onkeydown: (e: KeyboardEvent) => {
+					if (e.key === 'Enter') handleLookup();
+				},
+			}),
+			m(
+				'button.research__config-btn',
+				{
+					disabled: configState.loading || !configState.inputId.trim(),
+					onclick: handleLookup,
+				},
+				configState.loading ? 'Looking up...' : 'Add',
+			),
+		]),
+
+		// Feedback
+		configState.error ? m('.research__config-msg.research__config-msg--error', configState.error) : null,
+		configState.success ? m('.research__config-msg.research__config-msg--success', configState.success) : null,
+
+		// Entries list
+		configState.entries.length > 0
+			? m('.research__config-list',
+				configState.entries.map((entry) =>
+					m('.research__config-entry', [
+						m('.research__config-info', [
+							m('span.research__config-title', entry.title.length > 60 ? entry.title.slice(0, 60) + '...' : entry.title),
+							m('span.research__config-id', entry.statementId),
+						]),
+						m(
+							'button.research__config-toggle',
+							{
+								class: entry.enabled ? 'research__config-toggle--on' : '',
+								onclick: () => handleToggle(entry),
+							},
+							entry.enabled ? 'Enabled' : 'Disabled',
+						),
+					]),
+				),
+			)
+			: m('.research__empty', 'Add a statement ID to configure research logging'),
+	]);
+}
+
 // ── Ticker (refreshes timeAgo labels) ────────────────────────────────
 
 let tickerInterval: ReturnType<typeof setInterval> | null = null;
@@ -81,11 +218,26 @@ function stopTicker(): void {
 
 // ── View ─────────────────────────────────────────────────────────────
 
+async function refreshPersistedEntries(): Promise<void> {
+	for (const entry of configState.entries) {
+		try {
+			const result = await getResearchLoggingStatus(entry.statementId);
+			if (result) {
+				entry.enabled = result.enabled;
+				entry.title = result.title;
+			}
+		} catch { /* ignore */ }
+	}
+	persistEntries(configState.entries);
+	m.redraw();
+}
+
 export function ResearchView(): m.Component {
 	return {
 		oninit() {
 			subscribeResearch();
 			startTicker();
+			refreshPersistedEntries();
 		},
 
 		onremove() {
@@ -124,6 +276,9 @@ export function ResearchView(): m.Component {
 						),
 					]),
 				]),
+
+				// Research Config
+				ResearchConfigPanel(),
 
 				// KPI Row
 				m('.kpi-row', [

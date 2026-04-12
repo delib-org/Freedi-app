@@ -188,6 +188,8 @@ export function setTimeScope(scope: TimeScope): void {
 	m.redraw();
 }
 
+let refreshInterval: ReturnType<typeof setInterval> | null = null;
+
 export function subscribeResearch(): void {
 	if (unsubscribe) return;
 
@@ -218,12 +220,24 @@ export function subscribeResearch(): void {
 			m.redraw();
 		},
 	);
+
+	// Recompute every 60s so actionsPerMinute and time buckets stay fresh
+	refreshInterval = setInterval(() => {
+		if (state.logs.length > 0) {
+			recompute(state.logs);
+			m.redraw();
+		}
+	}, 60_000);
 }
 
 export function unsubscribeResearch(): void {
 	if (unsubscribe) {
 		unsubscribe();
 		unsubscribe = null;
+	}
+	if (refreshInterval) {
+		clearInterval(refreshInterval);
+		refreshInterval = null;
 	}
 }
 
