@@ -4,7 +4,7 @@ import { KpiCard } from '../components/KpiCard';
 import { Spinner } from '../components/Spinner';
 import { subscribeResearch, unsubscribeResearch, getResearchState } from '../state/research';
 import { ResearchChart } from '../components/ResearchChart';
-import { getResearchActionLabel } from '@freedi/shared-types';
+import { getResearchActionLabel, normalizeScreenPath } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -235,7 +235,26 @@ export function ResearchView(): m.Component {
 // ── Export ────────────────────────────────────────────────────────────
 
 function exportJSON(logs: ResearchLog[]): void {
-	const blob = new Blob([JSON.stringify(logs, null, 2)], { type: 'application/json' });
+	// Pseudonymize before export
+	const userIdMap = new Map<string, string>();
+	let counter = 1;
+
+	const anonymized = logs.map((log) => {
+		if (!userIdMap.has(log.userId)) {
+			userIdMap.set(log.userId, `participant_${counter++}`);
+		}
+		const pseudoId = userIdMap.get(log.userId)!;
+
+		return {
+			...log,
+			userId: pseudoId,
+			logId: `${pseudoId}_${log.timestamp}`,
+			screen: log.screen ? normalizeScreenPath(log.screen) : undefined,
+			loginCount: undefined,
+		};
+	});
+
+	const blob = new Blob([JSON.stringify(anonymized, null, 2)], { type: 'application/json' });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;

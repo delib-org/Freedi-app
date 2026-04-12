@@ -1,6 +1,8 @@
 import { FC, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { Download, Users, FlaskConical } from 'lucide-react';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { exportStatementData } from '@/utils/exportUtils';
 import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
@@ -16,6 +18,8 @@ interface ExportSettingsProps {
 
 const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) => {
 	const { t } = useTranslation();
+	const creator = useAppSelector(creatorSelector);
+	const isSysAdmin = creator?.systemAdmin === true;
 
 	const [isExporting, setIsExporting] = useState<{ json: boolean; csv: boolean }>({
 		json: false,
@@ -139,27 +143,29 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 				{t('Includes evaluation counts, demographic breakdowns, and anonymized data')}
 			</p>
 
-			{/* Divider */}
-			<div className={styles.exportDivider} />
-
-			{/* Research Logs Export */}
-			<h4 className={styles.sectionTitle}>
-				<FlaskConical size={18} />
-				{t('Export Research Logs')}
-			</h4>
-			<p className={styles.sectionDescription}>
-				{t('Download raw action logs collected during research events for offline analysis')}
-			</p>
-			<div className={styles.exportButtons}>
-				<button
-					className={styles.exportButton}
-					onClick={handleResearchExport}
-					disabled={isResearchExporting}
-				>
-					<Download size={18} />
-					{isResearchExporting ? t('Exporting...') : t('Export Research JSON')}
-				</button>
-			</div>
+			{/* Research Logs Export — system admins only */}
+			{isSysAdmin && (
+				<>
+					<div className={styles.exportDivider} />
+					<h4 className={styles.sectionTitle}>
+						<FlaskConical size={18} />
+						{t('Export Research Logs')}
+					</h4>
+					<p className={styles.sectionDescription}>
+						{t('Download pseudonymized action logs for offline research analysis')}
+					</p>
+					<div className={styles.exportButtons}>
+						<button
+							className={styles.exportButton}
+							onClick={handleResearchExport}
+							disabled={isResearchExporting}
+						>
+							<Download size={18} />
+							{isResearchExporting ? t('Exporting...') : t('Export Research JSON')}
+						</button>
+					</div>
+				</>
+			)}
 		</div>
 	);
 };

@@ -5,7 +5,8 @@ import { statementSelectorById } from '@/redux/statements/statementsSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useResearchLogs, ResearchScope } from './useResearchLogs';
 import { downloadResearchLogsAsJSON } from '@/controllers/db/researchLogs/researchLogger';
-import { getResearchActionLabel, RESEARCH_CATEGORY_COLORS } from '@freedi/shared-types';
+import { getResearchActionLabel } from '@freedi/shared-types';
+import { creatorSelector } from '@/redux/creator/creatorSlice';
 import type { ResearchLog } from '@freedi/shared-types';
 import styles from './ResearchDashboard.module.scss';
 
@@ -99,6 +100,8 @@ const ResearchDashboard: FC = () => {
 	const [isExporting, setIsExporting] = useState(false);
 	const [, setTick] = useState(0);
 	const isTopLevel = !statement?.parentId || statement.parentId === 'top';
+	const creator = useAppSelector(creatorSelector);
+	const isSysAdmin = creator?.systemAdmin === true;
 
 	// Refresh "time ago" labels every 10s
 	useEffect(() => {
@@ -152,13 +155,15 @@ const ResearchDashboard: FC = () => {
 						<span>{isLive ? t('Live') : t('Inactive')}</span>
 					</div>
 				</div>
-				<button
-					className={styles.exportBtn}
-					onClick={handleExport}
-					disabled={isExporting || stats.totalActions === 0}
-				>
-					{isExporting ? t('Exporting...') : t('Export JSON')}
-				</button>
+				{isSysAdmin && (
+					<button
+						className={styles.exportBtn}
+						onClick={handleExport}
+						disabled={isExporting || stats.totalActions === 0}
+					>
+						{isExporting ? t('Exporting...') : t('Export JSON')}
+					</button>
+				)}
 			</div>
 
 			{/* Scope Toggle — only show when not at top level */}
@@ -236,26 +241,28 @@ const ResearchDashboard: FC = () => {
 				</div>
 			</div>
 
-			{/* Live Activity Feed */}
-			<div className={styles.panel}>
-				<h3 className={styles.panelTitle}>
-					{t('Live Activity')}
-					<span className={styles.feedCount}>
-						{stats.recentLogs.length} {t('recent')}
-					</span>
-				</h3>
-				<div className={styles.activityFeed}>
-					{stats.recentLogs.length === 0 ? (
-						<div className={styles.emptyFeed}>
-							<span className={styles.emptyText}>{t('Waiting for actions...')}</span>
-						</div>
-					) : (
-						stats.recentLogs.map((log) => (
-							<ActivityItem key={log.logId} log={log} isNew={stats.newLogIds.has(log.logId)} />
-						))
-					)}
+			{/* Live Activity Feed — system admins only */}
+			{isSysAdmin && (
+				<div className={styles.panel}>
+					<h3 className={styles.panelTitle}>
+						{t('Live Activity')}
+						<span className={styles.feedCount}>
+							{stats.recentLogs.length} {t('recent')}
+						</span>
+					</h3>
+					<div className={styles.activityFeed}>
+						{stats.recentLogs.length === 0 ? (
+							<div className={styles.emptyFeed}>
+								<span className={styles.emptyText}>{t('Waiting for actions...')}</span>
+							</div>
+						) : (
+							stats.recentLogs.map((log) => (
+								<ActivityItem key={log.logId} log={log} isNew={stats.newLogIds.has(log.logId)} />
+							))
+						)}
+					</div>
 				</div>
-			</div>
+			)}
 		</div>
 	);
 };

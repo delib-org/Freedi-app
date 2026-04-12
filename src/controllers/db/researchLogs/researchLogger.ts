@@ -26,6 +26,7 @@ import {
 	getResearchLogId,
 	RESEARCH_GLOBAL_ACTIONS,
 	bucketLoginCount,
+	normalizeScreenPath,
 } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
@@ -242,11 +243,39 @@ export async function exportResearchLogs(topParentId: string): Promise<ResearchL
 }
 
 /**
- * Download research logs as a JSON file.
- * Triggers a browser download.
+ * Pseudonymize logs: replace userIds with participant_N, sanitize logIds,
+ * bucket loginCount, normalize screen paths.
+ */
+function pseudonymizeLogs(logs: ResearchLog[]): Record<string, unknown>[] {
+	const userIdMap = new Map<string, string>();
+	let counter = 1;
+
+	return logs.map((log) => {
+		if (!userIdMap.has(log.userId)) {
+			userIdMap.set(log.userId, `participant_${counter++}`);
+		}
+		const pseudoId = userIdMap.get(log.userId)!;
+
+		return {
+			...log,
+			userId: pseudoId,
+			logId: `${pseudoId}_${log.timestamp}_${Math.random().toString(36).substring(2, 8)}`,
+			screen: log.screen ? normalizeScreenPath(log.screen) : undefined,
+			loginCount: log.loginCount ? undefined : undefined,
+			metadata: log.metadata?.loginBucket
+				? { loginBucket: log.metadata.loginBucket }
+				: log.metadata,
+		};
+	});
+}
+
+/**
+ * Download research logs as a pseudonymized JSON file.
+ * UserIds are replaced with participant_1, participant_2, etc.
  */
 export async function downloadResearchLogsAsJSON(topParentId: string): Promise<void> {
 	const logs = await exportResearchLogs(topParentId);
-	const filename = `research-logs_${topParentId}_${new Date().toISOString().slice(0, 10)}.json`;
-	downloadFile(JSON.stringify(logs, null, 2), filename, 'application/json');
+	const anonymized = pseudonymizeLogs(logs);
+	const filename = `research-logs_${new Date().toISOString().slice(0, 10)}.json`;
+	downloadFile(JSON.stringify(anonymized, null, 2), filename, 'application/json');
 }
