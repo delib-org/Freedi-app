@@ -168,8 +168,11 @@ export async function POST(
     // Atomically update consensus
     await atomicUpdateCommentConsensus(db, commentId, evalDiff);
 
-    // Research logging
-    logResearchAction(effectiveId, ResearchAction.EVALUATE, {
+    // Research logging — check top-level document's settings
+    const topDocId = comment?.topParentId || commentId;
+    const topDocForResearch = await db.collection(Collections.statements).doc(topDocId).get();
+    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(effectiveId, ResearchAction.EVALUATE, researchEnabled, {
       statementId: commentId,
       topParentId: comment?.topParentId,
       newValue: String(evaluation),

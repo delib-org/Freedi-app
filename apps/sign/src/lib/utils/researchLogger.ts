@@ -17,6 +17,7 @@ import { logger } from './logger';
 export function logResearchAction(
   userId: string,
   action: ResearchAction,
+  isResearchEnabled: boolean,
   data?: Partial<
     Pick<
       ResearchLog,
@@ -30,6 +31,8 @@ export function logResearchAction(
     >
   >,
 ): void {
+  if (!isResearchEnabled) return;
+
   try {
     const db = getFirestoreAdmin();
     const timestamp = Date.now();

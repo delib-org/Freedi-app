@@ -774,22 +774,27 @@ service cloud.firestore {
 
     // Research logs - append-only telemetry for field research
     match /researchLogs/{logId} {
-      // Users can append their own logs (no updates/deletes)
       allow create: if request.auth != null &&
                      request.auth.uid == request.resource.data.userId;
       allow update, delete: if false;
-
-      // System admins can read all logs (including global events without topParentId)
-      // Statement creators can read logs scoped to their statement
+      // Only system admins can read research logs (not statement creators)
       allow list: if request.auth != null &&
-                   (get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true ||
-                    (resource.data.topParentId != null &&
-                     get(/databases/$(database)/documents/statements/$(resource.data.topParentId)).data.creatorId == request.auth.uid));
+                   get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
       allow get: if request.auth != null &&
                    (get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true ||
-                    resource.data.userId == request.auth.uid ||
-                    (resource.data.topParentId != null &&
-                     get(/databases/$(database)/documents/statements/$(resource.data.topParentId)).data.creatorId == request.auth.uid));
+                    resource.data.userId == request.auth.uid);
+    }
+
+    // Research consent - users manage their own consent records
+    match /researchConsent/{consentId} {
+      allow create: if request.auth != null &&
+                     request.auth.uid == request.resource.data.userId;
+      allow read: if request.auth != null &&
+                   (request.auth.uid == resource.data.userId ||
+                    get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true);
+      allow update: if request.auth != null &&
+                     request.auth.uid == resource.data.userId;
+      allow delete: if false;
     }
 
     // Notification queue - no client access (Functions only)

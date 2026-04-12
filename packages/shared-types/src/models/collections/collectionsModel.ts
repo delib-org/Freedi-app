@@ -88,4 +88,5 @@ export enum Collections {
 
     // Research logging
     researchLogs = 'researchLogs',
+    researchConsent = 'researchConsent',
 }

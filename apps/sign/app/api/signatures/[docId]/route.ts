@@ -146,7 +146,8 @@ export async function POST(
     await db.collection(Collections.signatures).doc(signatureId).set(signature, { merge: true });
 
     // Research logging
-    logResearchAction(userId, ResearchAction.VOTE, {
+    const researchEnabled = document?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.VOTE, researchEnabled, {
       statementId: docId,
       topParentId: document?.topParentId || docId,
       newValue: signed,

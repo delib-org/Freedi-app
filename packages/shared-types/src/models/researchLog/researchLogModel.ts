@@ -2,6 +2,7 @@ import {
 	object,
 	string,
 	number,
+	boolean,
 	optional,
 	type InferOutput,
 	record,
@@ -84,6 +85,41 @@ export type ResearchLog = InferOutput<typeof ResearchLogSchema>;
 /** Helper to generate a research log document ID */
 export function getResearchLogId(userId: string, timestamp: number): string {
 	return `${userId}_${timestamp}_${Math.random().toString(36).substring(2, 8)}`;
+}
+
+// ── Research Consent ────────────────────────────────────────────────
+
+export const ResearchConsentSchema = object({
+	consentId: string(),
+	userId: string(),
+	topParentId: string(),
+	consented: boolean(),
+	timestamp: number(),
+});
+
+export type ResearchConsent = InferOutput<typeof ResearchConsentSchema>;
+
+export function getResearchConsentId(userId: string, topParentId: string): string {
+	return `${userId}_${topParentId}`;
+}
+
+// ── Data minimization helpers ───────────────────────────────────────
+
+/** Bucket raw login count into ranges for privacy */
+export function bucketLoginCount(count: number): string {
+	if (count <= 1) return "1";
+	if (count <= 5) return "2-5";
+	if (count <= 10) return "6-10";
+	if (count <= 20) return "11-20";
+	return "20+";
+}
+
+/** Replace statement IDs in URL paths with :id to prevent tracking */
+export function normalizeScreenPath(path: string): string {
+	return path.replace(
+		/\/(statement|stage|statement-screen)\/[^/]+/g,
+		"/$1/:id"
+	);
 }
 
 // ── Centralized action metadata (single source of truth) ───────────

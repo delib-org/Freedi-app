@@ -201,8 +201,10 @@ export async function POST(
     // Write to statements collection (new system)
     await db.collection(Collections.statements).doc(suggestionStatement.statementId).set(suggestionStatement);
 
-    // Research logging
-    logResearchAction(userId, ResearchAction.SUBMIT_PROPOSAL, {
+    // Research logging — check top-level document's settings
+    const topDocForResearch = await db.collection(Collections.statements).doc(documentId).get();
+    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.SUBMIT_PROPOSAL, researchEnabled, {
       statementId: suggestionStatement.statementId,
       parentId: paragraphId,
       topParentId: documentId,

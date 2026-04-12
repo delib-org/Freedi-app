@@ -3,6 +3,10 @@ export {
 	ResearchAction,
 	ResearchActionSchema,
 	getResearchLogId,
+	ResearchConsentSchema,
+	getResearchConsentId,
+	bucketLoginCount,
+	normalizeScreenPath,
 	RESEARCH_ACTION_CATEGORY,
 	RESEARCH_ACTION_LABELS,
 	RESEARCH_CATEGORY_COLORS,
@@ -11,4 +15,4 @@ export {
 	getResearchActionLabel,
 } from "./researchLogModel";
 
-export type { ResearchLog, ResearchCategory } from "./researchLogModel";
+export type { ResearchLog, ResearchCategory, ResearchConsent } from "./researchLogModel";

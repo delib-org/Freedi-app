@@ -117,8 +117,10 @@ export async function POST(
       }, { merge: true });
     });
 
-    // Research logging
-    logResearchAction(userId, ResearchAction.EVALUATE, {
+    // Research logging (only if enabled on the parent question)
+    const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
+    const researchEnabled = parentDoc.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.EVALUATE, researchEnabled, {
       statementId,
       parentId,
       topParentId: statement?.topParentId,

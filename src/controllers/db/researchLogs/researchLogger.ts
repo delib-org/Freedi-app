@@ -20,7 +20,13 @@ import {
 } from 'firebase/firestore';
 import { DB } from '@/controllers/db/config';
 import { createDocRef } from '@/utils/firebaseUtils';
-import { Collections, ResearchAction, getResearchLogId } from '@freedi/shared-types';
+import {
+	Collections,
+	ResearchAction,
+	getResearchLogId,
+	RESEARCH_GLOBAL_ACTIONS,
+	bucketLoginCount,
+} from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';
@@ -31,6 +37,17 @@ const LOGIN_COUNT_KEY = 'freedi_research_login_count';
 
 function getUserId(): string | undefined {
 	return store.getState().creator.creator?.uid;
+}
+
+/**
+ * Check if research logging is enabled for a statement (or its top parent).
+ * Looks up the topParentId statement in Redux.
+ */
+function isResearchEnabled(topParentId: string): boolean {
+	const statements = store.getState().statements.statements;
+	const statement = statements.find((s) => s.statementId === topParentId);
+
+	return statement?.statementSettings?.enableResearchLogging === true;
 }
 
 /**
@@ -56,6 +73,13 @@ export async function logResearchAction(
 	try {
 		const userId = getUserId();
 		if (!userId) return;
+
+		// Check if research mode is enabled for this statement
+		const isGlobal = RESEARCH_GLOBAL_ACTIONS.includes(action);
+		if (!isGlobal) {
+			const topParentId = data?.topParentId;
+			if (!topParentId || !isResearchEnabled(topParentId)) return;
+		}
 
 		const timestamp = Date.now();
 		const logId = getResearchLogId(userId, timestamp);
@@ -85,7 +109,9 @@ export async function logResearchAction(
  */
 export async function logLogin(): Promise<void> {
 	const count = incrementLoginCount();
-	await logResearchAction(ResearchAction.LOGIN, { loginCount: count });
+	await logResearchAction(ResearchAction.LOGIN, {
+		metadata: { loginBucket: bucketLoginCount(count) },
+	});
 }
 
 /**

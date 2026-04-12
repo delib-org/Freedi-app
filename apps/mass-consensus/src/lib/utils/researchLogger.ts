@@ -13,10 +13,12 @@ import { logger } from './logger';
 
 /**
  * Log a research action to Firestore (server-side, non-blocking).
+ * Only logs if isResearchEnabled is true (checked by the caller from statement settings).
  */
 export function logResearchAction(
   userId: string,
   action: ResearchAction,
+  isResearchEnabled: boolean,
   data?: Partial<
     Pick<
       ResearchLog,
@@ -30,6 +32,8 @@ export function logResearchAction(
     >
   >,
 ): void {
+  if (!isResearchEnabled) return;
+
   try {
     const db = getFirestoreAdmin();
     const timestamp = Date.now();

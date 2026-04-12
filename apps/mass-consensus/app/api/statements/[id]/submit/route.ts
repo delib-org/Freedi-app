@@ -276,7 +276,8 @@ export async function POST(
     await writeBatch.commit();
 
     // Research logging
-    logResearchAction(userId, ResearchAction.CREATE_STATEMENT, {
+    const researchEnabled = questionData?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.CREATE_STATEMENT, researchEnabled, {
       statementId: statementRef.id,
       parentId: questionId,
       topParentId: questionData?.topParentId || questionId,

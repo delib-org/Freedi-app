@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { useLocation } from 'react-router';
 import { logScreenView, logResearchAction } from './researchLogger';
-import { ResearchAction } from '@freedi/shared-types';
+import { ResearchAction, normalizeScreenPath } from '@freedi/shared-types';
 import { store } from '@/redux/store';
 
 /**
  * Hook to log screen views for research purposes.
- * Resolves the actual topParentId from Redux state.
- * Retries if the user isn't authenticated yet.
+ * Only logs when research mode is enabled on the relevant statement.
+ * Normalizes screen paths to prevent tracking real statement IDs.
  */
 export function useResearchRouteTracking(): void {
 	const location = useLocation();
@@ -18,7 +18,6 @@ export function useResearchRouteTracking(): void {
 		const currentPath = location.pathname;
 		if (currentPath === prevPathRef.current) return;
 
-		// Clear any pending retry
 		if (retryRef.current) {
 			clearTimeout(retryRef.current);
 			retryRef.current = null;
@@ -27,7 +26,6 @@ export function useResearchRouteTracking(): void {
 		const doLog = () => {
 			const userId = store.getState().creator.creator?.uid;
 			if (!userId) {
-				// User not authenticated yet — retry once after auth likely completes
 				retryRef.current = setTimeout(doLog, 2000);
 
 				return;
@@ -35,13 +33,15 @@ export function useResearchRouteTracking(): void {
 
 			const statementId = extractStatementId(currentPath);
 			const topParentId = resolveTopParentId(statementId);
+			const normalizedPath = normalizeScreenPath(currentPath);
 
 			// Log leaving previous screen
 			if (prevPathRef.current) {
 				const prevStatementId = extractStatementId(prevPathRef.current);
 				const prevTopParentId = resolveTopParentId(prevStatementId);
+				const prevNormalized = normalizeScreenPath(prevPathRef.current);
 				logResearchAction(ResearchAction.LEAVE_SCREEN, {
-					screen: prevPathRef.current,
+					screen: prevNormalized,
 					statementId: prevStatementId,
 					topParentId: prevTopParentId,
 				}).catch(() => {
@@ -50,7 +50,7 @@ export function useResearchRouteTracking(): void {
 			}
 
 			// Log viewing new screen
-			logScreenView(currentPath, topParentId).catch(() => {
+			logScreenView(normalizedPath, topParentId).catch(() => {
 				/* handled inside logResearchAction */
 			});
 		};
@@ -67,19 +67,12 @@ export function useResearchRouteTracking(): void {
 	}, [location.pathname]);
 }
 
-/**
- * Extract statementId from URL patterns like /statement/:id, /stage/:id, etc.
- */
 function extractStatementId(path: string): string | undefined {
 	const match = path.match(/\/(statement|stage|statement-screen)\/([^/]+)/);
 
 	return match?.[2];
 }
 
-/**
- * Look up the actual topParentId from Redux state.
- * Falls back to the statementId itself if not found in store.
- */
 function resolveTopParentId(statementId: string | undefined): string | undefined {
 	if (!statementId) return undefined;
 

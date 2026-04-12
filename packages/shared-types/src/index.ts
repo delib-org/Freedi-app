@@ -567,12 +567,16 @@ export type { ModerationLog } from "./models/moderation/moderationModel";
 export { ModerationLogSchema, ModerationCategory } from "./models/moderation/moderationModel";
 
 // Research logging
-export type { ResearchLog, ResearchCategory } from "./models/researchLog";
+export type { ResearchLog, ResearchCategory, ResearchConsent } from "./models/researchLog";
 export {
   ResearchLogSchema,
   ResearchAction,
   ResearchActionSchema,
   getResearchLogId,
+  ResearchConsentSchema,
+  getResearchConsentId,
+  bucketLoginCount,
+  normalizeScreenPath,
   RESEARCH_ACTION_CATEGORY,
   RESEARCH_ACTION_LABELS,
   RESEARCH_CATEGORY_COLORS,
