@@ -6,6 +6,8 @@ import { updateStatementConsensus } from '@/lib/firebase/queries';
 import { FieldValue } from 'firebase-admin/firestore';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 
 /**
  * POST /api/evaluations/[id]
@@ -113,6 +115,14 @@ export async function POST(
         // Only set createdAt if document doesn't exist
         ...(userEvalDoc.exists ? {} : { createdAt: now }),
       }, { merge: true });
+    });
+
+    // Research logging
+    logResearchAction(userId, ResearchAction.EVALUATE, {
+      statementId,
+      parentId,
+      topParentId: statement?.topParentId,
+      newValue: String(evaluation),
     });
 
     // Update statement consensus (async, don't wait)

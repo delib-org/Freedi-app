@@ -12,6 +12,7 @@ const navItems: NavItem[] = [
 	{ path: '/statements', label: 'Statements', icon: '\u2630' },
 	{ path: '/users', label: 'Users', icon: '\u263A' },
 	{ path: '/admins', label: 'Admins', icon: '\u2605' },
+	{ path: '/research', label: 'Research', icon: '\u{1F52C}' },
 ];
 
 export const Sidebar: m.Component = {

@@ -7,6 +7,8 @@ import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Firestore } from 'firebase-admin/firestore';
 
@@ -272,6 +274,13 @@ export async function POST(
     });
 
     await writeBatch.commit();
+
+    // Research logging
+    logResearchAction(userId, ResearchAction.CREATE_STATEMENT, {
+      statementId: statementRef.id,
+      parentId: questionId,
+      topParentId: questionData?.topParentId || questionId,
+    });
 
     return NextResponse.json({
       success: true,

@@ -1,10 +1,11 @@
 import { FC, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
-import { Download, Users } from 'lucide-react';
+import { Download, Users, FlaskConical } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { exportStatementData } from '@/utils/exportUtils';
 import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
 import { logError } from '@/utils/errorHandling';
+import { downloadResearchLogsAsJSON } from '@/controllers/db/researchLogs/researchLogger';
 import type { ExportFormat } from '@/types/export';
 import styles from './EnhancedAdvancedSettings.module.scss';
 
@@ -26,6 +27,8 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 		csv: false,
 	});
 
+	const [isResearchExporting, setIsResearchExporting] = useState(false);
+
 	async function handleExport(format: ExportFormat) {
 		setIsExporting((prev) => ({ ...prev, [format]: true }));
 		try {
@@ -38,6 +41,20 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			});
 		} finally {
 			setIsExporting((prev) => ({ ...prev, [format]: false }));
+		}
+	}
+
+	async function handleResearchExport() {
+		setIsResearchExporting(true);
+		try {
+			await downloadResearchLogsAsJSON(statement.topParentId || statement.statementId);
+		} catch (error) {
+			logError(error, {
+				operation: 'ExportSettings.handleResearchExport',
+				statementId: statement.statementId,
+			});
+		} finally {
+			setIsResearchExporting(false);
 		}
 	}
 
@@ -121,6 +138,28 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			<p className={styles.exportInfo}>
 				{t('Includes evaluation counts, demographic breakdowns, and anonymized data')}
 			</p>
+
+			{/* Divider */}
+			<div className={styles.exportDivider} />
+
+			{/* Research Logs Export */}
+			<h4 className={styles.sectionTitle}>
+				<FlaskConical size={18} />
+				{t('Export Research Logs')}
+			</h4>
+			<p className={styles.sectionDescription}>
+				{t('Download raw action logs collected during research events for offline analysis')}
+			</p>
+			<div className={styles.exportButtons}>
+				<button
+					className={styles.exportButton}
+					onClick={handleResearchExport}
+					disabled={isResearchExporting}
+				>
+					<Download size={18} />
+					{isResearchExporting ? t('Exporting...') : t('Export Research JSON')}
+				</button>
+			</div>
 		</div>
 	);
 };
