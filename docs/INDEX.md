@@ -25,6 +25,9 @@ Developer guides, coding standards, and user-facing docs.
 - `design-guide.md` - Visual design guide (colors, typography, components)
 - `participant-personas.md` - User personas and research (.pdf available)
 
+### [`PRIVACY_AND_RESEARCH_POLICY.md`](./PRIVACY_AND_RESEARCH_POLICY.md)
+Privacy policy and scientific research data policy covering data collection, consent model, anonymization, retention, and user rights.
+
 ### [`security/`](./security/)
 Security policies and vulnerability tracking.
 - `SECURITY.md` - Security policy & reporting
@@ -145,6 +148,7 @@ AI-powered features and evaluation models.
 | Set up development environment | [`setup/`](./setup/) |
 | Understand coding standards | [`guides/CODING_STYLE_GUIDE.md`](./guides/CODING_STYLE_GUIDE.md) |
 | Learn the design system | [`guides/design-guide.md`](./guides/design-guide.md) |
+| Understand privacy & research data | [`PRIVACY_AND_RESEARCH_POLICY.md`](./PRIVACY_AND_RESEARCH_POLICY.md) |
 | Report a security issue | [`security/SECURITY.md`](./security/SECURITY.md) |
 | Check performance metrics | [`performance/`](./performance/) |
 | Review system architecture | [`architecture/`](./architecture/) |

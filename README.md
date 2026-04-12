@@ -28,6 +28,7 @@ Whether you're drafting policies, brainstorming in teams, or running public cons
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [Limitations and Future Work](#limitations-and-future-work)
+- [Privacy and Research Data](#privacy-and-research-data)
 - [For Researchers](#for-researchers)
 - [License](#license)
 
@@ -314,6 +315,20 @@ We acknowledge several important limitations:
 4. **Facilitation Dependency**: Current success cases relied on structured facilitation. The system cannot yet substitute for facilitation quality and institutional context.
 
 These limitations position Freedi as a research direction rather than a replacement for existing democratic institutions. Considerable work remains before deployment in contexts with substantial consequences.
+
+## Privacy and Research Data
+
+Freedi takes user privacy seriously. Our approach:
+
+- **No tracking cookies** — No advertising or third-party tracking
+- **Research is opt-in** — Discussions must have research logging explicitly enabled by an admin, and each user sees a consent banner before any data is collected
+- **Anonymized by design** — Research logs store only anonymized user IDs, never names, emails, or personal information
+- **Pseudonymized exports** — When data is exported for research, all user IDs are replaced with sequential pseudonyms (`participant_1`, `participant_2`, ...)
+- **K-anonymity protection** — Demographic breakdowns with fewer than 3 users are suppressed
+- **Automatic data retention** — Research logs are automatically deleted after 365 days
+- **User control** — Users can decline research participation and continue using the platform normally
+
+For full details, see our **[Privacy and Research Data Policy](./docs/PRIVACY_AND_RESEARCH_POLICY.md)**.
 
 ## For Researchers
 
