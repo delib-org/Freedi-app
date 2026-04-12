@@ -90,6 +90,7 @@ import {
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
+import { cleanupResearchLogs } from './fn_researchRetention';
 import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
@@ -451,6 +452,7 @@ exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
 exports.deleteResearchLogs = deleteResearchLogs;
+exports.cleanupResearchLogs = cleanupResearchLogs;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);

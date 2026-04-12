@@ -28,22 +28,28 @@ export function getOrCreateAnonymousUser(): string {
     localStorage.setItem(USER_ID_KEY, userId);
   }
 
-  // Set cookie for server-side access
-  document.cookie = `userId=${userId}; path=/; max-age=31536000; SameSite=Lax`;
+  // Cookie is now set by middleware (HttpOnly _uid cookie)
+  // Legacy userId cookie also set by middleware on first visit
 
   return userId;
 }
 
 /**
- * Get user ID from cookies (server-side)
- * @param cookieHeader - Cookie header from request
+ * Get user ID from cookies (server-side).
+ * Prefers the HttpOnly _uid cookie (set by middleware, XSS-proof)
+ * over the legacy userId cookie.
  */
 export function getUserIdFromCookie(cookieHeader: string | null): string | null {
   if (!cookieHeader) return null;
 
-  const match = cookieHeader.match(/userId=([^;]+)/);
+  // Prefer secure HttpOnly cookie
+  const secureMatch = cookieHeader.match(/_uid=([^;]+)/);
+  if (secureMatch) return secureMatch[1];
 
-return match ? match[1] : null;
+  // Fall back to legacy cookie
+  const legacyMatch = cookieHeader.match(/userId=([^;]+)/);
+
+  return legacyMatch ? legacyMatch[1] : null;
 }
 
 /**
@@ -51,9 +57,14 @@ return match ? match[1] : null;
  * @param cookieStore - Next.js cookies() return value
  */
 export function getUserIdFromCookies(cookieStore: { get: (name: string) => { value: string } | undefined }): string | null {
-  const userIdCookie = cookieStore.get('userId');
+  // Prefer HttpOnly _uid cookie
+  const secureCookie = cookieStore.get('_uid');
+  if (secureCookie?.value) return secureCookie.value;
 
-  return userIdCookie?.value ?? null;
+  // Fall back to legacy cookie
+  const legacyCookie = cookieStore.get('userId');
+
+  return legacyCookie?.value ?? null;
 }
 
 const pseudoNameAdjectives = [

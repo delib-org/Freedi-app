@@ -29,8 +29,8 @@ export function getOrCreateAnonymousUser(): string {
     localStorage.setItem(USER_ID_KEY, userId);
   }
 
-  // Set cookie for server-side access
-  document.cookie = `userId=${userId}; path=/; max-age=31536000; SameSite=Lax`;
+  // Cookie is now set by middleware (HttpOnly _uid cookie)
+  // Legacy userId cookie also set by middleware on first visit
 
   return userId;
 }
@@ -41,12 +41,17 @@ export function getOrCreateAnonymousUser(): string {
 export function setFirebaseUser(user: { uid: string; displayName: string | null; email: string | null }): void {
   if (typeof window === 'undefined') return;
 
-  localStorage.setItem(FIREBASE_USER_KEY, JSON.stringify(user));
+  // Store in localStorage for client-side access (display purposes only)
+  // Do NOT store email — PII should not persist in browser storage
+  localStorage.setItem(FIREBASE_USER_KEY, JSON.stringify({ uid: user.uid, displayName: user.displayName }));
   localStorage.setItem(USER_ID_KEY, user.uid);
 
-  // Set cookie for server-side access
+  // Set legacy cookies for server-side access
+  // The authoritative _uid HttpOnly cookie is set by middleware
   document.cookie = `userId=${user.uid}; path=/; max-age=31536000; SameSite=Lax`;
   document.cookie = `userDisplayName=${encodeURIComponent(user.displayName || '')}; path=/; max-age=31536000; SameSite=Lax`;
+  // Remove any existing email cookie (PII)
+  document.cookie = 'userEmail=; path=/; max-age=0';
 }
 
 /**
@@ -67,12 +72,21 @@ export function clearUserData(): void {
  * Get user ID from cookies (server-side)
  * @param cookieHeader - Cookie header from request
  */
+/**
+ * Prefers the HttpOnly _uid cookie (set by middleware, XSS-proof)
+ * over the legacy userId cookie.
+ */
 export function getUserIdFromCookie(cookieHeader: string | null): string | null {
   if (!cookieHeader) return null;
 
-  const match = cookieHeader.match(/userId=([^;]+)/);
+  // Prefer secure HttpOnly cookie
+  const secureMatch = cookieHeader.match(/_uid=([^;]+)/);
+  if (secureMatch) return secureMatch[1];
 
-  return match ? match[1] : null;
+  // Fall back to legacy cookie
+  const legacyMatch = cookieHeader.match(/userId=([^;]+)/);
+
+  return legacyMatch ? legacyMatch[1] : null;
 }
 
 /**
@@ -88,15 +102,11 @@ export function getUserDisplayNameFromCookie(cookieHeader: string | null): strin
 }
 
 /**
- * Get user email from cookies (server-side)
- * @param cookieHeader - Cookie header from request
+ * @deprecated Email is no longer stored in cookies (PII removal).
+ * Returns null. Use Firebase Admin auth verification instead.
  */
-export function getUserEmailFromCookie(cookieHeader: string | null): string | null {
-  if (!cookieHeader) return null;
-
-  const match = cookieHeader.match(/userEmail=([^;]+)/);
-
-  return match ? decodeURIComponent(match[1]) : null;
+export function getUserEmailFromCookie(_cookieHeader: string | null): string | null {
+  return null;
 }
 
 /**
@@ -106,9 +116,14 @@ export function getUserEmailFromCookie(cookieHeader: string | null): string | nu
 export function getUserIdFromCookies(
   cookieStore: { get: (name: string) => { value: string } | undefined }
 ): string | null {
-  const userIdCookie = cookieStore.get('userId');
+  // Prefer HttpOnly _uid cookie
+  const secureCookie = cookieStore.get('_uid');
+  if (secureCookie?.value) return secureCookie.value;
 
-  return userIdCookie?.value ?? null;
+  // Fall back to legacy cookie
+  const legacyCookie = cookieStore.get('userId');
+
+  return legacyCookie?.value ?? null;
 }
 
 /**
@@ -168,10 +183,9 @@ export interface SignUser {
 /**
  * Get user info from cookies (server-side).
  *
- * On the server we cannot access localStorage, so we determine anonymity
- * by checking: (1) the "anon_" prefix, and (2) whether an email cookie exists.
- * Google-authenticated users always have an email cookie; Firebase anonymous
- * users do not.
+ * Determines anonymity by checking:
+ * (1) the "anon_" prefix, and
+ * (2) whether a display name cookie exists (Google users always have one).
  */
 export function getUserFromCookies(
   cookieStore: { get: (name: string) => { value: string } | undefined }
@@ -184,10 +198,9 @@ export function getUserFromCookies(
     ? decodeURIComponent(displayNameCookie.value)
     : getAnonymousDisplayName(userId);
 
-  // Determine anonymity: "anon_" prefix OR no email cookie (Firebase anonymous users)
-  const emailCookie = cookieStore.get('userEmail');
-  const hasEmail = Boolean(emailCookie?.value);
-  const isAnonymous = userId.startsWith('anon_') || !hasEmail;
+  // Determine anonymity: "anon_" prefix OR no display name (Firebase anonymous users have no name)
+  const hasDisplayName = Boolean(displayNameCookie?.value);
+  const isAnonymous = userId.startsWith('anon_') || !hasDisplayName;
 
   return {
     uid: userId,

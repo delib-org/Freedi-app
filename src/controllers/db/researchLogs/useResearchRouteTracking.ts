@@ -42,8 +42,8 @@ export function useResearchRouteTracking(): void {
 				const prevNormalized = normalizeScreenPath(prevPathRef.current);
 				logResearchAction(ResearchAction.LEAVE_SCREEN, {
 					screen: prevNormalized,
-					statementId: prevStatementId,
-					topParentId: prevTopParentId,
+					...(prevStatementId && { statementId: prevStatementId }),
+					...(prevTopParentId && { topParentId: prevTopParentId }),
 				}).catch(() => {
 					/* handled inside logResearchAction */
 				});
