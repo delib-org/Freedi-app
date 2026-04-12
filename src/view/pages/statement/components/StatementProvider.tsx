@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { StatementContext } from '../StatementCont';
 import { StatementContent } from './StatementContent';
 import { setShowNewStatementModal } from '@/redux/statements/newStatementSlice';
+import ResearchConsentBanner from '@/view/components/researchConsent/ResearchConsentBanner';
 import {
 	Statement,
 	User,
@@ -78,6 +79,11 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 		],
 	);
 
+	const researchTopParentId = topParentStatement?.statementId || statement?.statementId;
+	const isResearchEnabled =
+		topParentStatement?.statementSettings?.enableResearchLogging === true ||
+		statement?.statementSettings?.enableResearchLogging === true;
+
 	return (
 		<StatementContext.Provider value={contextValue}>
 			<StatementContent
@@ -90,6 +96,9 @@ export const StatementProvider: React.FC<StatementProviderProps> = ({
 				isMassConsensus={isMassConsensus}
 				role={role}
 			/>
+			{isResearchEnabled && researchTopParentId && (
+				<ResearchConsentBanner topParentId={researchTopParentId} />
+			)}
 		</StatementContext.Provider>
 	);
 };

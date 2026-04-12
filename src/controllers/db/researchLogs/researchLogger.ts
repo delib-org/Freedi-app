@@ -32,6 +32,7 @@ import type { ResearchLog } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 import { store } from '@/redux/store';
 import { downloadFile } from '@/utils/exportUtils';
+import { getCachedConsent } from './researchConsentService';
 
 const SESSION_ID = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
 const LOGIN_COUNT_KEY = 'freedi_research_login_count';
@@ -80,6 +81,10 @@ export async function logResearchAction(
 		if (!isGlobal) {
 			const topParentId = data?.topParentId;
 			if (!topParentId || !isResearchEnabled(topParentId)) return;
+
+			// Check user consent (skip if opted out)
+			const consent = getCachedConsent(userId, topParentId);
+			if (consent === false) return;
 		}
 
 		const timestamp = Date.now();
@@ -95,8 +100,13 @@ export async function logResearchAction(
 			...data,
 		};
 
+		// Remove undefined values — Firestore rejects them in setDoc()
+		const cleanEntry = Object.fromEntries(
+			Object.entries(logEntry).filter(([, v]) => v !== undefined),
+		);
+
 		const docRef = createDocRef(Collections.researchLogs, logId);
-		await setDoc(docRef, logEntry);
+		await setDoc(docRef, cleanEntry);
 	} catch (error) {
 		logError(error, {
 			operation: 'researchLogger.logResearchAction',
