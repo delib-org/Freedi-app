@@ -150,6 +150,11 @@ const HeaderMenu: FC<HeaderMenuProps> = ({
 							}}
 						/>
 						<MenuOption
+							label={t('Research Dashboard')}
+							icon={<MapIcon style={menuIconStyle} />}
+							onOptionClick={() => handleNavigateToMap(Screen.research)}
+						/>
+						<MenuOption
 							label={t('Settings')}
 							icon={<SettingsIcon style={menuIconStyle} />}
 							onOptionClick={onNavigateToSettings}

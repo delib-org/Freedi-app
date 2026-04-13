@@ -33,6 +33,10 @@ const SubQuestionsMap = lazyWithRetry(
 	() => import('../subQuestionsMap/SubQuestionsMap'),
 	'SubQuestionsMap',
 );
+const ResearchDashboard = lazyWithRetry(
+	() => import('../researchDashboard/ResearchDashboard'),
+	'ResearchDashboard',
+);
 
 interface SwitchScreenProps {
 	statement: Statement | undefined;
@@ -77,7 +81,7 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 
 	// Permission check for settings
 	const hasPermission = role === Role.admin || role === Role.creator;
-	if (!hasPermission && screen === 'settings') {
+	if (!hasPermission && (screen === 'settings' || screen === 'research')) {
 		screen = 'main';
 	}
 
@@ -111,6 +115,12 @@ function SwitchScreen({ statement, role, activeView }: Readonly<SwitchScreenProp
 			return (
 				<Suspense fallback={<LoadingPage />}>
 					<StatementSettings />
+				</Suspense>
+			);
+		case Screen.research:
+			return (
+				<Suspense fallback={<LoadingPage />}>
+					<ResearchDashboard />
 				</Suspense>
 			);
 		default:

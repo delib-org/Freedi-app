@@ -122,6 +122,7 @@ export enum Screen {
 	agreementMap = 'agreement-map',
 	polarizationIndex = 'polarization-index',
 	subQuestionsMap = 'sub-questions-map',
+	research = 'research',
 }
 
 export enum SortType {

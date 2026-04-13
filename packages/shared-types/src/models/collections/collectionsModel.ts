@@ -85,4 +85,8 @@ export enum Collections {
     userEngagement = 'userEngagement',
     engagementEvents = 'engagementEvents',
     creditRules = 'creditRules',
+
+    // Research logging
+    researchLogs = 'researchLogs',
+    researchConsent = 'researchConsent',
 }

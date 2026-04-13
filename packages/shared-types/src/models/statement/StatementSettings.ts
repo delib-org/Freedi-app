@@ -53,6 +53,7 @@ export const StatementSettingsSchema = object({
 	enableSubQuestionsMap: optional(boolean()), // if false, the sub-questions map side panel is hidden (default: true)
 	defaultView: optional(string()), // 'chat' | 'options' | 'questions' - default view for the segmented control
 	enableTreeView: optional(boolean()), // if true, show threaded tree discussion instead of flat chat
+	enableResearchLogging: optional(boolean()), // if true, research actions are logged for this statement and all sub-statements
 });
 
 

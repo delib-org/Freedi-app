@@ -965,7 +965,7 @@
   "Friendly dog holding an unplugged cable": "כלב חמוד מחזיק כבל מנותק",
   "Friendly illustration showing access restriction": "איור ידידותי המציג הגבלת גישה",
   "From": "מ",
-  "From the Institute for Deliberative Democracy": "מהמכון לדמוקרטיה מתדיינת",
+  "From the Institute for Deliberative Democracy": "מהמכון לדמוקרטיה דיונית",
   "Full control over statement and members": "שליטה מלאה על הצהרה וחברים",
   "Full Document Revision Recommended": "מומלץ עדכון מלא של המסמך",
   "Full keyboard navigation support for all features": "תמיכה מלאה בניווט מקלדת לכל התכונות",
@@ -2732,5 +2732,11 @@
   "You haven't posted yet": "עדיין לא פרסמת",
   "Join the discussion by typing a message below": "הצטרף לדיון על ידי הקלדת הודעה למטה",
   "Collapse all": "כווץ הכל",
-  "Expand all": "הרחב הכל"
+  "Expand all": "הרחב הכל",
+  "Academic Research": "מחקר אקדמי",
+  "This discussion is part of academic research aimed at improving democratic decision-making. By consenting, you help improve our democracy.": "דיון זה הוא חלק ממחקר אקדמי שמטרתו לשפר קבלת החלטות דמוקרטית. בהסכמתך, את/ה עוזר/ת לשפר את הדמוקרטיה שלנו.",
+  "All data is collected anonymously — no personal information is stored.": "כל המידע נאסף באופן אנונימי — לא נשמר מידע אישי.",
+  "You may opt out and continue participating without being tracked.": "באפשרותך לסרב ולהמשיך להשתתף ללא מעקב.",
+  "I Consent": "אני מסכים/ה",
+  "No Thanks": "לא, תודה"
 }

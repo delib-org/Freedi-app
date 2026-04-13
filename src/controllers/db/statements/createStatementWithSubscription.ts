@@ -13,6 +13,7 @@ import { Dispatch } from '@reduxjs/toolkit';
 import { setStatementSubscriptionToDB } from '@/controllers/db/subscriptions/setSubscriptions';
 import { notificationService } from '@/services/notificationService';
 import { validateStatementTypeHierarchy } from '@/controllers/general/helpers';
+import { logStatementCreation } from '@/controllers/db/researchLogs/researchLogger';
 
 interface CreateStatementWithSubscriptionParams {
 	newStatementParent: Statement | 'top';
@@ -97,6 +98,9 @@ export async function createStatementWithSubscription({
 	}
 
 	const { statementId } = result;
+
+	// Research logging
+	logStatementCreation(statementId, _newStatement.parentId, _newStatement.topParentId);
 
 	// Create subscription in Firestore with push notifications enabled if user has granted permission
 	const pushNotificationsEnabled =

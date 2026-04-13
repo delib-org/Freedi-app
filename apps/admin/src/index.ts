@@ -6,6 +6,7 @@ import { DashboardView } from './views/DashboardView';
 import { StatementsView } from './views/StatementsView';
 import { UsersView } from './views/UsersView';
 import { AdminsView } from './views/AdminsView';
+import { ResearchView } from './views/ResearchView';
 
 // Initialize auth before mounting
 initAuth();
@@ -18,5 +19,6 @@ if (root) {
 		'/statements': StatementsView,
 		'/users': UsersView,
 		'/admins': AdminsView,
+		'/research': ResearchView,
 	});
 }
