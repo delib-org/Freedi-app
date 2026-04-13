@@ -57,7 +57,7 @@ const ResearchConsentBanner: FC<ResearchConsentBannerProps> = ({ topParentId }) 
 					{t('All data is collected anonymously — no personal information is stored.')}
 				</p>
 				<p className={styles.optOut}>
-					{t('You may opt out and continue participating without being tracked.')}
+					{t('The information collected is anonymous and used for statistical analysis only. You may stop participating at any stage.')}
 				</p>
 				<div className={styles.buttons}>
 					<button className={styles.consentBtn} onClick={() => handleConsent(true)}>
