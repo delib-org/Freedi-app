@@ -6,7 +6,7 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { Statement, calcMeanSentiment, calcAgreementIndex } from '@freedi/shared-types';
+import { Statement, calcMeanSentiment, calcAgreementIndex, DEFAULT_MIN_EVALUATORS } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
@@ -147,7 +147,7 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			<div
 				className={`${styles['evaluation-score']} ${consensusDisplay < 0 ? styles.negative : ''}`}
 			>
-				{showEvaluation && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{showEvaluation && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS ? (
 					<Tooltip
 						content={metrics ? (
 							<>
