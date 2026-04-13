@@ -140,8 +140,10 @@ export function listenToStatementSubscriptions(
 		const statementsSubscribeRef = collection(FireStore, Collections.statementsSubscribe);
 		const q = query(
 			statementsSubscribeRef,
-			where('userId', '==', userId),
-			where('parentId', '==', 'top'),
+			and(
+				where('userId', '==', userId),
+				or(where('parentId', '==', 'top'), where('statement.parentId', '==', 'top')),
+			),
 			orderBy('lastUpdate', 'desc'),
 			limit(numberOfStatements),
 		);

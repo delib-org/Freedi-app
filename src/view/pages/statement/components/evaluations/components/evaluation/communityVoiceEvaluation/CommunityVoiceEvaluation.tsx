@@ -1,11 +1,11 @@
-import { FC, useState, useEffect } from 'react';
+import { FC, useState, useEffect, useMemo } from 'react';
 import styles from './CommunityVoiceEvaluation.module.scss';
 import { communityVoiceOptions, CommunityVoiceOption } from './CommunityVoiceEvaluationModel';
 import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { Statement } from '@freedi/shared-types';
+import { Statement, calcMeanSentiment, calcAgreementIndex } from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
@@ -32,14 +32,30 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 		numberOfEvaluators,
 		sumPro = 0,
 		sumCon = 0,
+		sumEvaluations = 0,
+		sumSquaredEvaluations = 0,
 	} = statement.evaluation || {
 		numberOfEvaluators: 0,
 		sumPro: 0,
 		sumCon: 0,
+		sumEvaluations: 0,
+		sumSquaredEvaluations: 0,
 	};
 	const avg =
 		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
 	const consensusDisplay = Math.round((statement.consensus || 0) * 100);
+
+	const metrics = useMemo(() => {
+		if (!numberOfEvaluators || numberOfEvaluators <= 0) return null;
+		const meanSentiment = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
+		const agreementIndex = calcAgreementIndex(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+
+		return {
+			meanSentiment: Math.round(meanSentiment * 100),
+			agreementIndex: Math.round(agreementIndex * 100),
+			consensusScore: consensusDisplay,
+		};
+	}, [sumEvaluations, sumSquaredEvaluations, numberOfEvaluators, consensusDisplay]);
 
 	return (
 		<div className={styles.evaluation}>
@@ -60,7 +76,14 @@ const CommunityVoiceEvaluation: FC<CommunityVoiceEvaluationProps> = ({
 			<div className={styles['evaluation-score']}>
 				{showEvaluation && numberOfEvaluators && numberOfEvaluators > 0 ? (
 					<Tooltip
-						content={`${t('average')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
+						content={metrics ? (
+							<>
+								<div>{t('Consensus score')}: {metrics.consensusScore}</div>
+								<div>{t('Average score')}: {metrics.meanSentiment}%</div>
+								<div>{t('Agreement')}: {metrics.agreementIndex}%</div>
+								<div>{t('Evaluators')}: {numberOfEvaluators}</div>
+							</>
+						) : `${t('Evaluators')}: ${numberOfEvaluators}`}
 						position="bottom"
 					>
 						<span

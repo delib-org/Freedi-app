@@ -2,7 +2,7 @@ import { FC, ReactNode, useState, useRef, useEffect } from 'react';
 import styles from './Tooltip.module.scss';
 
 interface TooltipProps {
-	content: string;
+	content: ReactNode;
 	children: ReactNode;
 	position?:
 		| 'top'

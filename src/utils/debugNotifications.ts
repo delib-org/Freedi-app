@@ -138,8 +138,8 @@ export async function debugNotifications() {
 	};
 }
 
-// Add to window for easy console access
-if (typeof window !== 'undefined') {
+// Add to window for easy console access — only in development to avoid PII exposure in production
+if (typeof window !== 'undefined' && import.meta.env.DEV) {
 	(window as { debugNotifications?: typeof debugNotifications }).debugNotifications =
 		debugNotifications;
 }
