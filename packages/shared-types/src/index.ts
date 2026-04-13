@@ -371,9 +371,14 @@ export {
 // Consensus Calculation utilities
 export {
   FLOOR_STD_DEV,
+  BAYESIAN_PRIOR_K,
+  CONFIDENCE_ALPHA,
+  tCritical,
+  calcSmoothedSEM,
   calcStandardError,
   calcAgreement,
   calcBinaryConsensus,
+  calcMeanSentiment,
   DEFAULT_REMOVAL_THRESHOLD,
   DEFAULT_ADDITION_THRESHOLD,
   DEFAULT_MIN_EVALUATORS,
