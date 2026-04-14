@@ -130,10 +130,12 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
 		false;
 
+	const isFailed = statement.joinStatus === 'failed';
 	const nodeClassName = [
 		styles['tree-option-node'],
 		isInResults ? styles['tree-option-node--selected'] : '',
 		isNew ? styles['tree-option-node--new'] : '',
+		isFailed ? styles['tree-option-node--failed'] : '',
 	]
 		.filter(Boolean)
 		.join(' ');

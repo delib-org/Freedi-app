@@ -168,6 +168,27 @@ service cloud.firestore {
                          request.auth.uid == submissionUserId;
         allow delete: if false;
       }
+
+      // Civil Activity Hub — post-resolve per-user state.
+      // Writes to this subcollection come from the `resolveJoinIntents`
+      // callable (admin-triggered) and from clients flipping their own
+      // pruning state to `confirmed`. The admin function writes via
+      // Firebase Admin SDK which bypasses these rules.
+      match /joinResolutionUsers/{resolutionUserId} {
+        function isResolutionAdmin() {
+          let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+          let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+          return exists(subPath) &&
+                 (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+        }
+
+        allow read: if request.auth.uid != null &&
+                       (request.auth.uid == resolutionUserId || isResolutionAdmin());
+        allow update: if request.auth.uid != null &&
+                         request.auth.uid == resolutionUserId;
+        allow create: if false;
+        allow delete: if false;
+      }
     }
 
     match /inAppNotifications/{inAppNotificationId=**} {

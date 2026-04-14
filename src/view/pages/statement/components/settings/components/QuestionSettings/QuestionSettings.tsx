@@ -38,6 +38,7 @@ import QuestionLinkSection from './QuestionLinkSection';
 import AnchoredSettings from './AnchoredSettings';
 import ConfidenceIndexSettings from './ConfidenceIndexSettings';
 import JoinFormSettings from './JoinFormSettings/JoinFormSettings';
+import JoinResolutionSettings from './JoinResolutionSettings/JoinResolutionSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -252,6 +253,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				<ConfidenceIndexSettings statement={statement} />
 
 				<JoinFormSettings statement={statement} />
+				<JoinResolutionSettings statement={statement} />
 			</div>
 		);
 	} catch (error: unknown) {

@@ -8,6 +8,7 @@ import {
 	array,
 	any,
 	enum_,
+	picklist,
 	InferOutput,
 	pipe,
 	transform,
@@ -213,10 +214,16 @@ export const StatementSchema = object({
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
-	/** Activists — users who joined this option to help it happen. */
+	/** Activists — users who joined this option to help it happen.
+	 *  During `joinResolution.phase === 'intent'` these are conditional intents;
+	 *  after resolve they are firm commitments. */
 	joined: optional(array(CreatorSchema)),
-	/** Organizers — users who coordinate / lead the option's team. Parallel to `joined`. */
+	/** Organizers — users who coordinate / lead the option's team. Parallel to
+	 *  `joined`, always firm, never cleared by resolve, never counted toward
+	 *  `minJoinMembers`. */
 	organizers: optional(array(CreatorSchema)),
+	/** Post-resolve status. Undefined before resolve. Set by `fn_resolveJoinIntents`. */
+	joinStatus: optional(picklist(['activated', 'failed'])),
 	hide: optional(boolean()), // if true, the statement is hidden
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)

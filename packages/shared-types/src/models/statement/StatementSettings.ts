@@ -38,6 +38,29 @@ export const JoinFormConfigSchema = object({
 });
 export type JoinFormConfig = InferOutput<typeof JoinFormConfigSchema>;
 
+/**
+ * Conditional-joining resolution — lets admins run a one-time "Resolve" step
+ * that filters out options below minJoinMembers. Until resolved, every join
+ * is a conditional intent ("count me in if this reaches N"). After resolve,
+ * surviving options become firm memberships and users with too many intents
+ * are prompted to prune to `maxCommitmentsPerUser`.
+ */
+export const JoinResolutionPhaseSchema = picklist(['intent', 'resolved']);
+export type JoinResolutionPhase = InferOutput<typeof JoinResolutionPhaseSchema>;
+
+export const JoinResolutionConfigSchema = object({
+	enabled: boolean(),
+	phase: JoinResolutionPhaseSchema,
+	maxCommitmentsPerUser: number(),
+	resolvedAt: optional(number()),
+	resolvedBy: optional(string()),
+	activatedCount: optional(number()),
+	failedCount: optional(number()),
+	orphanedCount: optional(number()),
+	pruningCount: optional(number()),
+});
+export type JoinResolutionConfig = InferOutput<typeof JoinResolutionConfigSchema>;
+
 export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
@@ -83,6 +106,7 @@ export const StatementSettingsSchema = object({
 	enableTreeView: optional(boolean()), // if true, show threaded tree discussion instead of flat chat
 	enableResearchLogging: optional(boolean()), // if true, research actions are logged for this statement and all sub-statements
 	joinForm: optional(JoinFormConfigSchema), // admin-defined join form shown on first join under this question
+	joinResolution: optional(JoinResolutionConfigSchema), // conditional-joining lifecycle (intent → resolved)
 });
 
 

@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { onSnapshot, query, where, orderBy, limit, collection } from 'firebase/firestore';
 import { DB } from '@/controllers/db/config';
-import {
-	Collections,
-	ResearchAction,
-	RESEARCH_GLOBAL_ACTIONS,
-	getResearchCategory,
-} from '@freedi/shared-types';
+import { Collections, RESEARCH_GLOBAL_ACTIONS, getResearchCategory } from '@freedi/shared-types';
 import type { ResearchLog, ResearchCategory } from '@freedi/shared-types';
 import { logError } from '@/utils/errorHandling';
 

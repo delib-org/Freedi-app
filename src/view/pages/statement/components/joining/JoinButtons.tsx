@@ -109,22 +109,50 @@ const JoinButtons: FC<JoinButtonsProps> = ({ statement, parentStatement, classNa
 	const activistCount = statement.joined?.length ?? 0;
 	const organizerCount = statement.organizers?.length ?? 0;
 
-	const activistLabel = hasJoinedOptimistic ? t('Leave as activist') : t('Join as activist');
-	const organizerLabel = hasOrganizedOptimistic
-		? t('Leave as organizer')
-		: t('Join as organizer');
+	// Phase-aware rendering driven by the parent question's joinResolution.
+	const resolution = parentStatement?.statementSettings?.joinResolution;
+	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
+	const isConditional = resolution?.enabled === true;
+	const isIntentPhase = isConditional && resolution?.phase === 'intent';
+	const isResolvedPhase = isConditional && resolution?.phase === 'resolved';
+	const isFailed = isResolvedPhase && statement.joinStatus === 'failed';
+
+	// Activist button label adapts to phase.
+	let activistLabel: string;
+	if (isIntentPhase && minJoinMembers) {
+		activistLabel = hasJoinedOptimistic
+			? t('Withdraw intent')
+			: `${t('Count me in if this reaches')} ${minJoinMembers}`;
+	} else {
+		activistLabel = hasJoinedOptimistic ? t('Leave as activist') : t('Join as activist');
+	}
+
+	const organizerLabel = hasOrganizedOptimistic ? t('Leave as organizer') : t('Join as organizer');
 
 	return (
 		<>
 			<div className={`${styles.joinButtons} ${className ?? ''}`.trim()}>
-				<Button
-					text={`${activistLabel} (${activistCount})`}
-					size="small"
-					variant={hasJoinedOptimistic ? 'approve' : 'secondary'}
-					onClick={() => handleJoin('activist')}
-					disabled={isJoinLoading || joinFlow.isLoading}
-					ariaLabel={activistLabel}
-				/>
+				{isFailed ? (
+					<span className={styles.joinButtons__failedBadge}>
+						{t('Did not reach critical mass')}
+					</span>
+				) : (
+					<div className={styles.joinButtons__activistGroup}>
+						<Button
+							text={`${activistLabel} (${activistCount}${
+								isIntentPhase && minJoinMembers ? `/${minJoinMembers}` : ''
+							})`}
+							size="small"
+							variant={hasJoinedOptimistic ? 'approve' : 'secondary'}
+							onClick={() => handleJoin('activist')}
+							disabled={isJoinLoading || joinFlow.isLoading}
+							ariaLabel={activistLabel}
+						/>
+						{isIntentPhase && (
+							<span className={styles.joinButtons__hint}>{t('Conditional — until resolved')}</span>
+						)}
+					</div>
+				)}
 				<Button
 					text={`${organizerLabel} (${organizerCount})`}
 					size="small"

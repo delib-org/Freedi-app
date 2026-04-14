@@ -196,7 +196,9 @@ export type {
   JoinFormField,
   JoinFormFieldType,
   JoinFormDestination,
-  JoinFormConfig
+  JoinFormConfig,
+  JoinResolutionPhase,
+  JoinResolutionConfig
 } from "./models/statement/StatementSettings";
 
 export {
@@ -205,7 +207,9 @@ export {
   JoinFormFieldSchema,
   JoinFormFieldTypeSchema,
   JoinFormDestinationSchema,
-  JoinFormConfigSchema
+  JoinFormConfigSchema,
+  JoinResolutionPhaseSchema,
+  JoinResolutionConfigSchema
 } from "./models/statement/StatementSettings";
 
 export type {
@@ -216,6 +220,17 @@ export {
   JoinFormSubmissionSchema,
   JOIN_FORM_SUBMISSIONS_SUBCOLLECTION
 } from "./models/statement/JoinFormSubmission";
+
+export type {
+  JoinResolutionUser,
+  JoinResolutionUserStatus
+} from "./models/statement/JoinResolutionUser";
+
+export {
+  JoinResolutionUserSchema,
+  JoinResolutionUserStatusSchema,
+  JOIN_RESOLUTION_USERS_SUBCOLLECTION
+} from "./models/statement/JoinResolutionUser";
 export type {
   StatementSubscription,
   StatementView,

@@ -182,6 +182,7 @@ import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActio
 // Civil Activity Hub — Join Form exports
 import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
+import { resolveJoinIntents } from './engagement/joinForm/fn_resolveJoinIntents';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
@@ -803,6 +804,7 @@ exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
 exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
+exports.resolveJoinIntents = resolveJoinIntents;
 
 // --------------------------
 // SCHEDULED FUNCTIONS
