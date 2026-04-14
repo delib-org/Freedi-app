@@ -4,16 +4,14 @@ const MOBILE_BREAKPOINT = '(max-width: 600px)';
 const SCROLL_THRESHOLD = 15;
 const MIN_SCROLL_TOP = 60;
 const COOLDOWN_MS = 350;
-const HIDDEN_CLASS = 'page--header-hidden';
+const HIDDEN_CLASS = 'page__header--minimized';
 // Minimum scrollable distance (scrollHeight - clientHeight) required before hiding.
-// Must be larger than the combined header height (~170px) so the user can still
-// scroll back up after the header is hidden and the viewport grows.
 const MIN_SCROLLABLE_DISTANCE = 250;
 
 /**
  * Detects scroll direction on mobile and toggles a CSS class on the .page ancestor.
- * Uses imperative DOM manipulation to avoid React re-renders entirely.
- * Includes a cooldown to prevent flickering from layout-shift-induced scroll events.
+ * Uses transform (GPU-accelerated) instead of margin to avoid layout reflow and flickering.
+ * Includes a cooldown to prevent rapid toggling from momentum scroll events.
  * Only activates after a real scroll gesture (touchmove) to ignore programmatic scrolls and taps.
  */
 export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>): void {
@@ -29,10 +27,11 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 		const page = scrollElement.closest('.page');
 		if (!page) return;
 
+		const header = page.querySelector('.page__header');
+		if (!header) return;
+
 		const mediaQuery = window.matchMedia(MOBILE_BREAKPOINT);
 
-		// Only activate on actual scroll gestures (touchmove), not taps (touchstart).
-		// This ignores programmatic scrolls AND scroll caused by content changes after tapping send.
 		let isTouching = false;
 
 		const handleTouchStart = () => {
@@ -58,7 +57,7 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 			if (!isHidden.current) return;
 			isHidden.current = false;
 			lastToggleTime.current = Date.now();
-			page.classList.remove(HIDDEN_CLASS);
+			header.classList.remove(HIDDEN_CLASS);
 
 			requestAnimationFrame(() => {
 				lastScrollTop.current = scrollElement.scrollTop;
@@ -69,7 +68,7 @@ export function useHeaderHideOnScroll(scrollRef: RefObject<HTMLElement | null>):
 			if (isHidden.current) return;
 			isHidden.current = true;
 			lastToggleTime.current = Date.now();
-			page.classList.add(HIDDEN_CLASS);
+			header.classList.add(HIDDEN_CLASS);
 
 			requestAnimationFrame(() => {
 				lastScrollTop.current = scrollElement.scrollTop;

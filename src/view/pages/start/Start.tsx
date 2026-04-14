@@ -52,7 +52,7 @@ const Start = () => {
 			</div>
 
 			<img src={StartPageImage} alt="" className={styles.StartPageImage} />
-			<a href="http://delib.org" target="_blank" className={styles.ddi}>
+			<a href="https://delib.org" target="_blank" className={styles.ddi}>
 				<footer>{t('From the Institute for Deliberative Democracy')}</footer>
 			</a>
 

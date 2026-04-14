@@ -46,6 +46,9 @@
 		"@freedi/shared-types"
 	],
 	"private": true,
+	"overrides": {
+		"axios": "1.14.0"
+	},
 	"bundleDependencies": [
 		"@freedi/shared-types"
 	]

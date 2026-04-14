@@ -5,37 +5,10 @@
 	width: 100vw;
 }
 
-.stickyTop {
-	position: sticky;
-	top: 0;
-	z-index: 2;
+.subHeader {
 	width: 100%;
-	align-self: stretch;
 	background-color: var(--statementBackground);
-	box-shadow: 0 3px 6px rgba(115, 138, 191, 0.1);
-
-	// Mobile scroll-to-hide animation
-	@media screen and (max-width: 600px) {
-		display: grid;
-		grid-template-rows: 1fr;
-		transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-			opacity 0.25s ease;
-	}
-}
-
-.stickyTopInner {
-	@media screen and (max-width: 600px) {
-		overflow: hidden;
-	}
-}
-
-// Driven by parent .page--header-hidden class (toggled by JS)
-:global(.page--header-hidden) .stickyTop {
-	@media screen and (max-width: 600px) {
-		grid-template-rows: 0fr;
-		opacity: 0;
-		pointer-events: none;
-	}
+	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .header {

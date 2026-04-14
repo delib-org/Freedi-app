@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { Statement, UserDemographicQuestion, Role } from '@freedi/shared-types';
 import StatementHeader from './header/StatementHeader';
 import Switch from './switch/Switch';
@@ -34,6 +34,12 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 		statement?.statementId,
 	);
 
+	const [activeView, setActiveView] = useState('chat');
+
+	const handleActiveViewChange = useCallback((view: string) => {
+		setActiveView(view);
+	}, []);
+
 	// Apply animation class when navigating between statements
 	const pageClassName = toSlide ? `page ${slideInOrOut}` : 'page';
 
@@ -68,13 +74,12 @@ export const StatementContent: React.FC<StatementContentProps> = ({
 					}}
 				>
 					<StatementHeader
-						statement={statement}
-						parentStatement={undefined}
 						topParentStatement={topParentStatement}
+						onActiveViewChange={handleActiveViewChange}
 					/>
 
 					<MapProvider>
-						<Switch />
+						<Switch activeView={activeView} />
 					</MapProvider>
 				</div>
 			</TreeFilterProvider>
