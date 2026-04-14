@@ -6,6 +6,7 @@ import {
 	StatementType,
 	functionConfig,
 	calcAgreementIndex,
+	calcLikeMindedness,
 	calcConfidenceIndex,
 	DEFAULT_SAMPLING_QUALITY,
 } from '@freedi/shared-types';
@@ -106,8 +107,15 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 
 			if (numberOfEvaluators === undefined || numberOfEvaluators <= 0) continue;
 
-			// Recalculate Agreement Index
+			// Recalculate Agreement Index (confidence-adjusted)
 			const agreementIndex = calcAgreementIndex(
+				sumEvaluations || 0,
+				sumSquaredEvaluations || 0,
+				numberOfEvaluators,
+			);
+
+			// Recalculate Like-mindedness (simple: 1 - SEM*)
+			const likeMindedness = calcLikeMindedness(
 				sumEvaluations || 0,
 				sumSquaredEvaluations || 0,
 				numberOfEvaluators,
@@ -125,6 +133,7 @@ export const recalculateIndices = onCall<RecalculateIndicesRequest>(
 
 			const updateData: Record<string, number> = {
 				'evaluation.agreementIndex': agreementIndex,
+				'evaluation.likeMindedness': likeMindedness,
 			};
 			if (confidenceIndex !== undefined) {
 				updateData['evaluation.confidenceIndex'] = confidenceIndex;

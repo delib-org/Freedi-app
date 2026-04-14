@@ -6,7 +6,12 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { Statement, calcMeanSentiment, calcAgreementIndex, DEFAULT_MIN_EVALUATORS } from '@freedi/shared-types';
+import {
+	Statement,
+	calcMeanSentiment,
+	calcLikeMindedness,
+	DEFAULT_MIN_EVALUATORS,
+} from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
@@ -64,11 +69,15 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	const metrics = useMemo(() => {
 		if (!numberOfEvaluators || numberOfEvaluators <= 0) return null;
 		const meanSentiment = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
-		const agreementIndex = calcAgreementIndex(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+		const likeMindedness = calcLikeMindedness(
+			sumEvaluations,
+			sumSquaredEvaluations,
+			numberOfEvaluators,
+		);
 
 		return {
 			meanSentiment: Math.round(meanSentiment * 100),
-			agreementIndex: Math.round(agreementIndex * 100),
+			likeMindedness: Math.round(likeMindedness * 100),
 			consensusScore: consensusDisplay,
 		};
 	}, [sumEvaluations, sumSquaredEvaluations, numberOfEvaluators, consensusDisplay]);
@@ -114,13 +123,23 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				</div>
 				{showEvaluation && (
 					<Tooltip
-						content={metrics ? (
-							<>
-								<div>{t('Average score')}: {metrics.meanSentiment}%</div>
-								<div>{t('Agreement')}: {metrics.agreementIndex}%</div>
-								<div>{t('Evaluators')}: {numberOfEvaluators}</div>
-							</>
-						) : `${t('Evaluators')}: 0`}
+						content={
+							metrics ? (
+								<>
+									<div>
+										{t('Average score')}: {metrics.meanSentiment}%
+									</div>
+									<div>
+										{t('Like-mindedness')}: {metrics.likeMindedness}%
+									</div>
+									<div>
+										{t('Evaluators')}: {numberOfEvaluators}
+									</div>
+								</>
+							) : (
+								`${t('Evaluators')}: 0`
+							)
+						}
 						position="top"
 					>
 						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
@@ -149,14 +168,26 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			>
 				{showEvaluation && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS ? (
 					<Tooltip
-						content={metrics ? (
-							<>
-								<div>{t('Consensus score')}: {metrics.consensusScore}</div>
-								<div>{t('Average score')}: {metrics.meanSentiment}%</div>
-								<div>{t('Agreement')}: {metrics.agreementIndex}%</div>
-								<div>{t('Evaluators')}: {numberOfEvaluators}</div>
-							</>
-						) : `${t('Evaluators')}: ${numberOfEvaluators}`}
+						content={
+							metrics ? (
+								<>
+									<div>
+										{t('Consensus score')}: {metrics.consensusScore}
+									</div>
+									<div>
+										{t('Average score')}: {metrics.meanSentiment}%
+									</div>
+									<div>
+										{t('Like-mindedness')}: {metrics.likeMindedness}%
+									</div>
+									<div>
+										{t('Evaluators')}: {numberOfEvaluators}
+									</div>
+								</>
+							) : (
+								`${t('Evaluators')}: ${numberOfEvaluators}`
+							)
+						}
 						position="bottom"
 					>
 						<span

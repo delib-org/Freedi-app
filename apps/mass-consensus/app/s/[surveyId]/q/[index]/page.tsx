@@ -177,6 +177,8 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
             totalFlowItems={totalFlowItems}
             questionId={questionId}
             mergedSettings={mergedSettings}
+            enableResearchLogging={question.statementSettings?.enableResearchLogging === true}
+            topParentId={question.topParentId || questionId}
           >
             {/* Question Header */}
             <QuestionHeader question={question} />

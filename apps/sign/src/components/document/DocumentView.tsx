@@ -12,6 +12,7 @@ import { useRealtimeSignatureCounts } from '@/hooks/useRealtimeSignatureCounts';
 import { calculateHeadingNumbers } from '@/utils/headingNumbering';
 import { useHeatMapStore } from '@/store/heatMapStore';
 import DocumentClient from './DocumentClient';
+import ResearchConsentBanner from '../shared/ResearchConsentBanner';
 import SignButton from './SignButton';
 
 // Import ParagraphCard dynamically to prevent SSR hydration mismatches
@@ -69,6 +70,8 @@ interface DocumentViewProps {
   hideUserIdentity?: boolean;
   /** When true, shows signed/rejected counts to all users in the document footer */
   showSignatureCounts?: boolean;
+  /** When true, research logging is enabled and consent banner should be shown */
+  enableResearchLogging?: boolean;
 }
 
 export default function DocumentView({
@@ -97,6 +100,7 @@ export default function DocumentView({
   requireGoogleLogin = false,
   hideUserIdentity = true,
   showSignatureCounts = true,
+  enableResearchLogging = false,
 }: DocumentViewProps) {
   const { t } = useTranslation();
 
@@ -153,6 +157,10 @@ export default function DocumentView({
   const showToc = tocSettings?.tocEnabled && tocItems.length > 0;
 
   return (
+      <>
+      {enableResearchLogging && (
+        <ResearchConsentBanner topParentId={document.statementId} />
+      )}
       <DocumentClient
         documentId={document.statementId}
         user={user}
@@ -356,5 +364,6 @@ export default function DocumentView({
           </div>
         </div>
       </DocumentClient>
+      </>
   );
 }

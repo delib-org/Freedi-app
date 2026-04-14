@@ -7,6 +7,7 @@ import SkeletonLoader from '@/components/shared/SkeletonLoader';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 import { notFound } from 'next/navigation';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
+import ResearchConsentBanner from '@/components/shared/ResearchConsentBanner';
 
 interface PageProps {
   params: { statementId: string };
@@ -59,6 +60,12 @@ export default async function QuestionPage({ params }: PageProps) {
         forceLanguage={(question as { forceLanguage?: boolean }).forceLanguage ?? false}
       >
         <div className="page">
+          {question.statementSettings?.enableResearchLogging === true && (
+            <ResearchConsentBanner
+              topParentId={question.topParentId || params.statementId}
+              enableResearchLogging={true}
+            />
+          )}
           {/* Server Component - Static header */}
           <QuestionHeader question={question} />
 

@@ -307,6 +307,32 @@ export function calcAgreementIndex(
 }
 
 /**
+ * Calculates simple Like-mindedness: how similar evaluators' opinions are (0-1).
+ *
+ * Formula: L_p = 1 - SEM*_p
+ *
+ * This is the user-facing metric — intuitive and easy to understand.
+ * Unlike calcAgreementIndex, it does NOT apply the t-distribution penalty,
+ * so it reflects raw opinion similarity without confidence adjustment.
+ *
+ * @param sumEvaluations - Sum of all evaluation values (Σe_i)
+ * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
+ * @param numberOfEvaluators - Number of evaluators (n_p)
+ * @returns Like-mindedness in [0, 1]. 1 = everyone voted the same
+ */
+export function calcLikeMindedness(
+  sumEvaluations: number,
+  sumSquaredEvaluations: number,
+  numberOfEvaluators: number,
+): number {
+  if (numberOfEvaluators <= 0) return 0;
+
+  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+
+  return Math.max(0, Math.min(1, 1 - sem));
+}
+
+/**
  * Calculates the Confidence Index: how representative the sample is (0-1).
  *
  * Formula: Γ = (n·q) / (n·q + c·ln(N)·(N-n)/(N-1))

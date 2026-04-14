@@ -18,6 +18,7 @@ import { number, parse } from 'valibot';
 import type { Statement, StatementEvaluation } from '@freedi/shared-types';
 import {
 	calcAgreementIndex,
+	calcLikeMindedness,
 	calcSmoothedSEM,
 	calcAgreement as sharedCalcAgreement,
 } from '@freedi/shared-types';
@@ -152,8 +153,15 @@ export function calculateEvaluation(
 	);
 	evaluation.agreement = agreement;
 
-	// Calculate Agreement Index (1 - sigma)
+	// Calculate Agreement Index (confidence-adjusted: 1 - t·SEM*)
 	evaluation.agreementIndex = calcAgreementIndex(
+		evaluation.sumEvaluations,
+		evaluation.sumSquaredEvaluations || 0,
+		evaluation.numberOfEvaluators,
+	);
+
+	// Calculate Like-mindedness (simple: 1 - SEM*)
+	evaluation.likeMindedness = calcLikeMindedness(
 		evaluation.sumEvaluations,
 		evaluation.sumSquaredEvaluations || 0,
 		evaluation.numberOfEvaluators,

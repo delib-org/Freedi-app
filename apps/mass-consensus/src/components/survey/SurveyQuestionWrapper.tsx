@@ -6,6 +6,7 @@ import { MergedQuestionSettings } from '@/lib/utils/settingsUtils';
 import { logError } from '@/lib/utils/errorHandling';
 import SurveyProgressBar from './SurveyProgress';
 import SurveyNavigation from './SurveyNavigation';
+import ResearchConsentBanner from '@/components/shared/ResearchConsentBanner';
 import styles from './Survey.module.scss';
 
 interface SurveyQuestionWrapperProps {
@@ -18,6 +19,10 @@ interface SurveyQuestionWrapperProps {
   children: ReactNode;
   /** Merged settings for the current question (survey + per-question overrides) */
   mergedSettings: MergedQuestionSettings;
+  /** Whether research logging is enabled for this question */
+  enableResearchLogging?: boolean;
+  /** Top parent statement ID for research consent */
+  topParentId?: string;
 }
 
 // Custom event types for communication between components
@@ -40,6 +45,8 @@ export default function SurveyQuestionWrapper({
   questionId,
   children,
   mergedSettings,
+  enableResearchLogging = false,
+  topParentId,
 }: SurveyQuestionWrapperProps) {
   // Track completed question indices (stored in localStorage for persistence)
   const [completedIndices, setCompletedIndices] = useState<number[]>([]);
@@ -208,6 +215,12 @@ export default function SurveyQuestionWrapper({
 
   return (
     <div className={styles.questionWrapper}>
+      {enableResearchLogging && topParentId && (
+        <ResearchConsentBanner
+          topParentId={topParentId}
+          enableResearchLogging={enableResearchLogging}
+        />
+      )}
       <SurveyProgressBar
         currentIndex={currentIndex}
         totalQuestions={totalFlowItems}
