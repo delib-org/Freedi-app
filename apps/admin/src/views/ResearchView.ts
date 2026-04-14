@@ -185,14 +185,24 @@ function ResearchConfigPanel(): m.Vnode {
 							m('span.research__config-title', entry.title.length > 60 ? entry.title.slice(0, 60) + '...' : entry.title),
 							m('span.research__config-id', entry.statementId),
 						]),
-						m(
-							'button.research__config-toggle',
-							{
-								class: entry.enabled ? 'research__config-toggle--on' : '',
-								onclick: () => handleToggle(entry),
-							},
-							entry.enabled ? 'Enabled' : 'Disabled',
-						),
+						m('.research__config-actions', [
+							m(
+								'button.research__config-export',
+								{
+									onclick: () => exportQuestionJSON(entry.statementId),
+									title: 'Export this question\'s research logs',
+								},
+								'\u2B07 Export',
+							),
+							m(
+								'button.research__config-toggle',
+								{
+									class: entry.enabled ? 'research__config-toggle--on' : '',
+									onclick: () => handleToggle(entry),
+								},
+								entry.enabled ? 'Enabled' : 'Disabled',
+							),
+						]),
 					]),
 				),
 			)
@@ -389,7 +399,22 @@ export function ResearchView(): m.Component {
 
 // ── Export ────────────────────────────────────────────────────────────
 
-function exportJSON(logs: ResearchLog[]): void {
+function exportQuestionJSON(questionId: string): void {
+	const s = getResearchState();
+	const filtered = s.logs.filter(
+		(log) => log.parentId === questionId || log.topParentId === questionId || log.statementId === questionId,
+	);
+	if (filtered.length === 0) {
+		configState.error = 'No research logs found for this question';
+		configState.success = null;
+		m.redraw();
+
+		return;
+	}
+	exportJSON(filtered, `research-logs_${questionId}_${new Date().toISOString().slice(0, 10)}.json`);
+}
+
+function exportJSON(logs: ResearchLog[], filename?: string): void {
 	// Pseudonymize before export
 	const userIdMap = new Map<string, string>();
 	let counter = 1;
@@ -413,7 +438,7 @@ function exportJSON(logs: ResearchLog[]): void {
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
-	a.download = `research-logs_${new Date().toISOString().slice(0, 10)}.json`;
+	a.download = filename || `research-logs_${new Date().toISOString().slice(0, 10)}.json`;
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);
