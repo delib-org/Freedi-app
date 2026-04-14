@@ -1,0 +1,80 @@
+.banner {
+	background: #fff;
+	padding: 0.5rem 0;
+	max-width: 440px;
+	text-align: center;
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.icon {
+	font-size: 2.5rem;
+	line-height: 1;
+}
+
+.title {
+	font-size: 1.3rem;
+	font-weight: 700;
+	color: #1a202c;
+	margin: 0;
+}
+
+.message {
+	font-size: 0.95rem;
+	color: #4a5568;
+	line-height: 1.5;
+	margin: 0;
+}
+
+.privacy {
+	font-size: 0.85rem;
+	color: #48bb78;
+	font-weight: 600;
+	margin: 0;
+}
+
+.optOut {
+	font-size: 0.8rem;
+	color: #a0aec0;
+	margin: 0;
+}
+
+.buttons {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+	margin-top: 0.5rem;
+}
+
+.consentBtn {
+	padding: 0.6rem 1.5rem;
+	border: none;
+	border-radius: 10px;
+	background: #5f88e5;
+	color: #fff;
+	font-weight: 600;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: opacity 0.2s;
+}
+
+.consentBtn:hover {
+	opacity: 0.9;
+}
+
+.declineBtn {
+	padding: 0.6rem 1.5rem;
+	border: 1px solid #e2e8f0;
+	border-radius: 10px;
+	background: transparent;
+	color: #4a5568;
+	font-weight: 600;
+	font-size: 0.9rem;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+
+.declineBtn:hover {
+	background: #f7fafc;
+}

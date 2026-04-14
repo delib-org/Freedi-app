@@ -1,0 +1,104 @@
+.description {
+	font-size: 0.9rem;
+	color: var(--text-secondary, #6b7280);
+	margin: 0.5rem 0 1rem;
+}
+
+.panel {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	padding: 1rem;
+	background: var(--card-default, #fff);
+	border: 1px solid var(--border-color, #e3e7ee);
+	border-radius: 10px;
+	margin-top: 0.75rem;
+
+	&__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		font-size: 0.95rem;
+		font-weight: 500;
+	}
+
+	&__input {
+		font: inherit;
+		width: 80px;
+		padding: 0.4rem 0.6rem;
+		border: 1px solid var(--border-color, #d0d4dc);
+		border-radius: 6px;
+	}
+
+	&__warning {
+		background: rgba(234, 179, 8, 0.1);
+		border-left: 3px solid var(--warning, #eab308);
+		padding: 0.6rem 0.8rem;
+		font-size: 0.88rem;
+		border-radius: 4px;
+	}
+
+	&__resolveRow {
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	&__summary {
+		padding: 0.75rem 1rem;
+		background: var(--card-muted, rgba(0, 0, 0, 0.03));
+		border-radius: 8px;
+
+		h4 {
+			margin: 0 0 0.5rem;
+			font-size: 0.95rem;
+		}
+
+		ul {
+			margin: 0;
+			padding-inline-start: 1.2rem;
+			font-size: 0.9rem;
+
+			li {
+				margin: 0.2rem 0;
+			}
+		}
+	}
+}
+
+.confirmOverlay {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.confirmDialog {
+	background: var(--card-default, #fff);
+	border-radius: 12px;
+	padding: 1.5rem;
+	max-width: 420px;
+	width: 90%;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+	h3 {
+		margin: 0 0 0.75rem;
+		font-size: 1.15rem;
+	}
+
+	p {
+		margin: 0 0 1.25rem;
+		font-size: 0.9rem;
+		color: var(--text-secondary, #6b7280);
+		line-height: 1.4;
+	}
+
+	&__actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+}

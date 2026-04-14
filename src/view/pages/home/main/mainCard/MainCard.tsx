@@ -4,7 +4,11 @@ import { useSelector } from 'react-redux';
 import styles from './MainCard.module.scss';
 import ImgThumb from '@/assets/images/ImgThumb.png';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
-import { SimpleStatement, StatementSubscription, statementToSimpleStatement } from '@freedi/shared-types';
+import {
+	SimpleStatement,
+	StatementSubscription,
+	statementToSimpleStatement,
+} from '@freedi/shared-types';
 import { getTime } from '@/controllers/general/helpers';
 import { getTitle } from './updateMainCard/UpdateMainCard';
 import BranchBell from '@/view/components/atomic/atoms/BranchBell/BranchBell';

@@ -1,4 +1,4 @@
-import { setUserAdvanceUser } from '@/redux/creator/creatorSlice';
+import { setUserAdvanceUser, setUserSystemAdmin } from '@/redux/creator/creatorSlice';
 import { store } from '@/redux/store';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { DB } from '../config';
@@ -54,6 +54,7 @@ export async function setUserToDB(user: Creator) {
 			if (userDB.exists()) {
 				const existingUser = userDB.data() as Creator;
 				dispatch(setUserAdvanceUser(existingUser.advanceUser || false));
+				dispatch(setUserSystemAdmin(existingUser.systemAdmin || false));
 			}
 		} catch (error) {
 			// Non-critical error, just log it

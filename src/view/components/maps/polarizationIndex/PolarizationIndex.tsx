@@ -336,7 +336,7 @@ const PolarizationIndexComp = () => {
 								{t('Agree')}
 							</span>
 						</div>
-						<span className={styles.xAxis__label}>{t('Agreement')}</span>
+						<span className={styles.xAxis__label}>{t('Like-mindedness')}</span>
 					</div>
 				</div>
 			</div>

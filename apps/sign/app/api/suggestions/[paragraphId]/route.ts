@@ -5,6 +5,8 @@ import { checkAdminAccess } from '@/lib/utils/adminAccess';
 import { Collections, StatementType, Statement, SourceApp } from '@freedi/shared-types';
 import { createSuggestionStatement } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 import { SUGGESTIONS, QUERY_LIMITS } from '@/constants/common';
 
 interface SuggestionInput {
@@ -198,6 +200,15 @@ export async function POST(
 
     // Write to statements collection (new system)
     await db.collection(Collections.statements).doc(suggestionStatement.statementId).set(suggestionStatement);
+
+    // Research logging — check top-level document's settings
+    const topDocForResearch = await db.collection(Collections.statements).doc(documentId).get();
+    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.SUBMIT_PROPOSAL, researchEnabled, {
+      statementId: suggestionStatement.statementId,
+      parentId: paragraphId,
+      topParentId: documentId,
+    });
 
     logger.info(`[Suggestions API] Created suggestion statement: ${suggestionStatement.statementId}`);
 

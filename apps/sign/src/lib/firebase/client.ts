@@ -219,15 +219,15 @@ export function subscribeToAuthState(callback: (user: User | null) => void): () 
 function setCookiesFromUser(user: User): void {
   const maxAge = 60 * 60 * 24 * 30; // 30 days
 
+  // Legacy userId cookie (the authoritative _uid HttpOnly cookie is set by middleware)
   document.cookie = `userId=${user.uid}; path=/; max-age=${maxAge}; SameSite=Lax`;
 
   if (user.displayName) {
     document.cookie = `userDisplayName=${encodeURIComponent(user.displayName)}; path=/; max-age=${maxAge}; SameSite=Lax`;
   }
 
-  if (user.email) {
-    document.cookie = `userEmail=${encodeURIComponent(user.email)}; path=/; max-age=${maxAge}; SameSite=Lax`;
-  }
+  // Remove any existing email cookie (PII should not be stored in cookies)
+  document.cookie = 'userEmail=; path=/; max-age=0';
 }
 
 /**

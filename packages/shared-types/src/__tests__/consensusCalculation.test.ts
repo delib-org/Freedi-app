@@ -8,6 +8,12 @@ import {
 	calcConfidenceIndex,
 	DEFAULT_SAMPLING_QUALITY,
 	CONFIDENCE_CALIBRATION_CONSTANT,
+	calcAgreement,
+	calcSmoothedSEM,
+	calcMeanSentiment,
+	calcBinaryConsensus,
+	tCritical,
+	BAYESIAN_PRIOR_K,
 } from '../utils/consensusCalculation';
 
 describe('consensusCalculation - threshold helpers', () => {
@@ -112,22 +118,43 @@ describe('consensusCalculation - threshold helpers', () => {
 	});
 });
 
-describe('calcAgreementIndex', () => {
-	it('should return 1 when all evaluators give the same value', () => {
-		// 3 evaluators all vote +1: sum=3, sumSq=3, n=3
-		expect(calcAgreementIndex(3, 3, 3)).toBe(1);
-		// 5 evaluators all vote +0.5: sum=2.5, sumSq=1.25, n=5
-		expect(calcAgreementIndex(2.5, 1.25, 5)).toBe(1);
-	});
-
-	it('should return 0 for maximum polarization', () => {
-		// Half +1, half -1: sum=0, sumSq=4, n=4 → mean=0, var=1, sigma=1, A=0
-		expect(calcAgreementIndex(0, 4, 4)).toBe(0);
-	});
-
+describe('calcAgreementIndex (A_p = 1 - t · SEM*)', () => {
 	it('should return 0 when n <= 0', () => {
 		expect(calcAgreementIndex(0, 0, 0)).toBe(0);
 		expect(calcAgreementIndex(5, 5, -1)).toBe(0);
+	});
+
+	it('should increase with sample size for unanimous votes (sample-size aware)', () => {
+		// 3 unanimous +1 votes should have lower A_p than 1000 unanimous votes
+		const a3 = calcAgreementIndex(3, 3, 3);
+		const a1000 = calcAgreementIndex(1000, 1000, 1000);
+		expect(a3).toBeLessThan(a1000);
+		// Small unanimous sample gets heavily penalized
+		expect(a3).toBeLessThan(0.5);
+		expect(a3).toBeGreaterThan(0);
+	});
+
+	it('should be high for large near-unanimous samples', () => {
+		// 1000 votes, 990 positive [+1], 10 negative [-1]
+		// sum = 980, sumSq = 1000, n = 1000
+		const a1000 = calcAgreementIndex(980, 1000, 1000);
+		expect(a1000).toBeGreaterThan(0.9);
+	});
+
+	it('should be low for maximum polarization with small sample', () => {
+		// Half +1, half -1: sum=0, sumSq=4, n=4
+		// With Bayesian smoothing and t-distribution, even polarized
+		// small samples don't hit exactly 0
+		const result = calcAgreementIndex(0, 4, 4);
+		expect(result).toBeLessThan(0.5);
+	});
+
+	it('should have high A_p for large polarized samples (confirmed division)', () => {
+		// 500 votes +1, 500 votes -1: mean ≈ 0, high variance
+		// Per paper Section 5.4: high A_p + low μ = "confirmed division"
+		// A_p measures sample reliability, not agreement direction
+		const result = calcAgreementIndex(0, 1000, 1000);
+		expect(result).toBeGreaterThan(0.9);
 	});
 
 	it('should return values between 0 and 1 for mixed evaluations', () => {
@@ -137,12 +164,18 @@ describe('calcAgreementIndex', () => {
 		expect(result).toBeLessThan(1);
 	});
 
-	it('should be independent of sample size (same distribution)', () => {
-		// Same mean and variance, different n
-		// All vote +0.5: sum=n*0.5, sumSq=n*0.25
-		const a3 = calcAgreementIndex(1.5, 0.75, 3);
-		const a100 = calcAgreementIndex(50, 25, 100);
-		expect(a3).toBe(a100);
+	it('should always be in [0, 1] range', () => {
+		const testCases = [
+			[3, 3, 3],
+			[0, 10, 10],
+			[-5, 5, 5],
+			[100, 100, 100],
+		] as const;
+		for (const [sum, sumSq, n] of testCases) {
+			const result = calcAgreementIndex(sum, sumSq, n);
+			expect(result).toBeGreaterThanOrEqual(0);
+			expect(result).toBeLessThanOrEqual(1);
+		}
 	});
 });
 
@@ -209,5 +242,151 @@ describe('calcConfidenceIndex', () => {
 			expect(result).toBeGreaterThanOrEqual(0);
 			expect(result).toBeLessThanOrEqual(1);
 		}
+	});
+});
+
+// ============================================================================
+// WizCol Scoring Engine Tests
+// ============================================================================
+
+describe('tCritical', () => {
+	it('should return exact table values for known df', () => {
+		expect(tCritical(1)).toBeCloseTo(6.314, 2);
+		expect(tCritical(2)).toBeCloseTo(2.920, 2);
+		expect(tCritical(5)).toBeCloseTo(2.015, 2);
+		expect(tCritical(10)).toBeCloseTo(1.812, 2);
+		expect(tCritical(30)).toBeCloseTo(1.697, 2);
+	});
+
+	it('should interpolate for intermediate df', () => {
+		const t22 = tCritical(22);
+		// Between df=20 (1.725) and df=25 (1.708)
+		expect(t22).toBeGreaterThan(1.708);
+		expect(t22).toBeLessThan(1.725);
+	});
+
+	it('should return z_0.05 = 1.645 for large df', () => {
+		expect(tCritical(200)).toBeCloseTo(1.645, 2);
+		expect(tCritical(1000)).toBeCloseTo(1.645, 2);
+	});
+
+	it('should decrease monotonically with df', () => {
+		let prev = tCritical(1);
+		for (const df of [2, 5, 10, 20, 50, 100]) {
+			const current = tCritical(df);
+			expect(current).toBeLessThanOrEqual(prev);
+			prev = current;
+		}
+	});
+});
+
+describe('calcSmoothedSEM (Bayesian k=2 phantom priors)', () => {
+	it('should return 1 for 0 evaluators', () => {
+		expect(calcSmoothedSEM(0, 0, 0)).toBe(1);
+	});
+
+	it('should give non-zero SEM for unanimous votes', () => {
+		// 3 votes of +1: sum=3, sumSq=3, n=3
+		// σ̂* = √(3 / (3+2-1)) = √(3/4) = 0.866
+		// SEM* = 0.866 / √(3+2) = 0.866 / 2.236 ≈ 0.387
+		const sem = calcSmoothedSEM(3, 3, 3);
+		expect(sem).toBeGreaterThan(0.3);
+		expect(sem).toBeLessThan(0.5);
+	});
+
+	it('should decrease as n grows (with same distribution)', () => {
+		// All +1 votes: sum=n, sumSq=n
+		const sem5 = calcSmoothedSEM(5, 5, 5);
+		const sem50 = calcSmoothedSEM(50, 50, 50);
+		const sem500 = calcSmoothedSEM(500, 500, 500);
+		expect(sem50).toBeLessThan(sem5);
+		expect(sem500).toBeLessThan(sem50);
+	});
+
+	it('should converge to regular SEM for large n', () => {
+		// For large n, the k=2 priors become negligible
+		const n = 1000;
+		const sum = 800; // mean = 0.8
+		const sumSq = 700; // var ≈ 0.06
+		const sem = calcSmoothedSEM(sum, sumSq, n);
+		// SEM* should be small for large n
+		expect(sem).toBeLessThan(0.03);
+		expect(sem).toBeGreaterThan(0);
+	});
+});
+
+describe('calcAgreement (C_p = μ - t · SEM*)', () => {
+	it('should return 0 for no evaluators', () => {
+		expect(calcAgreement(0, 0, 0)).toBe(0);
+	});
+
+	it('should heavily penalize small unanimous samples', () => {
+		// 3 votes of +1 → C_p should be well below 1.0
+		const score = calcAgreement(3, 3, 3);
+		expect(score).toBeLessThan(0.2);
+		expect(score).toBeGreaterThan(-1);
+	});
+
+	it('should reward large samples with genuine consensus', () => {
+		// 100 votes of +0.95 (with natural variance)
+		// sum = 95, sumSq ≈ 90.25, n = 100
+		const score = calcAgreement(95, 90.25, 100);
+		expect(score).toBeGreaterThan(0.75);
+	});
+
+	it('should ensure large sample > small unanimous sample', () => {
+		const smallUnanimous = calcAgreement(3, 3, 3);
+		const largeSample = calcAgreement(95, 90.25, 100);
+		expect(largeSample).toBeGreaterThan(smallUnanimous);
+	});
+
+	it('should return negative for proposals with negative sentiment', () => {
+		// 10 votes of -0.5: sum=-5, sumSq=2.5, n=10
+		const score = calcAgreement(-5, 2.5, 10);
+		expect(score).toBeLessThan(0);
+	});
+
+	it('should stay within [-1, 1]', () => {
+		const testCases = [
+			[3, 3, 3],
+			[-3, 3, 3],
+			[0, 10, 10],
+			[1000, 1000, 1000],
+			[-1000, 1000, 1000],
+		] as const;
+		for (const [sum, sumSq, n] of testCases) {
+			const result = calcAgreement(sum, sumSq, n);
+			expect(result).toBeGreaterThanOrEqual(-1);
+			expect(result).toBeLessThanOrEqual(1);
+		}
+	});
+});
+
+describe('calcBinaryConsensus', () => {
+	it('should return 0 for no votes', () => {
+		expect(calcBinaryConsensus(0, 0)).toBe(0);
+	});
+
+	it('should penalize small unanimous binary votes', () => {
+		const score = calcBinaryConsensus(3, 0);
+		expect(score).toBeLessThan(0.5);
+		expect(score).toBeGreaterThan(-1);
+	});
+
+	it('should return near 0 for evenly split votes', () => {
+		const score = calcBinaryConsensus(50, 50);
+		expect(Math.abs(score)).toBeLessThan(0.5);
+	});
+});
+
+describe('calcMeanSentiment', () => {
+	it('should return 0 for no evaluators', () => {
+		expect(calcMeanSentiment(0, 0)).toBe(0);
+	});
+
+	it('should return the simple mean', () => {
+		expect(calcMeanSentiment(10, 5)).toBe(2);
+		expect(calcMeanSentiment(3, 3)).toBe(1);
+		expect(calcMeanSentiment(-5, 10)).toBe(-0.5);
 	});
 });
