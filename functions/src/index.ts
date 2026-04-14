@@ -179,6 +179,10 @@ import { fn_pruneVersionHistory } from './fn_pruneVersionHistory';
 import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPending';
 import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
 
+// Civil Activity Hub — Join Form exports
+import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
+import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
+
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
 import {
@@ -797,6 +801,8 @@ exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
+exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
+exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

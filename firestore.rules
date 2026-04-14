@@ -144,6 +144,30 @@ service cloud.firestore {
       allow create: if request.auth.uid != null;
       allow update: if request.auth.uid != null && isAllowedToUpdate();
       allow delete: if request.auth.uid != null && isAuthorized();
+
+      // Civil Activity Hub — join form submissions subcollection.
+      // Scoped to the owning question document. Each user owns their own
+      // submission doc keyed by userId. Admins of the question (via the
+      // statementsSubscribe role check) can read the full collection;
+      // regular users can only read/write their own doc.
+      match /joinFormSubmissions/{submissionUserId} {
+        function isQuestionAdmin() {
+          let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+          let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+          return exists(subPath) &&
+                 (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+        }
+
+        allow read: if request.auth.uid != null &&
+                       (request.auth.uid == submissionUserId || isQuestionAdmin());
+        allow create: if request.auth.uid != null &&
+                         request.auth.uid == submissionUserId &&
+                         request.resource.data.userId == submissionUserId &&
+                         request.resource.data.questionId == statementId;
+        allow update: if request.auth.uid != null &&
+                         request.auth.uid == submissionUserId;
+        allow delete: if false;
+      }
     }
 
     match /inAppNotifications/{inAppNotificationId=**} {

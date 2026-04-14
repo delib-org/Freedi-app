@@ -5,10 +5,38 @@ import {
 	string,
 	boolean,
 	enum_,
+	picklist,
 	InferOutput,
 	number,
 } from 'valibot';
 import { DeliberationType } from '../TypeEnums';
+
+/**
+ * Join form — admin-defined contact form shown the first time a user joins
+ * any option under a question. Submission is stored once per user per
+ * owning question, either in Firestore or appended to a Google Sheet.
+ */
+export const JoinFormFieldTypeSchema = picklist(['text', 'phone', 'email']);
+export type JoinFormFieldType = InferOutput<typeof JoinFormFieldTypeSchema>;
+
+export const JoinFormFieldSchema = object({
+	id: string(),       // stable slug used as the form key
+	label: string(),    // display label (admin-provided, admin handles translation)
+	type: JoinFormFieldTypeSchema,
+	required: boolean(),
+});
+export type JoinFormField = InferOutput<typeof JoinFormFieldSchema>;
+
+export const JoinFormDestinationSchema = picklist(['firestore', 'sheets']);
+export type JoinFormDestination = InferOutput<typeof JoinFormDestinationSchema>;
+
+export const JoinFormConfigSchema = object({
+	enabled: boolean(),
+	fields: array(JoinFormFieldSchema),
+	destination: JoinFormDestinationSchema,
+	sheetUrl: optional(string()),
+});
+export type JoinFormConfig = InferOutput<typeof JoinFormConfigSchema>;
 
 export enum evaluationType {
 	likeDislike = 'like-dislike',
@@ -54,6 +82,7 @@ export const StatementSettingsSchema = object({
 	defaultView: optional(string()), // 'chat' | 'options' | 'questions' - default view for the segmented control
 	enableTreeView: optional(boolean()), // if true, show threaded tree discussion instead of flat chat
 	enableResearchLogging: optional(boolean()), // if true, research actions are logged for this statement and all sub-statements
+	joinForm: optional(JoinFormConfigSchema), // admin-defined join form shown on first join under this question
 });
 
 

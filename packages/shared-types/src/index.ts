@@ -192,13 +192,30 @@ export {
   statementToSimpleStatement
 } from "./models/statement/statementToSimple";
 export type {
-  StatementSettings
+  StatementSettings,
+  JoinFormField,
+  JoinFormFieldType,
+  JoinFormDestination,
+  JoinFormConfig
 } from "./models/statement/StatementSettings";
 
 export {
   StatementSettingsSchema,
-  evaluationType
+  evaluationType,
+  JoinFormFieldSchema,
+  JoinFormFieldTypeSchema,
+  JoinFormDestinationSchema,
+  JoinFormConfigSchema
 } from "./models/statement/StatementSettings";
+
+export type {
+  JoinFormSubmission
+} from "./models/statement/JoinFormSubmission";
+
+export {
+  JoinFormSubmissionSchema,
+  JOIN_FORM_SUBMISSIONS_SUBCOLLECTION
+} from "./models/statement/JoinFormSubmission";
 export type {
   StatementSubscription,
   StatementView,
@@ -387,6 +404,7 @@ export {
   DEFAULT_SAMPLING_QUALITY,
   CONFIDENCE_CALIBRATION_CONSTANT,
   calcAgreementIndex,
+  calcLikeMindedness,
   calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 

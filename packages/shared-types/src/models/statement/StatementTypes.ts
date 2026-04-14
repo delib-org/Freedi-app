@@ -213,7 +213,10 @@ export const StatementSchema = object({
 	votingSettings: optional(VotingSettingsSchema), // the settings of the voting of the statement
 	questionSettings: optional(QuestionSettingsSchema), // the settings of the question of the statement
 	statementSettings: optional(StatementSettingsSchema), // the settings of the statement
-	joined: optional(array(CreatorSchema)), // the joined users of the statement
+	/** Activists — users who joined this option to help it happen. */
+	joined: optional(array(CreatorSchema)),
+	/** Organizers — users who coordinate / lead the option's team. Parallel to `joined`. */
+	organizers: optional(array(CreatorSchema)),
 	hide: optional(boolean()), // if true, the statement is hidden
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
