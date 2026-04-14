@@ -47,20 +47,14 @@ export const deleteResearchLogs = onCall<DeleteRequest>(
 
 		try {
 			// Delete research logs in batches
-			deletedLogs = await batchDelete(
-				Collections.researchLogs,
-				'userId',
-				targetUserId,
-			);
+			deletedLogs = await batchDelete(Collections.researchLogs, 'userId', targetUserId);
 
 			// Delete consent records in batches
-			deletedConsent = await batchDelete(
-				Collections.researchConsent,
-				'userId',
-				targetUserId,
-			);
+			deletedConsent = await batchDelete(Collections.researchConsent, 'userId', targetUserId);
 
-			logger.info(`[DeleteResearchLogs] Deleted ${deletedLogs} logs and ${deletedConsent} consent records for user ${targetUserId}`);
+			logger.info(
+				`[DeleteResearchLogs] Deleted ${deletedLogs} logs and ${deletedConsent} consent records for user ${targetUserId}`,
+			);
 
 			return { success: true, deletedLogs, deletedConsent };
 		} catch (error) {
@@ -70,11 +64,7 @@ export const deleteResearchLogs = onCall<DeleteRequest>(
 	},
 );
 
-async function batchDelete(
-	collectionName: string,
-	field: string,
-	value: string,
-): Promise<number> {
+async function batchDelete(collectionName: string, field: string, value: string): Promise<number> {
 	const BATCH_SIZE = 500;
 	let totalDeleted = 0;
 	let hasMore = true;

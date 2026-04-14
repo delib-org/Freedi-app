@@ -32,6 +32,7 @@ export const creatorSlice = createSlice({
 	},
 });
 
-export const { setCreator, removeCreator, setUserAdvanceUser, setUserSystemAdmin } = creatorSlice.actions;
+export const { setCreator, removeCreator, setUserAdvanceUser, setUserSystemAdmin } =
+	creatorSlice.actions;
 
 export const creatorSelector = (state: { creator: CreatorState }) => state.creator.creator;

@@ -17,24 +17,18 @@ import { logError } from '@/utils/errorHandling';
  */
 export function useHomeStatementOverlay(subscriptions: StatementSubscription[]): void {
 	const dispatch = useAppDispatch();
-	const statements = useAppSelector(
-		(state) => state.statements.statements,
-	);
+	const statements = useAppSelector((state) => state.statements.statements);
 	const fetchedRef = useRef(new Set<string>());
 
 	useEffect(() => {
 		if (subscriptions.length === 0) return;
 
-		const statementsMap = new Map<string, Statement>(
-			statements.map((s) => [s.statementId, s]),
-		);
+		const statementsMap = new Map<string, Statement>(statements.map((s) => [s.statementId, s]));
 
 		// Find subscription statementIds not yet in Redux and not already being fetched
 		const missingIds = subscriptions
 			.map((sub) => sub.statementId)
-			.filter(
-				(id) => !statementsMap.has(id) && !fetchedRef.current.has(id),
-			);
+			.filter((id) => !statementsMap.has(id) && !fetchedRef.current.has(id));
 
 		if (missingIds.length === 0) return;
 

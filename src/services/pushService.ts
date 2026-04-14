@@ -211,9 +211,14 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 		// Initialize messaging if not already done
 		const messagingResult = await initializeMessaging();
 		if (!messagingResult.success) {
-			logError(new Error(`[PushService] Failed to initialize messaging in getOrRefreshToken: ${messagingResult.reason}`), {
-				operation: 'services.pushService.getOrRefreshToken',
-			});
+			logError(
+				new Error(
+					`[PushService] Failed to initialize messaging in getOrRefreshToken: ${messagingResult.reason}`,
+				),
+				{
+					operation: 'services.pushService.getOrRefreshToken',
+				},
+			);
 
 			return null;
 		}
