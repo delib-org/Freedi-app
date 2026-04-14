@@ -275,10 +275,9 @@ export async function POST(
 
     await writeBatch.commit();
 
-    // Research logging — check top-level document's settings
+    // Research logging — check question's own settings or top parent's
     const topParentId = questionData?.topParentId || questionId;
-    const topDocForResearch = await db.collection(Collections.statements).doc(topParentId).get();
-    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
+    const researchEnabled = questionData?.statementSettings?.enableResearchLogging === true;
     logResearchAction(userId, ResearchAction.CREATE_STATEMENT, researchEnabled, {
       statementId: statementRef.id,
       parentId: questionId,

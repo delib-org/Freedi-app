@@ -117,14 +117,14 @@ export async function POST(
       }, { merge: true });
     });
 
-    // Research logging — check top-level document's settings
+    // Research logging — check parent question's settings
     const topParentId = statement?.topParentId || parentId;
-    const topDoc = await db.collection(Collections.statements).doc(topParentId).get();
-    const researchEnabled = topDoc.data()?.statementSettings?.enableResearchLogging === true;
+    const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
+    const researchEnabled = parentDoc.data()?.statementSettings?.enableResearchLogging === true;
     logResearchAction(userId, ResearchAction.EVALUATE, researchEnabled, {
       statementId,
       parentId,
-      topParentId: statement?.topParentId,
+      topParentId,
       newValue: String(evaluation),
     });
 
