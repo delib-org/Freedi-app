@@ -76,9 +76,10 @@ export async function getRandomOptions(
     size?: number;
     userId?: string;
     excludeIds?: string[];
+    stratified?: boolean;
   } = {}
 ): Promise<Statement[]> {
-  const { size = 6, userId, excludeIds = [] } = options;
+  const { size = 6, userId, excludeIds = [], stratified = true } = options;
   const db = getFirestoreAdmin();
 
   logger.info('[getRandomOptions] Fetching options for question:', questionId);
@@ -154,7 +155,80 @@ export async function getRandomOptions(
 
   logger.info('[getRandomOptions] Final result:', options_results.length, 'options (requested', size, ')');
 
+  // Diversify by cluster if stratified mode and hybrid framing exists
+  if (stratified && options_results.length >= size) {
+    try {
+      const framingSnapshot = await db
+        .collection('framings')
+        .where('parentStatementId', '==', questionId)
+        .where('createdBy', '==', 'hybrid-auto')
+        .where('isActive', '==', true)
+        .limit(1)
+        .get();
+
+      if (!framingSnapshot.empty) {
+        const framingId = (framingSnapshot.docs[0].data().framingId) as string;
+        const diversified = diversifyByCluster(options_results, framingId, size);
+        logger.info('[getRandomOptions] Diversified by cluster:', diversified.length, 'options');
+
+        return diversified;
+      }
+    } catch (error) {
+      // Non-critical: fall through to standard return
+      logger.warn('[getRandomOptions] Cluster diversification failed, using standard random:', error);
+    }
+  }
+
   return options_results.slice(0, size);
+}
+
+/**
+ * Diversify a list of options by selecting at most 1 per cluster.
+ * Ensures the returned batch represents as many clusters as possible.
+ */
+function diversifyByCluster(
+  options: Statement[],
+  framingId: string,
+  size: number,
+): Statement[] {
+  const clusterPicks = new Map<string, Statement>();
+  const unclustered: Statement[] = [];
+
+  for (const opt of options) {
+    const framingClusters = (opt as Statement & { framingClusters?: Record<string, string> }).framingClusters;
+    const clusterId = framingClusters?.[framingId];
+
+    if (clusterId) {
+      if (!clusterPicks.has(clusterId)) {
+        clusterPicks.set(clusterId, opt);
+      }
+    } else {
+      unclustered.push(opt);
+    }
+  }
+
+  // Take one per cluster first
+  const result = Array.from(clusterPicks.values());
+
+  // Fill remaining slots from unclustered or duplicate clusters
+  if (result.length < size) {
+    const selectedIds = new Set(result.map((r) => r.statementId));
+    const remaining = [...unclustered, ...options]
+      .filter((o) => !selectedIds.has(o.statementId));
+
+    for (const opt of remaining) {
+      if (result.length >= size) break;
+      result.push(opt);
+    }
+  }
+
+  // Shuffle for random presentation
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+
+  return result.slice(0, size);
 }
 
 /**
@@ -180,6 +254,7 @@ export async function getAdaptiveBatch(
   } = {}
 ): Promise<BatchResult> {
   const { size = 6, config } = options;
+  const FRAMINGS_COLLECTION = 'framings';
   const db = getFirestoreAdmin();
   const sampler = new ProposalSampler(config);
 
@@ -241,8 +316,36 @@ export async function getAdaptiveBatch(
       logger.info('[getAdaptiveBatch] No userId provided (SSR) - using Thompson Sampling without user history');
     }
 
-    // 3. Select batch using adaptive priority sampling (Thompson Sampling)
-    const selected = sampler.selectForUser(proposals, evaluatedIds, size);
+    // 3. Check for hybrid-auto framing (cluster-aware stratified sampling)
+    let selected: Statement[];
+
+    const framingSnapshot = await db
+      .collection(FRAMINGS_COLLECTION)
+      .where('parentStatementId', '==', questionId)
+      .where('createdBy', '==', 'hybrid-auto')
+      .where('isActive', '==', true)
+      .limit(1)
+      .get();
+
+    if (!framingSnapshot.empty) {
+      // Use cluster-aware stratified sampling
+      const framing = framingSnapshot.docs[0].data();
+      const framingId = framing.framingId as string;
+      const batchIndex = Math.floor(evaluatedIds.size / size);
+
+      logger.info('[getAdaptiveBatch] Using stratified cluster sampling:', {
+        framingId,
+        batchIndex,
+        clusterCount: (framing.clusterIds as string[])?.length ?? 0,
+      });
+
+      selected = sampler.selectStratifiedByCluster(
+        proposals, evaluatedIds, size, framingId, batchIndex
+      );
+    } else {
+      // Fallback: standard Thompson Sampling (no hybrid framing available)
+      selected = sampler.selectForUser(proposals, evaluatedIds, size);
+    }
 
     // 4. Calculate statistics
     const stats = sampler.calculateStats(proposals, evaluatedIds, selected.length);
