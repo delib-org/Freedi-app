@@ -466,6 +466,38 @@ export async function getResearchLoggingStatus(statementId: string): Promise<{ e
 	};
 }
 
+/**
+ * Fetch statement titles/descriptions for a set of statement IDs.
+ * Returns a lookup map: statementId → { title, description }
+ */
+export async function fetchStatementContextMap(
+	statementIds: string[],
+): Promise<Record<string, { title: string; description?: string }>> {
+	const context: Record<string, { title: string; description?: string }> = {};
+	const BATCH = 10;
+
+	for (let i = 0; i < statementIds.length; i += BATCH) {
+		const batch = statementIds.slice(i, i + BATCH);
+		const results = await Promise.all(
+			batch.map((id) => getDoc(doc(db, Collections.statements, id))),
+		);
+
+		for (const snap of results) {
+			if (!snap.exists()) continue;
+			const data = snap.data() as Statement;
+			const title = data.statement || '';
+			const paragraphs = data.paragraphs;
+			const description = Array.isArray(paragraphs)
+				? paragraphs.map((p: { content?: string }) => p.content || '').join(' ').substring(0, 300)
+				: undefined;
+
+			context[snap.id] = { title, description };
+		}
+	}
+
+	return context;
+}
+
 export { toMillis, bucketize };
 export type { Unsubscribe, QueryDocumentSnapshot };
 

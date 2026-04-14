@@ -6,7 +6,7 @@ import { subscribeResearch, unsubscribeResearch, getResearchState } from '../sta
 import { ResearchChart } from '../components/ResearchChart';
 import { getResearchActionLabel, normalizeScreenPath } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
-import { setResearchLogging, getResearchLoggingStatus } from '../lib/queries';
+import { setResearchLogging, getResearchLoggingStatus, fetchStatementContextMap } from '../lib/queries';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -399,7 +399,7 @@ export function ResearchView(): m.Component {
 
 // ── Export ────────────────────────────────────────────────────────────
 
-function exportQuestionJSON(questionId: string): void {
+async function exportQuestionJSON(questionId: string): Promise<void> {
 	const s = getResearchState();
 	const filtered = s.logs.filter(
 		(log) => log.parentId === questionId || log.topParentId === questionId || log.statementId === questionId,
@@ -411,10 +411,20 @@ function exportQuestionJSON(questionId: string): void {
 
 		return;
 	}
-	exportJSON(filtered, `research-logs_${questionId}_${new Date().toISOString().slice(0, 10)}.json`);
+	await exportJSON(filtered, `research-logs_${questionId}_${new Date().toISOString().slice(0, 10)}.json`);
 }
 
-function exportJSON(logs: ResearchLog[], filename?: string): void {
+async function exportJSON(logs: ResearchLog[], filename?: string): Promise<void> {
+	// Collect unique statementIds to fetch titles
+	const statementIds = new Set<string>();
+	for (const log of logs) {
+		if (log.statementId) statementIds.add(log.statementId);
+		if (log.parentId) statementIds.add(log.parentId);
+	}
+
+	// Fetch statement titles from Firestore
+	const statements = await fetchStatementContextMap(Array.from(statementIds));
+
 	// Pseudonymize before export
 	const userIdMap = new Map<string, string>();
 	let counter = 1;
@@ -434,7 +444,14 @@ function exportJSON(logs: ResearchLog[], filename?: string): void {
 		};
 	});
 
-	const blob = new Blob([JSON.stringify(anonymized, null, 2)], { type: 'application/json' });
+	const exportData = {
+		exportedAt: new Date().toISOString(),
+		totalLogs: anonymized.length,
+		statements,
+		logs: anonymized,
+	};
+
+	const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
