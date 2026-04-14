@@ -125,6 +125,9 @@ import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/da
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
+// Hybrid Text + Rating Clustering
+import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
@@ -920,3 +923,26 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 	const result = await performUserStatsRefresh();
 	res.json(result);
 });
+
+// --------------------------
+// HYBRID TEXT + RATING CLUSTERING
+// --------------------------
+
+// Scheduled function: sweep stale hybrid embeddings and re-cluster every 15 minutes
+export const hybridClusteringSweepScheduled = onSchedule(
+	{
+		schedule: '*/15 * * * *',
+		timeZone: 'UTC',
+		...functionConfig,
+		region: 'us-central1',
+		memory: '1GiB',
+		timeoutSeconds: 300,
+		secrets: ['GEMINI_API_KEY', 'OPENAI_API_KEY'],
+	},
+	async () => {
+		await hybridClusteringSweep();
+	},
+);
+
+// HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
+exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering);

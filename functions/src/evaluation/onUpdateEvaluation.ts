@@ -14,6 +14,7 @@ import { updateUserDemographicEvaluation } from '../fn_polarizationIndex';
 import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 
 export async function updateEvaluation(
 	event: FirestoreEvent<Change<DocumentSnapshot>>,
@@ -72,6 +73,11 @@ export async function updateEvaluation(
 			evaluation: after.evaluation || 0,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
+
+		// Mark hybrid embedding as stale (non-blocking)
+		markHybridEmbeddingStale(after.statementId).catch((err) =>
+			logger.warn('Hybrid stale marking failed:', err),
+		);
 	} catch (error) {
 		logger.error('Error in updateEvaluation:', error);
 	}

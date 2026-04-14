@@ -25,6 +25,11 @@ import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notificatio
 import { trackStatementCreation } from './engagement/credits/trackEngagement';
 import { onStatementCreatedStats } from './fn_adminStats';
 import { generateDescriptionFromChildren } from './helpers';
+import {
+	computeHybridVector,
+	isHybridClusteringEnabled,
+	saveHybridEmbedding,
+} from './services/hybrid-vector-service';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -513,6 +518,23 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 			dimensions: result.dimensions,
 			hasContext: Boolean(context),
 		});
+
+		// Generate initial hybrid embedding if hybrid clustering is enabled
+		// Fetch top parent for setting inheritance check
+		let topParent: Statement | undefined;
+		if (parentStatement.topParentId && parentStatement.topParentId !== parentId) {
+			const topDoc = await db.collection(Collections.statements).doc(parentStatement.topParentId).get();
+			if (topDoc.exists) {
+				topParent = topDoc.data() as Statement;
+			}
+		}
+
+		if (isHybridClusteringEnabled(parentStatement, topParent)) {
+			const ratingVec = [0, 0, 0, 0, 0, 0, 0, 0];
+			const hybridVec = computeHybridVector(result.embedding, ratingVec, 0);
+			await saveHybridEmbedding(statement.statementId, hybridVec);
+			logger.info(`Generated initial hybrid embedding for statement ${statement.statementId}`);
+		}
 	} catch (error) {
 		// Log but don't fail the trigger - embedding generation is non-critical
 		logger.error(`Failed to generate embedding for statement ${statement.statementId}:`, error);

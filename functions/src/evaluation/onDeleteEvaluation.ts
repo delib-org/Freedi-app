@@ -13,6 +13,7 @@ import type { Evaluation } from '@freedi/shared-types';
 import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 
 export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
@@ -57,6 +58,11 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		}
 
 		await updateParentStatementWithChosenOptions(statement.parentId);
+
+		// Mark hybrid embedding as stale (non-blocking)
+		markHybridEmbeddingStale(statementId).catch((err) =>
+			logger.warn('Hybrid stale marking failed:', err),
+		);
 	} catch (error) {
 		logger.error('Error in deleteEvaluation:', error);
 	}

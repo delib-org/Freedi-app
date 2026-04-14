@@ -107,6 +107,7 @@ export const StatementSettingsSchema = object({
 	enableResearchLogging: optional(boolean()), // if true, research actions are logged for this statement and all sub-statements
 	joinForm: optional(JoinFormConfigSchema), // admin-defined join form shown on first join under this question
 	joinResolution: optional(JoinResolutionConfigSchema), // conditional-joining lifecycle (intent → resolved)
+	enableHybridClustering: optional(boolean()), // if true, hybrid text+rating clustering runs for this question and sub-questions
 });
 
 
