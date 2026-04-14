@@ -10,6 +10,8 @@
 import {
 	setDoc,
 	getDocs,
+	getDoc,
+	doc,
 	query,
 	where,
 	orderBy,
@@ -310,12 +312,153 @@ function pseudonymizeLogs(logs: ResearchLog[]): Record<string, unknown>[] {
 }
 
 /**
+ * Fetch statement titles/descriptions for all unique statementIds in the logs.
+ * Returns a lookup map: statementId → { title, description }
+ */
+async function fetchStatementContext(
+	logs: ResearchLog[],
+): Promise<Record<string, { title: string; description?: string }>> {
+	const statementIds = new Set<string>();
+
+	for (const log of logs) {
+		if (log.statementId) statementIds.add(log.statementId);
+		if (log.parentId) statementIds.add(log.parentId);
+	}
+
+	const context: Record<string, { title: string; description?: string }> = {};
+
+	// Fetch in batches of 10 (Firestore getDoc is not batched, but we parallelize)
+	const ids = Array.from(statementIds);
+	const BATCH = 10;
+
+	for (let i = 0; i < ids.length; i += BATCH) {
+		const batch = ids.slice(i, i + BATCH);
+		const results = await Promise.all(
+			batch.map((id) => getDoc(doc(DB, Collections.statements, id))),
+		);
+
+		for (const snap of results) {
+			if (!snap.exists()) continue;
+			const data = snap.data();
+			const title = data.statement || '';
+			const paragraphs = data.paragraphs;
+			const description = Array.isArray(paragraphs)
+				? paragraphs.map((p: { content?: string }) => p.content || '').join(' ').substring(0, 300)
+				: undefined;
+
+			context[snap.id] = { title, description };
+		}
+	}
+
+	return context;
+}
+
+/**
  * Download research logs as a pseudonymized JSON file.
- * UserIds are replaced with participant_1, participant_2, etc.
+ * Includes a statements lookup with titles so researchers know what was evaluated.
  */
 export async function downloadResearchLogsAsJSON(topParentId: string): Promise<void> {
 	const logs = await exportResearchLogs(topParentId);
 	const anonymized = pseudonymizeLogs(logs);
+	const statements = await fetchStatementContext(logs);
+	const exportData = {
+		exportedAt: new Date().toISOString(),
+		totalLogs: anonymized.length,
+		statements,
+		logs: anonymized,
+	};
 	const filename = `research-logs_${new Date().toISOString().slice(0, 10)}.json`;
-	downloadFile(JSON.stringify(anonymized, null, 2), filename, 'application/json');
+	downloadFile(JSON.stringify(exportData, null, 2), filename, 'application/json');
+}
+
+/**
+ * Export research logs for a specific question (by parentId or topParentId).
+ * Tries parentId first, falls back to topParentId for broader scope.
+ */
+export async function exportResearchLogsByQuestion(questionId: string): Promise<ResearchLog[]> {
+	try {
+		const allLogs: ResearchLog[] = [];
+		let lastDoc: QueryDocumentSnapshot | undefined;
+		let hasMore = true;
+
+		while (hasMore) {
+			const baseConstraints = [
+				where('parentId', '==', questionId),
+				orderBy('timestamp', 'asc'),
+				limit(EXPORT_BATCH_SIZE),
+			];
+
+			const constraints = lastDoc ? [...baseConstraints, startAfter(lastDoc)] : baseConstraints;
+			const q = query(collection(DB, Collections.researchLogs), ...constraints);
+			const snapshot = await getDocs(q);
+
+			snapshot.forEach((doc) => {
+				allLogs.push(doc.data() as ResearchLog);
+			});
+
+			hasMore = snapshot.size === EXPORT_BATCH_SIZE;
+			if (snapshot.size > 0) {
+				lastDoc = snapshot.docs[snapshot.docs.length - 1];
+			}
+		}
+
+		// Also fetch logs where topParentId matches (e.g. consent, page views)
+		let topLastDoc: QueryDocumentSnapshot | undefined;
+		hasMore = true;
+
+		while (hasMore) {
+			const baseConstraints = [
+				where('topParentId', '==', questionId),
+				orderBy('timestamp', 'asc'),
+				limit(EXPORT_BATCH_SIZE),
+			];
+
+			const constraints = topLastDoc ? [...baseConstraints, startAfter(topLastDoc)] : baseConstraints;
+			const q = query(collection(DB, Collections.researchLogs), ...constraints);
+			const snapshot = await getDocs(q);
+
+			snapshot.forEach((doc) => {
+				const log = doc.data() as ResearchLog;
+				// Avoid duplicates (logs that already matched parentId)
+				if (!allLogs.some((existing) => existing.logId === log.logId)) {
+					allLogs.push(log);
+				}
+			});
+
+			hasMore = snapshot.size === EXPORT_BATCH_SIZE;
+			if (snapshot.size > 0) {
+				topLastDoc = snapshot.docs[snapshot.docs.length - 1];
+			}
+		}
+
+		allLogs.sort((a, b) => a.timestamp - b.timestamp);
+
+		return allLogs;
+	} catch (error) {
+		logError(error, {
+			operation: 'researchLogger.exportResearchLogsByQuestion',
+			metadata: { questionId },
+		});
+
+		return [];
+	}
+}
+
+/**
+ * Download research logs for a specific question as a pseudonymized JSON file.
+ * Includes a statements lookup with titles so researchers know what was evaluated.
+ */
+export async function downloadResearchLogsByQuestionAsJSON(questionId: string): Promise<void> {
+	const logs = await exportResearchLogsByQuestion(questionId);
+	const anonymized = pseudonymizeLogs(logs);
+	const statements = await fetchStatementContext(logs);
+	const exportData = {
+		exportedAt: new Date().toISOString(),
+		questionId,
+		totalLogs: anonymized.length,
+		statements,
+		logs: anonymized,
+	};
+	const filename = `research-logs_question_${new Date().toISOString().slice(0, 10)}.json`;
+	downloadFile(JSON.stringify(exportData, null, 2), filename, 'application/json');
 }

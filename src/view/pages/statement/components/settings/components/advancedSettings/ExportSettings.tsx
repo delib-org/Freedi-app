@@ -7,7 +7,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { exportStatementData } from '@/utils/exportUtils';
 import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
 import { logError } from '@/utils/errorHandling';
-import { downloadResearchLogsAsJSON } from '@/controllers/db/researchLogs/researchLogger';
+import { downloadResearchLogsAsJSON, downloadResearchLogsByQuestionAsJSON } from '@/controllers/db/researchLogs/researchLogger';
 import type { ExportFormat } from '@/types/export';
 import styles from './EnhancedAdvancedSettings.module.scss';
 
@@ -32,6 +32,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 	});
 
 	const [isResearchExporting, setIsResearchExporting] = useState(false);
+	const [isQuestionResearchExporting, setIsQuestionResearchExporting] = useState(false);
 
 	async function handleExport(format: ExportFormat) {
 		setIsExporting((prev) => ({ ...prev, [format]: true }));
@@ -59,6 +60,20 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			});
 		} finally {
 			setIsResearchExporting(false);
+		}
+	}
+
+	async function handleQuestionResearchExport() {
+		setIsQuestionResearchExporting(true);
+		try {
+			await downloadResearchLogsByQuestionAsJSON(statement.statementId);
+		} catch (error) {
+			logError(error, {
+				operation: 'ExportSettings.handleQuestionResearchExport',
+				statementId: statement.statementId,
+			});
+		} finally {
+			setIsQuestionResearchExporting(false);
 		}
 	}
 
@@ -157,11 +172,19 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					<div className={styles.exportButtons}>
 						<button
 							className={styles.exportButton}
+							onClick={handleQuestionResearchExport}
+							disabled={isQuestionResearchExporting}
+						>
+							<Download size={18} />
+							{isQuestionResearchExporting ? t('Exporting...') : t('Export This Question')}
+						</button>
+						<button
+							className={styles.exportButton}
 							onClick={handleResearchExport}
 							disabled={isResearchExporting}
 						>
 							<Download size={18} />
-							{isResearchExporting ? t('Exporting...') : t('Export Research JSON')}
+							{isResearchExporting ? t('Exporting...') : t('Export All Research')}
 						</button>
 					</div>
 				</>
