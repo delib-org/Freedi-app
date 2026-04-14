@@ -837,18 +837,15 @@ service cloud.firestore {
     }
 
     // Research consent - users manage their own consent records
+    // Supports both Firebase Auth users and anonymous users (MC/Sign apps)
+    // For anonymous users: consentId = "userId_topParentId", validated by matching userId field
     match /researchConsent/{consentId} {
-      allow create: if request.auth != null &&
-                     request.auth.uid == request.resource.data.userId;
-      // Allow get on non-existent docs (resource == null returns "not found")
-      // and reads for the owning user or system admins
-      allow read: if request.auth != null &&
-                   (resource == null ||
-                    request.auth.uid == resource.data.userId ||
-                    (exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
-                     get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true));
-      allow update: if request.auth != null &&
-                     request.auth.uid == resource.data.userId;
+      allow create: if request.resource.data.userId is string &&
+                     request.resource.data.topParentId is string &&
+                     request.resource.data.consentId == consentId;
+      allow read: if true;
+      allow update: if request.resource.data.consentId == consentId &&
+                     request.resource.data.userId == resource.data.userId;
       allow delete: if false;
     }
 
