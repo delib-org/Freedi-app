@@ -195,59 +195,12 @@ async function updateParentWithLatestChildren(parentId: string) {
 
 		logger.info(`Updated parent ${parentId} with ${lastSubStatements.length} sub-statements`);
 
-		// Update ONLY direct parent subscriptions (not cascading to all statements)
-		await updateParentSubscriptions(parentId, timestamp, lastSubStatements);
+		// REMOVED: updateParentSubscriptions fan-out
+		// Previously wrote lastUpdate to ALL subscription docs for the parent statement (O(N) writes).
+		// Now the parent Statement doc's lastChildUpdate field (set above) is the source of truth.
+		// The client reads lastChildUpdate via Redux overlay and sorts using getLatestChildActivity().
 	} catch (error) {
 		logger.error(`Error updating parent ${parentId}:`, error);
-	}
-}
-
-/**
- * Updates the lastUpdate timestamp for all subscriptions to a specific statement
- * This is limited to ONLY the direct parent statement to avoid cascading
- */
-async function updateParentSubscriptions(
-	statementId: string,
-	timestamp: number,
-	lastSubStatements: SimpleStatement[],
-) {
-	try {
-		const LIMIT = 500; // Safety limit to prevent runaway updates
-
-		// Get all subscriptions for this specific statement
-		const subscriptionsQuery = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', statementId)
-			.limit(LIMIT) // Safety limit to prevent runaway updates
-			.get();
-
-		if (subscriptionsQuery.empty) {
-			logger.info(`No subscriptions found for statement ${statementId}`);
-
-			return;
-		}
-
-		if (subscriptionsQuery.size >= LIMIT) {
-			logger.warn(
-				`Found more than ${LIMIT} subscriptions for statement ${statementId}, consider batching updates`,
-			);
-		}
-
-		logger.info(`Updating ${subscriptionsQuery.size} subscriptions for statement ${statementId}`);
-
-		// Batch update for efficiency
-		const batch = db.batch();
-		subscriptionsQuery.docs.forEach((doc) => {
-			batch.update(doc.ref, {
-				lastUpdate: timestamp,
-				lastSubStatements: lastSubStatements,
-			});
-		});
-
-		await batch.commit();
-		logger.info(`Successfully updated ${subscriptionsQuery.size} subscriptions`);
-	} catch (error) {
-		logger.error(`Error updating subscriptions for statement ${statementId}:`, error);
 	}
 }
 

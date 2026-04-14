@@ -123,15 +123,13 @@ export function captureException(error: Error, context?: Record<string, unknown>
 			scope.setContext('additional', context);
 		}
 
-		// Add user context if available
+		// Add pseudonymized user context — no PII (email/username) sent to third-party
 		try {
 			const userString = localStorage.getItem('user');
 			if (userString) {
 				const user = JSON.parse(userString);
 				scope.setUser({
 					id: user.uid,
-					email: user.email,
-					username: user.displayName,
 				});
 			}
 		} catch {

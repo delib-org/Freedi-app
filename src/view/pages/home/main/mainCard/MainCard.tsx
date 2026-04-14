@@ -1,21 +1,31 @@
 import { FC } from 'react';
 import { Link } from 'react-router';
+import { useSelector } from 'react-redux';
 import styles from './MainCard.module.scss';
 import ImgThumb from '@/assets/images/ImgThumb.png';
 import StatementChatMore from '@/view/pages/statement/components/chat/components/statementChatMore/StatementChatMore';
-import { SimpleStatement, StatementSubscription } from '@freedi/shared-types';
+import {
+	SimpleStatement,
+	StatementSubscription,
+	statementToSimpleStatement,
+} from '@freedi/shared-types';
 import { getTime } from '@/controllers/general/helpers';
 import { getTitle } from './updateMainCard/UpdateMainCard';
 import BranchBell from '@/view/components/atomic/atoms/BranchBell/BranchBell';
 import { useBranchBell } from '@/controllers/hooks/useBranchBell';
+import { statementSelector } from '@/redux/statements/statementsSlice';
 
 interface Props {
 	subscription: StatementSubscription;
 }
 
 const MainCard: FC<Props> = ({ subscription }) => {
-	const { statement: simpleStatement } = subscription;
-	const subStatements = subscription.lastSubStatements || [];
+	// Overlay: prefer fresh Statement from Redux, fall back to subscription snapshot
+	const freshStatement = useSelector(statementSelector(subscription.statementId));
+	const simpleStatement = freshStatement
+		? statementToSimpleStatement(freshStatement)
+		: subscription.statement;
+	const subStatements = freshStatement?.lastSubStatements || subscription.lastSubStatements || [];
 	const statementImgUrl = simpleStatement.imageURL || undefined;
 	const { state: bellState, onFrequencyChange } = useBranchBell(simpleStatement.statementId);
 

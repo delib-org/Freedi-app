@@ -33,7 +33,6 @@ import { updateVote } from './fn_vote';
 import {
 	onNewSubscription,
 	onStatementDeletionDeleteSubscriptions,
-	updateSubscriptionsSimpleStatement,
 	validateRoleChange,
 	updateStatementMemberCount,
 } from './fn_subscriptions';
@@ -51,6 +50,7 @@ import {
 	addRandomSeed,
 	backfillEvaluationType,
 	backfillParentsArray,
+	backfillSubscriptionFields,
 } from './fn_httpRequests';
 import { findSimilarStatements } from './fn_findSimilarStatements';
 import { detectMultipleSuggestions } from './fn_detectMultipleSuggestions';
@@ -89,6 +89,8 @@ import {
 } from './fn_clusterAggregation';
 import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
+import { deleteResearchLogs } from './fn_deleteResearchLogs';
+import { cleanupResearchLogs } from './fn_researchRetention';
 import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
@@ -176,6 +178,11 @@ import { fn_updateQueueConsensus } from './fn_updateQueueConsensus';
 import { fn_pruneVersionHistory } from './fn_pruneVersionHistory';
 import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPending';
 import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
+
+// Civil Activity Hub — Join Form exports
+import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
+import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
+import { resolveJoinIntents } from './engagement/joinForm/fn_resolveJoinIntents';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
@@ -449,6 +456,8 @@ exports.getCluster = wrapHttpFunction(getCluster);
 exports.recoverLastSnapshot = wrapHttpFunction(recoverLastSnapshot);
 exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
+exports.deleteResearchLogs = deleteResearchLogs;
+exports.cleanupResearchLogs = cleanupResearchLogs;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
@@ -469,6 +478,7 @@ exports.recalculateEvaluations = wrapAdminHttpFunction(recalculateEvaluations);
 exports.addRandomSeed = wrapAdminHttpFunction(addRandomSeed);
 exports.backfillEvaluationType = wrapAdminHttpFunction(backfillEvaluationType);
 exports.backfillParentsArray = wrapAdminHttpFunction(backfillParentsArray);
+exports.backfillSubscriptionFields = wrapAdminHttpFunction(backfillSubscriptionFields);
 
 // --------------------------
 // FIRESTORE TRIGGER FUNCTIONS
@@ -575,7 +585,7 @@ exports.updateStatementMemberCount = createFirestoreFunction(
 // exports.updateParentOnChildCreate = updateParentOnChildCreate;
 exports.updateParentOnChildUpdate = updateParentOnChildUpdate;
 exports.updateParentOnChildDelete = updateParentOnChildDelete;
-exports.updateSubscriptionsSimpleStatement = updateSubscriptionsSimpleStatement;
+// REMOVED: updateSubscriptionsSimpleStatement — replaced by Snapshot + Overlay pattern
 
 // DEPRECATED: This function is no longer needed
 // exports.updateParentStatementOnChildChange = updateParentStatementOnChildChange;
@@ -792,6 +802,9 @@ exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
+exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
+exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
+exports.resolveJoinIntents = resolveJoinIntents;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

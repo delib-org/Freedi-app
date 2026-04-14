@@ -97,9 +97,15 @@ service cloud.firestore {
                (get(topSubPath).data.role == 'admin' || get(topSubPath).data.role == 'statement-creator');
       }
 
-      // Combined check: direct admin, creator, parent admin, or topParent admin
+      // Check if user is a system-wide admin (usersV2 document)
+      function isSystemAdmin() {
+        return exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
+               get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+      }
+
+      // Combined check: direct admin, creator, parent admin, topParent admin, or system admin
       function isAuthorized() {
-        return isAdmin() || isCreator() ||
+        return isAdmin() || isCreator() || isSystemAdmin() ||
                (resource.data.keys().hasAll(['parentId']) &&
                 resource.data.parentId != null &&
                 checkParentAdmin()) ||
@@ -138,11 +144,56 @@ service cloud.firestore {
       allow create: if request.auth.uid != null;
       allow update: if request.auth.uid != null && isAllowedToUpdate();
       allow delete: if request.auth.uid != null && isAuthorized();
+
+      // Civil Activity Hub — join form submissions subcollection.
+      // Scoped to the owning question document. Each user owns their own
+      // submission doc keyed by userId. Admins of the question (via the
+      // statementsSubscribe role check) can read the full collection;
+      // regular users can only read/write their own doc.
+      match /joinFormSubmissions/{submissionUserId} {
+        function isQuestionAdmin() {
+          let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+          let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+          return exists(subPath) &&
+                 (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+        }
+
+        allow read: if request.auth.uid != null &&
+                       (request.auth.uid == submissionUserId || isQuestionAdmin());
+        allow create: if request.auth.uid != null &&
+                         request.auth.uid == submissionUserId &&
+                         request.resource.data.userId == submissionUserId &&
+                         request.resource.data.questionId == statementId;
+        allow update: if request.auth.uid != null &&
+                         request.auth.uid == submissionUserId;
+        allow delete: if false;
+      }
+
+      // Civil Activity Hub — post-resolve per-user state.
+      // Writes to this subcollection come from the `resolveJoinIntents`
+      // callable (admin-triggered) and from clients flipping their own
+      // pruning state to `confirmed`. The admin function writes via
+      // Firebase Admin SDK which bypasses these rules.
+      match /joinResolutionUsers/{resolutionUserId} {
+        function isResolutionAdmin() {
+          let subId = string(request.auth.uid) + '--' + cleanPath(string(statementId));
+          let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+          return exists(subPath) &&
+                 (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+        }
+
+        allow read: if request.auth.uid != null &&
+                       (request.auth.uid == resolutionUserId || isResolutionAdmin());
+        allow update: if request.auth.uid != null &&
+                         request.auth.uid == resolutionUserId;
+        allow create: if false;
+        allow delete: if false;
+      }
     }
 
     match /inAppNotifications/{inAppNotificationId=**} {
-      // Allow read if authenticated - the app already filters by userId in queries
-      allow read: if request.auth != null;
+      // Only allow users to read their own notifications
+      allow read: if request.auth != null && resource.data.get('userId', '') == request.auth.uid;
       // Only allow updates and deletes by the owner of the notification
       allow update: if request.auth != null && resource.data.get('userId', '') == request.auth.uid;
       allow delete: if request.auth != null && (resource == null || resource.data.get('userId', '') == request.auth.uid);
@@ -402,9 +453,9 @@ service cloud.firestore {
       allow write: if request.auth.uid != null;
     }
 
-    // INTENTIONALLY PUBLIC: Mass consensus requires unauthenticated read access for anonymous participants
+    // Require authentication — anonymous mass-consensus users still get Firebase Auth tokens via signInAnonymously()
     match /evaluations/{evluationId=**} {
-      allow read: if true;
+      allow read: if request.auth != null;
       allow create: if request.resource.data.keys().hasAll(['evaluationId', 'parentId', 'statementId', 'evaluatorId', 'evaluation', 'updatedAt'])
                     && request.resource.data.evaluationId is string
                     && request.resource.data.parentId is string
@@ -770,6 +821,35 @@ service cloud.firestore {
                     resource.data.userId == request.auth.uid;
       // Writes handled by Cloud Functions only
       allow write: if false;
+    }
+
+    // Research logs - append-only telemetry for field research
+    match /researchLogs/{logId} {
+      allow create: if request.auth != null &&
+                     request.auth.uid == request.resource.data.userId;
+      allow update, delete: if false;
+      // Only system admins can read research logs (not statement creators)
+      allow list: if request.auth != null &&
+                   get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
+      allow get: if request.auth != null &&
+                   (get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true ||
+                    resource.data.userId == request.auth.uid);
+    }
+
+    // Research consent - users manage their own consent records
+    match /researchConsent/{consentId} {
+      allow create: if request.auth != null &&
+                     request.auth.uid == request.resource.data.userId;
+      // Allow get on non-existent docs (resource == null returns "not found")
+      // and reads for the owning user or system admins
+      allow read: if request.auth != null &&
+                   (resource == null ||
+                    request.auth.uid == resource.data.userId ||
+                    (exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
+                     get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true));
+      allow update: if request.auth != null &&
+                     request.auth.uid == resource.data.userId;
+      allow delete: if false;
     }
 
     // Notification queue - no client access (Functions only)

@@ -227,6 +227,19 @@ export class MaintenanceController {
 		}
 	}
 
+	async backfillSubscriptionFields(_: Request, res: Response): Promise<void> {
+		try {
+			const { backfillSubscriptionTopLevelFields } = await import(
+				'../migrations/backfillSubscriptionFields'
+			);
+
+			const result = await backfillSubscriptionTopLevelFields();
+			res.send({ ok: true, ...result });
+		} catch (error) {
+			this.handleError(res, error);
+		}
+	}
+
 	/**
 	 * Handle errors consistently
 	 */

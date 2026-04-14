@@ -4,6 +4,7 @@ import {
 	doc,
 	getDoc,
 	getDocs,
+	updateDoc,
 	query,
 	where,
 	orderBy,
@@ -441,6 +442,29 @@ export function statsToBuckets(
 }
 
 // ── Real-time listener helpers ───────────────────────────────────────
+
+/**
+ * Toggle enableResearchLogging on a statement's statementSettings.
+ */
+export async function setResearchLogging(statementId: string, enabled: boolean): Promise<void> {
+	const ref = doc(db, Collections.statements, statementId);
+	await updateDoc(ref, { 'statementSettings.enableResearchLogging': enabled });
+}
+
+/**
+ * Fetch the current enableResearchLogging value for a statement.
+ * Returns null if statement not found.
+ */
+export async function getResearchLoggingStatus(statementId: string): Promise<{ enabled: boolean; title: string } | null> {
+	const docSnap = await getDoc(doc(db, Collections.statements, statementId));
+	if (!docSnap.exists()) return null;
+	const data = docSnap.data() as Statement;
+
+	return {
+		enabled: data.statementSettings?.enableResearchLogging === true,
+		title: data.statement || statementId,
+	};
+}
 
 export { toMillis, bucketize };
 export type { Unsubscribe, QueryDocumentSnapshot };

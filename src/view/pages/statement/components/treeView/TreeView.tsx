@@ -15,6 +15,8 @@ import { TreeFilterMode } from './TreeFilterMode';
 import { useNewSolutionsBuffer, MAX_DISPLAY_COUNT } from './hooks/useNewSolutionsBuffer';
 import NewSolutionsPill from './components/NewSolutionsPill/NewSolutionsPill';
 import TreeNode from './components/TreeNode/TreeNode';
+import PruningBanner from '@/view/pages/statement/components/joining/PruningBanner';
+import OrphanedBanner from '@/view/pages/statement/components/joining/OrphanedBanner';
 import styles from './TreeView.module.scss';
 import { Statement, StatementType, SortType } from '@freedi/shared-types';
 
@@ -205,6 +207,12 @@ const TreeView: FC<TreeViewProps> = ({
 
 	return (
 		<div ref={treeViewRef} className={styles['tree-view']}>
+			{statement && statement.statementType === StatementType.question && (
+				<>
+					<PruningBanner question={statement} />
+					<OrphanedBanner question={statement} />
+				</>
+			)}
 			<div className={styles['tree-view__list']}>
 				{pendingCount > 0 && showSortNav && (
 					<NewSolutionsPill

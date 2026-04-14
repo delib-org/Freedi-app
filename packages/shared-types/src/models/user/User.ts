@@ -53,6 +53,7 @@ export const CreatorSchema = object({
 	isAnonymous: optional(boolean()),
 	email: optional(nullable(string())),
 	advanceUser: optional(boolean()),
+	systemAdmin: optional(boolean()),
 });
 
 export type Creator = InferOutput<typeof CreatorSchema>;

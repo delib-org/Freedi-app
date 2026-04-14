@@ -1,4 +1,4 @@
-import { FC, useRef, useEffect, useState, useCallback } from 'react';
+import { FC, useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { getEvaluationThumbIdByScore } from '../../../statementsEvaluationCont';
 import styles from './EnhancedEvaluation.module.scss';
 import { enhancedEvaluationsThumbs, EnhancedEvaluationThumb } from './EnhancedEvaluationModel';
@@ -6,7 +6,12 @@ import { setEvaluationToDB } from '@/controllers/db/evaluation/setEvaluation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { useUserConfig } from '@/controllers/hooks/useUserConfig';
 import { evaluationSelector } from '@/redux/evaluations/evaluationsSlice';
-import { Statement } from '@freedi/shared-types';
+import {
+	Statement,
+	calcMeanSentiment,
+	calcLikeMindedness,
+	DEFAULT_MIN_EVALUATORS,
+} from '@freedi/shared-types';
 import { useAuthentication } from '@/controllers/hooks/useAuthentication';
 import { useDecreaseLearningRemain } from '@/controllers/hooks/useDecreaseLearningRemain';
 import { Tooltip } from '@/view/components/tooltip/Tooltip';
@@ -44,14 +49,38 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 	}, []);
 
 	const { consensus: _consensus } = statement;
-	const { sumPro, sumCon, numberOfEvaluators } = statement.evaluation || {
+	const {
+		sumPro,
+		sumCon,
+		numberOfEvaluators,
+		sumEvaluations = 0,
+		sumSquaredEvaluations = 0,
+	} = statement.evaluation || {
 		sumPro: 0,
 		sumCon: 0,
 		numberOfEvaluators: 0,
+		sumEvaluations: 0,
+		sumSquaredEvaluations: 0,
 	};
 	const avg =
 		numberOfEvaluators !== 0 ? Math.round(((sumPro - sumCon) / numberOfEvaluators) * 100) / 100 : 0;
 	const consensusDisplay = Math.round(_consensus * 100);
+
+	const metrics = useMemo(() => {
+		if (!numberOfEvaluators || numberOfEvaluators <= 0) return null;
+		const meanSentiment = calcMeanSentiment(sumEvaluations, numberOfEvaluators);
+		const likeMindedness = calcLikeMindedness(
+			sumEvaluations,
+			sumSquaredEvaluations,
+			numberOfEvaluators,
+		);
+
+		return {
+			meanSentiment: Math.round(meanSentiment * 100),
+			likeMindedness: Math.round(likeMindedness * 100),
+			consensusScore: consensusDisplay,
+		};
+	}, [sumEvaluations, sumSquaredEvaluations, numberOfEvaluators, consensusDisplay]);
 
 	useEffect(() => {
 		if (evaluationBarRef.current) {
@@ -94,7 +123,23 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 				</div>
 				{showEvaluation && (
 					<Tooltip
-						content={`${t('Average score')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
+						content={
+							metrics ? (
+								<>
+									<div>
+										{t('Average score')}: {metrics.meanSentiment}%
+									</div>
+									<div>
+										{t('Like-mindedness')}: {metrics.likeMindedness}%
+									</div>
+									<div>
+										{t('Evaluators')}: {numberOfEvaluators}
+									</div>
+								</>
+							) : (
+								`${t('Evaluators')}: 0`
+							)
+						}
 						position="top"
 					>
 						<div className={styles['evaluation-bar']} ref={evaluationBarRef}>
@@ -121,9 +166,28 @@ const EnhancedEvaluation: FC<EnhancedEvaluationProps> = ({
 			<div
 				className={`${styles['evaluation-score']} ${consensusDisplay < 0 ? styles.negative : ''}`}
 			>
-				{showEvaluation && numberOfEvaluators && numberOfEvaluators > 0 ? (
+				{showEvaluation && numberOfEvaluators >= DEFAULT_MIN_EVALUATORS ? (
 					<Tooltip
-						content={`${t('average')}: ${avg} | ${t('Evaluators')}: ${numberOfEvaluators}`}
+						content={
+							metrics ? (
+								<>
+									<div>
+										{t('Consensus score')}: {metrics.consensusScore}
+									</div>
+									<div>
+										{t('Average score')}: {metrics.meanSentiment}%
+									</div>
+									<div>
+										{t('Like-mindedness')}: {metrics.likeMindedness}%
+									</div>
+									<div>
+										{t('Evaluators')}: {numberOfEvaluators}
+									</div>
+								</>
+							) : (
+								`${t('Evaluators')}: ${numberOfEvaluators}`
+							)
+						}
 						position="bottom"
 					>
 						<span

@@ -11,6 +11,7 @@ import {
 } from 'valibot';
 import { Creator, CreatorSchema, User, UserSchema } from '../user/User';
 import { Role } from '../user/UserSettings';
+import { StatementType } from '../TypeEnums';
 import { NotificationFrequency } from '../engagement/NotificationFrequency';
 import { BranchPreferenceSchema } from '../engagement/EngagementModel';
 import { StatementSchema } from './StatementTypes';
@@ -25,6 +26,12 @@ export const StatementSubscriptionSchema = object({
 	statementsSubscribeId: string(),
 	statement: SimpleStatementSchema || StatementSchema,
 	lastSubStatements:optional(array(SimpleStatementSchema || StatementSchema)),
+
+	// Top-level query fields (promoted from embedded statement for efficient Firestore queries)
+	// These are immutable after creation — set once when subscription is created
+	parentId: optional(string()),
+	statementType: optional(enum_(StatementType)),
+	topParentId: optional(string()),
 	tokens: optional(array(string())),
 	totalSubStatementsRead: optional(number()), // deprecated at 3/8/2024
 	lastReadTimestamp: optional(number()),

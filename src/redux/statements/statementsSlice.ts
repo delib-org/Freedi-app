@@ -529,7 +529,7 @@ export const topSubscriptionsSelector = createSelector(
 		const statementsMap = new Map(statements.map((s) => [s.statementId, s]));
 
 		return statementSubscription
-			.filter((sub: StatementSubscription) => sub.statement.parentId === 'top')
+			.filter((sub: StatementSubscription) => (sub.parentId || sub.statement.parentId) === 'top')
 			.sort(
 				(a, b) =>
 					getLatestChildActivity(b, statementsMap) - getLatestChildActivity(a, statementsMap),

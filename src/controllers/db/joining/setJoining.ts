@@ -5,9 +5,14 @@ import { Statement, StatementType } from '@freedi/shared-types';
 import { store } from '@/redux/store';
 import { logError } from '@/utils/errorHandling';
 
+export type JoinRole = 'activist' | 'organizer';
+
 export interface ToggleJoiningParams {
 	statementId: string;
 	parentStatementId?: string;
+	/** 'activist' writes to `joined[]` (default, legacy behavior).
+	 *  'organizer' writes to `organizers[]` and skips sibling cleanup. */
+	role?: JoinRole;
 }
 
 export interface ToggleJoiningResult {
@@ -19,10 +24,15 @@ export interface ToggleJoiningResult {
 
 /**
  * Toggle user joining status for a statement (option).
- * If singleJoinOnly is enabled on parent, removes user from other sibling options first.
+ * - Activists are stored on `statement.joined[]`. When `singleJoinOnly` is
+ *   enabled on the parent, the user is removed from other sibling options
+ *   before being added.
+ * - Organizers are stored on `statement.organizers[]`. They are unbounded
+ *   and NOT subject to `singleJoinOnly` / `min`/`maxJoinMembers`.
  */
 export async function toggleJoining(params: ToggleJoiningParams): Promise<ToggleJoiningResult> {
-	const { statementId, parentStatementId } = params;
+	const { statementId, parentStatementId, role = 'activist' } = params;
+	const field: 'joined' | 'organizers' = role === 'organizer' ? 'organizers' : 'joined';
 
 	try {
 		const creator = store.getState().creator.creator;
@@ -37,9 +47,9 @@ export async function toggleJoining(params: ToggleJoiningParams): Promise<Toggle
 		let leftStatementId: string | undefined;
 		let leftStatementTitle: string | undefined;
 
-		// Check if singleJoinOnly is enabled on parent
+		// Sibling-exclusive join logic applies to activists only.
 		let singleJoinOnly = false;
-		if (parentStatementId) {
+		if (role === 'activist' && parentStatementId) {
 			const parentDocs = await getDocs(
 				query(
 					collection(DB, Collections.statements),
@@ -53,30 +63,37 @@ export async function toggleJoining(params: ToggleJoiningParams): Promise<Toggle
 		}
 
 		await runTransaction(DB, async (transaction) => {
-			// Read the target statement
 			const statementDB = await transaction.get(statementRef);
 			if (!statementDB.exists()) {
 				throw new Error('Statement does not exist');
 			}
 			const statement = statementDB.data() as Statement;
+			const otherField: 'joined' | 'organizers' = field === 'joined' ? 'organizers' : 'joined';
+			const currentMembers: Creator[] =
+				(field === 'organizers' ? statement.organizers : statement.joined) ?? [];
+			const currentOthers: Creator[] =
+				(otherField === 'organizers' ? statement.organizers : statement.joined) ?? [];
 
-			const isUserJoined = statement.joined?.find((user: Creator) => user.uid === creator.uid)
-				? true
-				: false;
+			const isUserMember = currentMembers.some((user) => user.uid === creator.uid);
 
-			// If user is already joined, they want to leave
-			if (isUserJoined) {
-				const updatedJoined =
-					statement.joined?.filter((user: Creator) => user.uid !== creator.uid) ?? [];
-				transaction.update(statementRef, { joined: updatedJoined });
+			if (isUserMember) {
+				const updated = currentMembers.filter((user) => user.uid !== creator.uid);
+				transaction.update(statementRef, { [field]: updated });
 
 				return;
 			}
 
-			// User wants to join
-			// If singleJoinOnly is enabled, find and remove user from other sibling options
-			if (singleJoinOnly && parentStatementId) {
-				// Query sibling options (same parent, type option, excluding current)
+			// Mutual exclusivity: a user is either activist OR organizer on an
+			// option, never both. If they're joining one role while being in the
+			// other, remove them from the other atomically in the same write.
+			const updatePayload: Record<string, Creator[]> = {};
+			const isUserInOther = currentOthers.some((user) => user.uid === creator.uid);
+			if (isUserInOther) {
+				updatePayload[otherField] = currentOthers.filter((user) => user.uid !== creator.uid);
+			}
+
+			// Activist single-join cleanup — organizers skip this branch.
+			if (role === 'activist' && singleJoinOnly && parentStatementId) {
 				const siblingsQuery = query(
 					collection(DB, Collections.statements),
 					where('parentId', '==', parentStatementId),
@@ -88,27 +105,23 @@ export async function toggleJoining(params: ToggleJoiningParams): Promise<Toggle
 					const sibling = siblingDoc.data() as Statement;
 					if (sibling.statementId === statementId) continue;
 
-					// Check if user is joined to this sibling
 					const isJoinedToSibling = sibling.joined?.find(
 						(user: Creator) => user.uid === creator.uid,
 					);
 					if (isJoinedToSibling) {
-						// Remove user from this sibling
 						const siblingRef = doc(DB, Collections.statements, sibling.statementId);
 						const updatedSiblingJoined =
 							sibling.joined?.filter((user: Creator) => user.uid !== creator.uid) ?? [];
 						transaction.update(siblingRef, { joined: updatedSiblingJoined });
 
-						// Track which statement user left
 						leftStatementId = sibling.statementId;
 						leftStatementTitle = sibling.statement;
 					}
 				}
 			}
 
-			// Add user to the target statement
-			const updatedJoined = [...(statement.joined ?? []), creator];
-			transaction.update(statementRef, { joined: updatedJoined });
+			updatePayload[field] = [...currentMembers, creator];
+			transaction.update(statementRef, updatePayload);
 		});
 
 		return {
@@ -120,7 +133,7 @@ export async function toggleJoining(params: ToggleJoiningParams): Promise<Toggle
 		logError(error, {
 			operation: 'joining.toggleJoining',
 			statementId,
-			metadata: { parentStatementId },
+			metadata: { parentStatementId, role },
 		});
 
 		return {

@@ -56,7 +56,8 @@ export const StatementEvaluationSchema = object({
 	averageEvaluation: optional(number()), //average evaluation
 	sumSquaredEvaluations: optional(number()), //sum of squared evaluations
 	standardDeviation: optional(number()), //standard deviation of evaluations
-	agreementIndex: optional(number()), // 1 - sigma, range [0,1] — how much evaluators align
+	agreementIndex: optional(number()), // 1 - t·SEM*, range [0,1] — confidence-adjusted agreement
+	likeMindedness: optional(number()), // 1 - SEM*, range [0,1] — simple opinion similarity (user-facing)
 	confidenceIndex: optional(number()), // Gamma formula, range [0,1] — how representative the sample is
 	viewed: optional(number()), //number of users who viewed the evaluation
 	evaluationRandomNumber: optional(number()),

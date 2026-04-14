@@ -13,6 +13,7 @@ import {
 } from '@/utils/firebaseUtils';
 import { functions } from '../config';
 import { logError } from '@/utils/errorHandling';
+import { logEvaluation } from '@/controllers/db/researchLogs/researchLogger';
 
 export async function setEvaluationToDB(
 	statement: Statement,
@@ -47,7 +48,24 @@ export async function setEvaluationToDB(
 
 		parse(EvaluationSchema, evaluationData);
 
+		// Capture previous evaluation from Redux before the write
+		const previousEval = store
+			.getState()
+			.evaluations.userEvaluations.find(
+				(e) => e.statementId === statementId && e.evaluatorId === creator.uid,
+			)?.evaluation;
+
 		await setDoc(evaluationRef, evaluationData);
+
+		// Research logging
+		logEvaluation(
+			statementId,
+			String(evaluation),
+			previousEval !== undefined ? String(previousEval) : undefined,
+			statement.topParentId,
+		).catch(() => {
+			/* handled inside logResearchAction */
+		});
 
 		// Track evaluation/vote
 		logger.info('Evaluation set', {

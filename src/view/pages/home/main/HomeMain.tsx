@@ -9,6 +9,7 @@ import {
 	statementsSubscriptionsSelector,
 	topSubscriptionsSelector,
 } from '@/redux/statements/statementsSlice';
+import { useHomeStatementOverlay } from '@/controllers/hooks/useHomeStatementOverlay';
 
 // Custom components
 import Footer from '@/view/components/footer/Footer';
@@ -40,13 +41,16 @@ const HomeMain = () => {
 	const allTopSubscriptions = useAppSelector(topSubscriptionsSelector);
 	const allStatementsSubscriptions = useAppSelector(statementsSubscriptionsSelector);
 
+	// Fetch fresh statement data for subscriptions (non-blocking overlay)
+	useHomeStatementOverlay(allTopSubscriptions);
+
 	const topSubscriptions = useMemo(
 		() =>
 			allTopSubscriptions.filter(
 				(sub) =>
 					sub.userId === userId &&
-					(sub.statement.statementType === StatementType.group ||
-						sub.statement.statementType === StatementType.question),
+					((sub.statementType || sub.statement.statementType) === StatementType.group ||
+						(sub.statementType || sub.statement.statementType) === StatementType.question),
 			),
 		[allTopSubscriptions, userId],
 	);

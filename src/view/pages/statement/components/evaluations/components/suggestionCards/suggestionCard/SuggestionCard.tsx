@@ -25,7 +25,7 @@ import IconButton from '@/view/components/iconButton/IconButton';
 import styles from './SuggestionCard.module.scss';
 import { StatementType, Statement } from '@freedi/shared-types';
 import { useAuthorization } from '@/controllers/hooks/useAuthorization';
-import { toggleJoining, ToggleJoiningResult } from '@/controllers/db/joining/setJoining';
+import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import Joined from '@/view/components/joined/Joined';
 import ImprovementModal from '@/view/components/improvementModal/ImprovementModal';
 import { improveSuggestionWithTimeout } from '@/services/suggestionImprovement';
@@ -51,9 +51,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 
 	const { t, dir } = useTranslation();
 	// Use parent's authorization instead of individual card authorization
-	const { isAuthorized, isAdmin, creator } = useAuthorization(parentStatement?.statementId);
+	const { isAuthorized, isAdmin } = useAuthorization(parentStatement?.statementId);
 	const enableJoining = parentStatement?.statementSettings?.joiningEnabled;
-	const singleJoinOnly = parentStatement?.statementSettings?.singleJoinOnly;
 	const minJoinMembers = parentStatement?.statementSettings?.minJoinMembers;
 	const maxJoinMembers = parentStatement?.statementSettings?.maxJoinMembers;
 	const showEvaluation = parentStatement?.statementSettings?.showEvaluation;
@@ -73,9 +72,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 	// Early return if statement is not defined
 	if (!statement) return null;
 
-	const hasJoinedServer = statement?.joined?.find((c) => c?.uid === creator?.uid) ? true : false;
-
-	// Join count and status for visual indicators
+	// Join count/status indicators apply to activists only (min/max on joined[]).
 	const joinedCount = statement?.joined?.length ?? 0;
 	const isBelowMinimum =
 		enableJoining && minJoinMembers !== undefined && joinedCount < minJoinMembers;
@@ -84,15 +81,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 	// Note: exceeding max is handled by admin splitting into rooms, not by blocking joining
 	const exceedsMaximum =
 		enableJoining && maxJoinMembers !== undefined && joinedCount > maxJoinMembers;
-
-	// Optimistic state for instant UI updates
-	const [hasJoinedOptimistic, setHasJoinedOptimistic] = useState(hasJoinedServer);
-	const [isJoinLoading, setIsJoinLoading] = useState(false);
-
-	// Update optimistic state when server state changes
-	useEffect(() => {
-		setHasJoinedOptimistic(hasJoinedServer);
-	}, [hasJoinedServer]);
 
 	// Use States
 	const [isEdit, setIsEdit] = useState(false);
@@ -175,40 +163,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 			}
 		} catch (error) {
 			logError(error, { operation: 'suggestionCard.SuggestionCard.handleSetOption' });
-		}
-	}
-
-	async function handleJoin() {
-		// Optimistically update the UI immediately
-		setHasJoinedOptimistic(!hasJoinedOptimistic);
-		setIsJoinLoading(true);
-
-		try {
-			// Call the API function with parentStatementId for single-join logic
-			const result: ToggleJoiningResult = await toggleJoining({
-				statementId: statement.statementId,
-				parentStatementId: parentStatement?.statementId,
-			});
-
-			if (!result.success) {
-				// If the API call fails, revert the optimistic update
-				setHasJoinedOptimistic(hasJoinedOptimistic);
-				logError(new Error(result.error ?? t('Failed to toggle joining')), {
-					operation: 'SuggestionCard.handleJoinToggle',
-				});
-			} else if (result.leftStatementTitle && singleJoinOnly) {
-				// Show notification that user left another option
-				console.info(t('You left') + ` "${result.leftStatementTitle}" ` + t('to join this option'));
-			}
-		} catch (error) {
-			// If the API call fails, revert the optimistic update
-			logError(error, {
-				operation: 'suggestionCard.SuggestionCard.with',
-				metadata: { message: 'Failed to toggle joining:' },
-			});
-			setHasJoinedOptimistic(hasJoinedOptimistic);
-		} finally {
-			setIsJoinLoading(false);
 		}
 	}
 
@@ -444,7 +398,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 									<Joined statement={statement} />
 									{/* Room Badge - shows user's assigned room for this option */}
 									<RoomBadge statementId={statement.statementId} />
-									{/* Join count indicator */}
+									{/* Join count indicator — activists only */}
 									{(minJoinMembers !== undefined || maxJoinMembers !== undefined) && (
 										<span
 											className={`
@@ -458,20 +412,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 											{maxJoinMembers !== undefined && `/${maxJoinMembers}`} {t('members')}
 										</span>
 									)}
-									<button
-										onClick={handleJoin}
-										disabled={isJoinLoading}
-										className="btn btn--small"
-										style={{
-											backgroundColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
-											color: hasJoinedOptimistic ? 'white' : 'inherit',
-											borderColor: hasJoinedOptimistic ? 'var(--approve)' : 'inherit',
-											opacity: isJoinLoading ? 0.7 : 1,
-											cursor: isJoinLoading ? 'not-allowed' : 'pointer',
-										}}
-									>
-										{hasJoinedOptimistic ? t('Leave') : t('Join')}
-									</button>
+									<JoinButtons statement={statement} parentStatement={parentStatement} />
 								</>
 							)}
 						</div>
