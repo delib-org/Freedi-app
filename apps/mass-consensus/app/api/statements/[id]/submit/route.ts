@@ -6,7 +6,6 @@ import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
-import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
 import { FieldValue } from 'firebase-admin/firestore';
@@ -96,7 +95,7 @@ export async function POST(
 
   try {
     const body = await request.json();
-    const { solutionText, userId: bodyUserId, userName, existingStatementId, generatedTitle, generatedDescription } = body;
+    const { solutionText, userId: bodyUserId, userName, existingStatementId } = body;
 
     // Get user ID
     const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -193,30 +192,9 @@ export async function POST(
 
     const displayName = userName || getAnonymousDisplayName(userId);
 
-    // Use title and description from check-similar response if provided,
-    // otherwise create a simple title/description from the text
-    let title: string;
-    let description: string;
-
-    logger.info('[Submit] AI generated title:', generatedTitle);
-    logger.info('[Submit] AI generated description:', generatedDescription);
-
-    if (generatedTitle && generatedDescription) {
-      // Use AI-generated values
-      title = generatedTitle;
-      description = generatedDescription;
-    } else {
-      // Fallback: create title and description from the text
-      if (trimmedText.length > 60) {
-        // Long text: truncate title, use full text as description
-        title = trimmedText.substring(0, 57) + '...';
-        description = trimmedText;
-      } else {
-        // Short text: use as title, add context to description
-        title = trimmedText;
-        description = `Proposed solution: ${trimmedText}`;
-      }
-    }
+    // Use user's original text as-is
+    const title = trimmedText;
+    const description = trimmedText;
 
     // Use shared utility to create properly structured statement
     const newSolution = createStatementObject({
