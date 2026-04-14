@@ -3,6 +3,8 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 import { checkSurveyCompletion } from '@/lib/firebase/demographicQueries';
 import { DemographicMode } from '@/types/demographics';
 
@@ -142,6 +144,14 @@ export async function POST(
     };
 
     await db.collection(Collections.signatures).doc(signatureId).set(signature, { merge: true });
+
+    // Research logging
+    const researchEnabled = document?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.VOTE, researchEnabled, {
+      statementId: docId,
+      topParentId: document?.topParentId || docId,
+      newValue: signed,
+    });
 
     logger.info(`[Signatures API] Created/updated signature: ${signatureId} - ${signed}`);
 

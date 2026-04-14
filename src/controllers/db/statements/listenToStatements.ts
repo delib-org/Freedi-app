@@ -317,7 +317,7 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 		const q = query(
 			membersRef,
 			where('statementId', '==', statementId),
-			where('statement.statementType', '!=', StatementType.document),
+			where('statementType', '!=', StatementType.document),
 			orderBy('createdAt', 'desc'),
 			limit(10), // Load only last 10 members initially, more can be loaded on demand
 		);

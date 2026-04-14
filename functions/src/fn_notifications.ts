@@ -19,11 +19,6 @@ export interface FcmSubscriber {
 	documentId?: string;
 }
 
-interface TokenValidationResult {
-	validTokens: FcmSubscriber[];
-	invalidTokens: FcmSubscriber[];
-}
-
 interface SendResult {
 	successful: number;
 	failed: number;
@@ -136,9 +131,14 @@ export async function updateInAppNotifications(
 		const newStatement = e.data?.data() as Statement;
 		const statement = parse(StatementSchema, newStatement);
 
-		// Fetch all required data in parallel
+		const MAX_NOTIFICATION_SUBSCRIBERS = 500;
+
+		// Fetch direct parent subscribers + parent statement in parallel
+		// Only fetch from direct parent — subscribers to ancestor statements are already
+		// subscribed to the parent via the subscription inheritance system.
 		const [subscribersDB, parentStatementDB, pushSubscribersDB] = await fetchNotificationData(
 			statement.parentId,
+			MAX_NOTIFICATION_SUBSCRIBERS,
 		);
 
 		const subscribersInApp = subscribersDB.docs.map(
@@ -158,39 +158,9 @@ export async function updateInAppNotifications(
 			parentStatement = parse(StatementSchema, parentStatementDB.data());
 		}
 
-		// Also fetch subscribers for ALL parent statements in the hierarchy
-		let allParentSubscribers: StatementSubscription[] = [];
-		if (statement.parentId !== 'top' && statement.parents && statement.parents.length > 0) {
-			// Get all parent statement IDs from the parents array
-			const parentIds = statement.parents.filter((id) => id !== 'top');
-
-			// Fetch subscribers for all parent statements in parallel
-			const parentSubscriberPromises = parentIds.map(async (parentId) => {
-				const subscribersDB = await db
-					.collection(Collections.statementsSubscribe)
-					.where('statementId', '==', parentId)
-					.where('getInAppNotification', '==', true)
-					.get();
-
-				return subscribersDB.docs.map(
-					(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
-				);
-			});
-
-			// Wait for all parent subscriber queries to complete
-			const parentSubscriberArrays = await Promise.all(parentSubscriberPromises);
-
-			// Flatten the array of arrays into a single array
-			allParentSubscribers = parentSubscriberArrays.flat();
-
-			logger.info(
-				`Found ${allParentSubscribers.length} subscribers from ${parentIds.length} parent statements`,
-			);
-		}
-
-		// Combine subscribers from direct parent and all ancestors
+		// Deduplicate subscribers by userId
 		const seenUserIds = new Set<string>();
-		const allSubscribers = [...subscribersInApp, ...allParentSubscribers].filter((subscriber) => {
+		const allSubscribers = subscribersInApp.filter((subscriber) => {
 			if (seenUserIds.has(subscriber.user.uid)) {
 				return false;
 			}
@@ -199,29 +169,14 @@ export async function updateInAppNotifications(
 			return true;
 		});
 
-		// Get push notification subscribers
+		// Get push notification subscribers (already capped by fetchNotificationData)
 		const pushSubscribers = pushSubscribersDB.docs.map(
 			(doc: QueryDocumentSnapshot) => doc.data() as StatementSubscription,
 		);
 
-		// Also get push subscribers from all parent statements
-		let allPushSubscribers = [...pushSubscribers];
-		if (statement.parentId !== 'top' && allParentSubscribers.length > 0) {
-			const parentPushSubscribers = allParentSubscribers.filter(
-				(sub) => sub.getPushNotification === true,
-			);
-			// Combine and dedupe by userId
-			const seenPushUserIds = new Set(pushSubscribers.map((s) => s.userId));
-			parentPushSubscribers.forEach((sub) => {
-				if (!seenPushUserIds.has(sub.userId)) {
-					allPushSubscribers.push(sub);
-				}
-			});
-		}
-
 		// Convert to FCM subscriber format
 		const fcmSubscribers: FcmSubscriber[] = [];
-		allPushSubscribers.forEach((subscriber) => {
+		pushSubscribers.forEach((subscriber) => {
 			if (subscriber.tokens && subscriber.tokens.length > 0) {
 				subscriber.tokens.forEach((token) => {
 					fcmSubscribers.push({
@@ -256,20 +211,23 @@ export async function updateInAppNotifications(
 
 /**
  * Fetches all data needed for notification processing in parallel.
+ * Queries are capped with a limit to prevent runaway reads.
  */
-async function fetchNotificationData(parentId: string) {
-	// Query for in-app notification subscribers
+async function fetchNotificationData(parentId: string, subscriberLimit: number = 500) {
+	// Query for in-app notification subscribers (capped)
 	const parentStatementSubscribersCB = db
 		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
 		.where('getInAppNotification', '==', true)
+		.limit(subscriberLimit)
 		.get();
 
-	// Query for push notification subscribers
+	// Query for push notification subscribers (capped)
 	const pushStatementSubscribersCB = db
 		.collection(Collections.statementsSubscribe)
 		.where('statementId', '==', parentId)
 		.where('getPushNotification', '==', true)
+		.limit(subscriberLimit)
 		.get();
 
 	const parentStatementCB = db.doc(`${Collections.statements}/${parentId}`).get();
@@ -330,63 +288,8 @@ async function processInAppNotifications(
 	await batch.commit();
 }
 
-/**
- * Validates FCM tokens - only marks tokens as invalid if they have specific invalid token errors
- */
-async function validateTokens(subscribers: FcmSubscriber[]): Promise<TokenValidationResult> {
-	const validTokens: FcmSubscriber[] = [];
-	const invalidTokens: FcmSubscriber[] = [];
-
-	// Create validation promises for all tokens
-	const validationPromises = subscribers.map(async (subscriber) => {
-		try {
-			// Send a dry run message to validate the token
-			await admin.messaging().send(
-				{
-					token: subscriber.token,
-					notification: {
-						title: 'Test',
-						body: 'Test',
-					},
-					data: {
-						test: 'true',
-					},
-				},
-				true,
-			); // true = dry run
-
-			validTokens.push(subscriber);
-		} catch (error) {
-			const errorCode =
-				error instanceof Error && 'code' in error ? (error as { code: string }).code : 'unknown';
-
-			// Only mark as invalid if it's a specific token error
-			if (
-				errorCode === 'messaging/registration-token-not-registered' ||
-				errorCode === 'messaging/invalid-registration-token' ||
-				errorCode === 'messaging/invalid-argument'
-			) {
-				logger.warn(`Invalid token for user ${subscriber.userId}:`, errorCode);
-				invalidTokens.push(subscriber);
-			} else {
-				// For other errors (like quota, server errors, etc), consider the token valid
-				logger.info(
-					`Token validation warning for user ${subscriber.userId}: ${errorCode}, treating as valid`,
-				);
-				validTokens.push(subscriber);
-			}
-		}
-	});
-
-	// Wait for all validations to complete
-	await Promise.all(validationPromises);
-
-	logger.info(
-		`Token validation complete: ${validTokens.length} valid, ${invalidTokens.length} invalid`,
-	);
-
-	return { validTokens, invalidTokens };
-}
+// REMOVED: validateTokens — was sending a dry-run FCM message per token (2x API calls).
+// Invalid tokens are now detected directly from sendEach() error responses.
 
 /**
  * Removes invalid tokens from all relevant collections:
@@ -516,37 +419,9 @@ export async function processFcmNotificationsImproved(
 		return result;
 	}
 
-	// First, validate all tokens (skip validation if in development to speed up)
-	const skipValidation =
-		process.env.FUNCTIONS_EMULATOR === 'true' || process.env.NODE_ENV === 'development';
-
-	let validTokens = fcmSubscribers;
-	let invalidTokens: FcmSubscriber[] = [];
-
-	if (!skipValidation) {
-		logger.info(`Validating ${fcmSubscribers.length} FCM tokens...`);
-		const validationResult = await validateTokens(fcmSubscribers);
-		validTokens = validationResult.validTokens;
-		invalidTokens = validationResult.invalidTokens;
-	} else {
-		logger.info(`Skipping token validation (development mode) for ${fcmSubscribers.length} tokens`);
-	}
-
-	// Remove invalid tokens from database
-	if (invalidTokens.length > 0) {
-		await removeInvalidTokens(invalidTokens);
-		result.invalidTokens = invalidTokens.map((t) => t.token);
-	}
-
-	if (validTokens.length === 0) {
-		logger.warn('No valid tokens found after validation');
-
-		return result;
-	}
-
 	// Filter out users in quiet hours
-	const tokensAfterQuietHours = await filterByQuietHours(validTokens);
-	const quietHoursFiltered = validTokens.length - tokensAfterQuietHours.length;
+	const tokensAfterQuietHours = await filterByQuietHours(fcmSubscribers);
+	const quietHoursFiltered = fcmSubscribers.length - tokensAfterQuietHours.length;
 
 	if (quietHoursFiltered > 0) {
 		logger.info(`Filtered ${quietHoursFiltered} tokens due to quiet hours`);
@@ -558,35 +433,31 @@ export async function processFcmNotificationsImproved(
 		return result;
 	}
 
-	// Format FCM messages for valid tokens only with rich notification features
+	// Format FCM messages — no pre-validation needed, invalid tokens are detected from send errors.
 	const creatorName = newStatement.creator.displayName || 'Someone';
 	const creatorPhoto = newStatement.creator.photoURL || '';
 	const statementPreview =
 		newStatement.statement.substring(0, 120) + (newStatement.statement.length > 120 ? '...' : '');
 
-	let notificationTitle = `✨ New statement from ${creatorName}`;
+	let notificationTitle = `New statement from ${creatorName}`;
 	let notificationBody = `"${statementPreview}"`;
 
 	if (parentStatement?.statement) {
 		const parentPreview =
 			parentStatement.statement.substring(0, 40) +
 			(parentStatement.statement.length > 40 ? '...' : '');
-		notificationTitle = `💬 ${creatorName} replied`;
-		notificationBody = `On: "${parentPreview}"\n\n↳ "${statementPreview}"`;
+		notificationTitle = `${creatorName} replied`;
+		notificationBody = `On: "${parentPreview}"\n\n"${statementPreview}"`;
 	}
 
-	// Build URL for notification click
 	const notificationUrl = `/statement/${newStatement.parentId}?focusId=${newStatement.statementId}`;
-
-	// Tag for grouping notifications from same discussion
 	const notificationTag = `discussion-${newStatement.parentId}`;
 
-	const fcmMessages = tokensAfterQuietHours.map((subscriber) => ({
+	const fcmMessages: admin.messaging.Message[] = tokensAfterQuietHours.map((subscriber) => ({
 		token: subscriber.token,
 		notification: {
 			title: notificationTitle,
 			body: notificationBody,
-			// Include creator's photo as notification image
 			...(creatorPhoto && { image: creatorPhoto }),
 		},
 		data: {
@@ -594,25 +465,17 @@ export async function processFcmNotificationsImproved(
 			parentId: newStatement.parentId,
 			createdAt: newStatement.createdAt.toString(),
 			notificationType: 'statement_reply',
-			// Rich notification data
 			url: notificationUrl,
 			tag: notificationTag,
 			openActionTitle: 'View Reply',
 			creatorPhoto: creatorPhoto,
 			creatorName: creatorName,
-			// Require interaction so user sees it
 			requireInteraction: 'true',
 		},
-		// Web push specific options
 		webpush: {
-			headers: {
-				Urgency: 'high',
-			},
-			fcmOptions: {
-				link: notificationUrl,
-			},
+			headers: { Urgency: 'high' },
+			fcmOptions: { link: notificationUrl },
 		},
-		// Android specific options
 		android: {
 			priority: 'high' as const,
 			notification: {
@@ -621,134 +484,55 @@ export async function processFcmNotificationsImproved(
 				clickAction: 'OPEN_DISCUSSION',
 			},
 		},
-		// APNs specific options for iOS
 		apns: {
-			headers: {
-				'apns-priority': '10',
-			},
-			payload: {
-				aps: {
-					'mutable-content': 1,
-					sound: 'default',
-				},
-			},
+			headers: { 'apns-priority': '10' },
+			payload: { aps: { 'mutable-content': 1, sound: 'default' } },
 		},
 	}));
 
-	// Send notifications in batches with retry logic
-	const fcmBatchSize = 500;
-	for (let i = 0; i < fcmMessages.length; i += fcmBatchSize) {
-		const batch = fcmMessages.slice(i, i + fcmBatchSize);
-		const batchResult = await sendBatchWithRetry(
-			batch,
-			tokensAfterQuietHours.slice(i, i + fcmBatchSize),
-		);
+	// Send in batches of 500 using sendEach (single API call per batch).
+	// Invalid tokens are detected from send errors — no separate validation pass needed.
+	const FCM_BATCH_SIZE = 500;
+	for (let i = 0; i < fcmMessages.length; i += FCM_BATCH_SIZE) {
+		const batch = fcmMessages.slice(i, i + FCM_BATCH_SIZE);
+		const subscriberBatch = tokensAfterQuietHours.slice(i, i + FCM_BATCH_SIZE);
 
-		result.successful += batchResult.successful;
-		result.failed += batchResult.failed;
-		result.invalidTokens.push(...batchResult.invalidTokens);
+		try {
+			const batchResponse = await admin.messaging().sendEach(batch);
+
+			batchResponse.responses.forEach((response, index) => {
+				if (response.success) {
+					result.successful++;
+				} else {
+					result.failed++;
+					const errorCode = response.error?.code;
+
+					if (
+						errorCode === 'messaging/registration-token-not-registered' ||
+						errorCode === 'messaging/invalid-registration-token' ||
+						errorCode === 'messaging/invalid-argument'
+					) {
+						result.invalidTokens.push(subscriberBatch[index].token);
+					}
+				}
+			});
+
+			logger.info(
+				`FCM batch: ${batchResponse.successCount} sent, ${batchResponse.failureCount} failed`,
+			);
+		} catch (error) {
+			logger.error('FCM sendEach batch failed:', error);
+			result.failed += batch.length;
+		}
 	}
 
-	// Clean up any newly discovered invalid tokens
+	// Clean up invalid tokens discovered during send
 	if (result.invalidTokens.length > 0) {
 		const tokensToRemove = tokensAfterQuietHours.filter((t) =>
 			result.invalidTokens.includes(t.token),
 		);
 		await removeInvalidTokens(tokensToRemove);
 	}
-
-	return result;
-}
-
-/**
- * Sends a batch of messages with retry logic and exponential backoff
- */
-async function sendBatchWithRetry(
-	messages: admin.messaging.Message[],
-	subscribers: FcmSubscriber[],
-	maxRetries: number = 3,
-): Promise<SendResult> {
-	const result: SendResult = {
-		successful: 0,
-		failed: 0,
-		invalidTokens: [],
-	};
-
-	let retryMessages = [...messages];
-	let retrySubscribers = [...subscribers];
-	let attempt = 0;
-
-	while (retryMessages.length > 0 && attempt < maxRetries) {
-		const failedMessages: admin.messaging.Message[] = [];
-		const failedSubscribers: FcmSubscriber[] = [];
-
-		// Send messages individually instead of using sendAll
-		// Add a small delay between messages to avoid rate limiting
-		for (let i = 0; i < retryMessages.length; i++) {
-			const message = retryMessages[i] as admin.messaging.TokenMessage;
-			try {
-				logger.info(`Sending notification to token: ${message.token.substring(0, 20)}...`);
-				const messageId = await admin.messaging().send(retryMessages[i]);
-				result.successful++;
-				logger.info(`Successfully sent notification. Message ID: ${messageId}`);
-
-				// Add 50ms delay between messages to avoid rate limiting
-				if (i < retryMessages.length - 1) {
-					await new Promise((resolve) => setTimeout(resolve, 50));
-				}
-			} catch (error: unknown) {
-				logger.error(`Failed to send to token ${message.token}:`, error);
-
-				// Type guard for Firebase errors
-				const isFirebaseError = (err: unknown): err is { code?: string } => {
-					return typeof err === 'object' && err !== null && 'code' in err;
-				};
-
-				if (isFirebaseError(error)) {
-					// Check if token is invalid
-					if (
-						error.code === 'messaging/registration-token-not-registered' ||
-						error.code === 'messaging/invalid-registration-token' ||
-						error.code === 'messaging/invalid-argument'
-					) {
-						result.invalidTokens.push(message.token);
-					} else if (
-						error.code === 'messaging/message-rate-exceeded' ||
-						error.code === 'messaging/internal-error' ||
-						error.code === 'messaging/server-unavailable' ||
-						error.code === 'messaging/unknown-error'
-					) {
-						// These errors might be temporary, retry them
-						failedMessages.push(retryMessages[i]);
-						failedSubscribers.push(retrySubscribers[i]);
-					} else {
-						// Other errors, don't retry
-						result.failed++;
-					}
-				} else {
-					// Unknown error type, retry it
-					failedMessages.push(retryMessages[i]);
-					failedSubscribers.push(retrySubscribers[i]);
-				}
-			}
-		}
-
-		// Prepare for next retry attempt
-		retryMessages = failedMessages;
-		retrySubscribers = failedSubscribers;
-
-		if (retryMessages.length > 0 && attempt < maxRetries - 1) {
-			// Exponential backoff: 1s, 2s, 4s
-			const delay = Math.pow(2, attempt) * 1000;
-			logger.info(`Retrying ${retryMessages.length} failed messages after ${delay}ms delay...`);
-			await new Promise((resolve) => setTimeout(resolve, delay));
-		}
-
-		attempt++;
-	}
-
-	// Any remaining messages after all retries are considered failed
-	result.failed += retryMessages.length;
 
 	return result;
 }

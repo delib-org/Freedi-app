@@ -110,7 +110,7 @@
 				display: flex;
 				justify-content: center;
 				align-items: center;
-				padding: 5px;
+				padding: 0.5rem;
 				border-bottom: 2px solid rgba(0, 0, 0, 0);
 				letter-spacing: 0.3px;
 				opacity: 0.7;
@@ -118,12 +118,12 @@
 				&--selected {
 					font-size: 1.1rem;
 					opacity: 1;
-					background-color: white;
+					background-color: var(--white);
 					border-radius: 2rem;
 					padding: 0.5rem 1rem;
 					min-width: fit-content;
 					color: var(--question);
-					display: block flex;
+					display: flex;
 					height: 2.5rem;
 					margin-top: 0.5rem;
 
@@ -151,16 +151,6 @@
 					}
 				}
 
-				&--selected {
-					font-size: 1rem;
-					padding: 0.5rem 0.5rem;
-					margin: 0rem;
-					min-width: fit-content;
-					color: var(--question);
-					display: block flex;
-					height: 2.5rem;
-					margin-top: 0.5rem;
-				}
 			}
 		}
 	}
@@ -244,7 +234,7 @@
 				resize: none;
 				outline: none;
 				border: none;
-				color: #232f4a;
+				color: var(--text-body);
 				min-height: 4rem;
 				flex: auto;
 				box-shadow: 0px 2px 4px 0px rgba(181, 197, 232, 0.48);
@@ -252,7 +242,7 @@
 				font-size: 1rem;
 
 				&::placeholder {
-					color: #979797;
+					color: var(--placeHolder);
 				}
 			}
 
@@ -268,7 +258,7 @@
 
 				user-select: none;
 				cursor: pointer;
-				background-color: #4e88c7;
+				background-color: var(--btn-primary);
 
 				.sendBtn {
 					display: flex;

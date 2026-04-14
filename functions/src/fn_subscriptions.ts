@@ -1,5 +1,4 @@
 import { logger } from 'firebase-functions';
-import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import {
 	Collections,
 	Role,
@@ -9,15 +8,12 @@ import {
 	StatementSubscriptionSchema,
 	createSubscription,
 	getStatementSubscriptionId,
-	statementToSimpleStatement,
-	functionConfig,
 } from '@freedi/shared-types';
 import { parse } from 'valibot';
 import { db } from '.';
 import { DocumentSnapshot, QueryDocumentSnapshot } from 'firebase-functions/v1/firestore';
 import { FirestoreEvent } from 'firebase-functions/firestore';
 import { Change } from 'firebase-functions/v1';
-import { getParagraphsText } from './helpers';
 import { onStatementDeletedStats, onSubscriptionCreatedStats } from './fn_adminStats';
 
 export async function onNewSubscription(
@@ -271,103 +267,11 @@ export async function onStatementDeletionDeleteSubscriptions(
 	}
 }
 
-export const updateSubscriptionsSimpleStatement = onDocumentUpdated(
-	{
-		document: `${Collections.statements}/{statementId}`,
-		region: functionConfig.region,
-	},
-	async (event) => {
-		try {
-			const _statementBefore = event.data?.before.data() as Statement | undefined;
-			const _statementAfter = event.data?.after.data() as Statement | undefined;
-
-			if (!_statementBefore || !_statementAfter) return;
-
-			// Skip if this is an update caused by other functions (check for typical function-updated fields)
-			if (
-				_statementBefore.lastUpdate !== _statementAfter.lastUpdate &&
-				_statementBefore.statement === _statementAfter.statement &&
-				getParagraphsText(_statementBefore.paragraphs) ===
-					getParagraphsText(_statementAfter.paragraphs)
-			) {
-				logger.info('Skipping subscription update - only metadata changed');
-
-				return;
-			}
-
-			const simpleStatementBefore = statementToSimpleStatement(_statementBefore);
-			const simpleStatementAfter = statementToSimpleStatement(_statementAfter);
-
-			//check if statement or paragraphs changed
-			if (
-				simpleStatementBefore.statement === simpleStatementAfter.statement &&
-				getParagraphsText(simpleStatementBefore.paragraphs) ===
-					getParagraphsText(simpleStatementAfter.paragraphs)
-			) {
-				logger.info('No content changes in statement, skipping subscription update');
-
-				return;
-			}
-
-			const statement = parse(StatementSchema, _statementAfter);
-
-			const statementId: string = statement.statementId;
-
-			//get all statement subscriptions
-			const statementSubscriptions = await getStatementSubscriptions(statementId);
-
-			//update all statement subscriptions
-			if (statementSubscriptions.length === 0) {
-				logger.info('No subscriptions found for statement ' + statementId);
-
-				return;
-			}
-
-			logger.info(
-				`Updating ${statementSubscriptions.length} subscriptions for statement ${statementId}`,
-			);
-
-			const batch = db.batch();
-			const timestamp = Date.now();
-			statementSubscriptions.forEach((subscription) => {
-				const subscriptionRef = db
-					.collection(Collections.statementsSubscribe)
-					.doc(subscription.statementsSubscribeId);
-				batch.update(subscriptionRef, {
-					statement: simpleStatementAfter,
-					lastUpdate: timestamp,
-				});
-			});
-			await batch.commit();
-
-			logger.info(`Successfully updated ${statementSubscriptions.length} subscriptions`);
-		} catch (error) {
-			logger.error('Error updating updateMembersWithSimpleStatement', error);
-		}
-	},
-);
-
-export async function getStatementSubscriptions(
-	statementId: string,
-): Promise<StatementSubscription[]> {
-	try {
-		const statementSubscriptions = await db
-			.collection(Collections.statementsSubscribe)
-			.where('statementId', '==', statementId)
-			.get();
-
-		if (statementSubscriptions.size > 100)
-			throw new Error(
-				`CIRCUIT BREAKER: Skipping update for ${statementSubscriptions.size} subscriptions`,
-			);
-
-		return statementSubscriptions.docs.map((doc) => doc.data() as StatementSubscription);
-	} catch (error) {
-		logger.error(`Error in getStatementSubscriptions for statementId ${statementId}:`, error);
-
-		return [];
-	}
-}
+// REMOVED: updateSubscriptionsSimpleStatement and getStatementSubscriptions
+// These functions used to rewrite the embedded SimpleStatement in ALL subscription documents
+// whenever a statement was edited — causing O(N) Firestore writes per edit.
+// Replaced by Snapshot + Overlay pattern: subscriptions keep a frozen snapshot from creation,
+// and the client overlays fresh data from Redux. See ARCHITECTURE.md Section 9.
 
 export async function setAdminsToNewStatement(
 	ev: FirestoreEvent<
@@ -608,7 +512,7 @@ export async function updateStatementMemberCount(
 		const subscriptionsRef = db.collection(Collections.statementsSubscribe);
 		const querySnapshot = await subscriptionsRef
 			.where('statementId', '==', statementId)
-			.where('statement.statementType', '!=', 'document')
+			.where('statementType', '!=', 'document')
 			.get();
 
 		const memberCount = querySnapshot.size;

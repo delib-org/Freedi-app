@@ -183,6 +183,9 @@ export default async function DocumentPage({ params }: PageProps) {
   // Signature counts setting (default: true)
   const showSignatureCounts = signSettings?.showSignatureCounts ?? true;
 
+  // Research logging setting (from statementSettings, not signSettings)
+  const enableResearchLogging = (document as { statementSettings?: { enableResearchLogging?: boolean } }).statementSettings?.enableResearchLogging === true;
+
   // Enforce isPublic: private document access control
   if (!isPublic && !isAdmin) {
     // No user or anonymous user → show login prompt (Google-only)
@@ -260,6 +263,7 @@ export default async function DocumentPage({ params }: PageProps) {
         requireGoogleLogin={requireGoogleLogin}
         hideUserIdentity={hideUserIdentity}
         showSignatureCounts={showSignatureCounts}
+        enableResearchLogging={enableResearchLogging}
       />
     </LanguageOverrideProvider>
   );

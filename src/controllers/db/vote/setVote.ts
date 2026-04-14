@@ -8,6 +8,7 @@ import { store } from '@/redux/store';
 import { trackDiscussionAction } from '@/redux/pwa/pwaSlice';
 import { createDocRef, createTimestamps } from '@/utils/firebaseUtils';
 import { Collections } from '@freedi/shared-types';
+import { logVote } from '@/controllers/db/researchLogs/researchLogger';
 
 export async function setVoteToDB(option: Statement, creator: User) {
 	try {
@@ -42,6 +43,9 @@ export async function setVoteToDB(option: Statement, creator: User) {
 
 			return removing;
 		});
+
+		// Research logging
+		logVote(option.statementId, isRemovingVote ? 'removed' : 'cast', option.topParentId);
 
 		// Track vote
 		if (!isRemovingVote) {

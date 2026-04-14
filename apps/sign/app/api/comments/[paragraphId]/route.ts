@@ -3,6 +3,8 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections, StatementType } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 
 interface CommentInput {
   statement: string;
@@ -133,6 +135,15 @@ export async function POST(
     };
 
     await db.collection(Collections.statements).doc(statementId).set(comment);
+
+    // Research logging — check top-level document's settings
+    const topDoc = await db.collection(Collections.statements).doc(documentId).get();
+    const researchEnabled = topDoc.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.CREATE_STATEMENT, researchEnabled, {
+      statementId,
+      parentId: paragraphId,
+      topParentId: documentId,
+    });
 
     logger.info(`[Comments API] Created comment: ${statementId}`);
 

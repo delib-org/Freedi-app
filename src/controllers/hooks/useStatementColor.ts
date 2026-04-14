@@ -31,12 +31,12 @@ export default function useStatementColor({
 			});
 		} else if (statementType === StatementType.option) {
 			setStyle({
-				backgroundColor: 'var(--header-not-chosen, #123abc)', // Custom option color
+				backgroundColor: 'var(--header-not-chosen, #ffe16a)', // Custom option color
 				color: 'var(--option-text, #ffffff)', // Text color for options
 			});
 		} else if (statementType === StatementType.question) {
 			setStyle({
-				backgroundColor: 'var(--header-question, #123def)', // Custom question color
+				backgroundColor: 'var(--header-question, #47b4ef)', // Custom question color
 				color: 'var(--question-text, #fff)', // Text color for questions
 			});
 		} else {

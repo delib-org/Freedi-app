@@ -40,6 +40,10 @@ export function createSubscription({
             getInAppNotification,
             getEmailNotification,
             getPushNotification,
+            // Top-level query fields (immutable after creation)
+            parentId: statement.parentId,
+            statementType: statement.statementType,
+            topParentId: statement.topParentId || statement.parentId,
         };
 
         return parse(StatementSubscriptionSchema, newSubscription);

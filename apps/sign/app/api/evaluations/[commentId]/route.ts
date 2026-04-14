@@ -4,6 +4,8 @@ import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie, getUserDisplayNameFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { Collections } from '@freedi/shared-types';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 
 interface EvaluationInput {
   evaluation: number; // -1 or 1
@@ -165,6 +167,17 @@ export async function POST(
 
     // Atomically update consensus
     await atomicUpdateCommentConsensus(db, commentId, evalDiff);
+
+    // Research logging — check top-level document's settings
+    const topDocId = comment?.topParentId || commentId;
+    const topDocForResearch = await db.collection(Collections.statements).doc(topDocId).get();
+    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(effectiveId, ResearchAction.EVALUATE, researchEnabled, {
+      statementId: commentId,
+      topParentId: comment?.topParentId,
+      newValue: String(evaluation),
+      previousValue: oldEvalSnap.exists ? String(oldEval) : undefined,
+    });
 
     logger.info(`[Evaluations API] ${oldEvalSnap.exists ? 'Updated' : 'Created'} evaluation: ${evaluationId} (anonymous: ${isAnonymous}, diff: ${evalDiff})`);
 

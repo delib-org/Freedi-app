@@ -13,6 +13,7 @@ import ChatMessageMenu from '@/view/pages/statement/components/chat/components/c
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
 import { useBookmark } from '@/controllers/hooks/useBookmark';
 import SendIcon from '@/view/components/icons/SendIcon';
+import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import styles from './TreeOptionNode.module.scss';
 
 interface TreeOptionNodeProps {
@@ -129,10 +130,12 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
 		false;
 
+	const isFailed = statement.joinStatus === 'failed';
 	const nodeClassName = [
 		styles['tree-option-node'],
 		isInResults ? styles['tree-option-node--selected'] : '',
 		isNew ? styles['tree-option-node--new'] : '',
+		isFailed ? styles['tree-option-node--failed'] : '',
 	]
 		.filter(Boolean)
 		.join(' ');
@@ -223,6 +226,7 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 							{childCount}
 						</button>
 					)}
+					<JoinButtons statement={statement} parentStatement={parentStatement} />
 				</div>
 				{showReplyInput && (
 					<form className={styles['tree-option-node__reply-form']} onSubmit={handleReplySubmit}>

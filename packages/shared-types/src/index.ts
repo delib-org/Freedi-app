@@ -192,13 +192,45 @@ export {
   statementToSimpleStatement
 } from "./models/statement/statementToSimple";
 export type {
-  StatementSettings
+  StatementSettings,
+  JoinFormField,
+  JoinFormFieldType,
+  JoinFormDestination,
+  JoinFormConfig,
+  JoinResolutionPhase,
+  JoinResolutionConfig
 } from "./models/statement/StatementSettings";
 
 export {
   StatementSettingsSchema,
-  evaluationType
+  evaluationType,
+  JoinFormFieldSchema,
+  JoinFormFieldTypeSchema,
+  JoinFormDestinationSchema,
+  JoinFormConfigSchema,
+  JoinResolutionPhaseSchema,
+  JoinResolutionConfigSchema
 } from "./models/statement/StatementSettings";
+
+export type {
+  JoinFormSubmission
+} from "./models/statement/JoinFormSubmission";
+
+export {
+  JoinFormSubmissionSchema,
+  JOIN_FORM_SUBMISSIONS_SUBCOLLECTION
+} from "./models/statement/JoinFormSubmission";
+
+export type {
+  JoinResolutionUser,
+  JoinResolutionUserStatus
+} from "./models/statement/JoinResolutionUser";
+
+export {
+  JoinResolutionUserSchema,
+  JoinResolutionUserStatusSchema,
+  JOIN_RESOLUTION_USERS_SUBCOLLECTION
+} from "./models/statement/JoinResolutionUser";
 export type {
   StatementSubscription,
   StatementView,
@@ -371,9 +403,14 @@ export {
 // Consensus Calculation utilities
 export {
   FLOOR_STD_DEV,
+  BAYESIAN_PRIOR_K,
+  CONFIDENCE_ALPHA,
+  tCritical,
+  calcSmoothedSEM,
   calcStandardError,
   calcAgreement,
   calcBinaryConsensus,
+  calcMeanSentiment,
   DEFAULT_REMOVAL_THRESHOLD,
   DEFAULT_ADDITION_THRESHOLD,
   DEFAULT_MIN_EVALUATORS,
@@ -382,6 +419,7 @@ export {
   DEFAULT_SAMPLING_QUALITY,
   CONFIDENCE_CALIBRATION_CONSTANT,
   calcAgreementIndex,
+  calcLikeMindedness,
   calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 
@@ -565,3 +603,22 @@ export { getAdminStatDocId } from "./models/analytics";
 // Content moderation
 export type { ModerationLog } from "./models/moderation/moderationModel";
 export { ModerationLogSchema, ModerationCategory } from "./models/moderation/moderationModel";
+
+// Research logging
+export type { ResearchLog, ResearchCategory, ResearchConsent } from "./models/researchLog";
+export {
+  ResearchLogSchema,
+  ResearchAction,
+  ResearchActionSchema,
+  getResearchLogId,
+  ResearchConsentSchema,
+  getResearchConsentId,
+  bucketLoginCount,
+  normalizeScreenPath,
+  RESEARCH_ACTION_CATEGORY,
+  RESEARCH_ACTION_LABELS,
+  RESEARCH_CATEGORY_COLORS,
+  RESEARCH_GLOBAL_ACTIONS,
+  getResearchCategory,
+  getResearchActionLabel,
+} from "./models/researchLog";

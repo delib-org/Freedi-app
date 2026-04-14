@@ -25,6 +25,13 @@
 		animation: new-solution-fade 12s ease-out;
 	}
 
+	&--failed {
+		opacity: 0.6;
+		filter: grayscale(0.4);
+		border-inline-start-color: var(--border-color, #d0d4dc);
+		background-color: rgba(0, 0, 0, 0.02);
+	}
+
 	@keyframes card-blink {
 		0%, 100% { background-color: rgba(255, 225, 106, 0.06); }
 		15%, 45%, 75% { background-color: rgba(95, 136, 229, 0.15); }

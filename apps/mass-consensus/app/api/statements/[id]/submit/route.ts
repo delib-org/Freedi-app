@@ -7,6 +7,8 @@ import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
 import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { ResearchAction } from '@freedi/shared-types';
 import { FieldValue } from 'firebase-admin/firestore';
 import type { Firestore } from 'firebase-admin/firestore';
 
@@ -272,6 +274,16 @@ export async function POST(
     });
 
     await writeBatch.commit();
+
+    // Research logging — check top-level document's settings
+    const topParentId = questionData?.topParentId || questionId;
+    const topDocForResearch = await db.collection(Collections.statements).doc(topParentId).get();
+    const researchEnabled = topDocForResearch.data()?.statementSettings?.enableResearchLogging === true;
+    logResearchAction(userId, ResearchAction.CREATE_STATEMENT, researchEnabled, {
+      statementId: statementRef.id,
+      parentId: questionId,
+      topParentId,
+    });
 
     return NextResponse.json({
       success: true,

@@ -158,13 +158,27 @@ export const waitForServiceWorker = async (): Promise<ServiceWorkerRegistration 
 };
 
 /**
+ * Result of messaging initialization.
+ * On success, returns { success: true }.
+ * On failure, returns { success: false, reason: string } with a diagnostic reason.
+ */
+export interface MessagingInitResult {
+	success: boolean;
+	reason?: string;
+}
+
+/**
  * Initialize Firebase Messaging.
  */
-export const initializeMessaging = async (): Promise<boolean> => {
+export const initializeMessaging = async (): Promise<MessagingInitResult> => {
 	if (!isFirebaseMessagingSupported()) {
-		console.info('[PushService] Firebase Messaging not supported on this platform');
+		const reason = !isBrowserNotificationsSupported()
+			? `Browser missing required APIs (serviceWorker: ${'serviceWorker' in navigator}, Notification: ${'Notification' in window})`
+			: `iOS device not in supported PWA mode`;
 
-		return false;
+		console.info(`[PushService] Firebase Messaging not supported: ${reason}`);
+
+		return { success: false, reason };
 	}
 
 	try {
@@ -173,14 +187,15 @@ export const initializeMessaging = async (): Promise<boolean> => {
 			state.messaging = getMessaging(app);
 		}
 
-		return true;
+		return { success: true };
 	} catch (error) {
+		const reason = error instanceof Error ? error.message : String(error);
 		logError(error, {
 			operation: 'services.pushService.initializeMessaging',
 			metadata: { message: '[PushService] Failed to initialize Firebase Messaging:' },
 		});
 
-		return false;
+		return { success: false, reason: `getMessaging() threw: ${reason}` };
 	}
 };
 
@@ -194,10 +209,16 @@ export const getOrRefreshToken = async (forceRefresh: boolean = false): Promise<
 
 	try {
 		// Initialize messaging if not already done
-		if (!(await initializeMessaging())) {
-			logError(new Error('[PushService] Failed to initialize messaging in getOrRefreshToken'), {
-				operation: 'services.pushService.getOrRefreshToken',
-			});
+		const messagingResult = await initializeMessaging();
+		if (!messagingResult.success) {
+			logError(
+				new Error(
+					`[PushService] Failed to initialize messaging in getOrRefreshToken: ${messagingResult.reason}`,
+				),
+				{
+					operation: 'services.pushService.getOrRefreshToken',
+				},
+			);
 
 			return null;
 		}

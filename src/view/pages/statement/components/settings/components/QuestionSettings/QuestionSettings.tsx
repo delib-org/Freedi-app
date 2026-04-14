@@ -37,6 +37,8 @@ import { logError } from '@/utils/errorHandling';
 import QuestionLinkSection from './QuestionLinkSection';
 import AnchoredSettings from './AnchoredSettings';
 import ConfidenceIndexSettings from './ConfidenceIndexSettings';
+import JoinFormSettings from './JoinFormSettings/JoinFormSettings';
+import JoinResolutionSettings from './JoinResolutionSettings/JoinResolutionSettings';
 
 const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
@@ -156,7 +158,7 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				<MultiSwitch
 					options={[
 						{
-							label: t('Agreement'),
+							label: t('Like-mindedness'),
 							value: EvaluationUI.suggestions,
 							icon: <SuggestionsIcon />,
 							toolTip: t('Consensus'),
@@ -249,6 +251,9 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 				<SectionTitle title={t('Sample Representativeness')} />
 				<ConfidenceIndexSettings statement={statement} />
+
+				<JoinFormSettings statement={statement} />
+				<JoinResolutionSettings statement={statement} />
 			</div>
 		);
 	} catch (error: unknown) {

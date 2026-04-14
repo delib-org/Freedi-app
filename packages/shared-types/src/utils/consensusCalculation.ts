@@ -1,139 +1,272 @@
 /**
  * Consensus Calculation Utilities
  *
- * Uses Mean - SEM (Standard Error of the Mean) formula with Uncertainty Floor.
- * This algorithm prevents small unanimous samples from achieving unrealistically
- * high scores while properly rewarding larger samples with genuine consensus.
+ * Implements the WizCol Deliberative Consensus System scoring engine.
+ *
+ * Core formula: C_p = μ_p - t_{α, n_p+k-1} · SEM*_p
+ *
+ * Key features:
+ * - t-distribution multiplier for statistically calibrated confidence penalty
+ * - Bayesian smoothing with k=2 phantom prior votes of 0
+ * - Sample-size-aware Agreement Index: A_p = 1 - t · SEM*
  *
  * The same formula is used across:
- * - Firebase functions (fn_evaluation.ts)
+ * - Firebase functions (evaluation)
  * - Sign app API (suggestion-evaluations)
  * - Any other consensus calculations
  */
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/** Number of phantom prior votes of 0 for Bayesian smoothing */
+export const BAYESIAN_PRIOR_K = 2;
+
+/** Confidence level for one-sided t-test (α = 0.05) */
+export const CONFIDENCE_ALPHA = 0.05;
+
 /**
- * The Uncertainty Floor constant.
- *
- * Represents a "moderate disagreement" baseline assumption.
- * When sample variance is lower than this floor, we assume it's due to
- * insufficient sample size rather than true population consensus.
- *
- * Value of 0.5 chosen because:
- * - On a scale of -1 to 1, 0.5 represents moderate disagreement
- * - It provides meaningful penalty for small unanimous samples
- * - Large samples with genuine consensus will exceed this floor naturally
+ * @deprecated Use BAYESIAN_PRIOR_K instead. Kept for backward compatibility.
  */
 export const FLOOR_STD_DEV = 0.5;
 
+// ============================================================================
+// t-DISTRIBUTION CRITICAL VALUES
+// ============================================================================
+
 /**
- * Calculates the Standard Error of the Mean (SEM) with an Uncertainty Floor.
+ * Lookup table for one-sided t-distribution critical values at α = 0.05.
+ * Key = degrees of freedom (df), value = t_{0.05, df}.
  *
- * This prevents small unanimous samples from achieving unrealistically high scores.
- * A sample of 3 unanimous votes cannot prove zero variance in the population.
+ * For df > 120, the normal approximation z_{0.05} = 1.645 is used.
+ */
+const T_CRITICAL_TABLE: Record<number, number> = {
+  1: 6.314,
+  2: 2.920,
+  3: 2.353,
+  4: 2.132,
+  5: 2.015,
+  6: 1.943,
+  7: 1.895,
+  8: 1.860,
+  9: 1.833,
+  10: 1.812,
+  11: 1.796,
+  12: 1.782,
+  13: 1.771,
+  14: 1.761,
+  15: 1.753,
+  16: 1.746,
+  17: 1.740,
+  18: 1.734,
+  19: 1.729,
+  20: 1.725,
+  25: 1.708,
+  30: 1.697,
+  40: 1.684,
+  50: 1.676,
+  60: 1.671,
+  80: 1.664,
+  100: 1.660,
+  120: 1.658,
+};
+
+/** Normal approximation for large df */
+const Z_ALPHA_005 = 1.645;
+
+/** Sorted df keys for interpolation */
+const DF_KEYS = Object.keys(T_CRITICAL_TABLE).map(Number).sort((a, b) => a - b);
+
+/**
+ * Returns the one-sided t-distribution critical value for α = 0.05.
+ * Uses lookup table with linear interpolation for intermediate df values.
+ * Falls back to z = 1.645 for df > 120.
  *
- * @param sumEvaluations - Sum of all evaluation values (Σxi)
- * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
- * @param numberOfEvaluators - Number of evaluators (n)
- * @returns SEM = max(s, FLOOR_STD_DEV) / √n
+ * @param df - degrees of freedom (n_p + k - 1)
+ */
+export function tCritical(df: number): number {
+  if (df <= 0) return Z_ALPHA_005;
+  if (df >= 120) return Z_ALPHA_005;
+
+  // Exact lookup
+  if (T_CRITICAL_TABLE[df] !== undefined) {
+    return T_CRITICAL_TABLE[df];
+  }
+
+  // Linear interpolation between nearest table entries
+  let lower = DF_KEYS[0];
+  let upper = DF_KEYS[DF_KEYS.length - 1];
+
+  for (let i = 0; i < DF_KEYS.length - 1; i++) {
+    if (DF_KEYS[i] <= df && DF_KEYS[i + 1] >= df) {
+      lower = DF_KEYS[i];
+      upper = DF_KEYS[i + 1];
+      break;
+    }
+  }
+
+  const tLower = T_CRITICAL_TABLE[lower];
+  const tUpper = T_CRITICAL_TABLE[upper];
+  const fraction = (df - lower) / (upper - lower);
+
+  return tLower + fraction * (tUpper - tLower);
+}
+
+// ============================================================================
+// BAYESIAN-SMOOTHED SEM (SEM*)
+// ============================================================================
+
+/**
+ * Calculates the Bayesian-smoothed Standard Error of the Mean (SEM*).
+ *
+ * Instead of a hard floor on σ, we add k=2 phantom prior votes of 0
+ * to the variance calculation. This smoothly decays as n grows.
+ *
+ * Formula:
+ *   σ̂*_p = √[ (Σe²_{i,p} + k·0²) / (n_p + k - 1) ]
+ *   SEM*_p = σ̂*_p / √(n_p + k)
+ *
+ * @param sumEvaluations - Sum of all evaluation values (Σe_i)
+ * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
+ * @param numberOfEvaluators - Number of real evaluators (n_p)
+ * @returns SEM*_p (Bayesian-smoothed standard error)
+ */
+export function calcSmoothedSEM(
+  sumEvaluations: number,
+  sumSquaredEvaluations: number,
+  numberOfEvaluators: number,
+): number {
+  const n = numberOfEvaluators;
+  const k = BAYESIAN_PRIOR_K;
+
+  // With no evaluators, return a high-uncertainty prior
+  if (n <= 0) return 1;
+
+  // The effective sample includes k phantom votes of 0.
+  // The mean of the augmented sample:
+  //   μ_aug = Σe_i / (n + k)  [since phantom votes are 0]
+  // But for variance we use the raw sum of squares:
+  //   σ̂* = √[ (Σe²_i + k·0²) / (n + k - 1) ]
+  //       = √[ Σe²_i / (n + k - 1) ]
+  // This is the Bessel-corrected std dev of the augmented sample.
+
+  const denomDf = n + k - 1; // degrees of freedom for variance
+  const smoothedVariance = sumSquaredEvaluations / denomDf;
+  const smoothedStdDev = Math.sqrt(Math.max(0, smoothedVariance));
+
+  // SEM* = σ̂* / √(n + k)
+  return smoothedStdDev / Math.sqrt(n + k);
+}
+
+/**
+ * @deprecated Use calcSmoothedSEM instead.
+ * Kept for backward compatibility with code that imports calcStandardError.
  */
 export function calcStandardError(
   sumEvaluations: number,
   sumSquaredEvaluations: number,
-  numberOfEvaluators: number
+  numberOfEvaluators: number,
 ): number {
-  if (numberOfEvaluators <= 1) return FLOOR_STD_DEV;
-
-  // Calculate mean (μ)
-  const mean = sumEvaluations / numberOfEvaluators;
-
-  // Calculate variance using: Var = (Σxi² / n) - μ²
-  const variance = (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean);
-
-  // Ensure variance is non-negative (floating point errors can cause small negative values)
-  const safeVariance = Math.max(0, variance);
-
-  // Calculate observed standard deviation: s = √Var
-  const observedStdDev = Math.sqrt(safeVariance);
-
-  // Apply the Uncertainty Floor: s_adj = max(s, s_min)
-  const adjustedStdDev = Math.max(observedStdDev, FLOOR_STD_DEV);
-
-  // SEM = s_adj / √n
-  return adjustedStdDev / Math.sqrt(numberOfEvaluators);
+  return calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 }
 
+// ============================================================================
+// CONSENSUS SCORE (C_p)
+// ============================================================================
+
 /**
- * Calculates consensus score using Mean - SEM approach with Uncertainty Floor.
+ * Calculates consensus score using the WizCol formula:
  *
- * Formula: Score = Mean - min(SEM, Mean + 1)
+ *   C_p = μ_p - t_{α, n_p+k-1} · SEM*_p
  *
- * This replaces simple averaging with a statistically grounded approach that
- * accounts for both the level of support and the confidence in that measurement.
+ * The t-distribution multiplier provides a statistically calibrated
+ * confidence penalty. Small samples face heavy penalty via heavy-tailed
+ * t-values; large samples converge to the normal critical value.
  *
- * Examples:
- * - 3 people vote +1.0: Score ≈ 0.71 (penalized for small sample)
- * - 100 people vote +0.95: Score ≈ 0.94 (floor usually doesn't trigger)
- * - Large sample defeats small unanimous sample correctly
+ * Bayesian smoothing (k=2 phantom priors) prevents small unanimous
+ * samples from claiming zero variance.
  *
  * @param sumEvaluations - Sum of all evaluation values
- * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
+ * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
  * @param numberOfEvaluators - Number of evaluators
- * @returns Consensus score (confidence-adjusted agreement)
+ * @returns Consensus score C_p (confidence-adjusted)
  */
 export function calcAgreement(
   sumEvaluations: number,
   sumSquaredEvaluations: number,
-  numberOfEvaluators: number
+  numberOfEvaluators: number,
 ): number {
-  // Handle edge case: no evaluators
   if (numberOfEvaluators === 0) return 0;
 
-  // Calculate mean evaluation
-  const mean = sumEvaluations / numberOfEvaluators;
+  const n = numberOfEvaluators;
+  const k = BAYESIAN_PRIOR_K;
 
-  // Calculate Standard Error of the Mean (SEM)
-  const sem = calcStandardError(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+  // Mean sentiment μ_p
+  const mean = sumEvaluations / n;
 
-  // Return confidence-adjusted score using proportional penalty
-  // The penalty is bounded by the available range to -1, ensuring
-  // the result naturally stays within [-1, 1]
-  const availableRange = mean + 1; // Distance from mean to -1
-  const penalty = Math.min(sem, availableRange);
+  // Bayesian-smoothed SEM*
+  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n);
 
-  return mean - penalty;
+  // t-distribution critical value with df = n + k - 1
+  const df = n + k - 1;
+  const t = tCritical(df);
+
+  // C_p = μ_p - t · SEM*
+  const penalty = t * sem;
+
+  // Bound so result stays within [-1, 1]
+  const availableRange = mean + 1;
+  const boundedPenalty = Math.min(penalty, availableRange);
+
+  return mean - boundedPenalty;
 }
 
 /**
  * Calculates consensus score for binary evaluations (+1/-1 votes).
  *
- * This is a convenience function for systems using simple up/down votes.
- * For binary evaluations:
- * - sumEvaluations = positives - negatives
- * - sumSquaredEvaluations = positives + negatives (since 1² = (-1)² = 1)
- *
  * @param positiveEvaluations - Number of +1 votes
  * @param negativeEvaluations - Number of -1 votes
- * @returns Consensus score (confidence-adjusted agreement)
+ * @returns Consensus score (confidence-adjusted)
  */
 export function calcBinaryConsensus(
   positiveEvaluations: number,
-  negativeEvaluations: number
+  negativeEvaluations: number,
 ): number {
   const numberOfEvaluators = positiveEvaluations + negativeEvaluations;
-
   if (numberOfEvaluators === 0) return 0;
 
-  // For binary evaluations (+1/-1):
-  // sumEvaluations = positives - negatives
-  // sumSquaredEvaluations = positives + negatives (since 1² = (-1)² = 1)
   const sumEvaluations = positiveEvaluations - negativeEvaluations;
-  const sumSquaredEvaluations = positiveEvaluations + negativeEvaluations;
+  const sumSquaredEvaluations = positiveEvaluations + negativeEvaluations; // 1² = (-1)² = 1
 
   return calcAgreement(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
 }
 
 // ============================================================================
-// AGREEMENT INDEX & CONFIDENCE INDEX
+// MEAN SENTIMENT (μ_p) — companion metric
+// ============================================================================
+
+/**
+ * Calculates the raw mean sentiment μ_p.
+ *
+ * This is the unbiased answer to "what does the community think?"
+ * It is a descriptive statistic, not a ranking tool.
+ *
+ * @param sumEvaluations - Sum of all evaluation values
+ * @param numberOfEvaluators - Number of evaluators
+ * @returns Mean sentiment in [-1, 1]
+ */
+export function calcMeanSentiment(
+  sumEvaluations: number,
+  numberOfEvaluators: number,
+): number {
+  if (numberOfEvaluators <= 0) return 0;
+
+  return sumEvaluations / numberOfEvaluators;
+}
+
+// ============================================================================
+// AGREEMENT INDEX (A_p) — companion metric
 // ============================================================================
 
 /** Default sampling quality for self-selected (open) participation */
@@ -143,18 +276,18 @@ export const DEFAULT_SAMPLING_QUALITY = 0.3;
 export const CONFIDENCE_CALIBRATION_CONSTANT = 5;
 
 /**
- * Calculates the Agreement Index: how much evaluators align (0-1).
+ * Calculates the Agreement Index A_p: evaluator alignment + sample reliability.
  *
- * Formula: A = 1 - σ
- * where σ = sqrt(max(0, (Σxi²/n) - mean²))
+ * Formula: A_p = 1 - t_{α, n_p+k-1} · SEM*_p
  *
- * This metric is independent of sample size — it only measures
- * how similar the evaluations are to each other.
+ * A_p ∈ [0, 1] is sample-size sensitive by design:
+ * - 3 votes all +1 → A_p ≈ 0.45 (small sample can't claim high confidence)
+ * - 1000 votes, 990 positive → A_p ≈ 0.99 (earned through evaluations)
  *
- * @param sumEvaluations - Sum of all evaluation values (Σxi)
- * @param sumSquaredEvaluations - Sum of squared evaluation values (Σxi²)
- * @param numberOfEvaluators - Number of evaluators (n)
- * @returns Agreement index in range [0, 1]. 1 = perfect agreement, 0 = max disagreement
+ * @param sumEvaluations - Sum of all evaluation values (Σe_i)
+ * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
+ * @param numberOfEvaluators - Number of evaluators (n_p)
+ * @returns Agreement index in [0, 1]. 1 = high agreement + reliable sample
  */
 export function calcAgreementIndex(
   sumEvaluations: number,
@@ -163,11 +296,40 @@ export function calcAgreementIndex(
 ): number {
   if (numberOfEvaluators <= 0) return 0;
 
-  const mean = sumEvaluations / numberOfEvaluators;
-  const variance = Math.max(0, (sumSquaredEvaluations / numberOfEvaluators) - (mean * mean));
-  const sigma = Math.sqrt(variance);
+  const n = numberOfEvaluators;
+  const k = BAYESIAN_PRIOR_K;
 
-  return Math.max(0, Math.min(1, 1 - sigma));
+  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, n);
+  const df = n + k - 1;
+  const t = tCritical(df);
+
+  return Math.max(0, Math.min(1, 1 - t * sem));
+}
+
+/**
+ * Calculates simple Like-mindedness: how similar evaluators' opinions are (0-1).
+ *
+ * Formula: L_p = 1 - SEM*_p
+ *
+ * This is the user-facing metric — intuitive and easy to understand.
+ * Unlike calcAgreementIndex, it does NOT apply the t-distribution penalty,
+ * so it reflects raw opinion similarity without confidence adjustment.
+ *
+ * @param sumEvaluations - Sum of all evaluation values (Σe_i)
+ * @param sumSquaredEvaluations - Sum of squared evaluation values (Σe²_i)
+ * @param numberOfEvaluators - Number of evaluators (n_p)
+ * @returns Like-mindedness in [0, 1]. 1 = everyone voted the same
+ */
+export function calcLikeMindedness(
+  sumEvaluations: number,
+  sumSquaredEvaluations: number,
+  numberOfEvaluators: number,
+): number {
+  if (numberOfEvaluators <= 0) return 0;
+
+  const sem = calcSmoothedSEM(sumEvaluations, sumSquaredEvaluations, numberOfEvaluators);
+
+  return Math.max(0, Math.min(1, 1 - sem));
 }
 
 /**
@@ -175,17 +337,14 @@ export function calcAgreementIndex(
  *
  * Formula: Γ = (n·q) / (n·q + c·ln(N)·(N-n)/(N-1))
  *
- * Where:
- * - n = number of evaluators (sample size)
- * - N = target population size
- * - q = sampling quality (0-1], how representative the sampling method is
- * - c = calibration constant (default 5)
+ * Note: The WizCol paper's A_p already encodes sample-size sensitivity,
+ * so this index is supplementary for cases where population size is known.
  *
  * @param numberOfEvaluators - n: number of evaluators
  * @param targetPopulation - N: target population size
  * @param samplingQuality - q: sampling quality (0-1]
  * @param calibrationConstant - c: calibration constant (default 5)
- * @returns Confidence index in range [0, 1]. 1 = complete census, 0 = no data
+ * @returns Confidence index in range [0, 1]
  */
 export function calcConfidenceIndex(
   numberOfEvaluators: number,
