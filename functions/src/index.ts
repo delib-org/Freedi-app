@@ -937,7 +937,7 @@ export const hybridClusteringSweepScheduled = onSchedule(
 		region: 'us-central1',
 		memory: '1GiB',
 		timeoutSeconds: 300,
-		secrets: ['GEMINI_API_KEY', 'OPENAI_API_KEY'],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await hybridClusteringSweep();
