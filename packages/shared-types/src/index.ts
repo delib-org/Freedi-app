@@ -301,6 +301,8 @@ export { VoteSchema, getVoteId, VotingSettingsSchema } from "./models/vote/votin
 
 export type { StatementSnapShot } from "./models/statement/StatementSnapShot";
 export { statementSnapShotSchema } from "./models/statement/StatementSnapShot";
+export type { StatementHistoryEntry, StatementHistorySource } from "./models/statement/StatementHistoryEntry";
+export { StatementHistoryEntrySchema, StatementHistorySourceSchema } from "./models/statement/StatementHistoryEntry";
 
 export type { UserDemographicQuestion, DemographicOption, DemographicQuestionScope, ExcludedInheritedDemographics } from "./models/userDemographic/userDemographicModel";
 export {

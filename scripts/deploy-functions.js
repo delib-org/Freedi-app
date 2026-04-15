@@ -72,6 +72,7 @@ Note: The \`--\` separator is REQUIRED so npm forwards the function names.
 }
 
 function main() {
+	process.chdir(ROOT_DIR);
 	const args = process.argv.slice(2);
 
 	if (args.length === 0 || args.includes('--help') || args.includes('-h')) {

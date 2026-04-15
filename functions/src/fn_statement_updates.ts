@@ -15,6 +15,8 @@ import {
 	functionConfig,
 } from '@freedi/shared-types';
 import { getParagraphsText, generateDescriptionFromChildren } from './helpers';
+import { writeHistoryEntry } from './statements/history/writeHistoryEntry';
+import { isResearchEnabledForTopParent } from './statements/history/isResearchEnabled';
 
 /**
  * Updates parent statement when a child statement is created
@@ -92,15 +94,36 @@ export const updateParentOnChildUpdate = onDocumentUpdated(
 			}
 
 			// Check if this is a significant content change
+			const titleChanged = before.statement !== after.statement;
+			const beforeParagraphs = getParagraphsText(before.paragraphs);
+			const afterParagraphs = getParagraphsText(after.paragraphs);
+			const descriptionChanged = beforeParagraphs !== afterParagraphs;
 			const hasContentChange =
-				before.statement !== after.statement ||
-				getParagraphsText(before.paragraphs) !== getParagraphsText(after.paragraphs) ||
-				before.consensus !== after.consensus;
+				titleChanged || descriptionChanged || before.consensus !== after.consensus;
 
 			if (!hasContentChange) {
 				logger.info('No significant content changes, skipping parent update');
 
 				return;
+			}
+
+			// Write a text-change history entry when title or description actually differ.
+			// Evaluation (consensus) deltas are tracked separately by the evaluation triggers.
+			if (titleChanged || descriptionChanged) {
+				try {
+					const isResearch = await isResearchEnabledForTopParent(after.topParentId);
+					await writeHistoryEntry({
+						statement: after,
+						source: 'text-change',
+						isResearch,
+						statementBefore: titleChanged ? before.statement : undefined,
+						statementAfter: titleChanged ? after.statement : undefined,
+						descriptionBefore: descriptionChanged ? beforeParagraphs : undefined,
+						descriptionAfter: descriptionChanged ? afterParagraphs : undefined,
+					});
+				} catch (historyError) {
+					logger.warn('[statementHistory] text-change write failed:', historyError);
+				}
 			}
 
 			logger.info(`Child statement content changed, updating parent ${after.parentId}`);

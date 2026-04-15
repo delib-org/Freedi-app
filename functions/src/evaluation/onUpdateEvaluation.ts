@@ -15,6 +15,8 @@ import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './ev
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
+import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 
 export async function updateEvaluation(
 	event: FirestoreEvent<Change<DocumentSnapshot>>,
@@ -78,6 +80,21 @@ export async function updateEvaluation(
 		markHybridEmbeddingStale(after.statementId).catch((err) =>
 			logger.warn('Hybrid stale marking failed:', err),
 		);
+
+		// Research-mode: record per-evaluation history (aggregate only, no user info)
+		isResearchEnabledForTopParent(statement.topParentId)
+			.then((isResearch) => {
+				if (!isResearch) return;
+
+				return writeHistoryEntry({
+					statement,
+					source: 'evaluation-change',
+					isResearch: true,
+					evaluationDelta: evaluationDiff,
+					evaluationAction: 'update',
+				});
+			})
+			.catch((err) => logger.warn('[statementHistory] update write failed:', err));
 	} catch (error) {
 		logger.error('Error in updateEvaluation:', error);
 	}
