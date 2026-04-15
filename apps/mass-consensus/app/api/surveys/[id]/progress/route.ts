@@ -1,11 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSurveyProgress, upsertSurveyProgress, getSurveyById } from '@/lib/firebase/surveys';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getUserIdFromCookie } from '@/lib/utils/user';
 import { UpdateProgressRequest } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
+import { logResearchAction } from '@/lib/utils/researchLogger';
+import { Collections, ResearchAction } from '@freedi/shared-types';
 
 interface RouteContext {
   params: { id: string };
+}
+
+async function logSurveyEntry(surveyId: string, userId: string): Promise<void> {
+  const survey = await getSurveyById(surveyId);
+  const parentStatementId = survey?.parentStatementId;
+  if (!parentStatementId) return;
+
+  const db = getFirestoreAdmin();
+  const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+  const researchEnabled = parentDoc.data()?.statementSettings?.enableResearchLogging === true;
+
+  logResearchAction(userId, ResearchAction.LOGIN, researchEnabled, {
+    topParentId: parentStatementId,
+    metadata: { isAnonymous: userId.startsWith('anon_') },
+  });
 }
 
 /**
@@ -26,6 +44,14 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const progress = await getSurveyProgress(surveyId, userId);
 
     if (!progress) {
+      // First visit to this survey for this user — emit a LOGIN research event
+      // so anonymous MC users show up in the admin research dashboard alongside
+      // authenticated logins from the main app. Gated by the parent statement's
+      // research-logging setting to respect per-project opt-in.
+      logSurveyEntry(surveyId, userId).catch((error) => {
+        logger.error('[GET /api/surveys/[id]/progress] Failed to log entry:', error);
+      });
+
       // Return empty progress if not started
       return NextResponse.json({
         hasProgress: false,
