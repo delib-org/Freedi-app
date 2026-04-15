@@ -5,7 +5,7 @@
 }
 
 .description {
-  color: #666;
+  color: #374151;
   margin: 0;
   text-align: center;
 }
@@ -13,18 +13,24 @@
 .textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 2px solid #64748b;
   border-radius: 8px;
   font-size: 1rem;
   font-family: inherit;
+  color: #111827;
   resize: vertical;
   min-height: 100px;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.textarea::placeholder {
+  color: #4b5563;
 }
 
 .textarea:focus {
   outline: none;
-  border-color: var(--primary-color, #4a90d9);
+  border-color: #1d4ed8;
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.25);
 }
 
 .textarea:disabled {
@@ -34,7 +40,7 @@
 
 .charCount {
   font-size: 0.85rem;
-  color: #888;
+  color: #374151;
   text-align: right;
 }
 
@@ -65,7 +71,8 @@
 
 .orSeparator {
   font-size: 0.875rem;
-  color: #9ca3af;
+  color: #374151;
+  font-weight: 500;
   user-select: none;
 }
 
@@ -75,40 +82,55 @@
   background: none;
   cursor: pointer;
   font-size: 0.9375rem;
-  color: var(--primary-color, #4a90d9);
+  font-weight: 600;
+  color: #1d4ed8;
   transition: all 0.2s;
   text-decoration: underline;
 }
 
 .cancelButton:hover:not(:disabled) {
-  background: #f5f5f5;
+  background: #eef2ff;
+  color: #1e3a8a;
+}
+
+.cancelButton:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .cancelButton:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
 }
 
 .primaryButton {
   padding: 0.75rem 1.5rem;
-  border: none;
-  background: var(--primary-color, #4a90d9);
-  color: white;
+  border: 2px solid transparent;
+  background: #1d4ed8;
+  color: #ffffff;
   border-radius: 8px;
   cursor: pointer;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s;
   width: 100%;
 }
 
 .primaryButton:hover:not(:disabled) {
-  background: var(--primary-hover, #3a7bc8);
+  background: #1e3a8a;
+}
+
+.primaryButton:focus-visible {
+  outline: 3px solid #1d4ed8;
+  outline-offset: 2px;
 }
 
 .primaryButton:disabled {
-  opacity: 0.5;
+  background: #94a3b8;
+  color: #ffffff;
   cursor: not-allowed;
+  opacity: 1;
 }
 
 .loaderContainer {
@@ -143,17 +165,17 @@
 
 /* Question Context Banner */
 .questionContext {
-  background: #f8fafc;
-  border-left: 3px solid var(--question, #47b4ef);
+  background: #f1f5f9;
+  border-left: 4px solid #1d4ed8;
   padding: 0.75rem 1rem;
   border-radius: 0 6px 6px 0;
   margin-bottom: 0.5rem;
 }
 
 .questionLabel {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #6b7280;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #1f2937;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.25rem;
@@ -162,9 +184,9 @@
 
 .questionText {
   font-size: 1rem;
-  color: #1f2937;
+  color: #0f172a;
   line-height: 1.5;
-  font-weight: 500;
+  font-weight: 600;
   margin: 0;
   display: -webkit-box;
   -webkit-line-clamp: 3;
@@ -178,9 +200,9 @@
 
 .questionDescription {
   font-size: 0.9375rem;
-  color: #4b5563;
+  color: #1f2937;
   line-height: 1.5;
-  font-weight: 400;
+  font-weight: 500;
   margin: 0.25rem 0 0;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -191,8 +213,9 @@
 .expandButton {
   background: none;
   border: none;
-  color: var(--primary-color, #4a90d9);
+  color: #1d4ed8;
   font-size: 0.875rem;
+  font-weight: 600;
   cursor: pointer;
   padding: 0.25rem 0;
   margin-top: 0.25rem;

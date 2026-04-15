@@ -9,7 +9,7 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions';
 import { getFirestore, QueryDocumentSnapshot } from 'firebase-admin/firestore';
-import { Collections } from '@freedi/shared-types';
+import { Collections, functionConfig } from '@freedi/shared-types';
 import type { UserEngagement, StreakData } from '@freedi/shared-types';
 
 const getDb = () => getFirestore();
@@ -24,6 +24,7 @@ export const calculateStreaks = onSchedule(
 		timeZone: 'UTC',
 		retryCount: 3,
 		memory: '512MiB',
+		region: functionConfig.region,
 	},
 	async (): Promise<void> => {
 		const startTime = Date.now();

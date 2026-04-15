@@ -16,6 +16,7 @@ import {
 	NotificationQueueStatus,
 	NotificationTriggerType,
 	SourceApp,
+	functionConfig,
 } from '@freedi/shared-types';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 import { buildDailyDigest, getDailyDigestUsers } from '../notifications/digestAggregator';
@@ -33,6 +34,7 @@ export const sendDailyDigests = onSchedule(
 		timeZone: 'UTC',
 		retryCount: 2,
 		memory: '512MiB',
+		region: functionConfig.region,
 	},
 	async (): Promise<void> => {
 		const startTime = Date.now();

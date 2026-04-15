@@ -1,7 +1,7 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import { Collections, PendingReplacement, StatementType } from '@freedi/shared-types';
+import { Collections, PendingReplacement, StatementType, functionConfig } from '@freedi/shared-types';
 import { Role } from '@freedi/shared-types';
 
 /**
@@ -16,7 +16,10 @@ import { Role } from '@freedi/shared-types';
  * - Denormalized creator info for richer notifications
  */
 export const fn_notifyAdminReplacementPending = onDocumentCreated(
-	`${Collections.paragraphReplacementQueue}/{queueId}`,
+	{
+		document: `${Collections.paragraphReplacementQueue}/{queueId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const queueEntry = event.data?.data() as PendingReplacement;

@@ -315,9 +315,11 @@
     }
 
     &:disabled {
-      background: var(--bg-muted, #e2e8f0);
-      color: var(--text-muted, #a0aec0);
+      background: #cbd5e0;
+      color: #4a5568;
       cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
     }
   }
 
@@ -329,6 +331,14 @@
     &:hover:not(:disabled) {
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+
+    &:disabled {
+      background: #cbd5e0;
+      color: #4a5568;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
     }
   }
 
@@ -349,8 +359,9 @@
 }
 
 .navHint {
-  font-size: 0.75rem;
-  color: var(--text-muted, #a0aec0);
+  font-size: 0.8125rem;
+  color: #374151;
+  font-weight: 600;
   text-align: center;
   margin-top: 0.5rem;
 }
