@@ -57,20 +57,27 @@
 
 .actions {
   display: flex;
-  gap: 1rem;
-  justify-content: flex-end;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
   margin-top: 0.5rem;
 }
 
+.orSeparator {
+  font-size: 0.875rem;
+  color: #9ca3af;
+  user-select: none;
+}
+
 .cancelButton {
-  padding: 0.75rem 1.5rem;
-  border: 1px solid #ddd;
-  background: white;
-  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
   cursor: pointer;
-  font-size: 1rem;
-  color: #666;
+  font-size: 0.9375rem;
+  color: var(--primary-color, #4a90d9);
   transition: all 0.2s;
+  text-decoration: underline;
 }
 
 .cancelButton:hover:not(:disabled) {
@@ -92,6 +99,7 @@
   font-size: 1rem;
   font-weight: 500;
   transition: all 0.2s;
+  width: 100%;
 }
 
 .primaryButton:hover:not(:disabled) {

@@ -476,19 +476,18 @@ export default function SolutionPromptModal({
 
             <div className={styles.actions}>
               <button
-                className={styles.cancelButton}
-                onClick={handleClose}
-              >
-                {requiresSolution
-                  ? t('Skip for now')
-                  : t('Cancel')}
-              </button>
-              <button
                 className={styles.primaryButton}
                 onClick={handleCheckSimilar}
                 disabled={!isValid}
               >
-                {requiresSolution ? t('Share My Idea') : t('Submit')}
+                {t('Add Your Idea')}
+              </button>
+              <span className={styles.orSeparator}>— {t('or')} —</span>
+              <button
+                className={styles.cancelButton}
+                onClick={handleClose}
+              >
+                {t('Skip for now')}
               </button>
             </div>
           </>
