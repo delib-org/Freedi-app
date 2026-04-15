@@ -130,10 +130,11 @@ export async function clearInAppNotifications(statementId: string) {
 		);
 		await Promise.all(deletePromises);
 	} catch (error: unknown) {
+		const firebaseError = error as { code?: string; name?: string };
+		const errorMessage = error instanceof Error ? error.message : String(error);
+
 		// Permission errors are expected during sign-out when Firebase
 		// revokes the auth token before React cleanup unsubscribes/unmounts
-		const firebaseError = error as { code?: string };
-		const errorMessage = error instanceof Error ? error.message : String(error);
 		if (
 			firebaseError.code === 'permission-denied' ||
 			errorMessage.includes('Missing or insufficient permissions')
@@ -141,7 +142,18 @@ export async function clearInAppNotifications(statementId: string) {
 			return;
 		}
 
-		logError(new Error('In clearInAppNotifications'), {
+		// IndexedDB/offline errors happen on flaky mobile browsers (Samsung
+		// Internet, private mode, multi-tab schema upgrades). Not actionable.
+		if (
+			firebaseError.code === 'unavailable' ||
+			firebaseError.name === 'IndexedDbTransactionError' ||
+			errorMessage.includes('IndexedDB') ||
+			errorMessage.includes('indexedDB')
+		) {
+			return;
+		}
+
+		logError(error, {
 			operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications',
 			metadata: { detail: errorMessage },
 		});
