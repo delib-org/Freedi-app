@@ -7,7 +7,8 @@ import styles from './WizColAttribution.module.scss';
 const WIZCOL_URL = 'https://wizcol.com/experience';
 
 export default function WizColAttribution() {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
+  const logoSrc = dir === 'rtl' ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 
   return (
     <div className={styles.attribution}>
@@ -19,13 +20,13 @@ export default function WizColAttribution() {
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/wizcol-icon.svg"
+          src={logoSrc}
           alt="WizCol"
           className={styles.logoIcon}
-          width={16}
-          height={16}
+          width={32}
+          height={32}
         />
-        {t('poweredByWizCol')}
+        <span className={styles.brandName}>{t('poweredByWizCol')}</span>
       </a>
       <span className={styles.tagline}>{t('discoverWizCol')}</span>
       <ShareButtons />
