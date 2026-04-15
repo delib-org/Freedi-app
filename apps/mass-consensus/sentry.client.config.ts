@@ -57,6 +57,24 @@ Sentry.init({
 
   // Before sending an event, you can modify or filter it
   beforeSend(event) {
+    // Drop "Not found" rejections triggered by a third-party script that
+    // probes execute-api.il-central-1.amazonaws.com/dev/sites (injected by
+    // some browser extensions / ISP middleware, not our code).
+    const rejectionValue = event.exception?.values?.[0]?.value;
+    if (rejectionValue === 'Not found') {
+      const fromAwsProbe = event.breadcrumbs?.some((b) => {
+        const url = (b.data as { url?: unknown } | undefined)?.url;
+        return (
+          b.category === 'fetch' &&
+          typeof url === 'string' &&
+          url.includes('execute-api.il-central-1.amazonaws.com/dev/sites')
+        );
+      });
+      if (fromAwsProbe) {
+        return null;
+      }
+    }
+
     // Remove potentially sensitive data from URLs
     if (event.request?.url) {
       const url = new URL(event.request.url);

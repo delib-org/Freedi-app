@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { getSurveyWithQuestions, getStatementIdForSurvey } from '@/lib/firebase/surveys';
 import { getUserIdFromCookie } from '@/lib/utils/user';
-import { Collections, UserEvaluation } from '@freedi/shared-types';
+import { Collections, StatementType, UserEvaluation } from '@freedi/shared-types';
 import { logError } from '@/lib/utils/errorHandling';
 
 interface RouteContext {
@@ -39,6 +39,18 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
 
+    // Client-reported completed question indices (from localStorage).
+    // These represent questions the user navigated through in the MC flow,
+    // which is the correct definition of "answered" for MC (users only
+    // evaluate a random subset of options, never all of them).
+    const completedIndicesParam = url.searchParams.get('completedIndices');
+    const clientCompletedIndices: number[] = completedIndicesParam
+      ? completedIndicesParam
+          .split(',')
+          .map((s) => Number.parseInt(s, 10))
+          .filter((n) => Number.isInteger(n) && n >= 0)
+      : [];
+
     const survey = await getSurveyWithQuestions(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
@@ -46,19 +58,34 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     const db = getFirestoreAdmin();
 
-    // Fetch UserEvaluation docs for each question (batched)
+    // Fetch UserEvaluation docs + live option counts for each question (batched)
     const questions: QuestionProgress[] = [];
     let totalOptionsEvaluated = 0;
-    let questionsCompleted = 0;
 
     const evalPromises = survey.questions.map(async (question) => {
       const userEvaluationId = `${userId}--${question.statementId}`;
-      const evalDoc = await db
-        .collection(Collections.userEvaluations)
-        .doc(userEvaluationId)
-        .get();
 
-      const totalOptions = question.numberOfOptions || 0;
+      // Run user-evaluation fetch + live option counts in parallel.
+      // count() is a single aggregation read regardless of option count,
+      // so this stays cheap even for questions with hundreds of options.
+      // We compute visible = total - hidden instead of filtering by
+      // hide==false, because legacy option docs may be missing the
+      // hide field and would be excluded from an == query.
+      const optionsBaseQuery = db
+        .collection(Collections.statements)
+        .where('parentId', '==', question.statementId)
+        .where('statementType', '==', StatementType.option);
+
+      const [evalDoc, totalOptionsSnap, hiddenOptionsSnap] = await Promise.all([
+        db.collection(Collections.userEvaluations).doc(userEvaluationId).get(),
+        optionsBaseQuery.count().get(),
+        optionsBaseQuery.where('hide', '==', true).count().get(),
+      ]);
+
+      const totalOptions = Math.max(
+        0,
+        totalOptionsSnap.data().count - hiddenOptionsSnap.data().count
+      );
       let evaluatedCount = 0;
 
       if (evalDoc.exists) {
@@ -78,10 +105,15 @@ export async function GET(request: NextRequest, context: RouteContext) {
     for (const q of questionResults) {
       questions.push(q);
       totalOptionsEvaluated += q.evaluatedCount;
-      if (q.totalOptions > 0 && q.evaluatedCount >= q.totalOptions) {
-        questionsCompleted++;
-      }
     }
+
+    // Questions "answered" = questions the user navigated through in the
+    // MC flow (from client localStorage). Fallback: any question where the
+    // user has at least one evaluation, so the count is still reasonable
+    // if the client didn't send completedIndices (e.g. old cached page).
+    const questionsCompleted = clientCompletedIndices.length > 0
+      ? clientCompletedIndices.filter((i) => i < survey.questions.length).length
+      : questionResults.filter((q) => q.evaluatedCount > 0).length;
 
     // Check demographic completion
     // Answers are stored in usersData collection with ID: questionId--userId

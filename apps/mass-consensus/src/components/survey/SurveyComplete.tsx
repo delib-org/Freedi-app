@@ -55,6 +55,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [hasSuggestions, setHasSuggestions] = useState(false);
   const [detailedProgress, setDetailedProgress] = useState<DetailedProgress | null>(null);
+  const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [stats, setStats] = useState<SurveyStats>({
     questionsCompleted: 0,
     totalQuestions: survey.questions.length,
@@ -68,8 +69,12 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     if (stored) {
       try {
         const data = JSON.parse(stored);
+        const indices: number[] = Array.isArray(data.completedIndices)
+          ? data.completedIndices.filter((n: unknown): n is number => Number.isInteger(n))
+          : [];
+        setCompletedIndices(indices);
         setStats({
-          questionsCompleted: (data.completedIndices || []).length,
+          questionsCompleted: indices.length,
           totalQuestions: survey.questions.length,
         });
       } catch {
@@ -86,8 +91,12 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     const fetchDetailedProgress = async () => {
       try {
         const userId = getOrCreateAnonymousUser();
+        const params = new URLSearchParams({ userId });
+        if (completedIndices.length > 0) {
+          params.set('completedIndices', completedIndices.join(','));
+        }
         const response = await fetch(
-          `/api/surveys/${survey.surveyId}/detailed-progress?userId=${encodeURIComponent(userId)}`,
+          `/api/surveys/${survey.surveyId}/detailed-progress?${params.toString()}`,
           { credentials: 'include' }
         );
         if (response.ok) {
@@ -111,7 +120,7 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     };
 
     fetchDetailedProgress();
-  }, [survey.surveyId]);
+  }, [survey.surveyId, completedIndices]);
 
   // Check if user has submitted suggestions
   useEffect(() => {
