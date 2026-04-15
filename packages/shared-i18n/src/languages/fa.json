@@ -2778,5 +2778,11 @@
   "Confirm": "تأیید",
   "None of your picks reached critical mass.": "هیچ‌کدام از انتخاب‌های شما به حد آستانه نرسید.",
   "Here are options that did — feel free to join one:": "اینجا گزینه‌هایی هستند که نگذشتند — می‌توانید به یکی بپیوندید:",
-  "No options activated on this question.": "هیچ گزینه‌ای در این پرسش فعال نشد."
+  "No options activated on this question.": "هیچ گزینه‌ای در این پرسش فعال نشد.",
+  "poweredByWizCol": "ارائه شده توسط WizCol",
+  "discoverWizCol": "راهی نو برای تصمیم‌گیری مشترک",
+  "learnMore": "بیشتر بدانید",
+  "shareMessage": "راهی نو برای تصمیم‌گیری مشترک سازمان‌ها را کشف کنید",
+  "linkCopied": "لینک کپی شد!",
+  "share": "اشتراک‌گذاری"
 }

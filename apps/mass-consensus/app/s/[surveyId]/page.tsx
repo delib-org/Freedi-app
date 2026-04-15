@@ -18,22 +18,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!survey) {
       return {
-        title: 'Survey Not Found | Freedi',
+        title: 'Survey Not Found | WizCol',
       };
     }
 
     return {
-      title: `${survey.title} | Freedi Survey`,
+      title: `${survey.title} | WizCol: Mass Consensus`,
       description: survey.description || `Participate in this survey: ${survey.title}`,
       openGraph: {
         title: survey.title,
-        description: survey.description || 'Join the survey',
+        description: survey.description || 'A new way to make decisions together',
         type: 'website',
+        images: [{ url: '/wizcol-logo.png', width: 800, height: 400, alt: 'WizCol' }],
       },
     };
   } catch {
     return {
-      title: 'Survey Not Found | Freedi',
+      title: 'Survey Not Found | WizCol',
     };
   }
 }

@@ -2238,5 +2238,11 @@
   "Confirm": "تأكيد",
   "None of your picks reached critical mass.": "لم يصل أي من خياراتك إلى الحد الأدنى.",
   "Here are options that did — feel free to join one:": "هنا الخيارات التي نجحت — يمكنك الانضمام إلى أحدها:",
-  "No options activated on this question.": "لم تُفعَّل أي خيارات في هذا السؤال."
+  "No options activated on this question.": "لم تُفعَّل أي خيارات في هذا السؤال.",
+  "poweredByWizCol": "مدعوم من WizCol",
+  "discoverWizCol": "طريقة جديدة لاتخاذ القرارات معاً",
+  "learnMore": "اعرف المزيد",
+  "shareMessage": "اكتشف طريقة جديدة للمؤسسات لاتخاذ القرارات معاً",
+  "linkCopied": "تم نسخ الرابط!",
+  "share": "مشاركة"
 }
