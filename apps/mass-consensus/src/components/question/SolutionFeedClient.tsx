@@ -46,6 +46,10 @@ export default function SolutionFeedClient({
   const [batchCount, setBatchCount] = useState(1);
   const [error, setError] = useState<string | null>(null);
   const [allOptionsEvaluated, setAllOptionsEvaluated] = useState(false);
+  const [isLastBatch, setIsLastBatch] = useState<boolean>(() => {
+    const total = question.numberOfOptions || 0;
+    return total > 0 && initialSolutions.length >= total;
+  });
   const [showSolutionPrompt, setShowSolutionPrompt] = useState(false);
   const [hasCheckedUserSolutions, setHasCheckedUserSolutions] = useState(false);
   const [showCompletionScreen, setShowCompletionScreen] = useState(false);
@@ -434,12 +438,10 @@ export default function SolutionFeedClient({
         setEvaluationScores(new Map());
         setShowBatchCompleteBanner(false);
         setBatchCount((prev) => prev + 1);
-
-        if (!data.hasMore) {
-          console.info('[SolutionFeedClient] Server indicates no more batches available');
-        }
+        setIsLastBatch(data.hasMore === false);
       } else {
         setAllOptionsEvaluated(true);
+        setIsLastBatch(true);
       }
     } catch (error) {
       logError(error, {
@@ -562,7 +564,7 @@ export default function SolutionFeedClient({
             </div>
 
             {/* Inline "get more" pill button below solutions */}
-            {inSurveyContext && !allOptionsEvaluated && (
+            {inSurveyContext && (
               <div className={styles.inlineGetMore}>
                 <button
                   className={`${styles.getMorePill} ${allBatchEvaluated ? styles.getMorePillReady : ''}`}
@@ -570,13 +572,25 @@ export default function SolutionFeedClient({
                     setShowBatchCompleteBanner(false);
                     handleGetNewBatch();
                   }}
-                  disabled={isLoadingBatch || !allBatchEvaluated}
+                  disabled={
+                    isLoadingBatch ||
+                    !allBatchEvaluated ||
+                    allOptionsEvaluated ||
+                    (isLastBatch && allBatchEvaluated)
+                  }
                 >
                   {isLoadingBatch
                     ? t('Loading...')
-                    : allBatchEvaluated
-                      ? t('getMoreSuggestions')
-                      : tWithParams('rateToUnlock', { count: solutions.length - evaluatedInBatch })
+                    : allOptionsEvaluated || (isLastBatch && allBatchEvaluated)
+                      ? t('allDoneMessage')
+                      : allBatchEvaluated
+                        ? t('getMoreSuggestions')
+                        : isLastBatch
+                          ? t('rateToFinish')
+                          : tWithParams(
+                              (solutions.length - evaluatedInBatch) <= 2 ? 'rateToUnlockAlmost' : 'rateToUnlock',
+                              { count: solutions.length - evaluatedInBatch }
+                            )
                   }
                 </button>
               </div>
