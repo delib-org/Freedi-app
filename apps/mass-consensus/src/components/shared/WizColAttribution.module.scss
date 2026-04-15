@@ -21,7 +21,7 @@
   }
 }
 
-.brandName {
+.brandText {
   font-size: 0.95rem;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -32,10 +32,4 @@
   height: 2rem;
   display: inline-block;
   object-fit: contain;
-}
-
-.tagline {
-  font-size: 0.85rem;
-  color: var(--text-secondary, #8b8fa3);
-  text-align: center;
 }

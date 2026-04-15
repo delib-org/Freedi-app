@@ -26,9 +26,8 @@ export default function WizColAttribution() {
           width={32}
           height={32}
         />
-        <span className={styles.brandName}>{t('poweredByWizCol')}</span>
+        <span className={styles.brandText}>{t('poweredByWizCol')}</span>
       </a>
-      <span className={styles.tagline}>{t('discoverWizCol')}</span>
       <ShareButtons />
     </div>
   );
