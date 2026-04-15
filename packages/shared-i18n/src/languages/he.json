@@ -2851,5 +2851,11 @@
   "Confirm": "אישור",
   "None of your picks reached critical mass.": "אף אחת מהבחירות שלך לא הגיעה למסה קריטית.",
   "Here are options that did — feel free to join one:": "הנה האפשרויות שעברו — אתם מוזמנים להצטרף לאחת:",
-  "No options activated on this question.": "אף אפשרות לא הופעלה בשאלה זו."
+  "No options activated on this question.": "אף אפשרות לא הופעלה בשאלה זו.",
+  "poweredByWizCol": "החלטות חכמות על ידי WizCol",
+  "discoverWizCol": "החלטות חכמות על ידי WizCol",
+  "learnMore": "למד עוד",
+  "shareMessage": "גלו דרך חדשה לארגונים לקבל החלטות ביחד",
+  "linkCopied": "הקישור הועתק!",
+  "share": "שתפ/י"
 }

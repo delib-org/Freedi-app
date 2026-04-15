@@ -6,6 +6,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
+import WizColAttribution from '../shared/WizColAttribution';
 import styles from './Survey.module.scss';
 
 interface SurveyCompleteProps {
@@ -301,6 +302,8 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
           {t('reviewAnswers')}
         </button>
       </div>
+
+      <WizColAttribution />
     </div>
   );
 }
