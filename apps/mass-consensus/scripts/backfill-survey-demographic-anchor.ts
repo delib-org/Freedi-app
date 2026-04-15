@@ -166,7 +166,11 @@ async function backfillSurvey(surveyId: string, dryRun: boolean): Promise<Backfi
     return summary;
   }
 
-  // 3. For each question, fetch evaluations and stamp the anchor
+  // 3. For each question, fetch evaluations and stamp the anchor.
+  // NOTE: in MC, users evaluate the *options/solutions* that live under
+  // each question, not the question itself. So evaluations we want to
+  // stamp are the ones whose `parentId` equals the survey's questionId;
+  // the evaluation's own `statementId` is the option being voted on.
   let batch: WriteBatch = db.batch();
   let batchCount = 0;
 
@@ -175,7 +179,7 @@ async function backfillSurvey(surveyId: string, dryRun: boolean): Promise<Backfi
 
     const evalSnapshot = await db
       .collection(EVALUATIONS_COLLECTION)
-      .where('statementId', '==', questionId)
+      .where('parentId', '==', questionId)
       .get();
 
     for (const evalDoc of evalSnapshot.docs) {
