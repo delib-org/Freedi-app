@@ -90,6 +90,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		const userEvalData = {
 			userId,
 			evaluation: evaluation.evaluation || 0,
+			demographicAnchorId: evaluation.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
 

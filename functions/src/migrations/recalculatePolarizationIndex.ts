@@ -29,6 +29,7 @@ interface UserDemographicEvaluation {
 		answer: string;
 		userQuestionId: string;
 	}>;
+	demographicAnchorId?: string;
 }
 
 /**
@@ -56,12 +57,14 @@ async function getAncestorStatementIds(statementId: string): Promise<string[]> {
 }
 
 /**
- * Fetch user's demographic data from the usersData collection
+ * Fetch user's demographic data from the usersData collection.
+ * Merge priority (first-wins): group-level > survey anchor > ancestor walk.
  */
 async function fetchUserDemographicData(
 	userId: string,
 	topParentId: string,
 	ancestorIds: string[],
+	demographicAnchorId?: string,
 ): Promise<UserDemographicQuestion[]> {
 	const answerMap = new Map<string, UserDemographicQuestion>();
 
@@ -84,8 +87,28 @@ async function fetchUserDemographicData(
 		}
 	}
 
-	// 2. Fetch statement-level answers across all ancestors
+	// 2. Fetch survey-anchor answers directly (one-hop, O(1))
+	if (demographicAnchorId) {
+		const anchorSnapshot = await db
+			.collection(Collections.usersData)
+			.where('userId', '==', userId)
+			.where('statementId', '==', demographicAnchorId)
+			.get();
+
+		if (!anchorSnapshot.empty) {
+			anchorSnapshot.docs.forEach((doc) => {
+				const data = doc.data() as UserDemographicQuestion;
+				if (data.userQuestionId && !answerMap.has(data.userQuestionId)) {
+					answerMap.set(data.userQuestionId, data);
+				}
+			});
+		}
+	}
+
+	// 3. Fetch statement-level answers across all ancestors
 	for (const ancestorId of ancestorIds) {
+		if (demographicAnchorId && ancestorId === demographicAnchorId) continue;
+
 		const statementSnapshot = await db
 			.collection(Collections.usersData)
 			.where('userId', '==', userId)
@@ -103,6 +126,20 @@ async function fetchUserDemographicData(
 	}
 
 	return Array.from(answerMap.values());
+}
+
+/**
+ * Fetch demographic questions stored directly under an anchor statementId
+ * (the survey-case: getStatementIdForSurvey(survey) hosts the survey's
+ * demographic questions, which may not live in the question's ancestor chain).
+ */
+async function getAnchorDemographicQuestions(anchorId: string): Promise<UserDemographicQuestion[]> {
+	const snapshot = await db
+		.collection(Collections.userDemographicQuestions)
+		.where('statementId', '==', anchorId)
+		.get();
+
+	return snapshot.docs.map((doc) => doc.data() as UserDemographicQuestion);
 }
 
 /**
@@ -198,11 +235,14 @@ export async function recalculatePolarizationIndexForStatement(
 			ancestorIds.unshift(parentId);
 		}
 
-		// Check if there are any demographic questions defined
-		const demographicQuestions = await getDemographicQuestions(topParentId || '', ancestorIds);
-		if (demographicQuestions.length === 0) {
-			return { success: false, message: 'No demographic questions found for this statement chain' };
-		}
+		// Check if there are any demographic questions defined via the
+		// ancestor chain. We also collect anchor-based questions on the fly
+		// below (once we see which evaluations carry a demographicAnchorId),
+		// so a missing result here is not yet a dealbreaker.
+		const ancestorDemographicQuestions = await getDemographicQuestions(
+			topParentId || '',
+			ancestorIds,
+		);
 
 		// Get excluded demographic IDs for this statement
 		const excludedDemographicIds =
@@ -220,6 +260,9 @@ export async function recalculatePolarizationIndexForStatement(
 
 		logger.info(`Found ${evaluationsSnapshot.size} evaluations for statement ${statementId}`);
 
+		// Cache anchor-question lookups across evaluations
+		const anchorQuestionCache = new Map<string, UserDemographicQuestion[]>();
+
 		// Process each evaluation and create demographic evaluations
 		const usersDemographicEvaluations: UserDemographicEvaluation[] = [];
 		const batch = db.batch();
@@ -231,8 +274,20 @@ export async function recalculatePolarizationIndexForStatement(
 
 			if (!userId) continue;
 
-			// Get user's demographic data
-			let demographicData = await fetchUserDemographicData(userId, topParentId || '', ancestorIds);
+			const anchorId = evaluation.demographicAnchorId;
+
+			// Populate anchor-question cache lazily
+			if (anchorId && !anchorQuestionCache.has(anchorId)) {
+				anchorQuestionCache.set(anchorId, await getAnchorDemographicQuestions(anchorId));
+			}
+
+			// Get user's demographic data (group + anchor + ancestor walk)
+			let demographicData = await fetchUserDemographicData(
+				userId,
+				topParentId || '',
+				ancestorIds,
+				anchorId,
+			);
 
 			// Filter out excluded demographics
 			if (excludedDemographicIds.length > 0) {
@@ -255,6 +310,7 @@ export async function recalculatePolarizationIndexForStatement(
 				parentId,
 				evaluation: evaluation.evaluation || 0,
 				demographic: demographicSummary,
+				...(anchorId ? { demographicAnchorId: anchorId } : {}),
 			};
 
 			usersDemographicEvaluations.push(userDemographicEvaluation);
@@ -280,6 +336,28 @@ export async function recalculatePolarizationIndexForStatement(
 
 		if (usersDemographicEvaluations.length === 0) {
 			return { success: false, message: 'No users with demographic data found' };
+		}
+
+		// Union of all demographic question definitions seen via ancestor
+		// walk plus every anchor used by any evaluation in this statement's
+		// set. createAxes needs these to label axes and iterate options.
+		const questionsById = new Map<string, UserDemographicQuestion>();
+		for (const q of ancestorDemographicQuestions) {
+			if (q.userQuestionId) questionsById.set(q.userQuestionId, q);
+		}
+		for (const anchorQuestions of anchorQuestionCache.values()) {
+			for (const q of anchorQuestions) {
+				if (q.userQuestionId && !questionsById.has(q.userQuestionId)) {
+					questionsById.set(q.userQuestionId, q);
+				}
+			}
+		}
+		const demographicQuestions = Array.from(questionsById.values());
+		if (demographicQuestions.length === 0) {
+			return {
+				success: false,
+				message: 'No demographic questions found for this statement chain',
+			};
 		}
 
 		logger.info(`Created ${usersDemographicEvaluations.length} demographic evaluations`);

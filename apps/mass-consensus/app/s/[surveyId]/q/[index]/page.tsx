@@ -190,12 +190,14 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
                   question={question}
                   initialSolutions={initialBatch}
                   mergedSettings={mergedSettings}
+                  surveyId={params.surveyId}
                 />
               ) : (
                 <SwipeInterfaceWrapper
                   question={question}
                   initialSolutions={initialBatch}
                   mergedSettings={mergedSettings}
+                  surveyId={params.surveyId}
                 />
               )}
             </Suspense>

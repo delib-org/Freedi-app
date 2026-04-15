@@ -73,6 +73,7 @@ export async function updateEvaluation(
 		const userEvalData = {
 			userId,
 			evaluation: after.evaluation || 0,
+			demographicAnchorId: after.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
 

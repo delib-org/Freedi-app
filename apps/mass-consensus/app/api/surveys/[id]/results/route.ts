@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getSurveyById,
   getSurveyWithQuestions,
-  getAllSurveyDemographicQuestions,
+  getSurveyDemographicQuestions,
   getAllSurveyDemographicAnswers,
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
@@ -125,10 +125,20 @@ export async function GET(
       return NextResponse.json({ error: 'You can only view results for your own surveys' }, { status: 403 });
     }
 
+    // Scope demographic questions to those actually referenced by this
+    // survey's current demographic pages. This prevents orphan/duplicate
+    // docs left over from prior saves (same statementId, different
+    // userQuestionIds) from surfacing in the results view.
+    const currentDemographicQuestionIds = Array.from(
+      new Set(
+        (survey.demographicPages || []).flatMap((page) => page.customQuestionIds || [])
+      )
+    );
+
     // Fetch questions and demographics in parallel
     const [surveyWithQuestions, demographicQuestions, demographicAnswers] = await Promise.all([
       getSurveyWithQuestions(surveyId),
-      getAllSurveyDemographicQuestions(surveyId),
+      getSurveyDemographicQuestions(surveyId, currentDemographicQuestionIds),
       getAllSurveyDemographicAnswers(surveyId),
     ]);
 

@@ -26,6 +26,8 @@ interface SolutionFeedClientProps {
   initialSolutions: Statement[];
   /** Merged settings for this question (survey + per-question overrides) */
   mergedSettings?: MergedQuestionSettings;
+  /** Survey context: used to stamp evaluations with a demographic anchor */
+  surveyId?: string;
 }
 
 /**
@@ -36,6 +38,7 @@ export default function SolutionFeedClient({
   question,
   initialSolutions,
   mergedSettings,
+  surveyId,
 }: SolutionFeedClientProps) {
   const { t, tWithParams } = useTranslation();
   const [solutions, setSolutions] = useState<Statement[]>(initialSolutions);
@@ -354,6 +357,7 @@ export default function SolutionFeedClient({
         body: JSON.stringify({
           userId,
           evaluation: score,
+          ...(surveyId ? { surveyId } : {}),
         }),
       });
 

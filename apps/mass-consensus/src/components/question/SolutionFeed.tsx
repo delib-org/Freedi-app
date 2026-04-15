@@ -7,6 +7,8 @@ interface SolutionFeedProps {
   initialSolutions: Statement[];
   /** Merged settings for this question (survey + per-question overrides) */
   mergedSettings?: MergedQuestionSettings;
+  /** Survey context: used to stamp evaluations with a demographic anchor */
+  surveyId?: string;
 }
 
 /**
@@ -17,7 +19,8 @@ interface SolutionFeedProps {
 export default function SolutionFeed({
   question,
   initialSolutions,
-  mergedSettings
+  mergedSettings,
+  surveyId,
 }: SolutionFeedProps) {
   // Always pass to client component for interactivity
   // Client component handles empty state with add solution capability
@@ -26,6 +29,7 @@ export default function SolutionFeed({
       question={question}
       initialSolutions={initialSolutions || []}
       mergedSettings={mergedSettings}
+      surveyId={surveyId}
     />
   );
 }
