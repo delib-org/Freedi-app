@@ -2688,6 +2688,7 @@
   "batchCompleteSubtitle": "شما {{count}} پیشنهاد را ارزیابی کردید!",
   "goToNextQuestion": "سوال بعدی",
   "getMoreSuggestions": "پیشنهادات بیشتر",
+  "rateToUnlock": "{{count}} مورد دیگر را ارزیابی کنید تا پیشنهادات جدید باز شود",
   "allOptionsEvaluatedShort": "شما تمام گزینه‌های موجود را ارزیابی کرده‌اید",
   "optionsRated": "{{evaluated}} از {{total}} ارزیابی شده",
   "evaluationProgress": "پیشرفت ارزیابی",

@@ -561,7 +561,28 @@ export default function SolutionFeedClient({
               ))}
             </div>
 
-            {/* Survey context: only show banner after all options are rated */}
+            {/* Inline "get more" pill button below solutions */}
+            {inSurveyContext && !allOptionsEvaluated && (
+              <div className={styles.inlineGetMore}>
+                <button
+                  className={`${styles.getMorePill} ${allBatchEvaluated ? styles.getMorePillReady : ''}`}
+                  onClick={() => {
+                    setShowBatchCompleteBanner(false);
+                    handleGetNewBatch();
+                  }}
+                  disabled={isLoadingBatch || !allBatchEvaluated}
+                >
+                  {isLoadingBatch
+                    ? t('Loading...')
+                    : allBatchEvaluated
+                      ? t('getMoreSuggestions')
+                      : tWithParams('rateToUnlock', { count: solutions.length - evaluatedInBatch })
+                  }
+                </button>
+              </div>
+            )}
+
+            {/* Survey context: show banner after all options are rated */}
             {inSurveyContext ? (
               showBatchCompleteBanner && (
                 <div className={styles.batchCompleteBanner} ref={bannerRef}>
@@ -576,20 +597,6 @@ export default function SolutionFeedClient({
                   >
                     {t('goToNextQuestion')}
                   </button>
-                  {allOptionsEvaluated ? (
-                    <p className={styles.hint}>{t('allOptionsEvaluatedShort')}</p>
-                  ) : (
-                    <button
-                      className={styles.bannerSecondaryLink}
-                      onClick={() => {
-                        setShowBatchCompleteBanner(false);
-                        handleGetNewBatch();
-                      }}
-                      disabled={isLoadingBatch}
-                    >
-                      {t('getMoreSuggestions')}
-                    </button>
-                  )}
                 </div>
               )
             ) : (

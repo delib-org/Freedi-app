@@ -2074,6 +2074,7 @@
   "batchCompleteSubtitle": "قيّمت {{count}} اقتراحات!",
   "goToNextQuestion": "السؤال التالي",
   "getMoreSuggestions": "احصل على المزيد من الاقتراحات",
+  "rateToUnlock": "قيّم {{count}} أخرى للحصول على اقتراحات جديدة",
   "allOptionsEvaluatedShort": "لقد قيّمت جميع الخيارات المتاحة",
   "optionsRated": "{{evaluated}} من {{total}} تم تقييمها",
   "evaluationProgress": "تقدم التقييم",

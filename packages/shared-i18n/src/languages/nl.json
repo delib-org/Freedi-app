@@ -2457,6 +2457,7 @@
   "batchCompleteSubtitle": "Je hebt {{count}} suggesties beoordeeld!",
   "goToNextQuestion": "Volgende vraag",
   "getMoreSuggestions": "Meer suggesties laden",
+  "rateToUnlock": "Beoordeel nog {{count}} om nieuwe suggesties te krijgen",
   "allOptionsEvaluatedShort": "Je hebt alle beschikbare opties beoordeeld",
   "optionsRated": "{{evaluated}} van {{total}} beoordeeld",
   "evaluationProgress": "Beoordelingsvoortgang",

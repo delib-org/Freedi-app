@@ -361,6 +361,45 @@
   margin: 0;
 }
 
+/* Inline "get more" pill button below solutions (survey context) */
+.inlineGetMore {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-md, 1rem);
+  margin-bottom: var(--spacing-sm, 0.5rem);
+}
+
+.getMorePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 2px solid var(--btn-secondary, #cbd5e0);
+  background: var(--bg-muted, #f7fafc);
+  color: var(--text-secondary, #718096);
+  cursor: not-allowed;
+  transition: all 0.25s ease;
+}
+
+.getMorePillReady {
+  border-color: var(--color-primary, #5f88e5);
+  background: white;
+  color: var(--color-primary, #5f88e5);
+  cursor: pointer;
+}
+
+.getMorePillReady:hover {
+  background: rgba(95, 136, 229, 0.08);
+  transform: translateY(-1px);
+}
+
+.getMorePillReady:active {
+  transform: translateY(0);
+}
+
 /* Batch Complete Banner (inline, survey context) */
 .batchCompleteBanner {
   display: flex;

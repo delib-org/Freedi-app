@@ -3190,6 +3190,7 @@
   "batchCompleteSubtitle": "You evaluated {{count}} suggestions!",
   "goToNextQuestion": "Next Question",
   "getMoreSuggestions": "Get More Suggestions",
+  "rateToUnlock": "Rate {{count}} more to unlock new suggestions",
   "allOptionsEvaluatedShort": "You've evaluated all available options",
   "optionsRated": "{{evaluated}} of {{total}} rated",
   "evaluationProgress": "Evaluation progress",

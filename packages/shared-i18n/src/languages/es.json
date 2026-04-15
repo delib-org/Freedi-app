@@ -2457,6 +2457,7 @@
   "batchCompleteSubtitle": "¡Evaluaste {{count}} sugerencias!",
   "goToNextQuestion": "Siguiente pregunta",
   "getMoreSuggestions": "Obtener más sugerencias",
+  "rateToUnlock": "Evalúa {{count}} más para desbloquear nuevas sugerencias",
   "allOptionsEvaluatedShort": "Has evaluado todas las opciones disponibles",
   "optionsRated": "{{evaluated}} de {{total}} evaluadas",
   "evaluationProgress": "Progreso de evaluación",
