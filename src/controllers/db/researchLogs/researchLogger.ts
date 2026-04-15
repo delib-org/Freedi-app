@@ -20,7 +20,7 @@ import {
 	startAfter,
 	QueryDocumentSnapshot,
 } from 'firebase/firestore';
-import { DB } from '@/controllers/db/config';
+import { DB, auth } from '@/controllers/db/config';
 import { createDocRef } from '@/utils/firebaseUtils';
 import {
 	Collections,
@@ -106,6 +106,10 @@ export async function logResearchAction(
 	try {
 		const userId = getUserId();
 		if (!userId) return;
+
+		// Firestore security rules require an authenticated user.
+		// Redux may still hold the old uid after sign-out, so double-check auth.
+		if (!auth.currentUser) return;
 
 		// Check if research mode is enabled for this statement
 		const isGlobal = RESEARCH_GLOBAL_ACTIONS.includes(action);
