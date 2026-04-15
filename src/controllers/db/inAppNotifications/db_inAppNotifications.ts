@@ -289,14 +289,30 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 		});
 		await batch.commit();
 	} catch (error: unknown) {
+		const firebaseError = error as { code?: string; name?: string };
+		const errorMessage = error instanceof Error ? error.message : String(error);
+
 		// Permission errors are expected when the user signs out or navigates away
 		// before the delayed batch commit fires — silently ignore them
-		const errorMessage = error instanceof Error ? error.message : String(error);
-		if (errorMessage.includes('Missing or insufficient permissions')) {
+		if (
+			firebaseError.code === 'permission-denied' ||
+			errorMessage.includes('Missing or insufficient permissions')
+		) {
 			return;
 		}
 
-		logError(new Error('In markNotificationsAsViewedInListDB'), {
+		// IndexedDB/offline errors happen on flaky mobile browsers (Samsung
+		// Internet, private mode, multi-tab schema upgrades). Not actionable.
+		if (
+			firebaseError.code === 'unavailable' ||
+			firebaseError.name === 'IndexedDbTransactionError' ||
+			errorMessage.includes('IndexedDB') ||
+			errorMessage.includes('indexedDB')
+		) {
+			return;
+		}
+
+		logError(error, {
 			operation: 'inAppNotifications.db_inAppNotifications.batch',
 			metadata: { detail: errorMessage },
 		});
