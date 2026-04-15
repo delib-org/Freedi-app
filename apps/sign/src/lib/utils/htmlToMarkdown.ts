@@ -99,7 +99,7 @@ export function markdownToHtml(markdown: string): string {
 
   // Convert *italic* and _italic_ (but not __ which was already converted)
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  html = html.replace(/(?<!_)_([^_]+?)_(?!_)/g, '<em>$1</em>');
+  html = html.replace(/_([^_]+?)_/g, '<em>$1</em>');
 
   // Convert unordered lists (lines starting with -, *, or +)
   html = html.replace(/^[\-\*\+]\s+(.+)$/gm, '<li>$1</li>');

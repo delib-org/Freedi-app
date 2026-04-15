@@ -50,13 +50,29 @@ Sentry.init({
     /window\.__firefox__/,
     /Can't find variable: __firefox__/,
     /window\.ethereum/,
+    // Firestore offline errors (client went offline — not actionable)
+    'Failed to get document because the client is offline',
+    'Could not reach Cloud Firestore backend',
+    'The operation could not be completed',
   ],
 
   // Don't send PII
   sendDefaultPii: false,
 
   // Before sending an event, you can modify or filter it
-  beforeSend(event) {
+  beforeSend(event, hint) {
+    // Drop Firestore offline / unavailable errors — these happen when the
+    // user's device has no connection and are not actionable.
+    const originalError = hint?.originalException as
+      | { name?: string; code?: string }
+      | undefined;
+    if (
+      originalError?.name === 'FirebaseError' &&
+      originalError?.code === 'unavailable'
+    ) {
+      return null;
+    }
+
     // Drop "Not found" rejections triggered by a third-party script that
     // probes execute-api.il-central-1.amazonaws.com/dev/sites (injected by
     // some browser extensions / ISP middleware, not our code).

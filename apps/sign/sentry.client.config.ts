@@ -15,4 +15,20 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+
+  // Ignore Firestore offline errors (user device lost connection — not actionable)
+  ignoreErrors: [
+    "Failed to get document because the client is offline",
+    "Could not reach Cloud Firestore backend",
+  ],
+
+  beforeSend(event, hint) {
+    const err = hint?.originalException as
+      | { name?: string; code?: string }
+      | undefined;
+    if (err?.name === "FirebaseError" && err?.code === "unavailable") {
+      return null;
+    }
+    return event;
+  },
 });
