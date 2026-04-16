@@ -4,7 +4,6 @@ import { Collections, StatementType, createStatementObject, SourceApp } from '@f
 import { getUserIdFromCookie, getAnonymousDisplayName } from '@/lib/utils/user';
 import { logError, ValidationError } from '@/lib/utils/errorHandling';
 import { VALIDATION, ERROR_MESSAGES } from '@/constants/common';
-import { textToParagraphs } from '@/lib/utils/paragraphUtils';
 import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
@@ -192,15 +191,11 @@ export async function POST(
 
     const displayName = userName || getAnonymousDisplayName(userId);
 
-    // Use user's original text as-is
-    const title = trimmedText;
-    const description = trimmedText;
-
-    // Use shared utility to create properly structured statement
+    // MC has a single input field — store it only as `statement` to avoid
+    // duplicating the same text as both title and description in downstream views.
     const newSolution = createStatementObject({
       statementId: statementRef.id,
-      statement: title,
-      paragraphs: textToParagraphs(description),
+      statement: trimmedText,
       statementType: StatementType.option,
       parentId: questionId,
       topParentId: questionData?.topParentId || questionId,
