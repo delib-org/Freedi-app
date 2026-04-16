@@ -9,6 +9,7 @@ import {
   setCustomDisplayName,
   getCustomDisplayName,
 } from '@/lib/store';
+import { generateTemporalName } from '@/lib/nameGenerator';
 import { db, doc, getDoc } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';
@@ -144,45 +145,77 @@ export const Chat: m.Component = {
                 }
               },
             }),
-            m(
-              'button.btn.btn--primary.btn--small',
-              {
-                disabled: !nameInput.trim(),
-                onclick: confirmName,
-              },
-              'Continue',
-            ),
+            m('.chat__name-actions', [
+              m(
+                'button.btn.btn--primary.btn--small',
+                {
+                  disabled: !nameInput.trim(),
+                  onclick: confirmName,
+                },
+                'Continue',
+              ),
+              m(
+                'button.btn.btn--secondary.btn--small',
+                {
+                  onclick: () => {
+                    const generated = generateTemporalName();
+                    nameInput = generated;
+                    setCustomDisplayName(generated);
+                    closeNamePrompt();
+                  },
+                },
+                'Stay anonymous',
+              ),
+            ]),
           ])
-        : m('.chat__input-bar', [
-            m('textarea.chat__input', {
-              value: messageText,
-              placeholder: 'Type a message...',
-              rows: 1,
-              onfocus: () => {
-                if (needsDisplayName()) {
-                  showNamePrompt = true;
-                  m.redraw();
-                }
-              },
-              oninput: (e: InputEvent) => {
-                messageText = (e.target as HTMLTextAreaElement).value;
-              },
-              onkeydown: (e: KeyboardEvent) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSend();
-                }
-              },
-            }),
-            m(
-              'button.chat__send',
-              {
-                disabled: !messageText.trim() || sending,
-                onclick: handleSend,
-                'aria-label': 'Send message',
-              },
-              '\u27A4',
-            ),
+        : m('.chat__input-area', [
+            user?.isAnonymous
+              ? m(
+                  'button.chat__name-tag',
+                  {
+                    onclick: () => {
+                      nameInput = getCustomDisplayName() || '';
+                      showNamePrompt = true;
+                      m.redraw();
+                    },
+                  },
+                  [
+                    m('span', getCustomDisplayName() || 'Set your name'),
+                    m('span.chat__name-edit', '\u270E'),
+                  ],
+                )
+              : null,
+            m('.chat__input-bar', [
+              m('textarea.chat__input', {
+                value: messageText,
+                placeholder: 'Type a message...',
+                rows: 1,
+                onfocus: () => {
+                  if (needsDisplayName()) {
+                    showNamePrompt = true;
+                    m.redraw();
+                  }
+                },
+                oninput: (e: InputEvent) => {
+                  messageText = (e.target as HTMLTextAreaElement).value;
+                },
+                onkeydown: (e: KeyboardEvent) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSend();
+                  }
+                },
+              }),
+              m(
+                'button.chat__send',
+                {
+                  disabled: !messageText.trim() || sending,
+                  onclick: handleSend,
+                  'aria-label': 'Send message',
+                },
+                '\u27A4',
+              ),
+            ]),
           ]),
     ]);
   },

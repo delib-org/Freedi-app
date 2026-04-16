@@ -403,6 +403,33 @@
     }
   }
 
+  &__input-area {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__name-tag {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    background: none;
+    border: none;
+    padding: var(--space-xs) var(--space-md);
+    font-family: var(--font-family);
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--easing-smooth);
+
+    &:hover {
+      color: var(--color-primary);
+    }
+  }
+
+  &__name-edit {
+    font-size: var(--font-size-xs);
+  }
+
   &__name-prompt {
     position: sticky;
     bottom: 0;
@@ -441,6 +468,11 @@
       outline: 2px solid var(--color-primary);
       outline-offset: -1px;
     }
+  }
+
+  &__name-actions {
+    display: flex;
+    gap: var(--space-sm);
   }
 }
 

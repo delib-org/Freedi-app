@@ -31,7 +31,11 @@ let chatUnsubscribe: Unsubscribe | null = null;
 let joinFormSubmitted = new Set<string>();
 let customDisplayName: string | null = null;
 
+const DISPLAY_NAME_KEY = 'freedi_join_name_v2';
 const VISITED_KEY = 'freedi_join_visited';
+
+// Clear stale name from old key
+try { localStorage.removeItem('freedi_join_display_name'); } catch { /* ignore */ }
 
 function getVisitedSet(): Set<string> {
   try {
@@ -68,7 +72,7 @@ export function getTotalVisibleCount(): number {
 export function setCustomDisplayName(name: string): void {
   customDisplayName = name;
   try {
-    localStorage.setItem('freedi_join_display_name', name);
+    localStorage.setItem(DISPLAY_NAME_KEY, name);
   } catch { /* ignore */ }
 }
 
@@ -76,8 +80,8 @@ export function getCustomDisplayName(): string | null {
   if (customDisplayName) return customDisplayName;
 
   try {
-    const stored = localStorage.getItem('freedi_join_display_name');
-    if (stored) {
+    const stored = localStorage.getItem(DISPLAY_NAME_KEY);
+    if (stored && stored.trim()) {
       customDisplayName = stored;
 
       return stored;
@@ -85,6 +89,13 @@ export function getCustomDisplayName(): string | null {
   } catch { /* ignore */ }
 
   return null;
+}
+
+export function clearCustomDisplayName(): void {
+  customDisplayName = null;
+  try {
+    localStorage.removeItem(DISPLAY_NAME_KEY);
+  } catch { /* ignore */ }
 }
 
 export function needsDisplayName(): boolean {
