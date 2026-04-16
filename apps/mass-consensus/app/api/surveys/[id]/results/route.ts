@@ -7,7 +7,8 @@ import {
 } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
-import { UserDemographicQuestion } from '@freedi/shared-types';
+import { Collections, UserDemographicQuestion } from '@freedi/shared-types';
+import { getFirestoreAdmin } from '@/lib/firebase/admin';
 
 interface DemographicOptionCount {
   option: string;
@@ -25,6 +26,32 @@ interface DemographicQuestionResult {
     max: number;
     average: number;
   };
+}
+
+/**
+ * Get the set of user IDs who submitted evaluations for options
+ * under the given parent statement IDs.
+ */
+async function getEvaluatorUserIds(parentStatementIds: string[]): Promise<Set<string>> {
+  const db = getFirestoreAdmin();
+  const evaluatorIds = new Set<string>();
+
+  for (const parentId of parentStatementIds) {
+    const snapshot = await db
+      .collection(Collections.evaluations)
+      .where('parentId', '==', parentId)
+      .select('evaluatorId')
+      .get();
+
+    snapshot.forEach((doc) => {
+      const evaluatorId = doc.data().evaluatorId;
+      if (evaluatorId) {
+        evaluatorIds.add(evaluatorId);
+      }
+    });
+  }
+
+  return evaluatorIds;
 }
 
 /**
@@ -149,10 +176,27 @@ export async function GET(
       statement: statement.statement,
     }));
 
-    // Aggregate demographic answers
-    const demographics = aggregateDemographicAnswers(demographicQuestions, demographicAnswers);
+    // Only count demographics from users who actually evaluated
+    const questionStatementIds = questions.map((q) => q.statementId);
+    const evaluatorIds = await getEvaluatorUserIds(questionStatementIds);
 
-    return NextResponse.json({ questions, demographics });
+    const evaluatorAnswers = demographicAnswers.filter((a) => {
+      const uid = (a as UserDemographicQuestion & { userId?: string }).userId;
+
+      return uid ? evaluatorIds.has(uid) : false;
+    });
+
+    // All respondents (everyone who answered the demographic form)
+    const allRespondentsDemographics = aggregateDemographicAnswers(demographicQuestions, demographicAnswers);
+
+    // Only evaluators (users who actually rated options)
+    const evaluatorDemographics = aggregateDemographicAnswers(demographicQuestions, evaluatorAnswers);
+
+    return NextResponse.json({
+      questions,
+      demographics: allRespondentsDemographics,
+      evaluatorDemographics,
+    });
   } catch (error) {
     logger.error('[GET /api/surveys/[id]/results] Error:', error);
     return NextResponse.json(

@@ -108,12 +108,11 @@ export async function updateParentTotalEvaluators(parentId: string): Promise<voi
 			.where('parentId', '==', parentId)
 			.get();
 
-		// Count unique evaluators (users who have evaluated at least one option)
+		// Count unique evaluators (all participants, including neutral/zero evaluations)
 		const uniqueEvaluators = new Set<string>();
 		evaluationsSnapshot.forEach((doc) => {
 			const evaluation = doc.data() as Evaluation;
-			// Only count evaluators with non-zero evaluations
-			if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
+			if (evaluation.evaluator?.uid) {
 				uniqueEvaluators.add(evaluation.evaluator.uid);
 			}
 		});

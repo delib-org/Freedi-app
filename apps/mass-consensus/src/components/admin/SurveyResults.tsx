@@ -34,6 +34,7 @@ interface DemographicQuestionResult {
 interface ResultsData {
   questions: QuestionResult[];
   demographics: DemographicQuestionResult[];
+  evaluatorDemographics: DemographicQuestionResult[];
 }
 
 interface SubscribersData {
@@ -150,6 +151,74 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
 
   const hasQuestions = results.questions.length > 0;
   const hasDemographics = results.demographics.length > 0;
+  const hasEvaluatorDemographics = results.evaluatorDemographics?.length > 0;
+
+  function renderDemographicCards(data: DemographicQuestionResult[], keyPrefix: string) {
+    return (
+      <div className={styles.resultsDemographicsList}>
+        {data.map((dq) => (
+          <div key={`${keyPrefix}-${dq.userQuestionId}`} className={styles.resultsDemographicCard}>
+            <div className={styles.resultsDemographicHeader}>
+              <span className={styles.resultsDemographicQuestion}>{dq.question}</span>
+              <span className={styles.resultsDemographicType}>{dq.type}</span>
+            </div>
+            <div className={styles.resultsDemographicMeta}>
+              {t('totalResponses')}: {dq.totalResponses}
+            </div>
+
+            {dq.optionCounts && dq.optionCounts.length > 0 && (
+              <div className={styles.resultsBarChart}>
+                {dq.optionCounts.map((opt) => {
+                  const percentage =
+                    dq.totalResponses > 0
+                      ? Math.round((opt.count / dq.totalResponses) * 100)
+                      : 0;
+
+                  return (
+                    <div key={opt.option} className={styles.resultsBarRow}>
+                      <div className={styles.resultsBarLabel}>{opt.option}</div>
+                      <div className={styles.resultsBarTrack}>
+                        <div
+                          className={styles.resultsBarFill}
+                          style={{ width: `${percentage}%` }}
+                        />
+                      </div>
+                      <div className={styles.resultsBarValue}>
+                        {opt.count} ({percentage}%)
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {dq.numericStats && (
+              <div className={styles.resultsNumericStats}>
+                <div className={styles.resultsNumericItem}>
+                  <span className={styles.resultsNumericLabel}>Min</span>
+                  <span className={styles.resultsNumericValue}>{dq.numericStats.min}</span>
+                </div>
+                <div className={styles.resultsNumericItem}>
+                  <span className={styles.resultsNumericLabel}>Max</span>
+                  <span className={styles.resultsNumericValue}>{dq.numericStats.max}</span>
+                </div>
+                <div className={styles.resultsNumericItem}>
+                  <span className={styles.resultsNumericLabel}>{t('average')}</span>
+                  <span className={styles.resultsNumericValue}>{dq.numericStats.average}</span>
+                </div>
+              </div>
+            )}
+
+            {['text', 'textarea'].includes(dq.type) && dq.totalResponses > 0 && (
+              <div className={styles.resultsTextCount}>
+                {dq.totalResponses} {t('responses')}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className={styles.resultsContainer}>
@@ -180,75 +249,19 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
         )}
       </div>
 
-      {/* Demographics Section */}
+      {/* All Respondents Demographics */}
       {hasDemographics && (
         <div className={styles.resultsSection}>
           <h2 className={styles.resultsSectionTitle}>{t('demographicResults')}</h2>
-          <div className={styles.resultsDemographicsList}>
-            {results.demographics.map((dq) => (
-              <div key={dq.userQuestionId} className={styles.resultsDemographicCard}>
-                <div className={styles.resultsDemographicHeader}>
-                  <span className={styles.resultsDemographicQuestion}>{dq.question}</span>
-                  <span className={styles.resultsDemographicType}>{dq.type}</span>
-                </div>
-                <div className={styles.resultsDemographicMeta}>
-                  {t('totalResponses')}: {dq.totalResponses}
-                </div>
+          {renderDemographicCards(results.demographics, 'all')}
+        </div>
+      )}
 
-                {/* Option-based results (radio, checkbox, dropdown) */}
-                {dq.optionCounts && dq.optionCounts.length > 0 && (
-                  <div className={styles.resultsBarChart}>
-                    {dq.optionCounts.map((opt) => {
-                      const percentage =
-                        dq.totalResponses > 0
-                          ? Math.round((opt.count / dq.totalResponses) * 100)
-                          : 0;
-
-                      return (
-                        <div key={opt.option} className={styles.resultsBarRow}>
-                          <div className={styles.resultsBarLabel}>{opt.option}</div>
-                          <div className={styles.resultsBarTrack}>
-                            <div
-                              className={styles.resultsBarFill}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                          <div className={styles.resultsBarValue}>
-                            {opt.count} ({percentage}%)
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Numeric results (range, number) */}
-                {dq.numericStats && (
-                  <div className={styles.resultsNumericStats}>
-                    <div className={styles.resultsNumericItem}>
-                      <span className={styles.resultsNumericLabel}>Min</span>
-                      <span className={styles.resultsNumericValue}>{dq.numericStats.min}</span>
-                    </div>
-                    <div className={styles.resultsNumericItem}>
-                      <span className={styles.resultsNumericLabel}>Max</span>
-                      <span className={styles.resultsNumericValue}>{dq.numericStats.max}</span>
-                    </div>
-                    <div className={styles.resultsNumericItem}>
-                      <span className={styles.resultsNumericLabel}>{t('average')}</span>
-                      <span className={styles.resultsNumericValue}>{dq.numericStats.average}</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Text responses: just show count */}
-                {['text', 'textarea'].includes(dq.type) && dq.totalResponses > 0 && (
-                  <div className={styles.resultsTextCount}>
-                    {dq.totalResponses} {t('responses')}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+      {/* Evaluators-Only Demographics */}
+      {hasEvaluatorDemographics && (
+        <div className={styles.resultsSection}>
+          <h2 className={styles.resultsSectionTitle}>{t('evaluatorDemographics')}</h2>
+          {renderDemographicCards(results.evaluatorDemographics, 'eval')}
         </div>
       )}
 

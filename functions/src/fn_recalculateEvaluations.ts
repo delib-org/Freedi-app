@@ -455,7 +455,7 @@ async function updateParentTotalEvaluators(
 	const uniqueEvaluators = new Set<string>();
 	evaluationsSnapshot.forEach((doc) => {
 		const evaluation = doc.data() as Evaluation;
-		if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
+		if (evaluation.evaluator?.uid) {
 			uniqueEvaluators.add(evaluation.evaluator.uid);
 		}
 	});
