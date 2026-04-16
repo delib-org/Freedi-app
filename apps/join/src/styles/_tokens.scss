@@ -1,0 +1,99 @@
+:root {
+  // --- COLORS (swap these to rebrand) ---
+  --color-primary: #e891b9;
+  --color-primary-light: #f3b8d4;
+  --color-primary-dark: #d46f9e;
+  --color-accent-1: #c8a8e9;
+  --color-accent-2: #a8e6cf;
+  --color-accent-3: #ffd3b6;
+  --color-agree: #a8e6cf;
+  --color-agree-strong: #7dd6b3;
+  --color-organizer: #c8a8e9;
+  --color-warning: #ffd3b6;
+
+  // --- BACKGROUNDS ---
+  --bg-page: #fef6fa;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fdf0f6;
+  --bg-subtle: #faf0f5;
+  --bg-overlay: rgba(100, 60, 80, 0.3);
+  --bg-chat-mine: var(--color-primary-light);
+  --bg-chat-other: var(--bg-card);
+  --bg-input: #ffffff;
+
+  // --- TEXT ---
+  --text-primary: #4a3347;
+  --text-secondary: #7b6478;
+  --text-muted: #b0a0ad;
+  --text-inverse: #ffffff;
+
+  // --- BORDERS ---
+  --border-light: #f0dce8;
+  --border-medium: #e5c8da;
+
+  // --- SPACING (8-point grid) ---
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  // --- TYPOGRAPHY ---
+  --font-family: 'Nunito', 'Quicksand', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
+  --font-size-xs: 0.75rem;
+  --font-size-sm: 0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg: 1.125rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+
+  // --- SHAPE ---
+  --radius-sm: 14px;
+  --radius-md: 20px;
+  --radius-lg: 28px;
+  --radius-full: 9999px;
+
+  // --- SHADOWS ---
+  --shadow-sm: 0 2px 8px rgba(232, 145, 185, 0.1);
+  --shadow-md: 0 4px 16px rgba(200, 168, 233, 0.12);
+  --shadow-lg: 0 8px 32px rgba(232, 145, 185, 0.1);
+
+  // --- MOTION ---
+  --duration-fast: 180ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+  --easing: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+  // --- LAYOUT ---
+  --max-width: 480px;
+  --header-height: 56px;
+  --touch-target: 48px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg-page: #1e1520;
+    --bg-card: #2a1f2e;
+    --bg-card-hover: #352840;
+    --bg-subtle: #2a1f2e;
+    --bg-input: #352840;
+    --bg-chat-mine: #3d2845;
+    --bg-chat-other: var(--bg-card);
+    --text-primary: #f0e6ed;
+    --text-secondary: #bba8b8;
+    --text-muted: #8a7888;
+    --border-light: #3d2e3a;
+    --border-medium: #4d3e4a;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
