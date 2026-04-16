@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey } from '@/types/survey';
+import ExportModal from './ExportModal';
 import styles from './Admin.module.scss';
 
 interface QuestionResult {
@@ -31,10 +32,17 @@ interface DemographicQuestionResult {
   };
 }
 
+interface ParticipationStats {
+  totalEntered: number;
+  totalEvaluators: number;
+  totalSolutionAdders: number;
+}
+
 interface ResultsData {
   questions: QuestionResult[];
   demographics: DemographicQuestionResult[];
   evaluatorDemographics: DemographicQuestionResult[];
+  participation?: ParticipationStats;
 }
 
 interface SubscribersData {
@@ -60,6 +68,7 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [emailsCopied, setEmailsCopied] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchResults = useCallback(async () => {
     setIsLoading(true);
@@ -127,6 +136,36 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
   if (!results) {
     return null;
   }
+
+  const handleExport = async (includeTestData: boolean) => {
+    const token = await refreshToken();
+    if (!token) {
+      router.push('/login?redirect=' + encodeURIComponent(window.location.pathname));
+
+      return;
+    }
+
+    const response = await fetch(
+      `/api/surveys/${survey.surveyId}/export?includeTestData=${includeTestData}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Export failed');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `survey-${survey.surveyId}-${Date.now()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+  };
 
   const handleCopyEmails = async () => {
     if (!subscribers || subscribers.emails.length === 0) return;
@@ -220,8 +259,44 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
     );
   }
 
+  const participation = results.participation;
+
   return (
     <div className={styles.resultsContainer}>
+      {/* Participation Stats + Download */}
+      <div className={styles.resultsSection}>
+        <div className={styles.resultsHeaderRow}>
+          <h2 className={styles.resultsSectionTitle}>{t('participationStats')}</h2>
+          <button
+            type="button"
+            className={styles.resultsDownloadButton}
+            onClick={() => setShowExportModal(true)}
+          >
+            {t('downloadData')}
+          </button>
+        </div>
+        <div className={styles.participationStatsGrid}>
+          <div className={styles.participationStatCard}>
+            <span className={styles.participationStatNumber}>
+              {participation?.totalEntered ?? 0}
+            </span>
+            <span className={styles.participationStatLabel}>{t('entered')}</span>
+          </div>
+          <div className={styles.participationStatCard}>
+            <span className={styles.participationStatNumber}>
+              {participation?.totalEvaluators ?? 0}
+            </span>
+            <span className={styles.participationStatLabel}>{t('evaluated')}</span>
+          </div>
+          <div className={styles.participationStatCard}>
+            <span className={styles.participationStatNumber}>
+              {participation?.totalSolutionAdders ?? 0}
+            </span>
+            <span className={styles.participationStatLabel}>{t('addedSolutions')}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Questions Section */}
       <div className={styles.resultsSection}>
         <h2 className={styles.resultsSectionTitle}>{t('questionsInSurvey')}</h2>
@@ -289,6 +364,15 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           <p className={styles.resultsEmpty}>{t('noEmailSubscribers')}</p>
         )}
       </div>
+
+      {showExportModal && (
+        <ExportModal
+          surveyId={survey.surveyId}
+          surveyTitle={survey.title}
+          onClose={() => setShowExportModal(false)}
+          onExport={handleExport}
+        />
+      )}
     </div>
   );
 }

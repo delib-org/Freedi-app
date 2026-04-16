@@ -2434,6 +2434,80 @@
   margin-bottom: 1.25rem;
 }
 
+.resultsHeaderRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+
+  .resultsSectionTitle {
+    margin-bottom: 0;
+  }
+
+  @media (max-width: 500px) {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.resultsDownloadButton {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  background: var(--btn-primary, #5f88e5);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: filter 0.2s;
+  white-space: nowrap;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary, #5f88e5);
+    outline-offset: 2px;
+  }
+}
+
+.participationStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+
+  @media (max-width: 500px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.participationStatCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1rem;
+  background: var(--bg-muted, #f7fafc);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.participationStatNumber {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--btn-primary, #5f88e5);
+  line-height: 1.1;
+}
+
+.participationStatLabel {
+  font-size: 0.8rem;
+  color: var(--text-muted, #718096);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
 .resultsQuestionsList {
   display: flex;
   flex-direction: column;

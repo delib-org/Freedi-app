@@ -5,9 +5,10 @@ import {
   getSurveyDemographicQuestions,
   getAllSurveyDemographicAnswers,
 } from '@/lib/firebase/surveys';
+import { SURVEY_PROGRESS_COLLECTION } from '@/lib/firebase/surveys/surveyHelpers';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
-import { Collections, UserDemographicQuestion } from '@freedi/shared-types';
+import { Collections, StatementType, UserDemographicQuestion } from '@freedi/shared-types';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 
 interface DemographicOptionCount {
@@ -26,6 +27,12 @@ interface DemographicQuestionResult {
     max: number;
     average: number;
   };
+}
+
+interface ParticipationStats {
+  totalEntered: number;
+  totalEvaluators: number;
+  totalSolutionAdders: number;
 }
 
 /**
@@ -52,6 +59,48 @@ async function getEvaluatorUserIds(parentStatementIds: string[]): Promise<Set<st
   }
 
   return evaluatorIds;
+}
+
+/**
+ * Get the set of user IDs who added at least one solution (option statement)
+ * under the given parent statement IDs.
+ */
+async function getSolutionAdderUserIds(parentStatementIds: string[]): Promise<Set<string>> {
+  const db = getFirestoreAdmin();
+  const adderIds = new Set<string>();
+
+  for (const parentId of parentStatementIds) {
+    const snapshot = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', parentId)
+      .where('statementType', '==', StatementType.option)
+      .select('creatorId')
+      .get();
+
+    snapshot.forEach((doc) => {
+      const creatorId = doc.data().creatorId;
+      if (creatorId) {
+        adderIds.add(creatorId);
+      }
+    });
+  }
+
+  return adderIds;
+}
+
+/**
+ * Count how many users have a SurveyProgress doc for this survey
+ * (i.e. have entered the survey). Excludes test data.
+ */
+async function countEnteredUsers(surveyId: string): Promise<number> {
+  const db = getFirestoreAdmin();
+  const snapshot = await db
+    .collection(SURVEY_PROGRESS_COLLECTION)
+    .where('surveyId', '==', surveyId)
+    .select('isTestData')
+    .get();
+
+  return snapshot.docs.filter((doc) => doc.data().isTestData !== true).length;
 }
 
 /**
@@ -178,7 +227,12 @@ export async function GET(
 
     // Only count demographics from users who actually evaluated
     const questionStatementIds = questions.map((q) => q.statementId);
-    const evaluatorIds = await getEvaluatorUserIds(questionStatementIds);
+
+    const [evaluatorIds, solutionAdderIds, totalEntered] = await Promise.all([
+      getEvaluatorUserIds(questionStatementIds),
+      getSolutionAdderUserIds(questionStatementIds),
+      countEnteredUsers(surveyId),
+    ]);
 
     const evaluatorAnswers = demographicAnswers.filter((a) => {
       const uid = (a as UserDemographicQuestion & { userId?: string }).userId;
@@ -192,10 +246,17 @@ export async function GET(
     // Only evaluators (users who actually rated options)
     const evaluatorDemographics = aggregateDemographicAnswers(demographicQuestions, evaluatorAnswers);
 
+    const participation: ParticipationStats = {
+      totalEntered,
+      totalEvaluators: evaluatorIds.size,
+      totalSolutionAdders: solutionAdderIds.size,
+    };
+
     return NextResponse.json({
       questions,
       demographics: allRespondentsDemographics,
       evaluatorDemographics,
+      participation,
     });
   } catch (error) {
     logger.error('[GET /api/surveys/[id]/results] Error:', error);
