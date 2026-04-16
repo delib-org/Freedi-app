@@ -648,6 +648,8 @@
   "enteredTooltip": "Unieke gebruikers die aan de enquête hebben deelgenomen — een oplossing beoordeeld of een oplossing toegevoegd.",
   "evaluatedTooltip": "Unieke gebruikers die expliciet ten minste één oplossing hebben beoordeeld.",
   "addedSolutionsTooltip": "Unieke gebruikers die ten minste één oplossing hebben ingediend.",
+  "solutionsSubmitted": "ingediende oplossingen",
+  "solutionsSubmittedTooltip": "Totaal aantal oplossingen dat in de enquête is ingediend.",
   "Evaluated 5+ solutions": "5+ oplossingen beoordeeld",
   "Evaluation & Voting": "Evaluatie & stemming",
   "Evaluation Method": "Evaluatiemethode",

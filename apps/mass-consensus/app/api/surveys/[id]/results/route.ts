@@ -32,6 +32,7 @@ interface ParticipationStats {
   totalEntered: number;
   totalEvaluators: number;
   totalSolutionAdders: number;
+  totalSolutions: number;
 }
 
 /**
@@ -61,12 +62,16 @@ async function getEvaluatorUserIds(parentStatementIds: string[]): Promise<Set<st
 }
 
 /**
- * Get the set of user IDs who added at least one solution (option statement)
- * under the given parent statement IDs.
+ * Walk all option statements under the given parents and return both the set
+ * of distinct creator IDs (for "solution adders") and the total option count
+ * (for "solutions submitted"). Collected in one scan to avoid a second query.
  */
-async function getSolutionAdderUserIds(parentStatementIds: string[]): Promise<Set<string>> {
+async function getSolutionStats(
+  parentStatementIds: string[]
+): Promise<{ adderIds: Set<string>; totalSolutions: number }> {
   const db = getFirestoreAdmin();
   const adderIds = new Set<string>();
+  let totalSolutions = 0;
 
   for (const parentId of parentStatementIds) {
     const snapshot = await db
@@ -76,6 +81,7 @@ async function getSolutionAdderUserIds(parentStatementIds: string[]): Promise<Se
       .select('creatorId')
       .get();
 
+    totalSolutions += snapshot.size;
     snapshot.forEach((doc) => {
       const creatorId = doc.data().creatorId;
       if (creatorId) {
@@ -84,7 +90,7 @@ async function getSolutionAdderUserIds(parentStatementIds: string[]): Promise<Se
     });
   }
 
-  return adderIds;
+  return { adderIds, totalSolutions };
 }
 
 /**
@@ -253,11 +259,12 @@ export async function GET(
     // Only count demographics from users who actually evaluated
     const questionStatementIds = questions.map((q) => q.statementId);
 
-    const [evaluatorIds, solutionAdderIds, allParticipantIds] = await Promise.all([
+    const [evaluatorIds, solutionStats, allParticipantIds] = await Promise.all([
       getEvaluatorUserIds(questionStatementIds),
-      getSolutionAdderUserIds(questionStatementIds),
+      getSolutionStats(questionStatementIds),
       getAllParticipantUserIds(questionStatementIds),
     ]);
+    const { adderIds: solutionAdderIds, totalSolutions } = solutionStats;
 
     const evaluatorAnswers = demographicAnswers.filter((a) => {
       const uid = (a as UserDemographicQuestion & { userId?: string }).userId;
@@ -275,6 +282,7 @@ export async function GET(
       totalEntered: allParticipantIds.size,
       totalEvaluators: evaluatorIds.size,
       totalSolutionAdders: solutionAdderIds.size,
+      totalSolutions,
     };
 
     return NextResponse.json({

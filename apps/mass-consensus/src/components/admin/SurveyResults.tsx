@@ -36,6 +36,7 @@ interface ParticipationStats {
   totalEntered: number;
   totalEvaluators: number;
   totalSolutionAdders: number;
+  totalSolutions: number;
 }
 
 interface ResultsData {
@@ -276,57 +277,26 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           </button>
         </div>
         <div className={styles.participationStatsGrid}>
-          <div
-            className={styles.participationStatCard}
-            title={t('enteredTooltip')}
-          >
-            <span className={styles.participationStatNumber}>
-              {participation?.totalEntered ?? 0}
-            </span>
-            <span className={styles.participationStatLabel}>
-              {t('entered')}
-              <span
-                className={styles.participationStatInfo}
-                aria-label={t('enteredTooltip')}
-              >
-                ?
-              </span>
-            </span>
-          </div>
-          <div
-            className={styles.participationStatCard}
-            title={t('evaluatedTooltip')}
-          >
-            <span className={styles.participationStatNumber}>
-              {participation?.totalEvaluators ?? 0}
-            </span>
-            <span className={styles.participationStatLabel}>
-              {t('evaluated')}
-              <span
-                className={styles.participationStatInfo}
-                aria-label={t('evaluatedTooltip')}
-              >
-                ?
-              </span>
-            </span>
-          </div>
-          <div
-            className={styles.participationStatCard}
-            title={t('addedSolutionsTooltip')}
-          >
-            <span className={styles.participationStatNumber}>
-              {participation?.totalSolutionAdders ?? 0}
-            </span>
-            <span className={styles.participationStatLabel}>
-              {t('addedSolutions')}
-              <span
-                className={styles.participationStatInfo}
-                aria-label={t('addedSolutionsTooltip')}
-              >
-                ?
-              </span>
-            </span>
-          </div>
+          <ParticipationStatCard
+            value={participation?.totalEntered ?? 0}
+            label={t('entered')}
+            tooltip={t('enteredTooltip')}
+          />
+          <ParticipationStatCard
+            value={participation?.totalEvaluators ?? 0}
+            label={t('evaluated')}
+            tooltip={t('evaluatedTooltip')}
+          />
+          <ParticipationStatCard
+            value={participation?.totalSolutionAdders ?? 0}
+            label={t('addedSolutions')}
+            tooltip={t('addedSolutionsTooltip')}
+          />
+          <ParticipationStatCard
+            value={participation?.totalSolutions ?? 0}
+            label={t('solutionsSubmitted')}
+            tooltip={t('solutionsSubmittedTooltip')}
+          />
         </div>
       </div>
 
@@ -406,6 +376,34 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           onExport={handleExport}
         />
       )}
+    </div>
+  );
+}
+
+interface ParticipationStatCardProps {
+  value: number;
+  label: string;
+  tooltip: string;
+}
+
+function ParticipationStatCard({ value, label, tooltip }: ParticipationStatCardProps) {
+  return (
+    <div className={styles.participationStatCard}>
+      <span className={styles.participationStatNumber}>{value}</span>
+      <span className={styles.participationStatLabel}>
+        {label}
+        <span
+          className={styles.participationStatInfo}
+          tabIndex={0}
+          role="button"
+          aria-label={tooltip}
+        >
+          ?
+          <span className={styles.participationStatTooltip} role="tooltip">
+            {tooltip}
+          </span>
+        </span>
+      </span>
     </div>
   );
 }

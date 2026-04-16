@@ -648,6 +648,8 @@
   "enteredTooltip": "Eindeutige Nutzer, die sich an der Umfrage beteiligt haben — eine Lösung bewertet oder eine Lösung hinzugefügt.",
   "evaluatedTooltip": "Eindeutige Nutzer, die mindestens eine Lösung ausdrücklich bewertet haben.",
   "addedSolutionsTooltip": "Eindeutige Nutzer, die mindestens eine Lösung eingereicht haben.",
+  "solutionsSubmitted": "eingereichte Lösungen",
+  "solutionsSubmittedTooltip": "Gesamtzahl der in der Umfrage eingereichten Lösungen.",
   "Evaluated 5+ solutions": "5+ Lösungen bewertet",
   "Evaluation & Voting": "Bewertung & Abstimmung",
   "Evaluation Method": "Bewertungsmethode",

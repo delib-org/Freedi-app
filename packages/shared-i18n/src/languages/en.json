@@ -824,6 +824,8 @@
   "enteredTooltip": "Unique users who took part in the survey — evaluated a solution or added a solution.",
   "evaluatedTooltip": "Unique users who explicitly rated at least one solution.",
   "addedSolutionsTooltip": "Unique users who submitted at least one solution.",
+  "solutionsSubmitted": "solutions submitted",
+  "solutionsSubmittedTooltip": "Total number of solutions submitted to the survey.",
   "Evaluated 5+ solutions": "Evaluated 5+ solutions",
   "Evaluation & Voting": "Evaluation & Voting",
   "Evaluation Method": "Evaluation Method",

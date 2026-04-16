@@ -657,6 +657,8 @@
   "enteredTooltip": "مستخدمون فريدون شاركوا في الاستبيان — قيّموا حلاً أو أضافوا حلاً.",
   "evaluatedTooltip": "مستخدمون فريدون قيّموا صراحةً حلاً واحداً على الأقل.",
   "addedSolutionsTooltip": "مستخدمون فريدون قدّموا حلاً واحداً على الأقل.",
+  "solutionsSubmitted": "حلول مقدّمة",
+  "solutionsSubmittedTooltip": "إجمالي عدد الحلول المقدّمة في الاستبيان.",
   "Evaluated 5+ solutions": "قيّم 5+ حلول",
   "Evaluation & Voting": "التقييم والتصويت",
   "Evaluation Method": "طريقة التقييم",
