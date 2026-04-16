@@ -5,7 +5,6 @@ import {
   getSurveyDemographicQuestions,
   getAllSurveyDemographicAnswers,
 } from '@/lib/firebase/surveys';
-import { SURVEY_PROGRESS_COLLECTION } from '@/lib/firebase/surveys/surveyHelpers';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
 import { Collections, StatementType, UserDemographicQuestion } from '@freedi/shared-types';
@@ -36,8 +35,10 @@ interface ParticipationStats {
 }
 
 /**
- * Get the set of user IDs who submitted evaluations for options
- * under the given parent statement IDs.
+ * Distinct users who explicitly rated at least one solution. Reads
+ * `evaluator.uid` so the auto +1 that MC writes when someone submits their
+ * own solution (which only sets `evaluatorId`) is excluded — those people
+ * are counted as solution adders, not evaluators.
  */
 async function getEvaluatorUserIds(parentStatementIds: string[]): Promise<Set<string>> {
   const db = getFirestoreAdmin();
@@ -47,14 +48,12 @@ async function getEvaluatorUserIds(parentStatementIds: string[]): Promise<Set<st
     const snapshot = await db
       .collection(Collections.evaluations)
       .where('parentId', '==', parentId)
-      .select('evaluatorId')
+      .select('evaluator')
       .get();
 
     snapshot.forEach((doc) => {
-      const evaluatorId = doc.data().evaluatorId;
-      if (evaluatorId) {
-        evaluatorIds.add(evaluatorId);
-      }
+      const uid = doc.data().evaluator?.uid;
+      if (uid) evaluatorIds.add(uid);
     });
   }
 
@@ -89,23 +88,42 @@ async function getSolutionAdderUserIds(parentStatementIds: string[]): Promise<Se
 }
 
 /**
- * Return the set of user IDs that started the MC survey flow
- * (i.e. have a SurveyProgress doc). Excludes test data.
+ * Distinct users who took any action on the survey — any evaluation (even the
+ * auto +1 from submitting a solution) or any option. Uses `evaluatorId` on the
+ * evaluation doc (set on every evaluation, including MC auto +1s) unioned with
+ * option creators. This is the "entered" count.
+ *
+ * SurveyProgress docs are not used: they are only written when a user clicks
+ * "Next", which misses anyone who evaluated or submitted without navigating.
  */
-async function getSurveyEntrantUserIds(surveyId: string): Promise<Set<string>> {
+async function getAllParticipantUserIds(parentStatementIds: string[]): Promise<Set<string>> {
   const db = getFirestoreAdmin();
-  const snapshot = await db
-    .collection(SURVEY_PROGRESS_COLLECTION)
-    .where('surveyId', '==', surveyId)
-    .select('userId', 'isTestData')
-    .get();
-
   const ids = new Set<string>();
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-    if (data.isTestData === true) return;
-    if (data.userId) ids.add(data.userId);
-  });
+
+  for (const parentId of parentStatementIds) {
+    const evalSnap = await db
+      .collection(Collections.evaluations)
+      .where('parentId', '==', parentId)
+      .select('evaluatorId')
+      .get();
+
+    evalSnap.forEach((doc) => {
+      const id = doc.data().evaluatorId;
+      if (id) ids.add(id);
+    });
+
+    const optSnap = await db
+      .collection(Collections.statements)
+      .where('parentId', '==', parentId)
+      .where('statementType', '==', StatementType.option)
+      .select('creatorId')
+      .get();
+
+    optSnap.forEach((doc) => {
+      const id = doc.data().creatorId;
+      if (id) ids.add(id);
+    });
+  }
 
   return ids;
 }
@@ -235,20 +253,10 @@ export async function GET(
     // Only count demographics from users who actually evaluated
     const questionStatementIds = questions.map((q) => q.statementId);
 
-    const [evaluatorIds, solutionAdderIds, entrantIds] = await Promise.all([
+    const [evaluatorIds, solutionAdderIds, allParticipantIds] = await Promise.all([
       getEvaluatorUserIds(questionStatementIds),
       getSolutionAdderUserIds(questionStatementIds),
-      getSurveyEntrantUserIds(surveyId),
-    ]);
-
-    // Total unique participants = union of survey-flow entrants + evaluators
-    // + solution creators. Users who reach the question directly from the main
-    // app have no SurveyProgress doc, so counting by SurveyProgress alone
-    // underreports the true participant count.
-    const allParticipantIds = new Set<string>([
-      ...entrantIds,
-      ...evaluatorIds,
-      ...solutionAdderIds,
+      getAllParticipantUserIds(questionStatementIds),
     ]);
 
     const evaluatorAnswers = demographicAnswers.filter((a) => {
