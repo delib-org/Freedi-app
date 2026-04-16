@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { Statement } from '@freedi/shared-types';
 import { ensureUser } from '@/lib/user';
 import {
   loadQuestion,
@@ -82,12 +83,12 @@ export const Solutions: m.Component = {
     return m('.solutions', [
       m('.solutions__header', { style: { background: headerColor } }, [
         m('h1.solutions__title', question.statement),
-        m('.solutions__subtitle', 'Please join activities that you want to promote, either as an activist or as an organizer'),
       ]),
       m('.solutions__scroll', [
-        (question.description || question.brief)
-          ? m('.solutions__description', question.brief || question.description)
-          : null,
+        m('.solutions__subtitle', [
+          m('span.solutions__subtitle-icon', '\u2728'),
+          m('span', buildSubtitleText(question)),
+        ]),
         m('.solutions__counter', [
           m('span.solutions__counter-total', `${total} options`),
           unread > 0
@@ -127,3 +128,24 @@ export const Solutions: m.Component = {
     ]);
   },
 };
+
+function buildSubtitleText(question: Statement): string {
+  const threshold = question.statementSettings?.activationThreshold;
+  if (!threshold?.enabled) {
+    return 'Please join activities that you want to promote, either as an activist or as an organizer';
+  }
+
+  const parts: string[] = [];
+  if (threshold.minOrganizers) {
+    parts.push(`${threshold.minOrganizers} organizer${threshold.minOrganizers > 1 ? 's' : ''}`);
+  }
+  if (threshold.minActivists) {
+    parts.push(`${threshold.minActivists} activist${threshold.minActivists > 1 ? 's' : ''}`);
+  }
+
+  if (parts.length === 0) {
+    return 'Please join activities that you want to promote, either as an activist or as an organizer';
+  }
+
+  return `To activate an activity, we need at least ${parts.join(' and ')}. Join to make it happen!`;
+}

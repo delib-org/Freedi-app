@@ -61,6 +61,18 @@ export const JoinResolutionConfigSchema = object({
 });
 export type JoinResolutionConfig = InferOutput<typeof JoinResolutionConfigSchema>;
 
+/**
+ * Activation threshold — minimum number of activists and organizers
+ * required before an option is considered "activated". When enabled,
+ * users see how many more people are needed.
+ */
+export const ActivationThresholdSchema = object({
+	enabled: boolean(),
+	minActivists: optional(number()),
+	minOrganizers: optional(number()),
+});
+export type ActivationThreshold = InferOutput<typeof ActivationThresholdSchema>;
+
 export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
@@ -108,6 +120,7 @@ export const StatementSettingsSchema = object({
 	joinForm: optional(JoinFormConfigSchema), // admin-defined join form shown on first join under this question
 	joinResolution: optional(JoinResolutionConfigSchema), // conditional-joining lifecycle (intent → resolved)
 	enableHybridClustering: optional(boolean()), // if true, hybrid text+rating clustering runs for this question and sub-questions
+	activationThreshold: optional(ActivationThresholdSchema), // min activists/organizers to activate an option
 });
 
 

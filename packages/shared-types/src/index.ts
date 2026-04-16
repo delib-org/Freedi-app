@@ -198,7 +198,8 @@ export type {
   JoinFormDestination,
   JoinFormConfig,
   JoinResolutionPhase,
-  JoinResolutionConfig
+  JoinResolutionConfig,
+  ActivationThreshold
 } from "./models/statement/StatementSettings";
 
 export {
@@ -209,7 +210,8 @@ export {
   JoinFormDestinationSchema,
   JoinFormConfigSchema,
   JoinResolutionPhaseSchema,
-  JoinResolutionConfigSchema
+  JoinResolutionConfigSchema,
+  ActivationThresholdSchema
 } from "./models/statement/StatementSettings";
 
 export type {
