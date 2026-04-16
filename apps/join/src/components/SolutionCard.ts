@@ -77,17 +77,17 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         ]),
         m('.solution-card__actions', [
           m(
-            `button.btn.btn--agree.btn--small${isJoinedAsActivist ? '.btn--active' : ''}`,
+            `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
             {
               onclick: (e: Event) => {
                 e.stopPropagation();
                 handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
               },
             },
-            isJoinedAsActivist ? 'Joined \u2713' : 'Join as activist',
+            isJoinedAsActivist ? 'Activist \u2713' : 'Join as activist',
           ),
           m(
-            `button.btn.btn--organizer.btn--small${isJoinedAsOrganizer ? '.btn--active' : ''}`,
+            `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
             {
               onclick: (e: Event) => {
                 e.stopPropagation();
