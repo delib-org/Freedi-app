@@ -10,6 +10,7 @@ import {
   JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
+import { t } from '@/lib/i18n';
 import { hasCelebrated, markCelebrated, playCelebrationSound, launchConfetti } from '@/lib/celebrate';
 
 function getOptionDescription(option: Statement): string | null {
@@ -75,6 +76,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         },
       },
       [
+        isActivated
+          ? m('.solution-card__activated-badge', t('card.activated'))
+          : null,
         m('.solution-card__title', option.statement),
         getOptionDescription(option)
           ? m('.solution-card__description', getOptionDescription(option))
@@ -82,8 +86,8 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         buildQuotaBar(joinedCount, organizerCount, question),
         m('.solution-card__meta', [
           m('.solution-card__counts', [
-            m('.solution-card__count', `${joinedCount} activists`),
-            m('.solution-card__count', `${organizerCount} organizers`),
+            m('.solution-card__count', t('card.activists', { count: joinedCount })),
+            m('.solution-card__count', t('card.organizers', { count: organizerCount })),
           ]),
           m(
             '.solution-card__chat',
@@ -117,7 +121,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
                 handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
               },
             },
-            isJoinedAsActivist ? 'Activist \u2713' : 'Join as activist',
+            isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
           ),
           m(
             `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
@@ -127,7 +131,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
                 handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
               },
             },
-            isJoinedAsOrganizer ? 'Organizer \u2713' : 'Join organizers',
+            isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
           ),
         ]),
       ],
@@ -198,7 +202,7 @@ function buildQuotaBar(
     const pct = Math.min(100, Math.round((joinedCount / minActivists) * 100));
     items.push(
       m('.solution-card__quota-row', [
-        m('.solution-card__quota-label', activistsMet ? '\u2705 Activists' : `Activists: ${remaining} more needed`),
+        m('.solution-card__quota-label', activistsMet ? t('card.quota.activists_met') : t('card.quota.activists_needed', { count: remaining })),
         m('.solution-card__quota-track', [
           m('.solution-card__quota-fill.solution-card__quota-fill--activist', { style: { width: `${pct}%` } }),
         ]),
@@ -211,7 +215,7 @@ function buildQuotaBar(
     const pct = Math.min(100, Math.round((organizerCount / minOrganizers) * 100));
     items.push(
       m('.solution-card__quota-row', [
-        m('.solution-card__quota-label', organizersMet ? '\u2705 Organizers' : `Organizers: ${remaining} more needed`),
+        m('.solution-card__quota-label', organizersMet ? t('card.quota.organizers_met') : t('card.quota.organizers_needed', { count: remaining })),
         m('.solution-card__quota-track', [
           m('.solution-card__quota-fill.solution-card__quota-fill--organizer', { style: { width: `${pct}%` } }),
         ]),

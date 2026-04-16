@@ -10,6 +10,7 @@ import {
   getCustomDisplayName,
 } from '@/lib/store';
 import { generateTemporalName } from '@/lib/nameGenerator';
+import { t } from '@/lib/i18n';
 import { db, doc, getDoc } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';
@@ -112,11 +113,11 @@ export const Chat: m.Component = {
     prevMessageCount = currentCount;
 
     if (loading) {
-      return m('.chat', m('.chat__empty', 'Loading...'));
+      return m('.chat', m('.chat__empty', t('chat.loading')));
     }
 
     if (!option) {
-      return m('.chat', m('.chat__empty', 'Solution not found'));
+      return m('.chat', m('.chat__empty', t('chat.not_found')));
     }
 
     return m('.chat', [
@@ -125,7 +126,7 @@ export const Chat: m.Component = {
           'button.chat__back',
           {
             onclick: () => m.route.set('/q/:qid', { qid: questionId }),
-            'aria-label': 'Back to solutions',
+            'aria-label': t('chat.back'),
           },
           '\u2190',
         ),
@@ -133,7 +134,7 @@ export const Chat: m.Component = {
       ]),
 
       msgs.length === 0
-        ? m('.chat__empty', 'No messages yet. Start the conversation!')
+        ? m('.chat__empty', t('chat.empty'))
         : m('.chat__messages-wrapper', [
             m(
               '.chat__messages',
@@ -173,7 +174,7 @@ export const Chat: m.Component = {
                     },
                   },
                   [
-                    m('span', `${newMessageCount} new message${newMessageCount > 1 ? 's' : ''}`),
+                    m('span', t(newMessageCount > 1 ? 'chat.new_messages' : 'chat.new_message', { count: newMessageCount })),
                     m('span', ' \u2193'),
                   ],
                 )
@@ -182,11 +183,11 @@ export const Chat: m.Component = {
 
       showNamePrompt
         ? m(`.chat__name-prompt${closingNamePrompt ? '.chat__name-prompt--closing' : ''}`, [
-            m('.chat__name-label', 'Enter your name to join the chat:'),
+            m('.chat__name-label', t('chat.name_prompt')),
             m('input.chat__name-input', {
               type: 'text',
               value: nameInput,
-              placeholder: 'Your name',
+              placeholder: t('chat.name_placeholder'),
               oninput: (e: InputEvent) => {
                 nameInput = (e.target as HTMLInputElement).value;
               },
@@ -208,7 +209,7 @@ export const Chat: m.Component = {
                   disabled: !nameInput.trim(),
                   onclick: confirmName,
                 },
-                'Continue',
+                t('chat.name_continue'),
               ),
               m(
                 'button.btn.btn--secondary.btn--small',
@@ -220,7 +221,7 @@ export const Chat: m.Component = {
                     closeNamePrompt();
                   },
                 },
-                'Stay anonymous',
+                t('chat.name_anonymous'),
               ),
             ]),
           ])
@@ -236,7 +237,7 @@ export const Chat: m.Component = {
                     },
                   },
                   [
-                    m('span', getCustomDisplayName() || 'Set your name'),
+                    m('span', getCustomDisplayName() || t('chat.set_name')),
                     m('span.chat__name-edit', '\u270E'),
                   ],
                 )
@@ -244,7 +245,7 @@ export const Chat: m.Component = {
             m('.chat__input-bar', [
               m('textarea.chat__input', {
                 value: messageText,
-                placeholder: 'Type a message...',
+                placeholder: t('chat.placeholder'),
                 rows: 1,
                 onfocus: () => {
                   if (needsDisplayName()) {
@@ -267,7 +268,7 @@ export const Chat: m.Component = {
                 {
                   disabled: !messageText.trim() || sending,
                   onclick: handleSend,
-                  'aria-label': 'Send message',
+                  'aria-label': t('chat.send'),
                 },
                 '\u27A4',
               ),

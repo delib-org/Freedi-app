@@ -1,5 +1,6 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
+import { t } from '@/lib/i18n';
 
 interface ChatMessageAttrs {
   message: Statement;
@@ -37,7 +38,7 @@ function uidToColor(uid: string): string {
 export const ChatMessage: m.Component<ChatMessageAttrs> = {
   view(vnode) {
     const { message, isMine } = vnode.attrs;
-    const displayName = message.creator?.displayName || 'Anonymous';
+    const displayName = message.creator?.displayName || t('common.anonymous');
     const uid = message.creatorId || '';
     const color = uidToColor(uid);
     const initials = getInitials(displayName);

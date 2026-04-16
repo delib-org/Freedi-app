@@ -10,6 +10,7 @@ import {
   getUnreadCount,
   getTotalVisibleCount,
 } from '@/lib/store';
+import { t } from '@/lib/i18n';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -28,7 +29,7 @@ export const Solutions: m.Component = {
     error = null;
     const questionId = m.route.param('qid');
     if (!questionId) {
-      error = 'No question ID provided';
+      error = t('solutions.error.no_id');
       loading = false;
       m.redraw();
 
@@ -42,7 +43,7 @@ export const Solutions: m.Component = {
       optionsUnsub = subscribeOptions(questionId);
     } catch (err) {
       console.error('[Solutions] Failed to load:', err);
-      error = 'Failed to load question';
+      error = t('solutions.error.failed');
     } finally {
       loading = false;
       m.redraw();
@@ -62,7 +63,7 @@ export const Solutions: m.Component = {
 
   view() {
     if (loading) {
-      return m('.solutions', m('.solutions__loading', 'Loading...'));
+      return m('.solutions', m('.solutions__loading', t('solutions.loading')));
     }
 
     if (error) {
@@ -71,13 +72,12 @@ export const Solutions: m.Component = {
 
     const question = getQuestion();
     if (!question) {
-      return m('.solutions', m('.solutions__empty', 'Question not found'));
+      return m('.solutions', m('.solutions__empty', t('solutions.error.not_found')));
     }
 
     const options = getVisibleOptions();
     const total = getTotalVisibleCount();
     const unread = getUnreadCount();
-
     const headerColor = question.color || 'var(--color-primary)';
 
     return m('.solutions', [
@@ -90,13 +90,13 @@ export const Solutions: m.Component = {
           m('span', buildSubtitleText(question)),
         ]),
         m('.solutions__counter', [
-          m('span.solutions__counter-total', `${total} options`),
+          m('span.solutions__counter-total', t('solutions.counter.options', { count: total })),
           unread > 0
-            ? m('span.solutions__counter-unread', `${unread} new`)
+            ? m('span.solutions__counter-unread', t('solutions.counter.new', { count: unread }))
             : null,
         ]),
         options.length === 0
-          ? m('.solutions__empty', 'No solutions available yet')
+          ? m('.solutions__empty', t('solutions.error.no_options'))
           : m(
               '.solutions__list',
               options.map((option) =>
@@ -132,20 +132,22 @@ export const Solutions: m.Component = {
 function buildSubtitleText(question: Statement): string {
   const threshold = question.statementSettings?.activationThreshold;
   if (!threshold?.enabled) {
-    return 'Please join activities that you want to promote, either as an activist or as an organizer';
+    return t('solutions.subtitle.default');
   }
 
   const parts: string[] = [];
   if (threshold.minOrganizers) {
-    parts.push(`${threshold.minOrganizers} organizer${threshold.minOrganizers > 1 ? 's' : ''}`);
+    const key = threshold.minOrganizers > 1 ? 'threshold.organizers_plural' : 'threshold.organizers';
+    parts.push(t(key, { count: threshold.minOrganizers }));
   }
   if (threshold.minActivists) {
-    parts.push(`${threshold.minActivists} activist${threshold.minActivists > 1 ? 's' : ''}`);
+    const key = threshold.minActivists > 1 ? 'threshold.activists_plural' : 'threshold.activists';
+    parts.push(t(key, { count: threshold.minActivists }));
   }
 
   if (parts.length === 0) {
-    return 'Please join activities that you want to promote, either as an activist or as an organizer';
+    return t('solutions.subtitle.default');
   }
 
-  return `To activate an activity, we need at least ${parts.join(' and ')}. Join to make it happen!`;
+  return t('solutions.subtitle.threshold', { requirements: parts.join(' & ') });
 }

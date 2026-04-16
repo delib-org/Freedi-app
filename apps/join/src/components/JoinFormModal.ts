@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { t } from '@/lib/i18n';
 import type { JoinFormConfig } from '@freedi/shared-types';
 import {
   saveJoinFormSubmission,
@@ -45,10 +46,10 @@ export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
       },
     }, [
       m('.modal__body', [
-        m('h2.modal__title', 'Join Information'),
+        m('h2.modal__title', t('form.title')),
 
         m('.modal__field', [
-          m('label.modal__label', { for: 'join-name' }, 'Your Name'),
+          m('label.modal__label', { for: 'join-name' }, t('form.your_name')),
           m('input.modal__input', {
             id: 'join-name',
             type: 'text',
@@ -77,14 +78,14 @@ export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
         ),
 
         m('.modal__actions', [
-          m('button.btn.btn--secondary.btn--small', { onclick: onClose }, 'Cancel'),
+          m('button.btn.btn--secondary.btn--small', { onclick: onClose }, t('form.cancel')),
           m(
             'button.btn.btn--primary.btn--small',
             {
               disabled: submitting || !displayName.trim(),
               onclick: () => handleSubmit(questionId, optionId, role, onClose),
             },
-            submitting ? 'Submitting...' : 'Join',
+            submitting ? t('form.submitting') : t('form.submit'),
           ),
         ]),
       ]),

@@ -262,18 +262,18 @@
     border: 2px solid var(--color-agree-medium);
     box-shadow: 0 0 16px rgba(46, 139, 87, 0.15), var(--shadow-md);
 
-    &::before {
-      content: '\2705 Activated!';
-      position: absolute;
-      top: var(--space-sm);
-      right: var(--space-sm);
-      background: var(--color-agree-medium);
-      color: #fff;
-      font-size: var(--font-size-xs);
-      font-weight: var(--font-weight-bold);
-      padding: 2px var(--space-sm);
-      border-radius: var(--radius-full);
-    }
+  }
+
+  &__activated-badge {
+    position: absolute;
+    top: var(--space-sm);
+    right: var(--space-sm);
+    background: var(--color-agree-medium);
+    color: #fff;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
+    padding: 2px var(--space-sm);
+    border-radius: var(--radius-full);
   }
 
   &__title {
