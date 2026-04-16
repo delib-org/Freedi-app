@@ -28,6 +28,12 @@ let question: Statement | null = null;
 let allOptions: Statement[] = [];
 let messages: Statement[] = [];
 let chatUnsubscribe: Unsubscribe | null = null;
+let messageCounts: Map<string, number> = new Map();
+let messageLatest: Map<string, number> = new Map();
+let messagesByOption: Map<string, number[]> = new Map();
+let messageCountsUnsubs: Unsubscribe[] = [];
+
+const LAST_READ_KEY = 'freedi_join_last_read';
 let joinFormSubmitted = new Set<string>();
 let customDisplayName: string | null = null;
 
@@ -56,6 +62,37 @@ export function markOptionRead(optionId: string): void {
   const visited = getVisitedSet();
   visited.add(optionId);
   saveVisitedSet(visited);
+  markOptionChatRead(optionId);
+}
+
+function getLastReadMap(): Record<string, number> {
+  try {
+    const raw = localStorage.getItem(LAST_READ_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+
+  return {};
+}
+
+function markOptionChatRead(optionId: string): void {
+  try {
+    const map = getLastReadMap();
+    map[optionId] = Date.now();
+    localStorage.setItem(LAST_READ_KEY, JSON.stringify(map));
+  } catch { /* ignore */ }
+}
+
+export function getNewMessageCount(optionId: string): number {
+  const lastRead = getLastReadMap()[optionId];
+  if (!lastRead) return messageCounts.get(optionId) ?? 0;
+
+  const latest = messageLatest.get(optionId);
+  if (!latest || latest <= lastRead) return 0;
+
+  const allMsgs = messagesByOption.get(optionId);
+  if (!allMsgs) return 0;
+
+  return allMsgs.filter((ts) => ts > lastRead).length;
 }
 
 export function getUnreadCount(): number {
@@ -182,6 +219,10 @@ export async function loadQuestion(questionId: string): Promise<void> {
   m.redraw();
 }
 
+export function getMessageCount(optionId: string): number {
+  return messageCounts.get(optionId) ?? 0;
+}
+
 export function subscribeOptions(questionId: string): Unsubscribe {
   const optionsQuery = query(
     collection(db, Collections.statements),
@@ -191,8 +232,53 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 
   return onSnapshot(optionsQuery, (snap) => {
     allOptions = snap.docs.map((d) => d.data() as Statement);
+    subscribeMessageCounts(questionId);
     m.redraw();
   });
+}
+
+function subscribeMessageCounts(_questionId: string): void {
+  for (const unsub of messageCountsUnsubs) unsub();
+  messageCountsUnsubs = [];
+
+  const optionIds = allOptions.map((o) => o.statementId);
+  if (optionIds.length === 0) return;
+
+  const batchSize = 30;
+  for (let i = 0; i < optionIds.length; i += batchSize) {
+    const batch = optionIds.slice(i, i + batchSize);
+
+    const chatQuery = query(
+      collection(db, Collections.statements),
+      where('parentId', 'in', batch),
+      where('statementType', '==', StatementType.statement),
+    );
+
+    const unsub = onSnapshot(chatQuery, (snap) => {
+      for (const id of batch) {
+        messageCounts.delete(id);
+        messageLatest.delete(id);
+        messagesByOption.delete(id);
+      }
+
+      for (const d of snap.docs) {
+        const data = d.data() as Statement;
+        const pid = data.parentId;
+        messageCounts.set(pid, (messageCounts.get(pid) ?? 0) + 1);
+
+        const ts = data.createdAt ?? 0;
+        const existing = messageLatest.get(pid) ?? 0;
+        if (ts > existing) messageLatest.set(pid, ts);
+
+        const arr = messagesByOption.get(pid) ?? [];
+        arr.push(ts);
+        messagesByOption.set(pid, arr);
+      }
+      m.redraw();
+    });
+
+    messageCountsUnsubs.push(unsub);
+  }
 }
 
 export function subscribeChat(optionId: string): void {

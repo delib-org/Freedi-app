@@ -24,10 +24,24 @@ let showNamePrompt = false;
 let closingNamePrompt = false;
 let nameInput = '';
 
+let isAtBottom = true;
+let newMessageCount = 0;
+let prevMessageCount = 0;
+
+const BOTTOM_THRESHOLD = 60;
+
+function checkIfAtBottom(): void {
+  if (!messagesEl) return;
+  const { scrollTop, scrollHeight, clientHeight } = messagesEl;
+  isAtBottom = scrollHeight - scrollTop - clientHeight < BOTTOM_THRESHOLD;
+}
+
 function scrollToBottom(): void {
   if (messagesEl) {
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
+  isAtBottom = true;
+  newMessageCount = 0;
 }
 
 function closeNamePrompt(): void {
@@ -48,6 +62,9 @@ export const Chat: m.Component = {
     showNamePrompt = false;
     closingNamePrompt = false;
     nameInput = getCustomDisplayName() || '';
+    isAtBottom = true;
+    newMessageCount = 0;
+    prevMessageCount = 0;
 
     const optionId = m.route.param('sid');
     if (!optionId) {
@@ -83,6 +100,17 @@ export const Chat: m.Component = {
     const user = getUserState().user;
     const msgs = getMessages();
 
+    const currentCount = msgs.length;
+    if (currentCount > prevMessageCount && prevMessageCount > 0) {
+      const incoming = currentCount - prevMessageCount;
+      if (isAtBottom) {
+        newMessageCount = 0;
+      } else {
+        newMessageCount += incoming;
+      }
+    }
+    prevMessageCount = currentCount;
+
     if (loading) {
       return m('.chat', m('.chat__empty', 'Loading...'));
     }
@@ -106,23 +134,51 @@ export const Chat: m.Component = {
 
       msgs.length === 0
         ? m('.chat__empty', 'No messages yet. Start the conversation!')
-        : m(
-            '.chat__messages',
-            {
-              oncreate: (vnode: m.VnodeDOM) => {
-                messagesEl = vnode.dom as HTMLElement;
-                scrollToBottom();
+        : m('.chat__messages-wrapper', [
+            m(
+              '.chat__messages',
+              {
+                oncreate: (vnode: m.VnodeDOM) => {
+                  messagesEl = vnode.dom as HTMLElement;
+                  scrollToBottom();
+                  messagesEl.addEventListener('scroll', () => {
+                    checkIfAtBottom();
+                    if (isAtBottom && newMessageCount > 0) {
+                      newMessageCount = 0;
+                      m.redraw();
+                    }
+                  }, { passive: true });
+                },
+                onupdate: () => {
+                  if (isAtBottom) {
+                    scrollToBottom();
+                  }
+                },
               },
-              onupdate: () => scrollToBottom(),
-            },
-            msgs.map((msg) =>
-              m(ChatMessage, {
-                key: msg.statementId,
-                message: msg,
-                isMine: msg.creatorId === user?.uid,
-              }),
+              msgs.map((msg) =>
+                m(ChatMessage, {
+                  key: msg.statementId,
+                  message: msg,
+                  isMine: msg.creatorId === user?.uid,
+                }),
+              ),
             ),
-          ),
+            newMessageCount > 0
+              ? m(
+                  'button.chat__new-badge',
+                  {
+                    onclick: () => {
+                      scrollToBottom();
+                      m.redraw();
+                    },
+                  },
+                  [
+                    m('span', `${newMessageCount} new message${newMessageCount > 1 ? 's' : ''}`),
+                    m('span', ' \u2193'),
+                  ],
+                )
+              : null,
+          ]),
 
       showNamePrompt
         ? m(`.chat__name-prompt${closingNamePrompt ? '.chat__name-prompt--closing' : ''}`, [

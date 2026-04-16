@@ -5,6 +5,8 @@ import {
   getCreator,
   hasJoinFormSubmission,
   getQuestion,
+  getMessageCount,
+  getNewMessageCount,
   JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
@@ -21,7 +23,8 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
     const user = getUserState().user;
     const joinedCount = option.joined?.length ?? 0;
     const organizerCount = option.organizers?.length ?? 0;
-    const messageCount = option.totalSubStatements ?? 0;
+    const messageCount = getMessageCount(option.statementId);
+    const newMsgCount = getNewMessageCount(option.statementId);
 
     const isJoinedAsActivist = user
       ? option.joined?.some((c: Creator) => c.uid === user.uid) ?? false
@@ -65,6 +68,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
               m('.solution-card__chat-icon', '\uD83D\uDCAC'),
               messageCount > 0
                 ? m('.solution-card__chat-count', messageCount)
+                : null,
+              newMsgCount > 0
+                ? m('.solution-card__chat-new', newMsgCount)
                 : null,
             ],
           ),

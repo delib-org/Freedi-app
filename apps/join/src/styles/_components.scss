@@ -239,6 +239,7 @@
   }
 
   &__chat {
+    position: relative;
     display: inline-flex;
     align-items: center;
     gap: var(--space-xs);
@@ -273,6 +274,24 @@
     font-weight: var(--font-weight-bold);
     min-width: 1ch;
     text-align: center;
+  }
+
+  &__chat-new {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    background: var(--color-primary);
+    color: var(--text-inverse);
+    font-size: 10px;
+    font-weight: var(--font-weight-bold);
+    min-width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    animation: badge-pop var(--duration-normal) var(--easing);
   }
 
   &__actions {
@@ -342,6 +361,41 @@
     justify-content: center;
     color: var(--text-muted);
     padding: var(--space-2xl);
+  }
+
+  &__messages-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__new-badge {
+    position: absolute;
+    bottom: var(--space-md);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--color-primary);
+    color: var(--text-inverse);
+    border: none;
+    border-radius: var(--radius-full);
+    padding: var(--space-xs) var(--space-md);
+    font-family: var(--font-family);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    animation: badge-pop var(--duration-normal) var(--easing);
+    transition: background var(--duration-fast) var(--easing-smooth);
+
+    &:hover {
+      background: var(--color-primary-dark);
+    }
   }
 
   &__input-bar {
@@ -490,11 +544,30 @@
     align-self: flex-end;
   }
 
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-xs);
+  }
+
+  &__avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: var(--font-weight-bold);
+    color: #fff;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+  }
+
   &__sender {
     font-size: var(--font-size-xs);
-    font-weight: var(--font-weight-medium);
-    color: var(--color-primary-dark);
-    margin-bottom: var(--space-xs);
+    font-weight: var(--font-weight-bold);
   }
 
   &__text {
@@ -607,5 +680,20 @@
   to {
     transform: translateY(100%);
     opacity: 0;
+  }
+}
+
+@keyframes badge-pop {
+  0% {
+    transform: translateX(-50%) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateX(-50%) scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
   }
 }
