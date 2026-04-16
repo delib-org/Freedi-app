@@ -10,6 +10,7 @@ import {
   JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
+import { hasCelebrated, markCelebrated, playCelebrationSound, launchConfetti } from '@/lib/celebrate';
 
 function getOptionDescription(option: Statement): string | null {
   if (option.description) return option.description;
@@ -35,6 +36,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
   view(vnode) {
     const { option, questionId, onRequestJoinForm } = vnode.attrs;
     const user = getUserState().user;
+    const question = getQuestion();
     const joinedCount = option.joined?.length ?? 0;
     const organizerCount = option.organizers?.length ?? 0;
     const messageCount = getMessageCount(option.statementId);
@@ -47,20 +49,37 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
       ? option.organizers?.some((c: Creator) => c.uid === user.uid) ?? false
       : false;
 
+    const isActivated = isOptionActivated(joinedCount, organizerCount, question);
+
     return m(
-      '.solution-card',
+      `.solution-card${isActivated ? '.solution-card--activated' : ''}`,
       {
         onclick: () =>
           m.route.set('/q/:qid/s/:sid', {
             qid: questionId,
             sid: option.statementId,
           }),
+        oncreate: (vnode: m.VnodeDOM) => {
+          if (isActivated && !hasCelebrated(option.statementId)) {
+            markCelebrated(option.statementId);
+            playCelebrationSound();
+            launchConfetti(vnode.dom as HTMLElement);
+          }
+        },
+        onupdate: (vnode: m.VnodeDOM) => {
+          if (isActivated && !hasCelebrated(option.statementId)) {
+            markCelebrated(option.statementId);
+            playCelebrationSound();
+            launchConfetti(vnode.dom as HTMLElement);
+          }
+        },
       },
       [
         m('.solution-card__title', option.statement),
         getOptionDescription(option)
           ? m('.solution-card__description', getOptionDescription(option))
           : null,
+        buildQuotaBar(joinedCount, organizerCount, question),
         m('.solution-card__meta', [
           m('.solution-card__counts', [
             m('.solution-card__count', `${joinedCount} activists`),
@@ -139,4 +158,66 @@ async function handleJoin(
 
   await toggleJoining(optionId, questionId, role);
   m.redraw();
+}
+
+function isOptionActivated(
+  joinedCount: number,
+  organizerCount: number,
+  question: Statement | null,
+): boolean {
+  const threshold = question?.statementSettings?.activationThreshold;
+  if (!threshold?.enabled) return false;
+
+  const minActivists = threshold.minActivists ?? 0;
+  const minOrganizers = threshold.minOrganizers ?? 0;
+  if (minActivists === 0 && minOrganizers === 0) return false;
+
+  return joinedCount >= minActivists && organizerCount >= minOrganizers;
+}
+
+function buildQuotaBar(
+  joinedCount: number,
+  organizerCount: number,
+  question: Statement | null,
+): m.Vnode | null {
+  const threshold = question?.statementSettings?.activationThreshold;
+  if (!threshold?.enabled) return null;
+
+  const minActivists = threshold.minActivists ?? 0;
+  const minOrganizers = threshold.minOrganizers ?? 0;
+  if (minActivists === 0 && minOrganizers === 0) return null;
+
+  const activistsMet = joinedCount >= minActivists;
+  const organizersMet = organizerCount >= minOrganizers;
+  const allMet = activistsMet && organizersMet;
+
+  const items: m.Vnode[] = [];
+
+  if (minActivists > 0) {
+    const remaining = Math.max(0, minActivists - joinedCount);
+    const pct = Math.min(100, Math.round((joinedCount / minActivists) * 100));
+    items.push(
+      m('.solution-card__quota-row', [
+        m('.solution-card__quota-label', activistsMet ? '\u2705 Activists' : `Activists: ${remaining} more needed`),
+        m('.solution-card__quota-track', [
+          m('.solution-card__quota-fill.solution-card__quota-fill--activist', { style: { width: `${pct}%` } }),
+        ]),
+      ]),
+    );
+  }
+
+  if (minOrganizers > 0) {
+    const remaining = Math.max(0, minOrganizers - organizerCount);
+    const pct = Math.min(100, Math.round((organizerCount / minOrganizers) * 100));
+    items.push(
+      m('.solution-card__quota-row', [
+        m('.solution-card__quota-label', organizersMet ? '\u2705 Organizers' : `Organizers: ${remaining} more needed`),
+        m('.solution-card__quota-track', [
+          m('.solution-card__quota-fill.solution-card__quota-fill--organizer', { style: { width: `${pct}%` } }),
+        ]),
+      ]),
+    );
+  }
+
+  return m(`.solution-card__quota${allMet ? '.solution-card__quota--met' : ''}`, items);
 }

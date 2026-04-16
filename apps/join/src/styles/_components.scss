@@ -244,15 +244,36 @@
 
 // Solution Card
 .solution-card {
+  position: relative;
+  overflow: hidden;
   background: var(--bg-card);
   border-radius: var(--radius-md);
   padding: var(--space-md);
   box-shadow: var(--shadow-sm);
-  transition: box-shadow var(--duration-fast) var(--easing-smooth);
+  transition: all var(--duration-normal) var(--easing-smooth);
   cursor: pointer;
 
   &:hover {
     box-shadow: var(--shadow-md);
+  }
+
+  &--activated {
+    background: linear-gradient(135deg, rgba(46, 139, 87, 0.08), rgba(95, 201, 118, 0.12));
+    border: 2px solid var(--color-agree-medium);
+    box-shadow: 0 0 16px rgba(46, 139, 87, 0.15), var(--shadow-md);
+
+    &::before {
+      content: '\2705 Activated!';
+      position: absolute;
+      top: var(--space-sm);
+      right: var(--space-sm);
+      background: var(--color-agree-medium);
+      color: #fff;
+      font-size: var(--font-size-xs);
+      font-weight: var(--font-weight-bold);
+      padding: 2px var(--space-sm);
+      border-radius: var(--radius-full);
+    }
   }
 
   &__title {
@@ -267,6 +288,53 @@
     color: var(--text-secondary);
     line-height: var(--line-height-normal);
     margin-bottom: var(--space-md);
+  }
+
+  &__quota {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-md);
+    padding: var(--space-sm);
+    background: var(--bg-subtle);
+    border-radius: var(--radius-sm);
+
+    &--met {
+      background: rgba(46, 139, 87, 0.08);
+    }
+  }
+
+  &__quota-row {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__quota-label {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    font-weight: var(--font-weight-medium);
+  }
+
+  &__quota-track {
+    height: 6px;
+    background: var(--border-light);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  &__quota-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width var(--duration-normal) var(--easing-smooth);
+
+    &--activist {
+      background: var(--color-agree-medium);
+    }
+
+    &--organizer {
+      background: var(--color-organizer);
+    }
   }
 
   &__meta {
@@ -742,6 +810,17 @@
   50% {
     transform: scale(1.02);
     background: var(--bg-card-hover);
+  }
+}
+
+@keyframes confetti-fall {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px) rotate(720deg);
+    opacity: 0;
   }
 }
 
