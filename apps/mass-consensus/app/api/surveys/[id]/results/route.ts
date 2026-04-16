@@ -89,18 +89,25 @@ async function getSolutionAdderUserIds(parentStatementIds: string[]): Promise<Se
 }
 
 /**
- * Count how many users have a SurveyProgress doc for this survey
- * (i.e. have entered the survey). Excludes test data.
+ * Return the set of user IDs that started the MC survey flow
+ * (i.e. have a SurveyProgress doc). Excludes test data.
  */
-async function countEnteredUsers(surveyId: string): Promise<number> {
+async function getSurveyEntrantUserIds(surveyId: string): Promise<Set<string>> {
   const db = getFirestoreAdmin();
   const snapshot = await db
     .collection(SURVEY_PROGRESS_COLLECTION)
     .where('surveyId', '==', surveyId)
-    .select('isTestData')
+    .select('userId', 'isTestData')
     .get();
 
-  return snapshot.docs.filter((doc) => doc.data().isTestData !== true).length;
+  const ids = new Set<string>();
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    if (data.isTestData === true) return;
+    if (data.userId) ids.add(data.userId);
+  });
+
+  return ids;
 }
 
 /**
@@ -228,10 +235,20 @@ export async function GET(
     // Only count demographics from users who actually evaluated
     const questionStatementIds = questions.map((q) => q.statementId);
 
-    const [evaluatorIds, solutionAdderIds, totalEntered] = await Promise.all([
+    const [evaluatorIds, solutionAdderIds, entrantIds] = await Promise.all([
       getEvaluatorUserIds(questionStatementIds),
       getSolutionAdderUserIds(questionStatementIds),
-      countEnteredUsers(surveyId),
+      getSurveyEntrantUserIds(surveyId),
+    ]);
+
+    // Total unique participants = union of survey-flow entrants + evaluators
+    // + solution creators. Users who reach the question directly from the main
+    // app have no SurveyProgress doc, so counting by SurveyProgress alone
+    // underreports the true participant count.
+    const allParticipantIds = new Set<string>([
+      ...entrantIds,
+      ...evaluatorIds,
+      ...solutionAdderIds,
     ]);
 
     const evaluatorAnswers = demographicAnswers.filter((a) => {
@@ -247,7 +264,7 @@ export async function GET(
     const evaluatorDemographics = aggregateDemographicAnswers(demographicQuestions, evaluatorAnswers);
 
     const participation: ParticipationStats = {
-      totalEntered,
+      totalEntered: allParticipantIds.size,
       totalEvaluators: evaluatorIds.size,
       totalSolutionAdders: solutionAdderIds.size,
     };

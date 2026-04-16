@@ -276,23 +276,56 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           </button>
         </div>
         <div className={styles.participationStatsGrid}>
-          <div className={styles.participationStatCard}>
+          <div
+            className={styles.participationStatCard}
+            title={t('enteredTooltip')}
+          >
             <span className={styles.participationStatNumber}>
               {participation?.totalEntered ?? 0}
             </span>
-            <span className={styles.participationStatLabel}>{t('entered')}</span>
+            <span className={styles.participationStatLabel}>
+              {t('entered')}
+              <span
+                className={styles.participationStatInfo}
+                aria-label={t('enteredTooltip')}
+              >
+                ?
+              </span>
+            </span>
           </div>
-          <div className={styles.participationStatCard}>
+          <div
+            className={styles.participationStatCard}
+            title={t('evaluatedTooltip')}
+          >
             <span className={styles.participationStatNumber}>
               {participation?.totalEvaluators ?? 0}
             </span>
-            <span className={styles.participationStatLabel}>{t('evaluated')}</span>
+            <span className={styles.participationStatLabel}>
+              {t('evaluated')}
+              <span
+                className={styles.participationStatInfo}
+                aria-label={t('evaluatedTooltip')}
+              >
+                ?
+              </span>
+            </span>
           </div>
-          <div className={styles.participationStatCard}>
+          <div
+            className={styles.participationStatCard}
+            title={t('addedSolutionsTooltip')}
+          >
             <span className={styles.participationStatNumber}>
               {participation?.totalSolutionAdders ?? 0}
             </span>
-            <span className={styles.participationStatLabel}>{t('addedSolutions')}</span>
+            <span className={styles.participationStatLabel}>
+              {t('addedSolutions')}
+              <span
+                className={styles.participationStatInfo}
+                aria-label={t('addedSolutionsTooltip')}
+              >
+                ?
+              </span>
+            </span>
           </div>
         </div>
       </div>
