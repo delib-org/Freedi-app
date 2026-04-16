@@ -78,6 +78,38 @@
   --max-width: 480px;
   --header-height: 56px;
   --touch-target: 48px;
+
+  // --- VOTING PALETTE (used for statement colors) ---
+  --voting-palette-pair-1-light: #fc8c9b;
+  --voting-palette-pair-1-dark: #f57c8c;
+  --voting-palette-pair-2-light: #f4978d;
+  --voting-palette-pair-2-dark: #ec8b81;
+  --voting-palette-pair-3-light: #feb69f;
+  --voting-palette-pair-3-dark: #efa38a;
+  --voting-palette-pair-4-light: #f1d075;
+  --voting-palette-pair-4-dark: #ebbd3d;
+  --voting-palette-pair-5-light: #85d697;
+  --voting-palette-pair-5-dark: #5fc976;
+  --voting-palette-pair-6-light: #a1d3a5;
+  --voting-palette-pair-6-dark: #97c99b;
+  --voting-palette-pair-7-light: #b4ccb9;
+  --voting-palette-pair-7-dark: #9bbaa2;
+  --voting-palette-pair-8-light: #b6d89c;
+  --voting-palette-pair-8-dark: #9bca78;
+  --voting-palette-pair-9-light: #95d7fe;
+  --voting-palette-pair-9-dark: #73c6f1;
+  --voting-palette-pair-10-light: #75c2fa;
+  --voting-palette-pair-10-dark: #4eb1f9;
+  --voting-palette-pair-11-light: #98bfff;
+  --voting-palette-pair-11-dark: #83adf3;
+  --voting-palette-pair-12-light: #a4dddf;
+  --voting-palette-pair-12-dark: #82c7ca;
+  --voting-palette-pair-13-light: #76d4d0;
+  --voting-palette-pair-13-dark: #64c8c4;
+  --voting-palette-pair-14-light: #bbb0f7;
+  --voting-palette-pair-14-dark: #a89be9;
+  --voting-palette-pair-15-light: #bda3ed;
+  --voting-palette-pair-15-dark: #a992d4;
 }
 
 @media (prefers-color-scheme: dark) {

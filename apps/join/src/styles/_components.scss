@@ -149,18 +149,38 @@
 .solutions {
   max-width: var(--max-width);
   margin: 0 auto;
-  padding: var(--space-md);
   width: 100%;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
 
   &__header {
-    margin-bottom: var(--space-lg);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg-page);
+    padding: var(--space-md) var(--space-md) var(--space-md);
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+
+  &__scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding: var(--space-md);
   }
 
   &__title {
     font-size: var(--font-size-xl);
     font-weight: var(--font-weight-bold);
-    color: var(--text-primary);
-    margin-bottom: var(--space-sm);
+    color: #fff;
+    margin-bottom: var(--space-xs);
+  }
+
+  &__subtitle {
+    font-size: var(--font-size-base);
+    color: rgba(255, 255, 255, 0.85);
+    font-style: italic;
   }
 
   &__description {

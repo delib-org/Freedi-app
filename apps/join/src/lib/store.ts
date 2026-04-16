@@ -219,6 +219,17 @@ export async function loadQuestion(questionId: string): Promise<void> {
   m.redraw();
 }
 
+export function subscribeQuestion(questionId: string): Unsubscribe {
+  return onSnapshot(doc(db, Collections.statements, questionId), (snap) => {
+    if (snap.exists()) {
+      question = snap.data() as Statement;
+    } else {
+      question = null;
+    }
+    m.redraw();
+  });
+}
+
 export function getMessageCount(optionId: string): number {
   return messageCounts.get(optionId) ?? 0;
 }

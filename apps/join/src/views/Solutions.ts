@@ -5,6 +5,7 @@ import {
   getQuestion,
   getVisibleOptions,
   subscribeOptions,
+  subscribeQuestion,
   getUnreadCount,
   getTotalVisibleCount,
 } from '@/lib/store';
@@ -14,6 +15,7 @@ import type { Unsubscribe } from '@/lib/firebase';
 
 let loading = true;
 let error: string | null = null;
+let questionUnsub: Unsubscribe | null = null;
 let optionsUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
@@ -35,6 +37,7 @@ export const Solutions: m.Component = {
     try {
       await ensureUser();
       await loadQuestion(questionId);
+      questionUnsub = subscribeQuestion(questionId);
       optionsUnsub = subscribeOptions(questionId);
     } catch (err) {
       console.error('[Solutions] Failed to load:', err);
@@ -46,6 +49,10 @@ export const Solutions: m.Component = {
   },
 
   onremove() {
+    if (questionUnsub) {
+      questionUnsub();
+      questionUnsub = null;
+    }
     if (optionsUnsub) {
       optionsUnsub();
       optionsUnsub = null;
@@ -70,11 +77,16 @@ export const Solutions: m.Component = {
     const total = getTotalVisibleCount();
     const unread = getUnreadCount();
 
+    const headerColor = question.color || 'var(--color-primary)';
+
     return m('.solutions', [
-      m('.solutions__header', [
+      m('.solutions__header', { style: { background: headerColor } }, [
         m('h1.solutions__title', question.statement),
-        question.description
-          ? m('.solutions__description', question.description)
+        m('.solutions__subtitle', 'Please join activities that you want to promote, either as an activist or as an organizer'),
+      ]),
+      m('.solutions__scroll', [
+        (question.description || question.brief)
+          ? m('.solutions__description', question.brief || question.description)
           : null,
         m('.solutions__counter', [
           m('span.solutions__counter-total', `${total} options`),
@@ -82,24 +94,24 @@ export const Solutions: m.Component = {
             ? m('span.solutions__counter-unread', `${unread} new`)
             : null,
         ]),
-      ]),
-      options.length === 0
-        ? m('.solutions__empty', 'No solutions available yet')
-        : m(
-            '.solutions__list',
-            options.map((option) =>
-              m(SolutionCard, {
-                key: option.statementId,
-                option,
-                questionId: question.statementId,
-                onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
-                  pendingJoinOptionId = optionId;
-                  pendingJoinRole = role;
-                  showJoinForm = true;
-                },
-              }),
+        options.length === 0
+          ? m('.solutions__empty', 'No solutions available yet')
+          : m(
+              '.solutions__list',
+              options.map((option) =>
+                m(SolutionCard, {
+                  key: option.statementId,
+                  option,
+                  questionId: question.statementId,
+                  onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
+                    pendingJoinOptionId = optionId;
+                    pendingJoinRole = role;
+                    showJoinForm = true;
+                  },
+                }),
+              ),
             ),
-          ),
+      ]),
       showJoinForm && question.statementSettings?.joinForm
         ? m(JoinFormModal, {
             joinForm: question.statementSettings.joinForm,

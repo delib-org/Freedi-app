@@ -11,6 +11,20 @@ import {
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
 
+function getOptionDescription(option: Statement): string | null {
+  if (option.description) return option.description;
+  if (option.brief) return option.brief;
+
+  if (option.paragraphs && option.paragraphs.length > 0) {
+    return option.paragraphs
+      .map((p) => p.content ?? '')
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  return null;
+}
+
 interface SolutionCardAttrs {
   option: Statement;
   questionId: string;
@@ -44,8 +58,8 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
       },
       [
         m('.solution-card__title', option.statement),
-        option.description
-          ? m('.solution-card__description', option.description)
+        getOptionDescription(option)
+          ? m('.solution-card__description', getOptionDescription(option))
           : null,
         m('.solution-card__meta', [
           m('.solution-card__counts', [
