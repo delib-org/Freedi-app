@@ -2573,5 +2573,16 @@
   "learnMore": "Meer informatie",
   "shareMessage": "Ontdek een nieuwe manier voor organisaties om samen beslissingen te nemen",
   "linkCopied": "Link gekopieerd!",
-  "share": "Delen"
+  "share": "Delen",
+  "surveyClosedTitle": "Enquête gesloten voor nieuwe suggesties",
+  "surveyClosedMessage": "Deze enquête accepteert geen nieuwe suggesties of stemmen meer. Maar een enquête is meestal slechts het begin van een democratisch proces — meld je hieronder aan om op de hoogte te blijven van de volgende stappen en updates.",
+  "notifyMeAboutUpdates": "Updates ontvangen",
+  "notifyMeDescription": "Vul je e-mailadres in om op de hoogte te blijven van de volgende stappen in dit proces.",
+  "notifyMe": "Houd me op de hoogte",
+  "subscriptionFailed": "Aanmelden mislukt. Probeer het opnieuw.",
+  "subscribedDuringSurvey": "Aangemeld tijdens de enquête",
+  "subscribedDuringSurveyDescription": "Deelnemers die zich hebben aangemeld terwijl de enquête open was.",
+  "subscribedAfterClose": "Aangemeld na sluiting",
+  "subscribedAfterCloseDescription": "Personen die na sluiting van de enquête om updates vroegen — een andere doelgroep die apart benaderd moet worden.",
+  "noPostCloseSubscribers": "Nog geen aanmeldingen na sluiting"
 }

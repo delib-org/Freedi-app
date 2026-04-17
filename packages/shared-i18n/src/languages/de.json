@@ -2573,5 +2573,16 @@
   "learnMore": "Mehr erfahren",
   "shareMessage": "Entdecken Sie einen neuen Weg für Organisationen, gemeinsam Entscheidungen zu treffen",
   "linkCopied": "Link kopiert!",
-  "share": "Teilen"
+  "share": "Teilen",
+  "surveyClosedTitle": "Umfrage für neue Vorschläge geschlossen",
+  "surveyClosedMessage": "Diese Umfrage nimmt keine neuen Vorschläge oder Stimmen mehr an. Eine Umfrage ist jedoch meist nur der Anfang eines demokratischen Prozesses — trage dich unten ein, um über die nächsten Schritte informiert zu werden.",
+  "notifyMeAboutUpdates": "Über Updates informieren",
+  "notifyMeDescription": "Gib deine E-Mail-Adresse ein, um über die nächsten Schritte in diesem Prozess informiert zu werden.",
+  "notifyMe": "Benachrichtigen",
+  "subscriptionFailed": "Anmeldung fehlgeschlagen. Bitte erneut versuchen.",
+  "subscribedDuringSurvey": "Während der Umfrage angemeldet",
+  "subscribedDuringSurveyDescription": "Teilnehmer, die sich angemeldet haben, während die Umfrage geöffnet war.",
+  "subscribedAfterClose": "Nach Schließung der Umfrage angemeldet",
+  "subscribedAfterCloseDescription": "Personen, die nach Schließung der Umfrage Updates angefordert haben — eine andere Zielgruppe, die separat angesprochen werden sollte.",
+  "noPostCloseSubscribers": "Noch keine Anmeldungen nach Schließung"
 }

@@ -2871,5 +2871,16 @@
   "learnMore": "למד עוד",
   "shareMessage": "גלו דרך חדשה לארגונים לקבל החלטות ביחד",
   "linkCopied": "הקישור הועתק!",
-  "share": "שתפ/י"
+  "share": "שתפ/י",
+  "surveyClosedTitle": "הסקר סגור להצעות חדשות",
+  "surveyClosedMessage": "הסקר הזה אינו מקבל יותר הצעות או הצבעות חדשות. אבל סקר הוא בדרך כלל רק תחילתו של תהליך דמוקרטי — הירשמ/י למטה כדי לקבל עדכונים על השלבים הבאים.",
+  "notifyMeAboutUpdates": "עדכנו אותי על התקדמות",
+  "notifyMeDescription": "השאירו אימייל כדי לקבל מידע על השלבים הבאים בתהליך.",
+  "notifyMe": "עדכנו אותי",
+  "subscriptionFailed": "ההרשמה נכשלה. נסו שוב.",
+  "subscribedDuringSurvey": "נרשמו במהלך הסקר",
+  "subscribedDuringSurveyDescription": "משתתפים שנרשמו כאשר הסקר היה פתוח.",
+  "subscribedAfterClose": "נרשמו לאחר סגירת הסקר",
+  "subscribedAfterCloseDescription": "אנשים שביקשו לקבל עדכונים לאחר שהסקר נסגר — קהל שונה שיש לפנות אליו אחרת.",
+  "noPostCloseSubscribers": "אין נרשמים לאחר סגירת הסקר עדיין"
 }

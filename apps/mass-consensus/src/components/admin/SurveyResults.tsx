@@ -50,7 +50,13 @@ interface ResultsData {
 interface SubscribersData {
   emails: string[];
   count: number;
+  activeEmails?: string[];
+  activeCount?: number;
+  closedEmails?: string[];
+  closedCount?: number;
 }
+
+type EmailGroupKey = 'active' | 'closed';
 
 interface SurveyResultsProps {
   survey: Survey;
@@ -69,7 +75,7 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
   const [subscribers, setSubscribers] = useState<SubscribersData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [emailsCopied, setEmailsCopied] = useState(false);
+  const [emailsCopied, setEmailsCopied] = useState<EmailGroupKey | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
 
   const fetchResults = useCallback(async () => {
@@ -169,10 +175,10 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
     window.URL.revokeObjectURL(url);
   };
 
-  const handleCopyEmails = async () => {
-    if (!subscribers || subscribers.emails.length === 0) return;
+  const handleCopyEmails = async (group: EmailGroupKey, emails: string[]) => {
+    if (emails.length === 0) return;
 
-    const emailText = subscribers.emails.join(', ');
+    const emailText = emails.join(', ');
     try {
       await navigator.clipboard.writeText(emailText);
     } catch {
@@ -186,8 +192,8 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
       document.execCommand('copy');
       document.body.removeChild(textArea);
     }
-    setEmailsCopied(true);
-    setTimeout(() => setEmailsCopied(false), 2000);
+    setEmailsCopied(group);
+    setTimeout(() => setEmailsCopied((current) => (current === group ? null : current)), 2000);
   };
 
   const hasQuestions = results.questions.length > 0;
@@ -353,22 +359,36 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
       <div className={styles.resultsSection}>
         <h2 className={styles.resultsSectionTitle}>{t('emailSubscribers')}</h2>
         {subscribers && subscribers.count > 0 ? (
-          <div className={styles.emailSubscribersContent}>
-            <div className={styles.emailSubscribersHeader}>
-              <span className={styles.emailSubscribersCount}>
-                {subscribers.count} {t('subscribers')}
-              </span>
-              <button
-                className={`${styles.copyButton} ${emailsCopied ? styles.copied : ''}`}
-                onClick={handleCopyEmails}
-              >
-                {emailsCopied ? t('copied') : t('copyAllEmails')}
-              </button>
-            </div>
-            <div className={styles.emailSubscribersList}>
-              {subscribers.emails.join(', ')}
-            </div>
-          </div>
+          <>
+            <EmailGroup
+              groupKey="active"
+              title={t('subscribedDuringSurvey')}
+              description={t('subscribedDuringSurveyDescription')}
+              emails={subscribers.activeEmails ?? subscribers.emails}
+              count={subscribers.activeCount ?? subscribers.count}
+              copied={emailsCopied === 'active'}
+              onCopy={handleCopyEmails}
+              styles={styles}
+              copiedLabel={t('copied')}
+              copyLabel={t('copyAllEmails')}
+              subscribersLabel={t('subscribers')}
+              emptyLabel={t('noEmailSubscribers')}
+            />
+            <EmailGroup
+              groupKey="closed"
+              title={t('subscribedAfterClose')}
+              description={t('subscribedAfterCloseDescription')}
+              emails={subscribers.closedEmails ?? []}
+              count={subscribers.closedCount ?? 0}
+              copied={emailsCopied === 'closed'}
+              onCopy={handleCopyEmails}
+              styles={styles}
+              copiedLabel={t('copied')}
+              copyLabel={t('copyAllEmails')}
+              subscribersLabel={t('subscribers')}
+              emptyLabel={t('noPostCloseSubscribers')}
+            />
+          </>
         ) : (
           <p className={styles.resultsEmpty}>{t('noEmailSubscribers')}</p>
         )}
@@ -381,6 +401,69 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
           onClose={() => setShowExportModal(false)}
           onExport={handleExport}
         />
+      )}
+    </div>
+  );
+}
+
+interface EmailGroupProps {
+  groupKey: EmailGroupKey;
+  title: string;
+  description?: string;
+  emails: string[];
+  count: number;
+  copied: boolean;
+  onCopy: (group: EmailGroupKey, emails: string[]) => void;
+  styles: Record<string, string>;
+  copiedLabel: string;
+  copyLabel: string;
+  subscribersLabel: string;
+  emptyLabel: string;
+}
+
+function EmailGroup({
+  groupKey,
+  title,
+  description,
+  emails,
+  count,
+  copied,
+  onCopy,
+  styles,
+  copiedLabel,
+  copyLabel,
+  subscribersLabel,
+  emptyLabel,
+}: EmailGroupProps) {
+  return (
+    <div className={styles.emailSubscribersGroup}>
+      <div className={styles.emailSubscribersGroupHeader}>
+        <h3 className={styles.emailSubscribersGroupTitle}>{title}</h3>
+        {description && (
+          <p className={styles.emailSubscribersGroupDescription}>{description}</p>
+        )}
+      </div>
+
+      {count > 0 ? (
+        <div className={styles.emailSubscribersContent}>
+          <div className={styles.emailSubscribersHeader}>
+            <span className={styles.emailSubscribersCount}>
+              {count} {subscribersLabel}
+            </span>
+            <button
+              type="button"
+              className={`${styles.copyButton} ${copied ? styles.copied : ''}`}
+              onClick={() => onCopy(groupKey, emails)}
+            >
+              {copied ? copiedLabel : copyLabel}
+            </button>
+          </div>
+          <div className={styles.emailSubscribersList}>
+            {emails.join(', ')}
+          </div>
+        </div>
+      ) : (
+        <p className={styles.resultsEmpty}>{emptyLabel}</p>
       )}
     </div>
   );

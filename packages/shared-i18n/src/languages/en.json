@@ -3308,5 +3308,16 @@
   "learnMore": "Learn more",
   "shareMessage": "Discover a new way for organizations to make decisions together",
   "linkCopied": "Link copied!",
-  "share": "Share"
+  "share": "Share",
+  "surveyClosedTitle": "Survey Closed for New Suggestions",
+  "surveyClosedMessage": "This survey is no longer accepting new suggestions or votes. But a survey is usually just the beginning of a democratic process — register below to be notified about next steps and updates.",
+  "notifyMeAboutUpdates": "Get notified about updates",
+  "notifyMeDescription": "Enter your email to hear about the next steps in this process.",
+  "notifyMe": "Notify me",
+  "subscriptionFailed": "Subscription failed. Please try again.",
+  "subscribedDuringSurvey": "Subscribed during the survey",
+  "subscribedDuringSurveyDescription": "Participants who signed up while the survey was still open.",
+  "subscribedAfterClose": "Subscribed after the survey closed",
+  "subscribedAfterCloseDescription": "People who registered for updates after the survey was closed — a different audience to address.",
+  "noPostCloseSubscribers": "No post-close subscribers yet"
 }
