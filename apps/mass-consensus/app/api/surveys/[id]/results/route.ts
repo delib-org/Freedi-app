@@ -278,8 +278,17 @@ export async function GET(
     // Only evaluators (users who actually rated options)
     const evaluatorDemographics = aggregateDemographicAnswers(demographicQuestions, evaluatorAnswers);
 
+    // Fold demographic answerers into the Entered count — users who answered
+    // the demographic form but dropped off before evaluating or submitting
+    // still entered the survey and should be counted.
+    const enteredIds = new Set<string>(allParticipantIds);
+    for (const answer of demographicAnswers) {
+      const uid = (answer as UserDemographicQuestion & { userId?: string }).userId;
+      if (uid) enteredIds.add(uid);
+    }
+
     const participation: ParticipationStats = {
-      totalEntered: allParticipantIds.size,
+      totalEntered: enteredIds.size,
       totalEvaluators: evaluatorIds.size,
       totalSolutionAdders: solutionAdderIds.size,
       totalSolutions,

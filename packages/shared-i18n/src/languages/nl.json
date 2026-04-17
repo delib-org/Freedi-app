@@ -645,7 +645,7 @@
   "entered": "ingevoerd",
   "addedSolutions": "oplossingen toegevoegd",
   "participationStats": "Deelname",
-  "enteredTooltip": "Unieke gebruikers die aan de enquête hebben deelgenomen — een oplossing beoordeeld of een oplossing toegevoegd.",
+  "enteredTooltip": "Unieke gebruikers die aan de enquête hebben deelgenomen — een demografische vraag beantwoord, een oplossing beoordeeld of een oplossing toegevoegd.",
   "evaluatedTooltip": "Unieke gebruikers die expliciet ten minste één oplossing hebben beoordeeld.",
   "addedSolutionsTooltip": "Unieke gebruikers die ten minste één oplossing hebben ingediend.",
   "solutionsSubmitted": "ingediende oplossingen",

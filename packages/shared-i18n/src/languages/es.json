@@ -645,7 +645,7 @@
   "entered": "ingresaron",
   "addedSolutions": "agregaron soluciones",
   "participationStats": "Participación",
-  "enteredTooltip": "Usuarios únicos que participaron en la encuesta — evaluaron una solución o agregaron una solución.",
+  "enteredTooltip": "Usuarios únicos que participaron en la encuesta — respondieron una pregunta demográfica, evaluaron una solución o agregaron una solución.",
   "evaluatedTooltip": "Usuarios únicos que evaluaron explícitamente al menos una solución.",
   "addedSolutionsTooltip": "Usuarios únicos que enviaron al menos una solución.",
   "solutionsSubmitted": "soluciones enviadas",

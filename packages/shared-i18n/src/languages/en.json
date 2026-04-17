@@ -821,7 +821,7 @@
   "entered": "entered",
   "addedSolutions": "added solutions",
   "participationStats": "Participation",
-  "enteredTooltip": "Unique users who took part in the survey — evaluated a solution or added a solution.",
+  "enteredTooltip": "Unique users who took part in the survey — answered a demographic question, evaluated a solution, or added a solution.",
   "evaluatedTooltip": "Unique users who explicitly rated at least one solution.",
   "addedSolutionsTooltip": "Unique users who submitted at least one solution.",
   "solutionsSubmitted": "solutions submitted",

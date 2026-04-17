@@ -645,7 +645,7 @@
   "entered": "teilgenommen",
   "addedSolutions": "Lösungen hinzugefügt",
   "participationStats": "Teilnahme",
-  "enteredTooltip": "Eindeutige Nutzer, die sich an der Umfrage beteiligt haben — eine Lösung bewertet oder eine Lösung hinzugefügt.",
+  "enteredTooltip": "Eindeutige Nutzer, die sich an der Umfrage beteiligt haben — eine demografische Frage beantwortet, eine Lösung bewertet oder eine Lösung hinzugefügt.",
   "evaluatedTooltip": "Eindeutige Nutzer, die mindestens eine Lösung ausdrücklich bewertet haben.",
   "addedSolutionsTooltip": "Eindeutige Nutzer, die mindestens eine Lösung eingereicht haben.",
   "solutionsSubmitted": "eingereichte Lösungen",
