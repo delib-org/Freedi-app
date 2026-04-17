@@ -826,6 +826,8 @@
   "addedSolutionsTooltip": "Unique users who submitted at least one solution.",
   "solutionsSubmitted": "solutions submitted",
   "solutionsSubmittedTooltip": "Total number of solutions submitted to the survey.",
+  "notEngaged": "didn't engage",
+  "notEngagedTooltip": "Users who entered the survey (answered demographics) but never evaluated or added a solution.",
   "Evaluated 5+ solutions": "Evaluated 5+ solutions",
   "Evaluation & Voting": "Evaluation & Voting",
   "Evaluation Method": "Evaluation Method",

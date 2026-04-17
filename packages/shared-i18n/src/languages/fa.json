@@ -772,6 +772,8 @@
   "addedSolutionsTooltip": "کاربران یکتایی که حداقل یک راه‌حل ارائه کردند.",
   "solutionsSubmitted": "راه‌حل‌های ارائه‌شده",
   "solutionsSubmittedTooltip": "تعداد کل راه‌حل‌های ارائه‌شده به نظرسنجی.",
+  "notEngaged": "مشارکت نکردند",
+  "notEngagedTooltip": "کاربرانی که وارد نظرسنجی شدند (به پرسش‌های جمعیت‌شناختی پاسخ دادند) اما هرگز راه‌حلی را ارزیابی یا اضافه نکردند.",
   "Evaluated 5+ solutions": "بیش از ۵ راه‌حل ارزیابی شده",
   "Evaluation & Voting": "ارزیابی و رأی‌گیری",
   "Evaluation Method": "روش ارزیابی",

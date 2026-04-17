@@ -650,6 +650,8 @@
   "addedSolutionsTooltip": "Usuarios únicos que enviaron al menos una solución.",
   "solutionsSubmitted": "soluciones enviadas",
   "solutionsSubmittedTooltip": "Número total de soluciones enviadas a la encuesta.",
+  "notEngaged": "no participaron",
+  "notEngagedTooltip": "Usuarios que ingresaron a la encuesta (respondieron preguntas demográficas) pero nunca evaluaron ni agregaron una solución.",
   "Evaluated 5+ solutions": "Evaluaste 5+ soluciones",
   "Evaluation & Voting": "Evaluación y votación",
   "Evaluation Method": "Método de Evaluación",

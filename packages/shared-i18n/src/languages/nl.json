@@ -650,6 +650,8 @@
   "addedSolutionsTooltip": "Unieke gebruikers die ten minste één oplossing hebben ingediend.",
   "solutionsSubmitted": "ingediende oplossingen",
   "solutionsSubmittedTooltip": "Totaal aantal oplossingen dat in de enquête is ingediend.",
+  "notEngaged": "niet deelgenomen",
+  "notEngagedTooltip": "Gebruikers die de enquête hebben ingevoerd (demografische vragen beantwoord) maar nooit een oplossing hebben beoordeeld of toegevoegd.",
   "Evaluated 5+ solutions": "5+ oplossingen beoordeeld",
   "Evaluation & Voting": "Evaluatie & stemming",
   "Evaluation Method": "Evaluatiemethode",

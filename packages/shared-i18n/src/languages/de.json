@@ -650,6 +650,8 @@
   "addedSolutionsTooltip": "Eindeutige Nutzer, die mindestens eine Lösung eingereicht haben.",
   "solutionsSubmitted": "eingereichte Lösungen",
   "solutionsSubmittedTooltip": "Gesamtzahl der in der Umfrage eingereichten Lösungen.",
+  "notEngaged": "nicht beteiligt",
+  "notEngagedTooltip": "Nutzer, die die Umfrage betreten (demografische Fragen beantwortet) haben, aber keine Lösung bewertet oder hinzugefügt haben.",
   "Evaluated 5+ solutions": "5+ Lösungen bewertet",
   "Evaluation & Voting": "Bewertung & Abstimmung",
   "Evaluation Method": "Bewertungsmethode",

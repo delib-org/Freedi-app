@@ -37,6 +37,7 @@ interface ParticipationStats {
   totalEvaluators: number;
   totalSolutionAdders: number;
   totalSolutions: number;
+  totalNotEngaged: number;
 }
 
 interface ResultsData {
@@ -281,6 +282,11 @@ export default function SurveyResults({ survey }: SurveyResultsProps) {
             value={participation?.totalEntered ?? 0}
             label={t('entered')}
             tooltip={t('enteredTooltip')}
+          />
+          <ParticipationStatCard
+            value={participation?.totalNotEngaged ?? 0}
+            label={t('notEngaged')}
+            tooltip={t('notEngagedTooltip')}
           />
           <ParticipationStatCard
             value={participation?.totalEvaluators ?? 0}

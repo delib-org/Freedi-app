@@ -33,6 +33,7 @@ interface ParticipationStats {
   totalEvaluators: number;
   totalSolutionAdders: number;
   totalSolutions: number;
+  totalNotEngaged: number;
 }
 
 /**
@@ -287,11 +288,21 @@ export async function GET(
       if (uid) enteredIds.add(uid);
     }
 
+    // "Engaged" = took any action on the question (evaluated, auto +1 from
+    // submitting a solution, or added a solution). allParticipantIds already
+    // represents that set. "Not engaged" = entered the survey (answered
+    // demographics) but never touched the question.
+    const notEngagedCount = Math.max(
+      0,
+      enteredIds.size - allParticipantIds.size
+    );
+
     const participation: ParticipationStats = {
       totalEntered: enteredIds.size,
       totalEvaluators: evaluatorIds.size,
       totalSolutionAdders: solutionAdderIds.size,
       totalSolutions,
+      totalNotEngaged: notEngagedCount,
     };
 
     return NextResponse.json({
