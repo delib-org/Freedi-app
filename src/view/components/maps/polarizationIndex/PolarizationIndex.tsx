@@ -65,6 +65,12 @@ interface HitTarget {
 	statementId: string;
 	// For hex hits: the underlying point statementIds (length >= 2)
 	hexStatementIds?: string[];
+	// True when the point fails the active demographic-coverage filter
+	// (rendered dim, tooltip explains why).
+	filtered?: boolean;
+	// The smallest group sizes for the active filter axis on this point —
+	// used in the tooltip to explain WHY this dot is below the threshold.
+	filterShortfall?: Array<{ option: string; n: number }>;
 }
 
 // Hex bucket of one or more points with the same hex grid cell.
@@ -248,6 +254,11 @@ const PolarizationIndexComp = () => {
 	const [zoomedZone, setZoomedZone] = useState<ZoneKey | null>(null);
 	const [viewMode, setViewMode] = useState<ViewMode>('dots');
 	const [clusterPoints, setClusterPoints] = useState<Point[] | null>(null);
+	// Demographic-coverage filter — only show solutions that have at least
+	// `filterMinN` evaluators in *every* group of `filterAxisId`. When the
+	// axis id is null the filter is inactive.
+	const [filterAxisId, setFilterAxisId] = useState<string | null>(null);
+	const [filterMinN, setFilterMinN] = useState<number>(2);
 	const boardRef = useRef<HTMLDivElement>(null);
 
 	const viewport = zoomedZone ? ZONE_VIEWPORTS[zoomedZone] : FULL_VIEWPORT;
@@ -281,14 +292,62 @@ const PolarizationIndexComp = () => {
 		[visiblePoints, boardDimensions, viewMode],
 	);
 
-	// Hex bins are built from the *unspread* points (since spreading would
-	// distort the bins). Only computed when hex mode is on.
+	// Coverage filter — for each point, compute whether every group on the
+	// chosen demographic axis has at least `filterMinN` evaluators. Points
+	// missing the axis are treated as failing (per UX agent recommendation).
+	const filteredOutMap = useMemo(() => {
+		const out = new Map<string, Array<{ option: string; n: number }>>();
+		if (!filterAxisId) return out;
+		for (const p of points) {
+			if (!p) continue;
+			const axis = p.axes.find((a) => a.questionId === filterAxisId);
+			if (!axis || axis.groups.length === 0) {
+				out.set(p.statementId, []);
+				continue;
+			}
+			const shortfall = axis.groups
+				.filter((g) => g.n < filterMinN)
+				.map((g) => ({ option: g.option.option, n: g.n }))
+				.sort((a, b) => a.n - b.n);
+			if (shortfall.length > 0) {
+				out.set(p.statementId, shortfall);
+			}
+		}
+
+		return out;
+	}, [points, filterAxisId, filterMinN]);
+
+	const totalPointsCount = points.length;
+	const shownPointsCount = totalPointsCount - filteredOutMap.size;
+
+	// Hex bins are built from the *unspread* points. When the filter is
+	// active, hexes use only the matching set so the cluster signal reflects
+	// reliable data (per UX agent: "hex view forces Hide semantics").
 	const hexBins = useMemo<HexBin[]>(() => {
 		if (viewMode !== 'hex') return [];
-		const ps = visiblePoints.filter((p): p is Point => Boolean(p?.position));
+		const ps = visiblePoints.filter(
+			(p): p is Point =>
+				Boolean(p?.position) && (!filterAxisId || !filteredOutMap.has(p.statementId)),
+		);
 
 		return buildHexBins(ps);
-	}, [viewMode, visiblePoints]);
+	}, [viewMode, visiblePoints, filterAxisId, filteredOutMap]);
+
+	// Available filter axes (the demographic questions). Derived from the
+	// axes on the first point — they're consistent across points.
+	const availableAxes = useMemo(() => {
+		const seen = new Map<string, string>();
+		for (const p of points) {
+			if (!p) continue;
+			for (const axis of p.axes) {
+				if (!seen.has(axis.questionId)) {
+					seen.set(axis.questionId, axis.question);
+				}
+			}
+		}
+
+		return [...seen.entries()].map(([questionId, question]) => ({ questionId, question }));
+	}, [points]);
 
 	const handleZoneZoom = useCallback((zone: ZoneKey) => {
 		setZoomedZone((cur) => (cur === zone ? null : zone));
@@ -338,6 +397,7 @@ const PolarizationIndexComp = () => {
 		if (viewMode === 'dots') {
 			for (const point of points) {
 				if (!point?.position) continue;
+				const shortfall = filteredOutMap.get(point.statementId);
 				targets.push({
 					kind: 'point',
 					x: point.position.x,
@@ -348,6 +408,8 @@ const PolarizationIndexComp = () => {
 					n: point.overallN,
 					color: getAgreementColor(point.overallMean),
 					statementId: point.statementId,
+					filtered: shortfall !== undefined,
+					filterShortfall: shortfall,
 				});
 			}
 		} else {
@@ -384,7 +446,7 @@ const PolarizationIndexComp = () => {
 		}
 
 		return targets;
-	}, [viewMode, points, hexBins, t]);
+	}, [viewMode, points, hexBins, t, filteredOutMap]);
 
 	const findNearest = useCallback(
 		(mx: number, my: number): HitTarget | null => {
@@ -638,6 +700,61 @@ const PolarizationIndexComp = () => {
 				)}
 			</div>
 
+			{/* Coverage filter — only relevant when there are demographic axes
+			    to filter by. Compact, always-visible per UX guidance. */}
+			{availableAxes.length > 0 && (
+				<div className={styles.filterRow}>
+					<label className={styles.filterRow__label}>
+						{t('Show only solutions with at least')}
+					</label>
+					<input
+						type="number"
+						min={1}
+						max={50}
+						value={filterMinN}
+						onChange={(e) => {
+							const v = Number(e.target.value);
+							if (!Number.isNaN(v) && v >= 1) setFilterMinN(v);
+						}}
+						className={styles.filterRow__num}
+						aria-label={t('Minimum evaluators per group')}
+					/>
+					<span className={styles.filterRow__label}>
+						{t('evaluators in each')}
+					</span>
+					<select
+						value={filterAxisId || ''}
+						onChange={(e) => setFilterAxisId(e.target.value || null)}
+						className={styles.filterRow__select}
+						aria-label={t('Demographic to filter by')}
+					>
+						<option value="">{t('— No filter —')}</option>
+						{availableAxes.map((a) => (
+							<option key={a.questionId} value={a.questionId}>
+								{a.question}
+							</option>
+						))}
+					</select>
+					<span className={styles.filterRow__label}>{t('group')}</span>
+					{filterAxisId && (
+						<>
+							<span className={styles.filterRow__count}>
+								{shownPointsCount} {t('of')} {totalPointsCount} {t('shown')}
+							</span>
+							<button
+								type="button"
+								className={styles.filterRow__clear}
+								onClick={() => setFilterAxisId(null)}
+								aria-label={t('Clear filter')}
+								title={t('Clear filter')}
+							>
+								&#x2715;
+							</button>
+						</>
+					)}
+				</div>
+			)}
+
 			{/* Chart Container with Axes */}
 			<div className={styles.chartContainer}>
 				{/* Y-Axis */}
@@ -718,6 +835,7 @@ const PolarizationIndexComp = () => {
 									const isHovered =
 										hoveredTarget?.kind === 'point' &&
 										hoveredTarget.statementId === point.statementId;
+									const isFiltered = filteredOutMap.has(point.statementId);
 
 									return (
 										<div
@@ -725,14 +843,14 @@ const PolarizationIndexComp = () => {
 											key={point.statementId}
 											id={`polarization-dot-${point.statementId}`}
 											role="button"
-											aria-label={`${point.statement}. ${agreementPercent(point.overallMean)}% agree, ${point.overallN} evaluators.`}
+											aria-label={`${point.statement}. ${agreementPercent(point.overallMean)}% agree, ${point.overallN} evaluators.${isFiltered ? ' Below coverage threshold.' : ''}`}
 											style={{
 												left: point.position?.x ? point.position.x + 'px' : '0px',
 												top: point.position?.y ? point.position.y + 'px' : '0px',
 											}}
 										>
 											<div
-												className={`${styles.point} ${isSelected ? styles['point--selected'] : ''} ${isHovered ? styles['point--hovered'] : ''}`}
+												className={`${styles.point} ${isSelected ? styles['point--selected'] : ''} ${isHovered ? styles['point--hovered'] : ''} ${isFiltered ? styles['point--filtered'] : ''}`}
 												style={{
 													backgroundColor: getAgreementColor(point.overallMean),
 												}}
@@ -821,6 +939,17 @@ const PolarizationIndexComp = () => {
 										}}
 									>
 										<div className={styles.hoverTip__bubble}>
+											{hoveredTarget.filtered && (
+												<div className={styles.hoverTip__warn}>
+													{t('Below coverage threshold')}
+													{hoveredTarget.filterShortfall &&
+														hoveredTarget.filterShortfall.length > 0 &&
+														' — ' +
+															hoveredTarget.filterShortfall
+																.map((s) => `${s.option}: ${s.n}`)
+																.join(', ')}
+												</div>
+											)}
 											<div className={styles.hoverTip__title}>
 												{hoveredTarget.label}
 											</div>

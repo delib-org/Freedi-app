@@ -3339,5 +3339,15 @@
   "Zoom into Consensus zone": "Zoom into Consensus zone",
   "Zoom into Rejection zone": "Zoom into Rejection zone",
   "Zoom into Polarized zone": "Zoom into Polarized zone",
-  "Zoom into Neutral zone": "Zoom into Neutral zone"
+  "Zoom into Neutral zone": "Zoom into Neutral zone",
+  "Show only solutions with at least": "Show only solutions with at least",
+  "evaluators in each": "evaluators in each",
+  "group": "group",
+  "— No filter —": "— No filter —",
+  "of": "of",
+  "shown": "shown",
+  "Clear filter": "Clear filter",
+  "Below coverage threshold": "Below coverage threshold",
+  "Minimum evaluators per group": "Minimum evaluators per group",
+  "Demographic to filter by": "Demographic to filter by"
 }

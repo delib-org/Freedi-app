@@ -2902,5 +2902,15 @@
   "Zoom into Consensus zone": "התמקד באזור קונצנזוס",
   "Zoom into Rejection zone": "התמקד באזור דחייה",
   "Zoom into Polarized zone": "התמקד באזור קיטוב",
-  "Zoom into Neutral zone": "התמקד באזור אדישות"
+  "Zoom into Neutral zone": "התמקד באזור אדישות",
+  "Show only solutions with at least": "הצג רק פתרונות עם לפחות",
+  "evaluators in each": "מעריכים בכל",
+  "group": "קבוצה",
+  "— No filter —": "— ללא סינון —",
+  "of": "מתוך",
+  "shown": "מוצגים",
+  "Clear filter": "נקה סינון",
+  "Below coverage threshold": "מתחת לסף הכיסוי",
+  "Minimum evaluators per group": "מינימום מעריכים בכל קבוצה",
+  "Demographic to filter by": "דמוגרפיה לסינון"
 }
