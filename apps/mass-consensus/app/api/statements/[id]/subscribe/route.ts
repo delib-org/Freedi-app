@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { logError } from '@/lib/utils/errorHandling';
 import { logger } from '@/lib/utils/logger';
+import { resolveSubscriberSource } from '@/lib/utils/subscriberSource';
 
 // Use the same collection as the Firebase function for admin notifications
 const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
@@ -38,11 +39,7 @@ export async function POST(
       );
     }
 
-    // Only whitelisted sources are allowed; unknown values fall back to default
-    const ALLOWED_SOURCES = new Set(['mass-consensus', 'mass-consensus-closed']);
-    const resolvedSource = typeof source === 'string' && ALLOWED_SOURCES.has(source)
-      ? source
-      : 'mass-consensus';
+    const resolvedSource = resolveSubscriberSource(source);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {

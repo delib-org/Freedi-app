@@ -3,6 +3,10 @@ import { getSurveyById } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { logger } from '@/lib/utils/logger';
+import {
+  groupSubscribersBySource,
+  RawSubscriberRecord,
+} from '@/lib/utils/subscriberSource';
 
 const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
 
@@ -54,8 +58,7 @@ export async function GET(
     }
 
     const db = getFirestoreAdmin();
-    const activeSet = new Set<string>();
-    const closedSet = new Set<string>();
+    const records: RawSubscriberRecord[] = [];
 
     // Firestore 'in' queries are limited to 30 items, so batch them
     const BATCH_SIZE = 30;
@@ -70,45 +73,30 @@ export async function GET(
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
-        if (!data.email || typeof data.email !== 'string') continue;
-
-        const email = data.email.toLowerCase();
-        if (data.source === 'mass-consensus-closed') {
-          closedSet.add(email);
-        } else {
-          activeSet.add(email);
-        }
+        records.push({ email: data.email, source: data.source });
       }
     }
 
-    // Post-close emails that also appear in the active list should only show
-    // in the post-close group (the later signup is the current intent)
-    for (const email of closedSet) {
-      activeSet.delete(email);
-    }
-
-    const activeEmails = Array.from(activeSet).sort();
-    const closedEmails = Array.from(closedSet).sort();
-    const allEmails = Array.from(new Set([...activeEmails, ...closedEmails])).sort();
+    const grouped = groupSubscribersBySource(records);
 
     logger.info(
       '[GET /api/surveys/[id]/subscribers] Found',
-      activeEmails.length,
+      grouped.activeCount,
       'active +',
-      closedEmails.length,
+      grouped.closedCount,
       'post-close subscribers for survey:',
       surveyId
     );
 
     return NextResponse.json({
       // Back-compat fields (combined)
-      emails: allEmails,
-      count: allEmails.length,
+      emails: grouped.allEmails,
+      count: grouped.allEmails.length,
       // New split fields
-      activeEmails,
-      activeCount: activeEmails.length,
-      closedEmails,
-      closedCount: closedEmails.length,
+      activeEmails: grouped.activeEmails,
+      activeCount: grouped.activeCount,
+      closedEmails: grouped.closedEmails,
+      closedCount: grouped.closedCount,
     });
   } catch (error) {
     logger.error('[GET /api/surveys/[id]/subscribers] Error:', error);
