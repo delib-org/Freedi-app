@@ -48,18 +48,19 @@ const SimpleSuggestionCards: FC<Props> = ({ subStatements: propSubStatements }) 
 			);
 	}, [statement, statementId, dispatch]);
 
-	// Listen to evaluations
+	// Listen to evaluations — wait for auth so the listener doesn't set up
+	// with an invalid session and fail with permission-denied.
 	useEffect(() => {
-		if (!statementId) return;
+		if (!statementId || !creator?.uid) return;
 
-		const unsubscribe = listenToEvaluations(statementId);
+		const unsubscribe = listenToEvaluations(statementId, undefined, creator.uid);
 
 		return () => {
 			if (unsubscribe) {
 				unsubscribe();
 			}
 		};
-	}, [statementId]);
+	}, [statementId, creator?.uid]);
 
 	if (!subStatements || subStatements.length === 0) {
 		return <EmptyScreen statement={statement} />;
