@@ -2584,5 +2584,11 @@
   "subscribedDuringSurveyDescription": "Teilnehmer, die sich angemeldet haben, während die Umfrage geöffnet war.",
   "subscribedAfterClose": "Nach Schließung der Umfrage angemeldet",
   "subscribedAfterCloseDescription": "Personen, die nach Schließung der Umfrage Updates angefordert haben — eine andere Zielgruppe, die separat angesprochen werden sollte.",
-  "noPostCloseSubscribers": "Noch keine Anmeldungen nach Schließung"
+  "noPostCloseSubscribers": "Noch keine Anmeldungen nach Schließung",
+  "agree": "stimmen zu",
+  "Strong consensus": "Starker Konsens",
+  "Strong rejection": "Starke Ablehnung",
+  "Sharply divided": "Stark geteilt",
+  "Mild agreement": "Leichte Zustimmung",
+  "Mild disagreement": "Leichte Ablehnung"
 }

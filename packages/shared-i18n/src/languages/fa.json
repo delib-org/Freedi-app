@@ -2809,5 +2809,11 @@
   "subscribedDuringSurveyDescription": "شرکت‌کنندگانی که هنگام باز بودن نظرسنجی ثبت‌نام کردند.",
   "subscribedAfterClose": "ثبت‌نام پس از بسته شدن نظرسنجی",
   "subscribedAfterCloseDescription": "افرادی که پس از بسته شدن نظرسنجی درخواست به‌روزرسانی کردند — مخاطبانی متفاوت که باید جداگانه با آنان ارتباط برقرار کرد.",
-  "noPostCloseSubscribers": "هنوز ثبت‌نامی پس از بسته شدن انجام نشده است"
+  "noPostCloseSubscribers": "هنوز ثبت‌نامی پس از بسته شدن انجام نشده است",
+  "agree": "موافقند",
+  "Strong consensus": "اجماع قوی",
+  "Strong rejection": "رد قوی",
+  "Sharply divided": "به‌شدت منقسم",
+  "Mild agreement": "موافقت ملایم",
+  "Mild disagreement": "مخالفت ملایم"
 }

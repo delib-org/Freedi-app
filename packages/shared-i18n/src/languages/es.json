@@ -2585,5 +2585,11 @@
   "subscribedDuringSurveyDescription": "Participantes que se registraron mientras la encuesta estaba abierta.",
   "subscribedAfterClose": "Suscritos después del cierre",
   "subscribedAfterCloseDescription": "Personas que pidieron recibir actualizaciones después del cierre — un público distinto al que hay que dirigirse por separado.",
-  "noPostCloseSubscribers": "Aún no hay suscriptores posteriores al cierre"
+  "noPostCloseSubscribers": "Aún no hay suscriptores posteriores al cierre",
+  "agree": "de acuerdo",
+  "Strong consensus": "Consenso fuerte",
+  "Strong rejection": "Rechazo fuerte",
+  "Sharply divided": "Marcadamente dividido",
+  "Mild agreement": "Acuerdo leve",
+  "Mild disagreement": "Desacuerdo leve"
 }

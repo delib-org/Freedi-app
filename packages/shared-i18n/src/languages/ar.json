@@ -2269,5 +2269,11 @@
   "subscribedDuringSurveyDescription": "المشاركون الذين اشتركوا بينما كان الاستطلاع مفتوحاً.",
   "subscribedAfterClose": "اشتركوا بعد إغلاق الاستطلاع",
   "subscribedAfterCloseDescription": "الأشخاص الذين طلبوا تلقي تحديثات بعد إغلاق الاستطلاع — جمهور مختلف يستحق معالجة منفصلة.",
-  "noPostCloseSubscribers": "لا يوجد مشتركون بعد الإغلاق حتى الآن"
+  "noPostCloseSubscribers": "لا يوجد مشتركون بعد الإغلاق حتى الآن",
+  "agree": "يوافقون",
+  "Strong consensus": "إجماع قوي",
+  "Strong rejection": "رفض قوي",
+  "Sharply divided": "منقسمون بشدة",
+  "Mild agreement": "اتفاق طفيف",
+  "Mild disagreement": "خلاف طفيف"
 }

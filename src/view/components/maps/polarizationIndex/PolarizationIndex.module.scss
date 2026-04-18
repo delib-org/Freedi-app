@@ -5,7 +5,7 @@
 	display: flex;
 	flex-direction: column;
 	width: 100%;
-	max-width: 900px;
+	max-width: 1400px;
 	margin: 1.5rem auto;
 	padding: 0 1rem;
 
@@ -29,6 +29,120 @@
 	&__subtitle {
 		font-size: 0.875rem;
 		color: var(--text-caption);
+	}
+}
+
+// Toolbar above the chart — view-mode toggle, zoom reset.
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	justify-content: center;
+	align-items: center;
+	margin-bottom: 0.75rem;
+	min-height: 2rem;
+
+	&__group {
+		display: inline-flex;
+		border-radius: 999px;
+		background: rgba(0, 0, 0, 0.05);
+		padding: 0.2rem;
+		gap: 0.15rem;
+	}
+
+	&__segment {
+		appearance: none;
+		border: none;
+		background: transparent;
+		padding: 0.3rem 0.85rem;
+		font-size: 0.8rem;
+		font-weight: 500;
+		color: var(--text-body);
+		border-radius: 999px;
+		cursor: pointer;
+		transition: background 0.15s ease, color 0.15s ease;
+
+		&:hover,
+		&:focus-visible {
+			background: rgba(255, 255, 255, 0.5);
+		}
+
+		&--active {
+			background: var(--btn-primary, #5f88e5);
+			color: #fff;
+			box-shadow: 0 2px 6px rgba(95, 136, 229, 0.3);
+
+			&:hover,
+			&:focus-visible {
+				background: var(--btn-primary, #5f88e5);
+			}
+		}
+	}
+
+	&__hint {
+		opacity: 0.8;
+		font-weight: 400;
+	}
+
+	&__pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.35rem 0.75rem;
+		border: none;
+		border-radius: 999px;
+		background: var(--btn-primary, #5f88e5);
+		color: #fff;
+		font-size: 0.8rem;
+		font-weight: 500;
+		cursor: pointer;
+		box-shadow: 0 2px 6px rgba(95, 136, 229, 0.3);
+		transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+		&:hover,
+		&:focus-visible {
+			transform: translateY(-1px);
+			box-shadow: 0 4px 10px rgba(95, 136, 229, 0.4);
+		}
+
+		&[aria-pressed='true'] {
+			background: var(--text-title, #2d3748);
+		}
+	}
+}
+
+// Pointy-top hex (used in hex view mode for multi-occupant cells).
+// CSS clip-path renders a real hex silhouette; the dot sits at (left, top)
+// translated to its centre so positioning math matches dots/groups.
+.hex {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+	color: #fff;
+	font-weight: 700;
+	font-size: 0.85rem;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+	cursor: pointer;
+	pointer-events: none; // Hit-testing handled by the board
+	z-index: 10;
+	transition: transform 0.15s ease;
+
+	&__count {
+		pointer-events: none;
+	}
+
+	&--hovered {
+		transform: translate(-50%, -50%) scale(1.15);
+		z-index: 60;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hex {
+		transition: none;
 	}
 }
 
@@ -105,18 +219,33 @@
 
 .board {
 	width: 100%;
-	height: 60vh;
-	min-height: 300px;
-	max-height: 500px;
+	height: clamp(420px, 72vh, 760px);
 	position: relative;
 	border-radius: 0.5rem;
-	overflow: hidden;
+	// `overflow: visible` lets tooltips that anchor on edge dots escape the
+	// chart bounds. Dots themselves are clamped to inside the board by the
+	// anti-collision pass so they don't bleed.
+	overflow: visible;
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	outline: none;
+
+	&:focus-visible {
+		box-shadow:
+			0 2px 8px rgba(0, 0, 0, 0.08),
+			0 0 0 3px var(--btn-primary, #5f88e5);
+	}
 
 	@media (max-width: 600px) {
-		height: 50vh;
-		min-height: 250px;
+		height: clamp(320px, 65vh, 520px);
 	}
+}
+
+// Painted gradient backdrop — clipped to the board's rounded corners so
+// switching the board to overflow:visible doesn't leak the gradient.
+.boardBackground,
+.zones,
+.centerLine {
+	border-radius: 0.5rem;
 }
 
 // The main visualization background with zones
@@ -166,7 +295,8 @@
 	pointer-events: none;
 }
 
-// Individual zone indicators
+// Individual zone indicators — buttons (clickable to zoom into that quadrant).
+// Re-enable pointer events that were disabled on the parent `.zones` container.
 .zone {
 	position: absolute;
 	display: flex;
@@ -174,13 +304,41 @@
 	align-items: center;
 	justify-content: center;
 	padding: 0.5rem;
+	border: none;
 	border-radius: 0.5rem;
 	background: rgba(255, 255, 255, 0.85);
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 	backdrop-filter: blur(4px);
 	text-align: center;
 	z-index: 5;
-	pointer-events: none; // Allow clicks to pass through to dots
+	cursor: pointer;
+	font: inherit;
+	color: inherit;
+	pointer-events: auto;
+	transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+	&:hover,
+	&:focus-visible {
+		transform: translate(0, -2px) scale(1.04);
+		box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+		background: rgba(255, 255, 255, 0.95);
+	}
+
+	// Center-aligned zones (polarized, neutral) anchor with translateX(-50%);
+	// preserve that on hover.
+	&--polarized,
+	&--neutral {
+		&:hover,
+		&:focus-visible {
+			transform: translateX(-50%) translateY(-2px) scale(1.04);
+		}
+	}
+
+	&--active {
+		background: var(--btn-primary, #5f88e5);
+		color: #fff;
+		box-shadow: 0 4px 14px rgba(95, 136, 229, 0.35);
+	}
 
 	@media (max-width: 600px) {
 		padding: 0.35rem;
@@ -377,7 +535,10 @@
 	}
 }
 
-// Container for main statement dots
+// Container for main statement dots. `pointer-events: none` so hover +
+// click always go to the board, which runs nearest-neighbor hit-testing.
+// Previously each dot listened for its own hover, which meant stacked dots
+// swallowed each other's events and rendered tooltips unreachable.
 .pointDiv {
 	position: absolute;
 	transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -388,11 +549,7 @@
 	justify-content: center;
 	align-items: center;
 	z-index: 10;
-
-	// Lift higher when hovered/active (but still below subgroups)
-	&:hover {
-		z-index: 50;
-	}
+	pointer-events: none;
 }
 
 // Main statement dot - beautiful glassy style
@@ -403,6 +560,7 @@
 	cursor: pointer;
 	transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	position: relative;
+	pointer-events: none;
 
 	// Glassy effect with gradient overlay
 	background: linear-gradient(
@@ -452,17 +610,6 @@
 		border-radius: 50%;
 	}
 
-	// Hover state - scale up with enhanced glow
-	&:hover {
-		transform: scale(1.15);
-		box-shadow:
-			0 6px 20px rgba(0, 0, 0, 0.2),
-			0 3px 8px rgba(0, 0, 0, 0.15),
-			inset 0 1px 3px rgba(255, 255, 255, 0.5),
-			0 0 20px rgba(255, 255, 255, 0.2);
-		border-color: rgba(255, 255, 255, 0.5);
-	}
-
 	// Active/pressed state
 	&:active {
 		transform: scale(1.05);
@@ -470,6 +617,19 @@
 			0 2px 8px rgba(0, 0, 0, 0.2),
 			inset 0 1px 2px rgba(255, 255, 255, 0.3);
 	}
+}
+
+// Hovered state is now controlled by the board's nearest-neighbor
+// hit-tester (not by CSS `:hover`, since the dots opt out of pointer events).
+.point--hovered {
+	transform: scale(1.2);
+	box-shadow:
+		0 6px 20px rgba(0, 0, 0, 0.2),
+		0 3px 8px rgba(0, 0, 0, 0.15),
+		inset 0 1px 3px rgba(255, 255, 255, 0.5),
+		0 0 20px rgba(255, 255, 255, 0.2);
+	border-color: rgba(255, 255, 255, 0.5);
+	z-index: 60;
 }
 
 // Selected state - applied via inline style, enhanced here
@@ -481,7 +641,8 @@
 		inset 0 1px 3px rgba(255, 255, 255, 0.5);
 }
 
-// Container for demographic group dots - always above main dots when visible
+// Container for demographic group dots - always above main dots when visible.
+// Opts out of pointer events; see `.pointDiv` rationale above.
 .axisGroup {
 	width: 15px;
 	height: 15px;
@@ -493,10 +654,7 @@
 	position: absolute;
 	transition: opacity 150ms ease-in-out, all 800ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
 	z-index: 100; // Above main dots (z-index 10-50)
-
-	&:hover {
-		z-index: 150; // Even higher when hovered
-	}
+	pointer-events: none;
 
 	// Demographic group point - smaller, elegant style
 	.axisGroupPoint {
@@ -509,6 +667,7 @@
 		left: 50%;
 		cursor: pointer;
 		transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		pointer-events: none;
 
 		// Glassy effect
 		background: linear-gradient(
@@ -541,21 +700,117 @@
 			border-radius: 50%;
 		}
 
-		// Hover state
-		&:hover {
-			transform: translate(-50%, -50%) scale(1.2);
+		// Active state
+		&:active {
+			transform: translate(-50%, -50%) scale(1.1);
+		}
+
+		// Hovered state, controlled by the board's delegated hit-tester.
+		&--hovered {
+			transform: translate(-50%, -50%) scale(1.25);
 			box-shadow:
 				0 5px 16px rgba(0, 0, 0, 0.18),
 				0 2px 6px rgba(0, 0, 0, 0.12),
 				inset 0 1px 3px rgba(255, 255, 255, 0.45),
 				0 0 15px rgba(255, 255, 255, 0.15);
 			border-color: rgba(255, 255, 255, 0.4);
+			z-index: 160;
 		}
+	}
+}
 
-		// Active state
-		&:active {
-			transform: translate(-50%, -50%) scale(1.1);
+// Shared hover tooltip — one instance, positioned near the active dot.
+// Two-axis anchor flips so the bubble stays inside the chart no matter
+// where the dot sits: horizontal { left | center | right } picks the side
+// of the dot the bubble extends from; vertical { above | below } flips it
+// under the dot when near the top edge.
+.hoverTip {
+	position: absolute;
+	z-index: 1000;
+	pointer-events: none;
+	transform: translate(var(--tip-tx, -50%), var(--tip-ty, calc(-100% - 0.75rem)));
+
+	// Horizontal anchors
+	&--h-center {
+		--tip-tx: -50%;
+	}
+	&--h-left {
+		--tip-tx: -0.25rem; // small inset so the bubble starts near the dot
+	}
+	&--h-right {
+		--tip-tx: calc(-100% + 0.25rem);
+	}
+
+	// Vertical anchors
+	&--v-above {
+		--tip-ty: calc(-100% - 0.75rem);
+	}
+	&--v-below {
+		--tip-ty: 1.25rem;
+	}
+
+	&__bubble {
+		background: var(--card-default, #fff);
+		color: var(--text-body, #333);
+		border-radius: 0.5rem;
+		padding: 0.6rem 0.8rem;
+		box-shadow:
+			0 6px 24px rgba(0, 0, 0, 0.18),
+			0 2px 6px rgba(0, 0, 0, 0.1);
+		// Wider on roomy screens, narrower on phones — the title can be a
+		// long sentence, so let it wrap onto multiple lines.
+		width: max-content;
+		min-width: 180px;
+		max-width: min(360px, calc(100vw - 2rem));
+		animation: hoverTipFade 140ms ease-out;
+	}
+
+	&__title {
+		font-size: 0.85rem;
+		font-weight: 600;
+		line-height: 1.3;
+		margin-bottom: 0.25rem;
+		overflow-wrap: anywhere;
+		word-break: break-word;
+
+		@media (max-width: 600px) {
+			font-size: 0.8rem;
 		}
+	}
+
+	&__meta {
+		font-size: 0.72rem;
+		color: var(--text-caption, #666);
+		line-height: 1.35;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.3rem;
+	}
+
+	&__agree {
+		font-weight: 600;
+	}
+
+	&__sep {
+		opacity: 0.5;
+	}
+}
+
+@keyframes hoverTipFade {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.hoverTip__bubble {
+		animation: none;
 	}
 }
 

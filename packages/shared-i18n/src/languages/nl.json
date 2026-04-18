@@ -2584,5 +2584,11 @@
   "subscribedDuringSurveyDescription": "Deelnemers die zich hebben aangemeld terwijl de enquête open was.",
   "subscribedAfterClose": "Aangemeld na sluiting",
   "subscribedAfterCloseDescription": "Personen die na sluiting van de enquête om updates vroegen — een andere doelgroep die apart benaderd moet worden.",
-  "noPostCloseSubscribers": "Nog geen aanmeldingen na sluiting"
+  "noPostCloseSubscribers": "Nog geen aanmeldingen na sluiting",
+  "agree": "eens",
+  "Strong consensus": "Sterke consensus",
+  "Strong rejection": "Sterke afwijzing",
+  "Sharply divided": "Scherp verdeeld",
+  "Mild agreement": "Lichte instemming",
+  "Mild disagreement": "Lichte onenigheid"
 }
