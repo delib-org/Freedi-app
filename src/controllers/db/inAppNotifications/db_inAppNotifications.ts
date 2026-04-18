@@ -24,6 +24,24 @@ import {
 } from '@/redux/notificationsSlice/notificationsSlice';
 import { logError } from '@/utils/errorHandling';
 
+// Filters out Firestore write errors that are expected and not actionable:
+// - permission-denied: happens during sign-out before listeners unmount
+// - IndexedDB/unavailable: flaky mobile browsers, private mode, multi-tab
+//   schema upgrades (Samsung Internet, Firefox private, etc.)
+function isIgnorableFirestoreWriteError(error: unknown): boolean {
+	const firebaseError = error as { code?: string; name?: string };
+	const errorMessage = error instanceof Error ? error.message : String(error);
+
+	return (
+		firebaseError.code === 'permission-denied' ||
+		firebaseError.code === 'unavailable' ||
+		firebaseError.name === 'IndexedDbTransactionError' ||
+		errorMessage.includes('Missing or insufficient permissions') ||
+		errorMessage.includes('IndexedDB') ||
+		errorMessage.includes('indexedDB')
+	);
+}
+
 export function listenToInAppNotifications(): Unsubscribe {
 	try {
 		const user = store.getState().creator.creator;
@@ -130,32 +148,13 @@ export async function clearInAppNotifications(statementId: string) {
 		);
 		await Promise.all(deletePromises);
 	} catch (error: unknown) {
-		const firebaseError = error as { code?: string; name?: string };
-		const errorMessage = error instanceof Error ? error.message : String(error);
-
-		// Permission errors are expected during sign-out when Firebase
-		// revokes the auth token before React cleanup unsubscribes/unmounts
-		if (
-			firebaseError.code === 'permission-denied' ||
-			errorMessage.includes('Missing or insufficient permissions')
-		) {
-			return;
-		}
-
-		// IndexedDB/offline errors happen on flaky mobile browsers (Samsung
-		// Internet, private mode, multi-tab schema upgrades). Not actionable.
-		if (
-			firebaseError.code === 'unavailable' ||
-			firebaseError.name === 'IndexedDbTransactionError' ||
-			errorMessage.includes('IndexedDB') ||
-			errorMessage.includes('indexedDB')
-		) {
-			return;
-		}
+		if (isIgnorableFirestoreWriteError(error)) return;
 
 		logError(error, {
 			operation: 'inAppNotifications.db_inAppNotifications.clearInAppNotifications',
-			metadata: { detail: errorMessage },
+			metadata: {
+				detail: error instanceof Error ? error.message : String(error),
+			},
 		});
 	}
 }
@@ -181,10 +180,14 @@ export async function markNotificationAsReadDB(notificationId: string): Promise<
 
 		// Update in Redux
 		store.dispatch(markNotificationAsRead(notificationId));
-	} catch (error) {
+	} catch (error: unknown) {
+		if (isIgnorableFirestoreWriteError(error)) return;
+
 		logError(new Error('In markNotificationAsReadDB'), {
 			operation: 'inAppNotifications.db_inAppNotifications.markNotificationAsReadDB',
-			metadata: { detail: error.message },
+			metadata: {
+				detail: error instanceof Error ? error.message : String(error),
+			},
 		});
 	}
 }
@@ -216,10 +219,14 @@ export async function markMultipleNotificationsAsReadDB(notificationIds: string[
 
 		// Update in Redux
 		store.dispatch(markNotificationsAsRead(notificationIds));
-	} catch (error) {
+	} catch (error: unknown) {
+		if (isIgnorableFirestoreWriteError(error)) return;
+
 		logError(new Error('In markMultipleNotificationsAsReadDB'), {
-			operation: 'inAppNotifications.db_inAppNotifications.now',
-			metadata: { detail: error.message },
+			operation: 'inAppNotifications.db_inAppNotifications.markMultipleNotificationsAsReadDB',
+			metadata: {
+				detail: error instanceof Error ? error.message : String(error),
+			},
 		});
 	}
 }
@@ -263,10 +270,14 @@ export async function markStatementNotificationsAsReadDB(statementId: string): P
 			// Update in Redux
 			store.dispatch(markStatementNotificationsAsRead(statementId));
 		}
-	} catch (error) {
+	} catch (error: unknown) {
+		if (isIgnorableFirestoreWriteError(error)) return;
+
 		logError(new Error('In markStatementNotificationsAsReadDB'), {
-			operation: 'inAppNotifications.db_inAppNotifications.now',
-			metadata: { detail: error.message },
+			operation: 'inAppNotifications.db_inAppNotifications.markStatementNotificationsAsReadDB',
+			metadata: {
+				detail: error instanceof Error ? error.message : String(error),
+			},
 		});
 	}
 }
@@ -289,32 +300,13 @@ export async function markNotificationsAsViewedInListDB(notificationIds: string[
 		});
 		await batch.commit();
 	} catch (error: unknown) {
-		const firebaseError = error as { code?: string; name?: string };
-		const errorMessage = error instanceof Error ? error.message : String(error);
-
-		// Permission errors are expected when the user signs out or navigates away
-		// before the delayed batch commit fires — silently ignore them
-		if (
-			firebaseError.code === 'permission-denied' ||
-			errorMessage.includes('Missing or insufficient permissions')
-		) {
-			return;
-		}
-
-		// IndexedDB/offline errors happen on flaky mobile browsers (Samsung
-		// Internet, private mode, multi-tab schema upgrades). Not actionable.
-		if (
-			firebaseError.code === 'unavailable' ||
-			firebaseError.name === 'IndexedDbTransactionError' ||
-			errorMessage.includes('IndexedDB') ||
-			errorMessage.includes('indexedDB')
-		) {
-			return;
-		}
+		if (isIgnorableFirestoreWriteError(error)) return;
 
 		logError(error, {
-			operation: 'inAppNotifications.db_inAppNotifications.batch',
-			metadata: { detail: errorMessage },
+			operation: 'inAppNotifications.db_inAppNotifications.markNotificationsAsViewedInListDB',
+			metadata: {
+				detail: error instanceof Error ? error.message : String(error),
+			},
 		});
 	}
 }
@@ -353,7 +345,9 @@ export async function clearAllInAppNotificationsDB(): Promise<void> {
 			});
 			await batch.commit();
 		}
-	} catch (error) {
+	} catch (error: unknown) {
+		if (isIgnorableFirestoreWriteError(error)) return;
+
 		logError(error, {
 			operation: 'inAppNotifications.db_inAppNotifications.clearAllInAppNotificationsDB',
 			userId: store.getState().creator.creator?.uid,
