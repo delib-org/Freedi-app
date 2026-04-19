@@ -57,6 +57,7 @@
     "deploy:test": "npm run deploy:h:test && npm run deploy:f:test && npm run deploy:rules:test",
     "deploy:flow": "npm run env:prod && cd apps/flow && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:flow && npm run env:dev",
     "deploy:admin": "npm run env:prod && cd apps/admin && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:admin && npm run env:dev",
+    "deploy:join": "npm run env:prod && cd apps/join && npm run build && cd ../.. && firebase use wizcol && firebase deploy --only hosting:join && npm run env:dev",
     "deploy:sign": "cd apps/sign && ./deploy.sh",
     "deploy:sign:vercel": "curl -X POST \"https://api.vercel.com/v1/integrations/deploy/prj_0m8aMtkMP7PPgfqdOpLVO55AsvfU/gsFjuMHuE9\"",
     "e2e:main": "npx playwright test --config=e2e/main-app/playwright.config.ts",
