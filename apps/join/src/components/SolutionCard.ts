@@ -59,8 +59,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
       });
     };
 
+    const isCluster = option.isCluster === true;
+    const groupSize = option.integratedOptions?.length ?? 0;
+
     return m(
-      `.solution-card${isActivated ? '.solution-card--activated' : ''}`,
+      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}`,
       {
         role: 'button',
         tabindex: 0,
@@ -90,6 +93,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
       [
         isActivated
           ? m('.solution-card__activated-badge', t('card.activated'))
+          : null,
+        isCluster && groupSize > 0
+          ? m('.solution-card__group-badge', t('card.group_represents', { count: groupSize }))
           : null,
         m('.solution-card__title', option.statement),
         getOptionDescription(option)

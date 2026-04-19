@@ -197,3 +197,52 @@ export const PWA_MESSAGES = {
 	CANCEL_BUTTON: 'Not now',
 	SUCCESS: 'FreeDi installed successfully!',
 } as const;
+
+/**
+ * Condensation / Grouped Suggestions — cosine-similarity thresholds for
+ * complete-linkage clustering. Calibrated empirically against
+ * `text-embedding-3-small` on thematically cohesive short text. The pipeline
+ * reads its own copy of this map (see functions/src/condensation/pipeline.ts)
+ * so keep the two in sync if you tune these.
+ */
+export const CONDENSATION_THRESHOLDS = {
+	loose: 0.82, // bigger groups, fewer singletons
+	balanced: 0.85, // middle ground (default)
+	tight: 0.88, // tighter cohesion, more singletons
+} as const;
+
+export type CondensationLevelKey = keyof typeof CONDENSATION_THRESHOLDS;
+
+/**
+ * Condensation pipeline constants
+ */
+export const CONDENSATION = {
+	/** Default minimum members required to form a cluster */
+	MIN_GROUP_SIZE_DEFAULT: 2,
+	/** Per-run cap on Gemini merge calls (cost gating) */
+	MAX_MERGES_PER_RUN: 25,
+	/** Jaccard overlap threshold above which a newly-produced group is matched
+	 *  to an existing cluster statement (update in place) rather than creating
+	 *  a new one. Below this, a new cluster is created. */
+	RECONCILER_JACCARD_THRESHOLD: 0.5,
+	/** Lock TTL for the `statements/{parentId}/locks/condensation` doc */
+	LOCK_TTL_MS: 5 * TIME.MINUTE,
+	/** Chunk size for batched `where(documentId(), 'in', ...)` queries when
+	 *  fetching cluster members on drill-down expansion */
+	DRILL_BATCH_SIZE: 30,
+	/** Scheduler cadence (piggybacks on the existing hybrid-clustering sweep) */
+	SCHEDULER_INTERVAL_MS: 15 * TIME.MINUTE,
+	/** Centroid-shift threshold that must be exceeded to regenerate a cluster
+	 *  title when `titleLockedByCreator` is false */
+	TITLE_REGEN_CENTROID_SHIFT: 0.1,
+} as const;
+
+/**
+ * Per-surface visibility defaults for newly enabled condensation. Matches
+ * the UX spec: main + MC default to "both", join defaults to "clusters-only".
+ */
+export const CONDENSATION_VISIBILITY_DEFAULTS = {
+	main: 'both',
+	massConsensus: 'both',
+	join: 'clusters-only',
+} as const;

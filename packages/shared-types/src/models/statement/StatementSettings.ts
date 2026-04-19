@@ -73,6 +73,40 @@ export const ActivationThresholdSchema = object({
 });
 export type ActivationThreshold = InferOutput<typeof ActivationThresholdSchema>;
 
+/**
+ * Condensation / "Grouped suggestions" — creates a new sibling statement
+ * (with `isCluster: true` and `integratedOptions: [...sourceIds]`) that
+ * represents a group of semantically similar originals. Originals are NOT
+ * reparented, hidden, or modified — they remain live in the database.
+ * Whether voters see them in the UI is controlled per-surface via `visibility`.
+ *
+ * Evaluations aggregate upward from originals into the cluster via the
+ * existing `fn_clusterAggregation` pipeline (deduped per evaluator).
+ */
+export const CondensationLevelSchema = picklist(['loose', 'balanced', 'tight']);
+export type CondensationLevel = InferOutput<typeof CondensationLevelSchema>;
+
+export const CondensationSurfaceVisibilitySchema = picklist(['both', 'clusters-only']);
+export type CondensationSurfaceVisibility = InferOutput<typeof CondensationSurfaceVisibilitySchema>;
+
+export const CondensationVisibilitySchema = object({
+	main: CondensationSurfaceVisibilitySchema,
+	massConsensus: CondensationSurfaceVisibilitySchema,
+	join: CondensationSurfaceVisibilitySchema,
+});
+export type CondensationVisibility = InferOutput<typeof CondensationVisibilitySchema>;
+
+export const CondensationConfigSchema = object({
+	enabled: boolean(),
+	level: CondensationLevelSchema, // maps to similarity threshold via CONDENSATION_THRESHOLDS
+	autoApply: boolean(), // false = creator approves groups via preview before they publish
+	allowCreatorOverrides: boolean(),
+	minGroupSize: number(), // minimum members required to form a cluster (default 2)
+	visibility: CondensationVisibilitySchema, // per-surface display mode
+	allowDrillToOriginals: boolean(), // when visibility is clusters-only, can voters drill to see originals
+});
+export type CondensationConfig = InferOutput<typeof CondensationConfigSchema>;
+
 export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
@@ -121,6 +155,7 @@ export const StatementSettingsSchema = object({
 	joinResolution: optional(JoinResolutionConfigSchema), // conditional-joining lifecycle (intent → resolved)
 	enableHybridClustering: optional(boolean()), // if true, hybrid text+rating clustering runs for this question and sub-questions
 	activationThreshold: optional(ActivationThresholdSchema), // min activists/organizers to activate an option
+	condensation: optional(CondensationConfigSchema), // grouped suggestions feature — see CondensationConfigSchema
 });
 
 

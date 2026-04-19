@@ -199,7 +199,11 @@ export type {
   JoinFormConfig,
   JoinResolutionPhase,
   JoinResolutionConfig,
-  ActivationThreshold
+  ActivationThreshold,
+  CondensationConfig,
+  CondensationLevel,
+  CondensationSurfaceVisibility,
+  CondensationVisibility
 } from "./models/statement/StatementSettings";
 
 export {
@@ -211,7 +215,11 @@ export {
   JoinFormConfigSchema,
   JoinResolutionPhaseSchema,
   JoinResolutionConfigSchema,
-  ActivationThresholdSchema
+  ActivationThresholdSchema,
+  CondensationConfigSchema,
+  CondensationLevelSchema,
+  CondensationSurfaceVisibilitySchema,
+  CondensationVisibilitySchema
 } from "./models/statement/StatementSettings";
 
 export type {

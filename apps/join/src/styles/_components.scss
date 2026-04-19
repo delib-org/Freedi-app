@@ -425,6 +425,29 @@
     z-index: 2;
   }
 
+  // Grouped suggestion badge — pairs with isCluster=true. Positioned under the
+  // activated badge (or at the same spot when the option isn't activated).
+  &__group-badge {
+    position: absolute;
+    top: var(--space-md);
+    left: var(--space-md);
+    background: var(--terra-500, var(--teal-700));
+    color: var(--text-inverse);
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    padding: 5px 10px;
+    border-radius: var(--radius-full);
+    z-index: 2;
+  }
+
+  // Subtle accent for grouped cards, so they read as "one step above" a plain
+  // option without introducing a brand-new card style.
+  &--grouped {
+    box-shadow: 0 0 0 2px var(--terra-500, var(--teal-700));
+  }
+
   &__title {
     font-family: var(--font-display);
     font-size: var(--font-size-xl);

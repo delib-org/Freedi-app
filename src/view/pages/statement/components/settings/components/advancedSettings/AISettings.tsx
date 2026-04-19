@@ -4,6 +4,7 @@ import { Search, Target, Database, Scissors } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
+import GroupingSettings from './GroupingSettings';
 
 interface AISettingsProps {
 	statement: Statement;
@@ -70,6 +71,7 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 						icon={Scissors}
 						badge="new"
 					/>
+					<GroupingSettings statement={statement} settings={settings} />
 				</>
 			)}
 		</>

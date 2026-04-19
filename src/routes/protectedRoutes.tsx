@@ -30,6 +30,10 @@ const SubscriptionManager = lazyWithRetry(
 	() => import('@/view/pages/subscriptions/SubscriptionManager'),
 	'SubscriptionManager',
 );
+const GroupsCurationPage = lazyWithRetry(
+	() => import('@/view/pages/statement/components/groups/GroupsCurationPage'),
+	'GroupsCurationPage',
+);
 
 // Helper to wrap with skeleton suspense (first load only)
 const withStatementSuspense = (Component: React.LazyExoticComponent<React.ComponentType>) =>
@@ -76,6 +80,10 @@ export const protectedRoutes: RouteObject[] = [
 	{
 		path: 'my-suggestions/statement/:statementId',
 		element: withLoadingSuspense(MySuggestions),
+	},
+	{
+		path: 'statement/:statementId/groups',
+		element: withLoadingSuspense(GroupsCurationPage),
 	},
 ];
 

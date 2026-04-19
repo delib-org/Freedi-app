@@ -157,6 +157,22 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
+	condensationStatus: optional(object({ // set on parent questions when the grouping pipeline runs
+		lastRunAt: optional(number()),
+		lastRunBy: optional(string()), // userId of the creator, or 'scheduler' for auto runs
+		isStale: optional(boolean()), // marked true when new suggestions arrive, cleared after run
+		inputCount: optional(number()), // number of candidate originals in the last run
+		producedGroupCount: optional(number()), // number of clusters produced by the last run
+		level: optional(picklist(['loose', 'balanced', 'tight'])),
+		error: optional(string()),
+	})),
+	creatorOverrides: optional(object({ // set on parent questions — manual reassignments by the creator
+		// map of originalStatementId → clusterStatementId | '__standalone__'
+		// the pipeline respects these on re-run instead of re-grouping them automatically
+		assignments: optional(any()), // Record<string, string> — validated at call sites
+		updatedAt: optional(number()),
+	})),
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement

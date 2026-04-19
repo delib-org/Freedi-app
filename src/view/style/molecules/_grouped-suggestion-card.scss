@@ -1,0 +1,197 @@
+// Grouped Suggestion Card — Atomic Design / BEM
+// Visually signals a statement that represents multiple similar originals.
+// Renders as a stacked card: primary surface + two offset "shadow cards"
+// behind it, hinting at the group members. Evaluation is performed on the
+// grouped card itself — aggregated values arrive pre-computed from
+// fn_clusterAggregation in the `evaluation` field.
+
+@use '../mixins' as *;
+
+.grouped-suggestion {
+  position: relative;
+  margin-bottom: 1.25rem; // extra room so stacked layers don't collide with next card
+
+  // ============================================================================
+  // STACKED LAYERS (pseudo-shadows suggesting "multiple items")
+  // ============================================================================
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0.5rem;
+    right: 0.5rem;
+    background: var(--card-default, #fff);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  &::before {
+    top: 0.5rem;
+    bottom: -0.5rem;
+    opacity: 0.55;
+  }
+
+  &::after {
+    top: 0.25rem;
+    bottom: -0.25rem;
+    opacity: 0.75;
+  }
+
+  &__card {
+    position: relative;
+    z-index: 1;
+    border-left: 4px solid var(--btn-primary);
+    padding-left: 0.5rem; // account for accent strip
+
+    @include rtl {
+      border-left: none;
+      border-right: 4px solid var(--btn-primary);
+      padding-left: 0;
+      padding-right: 0.5rem;
+    }
+  }
+
+  // ============================================================================
+  // ELEMENTS
+  // ============================================================================
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__title-wrap {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__count-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.6rem;
+    background: var(--btn-primary);
+    color: var(--btn-primary-text, #fff);
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__body {
+    @include body-text;
+    margin-bottom: 0.75rem;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.25rem;
+    font-size: 0.8rem;
+    color: var(--text-secondary, #777);
+    margin-bottom: 0.75rem;
+  }
+
+  &__meta-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__disclosure {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    background: transparent;
+    border: none;
+    color: var(--btn-primary);
+    cursor: pointer;
+    padding: 0.35rem 0.5rem;
+    margin: 0;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: background-color 150ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__originals {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border-light);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__original {
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.02));
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-body);
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+
+    &-text {
+      flex: 1;
+      min-width: 0;
+    }
+
+    &-note {
+      font-size: 0.75rem;
+      color: var(--text-secondary, #777);
+      flex-shrink: 0;
+    }
+  }
+
+  // ============================================================================
+  // MODIFIERS
+  // ============================================================================
+  &--expanded {
+    // visual hint that drill-down is open — slightly stronger accent
+    .grouped-suggestion__card {
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  &--clusters-only {
+    // single-layer rendering in clusters-only mode; drill-down opens a modal
+    &::before,
+    &::after {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  @include mobile {
+    &__header {
+      flex-wrap: wrap;
+    }
+
+    &__count-pill {
+      order: 2;
+      margin-left: auto;
+    }
+  }
+}
