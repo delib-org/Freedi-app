@@ -33,6 +33,7 @@ const translations: Record<string, Record<string, string>> = {
     'chat.loading': 'Loading...',
     'chat.not_found': 'Solution not found',
     'chat.empty': 'No messages yet. Start the conversation!',
+    'chat.open': 'Open chat',
     'chat.placeholder': 'Type a message...',
     'chat.send': 'Send message',
     'chat.back': 'Back to solutions',
@@ -82,6 +83,7 @@ const translations: Record<string, Record<string, string>> = {
     'chat.loading': 'טוען...',
     'chat.not_found': 'הפתרון לא נמצא',
     'chat.empty': 'אין הודעות עדיין. התחילו את השיחה!',
+    'chat.open': 'פתח צ\'אט',
     'chat.placeholder': 'כתבו הודעה...',
     'chat.send': 'שלח הודעה',
     'chat.back': 'חזרה לפתרונות',
@@ -129,6 +131,7 @@ const translations: Record<string, Record<string, string>> = {
     'chat.loading': 'جارٍ التحميل...',
     'chat.not_found': 'الحل غير موجود',
     'chat.empty': 'لا توجد رسائل بعد. ابدأ المحادثة!',
+    'chat.open': 'فتح الدردشة',
     'chat.placeholder': 'اكتب رسالة...',
     'chat.send': 'إرسال',
     'chat.back': 'العودة إلى الحلول',
@@ -162,6 +165,7 @@ const translations: Record<string, Record<string, string>> = {
     'card.join_organizer': 'Als Organisator beitreten',
     'card.joined_organizer': 'Organisator \u2713',
     'chat.empty': 'Noch keine Nachrichten. Starten Sie das Gespräch!',
+    'chat.open': 'Chat öffnen',
     'chat.placeholder': 'Nachricht eingeben...',
     'chat.name_prompt': 'Geben Sie Ihren Namen ein, um dem Chat beizutreten:',
     'chat.name_continue': 'Weiter',
@@ -187,6 +191,7 @@ const translations: Record<string, Record<string, string>> = {
     'card.join_organizer': 'Unirse como organizador',
     'card.joined_organizer': 'Organizador \u2713',
     'chat.empty': 'No hay mensajes aún. ¡Inicie la conversación!',
+    'chat.open': 'Abrir chat',
     'chat.placeholder': 'Escribe un mensaje...',
     'chat.name_prompt': 'Ingrese su nombre para unirse al chat:',
     'chat.name_continue': 'Continuar',
@@ -209,6 +214,7 @@ const translations: Record<string, Record<string, string>> = {
     'card.join_organizer': 'Word organisator',
     'card.joined_organizer': 'Organisator \u2713',
     'chat.empty': 'Nog geen berichten. Begin het gesprek!',
+    'chat.open': 'Chat openen',
     'chat.placeholder': 'Typ een bericht...',
     'chat.name_prompt': 'Voer uw naam in om deel te nemen aan de chat:',
     'chat.name_continue': 'Doorgaan',
@@ -231,6 +237,7 @@ const translations: Record<string, Record<string, string>> = {
     'card.join_organizer': 'پیوستن به عنوان سازمان‌دهنده',
     'card.joined_organizer': 'سازمان‌دهنده \u2713',
     'chat.empty': 'هنوز پیامی نیست. گفتگو را شروع کنید!',
+    'chat.open': 'باز کردن گفتگو',
     'chat.placeholder': 'پیام بنویسید...',
     'chat.name_prompt': 'نام خود را وارد کنید تا به چت بپیوندید:',
     'chat.name_continue': 'ادامه',
@@ -245,24 +252,41 @@ const translations: Record<string, Record<string, string>> = {
 type LangCode = string;
 let currentLang: LangCode = 'en';
 
-function detectLanguage(): LangCode {
+// Did the user make an explicit language choice (via ?lang= or prior setLang)?
+// If not, the statement's defaultLanguage is allowed to override the browser
+// default on load.
+let userExplicitLang = false;
+
+function detectLanguage(): { lang: LangCode; explicit: boolean } {
   const params = new URLSearchParams(window.location.search);
   const urlLang = params.get('lang');
-  if (urlLang && translations[urlLang]) return urlLang;
+  if (urlLang && translations[urlLang]) {
+    return { lang: urlLang, explicit: true };
+  }
 
   const stored = localStorage.getItem('freedi_join_lang');
-  if (stored && translations[stored]) return stored;
+  if (stored && translations[stored]) {
+    return { lang: stored, explicit: true };
+  }
 
   const browserLang = navigator.language.split('-')[0];
-  if (translations[browserLang]) return browserLang;
+  if (translations[browserLang]) {
+    return { lang: browserLang, explicit: false };
+  }
 
-  return 'en';
+  return { lang: 'en', explicit: false };
+}
+
+function applyLang(lang: LangCode): void {
+  currentLang = lang;
+  document.documentElement.dir = isRTL() ? 'rtl' : 'ltr';
+  document.documentElement.lang = currentLang;
 }
 
 export function initI18n(): void {
-  currentLang = detectLanguage();
-  document.documentElement.dir = isRTL() ? 'rtl' : 'ltr';
-  document.documentElement.lang = currentLang;
+  const { lang, explicit } = detectLanguage();
+  userExplicitLang = explicit;
+  applyLang(lang);
 }
 
 export function getLang(): LangCode {
@@ -270,11 +294,34 @@ export function getLang(): LangCode {
 }
 
 export function setLang(lang: LangCode): void {
-  currentLang = lang;
+  if (!translations[lang]) return;
+  userExplicitLang = true;
   localStorage.setItem('freedi_join_lang', lang);
-  document.documentElement.dir = isRTL() ? 'rtl' : 'ltr';
-  document.documentElement.lang = currentLang;
+  applyLang(lang);
   m.redraw();
+}
+
+/**
+ * Apply the language preference declared on a Statement (typically the
+ * question set in the main app). Priority rules:
+ *   - statement.forceLanguage === true  →  always wins, even over URL/localStorage
+ *   - otherwise, statement.defaultLanguage wins only when the user hasn't
+ *     made an explicit choice (URL param or prior setLang)
+ * Returns true if the active language changed.
+ */
+export function applyStatementLanguage(
+  defaultLanguage?: string,
+  forceLanguage?: boolean,
+): boolean {
+  if (!defaultLanguage || !translations[defaultLanguage]) return false;
+  if (defaultLanguage === currentLang) return false;
+
+  const shouldApply = forceLanguage === true || !userExplicitLang;
+  if (!shouldApply) return false;
+
+  applyLang(defaultLanguage);
+
+  return true;
 }
 
 export function isRTL(): boolean {

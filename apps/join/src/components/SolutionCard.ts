@@ -52,14 +52,26 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 
     const isActivated = isOptionActivated(joinedCount, organizerCount, question);
 
+    const navigateToChat = (): void => {
+      m.route.set('/q/:qid/s/:sid', {
+        qid: questionId,
+        sid: option.statementId,
+      });
+    };
+
     return m(
       `.solution-card${isActivated ? '.solution-card--activated' : ''}`,
       {
-        onclick: () =>
-          m.route.set('/q/:qid/s/:sid', {
-            qid: questionId,
-            sid: option.statementId,
-          }),
+        role: 'button',
+        tabindex: 0,
+        'aria-label': option.statement,
+        onclick: navigateToChat,
+        onkeydown: (e: KeyboardEvent) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigateToChat();
+          }
+        },
         oncreate: (vnode: m.VnodeDOM) => {
           if (isActivated && !hasCelebrated(option.statementId)) {
             markCelebrated(option.statementId);
@@ -93,21 +105,31 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             '.solution-card__chat',
             {
               class: messageCount > 0 ? 'solution-card__chat--active' : '',
+              role: 'button',
+              tabindex: 0,
+              'aria-label':
+                newMsgCount > 0
+                  ? t(newMsgCount > 1 ? 'card.new_messages_plural' : 'card.new_messages', { count: newMsgCount })
+                  : t('chat.open'),
               onclick: (e: Event) => {
                 e.stopPropagation();
-                m.route.set('/q/:qid/s/:sid', {
-                  qid: questionId,
-                  sid: option.statementId,
-                });
+                navigateToChat();
+              },
+              onkeydown: (e: KeyboardEvent) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  navigateToChat();
+                }
               },
             },
             [
-              m('.solution-card__chat-icon', '\uD83D\uDCAC'),
+              m('.solution-card__chat-icon', { 'aria-hidden': 'true' }, '\uD83D\uDCAC'),
               messageCount > 0
                 ? m('.solution-card__chat-count', messageCount)
                 : null,
               newMsgCount > 0
-                ? m('.solution-card__chat-new', newMsgCount)
+                ? m('.solution-card__chat-new', { 'aria-hidden': 'true' }, newMsgCount)
                 : null,
             ],
           ),

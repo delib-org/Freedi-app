@@ -78,12 +78,14 @@ export const Solutions: m.Component = {
     const options = getVisibleOptions();
     const total = getTotalVisibleCount();
     const unread = getUnreadCount();
-    const headerColor = question.color || 'var(--color-primary)';
+    const accentColor = question.color || 'var(--terra-500)';
 
     return m('.solutions', [
-      m('.solutions__header', { style: { background: headerColor } }, [
-        m('h1.solutions__title', question.statement),
-      ]),
+      m(
+        '.solutions__header',
+        { style: `--q-accent: ${accentColor}` },
+        [m('h1.solutions__title', question.statement)],
+      ),
       m('.solutions__scroll', [
         m('.solutions__subtitle', [
           m('span.solutions__subtitle-icon', '\u2728'),

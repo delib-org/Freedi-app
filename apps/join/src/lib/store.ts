@@ -14,6 +14,7 @@ import {
   Unsubscribe,
 } from './firebase';
 import { getUserState } from './user';
+import { applyStatementLanguage } from './i18n';
 import {
   Collections,
   Statement,
@@ -196,6 +197,11 @@ export function getCreator(): Creator | null {
   return buildCreator();
 }
 
+function syncQuestionLanguage(): void {
+  if (!question) return;
+  applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
+}
+
 export async function loadQuestion(questionId: string): Promise<void> {
   const qDoc = await getDoc(doc(db, Collections.statements, questionId));
   if (!qDoc.exists()) {
@@ -207,6 +213,7 @@ export async function loadQuestion(questionId: string): Promise<void> {
   }
 
   question = qDoc.data() as Statement;
+  syncQuestionLanguage();
 
   const optionsQuery = query(
     collection(db, Collections.statements),
@@ -223,6 +230,7 @@ export function subscribeQuestion(questionId: string): Unsubscribe {
   return onSnapshot(doc(db, Collections.statements, questionId), (snap) => {
     if (snap.exists()) {
       question = snap.data() as Statement;
+      syncQuestionLanguage();
     } else {
       question = null;
     }

@@ -1,7 +1,10 @@
 @use 'tokens';
 @use 'components';
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+// Fraunces (display serif, variable) + Figtree (humanist sans).
+// Latin-only; RTL scripts (ar, he, fa) gracefully fall back to system fonts
+// via the stack in _tokens.scss.
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&display=swap');
 
 *,
 *::before,
@@ -14,10 +17,11 @@
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  font-family: var(--font-family);
+  font-family: var(--font-body);
   font-size: var(--font-size-base);
   line-height: var(--line-height-normal);
   color: var(--text-primary);
@@ -25,14 +29,56 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'ss01', 'cv11';
+
+  // Subtle paper grain — never over ~8% opacity so it doesn't affect
+  // text contrast ratios. Hidden for forced-colors users.
+  background-image:
+    radial-gradient(
+      ellipse at top left,
+      color-mix(in oklab, var(--terra-50) 60%, transparent) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at bottom right,
+      color-mix(in oklab, var(--teal-50) 40%, transparent) 0%,
+      transparent 60%
+    );
+  background-attachment: fixed;
+}
+
+// Typographic defaults — everything inherits body, display used explicitly.
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-tight);
+  letter-spacing: var(--tracking-tight);
+  color: var(--text-primary);
+  // Fraunces opsz enables optical-size variation — larger headings get
+  // more dramatic contrast automatically.
+  font-variation-settings: 'opsz' 144, 'SOFT' 50;
+}
+
+h4, h5, h6 {
+  font-family: var(--font-body);
+  font-weight: var(--font-weight-semibold);
+  line-height: var(--line-height-snug);
+}
+
+button, input, textarea, select {
+  font: inherit;
+  color: inherit;
 }
 
 #app {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
+// Skip-link — visible on focus, hits AA contrast requirement.
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -45,10 +91,39 @@ body {
   border: 0;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 3px;
+.visually-hidden:focus,
+.visually-hidden:focus-visible {
+  position: fixed;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  width: auto;
+  height: auto;
+  padding: var(--space-sm) var(--space-md);
+  margin: 0;
+  clip: auto;
+  background: var(--ink);
+  color: var(--paper);
   border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
+  z-index: 1000;
+  text-decoration: none;
+}
+
+// High-contrast focus ring, applied everywhere.
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-sm);
+}
+
+// Selection — warm terracotta tint, high contrast.
+::selection {
+  background: var(--terra-500);
+  color: #fff;
 }
 
 .confetti-container {
@@ -59,11 +134,23 @@ body {
   z-index: 20;
 }
 
+// Respect user motion preferences. Keep focus/scroll behaviors instant
+// rather than disabled so keyboard nav isn't broken.
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+// Forced-colors: drop decorative backgrounds that could obscure system
+// color overrides.
+@media (forced-colors: active) {
+  body {
+    background-image: none;
   }
 }
