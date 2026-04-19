@@ -22,6 +22,14 @@ export const EvaluationSchema = object({
 	isTestData: optional(boolean()),
 	/** Timestamp when this data was retroactively marked as test data (if applicable) */
 	markedAsTestAt: optional(number()),
+	/**
+	 * The statementId under which this evaluator's demographic answers are
+	 * stored (i.e. getStatementIdForSurvey(survey)). Set when the evaluation
+	 * was submitted inside a survey session so the polarization index can
+	 * look up the evaluator's demographics directly instead of relying on
+	 * an ancestor walk. Omitted for evaluations made outside any survey.
+	 */
+	demographicAnchorId: optional(string()),
 });
 
 export type Evaluation = InferOutput<typeof EvaluationSchema>;

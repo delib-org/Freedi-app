@@ -59,18 +59,11 @@ export async function updateStatementEvaluation(
 		// This is the difference in x^2 values: new^2 - old^2
 		const squaredEvaluationDiff = calcSquaredDiff(newEvaluation, oldEvaluation);
 
-		// Determine if we should actually add an evaluator
-		// Only count as a new evaluator if:
-		// 1. It's a truly new evaluation (action = new AND newEvaluation is not 0)
-		// 2. It's transitioning from no evaluation (0) to having an evaluation
+		// Count every participant, including zero-value (neutral) evaluations
 		let actualAddEvaluator = 0;
-		if (action === ActionTypes.new && newEvaluation !== 0) {
+		if (action === ActionTypes.new) {
 			actualAddEvaluator = 1;
-		} else if (action === ActionTypes.update && oldEvaluation === 0 && newEvaluation !== 0) {
-			actualAddEvaluator = 1;
-		} else if (action === ActionTypes.update && oldEvaluation !== 0 && newEvaluation === 0) {
-			actualAddEvaluator = -1;
-		} else if (action === ActionTypes.delete && oldEvaluation !== 0) {
+		} else if (action === ActionTypes.delete) {
 			actualAddEvaluator = -1;
 		}
 

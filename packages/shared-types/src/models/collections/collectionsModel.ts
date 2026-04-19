@@ -1,6 +1,7 @@
 export enum Collections {
     statements = 'statements',
     statementSnapShots = 'statementSnapshots',
+    statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
     statementsSettings = 'statementsSettings',
     statementsMetaData = 'statementsMeta',

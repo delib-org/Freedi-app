@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getFirestoreAdmin } from '@/lib/firebase/admin';
 import { logError } from '@/lib/utils/errorHandling';
 import { logger } from '@/lib/utils/logger';
+import { resolveSubscriberSource } from '@/lib/utils/subscriberSource';
 
 // Use the same collection as the Firebase function for admin notifications
 const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
@@ -28,7 +29,7 @@ export async function POST(
   try {
     const { id: statementId } = await params;
     const body = await request.json();
-    const { email, userId } = body;
+    const { email, userId, source } = body;
 
     // Validate email
     if (!email || typeof email !== 'string') {
@@ -37,6 +38,8 @@ export async function POST(
         { status: 400 }
       );
     }
+
+    const resolvedSource = resolveSubscriberSource(source);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -56,11 +59,12 @@ export async function POST(
 
     const db = getFirestoreAdmin();
 
-    // Check if already subscribed (by email + statementId)
+    // Check if already subscribed for this source (email + statementId + source)
     const existingQuery = await db
       .collection(EMAIL_SUBSCRIBERS_COLLECTION)
       .where('email', '==', email.toLowerCase())
       .where('statementId', '==', statementId)
+      .where('source', '==', resolvedSource)
       .where('isActive', '==', true)
       .limit(1)
       .get();
@@ -85,7 +89,7 @@ export async function POST(
       statementId,
       createdAt: Date.now(),
       isActive: true,
-      source: 'mass-consensus',
+      source: resolvedSource,
     };
 
     // Only add userId if it's a valid non-empty string (Firestore rejects undefined values)

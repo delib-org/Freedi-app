@@ -1,5 +1,5 @@
 import { Unsubscribe } from 'firebase/auth';
-import { query, where, getDocs, getDoc } from 'firebase/firestore';
+import { query, where, getDocs, getDoc, FirestoreError } from 'firebase/firestore';
 import { setEvaluationToStore } from '@/redux/evaluations/evaluationsSlice';
 import { AppDispatch, store } from '@/redux/store';
 import { parse } from 'valibot';
@@ -18,6 +18,24 @@ import {
 } from '@/controllers/utils/firestoreListenerHelpers';
 import { createCollectionRef, createEvaluationRef, createDocRef } from '@/utils/firebaseUtils';
 import { logError } from '@/utils/errorHandling';
+import { auth } from '@/controllers/db/config';
+
+// Permission-denied errors are expected during auth transitions (token refresh,
+// session expiry, sign-out while listener is still attached) — especially on
+// iOS Safari. They are not actionable bugs, so we log them as info instead
+// of flooding Sentry.
+const handleListenerError = (error: FirestoreError, operation: string, message: string): void => {
+	if (error.code === 'permission-denied') {
+		console.info(`${message} (permission-denied, likely auth transition)`);
+
+		return;
+	}
+
+	logError(error, {
+		operation,
+		metadata: { message },
+	});
+};
 
 export const listenToEvaluations = (
 	parentId: string,
@@ -30,6 +48,15 @@ export const listenToEvaluations = (
 
 		const evaluatorId = userId ?? store.getState().creator.creator?.uid;
 		if (!evaluatorId) throw new Error('User is undefined');
+
+		// Gate on Firebase Auth state (not just Redux) so we don't attach a
+		// listener that will immediately fail with permission-denied when
+		// the cached Redux creator doesn't match a valid auth session.
+		if (!auth.currentUser) {
+			console.info('listenToEvaluations skipped: no Firebase Auth session');
+
+			return () => {};
+		}
 
 		const q = selectionFunction
 			? query(
@@ -71,10 +98,11 @@ export const listenToEvaluations = (
 				}
 			},
 			(error) =>
-				logError(error, {
-					operation: 'evaluation.getEvaluation.unknown',
-					metadata: { message: 'Error in evaluations listener:' },
-				}),
+				handleListenerError(
+					error,
+					'evaluation.getEvaluation.unknown',
+					'Error in evaluations listener:',
+				),
 			'query',
 		);
 	} catch (error) {
@@ -86,6 +114,12 @@ export const listenToEvaluations = (
 
 export function listenToEvaluation(statementId: string, userId: string): () => void {
 	try {
+		if (!auth.currentUser) {
+			console.info('listenToEvaluation skipped: no Firebase Auth session');
+
+			return () => {};
+		}
+
 		const evaluationId = getStatementSubscriptionId(statementId, userId);
 
 		const evaluationsRef = createEvaluationRef(evaluationId);
@@ -108,10 +142,11 @@ export function listenToEvaluation(statementId: string, userId: string): () => v
 				}
 			},
 			(error) =>
-				logError(error, {
-					operation: 'evaluation.getEvaluation.listenToEvaluation',
-					metadata: { message: 'Error in evaluation listener:' },
-				}),
+				handleListenerError(
+					error,
+					'evaluation.getEvaluation.listenToEvaluation',
+					'Error in evaluation listener:',
+				),
 		);
 	} catch (error) {
 		logError(error, { operation: 'evaluation.getEvaluation.listenToEvaluation' });

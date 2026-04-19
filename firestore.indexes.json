@@ -778,6 +778,23 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "hybridEmbedding",
+          "vectorConfig": {
+            "dimension": 1544,
+            "flat": {}
+          }
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statements",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "parentId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "evidence",
           "order": "ASCENDING"
         }

@@ -1,0 +1,30 @@
+{
+  "name": "@freedi/join",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "env:dev": "cd ../.. && npm run env:dev",
+    "dev": "npm run env:dev && vite --port 3007",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 3007",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"src/**/*.ts\"",
+    "check-all": "npm run lint && npm run typecheck && npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@freedi/shared-types": "file:../../packages/shared-types",
+    "firebase": "^11.0.2",
+    "mithril": "^2.2.8"
+  },
+  "devDependencies": {
+    "@types/mithril": "^2.2.7",
+    "sass": "^1.94.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-pwa": "^0.21.1",
+    "vitest": "^4.0.18"
+  }
+}

@@ -8,6 +8,7 @@ import { checkRateLimit, RATE_LIMITS } from '@/lib/utils/rateLimit';
 import { logger } from '@/lib/utils/logger';
 import { logResearchAction } from '@/lib/utils/researchLogger';
 import { ResearchAction } from '@freedi/shared-types';
+import { getSurveyById, getStatementIdForSurvey } from '@/lib/firebase/surveys';
 
 /**
  * POST /api/evaluations/[id]
@@ -27,7 +28,7 @@ export async function POST(
   try {
     const { id: statementId } = await params;
     const body = await request.json();
-    const { evaluation, userId: bodyUserId, userName } = body;
+    const { evaluation, userId: bodyUserId, userName, surveyId } = body;
 
     // Get user ID
     const cookieUserId = getUserIdFromCookie(request.headers.get('cookie'));
@@ -78,6 +79,20 @@ export async function POST(
 
     const displayName = userName || getAnonymousDisplayName(userId);
 
+    // If this evaluation was submitted inside a survey session, resolve the
+    // survey's demographic anchor and stamp it on the evaluation. The
+    // polarization index uses this to look up the evaluator's demographic
+    // answers directly instead of walking the parent chain.
+    let demographicAnchorId: string | undefined;
+    if (typeof surveyId === 'string' && surveyId) {
+      const survey = await getSurveyById(surveyId);
+      if (survey) {
+        demographicAnchorId = getStatementIdForSurvey(survey);
+      } else {
+        logger.info('[API] Evaluation submitted with unknown surveyId', { surveyId });
+      }
+    }
+
     const evaluationData: Partial<Evaluation> = {
       evaluationId,
       parentId,
@@ -92,6 +107,7 @@ export async function POST(
       },
       evaluation,
       updatedAt: Date.now(),
+      ...(demographicAnchorId ? { demographicAnchorId } : {}),
     };
 
     // Save evaluation and update userEvaluations in a single transaction
@@ -99,8 +115,20 @@ export async function POST(
     const userEvaluationRef = db.collection(Collections.userEvaluations).doc(userEvaluationId);
 
     await db.runTransaction(async (transaction) => {
-      const userEvalDoc = await transaction.get(userEvaluationRef);
+      const [userEvalDoc, existingEvalDoc] = await Promise.all([
+        transaction.get(userEvaluationRef),
+        transaction.get(evaluationRef),
+      ]);
       const now = Date.now();
+
+      // Preserve an existing anchor on re-evaluation when the client didn't
+      // resend surveyId (e.g., user updates their rating after the fact).
+      if (!evaluationData.demographicAnchorId && existingEvalDoc.exists) {
+        const existingAnchor = existingEvalDoc.data()?.demographicAnchorId;
+        if (typeof existingAnchor === 'string' && existingAnchor) {
+          evaluationData.demographicAnchorId = existingAnchor;
+        }
+      }
 
       // Save evaluation
       transaction.set(evaluationRef, evaluationData);
@@ -117,14 +145,14 @@ export async function POST(
       }, { merge: true });
     });
 
-    // Research logging — check top-level document's settings
+    // Research logging — check parent question's settings
     const topParentId = statement?.topParentId || parentId;
-    const topDoc = await db.collection(Collections.statements).doc(topParentId).get();
-    const researchEnabled = topDoc.data()?.statementSettings?.enableResearchLogging === true;
+    const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
+    const researchEnabled = parentDoc.data()?.statementSettings?.enableResearchLogging === true;
     logResearchAction(userId, ResearchAction.EVALUATE, researchEnabled, {
       statementId,
       parentId,
-      topParentId: statement?.topParentId,
+      topParentId,
       newValue: String(evaluation),
     });
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSurveyStats, getSurveyById } from '@/lib/firebase/surveys';
+import { getSurveyStats, getSurveyWithQuestions } from '@/lib/firebase/surveys';
 import { verifyToken, extractBearerToken } from '@/lib/auth/verifyAdmin';
 import { logger } from '@/lib/utils/logger';
 
@@ -9,6 +9,7 @@ import { logger } from '@/lib/utils/logger';
  *
  * Query params:
  * - includeTestData: boolean - If true, includes test data in counts (default: false)
+ * - includeFunnel: boolean - If true, includes per-question evaluation funnel (default: false)
  */
 export async function GET(
   request: NextRequest,
@@ -20,6 +21,7 @@ export async function GET(
     // Parse query params
     const { searchParams } = new URL(request.url);
     const includeTestData = searchParams.get('includeTestData') === 'true';
+    const includeFunnel = searchParams.get('includeFunnel') === 'true';
 
     // Extract and verify token
     const token = extractBearerToken(request.headers.get('authorization'));
@@ -32,8 +34,8 @@ export async function GET(
       return NextResponse.json({ error: 'Invalid or expired token' }, { status: 401 });
     }
 
-    // Verify user owns this survey
-    const survey = await getSurveyById(surveyId);
+    // Fetch survey with questions (needed for funnel and ownership check)
+    const survey = await getSurveyWithQuestions(surveyId);
     if (!survey) {
       return NextResponse.json({ error: 'Survey not found' }, { status: 404 });
     }
@@ -42,7 +44,12 @@ export async function GET(
       return NextResponse.json({ error: 'You can only view stats for your own surveys' }, { status: 403 });
     }
 
-    const stats = await getSurveyStats(surveyId, { includeTestData });
+    // Build question list for funnel if requested
+    const questionIds = includeFunnel
+      ? survey.questions.map(q => ({ id: q.statementId, text: q.statement }))
+      : undefined;
+
+    const stats = await getSurveyStats(surveyId, { includeTestData }, questionIds);
 
     return NextResponse.json(stats);
   } catch (error) {

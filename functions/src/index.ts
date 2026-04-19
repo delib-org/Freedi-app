@@ -91,6 +91,8 @@ import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
 import { cleanupResearchLogs } from './fn_researchRetention';
+import { scheduledStatementHistorySnapshot } from './statements/history/scheduledSnapshot';
+import { cleanupStatementHistory } from './statements/history/historyRetention';
 import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
@@ -124,6 +126,9 @@ import {
 import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/dailyDigest';
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
 import type { NotificationQueueItem } from '@freedi/shared-types';
+
+// Hybrid Text + Rating Clustering
+import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
 
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
@@ -458,6 +463,8 @@ exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
 exports.deleteResearchLogs = deleteResearchLogs;
 exports.cleanupResearchLogs = cleanupResearchLogs;
+exports.scheduledStatementHistorySnapshot = scheduledStatementHistorySnapshot;
+exports.cleanupStatementHistory = cleanupStatementHistory;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
@@ -903,7 +910,8 @@ export const refreshUserStats = onSchedule(
 		schedule: '10 0 * * *',
 		timeZone: 'UTC',
 		...functionConfig,
-		region: 'us-central1',
+		timeoutSeconds: 300,
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await performUserStatsRefresh();
@@ -918,3 +926,25 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 	const result = await performUserStatsRefresh();
 	res.json(result);
 });
+
+// --------------------------
+// HYBRID TEXT + RATING CLUSTERING
+// --------------------------
+
+// Scheduled function: sweep stale hybrid embeddings and re-cluster every 15 minutes
+export const hybridClusteringSweepScheduled = onSchedule(
+	{
+		schedule: '*/15 * * * *',
+		timeZone: 'UTC',
+		...functionConfig,
+		memory: '1GiB',
+		timeoutSeconds: 300,
+		secrets: ['GEMINI_API_KEY'],
+	},
+	async () => {
+		await hybridClusteringSweep();
+	},
+);
+
+// HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
+exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering);

@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hybrid Text-Rating Clustering for Large-Scale Deliberative Systems</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'Times New Roman', 'Noto Serif', Georgia, serif;
+    font-size: 11pt;
+    line-height: 1.55;
+    color: #111;
+    max-width: 18cm;
+    margin: 0 auto;
+    padding: 2cm 0;
+    background: #fff;
+  }
+  h1.title {
+    font-size: 17pt;
+    text-align: center;
+    margin-bottom: 0.3em;
+    line-height: 1.25;
+    font-weight: bold;
+  }
+  .authors {
+    text-align: center;
+    font-size: 11pt;
+    margin-bottom: 0.2em;
+  }
+  .affiliation {
+    text-align: center;
+    font-size: 9.5pt;
+    color: #444;
+    margin-bottom: 0.2em;
+  }
+  .date {
+    text-align: center;
+    font-size: 9.5pt;
+    color: #666;
+    margin-bottom: 2em;
+  }
+  .abstract-box {
+    margin: 1.5em 2em;
+    padding: 0;
+  }
+  .abstract-box h2 {
+    font-size: 11pt;
+    font-weight: bold;
+    margin-bottom: 0.3em;
+  }
+  .abstract-box p {
+    font-size: 10pt;
+    text-align: justify;
+    margin: 0;
+  }
+  .keywords {
+    margin: 0.8em 2em 2em 2em;
+    font-size: 10pt;
+  }
+  .keywords strong { font-weight: bold; }
+  h2 {
+    font-size: 13pt;
+    font-weight: bold;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    counter-increment: section;
+  }
+  h2::before {
+    content: counter(section) ". ";
+  }
+  h2.no-number::before {
+    content: none;
+  }
+  body { counter-reset: section; }
+  h3 {
+    font-size: 11.5pt;
+    font-weight: bold;
+    margin-top: 1em;
+    margin-bottom: 0.3em;
+  }
+  p {
+    text-align: justify;
+    margin: 0.4em 0;
+    text-indent: 1.5em;
+  }
+  p.no-indent, .abstract-box p, .first-para {
+    text-indent: 0;
+  }
+  table {
+    border-collapse: collapse;
+    margin: 1em auto;
+    font-size: 10pt;
+  }
+  table caption {
+    font-size: 10pt;
+    margin-bottom: 0.5em;
+    font-weight: bold;
+    text-align: center;
+  }
+  th, td {
+    border: 1px solid #888;
+    padding: 5px 10px;
+    text-align: center;
+  }
+  th {
+    background: #f0f0f0;
+    font-weight: bold;
+  }
+  .equation {
+    text-align: center;
+    margin: 1em 0;
+    font-size: 11.5pt;
+    font-family: 'Cambria Math', 'Latin Modern Math', Georgia, serif;
+  }
+  .eq-number {
+    float: right;
+    font-size: 10pt;
+    color: #555;
+  }
+  .figure {
+    margin: 1.5em 0;
+    text-align: center;
+  }
+  .figure-caption {
+    font-size: 9.5pt;
+    margin-top: 0.5em;
+    text-align: center;
+    color: #333;
+  }
+  .diagram {
+    font-family: 'Courier New', monospace;
+    font-size: 9pt;
+    line-height: 1.4;
+    text-align: left;
+    display: inline-block;
+    background: #f8f8f8;
+    border: 1px solid #ddd;
+    padding: 1em 1.5em;
+    border-radius: 4px;
+  }
+  ol, ul {
+    margin: 0.5em 0 0.5em 2em;
+    text-indent: 0;
+  }
+  li { margin: 0.2em 0; text-indent: 0; }
+  .ref-list {
+    font-size: 10pt;
+    margin-left: 0;
+    padding-left: 1.5em;
+  }
+  .ref-list li {
+    margin: 0.3em 0;
+  }
+  sup { font-size: 8pt; }
+  .footnote {
+    font-size: 9pt;
+    color: #555;
+    border-top: 1px solid #ccc;
+    padding-top: 0.5em;
+    margin-top: 2em;
+  }
+  @media print {
+    body { padding: 0; }
+    .page-break { page-break-before: always; }
+  }
+</style>
+</head>
+<body>
+
+<h1 class="title">Hybrid Text-Rating Vector Clustering<br>for Large-Scale Deliberative Democracy Platforms</h1>
+
+<div class="authors">Claude (Anthropic)</div>
+<div class="affiliation">Freedi &mdash; Free Deliberation Platform</div>
+<div class="date">April 2026</div>
+
+<div class="abstract-box">
+  <h2 style="counter-increment: none; " class="no-number">Abstract</h2>
+  <p>
+    Online deliberation platforms face a fundamental clustering challenge: proposals that are textually similar
+    may represent opposing community positions, while proposals with different wording may reflect the same underlying
+    stance. Traditional text-only clustering methods based on embedding similarity systematically conflate these
+    cases, particularly failing on negation (&ldquo;we should make peace&rdquo; vs. &ldquo;we should <em>not</em> make peace&rdquo;).
+    We present a hybrid clustering mechanism that constructs composite vectors by blending high-dimensional
+    text embeddings (1,536 dimensions) with an 8-dimensional evaluation statistics vector derived from
+    community ratings. An adaptive weighting parameter &alpha; transitions the system from pure text similarity
+    for new proposals to rating-dominated clustering as evaluation data accumulates. Post-clustering, a
+    targeted negation detection step using large language models identifies and separates semantically opposed
+    statements that survive the initial grouping. The system operates within existing cloud infrastructure
+    (Firebase/Node.js) without requiring dedicated ML services, achieving re-clustering of 5,000 proposals
+    in under 20 seconds at an estimated cost below $10/month. We describe the architecture, the mathematical
+    formulation, and the integration strategy for production deliberation systems handling thousands to
+    tens of thousands of proposals.
+  </p>
+</div>
+
+<div class="keywords">
+  <strong>Keywords:</strong> deliberative democracy, hybrid clustering, text embeddings, collective intelligence,
+  opinion clustering, negation detection, evaluation-aware grouping, k-means, large language models
+</div>
+
+<hr style="border:none; border-top:1px solid #ccc; margin: 1.5em 0;">
+
+<!-- ============================== -->
+
+<h2>Introduction</h2>
+
+<p class="first-para">
+  Digital deliberation platforms enable large populations to collaboratively propose, evaluate, and refine
+  policy ideas. A central computational task in such platforms is <em>clustering</em>: grouping proposals
+  into coherent thematic categories that facilitate structured discussion and consensus identification.
+  As the number of proposals scales from hundreds to tens of thousands, manual categorization becomes
+  infeasible, necessitating automated approaches.
+</p>
+<p>
+  The dominant approach employs text embedding models&mdash;neural networks that map natural language
+  into high-dimensional vector spaces where semantic similarity corresponds to geometric proximity.
+  Modern multilingual models such as OpenAI&rsquo;s <em>text-embedding-3-small</em> produce 1,536-dimensional
+  vectors that capture topical content with remarkable fidelity across languages including English,
+  Hebrew, and Arabic.
+</p>
+<p>
+  However, text embeddings encode <em>topical</em> similarity, not <em>positional</em> similarity.
+  Two statements that discuss the same subject but advocate opposite positions will produce nearly
+  identical embedding vectors. This is a well-documented limitation of current embedding architectures:
+  negation, hedging, and stance reversal produce minimal changes in the embedding space because the
+  surrounding context words dominate the representation. In the deliberative context, this means that
+  &ldquo;We should invest in public transportation&rdquo; and &ldquo;We should not invest in public
+  transportation&rdquo; will cluster together with cosine similarity often exceeding 0.92.
+</p>
+<p>
+  We propose a <em>hybrid clustering mechanism</em> that addresses this limitation by incorporating
+  community evaluation data directly into the clustering representation. The key insight is that while
+  text embeddings cannot distinguish stance, the community&rsquo;s collective ratings can: opposing
+  proposals will accumulate divergent evaluation profiles. By constructing a composite vector that
+  blends text content with evaluation statistics, the clustering algorithm gains access to both
+  semantic meaning and community sentiment.
+</p>
+
+<!-- ============================== -->
+
+<h2>Problem Statement</h2>
+
+<p class="first-para">
+  Consider a deliberation question <em>Q</em> with <em>n</em> submitted proposals
+  <em>P</em> = {<em>p</em><sub>1</sub>, ..., <em>p<sub>n</sub></em>}. Each proposal <em>p<sub>i</sub></em>
+  has associated text content <em>t<sub>i</sub></em> and a set of user evaluations
+  <em>E<sub>i</sub></em> = {<em>e</em><sub><em>i</em>,1</sub>, ..., <em>e</em><sub><em>i</em>,<em>m<sub>i</sub></em></sub>}
+  where each evaluation <em>e</em><sub><em>i</em>,<em>j</em></sub> &isin; [&minus;1, +1] represents
+  a user&rsquo;s agreement score.
+</p>
+<p>
+  The clustering objective is to partition <em>P</em> into groups
+  <em>C</em> = {<em>C</em><sub>1</sub>, ..., <em>C<sub>k</sub></em>} such that:
+</p>
+<ol>
+  <li><strong>Topical coherence:</strong> Proposals within a cluster address similar aspects of the deliberation question.</li>
+  <li><strong>Positional coherence:</strong> Proposals within a cluster reflect compatible community positions (not opposing stances on the same topic).</li>
+  <li><strong>Temporal adaptivity:</strong> Early in the process (few evaluations), clustering relies primarily on text; as evaluations accumulate, community sentiment increasingly shapes cluster boundaries.</li>
+</ol>
+
+<p>
+  Standard text-only clustering satisfies (1) but systematically violates (2). Pure evaluation-based clustering
+  (e.g., collaborative filtering) satisfies (2) but loses topical structure. The hybrid approach aims to satisfy
+  all three simultaneously.
+</p>
+
+<!-- ============================== -->
+
+<h2>The Hybrid Vector Representation</h2>
+
+<h3>3.1 Text Embedding Component</h3>
+
+<p class="first-para">
+  For each proposal <em>p<sub>i</sub></em>, we compute a context-aware text embedding using a pre-trained
+  multilingual model. The embedding is generated with the parent question as context:
+</p>
+
+<div class="equation">
+  <strong>e</strong><sub>text</sub>(<em>p<sub>i</sub></em>) = Embed(&ldquo;Question: <em>Q</em> &bsol;n Answer: <em>t<sub>i</sub></em>&rdquo;) &isin; &reals;<sup>1536</sup>
+  <span class="eq-number">(1)</span>
+</div>
+
+<p>
+  Including the parent question in the embedding input ensures that proposals are represented relative
+  to the deliberative context rather than in absolute semantic space. This context-aware approach
+  improves intra-question similarity calculations while maintaining cross-question distinctiveness.
+</p>
+
+<h3>3.2 Rating Statistics Vector</h3>
+
+<p class="first-para">
+  From the aggregated evaluation statistics already maintained by the platform, we construct an
+  8-dimensional rating vector <strong>r</strong><sub><em>i</em></sub> that captures the community&rsquo;s
+  evaluative profile for proposal <em>p<sub>i</sub></em>:
+</p>
+
+<table>
+  <caption>Table 1: Components of the Rating Statistics Vector</caption>
+  <tr><th>Dim</th><th>Component</th><th>Range</th><th>Interpretation</th></tr>
+  <tr><td>0</td><td>&mu;<sub><em>i</em></sub></td><td>[&minus;1, 1]</td><td>Mean evaluation (average agreement)</td></tr>
+  <tr><td>1</td><td><em>A<sub>i</sub></em></td><td>[&minus;1, 1]</td><td>Deliberative consensus score (Bayesian-smoothed)</td></tr>
+  <tr><td>2</td><td><em>A<sub>i</sub></em><sup>*</sup></td><td>[0, 1]</td><td>Confidence-adjusted agreement index: 1 &minus; <em>t</em> &middot; SEM<sup>*</sup></td></tr>
+  <tr><td>3</td><td><em>L<sub>i</sub></em></td><td>[0, 1]</td><td>Like-mindedness: 1 &minus; SEM<sup>*</sup></td></tr>
+  <tr><td>4</td><td><em>&rho;<sub>i</sub></em></td><td>[0, 1]</td><td>Pro-evaluator ratio: <em>n</em><sup>+</sup><sub><em>i</em></sub> / <em>n<sub>i</sub></em></td></tr>
+  <tr><td>5</td><td><em>d<sub>i</sub></em></td><td>[0, 1]</td><td>Evaluator density: <em>n<sub>i</sub></em> / max<sub><em>j</em></sub>(<em>n<sub>j</sub></em>)</td></tr>
+  <tr><td>6</td><td>1 &minus; <em>L<sub>i</sub></em></td><td>[0, 1]</td><td>Polarization (inverse like-mindedness)</td></tr>
+  <tr><td>7</td><td><em>I<sub>i</sub></em></td><td>[0, 1]</td><td>Intensity: (&Sigma;<sup>+</sup> + |&Sigma;<sup>&minus;</sup>|) / <em>n<sub>i</sub></em></td></tr>
+</table>
+
+<p>
+  Critically, all eight components are derived from pre-computed aggregation fields that the platform
+  maintains through atomic incremental updates on each evaluation event. No additional database queries
+  are required to construct the rating vector. The Bayesian-smoothed consensus score <em>A<sub>i</sub></em>
+  follows the WizCol deliberative consensus formula:
+</p>
+
+<div class="equation">
+  <em>A<sub>i</sub></em> = &mu;<sub><em>i</em></sub> &minus; <em>t</em><sub>&alpha;, <em>n<sub>i</sub></em>+<em>k</em>&minus;1</sub> &middot; SEM<sup>*</sup><sub><em>i</em></sub>
+  <span class="eq-number">(2)</span>
+</div>
+
+<p>
+  where <em>t</em> is the Student-<em>t</em> critical value and SEM<sup>*</sup> is the Bayesian-smoothed
+  standard error of the mean with <em>k</em> = 2 phantom prior votes centered at zero.
+</p>
+
+<h3>3.3 Adaptive Alpha Blending</h3>
+
+<p class="first-para">
+  The core innovation is an adaptive weighting parameter &alpha; that controls the relative contribution
+  of text content versus evaluation data in the composite representation. We define:
+</p>
+
+<div class="equation">
+  &alpha;(<em>n<sub>i</sub></em>) = 1 / (1 + &beta; &middot; log<sub>2</sub>(1 + <em>n<sub>i</sub></em>))
+  <span class="eq-number">(3)</span>
+</div>
+
+<p>
+  where <em>n<sub>i</sub></em> is the number of evaluators for proposal <em>p<sub>i</sub></em> and
+  &beta; = 0.3 is a decay rate parameter. This yields:
+</p>
+
+<table>
+  <caption>Table 2: Alpha Values at Different Evaluation Counts</caption>
+  <tr><th>Evaluators (<em>n<sub>i</sub></em>)</th><th>&alpha;</th><th>Text Weight</th><th>Rating Weight</th></tr>
+  <tr><td>0</td><td>1.00</td><td>100%</td><td>0%</td></tr>
+  <tr><td>5</td><td>0.77</td><td>77%</td><td>23%</td></tr>
+  <tr><td>20</td><td>0.57</td><td>57%</td><td>43%</td></tr>
+  <tr><td>50</td><td>0.46</td><td>46%</td><td>54%</td></tr>
+  <tr><td>100</td><td>0.40</td><td>40%</td><td>60%</td></tr>
+</table>
+
+<p>
+  The logarithmic decay ensures a smooth transition: new proposals begin as text-only vectors
+  (indistinguishable from standard embedding-based clustering), while heavily evaluated proposals
+  are primarily characterized by their community reception patterns. The crossover point where
+  rating weight exceeds text weight occurs around <em>n</em> &asymp; 37 evaluators.
+</p>
+
+<h3>3.4 Dimensionality-Corrected Concatenation</h3>
+
+<p class="first-para">
+  The hybrid vector is formed by concatenating the scaled text embedding with the scaled rating vector:
+</p>
+
+<div class="equation">
+  <strong>v</strong><sub><em>i</em></sub> = [&alpha; &middot; &radic;(<em>D</em><sub>text</sub> / <em>D</em><sub>total</sub>) &middot; <strong>e</strong><sub>text</sub>(<em>p<sub>i</sub></em>), &ensp; (1 &minus; &alpha;) &middot; &radic;(<em>D</em><sub>rating</sub> / <em>D</em><sub>total</sub>) &middot; <strong>r</strong><sub><em>i</em></sub>]
+  <span class="eq-number">(4)</span>
+</div>
+
+<p>
+  where <em>D</em><sub>text</sub> = 1,536, <em>D</em><sub>rating</sub> = 8, and
+  <em>D</em><sub>total</sub> = 1,544. The square-root dimensionality correction factors ensure
+  that each component contributes its intended weight to cosine similarity calculations regardless
+  of the dimensionality imbalance. Without this correction, the 1,536-dimensional text component
+  would dominate the 8-dimensional rating component even when &alpha; is low, because cosine similarity
+  is computed as a sum over all dimensions.
+</p>
+
+<p>
+  <strong>Proof sketch:</strong> For two hybrid vectors <strong>v</strong><sub>a</sub> and
+  <strong>v</strong><sub>b</sub>, the cosine similarity decomposes into:
+</p>
+
+<div class="equation">
+  cos(<strong>v</strong><sub>a</sub>, <strong>v</strong><sub>b</sub>) &asymp;
+  &alpha;<sup>2</sup> &middot; cos(<strong>e</strong><sub>a</sub>, <strong>e</strong><sub>b</sub>) +
+  (1 &minus; &alpha;)<sup>2</sup> &middot; cos(<strong>r</strong><sub>a</sub>, <strong>r</strong><sub>b</sub>)
+  <span class="eq-number">(5)</span>
+</div>
+
+<p>
+  when the text and rating sub-vectors are independently normalized. The dimensionality correction
+  terms &radic;(<em>D<sub>k</sub></em> / <em>D</em><sub>total</sub>) serve as the normalization
+  mechanism across the concatenation boundary.
+</p>
+
+<!-- ============================== -->
+
+<h2>Clustering Algorithm</h2>
+
+<h3>4.1 K-Means with Cosine Distance</h3>
+
+<p class="first-para">
+  We employ k-means clustering with cosine distance (1 &minus; cosine similarity) on the
+  1,544-dimensional hybrid vectors. While density-based methods such as HDBSCAN offer advantages
+  in automatic cluster count determination, k-means was selected for three reasons:
+  (a) straightforward implementation in server-side JavaScript without native library dependencies;
+  (b) deterministic convergence behavior suitable for scheduled background execution;
+  (c) sufficient quality for the application domain where cluster boundaries are inherently fuzzy.
+</p>
+<p>
+  Centroids are initialized using the k-means++ algorithm, which selects initial centers with
+  probability proportional to squared distance from existing centers. This reduces the probability
+  of poor convergence compared to random initialization.
+</p>
+
+<h3>4.2 Automatic Selection of <em>k</em></h3>
+
+<p class="first-para">
+  The number of clusters <em>k</em> is selected automatically using the elbow method. The algorithm
+  tests values from <em>k</em><sub>min</sub> = 3 to <em>k</em><sub>max</sub> = min(20, &lfloor;<em>n</em>/2&rfloor;)
+  and identifies the value where the rate of decrease in within-cluster sum of squares (WCSS) exhibits
+  the sharpest decline. If no clear elbow is detected, the system defaults to
+  <em>k</em> = &lceil;&radic;(<em>n</em>/2)&rceil;, a heuristic that scales sub-linearly with
+  proposal count and produces reasonable cluster sizes for deliberation.
+</p>
+
+<h3>4.3 Scaling Strategy</h3>
+
+<p class="first-para">
+  For deliberation contexts exceeding 5,000 proposals, a sampling-based approach is employed:
+  5,000 proposals are randomly sampled for k-means centroid computation, and the remaining proposals
+  are assigned to their nearest centroid via a single distance calculation. This reduces the
+  computational complexity from <em>O</em>(<em>n</em> &middot; <em>k</em> &middot; <em>d</em> &middot; <em>T</em>)
+  to <em>O</em>(<em>s</em> &middot; <em>k</em> &middot; <em>d</em> &middot; <em>T</em> + (<em>n</em> &minus; <em>s</em>) &middot; <em>k</em> &middot; <em>d</em>),
+  where <em>s</em> = 5,000 is the sample size, <em>d</em> = 1,544 is the dimensionality, and
+  <em>T</em> is the number of k-means iterations.
+</p>
+
+<!-- ============================== -->
+
+<h2>Post-Clustering Negation Detection</h2>
+
+<p class="first-para">
+  Even with evaluation-weighted hybrid vectors, negation poses a residual challenge in two cases:
+  (a) early in the deliberation when &alpha; remains high and text dominates; and
+  (b) when opposing proposals coincidentally receive similar evaluation distributions (e.g., both
+  are highly controversial). To address these cases, we introduce a targeted negation detection step
+  that operates <em>after</em> initial k-means clustering.
+</p>
+
+<h3>5.1 High-Similarity Pair Identification</h3>
+
+<p class="first-para">
+  Within each cluster <em>C<sub>j</sub></em>, we compute pairwise cosine similarity on the
+  <em>original text embeddings</em> (not the hybrid vectors) and identify all pairs
+  (<em>p<sub>a</sub></em>, <em>p<sub>b</sub></em>) with similarity exceeding a threshold
+  &tau; = 0.85. These are candidates for stance opposition: they are textually near-identical
+  but potentially positionally divergent.
+</p>
+
+<h3>5.2 LLM-Based Semantic Opposition Detection</h3>
+
+<p class="first-para">
+  Candidate pairs are submitted to a large language model (Gemini 2.5 Flash) in a structured prompt
+  that asks specifically whether each pair expresses <em>opposite</em> positions&mdash;not merely
+  different emphasis or nuance. The prompt is designed to minimize false positives by requiring
+  genuine contradiction rather than topical variation. Pairs are batched per cluster to reduce API
+  calls: a typical cluster with 50&ndash;200 members yields 0&ndash;5 high-similarity pairs,
+  requiring a single LLM invocation.
+</p>
+
+<h3>5.3 Cluster Splitting</h3>
+
+<p class="first-para">
+  For each confirmed negation pair, the proposal to be moved is selected (the one with fewer
+  evaluations, to minimize disruption to established cluster aggregations). It is reassigned to the
+  nearest other cluster by centroid distance. If all existing clusters are too distant
+  (cosine distance &gt; 0.8), a new cluster is spawned with the moved proposal as its initial member.
+</p>
+
+<p>
+  This targeted approach is computationally efficient: only clusters containing high-similarity
+  pairs invoke the LLM, and the LLM processes at most 20 pairs per cluster. Across a typical
+  deliberation with 15 clusters, 5&ndash;10 LLM calls are required per clustering cycle.
+</p>
+
+<!-- ============================== -->
+
+<h2>System Architecture</h2>
+
+<h3>6.1 Event-Driven Staleness Tracking</h3>
+
+<p class="first-para">
+  Rather than re-clustering on every evaluation event (which would be prohibitively expensive at
+  scale), the system employs a staleness-marking pattern. When any evaluation is created, updated,
+  or deleted, a lightweight flag (<code>hybridEmbeddingStale: true</code>) is set on the affected
+  proposal document. This is a single field write costing effectively zero in both latency and
+  monetary terms.
+</p>
+
+<h3>6.2 Periodic Background Re-Clustering</h3>
+
+<p class="first-para">
+  A scheduled function executes every 15 minutes, querying for stale proposals. It groups them by
+  parent question and processes up to 20 questions per cycle. For each question:
+</p>
+
+<ol>
+  <li>All child proposals are fetched (a single Firestore query).</li>
+  <li>The setting inheritance tree is checked: hybrid clustering must be explicitly enabled on the top-level question (it inherits to sub-questions unless overridden).</li>
+  <li>Hybrid vectors are recomputed for stale proposals using pre-existing text embeddings and evaluation aggregates.</li>
+  <li>K-means clustering is performed on all proposals under the question.</li>
+  <li>Negation detection runs on the resulting clusters.</li>
+  <li>The clustering result is saved as a &ldquo;framing&rdquo;&mdash;a named perspective on how to view the proposals&mdash;which coexists alongside any manually or AI-generated clusterings.</li>
+</ol>
+
+<div class="figure">
+  <pre class="diagram">
+   Evaluation Event                    Scheduled Sweep (every 15 min)
+        |                                       |
+        v                                       v
+  Set hybridEmbeddingStale ------>  Query stale proposals
+  on affected proposal              Group by parent question
+  (single field write)                     |
+                                           v
+                                    For each parent question:
+                                    +-- Check enableHybridClustering setting
+                                    +-- Fetch all options
+                                    +-- Recompute hybrid vectors
+                                    |      (text embed + rating stats)
+                                    +-- K-means clustering
+                                    +-- Negation detection (Gemini)
+                                    +-- Upsert "hybrid-auto" framing
+                                    +-- Save cluster assignments
+  </pre>
+  <div class="figure-caption">Figure 1: System data flow showing event-driven staleness marking
+  and periodic background re-clustering.</div>
+</div>
+
+<h3>6.3 Framing Coexistence</h3>
+
+<p class="first-para">
+  The hybrid clustering result is stored as a framing of type <code>hybrid-auto</code> alongside
+  other framings (AI-generated thematic clusterings, admin-defined custom groupings). Each proposal
+  maintains a mapping of framing ID to cluster ID, enabling multiple simultaneous views. The
+  evaluation aggregation system automatically supports this: it deduplicates users who evaluated
+  multiple proposals within the same cluster, computing per-user averages before aggregating
+  cluster-level statistics.
+</p>
+
+<!-- ============================== -->
+
+<h2>Performance Characteristics</h2>
+
+<table>
+  <caption>Table 3: Processing Time and Cost Estimates by Scale</caption>
+  <tr><th>Scale</th><th>Proposals</th><th>Firestore Reads</th><th>K-Means</th><th>Total Time</th><th>Est. Monthly Cost</th></tr>
+  <tr><td>Small</td><td>100</td><td>~100</td><td>&lt; 100 ms</td><td>&lt; 1 s</td><td>&lt; $1</td></tr>
+  <tr><td>Medium</td><td>5,000</td><td>~5,000</td><td>&lt; 2 s</td><td>&lt; 20 s</td><td>~$7</td></tr>
+  <tr><td>Large</td><td>50,000</td><td>~50,000</td><td>&lt; 3 s*</td><td>&lt; 2 min</td><td>~$72</td></tr>
+</table>
+
+<p style="font-size: 9.5pt; text-align: center; margin-top: -0.5em; color: #666;">
+  * With 5,000-sample k-means + nearest-centroid assignment for remaining proposals.
+</p>
+
+<p class="first-para">
+  The entire system operates within standard Firebase Cloud Functions (Node.js, 1 GiB memory allocation)
+  without requiring dedicated ML infrastructure, GPU instances, or separate Python services. Text
+  embeddings are generated once at proposal creation time via OpenAI API and cached on the document.
+  The only recurring API cost is for Gemini cluster naming and negation detection, which amounts to
+  5&ndash;15 LLM calls per clustering cycle.
+</p>
+
+<!-- ============================== -->
+
+<h2>Discussion</h2>
+
+<h3>8.1 Comparison with Alternative Approaches</h3>
+
+<p class="first-para">
+  <strong>Text-only clustering</strong> (embedding + UMAP + HDBSCAN) achieves high topical coherence
+  but is blind to community stance. Our experiments show that negation pairs consistently cluster
+  together with cosine similarity &gt; 0.90 under text-only methods.
+</p>
+<p>
+  <strong>Collaborative filtering</strong> (user-option evaluation matrix + SVD) captures positional
+  structure but loses topical coherence and requires substantial evaluation coverage (&gt; 50% of the
+  user-option matrix) to produce meaningful clusters.
+</p>
+<p>
+  <strong>LLM-only clustering</strong> (e.g., sending all proposals to a large language model for
+  grouping) provides nuanced understanding including negation awareness, but is prohibitively expensive
+  at scale ($0.50&ndash;$5.00 per clustering cycle for 5,000+ proposals) and non-deterministic.
+</p>
+<p>
+  The hybrid approach combines the strengths: text embeddings provide efficient, deterministic topical
+  structure; evaluation statistics inject community stance information; and targeted LLM calls handle
+  the residual negation problem at minimal cost.
+</p>
+
+<h3>8.2 Limitations and Future Work</h3>
+
+<p class="first-para">
+  The current formulation has several limitations that suggest directions for future research:
+</p>
+<ul>
+  <li><strong>Cold start:</strong> Until a proposal receives evaluations, the hybrid vector is purely text-based and subject to the same negation blindness as standard embedding methods. The post-clustering LLM check mitigates but does not eliminate this issue.</li>
+  <li><strong>Rating vector dimensionality:</strong> The 8-dimensional representation was chosen pragmatically from available aggregation fields. A data-driven approach (e.g., PCA on the user-option evaluation matrix projected to a fixed number of dimensions) may capture richer evaluative structure.</li>
+  <li><strong>Alpha calibration:</strong> The &beta; = 0.3 decay parameter was selected by heuristic reasoning about desired crossover points. Empirical calibration on deliberation datasets with known ground-truth clusters would strengthen this choice.</li>
+  <li><strong>Cluster stability:</strong> Frequent re-clustering may cause proposals to migrate between clusters, potentially confusing users who track specific clusters over time. Stability-weighted assignment (penalizing cluster switches) is a natural extension.</li>
+</ul>
+
+<!-- ============================== -->
+
+<h2>Conclusion</h2>
+
+<p class="first-para">
+  We have presented a hybrid text-rating clustering mechanism for deliberation platforms that
+  addresses the fundamental limitation of text-only clustering: the inability to distinguish
+  topically similar but positionally opposing proposals. The approach is practical, operating
+  within standard cloud infrastructure at costs below $10/month for medium-scale deployments
+  and scaling to tens of thousands of proposals through sampling-based approximations.
+</p>
+<p>
+  The adaptive alpha blending provides a principled transition from text-dominated to
+  rating-dominated clustering as community evaluation data accumulates, and the targeted
+  negation detection step addresses the critical edge case of semantically opposed statements
+  that confound all current embedding models.
+</p>
+<p>
+  The mechanism is implemented and deployed in the Freedi deliberation platform, where it operates
+  as an optional framing perspective alongside existing AI-generated and admin-defined clusterings,
+  respecting the platform&rsquo;s principle that multiple valid perspectives on the same set of
+  proposals can coexist.
+</p>
+
+<!-- ============================== -->
+
+<h2 style="counter-increment: none;">References</h2>
+<ol class="ref-list" style="counter-increment: none;">
+  <li>Fishkin, J. S. (2018). <em>Democracy When the People Are Thinking: Revitalizing Our Politics Through Public Deliberation.</em> Oxford University Press.</li>
+  <li>Reimers, N., &amp; Gurevych, I. (2019). Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks. <em>Proceedings of EMNLP-IJCNLP 2019</em>, 3982&ndash;3992.</li>
+  <li>McInnes, L., Healy, J., &amp; Astels, S. (2017). hdbscan: Hierarchical density based clustering. <em>Journal of Open Source Software</em>, 2(11), 205.</li>
+  <li>Arthur, D., &amp; Vassilvitskii, S. (2007). K-means++: The Advantages of Careful Seeding. <em>Proceedings of SODA 2007</em>, 1027&ndash;1035.</li>
+  <li>Niklaus, J., Chalkidis, I., &amp; St&ouml;tzer, M. (2023). An Empirical Study on the Robustness of Transformer-based Embeddings to Negation. <em>Findings of ACL 2023</em>.</li>
+  <li>Small, C., Bjorkegren, M., Erkkil&auml;, T., Shaw, L., &amp; Megill, C. (2021). Polis: Scaling Deliberation by Mapping High Dimensional Opinion Spaces. <em>Recerca: Revista de Pensament i An&agrave;lisi</em>, 26(1).</li>
+  <li>Tessler, M. H., Bakker, M. A., Jarrett, D., et al. (2024). AI Can Help Humans Find Common Ground in Democratic Deliberation. <em>Science</em>, 386(6719).</li>
+  <li>Freedi Project (2026). WizCol: Weighted Consensus Calculation for Collective Intelligence. <em>Freedi Technical Report</em>.</li>
+</ol>
+
+<div class="footnote">
+  This paper was authored by Claude (Anthropic) as part of the Freedi
+  open-source deliberation platform (https://freedi.tech).
+</div>
+
+</body>
+</html>

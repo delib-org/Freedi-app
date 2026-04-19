@@ -1,4 +1,4 @@
-import { Collections, Evaluation, Statement } from '@freedi/shared-types';
+import { Collections, Evaluation, Statement, functionConfig } from '@freedi/shared-types';
 import {
 	Framing,
 	ClusterAggregatedEvaluation,
@@ -386,7 +386,10 @@ export async function recalculateClusterAggregation(req: Request, res: Response)
  * Firestore trigger: Invalidate cache when evaluation changes
  */
 export const onEvaluationChangeInvalidateCache = onDocumentWritten(
-	`${Collections.evaluations}/{evaluationId}`,
+	{
+		document: `${Collections.evaluations}/{evaluationId}`,
+		region: functionConfig.region,
+	},
 	async (event: FirestoreEvent<Change<FirebaseFirestore.DocumentSnapshot> | undefined>) => {
 		try {
 			const change = event.data;

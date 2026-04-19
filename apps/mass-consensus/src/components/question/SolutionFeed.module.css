@@ -329,26 +329,27 @@
 }
 
 .batchButton {
-  background: var(--color-primary, #7C9EB2);
-  color: white;
+  background: transparent;
+  color: var(--color-primary, #7C9EB2);
   padding: var(--spacing-md) var(--spacing-xl);
   border-radius: 9999px;
   font-size: 1rem;
   font-weight: 500;
   min-width: 200px;
   transition: all 0.2s ease;
-  border: none;
+  border: 2px solid var(--color-primary, #7C9EB2);
   cursor: pointer;
 }
 
 .batchButton:hover:not(.disabled) {
-  background: #6B8DA1;
+  background: rgba(124, 158, 178, 0.1);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(124, 158, 178, 0.3);
+  box-shadow: 0 4px 12px rgba(124, 158, 178, 0.15);
 }
 
 .batchButton.disabled {
-  background: var(--btn-secondary, #e2e8f0);
+  background: transparent;
+  border-color: var(--btn-secondary, #e2e8f0);
   color: var(--text-secondary);
   cursor: not-allowed;
 }
@@ -358,6 +359,111 @@
   color: var(--text-secondary);
   text-align: center;
   margin: 0;
+}
+
+/* Inline "get more" pill button below solutions (survey context) */
+.inlineGetMore {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--spacing-md, 1rem);
+  margin-bottom: var(--spacing-sm, 0.5rem);
+}
+
+.getMorePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 2px solid var(--btn-secondary, #cbd5e0);
+  background: var(--bg-muted, #f7fafc);
+  color: var(--text-secondary, #718096);
+  cursor: not-allowed;
+  transition: all 0.25s ease;
+}
+
+.getMorePillReady {
+  border-color: var(--color-primary, #5f88e5);
+  background: white;
+  color: var(--color-primary, #5f88e5);
+  cursor: pointer;
+}
+
+.getMorePillReady:hover {
+  background: rgba(95, 136, 229, 0.08);
+  transform: translateY(-1px);
+}
+
+.getMorePillReady:active {
+  transform: translateY(0);
+}
+
+/* Batch Complete Banner (inline, survey context) */
+.batchCompleteBanner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-xl) var(--spacing-lg);
+  background: linear-gradient(135deg, var(--color-mint, #C9E4DE) 0%, var(--color-secondary, #B8D4E3) 100%);
+  border-radius: 16px;
+  text-align: center;
+  animation: fadeIn 0.4s ease-out;
+  margin-top: var(--spacing-lg);
+}
+
+.bannerEmoji {
+  font-size: 2.5rem;
+}
+
+.bannerTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-body, #475569);
+  margin: 0;
+}
+
+.bannerSubtitle {
+  font-size: 0.9375rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0;
+}
+
+.bannerPrimaryButton {
+  background: var(--btn-primary, #5f88e5);
+  color: white;
+  padding: var(--spacing-md) var(--spacing-xl);
+  border-radius: 9999px;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 16px rgba(95, 136, 229, 0.4);
+  min-width: 200px;
+}
+
+.bannerPrimaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(95, 136, 229, 0.5);
+}
+
+.bannerSecondaryLink {
+  background: none;
+  border: none;
+  color: var(--color-primary, #7C9EB2);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.bannerSecondaryLink:hover {
+  color: #6B8DA1;
 }
 
 .completionMessage {

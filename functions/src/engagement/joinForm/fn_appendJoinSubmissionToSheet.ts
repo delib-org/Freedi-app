@@ -6,6 +6,7 @@ import {
 	JoinFormSubmission,
 	JOIN_FORM_SUBMISSIONS_SUBCOLLECTION,
 	Statement,
+	functionConfig,
 } from '@freedi/shared-types';
 import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
 
@@ -20,7 +21,10 @@ import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
  * trigger exponential retry against the Sheets API.
  */
 export const fn_appendJoinSubmissionToSheet = onDocumentCreated(
-	`${Collections.statements}/{questionId}/${JOIN_FORM_SUBMISSIONS_SUBCOLLECTION}/{userId}`,
+	{
+		document: `${Collections.statements}/{questionId}/${JOIN_FORM_SUBMISSIONS_SUBCOLLECTION}/{userId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		const { questionId, userId } = event.params;
 

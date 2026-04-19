@@ -1,7 +1,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import { Collections, Statement, ReplacementQueueStatus } from '@freedi/shared-types';
+import { Collections, Statement, ReplacementQueueStatus, functionConfig } from '@freedi/shared-types';
 
 /**
  * Cloud Function: Update Queue Consensus
@@ -15,7 +15,10 @@ import { Collections, Statement, ReplacementQueueStatus } from '@freedi/shared-t
  * - Non-blocking (errors don't throw)
  */
 export const fn_updateQueueConsensus = onDocumentUpdated(
-	`${Collections.statements}/{suggestionId}`,
+	{
+		document: `${Collections.statements}/{suggestionId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;

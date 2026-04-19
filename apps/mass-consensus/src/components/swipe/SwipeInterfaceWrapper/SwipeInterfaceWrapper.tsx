@@ -18,6 +18,8 @@ export interface SwipeInterfaceWrapperProps {
   initialSolutions: Statement[];
   mergedSettings?: MergedQuestionSettings;
   onComplete?: () => void;
+  /** Survey context: used to stamp evaluations with a demographic anchor */
+  surveyId?: string;
 }
 
 const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
@@ -25,6 +27,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
   initialSolutions,
   mergedSettings,
   onComplete,
+  surveyId,
 }) => {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
@@ -59,6 +62,7 @@ const SwipeInterfaceWrapper: React.FC<SwipeInterfaceWrapperProps> = ({
       userName={userName}
       mergedSettings={mergedSettings}
       onComplete={onComplete}
+      surveyId={surveyId}
     />
   );
 };

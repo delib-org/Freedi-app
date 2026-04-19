@@ -8,6 +8,7 @@ import {
 	Role,
 	Statement,
 	StatementType,
+	functionConfig,
 } from '@freedi/shared-types';
 
 interface ResolveRequest {
@@ -42,7 +43,7 @@ interface ResolveSummary {
  * `minJoinMembers`, and not cleared on failure.
  */
 export const resolveJoinIntents = onCall(
-	{ memory: '512MiB' },
+	{ memory: '512MiB', region: functionConfig.region },
 	async (request: CallableRequest<ResolveRequest>): Promise<ResolveSummary> => {
 		if (!request.auth) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');

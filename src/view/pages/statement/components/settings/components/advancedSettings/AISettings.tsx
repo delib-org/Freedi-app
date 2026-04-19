@@ -1,6 +1,6 @@
 import { FC } from 'react';
 import { Statement, StatementSettings, StatementType } from '@freedi/shared-types';
-import { Sparkles, Search, Target, Database, Scissors } from 'lucide-react';
+import { Search, Target, Database, Scissors } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
@@ -19,14 +19,6 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 
 	return (
 		<>
-			<ToggleSwitch
-				isChecked={settings.enableAIImprovement ?? false}
-				onChange={(checked) => handleSettingChange('enableAIImprovement', checked)}
-				label={t('AI Suggestion Enhancement')}
-				description={t('Use AI to improve and refine user suggestions')}
-				icon={Sparkles}
-				badge="premium"
-			/>
 			<ToggleSwitch
 				isChecked={settings.enableSimilaritiesSearch ?? false}
 				onChange={(checked) => handleSettingChange('enableSimilaritiesSearch', checked)}

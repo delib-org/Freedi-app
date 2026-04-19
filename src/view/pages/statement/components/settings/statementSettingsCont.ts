@@ -17,6 +17,7 @@ import {
 	Vote,
 	Creator,
 	Paragraph,
+	evaluationType as EvalType,
 } from '@freedi/shared-types';
 import { Dispatch, SetStateAction } from 'react';
 import { logError } from '@/utils/errorHandling';
@@ -171,7 +172,7 @@ export const getStatementSettings = (statement: Statement) => {
 		defaultLookForSimilarities: Boolean(statementSettings.defaultLookForSimilarities),
 		enableAddVotingOption: Boolean(statementSettings.enableAddVotingOption),
 		enhancedEvaluation: Boolean(statementSettings.enhancedEvaluation),
-		evaluationType: statementSettings.evaluationType, // Add this field
+		evaluationType: statementSettings.evaluationType ?? EvalType.range,
 		showEvaluation: Boolean(statementSettings.showEvaluation),
 		subScreens: statementSettings.subScreens ?? [],
 		inVotingGetOnlyResults: Boolean(statementSettings.inVotingGetOnlyResults),

@@ -6,6 +6,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { SurveyWithQuestions } from '@/types/survey';
 import { getOrCreateAnonymousUser } from '@/lib/utils/user';
 import { logError } from '@/lib/utils/errorHandling';
+import WizColAttribution from '../shared/WizColAttribution';
 import styles from './Survey.module.scss';
 
 interface SurveyCompleteProps {
@@ -17,17 +18,44 @@ interface SurveyStats {
   totalQuestions: number;
 }
 
+interface QuestionProgress {
+  questionId: string;
+  questionText: string;
+  totalOptions: number;
+  evaluatedCount: number;
+}
+
+interface DemographicProgress {
+  pageId: string;
+  pageTitle: string;
+  isCompleted: boolean;
+}
+
+interface DetailedProgress {
+  questions: QuestionProgress[];
+  demographics: DemographicProgress[];
+  overall: {
+    questionsCompleted: number;
+    totalQuestions: number;
+    totalOptionsEvaluated: number;
+    demographicsCompleted: number;
+    totalDemographicPages: number;
+  };
+}
+
 /**
  * Completion screen shown after finishing all questions
  */
 export default function SurveyComplete({ survey }: SurveyCompleteProps) {
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, tWithParams } = useTranslation();
 
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [hasSuggestions, setHasSuggestions] = useState(false);
+  const [detailedProgress, setDetailedProgress] = useState<DetailedProgress | null>(null);
+  const [completedIndices, setCompletedIndices] = useState<number[]>([]);
   const [stats, setStats] = useState<SurveyStats>({
     questionsCompleted: 0,
     totalQuestions: survey.questions.length,
@@ -41,8 +69,12 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
     if (stored) {
       try {
         const data = JSON.parse(stored);
+        const indices: number[] = Array.isArray(data.completedIndices)
+          ? data.completedIndices.filter((n: unknown): n is number => Number.isInteger(n))
+          : [];
+        setCompletedIndices(indices);
         setStats({
-          questionsCompleted: (data.completedIndices || []).length,
+          questionsCompleted: indices.length,
           totalQuestions: survey.questions.length,
         });
       } catch {
@@ -52,10 +84,43 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
         });
       }
     }
-
-    // Clear progress after showing stats
-    // localStorage.removeItem(storageKey);
   }, [survey.surveyId, survey.questions.length]);
+
+  // Fetch detailed progress from API
+  useEffect(() => {
+    const fetchDetailedProgress = async () => {
+      try {
+        const userId = getOrCreateAnonymousUser();
+        const params = new URLSearchParams({ userId });
+        if (completedIndices.length > 0) {
+          params.set('completedIndices', completedIndices.join(','));
+        }
+        const response = await fetch(
+          `/api/surveys/${survey.surveyId}/detailed-progress?${params.toString()}`,
+          { credentials: 'include' }
+        );
+        if (response.ok) {
+          const data: DetailedProgress = await response.json();
+          setDetailedProgress(data);
+
+          // Update stats from server data if available
+          if (data.overall) {
+            setStats({
+              questionsCompleted: data.overall.questionsCompleted,
+              totalQuestions: data.overall.totalQuestions,
+            });
+          }
+        }
+      } catch (error) {
+        logError(error, {
+          operation: 'SurveyComplete.fetchDetailedProgress',
+          metadata: { surveyId: survey.surveyId },
+        });
+      }
+    };
+
+    fetchDetailedProgress();
+  }, [survey.surveyId, completedIndices]);
 
   // Check if user has submitted suggestions
   useEffect(() => {
@@ -135,10 +200,68 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
           <span className={styles.summaryLabel}>{t('questionsAnswered')}</span>
         </div>
         <div className={styles.summaryItem}>
-          <span className={styles.summaryNumber}>{stats.totalQuestions}</span>
-          <span className={styles.summaryLabel}>{t('totalQuestions')}</span>
+          <span className={styles.summaryNumber}>
+            {detailedProgress?.overall.totalOptionsEvaluated ?? 0}
+          </span>
+          <span className={styles.summaryLabel}>{t('optionsEvaluated')}</span>
         </div>
       </div>
+
+      {/* Per-question detailed progress */}
+      {detailedProgress && detailedProgress.questions.length > 0 && (
+        <div className={styles.detailedProgress}>
+          <h3 className={styles.detailedProgressTitle}>{t('yourEvaluationSummary')}</h3>
+          <div className={styles.questionProgressList}>
+            {detailedProgress.questions.map((q) => {
+              const pct = q.totalOptions > 0
+                ? Math.min(100, Math.round((q.evaluatedCount / q.totalOptions) * 100))
+                : 0;
+              return (
+                <div key={q.questionId} className={styles.questionProgressRow}>
+                  <span className={styles.questionProgressText}>
+                    {q.questionText}
+                  </span>
+                  <div className={styles.questionProgressBarTrack}>
+                    <div
+                      className={styles.questionProgressBarFill}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className={styles.questionProgressCount}>
+                    {tWithParams('optionsRated', {
+                      evaluated: q.evaluatedCount,
+                      total: q.totalOptions,
+                    })}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Demographic sections */}
+          {detailedProgress.demographics.length > 0 && (
+            <>
+              <h4 className={styles.detailedProgressSubtitle}>{t('demographicSections')}</h4>
+              <div className={styles.demographicProgressList}>
+                {detailedProgress.demographics.map((d) => (
+                  <div key={d.pageId} className={styles.demographicProgressRow}>
+                    <span className={styles.demographicProgressText}>{d.pageTitle}</span>
+                    <span
+                      className={
+                        d.isCompleted
+                          ? styles.demographicStatusComplete
+                          : styles.demographicStatusIncomplete
+                      }
+                    >
+                      {d.isCompleted ? t('sectionCompleted') : t('sectionNotCompleted')}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
 
       {survey.showEmailSignup !== false && (
         !isSubscribed ? (
@@ -188,6 +311,8 @@ export default function SurveyComplete({ survey }: SurveyCompleteProps) {
           {t('reviewAnswers')}
         </button>
       </div>
+
+      <WizColAttribution />
     </div>
   );
 }

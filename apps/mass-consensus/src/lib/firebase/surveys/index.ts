@@ -52,7 +52,7 @@ export {
   getBatchSurveyStats,
   getSurveyStats,
 } from './surveyStats';
-export type { SurveyStatsOptions, SurveyStatsResult } from './surveyStats';
+export type { SurveyStatsOptions, SurveyStatsResult, QuestionFunnelItem } from './surveyStats';
 
 // Progress tracking
 export {

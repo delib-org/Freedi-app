@@ -17,6 +17,9 @@ import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
 import { trackEvaluationEngagement } from '../engagement/credits/trackEngagement';
 import { checkSocialProofMilestone } from '../engagement/notifications/socialProofTrigger';
 import { onEvaluationCreatedStats } from '../fn_adminStats';
+import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
+import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
@@ -87,6 +90,7 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		const userEvalData = {
 			userId,
 			evaluation: evaluation.evaluation || 0,
+			demographicAnchorId: evaluation.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
 
@@ -105,6 +109,26 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 		checkSocialProofMilestone(statement, evaluatorCount).catch((err) =>
 			logger.warn('Social proof check failed:', err),
 		);
+
+		// Mark hybrid embedding as stale (non-blocking) — sweep checks setting before processing
+		markHybridEmbeddingStale(statementId).catch((err) =>
+			logger.warn('Hybrid stale marking failed:', err),
+		);
+
+		// Research-mode: record per-evaluation history (aggregate only, no user info)
+		isResearchEnabledForTopParent(statement.topParentId)
+			.then((isResearch) => {
+				if (!isResearch) return;
+
+				return writeHistoryEntry({
+					statement,
+					source: 'evaluation-change',
+					isResearch: true,
+					evaluationDelta: evaluation.evaluation,
+					evaluationAction: 'new',
+				});
+			})
+			.catch((err) => logger.warn('[statementHistory] create write failed:', err));
 	} catch (error) {
 		logger.error('Error in newEvaluation:', error);
 	}

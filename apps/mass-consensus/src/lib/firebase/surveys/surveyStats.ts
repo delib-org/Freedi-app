@@ -1,9 +1,18 @@
 import { getFirestoreAdmin } from '../admin';
 import { SURVEY_PROGRESS_COLLECTION } from './surveyHelpers';
+import { Collections } from '@freedi/shared-types';
 
 export interface SurveyStatsOptions {
   /** Include test data in stats (default: false) */
   includeTestData?: boolean;
+}
+
+export interface QuestionFunnelItem {
+  questionId: string;
+  questionText: string;
+  usersEvaluated: number;
+  /** Percentage of entrants who evaluated at least one option for this question */
+  percentage: number;
 }
 
 export interface SurveyStatsResult {
@@ -14,6 +23,8 @@ export interface SurveyStatsResult {
   testResponseCount?: number;
   /** Test completion count (only returned if test data exists) */
   testCompletionCount?: number;
+  /** Per-question evaluation funnel (only returned when questionIds provided) */
+  questionFunnel?: QuestionFunnelItem[];
 }
 
 /**
@@ -73,10 +84,13 @@ export async function getBatchSurveyStats(
 /**
  * Get survey statistics (response and completion counts)
  * By default, excludes test data from counts
+ *
+ * @param questionIds - If provided, also calculates per-question evaluation funnel
  */
 export async function getSurveyStats(
   surveyId: string,
-  options: SurveyStatsOptions = {}
+  options: SurveyStatsOptions = {},
+  questionIds?: Array<{ id: string; text: string }>
 ): Promise<SurveyStatsResult> {
   const { includeTestData = false } = options;
   const db = getFirestoreAdmin();
@@ -123,6 +137,31 @@ export async function getSurveyStats(
   if (testResponseCount > 0) {
     result.testResponseCount = testResponseCount;
     result.testCompletionCount = testCompletionCount;
+  }
+
+  // Per-question evaluation funnel
+  if (questionIds && questionIds.length > 0 && responseCount > 0) {
+    const funnelPromises = questionIds.map(async (q) => {
+      // Count how many distinct users have a UserEvaluation doc for this question
+      const evalSnapshot = await db
+        .collection(Collections.userEvaluations)
+        .where('parentStatementId', '==', q.id)
+        .select('userId', 'isTestData')
+        .get();
+
+      const usersEvaluated = includeTestData
+        ? evalSnapshot.docs.length
+        : evalSnapshot.docs.filter(doc => doc.data().isTestData !== true).length;
+
+      return {
+        questionId: q.id,
+        questionText: q.text,
+        usersEvaluated,
+        percentage: Math.round((usersEvaluated / responseCount) * 100),
+      };
+    });
+
+    result.questionFunnel = await Promise.all(funnelPromises);
   }
 
   return result;

@@ -6,6 +6,7 @@ import {
 	Statement,
 	PendingReplacement,
 	ReplacementQueueStatus,
+	functionConfig,
 } from '@freedi/shared-types';
 
 /**
@@ -38,7 +39,10 @@ function stripHtml(html: string): string {
  * - Track consensus snapshot at creation for staleness detection
  */
 export const fn_createReplacementQueueItem = onDocumentUpdated(
-	`${Collections.statements}/{suggestionId}`,
+	{
+		document: `${Collections.statements}/{suggestionId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;

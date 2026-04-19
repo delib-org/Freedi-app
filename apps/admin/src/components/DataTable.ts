@@ -29,39 +29,41 @@ export function DataTable<T>(): m.Component<DataTableAttrs<T>> {
 					? m('.spinner.spinner--inline', m('.spinner__circle'))
 					: data.length === 0
 						? m('.data-table__empty', emptyMessage || 'No data')
-						: m('table', [
-								m(
-									'thead',
+						: m('.data-table__scroll', [
+								m('table', [
 									m(
-										'tr',
-										columns.map((col) =>
-											m(
-												'th',
-												{
-													style: col.width ? { width: col.width } : {},
-												},
-												col.label
-											)
-										)
-									)
-								),
-								m(
-									'tbody',
-									data.map((item) =>
+										'thead',
 										m(
 											'tr',
-											{
-												onclick: onRowClick
-													? () => onRowClick(item)
-													: undefined,
-												style: onRowClick
-													? { cursor: 'pointer' }
-													: {},
-											},
-											columns.map((col) => m('td', col.render(item)))
+											columns.map((col) =>
+												m(
+													'th',
+													{
+														style: col.width ? { width: col.width } : {},
+													},
+													col.label
+												)
+											)
 										)
-									)
-								),
+									),
+									m(
+										'tbody',
+										data.map((item) =>
+											m(
+												'tr',
+												{
+													onclick: onRowClick
+														? () => onRowClick(item)
+														: undefined,
+													style: onRowClick
+														? { cursor: 'pointer' }
+														: {},
+												},
+												columns.map((col) => m('td', col.render(item)))
+											)
+										)
+									),
+								]),
 							]),
 			]);
 		},

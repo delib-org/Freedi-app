@@ -53,6 +53,8 @@ export interface SwipeInterfaceProps {
   userName: string;
   mergedSettings?: MergedQuestionSettings;
   onComplete?: () => void;
+  /** Surveys: used to stamp each evaluation with its demographic anchor */
+  surveyId?: string;
 }
 
 const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
@@ -62,6 +64,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
   userName,
   mergedSettings,
   onComplete,
+  surveyId,
 }) => {
   const { t } = useTranslation();
   const dispatch = useDispatch();
@@ -250,7 +253,7 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
     setTimeout(async () => {
       try {
         // Save rating via API (deterministic ID prevents duplicates)
-        await submitRating(question.statementId, capturedStatementId, rating, userId, userName);
+        await submitRating(question.statementId, capturedStatementId, rating, userId, userName, surveyId);
 
         // Update local previous evaluations map
         setPreviousEvaluations((prev) => {
@@ -413,12 +416,21 @@ const SwipeInterface: React.FC<SwipeInterfaceProps> = ({
           <p className="swipe-interface__completion-message">
             {t("You've evaluated all proposals.")}
           </p>
-          <button
-            className="swipe-interface__completion-button"
-            onClick={() => setShowProposalModal(true)}
-          >
-            {t('Submit Your Own Idea')}
-          </button>
+          {mergedSettings ? (
+            <button
+              className="swipe-interface__completion-button swipe-interface__completion-button--primary"
+              onClick={() => window.dispatchEvent(new CustomEvent('trigger-next-question'))}
+            >
+              {t('goToNextQuestion')}
+            </button>
+          ) : (
+            <button
+              className="swipe-interface__completion-button"
+              onClick={() => setShowProposalModal(true)}
+            >
+              {t('Submit Your Own Idea')}
+            </button>
+          )}
         </div>
       )}
 

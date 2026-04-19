@@ -1,7 +1,7 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import { Collections, Statement, VersionArchive } from '@freedi/shared-types';
+import { Collections, Statement, VersionArchive, functionConfig } from '@freedi/shared-types';
 import * as pako from 'pako';
 
 /**
@@ -31,7 +31,10 @@ interface VersionData {
  * - Respects maxRecentVersions and maxTotalVersions settings
  */
 export const fn_pruneVersionHistory = onDocumentUpdated(
-	`${Collections.statements}/{paragraphId}`,
+	{
+		document: `${Collections.statements}/{paragraphId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;

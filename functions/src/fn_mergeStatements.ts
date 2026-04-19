@@ -1,7 +1,7 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { Collections, StatementType, Paragraph, ParagraphType } from '@freedi/shared-types';
+import { Collections, StatementType, Paragraph, ParagraphType, ResearchAction, getResearchLogId } from '@freedi/shared-types';
 import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
 import { generateParagraphId } from './helpers';
 
@@ -166,13 +166,19 @@ export async function mergeStatements(request: Request, response: Response): Pro
 		});
 
 		// 5. Convert merged paragraphs to proper Paragraph format
-		const mergedParagraphs: Paragraph[] = mergeResult.paragraphs.map((p, index) => ({
-			paragraphId: generateParagraphId(),
-			type: ParagraphType.paragraph,
-			content: p.content,
-			order: index,
-			sourceStatementId: p.sourceStatementId ?? undefined,
-		}));
+		const mergedParagraphs: Paragraph[] = mergeResult.paragraphs.map((p, index) => {
+			const paragraph: Paragraph = {
+				paragraphId: generateParagraphId(),
+				type: ParagraphType.paragraph,
+				content: p.content,
+				order: index,
+			};
+			if (p.sourceStatementId) {
+				paragraph.sourceStatementId = p.sourceStatementId;
+			}
+
+			return paragraph;
+		});
 
 		// 6. Check if user already has an evaluation on target
 		const existingEvalQuery = await db
@@ -231,6 +237,27 @@ export async function mergeStatements(request: Request, response: Response): Pro
 			hiddenStatementId: hiddenStatementRef.id,
 			newTitle: mergeResult.newTitle.substring(0, 50),
 		});
+
+		// Research logging (non-blocking)
+		const topParentId = questionData.topParentId || questionId;
+		const researchEnabled = questionData.statementSettings?.enableResearchLogging === true;
+		if (researchEnabled) {
+			const timestamp = Date.now();
+			const logId = getResearchLogId(userId, timestamp);
+			db.collection(Collections.researchLogs).doc(logId).set({
+				logId,
+				userId,
+				action: ResearchAction.CREATE_STATEMENT,
+				timestamp,
+				sourceApp: 'mass-consensus',
+				statementId: hiddenStatementRef.id,
+				parentId: questionId,
+				topParentId,
+				metadata: { mergedInto: targetStatementId },
+			}).catch((err: Error) => {
+				logger.error('Research log failed:', err.message);
+			});
+		}
 
 		const responseData: MergeResponse = {
 			ok: true,

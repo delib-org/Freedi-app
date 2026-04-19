@@ -35,9 +35,9 @@ export default function QuestionTextEditor({
       // Bold: **text** or __text__
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       .replace(/__(.+?)__/g, '<strong>$1</strong>')
-      // Italic: *text* or _text_ (but not inside words)
-      .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
-      .replace(/(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/g, '<em>$1</em>');
+      // Italic: *text* or _text_ (bold already consumed above, so singles are italic)
+      .replace(/\*([^*\n]+?)\*/g, '<em>$1</em>')
+      .replace(/_([^_\n]+?)_/g, '<em>$1</em>');
 
     return html;
   }, [questionText]);

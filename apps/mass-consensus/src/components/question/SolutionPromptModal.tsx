@@ -55,7 +55,6 @@ export default function SolutionPromptModal({
   const [text, setText] = useState('');
   const [flowState, setFlowState] = useState<FlowState>({ step: 'input' });
   const [error, setError] = useState<string | null>(null);
-  const [generatedTitleDesc, setGeneratedTitleDesc] = useState<{ title?: string; description?: string }>({});
   const [multiSuggestions, setMultiSuggestions] = useState<SplitSuggestion[]>([]);
   const [storedSimilarData, setStoredSimilarData] = useState<SimilarCheckResponse | null>(null);
   const [isFinalSubmit, setIsFinalSubmit] = useState(false);
@@ -73,7 +72,6 @@ export default function SolutionPromptModal({
       setText('');
       setFlowState({ step: 'input' });
       setError(null);
-      setGeneratedTitleDesc({});
       setMultiSuggestions([]);
       setStoredSimilarData(null);
     }
@@ -163,14 +161,6 @@ export default function SolutionPromptModal({
       // Parse similar response
       const similarData: SimilarCheckResponse = await similarResponse.json();
 
-      // Store generated title/description for later use
-      if (similarData.generatedTitle || similarData.generatedDescription) {
-        setGeneratedTitleDesc({
-          title: similarData.generatedTitle,
-          description: similarData.generatedDescription,
-        });
-      }
-
       // Parse multi-response separately to handle errors gracefully
       let multiData: MultiSuggestionResponse = {
         ok: false,
@@ -238,8 +228,8 @@ export default function SolutionPromptModal({
       if (similarData.similarStatements && similarData.similarStatements.length > 0) {
         setFlowState({ step: 'similar', data: similarData });
       } else {
-        // No similar solutions, proceed to submit with generated title/description
-        await handleSelectSolution(null, text, similarData.generatedTitle, similarData.generatedDescription);
+        // No similar solutions, proceed to submit
+        await handleSelectSolution(null, text);
       }
     } catch (err) {
       logError(err, {
@@ -256,16 +246,10 @@ export default function SolutionPromptModal({
   const handleSelectSolution = async (
     statementId: string | null,
     solutionText?: string,
-    genTitle?: string,
-    genDescription?: string
   ) => {
     const textToSubmit = solutionText || text;
     setIsFinalSubmit(true);
     setFlowState({ step: 'submitting' });
-
-    // Use passed values or stored values from check-similar response
-    const titleToUse = genTitle || generatedTitleDesc.title;
-    const descriptionToUse = genDescription || generatedTitleDesc.description;
 
     try {
       const response = await fetch(`/api/statements/${questionId}/submit`, {
@@ -275,8 +259,6 @@ export default function SolutionPromptModal({
           solutionText: textToSubmit,
           userId,
           existingStatementId: statementId,
-          generatedTitle: titleToUse,
-          generatedDescription: descriptionToUse,
         }),
       });
 
@@ -413,7 +395,7 @@ export default function SolutionPromptModal({
       setFlowState({ step: 'similar', data: storedSimilarData });
     } else {
       // Submit original directly
-      await handleSelectSolution(null, text, generatedTitleDesc.title, generatedTitleDesc.description);
+      await handleSelectSolution(null, text);
     }
   };
 
@@ -494,19 +476,18 @@ export default function SolutionPromptModal({
 
             <div className={styles.actions}>
               <button
-                className={styles.cancelButton}
-                onClick={handleClose}
-              >
-                {requiresSolution
-                  ? t('Skip for now')
-                  : t('Cancel')}
-              </button>
-              <button
                 className={styles.primaryButton}
                 onClick={handleCheckSimilar}
                 disabled={!isValid}
               >
-                {requiresSolution ? t('Share My Idea') : t('Submit')}
+                {t('Add Your Idea')}
+              </button>
+              <span className={styles.orSeparator}>— {t('or')} —</span>
+              <button
+                className={styles.cancelButton}
+                onClick={handleClose}
+              >
+                {t('Skip for now')}
               </button>
             </div>
           </>
