@@ -183,8 +183,7 @@
   &__text {
     font-family: var(--font-display);
     font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-semibold);
-    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+    font-weight: var(--font-weight-bold);
     letter-spacing: var(--tracking-tight);
     color: var(--ink);
     margin-top: var(--space-lg);
@@ -272,8 +271,7 @@
   &__title {
     font-family: var(--font-display);
     font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-semibold);
-    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+    font-weight: var(--font-weight-bold);
     line-height: var(--line-height-tight);
     letter-spacing: var(--tracking-tight);
     color: var(--ink);                     // 16:1 on paper ✓ AAA
@@ -430,8 +428,7 @@
   &__title {
     font-family: var(--font-display);
     font-size: var(--font-size-xl);
-    font-weight: var(--font-weight-semibold);
-    font-variation-settings: 'opsz' 96, 'SOFT' 50;
+    font-weight: var(--font-weight-bold);
     line-height: var(--line-height-tight);
     letter-spacing: var(--tracking-tight);
     color: var(--ink);                     // 16:1 ✓ AAA
@@ -649,8 +646,7 @@
   &__title {
     font-family: var(--font-display);
     font-size: var(--font-size-lg);
-    font-weight: var(--font-weight-semibold);
-    font-variation-settings: 'opsz' 72, 'SOFT' 50;
+    font-weight: var(--font-weight-bold);
     line-height: var(--line-height-tight);
     letter-spacing: var(--tracking-tight);
     color: var(--ink);                     // 16:1 ✓ AAA
@@ -964,8 +960,7 @@
   &__title {
     font-family: var(--font-display);
     font-size: var(--font-size-2xl);
-    font-weight: var(--font-weight-semibold);
-    font-variation-settings: 'opsz' 144, 'SOFT' 50;
+    font-weight: var(--font-weight-bold);
     line-height: var(--line-height-tight);
     letter-spacing: var(--tracking-tight);
     color: var(--ink);                      // 16:1 ✓ AAA

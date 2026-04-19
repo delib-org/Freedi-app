@@ -1,10 +1,10 @@
 @use 'tokens';
 @use 'components';
 
-// Fraunces (display serif, variable) + Figtree (humanist sans).
-// Latin-only; RTL scripts (ar, he, fa) gracefully fall back to system fonts
-// via the stack in _tokens.scss.
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Figtree:wght@400;500;600;700&display=swap');
+// Assistant — modern humanist sans with full Hebrew + Latin coverage, so
+// the same family works for LTR and RTL languages. Variable weight axis
+// (200–800) lets us handle display, body, and emphasis in one file.
+@import url('https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap');
 
 *,
 *::before,
@@ -30,7 +30,6 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
   text-rendering: optimizeLegibility;
-  font-feature-settings: 'ss01', 'cv11';
 
   // Subtle paper grain — never over ~8% opacity so it doesn't affect
   // text contrast ratios. Hidden for forced-colors users.
@@ -48,16 +47,15 @@ body {
   background-attachment: fixed;
 }
 
-// Typographic defaults — everything inherits body, display used explicitly.
+// Typographic defaults — headings inherit the same family as body since
+// Assistant covers every supported script. Hierarchy comes from weight
+// and tracking, not family swap.
 h1, h2, h3 {
   font-family: var(--font-display);
-  font-weight: var(--font-weight-semibold);
+  font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   letter-spacing: var(--tracking-tight);
   color: var(--text-primary);
-  // Fraunces opsz enables optical-size variation — larger headings get
-  // more dramatic contrast automatically.
-  font-variation-settings: 'opsz' 144, 'SOFT' 50;
 }
 
 h4, h5, h6 {

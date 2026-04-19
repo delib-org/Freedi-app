@@ -90,15 +90,14 @@
   --space-3xl: 72px;
 
   // ---- TYPOGRAPHY ----
-  // Display: Fraunces (variable opsz + wght) for editorial serif presence.
-  // Body: Figtree — humanist sans, excellent legibility.
-  // RTL scripts fall back to system fonts which look better in Hebrew/Arabic
-  // than Latin webfonts forced onto non-Latin glyphs.
+  // Assistant — modern humanist sans with first-class Hebrew + Latin coverage.
+  // Used for both display (heavier weights + tighter tracking) and body, so
+  // text looks right in every supported language including RTL scripts.
   --font-display:
-    'Fraunces', ui-serif, 'Iowan Old Style', 'Palatino Linotype',
-    'Hoefler Text', 'Charter', 'Times New Roman', serif;
+    'Assistant', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', sans-serif;
   --font-body:
-    'Figtree', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    'Assistant', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     Roboto, 'Helvetica Neue', sans-serif;
   --font-mono:
     ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
