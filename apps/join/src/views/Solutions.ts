@@ -13,6 +13,7 @@ import {
 import { t } from '@/lib/i18n';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
+import { WizColFooter } from '@/components/WizColFooter';
 import type { Unsubscribe } from '@/lib/firebase';
 
 let loading = true;
@@ -114,6 +115,7 @@ export const Solutions: m.Component = {
                 }),
               ),
             ),
+        m(WizColFooter),
       ]),
       showJoinForm && question.statementSettings?.joinForm
         ? m(JoinFormModal, {

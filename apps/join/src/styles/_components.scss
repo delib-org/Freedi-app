@@ -1060,3 +1060,124 @@
   60%  { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
 }
+
+// -----------------------------------------------------------------------------
+// WizCol footer — attribution + share (ported from MC)
+// -----------------------------------------------------------------------------
+.wizcol-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-md) var(--space-md);
+  margin-top: var(--space-xl);
+  border-top: 1px solid var(--paper-line);
+  text-align: center;
+
+  &__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    text-decoration: none;
+    color: var(--ink-muted);                   // 8.7:1 ✓ AAA
+    padding: 6px 10px;
+    border-radius: var(--radius-md);
+    transition:
+      color var(--dur-quick) var(--ease-out),
+      background var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      color: var(--ink);                       // 16:1 ✓ AAA
+      background: var(--paper-soft);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+
+  &__logo {
+    width: 32px;
+    height: 32px;
+    display: inline-block;
+    object-fit: contain;
+  }
+
+  &__brand-text {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.01em;
+  }
+
+  &__share {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  &__share-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    color: var(--ink-muted);                   // 8.7:1 ✓ AAA
+    letter-spacing: 0.02em;
+  }
+
+  &__share-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--touch-target);
+    height: var(--touch-target);
+    border-radius: 50%;
+    border: 1.5px solid var(--paper-line);     // 3.3:1 ✓ AA UI
+    background: var(--bg-card);
+    color: var(--ink-muted);                   // icon tint
+    cursor: pointer;
+    padding: 0;
+    transition:
+      color var(--dur-quick) var(--ease-out),
+      background var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out),
+      transform var(--dur-quick) var(--ease-out);
+
+    svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    &:hover {
+      color: var(--paper);
+      background: var(--ink);
+      border-color: var(--ink);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0) scale(0.96);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+
+  &__copied {
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--teal-700);                    // 10:1 ✓ AAA
+    margin-inline-start: var(--space-xs);
+    animation: wizcol-copied-in var(--dur-base) var(--ease-out);
+  }
+}
+
+@keyframes wizcol-copied-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

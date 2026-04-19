@@ -41,11 +41,11 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'Freedi Join',
+        name: 'WizCol Join',
         short_name: 'Join',
         description: 'Join solutions and collaborate',
-        theme_color: '#fef6fa',
-        background_color: '#fef6fa',
+        theme_color: '#faf6ef',
+        background_color: '#faf6ef',
         display: 'standalone',
         start_url: '/',
         icons: [
