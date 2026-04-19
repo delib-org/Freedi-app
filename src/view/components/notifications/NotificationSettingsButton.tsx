@@ -76,6 +76,11 @@ const NotificationSettingsButton: React.FC<NotificationSettingsButtonProps> = ({
 					setAllNotificationsOff(allOff);
 				}
 			} catch (error) {
+				const err = error as { code?: string };
+				// Permission-denied is expected for users without a valid/confirmed
+				// auth token (e.g., stale currentUser from persisted cache or
+				// in-flight auth state). Skip silently to avoid noisy Sentry reports.
+				if (err?.code === 'permission-denied') return;
 				logError(error, {
 					operation: 'notifications.NotificationSettingsButton.checkNotificationPreferences',
 					metadata: { message: 'Error checking notification preferences:' },
