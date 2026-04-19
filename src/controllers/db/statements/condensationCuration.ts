@@ -1,6 +1,13 @@
 import { deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { Statement } from '@freedi/shared-types';
+import { httpsCallable } from 'firebase/functions';
+import {
+	createStatementObject,
+	Statement,
+	StatementType,
+	User,
+} from '@freedi/shared-types';
 import { createStatementRef } from '@/utils/firebaseUtils';
+import { functions } from '@/controllers/db/config';
 import { logError } from '@/utils/errorHandling';
 import { getCurrentTimestamp } from '@/utils/firebaseUtils';
 
@@ -164,6 +171,126 @@ export async function ungroupCluster(args: {
 			operation: 'condensationCuration.ungroupCluster',
 			statementId: args.clusterId,
 			metadata: { parentStatementId: args.parentStatementId },
+		});
+		throw error;
+	}
+}
+
+/**
+ * Client-side throttle: one suggestion call per cluster per 3s. Prevents
+ * accidental spam (cost + latency) if the admin repeatedly clicks the
+ * "Suggest better title" button. Server-side rate limits are separate.
+ */
+const THROTTLE_WINDOW_MS = 3000;
+const lastCallPerCluster = new Map<string, number>();
+
+interface TitleSuggestion {
+	title: string;
+	description: string;
+}
+
+/**
+ * Ask the Cloud Function to produce a fresh AI title suggestion for the
+ * given cluster based on its current members. Returns the suggestion; does
+ * NOT mutate Firestore — the admin must explicitly accept via
+ * `updateClusterTitle` with `lockTitle: true`.
+ *
+ * Supports cancellation: pass an AbortSignal; the in-flight call is ignored
+ * on the caller's side if the signal fires (the Cloud Function still runs
+ * to completion, but its result is discarded).
+ */
+export async function suggestClusterTitle(
+	clusterId: string,
+	signal?: AbortSignal,
+): Promise<TitleSuggestion> {
+	const now = Date.now();
+	const last = lastCallPerCluster.get(clusterId) ?? 0;
+	if (now - last < THROTTLE_WINDOW_MS) {
+		throw new Error('throttled');
+	}
+	lastCallPerCluster.set(clusterId, now);
+
+	try {
+		const callable = httpsCallable<
+			{ clusterId: string },
+			{ ok: boolean; title: string; description: string }
+		>(functions, 'suggestClusterTitle');
+		const result = await callable({ clusterId });
+		if (signal?.aborted) {
+			throw new DOMException('Aborted', 'AbortError');
+		}
+
+		return {
+			title: result.data.title ?? '',
+			description: result.data.description ?? '',
+		};
+	} catch (error) {
+		if (signal?.aborted) throw error;
+		logError(error, {
+			operation: 'condensationCuration.suggestClusterTitle',
+			statementId: clusterId,
+		});
+		throw error;
+	}
+}
+
+/**
+ * Create a new empty cluster statement under the parent question. The
+ * creator can then drag originals into it from the curation page. Title is
+ * locked by default since the admin authored it — the AI pipeline won't
+ * regenerate it on the next run.
+ *
+ * Returns the new cluster's statementId so the caller can select it.
+ */
+export async function createEmptyCluster(args: {
+	parentStatement: Statement;
+	title: string;
+	creator: User;
+}): Promise<string> {
+	const trimmed = args.title.trim();
+	if (!trimmed) throw new Error('Title is required');
+	if (trimmed.length > 120) {
+		throw new Error('Title exceeds 120 characters');
+	}
+
+	try {
+		const created = createStatementObject({
+			statement: trimmed,
+			statementType: StatementType.option,
+			parentId: args.parentStatement.statementId,
+			topParentId: args.parentStatement.topParentId ?? args.parentStatement.statementId,
+			parents: [
+				...(args.parentStatement.parents ?? []),
+				args.parentStatement.statementId,
+			].filter(Boolean),
+			creatorId: args.creator.uid,
+			creator: args.creator,
+		});
+
+		if (!created) throw new Error('Failed to build cluster statement');
+
+		const clusterStatement: Statement = {
+			...created,
+			isCluster: true,
+			integratedOptions: [],
+			titleLockedByCreator: true,
+		};
+
+		await setDoc(createStatementRef(clusterStatement.statementId), clusterStatement);
+
+		// Nudge the parent's lastChildUpdate so listeners notice.
+		await updateDoc(createStatementRef(args.parentStatement.statementId), {
+			lastChildUpdate: getCurrentTimestamp(),
+			lastUpdate: getCurrentTimestamp(),
+		}).catch(() => {
+			// best-effort
+		});
+
+		return clusterStatement.statementId;
+	} catch (error) {
+		logError(error, {
+			operation: 'condensationCuration.createEmptyCluster',
+			statementId: args.parentStatement.statementId,
 		});
 		throw error;
 	}

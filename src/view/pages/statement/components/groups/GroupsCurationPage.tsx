@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import {
@@ -7,10 +7,13 @@ import {
 	Lock,
 	Unlock,
 	Pencil,
+	Plus,
 	Trash2,
 	Scissors,
 	Sparkles,
+	Wand2,
 	X,
+	Check,
 } from 'lucide-react';
 import { Statement, StatementType } from '@freedi/shared-types';
 
@@ -21,10 +24,12 @@ import { createStatementsByParentSelector } from '@/redux/utils/selectorFactorie
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import type { RootState } from '@/redux/store';
 import {
+	createEmptyCluster,
 	moveOriginalToCluster,
 	resetTitleToAI,
 	splitGroupMembers,
 	STANDALONE_OVERRIDE,
+	suggestClusterTitle,
 	toggleTitleLock,
 	ungroupCluster,
 	updateClusterTitle,
@@ -145,6 +150,59 @@ const GroupsCurationPage: FC = () => {
 	const [titleDraft, setTitleDraft] = useState('');
 	/** Cluster that just received a drop — triggers a brief flash animation. */
 	const [flashClusterId, setFlashClusterId] = useState<string | null>(null);
+
+	/**
+	 * AI title-suggestion state. Scoped to a single cluster at a time —
+	 * switching selection dismisses any pending suggestion without applying.
+	 */
+	type SuggestionState =
+		| { kind: 'idle' }
+		| { kind: 'loading'; clusterId: string }
+		| {
+			kind: 'ready';
+			clusterId: string;
+			suggestedTitle: string;
+			suggestedDescription: string;
+			draftTitle: string;
+			draftDescription: string;
+			identical: boolean;
+		}
+		| { kind: 'error'; clusterId: string; message: string };
+	const [suggestion, setSuggestion] = useState<SuggestionState>({ kind: 'idle' });
+	const suggestionAbortRef = useRef<AbortController | null>(null);
+
+	/**
+	 * Undo banner state — shown for 5s after Apply, so the admin can revert
+	 * the applied title + the automatic title-lock.
+	 */
+	interface UndoState {
+		clusterId: string;
+		previousTitle: string;
+		previousDescription: string;
+		previousLocked: boolean;
+		visible: boolean;
+	}
+	const [undoState, setUndoState] = useState<UndoState | null>(null);
+	const undoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	/** Inline "+ New group" form state. */
+	const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+	const [newGroupTitle, setNewGroupTitle] = useState('');
+	const [creatingSubmit, setCreatingSubmit] = useState(false);
+
+	// Clear any in-flight suggestion when switching to a different cluster.
+	useEffect(() => {
+		setSuggestion({ kind: 'idle' });
+		suggestionAbortRef.current?.abort();
+		suggestionAbortRef.current = null;
+	}, [selectedClusterId]);
+
+	useEffect(() => {
+		return () => {
+			suggestionAbortRef.current?.abort();
+			if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+		};
+	}, []);
 	const [descriptionDraft, setDescriptionDraft] = useState('');
 	const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
 	const [dragOverClusterId, setDragOverClusterId] = useState<string | null>(null);
@@ -265,6 +323,139 @@ const GroupsCurationPage: FC = () => {
 		}
 	}
 
+	async function requestSuggestion(cluster: Statement) {
+		suggestionAbortRef.current?.abort();
+		const controller = new AbortController();
+		suggestionAbortRef.current = controller;
+		setSuggestion({ kind: 'loading', clusterId: cluster.statementId });
+		try {
+			const { title, description } = await suggestClusterTitle(
+				cluster.statementId,
+				controller.signal,
+			);
+			if (controller.signal.aborted) return;
+			const identical =
+				title.trim() === (cluster.statement ?? '').trim() &&
+				description.trim() === (cluster.description ?? '').trim();
+			setSuggestion({
+				kind: 'ready',
+				clusterId: cluster.statementId,
+				suggestedTitle: title,
+				suggestedDescription: description,
+				draftTitle: title,
+				draftDescription: description,
+				identical,
+			});
+		} catch (error) {
+			if (controller.signal.aborted) return;
+			const message = error instanceof Error ? error.message : String(error);
+			if (message === 'throttled') {
+				setSuggestion({ kind: 'idle' });
+
+				return;
+			}
+			logError(error, {
+				operation: 'GroupsCurationPage.requestSuggestion',
+				statementId: cluster.statementId,
+			});
+			setSuggestion({ kind: 'error', clusterId: cluster.statementId, message });
+		}
+	}
+
+	function dismissSuggestion() {
+		suggestionAbortRef.current?.abort();
+		suggestionAbortRef.current = null;
+		setSuggestion({ kind: 'idle' });
+	}
+
+	async function applySuggestion(cluster: Statement) {
+		if (suggestion.kind !== 'ready' || suggestion.clusterId !== cluster.statementId) return;
+		const nextTitle = suggestion.draftTitle.trim();
+		if (!nextTitle) return;
+
+		const previous: UndoState = {
+			clusterId: cluster.statementId,
+			previousTitle: cluster.statement,
+			previousDescription: cluster.description ?? '',
+			previousLocked: cluster.titleLockedByCreator ?? false,
+			visible: true,
+		};
+
+		try {
+			await updateClusterTitle({
+				clusterId: cluster.statementId,
+				statement: nextTitle,
+				description: suggestion.draftDescription.trim(),
+				lockTitle: true,
+			});
+			setSuggestion({ kind: 'idle' });
+			if (undoTimerRef.current) clearTimeout(undoTimerRef.current);
+			setUndoState(previous);
+			undoTimerRef.current = setTimeout(() => {
+				setUndoState(null);
+				undoTimerRef.current = null;
+			}, 5000);
+		} catch (error) {
+			logError(error, {
+				operation: 'GroupsCurationPage.applySuggestion',
+				statementId: cluster.statementId,
+			});
+			setSuggestion({
+				kind: 'error',
+				clusterId: cluster.statementId,
+				message: error instanceof Error ? error.message : String(error),
+			});
+		}
+	}
+
+	async function handleCreateGroup() {
+		const trimmed = newGroupTitle.trim();
+		if (!trimmed || !creator) return;
+		setCreatingSubmit(true);
+		try {
+			const newId = await createEmptyCluster({
+				parentStatement: parent,
+				title: trimmed,
+				creator,
+			});
+			setNewGroupTitle('');
+			setIsCreatingGroup(false);
+			setSelectedClusterId(newId);
+			setPanelTab('detail');
+			setSelectedMemberIds(new Set());
+		} catch (error) {
+			logError(error, {
+				operation: 'GroupsCurationPage.handleCreateGroup',
+				statementId: parent.statementId,
+			});
+		} finally {
+			setCreatingSubmit(false);
+		}
+	}
+
+	async function undoLastSuggestion() {
+		if (!undoState) return;
+		const snapshot = undoState;
+		setUndoState(null);
+		if (undoTimerRef.current) {
+			clearTimeout(undoTimerRef.current);
+			undoTimerRef.current = null;
+		}
+		try {
+			await updateClusterTitle({
+				clusterId: snapshot.clusterId,
+				statement: snapshot.previousTitle,
+				description: snapshot.previousDescription,
+				lockTitle: snapshot.previousLocked,
+			});
+		} catch (error) {
+			logError(error, {
+				operation: 'GroupsCurationPage.undoLastSuggestion',
+				statementId: snapshot.clusterId,
+			});
+		}
+	}
+
 	async function handleUngroup(cluster: Statement) {
 		if (!window.confirm(t('Ungroup this suggestion? Originals will appear as standalone options.'))) {
 			return;
@@ -367,6 +558,59 @@ const GroupsCurationPage: FC = () => {
 					className={`${styles['curation-page__list']} ${panelTab === 'list' ? styles['curation-page__list--visible'] : ''}`}
 					aria-label={t('Groups list')}
 				>
+					{/* + New group — create an empty cluster the admin can drag into */}
+					{isCreatingGroup ? (
+						<div className={styles['curation-page__new-group-form']}>
+							<input
+								type="text"
+								className={styles['curation-page__new-group-input']}
+								value={newGroupTitle}
+								onChange={(e) => setNewGroupTitle(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+										void handleCreateGroup();
+									} else if (e.key === 'Escape') {
+										e.preventDefault();
+										setIsCreatingGroup(false);
+										setNewGroupTitle('');
+									}
+								}}
+								placeholder={t('Group title')}
+								maxLength={120}
+								autoFocus
+								aria-label={t('Group title')}
+							/>
+							<div className={styles['curation-page__new-group-actions']}>
+								<button
+									type="button"
+									className={styles['curation-page__btn-primary']}
+									onClick={() => void handleCreateGroup()}
+									disabled={!newGroupTitle.trim() || creatingSubmit}
+								>
+									{creatingSubmit ? t('Creating…') : t('Create')}
+								</button>
+								<button
+									type="button"
+									className={styles['curation-page__btn-ghost']}
+									onClick={() => {
+										setIsCreatingGroup(false);
+										setNewGroupTitle('');
+									}}
+								>
+									{t('Cancel')}
+								</button>
+							</div>
+						</div>
+					) : (
+						<button
+							type="button"
+							className={styles['curation-page__new-group-trigger']}
+							onClick={() => setIsCreatingGroup(true)}
+						>
+							<Plus size={16} /> {t('New group')}
+						</button>
+					)}
 					{view.clusters.length === 0 && (
 						<p className={styles['curation-page__empty']}>
 							{t('No groups yet. Run grouping from the question settings to generate some.')}
@@ -484,6 +728,35 @@ const GroupsCurationPage: FC = () => {
 					className={`${styles['curation-page__detail']} ${panelTab === 'detail' ? styles['curation-page__detail--visible'] : ''}`}
 					aria-label={t('Group detail')}
 				>
+					<div
+						className={styles['curation-page__aria-live']}
+						aria-live="polite"
+						aria-atomic="true"
+					>
+						{suggestion.kind === 'loading' && t('Generating title suggestion')}
+						{suggestion.kind === 'ready' &&
+							`${t('Suggestion ready')}: ${suggestion.suggestedTitle}`}
+						{suggestion.kind === 'error' && t("Couldn't generate a suggestion.")}
+					</div>
+					{undoState && (
+						<div
+							className={styles['curation-page__undo-banner']}
+							role="status"
+							aria-live="polite"
+						>
+							<span className={styles['curation-page__undo-banner-text']}>
+								<Check size={14} aria-hidden />{' '}
+								{t("Title updated and locked. The AI won't change it automatically.")}
+							</span>
+							<button
+								type="button"
+								className={styles['curation-page__undo-banner-action']}
+								onClick={undoLastSuggestion}
+							>
+								{t('Undo')}
+							</button>
+						</div>
+					)}
 					{!selectedCluster && (
 						<p className={styles['curation-page__empty']}>
 							{t('Select a group on the left to review its members.')}
@@ -552,6 +825,27 @@ const GroupsCurationPage: FC = () => {
 											<button
 												type="button"
 												className={styles['curation-page__btn-ghost']}
+												onClick={() => requestSuggestion(selectedCluster)}
+												disabled={
+													(selectedCluster.integratedOptions?.length ?? 0) < 2 ||
+													(suggestion.kind === 'loading' &&
+														suggestion.clusterId === selectedCluster.statementId)
+												}
+												title={
+													(selectedCluster.integratedOptions?.length ?? 0) < 2
+														? t('Add members to get a suggestion')
+														: undefined
+												}
+											>
+												<Wand2 size={14} />{' '}
+												{suggestion.kind === 'loading' &&
+												suggestion.clusterId === selectedCluster.statementId
+													? t('Thinking…')
+													: t('Suggest better title')}
+											</button>
+											<button
+												type="button"
+												className={styles['curation-page__btn-ghost']}
 												onClick={() => handleToggleLock(selectedCluster)}
 											>
 												{selectedCluster.titleLockedByCreator ? (
@@ -575,6 +869,110 @@ const GroupsCurationPage: FC = () => {
 												</button>
 											)}
 										</div>
+
+										{(suggestion.kind === 'ready' || suggestion.kind === 'error') &&
+											suggestion.clusterId === selectedCluster.statementId && (
+											<div
+												className={styles['curation-page__suggestion']}
+												role="region"
+												aria-label={t('AI suggestion')}
+											>
+												<div className={styles['curation-page__suggestion-header']}>
+													<span className={styles['curation-page__suggestion-label']}>
+														<Sparkles size={14} aria-hidden /> {t('AI suggestion')}
+													</span>
+													<button
+														type="button"
+														className={styles['curation-page__suggestion-close']}
+														onClick={dismissSuggestion}
+														aria-label={t('Dismiss')}
+													>
+														<X size={14} />
+													</button>
+												</div>
+												{suggestion.kind === 'error' ? (
+													<>
+														<p className={styles['curation-page__suggestion-error']}>
+															{t("Couldn't generate a suggestion.")}
+														</p>
+														<div className={styles['curation-page__suggestion-actions']}>
+															<button
+																type="button"
+																className={styles['curation-page__btn-primary']}
+																onClick={() => requestSuggestion(selectedCluster)}
+															>
+																{t('Try again')}
+															</button>
+														</div>
+													</>
+												) : (
+													<>
+														<input
+															type="text"
+															className={styles['curation-page__suggestion-title']}
+															value={suggestion.draftTitle}
+															onChange={(e) =>
+																setSuggestion((prev) =>
+																	prev.kind === 'ready'
+																		? { ...prev, draftTitle: e.target.value }
+																		: prev,
+																)
+															}
+															onKeyDown={(e) => {
+																if (e.key === 'Enter') {
+																	e.preventDefault();
+																	applySuggestion(selectedCluster);
+																} else if (e.key === 'Escape') {
+																	e.preventDefault();
+																	dismissSuggestion();
+																}
+															}}
+															autoFocus
+															aria-label={t('Suggested title')}
+														/>
+														<textarea
+															className={styles['curation-page__suggestion-description']}
+															value={suggestion.draftDescription}
+															onChange={(e) =>
+																setSuggestion((prev) =>
+																	prev.kind === 'ready'
+																		? { ...prev, draftDescription: e.target.value }
+																		: prev,
+																)
+															}
+															rows={2}
+															placeholder={t('Description (optional)')}
+															aria-label={t('Suggested description')}
+														/>
+														<p className={styles['curation-page__suggestion-hint']}>
+															{suggestion.identical
+																? t('This matches the current title. Try editing members first.')
+																: t('Based on the {count} members in this group.').replace(
+																		'{count}',
+																		String(selectedCluster.integratedOptions?.length ?? 0),
+																	)}
+														</p>
+														<div className={styles['curation-page__suggestion-actions']}>
+															<button
+																type="button"
+																className={styles['curation-page__btn-primary']}
+																onClick={() => applySuggestion(selectedCluster)}
+																disabled={!suggestion.draftTitle.trim()}
+															>
+																<Check size={14} /> {t('Apply')}
+															</button>
+															<button
+																type="button"
+																className={styles['curation-page__btn-ghost']}
+																onClick={dismissSuggestion}
+															>
+																{t('Dismiss')}
+															</button>
+														</div>
+													</>
+												)}
+											</div>
+										)}
 									</>
 								)}
 							</div>

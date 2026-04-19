@@ -204,6 +204,7 @@ import {
 	onEvaluationChangeRecomputeCondensationClusters,
 	onStatementCreatedMarkCondensationStale,
 } from './condensation/fn_runCondensation';
+import { suggestClusterTitle } from './condensation/fn_suggestClusterTitle';
 
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
@@ -962,3 +963,4 @@ exports.runCondensation = runCondensation;
 exports.onEvaluationChangeRecomputeCondensationClusters =
 	onEvaluationChangeRecomputeCondensationClusters;
 exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensationStale;
+exports.suggestClusterTitle = suggestClusterTitle;
