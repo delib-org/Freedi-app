@@ -89,6 +89,12 @@ export async function recomputeClusterEvaluation(
 
 	const numberOfEvaluators = byUser.size;
 
+	// Preserve any pre-existing evaluationRandomNumber so downstream writers
+	// (e.g. the main evaluation updater) don't trip over an undefined field,
+	// and stable-order selectors keep working.
+	const existingRandom = cluster.evaluation?.evaluationRandomNumber;
+	const existingViewed = cluster.evaluation?.viewed;
+
 	if (numberOfEvaluators === 0) {
 		// Zero out the evaluation but keep the field present so UI renders.
 		const empty: StatementEvaluation = {
@@ -105,6 +111,8 @@ export async function recomputeClusterEvaluation(
 			agreementIndex: 0,
 			likeMindedness: 0,
 			confidenceIndex: 0,
+			evaluationRandomNumber: existingRandom ?? Math.random(),
+			viewed: existingViewed ?? 0,
 		};
 		await clusterDoc.ref.update({ evaluation: empty, consensus: 0, lastUpdate: Date.now() });
 
@@ -166,6 +174,8 @@ export async function recomputeClusterEvaluation(
 		agreementIndex,
 		likeMindedness,
 		confidenceIndex,
+		evaluationRandomNumber: existingRandom ?? Math.random(),
+		viewed: existingViewed ?? 0,
 	};
 
 	await clusterDoc.ref.update({ evaluation, consensus, lastUpdate: Date.now() });

@@ -553,11 +553,22 @@ async function main(): Promise<void> {
 				embedding: FieldValue.vector(embedding),
 				embeddingModel: 'seed-synthetic-v1',
 				embeddingCreatedAt: createdAt,
-				// basic evaluation so the UI doesn't complain
+				// basic evaluation so the UI doesn't complain. Include
+				// evaluationRandomNumber + viewed so the main evaluation updater
+				// (statementEvaluationUpdater.ts) can safely overwrite the object
+				// via dot-notation updates — Firestore rejects undefined values.
 				evaluation: {
 					sumEvaluations: 0,
 					agreement: 0,
 					numberOfEvaluators: 0,
+					sumPro: 0,
+					sumCon: 0,
+					numberOfProEvaluators: 0,
+					numberOfConEvaluators: 0,
+					sumSquaredEvaluations: 0,
+					averageEvaluation: 0,
+					evaluationRandomNumber: Math.random(),
+					viewed: 0,
 				},
 			});
 		}

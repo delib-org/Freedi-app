@@ -104,6 +104,11 @@ export const CondensationConfigSchema = object({
 	minGroupSize: number(), // minimum members required to form a cluster (default 2)
 	visibility: CondensationVisibilitySchema, // per-surface display mode
 	allowDrillToOriginals: boolean(), // when visibility is clusters-only, can voters drill to see originals
+	// Eligibility filters: only options that meet BOTH thresholds are considered
+	// for automatic clustering. Creator overrides (drag-drop) bypass these.
+	// Undefined or 0 disables the filter.
+	minAverageForClustering: optional(number()), // e.g. 0.7 means only cluster options with avg eval >= 0.7
+	minEvaluatorsForClustering: optional(number()), // e.g. 3 means only cluster options with >=3 evaluators
 });
 export type CondensationConfig = InferOutput<typeof CondensationConfigSchema>;
 

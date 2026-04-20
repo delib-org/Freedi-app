@@ -85,6 +85,28 @@ interface PipelineResult {
 	created: number;
 	affectedOriginals: Array<{ originalId: string; clusterId: string; authorId: string }>;
 	orphanedClusters: string[];
+	/** Only populated when the run was a dry-run. Describes what WOULD have
+	 *  been written so the admin can preview before committing. */
+	preview?: PreviewGroup[];
+}
+
+export interface PreviewGroup {
+	/** 'create' = new cluster will be created; 'update' = existing cluster
+	 *  would have its integratedOptions (and optionally title) updated. */
+	kind: 'create' | 'update';
+	existingClusterId?: string;
+	existingTitle?: string;
+	suggestedTitle: string;
+	suggestedDescription: string;
+	memberIds: string[];
+	memberTexts: string[];
+}
+
+export interface PipelineOptions {
+	/** When true, no Firestore writes happen. Returns a `preview` array of
+	 *  the groups that WOULD have been produced. Gemini is still called for
+	 *  title generation so the preview is representative. */
+	dryRun?: boolean;
 }
 
 /**
@@ -168,7 +190,9 @@ export async function runCondensationPipeline(
 	parentId: string,
 	config: CondensationConfig,
 	runBy: string,
+	options: PipelineOptions = {},
 ): Promise<PipelineResult> {
+	const { dryRun = false } = options;
 	const threshold = THRESHOLDS[config.level];
 	const minGroupSize = Math.max(2, config.minGroupSize ?? DEFAULT_MIN_GROUP_SIZE);
 
@@ -212,11 +236,48 @@ export async function runCondensationPipeline(
 		forcedGroupsByTarget.set(target, bucket);
 	}
 
-	// 2. Candidates = originals with a valid embedding, minus standalones.
+	// 2. Candidates = originals with a valid embedding, minus standalones,
+	//    and passing the admin-configured eligibility filters (min avg
+	//    evaluation + min evaluator count). Creator-forced overrides bypass
+	//    the eligibility filters because drag-drop is explicit admin intent.
 	//    Embeddings on statements are stored as Firestore VectorValue, not
 	//    plain arrays — extractEmbedding() normalizes both shapes.
+	const minAverage =
+		typeof config.minAverageForClustering === 'number' && config.minAverageForClustering > -1
+			? config.minAverageForClustering
+			: null;
+	const minEvaluators =
+		typeof config.minEvaluatorsForClustering === 'number' && config.minEvaluatorsForClustering > 0
+			? config.minEvaluatorsForClustering
+			: null;
+	const isForcedToCluster = new Set<string>();
+	for (const [originalId, target] of Object.entries(overrideAssignments)) {
+		if (target !== '__standalone__') isForcedToCluster.add(originalId);
+	}
+
+	function passesEligibility(s: Statement): boolean {
+		if (isForcedToCluster.has(s.statementId)) return true; // admin intent wins
+		if (minAverage !== null) {
+			const avg = s.evaluation?.averageEvaluation ?? null;
+			if (avg === null || avg < minAverage) return false;
+		}
+		if (minEvaluators !== null) {
+			const evals = s.evaluation?.numberOfEvaluators ?? 0;
+			if (evals < minEvaluators) return false;
+		}
+
+		return true;
+	}
+
+	let filteredOutByEligibility = 0;
 	const candidates: Candidate[] = originals
 		.filter((s) => !standaloneOverrides.has(s.statementId))
+		.filter((s) => {
+			if (passesEligibility(s)) return true;
+			filteredOutByEligibility++;
+
+			return false;
+		})
 		.map((s) => {
 			const embedding = extractEmbedding(
 				(s as unknown as { embedding?: unknown }).embedding,
@@ -233,6 +294,15 @@ export async function runCondensationPipeline(
 				: null;
 		})
 		.filter((c): c is Candidate => c !== null);
+
+	if (filteredOutByEligibility > 0) {
+		logger.info('condensation.pipeline — eligibility filter applied', {
+			parentId,
+			filteredOut: filteredOutByEligibility,
+			minAverage,
+			minEvaluators,
+		});
+	}
 
 	if (candidates.length < minGroupSize) {
 		logger.info('condensation.pipeline skipped — not enough embedded candidates', {
@@ -319,6 +389,7 @@ export async function runCondensationPipeline(
 			created: 0,
 			affectedOriginals: [],
 			orphanedClusters: [],
+			preview: dryRun ? [] : undefined,
 		};
 	}
 
@@ -352,6 +423,74 @@ export async function runCondensationPipeline(
 	const affectedOriginals: Array<{ originalId: string; clusterId: string; authorId: string }> = [];
 	let createdCount = 0;
 	let updatedCount = 0;
+	const candidatesById = new Map(candidates.map((c) => [c.id, c]));
+	const existingClusterById = new Map(existingClusters.map((c) => [c.statementId, c]));
+	const preview: PreviewGroup[] = [];
+
+	// 7a. Dry-run path: compute titles + preview WITHOUT any Firestore writes.
+	// We still call Gemini so the admin sees the titles they'd actually get.
+	if (dryRun) {
+		for (const group of reconciled.groups) {
+			const sourceTexts = group.sourceIds
+				.map((id) => candidatesById.get(id)?.text)
+				.filter((t): t is string => Boolean(t));
+			if (sourceTexts.length === 0) continue;
+
+			let suggestedTitle: string;
+			let suggestedDescription: string;
+			if (group.kind === 'update' && group.existingClusterId) {
+				const existing = existingClusterById.get(group.existingClusterId);
+				const prevHash = hashIntegratedOptions(existing?.integratedOptions ?? []);
+				const nextHash = hashIntegratedOptions(group.sourceIds);
+				const unchanged = prevHash === nextHash;
+				if (!unchanged && !existing?.titleLockedByCreator && merges < DEFAULT_MAX_MERGES_PER_RUN) {
+					const g = await generateGroupedTitle(sourceTexts, questionContext);
+					suggestedTitle = g.title;
+					suggestedDescription = g.description;
+					merges++;
+				} else {
+					suggestedTitle = existing?.statement ?? sourceTexts[0];
+					suggestedDescription = existing?.description ?? '';
+				}
+			} else if (merges < DEFAULT_MAX_MERGES_PER_RUN) {
+				const g = await generateGroupedTitle(sourceTexts, questionContext);
+				suggestedTitle = g.title;
+				suggestedDescription = g.description;
+				merges++;
+			} else {
+				suggestedTitle = sourceTexts[0];
+				suggestedDescription = sourceTexts.slice(1, 4).join(' · ');
+			}
+
+			preview.push({
+				kind: group.kind,
+				existingClusterId: group.existingClusterId,
+				existingTitle:
+					group.kind === 'update'
+						? existingClusterById.get(group.existingClusterId ?? '')?.statement
+						: undefined,
+				suggestedTitle,
+				suggestedDescription,
+				memberIds: group.sourceIds,
+				memberTexts: sourceTexts,
+			});
+		}
+
+		logger.info('condensation.pipeline DRY RUN', {
+			parentId,
+			candidates: candidates.length,
+			preview: preview.length,
+		});
+
+		return {
+			produced: preview.length,
+			created: preview.filter((g) => g.kind === 'create').length,
+			updated: preview.filter((g) => g.kind === 'update').length,
+			affectedOriginals: [],
+			orphanedClusters: reconciled.orphanedClusterIds,
+			preview,
+		};
+	}
 
 	for (const group of reconciled.groups) {
 		try {
@@ -359,7 +498,7 @@ export async function runCondensationPipeline(
 				parent: parent ?? ({ statementId: parentId } as Statement),
 				parentId,
 				group,
-				candidatesById: new Map(candidates.map((c) => [c.id, c])),
+				candidatesById,
 				questionContext,
 				mergesRemaining: DEFAULT_MAX_MERGES_PER_RUN - merges,
 				runBy,

@@ -30,9 +30,10 @@ const db = getFirestore();
 export const runCondensation = onCall(
 	{ region: functionConfig.region, cors: true },
 	async (request) => {
-		const { parentId, mode } = (request.data ?? {}) as {
+		const { parentId, mode, dryRun } = (request.data ?? {}) as {
 			parentId?: string;
 			mode?: 'manual' | 'scheduled';
+			dryRun?: boolean;
 		};
 
 		if (!request.auth?.uid) {
@@ -62,6 +63,36 @@ export const runCondensation = onCall(
 				'failed-precondition',
 				'Grouping is not enabled for this question',
 			);
+		}
+
+		// Dry-run path — no writes, no lock, no status updates, no
+		// notifications. Just compute the would-be groups and return.
+		if (dryRun) {
+			try {
+				const result = await runCondensationPipeline(
+					parentId,
+					condensation,
+					request.auth.uid,
+					{ dryRun: true },
+				);
+
+				return {
+					ok: true,
+					dryRun: true,
+					preview: result.preview ?? [],
+					produced: result.produced,
+					created: result.created,
+					updated: result.updated,
+					orphanedClusters: result.orphanedClusters,
+				};
+			} catch (error) {
+				logError(error, {
+					operation: 'runCondensation.dryRun',
+					statementId: parentId,
+					userId: request.auth.uid,
+				});
+				throw new HttpsError('internal', 'Preview failed');
+			}
 		}
 
 		// Write lock (best-effort); rely on pipeline idempotency for correctness.
