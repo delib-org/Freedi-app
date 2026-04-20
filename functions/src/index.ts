@@ -206,6 +206,9 @@ import {
 } from './condensation/fn_runCondensation';
 import { suggestClusterTitle } from './condensation/fn_suggestClusterTitle';
 
+// Scheduled drift correction for evaluation aggregates
+import { evaluationDriftCorrection } from './fn_evaluationDriftCorrection';
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
 	initializeApp();
@@ -964,3 +967,4 @@ exports.onEvaluationChangeRecomputeCondensationClusters =
 	onEvaluationChangeRecomputeCondensationClusters;
 exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensationStale;
 exports.suggestClusterTitle = suggestClusterTitle;
+exports.evaluationDriftCorrection = evaluationDriftCorrection;
