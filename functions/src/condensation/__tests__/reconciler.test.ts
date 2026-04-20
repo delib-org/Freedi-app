@@ -58,10 +58,7 @@ describe('reconciler', () => {
 	});
 
 	it('greedy 1:1 — the same existing cluster is not assigned twice', () => {
-		const existing = [
-			cluster('K1', ['a', 'b', 'c', 'd']),
-			cluster('K2', ['x', 'y', 'z']),
-		];
+		const existing = [cluster('K1', ['a', 'b', 'c', 'd']), cluster('K2', ['x', 'y', 'z'])];
 		const { groups } = reconcileGroups(
 			[
 				{ sourceIds: ['a', 'b', 'c'] }, // matches K1 (3/4 = 0.75)
@@ -85,8 +82,6 @@ describe('reconciler', () => {
 	});
 
 	it('hash is order-independent — critical for the cost gate', () => {
-		expect(hashIntegratedOptions(['a', 'b', 'c'])).toBe(
-			hashIntegratedOptions(['c', 'a', 'b']),
-		);
+		expect(hashIntegratedOptions(['a', 'b', 'c'])).toBe(hashIntegratedOptions(['c', 'a', 'b']));
 	});
 });

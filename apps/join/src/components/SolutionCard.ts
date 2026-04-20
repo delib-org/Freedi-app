@@ -7,6 +7,7 @@ import {
   getQuestion,
   getMessageCount,
   getNewMessageCount,
+  getClusterEvaluatorCount,
   JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
@@ -96,6 +97,12 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
           : null,
         isCluster && groupSize > 0
           ? m('.solution-card__group-badge', t('card.group_represents', { count: groupSize }))
+          : null,
+        isCluster && getClusterEvaluatorCount(option.statementId) > 0
+          ? m(
+              '.solution-card__group-votes',
+              t('card.group_evaluators', { count: getClusterEvaluatorCount(option.statementId) }),
+            )
           : null,
         m('.solution-card__title', option.statement),
         getOptionDescription(option)

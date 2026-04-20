@@ -26,8 +26,7 @@ export async function isResearchEnabledForTopParent(
 
 	try {
 		const snap = await db.collection(Collections.statements).doc(topParentId).get();
-		const enabled =
-			snap.exists && snap.data()?.statementSettings?.enableResearchLogging === true;
+		const enabled = snap.exists && snap.data()?.statementSettings?.enableResearchLogging === true;
 
 		cache.set(topParentId, { enabled, expiresAt: Date.now() + CACHE_TTL_MS });
 

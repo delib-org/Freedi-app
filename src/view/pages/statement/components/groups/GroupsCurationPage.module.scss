@@ -412,6 +412,14 @@
     gap: 0.5rem;
   }
 
+  &__score-breakdown {
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.02));
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+  }
+
   &__detail-actions {
     display: flex;
     flex-wrap: wrap;

@@ -7,7 +7,7 @@ import {
 	type InferOutput,
 	record,
 	unknown,
-	enum as valibotEnum,
+	enum_ as valibotEnum,
 } from "valibot";
 
 /** Actions tracked for research purposes */

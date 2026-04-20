@@ -216,9 +216,9 @@ export async function runCondensationPipeline(
 	// cluster ID are forced to end up in the same group, regardless of
 	// similarity. Fetched from the parent statement document.
 	const parentForOverrides = siblings.find((s) => s.statementId === parentId);
-	const overridesRaw =
-		(parentForOverrides as unknown as { creatorOverrides?: { assignments?: unknown } })
-			?.creatorOverrides?.assignments;
+	const overridesRaw = (
+		parentForOverrides as unknown as { creatorOverrides?: { assignments?: unknown } }
+	)?.creatorOverrides?.assignments;
 	const overrideAssignments: Record<string, string> =
 		overridesRaw && typeof overridesRaw === 'object'
 			? (overridesRaw as Record<string, string>)
@@ -279,18 +279,16 @@ export async function runCondensationPipeline(
 			return false;
 		})
 		.map((s) => {
-			const embedding = extractEmbedding(
-				(s as unknown as { embedding?: unknown }).embedding,
-			);
+			const embedding = extractEmbedding((s as unknown as { embedding?: unknown }).embedding);
 
 			return embedding
 				? {
-					id: s.statementId,
-					text: s.statement,
-					embedding,
-					createdAt: s.createdAt,
-					creatorId: s.creatorId,
-				}
+						id: s.statementId,
+						text: s.statement,
+						embedding,
+						createdAt: s.createdAt,
+						creatorId: s.creatorId,
+					}
 				: null;
 		})
 		.filter((c): c is Candidate => c !== null);
@@ -652,12 +650,16 @@ async function applyGroup({
 	await db.collection(Collections.statements).doc(clusterId).set(clusterData);
 
 	// Mark parent's lastChildUpdate so listeners refresh.
-	await db.collection(Collections.statements).doc(parentId).update({
-		lastChildUpdate: Date.now(),
-		lastUpdate: Date.now(),
-	}).catch(() => {
-		// best-effort
-	});
+	await db
+		.collection(Collections.statements)
+		.doc(parentId)
+		.update({
+			lastChildUpdate: Date.now(),
+			lastUpdate: Date.now(),
+		})
+		.catch(() => {
+			// best-effort
+		});
 
 	return clusterId;
 }

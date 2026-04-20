@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useSelector } from 'react-redux';
 import {
@@ -16,6 +16,7 @@ import {
 	Check,
 } from 'lucide-react';
 import { Statement, StatementType } from '@freedi/shared-types';
+import ScoreBreakdown from '@/view/components/atomic/molecules/GroupedSuggestionCard/ScoreBreakdown';
 
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -142,8 +143,8 @@ const GroupsCurationPage: FC = () => {
 		};
 	}, [statementId]);
 
-	const [selectedClusterId, setSelectedClusterId] = useState<string | null>(() =>
-		view.clusters[0]?.statementId ?? null,
+	const [selectedClusterId, setSelectedClusterId] = useState<string | null>(
+		() => view.clusters[0]?.statementId ?? null,
 	);
 	const [panelTab, setPanelTab] = useState<PanelTab>('list');
 	const [editingTitle, setEditingTitle] = useState<string | null>(null);
@@ -159,14 +160,14 @@ const GroupsCurationPage: FC = () => {
 		| { kind: 'idle' }
 		| { kind: 'loading'; clusterId: string }
 		| {
-			kind: 'ready';
-			clusterId: string;
-			suggestedTitle: string;
-			suggestedDescription: string;
-			draftTitle: string;
-			draftDescription: string;
-			identical: boolean;
-		}
+				kind: 'ready';
+				clusterId: string;
+				suggestedTitle: string;
+				suggestedDescription: string;
+				draftTitle: string;
+				draftDescription: string;
+				identical: boolean;
+		  }
 		| { kind: 'error'; clusterId: string; message: string };
 	const [suggestion, setSuggestion] = useState<SuggestionState>({ kind: 'idle' });
 	const suggestionAbortRef = useRef<AbortController | null>(null);
@@ -226,10 +227,9 @@ const GroupsCurationPage: FC = () => {
 		);
 	}
 
-	const selectedCluster =
-		view.clusters.find((c) => c.statementId === selectedClusterId) ?? null;
+	const selectedCluster = view.clusters.find((c) => c.statementId === selectedClusterId) ?? null;
 	const selectedMembers = selectedCluster
-		? view.originalsByCluster.get(selectedCluster.statementId) ?? []
+		? (view.originalsByCluster.get(selectedCluster.statementId) ?? [])
 		: [];
 
 	// Drag-and-drop handlers (HTML5 native; keyboard equivalent via "Move to…" menu on each row).
@@ -239,7 +239,10 @@ const GroupsCurationPage: FC = () => {
 		e.dataTransfer.effectAllowed = 'move';
 	}
 
-	function onDropToCluster(e: React.DragEvent, targetClusterId: string | typeof STANDALONE_OVERRIDE) {
+	function onDropToCluster(
+		e: React.DragEvent,
+		targetClusterId: string | typeof STANDALONE_OVERRIDE,
+	) {
 		e.preventDefault();
 		setDragOverClusterId(null);
 		const originalId = e.dataTransfer.getData('text/plain');
@@ -457,7 +460,9 @@ const GroupsCurationPage: FC = () => {
 	}
 
 	async function handleUngroup(cluster: Statement) {
-		if (!window.confirm(t('Ungroup this suggestion? Originals will appear as standalone options.'))) {
+		if (
+			!window.confirm(t('Ungroup this suggestion? Originals will appear as standalone options.'))
+		) {
 			return;
 		}
 		try {
@@ -728,22 +733,14 @@ const GroupsCurationPage: FC = () => {
 					className={`${styles['curation-page__detail']} ${panelTab === 'detail' ? styles['curation-page__detail--visible'] : ''}`}
 					aria-label={t('Group detail')}
 				>
-					<div
-						className={styles['curation-page__aria-live']}
-						aria-live="polite"
-						aria-atomic="true"
-					>
+					<div className={styles['curation-page__aria-live']} aria-live="polite" aria-atomic="true">
 						{suggestion.kind === 'loading' && t('Generating title suggestion')}
 						{suggestion.kind === 'ready' &&
 							`${t('Suggestion ready')}: ${suggestion.suggestedTitle}`}
 						{suggestion.kind === 'error' && t("Couldn't generate a suggestion.")}
 					</div>
 					{undoState && (
-						<div
-							className={styles['curation-page__undo-banner']}
-							role="status"
-							aria-live="polite"
-						>
+						<div className={styles['curation-page__undo-banner']} role="status" aria-live="polite">
 							<span className={styles['curation-page__undo-banner-text']}>
 								<Check size={14} aria-hidden />{' '}
 								{t("Title updated and locked. The AI won't change it automatically.")}
@@ -814,6 +811,13 @@ const GroupsCurationPage: FC = () => {
 												{selectedCluster.description}
 											</p>
 										)}
+										<div className={styles['curation-page__score-breakdown']}>
+											<ScoreBreakdown
+												clusterId={selectedCluster.statementId}
+												verbose
+												alwaysExpanded
+											/>
+										</div>
 										<div className={styles['curation-page__detail-actions']}>
 											<button
 												type="button"
@@ -872,107 +876,107 @@ const GroupsCurationPage: FC = () => {
 
 										{(suggestion.kind === 'ready' || suggestion.kind === 'error') &&
 											suggestion.clusterId === selectedCluster.statementId && (
-											<div
-												className={styles['curation-page__suggestion']}
-												role="region"
-												aria-label={t('AI suggestion')}
-											>
-												<div className={styles['curation-page__suggestion-header']}>
-													<span className={styles['curation-page__suggestion-label']}>
-														<Sparkles size={14} aria-hidden /> {t('AI suggestion')}
-													</span>
-													<button
-														type="button"
-														className={styles['curation-page__suggestion-close']}
-														onClick={dismissSuggestion}
-														aria-label={t('Dismiss')}
-													>
-														<X size={14} />
-													</button>
-												</div>
-												{suggestion.kind === 'error' ? (
-													<>
-														<p className={styles['curation-page__suggestion-error']}>
-															{t("Couldn't generate a suggestion.")}
-														</p>
-														<div className={styles['curation-page__suggestion-actions']}>
-															<button
-																type="button"
-																className={styles['curation-page__btn-primary']}
-																onClick={() => requestSuggestion(selectedCluster)}
-															>
-																{t('Try again')}
-															</button>
-														</div>
-													</>
-												) : (
-													<>
-														<input
-															type="text"
-															className={styles['curation-page__suggestion-title']}
-															value={suggestion.draftTitle}
-															onChange={(e) =>
-																setSuggestion((prev) =>
-																	prev.kind === 'ready'
-																		? { ...prev, draftTitle: e.target.value }
-																		: prev,
-																)
-															}
-															onKeyDown={(e) => {
-																if (e.key === 'Enter') {
-																	e.preventDefault();
-																	applySuggestion(selectedCluster);
-																} else if (e.key === 'Escape') {
-																	e.preventDefault();
-																	dismissSuggestion();
+												<div
+													className={styles['curation-page__suggestion']}
+													role="region"
+													aria-label={t('AI suggestion')}
+												>
+													<div className={styles['curation-page__suggestion-header']}>
+														<span className={styles['curation-page__suggestion-label']}>
+															<Sparkles size={14} aria-hidden /> {t('AI suggestion')}
+														</span>
+														<button
+															type="button"
+															className={styles['curation-page__suggestion-close']}
+															onClick={dismissSuggestion}
+															aria-label={t('Dismiss')}
+														>
+															<X size={14} />
+														</button>
+													</div>
+													{suggestion.kind === 'error' ? (
+														<>
+															<p className={styles['curation-page__suggestion-error']}>
+																{t("Couldn't generate a suggestion.")}
+															</p>
+															<div className={styles['curation-page__suggestion-actions']}>
+																<button
+																	type="button"
+																	className={styles['curation-page__btn-primary']}
+																	onClick={() => requestSuggestion(selectedCluster)}
+																>
+																	{t('Try again')}
+																</button>
+															</div>
+														</>
+													) : (
+														<>
+															<input
+																type="text"
+																className={styles['curation-page__suggestion-title']}
+																value={suggestion.draftTitle}
+																onChange={(e) =>
+																	setSuggestion((prev) =>
+																		prev.kind === 'ready'
+																			? { ...prev, draftTitle: e.target.value }
+																			: prev,
+																	)
 																}
-															}}
-															autoFocus
-															aria-label={t('Suggested title')}
-														/>
-														<textarea
-															className={styles['curation-page__suggestion-description']}
-															value={suggestion.draftDescription}
-															onChange={(e) =>
-																setSuggestion((prev) =>
-																	prev.kind === 'ready'
-																		? { ...prev, draftDescription: e.target.value }
-																		: prev,
-																)
-															}
-															rows={2}
-															placeholder={t('Description (optional)')}
-															aria-label={t('Suggested description')}
-														/>
-														<p className={styles['curation-page__suggestion-hint']}>
-															{suggestion.identical
-																? t('This matches the current title. Try editing members first.')
-																: t('Based on the {count} members in this group.').replace(
-																		'{count}',
-																		String(selectedCluster.integratedOptions?.length ?? 0),
-																	)}
-														</p>
-														<div className={styles['curation-page__suggestion-actions']}>
-															<button
-																type="button"
-																className={styles['curation-page__btn-primary']}
-																onClick={() => applySuggestion(selectedCluster)}
-																disabled={!suggestion.draftTitle.trim()}
-															>
-																<Check size={14} /> {t('Apply')}
-															</button>
-															<button
-																type="button"
-																className={styles['curation-page__btn-ghost']}
-																onClick={dismissSuggestion}
-															>
-																{t('Dismiss')}
-															</button>
-														</div>
-													</>
-												)}
-											</div>
-										)}
+																onKeyDown={(e) => {
+																	if (e.key === 'Enter') {
+																		e.preventDefault();
+																		applySuggestion(selectedCluster);
+																	} else if (e.key === 'Escape') {
+																		e.preventDefault();
+																		dismissSuggestion();
+																	}
+																}}
+																autoFocus
+																aria-label={t('Suggested title')}
+															/>
+															<textarea
+																className={styles['curation-page__suggestion-description']}
+																value={suggestion.draftDescription}
+																onChange={(e) =>
+																	setSuggestion((prev) =>
+																		prev.kind === 'ready'
+																			? { ...prev, draftDescription: e.target.value }
+																			: prev,
+																	)
+																}
+																rows={2}
+																placeholder={t('Description (optional)')}
+																aria-label={t('Suggested description')}
+															/>
+															<p className={styles['curation-page__suggestion-hint']}>
+																{suggestion.identical
+																	? t('This matches the current title. Try editing members first.')
+																	: t('Based on the {count} members in this group.').replace(
+																			'{count}',
+																			String(selectedCluster.integratedOptions?.length ?? 0),
+																		)}
+															</p>
+															<div className={styles['curation-page__suggestion-actions']}>
+																<button
+																	type="button"
+																	className={styles['curation-page__btn-primary']}
+																	onClick={() => applySuggestion(selectedCluster)}
+																	disabled={!suggestion.draftTitle.trim()}
+																>
+																	<Check size={14} /> {t('Apply')}
+																</button>
+																<button
+																	type="button"
+																	className={styles['curation-page__btn-ghost']}
+																	onClick={dismissSuggestion}
+																>
+																	{t('Dismiss')}
+																</button>
+															</div>
+														</>
+													)}
+												</div>
+											)}
 									</>
 								)}
 							</div>

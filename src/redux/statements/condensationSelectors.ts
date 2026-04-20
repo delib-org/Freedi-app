@@ -1,9 +1,5 @@
 import { createSelector } from '@reduxjs/toolkit';
-import {
-	Statement,
-	StatementType,
-	CondensationSurfaceVisibility,
-} from '@freedi/shared-types';
+import { Statement, StatementType, CondensationSurfaceVisibility } from '@freedi/shared-types';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,9 +68,7 @@ export function createGroupedViewSelector(selectStatements: StateSelector<Statem
 			const parent = statements.find((s) => s.statementId === parentId);
 			const condensation = parent?.statementSettings?.condensation;
 			const mode: CondensationSurfaceVisibility =
-				condensation?.enabled === true
-					? (condensation.visibility?.[surface] ?? 'both')
-					: 'both';
+				condensation?.enabled === true ? (condensation.visibility?.[surface] ?? 'both') : 'both';
 			const allowDrillToOriginals = condensation?.allowDrillToOriginals ?? true;
 
 			const siblings = statements.filter(
@@ -114,9 +108,7 @@ export function createGroupedViewSelector(selectStatements: StateSelector<Statem
  * Selector that returns the cluster IDs a given original belongs to. Use this
  * on original cards to render a small "Also represented in: [Group]" badge.
  */
-export function createMembershipForOriginalSelector(
-	selectStatements: StateSelector<Statement[]>,
-) {
+export function createMembershipForOriginalSelector(selectStatements: StateSelector<Statement[]>) {
 	return (originalId: string | undefined, parentId: string | undefined) =>
 		createSelector([selectStatements], (statements): Statement[] => {
 			if (!originalId || !parentId) {

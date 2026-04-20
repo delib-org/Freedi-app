@@ -33,13 +33,8 @@ export function initSentry() {
 
 				// Filter out Firestore offline errors — not actionable, happens
 				// constantly on flaky mobile networks
-				const firebaseErr = error as
-					| { name?: string; code?: string }
-					| undefined;
-				if (
-					firebaseErr?.name === 'FirebaseError' &&
-					firebaseErr?.code === 'unavailable'
-				) {
+				const firebaseErr = error as { name?: string; code?: string } | undefined;
+				if (firebaseErr?.name === 'FirebaseError' && firebaseErr?.code === 'unavailable') {
 					return null;
 				}
 

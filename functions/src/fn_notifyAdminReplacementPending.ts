@@ -1,7 +1,12 @@
 import { onDocumentCreated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import { Collections, PendingReplacement, StatementType, functionConfig } from '@freedi/shared-types';
+import {
+	Collections,
+	PendingReplacement,
+	StatementType,
+	functionConfig,
+} from '@freedi/shared-types';
 import { Role } from '@freedi/shared-types';
 
 /**

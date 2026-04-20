@@ -523,7 +523,10 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		// Fetch top parent for setting inheritance check
 		let topParent: Statement | undefined;
 		if (parentStatement.topParentId && parentStatement.topParentId !== parentId) {
-			const topDoc = await db.collection(Collections.statements).doc(parentStatement.topParentId).get();
+			const topDoc = await db
+				.collection(Collections.statements)
+				.doc(parentStatement.topParentId)
+				.get();
 			if (topDoc.exists) {
 				topParent = topDoc.data() as Statement;
 			}

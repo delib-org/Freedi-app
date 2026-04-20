@@ -67,9 +67,7 @@ export async function writeHistoryEntry(input: WriteHistoryEntryInput): Promise<
 		};
 
 		// Strip undefined values — Firestore rejects them
-		const cleaned = Object.fromEntries(
-			Object.entries(entry).filter(([, v]) => v !== undefined),
-		);
+		const cleaned = Object.fromEntries(Object.entries(entry).filter(([, v]) => v !== undefined));
 
 		await db
 			.collection(Collections.statements)

@@ -33,7 +33,7 @@ export async function generateGroupedTitle(
 			'The originals are preserved — you are NOT merging or rewriting them. You',
 			'are producing a short, neutral label that voters can recognize as',
 			'representing all of them. Do not invent content that is not present in',
-			'the sources. Match the sources\' language (Hebrew, Arabic, English,',
+			"the sources. Match the sources' language (Hebrew, Arabic, English,",
 			'Spanish, etc.) — do not translate.',
 			'',
 			'Return strict JSON: { "title": string, "description": string }.',

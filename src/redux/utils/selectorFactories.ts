@@ -83,8 +83,15 @@ export const sortByCreatedAt = (a: Statement, b: Statement): number => a.created
 
 export const sortByLastUpdate = (a: Statement, b: Statement): number => b.lastUpdate - a.lastUpdate;
 
-export const sortByConsensus = (a: Statement, b: Statement): number =>
-	(b.consensus ?? 0) - (a.consensus ?? 0);
+export const sortByConsensus = (a: Statement, b: Statement): number => {
+	// Prefer the StatementEvaluation.agreement since that's what the
+	// evaluation pipeline + cluster aggregator write. Fall back to the
+	// top-level `consensus` field for legacy docs without `evaluation`.
+	const aScore = a.evaluation?.agreement ?? a.consensus ?? 0;
+	const bScore = b.evaluation?.agreement ?? b.consensus ?? 0;
+
+	return bScore - aScore;
+};
 
 export const sortByEvaluationCount = (a: Statement, b: Statement): number =>
 	(b.evaluation?.numberOfEvaluators || 0) - (a.evaluation?.numberOfEvaluators || 0);

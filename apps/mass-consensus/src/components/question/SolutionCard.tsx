@@ -5,6 +5,7 @@ import EvaluationButtons from './EvaluationButtons';
 import { getParagraphsText } from '@/lib/utils/paragraphUtils';
 import InlineMarkdown from '../shared/InlineMarkdown';
 import { useTranslation } from '@freedi/shared-i18n/next';
+import ScoreBreakdown from './ScoreBreakdown';
 import styles from './SolutionCard.module.css';
 
 function formatGroupLabel(template: string, count: number): string {
@@ -85,6 +86,7 @@ export default function SolutionCard({
         onEvaluate={handleEvaluate}
         currentScore={currentScore}
       />
+      {isCluster && <ScoreBreakdown clusterId={solution.statementId} />}
     </div>
   );
 }

@@ -3027,5 +3027,9 @@
   "Was": "היה",
   "Apply these groups": "החל קבוצות אלו",
   "Applying…": "מחיל…",
-  "Close": "סגור"
+  "Close": "סגור",
+  "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals": "{count} מעריכים · {direct} ישירות + {inherited} בירושה מ-{originals} הצעות מקוריות",
+  "Score breakdown": "פירוט הציון",
+  "{count} votes · avg {avg}": "{count} הצבעות · ממוצע {avg}",
+  "Last aggregated": "איסוף אחרון"
 }

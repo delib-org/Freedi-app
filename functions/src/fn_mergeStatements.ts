@@ -1,7 +1,14 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { Collections, StatementType, Paragraph, ParagraphType, ResearchAction, getResearchLogId } from '@freedi/shared-types';
+import {
+	Collections,
+	StatementType,
+	Paragraph,
+	ParagraphType,
+	ResearchAction,
+	getResearchLogId,
+} from '@freedi/shared-types';
 import { mergeAndReorganizeParagraphs, ParagraphForMerge } from './services/ai-service';
 import { generateParagraphId } from './helpers';
 
@@ -244,19 +251,22 @@ export async function mergeStatements(request: Request, response: Response): Pro
 		if (researchEnabled) {
 			const timestamp = Date.now();
 			const logId = getResearchLogId(userId, timestamp);
-			db.collection(Collections.researchLogs).doc(logId).set({
-				logId,
-				userId,
-				action: ResearchAction.CREATE_STATEMENT,
-				timestamp,
-				sourceApp: 'mass-consensus',
-				statementId: hiddenStatementRef.id,
-				parentId: questionId,
-				topParentId,
-				metadata: { mergedInto: targetStatementId },
-			}).catch((err: Error) => {
-				logger.error('Research log failed:', err.message);
-			});
+			db.collection(Collections.researchLogs)
+				.doc(logId)
+				.set({
+					logId,
+					userId,
+					action: ResearchAction.CREATE_STATEMENT,
+					timestamp,
+					sourceApp: 'mass-consensus',
+					statementId: hiddenStatementRef.id,
+					parentId: questionId,
+					topParentId,
+					metadata: { mergedInto: targetStatementId },
+				})
+				.catch((err: Error) => {
+					logger.error('Research log failed:', err.message);
+				});
 		}
 
 		const responseData: MergeResponse = {

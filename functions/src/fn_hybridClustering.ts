@@ -67,9 +67,7 @@ interface HybridClusteringResult {
 /**
  * Main clustering logic for a single parent question.
  */
-export async function performHybridClustering(
-	parentId: string,
-): Promise<HybridClusteringResult> {
+export async function performHybridClustering(parentId: string): Promise<HybridClusteringResult> {
 	const startTime = Date.now();
 
 	// Fetch the parent statement to check settings
@@ -138,10 +136,7 @@ export async function performHybridClustering(
 	}
 
 	// Compute max evaluators across all siblings (for density normalization)
-	const maxEvaluators = Math.max(
-		...options.map((o) => o.evaluation?.numberOfEvaluators ?? 0),
-		1,
-	);
+	const maxEvaluators = Math.max(...options.map((o) => o.evaluation?.numberOfEvaluators ?? 0), 1);
 
 	// Build hybrid vectors for all options
 	const vectors: VectorWithId[] = [];
@@ -149,13 +144,15 @@ export async function performHybridClustering(
 	const statementsMap = new Map<string, Statement>();
 
 	for (const option of options) {
-		const textEmbedding = extractEmbeddingArray(
-			(option as Record<string, unknown>).embedding,
-		);
+		const textEmbedding = extractEmbeddingArray((option as Record<string, unknown>).embedding);
 		if (!textEmbedding || textEmbedding.length === 0) continue;
 
 		const ratingVec = computeRatingVector(option.evaluation, maxEvaluators);
-		const hybridVec = computeHybridVector(textEmbedding, ratingVec, option.evaluation?.numberOfEvaluators ?? 0);
+		const hybridVec = computeHybridVector(
+			textEmbedding,
+			ratingVec,
+			option.evaluation?.numberOfEvaluators ?? 0,
+		);
 
 		vectors.push({ id: option.statementId, vector: hybridVec });
 		vectorMap.set(option.statementId, hybridVec);
@@ -248,12 +245,7 @@ export async function performHybridClustering(
 	let finalAssignments = assignments;
 
 	if (allNegationPairs.length > 0) {
-		const splitResult = splitNegationPairs(
-			assignments,
-			centroids,
-			allNegationPairs,
-			vectorMap,
-		);
+		const splitResult = splitNegationPairs(assignments, centroids, allNegationPairs, vectorMap);
 		finalAssignments = splitResult.assignments;
 	}
 
@@ -326,7 +318,9 @@ export async function hybridClusteringSweep(): Promise<void> {
 			}
 		}
 
-		logger.info(`Hybrid clustering sweep: ${parentIds.size} parents to process from ${staleSnapshot.size} stale statements`);
+		logger.info(
+			`Hybrid clustering sweep: ${parentIds.size} parents to process from ${staleSnapshot.size} stale statements`,
+		);
 
 		// Process each parent (up to limit)
 		let processed = 0;
@@ -367,10 +361,7 @@ export async function hybridClusteringSweep(): Promise<void> {
 /**
  * HTTP endpoint for manually triggering hybrid clustering on a specific question.
  */
-export async function triggerHybridClustering(
-	req: Request,
-	res: Response,
-): Promise<void> {
+export async function triggerHybridClustering(req: Request, res: Response): Promise<void> {
 	try {
 		const { parentStatementId } = req.body;
 
@@ -475,7 +466,10 @@ Return ONLY a JSON array with no markdown formatting:
 		const response = await model.generateContent(prompt);
 		const text = response.response.text();
 
-		let jsonString = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+		let jsonString = text
+			.replace(/```json\s*/g, '')
+			.replace(/```\s*/g, '')
+			.trim();
 		const jsonMatch = jsonString.match(/\[[\s\S]*\]/);
 		if (jsonMatch) jsonString = jsonMatch[0];
 
@@ -505,7 +499,7 @@ async function upsertHybridFraming(
 	parentStatement: Statement,
 	clusters: Map<number, string[]>,
 	clusterNames: Map<number, string>,
-	statementsMap: Map<string, Statement>,
+	_statementsMap: Map<string, Statement>,
 ): Promise<string> {
 	const parentId = parentStatement.statementId;
 
@@ -581,10 +575,7 @@ async function upsertHybridFraming(
 			framingId,
 		};
 
-		writeBatch.set(
-			db.collection(Collections.statements).doc(clusterId),
-			clusterStatement,
-		);
+		writeBatch.set(db.collection(Collections.statements).doc(clusterId), clusterStatement);
 
 		// Collect snapshot data
 		clusterSnapshots.push({
@@ -595,13 +586,10 @@ async function upsertHybridFraming(
 
 		// Map options to this cluster
 		for (const memberId of memberIds) {
-			writeBatch.update(
-				db.collection(Collections.statements).doc(memberId),
-				{
-					[`framingClusters.${framingId}`]: clusterId,
-					lastUpdate: Date.now(),
-				},
-			);
+			writeBatch.update(db.collection(Collections.statements).doc(memberId), {
+				[`framingClusters.${framingId}`]: clusterId,
+				lastUpdate: Date.now(),
+			});
 		}
 	}
 
@@ -631,10 +619,7 @@ async function upsertHybridFraming(
 		createdAt: Date.now(),
 	};
 
-	await db
-		.collection(FRAMING_COLLECTIONS.framingSnapshots)
-		.doc(snapshot.snapshotId)
-		.set(snapshot);
+	await db.collection(FRAMING_COLLECTIONS.framingSnapshots).doc(snapshot.snapshotId).set(snapshot);
 
 	logger.info(`${isUpdate ? 'Updated' : 'Created'} hybrid-auto framing ${framingId}`, {
 		parentId,

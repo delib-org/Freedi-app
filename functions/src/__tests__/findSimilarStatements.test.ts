@@ -64,10 +64,12 @@ describe('findSimilarStatements - Optimized', () => {
 			await findSimilarStatements(mockRequest as Request, mockResponse as Response);
 
 			expect(mockStatus).toHaveBeenCalledWith(400);
-			expect(mockSend).toHaveBeenCalledWith({
-				ok: false,
-				error: 'Input contains inappropriate content',
-			});
+			expect(mockSend).toHaveBeenCalledWith(
+				expect.objectContaining({
+					ok: false,
+					error: 'Input contains inappropriate content',
+				}),
+			);
 
 			// Ensure no further processing happens
 			expect(cachedAiService.getCachedSimilarityResponse).not.toHaveBeenCalled();

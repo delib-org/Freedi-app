@@ -1,5 +1,10 @@
 import { FC } from 'react';
-import { Statement, StatementSettings, StatementType, ActivationThreshold } from '@freedi/shared-types';
+import {
+	Statement,
+	StatementSettings,
+	StatementType,
+	ActivationThreshold,
+} from '@freedi/shared-types';
 import { UserPlus, Plus, Target } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
@@ -55,25 +60,56 @@ const ParticipationSettings: FC<ParticipationSettingsProps> = ({
 								icon={Target}
 							/>
 							{threshold?.enabled && (
-								<div style={{ display: 'flex', gap: '16px', padding: '0 16px 12px', marginTop: '-4px' }}>
-									<label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem' }}>
+								<div
+									style={{
+										display: 'flex',
+										gap: '16px',
+										padding: '0 16px 12px',
+										marginTop: '-4px',
+									}}
+								>
+									<label
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											fontSize: '0.875rem',
+										}}
+									>
 										<span>{t('Min. activists')}</span>
 										<input
 											type="number"
 											min={0}
 											value={threshold.minActivists ?? 0}
 											onChange={(e) => updateThreshold({ minActivists: Number(e.target.value) })}
-											style={{ width: '60px', padding: '4px 8px', borderRadius: '8px', border: '1px solid #ccc' }}
+											style={{
+												width: '60px',
+												padding: '4px 8px',
+												borderRadius: '8px',
+												border: '1px solid #ccc',
+											}}
 										/>
 									</label>
-									<label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.875rem' }}>
+									<label
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											fontSize: '0.875rem',
+										}}
+									>
 										<span>{t('Min. organizers')}</span>
 										<input
 											type="number"
 											min={0}
 											value={threshold.minOrganizers ?? 0}
 											onChange={(e) => updateThreshold({ minOrganizers: Number(e.target.value) })}
-											style={{ width: '60px', padding: '4px 8px', borderRadius: '8px', border: '1px solid #ccc' }}
+											style={{
+												width: '60px',
+												padding: '4px 8px',
+												borderRadius: '8px',
+												border: '1px solid #ccc',
+											}}
 										/>
 									</label>
 								</div>

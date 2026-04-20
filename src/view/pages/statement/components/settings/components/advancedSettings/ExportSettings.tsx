@@ -7,7 +7,10 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { exportStatementData } from '@/utils/exportUtils';
 import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
 import { logError } from '@/utils/errorHandling';
-import { downloadResearchLogsAsJSON, downloadResearchLogsByQuestionAsJSON } from '@/controllers/db/researchLogs/researchLogger';
+import {
+	downloadResearchLogsAsJSON,
+	downloadResearchLogsByQuestionAsJSON,
+} from '@/controllers/db/researchLogs/researchLogger';
 import type { ExportFormat } from '@/types/export';
 import styles from './EnhancedAdvancedSettings.module.scss';
 

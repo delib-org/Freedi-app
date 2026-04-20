@@ -50,14 +50,14 @@ export function computeRatingVector(
 	const maxEval = Math.max(maxEvaluatorsInParent, 1);
 
 	return [
-		evaluation.averageEvaluation ?? 0,                    // dim 0: mean sentiment [-1, 1]
-		evaluation.agreement ?? 0,                            // dim 1: WizCol consensus [-1, 1]
-		evaluation.agreementIndex ?? 0,                       // dim 2: confidence-adjusted [0, 1]
-		likeMindedness,                                       // dim 3: opinion similarity [0, 1]
-		n > 0 ? nPro / n : 0,                                // dim 4: pro ratio [0, 1]
-		maxEval > 0 ? n / maxEval : 0,                       // dim 5: evaluator density [0, 1]
-		1 - likeMindedness,                                   // dim 6: polarization [0, 1]
-		n > 0 ? (sPro + sCon) / n : 0,                       // dim 7: intensity [0, 1]
+		evaluation.averageEvaluation ?? 0, // dim 0: mean sentiment [-1, 1]
+		evaluation.agreement ?? 0, // dim 1: WizCol consensus [-1, 1]
+		evaluation.agreementIndex ?? 0, // dim 2: confidence-adjusted [0, 1]
+		likeMindedness, // dim 3: opinion similarity [0, 1]
+		n > 0 ? nPro / n : 0, // dim 4: pro ratio [0, 1]
+		maxEval > 0 ? n / maxEval : 0, // dim 5: evaluator density [0, 1]
+		1 - likeMindedness, // dim 6: polarization [0, 1]
+		n > 0 ? (sPro + sCon) / n : 0, // dim 7: intensity [0, 1]
 	];
 }
 
@@ -115,10 +115,7 @@ export function computeHybridVector(
  * 3. Inherit from top parent → whatever top parent says
  * 4. Default → false
  */
-export function isHybridClusteringEnabled(
-	statement: Statement,
-	topParent?: Statement,
-): boolean {
+export function isHybridClusteringEnabled(statement: Statement, topParent?: Statement): boolean {
 	// Explicit opt-out on this statement takes priority
 	if (statement.statementSettings?.enableHybridClustering === false) return false;
 
@@ -145,11 +142,14 @@ export async function saveHybridEmbedding(
 	}
 
 	try {
-		await db.collection('statements').doc(statementId).update({
-			hybridEmbedding: FieldValue.vector(hybridVector),
-			hybridEmbeddingStale: false,
-			hybridEmbeddingUpdatedAt: Date.now(),
-		});
+		await db
+			.collection('statements')
+			.doc(statementId)
+			.update({
+				hybridEmbedding: FieldValue.vector(hybridVector),
+				hybridEmbeddingStale: false,
+				hybridEmbeddingUpdatedAt: Date.now(),
+			});
 	} catch (error) {
 		logger.error('Failed to save hybrid embedding', { statementId, error });
 		throw error;

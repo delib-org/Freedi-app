@@ -1,11 +1,6 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import {
-	Collections,
-	NotificationType,
-	Statement,
-	StatementType,
-} from '@freedi/shared-types';
+import { Collections, NotificationType, Statement, StatementType } from '@freedi/shared-types';
 
 const db = getFirestore();
 
@@ -47,7 +42,11 @@ export async function notifyAuthorsOfGrouping(
 		const batch = clusterIds.slice(i, i + BATCH);
 		const snap = await db
 			.collection(Collections.statements)
-			.where('__name__', 'in', batch.map((id) => db.collection(Collections.statements).doc(id)))
+			.where(
+				'__name__',
+				'in',
+				batch.map((id) => db.collection(Collections.statements).doc(id)),
+			)
 			.get()
 			.catch(() => null);
 		// Fallback to per-doc fetch if the above query rejects.

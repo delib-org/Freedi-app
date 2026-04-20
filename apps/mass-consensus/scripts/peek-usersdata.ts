@@ -1,5 +1,6 @@
 import { readFileSync } from 'fs';
 import path from 'path';
+import type { QueryDocumentSnapshot } from 'firebase-admin/firestore';
 
 const envPath = process.env.ENV_FILE || path.join(__dirname, '..', '.env');
 const envContent = readFileSync(envPath, 'utf8');
@@ -21,7 +22,7 @@ async function main(): Promise<void> {
 
   const questionMap = new Map<string, { question: string; sample: Record<string, unknown> }>();
   const snap = await db.collection('usersData').where('statementId', '==', anchor).limit(200).get();
-  snap.docs.forEach((d) => {
+  snap.docs.forEach((d: QueryDocumentSnapshot) => {
     const data = d.data() as Record<string, unknown>;
     const qid = data.userQuestionId as string;
     if (!questionMap.has(qid)) {

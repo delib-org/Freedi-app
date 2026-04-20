@@ -13,11 +13,7 @@
 
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v1';
-import {
-	Collections,
-	Statement,
-	functionConfig,
-} from '@freedi/shared-types';
+import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 import { db } from '../../index';
 import { writeHistoryEntry } from './writeHistoryEntry';
 import { isResearchEnabledForTopParent } from './isResearchEnabled';
