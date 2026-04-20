@@ -86,9 +86,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		setExpanded((v) => !v);
 	};
 
-	const disclosureVisible =
-		mode === 'both' ||
-		(isClustersOnly && allowDrillToOriginals);
+	const disclosureVisible = mode === 'both' || (isClustersOnly && allowDrillToOriginals);
 
 	return (
 		<div className={classes}>
@@ -96,9 +94,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				<div className="grouped-suggestion__header">
 					<div className="grouped-suggestion__title-wrap">
 						<h3 className="card__title">{cluster.statement}</h3>
-						{cluster.description && (
-							<p className="card__subtitle">{cluster.description}</p>
-						)}
+						{cluster.description && <p className="card__subtitle">{cluster.description}</p>}
 					</div>
 					<span className="grouped-suggestion__count-pill" aria-label={countLabel}>
 						<Layers size={14} aria-hidden />
@@ -151,9 +147,12 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 							: expanded
 								? t('Hide {count} originals').replace('{count}', String(count))
 								: t('Show {count} originals').replace('{count}', String(count))}
-						{mode === 'both' && (
-							expanded ? <ChevronUp size={16} aria-hidden /> : <ChevronDown size={16} aria-hidden />
-						)}
+						{mode === 'both' &&
+							(expanded ? (
+								<ChevronUp size={16} aria-hidden />
+							) : (
+								<ChevronDown size={16} aria-hidden />
+							))}
 					</button>
 				)}
 
@@ -164,9 +163,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 						role="region"
 						aria-label={t('Original suggestions represented by this group')}
 					>
-						{isLoading && (
-							<p className="grouped-suggestion__original-note">{t('Loading…')}</p>
-						)}
+						{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
 						{!isLoading && members.length === 0 && (
 							<p className="grouped-suggestion__original-note">{t('No originals found.')}</p>
 						)}
@@ -176,9 +173,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 									renderOriginal(original)
 								) : (
 									<>
-										<span className="grouped-suggestion__original-text">
-											{original.statement}
-										</span>
+										<span className="grouped-suggestion__original-text">{original.statement}</span>
 										<span className="grouped-suggestion__original-note">
 											{t('Already counted in the group above')}
 										</span>

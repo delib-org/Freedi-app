@@ -1,6 +1,5 @@
 import React, { useEffect, useId, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Info } from 'lucide-react';
-import { ClusterEvaluationLink } from '@freedi/shared-types';
 import { useSelector } from 'react-redux';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -58,10 +57,7 @@ const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
 	}, [clusterId]);
 
 	const selectLinks = useMemo(
-		() =>
-			createLinksByClusterSelector(
-				(state: RootState) => state.clusterEvaluationLinks.byId,
-			),
+		() => createLinksByClusterSelector((state: RootState) => state.clusterEvaluationLinks.byId),
 		[],
 	);
 	const links = useSelector(selectLinks(clusterId));
@@ -107,8 +103,7 @@ const ScoreBreakdown: React.FC<ScoreBreakdownProps> = ({
 
 	// Load original titles from statements slice as a default.
 	const defaultGetTitle = useAppSelector((state: RootState) => {
-		return (id: string) =>
-			state.statements.statements.find((s) => s.statementId === id)?.statement;
+		return (id: string) => state.statements.statements.find((s) => s.statementId === id)?.statement;
 	});
 	const resolveTitle = getOriginalTitle ?? defaultGetTitle;
 

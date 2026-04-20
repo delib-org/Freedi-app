@@ -1,11 +1,4 @@
-import {
-	array,
-	InferOutput,
-	number,
-	object,
-	optional,
-	string,
-} from 'valibot';
+import { array, InferOutput, number, object, optional, string } from 'valibot';
 
 /**
  * Provenance record: one document per (clusterId, userId) pair, describing

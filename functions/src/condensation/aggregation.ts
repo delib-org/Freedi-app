@@ -170,9 +170,10 @@ export async function recomputeClusterEvaluation(
 
 	const targetPopulation = options.targetPopulation ?? 0;
 	const samplingQuality = options.samplingQuality ?? DEFAULT_SAMPLING_QUALITY;
-	const confidenceIndex = targetPopulation > 0
-		? calcConfidenceIndex(numberOfEvaluators, targetPopulation, samplingQuality)
-		: likeMindedness; // fall back to like-mindedness when no N is configured
+	const confidenceIndex =
+		targetPopulation > 0
+			? calcConfidenceIndex(numberOfEvaluators, targetPopulation, samplingQuality)
+			: likeMindedness; // fall back to like-mindedness when no N is configured
 
 	const evaluation: StatementEvaluation = {
 		sumEvaluations,

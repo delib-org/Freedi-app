@@ -172,7 +172,11 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 	}
 
 	async function restoreLast() {
-		if (!window.confirm(t('Undo the last grouping run? Cluster statements from the last run will be removed.'))) {
+		if (
+			!window.confirm(
+				t('Undo the last grouping run? Cluster statements from the last run will be removed.'),
+			)
+		) {
 			return;
 		}
 		try {
@@ -210,7 +214,11 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 					<p className={styles.sliderDescription}>
 						{t('How aggressively to group. Tighter = only near-duplicates; looser = shared theme.')}
 					</p>
-					<div role="radiogroup" aria-label={t('Grouping strength')} style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+					<div
+						role="radiogroup"
+						aria-label={t('Grouping strength')}
+						style={{ display: 'flex', gap: 8, marginBottom: 12 }}
+					>
 						{levelOrder.map((lvl) => {
 							const active = condensation.level === lvl;
 
@@ -225,7 +233,9 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 										flex: 1,
 										padding: '8px 12px',
 										borderRadius: 8,
-										border: active ? '2px solid var(--btn-primary)' : '1px solid var(--border-color, #ccc)',
+										border: active
+											? '2px solid var(--btn-primary)'
+											: '1px solid var(--border-color, #ccc)',
 										background: active ? 'var(--btn-primary)' : 'transparent',
 										color: active ? 'var(--btn-primary-text, #fff)' : 'inherit',
 										fontWeight: active ? 600 : 400,
@@ -281,7 +291,9 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 						<span className={styles.sliderLabel}>{t('Only cluster well-evaluated options')}</span>
 					</div>
 					<p className={styles.sliderDescription}>
-						{t('Options that fail these thresholds stay ungrouped. Leave blank to include everything.')}
+						{t(
+							'Options that fail these thresholds stay ungrouped. Leave blank to include everything.',
+						)}
 					</p>
 					<label
 						style={{
@@ -364,8 +376,10 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 					{(['main', 'massConsensus', 'join'] as const).map((surface) => {
 						const current = condensation.visibility[surface];
 						const surfaceLabel =
-							surface === 'main' ? t('Main app')
-								: surface === 'massConsensus' ? t('Mass Consensus')
+							surface === 'main'
+								? t('Main app')
+								: surface === 'massConsensus'
+									? t('Mass Consensus')
 									: t('Join');
 
 						return (
@@ -398,7 +412,9 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 												style={{
 													padding: '4px 10px',
 													borderRadius: 6,
-													border: active ? '2px solid var(--btn-primary)' : '1px solid var(--border-color, #ccc)',
+													border: active
+														? '2px solid var(--btn-primary)'
+														: '1px solid var(--border-color, #ccc)',
 													background: active ? 'var(--btn-primary)' : 'transparent',
 													color: active ? 'var(--btn-primary-text, #fff)' : 'inherit',
 													fontWeight: active ? 600 : 400,
@@ -435,7 +451,8 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 								padding: '8px 16px',
 								borderRadius: 8,
 								border: '1px solid var(--btn-primary)',
-								background: runState === 'running' ? 'var(--card-default, #eee)' : 'var(--btn-primary)',
+								background:
+									runState === 'running' ? 'var(--card-default, #eee)' : 'var(--btn-primary)',
 								color: 'var(--btn-primary-text, #fff)',
 								cursor: runState === 'running' ? 'wait' : 'pointer',
 								fontWeight: 600,
@@ -685,10 +702,7 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 										fontWeight: 600,
 										textTransform: 'uppercase',
 										letterSpacing: '0.04em',
-										color:
-											group.kind === 'create'
-												? 'var(--btn-primary)'
-												: 'var(--agree, #2d8659)',
+										color: group.kind === 'create' ? 'var(--btn-primary)' : 'var(--agree, #2d8659)',
 									}}
 								>
 									{group.kind === 'create' ? t('New') : t('Update')}
@@ -736,10 +750,7 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 										cursor: 'pointer',
 									}}
 								>
-									{t('Show {count} originals').replace(
-										'{count}',
-										String(group.memberIds.length),
-									)}
+									{t('Show {count} originals').replace('{count}', String(group.memberIds.length))}
 								</summary>
 								<ul
 									style={{
@@ -792,7 +803,10 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 							padding: '8px 16px',
 							borderRadius: 8,
 							border: '1px solid var(--btn-primary)',
-							background: applying || preview.length === 0 ? 'var(--card-default, #eee)' : 'var(--btn-primary)',
+							background:
+								applying || preview.length === 0
+									? 'var(--card-default, #eee)'
+									: 'var(--btn-primary)',
 							color: 'var(--btn-primary-text, #fff)',
 							cursor: applying ? 'wait' : preview.length === 0 ? 'not-allowed' : 'pointer',
 							fontWeight: 600,

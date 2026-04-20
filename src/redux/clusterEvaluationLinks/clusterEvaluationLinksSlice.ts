@@ -48,12 +48,8 @@ export const clusterEvaluationLinksSlice = createSlice({
 	},
 });
 
-export const {
-	setLink,
-	setLinks,
-	removeLink,
-	replaceForCluster,
-} = clusterEvaluationLinksSlice.actions;
+export const { setLink, setLinks, removeLink, replaceForCluster } =
+	clusterEvaluationLinksSlice.actions;
 
 /**
  * Select all provenance links for a specific cluster. Memoized factory —

@@ -300,10 +300,9 @@ export async function createEmptyCluster(args: {
 			statementType: StatementType.option,
 			parentId: args.parentStatement.statementId,
 			topParentId: args.parentStatement.topParentId ?? args.parentStatement.statementId,
-			parents: [
-				...(args.parentStatement.parents ?? []),
-				args.parentStatement.statementId,
-			].filter(Boolean),
+			parents: [...(args.parentStatement.parents ?? []), args.parentStatement.statementId].filter(
+				Boolean,
+			),
 			creatorId: args.creator.uid,
 			creator: args.creator,
 		});
@@ -355,7 +354,13 @@ export async function splitGroupMembers(args: {
 	sourceIntegratedOptions: string[];
 	currentAssignments: Record<string, string>;
 }): Promise<{ newClusterPlaceholder: string }> {
-	const { parentStatement, sourceClusterId, memberIdsToSplit, sourceIntegratedOptions, currentAssignments } = args;
+	const {
+		parentStatement,
+		sourceClusterId,
+		memberIdsToSplit,
+		sourceIntegratedOptions,
+		currentAssignments,
+	} = args;
 
 	if (memberIdsToSplit.length < 2) {
 		throw new Error('Split requires at least two members');

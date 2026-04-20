@@ -12,10 +12,7 @@ import {
 import { logError } from '../utils/errorHandling';
 import { runCondensationPipeline } from './pipeline';
 import { notifyAuthorsOfGrouping } from './authorNotifications';
-import {
-	findClustersAffectedByEvaluation,
-	recomputeClusterEvaluation,
-} from './aggregation';
+import { findClustersAffectedByEvaluation, recomputeClusterEvaluation } from './aggregation';
 
 const db = getFirestore();
 
@@ -27,90 +24,84 @@ const db = getFirestore();
  * Permission: only the parent's creator can trigger a manual run. (Admin
  * extension can be added later by reading subscription roles.)
  */
-export const runCondensation = onCall(
-	{ region: functionConfig.region },
-	async (request) => {
-		const { parentId, mode, dryRun } = (request.data ?? {}) as {
-			parentId?: string;
-			mode?: 'manual' | 'scheduled';
-			dryRun?: boolean;
-		};
+export const runCondensation = onCall({ region: functionConfig.region }, async (request) => {
+	const { parentId, mode, dryRun } = (request.data ?? {}) as {
+		parentId?: string;
+		mode?: 'manual' | 'scheduled';
+		dryRun?: boolean;
+	};
 
-		if (!request.auth?.uid) {
-			throw new HttpsError('unauthenticated', 'Sign in required');
+	if (!request.auth?.uid) {
+		throw new HttpsError('unauthenticated', 'Sign in required');
+	}
+	if (!parentId) {
+		throw new HttpsError('invalid-argument', 'parentId is required');
+	}
+
+	const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
+	if (!parentDoc.exists) {
+		throw new HttpsError('not-found', 'Parent statement not found');
+	}
+	const parent = parentDoc.data() as Statement;
+
+	if (parent.creatorId !== request.auth.uid && mode !== 'scheduled') {
+		throw new HttpsError(
+			'permission-denied',
+			'Only the creator can trigger grouping for this question',
+		);
+	}
+
+	const condensation: CondensationConfig | undefined = parent.statementSettings?.condensation;
+	if (!condensation?.enabled) {
+		throw new HttpsError('failed-precondition', 'Grouping is not enabled for this question');
+	}
+
+	// Dry-run path — no writes, no lock, no status updates, no
+	// notifications. Just compute the would-be groups and return.
+	if (dryRun) {
+		try {
+			const result = await runCondensationPipeline(parentId, condensation, request.auth.uid, {
+				dryRun: true,
+			});
+
+			return {
+				ok: true,
+				dryRun: true,
+				preview: result.preview ?? [],
+				produced: result.produced,
+				created: result.created,
+				updated: result.updated,
+				orphanedClusters: result.orphanedClusters,
+			};
+		} catch (error) {
+			logError(error, {
+				operation: 'runCondensation.dryRun',
+				statementId: parentId,
+				userId: request.auth.uid,
+			});
+			throw new HttpsError('internal', 'Preview failed');
 		}
-		if (!parentId) {
-			throw new HttpsError('invalid-argument', 'parentId is required');
-		}
+	}
 
-		const parentDoc = await db.collection(Collections.statements).doc(parentId).get();
-		if (!parentDoc.exists) {
-			throw new HttpsError('not-found', 'Parent statement not found');
-		}
-		const parent = parentDoc.data() as Statement;
+	// Write lock (best-effort); rely on pipeline idempotency for correctness.
+	const lockRef = db
+		.collection(Collections.statements)
+		.doc(parentId)
+		.collection('locks')
+		.doc('condensation');
+	await lockRef.set(
+		{
+			lockedAt: FieldValue.serverTimestamp(),
+			lockedBy: request.auth.uid,
+		},
+		{ merge: true },
+	);
 
-		if (parent.creatorId !== request.auth.uid && mode !== 'scheduled') {
-			throw new HttpsError(
-				'permission-denied',
-				'Only the creator can trigger grouping for this question',
-			);
-		}
-
-		const condensation: CondensationConfig | undefined =
-			parent.statementSettings?.condensation;
-		if (!condensation?.enabled) {
-			throw new HttpsError(
-				'failed-precondition',
-				'Grouping is not enabled for this question',
-			);
-		}
-
-		// Dry-run path — no writes, no lock, no status updates, no
-		// notifications. Just compute the would-be groups and return.
-		if (dryRun) {
-			try {
-				const result = await runCondensationPipeline(
-					parentId,
-					condensation,
-					request.auth.uid,
-					{ dryRun: true },
-				);
-
-				return {
-					ok: true,
-					dryRun: true,
-					preview: result.preview ?? [],
-					produced: result.produced,
-					created: result.created,
-					updated: result.updated,
-					orphanedClusters: result.orphanedClusters,
-				};
-			} catch (error) {
-				logError(error, {
-					operation: 'runCondensation.dryRun',
-					statementId: parentId,
-					userId: request.auth.uid,
-				});
-				throw new HttpsError('internal', 'Preview failed');
-			}
-		}
-
-		// Write lock (best-effort); rely on pipeline idempotency for correctness.
-		const lockRef = db
+	try {
+		await db
 			.collection(Collections.statements)
 			.doc(parentId)
-			.collection('locks')
-			.doc('condensation');
-		await lockRef.set(
-			{
-				lockedAt: FieldValue.serverTimestamp(),
-				lockedBy: request.auth.uid,
-			},
-			{ merge: true },
-		);
-
-		try {
-			await db.collection(Collections.statements).doc(parentId).update({
+			.update({
 				condensationStatus: {
 					isStale: false,
 					lastRunBy: request.auth.uid,
@@ -120,13 +111,12 @@ export const runCondensation = onCall(
 				lastUpdate: Date.now(),
 			});
 
-			const result = await runCondensationPipeline(
-				parentId,
-				condensation,
-				request.auth.uid,
-			);
+		const result = await runCondensationPipeline(parentId, condensation, request.auth.uid);
 
-			await db.collection(Collections.statements).doc(parentId).update({
+		await db
+			.collection(Collections.statements)
+			.doc(parentId)
+			.update({
 				condensationStatus: {
 					isStale: false,
 					lastRunBy: request.auth.uid,
@@ -138,42 +128,41 @@ export const runCondensation = onCall(
 				lastUpdate: Date.now(),
 			});
 
-			// Fire author notifications (non-blocking from the callable's PoV).
-			await notifyAuthorsOfGrouping(parent, result.affectedOriginals).catch((err) =>
-				logError(err, {
-					operation: 'runCondensation.notifyAuthors',
-					statementId: parentId,
-				}),
-			);
-
-			return { ok: true, ...result };
-		} catch (error) {
-			logError(error, {
-				operation: 'runCondensation',
+		// Fire author notifications (non-blocking from the callable's PoV).
+		await notifyAuthorsOfGrouping(parent, result.affectedOriginals).catch((err) =>
+			logError(err, {
+				operation: 'runCondensation.notifyAuthors',
 				statementId: parentId,
-				userId: request.auth.uid,
-			});
-			await db
-				.collection(Collections.statements)
-				.doc(parentId)
-				.update({
-					condensationStatus: {
-						isStale: true,
-						error: error instanceof Error ? error.message : String(error),
-					},
-					lastUpdate: Date.now(),
-				})
-				.catch(() => {
-					// best-effort
-				});
-			throw new HttpsError('internal', 'Condensation run failed');
-		} finally {
-			await lockRef.delete().catch(() => {
+			}),
+		);
+
+		return { ok: true, ...result };
+	} catch (error) {
+		logError(error, {
+			operation: 'runCondensation',
+			statementId: parentId,
+			userId: request.auth.uid,
+		});
+		await db
+			.collection(Collections.statements)
+			.doc(parentId)
+			.update({
+				condensationStatus: {
+					isStale: true,
+					error: error instanceof Error ? error.message : String(error),
+				},
+				lastUpdate: Date.now(),
+			})
+			.catch(() => {
 				// best-effort
 			});
-		}
-	},
-);
+		throw new HttpsError('internal', 'Condensation run failed');
+	} finally {
+		await lockRef.delete().catch(() => {
+			// best-effort
+		});
+	}
+});
 
 /**
  * Trigger: when an evaluation is written (created/updated/deleted), look up
@@ -211,10 +200,7 @@ export const onEvaluationChangeRecomputeCondensationClusters = onDocumentWritten
 				}
 			}
 		} catch (error) {
-			logger.error(
-				'condensation.onEvaluationChangeRecomputeCondensationClusters error',
-				error,
-			);
+			logger.error('condensation.onEvaluationChangeRecomputeCondensationClusters error', error);
 		}
 	},
 );
@@ -247,17 +233,16 @@ export const onStatementCreatedMarkCondensationStale = onDocumentWritten(
 			const condensation = parent.statementSettings?.condensation;
 			if (!condensation?.enabled) return;
 
-			await parentRef.update({
-				'condensationStatus.isStale': true,
-				lastUpdate: Date.now(),
-			}).catch(() => {
-				// best-effort
-			});
+			await parentRef
+				.update({
+					'condensationStatus.isStale': true,
+					lastUpdate: Date.now(),
+				})
+				.catch(() => {
+					// best-effort
+				});
 		} catch (error) {
-			logger.error(
-				'condensation.onStatementCreatedMarkCondensationStale error',
-				error,
-			);
+			logger.error('condensation.onStatementCreatedMarkCondensationStale error', error);
 		}
 	},
 );
