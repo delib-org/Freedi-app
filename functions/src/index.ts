@@ -198,6 +198,14 @@ import {
 	deleteEmbedding,
 } from './fn_embeddingOperations';
 
+// Condensation / Grouped Suggestions
+import {
+	runCondensation,
+	onEvaluationChangeRecomputeCondensationClusters,
+	onStatementCreatedMarkCondensationStale,
+} from './condensation/fn_runCondensation';
+import { suggestClusterTitle } from './condensation/fn_suggestClusterTitle';
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
 	initializeApp();
@@ -948,3 +956,11 @@ export const hybridClusteringSweepScheduled = onSchedule(
 
 // HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
 exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering);
+
+// Condensation / Grouped Suggestions — non-destructive clustering on demand,
+// evaluation aggregation writeback, and stale-marking trigger.
+exports.runCondensation = runCondensation;
+exports.onEvaluationChangeRecomputeCondensationClusters =
+	onEvaluationChangeRecomputeCondensationClusters;
+exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensationStale;
+exports.suggestClusterTitle = suggestClusterTitle;

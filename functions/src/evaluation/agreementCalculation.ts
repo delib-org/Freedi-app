@@ -138,6 +138,12 @@ export function calculateEvaluation(
 	// Ensure pro/con evaluator counts are never negative
 	evaluation.numberOfProEvaluators = Math.max(0, evaluation.numberOfProEvaluators || 0);
 	evaluation.numberOfConEvaluators = Math.max(0, evaluation.numberOfConEvaluators || 0);
+	// Ensure evaluationRandomNumber + viewed exist. Without this, Firestore
+	// rejects the subsequent update() call with "Cannot use undefined" when the
+	// source statement has an incomplete evaluation object (e.g. legacy docs,
+	// seeded data, or cluster aggregations that don't track random ordering).
+	evaluation.evaluationRandomNumber = evaluation.evaluationRandomNumber ?? Math.random();
+	evaluation.viewed = evaluation.viewed ?? 0;
 
 	// Calculate average evaluation
 	evaluation.averageEvaluation =

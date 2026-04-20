@@ -273,8 +273,14 @@ export async function GET(
       return uid ? evaluatorIds.has(uid) : false;
     });
 
-    // All respondents (everyone who answered the demographic form)
-    const allRespondentsDemographics = aggregateDemographicAnswers(demographicQuestions, demographicAnswers);
+    // All respondents (everyone who answered the demographic form).
+    // Exclude backfilled synthetic docs — they duplicate original pre-session-regen
+    // entries (e.g. Rosh Pina Apr 15 orphans) and would inflate the "all
+    // respondents" tally. They are still used for evaluator-linked demographics.
+    const originalAnswers = demographicAnswers.filter(
+      (a) => !(a as { backfilled?: boolean }).backfilled
+    );
+    const allRespondentsDemographics = aggregateDemographicAnswers(demographicQuestions, originalAnswers);
 
     // Only evaluators (users who actually rated options)
     const evaluatorDemographics = aggregateDemographicAnswers(demographicQuestions, evaluatorAnswers);

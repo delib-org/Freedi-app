@@ -19,6 +19,9 @@ import SuggestionCard from './suggestionCard/SuggestionCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
 import styles from './SuggestionCards.module.scss';
+import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
+import { createGroupedViewSelector } from '@/redux/statements/condensationSelectors';
+import type { RootState } from '@/redux/store';
 
 interface Props {
 	propSort?: SortType | string;
@@ -107,6 +110,20 @@ const SuggestionCards: FC<Props> = ({
 
 	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId));
 
+	// Grouped view — filters the list per-surface based on admin settings.
+	// Returns grouped clusters + the subset of originals that should remain
+	// visible (all of them in "both" mode; only ungrouped originals in
+	// "clusters-only" mode). Falls back to "both" when condensation is off.
+	const selectGroupedView = useMemo(
+		() =>
+			createGroupedViewSelector((state: RootState) => state.statements.statements)(
+				statement?.statementId,
+				'main',
+			),
+		[statement?.statementId],
+	);
+	const groupedView = useSelector(selectGroupedView);
+
 	// Check if user is admin
 	const isAdmin =
 		creator?.uid === parentSubscription?.statement?.creatorId ||
@@ -120,9 +137,25 @@ const SuggestionCards: FC<Props> = ({
 	// - Non-hidden cards are always visible
 	// - For admins: hidden cards visibility is controlled by the showHiddenCards toggle
 	// - For non-admins: they can see their own hidden cards only
+	// - Cluster statements (grouped suggestions) are rendered separately below
+	//   and excluded from this "originals" list.
+	// - In "clusters-only" mode: originals that are inside a group are hidden.
+	const originalsHiddenByGroup = useMemo(() => {
+		if (groupedView.mode !== 'clusters-only') return new Set<string>();
+		const inGroup = new Set<string>();
+		Object.values(groupedView.groupMembers).forEach((ids) =>
+			ids.forEach((id) => inGroup.add(id)),
+		);
+
+		return inGroup;
+	}, [groupedView]);
+
 	const visibleStatements = useMemo(
 		() =>
 			statementsFromStore.filter((st) => {
+				if (st.isCluster === true) return false; // handled by GroupedSuggestionCard block
+				if (originalsHiddenByGroup.has(st.statementId)) return false;
+
 				// Non-hidden cards are always visible
 				if (st.hide !== true) return true;
 
@@ -137,7 +170,7 @@ const SuggestionCards: FC<Props> = ({
 				// Otherwise, hidden cards are not visible
 				return false;
 			}),
-		[statementsFromStore, creator?.uid, isAdmin, showHiddenCards],
+		[statementsFromStore, creator?.uid, isAdmin, showHiddenCards, originalsHiddenByGroup],
 	);
 
 	// Memoize subStatements to prevent unnecessary recalculations
@@ -196,6 +229,22 @@ const SuggestionCards: FC<Props> = ({
 
 	return (
 		<>
+			{groupedView.groupedSuggestions.length > 0 && (
+				<div className={styles['suggestions-wrapper']}>
+					{groupedView.groupedSuggestions.map((cluster) => (
+						<div key={cluster.statementId} className={styles['card-wrapper']}>
+							<GroupedSuggestionCard
+								cluster={cluster}
+								mode={groupedView.mode}
+								allowDrillToOriginals={groupedView.allowDrillToOriginals}
+								renderOriginal={(original) => (
+									<SuggestionCard parentStatement={statement} statement={original} />
+								)}
+							/>
+						</div>
+					))}
+				</div>
+			)}
 			<Flipper
 				flipKey={flipKey}
 				spring={{ stiffness: 300, damping: 30 }}

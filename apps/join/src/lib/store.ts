@@ -161,6 +161,24 @@ export function getVisibleOptions(): Statement[] {
     .filter((o) => o.joinStatus !== 'failed')
     .sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0));
 
+  // Condensation: in "clusters-only" mode for the join surface, hide any
+  // original that is represented by a cluster (identified via
+  // `integratedOptions`). Originals remain live in Firestore — this is a
+  // display filter only.
+  const condensation = question?.statementSettings?.condensation;
+  const visibility = condensation?.enabled === true
+    ? (condensation.visibility?.join ?? 'clusters-only')
+    : 'both';
+  if (visibility === 'clusters-only') {
+    const memberOf = new Set<string>();
+    for (const o of allOptions) {
+      if (o.isCluster === true && Array.isArray(o.integratedOptions)) {
+        o.integratedOptions.forEach((id) => memberOf.add(id));
+      }
+    }
+    opts = opts.filter((o) => o.isCluster === true || !memberOf.has(o.statementId));
+  }
+
   if (!question?.resultsSettings) return opts;
 
   const rs: ResultsSettings = question.resultsSettings;
