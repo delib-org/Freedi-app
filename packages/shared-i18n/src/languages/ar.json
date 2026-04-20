@@ -2390,5 +2390,9 @@
   "Was": "كان",
   "Apply these groups": "تطبيق هذه المجموعات",
   "Applying…": "جارٍ التطبيق…",
-  "Close": "إغلاق"
+  "Close": "إغلاق",
+  "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals": "{count} مقيّمين · {direct} مباشر + {inherited} موروث من {originals} اقتراحات أصلية",
+  "Score breakdown": "تفصيل النتيجة",
+  "{count} votes · avg {avg}": "{count} أصوات · المتوسط {avg}",
+  "Last aggregated": "آخر تجميع"
 }

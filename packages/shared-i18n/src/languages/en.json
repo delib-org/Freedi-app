@@ -3464,5 +3464,9 @@
   "Was": "Was",
   "Apply these groups": "Apply these groups",
   "Applying…": "Applying…",
-  "Close": "Close"
+  "Close": "Close",
+  "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals": "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals",
+  "Score breakdown": "Score breakdown",
+  "{count} votes · avg {avg}": "{count} votes · avg {avg}",
+  "Last aggregated": "Last aggregated"
 }

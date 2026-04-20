@@ -33,6 +33,9 @@ let messageCounts: Map<string, number> = new Map();
 let messageLatest: Map<string, number> = new Map();
 let messagesByOption: Map<string, number[]> = new Map();
 let messageCountsUnsubs: Unsubscribe[] = [];
+/** Cluster-id → unique-evaluator count. Populated by `subscribeClusterLinks`. */
+let clusterEvaluatorCounts: Map<string, number> = new Map();
+let clusterLinksUnsubs: Unsubscribe[] = [];
 
 const LAST_READ_KEY = 'freedi_join_last_read';
 let joinFormSubmitted = new Set<string>();
@@ -270,8 +273,57 @@ export function subscribeOptions(questionId: string): Unsubscribe {
   return onSnapshot(optionsQuery, (snap) => {
     allOptions = snap.docs.map((d) => d.data() as Statement);
     subscribeMessageCounts(questionId);
+    subscribeClusterLinks();
     m.redraw();
   });
+}
+
+/**
+ * Subscribe to `clusterEvaluationLinks` for every currently-visible cluster,
+ * so the card can show a counts-only breakdown ("Combined votes from N
+ * evaluators"). Tears down prior subscriptions when the cluster set changes.
+ */
+function subscribeClusterLinks(): void {
+  for (const unsub of clusterLinksUnsubs) unsub();
+  clusterLinksUnsubs = [];
+  clusterEvaluatorCounts = new Map();
+
+  const clusterIds = allOptions
+    .filter((o) => o.isCluster === true)
+    .map((o) => o.statementId);
+  if (clusterIds.length === 0) return;
+
+  const BATCH = 30;
+  for (let i = 0; i < clusterIds.length; i += BATCH) {
+    const batch = clusterIds.slice(i, i + BATCH);
+    const q = query(
+      collection(db, Collections.clusterEvaluationLinks),
+      where('clusterId', 'in', batch),
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const counts = new Map<string, number>();
+      snap.forEach((d) => {
+        const link = d.data() as { clusterId?: string };
+        if (link?.clusterId) {
+          counts.set(link.clusterId, (counts.get(link.clusterId) ?? 0) + 1);
+        }
+      });
+      // Merge into the outer map — other batches may own different clusters.
+      for (const id of batch) {
+        if (counts.has(id)) {
+          clusterEvaluatorCounts.set(id, counts.get(id)!);
+        } else {
+          clusterEvaluatorCounts.delete(id);
+        }
+      }
+      m.redraw();
+    });
+    clusterLinksUnsubs.push(unsub);
+  }
+}
+
+export function getClusterEvaluatorCount(clusterId: string): number {
+  return clusterEvaluatorCounts.get(clusterId) ?? 0;
 }
 
 function subscribeMessageCounts(_questionId: string): void {

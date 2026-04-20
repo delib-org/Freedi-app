@@ -1,6 +1,13 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
-import { Collections, Evaluation, Statement, StatementEvaluation } from '@freedi/shared-types';
+import {
+	ClusterEvaluationLink,
+	Collections,
+	Evaluation,
+	Statement,
+	StatementEvaluation,
+	getClusterEvaluationLinkId,
+} from '@freedi/shared-types';
 import {
 	calcAgreement,
 	calcLikeMindedness,
@@ -75,15 +82,16 @@ export async function recomputeClusterEvaluation(
 
 	const evaluations = await fetchEvaluationsForIds(sourceIds);
 
-	// Group per evaluator and average their evaluations across the set.
-	const byUser = new Map<string, number[]>();
+	// Group per evaluator — keep the full Evaluation records so we can build
+	// provenance link docs below (no extra fetch needed).
+	const byUser = new Map<string, Evaluation[]>();
 	for (const e of evaluations) {
 		if (!e.evaluatorId) continue;
 		const bucket = byUser.get(e.evaluatorId);
 		if (bucket) {
-			bucket.push(e.evaluation);
+			bucket.push(e);
 		} else {
-			byUser.set(e.evaluatorId, [e.evaluation]);
+			byUser.set(e.evaluatorId, [e]);
 		}
 	}
 
@@ -115,6 +123,8 @@ export async function recomputeClusterEvaluation(
 			viewed: existingViewed ?? 0,
 		};
 		await clusterDoc.ref.update({ evaluation: empty, consensus: 0, lastUpdate: Date.now() });
+		// Prune any stale link docs — this cluster has no contributors.
+		await syncClusterEvaluationLinks(clusterId, cluster.parentId, new Map());
 
 		return empty;
 	}
@@ -125,9 +135,13 @@ export async function recomputeClusterEvaluation(
 	let sumCon = 0;
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
+	// Per-user aggregated value — kept for the provenance link docs below.
+	const perUserAverages = new Map<string, number>();
 
-	byUser.forEach((values) => {
+	byUser.forEach((userEvals, userId) => {
+		const values = userEvals.map((e) => e.evaluation);
 		const avg = values.reduce((a, b) => a + b, 0) / values.length;
+		perUserAverages.set(userId, avg);
 		sumEvaluations += avg;
 		sumSquaredEvaluations += avg * avg;
 		if (avg > 0) {
@@ -180,6 +194,10 @@ export async function recomputeClusterEvaluation(
 
 	await clusterDoc.ref.update({ evaluation, consensus, lastUpdate: Date.now() });
 
+	// Persist per-user provenance so the admin can see the breakdown and
+	// future UI can let users remove / re-evaluate their own contributions.
+	await syncClusterEvaluationLinks(clusterId, cluster.parentId, byUser, perUserAverages);
+
 	logger.info('condensation.recomputeClusterEvaluation', {
 		clusterId,
 		members: integrated.length,
@@ -188,6 +206,114 @@ export async function recomputeClusterEvaluation(
 	});
 
 	return evaluation;
+}
+
+/**
+ * Diff the in-memory `byUser` map against existing `clusterEvaluationLinks`
+ * for this cluster, then upsert / delete so the collection always matches
+ * the current aggregation state. This is the single source of truth for
+ * "who contributed what to this cluster."
+ */
+async function syncClusterEvaluationLinks(
+	clusterId: string,
+	parentStatementId: string,
+	byUser: Map<string, Evaluation[]>,
+	perUserAverages?: Map<string, number>,
+): Promise<void> {
+	const now = Date.now();
+	try {
+		const existingSnap = await db
+			.collection(Collections.clusterEvaluationLinks)
+			.where('clusterId', '==', clusterId)
+			.get();
+
+		const existingByUser = new Map<string, { id: string; createdAt?: number }>();
+		existingSnap.docs.forEach((d) => {
+			const data = d.data() as Partial<ClusterEvaluationLink>;
+			if (data.userId) {
+				existingByUser.set(data.userId, { id: d.id, createdAt: data.createdAt });
+			}
+		});
+
+		const toWrite: ClusterEvaluationLink[] = [];
+		byUser.forEach((userEvals, userId) => {
+			const inheritedFrom: ClusterEvaluationLink['inheritedFrom'] = [];
+			let direct: ClusterEvaluationLink['direct'] | undefined;
+
+			for (const e of userEvals) {
+				if (e.statementId === clusterId) {
+					direct = {
+						evaluationId: e.evaluationId,
+						value: e.evaluation,
+						updatedAt: e.updatedAt,
+					};
+				} else {
+					inheritedFrom.push({
+						evaluationId: e.evaluationId,
+						sourceStatementId: e.statementId,
+						value: e.evaluation,
+						updatedAt: e.updatedAt,
+					});
+				}
+			}
+
+			const contributionCount = inheritedFrom.length + (direct ? 1 : 0);
+			if (contributionCount === 0) return;
+
+			const linkId = getClusterEvaluationLinkId(clusterId, userId);
+			const existing = existingByUser.get(userId);
+			toWrite.push({
+				linkId,
+				clusterId,
+				userId,
+				parentStatementId,
+				inheritedFrom,
+				...(direct ? { direct } : {}),
+				aggregatedValue: perUserAverages?.get(userId) ?? 0,
+				contributionCount,
+				createdAt: existing?.createdAt ?? now,
+				updatedAt: now,
+			});
+		});
+
+		// Delete link docs whose users no longer contribute.
+		const currentUserIds = new Set(byUser.keys());
+		const toDelete: string[] = [];
+		existingByUser.forEach((entry, userId) => {
+			if (!currentUserIds.has(userId)) toDelete.push(entry.id);
+		});
+
+		// Batch the writes (Firestore 500-op limit — far more than we'd hit).
+		const BATCH_CAP = 400;
+		const all = [
+			...toWrite.map((link) => ({ type: 'set' as const, link })),
+			...toDelete.map((id) => ({ type: 'del' as const, id })),
+		];
+		for (let i = 0; i < all.length; i += BATCH_CAP) {
+			const chunk = all.slice(i, i + BATCH_CAP);
+			const batch = db.batch();
+			for (const op of chunk) {
+				if (op.type === 'set') {
+					const ref = db.collection(Collections.clusterEvaluationLinks).doc(op.link.linkId);
+					batch.set(ref, op.link);
+				} else {
+					const ref = db.collection(Collections.clusterEvaluationLinks).doc(op.id);
+					batch.delete(ref);
+				}
+			}
+			await batch.commit();
+		}
+
+		if (toWrite.length || toDelete.length) {
+			logger.info('condensation.syncClusterEvaluationLinks', {
+				clusterId,
+				upserted: toWrite.length,
+				deleted: toDelete.length,
+			});
+		}
+	} catch (error) {
+		logger.error('condensation.syncClusterEvaluationLinks failed', { clusterId, error });
+	}
 }
 
 /**

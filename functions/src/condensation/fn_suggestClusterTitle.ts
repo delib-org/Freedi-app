@@ -17,7 +17,7 @@ const db = getFirestore();
  * This separation is important: admin approves, or edits, or dismisses.
  */
 export const suggestClusterTitle = onCall(
-	{ region: functionConfig.region, cors: true },
+	{ region: functionConfig.region },
 	async (request) => {
 		const { clusterId } = (request.data ?? {}) as { clusterId?: string };
 

@@ -1,5 +1,6 @@
 import { FC, useState } from 'react';
 import { useNavigate } from 'react-router';
+import { deleteField, setDoc } from 'firebase/firestore';
 import {
 	Statement,
 	StatementSettings,
@@ -8,9 +9,9 @@ import {
 	CondensationLevel,
 	CondensationSurfaceVisibility,
 } from '@freedi/shared-types';
+import { createStatementRef } from '@/utils/firebaseUtils';
 import { Layers, Play, RotateCcw, Eye, ListChecks, Search, X, Check } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import { CONDENSATION, CONDENSATION_VISIBILITY_DEFAULTS } from '@/constants/common';
 import { logError } from '@/utils/errorHandling';
 import ToggleSwitch from './ToggleSwitch';
@@ -69,12 +70,33 @@ const GroupingSettings: FC<GroupingSettingsProps> = ({ statement, settings }) =>
 	const condensation: CondensationConfig = settings.condensation ?? defaultCondensation();
 
 	function update(patch: Partial<CondensationConfig>) {
+		// Firestore rejects undefined values. When the admin clears an
+		// optional numeric filter (e.g. minAverageForClustering) we want
+		// Firestore to forget it — so we substitute `deleteField()` for
+		// undefined values that were EXPLICITLY set via the patch.
 		const next: CondensationConfig = { ...condensation, ...patch };
-		setStatementSettingToDB({
-			statement,
-			property: 'condensation',
-			newValue: next as unknown as Record<string, unknown>,
-			settingsSection: 'statementSettings',
+		const payload: Record<string, unknown> = {};
+		for (const [k, v] of Object.entries(next)) {
+			if (v !== undefined) {
+				payload[k] = v;
+			} else if (Object.prototype.hasOwnProperty.call(patch, k)) {
+				// Admin explicitly cleared this field → delete it in Firestore.
+				payload[k] = deleteField();
+			}
+			// Otherwise it was already missing — leave it absent in the payload.
+		}
+		// Use setDoc directly with merge so deleteField() sentinels work inside
+		// the nested map. setStatementSettingToDB wraps a simpler path that
+		// doesn't preserve sentinels cleanly.
+		void setDoc(
+			createStatementRef(statement.statementId),
+			{ statementSettings: { condensation: payload } },
+			{ merge: true },
+		).catch((error) => {
+			logError(error, {
+				operation: 'groupingSettings.update',
+				statementId: statement.statementId,
+			});
 		});
 	}
 

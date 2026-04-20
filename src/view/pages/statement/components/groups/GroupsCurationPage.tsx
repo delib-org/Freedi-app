@@ -16,6 +16,7 @@ import {
 	Check,
 } from 'lucide-react';
 import { Statement, StatementType } from '@freedi/shared-types';
+import ScoreBreakdown from '@/view/components/atomic/molecules/GroupedSuggestionCard/ScoreBreakdown';
 
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -814,6 +815,13 @@ const GroupsCurationPage: FC = () => {
 												{selectedCluster.description}
 											</p>
 										)}
+										<div className={styles['curation-page__score-breakdown']}>
+											<ScoreBreakdown
+												clusterId={selectedCluster.statementId}
+												verbose
+												alwaysExpanded
+											/>
+										</div>
 										<div className={styles['curation-page__detail-actions']}>
 											<button
 												type="button"

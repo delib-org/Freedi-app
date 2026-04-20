@@ -4,6 +4,7 @@ import { Statement } from '@freedi/shared-types';
 import { Layers, ChevronDown, ChevronUp, Users } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useGroupMembers } from '@/controllers/hooks/useGroupMembers';
+import ScoreBreakdown from './ScoreBreakdown';
 
 /**
  * GroupedSuggestionCard — displays a condensed cluster statement that
@@ -133,6 +134,8 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 				)}
 
 				{evaluationSlot && <div className="grouped-suggestion__body">{evaluationSlot}</div>}
+
+				<ScoreBreakdown clusterId={cluster.statementId} />
 
 				{disclosureVisible && (
 					<button

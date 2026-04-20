@@ -64,6 +64,7 @@ export enum Collections {
     framings = 'framings',
     framingRequests = 'framingRequests',
     clusterAggregations = 'clusterAggregations',
+    clusterEvaluationLinks = 'clusterEvaluationLinks',
     framingSnapshots = 'framingSnapshots',
     suggestions = 'suggestions',
     documentVersions = 'documentVersions',

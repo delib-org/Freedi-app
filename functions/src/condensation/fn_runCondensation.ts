@@ -28,7 +28,7 @@ const db = getFirestore();
  * extension can be added later by reading subscription roles.)
  */
 export const runCondensation = onCall(
-	{ region: functionConfig.region, cors: true },
+	{ region: functionConfig.region },
 	async (request) => {
 		const { parentId, mode, dryRun } = (request.data ?? {}) as {
 			parentId?: string;

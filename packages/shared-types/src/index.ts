@@ -83,6 +83,13 @@ export type {
   UserEvaluationSchema
 } from "./models/evaluation/Evaluation";
 
+// Cluster evaluation provenance (grouped suggestions feature)
+export type { ClusterEvaluationLink } from "./models/evaluation/ClusterEvaluationLink";
+export {
+  ClusterEvaluationLinkSchema,
+  getClusterEvaluationLinkId,
+} from "./models/evaluation/ClusterEvaluationLink";
+
 export {
   EvaluationSchema,
   EvaluatorSchema,

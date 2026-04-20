@@ -1,13 +1,23 @@
-import { deleteDoc, setDoc, updateDoc } from 'firebase/firestore';
-import { httpsCallable } from 'firebase/functions';
 import {
+	Collections,
 	createStatementObject,
 	Statement,
 	StatementType,
 	User,
 } from '@freedi/shared-types';
+import {
+	collection,
+	deleteDoc,
+	getDocs,
+	query,
+	setDoc,
+	updateDoc,
+	where,
+	writeBatch,
+} from 'firebase/firestore';
+import { httpsCallable } from 'firebase/functions';
 import { createStatementRef } from '@/utils/firebaseUtils';
-import { functions } from '@/controllers/db/config';
+import { FireStore, functions } from '@/controllers/db/config';
 import { logError } from '@/utils/errorHandling';
 import { getCurrentTimestamp } from '@/utils/firebaseUtils';
 
@@ -23,6 +33,32 @@ import { getCurrentTimestamp } from '@/utils/firebaseUtils';
 
 const STANDALONE = '__standalone__' as const;
 export const STANDALONE_OVERRIDE = STANDALONE;
+
+/**
+ * Batch-delete all cluster-evaluation provenance links for a given cluster.
+ * Called on ungroup (and should be called anywhere else a cluster statement
+ * is deleted from the client).
+ */
+async function deleteClusterEvaluationLinks(clusterId: string): Promise<void> {
+	try {
+		const linksRef = collection(FireStore, Collections.clusterEvaluationLinks);
+		const q = query(linksRef, where('clusterId', '==', clusterId));
+		const snap = await getDocs(q);
+		if (snap.empty) return;
+		const BATCH_CAP = 400;
+		for (let i = 0; i < snap.docs.length; i += BATCH_CAP) {
+			const chunk = snap.docs.slice(i, i + BATCH_CAP);
+			const batch = writeBatch(FireStore);
+			chunk.forEach((d) => batch.delete(d.ref));
+			await batch.commit();
+		}
+	} catch (error) {
+		logError(error, {
+			operation: 'condensationCuration.deleteClusterEvaluationLinks',
+			statementId: clusterId,
+		});
+	}
+}
 
 interface SetGroupOverrideArgs {
 	parentStatementId: string;
@@ -147,6 +183,11 @@ export async function ungroupCluster(args: {
 	currentAssignments: Record<string, string>;
 }): Promise<void> {
 	try {
+		// Cascade: delete all provenance link docs for this cluster BEFORE
+		// the cluster statement is deleted (so the server-side trigger can't
+		// fire an aggregator against a phantom state).
+		await deleteClusterEvaluationLinks(args.clusterId);
+
 		await deleteDoc(createStatementRef(args.clusterId));
 
 		// Drop any overrides that pointed at the now-deleted cluster.

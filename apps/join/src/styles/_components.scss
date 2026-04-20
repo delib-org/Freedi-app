@@ -425,6 +425,15 @@
     z-index: 2;
   }
 
+  // Small counts-only line under the group badge showing how many unique
+  // evaluators contributed to the cluster's aggregated score.
+  &__group-votes {
+    margin-top: var(--space-xs, 0.25rem);
+    font-size: var(--font-size-xs);
+    color: var(--ink-muted);
+    font-weight: var(--font-weight-medium);
+  }
+
   // Grouped suggestion badge — pairs with isCluster=true. Positioned under the
   // activated badge (or at the same spot when the option isn't activated).
   &__group-badge {
