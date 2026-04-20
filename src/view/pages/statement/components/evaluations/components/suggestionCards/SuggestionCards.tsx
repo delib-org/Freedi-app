@@ -143,9 +143,7 @@ const SuggestionCards: FC<Props> = ({
 	const originalsHiddenByGroup = useMemo(() => {
 		if (groupedView.mode !== 'clusters-only') return new Set<string>();
 		const inGroup = new Set<string>();
-		Object.values(groupedView.groupMembers).forEach((ids) =>
-			ids.forEach((id) => inGroup.add(id)),
-		);
+		Object.values(groupedView.groupMembers).forEach((ids) => ids.forEach((id) => inGroup.add(id)));
 
 		return inGroup;
 	}, [groupedView]);

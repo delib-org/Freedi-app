@@ -93,10 +93,7 @@ function computeCentroid(vectors: number[][]): number[] {
 /**
  * Initialize centroids using k-means++ for better convergence.
  */
-function initializeCentroidsKMeansPlusPlus(
-	vectors: VectorWithId[],
-	k: number,
-): number[][] {
+function initializeCentroidsKMeansPlusPlus(vectors: VectorWithId[], k: number): number[][] {
 	const centroids: number[][] = [];
 
 	// Pick first centroid randomly
@@ -140,7 +137,11 @@ function initializeCentroidsKMeansPlusPlus(
 /**
  * Compute within-cluster sum of squared cosine distances (WCSS).
  */
-function computeWCSS(vectors: VectorWithId[], assignments: number[], centroids: number[][]): number {
+function computeWCSS(
+	vectors: VectorWithId[],
+	assignments: number[],
+	centroids: number[][],
+): number {
 	let wcss = 0;
 
 	for (let i = 0; i < vectors.length; i++) {

@@ -86,18 +86,18 @@ export function reconcileGroups(
 
 		return existingClusterId
 			? {
-				kind: 'update' as const,
-				sourceIds: p.sourceIds,
-				titleHint: p.titleHint,
-				descriptionHint: p.descriptionHint,
-				existingClusterId,
-			}
+					kind: 'update' as const,
+					sourceIds: p.sourceIds,
+					titleHint: p.titleHint,
+					descriptionHint: p.descriptionHint,
+					existingClusterId,
+				}
 			: {
-				kind: 'create' as const,
-				sourceIds: p.sourceIds,
-				titleHint: p.titleHint,
-				descriptionHint: p.descriptionHint,
-			};
+					kind: 'create' as const,
+					sourceIds: p.sourceIds,
+					titleHint: p.titleHint,
+					descriptionHint: p.descriptionHint,
+				};
 	});
 
 	const orphanedClusterIds = existingClusters

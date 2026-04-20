@@ -347,7 +347,10 @@ async function fetchStatementContext(
 			const title = data.statement || '';
 			const paragraphs = data.paragraphs;
 			const description = Array.isArray(paragraphs)
-				? paragraphs.map((p: { content?: string }) => p.content || '').join(' ').substring(0, 300)
+				? paragraphs
+						.map((p: { content?: string }) => p.content || '')
+						.join(' ')
+						.substring(0, 300)
 				: undefined;
 
 			context[snap.id] = { title, description };
@@ -417,7 +420,9 @@ export async function exportResearchLogsByQuestion(questionId: string): Promise<
 				limit(EXPORT_BATCH_SIZE),
 			];
 
-			const constraints = topLastDoc ? [...baseConstraints, startAfter(topLastDoc)] : baseConstraints;
+			const constraints = topLastDoc
+				? [...baseConstraints, startAfter(topLastDoc)]
+				: baseConstraints;
 			const q = query(collection(DB, Collections.researchLogs), ...constraints);
 			const snapshot = await getDocs(q);
 

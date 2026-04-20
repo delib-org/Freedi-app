@@ -92,7 +92,10 @@ Include ALL pairs in the response. Set isOpposite to false for pairs that are si
 		const text = response.response.text();
 
 		// Parse response - strip markdown code blocks if present
-		let jsonString = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+		let jsonString = text
+			.replace(/```json\s*/g, '')
+			.replace(/```\s*/g, '')
+			.trim();
 
 		// Handle case where Gemini wraps in extra text
 		const jsonMatch = jsonString.match(/\[[\s\S]*\]/);

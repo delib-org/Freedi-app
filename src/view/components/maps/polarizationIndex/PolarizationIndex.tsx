@@ -680,18 +680,13 @@ const PolarizationIndexComp = () => {
 						{polarizationIndexes.length > HEX_AUTO_THRESHOLD && viewMode === 'dots' && (
 							<span className={styles.toolbar__hint} aria-hidden="true">
 								{' '}
-								&middot;{' '}
-								{polarizationIndexes.length}
+								&middot; {polarizationIndexes.length}
 							</span>
 						)}
 					</button>
 				</div>
 				{zoomedZone && (
-					<button
-						type="button"
-						className={styles.toolbar__pill}
-						onClick={handleResetZoom}
-					>
+					<button type="button" className={styles.toolbar__pill} onClick={handleResetZoom}>
 						<span aria-hidden="true">&#x21BB;</span>
 						<span>
 							{t('Reset view')} ({t(`Zoomed to ${zoomedZone}`)})
@@ -719,9 +714,7 @@ const PolarizationIndexComp = () => {
 						className={styles.filterRow__num}
 						aria-label={t('Minimum evaluators per group')}
 					/>
-					<span className={styles.filterRow__label}>
-						{t('evaluators in each')}
-					</span>
+					<span className={styles.filterRow__label}>{t('evaluators in each')}</span>
 					<select
 						value={filterAxisId || ''}
 						onChange={(e) => setFilterAxisId(e.target.value || null)}
@@ -866,8 +859,7 @@ const PolarizationIndexComp = () => {
 							hexBins.map((bin) => {
 								const isSingle = bin.points.length === 1;
 								const id = `hex-${bin.q}-${bin.r}`;
-								const isHovered =
-									hoveredTarget?.kind === 'hex' && hoveredTarget.statementId === id;
+								const isHovered = hoveredTarget?.kind === 'hex' && hoveredTarget.statementId === id;
 								const point = bin.points[0];
 
 								if (isSingle) {
@@ -920,14 +912,11 @@ const PolarizationIndexComp = () => {
 						    flip below when the dot is near the top edge. */}
 						{hoveredTarget &&
 							(() => {
-								const xPct = boardDimensions.width
-									? hoveredTarget.x / boardDimensions.width
-									: 0.5;
+								const xPct = boardDimensions.width ? hoveredTarget.x / boardDimensions.width : 0.5;
 								const yPct = boardDimensions.height
 									? hoveredTarget.y / boardDimensions.height
 									: 0.5;
-								const hAnchor =
-									xPct < 0.2 ? 'left' : xPct > 0.8 ? 'right' : 'center';
+								const hAnchor = xPct < 0.2 ? 'left' : xPct > 0.8 ? 'right' : 'center';
 								const vAnchor = yPct < 0.18 ? 'below' : 'above';
 
 								return (
@@ -950,21 +939,16 @@ const PolarizationIndexComp = () => {
 																.join(', ')}
 												</div>
 											)}
-											<div className={styles.hoverTip__title}>
-												{hoveredTarget.label}
-											</div>
+											<div className={styles.hoverTip__title}>{hoveredTarget.label}</div>
 											<div className={styles.hoverTip__meta}>
 												<span
 													className={styles.hoverTip__agree}
 													style={{ color: hoveredTarget.color }}
 												>
-													{agreementPercent(hoveredTarget.mean)}%{' '}
-													{t('agree')}
+													{agreementPercent(hoveredTarget.mean)}% {t('agree')}
 												</span>
 												<span className={styles.hoverTip__sep}>·</span>
-												<span>
-													{t(verdictKey(hoveredTarget.mad, hoveredTarget.mean))}
-												</span>
+												<span>{t(verdictKey(hoveredTarget.mad, hoveredTarget.mean))}</span>
 												<span className={styles.hoverTip__sep}>·</span>
 												<span>
 													{hoveredTarget.n} {t('evaluators')}

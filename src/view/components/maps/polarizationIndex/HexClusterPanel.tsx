@@ -65,9 +65,7 @@ const HexClusterPanel: React.FC<HexClusterPanelProps> = ({ isOpen, points, onClo
 								aria-hidden="true"
 							/>
 							<span className={styles.clusterRow__label}>{p.statement}</span>
-							<span className={styles.clusterRow__pct}>
-								{agreementPercent(p.overallMean)}%
-							</span>
+							<span className={styles.clusterRow__pct}>{agreementPercent(p.overallMean)}%</span>
 							<span className={styles.clusterRow__n}>({p.overallN})</span>
 						</button>
 					</li>

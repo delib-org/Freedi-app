@@ -97,7 +97,10 @@ export function useGroupMembers(clusterId: string | undefined, enabled: boolean)
 		};
 	}, [enabled, clusterId, missingIds]);
 
-	const members = useMemo(() => [...storeMembers, ...fetchedMembers], [storeMembers, fetchedMembers]);
+	const members = useMemo(
+		() => [...storeMembers, ...fetchedMembers],
+		[storeMembers, fetchedMembers],
+	);
 
 	return { members, isLoading, error };
 }

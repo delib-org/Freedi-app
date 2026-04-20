@@ -65,7 +65,8 @@ function updateStatementSettings({
 		return defaultSettings;
 	}
 
-	const resolvedEvalType = evalType ?? statement.statementSettings?.evaluationType ?? EvalType.range;
+	const resolvedEvalType =
+		evalType ?? statement.statementSettings?.evaluationType ?? EvalType.range;
 
 	return {
 		...(statement.statementSettings || defaultSettings),

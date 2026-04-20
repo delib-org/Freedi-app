@@ -151,13 +151,7 @@ const BreakdownPanel: React.FC<BreakdownPanelProps> = ({
 	}, [groups]);
 
 	return (
-		<Modal
-			isOpen={isOpen}
-			onClose={onClose}
-			title={title}
-			layout="bottom-sheet"
-			size="medium"
-		>
+		<Modal isOpen={isOpen} onClose={onClose} title={title} layout="bottom-sheet" size="medium">
 			<div className={styles.breakdown}>
 				<div className={styles.breakdown__summary}>
 					<span className={styles.breakdown__verdict}>{t(verdict)}</span>
@@ -199,10 +193,7 @@ const BreakdownPanel: React.FC<BreakdownPanelProps> = ({
 					})}
 
 					{hovered && (
-						<div
-							className={styles.miniTip}
-							style={{ left: hovered.x, top: hovered.y }}
-						>
+						<div className={styles.miniTip} style={{ left: hovered.x, top: hovered.y }}>
 							<div className={styles.miniTip__bubble}>
 								<div className={styles.miniTip__title}>{hovered.group.option}</div>
 								<div className={styles.miniTip__sub}>{hovered.group.question}</div>
@@ -235,12 +226,8 @@ const BreakdownPanel: React.FC<BreakdownPanelProps> = ({
 											aria-hidden="true"
 										/>
 										<span className={styles.demoRow__label}>{g.option}</span>
-										<span className={styles.demoRow__pct}>
-											{agreementPercent(g.mean)}%
-										</span>
-										<span className={styles.demoRow__n}>
-											({g.n})
-										</span>
+										<span className={styles.demoRow__pct}>{agreementPercent(g.mean)}%</span>
+										<span className={styles.demoRow__n}>({g.n})</span>
 									</li>
 								))}
 						</ul>

@@ -1,7 +1,12 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import { Collections, Statement, ReplacementQueueStatus, functionConfig } from '@freedi/shared-types';
+import {
+	Collections,
+	Statement,
+	ReplacementQueueStatus,
+	functionConfig,
+} from '@freedi/shared-types';
 
 /**
  * Cloud Function: Update Queue Consensus
