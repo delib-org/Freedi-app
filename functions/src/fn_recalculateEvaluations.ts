@@ -501,7 +501,15 @@ async function updateParentTotalEvaluators(
  * Firebase callable function to recalculate all evaluation data for a question's options
  */
 export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
-	{ region: functionConfig.region },
+	{
+		region: functionConfig.region,
+		// Admin recalc loops serially over every option under a parent and
+		// runs per-option Firestore reads + writes. Questions with hundreds
+		// of options (240+ in the wild) blow past the default 60s timeout.
+		// Bump timeout + memory so this reliably completes in one call.
+		timeoutSeconds: 540,
+		memory: '1GiB',
+	},
 	async (request): Promise<RecalculateResult> => {
 		const { statementId, dryRun = false } = request.data;
 
