@@ -258,6 +258,7 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 						<div
 							className={`${styles.textContent} ${isExpanded ? styles.textContentExpanded : ''}`}
 							ref={textContainerRef}
+							onClick={(e) => e.stopPropagation()}
 						>
 							<EditableStatement
 								statement={statement}

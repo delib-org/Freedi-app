@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, MouseEvent } from 'react';
 import styles from './StatementChatMore.module.scss';
 
 // Icons
@@ -85,7 +85,10 @@ const StatementChatMore: FC<Props> = ({
 	// Display count: show total if available, otherwise show unread as indicator
 	const displayCount = totalMessages > 0 ? totalMessages : unreadCount > 0 ? unreadCount : 0;
 
-	const handleClick = async () => {
+	const handleClick = async (e: MouseEvent<HTMLButtonElement>) => {
+		// Prevent accidental navigation when selecting text nearby
+		e.stopPropagation();
+
 		if (useLink) {
 			// Mark notifications as read when navigating to chat
 			if (hasUnread) {
