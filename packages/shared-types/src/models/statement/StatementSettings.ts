@@ -9,7 +9,7 @@ import {
 	InferOutput,
 	number,
 } from 'valibot';
-import { DeliberationType } from '../TypeEnums';
+import { DeliberationType, SortType } from '../TypeEnums';
 
 /**
  * Join form — admin-defined contact form shown the first time a user joins
@@ -154,6 +154,7 @@ export const StatementSettingsSchema = object({
 	enableChatPanel: optional(boolean()), // if false, the chat side panel is hidden (default: true)
 	enableSubQuestionsMap: optional(boolean()), // if false, the sub-questions map side panel is hidden (default: true)
 	defaultView: optional(string()), // 'chat' | 'options' | 'questions' - default view for the segmented control
+	defaultSortType: optional(enum_(SortType)), // default sort for options/suggestions (e.g., 'accepted' for consensus sort)
 	enableTreeView: optional(boolean()), // if true, show threaded tree discussion instead of flat chat
 	enableResearchLogging: optional(boolean()), // if true, research actions are logged for this statement and all sub-statements
 	joinForm: optional(JoinFormConfigSchema), // admin-defined join form shown on first join under this question

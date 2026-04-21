@@ -98,10 +98,11 @@ const SuggestionCards: FC<Props> = ({
 
 	// Memoize statementId to prevent unnecessary effect re-runs
 	const statementId = useMemo(() => params.statementId, [params.statementId]);
-	const sort = propSort || params.sort || SortType.newest;
+	const statement = useSelector(statementSelector(statementId));
+	const defaultSort = statement?.statementSettings?.defaultSortType || SortType.newest;
+	const sort = propSort || params.sort || defaultSort;
 
 	const dispatch = useDispatch();
-	const statement = useSelector(statementSelector(statementId));
 	const isQuestion = statement?.statementType === StatementType.question;
 	const creator = useSelector(creatorSelector);
 	const parentSubscription = useSelector(statementSubscriptionSelector(statementId));
