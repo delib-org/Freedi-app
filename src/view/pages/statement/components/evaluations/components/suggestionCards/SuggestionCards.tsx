@@ -115,13 +115,15 @@ const SuggestionCards: FC<Props> = ({
 	// Returns grouped clusters + the subset of originals that should remain
 	// visible (all of them in "both" mode; only ungrouped originals in
 	// "clusters-only" mode). Falls back to "both" when condensation is off.
+	// Use 'join' surface when joining is enabled, 'main' surface otherwise.
+	const condensationSurface = statement?.statementSettings?.joiningEnabled ? 'join' : 'main';
 	const selectGroupedView = useMemo(
 		() =>
 			createGroupedViewSelector((state: RootState) => state.statements.statements)(
 				statement?.statementId,
-				'main',
+				condensationSurface,
 			),
-		[statement?.statementId],
+		[statement?.statementId, condensationSurface],
 	);
 	const groupedView = useSelector(selectGroupedView);
 
