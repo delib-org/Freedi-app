@@ -32,6 +32,64 @@
 		background-color: rgba(0, 0, 0, 0.02);
 	}
 
+	// Cluster: full tinted surface + blue rail + visible stacked-paper shadows.
+	// Intentionally loud so grouped nodes can't be confused with regular
+	// options at a glance, even in RTL and high-contrast environments.
+	// `!important` on the surface-level rules is used deliberately: the base
+	// `.tree-option-node` selector has the same BEM specificity as the
+	// modifier, and source order inside a CSS module can flip depending on
+	// build-time @use hoisting — we want the cluster look to always win.
+	&--cluster {
+		border-inline-start-color: var(--btn-primary, #5f88e5) !important;
+		border-inline-start-width: 4px !important;
+		background-color: rgba(95, 136, 229, 0.14) !important;
+		box-shadow:
+			4px 5px 0 -1px rgba(95, 136, 229, 0.35),
+			10px 11px 0 -2px rgba(95, 136, 229, 0.18);
+		border-radius: 8px;
+		position: relative;
+
+		// Flip shadow direction in RTL so the stack visually sits behind the card.
+		[dir='rtl'] & {
+			box-shadow:
+				-4px 5px 0 -1px rgba(95, 136, 229, 0.35),
+				-10px 11px 0 -2px rgba(95, 136, 229, 0.18);
+		}
+
+		// Selection still wins on the accent rail color; cluster keeps its
+		// tint + shadows so users see both "it's in results" + "it's a group".
+		&.tree-option-node--selected {
+			border-inline-start-color: var(--approve, #57c6b2) !important;
+		}
+
+		// High-contrast: replace tint with solid border.
+		@media (prefers-contrast: more) {
+			background-color: transparent !important;
+			border: 2px solid var(--btn-primary, #5f88e5) !important;
+			box-shadow: none;
+		}
+
+		@media (prefers-reduced-motion: reduce) {
+			box-shadow: none;
+		}
+	}
+
+	&__cluster-badge {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 3px 10px;
+		border-radius: 999px;
+		background: var(--btn-primary, #5f88e5);
+		color: var(--btn-primary-text, #fff);
+		font-size: 0.72rem;
+		font-weight: 700;
+		line-height: 1.4;
+		white-space: nowrap;
+		margin-inline-end: 0.4rem;
+		box-shadow: 0 1px 3px rgba(95, 136, 229, 0.4);
+	}
+
 	@keyframes card-blink {
 		0%, 100% { background-color: rgba(255, 225, 106, 0.06); }
 		15%, 45%, 75% { background-color: rgba(95, 136, 229, 0.15); }
@@ -69,6 +127,9 @@
 		top: 0;
 		inset-inline-end: 0;
 		z-index: 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
 	}
 
 	&__author {
@@ -109,6 +170,13 @@
 		line-height: 1.4;
 		color: var(--text-body, #444);
 		word-break: break-word;
+	}
+
+	// When the node is a cluster, reserve extra top-end space so the cluster
+	// badge sitting in the absolute-positioned header doesn't collide with
+	// the title on narrow rows.
+	&--cluster &__text {
+		padding-inline-end: 5.5rem;
 	}
 
 	&__description {

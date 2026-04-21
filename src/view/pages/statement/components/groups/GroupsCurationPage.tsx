@@ -207,6 +207,7 @@ const GroupsCurationPage: FC = () => {
 	const [descriptionDraft, setDescriptionDraft] = useState('');
 	const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
 	const [dragOverClusterId, setDragOverClusterId] = useState<string | null>(null);
+	const [isRemovingAll, setIsRemovingAll] = useState(false);
 
 	if (!parent) {
 		return (
@@ -459,6 +460,42 @@ const GroupsCurationPage: FC = () => {
 		}
 	}
 
+	async function handleRemoveAllGroupings() {
+		const total = view.clusters.length;
+		if (total === 0 || isRemovingAll) return;
+		const message = t(
+			'Remove all {count} groupings? Each group will be deleted and its originals will reappear as standalone options. This cannot be undone.',
+		).replace('{count}', String(total));
+		if (!window.confirm(message)) return;
+
+		setIsRemovingAll(true);
+		try {
+			// Sequential to keep Firestore writes ordered + avoid runaway
+			// concurrency on large parents. Each ungroupCluster also trims
+			// creatorOverrides, so order preservation matters.
+			for (const cluster of view.clusters) {
+				try {
+					await ungroupCluster({
+						parentStatementId: parent.statementId,
+						clusterId: cluster.statementId,
+						currentAssignments: assignments,
+					});
+				} catch (error) {
+					logError(error, {
+						operation: 'GroupsCurationPage.handleRemoveAllGroupings.perCluster',
+						statementId: cluster.statementId,
+					});
+					// Continue with the rest — partial success is better than all-or-nothing.
+				}
+			}
+			setSelectedClusterId(null);
+			setSelectedMemberIds(new Set());
+			setPanelTab('list');
+		} finally {
+			setIsRemovingAll(false);
+		}
+	}
+
 	async function handleUngroup(cluster: Statement) {
 		if (
 			!window.confirm(t('Ungroup this suggestion? Originals will appear as standalone options.'))
@@ -521,8 +558,8 @@ const GroupsCurationPage: FC = () => {
 				<button
 					type="button"
 					className={styles['curation-page__back']}
-					onClick={() => navigate(-1)}
-					aria-label={t('Go back')}
+					onClick={() => navigate(`/statement-screen/${parent.statementId}/settings`)}
+					aria-label={t('Go back to settings')}
 				>
 					<ArrowLeft size={18} />
 				</button>
@@ -532,6 +569,21 @@ const GroupsCurationPage: FC = () => {
 					</h1>
 					<p className={styles['curation-page__subtitle']}>{parent.statement}</p>
 				</div>
+				{view.clusters.length > 0 && (
+					<button
+						type="button"
+						className={styles['curation-page__btn-danger']}
+						onClick={() => void handleRemoveAllGroupings()}
+						disabled={isRemovingAll}
+						aria-label={t('Remove all groupings')}
+						title={t('Delete every group and return originals to the ungrouped list.')}
+					>
+						<Trash2 size={16} aria-hidden />
+						{isRemovingAll
+							? t('Removing…')
+							: t('Remove all ({count})').replace('{count}', String(view.clusters.length))}
+					</button>
+				)}
 			</header>
 
 			{/* Mobile tab switcher */}
@@ -676,7 +728,33 @@ const GroupsCurationPage: FC = () => {
 									)}
 								</div>
 								<div className={styles['curation-page__group-card-meta']}>
-									{t('{count} members').replace('{count}', String(members.length))}
+									<span>{t('{count} members').replace('{count}', String(members.length))}</span>
+									{cluster.evaluation && cluster.evaluation.numberOfEvaluators > 0 && (
+										<>
+											<span aria-hidden>·</span>
+											<span>
+												{t('{count} evaluators').replace(
+													'{count}',
+													String(cluster.evaluation.numberOfEvaluators),
+												)}
+											</span>
+											<span aria-hidden>·</span>
+											<span>
+												{t('{pct}% agree').replace(
+													'{pct}',
+													String(Math.round((cluster.evaluation.agreement ?? 0) * 100)),
+												)}
+											</span>
+										</>
+									)}
+									{cluster.evaluation && cluster.evaluation.numberOfEvaluators === 0 && (
+										<>
+											<span aria-hidden>·</span>
+											<span className={styles['curation-page__group-card-meta-muted']}>
+												{t('no evaluations yet')}
+											</span>
+										</>
+									)}
 								</div>
 							</div>
 						);

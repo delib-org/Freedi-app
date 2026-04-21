@@ -1,40 +1,38 @@
-import React, { useId, useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
+import { Link } from 'react-router';
 import clsx from 'clsx';
 import { Statement } from '@freedi/shared-types';
-import { Layers, ChevronDown, ChevronUp, Users } from 'lucide-react';
+import { Layers, ChevronDown, Users, ExternalLink, Info } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import type { RootState } from '@/redux/store';
 import { useGroupMembers } from '@/controllers/hooks/useGroupMembers';
 import ScoreBreakdown from './ScoreBreakdown';
 
 /**
- * GroupedSuggestionCard — displays a condensed cluster statement that
- * represents several similar originals. All styling lives in
- * `_grouped-suggestion-card.scss` (BEM). This React wrapper only assembles
- * classes and composes sub-sections.
+ * GroupedSuggestionCard — displays a cluster statement that represents
+ * several similar originals ("sub-solutions"). Visually distinct from a
+ * loose SuggestionCard: tinted surface, stacked-paper shadows, corner
+ * count ribbon, preview peek of first members, and a footer drawer strip
+ * that drills into the full member list with a thread-rail connector.
  *
- * Evaluation UI (agreement bars, consensus, confidence) is provided by the
- * parent via `evaluationSlot` — the card itself is display-only so it can
- * be reused across main, MC, and (read-only) drill-downs.
+ * All styling lives in `_grouped-suggestion-card.scss` (BEM). This React
+ * wrapper assembles classes and passes state; evaluation UI is injected
+ * via `evaluationSlot` so the card stays display-only.
  */
 export interface GroupedSuggestionCardProps {
 	cluster: Statement;
-	/** Mode this surface is rendering in. Controls whether the inline accordion
-	 *  expands to show originals, or the card shows a "View N originals" link
-	 *  that opens a drill-down modal handled by the parent. */
+	/** 'both' = inline accordion; 'clusters-only' = drill-down modal via parent. */
 	mode: 'both' | 'clusters-only';
-	/** Whether drill-down to originals is allowed by admin settings. Only
-	 *  relevant in clusters-only mode. */
 	allowDrillToOriginals: boolean;
-	/** Parent-provided renderer for each original (e.g. a regular option card
-	 *  in read-only mode). In "both" mode the originals inside the accordion
-	 *  are rendered in a simple text form; pass this to use richer rendering. */
 	renderOriginal?: (original: Statement) => React.ReactNode;
-	/** Parent-provided evaluation UI (agreement bars, buttons, etc.). */
 	evaluationSlot?: React.ReactNode;
-	/** Opens the clusters-only drill-down modal. Parent controls the modal. */
 	onDrillToOriginals?: (cluster: Statement) => void;
 	className?: string;
 }
+
+const PREVIEW_LIMIT = 2;
+const MANY_THRESHOLD = 15;
 
 const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	cluster,
@@ -47,34 +45,67 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const [expanded, setExpanded] = useState(false);
+	const [mobileMetaOpen, setMobileMetaOpen] = useState(false);
 	const disclosureId = useId();
 	const regionId = `${disclosureId}-originals`;
 
-	const integratedOptions = cluster.integratedOptions ?? [];
+	const integratedOptions = useMemo(
+		() => cluster.integratedOptions ?? [],
+		[cluster.integratedOptions],
+	);
 	const count = integratedOptions.length;
 	const evaluation = cluster.evaluation;
+	const isClustersOnly = mode === 'clusters-only';
 
-	// Lazy-fetch members only when expanded (in "both" mode) or when the
-	// drill-down is a link-only affordance but consumer didn't provide a
-	// modal handler.
+	// Preview peek: read whatever originals Redux already has (no network).
+	// If none are cached, the peek lines quietly omit themselves.
+	const previewMembers = useAppSelector((state: RootState) =>
+		integratedOptions
+			.slice(0, PREVIEW_LIMIT)
+			.map((id) => state.statements.statements.find((s) => s.statementId === id))
+			.filter((s): s is Statement => Boolean(s)),
+	);
+	const previewRemainder = Math.max(0, count - previewMembers.length);
+
+	// Full member list — only fetched from Firestore when the drawer opens.
 	const shouldFetch = mode === 'both' && expanded;
 	const { members, isLoading } = useGroupMembers(
 		shouldFetch ? cluster.statementId : undefined,
 		shouldFetch,
 	);
 
-	const isClustersOnly = mode === 'clusters-only';
+	const numberOfEvaluators = evaluation?.numberOfEvaluators ?? 0;
+	const isAwaiting = numberOfEvaluators === 0;
 
 	const classes = clsx(
 		'grouped-suggestion',
 		isClustersOnly && 'grouped-suggestion--clusters-only',
 		expanded && 'grouped-suggestion--expanded',
+		isAwaiting && 'grouped-suggestion--awaiting',
+		mobileMetaOpen && 'grouped-suggestion--meta-open',
 		className,
 	);
 
+	// Corner ribbon copy — "Pair" / "N" / "15+"
+	let ribbonText: string;
+	let ribbonModifier: string | false = false;
+	if (count === 2) {
+		ribbonText = t('Pair');
+		ribbonModifier = 'grouped-suggestion__count-ribbon--pair';
+	} else if (count > MANY_THRESHOLD) {
+		ribbonText = `${MANY_THRESHOLD}+`;
+		ribbonModifier = 'grouped-suggestion__count-ribbon--many';
+	} else {
+		ribbonText = String(count);
+	}
+
+	const cardAriaLabel = t('Group of {count} related suggestions: {title}')
+		.replace('{count}', String(count))
+		.replace('{title}', cluster.statement);
+
 	const countLabel = t('Represents {count} suggestions').replace('{count}', String(count));
 
-	const handleDisclosure = () => {
+	const handleDrawerClick = () => {
 		if (isClustersOnly && allowDrillToOriginals && onDrillToOriginals) {
 			onDrillToOriginals(cluster);
 
@@ -86,73 +117,124 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		setExpanded((v) => !v);
 	};
 
-	const disclosureVisible = mode === 'both' || (isClustersOnly && allowDrillToOriginals);
+	const drawerVisible = mode === 'both' || (isClustersOnly && allowDrillToOriginals);
+	const drawerCountLabel = isClustersOnly
+		? t('View {count} originals').replace('{count}', String(count))
+		: expanded
+			? t('Hide originals')
+			: t('Show originals');
 
 	return (
-		<div className={classes}>
+		<div className={classes} aria-label={cardAriaLabel}>
+			<span
+				className={clsx('grouped-suggestion__count-ribbon', ribbonModifier)}
+				aria-label={countLabel}
+			>
+				<Layers size={14} aria-hidden />
+				<span aria-hidden>{ribbonText}</span>
+				<span className="sr-only">{countLabel}</span>
+			</span>
+
 			<div className="grouped-suggestion__card card card--elevated">
 				<div className="grouped-suggestion__header">
 					<div className="grouped-suggestion__title-wrap">
 						<h3 className="card__title">{cluster.statement}</h3>
 						{cluster.description && <p className="card__subtitle">{cluster.description}</p>}
 					</div>
-					<span className="grouped-suggestion__count-pill" aria-label={countLabel}>
-						<Layers size={14} aria-hidden />
-						<span aria-hidden>{count}</span>
-						<span className="sr-only">{countLabel}</span>
-					</span>
 				</div>
 
-				{evaluation && (
-					<div className="grouped-suggestion__meta" aria-label={t('Aggregated evaluation')}>
-						{typeof evaluation.numberOfEvaluators === 'number' && (
-							<span className="grouped-suggestion__meta-item">
-								<Users size={14} aria-hidden />
-								{evaluation.numberOfEvaluators} {t('evaluators')}
+				{/* Preview peek — first 2 member titles (italic, prefixed ›) */}
+				{previewMembers.length > 0 && (
+					<div
+						className="grouped-suggestion__preview"
+						aria-label={t('Preview of grouped suggestions')}
+					>
+						{previewMembers.map((m) => (
+							<span key={m.statementId} className="grouped-suggestion__preview-line">
+								<span className="grouped-suggestion__preview-text">{m.statement}</span>
 							</span>
-						)}
-						{typeof evaluation.averageEvaluation === 'number' && (
-							<span className="grouped-suggestion__meta-item">
-								{t('Average')}: {evaluation.averageEvaluation.toFixed(2)}
-							</span>
-						)}
-						{typeof evaluation.agreement === 'number' && (
-							<span className="grouped-suggestion__meta-item">
-								{t('Agreement')}: {(evaluation.agreement * 100).toFixed(0)}%
-							</span>
-						)}
-						{typeof evaluation.confidenceIndex === 'number' && (
-							<span className="grouped-suggestion__meta-item">
-								{t('Confidence')}: {(evaluation.confidenceIndex * 100).toFixed(0)}%
+						))}
+						{previewRemainder > 0 && (
+							<span className="grouped-suggestion__preview-more">
+								{t('…and {count} more').replace('{count}', String(previewRemainder))}
 							</span>
 						)}
 					</div>
+				)}
+
+				{evaluation && (
+					<>
+						<div
+							className={clsx(
+								'grouped-suggestion__meta',
+								isAwaiting && 'grouped-suggestion__meta--muted',
+							)}
+							aria-label={t('Aggregated evaluation')}
+						>
+							{isAwaiting ? (
+								<span className="grouped-suggestion__meta-item">
+									{t('Awaiting community feedback')}
+								</span>
+							) : (
+								<>
+									<span className="grouped-suggestion__meta-item">
+										<Users size={14} aria-hidden />
+										{numberOfEvaluators} {t('evaluators')}
+									</span>
+									{typeof evaluation.averageEvaluation === 'number' && (
+										<span className="grouped-suggestion__meta-item">
+											{t('Average')}: {evaluation.averageEvaluation.toFixed(2)}
+										</span>
+									)}
+									{typeof evaluation.agreement === 'number' && (
+										<span className="grouped-suggestion__meta-item">
+											{t('Agreement')}: {(evaluation.agreement * 100).toFixed(0)}%
+										</span>
+									)}
+									{typeof evaluation.confidenceIndex === 'number' && (
+										<span className="grouped-suggestion__meta-item">
+											{t('Confidence')}: {(evaluation.confidenceIndex * 100).toFixed(0)}%
+										</span>
+									)}
+								</>
+							)}
+						</div>
+						{/* Mobile-only toggle to reveal the meta row */}
+						<button
+							type="button"
+							className="grouped-suggestion__meta-toggle"
+							aria-expanded={mobileMetaOpen}
+							onClick={() => setMobileMetaOpen((v) => !v)}
+						>
+							<Info size={14} aria-hidden />
+							{mobileMetaOpen ? t('Hide details') : t('More info')}
+						</button>
+					</>
 				)}
 
 				{evaluationSlot && <div className="grouped-suggestion__body">{evaluationSlot}</div>}
 
 				<ScoreBreakdown clusterId={cluster.statementId} />
 
-				{disclosureVisible && (
+				{drawerVisible && (
 					<button
 						id={disclosureId}
 						type="button"
-						className="grouped-suggestion__disclosure"
+						className="grouped-suggestion__drawer"
 						aria-expanded={mode === 'both' ? expanded : undefined}
 						aria-controls={mode === 'both' ? regionId : undefined}
-						onClick={handleDisclosure}
+						onClick={handleDrawerClick}
 					>
-						{isClustersOnly
-							? t('View {count} originals').replace('{count}', String(count))
-							: expanded
-								? t('Hide {count} originals').replace('{count}', String(count))
-								: t('Show {count} originals').replace('{count}', String(count))}
-						{mode === 'both' &&
-							(expanded ? (
-								<ChevronUp size={16} aria-hidden />
-							) : (
-								<ChevronDown size={16} aria-hidden />
-							))}
+						<span className="grouped-suggestion__drawer-label">
+							<Layers size={16} aria-hidden />
+							<span>
+								<strong>{count}</strong> {t('originals in this group')}
+							</span>
+						</span>
+						<span className="grouped-suggestion__drawer-chevron" aria-hidden>
+							<ChevronDown size={18} />
+						</span>
+						<span className="sr-only">{drawerCountLabel}</span>
 					</button>
 				)}
 
@@ -161,6 +243,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 						id={regionId}
 						className="grouped-suggestion__originals"
 						role="region"
+						aria-live="polite"
 						aria-label={t('Original suggestions represented by this group')}
 					>
 						{isLoading && <p className="grouped-suggestion__original-note">{t('Loading…')}</p>}
@@ -169,16 +252,28 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 						)}
 						{members.map((original) => (
 							<div key={original.statementId} className="grouped-suggestion__original">
-								{renderOriginal ? (
-									renderOriginal(original)
-								) : (
-									<>
-										<span className="grouped-suggestion__original-text">{original.statement}</span>
-										<span className="grouped-suggestion__original-note">
-											{t('Already counted in the group above')}
-										</span>
-									</>
-								)}
+								<div className="grouped-suggestion__original-row">
+									<div className="grouped-suggestion__original-text">
+										{renderOriginal ? (
+											renderOriginal(original)
+										) : (
+											<>
+												<span>{original.statement}</span>
+												<span className="grouped-suggestion__original-note">
+													{t('Already counted in the group above')}
+												</span>
+											</>
+										)}
+									</div>
+									<Link
+										to={`/statement/${original.statementId}`}
+										className="grouped-suggestion__original-nav"
+										aria-label={t('Open original: {title}').replace('{title}', original.statement)}
+									>
+										<ExternalLink size={14} aria-hidden />
+										<span>{t('Open')}</span>
+									</Link>
+								</div>
 							</div>
 						))}
 					</div>

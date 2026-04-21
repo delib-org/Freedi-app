@@ -192,11 +192,13 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 			resultMap = sortedMap;
 		}
 
-		// Apply bookmark/mine filter
+		// Apply bookmark/mine/grouped filter
 		if (filterMode === TreeFilterMode.bookmarked && bookmarkedIds) {
 			resultRoot = resultRoot.filter((c) => bookmarkedIds.has(c.statementId));
 		} else if (filterMode === TreeFilterMode.mine && userId) {
 			resultRoot = resultRoot.filter((c) => c.creatorId === userId);
+		} else if (filterMode === TreeFilterMode.grouped) {
+			resultRoot = resultRoot.filter((c) => c.isCluster === true);
 		}
 
 		return { childrenMap: resultMap, rootChildren: resultRoot };

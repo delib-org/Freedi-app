@@ -5,7 +5,9 @@ import {
 	CondensationConfig,
 	CondensationLevel,
 	createStatementObject,
+	Evaluation,
 	Statement,
+	StatementEvaluation,
 	StatementType,
 	DeliberativeElement,
 	User,
@@ -18,7 +20,11 @@ import {
 	ReconciledGroup,
 	reconcileGroups,
 } from './reconciler';
-import { recomputeClusterEvaluation } from './aggregation';
+import {
+	computeClusterEvaluationFromRawEvals,
+	fetchEvaluationsForIds,
+	recomputeClusterEvaluation,
+} from './aggregation';
 
 const db = getFirestore();
 
@@ -100,6 +106,11 @@ export interface PreviewGroup {
 	suggestedDescription: string;
 	memberIds: string[];
 	memberTexts: string[];
+	/** Aggregated evaluation the cluster WOULD have once written — same math
+	 *  as `recomputeClusterEvaluation` (per-user dedup + averaging across
+	 *  member options). Included in dry-runs so the admin can see support
+	 *  strength before approving. */
+	evaluationSnapshot: StatementEvaluation;
 }
 
 export interface PipelineOptions {
@@ -425,6 +436,26 @@ export async function runCondensationPipeline(
 	const existingClusterById = new Map(existingClusters.map((c) => [c.statementId, c]));
 	const preview: PreviewGroup[] = [];
 
+	// Pre-fetch all raw evaluations for candidate originals AND existing
+	// clusters in one batch, so both the dry-run preview and the real create/
+	// update paths can compute the aggregated cluster evaluation in-memory
+	// (no per-group Firestore round-trip).
+	const evalSourceIds = [
+		...candidates.map((c) => c.id),
+		...existingClusters.map((c) => c.statementId),
+	];
+	const allFetchedEvals = await fetchEvaluationsForIds(evalSourceIds);
+	const preloadedEvals = new Map<string, Evaluation[]>();
+	for (const e of allFetchedEvals) {
+		if (!e.statementId) continue;
+		const bucket = preloadedEvals.get(e.statementId);
+		if (bucket) {
+			bucket.push(e);
+		} else {
+			preloadedEvals.set(e.statementId, [e]);
+		}
+	}
+
 	// 7a. Dry-run path: compute titles + preview WITHOUT any Firestore writes.
 	// We still call Gemini so the admin sees the titles they'd actually get.
 	if (dryRun) {
@@ -460,6 +491,24 @@ export async function runCondensationPipeline(
 				suggestedDescription = sourceTexts.slice(1, 4).join(' · ');
 			}
 
+			// Compute the aggregated evaluation this cluster WOULD have — include
+			// direct evaluations on the existing cluster (for `update` kind) plus
+			// every member's evaluations.
+			const evalFetchIds =
+				group.kind === 'update' && group.existingClusterId
+					? [group.existingClusterId, ...group.sourceIds]
+					: group.sourceIds;
+			const memberEvals: Evaluation[] = evalFetchIds.flatMap((id) => preloadedEvals.get(id) ?? []);
+			const existingClusterEval = group.existingClusterId
+				? existingClusterById.get(group.existingClusterId)?.evaluation
+				: undefined;
+			const { evaluation: evaluationSnapshot } = computeClusterEvaluationFromRawEvals(
+				memberEvals,
+				{},
+				existingClusterEval?.evaluationRandomNumber,
+				existingClusterEval?.viewed,
+			);
+
 			preview.push({
 				kind: group.kind,
 				existingClusterId: group.existingClusterId,
@@ -471,6 +520,7 @@ export async function runCondensationPipeline(
 				suggestedDescription,
 				memberIds: group.sourceIds,
 				memberTexts: sourceTexts,
+				evaluationSnapshot,
 			});
 		}
 
@@ -497,6 +547,7 @@ export async function runCondensationPipeline(
 				parentId,
 				group,
 				candidatesById,
+				preloadedEvals,
 				questionContext,
 				mergesRemaining: DEFAULT_MAX_MERGES_PER_RUN - merges,
 				runBy,
@@ -556,6 +607,7 @@ interface ApplyGroupArgs {
 	parentId: string;
 	group: ReconciledGroup;
 	candidatesById: Map<string, Candidate>;
+	preloadedEvals: Map<string, Evaluation[]>;
 	questionContext: string;
 	mergesRemaining: number;
 	runBy: string;
@@ -566,6 +618,7 @@ async function applyGroup({
 	parentId,
 	group,
 	candidatesById,
+	preloadedEvals,
 	questionContext,
 	mergesRemaining,
 	runBy,
@@ -592,10 +645,27 @@ async function applyGroup({
 			description = generated.description;
 		}
 
+		// Pre-compute aggregated evaluation from the new member set + any
+		// direct evaluations on the existing cluster itself, so the cluster's
+		// `evaluation` / `consensus` update atomically with its `integratedOptions`.
+		const updateEvalIds = [existing.statementId, ...group.sourceIds];
+		const updateMemberEvals: Evaluation[] = updateEvalIds.flatMap(
+			(id) => preloadedEvals.get(id) ?? [],
+		);
+		const { evaluation: updatedEvaluation } = computeClusterEvaluationFromRawEvals(
+			updateMemberEvals,
+			{},
+			existing.evaluation?.evaluationRandomNumber,
+			existing.evaluation?.viewed,
+		);
+
 		await existingRef.update({
 			statement: title,
 			description,
 			integratedOptions: group.sourceIds,
+			evaluation: updatedEvaluation,
+			consensus: updatedEvaluation.agreement,
+			totalEvaluators: updatedEvaluation.numberOfEvaluators,
 			lastUpdate: Date.now(),
 		});
 
@@ -638,11 +708,22 @@ async function applyGroup({
 		return null;
 	}
 
+	// Pre-compute aggregated evaluation from member originals' evaluations so
+	// the cluster is born with non-zero agreement/consensus/totalEvaluators
+	// instead of a momentary zero state.
+	const createMemberEvals: Evaluation[] = group.sourceIds.flatMap(
+		(id) => preloadedEvals.get(id) ?? [],
+	);
+	const { evaluation: createdEvaluation } = computeClusterEvaluationFromRawEvals(createMemberEvals);
+
 	const clusterData: Statement = {
 		...created,
 		description,
 		isCluster: true,
 		integratedOptions: group.sourceIds,
+		evaluation: createdEvaluation,
+		consensus: createdEvaluation.agreement,
+		totalEvaluators: createdEvaluation.numberOfEvaluators,
 	};
 
 	const clusterId = clusterData.statementId;

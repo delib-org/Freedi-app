@@ -1,6 +1,7 @@
 import React, { FC, useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement } from '@freedi/shared-types';
+import { Layers } from 'lucide-react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import { isAuthorized } from '@/controllers/general/helpers';
@@ -131,11 +132,14 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		false;
 
 	const isFailed = statement.joinStatus === 'failed';
+	const isCluster = statement.isCluster === true;
+	const integratedCount = statement.integratedOptions?.length ?? 0;
 	const nodeClassName = [
 		styles['tree-option-node'],
 		isInResults ? styles['tree-option-node--selected'] : '',
 		isNew ? styles['tree-option-node--new'] : '',
 		isFailed ? styles['tree-option-node--failed'] : '',
+		isCluster ? styles['tree-option-node--cluster'] : '',
 	]
 		.filter(Boolean)
 		.join(' ');
@@ -147,6 +151,22 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 			</div>
 			<div className={styles['tree-option-node__body']}>
 				<div className={styles['tree-option-node__header']}>
+					{isCluster && (
+						<span
+							className={styles['tree-option-node__cluster-badge']}
+							aria-label={t('Grouped suggestion representing {count} originals').replace(
+								'{count}',
+								String(integratedCount),
+							)}
+							title={t('Grouped suggestion representing {count} originals').replace(
+								'{count}',
+								String(integratedCount),
+							)}
+						>
+							<Layers size={12} aria-hidden />
+							<span>{t('Group · {count}').replace('{count}', String(integratedCount))}</span>
+						</span>
+					)}
 					<div className={styles['tree-option-node__menu']}>
 						<ChatMessageMenu
 							statement={statement}

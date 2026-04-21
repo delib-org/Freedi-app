@@ -1,4 +1,5 @@
 import { FC } from 'react';
+import { Layers } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { TreeFilterMode } from '../../TreeFilterMode';
 import styles from './TreeFilterChips.module.scss';
@@ -47,6 +48,15 @@ const TreeFilterChips: FC<TreeFilterChipsProps> = ({
 						person
 					</span>
 					{t('My Statements')}
+				</button>
+				<button
+					className={`${styles['tree-filter-chips__chip']} ${activeFilter === TreeFilterMode.grouped ? styles['tree-filter-chips__chip--active'] : ''}`}
+					onClick={() => onFilterChange(TreeFilterMode.grouped)}
+					aria-pressed={activeFilter === TreeFilterMode.grouped}
+					title={t('Show only grouped (clustered) suggestions')}
+				>
+					<Layers size={16} aria-hidden />
+					{t('Grouped')}
 				</button>
 			</div>
 			<button

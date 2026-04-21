@@ -47,7 +47,7 @@ interface AggregationOptions {
 	samplingQuality?: number;
 }
 
-async function fetchEvaluationsForIds(statementIds: string[]): Promise<Evaluation[]> {
+export async function fetchEvaluationsForIds(statementIds: string[]): Promise<Evaluation[]> {
 	const BATCH = 30;
 	const results: Evaluation[] = [];
 	for (let i = 0; i < statementIds.length; i += BATCH) {
@@ -64,26 +64,27 @@ async function fetchEvaluationsForIds(statementIds: string[]): Promise<Evaluatio
 }
 
 /**
- * Recompute and write the cluster's aggregated StatementEvaluation.
- * Safe to call on non-cluster statements (no-op returns null).
+ * Pure, Firestore-free aggregation: given the raw per-user evaluation records
+ * that constitute a cluster (direct evals on the cluster + evals on each
+ * `integratedOptions` member), compute the aggregated `StatementEvaluation`
+ * using per-user dedup+averaging semantics.
+ *
+ * Returns the aggregated evaluation AND the intermediate `byUser` /
+ * `perUserAverages` maps so callers that persist provenance can reuse them
+ * without re-running the dedup loop.
  */
-export async function recomputeClusterEvaluation(
-	clusterId: string,
+export function computeClusterEvaluationFromRawEvals(
+	evaluations: Evaluation[],
 	options: AggregationOptions = {},
-): Promise<StatementEvaluation | null> {
-	const clusterDoc = await db.collection(Collections.statements).doc(clusterId).get();
-	if (!clusterDoc.exists) return null;
-
-	const cluster = clusterDoc.data() as Statement;
-	if (cluster.isCluster !== true) return null;
-
-	const integrated = cluster.integratedOptions ?? [];
-	const sourceIds = [clusterId, ...integrated]; // include direct evaluations on the cluster
-
-	const evaluations = await fetchEvaluationsForIds(sourceIds);
-
-	// Group per evaluator — keep the full Evaluation records so we can build
-	// provenance link docs below (no extra fetch needed).
+	existingRandom?: number,
+	existingViewed?: number,
+): {
+	evaluation: StatementEvaluation;
+	byUser: Map<string, Evaluation[]>;
+	perUserAverages: Map<string, number>;
+} {
+	// Group per evaluator — keep the full Evaluation records so callers can
+	// build provenance link docs without an extra fetch.
 	const byUser = new Map<string, Evaluation[]>();
 	for (const e of evaluations) {
 		if (!e.evaluatorId) continue;
@@ -96,15 +97,9 @@ export async function recomputeClusterEvaluation(
 	}
 
 	const numberOfEvaluators = byUser.size;
-
-	// Preserve any pre-existing evaluationRandomNumber so downstream writers
-	// (e.g. the main evaluation updater) don't trip over an undefined field,
-	// and stable-order selectors keep working.
-	const existingRandom = cluster.evaluation?.evaluationRandomNumber;
-	const existingViewed = cluster.evaluation?.viewed;
+	const perUserAverages = new Map<string, number>();
 
 	if (numberOfEvaluators === 0) {
-		// Zero out the evaluation but keep the field present so UI renders.
 		const empty: StatementEvaluation = {
 			sumEvaluations: 0,
 			agreement: 0,
@@ -122,11 +117,8 @@ export async function recomputeClusterEvaluation(
 			evaluationRandomNumber: existingRandom ?? Math.random(),
 			viewed: existingViewed ?? 0,
 		};
-		await clusterDoc.ref.update({ evaluation: empty, consensus: 0, lastUpdate: Date.now() });
-		// Prune any stale link docs — this cluster has no contributors.
-		await syncClusterEvaluationLinks(clusterId, cluster.parentId, new Map());
 
-		return empty;
+		return { evaluation: empty, byUser, perUserAverages };
 	}
 
 	let sumEvaluations = 0;
@@ -135,8 +127,6 @@ export async function recomputeClusterEvaluation(
 	let sumCon = 0;
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
-	// Per-user aggregated value — kept for the provenance link docs below.
-	const perUserAverages = new Map<string, number>();
 
 	byUser.forEach((userEvals, userId) => {
 		const values = userEvals.map((e) => e.evaluation);
@@ -193,17 +183,57 @@ export async function recomputeClusterEvaluation(
 		viewed: existingViewed ?? 0,
 	};
 
-	await clusterDoc.ref.update({ evaluation, consensus, lastUpdate: Date.now() });
+	return { evaluation, byUser, perUserAverages };
+}
+
+/**
+ * Recompute and write the cluster's aggregated StatementEvaluation.
+ * Safe to call on non-cluster statements (no-op returns null).
+ */
+export async function recomputeClusterEvaluation(
+	clusterId: string,
+	options: AggregationOptions = {},
+): Promise<StatementEvaluation | null> {
+	const clusterDoc = await db.collection(Collections.statements).doc(clusterId).get();
+	if (!clusterDoc.exists) return null;
+
+	const cluster = clusterDoc.data() as Statement;
+	if (cluster.isCluster !== true) return null;
+
+	const integrated = cluster.integratedOptions ?? [];
+	const sourceIds = [clusterId, ...integrated]; // include direct evaluations on the cluster
+
+	const evaluations = await fetchEvaluationsForIds(sourceIds);
+
+	// Preserve any pre-existing evaluationRandomNumber so downstream writers
+	// (e.g. the main evaluation updater) don't trip over an undefined field,
+	// and stable-order selectors keep working.
+	const existingRandom = cluster.evaluation?.evaluationRandomNumber;
+	const existingViewed = cluster.evaluation?.viewed;
+
+	const { evaluation, byUser, perUserAverages } = computeClusterEvaluationFromRawEvals(
+		evaluations,
+		options,
+		existingRandom,
+		existingViewed,
+	);
+
+	await clusterDoc.ref.update({
+		evaluation,
+		consensus: evaluation.agreement,
+		lastUpdate: Date.now(),
+	});
 
 	// Persist per-user provenance so the admin can see the breakdown and
 	// future UI can let users remove / re-evaluate their own contributions.
+	// For a zero-evaluator cluster this prunes any stale link docs.
 	await syncClusterEvaluationLinks(clusterId, cluster.parentId, byUser, perUserAverages);
 
 	logger.info('condensation.recomputeClusterEvaluation', {
 		clusterId,
 		members: integrated.length,
-		numberOfEvaluators,
-		consensus,
+		numberOfEvaluators: evaluation.numberOfEvaluators,
+		consensus: evaluation.agreement,
 	});
 
 	return evaluation;

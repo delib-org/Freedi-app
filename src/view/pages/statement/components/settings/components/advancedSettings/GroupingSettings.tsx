@@ -37,6 +37,16 @@ const defaultCondensation = (): CondensationConfig => ({
 const levelOrder: CondensationLevel[] = ['loose', 'balanced', 'tight'];
 const visibilityOrder: CondensationSurfaceVisibility[] = ['both', 'clusters-only'];
 
+interface PreviewEvaluationSnapshot {
+	numberOfEvaluators: number;
+	agreement: number; // consensus, equivalent to statement.consensus
+	averageEvaluation: number;
+	sumPro: number;
+	sumCon: number;
+	numberOfProEvaluators: number;
+	numberOfConEvaluators: number;
+}
+
 interface PreviewGroup {
 	kind: 'create' | 'update';
 	existingClusterId?: string;
@@ -45,6 +55,7 @@ interface PreviewGroup {
 	suggestedDescription: string;
 	memberIds: string[];
 	memberTexts: string[];
+	evaluationSnapshot?: PreviewEvaluationSnapshot;
 }
 
 interface PreviewPayload {
@@ -694,6 +705,7 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 									alignItems: 'center',
 									gap: 8,
 									marginBottom: 4,
+									flexWrap: 'wrap',
 								}}
 							>
 								<span
@@ -715,6 +727,36 @@ const PreviewModal: FC<PreviewModalProps> = ({ payload, applying, onApply, onClo
 								>
 									{group.memberIds.length} {t('members')}
 								</span>
+								{group.evaluationSnapshot && (
+									<span
+										style={{
+											fontSize: '0.75rem',
+											color: 'var(--text-secondary, #777)',
+											display: 'inline-flex',
+											gap: 10,
+										}}
+										title={t('Aggregated across all member evaluations (each user counted once).')}
+									>
+										<span>
+											{t('Evaluators')}:{' '}
+											<strong>{group.evaluationSnapshot.numberOfEvaluators}</strong>
+										</span>
+										<span>
+											{t('Avg')}:{' '}
+											<strong>{group.evaluationSnapshot.averageEvaluation.toFixed(2)}</strong>
+										</span>
+										<span>
+											{t('Consensus')}:{' '}
+											<strong>{group.evaluationSnapshot.agreement.toFixed(2)}</strong>
+										</span>
+										<span style={{ color: 'var(--agree, #2d8659)' }}>
+											+{group.evaluationSnapshot.numberOfProEvaluators}
+										</span>
+										<span style={{ color: 'var(--disagree, #c0392b)' }}>
+											−{group.evaluationSnapshot.numberOfConEvaluators}
+										</span>
+									</span>
+								)}
 							</div>
 							<h4 style={{ margin: '4px 0', color: 'var(--text-title)', fontSize: '1rem' }}>
 								{group.suggestedTitle}

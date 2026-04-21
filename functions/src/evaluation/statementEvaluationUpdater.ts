@@ -185,6 +185,23 @@ async function updateStatementInTransaction(
 			throw new Error('Statement not found');
 		}
 
+		// Clusters are managed exclusively by the condensation aggregator
+		// (`onEvaluationChangeRecomputeCondensationClusters` -> `recomputeClusterEvaluation`).
+		// That trigger recomputes the cluster's full aggregated evaluation from
+		// all member evaluations (with per-user dedup) on every evaluation write.
+		// If this updater also writes to the cluster via FieldValue.increment +
+		// absolute consensus, the two writes race and leave the cluster doc in
+		// an inconsistent state (e.g. numberOfEvaluators from aggregator but
+		// consensus from increment-based partial calc). Skip clusters here;
+		// the aggregator is the single source of truth.
+		if (statementData.isCluster === true) {
+			logger.info('statementEvaluationUpdater skipping cluster (aggregator handles it)', {
+				statementId,
+			});
+
+			return;
+		}
+
 		// Check if this statement is missing averageEvaluation
 		if (
 			statementData.statementType === StatementType.option &&

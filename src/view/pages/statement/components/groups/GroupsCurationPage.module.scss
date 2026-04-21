@@ -6,11 +6,18 @@
 .curation-page {
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  // App body has `overflow: hidden; height: 100svh;` — this page is its OWN
+  // scroll container so its header stays pinned feel-wise while content
+  // scrolls. Uses dvh to account for mobile browser chrome (URL bar).
+  height: 100dvh;
+  width: 100%;
   max-width: 1280px;
   margin: 0 auto;
   padding: var(--padding, 1rem);
   gap: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--card-default, #fff);
 
   &__header {
     display: flex;
@@ -226,8 +233,17 @@
   }
 
   &__group-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
     color: var(--text-secondary, #777);
     font-size: 0.75rem;
+  }
+
+  &__group-card-meta-muted {
+    font-style: italic;
+    opacity: 0.8;
   }
 
   // ============================================================================
