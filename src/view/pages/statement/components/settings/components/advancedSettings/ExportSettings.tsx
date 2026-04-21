@@ -106,6 +106,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			</p>
 			<div className={styles.exportButtons}>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleExport('json')}
 					disabled={isExporting.json}
@@ -114,6 +115,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					{isExporting.json ? t('Exporting...') : t('Export JSON')}
 				</button>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleExport('csv')}
 					disabled={isExporting.csv}
@@ -141,6 +143,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			</p>
 			<div className={styles.exportButtons}>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleUserDataExport('json')}
 					disabled={isUserDataExporting.json}
@@ -149,6 +152,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					{isUserDataExporting.json ? t('Exporting...') : t('Export JSON')}
 				</button>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleUserDataExport('csv')}
 					disabled={isUserDataExporting.csv}
@@ -174,6 +178,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					</p>
 					<div className={styles.exportButtons}>
 						<button
+							type="button"
 							className={styles.exportButton}
 							onClick={handleQuestionResearchExport}
 							disabled={isQuestionResearchExporting}
@@ -182,6 +187,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 							{isQuestionResearchExporting ? t('Exporting...') : t('Export This Question')}
 						</button>
 						<button
+							type="button"
 							className={styles.exportButton}
 							onClick={handleResearchExport}
 							disabled={isResearchExporting}

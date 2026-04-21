@@ -548,7 +548,7 @@ export async function exportPrivacyPreservingData(
 		);
 
 		const timestamp = new Date().toISOString().split('T')[0];
-		const safeTitle = parentStatement.statement.slice(0, 30).replace(/[^a-zA-Z0-9]/g, '_');
+		const safeTitle = parentStatement.statement.slice(0, 30).replace(/[^\p{L}\p{N}]/gu, '_');
 
 		if (format === 'json') {
 			const content = JSON.stringify(data, null, 2);
