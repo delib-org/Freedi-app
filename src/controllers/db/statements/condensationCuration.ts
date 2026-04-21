@@ -217,6 +217,67 @@ export async function ungroupCluster(args: {
 	}
 }
 
+interface MergeClustersArgs {
+	parentStatementId: string;
+	/** Cluster that keeps its title and absorbs the others. */
+	intoClusterId: string;
+	/** Clusters that will be deleted; their members move to `intoClusterId`. */
+	fromClusterIds: string[];
+}
+
+interface MergeClustersResult {
+	mergedClusterId: string;
+	absorbedClusterIds: string[];
+	totalMembers: number;
+}
+
+/**
+ * Fold one or more clusters into a target cluster. The target keeps its
+ * title/ID and gains every absorbed cluster's members; the absorbed docs
+ * are deleted and their `clusterEvaluationLinks` provenance is cleaned up.
+ * The target's aggregated evaluation is re-computed from the union of
+ * member evaluations before the call returns.
+ *
+ * Delegated to the `mergeClusters` Cloud Function because the operation
+ * needs parent-creator permission checking + atomic multi-doc writes +
+ * server-side re-aggregation (all three ill-suited to client-side code).
+ */
+export async function mergeClusters({
+	parentStatementId,
+	intoClusterId,
+	fromClusterIds,
+}: MergeClustersArgs): Promise<MergeClustersResult> {
+	try {
+		const callable = httpsCallable<
+			{ parentId: string; intoClusterId: string; fromClusterIds: string[] },
+			{
+				success: boolean;
+				mergedClusterId: string;
+				absorbedClusterIds: string[];
+				totalMembers: number;
+			}
+		>(functions, 'mergeClusters');
+		const res = await callable({
+			parentId: parentStatementId,
+			intoClusterId,
+			fromClusterIds,
+		});
+
+		return {
+			mergedClusterId: res.data.mergedClusterId,
+			absorbedClusterIds: res.data.absorbedClusterIds,
+			totalMembers: res.data.totalMembers,
+		};
+	} catch (error) {
+		logError(error, {
+			operation: 'condensationCuration.mergeClusters',
+			statementId: intoClusterId,
+			metadata: { parentStatementId, fromClusterIds },
+		});
+		throw error;
+	}
+}
+
 /**
  * Client-side throttle: one suggestion call per cluster per 3s. Prevents
  * accidental spam (cost + latency) if the admin repeatedly clicks the

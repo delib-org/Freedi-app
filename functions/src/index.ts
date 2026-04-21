@@ -205,6 +205,7 @@ import {
 	onStatementCreatedMarkCondensationStale,
 } from './condensation/fn_runCondensation';
 import { suggestClusterTitle } from './condensation/fn_suggestClusterTitle';
+import { mergeClusters } from './condensation/fn_mergeClusters';
 
 // Scheduled drift correction for evaluation aggregates
 import { evaluationDriftCorrection } from './fn_evaluationDriftCorrection';
@@ -967,4 +968,5 @@ exports.onEvaluationChangeRecomputeCondensationClusters =
 	onEvaluationChangeRecomputeCondensationClusters;
 exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensationStale;
 exports.suggestClusterTitle = suggestClusterTitle;
+exports.mergeClusters = mergeClusters;
 exports.evaluationDriftCorrection = evaluationDriftCorrection;

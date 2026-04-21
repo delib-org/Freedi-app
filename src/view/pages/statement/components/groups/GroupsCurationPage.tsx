@@ -14,6 +14,7 @@ import {
 	Wand2,
 	X,
 	Check,
+	GitMerge,
 } from 'lucide-react';
 import { Statement, StatementType } from '@freedi/shared-types';
 import ScoreBreakdown from '@/view/components/atomic/molecules/GroupedSuggestionCard/ScoreBreakdown';
@@ -26,6 +27,7 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import type { RootState } from '@/redux/store';
 import {
 	createEmptyCluster,
+	mergeClusters,
 	moveOriginalToCluster,
 	resetTitleToAI,
 	splitGroupMembers,
@@ -208,6 +210,9 @@ const GroupsCurationPage: FC = () => {
 	const [selectedMemberIds, setSelectedMemberIds] = useState<Set<string>>(new Set());
 	const [dragOverClusterId, setDragOverClusterId] = useState<string | null>(null);
 	const [isRemovingAll, setIsRemovingAll] = useState(false);
+	/** Cluster whose "Merge into…" menu is currently open. null = closed. */
+	const [mergeMenuFor, setMergeMenuFor] = useState<string | null>(null);
+	const [isMerging, setIsMerging] = useState(false);
 
 	if (!parent) {
 		return (
@@ -516,6 +521,42 @@ const GroupsCurationPage: FC = () => {
 				operation: 'GroupsCurationPage.handleUngroup',
 				statementId: cluster.statementId,
 			});
+		}
+	}
+
+	async function handleMergeInto(source: Statement, target: Statement) {
+		if (source.statementId === target.statementId || isMerging) return;
+		const sourceCount = source.integratedOptions?.length ?? 0;
+		const targetCount = target.integratedOptions?.length ?? 0;
+		const message = t(
+			'Merge "{source}" ({sourceCount}) into "{target}" ({targetCount})? The source group will be deleted and its originals will be added to the target.',
+		)
+			.replace('{source}', source.statement)
+			.replace('{sourceCount}', String(sourceCount))
+			.replace('{target}', target.statement)
+			.replace('{targetCount}', String(targetCount));
+		if (!window.confirm(message)) return;
+
+		setIsMerging(true);
+		try {
+			await mergeClusters({
+				parentStatementId: parent.statementId,
+				intoClusterId: target.statementId,
+				fromClusterIds: [source.statementId],
+			});
+			if (selectedClusterId === source.statementId) {
+				setSelectedClusterId(target.statementId);
+			}
+			setSelectedMemberIds(new Set());
+			setMergeMenuFor(null);
+		} catch (error) {
+			logError(error, {
+				operation: 'GroupsCurationPage.handleMergeInto',
+				statementId: source.statementId,
+				metadata: { targetClusterId: target.statementId },
+			});
+		} finally {
+			setIsMerging(false);
 		}
 	}
 
@@ -1071,6 +1112,82 @@ const GroupsCurationPage: FC = () => {
 										>
 											<Scissors size={14} /> {t('Split selected into new group')}
 										</button>
+										{view.clusters.length > 1 && (
+											<div className={styles['curation-page__merge-wrap']}>
+												<button
+													type="button"
+													className={styles['curation-page__btn-ghost']}
+													onClick={() =>
+														setMergeMenuFor(
+															mergeMenuFor === selectedCluster.statementId
+																? null
+																: selectedCluster.statementId,
+														)
+													}
+													disabled={isMerging}
+													aria-haspopup="menu"
+													aria-expanded={mergeMenuFor === selectedCluster.statementId}
+												>
+													<GitMerge size={14} />{' '}
+													{isMerging ? t('Merging…') : t('Merge into…')}
+												</button>
+												{mergeMenuFor === selectedCluster.statementId && (
+													<div
+														role="menu"
+														className={styles['curation-page__merge-menu']}
+														onKeyDown={(e) => {
+															if (e.key === 'Escape') setMergeMenuFor(null);
+														}}
+													>
+														<p className={styles['curation-page__merge-menu-hint']}>
+															{t(
+																'Choose a target group. This group will be deleted and its originals moved.',
+															)}
+														</p>
+														{view.clusters
+															.filter(
+																(c) => c.statementId !== selectedCluster.statementId,
+															)
+															.map((target) => {
+																const targetMembers =
+																	view.originalsByCluster.get(target.statementId) ??
+																	[];
+
+																return (
+																	<button
+																		key={target.statementId}
+																		type="button"
+																		role="menuitem"
+																		className={styles['curation-page__merge-menu-item']}
+																		onClick={() =>
+																			void handleMergeInto(selectedCluster, target)
+																		}
+																		disabled={isMerging}
+																	>
+																		<span
+																			className={
+																				styles['curation-page__merge-menu-item-title']
+																			}
+																		>
+																			{target.statement}
+																		</span>
+																		<span
+																			className={
+																				styles['curation-page__merge-menu-item-meta']
+																			}
+																		>
+																			{t('{count} members').replace(
+																				'{count}',
+																				String(targetMembers.length),
+																			)}
+																		</span>
+																	</button>
+																);
+															})}
+													</div>
+												)}
+											</div>
+										)}
 										<button
 											type="button"
 											className={styles['curation-page__btn-danger']}

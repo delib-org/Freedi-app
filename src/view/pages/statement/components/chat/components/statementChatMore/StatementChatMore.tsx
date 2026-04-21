@@ -88,6 +88,7 @@ const StatementChatMore: FC<Props> = ({
 	const handleClick = async (e: MouseEvent<HTMLButtonElement>) => {
 		// Prevent accidental navigation when selecting text nearby
 		e.stopPropagation();
+		e.preventDefault();
 
 		if (useLink) {
 			// Mark notifications as read when navigating to chat
