@@ -60,6 +60,24 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
       });
     };
 
+    const handleCardClick = (e: Event): void => {
+      const target = e.target as HTMLElement;
+
+      // Don't navigate if clicking on interactive elements
+      if (
+        target.closest('button') ||
+        target.closest('[role="button"]') ||
+        target.closest('a') ||
+        target.closest('input') ||
+        target.closest('textarea')
+      ) {
+        return;
+      }
+
+      // Only navigate if clicking on the card itself, not on nested content
+      navigateToChat();
+    };
+
     const isCluster = option.isCluster === true;
     const groupSize = option.integratedOptions?.length ?? 0;
 
@@ -69,7 +87,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         role: 'button',
         tabindex: 0,
         'aria-label': option.statement,
-        onclick: navigateToChat,
+        onclick: handleCardClick,
         onkeydown: (e: KeyboardEvent) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
