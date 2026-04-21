@@ -161,6 +161,47 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 		setIsCardMenuOpen(!isCardMenuOpen);
 	}
 
+	// Block any clicks that might propagate to chat button
+	function handleCardAreaClick(e: React.MouseEvent<HTMLDivElement>) {
+		const target = e.target as HTMLElement;
+
+		// If click is on the chat button or within it, let it proceed
+		const chatButton = elementRef.current?.querySelector('[data-testid="statement-chat-more-button"]');
+		if (chatButton && chatButton.contains(target)) {
+			console.debug('[SuggestionCard] Click on chat button, allowing to proceed');
+			return; // Allow chat button clicks
+		}
+
+		// For all other clicks, make absolutely sure they don't bubble to parent handlers
+		// and don't trigger any navigation
+		if (target.closest('button') || target.closest('a') || target.closest('[role="button"]')) {
+			console.debug('[SuggestionCard] Click on interactive element:', target.tagName);
+			// These are interactive elements, let them handle themselves
+			return;
+		}
+
+		// For non-interactive areas, stop propagation
+		console.debug('[SuggestionCard] Blocking non-interactive click on:', target.tagName);
+		e.stopPropagation();
+	}
+
+	// Also handle pointer events to catch all interaction types
+	function handleCardPointerDown(e: React.PointerEvent<HTMLDivElement>) {
+		const target = e.target as HTMLElement;
+		const chatButton = elementRef.current?.querySelector('[data-testid="statement-chat-more-button"]');
+
+		// Don't block pointer events on the chat button
+		if (chatButton && chatButton.contains(target)) {
+			return;
+		}
+
+		// Block pointer events on non-interactive areas
+		if (!target.closest('button') && !target.closest('a') && !target.closest('[role="button"]')) {
+			console.debug('[SuggestionCard] Blocking pointer event on:', target.tagName);
+			e.preventDefault();
+		}
+	}
+
 	// Check if statement is in parent's results array (evaluation/consensus winner)
 	const isInResults =
 		parentStatement?.results?.some((result) => result.statementId === statement.statementId) ??
@@ -180,6 +221,8 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 	return (
 		<div
 			onContextMenu={(e) => handleRightClick(e)}
+			onClick={handleCardAreaClick}
+			onPointerDown={handleCardPointerDown}
 			className={`
 				${styles['statement-evaluation-card']}
 				${statementAge < 10000 ? styles['statement-evaluation-card--new'] : ''}

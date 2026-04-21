@@ -1128,8 +1128,7 @@ const GroupsCurationPage: FC = () => {
 													aria-haspopup="menu"
 													aria-expanded={mergeMenuFor === selectedCluster.statementId}
 												>
-													<GitMerge size={14} />{' '}
-													{isMerging ? t('Merging…') : t('Merge into…')}
+													<GitMerge size={14} /> {isMerging ? t('Merging…') : t('Merge into…')}
 												</button>
 												{mergeMenuFor === selectedCluster.statementId && (
 													<div
@@ -1145,13 +1144,10 @@ const GroupsCurationPage: FC = () => {
 															)}
 														</p>
 														{view.clusters
-															.filter(
-																(c) => c.statementId !== selectedCluster.statementId,
-															)
+															.filter((c) => c.statementId !== selectedCluster.statementId)
 															.map((target) => {
 																const targetMembers =
-																	view.originalsByCluster.get(target.statementId) ??
-																	[];
+																	view.originalsByCluster.get(target.statementId) ?? [];
 
 																return (
 																	<button
@@ -1159,23 +1155,15 @@ const GroupsCurationPage: FC = () => {
 																		type="button"
 																		role="menuitem"
 																		className={styles['curation-page__merge-menu-item']}
-																		onClick={() =>
-																			void handleMergeInto(selectedCluster, target)
-																		}
+																		onClick={() => void handleMergeInto(selectedCluster, target)}
 																		disabled={isMerging}
 																	>
 																		<span
-																			className={
-																				styles['curation-page__merge-menu-item-title']
-																			}
+																			className={styles['curation-page__merge-menu-item-title']}
 																		>
 																			{target.statement}
 																		</span>
-																		<span
-																			className={
-																				styles['curation-page__merge-menu-item-meta']
-																			}
-																		>
+																		<span className={styles['curation-page__merge-menu-item-meta']}>
 																			{t('{count} members').replace(
 																				'{count}',
 																				String(targetMembers.length),

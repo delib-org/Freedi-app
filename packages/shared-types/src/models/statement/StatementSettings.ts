@@ -35,6 +35,10 @@ export const JoinFormConfigSchema = object({
 	fields: array(JoinFormFieldSchema),
 	destination: JoinFormDestinationSchema,
 	sheetUrl: optional(string()),
+	// Language the admin used when saving the form (e.g. 'he', 'en'). The join
+	// app renders the modal chrome (title, buttons) in this language so they
+	// match the stored field labels regardless of the visitor's browser lang.
+	formLanguage: optional(string()),
 });
 export type JoinFormConfig = InferOutput<typeof JoinFormConfigSchema>;
 

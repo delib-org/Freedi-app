@@ -9,6 +9,7 @@ import { UserPlus, Plus, Target } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import ToggleSwitch from './ToggleSwitch';
+import JoinFormCard from './JoinFormCard';
 
 interface ParticipationSettingsProps {
 	statement: Statement;
@@ -52,6 +53,7 @@ const ParticipationSettings: FC<ParticipationSettingsProps> = ({
 					/>
 					{settings.joiningEnabled && (
 						<>
+							<JoinFormCard statement={statement} />
 							<ToggleSwitch
 								isChecked={threshold?.enabled ?? false}
 								onChange={(checked) => updateThreshold({ enabled: checked })}

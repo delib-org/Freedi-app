@@ -191,6 +191,7 @@ const translations: Record<string, Record<string, string>> = {
     'form.title': 'Beitrittsinformationen',
     'form.cancel': 'Abbrechen',
     'form.submit': 'Beitreten',
+    'form.submitting': 'Wird gesendet...',
     'common.anonymous': 'Anonym',
     'poweredByWizCol': 'Smarte Entscheidungen mit WizCol',
     'shareMessage': 'Entdecken Sie einen neuen Weg für Organisationen, gemeinsam Entscheidungen zu treffen',
@@ -221,6 +222,7 @@ const translations: Record<string, Record<string, string>> = {
     'form.title': 'Información de unión',
     'form.cancel': 'Cancelar',
     'form.submit': 'Unirse',
+    'form.submitting': 'Enviando...',
     'common.anonymous': 'Anónimo',
     'poweredByWizCol': 'Decisiones inteligentes con WizCol',
     'shareMessage': 'Descubre una nueva forma para que las organizaciones tomen decisiones juntas',
@@ -248,6 +250,7 @@ const translations: Record<string, Record<string, string>> = {
     'form.title': 'Deelname-informatie',
     'form.cancel': 'Annuleren',
     'form.submit': 'Deelnemen',
+    'form.submitting': 'Bezig met verzenden...',
     'common.anonymous': 'Anoniem',
     'poweredByWizCol': 'Slimme beslissingen met WizCol',
     'shareMessage': 'Ontdek een nieuwe manier voor organisaties om samen beslissingen te nemen',
@@ -275,6 +278,7 @@ const translations: Record<string, Record<string, string>> = {
     'form.title': 'اطلاعات عضویت',
     'form.cancel': 'لغو',
     'form.submit': 'پیوستن',
+    'form.submitting': 'در حال ارسال...',
     'common.anonymous': 'ناشناس',
     'poweredByWizCol': 'تصمیمات هوشمند با WizCol',
     'shareMessage': 'راهی نو برای تصمیم‌گیری مشترک سازمان‌ها را کشف کنید',
@@ -363,8 +367,21 @@ export function isRTL(): boolean {
 }
 
 export function t(key: string, params?: Record<string, string | number>): string {
-  const langDict = translations[currentLang] ?? translations.en;
-  let text = langDict[key] ?? translations.en[key] ?? key;
+  return translate(key, currentLang, params);
+}
+
+/** Translate a key using a specific language override, falling back to the
+ *  current active language, then English, then the key itself. Useful when
+ *  an admin-stored language (e.g. a saved form's formLanguage) must override
+ *  the visitor's UI language for a specific section. */
+export function translate(
+  key: string,
+  lang: LangCode | undefined,
+  params?: Record<string, string | number>,
+): string {
+  const override = lang ? translations[lang] : undefined;
+  const active = translations[currentLang] ?? translations.en;
+  let text = override?.[key] ?? active[key] ?? translations.en[key] ?? key;
 
   if (params) {
     for (const [k, v] of Object.entries(params)) {

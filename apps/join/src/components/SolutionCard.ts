@@ -3,7 +3,8 @@ import { Statement, Creator } from '@freedi/shared-types';
 import {
   toggleJoining,
   getCreator,
-  hasJoinFormSubmission,
+  getCachedJoinFormSubmissionRole,
+  getJoinFormSubmissionRole,
   getQuestion,
   getMessageCount,
   getNewMessageCount,
@@ -204,10 +205,15 @@ async function handleJoin(
   const question = getQuestion();
   const joinForm = question?.statementSettings?.joinForm;
 
-  if (joinForm?.enabled && role === 'activist') {
-    const alreadySubmitted = await hasJoinFormSubmission(questionId, creator.uid);
-    if (!alreadySubmitted) {
+  if (joinForm?.enabled) {
+    // Optimistic path: open the form IMMEDIATELY when the cache doesn't tell
+    // us the user already submitted for this role. The Firestore verification
+    // runs in the background and corrects the cache for next time.
+    const cachedRole = getCachedJoinFormSubmissionRole(questionId, creator.uid);
+    if (cachedRole !== role) {
       onRequestJoinForm(optionId, role);
+      // Warm the cache so subsequent clicks on the same role skip the form.
+      void getJoinFormSubmissionRole(questionId, creator.uid);
 
       return;
     }

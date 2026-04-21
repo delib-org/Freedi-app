@@ -23,6 +23,7 @@ export const JoinFormSubmissionSchema = object({
 	values: record(string(), string()), // { [fieldId]: value }
 	createdAt: number(),
 	lastUpdate: number(),
+	role: optional(string()), // 'activist' | 'organizer' — captured when the form is submitted
 	syncedToSheet: optional(boolean()),
 	syncedRange: optional(string()),
 });

@@ -39,6 +39,11 @@ let clusterLinksUnsubs: Unsubscribe[] = [];
 
 const LAST_READ_KEY = 'freedi_join_last_read';
 let joinFormSubmitted = new Set<string>();
+// In-memory cache of the last-known submission role per (questionId, userId).
+// Lets handleJoin decide optimistically whether to open the form without a
+// Firestore read. Populated on successful saveJoinFormSubmission, and by
+// getJoinFormSubmissionRole on its first fetch.
+const joinFormSubmittedRole = new Map<string, JoinRole>();
 let customDisplayName: string | null = null;
 
 const DISPLAY_NAME_KEY = 'freedi_join_name_v2';
@@ -533,22 +538,56 @@ export async function hasJoinFormSubmission(questionId: string, userId: string):
   return false;
 }
 
+/** Synchronous peek at the cached submission role — null if unknown locally. */
+export function getCachedJoinFormSubmissionRole(
+  questionId: string,
+  userId: string,
+): JoinRole | null {
+  return joinFormSubmittedRole.get(`${questionId}_${userId}`) ?? null;
+}
+
+export async function getJoinFormSubmissionRole(
+  questionId: string,
+  userId: string,
+): Promise<JoinRole | null> {
+  const key = `${questionId}_${userId}`;
+  const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
+  const snap = await getDoc(submissionRef);
+  if (!snap.exists()) {
+    joinFormSubmittedRole.delete(key);
+
+    return null;
+  }
+  const data = snap.data() as { role?: JoinRole } | undefined;
+  const role = data?.role ?? null;
+  if (role) joinFormSubmittedRole.set(key, role);
+
+  return role;
+}
+
 export async function saveJoinFormSubmission(
   questionId: string,
   userId: string,
   displayName: string,
   values: Record<string, string>,
+  role: JoinRole = 'activist',
 ): Promise<void> {
   const now = Date.now();
   const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
+  // Reset syncedToSheet so the onDocumentWritten trigger appends a fresh row
+  // for this (possibly role-changed) submission.
   await setDoc(submissionRef, {
     userId,
     questionId,
     displayName,
     values,
+    role,
     createdAt: now,
     lastUpdate: now,
+    syncedToSheet: false,
   }, { merge: true });
 
-  joinFormSubmitted.add(`${questionId}_${userId}`);
+  const key = `${questionId}_${userId}`;
+  joinFormSubmitted.add(key);
+  joinFormSubmittedRole.set(key, role);
 }

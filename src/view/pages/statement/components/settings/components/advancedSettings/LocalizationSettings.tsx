@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { Statement } from '@freedi/shared-types';
 import { Globe, Lock } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
@@ -18,6 +18,18 @@ const LocalizationSettings: FC<LocalizationSettingsProps> = ({
 	handleForceLanguageChange,
 }) => {
 	const { t } = useTranslation();
+	// Optimistic local state so the toggle snaps instantly on click. The Redux
+	// store catches up when the Firestore listener fires; that sync re-applies
+	// the authoritative value via the useEffect below.
+	const [force, setForce] = useState<boolean>(statement.forceLanguage ?? false);
+	useEffect(() => {
+		setForce(statement.forceLanguage ?? false);
+	}, [statement.forceLanguage]);
+
+	const onForceToggle = (next: boolean) => {
+		setForce(next);
+		handleForceLanguageChange(next);
+	};
 
 	return (
 		<>
@@ -35,8 +47,8 @@ const LocalizationSettings: FC<LocalizationSettingsProps> = ({
 				/>
 			</div>
 			<ToggleSwitch
-				isChecked={statement.forceLanguage ?? false}
-				onChange={handleForceLanguageChange}
+				isChecked={force}
+				onChange={onForceToggle}
 				label={t('Force survey language (override browser preferences)')}
 				description={t(
 					'When enabled, all participants will see the survey in the default language regardless of their browser settings',

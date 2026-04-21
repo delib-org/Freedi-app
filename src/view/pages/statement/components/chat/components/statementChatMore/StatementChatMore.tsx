@@ -90,16 +90,29 @@ const StatementChatMore: FC<Props> = ({
 		e.stopPropagation();
 		e.preventDefault();
 
-		if (useLink) {
-			// Mark notifications as read when navigating to chat
-			if (hasUnread) {
-				await markStatementNotificationsAsReadDB(statement.statementId);
-			}
-
-			navigate(`/statement/${statement.statementId}/chat`, {
-				state: { from: window.location.pathname },
-			});
+		if (!useLink) {
+			console.debug('[StatementChatMore] useLink is false, not navigating');
+			return;
 		}
+
+		// Verify click is from this button - extra safety check
+		// to prevent accidental navigation from parent elements
+		const button = e.currentTarget;
+		if (!button) {
+			console.debug('[StatementChatMore] No currentTarget, not navigating');
+			return;
+		}
+
+		console.debug('[StatementChatMore] Navigating to chat for statement:', statement.statementId);
+
+		// Mark notifications as read when navigating to chat
+		if (hasUnread) {
+			await markStatementNotificationsAsReadDB(statement.statementId);
+		}
+
+		navigate(`/statement/${statement.statementId}/chat`, {
+			state: { from: window.location.pathname },
+		});
 	};
 
 	// Build accessible label
@@ -158,12 +171,29 @@ const StatementChatMore: FC<Props> = ({
 		</div>
 	);
 
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+		// Only allow Enter and Space to trigger navigation
+		if (e.key !== 'Enter' && e.key !== ' ') {
+			return;
+		}
+		// Let the button handle it naturally - this will trigger onClick
+	};
+
+	const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
+		console.debug('[StatementChatMore] Touch event on chat button');
+		// Prevent any parent handlers from intercepting touch
+		e.stopPropagation();
+	};
+
 	return asButton ? (
 		<button
 			className={styles.statementChatMore}
 			aria-label={ariaLabel}
 			onClick={handleClick}
+			onTouchEnd={handleTouchEnd}
+			onKeyDown={handleKeyDown}
 			type="button"
+			data-testid="statement-chat-more-button"
 		>
 			{content}
 		</button>
@@ -172,7 +202,10 @@ const StatementChatMore: FC<Props> = ({
 			type="button"
 			className={styles.statementChatMore}
 			onClick={handleClick}
+			onTouchEnd={handleTouchEnd}
+			onKeyDown={handleKeyDown}
 			aria-label={ariaLabel}
+			data-testid="statement-chat-more-button"
 		>
 			{content}
 		</button>

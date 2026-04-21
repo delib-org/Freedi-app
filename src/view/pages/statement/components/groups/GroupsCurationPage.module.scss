@@ -652,6 +652,84 @@
   &__members-bulk {
     display: flex;
     gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  // Container for the Merge-into dropdown. Position relative so the menu
+  // anchors to the trigger button, not the page.
+  &__merge-wrap {
+    position: relative;
+  }
+
+  &__merge-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    inset-inline-end: 0;
+    z-index: 20;
+    min-width: 280px;
+    max-width: min(360px, 90vw);
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__merge-menu-hint {
+    margin: 0 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #777);
+    line-height: 1.35;
+  }
+
+  &__merge-menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.5rem 0.6rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: start;
+    color: var(--text-body);
+    transition: background 120ms ease, border-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      border-color: var(--border-light);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: -2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__merge-menu-item-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    // Wrap long titles within the dropdown width.
+    word-break: break-word;
+  }
+
+  &__merge-menu-item-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #777);
   }
 
   &__member {

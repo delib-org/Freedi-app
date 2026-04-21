@@ -1,4 +1,4 @@
-import { onDocumentCreated } from 'firebase-functions/v2/firestore';
+import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from '../../db';
 import {
@@ -11,16 +11,19 @@ import {
 import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
 
 /**
- * Appends a newly created join-form submission to the admin-configured
- * Google Sheet, if the owning question has `statementSettings.joinForm.destination`
- * set to `'sheets'`.
+ * Appends a join-form submission to the admin-configured Google Sheet when
+ * the owning question has `statementSettings.joinForm.destination === 'sheets'`.
  *
- * Idempotency: the function is `onDocumentCreated` so it fires once. On
- * retry, the `syncedToSheet` flag on the submission doc short-circuits the
- * append. Errors are logged but never thrown — failed exports must not
- * trigger exponential retry against the Sheets API.
+ * Fires on `onDocumentWritten` so that role changes (user flips between
+ * activist ↔ organizer, which re-saves the submission with `syncedToSheet`
+ * reset to `false`) produce a new audit row rather than silently mutating
+ * history. The `syncedToSheet === true` short-circuit below prevents the
+ * self-write at the end of this function from re-triggering the loop.
+ *
+ * Errors are logged but never thrown — failed exports must not trigger
+ * exponential retry against the Sheets API.
  */
-export const fn_appendJoinSubmissionToSheet = onDocumentCreated(
+export const fn_appendJoinSubmissionToSheet = onDocumentWritten(
 	{
 		document: `${Collections.statements}/{questionId}/${JOIN_FORM_SUBMISSIONS_SUBCOLLECTION}/{userId}`,
 		region: functionConfig.region,
@@ -29,7 +32,13 @@ export const fn_appendJoinSubmissionToSheet = onDocumentCreated(
 		const { questionId, userId } = event.params;
 
 		try {
-			const submission = event.data?.data() as JoinFormSubmission | undefined;
+			// onDocumentWritten fires on create, update, AND delete. Skip deletes.
+			const afterSnap = event.data?.after;
+			if (!afterSnap?.exists) {
+				return null;
+			}
+
+			const submission = afterSnap.data() as JoinFormSubmission | undefined;
 			if (!submission) {
 				logger.warn('[fn_appendJoinSubmissionToSheet] No submission data', { questionId, userId });
 
@@ -108,7 +117,7 @@ export const fn_appendJoinSubmissionToSheet = onDocumentCreated(
 
 			const fieldIds = joinForm.fields.map((f) => f.id);
 			const fieldLabels = joinForm.fields.map((f) => f.label);
-			const metadataHeaders = ['userId', 'displayName', 'optionTitle', 'submittedAt', 'questionId'];
+			const metadataHeaders = ['userId', 'displayName', 'role', 'optionTitle', 'submittedAt', 'questionId'];
 
 			if (isEmpty) {
 				try {
@@ -134,6 +143,7 @@ export const fn_appendJoinSubmissionToSheet = onDocumentCreated(
 				...fieldIds.map((id) => submission.values[id] ?? ''),
 				submission.userId,
 				submission.displayName,
+				submission.role ?? '',
 				'', // optionTitle — the submission is per-question, not tied to a specific option
 				new Date(submission.createdAt).toISOString(),
 				submission.questionId,
@@ -160,7 +170,7 @@ export const fn_appendJoinSubmissionToSheet = onDocumentCreated(
 
 			// Mark synced so retries and future re-runs are no-ops.
 			try {
-				await event.data?.ref.update({
+				await afterSnap.ref.update({
 					syncedToSheet: true,
 					syncedRange: updatedRange,
 					lastUpdate: Date.now(),

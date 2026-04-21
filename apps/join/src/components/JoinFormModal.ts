@@ -1,6 +1,6 @@
 import m from 'mithril';
-import { t } from '@/lib/i18n';
-import type { JoinFormConfig } from '@freedi/shared-types';
+import { translate } from '@/lib/i18n';
+import type { JoinFormConfig, JoinFormField } from '@freedi/shared-types';
 import {
   saveJoinFormSubmission,
   toggleJoining,
@@ -17,28 +17,48 @@ interface JoinFormModalAttrs {
 }
 
 let formValues: Record<string, string> = {};
-let displayName = '';
 let submitting = false;
+
+/** Pick the field we'll treat as the user's display name — either the field
+ *  whose id is exactly "name", or (failing that) the first text field. */
+function findNameField(fields: JoinFormField[]): JoinFormField | undefined {
+  return fields.find((f) => f.id === 'name') ?? fields.find((f) => f.type === 'text');
+}
+
+function getNameValue(fields: JoinFormField[]): string {
+  const nameField = findNameField(fields);
+  if (!nameField) return '';
+
+  return (formValues[nameField.id] || '').trim();
+}
 
 export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
   oninit(vnode) {
     formValues = {};
-    displayName = '';
     submitting = false;
 
-    const creator = getCreator();
-    if (creator) {
-      displayName = creator.displayName || '';
+    const fields = vnode.attrs.joinForm.fields ?? [];
+    for (const field of fields) {
+      formValues[field.id] = '';
     }
 
-    for (const field of vnode.attrs.joinForm.fields ?? []) {
-      formValues[field.id] = '';
+    // Prefill the name field with the creator's existing display name so users
+    // don't have to retype it.
+    const creator = getCreator();
+    const nameField = findNameField(fields);
+    if (creator?.displayName && nameField) {
+      formValues[nameField.id] = creator.displayName;
     }
   },
 
   view(vnode) {
     const { joinForm, questionId, optionId, role, onClose } = vnode.attrs;
     const fields = joinForm.fields ?? [];
+    const canSubmit = !submitting && getNameValue(fields).length > 0;
+    // Render the modal chrome in the language the admin saved the form in —
+    // otherwise the title/buttons can drift from the stored field labels.
+    const formLang = joinForm.formLanguage;
+    const tf = (key: string) => translate(key, formLang);
 
     return m('.modal__overlay', {
       onclick: (e: Event) => {
@@ -46,20 +66,7 @@ export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
       },
     }, [
       m('.modal__body', [
-        m('h2.modal__title', t('form.title')),
-
-        m('.modal__field', [
-          m('label.modal__label', { for: 'join-name' }, t('form.your_name')),
-          m('input.modal__input', {
-            id: 'join-name',
-            type: 'text',
-            value: displayName,
-            required: true,
-            oninput: (e: InputEvent) => {
-              displayName = (e.target as HTMLInputElement).value;
-            },
-          }),
-        ]),
+        m('h2.modal__title', tf('form.title')),
 
         fields.map((field) =>
           m('.modal__field', { key: field.id }, [
@@ -78,14 +85,14 @@ export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
         ),
 
         m('.modal__actions', [
-          m('button.btn.btn--secondary.btn--small', { onclick: onClose }, t('form.cancel')),
+          m('button.btn.btn--secondary.btn--small', { onclick: onClose }, tf('form.cancel')),
           m(
             'button.btn.btn--primary.btn--small',
             {
-              disabled: submitting || !displayName.trim(),
-              onclick: () => handleSubmit(questionId, optionId, role, onClose),
+              disabled: !canSubmit,
+              onclick: () => handleSubmit(questionId, optionId, role, fields, onClose),
             },
-            submitting ? t('form.submitting') : t('form.submit'),
+            submitting ? tf('form.submitting') : tf('form.submit'),
           ),
         ]),
       ]),
@@ -97,16 +104,18 @@ async function handleSubmit(
   questionId: string,
   optionId: string,
   role: JoinRole,
+  fields: JoinFormField[],
   onClose: () => void,
 ): Promise<void> {
   const creator = getCreator();
-  if (!creator || !displayName.trim()) return;
+  const displayName = getNameValue(fields);
+  if (!creator || !displayName) return;
 
   submitting = true;
   m.redraw();
 
   try {
-    await saveJoinFormSubmission(questionId, creator.uid, displayName.trim(), formValues);
+    await saveJoinFormSubmission(questionId, creator.uid, displayName, formValues, role);
     await toggleJoining(optionId, questionId, role);
     onClose();
   } catch (err) {
