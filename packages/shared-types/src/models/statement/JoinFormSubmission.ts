@@ -24,6 +24,8 @@ export const JoinFormSubmissionSchema = object({
 	createdAt: number(),
 	lastUpdate: number(),
 	role: optional(string()), // 'activist' | 'organizer' — captured when the form is submitted
+	optionId: optional(string()), // id of the option the user clicked Join on
+	optionTitle: optional(string()), // human-readable title of that option
 	syncedToSheet: optional(boolean()),
 	syncedRange: optional(string()),
 });

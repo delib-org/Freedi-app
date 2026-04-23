@@ -13,7 +13,7 @@ import {
   runTransaction,
   Unsubscribe,
 } from './firebase';
-import { getUserState } from './user';
+import { getUserState, ensureUser } from './user';
 import { applyStatementLanguage } from './i18n';
 import {
   Collections,
@@ -160,6 +160,10 @@ export function getAllOptions(): Statement[] {
   return allOptions;
 }
 
+export function getOptionById(optionId: string): Statement | undefined {
+  return allOptions.find((o) => o.statementId === optionId);
+}
+
 export function getMessages(): Statement[] {
   return messages;
 }
@@ -249,7 +253,26 @@ export async function loadQuestion(questionId: string): Promise<void> {
   const optionsSnap = await getDocs(optionsQuery);
   allOptions = optionsSnap.docs.map((d) => d.data() as Statement);
 
+  // Warm the join-form submission cache in the background so the modal opens
+  // with the user's previous name/phone/email on their first click. Gated by
+  // joinForm.enabled to avoid unnecessary reads.
+  if (question.statementSettings?.joinForm?.enabled) {
+    void prefetchJoinFormSubmission(questionId);
+  }
+
   m.redraw();
+}
+
+async function prefetchJoinFormSubmission(questionId: string): Promise<void> {
+  try {
+    await ensureUser();
+    const creator = getCreator();
+    if (!creator) return;
+    await getJoinFormSubmissionData(questionId, creator.uid);
+    m.redraw();
+  } catch {
+    /* ignore — modal will still work, just without prefill */
+  }
 }
 
 export function subscribeQuestion(questionId: string): Unsubscribe {
@@ -546,23 +569,61 @@ export function getCachedJoinFormSubmissionRole(
   return joinFormSubmittedRole.get(`${questionId}_${userId}`) ?? null;
 }
 
-export async function getJoinFormSubmissionRole(
+export interface JoinFormSubmissionData {
+  role: JoinRole | null;
+  displayName: string;
+  values: Record<string, string>;
+}
+
+// In-memory cache of the full submission so repeated modal opens don't re-hit
+// Firestore. Populated on every save and on getJoinFormSubmissionData fetch.
+const joinFormSubmissionCache = new Map<string, JoinFormSubmissionData>();
+
+export function getCachedJoinFormSubmissionData(
   questionId: string,
   userId: string,
-): Promise<JoinRole | null> {
+): JoinFormSubmissionData | null {
+  return joinFormSubmissionCache.get(`${questionId}_${userId}`) ?? null;
+}
+
+export async function getJoinFormSubmissionData(
+  questionId: string,
+  userId: string,
+): Promise<JoinFormSubmissionData | null> {
   const key = `${questionId}_${userId}`;
   const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
   const snap = await getDoc(submissionRef);
   if (!snap.exists()) {
     joinFormSubmittedRole.delete(key);
+    joinFormSubmissionCache.delete(key);
 
     return null;
   }
-  const data = snap.data() as { role?: JoinRole } | undefined;
-  const role = data?.role ?? null;
-  if (role) joinFormSubmittedRole.set(key, role);
+  const data = snap.data() as {
+    role?: JoinRole;
+    displayName?: string;
+    values?: Record<string, string>;
+  } | undefined;
 
-  return role;
+  const submission: JoinFormSubmissionData = {
+    role: data?.role ?? null,
+    displayName: data?.displayName ?? '',
+    values: data?.values ?? {},
+  };
+  if (submission.role) joinFormSubmittedRole.set(key, submission.role);
+  joinFormSubmissionCache.set(key, submission);
+
+  return submission;
+}
+
+/** Back-compat: legacy role-only lookup. Delegates to the full fetcher. */
+export async function getJoinFormSubmissionRole(
+  questionId: string,
+  userId: string,
+): Promise<JoinRole | null> {
+  const submission = await getJoinFormSubmissionData(questionId, userId);
+
+  return submission?.role ?? null;
 }
 
 export async function saveJoinFormSubmission(
@@ -571,6 +632,8 @@ export async function saveJoinFormSubmission(
   displayName: string,
   values: Record<string, string>,
   role: JoinRole = 'activist',
+  optionId?: string,
+  optionTitle?: string,
 ): Promise<void> {
   const now = Date.now();
   const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
@@ -582,6 +645,8 @@ export async function saveJoinFormSubmission(
     displayName,
     values,
     role,
+    optionId: optionId ?? '',
+    optionTitle: optionTitle ?? '',
     createdAt: now,
     lastUpdate: now,
     syncedToSheet: false,
@@ -590,4 +655,5 @@ export async function saveJoinFormSubmission(
   const key = `${questionId}_${userId}`;
   joinFormSubmitted.add(key);
   joinFormSubmittedRole.set(key, role);
+  joinFormSubmissionCache.set(key, { role, displayName, values });
 }

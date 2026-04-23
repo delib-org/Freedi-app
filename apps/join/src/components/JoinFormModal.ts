@@ -5,6 +5,9 @@ import {
   saveJoinFormSubmission,
   toggleJoining,
   getCreator,
+  getCachedJoinFormSubmissionData,
+  getJoinFormSubmissionData,
+  getOptionById,
   JoinRole,
 } from '@/lib/store';
 
@@ -32,6 +35,26 @@ function getNameValue(fields: JoinFormField[]): string {
   return (formValues[nameField.id] || '').trim();
 }
 
+/** Copy saved submission values into the module-level formValues, matched by
+ *  field id. If the stored displayName is non-empty and the name field is
+ *  empty/missing from values, fall back to displayName. */
+function applySubmissionValues(
+  fields: JoinFormField[],
+  values: Record<string, string>,
+  displayName: string,
+): void {
+  for (const field of fields) {
+    const saved = values[field.id];
+    if (saved !== undefined && saved !== '') {
+      formValues[field.id] = saved;
+    }
+  }
+  const nameField = findNameField(fields);
+  if (nameField && !formValues[nameField.id] && displayName) {
+    formValues[nameField.id] = displayName;
+  }
+}
+
 export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
   oninit(vnode) {
     formValues = {};
@@ -42,13 +65,28 @@ export const JoinFormModal: m.Component<JoinFormModalAttrs> = {
       formValues[field.id] = '';
     }
 
-    // Prefill the name field with the creator's existing display name so users
-    // don't have to retype it.
     const creator = getCreator();
-    const nameField = findNameField(fields);
-    if (creator?.displayName && nameField) {
-      formValues[nameField.id] = creator.displayName;
+    if (!creator) return;
+
+    const { questionId } = vnode.attrs;
+
+    // Hydrate from the user's prior submission so fields don't start blank on
+    // repeat visits. Use the synchronous cache first (instant UX), then kick
+    // off a background fetch to correct anything stale.
+    const cached = getCachedJoinFormSubmissionData(questionId, creator.uid);
+    if (cached) {
+      applySubmissionValues(fields, cached.values, cached.displayName);
     }
+
+    getJoinFormSubmissionData(questionId, creator.uid)
+      .then((latest) => {
+        if (!latest) return;
+        applySubmissionValues(fields, latest.values, latest.displayName);
+        m.redraw();
+      })
+      .catch(() => {
+        /* ignore — form stays blank, user can type */
+      });
   },
 
   view(vnode) {
@@ -115,7 +153,17 @@ async function handleSubmit(
   m.redraw();
 
   try {
-    await saveJoinFormSubmission(questionId, creator.uid, displayName, formValues, role);
+    const option = getOptionById(optionId);
+    const optionTitle = option?.statement ?? '';
+    await saveJoinFormSubmission(
+      questionId,
+      creator.uid,
+      displayName,
+      formValues,
+      role,
+      optionId,
+      optionTitle,
+    );
     await toggleJoining(optionId, questionId, role);
     onClose();
   } catch (err) {

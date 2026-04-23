@@ -144,17 +144,19 @@ export const fn_appendJoinSubmissionToSheet = onDocumentWritten(
 				submission.userId,
 				submission.displayName,
 				submission.role ?? '',
-				'', // optionTitle — the submission is per-question, not tied to a specific option
+				submission.optionTitle ?? '',
 				new Date(submission.createdAt).toISOString(),
 				submission.questionId,
 			];
 
 			let updatedRange = '';
 			try {
+				// RAW (not USER_ENTERED) so leading zeros on phone numbers like
+				// "0526079419" survive — otherwise Sheets coerces them to integers.
 				const appendResult = await sheets.spreadsheets.values.append({
 					spreadsheetId: sheetId,
 					range: 'A1',
-					valueInputOption: 'USER_ENTERED',
+					valueInputOption: 'RAW',
 					requestBody: { values: [row] },
 				});
 				updatedRange = appendResult.data.updates?.updatedRange ?? '';
