@@ -125,25 +125,35 @@ export const Solutions: m.Component = {
               ),
             ])
           : renderAdminSignIn(question.statementId, question.creatorId),
-        renderOrganizerSection(question.statementId, adminMode),
         options.length === 0
           ? m('.solutions__empty', t('solutions.error.no_options'))
-          : m(
-              '.solutions__list',
-              options.map((option) =>
-                m(SolutionCard, {
-                  key: option.statementId,
-                  option,
-                  questionId: question.statementId,
-                  adminMode: isAdmin() && adminMode,
-                  onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
-                    pendingJoinOptionId = optionId;
-                    pendingJoinRole = role;
-                    showJoinForm = true;
-                  },
-                }),
+          : m('.solutions__crowd-section', [
+              // Header only appears when the organizer section is also
+              // visible, so a simple question without any organizer
+              // suggestions still shows a single unlabeled list.
+              getOrganizerSuggestions().length > 0
+                ? m('h2.solutions__crowd-heading', t('admin.crowd_section'))
+                : null,
+              m(
+                '.solutions__list',
+                options.map((option) =>
+                  m(SolutionCard, {
+                    key: option.statementId,
+                    option,
+                    questionId: question.statementId,
+                    adminMode: isAdmin() && adminMode,
+                    onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
+                      pendingJoinOptionId = optionId;
+                      pendingJoinRole = role;
+                      showJoinForm = true;
+                    },
+                  }),
+                ),
               ),
-            ),
+            ]),
+        // Organizer suggestions render AFTER the crowd list — the crowd
+        // is the primary content, admin additions come last.
+        renderOrganizerSection(question.statementId, adminMode),
         m(WizColFooter),
       ]),
       showJoinForm && question.statementSettings?.joinForm

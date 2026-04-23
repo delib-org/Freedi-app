@@ -1251,6 +1251,20 @@
   border-inline-start: 3px solid var(--indigo-500);
 }
 
+.solutions__crowd-section {
+  margin: var(--space-lg) 0;
+}
+
+.solutions__crowd-heading {
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--teal-700);
+  margin: 0 0 var(--space-sm);
+  padding-inline-start: var(--space-sm);
+  border-inline-start: 3px solid var(--teal-500);
+}
+
 .solution-card--organizer {
   background: var(--indigo-50);
   border-color: var(--indigo-500);
