@@ -1207,3 +1207,81 @@
   from { opacity: 0; transform: translateY(2px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+// ---------------------------------------------------------------------------
+// Admin curation + organizer suggestions (Join app admin features)
+// ---------------------------------------------------------------------------
+
+.solutions__admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
+  background: var(--indigo-50);
+  border: 1.5px dashed var(--indigo-500);
+  border-radius: var(--radius-lg);
+}
+
+// Discreet sign-in affordance for admins visiting anonymously — small,
+// subdued, placed where the admin toolbar would be once they're recognized.
+.solutions__admin-signin {
+  display: flex;
+  justify-content: flex-end;
+  margin: var(--space-xs) 0;
+  opacity: 0.6;
+  transition: opacity var(--dur-base) var(--ease-out);
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.solutions__organizer-section {
+  margin: var(--space-lg) 0;
+}
+
+.solutions__organizer-heading {
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--indigo-700);
+  margin: 0 0 var(--space-sm);
+  padding-inline-start: var(--space-sm);
+  border-inline-start: 3px solid var(--indigo-500);
+}
+
+.solution-card--organizer {
+  background: var(--indigo-50);
+  border-color: var(--indigo-500);
+
+  &:hover {
+    border-color: var(--indigo-700);
+  }
+}
+
+.solution-card__organizer-badge {
+  position: absolute;
+  top: var(--space-md);
+  inset-inline-start: var(--space-md);
+  background: var(--indigo-600);
+  color: var(--text-inverse);
+  font-family: var(--font-body);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-semibold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: var(--radius-full);
+  z-index: 2;
+}
+
+.solution-card__admin {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px dashed var(--paper-line);
+}
+

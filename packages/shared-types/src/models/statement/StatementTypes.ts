@@ -14,6 +14,7 @@ import {
 	transform,
 } from 'valibot';
 import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
+import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
 import { QuestionSettingsSchema } from '../question/QuestionType';
@@ -241,6 +242,12 @@ export const StatementSchema = object({
 	/** Post-resolve status. Undefined before resolve. Set by `fn_resolveJoinIntents`. */
 	joinStatus: optional(picklist(['activated', 'failed'])),
 	hide: optional(boolean()), // if true, the statement is hidden
+	/** If true, admin-promoted: always shown in Join app even if below resultsSettings cutoff. */
+	forceShow: optional(boolean()),
+	/** The role of the user who created this statement. Set to Role.admin for
+	 *  organizer suggestions created from the Join app admin UI — these render
+	 *  in a separate "Organizer suggestions" section and carry a badge. */
+	creatorRole: optional(enum_(Role)),
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	replyTo: optional(object({ // reference to the message this is a reply to (chat view threading)

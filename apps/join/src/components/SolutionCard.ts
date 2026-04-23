@@ -9,6 +9,7 @@ import {
   getMessageCount,
   getNewMessageCount,
   getClusterEvaluatorCount,
+  setOptionFlag,
   JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
@@ -33,11 +34,15 @@ interface SolutionCardAttrs {
   option: Statement;
   questionId: string;
   onRequestJoinForm: (optionId: string, role: JoinRole) => void;
+  /** When true, show admin curation controls (Hide / Force-show). */
+  adminMode?: boolean;
+  /** When true, render the organizer-suggestion variant (badge + accent). */
+  isOrganizerSuggestion?: boolean;
 }
 
 export const SolutionCard: m.Component<SolutionCardAttrs> = {
   view(vnode) {
-    const { option, questionId, onRequestJoinForm } = vnode.attrs;
+    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion } = vnode.attrs;
     const user = getUserState().user;
     const question = getQuestion();
     const joinedCount = option.joined?.length ?? 0;
@@ -82,8 +87,10 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
     const isCluster = option.isCluster === true;
     const groupSize = option.integratedOptions?.length ?? 0;
 
+    const organizerClass = isOrganizerSuggestion ? '.solution-card--organizer' : '';
+
     return m(
-      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}`,
+      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}`,
       {
         role: 'button',
         tabindex: 0,
@@ -111,6 +118,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         },
       },
       [
+        isOrganizerSuggestion
+          ? m('.solution-card__organizer-badge', t('admin.suggestion_badge'))
+          : null,
         isActivated
           ? m('.solution-card__activated-badge', t('card.activated'))
           : null,
@@ -188,6 +198,32 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
           ),
         ]),
+        adminMode
+          ? m('.solution-card__admin', [
+              m(
+                'button.btn.btn--small.btn--outline',
+                {
+                  onclick: (e: Event) => {
+                    e.stopPropagation();
+                    setOptionFlag(option.statementId, 'hide', !option.hide);
+                  },
+                },
+                option.hide ? t('admin.unhide') : t('admin.hide'),
+              ),
+              !isOrganizerSuggestion
+                ? m(
+                    'button.btn.btn--small.btn--outline',
+                    {
+                      onclick: (e: Event) => {
+                        e.stopPropagation();
+                        setOptionFlag(option.statementId, 'forceShow', !option.forceShow);
+                      },
+                    },
+                    option.forceShow ? t('admin.unforce') : t('admin.force_show'),
+                  )
+                : null,
+            ])
+          : null,
       ],
     );
   },

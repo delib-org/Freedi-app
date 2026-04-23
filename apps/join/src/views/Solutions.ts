@@ -1,18 +1,21 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
-import { ensureUser } from '@/lib/user';
+import { ensureUser, signInWithGoogle, getUserState } from '@/lib/user';
 import {
   loadQuestion,
   getQuestion,
   getVisibleOptions,
+  getOrganizerSuggestions,
   subscribeOptions,
   subscribeQuestion,
   getUnreadCount,
   getTotalVisibleCount,
 } from '@/lib/store';
+import { isAdmin, checkAdminStatus } from '@/lib/admin';
 import { t } from '@/lib/i18n';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
+import { AddSuggestionModal } from '@/components/AddSuggestionModal';
 import { WizColFooter } from '@/components/WizColFooter';
 import type { Unsubscribe } from '@/lib/firebase';
 
@@ -23,6 +26,8 @@ let optionsUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
+let adminMode = false;
+let showAddSuggestion = false;
 
 export const Solutions: m.Component = {
   async oninit() {
@@ -98,6 +103,29 @@ export const Solutions: m.Component = {
             ? m('span.solutions__counter-unread', t('solutions.counter.new', { count: unread }))
             : null,
         ]),
+        isAdmin()
+          ? m('.solutions__admin-toolbar', [
+              m(
+                'button.btn.btn--small.btn--primary',
+                {
+                  onclick: () => {
+                    showAddSuggestion = true;
+                  },
+                },
+                t('admin.add_suggestion'),
+              ),
+              m(
+                `button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
+                {
+                  onclick: () => {
+                    adminMode = !adminMode;
+                  },
+                },
+                t('admin.manage_options'),
+              ),
+            ])
+          : renderAdminSignIn(question.statementId, question.creatorId),
+        renderOrganizerSection(question.statementId, adminMode),
         options.length === 0
           ? m('.solutions__empty', t('solutions.error.no_options'))
           : m(
@@ -107,6 +135,7 @@ export const Solutions: m.Component = {
                   key: option.statementId,
                   option,
                   questionId: question.statementId,
+                  adminMode: isAdmin() && adminMode,
                   onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
                     pendingJoinOptionId = optionId;
                     pendingJoinRole = role;
@@ -129,9 +158,70 @@ export const Solutions: m.Component = {
             },
           })
         : null,
+      showAddSuggestion
+        ? m(AddSuggestionModal, {
+            onClose: () => {
+              showAddSuggestion = false;
+            },
+          })
+        : null,
     ]);
   },
 };
+
+/** Discreet "Sign in as admin" affordance for anonymous visitors. The Join
+ *  app signs users in anonymously by default, so admins whose Google uid
+ *  would match the question need a way to upgrade the session and trigger a
+ *  fresh admin check. Hidden once the user has a non-anonymous session to
+ *  avoid nagging non-admin Google users. */
+function renderAdminSignIn(questionId: string, creatorId: string): m.Children {
+  const user = getUserState().user;
+  if (!user || !user.isAnonymous) return null;
+
+  return m('.solutions__admin-signin', [
+    m(
+      'button.btn.btn--small.btn--outline',
+      {
+        onclick: async () => {
+          try {
+            await signInWithGoogle();
+            await checkAdminStatus(questionId, creatorId);
+            m.redraw();
+          } catch (err) {
+            console.error('[Solutions] Admin sign-in failed:', err);
+          }
+        },
+      },
+      t('admin.signin'),
+    ),
+  ]);
+}
+
+function renderOrganizerSection(questionId: string, adminModeActive: boolean): m.Children {
+  const suggestions = getOrganizerSuggestions();
+  if (suggestions.length === 0) return null;
+
+  return m('.solutions__organizer-section', [
+    m('h2.solutions__organizer-heading', t('admin.suggestions_section')),
+    m(
+      '.solutions__list',
+      suggestions.map((option) =>
+        m(SolutionCard, {
+          key: option.statementId,
+          option,
+          questionId,
+          isOrganizerSuggestion: true,
+          adminMode: isAdmin() && adminModeActive,
+          onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
+            pendingJoinOptionId = optionId;
+            pendingJoinRole = role;
+            showJoinForm = true;
+          },
+        }),
+      ),
+    ),
+  ]);
+}
 
 function buildSubtitleText(question: Statement): string {
   const threshold = question.statementSettings?.activationThreshold;

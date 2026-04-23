@@ -1,6 +1,7 @@
 import m from 'mithril';
 import {
   db,
+  functions,
   collection,
   doc,
   getDoc,
@@ -11,6 +12,7 @@ import {
   orderBy,
   onSnapshot,
   runTransaction,
+  httpsCallable,
   Unsubscribe,
 } from './firebase';
 import { getUserState, ensureUser } from './user';
@@ -20,10 +22,12 @@ import {
   Statement,
   StatementType,
   Creator,
+  Role,
   createStatementObject,
   CutoffBy,
 } from '@freedi/shared-types';
 import type { ResultsSettings } from '@freedi/shared-types';
+import { checkAdminStatus } from './admin';
 
 let question: Statement | null = null;
 let allOptions: Statement[] = [];
@@ -170,6 +174,10 @@ export function getMessages(): Statement[] {
 
 export function getVisibleOptions(): Statement[] {
   let opts = allOptions
+    // organizer suggestions render in their own section above the regular list
+    .filter((o) => o.creatorRole !== Role.admin)
+    // admin-hidden options never render for anyone
+    .filter((o) => o.hide !== true)
     .filter((o) => o.joinStatus !== 'failed')
     .sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0));
 
@@ -191,17 +199,76 @@ export function getVisibleOptions(): Statement[] {
     opts = opts.filter((o) => o.isCluster === true || !memberOf.has(o.statementId));
   }
 
-  if (!question?.resultsSettings) return opts;
+  if (question?.resultsSettings) {
+    const rs: ResultsSettings = question.resultsSettings;
+    if (rs.cutoffBy === CutoffBy.topOptions && rs.numberOfResults) {
+      opts = opts.slice(0, rs.numberOfResults);
+    } else if (rs.cutoffBy === CutoffBy.aboveThreshold && rs.minConsensus != null) {
+      opts = opts.filter((o) => (o.consensus ?? 0) >= (rs.minConsensus ?? 0));
+    }
+  }
 
-  const rs: ResultsSettings = question.resultsSettings;
-
-  if (rs.cutoffBy === CutoffBy.topOptions && rs.numberOfResults) {
-    opts = opts.slice(0, rs.numberOfResults);
-  } else if (rs.cutoffBy === CutoffBy.aboveThreshold && rs.minConsensus != null) {
-    opts = opts.filter((o) => (o.consensus ?? 0) >= (rs.minConsensus ?? 0));
+  // Re-inject admin-promoted options that the cutoff would otherwise drop.
+  // Runs after condensation + cutoff so admin intent wins over both.
+  const forced = allOptions.filter(
+    (o) =>
+      o.forceShow === true &&
+      o.hide !== true &&
+      o.joinStatus !== 'failed' &&
+      o.creatorRole !== Role.admin,
+  );
+  if (forced.length > 0) {
+    const seen = new Set(opts.map((o) => o.statementId));
+    for (const f of forced) if (!seen.has(f.statementId)) opts.push(f);
   }
 
   return opts;
+}
+
+/** Options created by an admin from the Join app. Rendered in a separate
+ *  section above the regular participant list. */
+export function getOrganizerSuggestions(): Statement[] {
+  return allOptions
+    .filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+}
+
+/** Admin curation: set `hide` or `forceShow` on a specific option. Uses
+ *  `setDoc` with merge to stay consistent with the rest of the module. */
+export async function setOptionFlag(
+  optionId: string,
+  field: 'hide' | 'forceShow',
+  value: boolean,
+): Promise<void> {
+  const ref = doc(db, Collections.statements, optionId);
+  await setDoc(ref, { [field]: value, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Create a new option attributed to the admin (organizer suggestion).
+ *
+ *  Delegates to the `createOrganizerSuggestion` Cloud Function. The callable
+ *  performs the admin check server-side and writes the statement with
+ *  `creatorRole: Role.admin` using the admin SDK — direct client writes that
+ *  set `creatorRole` are rejected by firestore.rules to prevent badge
+ *  spoofing, so this is the only path that produces an organizer suggestion. */
+export async function createOrganizerSuggestion(text: string): Promise<void> {
+  if (!question) return;
+
+  const creator = getCreator();
+  if (!creator) return;
+
+  const trimmed = text.trim();
+  if (!trimmed) return;
+
+  const call = httpsCallable<
+    { questionId: string; text: string; displayName?: string },
+    { statementId: string }
+  >(functions, 'createOrganizerSuggestion');
+  await call({
+    questionId: question.statementId,
+    text: trimmed,
+    displayName: creator.displayName,
+  });
 }
 
 function buildCreator(): Creator | null {
@@ -244,6 +311,10 @@ export async function loadQuestion(questionId: string): Promise<void> {
 
   question = qDoc.data() as Statement;
   syncQuestionLanguage();
+
+  // Resolve admin status (creator or subscribed admin) before options render,
+  // so the first paint already knows whether to show admin-only UI.
+  await checkAdminStatus(questionId, question.creatorId);
 
   const optionsQuery = query(
     collection(db, Collections.statements),

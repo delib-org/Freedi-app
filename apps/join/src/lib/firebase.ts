@@ -31,6 +31,15 @@ import {
   onAuthStateChanged,
   User,
 } from 'firebase/auth';
+import {
+  getFunctions,
+  Functions,
+  connectFunctionsEmulator,
+  httpsCallable,
+} from 'firebase/functions';
+
+// Functions deploy to me-west1 (Tel Aviv) — never rely on the us-central1 default.
+const FUNCTIONS_REGION = 'me-west1';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -45,6 +54,7 @@ const firebaseConfig = {
 let app: FirebaseApp;
 let db: Firestore;
 let auth: Auth;
+let functions: Functions;
 
 function init(): void {
   if (getApps().length > 0) {
@@ -55,6 +65,7 @@ function init(): void {
 
   db = getFirestore(app);
   auth = getAuth(app);
+  functions = getFunctions(app, FUNCTIONS_REGION);
 
   const isLocalhost =
     typeof window !== 'undefined' && window.location.hostname === 'localhost';
@@ -72,6 +83,11 @@ function init(): void {
     } catch (error) {
       console.error('[Firebase] Firestore emulator connection failed:', error);
     }
+    try {
+      connectFunctionsEmulator(functions, 'localhost', 5001);
+    } catch (error) {
+      console.error('[Firebase] Functions emulator connection failed:', error);
+    }
   }
 }
 
@@ -81,6 +97,7 @@ export {
   app,
   db,
   auth,
+  functions,
   collection,
   doc,
   getDoc,
@@ -93,6 +110,7 @@ export {
   limit,
   onSnapshot,
   runTransaction,
+  httpsCallable,
   signInAnonymously,
   GoogleAuthProvider,
   signInWithPopup,

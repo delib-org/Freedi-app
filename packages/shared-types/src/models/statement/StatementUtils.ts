@@ -4,6 +4,7 @@ import { getRandomUID } from '../TypeUtils';
 import { StageSelectionType } from '../stage/stageTypes';
 import { parse, safeParse } from 'valibot';
 import { User } from '../user/User';
+import { Role } from '../user/UserSettings';
 import { Paragraph } from '../paragraph/paragraphModel';
 import { StatementSettings } from './StatementSettings';
 import { SourceApp } from '../engagement/SourceApp';
@@ -52,6 +53,11 @@ export interface CreateStatementParams {
 	randomSeed?: number;
 	/** Optional hide flag */
 	hide?: boolean;
+	/** Optional force-show flag — promotes this option into the Join app
+	 *  visible set even when resultsSettings cutoff would exclude it. */
+	forceShow?: boolean;
+	/** Role of the creator — set to Role.admin for organizer-added suggestions. */
+	creatorRole?: Role;
 	/** Optional color */
 	color?: string;
 	/** Optional reasoning/explanation for the statement */
@@ -139,6 +145,8 @@ export function createStatementObject(params: CreateStatementParams): Statement 
 			...(params.color && { color: params.color }),
 			...(params.reasoning && { reasoning: params.reasoning }),
 			...(params.sourceApp && { sourceApp: params.sourceApp }),
+			...(params.forceShow !== undefined && { forceShow: params.forceShow }),
+			...(params.creatorRole && { creatorRole: params.creatorRole }),
 		};
 
 		// Validate against schema

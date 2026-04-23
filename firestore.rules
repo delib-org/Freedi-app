@@ -140,9 +140,25 @@ service cloud.firestore {
                isAuthorized();
       }
 
+      // Direct client writes must NEVER set `creatorRole`. This field is
+      // used by the Join app to render the "organizer suggestion" badge, so
+      // allowing anyone to set it would let any authenticated user spoof the
+      // badge on their own option. Legitimate organizer suggestions are
+      // created through the `createOrganizerSuggestion` callable, which uses
+      // the admin SDK and bypasses rule evaluation entirely.
+      function setsCreatorRoleOnCreate() {
+        return request.resource.data.get('creatorRole', null) != null;
+      }
+      function changesCreatorRole() {
+        return resource.data.get('creatorRole', null) !=
+               request.resource.data.get('creatorRole', null);
+      }
+
       allow read;
-      allow create: if request.auth.uid != null;
-      allow update: if request.auth.uid != null && isAllowedToUpdate();
+      allow create: if request.auth.uid != null && !setsCreatorRoleOnCreate();
+      allow update: if request.auth.uid != null &&
+                       !changesCreatorRole() &&
+                       isAllowedToUpdate();
       allow delete: if request.auth.uid != null && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
