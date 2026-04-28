@@ -11,6 +11,20 @@
 	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+// Constrains the title / brief / tabs / filters inside the header to a
+// readable column width and centers them, instead of letting them spread
+// edge-to-edge on wide screens.
+.subHeaderInner {
+	width: 100%;
+	max-width: 75ch;
+	margin: 0 auto;
+	padding: 0 1rem;
+
+	@media screen and (max-width: 600px) {
+		padding: 0 0.5rem;
+	}
+}
+
 .header {
 	display: flex;
 	justify-content: center;

@@ -16,7 +16,6 @@ import { renderInlineMarkdown } from '@/helpers/inlineMarkdownHelpers';
 import { updateStatementText } from '@/controllers/db/statements/updateStatementFields';
 import SegmentedControl from '@/view/components/atomic/atoms/SegmentedControl/SegmentedControl';
 import StatementDescription from '@/view/components/atomic/molecules/StatementDescription/StatementDescription';
-import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
 import DeadlineBanner from '../deadlineBanner/DeadlineBanner';
 import TreeFilterChips from '../treeView/components/TreeFilterChips/TreeFilterChips';
 import { useTreeFilterOptional } from '../treeView/TreeFilterContext';
@@ -183,6 +182,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 
 					{/* Sub-header: title, tabs, filters */}
 					<div className={styles.subHeader}>
+						<div className={styles.subHeaderInner}>
 						{isAdmin ? (
 							<button className={styles.header} onClick={handleStartEdit}>
 								{!edit ? (
@@ -241,9 +241,6 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 										callToAction={t('Share your thoughts below')}
 									/>
 								)}
-								{statement && (
-									<StatementBody host={statement} canEdit={isAdmin} />
-								)}
 								<DeadlineBanner statement={statement} role={role} />
 								{showSegmentedControl && (
 									<div className={styles.segmentedControlWrapper}>
@@ -265,6 +262,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 								isCollapsed={treeFilter.isCollapsed}
 							/>
 						)}
+						</div>
 					</div>
 				</div>
 
