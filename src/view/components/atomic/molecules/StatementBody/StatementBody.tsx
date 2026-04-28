@@ -278,11 +278,13 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 			isEditing && 'statement-body__block--editing',
 		);
 
-		// IMPORTANT: the contenteditable div is uncontrolled. We never pass its
-		// text as JSX children — that would clobber the DOM (and the caret) on
-		// every keystroke. Initial content is set once in the ref callback.
+		// IMPORTANT: the contenteditable element is uncontrolled. We never pass
+		// its text as JSX children — that would clobber the DOM (and the caret)
+		// on every keystroke. Initial content is set once in the ref callback.
+		// Using <span> (inline) so it's valid inside <p>, <h1>..<h6>, etc.;
+		// CSS gives it block-like layout.
 		const content = isEditing ? (
-			<div
+			<span
 				ref={setEditorRef}
 				className="statement-body__editor"
 				contentEditable
@@ -441,7 +443,9 @@ function renderTypedContent(type: ParagraphType, inner: React.ReactNode): React.
 		case ParagraphType.h6:
 			return <h6 className="statement-body__h6">{inner}</h6>;
 		case ParagraphType.li:
-			return <li className="statement-body__li">{inner}</li>;
+			// Render as div with list-item visual styling — bare <li> is invalid
+			// outside <ul>/<ol> and we don't group consecutive list items in v1.
+			return <div className="statement-body__li">{inner}</div>;
 		case ParagraphType.paragraph:
 		default:
 			return <p className="statement-body__paragraph">{inner}</p>;

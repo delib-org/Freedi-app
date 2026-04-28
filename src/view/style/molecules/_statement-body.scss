@@ -85,15 +85,6 @@
     line-height: 1.4;
   }
 
-  &__li {
-    margin: 0;
-    padding-inline-start: 1.5rem;
-    list-style-type: disc;
-    @include body-text;
-    color: var(--text-body);
-    line-height: 1.6;
-  }
-
   // ----- inner text + editor ------------------------------------------------
   &__text {
     display: inline-block;
@@ -103,6 +94,11 @@
   }
 
   &__editor {
+    // Rendered as <span> (so it's valid inside <p>/<h1>/etc.) but we want
+    // block-level layout for the editor — a multi-line typing surface that
+    // fills its parent and shows newlines naturally.
+    display: block;
+    width: 100%;
     outline: none;
     min-height: 1.5em;
     word-break: break-word;
@@ -110,6 +106,24 @@
 
     &:focus-visible {
       outline: none;
+    }
+  }
+
+  // List-item visual: render as div, mimic <li> bullet so it still reads as a
+  // list item without needing a <ul>/<ol> wrapper.
+  &__li {
+    position: relative;
+    margin: 0;
+    padding-inline-start: 1.5rem;
+    @include body-text;
+    color: var(--text-body);
+    line-height: 1.6;
+
+    &::before {
+      content: '•';
+      position: absolute;
+      inset-inline-start: 0.5rem;
+      color: var(--text-body);
     }
   }
 
