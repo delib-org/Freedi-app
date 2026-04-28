@@ -210,9 +210,7 @@
   max-width: var(--max-width);
   margin: 0 auto;
   width: 100%;
-  height: 100dvh;
-  display: flex;
-  flex-direction: column;
+  min-height: 100dvh;
   background: var(--bg-page);
 
   // question.color becomes a decorative accent, not the text background.
@@ -281,10 +279,7 @@
   }
 
   &__scroll {
-    flex: 1;
-    overflow-y: auto;
     padding: var(--space-md) var(--space-md) var(--space-2xl);
-    -webkit-overflow-scrolling: touch;
   }
 
   &__subtitle {
@@ -411,7 +406,7 @@
   &__activated-badge {
     position: absolute;
     top: var(--space-md);
-    right: var(--space-md);
+    inset-inline-end: var(--space-md);
     background: var(--teal-700);           // white on teal-700 = 11:1 ✓ AAA
     color: var(--text-inverse);
     font-family: var(--font-body);
@@ -424,21 +419,32 @@
     z-index: 2;
   }
 
-  // Small counts-only line under the group badge showing how many unique
-  // evaluators contributed to the cluster's aggregated score.
+  // Meta row above the title that keeps cluster context (badge + votes) in
+  // flow rather than absolutely positioned. Reserves trailing space so the
+  // absolute activated badge can't overlap it.
+  &__meta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-xs);
+    padding-inline-end: var(--space-xl);
+  }
+
+  // Small counts-only text showing how many unique evaluators contributed to
+  // the cluster's aggregated score. Sits beside the group badge (or wraps
+  // below it on narrow cards).
   &__group-votes {
-    margin-top: var(--space-xs, 0.25rem);
     font-size: var(--font-size-xs);
     color: var(--ink-muted);
     font-weight: var(--font-weight-medium);
   }
 
-  // Grouped suggestion badge — pairs with isCluster=true. Positioned under the
-  // activated badge (or at the same spot when the option isn't activated).
+  // Grouped suggestion badge — pairs with isCluster=true. Rendered in flow
+  // inside __meta-row so it never overlaps the title in any direction.
   &__group-badge {
-    position: absolute;
-    top: var(--space-md);
-    left: var(--space-md);
+    display: inline-flex;
+    align-items: center;
     background: var(--terra-500, var(--teal-700));
     color: var(--text-inverse);
     font-family: var(--font-body);
@@ -447,7 +453,6 @@
     letter-spacing: var(--tracking-wide);
     padding: 5px 10px;
     border-radius: var(--radius-full);
-    z-index: 2;
   }
 
   // Subtle accent for grouped cards, so they read as "one step above" a plain
@@ -464,7 +469,8 @@
     letter-spacing: var(--tracking-tight);
     color: var(--ink);                     // 16:1 ✓ AAA
     margin-bottom: var(--space-sm);
-    padding-right: var(--space-xl);        // space for activation badge
+    padding-inline-end: var(--space-xl);   // space for activation badge (trailing)
+    text-wrap: balance;
   }
 
   &__description {

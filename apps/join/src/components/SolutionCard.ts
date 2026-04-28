@@ -124,15 +124,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         isActivated
           ? m('.solution-card__activated-badge', t('card.activated'))
           : null,
-        isCluster && groupSize > 0
-          ? m('.solution-card__group-badge', t('card.group_represents', { count: groupSize }))
-          : null,
-        isCluster && getClusterEvaluatorCount(option.statementId) > 0
-          ? m(
-              '.solution-card__group-votes',
-              t('card.group_evaluators', { count: getClusterEvaluatorCount(option.statementId) }),
-            )
-          : null,
+        renderMetaRow(option, isCluster, groupSize),
         m('.solution-card__title', option.statement),
         getOptionDescription(option)
           ? m('.solution-card__description', getOptionDescription(option))
@@ -257,6 +249,31 @@ async function handleJoin(
 
   await toggleJoining(optionId, questionId, role);
   m.redraw();
+}
+
+function renderMetaRow(
+  option: Statement,
+  isCluster: boolean,
+  groupSize: number,
+): m.Vnode | null {
+  if (!isCluster) return null;
+
+  const evaluatorCount = getClusterEvaluatorCount(option.statementId);
+  const showBadge = groupSize > 0;
+  const showVotes = evaluatorCount > 0;
+  if (!showBadge && !showVotes) return null;
+
+  return m('.solution-card__meta-row', [
+    showBadge
+      ? m('.solution-card__group-badge', t('card.group_represents', { count: groupSize }))
+      : null,
+    showVotes
+      ? m(
+          '.solution-card__group-votes',
+          t('card.group_evaluators', { count: evaluatorCount }),
+        )
+      : null,
+  ]);
 }
 
 function isOptionActivated(
