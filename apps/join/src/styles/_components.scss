@@ -1305,3 +1305,189 @@
   border-top: 1px dashed var(--paper-line);
 }
 
+// -----------------------------------------------------------------------------
+// Main Hub — facilitated entry page
+// -----------------------------------------------------------------------------
+.main-hub {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: var(--space-lg) var(--space-md) 0;
+  background: var(--paper-soft);
+}
+
+.main-hub__brand {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.main-hub__logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.main-hub__title {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.main-hub__description {
+  margin: 0 auto var(--space-lg);
+  max-width: 60ch;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+.main-hub__scroll {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-xl);
+}
+
+.main-hub__questions-heading {
+  margin: 0;
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.main-hub__question-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.main-hub__question-card {
+  padding: var(--space-md);
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  cursor: default;
+  user-select: none;
+
+  // Display-only — no hover/active treatment.
+  &:hover,
+  &:active {
+    background: var(--surface-card, #fff);
+    border-color: var(--paper-line);
+    box-shadow: var(--shadow-xs);
+    transform: none;
+  }
+}
+
+.main-hub__question-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.main-hub__question-description {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-muted);
+  line-height: var(--line-height-loose, 1.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.main-hub__loading,
+.main-hub__empty {
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+// -----------------------------------------------------------------------------
+// Facilitated lockdown — Solutions cards become display-only
+// -----------------------------------------------------------------------------
+.solutions--facilitated {
+  .solution-card,
+  .solution-card--display-only {
+    cursor: default;
+
+    &:hover,
+    &:active {
+      transform: none;
+      box-shadow: var(--shadow-xs);
+    }
+  }
+
+  .solution-card__chat:not([role='button']) {
+    cursor: default;
+  }
+}
+
+.solution-card--display-only {
+  cursor: default;
+  user-select: none;
+
+  &:hover,
+  &:active {
+    transform: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat — facilitated mode tweaks (back button hidden via component logic; the
+// title takes the full header width).
+// -----------------------------------------------------------------------------
+.chat--facilitated {
+  .chat__header {
+    justify-content: center;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Facilitator toast — appended directly to <body>, not part of any view tree.
+// -----------------------------------------------------------------------------
+.facilitator-toast {
+  position: fixed;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translate(-50%, -16px);
+  z-index: 9999;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-inverse);
+  background: var(--terra-700);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-quick, 150ms) var(--ease-out),
+    transform var(--dur-quick, 150ms) var(--ease-out);
+}
+
+.facilitator-toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .facilitator-toast {
+    transition: opacity var(--dur-quick, 150ms) linear;
+    transform: translate(-50%, 0);
+  }
+}
+

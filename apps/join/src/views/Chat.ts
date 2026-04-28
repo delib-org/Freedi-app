@@ -8,10 +8,12 @@ import {
   needsDisplayName,
   setCustomDisplayName,
   getCustomDisplayName,
+  subscribeMainStatement,
 } from '@/lib/store';
 import { generateTemporalName } from '@/lib/nameGenerator';
 import { t } from '@/lib/i18n';
-import { db, doc, getDoc } from '@/lib/firebase';
+import { isFacilitatedMode } from '@/lib/facilitator';
+import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';
 import { ChatMessage } from '@/components/ChatMessage';
@@ -24,6 +26,7 @@ let messagesEl: HTMLElement | null = null;
 let showNamePrompt = false;
 let closingNamePrompt = false;
 let nameInput = '';
+let mainUnsub: Unsubscribe | null = null;
 
 let isAtBottom = true;
 let newMessageCount = 0;
@@ -82,6 +85,13 @@ export const Chat: m.Component = {
       }
       subscribeChat(optionId);
       markOptionRead(optionId);
+
+      // In facilitated mode, keep a listener on the main statement so the
+      // facilitator can move us back up to Solutions or the Hub.
+      const mainId = m.route.param('mid');
+      if (mainId) {
+        mainUnsub = subscribeMainStatement(mainId);
+      }
     } catch (err) {
       console.error('[Chat] Failed to load option:', err);
     } finally {
@@ -92,6 +102,10 @@ export const Chat: m.Component = {
 
   onremove() {
     unsubscribeChat();
+    if (mainUnsub) {
+      mainUnsub();
+      mainUnsub = null;
+    }
     option = null;
     messagesEl = null;
   },
@@ -100,6 +114,7 @@ export const Chat: m.Component = {
     const questionId = m.route.param('qid');
     const user = getUserState().user;
     const msgs = getMessages();
+    const facilitated = isFacilitatedMode();
 
     const currentCount = msgs.length;
     if (currentCount > prevMessageCount && prevMessageCount > 0) {
@@ -120,16 +135,18 @@ export const Chat: m.Component = {
       return m('.chat', m('.chat__empty', t('chat.not_found')));
     }
 
-    return m('.chat', [
+    return m(`.chat${facilitated ? '.chat--facilitated' : ''}`, [
       m('.chat__header', [
-        m(
-          'button.chat__back',
-          {
-            onclick: () => m.route.set('/q/:qid', { qid: questionId }),
-            'aria-label': t('chat.back'),
-          },
-          '\u2190',
-        ),
+        facilitated
+          ? null
+          : m(
+              'button.chat__back',
+              {
+                onclick: () => m.route.set('/q/:qid', { qid: questionId }),
+                'aria-label': t('chat.back'),
+              },
+              '\u2190',
+            ),
         m('.chat__title', option.statement),
       ]),
 

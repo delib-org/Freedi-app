@@ -38,11 +38,14 @@ interface SolutionCardAttrs {
   adminMode?: boolean;
   /** When true, render the organizer-suggestion variant (badge + accent). */
   isOrganizerSuggestion?: boolean;
+  /** When true, render in facilitated/locked mode: no clicks, no join buttons,
+   *  no admin controls — only the facilitator can move participants. */
+  displayOnly?: boolean;
 }
 
 export const SolutionCard: m.Component<SolutionCardAttrs> = {
   view(vnode) {
-    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion } = vnode.attrs;
+    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion, displayOnly } = vnode.attrs;
     const user = getUserState().user;
     const question = getQuestion();
     const joinedCount = option.joined?.length ?? 0;
@@ -88,20 +91,24 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
     const groupSize = option.integratedOptions?.length ?? 0;
 
     const organizerClass = isOrganizerSuggestion ? '.solution-card--organizer' : '';
+    const displayOnlyClass = displayOnly ? '.solution-card--display-only' : '';
 
     return m(
-      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}`,
+      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}${displayOnlyClass}`,
       {
-        role: 'button',
-        tabindex: 0,
+        role: displayOnly ? undefined : 'button',
+        tabindex: displayOnly ? undefined : 0,
         'aria-label': option.statement,
-        onclick: handleCardClick,
-        onkeydown: (e: KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            navigateToChat();
-          }
-        },
+        'aria-disabled': displayOnly ? 'true' : undefined,
+        onclick: displayOnly ? undefined : handleCardClick,
+        onkeydown: displayOnly
+          ? undefined
+          : (e: KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigateToChat();
+              }
+            },
         oncreate: (vnode: m.VnodeDOM) => {
           if (isActivated && !hasCelebrated(option.statementId)) {
             markCelebrated(option.statementId);
@@ -139,23 +146,27 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             '.solution-card__chat',
             {
               class: messageCount > 0 ? 'solution-card__chat--active' : '',
-              role: 'button',
-              tabindex: 0,
+              role: displayOnly ? undefined : 'button',
+              tabindex: displayOnly ? undefined : 0,
               'aria-label':
                 newMsgCount > 0
                   ? t(newMsgCount > 1 ? 'card.new_messages_plural' : 'card.new_messages', { count: newMsgCount })
                   : t('chat.open'),
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                navigateToChat();
-              },
-              onkeydown: (e: KeyboardEvent) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigateToChat();
-                }
-              },
+              onclick: displayOnly
+                ? undefined
+                : (e: Event) => {
+                    e.stopPropagation();
+                    navigateToChat();
+                  },
+              onkeydown: displayOnly
+                ? undefined
+                : (e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigateToChat();
+                    }
+                  },
             },
             [
               m('.solution-card__chat-icon', { 'aria-hidden': 'true' }, '\uD83D\uDCAC'),
@@ -168,29 +179,31 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             ],
           ),
         ]),
-        m('.solution-card__actions', [
-          m(
-            `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
-            {
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
-              },
-            },
-            isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
-          ),
-          m(
-            `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
-            {
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
-              },
-            },
-            isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
-          ),
-        ]),
-        adminMode
+        displayOnly
+          ? null
+          : m('.solution-card__actions', [
+              m(
+                `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
+                {
+                  onclick: (e: Event) => {
+                    e.stopPropagation();
+                    handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+                  },
+                },
+                isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
+              ),
+              m(
+                `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
+                {
+                  onclick: (e: Event) => {
+                    e.stopPropagation();
+                    handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
+                  },
+                },
+                isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
+              ),
+            ]),
+        adminMode && !displayOnly
           ? m('.solution-card__admin', [
               m(
                 'button.btn.btn--small.btn--outline',

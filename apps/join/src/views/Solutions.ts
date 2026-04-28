@@ -8,11 +8,13 @@ import {
   getOrganizerSuggestions,
   subscribeOptions,
   subscribeQuestion,
+  subscribeMainStatement,
   getUnreadCount,
   getTotalVisibleCount,
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
 import { t } from '@/lib/i18n';
+import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
@@ -23,6 +25,7 @@ let loading = true;
 let error: string | null = null;
 let questionUnsub: Unsubscribe | null = null;
 let optionsUnsub: Unsubscribe | null = null;
+let mainUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
@@ -47,6 +50,14 @@ export const Solutions: m.Component = {
       await loadQuestion(questionId);
       questionUnsub = subscribeQuestion(questionId);
       optionsUnsub = subscribeOptions(questionId);
+
+      // In facilitated mode, also keep a listener on the main statement so
+      // the facilitator can move us up to the Hub or across to another
+      // question / chat without us being on the Hub view.
+      const mainId = m.route.param('mid');
+      if (mainId) {
+        mainUnsub = subscribeMainStatement(mainId);
+      }
     } catch (err) {
       console.error('[Solutions] Failed to load:', err);
       error = t('solutions.error.failed');
@@ -64,6 +75,10 @@ export const Solutions: m.Component = {
     if (optionsUnsub) {
       optionsUnsub();
       optionsUnsub = null;
+    }
+    if (mainUnsub) {
+      mainUnsub();
+      mainUnsub = null;
     }
   },
 
@@ -85,8 +100,9 @@ export const Solutions: m.Component = {
     const total = getTotalVisibleCount();
     const unread = getUnreadCount();
     const accentColor = question.color || 'var(--terra-500)';
+    const facilitated = isFacilitatedMode();
 
-    return m('.solutions', [
+    return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
       m(
         '.solutions__header',
         { style: `--q-accent: ${accentColor}` },
@@ -103,28 +119,30 @@ export const Solutions: m.Component = {
             ? m('span.solutions__counter-unread', t('solutions.counter.new', { count: unread }))
             : null,
         ]),
-        isAdmin()
-          ? m('.solutions__admin-toolbar', [
-              m(
-                'button.btn.btn--small.btn--primary',
-                {
-                  onclick: () => {
-                    showAddSuggestion = true;
+        facilitated
+          ? null
+          : isAdmin()
+            ? m('.solutions__admin-toolbar', [
+                m(
+                  'button.btn.btn--small.btn--primary',
+                  {
+                    onclick: () => {
+                      showAddSuggestion = true;
+                    },
                   },
-                },
-                t('admin.add_suggestion'),
-              ),
-              m(
-                `button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
-                {
-                  onclick: () => {
-                    adminMode = !adminMode;
+                  t('admin.add_suggestion'),
+                ),
+                m(
+                  `button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
+                  {
+                    onclick: () => {
+                      adminMode = !adminMode;
+                    },
                   },
-                },
-                t('admin.manage_options'),
-              ),
-            ])
-          : renderAdminSignIn(question.statementId, question.creatorId),
+                  t('admin.manage_options'),
+                ),
+              ])
+            : renderAdminSignIn(question.statementId, question.creatorId),
         options.length === 0
           ? m('.solutions__empty', t('solutions.error.no_options'))
           : m('.solutions__crowd-section', [
@@ -141,7 +159,8 @@ export const Solutions: m.Component = {
                     key: option.statementId,
                     option,
                     questionId: question.statementId,
-                    adminMode: isAdmin() && adminMode,
+                    adminMode: isAdmin() && adminMode && !facilitated,
+                    displayOnly: facilitated,
                     onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
                       pendingJoinOptionId = optionId;
                       pendingJoinRole = role;
@@ -153,7 +172,7 @@ export const Solutions: m.Component = {
             ]),
         // Organizer suggestions render AFTER the crowd list — the crowd
         // is the primary content, admin additions come last.
-        renderOrganizerSection(question.statementId, adminMode),
+        renderOrganizerSection(question.statementId, adminMode, facilitated),
         m(WizColFooter),
       ]),
       showJoinForm && question.statementSettings?.joinForm
@@ -207,7 +226,11 @@ function renderAdminSignIn(questionId: string, creatorId: string): m.Children {
   ]);
 }
 
-function renderOrganizerSection(questionId: string, adminModeActive: boolean): m.Children {
+function renderOrganizerSection(
+  questionId: string,
+  adminModeActive: boolean,
+  facilitated: boolean,
+): m.Children {
   const suggestions = getOrganizerSuggestions();
   if (suggestions.length === 0) return null;
 
@@ -221,7 +244,8 @@ function renderOrganizerSection(questionId: string, adminModeActive: boolean): m
           option,
           questionId,
           isOrganizerSuggestion: true,
-          adminMode: isAdmin() && adminModeActive,
+          adminMode: isAdmin() && adminModeActive && !facilitated,
+          displayOnly: facilitated,
           onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
             pendingJoinOptionId = optionId;
             pendingJoinRole = role;

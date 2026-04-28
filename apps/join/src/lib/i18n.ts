@@ -68,6 +68,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'Discover a new way for organizations to make decisions together',
     'linkCopied': 'Link copied!',
     'share': 'Share',
+    'facilitator.following': 'Following facilitator…',
+    'mainHub.questionsHeading': 'Questions',
+    'mainHub.empty': 'No questions yet.',
   },
   he: {
     'splash.title': 'Freedi',
@@ -136,6 +139,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'גלו דרך חדשה לארגונים לקבל החלטות ביחד',
     'linkCopied': 'הקישור הועתק!',
     'share': 'שתפ/י',
+    'facilitator.following': 'עוקבים אחר המנחה…',
+    'mainHub.questionsHeading': 'שאלות',
+    'mainHub.empty': 'אין שאלות עדיין.',
   },
   ar: {
     'splash.title': 'Freedi',
@@ -202,6 +208,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'اكتشف طريقة جديدة للمؤسسات لاتخاذ القرارات معاً',
     'linkCopied': 'تم نسخ الرابط!',
     'share': 'مشاركة',
+    'facilitator.following': 'متابعة الميسّر…',
+    'mainHub.questionsHeading': 'الأسئلة',
+    'mainHub.empty': 'لا توجد أسئلة بعد.',
   },
   de: {
     'solutions.loading': 'Laden...',
@@ -245,6 +254,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'Entdecken Sie einen neuen Weg für Organisationen, gemeinsam Entscheidungen zu treffen',
     'linkCopied': 'Link kopiert!',
     'share': 'Teilen',
+    'facilitator.following': 'Moderator wird gefolgt…',
+    'mainHub.questionsHeading': 'Fragen',
+    'mainHub.empty': 'Noch keine Fragen.',
   },
   es: {
     'solutions.loading': 'Cargando...',
@@ -288,6 +300,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'Descubre una nueva forma para que las organizaciones tomen decisiones juntas',
     'linkCopied': '¡Enlace copiado!',
     'share': 'Compartir',
+    'facilitator.following': 'Siguiendo al facilitador…',
+    'mainHub.questionsHeading': 'Preguntas',
+    'mainHub.empty': 'Aún no hay preguntas.',
   },
   nl: {
     'solutions.loading': 'Laden...',
@@ -328,6 +343,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'Ontdek een nieuwe manier voor organisaties om samen beslissingen te nemen',
     'linkCopied': 'Link gekopieerd!',
     'share': 'Delen',
+    'facilitator.following': 'Facilitator volgen…',
+    'mainHub.questionsHeading': 'Vragen',
+    'mainHub.empty': 'Nog geen vragen.',
   },
   fa: {
     'solutions.loading': 'در حال بارگذاری...',
@@ -368,6 +386,9 @@ const translations: Record<string, Record<string, string>> = {
     'shareMessage': 'راهی نو برای تصمیم‌گیری مشترک سازمان‌ها را کشف کنید',
     'linkCopied': 'لینک کپی شد!',
     'share': 'اشتراک‌گذاری',
+    'facilitator.following': 'دنبال کردن میزبان…',
+    'mainHub.questionsHeading': 'پرسش‌ها',
+    'mainHub.empty': 'هنوز پرسشی نیست.',
   },
 };
 

@@ -16,7 +16,7 @@ import {
   Unsubscribe,
 } from './firebase';
 import { getUserState, ensureUser } from './user';
-import { applyStatementLanguage } from './i18n';
+import { applyStatementLanguage, t } from './i18n';
 import {
   Collections,
   Statement,
@@ -28,6 +28,12 @@ import {
 } from '@freedi/shared-types';
 import type { ResultsSettings } from '@freedi/shared-types';
 import { checkAdminStatus } from './admin';
+import {
+  mapMainAppPathToJoinTarget,
+  joinTargetToRoute,
+  FACILITATOR_REDIRECT_DELAY_MS,
+} from './facilitator';
+import { showFacilitatorToast } from './facilitatorToast';
 
 let question: Statement | null = null;
 let allOptions: Statement[] = [];
@@ -356,6 +362,119 @@ export function subscribeQuestion(questionId: string): Unsubscribe {
     }
     m.redraw();
   });
+}
+
+// --- Facilitated-mode state (Main Hub + sub-questions + cross-app follow) ---
+
+let mainStatement: Statement | null = null;
+let subQuestions: Statement[] = [];
+let lastPowerFollowMePath = '';
+let activeFacilitatedMainId: string | null = null;
+let pendingRedirectTimer: number | null = null;
+
+export function getMainStatement(): Statement | null {
+  return mainStatement;
+}
+
+export function getSubQuestions(): Statement[] {
+  return subQuestions;
+}
+
+export async function loadMainStatement(mainId: string): Promise<void> {
+  const snap = await getDoc(doc(db, Collections.statements, mainId));
+  if (!snap.exists()) {
+    mainStatement = null;
+    subQuestions = [];
+    m.redraw();
+
+    return;
+  }
+  mainStatement = snap.data() as Statement;
+  syncMainStatementLanguage();
+
+  const subQ = query(
+    collection(db, Collections.statements),
+    where('parentId', '==', mainId),
+    where('statementType', '==', StatementType.question),
+  );
+  const subSnap = await getDocs(subQ);
+  subQuestions = subSnap.docs.map((d) => d.data() as Statement);
+  m.redraw();
+}
+
+function syncMainStatementLanguage(): void {
+  if (!mainStatement) return;
+  applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
+}
+
+export function subscribeMainStatement(mainId: string): Unsubscribe {
+  // When swapping to a different main, reset the dedupe so the first snapshot
+  // for the new mid is allowed to fire a redirect.
+  if (activeFacilitatedMainId !== mainId) {
+    activeFacilitatedMainId = mainId;
+    lastPowerFollowMePath = '';
+  }
+
+  return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
+    if (!snap.exists()) {
+      mainStatement = null;
+      m.redraw();
+
+      return;
+    }
+    const data = snap.data() as Statement;
+    mainStatement = data;
+    syncMainStatementLanguage();
+
+    const newPower = data.powerFollowMe ?? '';
+    if (newPower !== lastPowerFollowMePath) {
+      lastPowerFollowMePath = newPower;
+      void applyFacilitatorRedirect(newPower, mainId);
+    }
+    m.redraw();
+  });
+}
+
+export function subscribeSubQuestions(mainId: string): Unsubscribe {
+  const subQ = query(
+    collection(db, Collections.statements),
+    where('parentId', '==', mainId),
+    where('statementType', '==', StatementType.question),
+  );
+
+  return onSnapshot(subQ, (snap) => {
+    subQuestions = snap.docs.map((d) => d.data() as Statement);
+    m.redraw();
+  });
+}
+
+async function applyFacilitatorRedirect(path: string, mainId: string): Promise<void> {
+  // Empty path = admin deactivated power-follow; per UX decision, participants
+  // stay where they are (no redirect, no toast).
+  if (!path) {
+    if (pendingRedirectTimer !== null) {
+      window.clearTimeout(pendingRedirectTimer);
+      pendingRedirectTimer = null;
+    }
+
+    return;
+  }
+
+  const target = await mapMainAppPathToJoinTarget(path, mainId);
+  if (!target) return;
+
+  const route = joinTargetToRoute(target, mainId);
+  if (route === m.route.get()) return;
+
+  showFacilitatorToast(t('facilitator.following'));
+
+  if (pendingRedirectTimer !== null) {
+    window.clearTimeout(pendingRedirectTimer);
+  }
+  pendingRedirectTimer = window.setTimeout(() => {
+    pendingRedirectTimer = null;
+    if (m.route.get() !== route) m.route.set(route);
+  }, FACILITATOR_REDIRECT_DELAY_MS);
 }
 
 export function getMessageCount(optionId: string): number {

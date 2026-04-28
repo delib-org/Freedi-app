@@ -5,6 +5,7 @@ import { initI18n, t } from '@/lib/i18n';
 import { Splash } from '@/views/Splash';
 import { Solutions } from '@/views/Solutions';
 import { Chat } from '@/views/Chat';
+import { MainHub } from '@/views/MainHub';
 
 initAuth();
 initI18n();
@@ -22,5 +23,10 @@ if (root) {
     },
     '/q/:qid': Solutions,
     '/q/:qid/s/:sid': Chat,
+    // Facilitated routes — entry via a main (top-parent) statement. Solutions
+    // and Chat detect facilitated mode via the /m/ prefix on the active route.
+    '/m/:mid': MainHub,
+    '/m/:mid/q/:qid': Solutions,
+    '/m/:mid/q/:qid/s/:sid': Chat,
   });
 }
