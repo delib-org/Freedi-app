@@ -1,10 +1,15 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
-import { Statement } from '@freedi/shared-types';
+import { Statement, StatementType } from '@freedi/shared-types';
 
 /**
  * Creates a memoized selector that builds a childrenMap for tree view rendering.
  * Groups all statements by parentId for O(1) child lookups.
+ *
+ * Paragraph child-statements (statementType === 'paragraph') are body content
+ * for the host statement, not discussable tree members — they're rendered by
+ * StatementBody via its own subscription. Excluding them here keeps the
+ * tree (questions / options / chat) free of body paragraphs.
  */
 export const createTreeViewSelector = () => {
 	return createSelector(
@@ -12,7 +17,11 @@ export const createTreeViewSelector = () => {
 			(state: RootState) => state.statements.statements,
 			(_: RootState, statementId: string) => statementId,
 		],
-		(statements, statementId) => {
+		(allStatements, statementId) => {
+			const statements = allStatements.filter(
+				(s) => s.statementType !== StatementType.paragraph,
+			);
+
 			const childrenMap = new Map<string, Statement[]>();
 
 			// Build a parentId lookup for all statements
