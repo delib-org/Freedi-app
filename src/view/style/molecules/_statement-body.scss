@@ -114,6 +114,13 @@
     padding-top: 0.375rem;
     border-top: 1px dashed var(--border-light);
     flex-wrap: wrap;
+
+    // While editing the only controls shown are Done + Cancel, sized larger
+    // and visually emphasized so the user always has an obvious exit.
+    &--editing {
+      gap: 0.5rem;
+      border-top-color: var(--btn-primary);
+    }
   }
 
   &__type-select {
@@ -135,14 +142,16 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 28px;
+    gap: 0.25rem;
+    min-width: 28px;
     height: 28px;
-    padding: 0;
+    padding: 0 0.375rem;
     background: transparent;
     border: 1px solid var(--border-light);
     border-radius: 6px;
     color: var(--text-body);
     cursor: pointer;
+    font-size: 0.85rem;
     transition: background-color 0.15s ease, color 0.15s ease;
 
     &:hover:not(:disabled) {
@@ -159,7 +168,25 @@
       color: var(--text-danger, #b91c1c);
     }
 
+    // Filled "Done" — clearly the primary exit affordance during edit.
+    &--primary {
+      padding: 0 0.625rem;
+      background: var(--btn-primary);
+      border-color: var(--btn-primary);
+      color: var(--text-inverse, #fff);
+      font-weight: 600;
+
+      &:hover:not(:disabled) {
+        background: var(--btn-primary-hover, var(--btn-primary));
+        filter: brightness(1.05);
+      }
+    }
+
     @include focus-visible;
+  }
+
+  &__icon-button-label {
+    font-weight: 600;
   }
 
   // ----- empty-state placeholder --------------------------------------------

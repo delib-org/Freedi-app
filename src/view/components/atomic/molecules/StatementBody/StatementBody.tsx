@@ -28,7 +28,7 @@ import {
 	moveParagraphChild,
 	sortParagraphChildren,
 } from '@/controllers/db/statements/paragraphChildren';
-import { ChevronUp, ChevronDown, X, Plus } from 'lucide-react';
+import { ChevronUp, ChevronDown, X, Plus, Check } from 'lucide-react';
 
 interface StatementBodyProps {
 	host: Statement;
@@ -52,8 +52,13 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 	const [paragraphs, setParagraphs] = useState<Statement[]>([]);
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [focusedId, setFocusedId] = useState<string | null>(null);
-	const [draft, setDraft] = useState('');
 	const editorRef = useRef<HTMLDivElement | null>(null);
+	// `draftRef` holds the in-progress text without triggering re-renders
+	// (which would clobber the contenteditable's DOM and the caret).
+	const draftRef = useRef<string>('');
+	// Tracks the editingId for which the editor element has been initialized,
+	// so the ref-callback initializes content + focus exactly once per session.
+	const lastInitializedFor = useRef<string | null>(null);
 	const debounceTimer = useRef<number | null>(null);
 
 	// Subscribe to paragraph children of `host`.
@@ -100,27 +105,38 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 
 	const beginEdit = useCallback((p: Statement) => {
 		if (!canEdit) return;
-		setEditingId(p.statementId);
+		draftRef.current = p.statement ?? '';
 		setFocusedId(p.statementId);
-		setDraft(p.statement ?? '');
-		// Focus is moved into the editor by the autoFocus on the rendered <div>.
+		setEditingId(p.statementId);
+		// The contentEditable div initializes its own content + focus via the
+		// ref-callback so we don't fight React over the DOM.
 	}, [canEdit]);
 
 	const commitEdit = useCallback(async () => {
 		if (!editingId) return;
 		const id = editingId;
-		const content = draft;
+		const content = draftRef.current;
+		flushDebounce();
 		setEditingId(null);
+		// Reset so the next edit session re-initializes from the latest snapshot.
+		lastInitializedFor.current = null;
 		await persistDraft(id, content);
-	}, [editingId, draft, persistDraft]);
+	}, [editingId, persistDraft, flushDebounce]);
 
+	const cancelEdit = useCallback(() => {
+		flushDebounce();
+		setEditingId(null);
+		lastInitializedFor.current = null;
+	}, [flushDebounce]);
+
+	// Keep the editor's content out of React's render cycle: read text from
+	// the DOM on input, store it in a ref, and schedule a debounced save.
 	const handleEditorInput = useCallback(
 		(e: React.FormEvent<HTMLDivElement>) => {
 			const el = e.currentTarget;
 			const text = el.innerText;
-			setDraft(text);
+			draftRef.current = text;
 
-			// Debounced auto-save while still typing — no Save button.
 			if (!editingId) return;
 			flushDebounce();
 			const id = editingId;
@@ -136,19 +152,37 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 		(e: KeyboardEvent<HTMLDivElement>) => {
 			if (e.key === 'Escape') {
 				e.preventDefault();
-				flushDebounce();
-				setEditingId(null);
+				cancelEdit();
 
 				return;
 			}
 			if (e.key === 'Enter' && !e.shiftKey) {
-				// v1: blur to commit, no auto-split (deferred to v1.5).
+				// v1: Enter commits and exits. Shift+Enter inserts a soft break
+				// (browser default). Auto-split into a new paragraph is v1.5.
 				e.preventDefault();
 				void commitEdit();
 			}
 		},
-		[commitEdit, flushDebounce],
+		[commitEdit, cancelEdit],
 	);
+
+	// Click-outside to commit. Listens at document level only while editing.
+	useEffect(() => {
+		if (!editingId) return;
+		function handleDocClick(e: MouseEvent) {
+			const el = editorRef.current;
+			if (!el) return;
+			const target = e.target as Node | null;
+			if (!target) return;
+			// If the click is on the editor itself or any descendant of the
+			// surrounding StatementBody, ignore — let blur or button handlers run.
+			if (el.contains(target)) return;
+			void commitEdit();
+		}
+		document.addEventListener('mousedown', handleDocClick);
+
+		return () => document.removeEventListener('mousedown', handleDocClick);
+	}, [editingId, commitEdit]);
 
 	const handleAddAtEnd = useCallback(async () => {
 		if (!canEdit) return;
@@ -159,9 +193,10 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 			currentParagraphs: paragraphs,
 		});
 		if (newId) {
-			setEditingId(newId);
+			draftRef.current = '';
+			lastInitializedFor.current = null;
 			setFocusedId(newId);
-			setDraft('');
+			setEditingId(newId);
 		}
 	}, [canEdit, host, paragraphs]);
 
@@ -197,20 +232,33 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 		[canEdit, paragraphs],
 	);
 
-	// Focus the editor when entering edit mode.
-	useEffect(() => {
-		if (editingId && editorRef.current) {
-			const el = editorRef.current;
-			el.focus();
-			// Place caret at end.
-			const range = document.createRange();
-			range.selectNodeContents(el);
-			range.collapse(false);
-			const sel = window.getSelection();
-			sel?.removeAllRanges();
-			sel?.addRange(range);
-		}
-	}, [editingId]);
+	// Ref callback: when the editor element first attaches for a given
+	// editingId, set its initial content and place caret at end. Runs once
+	// per edit session because of `lastInitializedFor`.
+	const setEditorRef = useCallback(
+		(el: HTMLDivElement | null) => {
+			editorRef.current = el;
+			if (!el || !editingId) return;
+			if (lastInitializedFor.current === editingId) return;
+
+			el.innerText = draftRef.current;
+			lastInitializedFor.current = editingId;
+
+			// Defer focus to allow the browser to finish layout — without this,
+			// some browsers won't accept focus on a freshly attached element.
+			window.setTimeout(() => {
+				if (editorRef.current !== el) return;
+				el.focus();
+				const range = document.createRange();
+				range.selectNodeContents(el);
+				range.collapse(false);
+				const sel = window.getSelection();
+				sel?.removeAllRanges();
+				sel?.addRange(range);
+			}, 0);
+		},
+		[editingId],
+	);
 
 	// Empty state.
 	const isEmpty = paragraphs.length === 0;
@@ -221,7 +269,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 		const isFocused = focusedId === p.statementId;
 		const isEditing = editingId === p.statementId;
 		const blockType = p.blockType ?? ParagraphType.paragraph;
-		const text = isEditing ? draft : (p.statement ?? '');
+		const text = p.statement ?? '';
 
 		const blockClass = clsx(
 			'statement-body__block',
@@ -230,9 +278,12 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 			isEditing && 'statement-body__block--editing',
 		);
 
+		// IMPORTANT: the contenteditable div is uncontrolled. We never pass its
+		// text as JSX children — that would clobber the DOM (and the caret) on
+		// every keystroke. Initial content is set once in the ref callback.
 		const content = isEditing ? (
 			<div
-				ref={editorRef}
+				ref={setEditorRef}
 				className="statement-body__editor"
 				contentEditable
 				suppressContentEditableWarning
@@ -240,10 +291,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 				aria-label={t('Edit paragraph')}
 				onInput={handleEditorInput}
 				onKeyDown={handleEditorKeyDown}
-				onBlur={() => void commitEdit()}
-			>
-				{text}
-			</div>
+			/>
 		) : (
 			<span
 				className="statement-body__text"
@@ -260,6 +308,38 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 				onClick={canEdit && !isEditing ? () => setFocusedId(p.statementId) : undefined}
 			>
 				{renderTypedContent(blockType, content)}
+
+				{canEdit && isEditing && (
+					<div className="statement-body__controls statement-body__controls--editing">
+						<button
+							type="button"
+							className="statement-body__icon-button statement-body__icon-button--primary"
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={(e) => {
+								e.stopPropagation();
+								void commitEdit();
+							}}
+							aria-label={t('Done editing')}
+						>
+							<Check size={16} />
+							<span className="statement-body__icon-button-label">
+								{t('Done')}
+							</span>
+						</button>
+						<button
+							type="button"
+							className="statement-body__icon-button"
+							onMouseDown={(e) => e.preventDefault()}
+							onClick={(e) => {
+								e.stopPropagation();
+								cancelEdit();
+							}}
+							aria-label={t('Cancel editing')}
+						>
+							<X size={16} />
+						</button>
+					</div>
+				)}
 
 				{canEdit && isFocused && !isEditing && (
 					<div className="statement-body__controls">
