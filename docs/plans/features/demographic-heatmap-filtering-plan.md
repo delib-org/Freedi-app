@@ -15,7 +15,7 @@
 5. [Phase 4: Divergence Heatmap Mode](#phase-4-divergence-heatmap-mode)
 6. [Phase 5: 2D Polarization Map Visualization](#phase-5-2d-polarization-map-visualization)
 7. [Phase 6: Multi-Segment Comparison View](#phase-6-multi-segment-comparison-view)
-8. [Phase 7: Full DCI Collaboration Matrix](#phase-7-full-dci-collaboration-matrix)
+8. [Phase 7: Full Collaboration Matrix](#phase-7-full-collaboration-matrix)
 9. [Testing Strategy](#testing-strategy)
 10. [Deployment Plan](#deployment-plan)
 
@@ -662,42 +662,43 @@ interface ComparisonState {
 
 ---
 
-## Phase 7: Full DCI Collaboration Matrix
+## Phase 7: Full Collaboration Matrix
 
 **Priority**: Medium | **Effort**: High | **Impact**: Medium
 
 ### 7.1 Objective
 
-Calculate and display pairwise Demographic Collaboration Index (DCI) between all demographic groups.
+Calculate and display the pairwise Agreement-on-Evaluation matrix (the Y-axis of the Collaboration Index map) between all demographic groups.
 
 ### 7.2 Tasks
 
-#### 7.2.1 Create DCI Calculation Utility
+#### 7.2.1 Use the Agreement-on-Evaluation Calculation Utility
 
-**File**: `packages/shared-types/src/utils/dciCalculation.ts`
+**File**: `packages/shared-types/src/utils/madCalculation.ts` (already implemented)
 
 ```typescript
 /**
- * Calculate Demographic Collaboration Index between two groups
- * DCI = 1 - (|meanA - meanB| / 2)
- * Returns 0-1 where 1 = perfect agreement, 0 = maximum disagreement
+ * Calculate Agreement-on-Evaluation between two groups
+ * Y-axis of the Collaboration Index 2D map
+ * agreementOnEvaluation = 1 - (|meanA - meanB| / 2)
+ * Returns 0-1: 1 = groups perfectly aligned in evaluation, 0 = groups at opposite poles
  */
-export function calculateDCI(meanA: number, meanB: number): number {
+export function calculateAgreementOnEvaluation(meanA: number, meanB: number): number {
   const divergence = Math.abs(meanA - meanB) / 2;
   return 1 - divergence;
 }
 
 /**
- * Calculate full DCI matrix for all segment pairs
+ * Calculate full Agreement-on-Evaluation matrix for all segment pairs
  */
-export function calculateDCIMatrix(
+export function calculateAgreementMatrix(
   segments: Array<{ value: string; mean: number }>
-): DCIMatrix {
+): AgreementMatrix {
   const matrix: number[][] = [];
   for (let i = 0; i < segments.length; i++) {
     matrix[i] = [];
     for (let j = 0; j < segments.length; j++) {
-      matrix[i][j] = calculateDCI(segments[i].mean, segments[j].mean);
+      matrix[i][j] = calculateAgreementOnEvaluation(segments[i].mean, segments[j].mean);
     }
   }
   return { segments: segments.map(s => s.value), matrix };
@@ -706,10 +707,10 @@ export function calculateDCIMatrix(
 
 #### 7.2.2 Create Types
 
-**File**: `packages/shared-types/src/models/signPolarization/dciModel.ts`
+**File**: `packages/shared-types/src/models/signPolarization/collaborationModel.ts`
 
 ```typescript
-export interface DCIMatrix {
+export interface AgreementMatrix {
   segments: string[];
   matrix: number[][];
 }
@@ -718,9 +719,9 @@ export interface DemographicCollaboration {
   documentId: string;
   demographicQuestionId: string;
   calculatedAt: number;
-  matrix: DCIMatrix;
-  topAgreeing: Array<{ pair: [string, string]; dci: number }>;
-  topDiverging: Array<{ pair: [string, string]; dci: number }>;
+  matrix: AgreementMatrix;
+  topAgreeing: Array<{ pair: [string, string]; agreementOnEvaluation: number }>;
+  topDiverging: Array<{ pair: [string, string]; agreementOnEvaluation: number }>;
   clusters?: CollaborationCluster[];
 }
 
@@ -728,7 +729,7 @@ export interface CollaborationCluster {
   position: 'support' | 'oppose' | 'neutral';
   segments: string[];
   averageMean: number;
-  internalDCI: number;
+  internalAgreementOnEvaluation: number;
 }
 ```
 
@@ -748,8 +749,8 @@ GET /api/collaboration/{docId}?demographic={questionId}
 
 ```typescript
 // Features:
-// - N x N grid of DCI values
-// - Color-coded: green (high DCI) to red (low DCI)
+// - N x N grid of Agreement-on-Evaluation values
+// - Color-coded: green (high agreement) to red (low agreement)
 // - Row/column labels: demographic segment names
 // - Highlight clusters of agreement
 // - Show top agreeing and diverging pairs
@@ -765,10 +766,10 @@ GET /api/collaboration/{docId}?demographic={questionId}
  * Using simple threshold-based clustering
  */
 export function detectClusters(
-  dciMatrix: DCIMatrix,
+  agreementMatrix: AgreementMatrix,
   threshold: number = 0.7
 ): CollaborationCluster[] {
-  // Group segments with DCI > threshold
+  // Group segments with agreementOnEvaluation > threshold
   // Identify position based on average mean
 }
 ```
@@ -782,7 +783,7 @@ export function detectClusters(
 
 ### 7.3 Acceptance Criteria
 
-- [ ] DCI calculated for all segment pairs
+- [ ] Agreement-on-Evaluation calculated for all segment pairs
 - [ ] Matrix displayed with color coding
 - [ ] Clusters identified and highlighted
 - [ ] Top agreeing/diverging pairs listed
@@ -818,9 +819,9 @@ describe('calcMadAndMean', () => {
 
 #### Phase 7 Tests
 ```typescript
-// packages/shared-types/src/__tests__/dciCalculation.test.ts
-describe('calculateDCI', () => {
-  it('should return 1 for identical means');
+// packages/shared-types/src/__tests__/madCalculation.test.ts
+describe('calculateAgreementOnEvaluation', () => {
+  it('should return 1 for identical means (groups aligned in evaluation)');
   it('should return 0 for opposite means (-1 and +1)');
   it('should return 0.5 for means at half distance');
 });
@@ -919,8 +920,8 @@ Each phase has independent feature flags:
 | 6 | `apps/sign/app/api/heatmap/[docId]/compare/route.ts` | Comparison API |
 | 6 | `apps/sign/src/store/comparisonStore.ts` | Comparison state |
 | 6 | `apps/sign/src/components/heatMap/HeatMapComparison/` | Comparison view |
-| 7 | `packages/shared-types/src/utils/dciCalculation.ts` | DCI calculation |
-| 7 | `packages/shared-types/src/models/signPolarization/dciModel.ts` | DCI types |
+| 7 | `packages/shared-types/src/utils/madCalculation.ts` | Agreement-on-Evaluation calculation (already implemented) |
+| 7 | `packages/shared-types/src/models/signPolarization/collaborationModel.ts` | Collaboration matrix types |
 | 7 | `apps/sign/app/api/collaboration/[docId]/route.ts` | Collaboration API |
 | 7 | `apps/sign/src/components/collaboration/CollaborationMatrix/` | Matrix view |
 | 7 | `apps/sign/src/utils/clusterDetection.ts` | Cluster detection |
@@ -1016,7 +1017,7 @@ export const updateParagraphPolarization = functions.firestore
 - `/api/heatmap/[docId]?demographic=...` - Filtered heatmap by demographic
 - `/api/heatmap/[docId]/compare` - Multi-segment comparison
 - `/api/polarization/[docId]` - Polarization index data
-- `/api/collaboration/[docId]` - DCI collaboration matrix
+- `/api/collaboration/[docId]` - Agreement-on-Evaluation collaboration matrix
 - `/api/admin/export-demographic/[docId]` - Demographic exports
 - Divergence heatmap mode
 - 2D Polarization Map visualization
@@ -1076,7 +1077,7 @@ const DemographicFilter: FC<Props> = ({ documentId }) => {
   }
 }
 
-// DCI matrix - scrollable on mobile
+// Agreement matrix - scrollable on mobile
 .collaboration-matrix {
   @media (max-width: 768px) {
     overflow-x: auto;

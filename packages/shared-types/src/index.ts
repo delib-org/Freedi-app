@@ -412,10 +412,10 @@ export {
 export type { MadResult } from "./utils/madCalculation";
 export {
   calcMadAndMean,
-  calculateDCI,
+  calculateAgreementOnEvaluation,
   meetsKAnonymity,
   interpretDivergence,
-  interpretDCI,
+  interpretAgreementOnEvaluation,
   DEMOGRAPHIC_CONSTANTS,
 } from "./utils/madCalculation";
 
