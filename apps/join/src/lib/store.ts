@@ -254,6 +254,19 @@ export async function setOptionFlag(
   await setDoc(ref, { [field]: value, lastUpdate: Date.now() }, { merge: true });
 }
 
+/** Facilitator live-control: write a partial patch to a question doc. Callers
+ *  pass shaped patches like `{ statementSettings: { hasChat: false } }` —
+ *  Firestore deep-merges nested fields. The local `subscribeQuestion`
+ *  listener then propagates the change to all participants on the next
+ *  snapshot, so flips feel instant. */
+export async function setQuestionSetting(
+  questionId: string,
+  patch: Partial<Statement>,
+): Promise<void> {
+  const ref = doc(db, Collections.statements, questionId);
+  await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
 /** Create a new option attributed to the admin (organizer suggestion).
  *
  *  Delegates to the `createOrganizerSuggestion` Cloud Function. The callable

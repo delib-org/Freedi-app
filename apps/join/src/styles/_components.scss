@@ -1242,6 +1242,7 @@
 }
 
 .main-hub__brand {
+  position: relative;
   display: flex;
   justify-content: center;
   margin-bottom: var(--space-md);
@@ -1251,6 +1252,36 @@
   width: 64px;
   height: 64px;
   object-fit: contain;
+}
+
+// Discreet admin-signin link tucked into the top-inline-end corner of the
+// brand row. Hidden once the user is non-anonymous; once admin status is
+// detected the FacilitatorPanel handle takes over.
+.main-hub__admin-signin {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-muted, #78716c);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.main-hub__admin-signin:hover,
+.main-hub__admin-signin:focus-visible {
+  color: var(--text-strong, #1c1917);
+  outline: none;
+}
+
+.main-hub__admin-signin:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
 }
 
 .main-hub__title {
@@ -1420,5 +1451,345 @@
     transition: opacity var(--dur-quick, 150ms) linear;
     transform: translate(-50%, 0);
   }
+}
+
+// -----------------------------------------------------------------------------
+// Facilitator panel — admin-only side drawer for live per-question controls.
+// Opened via the pinned "Facilitate" handle on the inline-end edge. Mounted
+// alongside hub / solutions / chat so the handle persists across views.
+// -----------------------------------------------------------------------------
+$facilitator-panel-width: 300px;
+
+.facilitator-panel-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9000;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.facilitator-panel__handle {
+  position: fixed;
+  top: 50%;
+  inset-inline-end: 0;
+  transform: translateY(-50%);
+  z-index: 9001;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 56px;
+  padding: 0;
+  color: var(--text-inverse);
+  background: var(--terra-700);
+  border: 0;
+  border-start-start-radius: var(--radius-lg);
+  border-end-start-radius: var(--radius-lg);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  box-shadow: var(--shadow-md);
+  cursor: grab;
+  // Required for pointermove drag tracking on touch — without this the
+  // browser's native pan gesture eats the move events before we see them.
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    transform var(--dur-base, 220ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__handle:active {
+  cursor: grabbing;
+}
+
+.facilitator-panel__handle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.625rem;
+  line-height: 1;
+}
+
+.facilitator-panel__handle:hover,
+.facilitator-panel__handle:focus-visible {
+  background: var(--terra-600);
+  outline: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.facilitator-panel__handle:focus-visible {
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+}
+
+.facilitator-panel__handle--open {
+  // While the drawer is open, slide the handle along with it so the
+  // affordance stays visually attached to the drawer edge.
+  transform: translateY(-50%) translateX(calc(-1 * #{$facilitator-panel-width}));
+}
+
+[dir='rtl'] .facilitator-panel__handle--open {
+  transform: translateY(-50%) translateX(#{$facilitator-panel-width});
+}
+
+// Once the user has dragged the handle, `top` becomes an exact pixel value
+// set inline — drop the default vertical centering translate so it doesn't
+// double-shift the element. The X-slide for the open state still applies.
+.facilitator-panel__handle--positioned {
+  transform: translateY(0);
+  cursor: grab;
+}
+
+.facilitator-panel__handle--positioned.facilitator-panel__handle--open {
+  transform: translateY(0) translateX(calc(-1 * #{$facilitator-panel-width}));
+}
+
+[dir='rtl'] .facilitator-panel__handle--positioned.facilitator-panel__handle--open {
+  transform: translateY(0) translateX(#{$facilitator-panel-width});
+}
+
+// During an active drag, kill the smoothing transition so the handle tracks
+// the pointer 1:1 instead of easing toward the new position.
+.facilitator-panel__handle--dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.facilitator-panel__backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9000;
+  background: rgba(28, 25, 23, 0.32);
+  animation: facilitator-panel-fade-in var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  inset-inline-end: 0;
+  z-index: 9002;
+  width: $facilitator-panel-width;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  background: var(--bg-paper, #ffffff);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform var(--dur-base, 220ms) var(--ease-out);
+  overflow-y: auto;
+}
+
+[dir='rtl'] .facilitator-panel {
+  transform: translateX(-100%);
+}
+
+.facilitator-panel--open {
+  transform: translateX(0);
+}
+
+// Match the specificity of `[dir='rtl'] .facilitator-panel` so the open
+// state actually overrides the off-screen translate in RTL. Without this
+// the drawer stays at translateX(-100%) and never slides into view.
+[dir='rtl'] .facilitator-panel--open {
+  transform: translateX(0);
+}
+
+.facilitator-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border, rgba(28, 25, 23, 0.08));
+}
+
+.facilitator-panel__title {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-strong, #1c1917);
+}
+
+.facilitator-panel__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-strong, #1c1917);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__close:hover,
+.facilitator-panel__close:focus-visible {
+  background: var(--terra-50);
+  outline: none;
+}
+
+.facilitator-panel__notice {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-body, #44403c);
+  background: var(--terra-50);
+  border-radius: var(--radius-sm);
+  font-style: italic;
+}
+
+.facilitator-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+}
+
+.facilitator-panel__row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.facilitator-panel__row-label {
+  flex: 1;
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-strong, #1c1917);
+}
+
+.facilitator-panel__row-help {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  line-height: 1.4;
+}
+
+.facilitator-panel__toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.facilitator-panel__toggle:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-full);
+}
+
+.facilitator-panel__toggle--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.facilitator-panel__toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-full);
+  transition: background var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__toggle-knob {
+  position: absolute;
+  top: 2px;
+  inset-inline-start: 2px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__toggle--on .facilitator-panel__toggle-track {
+  background: var(--teal-600, #145f54);
+}
+
+.facilitator-panel__toggle--on .facilitator-panel__toggle-knob {
+  transform: translateX(20px);
+}
+
+[dir='rtl'] .facilitator-panel__toggle--on .facilitator-panel__toggle-knob {
+  transform: translateX(-20px);
+}
+
+.facilitator-panel__slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-xs) var(--space-sm);
+}
+
+.facilitator-panel__slider {
+  flex: 1;
+  width: 100%;
+  accent-color: var(--teal-600, #145f54);
+  cursor: pointer;
+}
+
+.facilitator-panel__slider-value {
+  min-width: 5.5em;
+  text-align: end;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes facilitator-panel-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .facilitator-panel,
+  .facilitator-panel__handle,
+  .facilitator-panel__handle--open,
+  .facilitator-panel__toggle-track,
+  .facilitator-panel__toggle-knob {
+    transition: none;
+  }
+
+  .facilitator-panel__backdrop {
+    animation: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat — paused-by-facilitator banner. Replaces the input area when a
+// facilitator has flipped `hasChat` off; history above stays readable.
+// -----------------------------------------------------------------------------
+.chat__paused-banner {
+  margin: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-body, #44403c);
+  background: var(--terra-50);
+  border-inline-start: 3px solid var(--terra-500);
+  border-radius: var(--radius-sm);
+  text-align: center;
 }
 

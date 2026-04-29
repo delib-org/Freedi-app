@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
-import { ensureUser } from '@/lib/user';
+import { ensureUser, signInWithGoogle, getUserState } from '@/lib/user';
 import {
   loadMainStatement,
   getMainStatement,
@@ -8,8 +8,10 @@ import {
   subscribeMainStatement,
   subscribeSubQuestions,
 } from '@/lib/store';
+import { checkAdminStatus } from '@/lib/admin';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
+import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { SplashLoader } from '@/views/Splash';
 import type { Unsubscribe } from '@/lib/firebase';
 
@@ -47,6 +49,14 @@ export const MainHub: m.Component = {
     try {
       await ensureUser();
       await loadMainStatement(mainId);
+      // Resolve admin status against the main statement so the facilitator
+      // panel handle is visible to admins even on the hub (where no specific
+      // question is in scope yet). Per-question status is re-resolved on
+      // navigation into Solutions.
+      const main = getMainStatement();
+      if (main) {
+        await checkAdminStatus(mainId, main.creatorId);
+      }
       mainUnsub = subscribeMainStatement(mainId);
       subUnsub = subscribeSubQuestions(mainId);
     } catch (err) {
@@ -97,6 +107,7 @@ export const MainHub: m.Component = {
           loading: 'eager',
           decoding: 'async',
         }),
+        renderAdminSignIn(main.statementId, main.creatorId),
       ]),
       m('h1.main-hub__title', main.statement),
       (() => {
@@ -132,6 +143,35 @@ export const MainHub: m.Component = {
             ),
         m(WizColFooter),
       ]),
+      m(FacilitatorPanel),
     ]);
   },
 };
+
+/** Discreet "Sign in as admin" link in the top-inline-end corner of the
+ *  hub brand row. Mirrors `Solutions.renderAdminSignIn` but presented as a
+ *  text link rather than a button — the hub is a participant-first surface
+ *  and shouldn't grow an admin-shaped CTA. Hidden once the user has a
+ *  non-anonymous session, at which point either the FacilitatorPanel handle
+ *  takes over (admin) or nothing replaces the link (non-admin Google user). */
+function renderAdminSignIn(mainId: string, creatorId: string): m.Children {
+  const user = getUserState().user;
+  if (!user || !user.isAnonymous) return null;
+
+  return m(
+    'button.main-hub__admin-signin',
+    {
+      type: 'button',
+      onclick: async () => {
+        try {
+          await signInWithGoogle();
+          await checkAdminStatus(mainId, creatorId);
+          m.redraw();
+        } catch (err) {
+          console.error('[MainHub] Admin sign-in failed:', err);
+        }
+      },
+    },
+    t('admin.signin'),
+  );
+}

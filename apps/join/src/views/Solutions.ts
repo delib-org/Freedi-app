@@ -18,6 +18,7 @@ import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
+import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { WizColFooter } from '@/components/WizColFooter';
 import { SplashLoader } from '@/views/Splash';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -124,15 +125,17 @@ export const Solutions: m.Component = {
           ? null
           : isAdmin()
             ? m('.solutions__admin-toolbar', [
-                m(
-                  'button.btn.btn--small.btn--primary',
-                  {
-                    onclick: () => {
-                      showAddSuggestion = true;
-                    },
-                  },
-                  t('admin.add_suggestion'),
-                ),
+                question.statementSettings?.enableAddEvaluationOption === false
+                  ? null
+                  : m(
+                      'button.btn.btn--small.btn--primary',
+                      {
+                        onclick: () => {
+                          showAddSuggestion = true;
+                        },
+                      },
+                      t('admin.add_suggestion'),
+                    ),
                 m(
                   `button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
                   {
@@ -195,6 +198,7 @@ export const Solutions: m.Component = {
             },
           })
         : null,
+      m(FacilitatorPanel),
     ]);
   },
 };

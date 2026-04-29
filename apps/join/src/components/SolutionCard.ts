@@ -142,7 +142,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             m('.solution-card__count', t('card.activists', { count: joinedCount })),
             m('.solution-card__count', t('card.organizers', { count: organizerCount })),
           ]),
-          m(
+          // Hide the chat affordance globally when a facilitator pauses chat
+          // (`hasChat === false`). Treat undefined as ON for back-compat.
+          question?.statementSettings?.hasChat === false
+          ? null
+          : m(
             '.solution-card__chat',
             {
               class: messageCount > 0 ? 'solution-card__chat--active' : '',

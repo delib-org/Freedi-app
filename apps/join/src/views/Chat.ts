@@ -9,6 +9,9 @@ import {
   setCustomDisplayName,
   getCustomDisplayName,
   subscribeMainStatement,
+  loadQuestion,
+  subscribeQuestion,
+  getQuestion,
 } from '@/lib/store';
 import { generateTemporalName } from '@/lib/nameGenerator';
 import { t } from '@/lib/i18n';
@@ -17,6 +20,7 @@ import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';
 import { ChatMessage } from '@/components/ChatMessage';
+import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { SplashLoader } from '@/views/Splash';
 
 let option: Statement | null = null;
@@ -28,6 +32,7 @@ let showNamePrompt = false;
 let closingNamePrompt = false;
 let nameInput = '';
 let mainUnsub: Unsubscribe | null = null;
+let questionUnsub: Unsubscribe | null = null;
 
 let isAtBottom = true;
 let newMessageCount = 0;
@@ -87,6 +92,15 @@ export const Chat: m.Component = {
       subscribeChat(optionId);
       markOptionRead(optionId);
 
+      // Load the parent question + keep a live subscription so the chat view
+      // sees real-time `hasChat` flips from the facilitator panel and so the
+      // panel itself can resolve admin status correctly.
+      const qid = m.route.param('qid');
+      if (qid) {
+        await loadQuestion(qid);
+        questionUnsub = subscribeQuestion(qid);
+      }
+
       // In facilitated mode, keep a listener on the main statement so the
       // facilitator can move us back up to Solutions or the Hub.
       const mainId = m.route.param('mid');
@@ -107,6 +121,10 @@ export const Chat: m.Component = {
       mainUnsub();
       mainUnsub = null;
     }
+    if (questionUnsub) {
+      questionUnsub();
+      questionUnsub = null;
+    }
     option = null;
     messagesEl = null;
   },
@@ -116,6 +134,9 @@ export const Chat: m.Component = {
     const user = getUserState().user;
     const msgs = getMessages();
     const facilitated = isFacilitatedMode();
+    // `hasChat === false` means a facilitator paused chat. Treat undefined as
+    // ON so existing questions without the field keep working.
+    const chatPaused = getQuestion()?.statementSettings?.hasChat === false;
 
     const currentCount = msgs.length;
     if (currentCount > prevMessageCount && prevMessageCount > 0) {
@@ -199,7 +220,9 @@ export const Chat: m.Component = {
               : null,
           ]),
 
-      showNamePrompt
+      chatPaused
+        ? m('.chat__paused-banner', t('facilitator.chat.paused'))
+        : showNamePrompt
         ? m(`.chat__name-prompt${closingNamePrompt ? '.chat__name-prompt--closing' : ''}`, [
             m('.chat__name-label', t('chat.name_prompt')),
             m('input.chat__name-input', {
@@ -292,6 +315,7 @@ export const Chat: m.Component = {
               ),
             ]),
           ]),
+      m(FacilitatorPanel),
     ]);
   },
 };
