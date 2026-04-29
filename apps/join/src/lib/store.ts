@@ -368,7 +368,7 @@ export function subscribeQuestion(questionId: string): Unsubscribe {
 
 let mainStatement: Statement | null = null;
 let subQuestions: Statement[] = [];
-let lastPowerFollowMePath = '';
+let lastFollowedPath = '';
 let activeFacilitatedMainId: string | null = null;
 let pendingRedirectTimer: number | null = null;
 
@@ -412,7 +412,7 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
   // for the new mid is allowed to fire a redirect.
   if (activeFacilitatedMainId !== mainId) {
     activeFacilitatedMainId = mainId;
-    lastPowerFollowMePath = '';
+    lastFollowedPath = '';
   }
 
   return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
@@ -426,10 +426,16 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
     mainStatement = data;
     syncMainStatementLanguage();
 
-    const newPower = data.powerFollowMe ?? '';
-    if (newPower !== lastPowerFollowMePath) {
-      lastPowerFollowMePath = newPower;
-      void applyFacilitatorRedirect(newPower, mainId);
+    // The join app always auto-redirects participants — there's no opt-in.
+    // Both `powerFollowMe` and the regular `followMe` mean "go where the
+    // facilitator is". powerFollowMe wins when both are set (matches the
+    // main app's precedence in FollowMeToast.tsx).
+    const power = data.powerFollowMe ?? '';
+    const regular = data.followMe ?? '';
+    const activePath = power || regular;
+    if (activePath !== lastFollowedPath) {
+      lastFollowedPath = activePath;
+      void applyFacilitatorRedirect(activePath, mainId);
     }
     m.redraw();
   });
