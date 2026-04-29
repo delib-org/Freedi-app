@@ -26,8 +26,7 @@ import {
   createStatementObject,
   CutoffBy,
 } from '@freedi/shared-types';
-import type { ResultsSettings } from '@freedi/shared-types';
-import { checkAdminStatus } from './admin';
+import { checkAdminStatus, isAdmin } from './admin';
 import {
   mapMainAppPathToJoinTarget,
   joinTargetToRoute,
@@ -208,22 +207,27 @@ export function getVisibleOptions(): Statement[] {
     opts = opts.filter((o) => o.isCluster === true || !memberOf.has(o.statementId));
   }
 
-  if (question?.resultsSettings) {
-    const rs: ResultsSettings = question.resultsSettings;
-    if (rs.cutoffBy === CutoffBy.topOptions && rs.numberOfResults) {
-      opts = opts.slice(0, rs.numberOfResults);
-    } else if (rs.cutoffBy === CutoffBy.aboveThreshold && rs.minConsensus != null) {
-      opts = opts.filter((o) => (o.consensus ?? 0) >= (rs.minConsensus ?? 0));
+  // Consensus-threshold filter: applies ONLY when admin explicitly chose
+  // "Above specific value" in the selection-criteria settings (either via
+  // the main-app settings page or via Join's facilitator panel — both
+  // write `cutoffBy === aboveThreshold`). The default `topOptions` mode is
+  // for results/winners and never filters the live engagement list — that
+  // would clip options before participants get a chance to vote/join.
+  // `cutoffNumber` is the canonical value; `minConsensus` is a legacy
+  // field older FacilitatorPanel builds wrote to, kept as a read fallback
+  // so existing question docs keep working without manual migration.
+  const rs = question?.resultsSettings;
+  if (rs?.cutoffBy === CutoffBy.aboveThreshold) {
+    const cutoff = rs.cutoffNumber ?? rs.minConsensus;
+    if (cutoff != null) {
+      opts = opts.filter((o) => (o.consensus ?? 0) >= cutoff);
     }
   }
 
-  // Re-inject admin-promoted options that the cutoff would otherwise drop.
-  // Runs after condensation + cutoff so admin intent wins over both.
+  // Re-inject admin-promoted options that the threshold would otherwise
+  // drop, so admins can keep an option visible regardless of its score.
   const forced = allOptions.filter(
-    (o) =>
-      o.forceShow === true &&
-      o.hide !== true &&
-      o.joinStatus !== 'failed',
+    (o) => o.forceShow === true && o.hide !== true && o.joinStatus !== 'failed',
   );
   if (forced.length > 0) {
     const seen = new Set(opts.map((o) => o.statementId));
@@ -265,6 +269,31 @@ export async function setQuestionSetting(
 ): Promise<void> {
   const ref = doc(db, Collections.statements, questionId);
   await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Admin "lead the session" from inside the Join app: writes
+ *  `joinFollowMe` on the main statement so participants get auto-redirected
+ *  to wherever the admin points them. Pass an empty string to stop.
+ *
+ *  The path format follows the main app's routing (e.g.
+ *  `/statement/{questionId}`); the join app translates it via
+ *  `mapMainAppPathToJoinTarget` before redirecting.
+ *
+ *  We deliberately use a separate field from the main app's
+ *  `powerFollowMe`. Main app sessions with power-follow active continually
+ *  rewrite `powerFollowMe` to the admin's current main-app path (see
+ *  `FollowMeToast.tsx`), which would clobber every write the join admin
+ *  makes — pulling participants back to wherever the main-app admin is.
+ *  `joinFollowMe` is owned by the Join app alone. */
+export async function setPowerFollowMe(mainId: string, path: string): Promise<void> {
+  const ref = doc(db, Collections.statements, mainId);
+  await setDoc(ref, { joinFollowMe: path, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Current `joinFollowMe` path on the subscribed main statement, or ''
+ *  when nobody is leading from inside the Join app. */
+export function getPowerFollowMePath(): string {
+  return mainStatement?.joinFollowMe ?? '';
 }
 
 /** Create a new option attributed to the admin (organizer suggestion).
@@ -443,16 +472,24 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
     mainStatement = data;
     syncMainStatementLanguage();
 
-    // The join app always auto-redirects participants — there's no opt-in.
-    // Both `powerFollowMe` and the regular `followMe` mean "go where the
-    // facilitator is". powerFollowMe wins when both are set (matches the
-    // main app's precedence in FollowMeToast.tsx).
-    const power = data.powerFollowMe ?? '';
-    const regular = data.followMe ?? '';
-    const activePath = power || regular;
+    // Participants auto-redirect to wherever the facilitator is. Admins are
+    // skipped — they're the source of truth for `joinFollowMe`, so being
+    // pulled around by their own broadcast would prevent them from
+    // navigating freely while leading.
+    //
+    // We use the join-specific `joinFollowMe` field rather than the
+    // main app's `powerFollowMe` / `followMe`. Main-app sessions with
+    // power-follow active continually rewrite `powerFollowMe` to the
+    // admin's current main-app path (FollowMeToast.tsx), which would yank
+    // join participants away every time the join admin tried to lead.
+    // `joinFollowMe` is owned by the Join app alone, so a stray main-app
+    // session can't fight us.
+    const activePath = data.joinFollowMe ?? '';
     if (activePath !== lastFollowedPath) {
       lastFollowedPath = activePath;
-      void applyFacilitatorRedirect(activePath, mainId);
+      if (!isAdmin()) {
+        void applyFacilitatorRedirect(activePath, mainId);
+      }
     }
     m.redraw();
   });

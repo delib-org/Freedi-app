@@ -2,7 +2,12 @@ import m from 'mithril';
 import { CutoffBy, ResultsBy, Statement } from '@freedi/shared-types';
 import type { ResultsSettings } from '@freedi/shared-types';
 import { isAdmin } from '@/lib/admin';
-import { getQuestion, setQuestionSetting } from '@/lib/store';
+import {
+  getQuestion,
+  setQuestionSetting,
+  setPowerFollowMe,
+  getPowerFollowMePath,
+} from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 let isOpen = false;
@@ -138,12 +143,19 @@ function ensureEscListener(): void {
 }
 
 function isThresholdOn(question: Statement): boolean {
-  const rs = question.resultsSettings;
-  return rs?.cutoffBy === CutoffBy.aboveThreshold && (rs.minConsensus ?? 0) > 0;
+  // Threshold is "on" when the admin has explicitly chosen the
+  // above-threshold cutoff method. Any value (including 0) is treated as
+  // an active filter — the user toggled it on, so honor that.
+  return question.resultsSettings?.cutoffBy === CutoffBy.aboveThreshold;
 }
 
 function getThresholdValue(question: Statement): number {
-  return question.resultsSettings?.minConsensus ?? DEFAULT_THRESHOLD;
+  // `cutoffNumber` is the source-of-truth field used by the main app's
+  // settings UI and the `updateChosenOptions` Cloud Function. Older builds
+  // wrote `minConsensus` instead, so we fall back to it for back-compat
+  // when reading existing question docs.
+  const rs = question.resultsSettings;
+  return rs?.cutoffNumber ?? rs?.minConsensus ?? DEFAULT_THRESHOLD;
 }
 
 /** Build a complete `ResultsSettings` patch by filling in any required fields
@@ -171,7 +183,7 @@ async function flipThreshold(question: Statement): Promise<void> {
     await setQuestionSetting(question.statementId, {
       resultsSettings: buildResultsSettingsPatch(question.resultsSettings, {
         cutoffBy: CutoffBy.aboveThreshold,
-        minConsensus: getThresholdValue(question),
+        cutoffNumber: getThresholdValue(question),
       }),
     });
   }
@@ -185,10 +197,29 @@ function writeThresholdValue(questionId: string, value: number): void {
     void setQuestionSetting(questionId, {
       resultsSettings: buildResultsSettingsPatch(q?.resultsSettings, {
         cutoffBy: CutoffBy.aboveThreshold,
-        minConsensus: value,
+        cutoffNumber: value,
       }),
     });
   }, SLIDER_DEBOUNCE_MS);
+}
+
+/** Path the main app would write to `powerFollowMe` to point participants
+ *  at this specific question. The join app translates the path back into
+ *  its own `/m/:mid/q/:qid` route via `mapMainAppPathToJoinTarget`. */
+function broadcastPathForQuestion(questionId: string): string {
+  return `/statement/${questionId}`;
+}
+
+function isFollowMeOn(question: Statement): boolean {
+  return getPowerFollowMePath() === broadcastPathForQuestion(question.statementId);
+}
+
+/** Press the button to start broadcasting "follow me to this question";
+ *  press it again to stop. The button itself is the only on/off control
+ *  now that the standalone indicator has been removed. */
+async function pressFollowMe(question: Statement, mainId: string): Promise<void> {
+  const next = isFollowMeOn(question) ? '' : broadcastPathForQuestion(question.statementId);
+  await setPowerFollowMe(mainId, next);
 }
 
 async function flipAllowAdd(question: Statement): Promise<void> {
@@ -259,6 +290,9 @@ export const FacilitatorPanel: m.Component = {
 
     const question = getQuestion();
     const hasQuestion = question !== null;
+    const mainId = m.route.param('mid');
+    const canLead = hasQuestion && Boolean(mainId);
+    const followMeOn = canLead ? isFollowMeOn(question!) : false;
     const thresholdOn = hasQuestion ? isThresholdOn(question!) : false;
     const thresholdVal = hasQuestion ? getThresholdValue(question!) : DEFAULT_THRESHOLD;
     const allowAddOn = hasQuestion
@@ -323,6 +357,40 @@ export const FacilitatorPanel: m.Component = {
           !hasQuestion
             ? m('.facilitator-panel__notice', t('facilitator.panel.no_question'))
             : null,
+          m('.facilitator-panel__row', [
+            m('.facilitator-panel__row-main', [
+              m(
+                `button.btn.facilitator-panel__action${followMeOn ? '.btn--secondary.facilitator-panel__action--on' : '.btn--primary'}`,
+                {
+                  type: 'button',
+                  disabled: !canLead,
+                  'aria-pressed': followMeOn ? 'true' : 'false',
+                  'aria-label': followMeOn
+                    ? t('facilitator.action.followMe.stop')
+                    : t('facilitator.action.followMe'),
+                  onclick: () => {
+                    if (!canLead) return;
+                    void pressFollowMe(question!, mainId!);
+                  },
+                },
+                [
+                  m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '📣'),
+                  m(
+                    'span.facilitator-panel__action-label',
+                    followMeOn
+                      ? t('facilitator.action.followMe.stop')
+                      : t('facilitator.action.followMe'),
+                  ),
+                ],
+              ),
+            ]),
+            m(
+              '.facilitator-panel__row-help',
+              followMeOn
+                ? t('facilitator.action.followMe.activeHelp')
+                : t('facilitator.action.followMe.help'),
+            ),
+          ]),
           renderToggle({
             label: t('facilitator.toggle.threshold'),
             on: thresholdOn,
@@ -348,7 +416,7 @@ export const FacilitatorPanel: m.Component = {
                     if (!Number.isFinite(v)) return;
                     // Optimistic local update so the label tracks the drag.
                     if (question!.resultsSettings) {
-                      question!.resultsSettings.minConsensus = v;
+                      question!.resultsSettings.cutoffNumber = v;
                     }
                     writeThresholdValue(question!.statementId, v);
                     m.redraw();

@@ -1342,7 +1342,7 @@
   cursor: default;
   user-select: none;
 
-  // Display-only — no hover/active treatment.
+  // Display-only by default — no hover/active treatment.
   &:hover,
   &:active {
     background: var(--surface-card, #fff);
@@ -1350,6 +1350,31 @@
     box-shadow: var(--shadow-xs);
     transform: none;
   }
+
+  // Admin-interactive variant: card behaves as a button. Hover/focus give
+  // it a subtle lift so it's clear the whole row is clickable.
+  &--interactive {
+    cursor: pointer;
+    transition: border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--q-accent, var(--terra-500));
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--q-accent, var(--terra-500));
+      outline-offset: 2px;
+    }
+  }
+}
+
+.main-hub__question-card-body {
+  min-width: 0;
 }
 
 .main-hub__question-title {
@@ -1683,6 +1708,26 @@ $facilitator-panel-width: 300px;
   line-height: 1.4;
 }
 
+// "Follow me" call-to-action button inside the panel. Sized to fill the
+// row (full-width inside the panel column) so it reads as a primary
+// action rather than a secondary toggle. Toggles between primary
+// (`Follow me`) and secondary (`Stop following`) styling via the variant
+// classes on the element.
+.facilitator-panel__action {
+  flex: 1 1 auto;
+  width: 100%;
+  gap: var(--space-xs);
+}
+
+.facilitator-panel__action-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.facilitator-panel__action-label {
+  white-space: nowrap;
+}
+
 .facilitator-panel__toggle {
   position: relative;
   width: 44px;
@@ -1792,4 +1837,56 @@ $facilitator-panel-width: 300px;
   border-radius: var(--radius-sm);
   text-align: center;
 }
+
+// -----------------------------------------------------------------------------
+// Back button — iOS-style fixed back affordance pinned to the top
+// inline-start corner (LTR → top-left, RTL → top-right). Admin-only;
+// the calling view decides which route to go back to.
+// -----------------------------------------------------------------------------
+.back-button {
+  position: fixed;
+  top: var(--space-md);
+  inset-inline-start: var(--space-md);
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--paper-line, rgba(0, 0, 0, 0.08));
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-primary, #1c1917);
+  font-size: 1.4rem;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  // Backdrop blur when supported gives the iOS chrome-on-photo feel; the
+  // rgba background above is the fallback.
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  &:hover,
+  &:focus-visible {
+    background: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--terra-600, #c2410c);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.back-button__chevron {
+  // Visually nudge the chevron upward — most chevron glyphs sit on the
+  // baseline and look offset inside a perfectly centered button.
+  margin-block-start: -2px;
+  font-weight: 600;
+}
+
 

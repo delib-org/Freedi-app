@@ -19,6 +19,7 @@ import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
+import { BackButton } from '@/components/BackButton';
 import { WizColFooter } from '@/components/WizColFooter';
 import { SplashLoader } from '@/views/Splash';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -103,8 +104,10 @@ export const Solutions: m.Component = {
     const unread = getUnreadCount();
     const accentColor = question.color || 'var(--terra-500)';
     const facilitated = isFacilitatedMode();
+    const mainId = m.route.param('mid');
 
     return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
+      facilitated && mainId ? m(BackButton, { to: `/m/${mainId}` }) : null,
       m(
         '.solutions__header',
         { style: `--q-accent: ${accentColor}` },

@@ -80,6 +80,7 @@ export const StatementSchema = object({
 	forceLanguage: optional(boolean()), // if true, force the language of the statement
 	followMe: optional(string()),
 	powerFollowMe: optional(string()), // when set, auto-redirects non-admin users to this path
+	joinFollowMe: optional(string()), // join-app-only follow-me; isolated from `powerFollowMe` so a main-app session with power-follow active can't fight the join admin's broadcasts
 	parentId: string(), // the id of the parent statement
 	parents: optional(array(string())), // the list of all parents of the statement
 	topParentId: string(), // the id of the top parent of the statement

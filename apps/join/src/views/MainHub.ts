@@ -8,7 +8,7 @@ import {
   subscribeMainStatement,
   subscribeSubQuestions,
 } from '@/lib/store';
-import { checkAdminStatus } from '@/lib/admin';
+import { checkAdminStatus, isAdmin } from '@/lib/admin';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
@@ -96,6 +96,8 @@ export const MainHub: m.Component = {
     const subs = getSubQuestions();
     const accentColor = main.color || 'var(--terra-500)';
     const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
+    const admin = isAdmin();
+    const mainId = main.statementId;
 
     return m('.main-hub', { style: `--q-accent: ${accentColor}` }, [
       m('.main-hub__brand', [
@@ -121,25 +123,7 @@ export const MainHub: m.Component = {
           ? m('.main-hub__empty', t('mainHub.empty'))
           : m(
               '.main-hub__question-list',
-              subs.map((q: Statement) =>
-                m(
-                  '.main-hub__question-card',
-                  {
-                    key: q.statementId,
-                    'aria-disabled': 'true',
-                  },
-                  [
-                    m('.main-hub__question-title', q.statement),
-                    (() => {
-                      const body = getStatementBody(q);
-
-                      return body
-                        ? m('.main-hub__question-description', body)
-                        : null;
-                    })(),
-                  ],
-                ),
-              ),
+              subs.map((q: Statement) => renderQuestionCard(q, mainId, admin)),
             ),
         m(WizColFooter),
       ]),
@@ -147,6 +131,43 @@ export const MainHub: m.Component = {
     ]);
   },
 };
+
+function renderQuestionCard(q: Statement, mainId: string, admin: boolean): m.Vnode {
+  const cardClass = `.main-hub__question-card${admin ? '.main-hub__question-card--interactive' : ''}`;
+
+  return m(
+    cardClass,
+    {
+      key: q.statementId,
+      role: admin ? 'button' : undefined,
+      tabindex: admin ? '0' : undefined,
+      'aria-disabled': admin ? undefined : 'true',
+      onclick: admin
+        ? () => {
+            m.route.set(`/m/${mainId}/q/${q.statementId}`);
+          }
+        : undefined,
+      onkeydown: admin
+        ? (e: KeyboardEvent) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              m.route.set(`/m/${mainId}/q/${q.statementId}`);
+            }
+          }
+        : undefined,
+    },
+    [
+      m('.main-hub__question-card-body', [
+        m('.main-hub__question-title', q.statement),
+        (() => {
+          const body = getStatementBody(q);
+
+          return body ? m('.main-hub__question-description', body) : null;
+        })(),
+      ]),
+    ],
+  );
+}
 
 /** Discreet "Sign in as admin" link in the top-inline-end corner of the
  *  hub brand row. Mirrors `Solutions.renderAdminSignIn` but presented as a

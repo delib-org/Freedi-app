@@ -21,6 +21,7 @@ import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';
 import { ChatMessage } from '@/components/ChatMessage';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
+import { BackButton } from '@/components/BackButton';
 import { SplashLoader } from '@/views/Splash';
 
 let option: Statement | null = null;
@@ -157,7 +158,12 @@ export const Chat: m.Component = {
       return m('.chat', m('.chat__empty', t('chat.not_found')));
     }
 
+    const mainId = m.route.param('mid');
+
     return m(`.chat${facilitated ? '.chat--facilitated' : ''}`, [
+      facilitated && mainId
+        ? m(BackButton, { to: `/m/${mainId}/q/${questionId}` })
+        : null,
       m('.chat__header', [
         facilitated
           ? null
