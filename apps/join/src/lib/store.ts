@@ -179,9 +179,12 @@ export function getMessages(): Statement[] {
 }
 
 export function getVisibleOptions(): Statement[] {
+  // Admin-added options ("admin suggestions") belong in the main people's
+  // list — users vote on them like any other option, and they can become
+  // people's suggestions through evaluation. They are NOT the same as
+  // "organizer suggestions" (which is a separate per-option role concept,
+  // tracked via the `organizers[]` array on each option).
   let opts = allOptions
-    // organizer suggestions render in their own section above the regular list
-    .filter((o) => o.creatorRole !== Role.admin)
     // admin-hidden options never render for anyone
     .filter((o) => o.hide !== true)
     .filter((o) => o.joinStatus !== 'failed')
@@ -220,8 +223,7 @@ export function getVisibleOptions(): Statement[] {
     (o) =>
       o.forceShow === true &&
       o.hide !== true &&
-      o.joinStatus !== 'failed' &&
-      o.creatorRole !== Role.admin,
+      o.joinStatus !== 'failed',
   );
   if (forced.length > 0) {
     const seen = new Set(opts.map((o) => o.statementId));
@@ -231,12 +233,14 @@ export function getVisibleOptions(): Statement[] {
   return opts;
 }
 
-/** Options created by an admin from the Join app. Rendered in a separate
- *  section above the regular participant list. */
+/** Deprecated: kept as a no-op for callers that still reference it. Admin-
+ *  added options (whether created in the main app or via the join app's
+ *  "Add suggestion" flow) are now part of the main people's list returned
+ *  by `getVisibleOptions()`. The "organizer" concept is now reserved for
+ *  the per-option role users can take via the activist/organizer join
+ *  buttons. */
 export function getOrganizerSuggestions(): Statement[] {
-  return allOptions
-    .filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
-    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+  return [];
 }
 
 /** Admin curation: set `hide` or `forceShow` on a specific option. Uses
