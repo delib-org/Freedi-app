@@ -562,6 +562,118 @@
 }
 
 // -----------------------------------------------------------------------------
+// Evaluation row (5 faces) — same -1..1 scale as the main app's
+// EnhancedEvaluation, but tuned for a 70+ audience: every thumb is a large,
+// fully-coloured circle so all five faces are clearly distinct on first
+// glance. The selected face gets a thick ink ring + scale-up + ring-shadow,
+// so it's unmistakable which one was picked.
+//
+// Sizes deliberately exceed the 44×44 minimum recommended for older-adult
+// touch targets. Layout wraps to 3+2 on very narrow screens so we never
+// shrink the buttons.
+// -----------------------------------------------------------------------------
+.evaluation {
+  display: flex;
+  flex-direction: row;        // logical: LTR = left→right (-1 …. +1), RTL = right→left
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;          // keep all five faces on a single line
+  gap: var(--space-xs);
+  margin: var(--space-sm) 0 var(--space-md);
+  padding: var(--space-sm);
+  background: var(--paper-soft);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--paper-line);
+}
+
+.evaluation__thumb {
+  appearance: none;
+  // Each thumb takes an equal share of the row, capped at 56px so they
+  // don't blow up on wide cards and floored at 44px so they never drop
+  // below the senior-friendly tap-target minimum. `aspect-ratio` keeps
+  // them circular regardless of the share they end up with.
+  flex: 1 1 0;
+  min-width: 44px;
+  max-width: 56px;
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  // The inline-styled background colour (one --emoji-* per face) is the
+  // primary signal; the border below sits on top for the active state.
+  border: 4px solid transparent;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition:
+    transform var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out),
+    filter var(--dur-quick, 140ms) var(--ease-out);
+
+  // Inactive faces dim slightly so the eye can still pick out the chosen
+  // one at a glance; the colour itself remains visible on every face.
+  filter: saturate(0.85);
+  opacity: 0.85;
+
+  &:hover {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: saturate(1);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+// Active = the user has picked this face (optimistic or server-confirmed).
+// Heavy ink ring + scale + double-ring shadow makes the choice impossible
+// to miss for low-vision users.
+.evaluation__thumb--active {
+  border-color: var(--ink, #1c1917);
+  transform: scale(1.12);
+  filter: saturate(1.05);
+  opacity: 1;
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 4px 10px rgba(0, 0, 0, 0.28);
+  z-index: 1;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+}
+
+.evaluation__thumb-img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  pointer-events: none;
+  // The asset paints the face in near-white; a soft shadow lifts it off the
+  // coloured circle without losing the line-art look.
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evaluation__thumb {
+    transition: none;
+  }
+  .evaluation__thumb:hover,
+  .evaluation__thumb:active,
+  .evaluation__thumb--active,
+  .evaluation__thumb--active:hover {
+    transform: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
 // Chat
 // -----------------------------------------------------------------------------
 .chat {
@@ -1154,6 +1266,29 @@
   border-radius: var(--radius-lg);
 }
 
+// Participant-facing "add a suggestion" affordance — only renders when the
+// admin has flipped the per-question `enableAddEvaluationOption` toggle on.
+// Sits between the header counter and the crowd list so it reads as the
+// natural next action ("if you have an idea, add it here") without the
+// admin-toolbar dashed-border treatment, which is reserved for admin-only
+// surfaces.
+.solutions__add-row {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-md) 0;
+}
+
+.solutions__add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.solutions__add-button-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
 // Discreet sign-in affordance for admins visiting anonymously — small,
 // subdued, placed where the admin toolbar would be once they're recognized.
 .solutions__admin-signin {
@@ -1737,6 +1872,49 @@ $facilitator-panel-width: 300px;
   border: 0;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+// Two-button segmented control for the admin sort. Sits in the same row
+// slot as the on/off toggles so the panel keeps a uniform rhythm. The
+// active segment fills with the panel accent (teal); the other shows the
+// neutral track colour so the choice reads at a glance.
+.facilitator-panel__segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted, #d6d3d1);
+  padding: 2px;
+  gap: 2px;
+}
+
+.facilitator-panel__segment {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-body, #44403c);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-medium, 500);
+  padding: 4px var(--space-sm);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.facilitator-panel__segment--active {
+  background: var(--teal-600, #145f54);
+  color: var(--paper, #ffffff);
 }
 
 .facilitator-panel__toggle:focus-visible {

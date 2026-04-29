@@ -15,6 +15,7 @@ import {
 import { getUserState } from '@/lib/user';
 import { t } from '@/lib/i18n';
 import { hasCelebrated, markCelebrated, playCelebrationSound, launchConfetti } from '@/lib/celebrate';
+import { Evaluation } from '@/components/Evaluation';
 
 function getOptionDescription(option: Statement): string | null {
   if (option.description) return option.description;
@@ -135,6 +136,15 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         m('.solution-card__title', option.statement),
         getOptionDescription(option)
           ? m('.solution-card__description', getOptionDescription(option))
+          : null,
+        // The 5-face evaluation row is gated by the same
+        // `statementSettings.showEvaluation` flag the main app uses, so
+        // both surfaces open and close evaluation in lockstep — and
+        // turning it off in the FacilitatorPanel hides it everywhere.
+        // No `key` here on purpose: this slot is positional, and mixing
+        // keyed + unkeyed siblings in a fragment is a Mithril error.
+        question?.statementSettings?.showEvaluation === true
+          ? m(Evaluation, { option })
           : null,
         buildQuotaBar(joinedCount, organizerCount, question),
         m('.solution-card__meta', [

@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { t } from '@/lib/i18n';
-import { createOrganizerSuggestion } from '@/lib/store';
+import { createSuggestion } from '@/lib/store';
+import { isAdmin } from '@/lib/admin';
 
 interface AddSuggestionModalAttrs {
   onClose: () => void;
@@ -18,6 +19,15 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
   view(vnode) {
     const { onClose } = vnode.attrs;
     const canSubmit = !submitting && text.trim().length > 0;
+    // Admin gets the "organizer suggestion" framing (their option will carry
+    // the organizer badge). Everyone else sees neutral "Add option" copy
+    // because their submission joins the regular crowd list.
+    const adminMode = isAdmin();
+    const titleKey = adminMode ? 'admin.add_suggestion' : 'solutions.add_suggestion';
+    const placeholderKey = adminMode
+      ? 'admin.suggestion_placeholder'
+      : 'solutions.add_suggestion_placeholder';
+    const submitKey = adminMode ? 'admin.submit' : 'solutions.add_suggestion_submit';
 
     return m(
       '.modal__overlay',
@@ -28,10 +38,10 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
       },
       [
         m('.modal__body', [
-          m('h2.modal__title', t('admin.add_suggestion')),
+          m('h2.modal__title', t(titleKey)),
 
           m('.modal__field', [
-            m('label.modal__label', { for: 'organizer-suggestion-text' }, t('admin.suggestion_placeholder')),
+            m('label.modal__label', { for: 'organizer-suggestion-text' }, t(placeholderKey)),
             m('textarea.modal__input', {
               id: 'organizer-suggestion-text',
               rows: 4,
@@ -50,7 +60,7 @@ export const AddSuggestionModal: m.Component<AddSuggestionModalAttrs> = {
                 disabled: !canSubmit,
                 onclick: () => handleSubmit(onClose),
               },
-              submitting ? t('form.submitting') : t('admin.submit'),
+              submitting ? t('form.submitting') : t(submitKey),
             ),
           ]),
         ]),
@@ -67,7 +77,7 @@ async function handleSubmit(onClose: () => void): Promise<void> {
   m.redraw();
 
   try {
-    await createOrganizerSuggestion(trimmed);
+    await createSuggestion(trimmed);
     onClose();
   } catch (err) {
     console.error('[AddSuggestionModal] Submission failed:', err);

@@ -1,10 +1,12 @@
 import m from 'mithril';
-import { CutoffBy, ResultsBy, Statement } from '@freedi/shared-types';
+import { CutoffBy, ResultsBy, SortType, Statement } from '@freedi/shared-types';
 import type { ResultsSettings } from '@freedi/shared-types';
 import { isAdmin } from '@/lib/admin';
 import {
   getQuestion,
   setQuestionSetting,
+  setSortType,
+  setEvaluationEnabled,
   setPowerFollowMe,
   getPowerFollowMePath,
 } from '@/lib/store';
@@ -233,6 +235,11 @@ async function flipAllowAdd(question: Statement): Promise<void> {
   });
 }
 
+async function flipAllowEvaluation(question: Statement): Promise<void> {
+  const next = !(question.statementSettings?.showEvaluation ?? false);
+  await setEvaluationEnabled(question.statementId, next);
+}
+
 async function flipAllowChat(question: Statement): Promise<void> {
   const next = !(question.statementSettings?.hasChat ?? true);
   await setQuestionSetting(question.statementId, {
@@ -241,6 +248,51 @@ async function flipAllowChat(question: Statement): Promise<void> {
       hasChat: next,
     },
   });
+}
+
+/** Two-button segmented control for the admin-controlled sort. Writes to the
+ *  question's `defaultSortType` so every subscriber sees the same order on
+ *  the next snapshot — the chosen sort travels with "follow me" because both
+ *  participants and the admin render from the same field. */
+function renderSortSegmented(question: Statement | null): m.Vnode {
+  const current = question?.statementSettings?.defaultSortType;
+  const isNewest = current === SortType.newest;
+  const isConsensus = !isNewest;
+  const disabled = !question;
+
+  const segment = (active: boolean, label: string, onclick: () => void) =>
+    m(
+      `button.facilitator-panel__segment${active ? '.facilitator-panel__segment--active' : ''}`,
+      {
+        type: 'button',
+        role: 'radio',
+        'aria-checked': active ? 'true' : 'false',
+        disabled: disabled ? true : undefined,
+        onclick: disabled ? undefined : onclick,
+      },
+      label,
+    );
+
+  return m('.facilitator-panel__row', [
+    m('.facilitator-panel__row-main', [
+      m('span.facilitator-panel__row-label', t('facilitator.sort.label')),
+      m(
+        '.facilitator-panel__segmented',
+        { role: 'radiogroup', 'aria-label': t('facilitator.sort.label') },
+        [
+          segment(isConsensus, t('facilitator.sort.consensus'), () => {
+            if (!question) return;
+            void setSortType(question.statementId, SortType.accepted);
+          }),
+          segment(isNewest, t('facilitator.sort.newest'), () => {
+            if (!question) return;
+            void setSortType(question.statementId, SortType.newest);
+          }),
+        ],
+      ),
+    ]),
+    m('.facilitator-panel__row-help', t('facilitator.sort.help')),
+  ]);
 }
 
 function renderToggle(opts: {
@@ -301,6 +353,9 @@ export const FacilitatorPanel: m.Component = {
     const allowChatOn = hasQuestion
       ? question!.statementSettings?.hasChat ?? true
       : true;
+    const allowEvaluationOn = hasQuestion
+      ? question!.statementSettings?.showEvaluation ?? false
+      : false;
 
     const positioned = handleY !== null;
     const dragging = dragState !== null;
@@ -391,6 +446,7 @@ export const FacilitatorPanel: m.Component = {
                 : t('facilitator.action.followMe.help'),
             ),
           ]),
+          renderSortSegmented(question),
           renderToggle({
             label: t('facilitator.toggle.threshold'),
             on: thresholdOn,
@@ -438,6 +494,16 @@ export const FacilitatorPanel: m.Component = {
               if (!hasQuestion) return;
               void flipAllowAdd(question!);
             },
+          }),
+          renderToggle({
+            label: t('facilitator.toggle.allowEvaluation'),
+            on: allowEvaluationOn,
+            disabled: !hasQuestion,
+            onflip: () => {
+              if (!hasQuestion) return;
+              void flipAllowEvaluation(question!);
+            },
+            help: t('facilitator.toggle.allowEvaluation.help'),
           }),
           renderToggle({
             label: t('facilitator.toggle.allowChat'),

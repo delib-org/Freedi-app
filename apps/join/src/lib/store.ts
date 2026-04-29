@@ -23,6 +23,7 @@ import {
   StatementType,
   Creator,
   Role,
+  SortType,
   createStatementObject,
   CutoffBy,
 } from '@freedi/shared-types';
@@ -45,6 +46,18 @@ let messageCountsUnsubs: Unsubscribe[] = [];
 /** Cluster-id → unique-evaluator count. Populated by `subscribeClusterLinks`. */
 let clusterEvaluatorCounts: Map<string, number> = new Map();
 let clusterLinksUnsubs: Unsubscribe[] = [];
+
+/** Confirmed (server-side) evaluations the current user has cast for options
+ *  under the active question, keyed by optionId. Populated by
+ *  `subscribeUserEvaluations`. The scale is -1..1, matching the main app's
+ *  `enhancedEvaluationsThumbs`. */
+let userEvaluations: Map<string, number> = new Map();
+/** Optimistic overrides from the most recent click. Reading code prefers
+ *  these over `userEvaluations` so the picked face stays highlighted even
+ *  before Firestore confirms — the listener clears each entry once the
+ *  server snapshot agrees with what we wrote. */
+let optimisticEvaluations: Map<string, number> = new Map();
+let userEvaluationsUnsub: Unsubscribe | null = null;
 
 const LAST_READ_KEY = 'freedi_join_last_read';
 let joinFormSubmitted = new Set<string>();
@@ -183,11 +196,21 @@ export function getVisibleOptions(): Statement[] {
   // people's suggestions through evaluation. They are NOT the same as
   // "organizer suggestions" (which is a separate per-option role concept,
   // tracked via the `organizers[]` array on each option).
+  // Admin-controlled sort: read `defaultSortType` off the question so every
+  // participant subscribed to it sees the same order as the admin. The field
+  // is shared with the main app's sort menu, so flipping it from either
+  // surface stays in sync. Only `accepted` (consensus) and `newest` are
+  // exposed in the Join facilitator panel — the others fall through to the
+  // consensus default so a stale value doesn't break the view.
+  const sortType = question?.statementSettings?.defaultSortType;
+  const sortFn = sortType === SortType.newest
+    ? (a: Statement, b: Statement) => (b.createdAt ?? 0) - (a.createdAt ?? 0)
+    : (a: Statement, b: Statement) => (b.consensus ?? 0) - (a.consensus ?? 0);
   let opts = allOptions
     // admin-hidden options never render for anyone
     .filter((o) => o.hide !== true)
     .filter((o) => o.joinStatus !== 'failed')
-    .sort((a, b) => (b.consensus ?? 0) - (a.consensus ?? 0));
+    .sort(sortFn);
 
   // Condensation: in "clusters-only" mode for the join surface, hide any
   // original that is represented by a cluster (identified via
@@ -258,6 +281,41 @@ export async function setOptionFlag(
   await setDoc(ref, { [field]: value, lastUpdate: Date.now() }, { merge: true });
 }
 
+/** Facilitator live-control: turn the 5-face evaluation row on/off for all
+ *  participants. Writes `statementSettings.showEvaluation` (the same flag
+ *  the main app uses to gate its evaluation surfaces) so the join card and
+ *  any main-app view stay in sync about whether evaluation is open. */
+export async function setEvaluationEnabled(
+  questionId: string,
+  value: boolean,
+): Promise<void> {
+  const ref = doc(db, Collections.statements, questionId);
+  await setDoc(
+    ref,
+    {
+      statementSettings: { showEvaluation: value },
+      lastUpdate: Date.now(),
+    },
+    { merge: true },
+  );
+}
+
+/** Facilitator live-control: change the sort order all participants see by
+ *  writing `statementSettings.defaultSortType` on the question doc. The
+ *  options listener re-renders every subscriber on the next snapshot, so
+ *  participants drop into the new order without a refresh. */
+export async function setSortType(questionId: string, value: SortType): Promise<void> {
+  const ref = doc(db, Collections.statements, questionId);
+  await setDoc(
+    ref,
+    {
+      statementSettings: { defaultSortType: value },
+      lastUpdate: Date.now(),
+    },
+    { merge: true },
+  );
+}
+
 /** Facilitator live-control: write a partial patch to a question doc. Callers
  *  pass shaped patches like `{ statementSettings: { hasChat: false } }` —
  *  Firestore deep-merges nested fields. The local `subscribeQuestion`
@@ -296,14 +354,21 @@ export function getPowerFollowMePath(): string {
   return mainStatement?.joinFollowMe ?? '';
 }
 
-/** Create a new option attributed to the admin (organizer suggestion).
+/** Create a new option under the active question.
  *
- *  Delegates to the `createOrganizerSuggestion` Cloud Function. The callable
- *  performs the admin check server-side and writes the statement with
- *  `creatorRole: Role.admin` using the admin SDK — direct client writes that
- *  set `creatorRole` are rejected by firestore.rules to prevent badge
- *  spoofing, so this is the only path that produces an organizer suggestion. */
-export async function createOrganizerSuggestion(text: string): Promise<void> {
+ *  Single entry-point used by both admins and participants — kept DRY so the
+ *  AddSuggestionModal doesn't have to know which path applies:
+ *    • Admins: call the `createOrganizerSuggestion` Cloud Function. It writes
+ *      with `creatorRole: Role.admin` via the admin SDK (direct client writes
+ *      that set `creatorRole` are rejected by firestore.rules to prevent
+ *      badge spoofing — the callable is the only path that produces the
+ *      organizer badge).
+ *    • Participants: when the question's `enableAddEvaluationOption` setting
+ *      is on, write the option directly. No `creatorRole`, so it joins the
+ *      regular crowd list and is allowed by firestore.rules.
+ *
+ *  The shared helper means UI callers and translation copy can stay neutral. */
+export async function createSuggestion(text: string): Promise<void> {
   if (!question) return;
 
   const creator = getCreator();
@@ -312,15 +377,41 @@ export async function createOrganizerSuggestion(text: string): Promise<void> {
   const trimmed = text.trim();
   if (!trimmed) return;
 
-  const call = httpsCallable<
-    { questionId: string; text: string; displayName?: string },
-    { statementId: string }
-  >(functions, 'createOrganizerSuggestion');
-  await call({
-    questionId: question.statementId,
-    text: trimmed,
-    displayName: creator.displayName,
+  if (isAdmin()) {
+    const call = httpsCallable<
+      { questionId: string; text: string; displayName?: string },
+      { statementId: string }
+    >(functions, 'createOrganizerSuggestion');
+    await call({
+      questionId: question.statementId,
+      text: trimmed,
+      displayName: creator.displayName,
+    });
+
+    return;
+  }
+
+  // Participant path: gate on the admin-controlled toggle so a stale UI
+  // can't push writes after the admin closes additions.
+  if (question.statementSettings?.enableAddEvaluationOption !== true) {
+    throw new Error('Adding options is not enabled for this question');
+  }
+
+  const newOption = createStatementObject({
+    statement: trimmed,
+    statementType: StatementType.option,
+    parentId: question.statementId,
+    topParentId: question.topParentId || question.statementId,
+    creatorId: creator.uid,
+    creator,
   });
+
+  if (!newOption) return;
+
+  await setDoc(
+    doc(db, Collections.statements, newOption.statementId),
+    newOption,
+  );
 }
 
 function buildCreator(): Creator | null {
@@ -602,6 +693,104 @@ function subscribeClusterLinks(): void {
 
 export function getClusterEvaluatorCount(clusterId: string): number {
   return clusterEvaluatorCounts.get(clusterId) ?? 0;
+}
+
+/** What face should be highlighted on the option's evaluation row? Returns
+ *  the optimistic value if a click is still in flight, otherwise the
+ *  server-confirmed value. `undefined` means the user hasn't evaluated yet. */
+export function getEffectiveEvaluation(optionId: string): number | undefined {
+  if (optimisticEvaluations.has(optionId)) {
+    return optimisticEvaluations.get(optionId);
+  }
+
+  return userEvaluations.get(optionId);
+}
+
+/** Optimistic evaluation write — mirrors the main app's
+ *  `setEvaluationToDB` shape so the same Cloud Function aggregates the
+ *  result. Highlights the face immediately, then writes through; the
+ *  evaluations listener clears the optimistic entry as soon as the server
+ *  snapshot matches. */
+export async function setEvaluation(option: Statement, score: number): Promise<void> {
+  if (score < -1 || score > 1) return;
+  if (!option.parentId) return;
+
+  const creator = getCreator();
+  if (!creator) return;
+
+  // Optimistic: paint the chosen face immediately and trigger a redraw so
+  // there's no perceptible lag between click and selected-state.
+  optimisticEvaluations.set(option.statementId, score);
+  m.redraw();
+
+  const evaluationId = `${creator.uid}--${option.statementId}`;
+  const data = {
+    parentId: option.parentId,
+    evaluationId,
+    statementId: option.statementId,
+    evaluatorId: creator.uid,
+    updatedAt: Date.now(),
+    evaluation: score,
+    evaluator: creator,
+  };
+
+  try {
+    await setDoc(doc(db, Collections.evaluations, evaluationId), data);
+  } catch (err) {
+    // Roll the optimistic entry back so the UI reflects what's actually
+    // saved on the server side.
+    optimisticEvaluations.delete(option.statementId);
+    m.redraw();
+    console.error('[setEvaluation] failed:', err);
+    throw err;
+  }
+}
+
+/** Subscribe to the current user's evaluations under this question, so the
+ *  card UI re-renders into the correct selected face when other clients (or
+ *  another tab) update the value. Tears down any prior subscription. */
+export function subscribeUserEvaluations(questionId: string): Unsubscribe {
+  if (userEvaluationsUnsub) {
+    userEvaluationsUnsub();
+    userEvaluationsUnsub = null;
+  }
+  userEvaluations = new Map();
+  optimisticEvaluations = new Map();
+
+  const creator = getCreator();
+  if (!creator) {
+    return () => undefined;
+  }
+
+  const q = query(
+    collection(db, Collections.evaluations),
+    where('parentId', '==', questionId),
+    where('evaluatorId', '==', creator.uid),
+  );
+
+  userEvaluationsUnsub = onSnapshot(q, (snap) => {
+    const next = new Map<string, number>();
+    for (const d of snap.docs) {
+      const data = d.data() as { statementId?: string; evaluation?: number };
+      if (typeof data.statementId === 'string' && typeof data.evaluation === 'number') {
+        next.set(data.statementId, data.evaluation);
+      }
+    }
+    userEvaluations = next;
+
+    // Clear optimistic entries that the server has now confirmed (or that
+    // the server resolved to the same value). Keeping a stale optimistic
+    // override would mask a server-rejected write.
+    for (const [optionId, optimisticScore] of optimisticEvaluations) {
+      const confirmed = next.get(optionId);
+      if (confirmed === optimisticScore) {
+        optimisticEvaluations.delete(optionId);
+      }
+    }
+    m.redraw();
+  });
+
+  return userEvaluationsUnsub;
 }
 
 function subscribeMessageCounts(_questionId: string): void {

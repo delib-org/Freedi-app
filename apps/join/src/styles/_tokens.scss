@@ -200,6 +200,16 @@
   --voting-palette-pair-14-dark: #a89be9;
   --voting-palette-pair-15-light: #bda3ed;
   --voting-palette-pair-15-dark: #a992d4;
+
+  // ---- EVALUATION FACES (5-step thumbs) ----
+  // Same colour values as the main app's `--emoji-*` tokens — keeping them
+  // identical means a face that looks "happy" on a main-app card looks
+  // "happy" on a join card too, so users learn one scale.
+  --emoji-smiley: #93cdc2;
+  --emoji-happy: #80a0ea;
+  --emoji-neutral: #ffd324;
+  --emoji-thinking: #f29173;
+  --emoji-sad: #f86d6f;
 }
 
 // =============================================================================

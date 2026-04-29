@@ -9,6 +9,7 @@ import {
   subscribeOptions,
   subscribeQuestion,
   subscribeMainStatement,
+  subscribeUserEvaluations,
   getUnreadCount,
   getTotalVisibleCount,
 } from '@/lib/store';
@@ -29,6 +30,7 @@ let error: string | null = null;
 let questionUnsub: Unsubscribe | null = null;
 let optionsUnsub: Unsubscribe | null = null;
 let mainUnsub: Unsubscribe | null = null;
+let evaluationsUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
@@ -53,6 +55,10 @@ export const Solutions: m.Component = {
       await loadQuestion(questionId);
       questionUnsub = subscribeQuestion(questionId);
       optionsUnsub = subscribeOptions(questionId);
+      // Stream just this user's evaluations under the question — gives the
+      // 5-face row its "I picked this" highlight on first paint and keeps
+      // it in sync if they evaluate from another tab.
+      evaluationsUnsub = subscribeUserEvaluations(questionId);
 
       // In facilitated mode, also keep a listener on the main statement so
       // the facilitator can move us up to the Hub or across to another
@@ -83,6 +89,10 @@ export const Solutions: m.Component = {
       mainUnsub();
       mainUnsub = null;
     }
+    if (evaluationsUnsub) {
+      evaluationsUnsub();
+      evaluationsUnsub = null;
+    }
   },
 
   view() {
@@ -105,6 +115,14 @@ export const Solutions: m.Component = {
     const accentColor = question.color || 'var(--terra-500)';
     const facilitated = isFacilitatedMode();
     const mainId = m.route.param('mid');
+    // Participants can add their own option whenever the admin has the
+    // `enableAddEvaluationOption` toggle on (mirrors main app: same setting,
+    // same modal, same store path). The facilitated route (/m/:mid/q/:qid)
+    // doesn't change this — the toggle is the single source of truth for
+    // "can people add options to this question".
+    const addOptionEnabled =
+      question.statementSettings?.enableAddEvaluationOption === true;
+    const showUserAddButton = addOptionEnabled && !isAdmin();
 
     return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
       facilitated && mainId ? m(BackButton, { to: `/m/${mainId}` }) : null,
@@ -128,9 +146,8 @@ export const Solutions: m.Component = {
           ? null
           : isAdmin()
             ? m('.solutions__admin-toolbar', [
-                question.statementSettings?.enableAddEvaluationOption === false
-                  ? null
-                  : m(
+                addOptionEnabled
+                  ? m(
                       'button.btn.btn--small.btn--primary',
                       {
                         onclick: () => {
@@ -138,7 +155,8 @@ export const Solutions: m.Component = {
                         },
                       },
                       t('admin.add_suggestion'),
-                    ),
+                    )
+                  : null,
                 m(
                   `button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
                   {
@@ -150,6 +168,22 @@ export const Solutions: m.Component = {
                 ),
               ])
             : renderAdminSignIn(question.statementId, question.creatorId),
+        showUserAddButton
+          ? m('.solutions__add-row', [
+              m(
+                'button.btn.btn--primary.solutions__add-button',
+                {
+                  onclick: () => {
+                    showAddSuggestion = true;
+                  },
+                },
+                [
+                  m('span.solutions__add-button-icon', { 'aria-hidden': 'true' }, '+'),
+                  m('span', t('solutions.add_suggestion')),
+                ],
+              ),
+            ])
+          : null,
         options.length === 0
           ? m('.solutions__empty', t('solutions.error.no_options'))
           : m('.solutions__crowd-section', [
