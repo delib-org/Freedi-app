@@ -1354,6 +1354,12 @@
   flex-direction: column;
   gap: var(--space-md);
   padding-bottom: var(--space-xl);
+  // Keep the questions list and footer in a readable column on desktop —
+  // the .main-hub container is full-width (so the beige background fills the
+  // viewport), but its content stays centered within this wrapper width.
+  width: 100%;
+  max-width: 75ch;
+  margin: 0 auto;
 }
 
 .main-hub__questions-heading {
