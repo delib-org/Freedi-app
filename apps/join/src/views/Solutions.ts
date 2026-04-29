@@ -19,6 +19,7 @@ import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
 import { WizColFooter } from '@/components/WizColFooter';
+import { SplashLoader } from '@/views/Splash';
 import type { Unsubscribe } from '@/lib/firebase';
 
 let loading = true;
@@ -84,7 +85,7 @@ export const Solutions: m.Component = {
 
   view() {
     if (loading) {
-      return m('.solutions', m('.solutions__loading', t('solutions.loading')));
+      return m(SplashLoader);
     }
 
     if (error) {

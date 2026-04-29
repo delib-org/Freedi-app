@@ -17,6 +17,7 @@ import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
 import { getUserState } from '@/lib/user';
 import { ChatMessage } from '@/components/ChatMessage';
+import { SplashLoader } from '@/views/Splash';
 
 let option: Statement | null = null;
 let loading = true;
@@ -128,7 +129,7 @@ export const Chat: m.Component = {
     prevMessageCount = currentCount;
 
     if (loading) {
-      return m('.chat', m('.chat__empty', t('chat.loading')));
+      return m(SplashLoader);
     }
 
     if (!option) {

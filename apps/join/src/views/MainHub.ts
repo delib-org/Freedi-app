@@ -10,6 +10,7 @@ import {
 } from '@/lib/store';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
+import { SplashLoader } from '@/views/Splash';
 import type { Unsubscribe } from '@/lib/firebase';
 
 function getStatementBody(s: Statement): string | null {
@@ -70,7 +71,7 @@ export const MainHub: m.Component = {
 
   view() {
     if (loading) {
-      return m('.main-hub', m('.main-hub__loading', t('solutions.loading')));
+      return m(SplashLoader);
     }
 
     if (error) {

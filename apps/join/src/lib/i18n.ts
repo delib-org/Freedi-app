@@ -2,7 +2,9 @@ import m from 'mithril';
 
 const translations: Record<string, Record<string, string>> = {
   en: {
-    'splash.title': 'Freedi',
+    'splash.title': 'WizCol',
+    'splash.tagline': 'Empowering collective decisions',
+    'splash.status': 'Loading your workspace...',
     'solutions.loading': 'Loading...',
     'solutions.error.no_id': 'No question ID provided',
     'solutions.error.failed': 'Failed to load question',
@@ -73,7 +75,9 @@ const translations: Record<string, Record<string, string>> = {
     'mainHub.empty': 'No questions yet.',
   },
   he: {
-    'splash.title': 'Freedi',
+    'splash.title': 'WizCol',
+    'splash.tagline': 'מעצימים קבלת החלטות משותפת',
+    'splash.status': 'טוען את סביבת העבודה...',
     'solutions.loading': 'טוען...',
     'solutions.error.no_id': 'לא סופק מזהה שאלה',
     'solutions.error.failed': 'טעינת השאלה נכשלה',
@@ -144,7 +148,9 @@ const translations: Record<string, Record<string, string>> = {
     'mainHub.empty': 'אין שאלות עדיין.',
   },
   ar: {
-    'splash.title': 'Freedi',
+    'splash.title': 'WizCol',
+    'splash.tagline': 'تمكين القرارات الجماعية',
+    'splash.status': 'جارٍ تحميل مساحة العمل...',
     'solutions.loading': 'جارٍ التحميل...',
     'solutions.error.no_id': 'لم يتم توفير معرّف السؤال',
     'solutions.error.failed': 'فشل تحميل السؤال',
