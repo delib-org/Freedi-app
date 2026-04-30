@@ -62,7 +62,6 @@ function clearDragState(): void {
 
 export const MainHub: m.Component = {
 	async oninit() {
-		loading = true;
 		error = null;
 		createInput = '';
 		creating = false;
@@ -79,13 +78,29 @@ export const MainHub: m.Component = {
 			return;
 		}
 
+		// Returning from `/m/:mid/q/:qid` to `/m/:mid` — the store still holds
+		// `mainStatement` and `subQuestions[]` from the first hub visit, since
+		// Solutions only writes to `question`/`allOptions`. When the cached
+		// `mainStatement` matches the requested mainId, render immediately and
+		// re-attach subscriptions in the background so the view stays live.
+		// Cold opens (deep link, refresh) take the original async path.
+		const cachedMain = getMainStatement();
+		const primed = cachedMain?.statementId === mainId;
+		loading = !primed;
+		if (primed) m.redraw();
+
 		try {
 			await ensureUser();
-			await loadMainStatement(mainId);
+			if (!primed) {
+				await loadMainStatement(mainId);
+			}
 			// Resolve admin status against the main statement so the facilitator
 			// panel handle is visible to admins even on the hub (where no specific
 			// question is in scope yet). Per-question status is re-resolved on
-			// navigation into Solutions.
+			// navigation into Solutions. On a primed return visit, `isAdmin()`
+			// is already cached from the first hub visit — calling
+			// `checkAdminStatus` again is a cheap re-confirm that doesn't block
+			// the first paint.
 			const main = getMainStatement();
 			if (main) {
 				await checkAdminStatus(mainId, main.creatorId);

@@ -512,6 +512,22 @@ function syncQuestionLanguage(): void {
 	applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
 }
 
+/** Optimistic priming: if the requested question is already in the
+ *  module-level cache (typically the hub's `subQuestions[]`, which has been
+ *  streaming since the user landed on `/m/:mid`), copy it into the active
+ *  `question` slot so views can render immediately without waiting for a
+ *  Firestore round-trip. Returns true when the cache hit, so callers can skip
+ *  the loading screen. The full `loadQuestion` still runs after this to
+ *  fetch fresh data and warm `allOptions`. */
+export function primeQuestionFromCache(questionId: string): boolean {
+	const cached = subQuestions.find((s) => s.statementId === questionId);
+	if (!cached) return false;
+	question = cached;
+	syncQuestionLanguage();
+
+	return true;
+}
+
 export async function loadQuestion(questionId: string): Promise<void> {
 	const qDoc = await getDoc(doc(db, Collections.statements, questionId));
 	if (!qDoc.exists()) {

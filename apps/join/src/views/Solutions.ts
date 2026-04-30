@@ -3,6 +3,7 @@ import { Statement } from '@freedi/shared-types';
 import { ensureUser, signInWithGoogle, getUserState } from '@/lib/user';
 import {
 	loadQuestion,
+	primeQuestionFromCache,
 	getQuestion,
 	getVisibleOptions,
 	getOrganizerSuggestions,
@@ -43,7 +44,6 @@ let addAsOrganizer = false;
 
 export const Solutions: m.Component = {
 	async oninit() {
-		loading = true;
 		error = null;
 		const questionId = m.route.param('qid');
 		if (!questionId) {
@@ -54,9 +54,26 @@ export const Solutions: m.Component = {
 			return;
 		}
 
+		// When the user lands here via the hub (the typical facilitated path),
+		// the sub-question Statement is already in `store.subQuestions[]` from
+		// `subscribeSubQuestions`. Hand it to the active question slot so the
+		// header renders immediately — no splash screen between hub click and
+		// solutions view. Options still stream in via `subscribeOptions` below
+		// (the page just shows an empty list for one frame instead of a splash).
+		const primed = primeQuestionFromCache(questionId);
+		loading = !primed;
+		if (primed) m.redraw();
+
 		try {
 			await ensureUser();
-			await loadQuestion(questionId);
+			// Skip the upfront `loadQuestion` round-trip when we primed from
+			// cache — `subscribeQuestion` will deliver a fresh snapshot within
+			// a frame, and `subscribeOptions` populates the list. For a cold
+			// open (deep link, refresh) we still need the awaited fetch so the
+			// view has data to render before the first snapshot arrives.
+			if (!primed) {
+				await loadQuestion(questionId);
+			}
 			questionUnsub = subscribeQuestion(questionId);
 			optionsUnsub = subscribeOptions(questionId);
 			// Stream just this user's evaluations under the question — gives the
