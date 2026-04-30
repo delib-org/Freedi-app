@@ -17,7 +17,9 @@ import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
+import { QRShare } from '@/components/QRShare';
 import { SplashLoader } from '@/views/Splash';
+import { createDragReorder } from '@/lib/dragReorder';
 import type { Unsubscribe } from '@/lib/firebase';
 
 function getStatementBody(s: Statement): string | null {
@@ -42,23 +44,16 @@ let createInput = '';
 let creating = false;
 let createError: string | null = null;
 
-// --- Admin-only drag-and-drop reorder state ----------------------------------
-// `draggingId` is the statementId of the card currently being dragged. It's
-// cleared on dragend/drop. `dropTargetId` is the id whose top edge is the
-// current drop indicator; when it equals `__end__`, we're inserting after the
-// last card. Both feed visual hints in the rendered list.
-let draggingId: string | null = null;
-let dropTargetId: string | null = null;
-// Pending optimistic order. While the admin is mid-drag we don't write to
-// Firestore on every reorder; we only persist on drop. The local order is
-// shown by remembering the move-to position in `pendingOrder`. Cleared after
-// the write resolves so the live snapshot takes over.
-let pendingOrder: string[] | null = null;
-
-function clearDragState(): void {
-	draggingId = null;
-	dropTargetId = null;
-}
+// --- Admin-only drag-and-drop reorder ---------------------------------------
+// The controller owns the draggingId / dropTargetId / pendingOrder state and
+// the event-handler bundles. It's a module-level singleton so the live drag
+// state survives intra-route redraws; `oninit()` resets it on every fresh
+// hub mount so a leftover drop-target highlight from a previous visit can't
+// linger across navigations.
+const subQuestionReorder = createDragReorder({
+	onCommit: (orderedIds) => setSubQuestionsOrder(orderedIds),
+	enabled: () => isAdmin(),
+});
 
 export const MainHub: m.Component = {
 	async oninit() {
@@ -66,8 +61,7 @@ export const MainHub: m.Component = {
 		createInput = '';
 		creating = false;
 		createError = null;
-		clearDragState();
-		pendingOrder = null;
+		subQuestionReorder.reset();
 
 		const mainId = m.route.param('mid');
 		if (!mainId) {
@@ -152,11 +146,11 @@ export const MainHub: m.Component = {
 			return m('.main-hub', m('.main-hub__empty', t('solutions.error.not_found')));
 		}
 
-		// Use `pendingOrder` (mid-drag optimistic ordering) when present; it
-		// keeps the list shown in the post-drop position even before Firestore
-		// confirms the writes.
+		// `applyOrder` returns the optimistic post-drop ordering when a commit
+		// is in flight; otherwise it returns the live snapshot untouched.
 		const subsRaw = getSubQuestions();
-		const subs = pendingOrder ? reorderByIds(subsRaw, pendingOrder) : subsRaw;
+		const subs = subQuestionReorder.applyOrder(subsRaw, (s) => s.statementId);
+		const currentIds = subs.map((s) => s.statementId);
 		const accentColor = main.color || 'var(--terra-500)';
 		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const admin = isAdmin();
@@ -184,6 +178,12 @@ export const MainHub: m.Component = {
 				return body ? m('.main-hub__description', body) : null;
 			})(),
 			m('.main-hub__scroll', [
+				main.statementSettings?.showQR
+					? m(QRShare, {
+							url: window.location.href,
+							title: main.statement,
+						})
+					: null,
 				m('h2.main-hub__questions-heading', t('mainHub.questionsHeading')),
 				admin ? renderCreateSubQuestionForm(mainId) : null,
 				subs.length === 0
@@ -191,37 +191,17 @@ export const MainHub: m.Component = {
 					: [
 							m(
 								'.main-hub__question-list',
-								{
-									// When dragging, allow drop on the list-end zone too —
-									// dragging past the last card lands the dragged item at
-									// the bottom of the list.
-									ondragover: admin
-										? (e: DragEvent) => {
-												if (!draggingId) return;
-												e.preventDefault();
-											}
-										: undefined,
-								},
+								subQuestionReorder.listAttrs(),
 								// Each card is rendered with a key (q.statementId). Mithril
 								// requires all children of a fragment to either be keyed or
 								// unkeyed — so the drop-end zone is rendered as a sibling
 								// outside this list, never mixed in.
-								subs.map((q: Statement) => renderQuestionCard(q, mainId, admin, subs)),
+								subs.map((q: Statement) => renderQuestionCard(q, mainId, admin, currentIds)),
 							),
-							admin && draggingId
+							admin && subQuestionReorder.isActive()
 								? m('.main-hub__question-drop-end', {
 										'aria-hidden': 'true',
-										ondragover: (e: DragEvent) => {
-											e.preventDefault();
-											if (dropTargetId !== '__end__') {
-												dropTargetId = '__end__';
-												m.redraw();
-											}
-										},
-										ondrop: (e: DragEvent) => {
-											e.preventDefault();
-											void handleDrop('__end__', subs);
-										},
+										...subQuestionReorder.endDropAttrs(currentIds),
 									})
 								: null,
 						],
@@ -304,11 +284,11 @@ function renderQuestionCard(
 	q: Statement,
 	mainId: string,
 	admin: boolean,
-	subs: Statement[],
+	currentIds: string[],
 ): m.Vnode {
 	const isHidden = q.hide === true;
-	const dragging = admin && draggingId === q.statementId;
-	const isDropTarget = admin && dropTargetId === q.statementId && draggingId !== q.statementId;
+	const dragging = admin && subQuestionReorder.isDragging(q.statementId);
+	const isDropTarget = admin && subQuestionReorder.isDropTarget(q.statementId);
 
 	const classes = [
 		'main-hub__question-card',
@@ -327,55 +307,7 @@ function renderQuestionCard(
 			role: admin ? 'button' : undefined,
 			tabindex: admin ? '0' : undefined,
 			'aria-disabled': admin ? undefined : 'true',
-			draggable: admin,
-			ondragstart: admin
-				? (e: DragEvent) => {
-						draggingId = q.statementId;
-						dropTargetId = null;
-						if (e.dataTransfer) {
-							e.dataTransfer.effectAllowed = 'move';
-							// Some browsers require text data to allow drop.
-							e.dataTransfer.setData('text/plain', q.statementId);
-						}
-						m.redraw();
-					}
-				: undefined,
-			ondragover: admin
-				? (e: DragEvent) => {
-						if (!draggingId || draggingId === q.statementId) return;
-						e.preventDefault();
-						if (dropTargetId !== q.statementId) {
-							dropTargetId = q.statementId;
-							m.redraw();
-						}
-					}
-				: undefined,
-			ondragleave: admin
-				? () => {
-						if (dropTargetId === q.statementId) {
-							dropTargetId = null;
-							m.redraw();
-						}
-					}
-				: undefined,
-			ondrop: admin
-				? (e: DragEvent) => {
-						if (!draggingId || draggingId === q.statementId) {
-							clearDragState();
-							m.redraw();
-
-							return;
-						}
-						e.preventDefault();
-						void handleDrop(q.statementId, subs);
-					}
-				: undefined,
-			ondragend: admin
-				? () => {
-						clearDragState();
-						m.redraw();
-					}
-				: undefined,
+			...subQuestionReorder.cardAttrs(q.statementId, currentIds),
 			onclick: admin
 				? (e: MouseEvent) => {
 						// Don't navigate when the click came from a control inside
@@ -439,60 +371,6 @@ function renderQuestionCard(
 				: null,
 		],
 	);
-}
-
-/** Reorder `subs` so `draggingId` lands at the position currently occupied by
- *  `targetId` (or at the end when targetId === '__end__'). Pure function — the
- *  result is what we render mid-drag and what we persist on drop. */
-function reorderForDrop(subs: Statement[], targetId: string): Statement[] | null {
-	if (!draggingId) return null;
-	const dragged = subs.find((s) => s.statementId === draggingId);
-	if (!dragged) return null;
-	const without = subs.filter((s) => s.statementId !== draggingId);
-	if (targetId === '__end__') {
-		return [...without, dragged];
-	}
-	const targetIdx = without.findIndex((s) => s.statementId === targetId);
-	if (targetIdx === -1) return null;
-
-	return [...without.slice(0, targetIdx), dragged, ...without.slice(targetIdx)];
-}
-
-function reorderByIds(subs: Statement[], orderedIds: string[]): Statement[] {
-	const byId = new Map(subs.map((s) => [s.statementId, s]));
-	const result: Statement[] = [];
-	for (const id of orderedIds) {
-		const s = byId.get(id);
-		if (s) {
-			result.push(s);
-			byId.delete(id);
-		}
-	}
-	// Append anything that arrived after the optimistic snapshot was captured.
-	for (const s of byId.values()) result.push(s);
-
-	return result;
-}
-
-async function handleDrop(targetId: string, subs: Statement[]): Promise<void> {
-	const reordered = reorderForDrop(subs, targetId);
-	clearDragState();
-	if (!reordered) {
-		m.redraw();
-
-		return;
-	}
-	pendingOrder = reordered.map((s) => s.statementId);
-	m.redraw();
-	try {
-		await setSubQuestionsOrder(pendingOrder);
-	} catch (err) {
-		console.error('[MainHub] Reorder failed:', err);
-	} finally {
-		// Clear the optimistic override; the live subscription has the truth.
-		pendingOrder = null;
-		m.redraw();
-	}
 }
 
 /** Discreet "Sign in as admin" link in the top-inline-end corner of the

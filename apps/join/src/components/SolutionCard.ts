@@ -97,6 +97,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
     return m(
       `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}${displayOnlyClass}`,
       {
+        // Stable identifier the FLIP reorder animation reads on the parent
+        // list; see lib/flipAnimate.ts and views/Solutions.ts.
+        'data-flip-id': option.statementId,
         role: displayOnly ? undefined : 'button',
         tabindex: displayOnly ? undefined : 0,
         'aria-label': option.statement,
@@ -195,28 +198,47 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         ]),
         displayOnly
           ? null
-          : m('.solution-card__actions', [
-              m(
-                `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
-                {
-                  onclick: (e: Event) => {
-                    e.stopPropagation();
-                    handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
-                  },
-                },
-                isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
-              ),
-              m(
-                `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
-                {
-                  onclick: (e: Event) => {
-                    e.stopPropagation();
-                    handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
-                  },
-                },
-                isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
-              ),
-            ]),
+          : m(
+              '.solution-card__actions',
+              question?.statementSettings?.dualRoleJoin === true
+                ? [
+                    m(
+                      `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
+                      {
+                        onclick: (e: Event) => {
+                          e.stopPropagation();
+                          handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+                        },
+                      },
+                      isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
+                    ),
+                    m(
+                      `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
+                      {
+                        onclick: (e: Event) => {
+                          e.stopPropagation();
+                          handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
+                        },
+                      },
+                      isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
+                    ),
+                  ]
+                : [
+                    // Default: simple "Join" — single activist-role button. Admin opts
+                    // into the dual activist/organizer split via `dualRoleJoin: true`
+                    // on the question's statementSettings.
+                    m(
+                      `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
+                      {
+                        onclick: (e: Event) => {
+                          e.stopPropagation();
+                          handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+                        },
+                      },
+                      isJoinedAsActivist ? t('card.joined') : t('card.join'),
+                    ),
+                  ],
+            ),
         adminMode && !displayOnly
           ? m('.solution-card__admin', [
               m(

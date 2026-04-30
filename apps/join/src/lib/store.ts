@@ -216,14 +216,12 @@ export function getVisibleOptions(): Statement[] {
 	// Admin-controlled sort: read `defaultSortType` off the question so every
 	// participant subscribed to it sees the same order as the admin. The field
 	// is shared with the main app's sort menu, so flipping it from either
-	// surface stays in sync. Only `accepted` (consensus) and `newest` are
-	// exposed in the Join facilitator panel — the others fall through to the
-	// consensus default so a stale value doesn't break the view.
+	// surface stays in sync. The Join facilitator panel exposes four modes —
+	// consensus (accepted), average evaluation, random, and newest — and any
+	// other stale value falls through to the consensus default.
 	const sortType = question?.statementSettings?.defaultSortType;
-	const sortFn =
-		sortType === SortType.newest
-			? (a: Statement, b: Statement) => (b.createdAt ?? 0) - (a.createdAt ?? 0)
-			: (a: Statement, b: Statement) => (b.consensus ?? 0) - (a.consensus ?? 0);
+	const randomSeed = question?.statementSettings?.randomSortSeed ?? 0;
+	const sortFn = getSortFn(sortType, randomSeed);
 	let opts = allOptions
 		// admin-hidden options never render for anyone
 		.filter((o) => o.hide !== true)
@@ -317,17 +315,53 @@ export async function setEvaluationEnabled(questionId: string, value: boolean): 
 /** Facilitator live-control: change the sort order all participants see by
  *  writing `statementSettings.defaultSortType` on the question doc. The
  *  options listener re-renders every subscriber on the next snapshot, so
- *  participants drop into the new order without a refresh. */
+ *  participants drop into the new order without a refresh. When admin chooses
+ *  `random`, also (re)write a fresh `randomSortSeed` so every participant
+ *  computes the same shuffle, and pressing Random again gives a new order. */
 export async function setSortType(questionId: string, value: SortType): Promise<void> {
 	const ref = doc(db, Collections.statements, questionId);
-	await setDoc(
-		ref,
-		{
-			statementSettings: { defaultSortType: value },
-			lastUpdate: Date.now(),
-		},
-		{ merge: true },
-	);
+	const patch: { statementSettings: { defaultSortType: SortType; randomSortSeed?: number } } = {
+		statementSettings: { defaultSortType: value },
+	};
+	if (value === SortType.random) {
+		patch.statementSettings.randomSortSeed = Date.now();
+	}
+	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Deterministic 32-bit hash of a string — used to derive a stable per-option
+ *  random key from `(seed + statementId)` so every participant produces the
+ *  same shuffle without storing per-option ordering. */
+function hashStr(s: string): number {
+	let h = 2166136261;
+	for (let i = 0; i < s.length; i++) {
+		h ^= s.charCodeAt(i);
+		h = Math.imul(h, 16777619);
+	}
+
+	return h >>> 0;
+}
+
+function getSortFn(
+	sortType: SortType | undefined,
+	randomSeed: number,
+): (a: Statement, b: Statement) => number {
+	switch (sortType) {
+		case SortType.newest:
+			return (a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0);
+		case SortType.averageEvaluation:
+			return (a, b) =>
+				(b.evaluation?.averageEvaluation ?? 0) - (a.evaluation?.averageEvaluation ?? 0);
+		case SortType.random: {
+			const seed = String(randomSeed);
+
+			return (a, b) =>
+				hashStr(seed + a.statementId) - hashStr(seed + b.statementId);
+		}
+		case SortType.accepted:
+		default:
+			return (a, b) => (b.consensus ?? 0) - (a.consensus ?? 0);
+	}
 }
 
 /** Facilitator live-control: write a partial patch to a question doc. Callers
@@ -340,6 +374,20 @@ export async function setQuestionSetting(
 	patch: Partial<Statement>,
 ): Promise<void> {
 	const ref = doc(db, Collections.statements, questionId);
+	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Hub-scoped settings live on the main statement, not on a question doc.
+ *  Currently used for the QR sharing toggle (`statementSettings.showQR`),
+ *  which any participant can act on but only an admin can flip. The local
+ *  `subscribeMainStatement` listener propagates the change to every
+ *  participant on the next snapshot, so the QR appears/disappears for the
+ *  room without a refresh. */
+export async function setMainStatementSetting(
+	mainId: string,
+	patch: Partial<Statement>,
+): Promise<void> {
+	const ref = doc(db, Collections.statements, mainId);
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
 }
 

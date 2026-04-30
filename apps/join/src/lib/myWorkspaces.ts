@@ -51,9 +51,35 @@ function writeRaw(list: MyWorkspace[]): void {
 	}
 }
 
-/** Returns the list sorted most-recent-first. */
+/** Returns the list in storage order. New workspaces are appended on first
+ *  visit (`recordMyWorkspace`), and the order can be customised via
+ *  `setMyWorkspacesOrder` from the Main page drag-to-reorder UI. We honour
+ *  whatever order was last persisted and never re-sort by `lastVisited`,
+ *  so manually-arranged lists stay put even after you visit an old entry.
+ *  `lastVisited` is still recorded for potential future "recently active"
+ *  surfacing. */
 export function getMyWorkspaces(): MyWorkspace[] {
-	return readRaw().sort((a, b) => b.lastVisited - a.lastVisited);
+	return readRaw();
+}
+
+/** Persist a new ordering of workspaces. `orderedIds` is the canonical new
+ *  order; any entry not present in `orderedIds` is appended at the end so a
+ *  concurrent recordMyWorkspace from another tab isn't lost on commit. IDs
+ *  in `orderedIds` that no longer match a stored workspace are dropped — a
+ *  stale optimistic order shouldn't resurrect a removed entry. */
+export function setMyWorkspacesOrder(orderedIds: string[]): void {
+	const current = readRaw();
+	const byId = new Map(current.map((w) => [w.id, w]));
+	const next: MyWorkspace[] = [];
+	for (const id of orderedIds) {
+		const entry = byId.get(id);
+		if (entry) {
+			next.push(entry);
+			byId.delete(id);
+		}
+	}
+	for (const entry of byId.values()) next.push(entry);
+	writeRaw(next);
 }
 
 /** Insert or update a workspace entry. Idempotent — calling on every visit

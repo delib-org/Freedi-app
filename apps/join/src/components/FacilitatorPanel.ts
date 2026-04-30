@@ -9,6 +9,8 @@ import {
   setEvaluationEnabled,
   setPowerFollowMe,
   getPowerFollowMePath,
+  getMainStatement,
+  setMainStatementSetting,
 } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
@@ -224,7 +226,7 @@ async function pressFollowMe(question: Statement, mainId: string): Promise<void>
   await setPowerFollowMe(mainId, next);
 }
 
-async function flipAllowAdd(question: Statement): Promise<void> {
+async function flipAllowNewOptions(question: Statement): Promise<void> {
   const next = !(question.statementSettings?.enableAddEvaluationOption ?? false);
   await setQuestionSetting(question.statementId, {
     statementSettings: {
@@ -233,11 +235,6 @@ async function flipAllowAdd(question: Statement): Promise<void> {
       enableAddVotingOption: next,
     },
   });
-}
-
-async function flipAllowEvaluation(question: Statement): Promise<void> {
-  const next = !(question.statementSettings?.showEvaluation ?? false);
-  await setEvaluationEnabled(question.statementId, next);
 }
 
 async function flipAllowChat(question: Statement): Promise<void> {
@@ -250,14 +247,84 @@ async function flipAllowChat(question: Statement): Promise<void> {
   });
 }
 
-/** Two-button segmented control for the admin-controlled sort. Writes to the
+/** Hub-scoped: writes to the *main* statement so the QR appears for every
+ *  participant viewing the hub, regardless of which sub-question they then
+ *  drill into. The toggle works from anywhere in the join app — admin doesn't
+ *  have to navigate back to the hub to flip it. */
+async function flipShowQR(main: Statement): Promise<void> {
+  const next = !(main.statementSettings?.showQR ?? false);
+  await setMainStatementSetting(main.statementId, {
+    statementSettings: {
+      ...main.statementSettings,
+      showQR: next,
+    },
+  });
+}
+
+/** Four-button segmented control for the admin-controlled sort. Writes to the
  *  question's `defaultSortType` so every subscriber sees the same order on
  *  the next snapshot — the chosen sort travels with "follow me" because both
- *  participants and the admin render from the same field. */
+ *  participants and the admin render from the same field. Random pushes a
+ *  fresh seed every press so participants get a new shared shuffle. The
+ *  segments display icons only; the label travels via aria-label/title. */
+const SORT_OPTIONS: Array<{ value: SortType; icon: string; labelKey: string }> = [
+  { value: SortType.accepted, icon: '🤝', labelKey: 'facilitator.sort.consensus' },
+  { value: SortType.averageEvaluation, icon: '📊', labelKey: 'facilitator.sort.average' },
+  { value: SortType.random, icon: '🎲', labelKey: 'facilitator.sort.random' },
+  { value: SortType.newest, icon: '✨', labelKey: 'facilitator.sort.newest' },
+];
+
 function renderSortSegmented(question: Statement | null): m.Vnode {
-  const current = question?.statementSettings?.defaultSortType;
-  const isNewest = current === SortType.newest;
-  const isConsensus = !isNewest;
+  const current = question?.statementSettings?.defaultSortType ?? SortType.accepted;
+  // Treat any non-Join sort value (e.g. legacy `mostUpdated`) as the consensus
+  // default so a stale field doesn't leave every segment looking inactive.
+  const supported = SORT_OPTIONS.some((o) => o.value === current);
+  const active = supported ? current : SortType.accepted;
+  const disabled = !question;
+
+  return m('.facilitator-panel__row', [
+    m('.facilitator-panel__row-main', [
+      m('span.facilitator-panel__row-label', t('facilitator.sort.label')),
+      m(
+        '.facilitator-panel__segmented',
+        { role: 'radiogroup', 'aria-label': t('facilitator.sort.label') },
+        SORT_OPTIONS.map((opt) => {
+          const isActive = active === opt.value;
+          const label = t(opt.labelKey);
+
+          return m(
+            `button.facilitator-panel__segment.facilitator-panel__segment--icon${isActive ? '.facilitator-panel__segment--active' : ''}`,
+            {
+              type: 'button',
+              role: 'radio',
+              'aria-checked': isActive ? 'true' : 'false',
+              'aria-label': label,
+              title: label,
+              disabled: disabled ? true : undefined,
+              onclick: disabled
+                ? undefined
+                : () => {
+                    if (!question) return;
+                    void setSortType(question.statementId, opt.value);
+                  },
+            },
+            m('span.facilitator-panel__segment-icon', { 'aria-hidden': 'true' }, opt.icon),
+          );
+        }),
+      ),
+    ]),
+    m('.facilitator-panel__row-help', t('facilitator.sort.help')),
+  ]);
+}
+
+/** Two-button segmented control for the participant mode. "Join options" lets
+ *  participants propose / join options; "Evaluate options" surfaces the 5-face
+ *  evaluation row on each card. Reuses `statementSettings.showEvaluation` as
+ *  the underlying flag (Join = false, Evaluate = true) so the existing card
+ *  gating in SolutionCard picks up the change without further plumbing. */
+function renderModeSegmented(question: Statement | null): m.Vnode {
+  const isEvaluate = question?.statementSettings?.showEvaluation === true;
+  const isJoin = !isEvaluate;
   const disabled = !question;
 
   const segment = (active: boolean, label: string, onclick: () => void) =>
@@ -275,23 +342,23 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 
   return m('.facilitator-panel__row', [
     m('.facilitator-panel__row-main', [
-      m('span.facilitator-panel__row-label', t('facilitator.sort.label')),
+      m('span.facilitator-panel__row-label', t('facilitator.mode.label')),
       m(
         '.facilitator-panel__segmented',
-        { role: 'radiogroup', 'aria-label': t('facilitator.sort.label') },
+        { role: 'radiogroup', 'aria-label': t('facilitator.mode.label') },
         [
-          segment(isConsensus, t('facilitator.sort.consensus'), () => {
+          segment(isJoin, t('facilitator.mode.join'), () => {
             if (!question) return;
-            void setSortType(question.statementId, SortType.accepted);
+            void setEvaluationEnabled(question.statementId, false);
           }),
-          segment(isNewest, t('facilitator.sort.newest'), () => {
+          segment(isEvaluate, t('facilitator.mode.evaluate'), () => {
             if (!question) return;
-            void setSortType(question.statementId, SortType.newest);
+            void setEvaluationEnabled(question.statementId, true);
           }),
         ],
       ),
     ]),
-    m('.facilitator-panel__row-help', t('facilitator.sort.help')),
+    m('.facilitator-panel__row-help', t('facilitator.mode.help')),
   ]);
 }
 
@@ -347,15 +414,15 @@ export const FacilitatorPanel: m.Component = {
     const followMeOn = canLead ? isFollowMeOn(question!) : false;
     const thresholdOn = hasQuestion ? isThresholdOn(question!) : false;
     const thresholdVal = hasQuestion ? getThresholdValue(question!) : DEFAULT_THRESHOLD;
-    const allowAddOn = hasQuestion
+    const allowNewOptionsOn = hasQuestion
       ? question!.statementSettings?.enableAddEvaluationOption ?? false
       : false;
     const allowChatOn = hasQuestion
       ? question!.statementSettings?.hasChat ?? true
       : true;
-    const allowEvaluationOn = hasQuestion
-      ? question!.statementSettings?.showEvaluation ?? false
-      : false;
+    const main = getMainStatement();
+    const showQRReady = main !== null;
+    const showQROn = showQRReady ? main!.statementSettings?.showQR ?? false : false;
 
     const positioned = handleY !== null;
     const dragging = dragState !== null;
@@ -446,7 +513,28 @@ export const FacilitatorPanel: m.Component = {
                 : t('facilitator.action.followMe.help'),
             ),
           ]),
+          renderToggle({
+            label: t('facilitator.toggle.showQR'),
+            on: showQROn,
+            disabled: !showQRReady,
+            onflip: () => {
+              if (!showQRReady) return;
+              void flipShowQR(main!);
+            },
+            help: t('facilitator.toggle.showQR.help'),
+          }),
           renderSortSegmented(question),
+          renderModeSegmented(question),
+          renderToggle({
+            label: t('facilitator.toggle.allowAdd'),
+            on: allowNewOptionsOn,
+            disabled: !hasQuestion,
+            onflip: () => {
+              if (!hasQuestion) return;
+              void flipAllowNewOptions(question!);
+            },
+            help: t('facilitator.toggle.allowAdd.help'),
+          }),
           renderToggle({
             label: t('facilitator.toggle.threshold'),
             on: thresholdOn,
@@ -486,25 +574,6 @@ export const FacilitatorPanel: m.Component = {
                 ),
               ])
             : null,
-          renderToggle({
-            label: t('facilitator.toggle.allowAdd'),
-            on: allowAddOn,
-            disabled: !hasQuestion,
-            onflip: () => {
-              if (!hasQuestion) return;
-              void flipAllowAdd(question!);
-            },
-          }),
-          renderToggle({
-            label: t('facilitator.toggle.allowEvaluation'),
-            on: allowEvaluationOn,
-            disabled: !hasQuestion,
-            onflip: () => {
-              if (!hasQuestion) return;
-              void flipAllowEvaluation(question!);
-            },
-            help: t('facilitator.toggle.allowEvaluation.help'),
-          }),
           renderToggle({
             label: t('facilitator.toggle.allowChat'),
             on: allowChatOn,

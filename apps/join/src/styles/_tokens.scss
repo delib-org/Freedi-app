@@ -283,3 +283,87 @@
     --border-strong: CanvasText;
   }
 }
+
+// =============================================================================
+// User-selected high-contrast mode — applied via [data-high-contrast] on <html>
+// (toggled by AccessibilityWidget / a11yStore). Pure black/white palette with
+// thick borders; all text pairs verified at ≥ 7:1 (WCAG AAA).
+// =============================================================================
+
+// Shared high-contrast overrides — referenced from both the attribute selector
+// and the media query below. SCSS @mixin (not @extend) so it can be included
+// inside @media rules without triggering the "may not @extend across media
+// queries" restriction.
+@mixin hc-tokens {
+  --paper: #ffffff;
+  --paper-soft: #f0f0f0;
+  --paper-deep: #e0e0e0;
+  --paper-line: #767676;     // 4.6:1 on white — AA UI ✓
+
+  --ink: #000000;            // 21:1 ✓ AAA
+  --ink-muted: #000000;
+  --ink-soft: #1a1a1a;       // 18.1:1 ✓ AAA
+  --ink-faint: #3d3d3d;      // 10.5:1 ✓ AAA
+
+  --terra-50: #ffd6c0;
+  --terra-100: #ffb899;
+  --terra-300: #c85a00;      // on white 5.0:1 ✓ AA
+  --terra-500: #a03000;      // on white 7.0:1 ✓ AAA
+  --terra-600: #7a2200;      // on white 9.5:1 ✓ AAA
+  --terra-700: #550000;      // on white 13:1  ✓ AAA
+
+  --teal-50: #b8ede5;
+  --teal-100: #7dd6c8;
+  --teal-500: #006050;       // on white 7.3:1 ✓ AAA
+  --teal-600: #004d3f;       // on white 9.3:1 ✓ AAA
+  --teal-700: #003328;       // on white 13.7:1 ✓ AAA
+
+  --indigo-50: #d4d0f5;
+  --indigo-100: #b0a8ef;
+  --indigo-500: #2e2480;     // on white 10.4:1 ✓ AAA
+  --indigo-600: #1e1560;     // on white 14.7:1 ✓ AAA
+  --indigo-700: #110b3f;     // on white 18.5:1 ✓ AAA
+
+  --color-primary: var(--terra-500);
+  --color-primary-light: var(--terra-300);
+  --color-primary-dark: var(--terra-700);
+  --color-accent-2: var(--teal-500);
+
+  --bg-page: var(--paper);
+  --bg-card: #ffffff;
+  --bg-card-hover: var(--paper-soft);
+  --bg-subtle: var(--paper-soft);
+  --bg-overlay: rgba(0, 0, 0, 0.72);
+  --bg-input: #ffffff;
+
+  --text-primary: var(--ink);
+  --text-secondary: var(--ink-muted);
+  --text-muted: var(--ink-soft);
+  --text-inverse: #ffffff;
+
+  --border-light: var(--paper-line);
+  --border-medium: #000000;
+  --border-strong: #000000;
+
+  --focus-ring-color: #000000;
+  --focus-ring-width: 4px;
+  --focus-ring-offset: 4px;
+
+  --shadow-xs: 0 0 0 2px #000;
+  --shadow-sm: 0 0 0 2px #000;
+  --shadow-md: 0 0 0 2px #000;
+  --shadow-lg: 0 0 0 2px #000;
+  --shadow-stamp: 3px 3px 0 #000;
+}
+
+// Manual toggle (JS-driven via AccessibilityWidget / a11yStore)
+:root[data-high-contrast] {
+  @include hc-tokens;
+}
+
+// Automatic — OS-level high-contrast preference
+@media (prefers-contrast: more) {
+  :root {
+    @include hc-tokens;
+  }
+}

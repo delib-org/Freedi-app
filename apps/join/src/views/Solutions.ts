@@ -24,6 +24,7 @@ import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { WizColFooter } from '@/components/WizColFooter';
 import { SplashLoader } from '@/views/Splash';
+import { captureFlipPositions, playFlipAnimation } from '@/lib/flipAnimate';
 import type { Unsubscribe } from '@/lib/firebase';
 
 let loading = true;
@@ -41,6 +42,9 @@ let showAddSuggestion = false;
 // organizer (badged Cloud Function path) or as a regular participant (crowd
 // list, no badge), so the modal needs to know which path to take.
 let addAsOrganizer = false;
+// Captured at `onbeforeupdate` of `.solutions__list`, replayed at `onupdate`
+// to drive the FLIP reorder animation.
+let capturedListRects: Map<string, DOMRect> | null = null;
 
 export const Solutions: m.Component = {
 	async oninit() {
@@ -248,6 +252,19 @@ export const Solutions: m.Component = {
 								: null,
 							m(
 								'.solutions__list',
+								{
+									onbeforeupdate: (_vnode: m.VnodeDOM, oldVnode: m.VnodeDOM) => {
+										capturedListRects = captureFlipPositions(oldVnode.dom as HTMLElement);
+
+										return true;
+									},
+									onupdate: (vnode: m.VnodeDOM) => {
+										if (capturedListRects) {
+											playFlipAnimation(vnode.dom as HTMLElement, capturedListRects);
+											capturedListRects = null;
+										}
+									},
+								},
 								options.map((option) =>
 									m(SolutionCard, {
 										key: option.statementId,

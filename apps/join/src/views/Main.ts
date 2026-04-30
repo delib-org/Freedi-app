@@ -7,10 +7,20 @@ import {
 	recordMyWorkspace,
 	removeMyWorkspace,
 	parseWorkspaceId,
+	setMyWorkspacesOrder,
 	workspaceRoute,
 	type MyWorkspace,
 } from '@/lib/myWorkspaces';
 import { createSimpleQuestion } from '@/lib/store';
+import { createDragReorder } from '@/lib/dragReorder';
+
+// Drag-to-reorder for the "My questions" list. Persists straight to
+// localStorage on commit — no admin gate (the list is per-device anyway).
+const workspaceReorder = createDragReorder({
+	onCommit: (orderedIds) => {
+		setMyWorkspacesOrder(orderedIds);
+	},
+});
 
 let signingOut = false;
 let openInput = '';
@@ -97,18 +107,41 @@ function displayName(): string {
 	return user.displayName || user.email || t('common.anonymous');
 }
 
-function renderWorkspaceCard(w: MyWorkspace): m.Vnode {
+function renderWorkspaceCard(w: MyWorkspace, currentIds: string[]): m.Vnode {
 	const accent = w.color || 'var(--terra-500)';
+	const dragging = workspaceReorder.isDragging(w.id);
+	const isDropTarget = workspaceReorder.isDropTarget(w.id);
+
+	const classes = [
+		'main-page__workspace',
+		dragging ? 'main-page__workspace--dragging' : null,
+		isDropTarget ? 'main-page__workspace--drop-target' : null,
+	].filter(Boolean);
 
 	return m(
-		'.main-page__workspace',
+		'div',
 		{
 			key: w.id,
+			class: classes.join(' '),
 			style: `--q-accent: ${accent}`,
 			role: 'group',
 			'aria-label': w.title,
+			...workspaceReorder.cardAttrs(w.id, currentIds),
 		},
 		[
+			m(
+				'span.main-page__workspace-handle',
+				{
+					'aria-hidden': 'true',
+					title: t('mainHub.reorder.handle'),
+					// Keep clicks here from bubbling into the open button when the
+					// handle visually overlaps the card body.
+					onclick: (e: MouseEvent) => {
+						e.stopPropagation();
+					},
+				},
+				'⋮⋮',
+			),
 			m(
 				'button.main-page__workspace-open',
 				{
@@ -140,7 +173,11 @@ export const Main: m.Component = {
 		const user = getUserState().user;
 		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const isGuest = !user || user.isAnonymous;
-		const workspaces = getMyWorkspaces();
+		const workspacesRaw = getMyWorkspaces();
+		// Apply the optimistic post-drop ordering while the localStorage write
+		// settles, so the card stays where the user dropped it.
+		const workspaces = workspaceReorder.applyOrder(workspacesRaw, (w) => w.id);
+		const workspaceIds = workspaces.map((w) => w.id);
 
 		return m('.main-page', [
 			m('header.main-page__header', [
@@ -220,12 +257,29 @@ export const Main: m.Component = {
 					m('h2.main-page__panel-title', t('main.my_questions_title')),
 					workspaces.length === 0
 						? m('p.main-page__panel-text', t('main.my_questions_empty'))
-						: m(
-								'ul.main-page__workspace-list',
-								workspaces.map((w) =>
-									m('li.main-page__workspace-item', { key: w.id }, renderWorkspaceCard(w)),
+						: [
+								m(
+									'ul.main-page__workspace-list',
+									workspaceReorder.listAttrs(),
+									workspaces.map((w) =>
+										m(
+											'li.main-page__workspace-item',
+											{ key: w.id },
+											renderWorkspaceCard(w, workspaceIds),
+										),
+									),
 								),
-							),
+								// End-drop zone — only rendered while a drag is in flight,
+								// so it doesn't take space in the resting layout. Sibling
+								// of the keyed list (Mithril rejects mixing keyed and
+								// unkeyed children inside the same fragment).
+								workspaceReorder.isActive()
+									? m('.main-page__workspace-drop-end', {
+											'aria-hidden': 'true',
+											...workspaceReorder.endDropAttrs(workspaceIds),
+										})
+									: null,
+							],
 				]),
 			]),
 			m(WizColFooter),
