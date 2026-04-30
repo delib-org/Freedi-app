@@ -420,9 +420,15 @@ export const FacilitatorPanel: m.Component = {
     const allowChatOn = hasQuestion
       ? question!.statementSettings?.hasChat ?? true
       : true;
+    // QR sharing is hub-scoped: the toggle writes to the *main* statement so
+    // every participant on the hub sees the same QR. It's only meaningful
+    // when there's a main statement in scope — i.e. on facilitated routes
+    // (`/m/:mid…`). Legacy non-facilitated routes (`/q/:qid`) don't carry a
+    // mid, so we hide the row entirely there rather than render a perpetually
+    // disabled toggle that confuses admins.
     const main = getMainStatement();
-    const showQRReady = main !== null;
-    const showQROn = showQRReady ? main!.statementSettings?.showQR ?? false : false;
+    const canFlipShowQR = main !== null && Boolean(mainId);
+    const showQROn = canFlipShowQR ? main!.statementSettings?.showQR ?? false : false;
 
     const positioned = handleY !== null;
     const dragging = dragState !== null;
@@ -513,16 +519,17 @@ export const FacilitatorPanel: m.Component = {
                 : t('facilitator.action.followMe.help'),
             ),
           ]),
-          renderToggle({
-            label: t('facilitator.toggle.showQR'),
-            on: showQROn,
-            disabled: !showQRReady,
-            onflip: () => {
-              if (!showQRReady) return;
-              void flipShowQR(main!);
-            },
-            help: t('facilitator.toggle.showQR.help'),
-          }),
+          canFlipShowQR
+            ? renderToggle({
+                label: t('facilitator.toggle.showQR'),
+                on: showQROn,
+                onflip: () => {
+                  if (!canFlipShowQR) return;
+                  void flipShowQR(main!);
+                },
+                help: t('facilitator.toggle.showQR.help'),
+              })
+            : null,
           renderSortSegmented(question),
           renderModeSegmented(question),
           renderToggle({
