@@ -2,16 +2,16 @@ import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
 import { ensureUser, signInWithGoogle, getUserState } from '@/lib/user';
 import {
-  loadQuestion,
-  getQuestion,
-  getVisibleOptions,
-  getOrganizerSuggestions,
-  subscribeOptions,
-  subscribeQuestion,
-  subscribeMainStatement,
-  subscribeUserEvaluations,
-  getUnreadCount,
-  getTotalVisibleCount,
+	loadQuestion,
+	getQuestion,
+	getVisibleOptions,
+	getOrganizerSuggestions,
+	subscribeOptions,
+	subscribeQuestion,
+	subscribeMainStatement,
+	subscribeUserEvaluations,
+	getUnreadCount,
+	getTotalVisibleCount,
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
 import { t } from '@/lib/i18n';
@@ -36,208 +36,245 @@ let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
 let adminMode = false;
 let showAddSuggestion = false;
+// Tracks which mode the modal opened in. Admins can open it as either an
+// organizer (badged Cloud Function path) or as a regular participant (crowd
+// list, no badge), so the modal needs to know which path to take.
+let addAsOrganizer = false;
 
 export const Solutions: m.Component = {
-  async oninit() {
-    loading = true;
-    error = null;
-    const questionId = m.route.param('qid');
-    if (!questionId) {
-      error = t('solutions.error.no_id');
-      loading = false;
-      m.redraw();
+	async oninit() {
+		loading = true;
+		error = null;
+		const questionId = m.route.param('qid');
+		if (!questionId) {
+			error = t('solutions.error.no_id');
+			loading = false;
+			m.redraw();
 
-      return;
-    }
+			return;
+		}
 
-    try {
-      await ensureUser();
-      await loadQuestion(questionId);
-      questionUnsub = subscribeQuestion(questionId);
-      optionsUnsub = subscribeOptions(questionId);
-      // Stream just this user's evaluations under the question — gives the
-      // 5-face row its "I picked this" highlight on first paint and keeps
-      // it in sync if they evaluate from another tab.
-      evaluationsUnsub = subscribeUserEvaluations(questionId);
+		try {
+			await ensureUser();
+			await loadQuestion(questionId);
+			questionUnsub = subscribeQuestion(questionId);
+			optionsUnsub = subscribeOptions(questionId);
+			// Stream just this user's evaluations under the question — gives the
+			// 5-face row its "I picked this" highlight on first paint and keeps
+			// it in sync if they evaluate from another tab.
+			evaluationsUnsub = subscribeUserEvaluations(questionId);
 
-      // In facilitated mode, also keep a listener on the main statement so
-      // the facilitator can move us up to the Hub or across to another
-      // question / chat without us being on the Hub view.
-      const mainId = m.route.param('mid');
-      if (mainId) {
-        mainUnsub = subscribeMainStatement(mainId);
-      }
-    } catch (err) {
-      console.error('[Solutions] Failed to load:', err);
-      error = t('solutions.error.failed');
-    } finally {
-      loading = false;
-      m.redraw();
-    }
-  },
+			// In facilitated mode, also keep a listener on the main statement so
+			// the facilitator can move us up to the Hub or across to another
+			// question / chat without us being on the Hub view.
+			const mainId = m.route.param('mid');
+			if (mainId) {
+				mainUnsub = subscribeMainStatement(mainId);
+			}
+		} catch (err) {
+			console.error('[Solutions] Failed to load:', err);
+			error = t('solutions.error.failed');
+		} finally {
+			loading = false;
+			m.redraw();
+		}
+	},
 
-  onremove() {
-    if (questionUnsub) {
-      questionUnsub();
-      questionUnsub = null;
-    }
-    if (optionsUnsub) {
-      optionsUnsub();
-      optionsUnsub = null;
-    }
-    if (mainUnsub) {
-      mainUnsub();
-      mainUnsub = null;
-    }
-    if (evaluationsUnsub) {
-      evaluationsUnsub();
-      evaluationsUnsub = null;
-    }
-  },
+	onremove() {
+		if (questionUnsub) {
+			questionUnsub();
+			questionUnsub = null;
+		}
+		if (optionsUnsub) {
+			optionsUnsub();
+			optionsUnsub = null;
+		}
+		if (mainUnsub) {
+			mainUnsub();
+			mainUnsub = null;
+		}
+		if (evaluationsUnsub) {
+			evaluationsUnsub();
+			evaluationsUnsub = null;
+		}
+	},
 
-  view() {
-    if (loading) {
-      return m(SplashLoader);
-    }
+	view() {
+		if (loading) {
+			return m(SplashLoader);
+		}
 
-    if (error) {
-      return m('.solutions', m('.solutions__empty', error));
-    }
+		if (error) {
+			return m('.solutions', m('.solutions__empty', error));
+		}
 
-    const question = getQuestion();
-    if (!question) {
-      return m('.solutions', m('.solutions__empty', t('solutions.error.not_found')));
-    }
+		const question = getQuestion();
+		if (!question) {
+			return m('.solutions', m('.solutions__empty', t('solutions.error.not_found')));
+		}
 
-    const options = getVisibleOptions();
-    const total = getTotalVisibleCount();
-    const unread = getUnreadCount();
-    const accentColor = question.color || 'var(--terra-500)';
-    const facilitated = isFacilitatedMode();
-    const mainId = m.route.param('mid');
-    // Participants can add their own option whenever the admin has the
-    // `enableAddEvaluationOption` toggle on (mirrors main app: same setting,
-    // same modal, same store path). The facilitated route (/m/:mid/q/:qid)
-    // doesn't change this — the toggle is the single source of truth for
-    // "can people add options to this question".
-    const addOptionEnabled =
-      question.statementSettings?.enableAddEvaluationOption === true;
-    const showUserAddButton = addOptionEnabled && !isAdmin();
+		const options = getVisibleOptions();
+		const total = getTotalVisibleCount();
+		const unread = getUnreadCount();
+		const accentColor = question.color || 'var(--terra-500)';
+		const facilitated = isFacilitatedMode();
+		const mainId = m.route.param('mid');
+		// Participants can add their own option whenever the admin has the
+		// `enableAddEvaluationOption` toggle on (mirrors main app: same setting,
+		// same modal, same store path). The facilitated route (/m/:mid/q/:qid)
+		// doesn't change this — the toggle is the single source of truth for
+		// "can people add options to this question".
+		const addOptionEnabled = question.statementSettings?.enableAddEvaluationOption === true;
+		const showUserAddButton = addOptionEnabled && !isAdmin();
+		// Admin sees the participant-style add button alongside the organizer
+		// one whenever participants are allowed to add — letting an admin post
+		// a suggestion "as a regular person" instead of with the badge.
+		const showAdminParticipantAdd = addOptionEnabled && isAdmin();
 
-    return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
-      facilitated && mainId ? m(BackButton, { to: `/m/${mainId}` }) : null,
-      m(
-        '.solutions__header',
-        { style: `--q-accent: ${accentColor}` },
-        [m('h1.solutions__title', question.statement)],
-      ),
-      m('.solutions__scroll', [
-        m('.solutions__subtitle', [
-          m('span.solutions__subtitle-icon', '\u2728'),
-          m('span', buildSubtitleText(question)),
-        ]),
-        m('.solutions__counter', [
-          m('span.solutions__counter-total', t('solutions.counter.options', { count: total })),
-          unread > 0
-            ? m('span.solutions__counter-unread', t('solutions.counter.new', { count: unread }))
-            : null,
-        ]),
-        facilitated
-          ? null
-          : isAdmin()
-            ? m('.solutions__admin-toolbar', [
-                addOptionEnabled
-                  ? m(
-                      'button.btn.btn--small.btn--primary',
-                      {
-                        onclick: () => {
-                          showAddSuggestion = true;
-                        },
-                      },
-                      t('admin.add_suggestion'),
-                    )
-                  : null,
-                m(
-                  `button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
-                  {
-                    onclick: () => {
-                      adminMode = !adminMode;
-                    },
-                  },
-                  t('admin.manage_options'),
-                ),
-              ])
-            : renderAdminSignIn(question.statementId, question.creatorId),
-        showUserAddButton
-          ? m('.solutions__add-row', [
-              m(
-                'button.btn.btn--primary.solutions__add-button',
-                {
-                  onclick: () => {
-                    showAddSuggestion = true;
-                  },
-                },
-                [
-                  m('span.solutions__add-button-icon', { 'aria-hidden': 'true' }, '+'),
-                  m('span', t('solutions.add_suggestion')),
-                ],
-              ),
-            ])
-          : null,
-        options.length === 0
-          ? m('.solutions__empty', t('solutions.error.no_options'))
-          : m('.solutions__crowd-section', [
-              // Header only appears when the organizer section is also
-              // visible, so a simple question without any organizer
-              // suggestions still shows a single unlabeled list.
-              getOrganizerSuggestions().length > 0
-                ? m('h2.solutions__crowd-heading', t('admin.crowd_section'))
-                : null,
-              m(
-                '.solutions__list',
-                options.map((option) =>
-                  m(SolutionCard, {
-                    key: option.statementId,
-                    option,
-                    questionId: question.statementId,
-                    adminMode: isAdmin() && adminMode && !facilitated,
-                    displayOnly: facilitated,
-                    onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
-                      pendingJoinOptionId = optionId;
-                      pendingJoinRole = role;
-                      showJoinForm = true;
-                    },
-                  }),
-                ),
-              ),
-            ]),
-        // Organizer suggestions render AFTER the crowd list — the crowd
-        // is the primary content, admin additions come last.
-        renderOrganizerSection(question.statementId, adminMode, facilitated),
-        m(WizColFooter),
-      ]),
-      showJoinForm && question.statementSettings?.joinForm
-        ? m(JoinFormModal, {
-            joinForm: question.statementSettings.joinForm,
-            questionId: question.statementId,
-            optionId: pendingJoinOptionId!,
-            role: pendingJoinRole,
-            onClose: () => {
-              showJoinForm = false;
-              pendingJoinOptionId = null;
-            },
-          })
-        : null,
-      showAddSuggestion
-        ? m(AddSuggestionModal, {
-            onClose: () => {
-              showAddSuggestion = false;
-            },
-          })
-        : null,
-      m(FacilitatorPanel),
-    ]);
-  },
+		return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
+			// Admin gets a return path: in facilitated mode that's the workspace
+			// hub; otherwise (e.g. a question created from /, or a /q share link
+			// opened by its admin) it's the join app's main page. The BackButton
+			// self-gates on `isAdmin()`, so participants don't see it either way.
+			m(BackButton, { to: facilitated && mainId ? `/m/${mainId}` : '/' }),
+			m('.solutions__header', { style: `--q-accent: ${accentColor}` }, [
+				m('h1.solutions__title', question.statement),
+			]),
+			m('.solutions__scroll', [
+				m('.solutions__subtitle', [
+					m('span.solutions__subtitle-icon', '\u2728'),
+					m('span', buildSubtitleText(question)),
+				]),
+				m('.solutions__counter', [
+					m('span.solutions__counter-total', t('solutions.counter.options', { count: total })),
+					unread > 0
+						? m('span.solutions__counter-unread', t('solutions.counter.new', { count: unread }))
+						: null,
+				]),
+				isAdmin()
+					? m('.solutions__admin-toolbar', [
+							// Admin can always add an organizer suggestion — it goes
+							// through the `createOrganizerSuggestion` Cloud Function,
+							// which doesn't depend on the participant-facing
+							// `enableAddEvaluationOption` toggle. Available in
+							// facilitated mode too: the FacilitatorPanel doesn't
+							// expose this action, and admins still need to seed the
+							// list while leading the room.
+							m(
+								'button.btn.btn--small.btn--primary',
+								{
+									onclick: () => {
+										addAsOrganizer = true;
+										showAddSuggestion = true;
+									},
+								},
+								t('admin.add_suggestion'),
+							),
+							// When participants are allowed to add, admin gets a second
+							// button to post "as a regular person" — same crowd-list
+							// path participants use, no organizer badge.
+							showAdminParticipantAdd
+								? m(
+										'button.btn.btn--small.btn--outline',
+										{
+											onclick: () => {
+												addAsOrganizer = false;
+												showAddSuggestion = true;
+											},
+										},
+										t('solutions.add_suggestion'),
+									)
+								: null,
+							// "Manage options" toggles per-card admin controls. Those
+							// controls are suppressed by `displayOnly` in facilitated
+							// mode, so the toggle would be a no-op there — hide it.
+							facilitated
+								? null
+								: m(
+										`button.btn.btn--small${adminMode ? '.btn--primary' : '.btn--outline'}`,
+										{
+											onclick: () => {
+												adminMode = !adminMode;
+											},
+										},
+										t('admin.manage_options'),
+									),
+						])
+					: facilitated
+						? null
+						: renderAdminSignIn(question.statementId, question.creatorId),
+				showUserAddButton
+					? m('.solutions__add-row', [
+							m(
+								'button.btn.btn--primary.solutions__add-button',
+								{
+									onclick: () => {
+										addAsOrganizer = false;
+										showAddSuggestion = true;
+									},
+								},
+								[
+									m('span.solutions__add-button-icon', { 'aria-hidden': 'true' }, '+'),
+									m('span', t('solutions.add_suggestion')),
+								],
+							),
+						])
+					: null,
+				options.length === 0
+					? m('.solutions__empty', t('solutions.error.no_options'))
+					: m('.solutions__crowd-section', [
+							// Header only appears when the organizer section is also
+							// visible, so a simple question without any organizer
+							// suggestions still shows a single unlabeled list.
+							getOrganizerSuggestions().length > 0
+								? m('h2.solutions__crowd-heading', t('admin.crowd_section'))
+								: null,
+							m(
+								'.solutions__list',
+								options.map((option) =>
+									m(SolutionCard, {
+										key: option.statementId,
+										option,
+										questionId: question.statementId,
+										adminMode: isAdmin() && adminMode && !facilitated,
+										displayOnly: facilitated,
+										onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
+											pendingJoinOptionId = optionId;
+											pendingJoinRole = role;
+											showJoinForm = true;
+										},
+									}),
+								),
+							),
+						]),
+				// Organizer suggestions render AFTER the crowd list — the crowd
+				// is the primary content, admin additions come last.
+				renderOrganizerSection(question.statementId, adminMode, facilitated),
+				m(WizColFooter),
+			]),
+			showJoinForm && question.statementSettings?.joinForm
+				? m(JoinFormModal, {
+						joinForm: question.statementSettings.joinForm,
+						questionId: question.statementId,
+						optionId: pendingJoinOptionId!,
+						role: pendingJoinRole,
+						onClose: () => {
+							showJoinForm = false;
+							pendingJoinOptionId = null;
+						},
+					})
+				: null,
+			showAddSuggestion
+				? m(AddSuggestionModal, {
+						asOrganizer: addAsOrganizer,
+						onClose: () => {
+							showAddSuggestion = false;
+						},
+					})
+				: null,
+			m(FacilitatorPanel),
+		]);
+	},
 };
 
 /** Discreet "Sign in as admin" affordance for anonymous visitors. The Join
@@ -246,78 +283,79 @@ export const Solutions: m.Component = {
  *  fresh admin check. Hidden once the user has a non-anonymous session to
  *  avoid nagging non-admin Google users. */
 function renderAdminSignIn(questionId: string, creatorId: string): m.Children {
-  const user = getUserState().user;
-  if (!user || !user.isAnonymous) return null;
+	const user = getUserState().user;
+	if (!user || !user.isAnonymous) return null;
 
-  return m('.solutions__admin-signin', [
-    m(
-      'button.btn.btn--small.btn--outline',
-      {
-        onclick: async () => {
-          try {
-            await signInWithGoogle();
-            await checkAdminStatus(questionId, creatorId);
-            m.redraw();
-          } catch (err) {
-            console.error('[Solutions] Admin sign-in failed:', err);
-          }
-        },
-      },
-      t('admin.signin'),
-    ),
-  ]);
+	return m('.solutions__admin-signin', [
+		m(
+			'button.btn.btn--small.btn--outline',
+			{
+				onclick: async () => {
+					try {
+						await signInWithGoogle();
+						await checkAdminStatus(questionId, creatorId);
+						m.redraw();
+					} catch (err) {
+						console.error('[Solutions] Admin sign-in failed:', err);
+					}
+				},
+			},
+			t('admin.signin'),
+		),
+	]);
 }
 
 function renderOrganizerSection(
-  questionId: string,
-  adminModeActive: boolean,
-  facilitated: boolean,
+	questionId: string,
+	adminModeActive: boolean,
+	facilitated: boolean,
 ): m.Children {
-  const suggestions = getOrganizerSuggestions();
-  if (suggestions.length === 0) return null;
+	const suggestions = getOrganizerSuggestions();
+	if (suggestions.length === 0) return null;
 
-  return m('.solutions__organizer-section', [
-    m('h2.solutions__organizer-heading', t('admin.suggestions_section')),
-    m(
-      '.solutions__list',
-      suggestions.map((option) =>
-        m(SolutionCard, {
-          key: option.statementId,
-          option,
-          questionId,
-          isOrganizerSuggestion: true,
-          adminMode: isAdmin() && adminModeActive && !facilitated,
-          displayOnly: facilitated,
-          onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
-            pendingJoinOptionId = optionId;
-            pendingJoinRole = role;
-            showJoinForm = true;
-          },
-        }),
-      ),
-    ),
-  ]);
+	return m('.solutions__organizer-section', [
+		m('h2.solutions__organizer-heading', t('admin.suggestions_section')),
+		m(
+			'.solutions__list',
+			suggestions.map((option) =>
+				m(SolutionCard, {
+					key: option.statementId,
+					option,
+					questionId,
+					isOrganizerSuggestion: true,
+					adminMode: isAdmin() && adminModeActive && !facilitated,
+					displayOnly: facilitated,
+					onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
+						pendingJoinOptionId = optionId;
+						pendingJoinRole = role;
+						showJoinForm = true;
+					},
+				}),
+			),
+		),
+	]);
 }
 
 function buildSubtitleText(question: Statement): string {
-  const threshold = question.statementSettings?.activationThreshold;
-  if (!threshold?.enabled) {
-    return t('solutions.subtitle.default');
-  }
+	const threshold = question.statementSettings?.activationThreshold;
+	if (!threshold?.enabled) {
+		return t('solutions.subtitle.default');
+	}
 
-  const parts: string[] = [];
-  if (threshold.minOrganizers) {
-    const key = threshold.minOrganizers > 1 ? 'threshold.organizers_plural' : 'threshold.organizers';
-    parts.push(t(key, { count: threshold.minOrganizers }));
-  }
-  if (threshold.minActivists) {
-    const key = threshold.minActivists > 1 ? 'threshold.activists_plural' : 'threshold.activists';
-    parts.push(t(key, { count: threshold.minActivists }));
-  }
+	const parts: string[] = [];
+	if (threshold.minOrganizers) {
+		const key =
+			threshold.minOrganizers > 1 ? 'threshold.organizers_plural' : 'threshold.organizers';
+		parts.push(t(key, { count: threshold.minOrganizers }));
+	}
+	if (threshold.minActivists) {
+		const key = threshold.minActivists > 1 ? 'threshold.activists_plural' : 'threshold.activists';
+		parts.push(t(key, { count: threshold.minActivists }));
+	}
 
-  if (parts.length === 0) {
-    return t('solutions.subtitle.default');
-  }
+	if (parts.length === 0) {
+		return t('solutions.subtitle.default');
+	}
 
-  return t('solutions.subtitle.threshold', { requirements: parts.join(' & ') });
+	return t('solutions.subtitle.threshold', { requirements: parts.join(' & ') });
 }

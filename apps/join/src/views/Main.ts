@@ -70,9 +70,11 @@ async function handleCreateSubmit(e: Event): Promise<void> {
 		}
 		// Save locally so it shows up in "My questions" immediately, even
 		// before the Cloud Function fans out the admin subscription doc.
-		recordMyWorkspace({ id, title, kind: 'question' });
+		// Tagged as `workspace` so the list routes back through MainHub
+		// (/m/<id>) on subsequent visits — matching the create-route below.
+		recordMyWorkspace({ id, title, kind: 'workspace' });
 		createInput = '';
-		m.route.set(`/q/${id}`);
+		m.route.set(`/m/${id}`);
 	} catch (err) {
 		console.error('[Main] Create question failed:', err);
 		createError = t('main.create_question_failed');

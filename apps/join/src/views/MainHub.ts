@@ -13,6 +13,7 @@ import { recordMyWorkspace } from '@/lib/myWorkspaces';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
+import { BackButton } from '@/components/BackButton';
 import { SplashLoader } from '@/views/Splash';
 import type { Unsubscribe } from '@/lib/firebase';
 
@@ -112,6 +113,9 @@ export const MainHub: m.Component = {
 		const mainId = main.statementId;
 
 		return m('.main-hub', { style: `--q-accent: ${accentColor}` }, [
+			// Admin-only return path to /. The BackButton self-gates on
+			// `isAdmin()`, so participants visiting via a share link never see it.
+			m(BackButton, { to: '/' }),
 			m('.main-hub__brand', [
 				m('img.main-hub__logo', {
 					src: logoSrc,
