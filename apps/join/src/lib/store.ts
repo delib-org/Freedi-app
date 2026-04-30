@@ -584,7 +584,22 @@ export function getMainStatement(): Statement | null {
 }
 
 export function getSubQuestions(): Statement[] {
-	return subQuestions;
+	// Admin-controlled order via the `Statement.order` field. Statements without
+	// an explicit order fall back to creation time so brand-new sub-questions
+	// land at the end of the list until an admin reorders. Hidden sub-questions
+	// are filtered out for participants but stay in the list for admins so they
+	// can unhide them — same pattern used for hidden options under a question.
+	const isAdminUser = isAdmin();
+
+	return [...subQuestions]
+		.filter((s) => isAdminUser || s.hide !== true)
+		.sort((a, b) => {
+			const ao = typeof a.order === 'number' ? a.order : Number.MAX_SAFE_INTEGER;
+			const bo = typeof b.order === 'number' ? b.order : Number.MAX_SAFE_INTEGER;
+			if (ao !== bo) return ao - bo;
+
+			return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+		});
 }
 
 export async function loadMainStatement(mainId: string): Promise<void> {
@@ -612,6 +627,85 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 function syncMainStatementLanguage(): void {
 	if (!mainStatement) return;
 	applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
+}
+
+/** Admin-only: append a new sub-question under the current main statement. The
+ *  new statement is intentionally created without an explicit `order` field so
+ *  it sorts to the end of the list via the `createdAt` tiebreaker — until the
+ *  admin reorders, at which point `setSubQuestionsOrder` writes explicit
+ *  indices for every sibling. Setting an explicit small index here would
+ *  otherwise jump the new card past existing unordered siblings (which fall
+ *  back to MAX_SAFE_INTEGER in the sort).
+ *
+ *  Returns the new statementId on success, or null if the user isn't admin or
+ *  the schema validation fails. Mirrors `createSimpleQuestion` but parents the
+ *  result under the main statement instead of `'top'`, and uses the main's
+ *  topParent so descendants stay reachable from the workspace root. */
+export async function createSubQuestion(mainId: string, title: string): Promise<string | null> {
+	if (!isAdmin()) return null;
+	const trimmed = title.trim();
+	if (!trimmed) return null;
+
+	await ensureUser();
+	const creator = buildCreator();
+	if (!creator) return null;
+
+	const main = mainStatement;
+	const topParentId = main?.topParentId || mainId;
+	const parents = [...(main?.parents ?? []), mainId];
+
+	const newQuestion = createStatementObject({
+		statement: trimmed,
+		statementType: StatementType.question,
+		parentId: mainId,
+		topParentId,
+		parents,
+		creatorId: creator.uid,
+		creator,
+		statementSettings: {
+			showEvaluation: true,
+			enableAddEvaluationOption: true,
+			enableAddVotingOption: true,
+			enableSimilaritiesSearch: true,
+			enableNavigationalElements: true,
+		},
+	});
+
+	if (!newQuestion) return null;
+
+	await setDoc(doc(db, Collections.statements, newQuestion.statementId), newQuestion);
+
+	return newQuestion.statementId;
+}
+
+/** Admin-only: persist a new sibling order for sub-questions. Writes the
+ *  index of each id as the `order` field via parallel `setDoc` merges — the
+ *  list will rarely exceed a handful, so a Firestore batch is overkill. */
+export async function setSubQuestionsOrder(orderedIds: string[]): Promise<void> {
+	if (!isAdmin()) return;
+	const now = Date.now();
+	await Promise.all(
+		orderedIds.map((id, index) =>
+			setDoc(
+				doc(db, Collections.statements, id),
+				{ order: index, lastUpdate: now },
+				{ merge: true },
+			),
+		),
+	);
+}
+
+/** Admin-only: hide or unhide a sub-question. Hidden sub-questions are
+ *  filtered out of `getSubQuestions()` for non-admins (admins still see them
+ *  greyed out so they can unhide). Reuses `Statement.hide`, the same field
+ *  the options list already respects via `setOptionFlag`. */
+export async function setSubQuestionHidden(subQuestionId: string, hidden: boolean): Promise<void> {
+	if (!isAdmin()) return;
+	await setDoc(
+		doc(db, Collections.statements, subQuestionId),
+		{ hide: hidden, lastUpdate: Date.now() },
+		{ merge: true },
+	);
 }
 
 export function subscribeMainStatement(mainId: string): Unsubscribe {
