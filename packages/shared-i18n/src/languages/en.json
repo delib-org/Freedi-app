@@ -3477,5 +3477,13 @@
   "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals": "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals",
   "Score breakdown": "Score breakdown",
   "{count} votes · avg {avg}": "{count} votes · avg {avg}",
-  "Last aggregated": "Last aggregated"
+  "Last aggregated": "Last aggregated",
+  "Bulk add options": "Bulk add options",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "Paste options, one per line. Use a dash (—) for an optional description.",
+  "Preview ({{count}})": "Preview ({{count}})",
+  "Add {{count}} options": "Add {{count}} options",
+  "Adding...": "Adding...",
+  "Added {{count}} options": "Added {{count}} options",
+  "Failed to add options at line {{line}}": "Failed to add options at line {{line}}",
+  "Clear": "Clear"
 }

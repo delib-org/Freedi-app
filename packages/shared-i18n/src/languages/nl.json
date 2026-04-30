@@ -2600,5 +2600,13 @@
   "Strong rejection": "Sterke afwijzing",
   "Sharply divided": "Scherp verdeeld",
   "Mild agreement": "Lichte instemming",
-  "Mild disagreement": "Lichte onenigheid"
+  "Mild disagreement": "Lichte onenigheid",
+  "Bulk add options": "Opties bulksgewijs toevoegen",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "Plak opties, één per regel. Gebruik een streepje (—) voor een optionele beschrijving.",
+  "Preview ({{count}})": "Voorbeeld ({{count}})",
+  "Add {{count}} options": "{{count}} opties toevoegen",
+  "Adding...": "Bezig met toevoegen...",
+  "Added {{count}} options": "{{count}} opties toegevoegd",
+  "Failed to add options at line {{line}}": "Toevoegen mislukt bij regel {{line}}",
+  "Clear": "Wissen"
 }

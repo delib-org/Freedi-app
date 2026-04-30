@@ -2824,5 +2824,13 @@
   "Strong rejection": "رد قوی",
   "Sharply divided": "به‌شدت منقسم",
   "Mild agreement": "موافقت ملایم",
-  "Mild disagreement": "مخالفت ملایم"
+  "Mild disagreement": "مخالفت ملایم",
+  "Bulk add options": "افزودن گزینه‌ها به‌صورت گروهی",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "گزینه‌ها را بچسبانید، یک گزینه در هر خط. از خط تیره (—) برای توضیح اختیاری استفاده کنید.",
+  "Preview ({{count}})": "پیش‌نمایش ({{count}})",
+  "Add {{count}} options": "افزودن {{count}} گزینه",
+  "Adding...": "در حال افزودن...",
+  "Added {{count}} options": "{{count}} گزینه افزوده شد",
+  "Failed to add options at line {{line}}": "افزودن گزینه‌ها در خط {{line}} ناموفق بود",
+  "Clear": "پاک کردن"
 }

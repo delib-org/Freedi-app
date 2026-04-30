@@ -3040,5 +3040,13 @@
   "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals": "{count} מעריכים · {direct} ישירות + {inherited} בירושה מ-{originals} הצעות מקוריות",
   "Score breakdown": "פירוט הציון",
   "{count} votes · avg {avg}": "{count} הצבעות · ממוצע {avg}",
-  "Last aggregated": "איסוף אחרון"
+  "Last aggregated": "איסוף אחרון",
+  "Bulk add options": "הוספת אפשרויות בכמות",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "הדביקו אפשרויות, אחת בשורה. השתמשו במקף (—) להוספת תיאור אופציונלי.",
+  "Preview ({{count}})": "תצוגה מקדימה ({{count}})",
+  "Add {{count}} options": "הוסף {{count}} אפשרויות",
+  "Adding...": "מוסיף...",
+  "Added {{count}} options": "נוספו {{count}} אפשרויות",
+  "Failed to add options at line {{line}}": "כשל בהוספת אפשרויות בשורה {{line}}",
+  "Clear": "נקה"
 }

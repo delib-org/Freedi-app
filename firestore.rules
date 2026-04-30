@@ -888,5 +888,19 @@ service cloud.firestore {
       // Writes handled by Cloud Functions only
       allow write: if false;
     }
+
+    // Moderation logs - readable only by admins/creators of the topParent statement.
+    // Writes are performed exclusively by Cloud Functions via the Admin SDK.
+    match /moderationLogs/{logId} {
+      function isTopParentAdmin() {
+        let topParentId = resource.data.topParentId;
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(topParentId));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      allow get, list: if request.auth != null && isTopParentAdmin();
+      allow write: if false;
+    }
   }
 }

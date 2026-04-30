@@ -19,6 +19,7 @@ import { setStatement, statementSelector } from '@/redux/statements/statementsSl
 import Loader from '@/view/components/loaders/Loader';
 import { Statement } from '@freedi/shared-types';
 import MembersManagement from './components/membership/MembersManagement';
+import BulkAddOptions from './components/BulkAddOptions/BulkAddOptions';
 
 const StatementSettings: FC = () => {
 	// * Hooks * //
@@ -110,6 +111,7 @@ const StatementSettings: FC = () => {
 						setStatementToEdit={setStatementToEdit}
 					/>
 					<MembersManagement statement={statementToEdit} />
+					<BulkAddOptions statement={statementToEdit} />
 				</>
 			)}
 		</div>

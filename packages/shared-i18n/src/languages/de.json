@@ -2600,5 +2600,13 @@
   "Strong rejection": "Starke Ablehnung",
   "Sharply divided": "Stark geteilt",
   "Mild agreement": "Leichte Zustimmung",
-  "Mild disagreement": "Leichte Ablehnung"
+  "Mild disagreement": "Leichte Ablehnung",
+  "Bulk add options": "Optionen in Stapel hinzufügen",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "Optionen einfügen, eine pro Zeile. Mit einem Bindestrich (—) optional eine Beschreibung hinzufügen.",
+  "Preview ({{count}})": "Vorschau ({{count}})",
+  "Add {{count}} options": "{{count}} Optionen hinzufügen",
+  "Adding...": "Wird hinzugefügt...",
+  "Added {{count}} options": "{{count}} Optionen hinzugefügt",
+  "Failed to add options at line {{line}}": "Fehler beim Hinzufügen in Zeile {{line}}",
+  "Clear": "Löschen"
 }

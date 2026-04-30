@@ -2601,5 +2601,13 @@
   "Strong rejection": "Rechazo fuerte",
   "Sharply divided": "Marcadamente dividido",
   "Mild agreement": "Acuerdo leve",
-  "Mild disagreement": "Desacuerdo leve"
+  "Mild disagreement": "Desacuerdo leve",
+  "Bulk add options": "Añadir opciones en bloque",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "Pega las opciones, una por línea. Usa un guion (—) para añadir una descripción opcional.",
+  "Preview ({{count}})": "Vista previa ({{count}})",
+  "Add {{count}} options": "Añadir {{count}} opciones",
+  "Adding...": "Añadiendo...",
+  "Added {{count}} options": "Se añadieron {{count}} opciones",
+  "Failed to add options at line {{line}}": "Error al añadir opciones en la línea {{line}}",
+  "Clear": "Limpiar"
 }
