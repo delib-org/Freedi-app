@@ -2067,4 +2067,744 @@ $facilitator-panel-width: 300px;
   font-weight: 600;
 }
 
+// -----------------------------------------------------------------------------
+// Accessibility widget — floating, draggable trigger + slide-out panel.
+// Matches the visual design of the main app's Accessibility component.
+// All interactive targets meet WCAG 2.5.5 (≥ 44×44 px touch targets).
+// -----------------------------------------------------------------------------
+
+.a11y-widget {
+  // Fixed to the inline-start edge (left in LTR, right in RTL), vertically
+  // positioned via inline JS. The negative translateX collapses most of the
+  // trigger off-screen so only a small tab peeks out.
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  // The panel slides in from the left; the trigger tab remains exposed.
+  // Default: panel off-screen (translateX is applied to the inner element,
+  // not the root, so the trigger is always accessible).
+
+  &--dragging * {
+    pointer-events: none;  // Prevent accidental button activation during drag
+  }
+}
+
+// Trigger tab — pill-shaped button that peeks out from the left edge.
+.a11y-widget__trigger {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0;
+  background: var(--terra-600);
+  color: var(--text-inverse);
+  border: 2px solid #ffffff;
+  border-left: none;
+  border-radius: 0 var(--radius-full) var(--radius-full) 0;
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  // clip-path keeps the shadow on 3 sides only (matching main app)
+  clip-path: inset(-8px -8px -8px 1px);
+  touch-action: none;  // Required so pointermove fires before browser panning
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--terra-700);
+    outline: none;
+    box-shadow: var(--shadow-lg);
+  }
+
+  &:focus-visible {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+  }
+
+  // High-contrast mode active state — invert to signal the mode is on
+  &--active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  svg {
+    width: 1.7rem;
+    height: 1.7rem;
+    pointer-events: none;
+  }
+}
+
+// Panel — slides in alongside the trigger when open
+.a11y-widget__panel {
+  display: flex;
+  flex-direction: column;
+  width: 11rem;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-medium);
+  border-left: none;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+
+  // The `display: flex` above overrides the UA stylesheet's `[hidden] { display: none }`,
+  // so we need an explicit attribute selector to actually hide the panel.
+  &[hidden] {
+    display: none;
+  }
+}
+
+// Row shared styles
+.a11y-widget__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  // Font size row — primary colour background (matches main app)
+  &--font {
+    background: var(--terra-600);
+    color: var(--text-inverse);
+    gap: var(--space-xs);
+    height: 3.1rem;
+  }
+
+  // Contrast row — vertical stack of two buttons
+  &--contrast {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+  }
+}
+
+// Font label (Aa + px value)
+.a11y-widget__font-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-inverse);
+  white-space: nowrap;
+  min-width: 4rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+// +/- icon buttons inside the font row
+.a11y-widget__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.2rem;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--terra-700);
+  border: none;
+  border-radius: var(--radius-xs);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur-quick) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// High / light contrast buttons
+.a11y-widget__contrast-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  gap: var(--space-sm);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--dur-quick) var(--ease-out),
+    color var(--dur-quick) var(--ease-out);
+  min-height: 44px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  span {
+    flex: 1;
+    text-align: start;
+  }
+
+  // High-contrast button — dark background, white text
+  &--high {
+    background: var(--ink);
+    color: var(--paper);   // 21:1 ✓ AAA
+
+    &:hover {
+      background: var(--ink-soft);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--teal-700);
+      color: var(--text-inverse);
+    }
+  }
+
+  // Light-contrast button — white background, dark text
+  &--light {
+    background: var(--bg-card);
+    color: var(--ink);     // 21:1 ✓ AAA
+
+    &:hover {
+      background: var(--paper-soft);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--teal-50);
+      color: var(--teal-700);
+    }
+  }
+}
+
+// Reduced motion — drop panel open/close transitions
+@media (prefers-reduced-motion: reduce) {
+  .a11y-widget__trigger,
+  .a11y-widget__icon-btn,
+  .a11y-widget__contrast-btn {
+    transition: none;
+  }
+}
+
+// High-contrast overrides for the widget itself so it remains usable in HC mode.
+// Duplicated for attribute selector (manual) and media query (OS-level).
+:root[data-high-contrast] {
+  .a11y-widget__trigger {
+    background: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+    border-width: 3px;
+  }
+
+  .a11y-widget__panel {
+    border-color: #000000;
+    border-width: 2px;
+  }
+
+  .a11y-widget__icon-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .a11y-widget__trigger {
+    background: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+    border-width: 3px;
+  }
+
+  .a11y-widget__panel {
+    border-color: #000000;
+    border-width: 2px;
+  }
+
+  .a11y-widget__icon-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Login — gated entry surface for the home route
+// -----------------------------------------------------------------------------
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  padding: var(--space-lg) var(--space-md);
+  background: var(--paper-soft);
+}
+
+.login__card {
+  width: min(28rem, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-card, 0 6px 24px rgba(0, 0, 0, 0.08));
+  text-align: center;
+}
+
+.login__logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: var(--space-xs);
+}
+
+.login__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+.login__tagline {
+  margin: 0;
+  max-width: 32ch;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+}
+
+.login__error {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--danger-50, #fef2f2);
+  color: var(--danger-700, #b91c1c);
+  border: 1px solid var(--danger-200, #fecaca);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  text-align: start;
+}
+
+.login__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+.login__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: transform var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(1px);
+  }
+}
+
+.login__btn--google {
+  background: var(--ink, #1c1917);
+  color: var(--paper, #fff);
+  border: 1px solid var(--ink, #1c1917);
+
+  &:not(:disabled):hover {
+    background: var(--ink-strong, #0c0a09);
+  }
+}
+
+.login__btn--guest {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--paper-line);
+
+  &:not(:disabled):hover {
+    background: var(--paper-soft);
+  }
+}
+
+.login__btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.login__divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  margin: var(--space-xs) 0;
+  color: var(--text-muted, #78716c);
+  font-size: var(--font-size-sm);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--paper-line);
+  }
+
+  span {
+    flex: 0 0 auto;
+  }
+}
+
+.login__hint {
+  margin: 0;
+  max-width: 32ch;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted, #78716c);
+  line-height: var(--line-height-loose, 1.6);
+}
+
+// -----------------------------------------------------------------------------
+// Main page — post-login landing
+// -----------------------------------------------------------------------------
+.main-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  padding: var(--space-md) var(--space-md) 0;
+  background: var(--paper-soft);
+}
+
+.main-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-sm);
+}
+
+.main-page__logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.main-page__signout {
+  padding: var(--space-xs) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-full, 999px);
+  cursor: pointer;
+  transition: color var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--paper);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.main-page__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-block: var(--space-xl);
+}
+
+.main-page__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-xxl, 2rem);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+.main-page__lede {
+  margin: 0;
+  max-width: 48ch;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+}
+
+.main-page__panel {
+  width: min(32rem, 100%);
+  padding: var(--space-lg);
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-card, 0 6px 24px rgba(0, 0, 0, 0.06));
+  text-align: start;
+}
+
+.main-page__panel-title {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-lg, 1.25rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+}
+
+.main-page__panel-text {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+}
+
+// "Open a question" form — input + submit on one row, wraps on narrow screens.
+.main-page__open-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.main-page__open-input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md, 12px);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
+
+  &::placeholder {
+    color: var(--text-muted, #78716c);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 1px;
+    border-color: var(--focus-ring-color);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--danger-500, #dc2626);
+  }
+}
+
+.main-page__open-submit {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--paper);
+  background: var(--ink, #1c1917);
+  border: 1px solid var(--ink, #1c1917);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: background-color var(--dur-quick, 140ms) var(--ease-out),
+    transform var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: var(--ink-strong, #0c0a09);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.main-page__open-error {
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--danger-700, #b91c1c);
+  background: var(--danger-50, #fef2f2);
+  border: 1px solid var(--danger-200, #fecaca);
+  border-radius: var(--radius-sm);
+}
+
+// "My questions" list — vertical stack of admin-owned workspaces.
+.main-page__workspace-list {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.main-page__workspace-item {
+  margin: 0;
+  padding: 0;
+}
+
+.main-page__workspace {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md, 12px);
+  // Accent bar — uses the workspace's color via a CSS custom property.
+  border-inline-start: 4px solid var(--q-accent, var(--terra-500));
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: var(--paper);
+  }
+}
+
+.main-page__workspace-open {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: start;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  color: inherit;
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.main-page__workspace-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+  line-height: var(--line-height-snug);
+}
+
+.main-page__workspace-id {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  letter-spacing: var(--tracking-wide, 0.02em);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main-page__workspace-remove {
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 0 var(--space-md);
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-muted, #78716c);
+  background: transparent;
+  border: 0;
+  border-inline-start: 1px solid var(--paper-line);
+  border-radius: 0;
+  cursor: pointer;
+  transition: color var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    color: var(--danger-700, #b91c1c);
+    background: var(--danger-50, #fef2f2);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
 
