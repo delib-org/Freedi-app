@@ -4,11 +4,23 @@
 
 const KEY = 'freedi_join_my_workspaces';
 
+/** A workspace is either a multi-question container (`workspace`, opened at
+ *  `/m/<id>`) or a single question created from the join app itself
+ *  (`question`, opened at `/q/<id>`). The kind decides which route we send
+ *  the user to when they click the entry. Older entries persisted before
+ *  this field was introduced are treated as `workspace` for compatibility. */
+export type WorkspaceKind = 'workspace' | 'question';
+
 export interface MyWorkspace {
 	id: string;
 	title: string;
 	color?: string;
 	lastVisited: number;
+	kind?: WorkspaceKind;
+}
+
+export function workspaceRoute(w: MyWorkspace): string {
+	return w.kind === 'question' ? `/q/${w.id}` : `/m/${w.id}`;
 }
 
 function readRaw(): MyWorkspace[] {
@@ -54,6 +66,10 @@ export function recordMyWorkspace(entry: Omit<MyWorkspace, 'lastVisited'>): void
 		id: entry.id,
 		title: entry.title,
 		color: entry.color,
+		// Preserve a previously-recorded kind on update — e.g. a question
+		// created from join (`question`) shouldn't get downgraded to
+		// `workspace` if the user later visits it as if it had sub-questions.
+		kind: entry.kind ?? (idx >= 0 ? list[idx].kind : undefined),
 		lastVisited: Date.now(),
 	};
 	if (idx >= 0) {

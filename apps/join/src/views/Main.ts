@@ -4,14 +4,20 @@ import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import {
 	getMyWorkspaces,
+	recordMyWorkspace,
 	removeMyWorkspace,
 	parseWorkspaceId,
+	workspaceRoute,
 	type MyWorkspace,
 } from '@/lib/myWorkspaces';
+import { createSimpleQuestion } from '@/lib/store';
 
 let signingOut = false;
 let openInput = '';
 let openError: string | null = null;
+let createInput = '';
+let creating = false;
+let createError: string | null = null;
 
 async function handleSignOut(): Promise<void> {
 	if (signingOut) return;
@@ -40,6 +46,40 @@ function handleOpenSubmit(e: Event): void {
 	openError = null;
 	openInput = '';
 	m.route.set(`/m/${id}`);
+}
+
+async function handleCreateSubmit(e: Event): Promise<void> {
+	e.preventDefault();
+	if (creating) return;
+	const title = createInput.trim();
+	if (!title) {
+		createError = t('main.create_question_invalid');
+		m.redraw();
+
+		return;
+	}
+	creating = true;
+	createError = null;
+	m.redraw();
+	try {
+		const id = await createSimpleQuestion(title);
+		if (!id) {
+			createError = t('main.create_question_failed');
+
+			return;
+		}
+		// Save locally so it shows up in "My questions" immediately, even
+		// before the Cloud Function fans out the admin subscription doc.
+		recordMyWorkspace({ id, title, kind: 'question' });
+		createInput = '';
+		m.route.set(`/q/${id}`);
+	} catch (err) {
+		console.error('[Main] Create question failed:', err);
+		createError = t('main.create_question_failed');
+	} finally {
+		creating = false;
+		m.redraw();
+	}
 }
 
 function handleRemove(id: string): void {
@@ -72,7 +112,7 @@ function renderWorkspaceCard(w: MyWorkspace): m.Vnode {
 				{
 					type: 'button',
 					onclick: () => {
-						m.route.set(`/m/${w.id}`);
+						m.route.set(workspaceRoute(w));
 					},
 				},
 				[m('span.main-page__workspace-title', w.title), m('span.main-page__workspace-id', w.id)],
@@ -124,6 +164,36 @@ export const Main: m.Component = {
 			m('main.main-page__body', [
 				m('h1.main-page__title', t('main.welcome', { name: displayName() })),
 				m('p.main-page__lede', isGuest ? t('main.lede_guest') : t('main.lede')),
+				m('section.main-page__panel', [
+					m('h2.main-page__panel-title', t('main.create_question_title')),
+					m('p.main-page__panel-text', t('main.create_question_help')),
+					m('form.main-page__open-form', { onsubmit: handleCreateSubmit }, [
+						m('input.main-page__open-input', {
+							type: 'text',
+							name: 'questionTitle',
+							value: createInput,
+							placeholder: t('main.create_question_placeholder'),
+							'aria-label': t('main.create_question_placeholder'),
+							'aria-invalid': createError ? 'true' : undefined,
+							disabled: creating,
+							maxlength: 200,
+							oninput: (e: Event) => {
+								createInput = (e.target as HTMLInputElement).value;
+								if (createError) createError = null;
+							},
+						}),
+						m(
+							'button.main-page__open-submit',
+							{
+								type: 'submit',
+								disabled: creating,
+								'aria-busy': creating ? 'true' : undefined,
+							},
+							creating ? t('main.create_question_busy') : t('main.create_question_submit'),
+						),
+					]),
+					createError ? m('.main-page__open-error', { role: 'alert' }, createError) : null,
+				]),
 				m('section.main-page__panel', [
 					m('h2.main-page__panel-title', t('main.open_question_title')),
 					m('p.main-page__panel-text', t('main.open_question_help')),
