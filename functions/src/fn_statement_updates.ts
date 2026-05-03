@@ -10,6 +10,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import {
 	Collections,
 	Statement,
+	StatementType,
 	SimpleStatement,
 	statementToSimpleStatement,
 	functionConfig,
@@ -199,9 +200,24 @@ async function updateParentWithLatestChildren(parentId: string) {
 
 		const timestamp = Date.now();
 
-		// Generate description from child paragraph statements
+		// Description should reflect the admin-authored body. When the host has
+		// paragraph child statements, use those — otherwise (e.g. a host with
+		// only sub-questions or options), fall back to the most recent children
+		// of any type so question/option hosts still get a meaningful preview.
+		const paragraphsSnap = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', parentId)
+			.where('statementType', '==', StatementType.paragraph)
+			.orderBy('createdAt', 'desc')
+			.limit(3)
+			.get();
+
+		const descriptionSourceDocs = paragraphsSnap.empty
+			? subStatementsQuery.docs
+			: paragraphsSnap.docs;
+
 		const description = generateDescriptionFromChildren(
-			subStatementsQuery.docs.map((doc) => {
+			descriptionSourceDocs.map((doc) => {
 				const stmt = doc.data() as Statement;
 
 				return { statement: stmt.statement, createdAt: stmt.createdAt };

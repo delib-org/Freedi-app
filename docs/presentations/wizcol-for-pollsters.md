@@ -108,6 +108,7 @@ Hebrew, Arabic, Spanish, English handled natively — critical for **bilingual /
 
 ---
 
+<<<<<<< HEAD
 ## Innovation #4 — The Collaboration Index Map
 
 The hardest question in polling: **"Where is there real cross-partisan common ground — and where is the dispute?"**
@@ -144,6 +145,41 @@ WizCol answers it with a **2D map**, plotting every proposal × every pair of de
 K-anonymity built in: minimum segment size = 5 (`DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE`) — GDPR/CCPA-compliant cuts out of the box.
 
 **For a pollster:** A 200-cell crosstab becomes one map. Hand the campaign a one-page where-they-stand picture instead of a 40-page deck.
+=======
+## Innovation #4 — Demographic Collaboration Index (DCI)
+
+The hardest question in polling: **"Where is there real cross-partisan common ground?"**
+
+WizCol answers it with a single number per proposal × per pair of groups:
+
+> **DCI = 1 − |mean_A − mean_B| / 2**
+
+| Group A vs. Group B | mean_A | mean_B | **DCI** | Interpretation |
+|---|---|---|---|---|
+| Dems vs. Reps on Proposal X | +0.55 | +0.45 | **0.95** | Strong cross-partisan agreement ✅ |
+| Dems vs. Reps on Proposal Y | +0.60 | −0.50 | **0.45** | Polarized landmine ⚠️ |
+| Latino vs. non-Latino on Z | +0.30 | +0.20 | **0.95** | Bilingual rollout safe ✅ |
+
+Plus **MAD (Mean Absolute Deviation)** flags *within-group* fractures: a party can have a high mean but be internally split — DCI catches what a crosstab average hides.
+
+📄 `packages/shared-types/src/utils/madCalculation.ts`
+
+---
+
+## DCI in Practice — Three-Way Paragraph Classification
+
+The Sign app `/api/admin/collaboration/[docId]` endpoint scores **every paragraph** of a platform document — or every proposal in a poll — as:
+
+| Status | Divergence | What a campaign does |
+|---|---|---|
+| 🟢 **Collaborative** | < 0.25 | Safe to lead with — broad agreement |
+| 🟡 **Mixed** | 0.25 – 0.60 | Needs message work / framing |
+| 🔴 **Polarized** | > 0.60 | Landmine — expect counter-mobilization |
+
+K-anonymity built in: minimum segment size = 5 (`DEMOGRAPHIC_CONSTANTS.MIN_SEGMENT_SIZE`) — GDPR/CCPA-compliant cuts out of the box.
+
+**For a pollster:** A 200-cell crosstab becomes one sortable column. Hand the campaign a one-page green/yellow/red sheet instead of a 40-page deck.
+>>>>>>> feat/join-facilitation-mode
 
 ---
 
@@ -198,7 +234,11 @@ For town halls, council meetings, school-board forums: **organizer-led synchroni
 | Open-ended responses | Manual coding, weeks | AI-clustered in real time |
 | Voter-submitted proposals | No | **Yes — Real Voice** |
 | Negative-consensus alerts | Only if you asked | Automatic |
+<<<<<<< HEAD
 | Cross-partisan common ground | Crosstab inference | **Collaboration Index map per pair of groups** |
+=======
+| Cross-partisan common ground | Crosstab inference | **DCI score per pair of groups** |
+>>>>>>> feat/join-facilitation-mode
 | Within-group cohesion | Not reported | **MAD per segment** |
 | Live group sessions | No | **Facilitation Mode** |
 | Languages | Translate per project | 6 built-in (EN/HE/AR/ES/DE/NL) |

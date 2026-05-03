@@ -65,6 +65,7 @@ export const StatementSchema = object({
 	creatorId: string(), // the id of the creator of the statement
 	creator: UserSchema, // the creator of the statement
 	statementType: enum_(StatementType), // the type of the statement: group, stage, option, chat-message, etc.
+	blockType: optional(enum_(ParagraphType)), // for paragraph child-statements (statementType === paragraph): visual block type (h1..h6, paragraph, li). Distinct from the nested doc.paragraphType used by Sign app.
 	evidence: optional(object({
 		evidenceType: optional(enum_(EvidenceType)), // the type of evidence: data, testimony, argument, anecdote, fallacy
 		support: optional(number()), // the strength of support of the evidence (-1 to 1): -1 = strongly challenges, 0 = neutral, 1 = strongly supports
@@ -79,6 +80,7 @@ export const StatementSchema = object({
 	forceLanguage: optional(boolean()), // if true, force the language of the statement
 	followMe: optional(string()),
 	powerFollowMe: optional(string()), // when set, auto-redirects non-admin users to this path
+	joinFollowMe: optional(string()), // join-app-only follow-me; isolated from `powerFollowMe` so a main-app session with power-follow active can't fight the join admin's broadcasts
 	parentId: string(), // the id of the parent statement
 	parents: optional(array(string())), // the list of all parents of the statement
 	topParentId: string(), // the id of the top parent of the statement

@@ -50,6 +50,7 @@ Speaker notes: 50/50 platform/agency revenue split modeled by CleanSweep Campaig
 
 ---
 
+<<<<<<< HEAD
 ## SLIDE 3 — The Collaboration Index — a 2D map of every proposal × every demographic pair
 
 Title: **Where they agree, where they dispute, who supports, who opposes — on one map**
@@ -88,6 +89,39 @@ Title: **Read the map: four worked examples**
 Within-group fractures caught by **MAD (Mean Absolute Deviation)** — a party can have a high mean but be internally split. MAD catches what crosstab averages hide.
 
 K-anonymity: minimum segment size = 5 (auto-suppressed below threshold).
+=======
+## SLIDE 3 — Demographic Collaboration Index (DCI) — replaces crosstab reading
+
+Title: **Cross-partisan common ground as a single sortable number**
+
+> **DCI = 1 − |mean_A − mean_B| / 2**     (range 0 → 1)
+
+| Group A vs. Group B on Proposal | mean_A | mean_B | **DCI** | Read |
+|---|---|---|---|---|
+| Dems vs. Reps — Proposal X | +0.55 | +0.45 | **0.95** | 🟢 Strong cross-partisan agreement |
+| Dems vs. Reps — Proposal Y | +0.60 | −0.50 | **0.45** | 🔴 Polarized landmine |
+| Latino vs. non-Latino — Proposal Z | +0.30 | +0.20 | **0.95** | 🟢 Bilingual rollout safe |
+
+A 200-cell crosstab becomes one column you can sort. Every proposal × every demographic pair gets a number.
+
+Source: `packages/shared-types/src/utils/madCalculation.ts:54`
+
+---
+
+## SLIDE 4 — DCI in Practice: Green / Yellow / Red
+
+Title: **One-page client deliverable instead of a 40-page deck**
+
+Every proposal (or document paragraph) auto-classified:
+
+| Status | Divergence | Campaign action |
+|---|---|---|
+| 🟢 **Collaborative** | < 0.25 | Lead with this — broad agreement |
+| 🟡 **Mixed** | 0.25 – 0.60 | Needs message work |
+| 🔴 **Polarized** | > 0.60 | Landmine — expect counter-mobilization |
+
+Within-group fractures caught by **MAD (Mean Absolute Deviation)** — a party can have a high mean but be internally split. DCI catches what crosstab averages hide.
+>>>>>>> feat/join-facilitation-mode
 
 Source: `apps/sign/app/api/admin/collaboration/[docId]/route.ts`
 
@@ -274,8 +308,13 @@ Contact: tal.yaron@gmail.com
 
 1. Title
 2. **Cost / market expansion** — pollsters lead with margin
+<<<<<<< HEAD
 3. **Collaboration Index map** — the killer analytical feature; replaces what they already do (crosstabs) with a 2D picture
 4. **Collaboration Index worked examples** — proves it's operational, not theoretical
+=======
+3. **DCI** — the killer analytical feature; replaces what they already do (crosstabs) with something better
+4. **DCI in practice** — proves it's operational, not theoretical
+>>>>>>> feat/join-facilitation-mode
 5. **Calibrated consensus** — defensibility (their #2 commercial concern)
 6. **AI clustering** — kills a real labor cost line
 7. **Real Voice** — the methodological leap; powerful but slightly threatening to their question-design role, so placed mid-deck after credibility is established

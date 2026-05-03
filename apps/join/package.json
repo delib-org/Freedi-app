@@ -16,8 +16,10 @@
   },
   "dependencies": {
     "@freedi/shared-types": "file:../../packages/shared-types",
+    "@types/qrcode": "^1.5.6",
     "firebase": "^11.0.2",
-    "mithril": "^2.2.8"
+    "mithril": "^2.2.8",
+    "qrcode": "^1.5.4"
   },
   "devDependencies": {
     "@types/mithril": "^2.2.7",

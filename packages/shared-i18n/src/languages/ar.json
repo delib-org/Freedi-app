@@ -2404,5 +2404,13 @@
   "{count} evaluators · {direct} direct + {inherited} inherited from {originals} originals": "{count} مقيّمين · {direct} مباشر + {inherited} موروث من {originals} اقتراحات أصلية",
   "Score breakdown": "تفصيل النتيجة",
   "{count} votes · avg {avg}": "{count} أصوات · المتوسط {avg}",
-  "Last aggregated": "آخر تجميع"
+  "Last aggregated": "آخر تجميع",
+  "Bulk add options": "إضافة خيارات بالجملة",
+  "Paste options, one per line. Use a dash (—) for an optional description.": "الصق الخيارات، خيار واحد في كل سطر. استخدم شرطة (—) لإضافة وصف اختياري.",
+  "Preview ({{count}})": "معاينة ({{count}})",
+  "Add {{count}} options": "إضافة {{count}} خيارات",
+  "Adding...": "جارٍ الإضافة...",
+  "Added {{count}} options": "تمت إضافة {{count}} خيارات",
+  "Failed to add options at line {{line}}": "فشل في إضافة الخيارات في السطر {{line}}",
+  "Clear": "مسح"
 }

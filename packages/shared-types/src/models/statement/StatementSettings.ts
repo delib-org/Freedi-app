@@ -137,6 +137,7 @@ export const StatementSettingsSchema = object({
 	evaluationType: optional(enum_(evaluationType)),
 	joiningEnabled: optional(boolean()),
 	singleJoinOnly: optional(boolean()), // If true, user can only join ONE option under this parent
+	dualRoleJoin: optional(boolean()), // Join app: when true, options expose two buttons (activist + organizer). Default (undefined/false) = single "Join" button.
 	minJoinMembers: optional(number()), // Minimum members per option (for visual indicator)
 	maxJoinMembers: optional(number()), // Maximum members per option (for visual indicator + split trigger)
 	showEvaluation: optional(boolean()),
@@ -166,6 +167,15 @@ export const StatementSettingsSchema = object({
 	enableHybridClustering: optional(boolean()), // if true, hybrid text+rating clustering runs for this question and sub-questions
 	activationThreshold: optional(ActivationThresholdSchema), // min activists/organizers to activate an option
 	condensation: optional(CondensationConfigSchema), // grouped suggestions feature — see CondensationConfigSchema
+	// Join app: when true, the MainHub renders a QR code section that any
+	// participant can use to share the room URL with someone nearby (peer-to-
+	// peer invite). Hub-scoped — only honoured on the main statement, not
+	// per-question. Admin-controlled via the FacilitatorPanel.
+	showQR: optional(boolean()),
+	// Join app: seed used when `defaultSortType === SortType.random` so every
+	// participant computes the same shuffle locally. Admin re-randomizes by
+	// pressing the Random sort button again, which writes a fresh seed.
+	randomSortSeed: optional(number()),
 });
 
 

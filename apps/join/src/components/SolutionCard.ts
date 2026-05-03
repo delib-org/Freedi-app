@@ -15,6 +15,7 @@ import {
 import { getUserState } from '@/lib/user';
 import { t } from '@/lib/i18n';
 import { hasCelebrated, markCelebrated, playCelebrationSound, launchConfetti } from '@/lib/celebrate';
+import { Evaluation } from '@/components/Evaluation';
 
 function getOptionDescription(option: Statement): string | null {
   if (option.description) return option.description;
@@ -38,11 +39,14 @@ interface SolutionCardAttrs {
   adminMode?: boolean;
   /** When true, render the organizer-suggestion variant (badge + accent). */
   isOrganizerSuggestion?: boolean;
+  /** When true, render in facilitated/locked mode: no clicks, no join buttons,
+   *  no admin controls — only the facilitator can move participants. */
+  displayOnly?: boolean;
 }
 
 export const SolutionCard: m.Component<SolutionCardAttrs> = {
   view(vnode) {
-    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion } = vnode.attrs;
+    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion, displayOnly } = vnode.attrs;
     const user = getUserState().user;
     const question = getQuestion();
     const joinedCount = option.joined?.length ?? 0;
@@ -88,20 +92,27 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
     const groupSize = option.integratedOptions?.length ?? 0;
 
     const organizerClass = isOrganizerSuggestion ? '.solution-card--organizer' : '';
+    const displayOnlyClass = displayOnly ? '.solution-card--display-only' : '';
 
     return m(
-      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}`,
+      `.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}${displayOnlyClass}`,
       {
-        role: 'button',
-        tabindex: 0,
+        // Stable identifier the FLIP reorder animation reads on the parent
+        // list; see lib/flipAnimate.ts and views/Solutions.ts.
+        'data-flip-id': option.statementId,
+        role: displayOnly ? undefined : 'button',
+        tabindex: displayOnly ? undefined : 0,
         'aria-label': option.statement,
-        onclick: handleCardClick,
-        onkeydown: (e: KeyboardEvent) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            navigateToChat();
-          }
-        },
+        'aria-disabled': displayOnly ? 'true' : undefined,
+        onclick: displayOnly ? undefined : handleCardClick,
+        onkeydown: displayOnly
+          ? undefined
+          : (e: KeyboardEvent) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                navigateToChat();
+              }
+            },
         oncreate: (vnode: m.VnodeDOM) => {
           if (isActivated && !hasCelebrated(option.statementId)) {
             markCelebrated(option.statementId);
@@ -129,33 +140,50 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
         getOptionDescription(option)
           ? m('.solution-card__description', getOptionDescription(option))
           : null,
+        // The 5-face evaluation row is gated by the same
+        // `statementSettings.showEvaluation` flag the main app uses, so
+        // both surfaces open and close evaluation in lockstep — and
+        // turning it off in the FacilitatorPanel hides it everywhere.
+        // No `key` here on purpose: this slot is positional, and mixing
+        // keyed + unkeyed siblings in a fragment is a Mithril error.
+        question?.statementSettings?.showEvaluation === true
+          ? m(Evaluation, { option })
+          : null,
         buildQuotaBar(joinedCount, organizerCount, question),
         m('.solution-card__meta', [
           m('.solution-card__counts', [
             m('.solution-card__count', t('card.activists', { count: joinedCount })),
             m('.solution-card__count', t('card.organizers', { count: organizerCount })),
           ]),
-          m(
+          // Hide the chat affordance globally when a facilitator pauses chat
+          // (`hasChat === false`). Treat undefined as ON for back-compat.
+          question?.statementSettings?.hasChat === false
+          ? null
+          : m(
             '.solution-card__chat',
             {
               class: messageCount > 0 ? 'solution-card__chat--active' : '',
-              role: 'button',
-              tabindex: 0,
+              role: displayOnly ? undefined : 'button',
+              tabindex: displayOnly ? undefined : 0,
               'aria-label':
                 newMsgCount > 0
                   ? t(newMsgCount > 1 ? 'card.new_messages_plural' : 'card.new_messages', { count: newMsgCount })
                   : t('chat.open'),
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                navigateToChat();
-              },
-              onkeydown: (e: KeyboardEvent) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  navigateToChat();
-                }
-              },
+              onclick: displayOnly
+                ? undefined
+                : (e: Event) => {
+                    e.stopPropagation();
+                    navigateToChat();
+                  },
+              onkeydown: displayOnly
+                ? undefined
+                : (e: KeyboardEvent) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigateToChat();
+                    }
+                  },
             },
             [
               m('.solution-card__chat-icon', { 'aria-hidden': 'true' }, '\uD83D\uDCAC'),
@@ -168,29 +196,50 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             ],
           ),
         ]),
-        m('.solution-card__actions', [
-          m(
-            `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
-            {
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
-              },
-            },
-            isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
-          ),
-          m(
-            `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
-            {
-              onclick: (e: Event) => {
-                e.stopPropagation();
-                handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
-              },
-            },
-            isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
-          ),
-        ]),
-        adminMode
+        displayOnly
+          ? null
+          : m(
+              '.solution-card__actions',
+              question?.statementSettings?.dualRoleJoin === true
+                ? [
+                    m(
+                      `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
+                      {
+                        onclick: (e: Event) => {
+                          e.stopPropagation();
+                          handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+                        },
+                      },
+                      isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
+                    ),
+                    m(
+                      `button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
+                      {
+                        onclick: (e: Event) => {
+                          e.stopPropagation();
+                          handleJoin(option.statementId, questionId, 'organizer', onRequestJoinForm);
+                        },
+                      },
+                      isJoinedAsOrganizer ? t('card.joined_organizer') : t('card.join_organizer'),
+                    ),
+                  ]
+                : [
+                    // Default: simple "Join" — single activist-role button. Admin opts
+                    // into the dual activist/organizer split via `dualRoleJoin: true`
+                    // on the question's statementSettings.
+                    m(
+                      `button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
+                      {
+                        onclick: (e: Event) => {
+                          e.stopPropagation();
+                          handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+                        },
+                      },
+                      isJoinedAsActivist ? t('card.joined') : t('card.join'),
+                    ),
+                  ],
+            ),
+        adminMode && !displayOnly
           ? m('.solution-card__admin', [
               m(
                 'button.btn.btn--small.btn--outline',

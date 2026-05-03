@@ -132,6 +132,7 @@ export enum SortType {
 	accepted = 'accepted',
 	backendOrder = 'backend-order',
 	mostJoined = 'mostJoined',
+	averageEvaluation = 'averageEvaluation',
 }
 
 

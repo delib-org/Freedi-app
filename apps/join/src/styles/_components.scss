@@ -127,81 +127,6 @@
   }
 }
 
-// -----------------------------------------------------------------------------
-// Splash — editorial type-first intro
-// -----------------------------------------------------------------------------
-.splash {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100dvh;
-  padding: var(--space-xl);
-  background: var(--bg-page);
-  text-align: center;
-  overflow: hidden;
-  position: relative;
-
-  // Two offset color blocks — risograph feel, purely decorative
-  &::before,
-  &::after {
-    content: '';
-    position: absolute;
-    border-radius: 50%;
-    pointer-events: none;
-    mix-blend-mode: multiply;
-    filter: blur(24px);
-    opacity: 0.55;
-    animation: splash-drift var(--dur-celebrate) var(--ease-out) both;
-  }
-
-  &::before {
-    width: 260px;
-    height: 260px;
-    background: var(--terra-100);
-    top: 18%;
-    left: -40px;
-  }
-
-  &::after {
-    width: 300px;
-    height: 300px;
-    background: var(--teal-100);
-    bottom: 14%;
-    right: -60px;
-    animation-delay: 80ms;
-  }
-
-  &__logo {
-    width: 88px;
-    height: 88px;
-    position: relative;
-    z-index: 1;
-    animation: splash-reveal var(--dur-slow) var(--ease-out) 60ms both;
-  }
-
-  &__text {
-    font-family: var(--font-display);
-    font-size: var(--font-size-3xl);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: var(--tracking-tight);
-    color: var(--ink);
-    margin-top: var(--space-lg);
-    position: relative;
-    z-index: 1;
-    animation: splash-reveal var(--dur-slow) var(--ease-out) 180ms both;
-  }
-}
-
-@keyframes splash-reveal {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes splash-drift {
-  from { opacity: 0; transform: scale(0.8); }
-  to   { opacity: 0.55; transform: scale(1); }
-}
 
 // -----------------------------------------------------------------------------
 // Solutions — list screen
@@ -401,6 +326,16 @@
     .solution-card__title {
       color: var(--teal-700);              // 10:1 on teal-50 ✓ AAA
     }
+  }
+
+  // Phase 1 of the FLIP reorder animation (lib/flipAnimate.ts): the inline
+  // transform that "inverts" the card to its old position is applied with
+  // transitions disabled, so the snap-back is instantaneous. The next frame
+  // strips this class and clears the inline transform — the existing
+  // `transition: transform var(--dur-base) var(--ease-out)` then animates
+  // the card to its new spot.
+  &--flipping {
+    transition: none;
   }
 
   &__activated-badge {
@@ -633,6 +568,118 @@
     .btn {
       flex: 1 1 auto;
     }
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Evaluation row (5 faces) — same -1..1 scale as the main app's
+// EnhancedEvaluation, but tuned for a 70+ audience: every thumb is a large,
+// fully-coloured circle so all five faces are clearly distinct on first
+// glance. The selected face gets a thick ink ring + scale-up + ring-shadow,
+// so it's unmistakable which one was picked.
+//
+// Sizes deliberately exceed the 44×44 minimum recommended for older-adult
+// touch targets. Layout wraps to 3+2 on very narrow screens so we never
+// shrink the buttons.
+// -----------------------------------------------------------------------------
+.evaluation {
+  display: flex;
+  flex-direction: row;        // logical: LTR = left→right (-1 …. +1), RTL = right→left
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: nowrap;          // keep all five faces on a single line
+  gap: var(--space-xs);
+  margin: var(--space-sm) 0 var(--space-md);
+  padding: var(--space-sm);
+  background: var(--paper-soft);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--paper-line);
+}
+
+.evaluation__thumb {
+  appearance: none;
+  // Each thumb takes an equal share of the row, capped at 56px so they
+  // don't blow up on wide cards and floored at 44px so they never drop
+  // below the senior-friendly tap-target minimum. `aspect-ratio` keeps
+  // them circular regardless of the share they end up with.
+  flex: 1 1 0;
+  min-width: 44px;
+  max-width: 56px;
+  aspect-ratio: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  // The inline-styled background colour (one --emoji-* per face) is the
+  // primary signal; the border below sits on top for the active state.
+  border: 4px solid transparent;
+  border-radius: 50%;
+  padding: 0;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  transition:
+    transform var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out),
+    filter var(--dur-quick, 140ms) var(--ease-out);
+
+  // Inactive faces dim slightly so the eye can still pick out the chosen
+  // one at a glance; the colour itself remains visible on every face.
+  filter: saturate(0.85);
+  opacity: 0.85;
+
+  &:hover {
+    transform: scale(1.05);
+    opacity: 1;
+    filter: saturate(1);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+// Active = the user has picked this face (optimistic or server-confirmed).
+// Heavy ink ring + scale + double-ring shadow makes the choice impossible
+// to miss for low-vision users.
+.evaluation__thumb--active {
+  border-color: var(--ink, #1c1917);
+  transform: scale(1.12);
+  filter: saturate(1.05);
+  opacity: 1;
+  box-shadow:
+    0 0 0 3px var(--paper),
+    0 4px 10px rgba(0, 0, 0, 0.28);
+  z-index: 1;
+
+  &:hover {
+    transform: scale(1.15);
+  }
+}
+
+.evaluation__thumb-img {
+  width: 32px;
+  height: 32px;
+  display: block;
+  pointer-events: none;
+  // The asset paints the face in near-white; a soft shadow lifts it off the
+  // coloured circle without losing the line-art look.
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evaluation__thumb {
+    transition: none;
+  }
+  .evaluation__thumb:hover,
+  .evaluation__thumb:active,
+  .evaluation__thumb--active,
+  .evaluation__thumb--active:hover {
+    transform: none;
   }
 }
 
@@ -1229,6 +1276,29 @@
   border-radius: var(--radius-lg);
 }
 
+// Participant-facing "add a suggestion" affordance — only renders when the
+// admin has flipped the per-question `enableAddEvaluationOption` toggle on.
+// Sits between the header counter and the crowd list so it reads as the
+// natural next action ("if you have an idea, add it here") without the
+// admin-toolbar dashed-border treatment, which is reserved for admin-only
+// surfaces.
+.solutions__add-row {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-md) 0;
+}
+
+.solutions__add-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.solutions__add-button-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
 // Discreet sign-in affordance for admins visiting anonymously — small,
 // subdued, placed where the admin toolbar would be once they're recognized.
 .solutions__admin-signin {
@@ -1304,4 +1374,2001 @@
   padding-top: var(--space-sm);
   border-top: 1px dashed var(--paper-line);
 }
+
+// -----------------------------------------------------------------------------
+// Main Hub — facilitated entry page
+// -----------------------------------------------------------------------------
+.main-hub {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: var(--space-lg) var(--space-md) 0;
+  background: var(--paper-soft);
+}
+
+.main-hub__brand {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
+.main-hub__logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+// Discreet admin-signin link tucked into the top-inline-end corner of the
+// brand row. Hidden once the user is non-anonymous; once admin status is
+// detected the FacilitatorPanel handle takes over.
+.main-hub__admin-signin {
+  position: absolute;
+  top: 0;
+  inset-inline-end: 0;
+  padding: var(--space-xs) var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-muted, #78716c);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: color var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.main-hub__admin-signin:hover,
+.main-hub__admin-signin:focus-visible {
+  color: var(--text-strong, #1c1917);
+  outline: none;
+}
+
+.main-hub__admin-signin:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+.main-hub__title {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.main-hub__description {
+  margin: 0 auto var(--space-lg);
+  max-width: 60ch;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+  text-align: center;
+  white-space: pre-wrap;
+}
+
+.main-hub__scroll {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding-bottom: var(--space-xl);
+  // Keep the questions list and footer in a readable column on desktop —
+  // the .main-hub container is full-width (so the beige background fills the
+  // viewport), but its content stays centered within this wrapper width.
+  width: 100%;
+  max-width: 75ch;
+  margin: 0 auto;
+}
+
+.main-hub__questions-heading {
+  margin: 0;
+  font-size: var(--font-size-lg, 1.125rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.main-hub__question-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.main-hub__question-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: var(--space-md);
+  background: var(--surface-card, #fff);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+  cursor: default;
+  user-select: none;
+  transition: border-color var(--dur-base) var(--ease-out),
+    box-shadow var(--dur-base) var(--ease-out),
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out);
+
+  // Display-only by default — no hover/active treatment.
+  &:hover,
+  &:active {
+    background: var(--surface-card, #fff);
+    border-color: var(--paper-line);
+    box-shadow: var(--shadow-xs);
+    transform: none;
+  }
+
+  // Admin-interactive variant: card behaves as a button. Hover/focus give
+  // it a subtle lift so it's clear the whole row is clickable.
+  &--interactive {
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--q-accent, var(--terra-500));
+      box-shadow: var(--shadow-sm);
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--q-accent, var(--terra-500));
+      outline-offset: 2px;
+    }
+  }
+
+  // Hidden sub-question (admin-only view): dim the card so admins can spot
+  // and unhide. Participants never see hidden cards (filtered upstream).
+  &--hidden {
+    opacity: 0.55;
+    background: var(--paper-soft, #faf7f2);
+  }
+
+  // Currently being dragged — fade the source card so the drop indicator
+  // reads as the new home position.
+  &--dragging {
+    opacity: 0.4;
+    cursor: grabbing;
+  }
+
+  // Hovered drop target — accent the top edge to indicate the dragged card
+  // will land before this one. The accent uses the workspace colour so the
+  // hint reads as part of the same workspace surface.
+  &--drop-target {
+    border-top: 3px solid var(--q-accent, var(--terra-500));
+    padding-top: calc(var(--space-md) - 2px);
+  }
+}
+
+.main-hub__question-card-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+// Drag handle on the inline-start of admin cards. The handle is purely
+// visual — the whole card is `draggable=true`, so anywhere on the card
+// initiates the drag. The handle just makes the affordance discoverable.
+.main-hub__question-card-handle {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1.25rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted, #78716c);
+  cursor: grab;
+  user-select: none;
+  letter-spacing: -1px;
+
+  // While the card is being dragged, the handle becomes a "grabbing" cursor.
+  .main-hub__question-card--dragging & {
+    cursor: grabbing;
+  }
+}
+
+// Inline-end action button: hide / unhide a sub-question. Admins only —
+// participants never see hidden cards, so they don't need this control.
+.main-hub__question-card-hide {
+  flex: 0 0 auto;
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted, #78716c);
+  transition: background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--paper-soft, #faf7f2);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+}
+
+// "Hidden" pill rendered inside the body so admins know at a glance that
+// participants don't see this sub-question.
+.main-hub__question-card-hidden-tag {
+  display: inline-block;
+  margin-top: var(--space-xs);
+  padding: 2px var(--space-xs);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-semibold, 600);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  background: var(--paper-soft, #faf7f2);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+}
+
+// Admin-only "create sub-question" form sitting just above the questions
+// list. Mirrors the styling of `.main-page__open-form` so the affordance
+// reads identically across the admin surfaces.
+.main-hub__create-question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-md);
+  background: var(--surface-card, #fff);
+  border: 1px dashed var(--paper-line);
+  border-radius: var(--radius-md);
+}
+
+.main-hub__create-question-label {
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-secondary);
+}
+
+.main-hub__create-question-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: stretch;
+}
+
+.main-hub__create-question-input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md, 12px);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &::placeholder {
+    color: var(--text-muted, #78716c);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 1px;
+    border-color: var(--focus-ring-color);
+  }
+}
+
+.main-hub__create-question-submit {
+  flex: 0 0 auto;
+}
+
+.main-hub__create-question-error {
+  margin-top: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--danger-700, #b91c1c);
+  background: var(--danger-50, #fef2f2);
+  border: 1px solid var(--danger-200, #fecaca);
+  border-radius: var(--radius-sm);
+}
+
+// Drop zone at the end of the list — only rendered while a drag is in
+// progress. Lets admins drop a card past the last existing card to send it
+// to the bottom of the list.
+.main-hub__question-drop-end {
+  height: 1.5rem;
+  border: 2px dashed transparent;
+  border-radius: var(--radius-sm);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    border-color: var(--q-accent, var(--terra-500));
+  }
+}
+
+.main-hub__question-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+  line-height: var(--line-height-tight);
+}
+
+.main-hub__question-description {
+  margin-top: var(--space-xs);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-muted);
+  line-height: var(--line-height-loose, 1.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.main-hub__loading,
+.main-hub__empty {
+  padding: var(--space-xl) var(--space-md);
+  text-align: center;
+  color: var(--text-muted);
+}
+
+// =============================================================================
+// QR share section — peer-to-peer URL sharing on the MainHub.
+// Compact card sits in the hub flow; tapping the canvas opens a fullscreen
+// presenter overlay for projector / cross-room scanning. The QR canvas is
+// always white-bg + black-fg regardless of theme — scanners read luminance,
+// dark-mode inversion would break them.
+// =============================================================================
+.main-hub__qr {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  align-items: center;
+  margin-bottom: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-card);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-xs);
+
+  // From small phone landscape upwards, lay out as two columns: QR on the
+  // inline-start, label + actions filling the rest. RTL flips automatically
+  // because we use flex defaults (no row-reverse).
+  @media (min-width: 480px) {
+    flex-direction: row;
+    align-items: stretch;
+  }
+}
+
+.main-hub__qr-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-sm);
+  text-align: center;
+
+  @media (min-width: 480px) {
+    text-align: start;
+  }
+}
+
+.main-hub__qr-label {
+  margin: 0;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+  line-height: var(--line-height-snug);
+}
+
+.main-hub__qr-canvas {
+  // Reset UA button defaults — without `appearance: none` Safari/Chromium
+  // ship a grey "buttonface" background and platform-specific cursor that
+  // override our zoom hint. We render the canvas as a plain interactive
+  // surface, so strip everything browser-y first.
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 144px;
+  height: 144px;
+  padding: var(--space-sm);
+  background: #ffffff;            // hard-coded — scanner contrast requirement
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;                // not zoom-in — some platforms render it as default
+  transition:
+    transform var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+
+  > svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    pointer-events: none;         // clicks always reach the button, never the SVG
+  }
+
+  &:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+.main-hub__qr-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  justify-content: center;
+
+  @media (min-width: 480px) {
+    justify-content: flex-start;
+  }
+}
+
+.main-hub__qr-action {
+  flex: 0 0 auto;
+  min-height: 36px;
+}
+
+// ---- Fullscreen presenter overlay -------------------------------------------
+.main-hub__qr-presenter {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(2px);
+  animation: main-hub-qr-fade-in var(--dur-base) var(--ease-out);
+}
+
+@keyframes main-hub-qr-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.main-hub__qr-presenter-title {
+  margin: 0;
+  max-width: min(80vw, 720px);
+  font-family: var(--font-display);
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-inverse);
+  text-align: center;
+  line-height: var(--line-height-snug);
+}
+
+.main-hub__qr-presenter-canvas {
+  width: min(60vw, 60vh, 720px);
+  height: min(60vw, 60vh, 720px);
+  padding: var(--space-md);
+  background: #ffffff;            // hard-coded — same contrast requirement
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+
+  > svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}
+
+.main-hub__qr-presenter-url {
+  margin: 0;
+  max-width: min(80vw, 720px);
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-mono);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-inverse);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-sm);
+  // URLs are always LTR even when the surrounding UI is RTL.
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: center;
+  word-break: break-all;
+}
+
+.main-hub__qr-presenter-close {
+  position: absolute;
+  top: var(--space-md);
+  inset-inline-end: var(--space-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--touch-target);
+  height: var(--touch-target);
+  padding: 0;
+  font-size: var(--font-size-xl);
+  line-height: 1;
+  color: var(--text-inverse);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background-color var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid #ffffff;
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+// ---- High-contrast (manual toggle + OS preference) -------------------------
+:root[data-high-contrast] .main-hub__qr-canvas,
+:root[data-high-contrast] .main-hub__qr-presenter-canvas {
+  background: #ffffff;
+  border: 2px solid #000000;
+}
+
+@media (forced-colors: active) {
+  .main-hub__qr-canvas,
+  .main-hub__qr-presenter-canvas {
+    forced-color-adjust: none;     // protect QR module colors specifically
+    background-color: #ffffff;     // …and force white where modules sit
+    border: 2px solid CanvasText;
+  }
+
+  .main-hub__qr-presenter {
+    backdrop-filter: none;
+    background: Canvas;
+  }
+
+  .main-hub__qr-presenter-title,
+  .main-hub__qr-presenter-url,
+  .main-hub__qr-presenter-close {
+    color: CanvasText;
+    background: Canvas;
+    border-color: CanvasText;
+  }
+}
+
+// ---- Reduced motion --------------------------------------------------------
+@media (prefers-reduced-motion: reduce) {
+  .main-hub__qr-canvas {
+    transition: none;
+
+    &:hover { transform: none; }
+  }
+
+  .main-hub__qr-presenter {
+    animation: none;
+    backdrop-filter: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Facilitated lockdown — Solutions cards become display-only
+// -----------------------------------------------------------------------------
+.solutions--facilitated {
+  .solution-card,
+  .solution-card--display-only {
+    cursor: default;
+
+    &:hover,
+    &:active {
+      transform: none;
+      box-shadow: var(--shadow-xs);
+    }
+  }
+
+  .solution-card__chat:not([role='button']) {
+    cursor: default;
+  }
+}
+
+.solution-card--display-only {
+  cursor: default;
+  user-select: none;
+
+  &:hover,
+  &:active {
+    transform: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat — facilitated mode tweaks (back button hidden via component logic; the
+// title takes the full header width).
+// -----------------------------------------------------------------------------
+.chat--facilitated {
+  .chat__header {
+    justify-content: center;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Facilitator toast — appended directly to <body>, not part of any view tree.
+// -----------------------------------------------------------------------------
+.facilitator-toast {
+  position: fixed;
+  top: var(--space-lg);
+  left: 50%;
+  transform: translate(-50%, -16px);
+  z-index: 9999;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-inverse);
+  background: var(--terra-700);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--dur-quick, 150ms) var(--ease-out),
+    transform var(--dur-quick, 150ms) var(--ease-out);
+}
+
+.facilitator-toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .facilitator-toast {
+    transition: opacity var(--dur-quick, 150ms) linear;
+    transform: translate(-50%, 0);
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Facilitator panel — admin-only side drawer for live per-question controls.
+// Opened via the pinned "Facilitate" handle on the inline-end edge. Mounted
+// alongside hub / solutions / chat so the handle persists across views.
+// -----------------------------------------------------------------------------
+$facilitator-panel-width: 300px;
+
+.facilitator-panel-root {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 9000;
+
+  > * {
+    pointer-events: auto;
+  }
+}
+
+.facilitator-panel__handle {
+  position: fixed;
+  top: 50%;
+  inset-inline-end: 0;
+  transform: translateY(-50%);
+  z-index: 9001;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 56px;
+  padding: 0;
+  color: var(--text-inverse);
+  background: var(--terra-700);
+  border: 0;
+  border-start-start-radius: var(--radius-lg);
+  border-end-start-radius: var(--radius-lg);
+  border-start-end-radius: 0;
+  border-end-end-radius: 0;
+  box-shadow: var(--shadow-md);
+  cursor: grab;
+  // Required for pointermove drag tracking on touch — without this the
+  // browser's native pan gesture eats the move events before we see them.
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    transform var(--dur-base, 220ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__handle:active {
+  cursor: grabbing;
+}
+
+.facilitator-panel__handle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.625rem;
+  line-height: 1;
+}
+
+.facilitator-panel__handle:hover,
+.facilitator-panel__handle:focus-visible {
+  background: var(--terra-600);
+  outline: none;
+  box-shadow: var(--shadow-lg);
+}
+
+.facilitator-panel__handle:focus-visible {
+  box-shadow:
+    var(--shadow-lg),
+    0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+}
+
+.facilitator-panel__handle--open {
+  // While the drawer is open, slide the handle along with it so the
+  // affordance stays visually attached to the drawer edge.
+  transform: translateY(-50%) translateX(calc(-1 * #{$facilitator-panel-width}));
+}
+
+[dir='rtl'] .facilitator-panel__handle--open {
+  transform: translateY(-50%) translateX(#{$facilitator-panel-width});
+}
+
+// Once the user has dragged the handle, `top` becomes an exact pixel value
+// set inline — drop the default vertical centering translate so it doesn't
+// double-shift the element. The X-slide for the open state still applies.
+.facilitator-panel__handle--positioned {
+  transform: translateY(0);
+  cursor: grab;
+}
+
+.facilitator-panel__handle--positioned.facilitator-panel__handle--open {
+  transform: translateY(0) translateX(calc(-1 * #{$facilitator-panel-width}));
+}
+
+[dir='rtl'] .facilitator-panel__handle--positioned.facilitator-panel__handle--open {
+  transform: translateY(0) translateX(#{$facilitator-panel-width});
+}
+
+// During an active drag, kill the smoothing transition so the handle tracks
+// the pointer 1:1 instead of easing toward the new position.
+.facilitator-panel__handle--dragging {
+  transition: none;
+  cursor: grabbing;
+}
+
+.facilitator-panel__backdrop {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9000;
+  background: rgba(28, 25, 23, 0.32);
+  animation: facilitator-panel-fade-in var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  inset-inline-end: 0;
+  z-index: 9002;
+  width: $facilitator-panel-width;
+  max-width: 90vw;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  background: var(--bg-paper, #ffffff);
+  box-shadow: var(--shadow-lg);
+  transform: translateX(100%);
+  transition: transform var(--dur-base, 220ms) var(--ease-out);
+  overflow-y: auto;
+}
+
+[dir='rtl'] .facilitator-panel {
+  transform: translateX(-100%);
+}
+
+.facilitator-panel--open {
+  transform: translateX(0);
+}
+
+// Match the specificity of `[dir='rtl'] .facilitator-panel` so the open
+// state actually overrides the off-screen translate in RTL. Without this
+// the drawer stays at translateX(-100%) and never slides into view.
+[dir='rtl'] .facilitator-panel--open {
+  transform: translateX(0);
+}
+
+.facilitator-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: var(--space-sm);
+  border-bottom: 1px solid var(--border, rgba(28, 25, 23, 0.08));
+}
+
+.facilitator-panel__title {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-strong, #1c1917);
+}
+
+.facilitator-panel__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text-strong, #1c1917);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__close:hover,
+.facilitator-panel__close:focus-visible {
+  background: var(--terra-50);
+  outline: none;
+}
+
+.facilitator-panel__notice {
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-body, #44403c);
+  background: var(--terra-50);
+  border-radius: var(--radius-sm);
+  font-style: italic;
+}
+
+.facilitator-panel__row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding: var(--space-sm) 0;
+}
+
+.facilitator-panel__row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.facilitator-panel__row-label {
+  flex: 1;
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-strong, #1c1917);
+}
+
+.facilitator-panel__row-help {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  line-height: 1.4;
+}
+
+// "Follow me" call-to-action button inside the panel. Sized to fill the
+// row (full-width inside the panel column) so it reads as a primary
+// action rather than a secondary toggle. Toggles between primary
+// (`Follow me`) and secondary (`Stop following`) styling via the variant
+// classes on the element.
+.facilitator-panel__action {
+  flex: 1 1 auto;
+  width: 100%;
+  gap: var(--space-xs);
+}
+
+.facilitator-panel__action-icon {
+  font-size: 1.1em;
+  line-height: 1;
+}
+
+.facilitator-panel__action-label {
+  white-space: nowrap;
+}
+
+.facilitator-panel__toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+// Two-button segmented control for the admin sort. Sits in the same row
+// slot as the on/off toggles so the panel keeps a uniform rhythm. The
+// active segment fills with the panel accent (teal); the other shows the
+// neutral track colour so the choice reads at a glance.
+.facilitator-panel__segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted, #d6d3d1);
+  padding: 2px;
+  gap: 2px;
+}
+
+.facilitator-panel__segment {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-body, #44403c);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-medium, 500);
+  padding: 4px var(--space-sm);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.facilitator-panel__segment--active {
+  background: var(--teal-600, #145f54);
+  color: var(--paper, #ffffff);
+}
+
+// Icon-only sort segments: equal-width squares, slightly larger glyph so the
+// emoji reads at the same visual weight as adjacent toggle controls.
+.facilitator-panel__segment--icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 32px;
+  padding: 4px 8px;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.facilitator-panel__segment-icon {
+  display: inline-block;
+}
+
+.facilitator-panel__toggle:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: var(--radius-full);
+}
+
+.facilitator-panel__toggle--disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.facilitator-panel__toggle-track {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-full);
+  transition: background var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__toggle-knob {
+  position: absolute;
+  top: 2px;
+  inset-inline-start: 2px;
+  width: 20px;
+  height: 20px;
+  background: #ffffff;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-quick, 140ms) var(--ease-out);
+}
+
+.facilitator-panel__toggle--on .facilitator-panel__toggle-track {
+  background: var(--teal-600, #145f54);
+}
+
+.facilitator-panel__toggle--on .facilitator-panel__toggle-knob {
+  transform: translateX(20px);
+}
+
+[dir='rtl'] .facilitator-panel__toggle--on .facilitator-panel__toggle-knob {
+  transform: translateX(-20px);
+}
+
+.facilitator-panel__slider-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: 0 var(--space-xs) var(--space-sm);
+}
+
+.facilitator-panel__slider {
+  flex: 1;
+  width: 100%;
+  accent-color: var(--teal-600, #145f54);
+  cursor: pointer;
+}
+
+.facilitator-panel__slider-value {
+  min-width: 5.5em;
+  text-align: end;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes facilitator-panel-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .facilitator-panel,
+  .facilitator-panel__handle,
+  .facilitator-panel__handle--open,
+  .facilitator-panel__toggle-track,
+  .facilitator-panel__toggle-knob {
+    transition: none;
+  }
+
+  .facilitator-panel__backdrop {
+    animation: none;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Chat — paused-by-facilitator banner. Replaces the input area when a
+// facilitator has flipped `hasChat` off; history above stays readable.
+// -----------------------------------------------------------------------------
+.chat__paused-banner {
+  margin: var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-body, #44403c);
+  background: var(--terra-50);
+  border-inline-start: 3px solid var(--terra-500);
+  border-radius: var(--radius-sm);
+  text-align: center;
+}
+
+// -----------------------------------------------------------------------------
+// Back button — iOS-style fixed back affordance pinned to the top
+// inline-start corner (LTR → top-left, RTL → top-right). Admin-only;
+// the calling view decides which route to go back to.
+// -----------------------------------------------------------------------------
+.back-button {
+  position: fixed;
+  top: var(--space-md);
+  inset-inline-start: var(--space-md);
+  z-index: 1100;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--paper-line, rgba(0, 0, 0, 0.08));
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--text-primary, #1c1917);
+  font-size: 1.4rem;
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  // Backdrop blur when supported gives the iOS chrome-on-photo feel; the
+  // rgba background above is the fallback.
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  &:hover,
+  &:focus-visible {
+    background: #fff;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--terra-600, #c2410c);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.back-button__chevron {
+  // Visually nudge the chevron upward — most chevron glyphs sit on the
+  // baseline and look offset inside a perfectly centered button.
+  margin-block-start: -2px;
+  font-weight: 600;
+}
+
+// -----------------------------------------------------------------------------
+// Accessibility widget — floating, draggable trigger + slide-out panel.
+// Matches the visual design of the main app's Accessibility component.
+// All interactive targets meet WCAG 2.5.5 (≥ 44×44 px touch targets).
+// -----------------------------------------------------------------------------
+
+.a11y-widget {
+  // Anchored to the inline-start edge (left in LTR, right in RTL) via the
+  // `inset-inline-start` logical property. Vertical position is managed via
+  // inline JS during drag.
+  position: fixed;
+  z-index: 10000;
+  inset-inline-start: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  // The root's bounding box covers both the trigger and the (laid-out) panel
+  // slot (~228px × 139px) — even when the panel is visibility:hidden and
+  // translated off-screen. Without this, the root DIV intercepts clicks in
+  // the panel area and obscures inputs/text underneath. Children re-enable
+  // pointer events on themselves where needed.
+  pointer-events: none;
+
+  &--dragging * {
+    pointer-events: none;  // Prevent accidental button activation during drag
+  }
+}
+
+// Trigger tab — pill-shaped button that peeks out from the start edge.
+.a11y-widget__trigger {
+  position: relative;
+  z-index: 1;
+  // The root has `pointer-events: none` so its empty flex slot for the panel
+  // doesn't catch clicks. Re-enable on the trigger itself.
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.25rem;
+  height: 3.25rem;
+  padding: 0;
+  background: var(--terra-600);
+  color: var(--text-inverse);
+  // Logical borders / radii so RTL flips automatically.
+  border: 2px solid #ffffff;
+  border-inline-start: none;
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+  border-start-end-radius: var(--radius-full);
+  border-end-end-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  cursor: pointer;
+  // clip-path keeps the shadow on 3 sides only — physical, flipped for RTL below.
+  clip-path: inset(-8px -8px -8px 1px);
+  touch-action: none;  // Required so pointermove fires before browser panning
+  user-select: none;
+  -webkit-user-select: none;
+  // Idle: scaled down + translucent so the trigger doesn't visually block
+  // content underneath. Anchored at the inline-start edge (LTR: left,
+  // RTL: right) so the button collapses INTO the screen edge, not toward
+  // the centre. Visible size at scale(0.55) is ~28px — meets WCAG 2.5.8 min.
+  opacity: 0.55;
+  transform: scale(0.55);
+  transform-origin: 0% 50%;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    background var(--dur-quick) var(--ease-out),
+    box-shadow var(--dur-quick) var(--ease-out);
+
+  // RTL: trigger sits at right edge; flip the shadow clip so the inner
+  // (right) side is masked, and pin the scale origin to the right edge.
+  [dir='rtl'] & {
+    clip-path: inset(-8px 1px -8px -8px);
+    transform-origin: 100% 50%;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--terra-700);
+    outline: none;
+    box-shadow: var(--shadow-lg);
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  &:focus-visible {
+    box-shadow:
+      var(--shadow-lg),
+      0 0 0 var(--focus-ring-width) var(--focus-ring-color);
+  }
+
+  // High-contrast mode active state — invert to signal the mode is on
+  &--active {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  svg {
+    width: 1.7rem;
+    height: 1.7rem;
+    pointer-events: none;
+  }
+}
+
+// Trigger expanded states — open or mid-drag — restore full size + opacity.
+.a11y-widget--open .a11y-widget__trigger,
+.a11y-widget--dragging .a11y-widget__trigger {
+  opacity: 1;
+  transform: scale(1);
+}
+
+// Panel — slides in alongside the trigger when open
+.a11y-widget__panel {
+  display: flex;
+  flex-direction: column;
+  width: 11rem;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-medium);
+  border-inline-start: none;  // Attached to the trigger on the start side
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+
+  // Closed state: slides off-screen toward the start edge (behind the trigger),
+  // fades out, becomes invisible to AT and unfocusable.
+  // Visibility transitions instantly when opening, but is delayed when closing
+  // until the slide-out completes (so the panel actually leaves the a11y tree).
+  // pointer-events flips immediately (no transition) so the closed panel never
+  // intercepts clicks meant for inputs underneath, even mid-animation.
+  transform: translateX(-100%);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform-origin: 0 50%;
+  transition:
+    transform var(--dur-base) var(--ease-out),
+    opacity var(--dur-base) var(--ease-out),
+    visibility 0s linear var(--dur-base);
+
+  // RTL: trigger is on the right edge, so the panel slides off to the right
+  // (positive translateX) when closed.
+  [dir='rtl'] & {
+    transform: translateX(100%);
+    transform-origin: 100% 50%;
+  }
+
+  // Open state — class is toggled on the root by AccessibilityWidget.ts
+  .a11y-widget--open & {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      transform var(--dur-base) var(--ease-out),
+      opacity var(--dur-base) var(--ease-out),
+      visibility 0s linear 0s;
+  }
+
+  // Reduced-motion: no slide, just fade
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+    transition: opacity var(--dur-quick) linear, visibility 0s linear var(--dur-quick);
+
+    [dir='rtl'] & {
+      transform: none;
+    }
+
+    .a11y-widget--open & {
+      transform: none;
+      transition: opacity var(--dur-quick) linear, visibility 0s linear 0s;
+    }
+  }
+}
+
+// Row shared styles
+.a11y-widget__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-light);
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  // Font size row — primary colour background (matches main app)
+  &--font {
+    background: var(--terra-600);
+    color: var(--text-inverse);
+    gap: var(--space-xs);
+    height: 3.1rem;
+  }
+
+  // Contrast row — vertical stack of two buttons
+  &--contrast {
+    flex-direction: column;
+    padding: 0;
+    gap: 0;
+  }
+}
+
+// Font label (Aa + px value)
+.a11y-widget__font-label {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-inverse);
+  white-space: nowrap;
+  min-width: 4rem;
+  text-align: center;
+  pointer-events: none;
+}
+
+// +/- icon buttons inside the font row
+.a11y-widget__icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.2rem;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--terra-700);
+  border: none;
+  border-radius: var(--radius-xs);
+  font-size: 1.5rem;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--dur-quick) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: #ffffff;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// High / light contrast buttons
+.a11y-widget__contrast-btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.6rem 1rem;
+  gap: var(--space-sm);
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-light);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background var(--dur-quick) var(--ease-out),
+    color var(--dur-quick) var(--ease-out);
+  min-height: 44px;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+
+  svg {
+    flex-shrink: 0;
+    pointer-events: none;
+  }
+
+  span {
+    flex: 1;
+    text-align: start;
+  }
+
+  // High-contrast button — dark background, white text
+  &--high {
+    background: var(--ink);
+    color: var(--paper);   // 21:1 ✓ AAA
+
+    &:hover {
+      background: var(--ink-soft);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--teal-700);
+      color: var(--text-inverse);
+    }
+  }
+
+  // Light-contrast button — white background, dark text
+  &--light {
+    background: var(--bg-card);
+    color: var(--ink);     // 21:1 ✓ AAA
+
+    &:hover {
+      background: var(--paper-soft);
+    }
+
+    &[aria-pressed='true'] {
+      background: var(--teal-50);
+      color: var(--teal-700);
+    }
+  }
+}
+
+// Reduced motion — drop panel open/close transitions
+@media (prefers-reduced-motion: reduce) {
+  .a11y-widget__trigger,
+  .a11y-widget__icon-btn,
+  .a11y-widget__contrast-btn {
+    transition: none;
+  }
+}
+
+// High-contrast overrides for the widget itself so it remains usable in HC mode.
+// Duplicated for attribute selector (manual) and media query (OS-level).
+:root[data-high-contrast] {
+  .a11y-widget__trigger {
+    background: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+    border-width: 3px;
+  }
+
+  .a11y-widget__panel {
+    border-color: #000000;
+    border-width: 2px;
+  }
+
+  .a11y-widget__icon-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .a11y-widget__trigger {
+    background: #000000;
+    color: #ffffff;
+    border-color: #ffffff;
+    border-width: 3px;
+  }
+
+  .a11y-widget__panel {
+    border-color: #000000;
+    border-width: 2px;
+  }
+
+  .a11y-widget__icon-btn {
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Login — gated entry surface for the home route
+// -----------------------------------------------------------------------------
+.login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  padding: var(--space-lg) var(--space-md);
+  background: var(--paper-soft);
+}
+
+.login__card {
+  width: min(28rem, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-xl) var(--space-lg);
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-card, 0 6px 24px rgba(0, 0, 0, 0.08));
+  text-align: center;
+}
+
+.login__logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  margin-bottom: var(--space-xs);
+}
+
+.login__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-xl, 1.5rem);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+.login__tagline {
+  margin: 0;
+  max-width: 32ch;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+}
+
+.login__error {
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  background: var(--danger-50, #fef2f2);
+  color: var(--danger-700, #b91c1c);
+  border: 1px solid var(--danger-200, #fecaca);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  text-align: start;
+}
+
+.login__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  margin-top: var(--space-sm);
+}
+
+.login__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: 48px;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: transform var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:not(:disabled):active {
+    transform: translateY(1px);
+  }
+}
+
+.login__btn--google {
+  background: var(--ink, #1c1917);
+  color: var(--paper, #fff);
+  border: 1px solid var(--ink, #1c1917);
+
+  &:not(:disabled):hover {
+    background: var(--ink-strong, #0c0a09);
+  }
+}
+
+.login__btn--guest {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--paper-line);
+
+  &:not(:disabled):hover {
+    background: var(--paper-soft);
+  }
+}
+
+.login__btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  font-family: var(--font-display, var(--font-body));
+  font-size: 1rem;
+  font-weight: var(--font-weight-bold);
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.login__divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  margin: var(--space-xs) 0;
+  color: var(--text-muted, #78716c);
+  font-size: var(--font-size-sm);
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1 1 auto;
+    height: 1px;
+    background: var(--paper-line);
+  }
+
+  span {
+    flex: 0 0 auto;
+  }
+}
+
+.login__hint {
+  margin: 0;
+  max-width: 32ch;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted, #78716c);
+  line-height: var(--line-height-loose, 1.6);
+}
+
+// -----------------------------------------------------------------------------
+// Main page — post-login landing
+// -----------------------------------------------------------------------------
+.main-page {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 100dvh;
+  padding: var(--space-md) var(--space-md) 0;
+  background: var(--paper-soft);
+}
+
+.main-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-sm);
+}
+
+.main-page__logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+}
+
+.main-page__signout {
+  padding: var(--space-xs) var(--space-md);
+  font-family: var(--font-body);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-full, 999px);
+  cursor: pointer;
+  transition: color var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--paper);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.main-page__body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding-block: var(--space-xl);
+}
+
+.main-page__title {
+  margin: 0;
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-xxl, 2rem);
+  font-weight: var(--font-weight-bold, 700);
+  line-height: var(--line-height-tight);
+  color: var(--text-primary);
+}
+
+.main-page__lede {
+  margin: 0;
+  max-width: 48ch;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+}
+
+.main-page__panel {
+  width: min(32rem, 100%);
+  padding: var(--space-lg);
+  background: var(--paper);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-lg, 16px);
+  box-shadow: var(--shadow-card, 0 6px 24px rgba(0, 0, 0, 0.06));
+  text-align: start;
+}
+
+.main-page__panel-title {
+  margin: 0 0 var(--space-xs);
+  font-family: var(--font-display, var(--font-body));
+  font-size: var(--font-size-lg, 1.25rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+}
+
+.main-page__panel-text {
+  margin: 0;
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-loose, 1.6);
+  color: var(--text-secondary);
+}
+
+// "Open a question" form — input + submit on one row, wraps on narrow screens.
+.main-page__open-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.main-page__open-input {
+  flex: 1 1 16rem;
+  min-width: 0;
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-md);
+  font: inherit;
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md, 12px);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
+
+  &::placeholder {
+    color: var(--text-muted, #78716c);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 1px;
+    border-color: var(--focus-ring-color);
+  }
+
+  &[aria-invalid='true'] {
+    border-color: var(--danger-500, #dc2626);
+  }
+}
+
+.main-page__open-submit {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: var(--space-xs) var(--space-lg);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--paper);
+  background: var(--ink, #1c1917);
+  border: 1px solid var(--ink, #1c1917);
+  border-radius: var(--radius-md, 12px);
+  cursor: pointer;
+  transition: background-color var(--dur-quick, 140ms) var(--ease-out),
+    transform var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: var(--ink-strong, #0c0a09);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.main-page__open-error {
+  margin-top: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  font-size: var(--font-size-sm);
+  color: var(--danger-700, #b91c1c);
+  background: var(--danger-50, #fef2f2);
+  border: 1px solid var(--danger-200, #fecaca);
+  border-radius: var(--radius-sm);
+}
+
+// "My questions" list — vertical stack of admin-owned workspaces.
+.main-page__workspace-list {
+  list-style: none;
+  margin: var(--space-md) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.main-page__workspace-item {
+  margin: 0;
+  padding: 0;
+}
+
+.main-page__workspace {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-xs);
+  background: var(--paper-soft);
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius-md, 12px);
+  // Accent bar — uses the workspace's color via a CSS custom property.
+  border-inline-start: 4px solid var(--q-accent, var(--terra-500));
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: var(--paper);
+  }
+}
+
+.main-page__workspace-open {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: flex-start;
+  text-align: start;
+  padding: var(--space-sm) var(--space-md);
+  font-family: var(--font-body);
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  cursor: pointer;
+  color: inherit;
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+.main-page__workspace-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-primary);
+  line-height: var(--line-height-snug);
+}
+
+.main-page__workspace-id {
+  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  letter-spacing: var(--tracking-wide, 0.02em);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.main-page__workspace-remove {
+  flex: 0 0 auto;
+  align-self: stretch;
+  padding: 0 var(--space-md);
+  font-family: var(--font-body);
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text-muted, #78716c);
+  background: transparent;
+  border: 0;
+  border-inline-start: 1px solid var(--paper-line);
+  border-radius: 0;
+  cursor: pointer;
+  transition: color var(--dur-quick, 140ms) var(--ease-out),
+    background-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    color: var(--danger-700, #b91c1c);
+    background: var(--danger-50, #fef2f2);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: -2px;
+  }
+}
+
+// Drag handle on the inline-start of each workspace card. Mirrors the hub's
+// `main-hub__question-card-handle` affordance — the whole card is the
+// `draggable=true` target, the handle just makes it discoverable.
+.main-page__workspace-handle {
+  flex: 0 0 auto;
+  align-self: center;
+  width: 1.25rem;
+  padding-inline-start: var(--space-sm);
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--text-muted, #78716c);
+  cursor: grab;
+  user-select: none;
+  letter-spacing: -1px;
+
+  .main-page__workspace--dragging & {
+    cursor: grabbing;
+  }
+}
+
+// Mid-drag treatments mirror the hub's question card so reorder feels
+// consistent across the two surfaces.
+.main-page__workspace--dragging {
+  opacity: 0.4;
+  cursor: grabbing;
+}
+
+.main-page__workspace--drop-target {
+  border-top: 3px solid var(--q-accent, var(--terra-500));
+}
+
+// Drop zone after the last card — only rendered while dragging, so it
+// doesn't add space to the resting layout.
+.main-page__workspace-drop-end {
+  height: 1.5rem;
+  margin-top: var(--space-xs);
+  border: 2px dashed transparent;
+  border-radius: var(--radius-sm);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    border-color: var(--q-accent, var(--terra-500));
+  }
+}
+
 

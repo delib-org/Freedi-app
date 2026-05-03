@@ -182,6 +182,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 
 					{/* Sub-header: title, tabs, filters */}
 					<div className={styles.subHeader}>
+						<div className={styles.subHeaderInner}>
 						{isAdmin ? (
 							<button className={styles.header} onClick={handleStartEdit}>
 								{!edit ? (
@@ -261,6 +262,7 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 								isCollapsed={treeFilter.isCollapsed}
 							/>
 						)}
+						</div>
 					</div>
 				</div>
 

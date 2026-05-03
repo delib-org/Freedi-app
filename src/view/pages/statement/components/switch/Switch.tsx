@@ -1,5 +1,6 @@
 import React, { useContext, useMemo, useRef } from 'react';
 import { useSelector } from 'react-redux';
+import { Role } from '@freedi/shared-types';
 
 import { StatementContext } from '../../StatementCont';
 import styles from './Switch.module.scss';
@@ -11,6 +12,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useHeaderHideOnScroll } from '@/controllers/hooks/useHeaderHideOnScroll';
 import { statementSubsSelector } from '@/redux/statements/statementsSlice';
 import { MessageSquare, Lightbulb, HelpCircle } from 'lucide-react';
+import StatementBody from '@/view/components/atomic/molecules/StatementBody/StatementBody';
 
 interface SwitchProps {
 	activeView: string;
@@ -30,9 +32,14 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	);
 	const allSubs = useSelector(subsSelect);
 
+	const isAdmin = role === Role.admin || role === Role.creator;
+
 	return (
 		<main ref={mainRef} className="page__main">
 			<OnlineUsers statementId={statement?.statementId} />
+			{statement && (
+				<StatementBody host={statement} canEdit={isAdmin} />
+			)}
 			{allSubs.length === 0 && activeView === 'chat' && (
 				<div className={styles.onboarding}>
 					<div className={styles.onboarding__step}>
