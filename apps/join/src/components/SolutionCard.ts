@@ -127,6 +127,16 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 		const isActivated = isOptionActivated(joinedCount, organizerCount, question);
 
 		const navigateToChat = (): void => {
+			const mainId = m.route.param('mid');
+			if (mainId) {
+				m.route.set('/m/:mid/q/:qid/s/:sid', {
+					mid: mainId,
+					qid: questionId,
+					sid: option.statementId,
+				});
+
+				return;
+			}
 			m.route.set('/q/:qid/s/:sid', {
 				qid: questionId,
 				sid: option.statementId,
@@ -250,35 +260,33 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 						: null,
 					// Hide the chat affordance globally when a facilitator pauses chat
 					// (`hasChat === false`). Treat undefined as ON for back-compat.
+					// Chat stays interactive even in `displayOnly` (facilitated) mode —
+					// reading/posting per-option discussion isn't a navigation conflict.
 					question?.statementSettings?.hasChat === false
 						? null
 						: m(
 								'.solution-card__chat',
 								{
 									class: messageCount > 0 ? 'solution-card__chat--active' : '',
-									role: displayOnly ? undefined : 'button',
-									tabindex: displayOnly ? undefined : 0,
+									role: 'button',
+									tabindex: 0,
 									'aria-label':
 										newMsgCount > 0
 											? t(newMsgCount > 1 ? 'card.new_messages_plural' : 'card.new_messages', {
 													count: newMsgCount,
 												})
 											: t('chat.open'),
-									onclick: displayOnly
-										? undefined
-										: (e: Event) => {
-												e.stopPropagation();
-												navigateToChat();
-											},
-									onkeydown: displayOnly
-										? undefined
-										: (e: KeyboardEvent) => {
-												if (e.key === 'Enter' || e.key === ' ') {
-													e.preventDefault();
-													e.stopPropagation();
-													navigateToChat();
-												}
-											},
+									onclick: (e: Event) => {
+										e.stopPropagation();
+										navigateToChat();
+									},
+									onkeydown: (e: KeyboardEvent) => {
+										if (e.key === 'Enter' || e.key === ' ') {
+											e.preventDefault();
+											e.stopPropagation();
+											navigateToChat();
+										}
+									},
 								},
 								[
 									m('.solution-card__chat-icon', { 'aria-hidden': 'true' }, '\uD83D\uDCAC'),

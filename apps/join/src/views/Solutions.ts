@@ -183,10 +183,18 @@ export const Solutions: m.Component = {
 				m('h1.solutions__title', question.statement),
 			]),
 			m('.solutions__scroll', [
-				m('.solutions__subtitle', [
-					m('span.solutions__subtitle-icon', '\u2728'),
-					m('span', buildSubtitleText(question)),
-				]),
+				question.statementSettings?.joiningEnabled === true
+					? m('.solutions__subtitle', [
+							m('span.solutions__subtitle-icon', '\u2728'),
+							m('span', buildSubtitleText(question)),
+						])
+					: null,
+				question.statementSettings?.showEvaluation === true
+					? m('.solutions__subtitle', [
+							m('span.solutions__subtitle-icon', '\u2728'),
+							m('span', t('solutions.subtitle.evaluate')),
+						])
+					: null,
 				m('.solutions__counter', [
 					m('span.solutions__counter-total', t('solutions.counter.options', { count: total })),
 					unread > 0

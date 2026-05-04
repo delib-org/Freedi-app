@@ -16,7 +16,7 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.subtitle.threshold':
 			'To activate an activity, we need at least {{requirements}}. Join to make it happen!',
 		'solutions.subtitle.evaluate':
-			'Please evaluate each option: -1 means you really don\'t like it, 1 means you like it very much',
+			'Please evaluate each option: 😞 means you really don\'t like it, 😁 means you like it very much',
 		'solutions.counter.options': '{{count}} options',
 		'solutions.counter.new': '{{count}} new',
 		'solutions.add_suggestion': 'Add a suggestion',
@@ -241,7 +241,7 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.subtitle.default': 'הצטרפו לפעילויות שאתם רוצים לקדם, כפעילים או כמארגנים',
 		'solutions.subtitle.threshold':
 			'כדי להפעיל פעילות, אנחנו צריכים לפחות {{requirements}}. הצטרפו כדי לגרום לזה לקרות!',
-		'solutions.subtitle.evaluate': 'אנא העריכו כל אפשרות: 1- פירושו שממש לא אוהבים אותה, 1 פירושו שאוהבים מאוד',
+		'solutions.subtitle.evaluate': 'אנא העריכו כל אפשרות: 😞 פירושו שממש לא אוהבים אותה, 😁 פירושו שאוהבים מאוד',
 		'solutions.counter.options': '{{count}} אפשרויות',
 		'solutions.counter.new': '{{count}} חדשות',
 		'solutions.add_suggestion': 'הוספת הצעה',
@@ -462,6 +462,7 @@ const translations: Record<string, Record<string, string>> = {
 			'انضم/ي إلى الأنشطة التي تريد/ين تعزيزها، سواء كناشط/ة أو كمنظّم/ة',
 		'solutions.subtitle.threshold':
 			'لتفعيل نشاط، نحتاج على الأقل {{requirements}}. انضم/ي لتحقيق ذلك!',
+		'solutions.subtitle.evaluate': 'يرجى تقييم كل خيار: 😞 تعني أنك لا تحبه على الإطلاق، 😁 تعني أنك تحبه كثيراً',
 		'solutions.counter.options': '{{count}} خيارات',
 		'solutions.counter.new': '{{count}} جديد',
 		'solutions.add_suggestion': 'إضافة اقتراح',
@@ -653,6 +654,8 @@ const translations: Record<string, Record<string, string>> = {
 			'Treten Sie Aktivitäten bei, die Sie fördern möchten, entweder als Aktivist oder als Organisator',
 		'solutions.subtitle.threshold':
 			'Um eine Aktivität zu aktivieren, brauchen wir mindestens {{requirements}}. Machen Sie mit!',
+		'solutions.subtitle.evaluate':
+			'Bitte bewerten Sie jede Option: 😞 bedeutet, Sie mögen sie gar nicht, 😁 bedeutet, Sie mögen sie sehr',
 		'solutions.counter.options': '{{count}} Optionen',
 		'solutions.counter.new': '{{count}} neu',
 		'solutions.add_suggestion': 'Vorschlag hinzufügen',
@@ -829,6 +832,8 @@ const translations: Record<string, Record<string, string>> = {
 			'Únase a las actividades que desea promover, ya sea como activista o como organizador',
 		'solutions.subtitle.threshold':
 			'Para activar una actividad, necesitamos al menos {{requirements}}. ¡Únase para hacerlo realidad!',
+		'solutions.subtitle.evaluate':
+			'Por favor, evalúe cada opción: 😞 significa que no le gusta nada, 😁 significa que le gusta mucho',
 		'solutions.counter.options': '{{count}} opciones',
 		'solutions.counter.new': '{{count}} nuevas',
 		'solutions.add_suggestion': 'Añadir sugerencia',
@@ -1005,6 +1010,8 @@ const translations: Record<string, Record<string, string>> = {
 			'Sluit u aan bij activiteiten die u wilt bevorderen, als activist of als organisator',
 		'solutions.subtitle.threshold':
 			'Om een activiteit te activeren hebben we minimaal {{requirements}} nodig. Doe mee!',
+		'solutions.subtitle.evaluate':
+			'Beoordeel elke optie: 😞 betekent dat u het helemaal niet leuk vindt, 😁 betekent dat u het erg leuk vindt',
 		'solutions.add_suggestion': 'Voeg een suggestie toe',
 		'solutions.add_suggestion_placeholder': 'Beschrijf je suggestie',
 		'solutions.add_suggestion_submit': 'Toevoegen',
@@ -1176,6 +1183,8 @@ const translations: Record<string, Record<string, string>> = {
 			'به فعالیت‌هایی که می‌خواهید ترویج دهید بپیوندید، چه به عنوان فعال و چه به عنوان سازمان‌دهنده',
 		'solutions.subtitle.threshold':
 			'برای فعال‌سازی یک فعالیت، حداقل به {{requirements}} نیاز داریم. بپیوندید!',
+		'solutions.subtitle.evaluate':
+			'لطفاً هر گزینه را ارزیابی کنید: 😞 یعنی واقعاً دوست ندارید، 😁 یعنی خیلی دوست دارید',
 		'card.activists': '{{count}} فعال',
 		'card.organizers': '{{count}} سازمان‌دهنده',
 		'card.results.aria_label': 'نتایج',
