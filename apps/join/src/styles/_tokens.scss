@@ -330,6 +330,23 @@
 
   --border-medium: #a78bfa;    // lavender rule, 3:1 on cream
   --focus-ring-color: var(--terra-500);
+
+  // iOS-vivid card palette — full-saturation system colors for punchy backgrounds
+  --voting-palette-pair-1-light: #FFADAD;   --voting-palette-pair-1-dark: #FF3B30;
+  --voting-palette-pair-2-light: #FFBF8C;   --voting-palette-pair-2-dark: #FF9500;
+  --voting-palette-pair-3-light: #FFE566;   --voting-palette-pair-3-dark: #FFCC00;
+  --voting-palette-pair-4-light: #80F0A0;   --voting-palette-pair-4-dark: #34C759;
+  --voting-palette-pair-5-light: #7EEAE5;   --voting-palette-pair-5-dark: #00C7BE;
+  --voting-palette-pair-6-light: #7DD8F5;   --voting-palette-pair-6-dark: #5AC8FA;
+  --voting-palette-pair-7-light: #75AAFF;   --voting-palette-pair-7-dark: #007AFF;
+  --voting-palette-pair-8-light: #9590FF;   --voting-palette-pair-8-dark: #5856D6;
+  --voting-palette-pair-9-light: #D080F0;   --voting-palette-pair-9-dark: #AF52DE;
+  --voting-palette-pair-10-light: #FF85A8;  --voting-palette-pair-10-dark: #FF2D55;
+  --voting-palette-pair-11-light: #FF88A8;  --voting-palette-pair-11-dark: #FF375F;
+  --voting-palette-pair-12-light: #55CCEE;  --voting-palette-pair-12-dark: #32ADE6;
+  --voting-palette-pair-13-light: #F5D060;  --voting-palette-pair-13-dark: #D4AC00;
+  --voting-palette-pair-14-light: #70E8A0;  --voting-palette-pair-14-dark: #30D158;
+  --voting-palette-pair-15-light: #F080F8;  --voting-palette-pair-15-dark: #BF5AF2;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -430,6 +447,23 @@
 
   --border-medium: #d8a7c1;
   --focus-ring-color: var(--terra-500);
+
+  // iOS-vivid card palette — pastel-bright iOS hues for a fashion-forward feel
+  --voting-palette-pair-1-light: #FFBCBC;   --voting-palette-pair-1-dark: #FF6B6B;
+  --voting-palette-pair-2-light: #FFCFB3;   --voting-palette-pair-2-dark: #FF8C5A;
+  --voting-palette-pair-3-light: #FFE8A0;   --voting-palette-pair-3-dark: #FFD030;
+  --voting-palette-pair-4-light: #AAEEC0;   --voting-palette-pair-4-dark: #3DC86A;
+  --voting-palette-pair-5-light: #AAF0EB;   --voting-palette-pair-5-dark: #1EC8BF;
+  --voting-palette-pair-6-light: #A8D8FF;   --voting-palette-pair-6-dark: #5AABFF;
+  --voting-palette-pair-7-light: #C0B8FF;   --voting-palette-pair-7-dark: #8078F8;
+  --voting-palette-pair-8-light: #E0B0FF;   --voting-palette-pair-8-dark: #C268EC;
+  --voting-palette-pair-9-light: #FFAAC8;   --voting-palette-pair-9-dark: #FF5590;
+  --voting-palette-pair-10-light: #FFC0D8;  --voting-palette-pair-10-dark: #FF6FAF;
+  --voting-palette-pair-11-light: #B8DFFF;  --voting-palette-pair-11-dark: #70BFFF;
+  --voting-palette-pair-12-light: #A0ECEC;  --voting-palette-pair-12-dark: #40CFC0;
+  --voting-palette-pair-13-light: #FFF0A0;  --voting-palette-pair-13-dark: #FFDA30;
+  --voting-palette-pair-14-light: #B8FFD8;  --voting-palette-pair-14-dark: #50E89A;
+  --voting-palette-pair-15-light: #F5B0FF;  --voting-palette-pair-15-dark: #E060F0;
 }
 
 @media (prefers-color-scheme: dark) {
