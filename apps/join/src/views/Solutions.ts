@@ -183,7 +183,7 @@ export const Solutions: m.Component = {
 				m('h1.solutions__title', question.statement),
 			]),
 			m('.solutions__scroll', [
-				question.statementSettings?.joiningEnabled === true
+				question.statementSettings?.showJoining !== false
 					? m('.solutions__subtitle', [
 							m('span.solutions__subtitle-icon', '\u2728'),
 							m('span', buildSubtitleText(question)),
