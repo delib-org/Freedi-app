@@ -53,6 +53,29 @@ interface SolutionCardAttrs {
 	onRequestEdit?: (optionId: string) => void;
 }
 
+function renderStatementParagraphs(statement: string): m.Vnode[] {
+	const paragraphs = statement
+		.split(/\n+/)
+		.map((p) => p.trim())
+		.filter(Boolean);
+
+	if (paragraphs.length === 0) return [];
+
+	const [title, ...rest] = paragraphs;
+	const nodes: m.Vnode[] = [m('.solution-card__title', title)];
+
+	if (rest.length > 0) {
+		nodes.push(
+			m(
+				'.solution-card__body',
+				rest.map((p) => m('p.solution-card__body-paragraph', p)),
+			),
+		);
+	}
+
+	return nodes;
+}
+
 export const SolutionCard: m.Component<SolutionCardAttrs> = {
 	view(vnode) {
 		const {
@@ -156,7 +179,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 					: null,
 				isActivated ? m('.solution-card__activated-badge', t('card.activated')) : null,
 				renderMetaRow(option, isCluster, groupSize),
-				m('.solution-card__title', option.statement),
+				...renderStatementParagraphs(option.statement),
 				getOptionDescription(option)
 					? m('.solution-card__description', getOptionDescription(option))
 					: null,
@@ -395,7 +418,7 @@ function renderResultsStrip(option: Statement, sortType: SortType | undefined): 
 		typeof evalData?.averageEvaluation === 'number'
 			? evalData.averageEvaluation
 			: (sumPro - sumCon) / numberOfEvaluators;
-	const averagePct = Math.round(((average + 1) / 2) * 100);
+	const averagePct = Math.round(average * 100);
 	const consensusPct = Math.round((option.consensus ?? 0) * 100);
 	const primary = getPrimaryFromSort(sortType);
 
@@ -412,7 +435,9 @@ function renderResultsStrip(option: Statement, sortType: SortType | undefined): 
 		);
 
 	return m('.solution-card__results', { 'aria-label': t('card.results.aria_label') }, [
-		pill('consensus', t('card.results.consensus'), `${consensusPct}`),
+		numberOfEvaluators >= 3
+			? pill('consensus', t('card.results.consensus'), `${consensusPct}%`)
+			: null,
 		pill('average', t('card.results.average'), `${averagePct}%`),
 		pill('evaluators', t('card.results.evaluators'), `${numberOfEvaluators}`),
 	]);
