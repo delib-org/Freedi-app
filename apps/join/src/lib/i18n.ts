@@ -16,7 +16,7 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.subtitle.threshold':
 			'To activate an activity, we need at least {{requirements}}. Join to make it happen!',
 		'solutions.subtitle.evaluate':
-			'Please evaluate each option: 😞 means you really don\'t like it, 😁 means you like it very much',
+			"Please evaluate each option: 😞 means you really don't like it, 😁 means you like it very much",
 		'solutions.counter.options': '{{count}} options',
 		'solutions.counter.new': '{{count}} new',
 		'solutions.add_suggestion': 'Add a suggestion',
@@ -219,7 +219,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'Creating…',
 		'main.create_question_invalid': 'Please enter a question title.',
 		'main.create_question_failed': "Couldn't create the question. Please try again.",
-		'a11y.trigger': 'Accessibility options',
+		'a11y.trigger': 'Accessibility and language',
 		'a11y.panel_label': 'Accessibility settings',
 		'a11y.font_size': 'Font size',
 		'a11y.increase_font': 'Increase font size',
@@ -227,6 +227,13 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'Colour contrast',
 		'a11y.high_contrast': 'High contrast',
 		'a11y.light_contrast': 'Light contrast',
+		'a11y.language': 'Language',
+		'a11y.language.locked': 'Set by facilitator',
+		'facilitator.language.label': 'Language',
+		'facilitator.language.help':
+			"Sets the room's language. Turn on Force to override participants' choices.",
+		'facilitator.language.force': 'Force',
+		'facilitator.toast.languageForced': 'Language set by facilitator',
 	},
 	he: {
 		'splash.title': 'WizCol',
@@ -241,7 +248,8 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.subtitle.default': 'הצטרפו לפעילויות שאתם רוצים לקדם, כפעילים או כמארגנים',
 		'solutions.subtitle.threshold':
 			'כדי להפעיל פעילות, אנחנו צריכים לפחות {{requirements}}. הצטרפו כדי לגרום לזה לקרות!',
-		'solutions.subtitle.evaluate': 'אנא העריכו כל אפשרות: 😞 פירושו שממש לא אוהבים אותה, 😁 פירושו שאוהבים מאוד',
+		'solutions.subtitle.evaluate':
+			'אנא העריכו כל אפשרות: 😞 פירושו שממש לא אוהבים אותה, 😁 פירושו שאוהבים מאוד',
 		'solutions.counter.options': '{{count}} אפשרויות',
 		'solutions.counter.new': '{{count}} חדשות',
 		'solutions.add_suggestion': 'הוספת הצעה',
@@ -439,7 +447,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'יוצר…',
 		'main.create_question_invalid': 'נא להזין כותרת לשאלה.',
 		'main.create_question_failed': 'יצירת השאלה נכשלה. נסו שוב.',
-		'a11y.trigger': 'אפשרויות נגישות',
+		'a11y.trigger': 'נגישות ושפה',
 		'a11y.panel_label': 'הגדרות נגישות',
 		'a11y.font_size': 'גודל גופן',
 		'a11y.increase_font': 'הגדלת גופן',
@@ -447,6 +455,13 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'ניגודיות צבעים',
 		'a11y.high_contrast': 'ניגודיות גבוהה',
 		'a11y.light_contrast': 'ניגודיות רגילה',
+		'a11y.language': 'שפה',
+		'a11y.language.locked': 'נקבע על־ידי המנחה',
+		'facilitator.language.label': 'שפה',
+		'facilitator.language.help':
+			'בחר שפת ברירת מחדל לחדר. הפעל "כפה" כדי לבטל את הבחירה האישית של המשתתפים.',
+		'facilitator.language.force': 'כפה',
+		'facilitator.toast.languageForced': 'השפה נקבעה על־ידי המנחה',
 	},
 	ar: {
 		'splash.title': 'WizCol',
@@ -462,7 +477,8 @@ const translations: Record<string, Record<string, string>> = {
 			'انضم/ي إلى الأنشطة التي تريد/ين تعزيزها، سواء كناشط/ة أو كمنظّم/ة',
 		'solutions.subtitle.threshold':
 			'لتفعيل نشاط، نحتاج على الأقل {{requirements}}. انضم/ي لتحقيق ذلك!',
-		'solutions.subtitle.evaluate': 'يرجى تقييم كل خيار: 😞 تعني أنك لا تحبه على الإطلاق، 😁 تعني أنك تحبه كثيراً',
+		'solutions.subtitle.evaluate':
+			'يرجى تقييم كل خيار: 😞 تعني أنك لا تحبه على الإطلاق، 😁 تعني أنك تحبه كثيراً',
 		'solutions.counter.options': '{{count}} خيارات',
 		'solutions.counter.new': '{{count}} جديد',
 		'solutions.add_suggestion': 'إضافة اقتراح',
@@ -636,7 +652,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'جارٍ الإنشاء…',
 		'main.create_question_invalid': 'يرجى إدخال عنوان للسؤال.',
 		'main.create_question_failed': 'تعذّر إنشاء السؤال. حاول مرة أخرى.',
-		'a11y.trigger': 'خيارات إمكانية الوصول',
+		'a11y.trigger': 'إمكانية الوصول واللغة',
 		'a11y.panel_label': 'إعدادات إمكانية الوصول',
 		'a11y.font_size': 'حجم الخط',
 		'a11y.increase_font': 'تكبير الخط',
@@ -644,6 +660,12 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'تباين الألوان',
 		'a11y.high_contrast': 'تباين عالٍ',
 		'a11y.light_contrast': 'تباين عادي',
+		'a11y.language': 'اللغة',
+		'a11y.language.locked': 'تم التعيين من قِبل الميسّر',
+		'facilitator.language.label': 'اللغة',
+		'facilitator.language.help': 'يحدد لغة الغرفة الافتراضية. فعّل "فرض" لتجاوز اختيار المشاركين.',
+		'facilitator.language.force': 'فرض',
+		'facilitator.toast.languageForced': 'تم تعيين اللغة من قِبل الميسّر',
 	},
 	de: {
 		'solutions.loading': 'Laden...',
@@ -814,7 +836,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'Wird erstellt…',
 		'main.create_question_invalid': 'Bitte gib einen Titel für die Frage ein.',
 		'main.create_question_failed': 'Frage konnte nicht erstellt werden. Bitte erneut versuchen.',
-		'a11y.trigger': 'Bedienungshilfen',
+		'a11y.trigger': 'Bedienungshilfen und Sprache',
 		'a11y.panel_label': 'Barrierefreiheitseinstellungen',
 		'a11y.font_size': 'Schriftgröße',
 		'a11y.increase_font': 'Schrift vergrößern',
@@ -822,6 +844,13 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'Farbkontrast',
 		'a11y.high_contrast': 'Hoher Kontrast',
 		'a11y.light_contrast': 'Normaler Kontrast',
+		'a11y.language': 'Sprache',
+		'a11y.language.locked': 'Vom Moderator festgelegt',
+		'facilitator.language.label': 'Sprache',
+		'facilitator.language.help':
+			'Legt die Sprache des Raums fest. Aktivieren Sie „Erzwingen", um die Wahl der Teilnehmer zu überschreiben.',
+		'facilitator.language.force': 'Erzwingen',
+		'facilitator.toast.languageForced': 'Sprache vom Moderator festgelegt',
 	},
 	es: {
 		'solutions.loading': 'Cargando...',
@@ -993,7 +1022,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'Creando…',
 		'main.create_question_invalid': 'Introduce un título para la pregunta.',
 		'main.create_question_failed': 'No se pudo crear la pregunta. Inténtalo de nuevo.',
-		'a11y.trigger': 'Opciones de accesibilidad',
+		'a11y.trigger': 'Accesibilidad e idioma',
 		'a11y.panel_label': 'Configuración de accesibilidad',
 		'a11y.font_size': 'Tamaño de fuente',
 		'a11y.increase_font': 'Aumentar fuente',
@@ -1001,6 +1030,13 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'Contraste de color',
 		'a11y.high_contrast': 'Alto contraste',
 		'a11y.light_contrast': 'Contraste normal',
+		'a11y.language': 'Idioma',
+		'a11y.language.locked': 'Establecido por el facilitador',
+		'facilitator.language.label': 'Idioma',
+		'facilitator.language.help':
+			'Define el idioma de la sala. Activa "Forzar" para anular la elección de los participantes.',
+		'facilitator.language.force': 'Forzar',
+		'facilitator.toast.languageForced': 'Idioma establecido por el facilitador',
 	},
 	nl: {
 		'solutions.loading': 'Laden...',
@@ -1166,7 +1202,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'Aanmaken…',
 		'main.create_question_invalid': 'Voer een titel voor de vraag in.',
 		'main.create_question_failed': 'De vraag kon niet worden aangemaakt. Probeer het opnieuw.',
-		'a11y.trigger': 'Toegankelijkheidsopties',
+		'a11y.trigger': 'Toegankelijkheid en taal',
 		'a11y.panel_label': 'Toegankelijkheidsinstellingen',
 		'a11y.font_size': 'Lettergrootte',
 		'a11y.increase_font': 'Lettergrootte vergroten',
@@ -1174,6 +1210,13 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'Kleurcontrast',
 		'a11y.high_contrast': 'Hoog contrast',
 		'a11y.light_contrast': 'Normaal contrast',
+		'a11y.language': 'Taal',
+		'a11y.language.locked': 'Ingesteld door facilitator',
+		'facilitator.language.label': 'Taal',
+		'facilitator.language.help':
+			'Stelt de taal van de ruimte in. Schakel "Forceren" in om de keuze van deelnemers te overschrijven.',
+		'facilitator.language.force': 'Forceren',
+		'facilitator.toast.languageForced': 'Taal ingesteld door facilitator',
 	},
 	fa: {
 		'solutions.loading': 'در حال بارگذاری...',
@@ -1320,7 +1363,7 @@ const translations: Record<string, Record<string, string>> = {
 		'main.create_question_busy': 'در حال ایجاد…',
 		'main.create_question_invalid': 'لطفاً عنوان پرسش را وارد کنید.',
 		'main.create_question_failed': 'ایجاد پرسش انجام نشد. دوباره تلاش کنید.',
-		'a11y.trigger': 'گزینه‌های دسترسی‌پذیری',
+		'a11y.trigger': 'دسترسی‌پذیری و زبان',
 		'a11y.panel_label': 'تنظیمات دسترسی‌پذیری',
 		'a11y.font_size': 'اندازه قلم',
 		'a11y.increase_font': 'افزایش اندازه قلم',
@@ -1328,6 +1371,13 @@ const translations: Record<string, Record<string, string>> = {
 		'a11y.contrast': 'تضاد رنگ',
 		'a11y.high_contrast': 'تضاد بالا',
 		'a11y.light_contrast': 'تضاد معمولی',
+		'a11y.language': 'زبان',
+		'a11y.language.locked': 'توسط تسهیل‌گر تنظیم شده',
+		'facilitator.language.label': 'زبان',
+		'facilitator.language.help':
+			'زبان پیش‌فرض اتاق را تعیین می‌کند. «اعمال» را فعال کنید تا انتخاب شرکت‌کنندگان نادیده گرفته شود.',
+		'facilitator.language.force': 'اعمال',
+		'facilitator.toast.languageForced': 'زبان توسط تسهیل‌گر تنظیم شد',
 	},
 };
 
@@ -1338,6 +1388,44 @@ let currentLang: LangCode = 'en';
 // If not, the statement's defaultLanguage is allowed to override the browser
 // default on load.
 let userExplicitLang = false;
+
+// Tracks whether the active language is currently being forced by the
+// facilitator (statement.forceLanguage === true on the main statement or
+// the active question). Read by the participant-facing widget so it can
+// disable its own language picker and show a "Set by facilitator" chip.
+// Cleared as soon as no force flag is active on the relevant docs.
+let forcedByAdmin = false;
+
+type LangChangeListener = () => void;
+const langChangeListeners = new Set<LangChangeListener>();
+
+function notifyLangChange(): void {
+	for (const listener of langChangeListeners) {
+		try {
+			listener();
+		} catch {
+			/* listener errors must not break i18n state for other subscribers */
+		}
+	}
+}
+
+/** Subscribe to language / force-state changes. Used by vanilla-DOM widgets
+ *  (the AccessibilityWidget) that live outside Mithril's redraw loop and
+ *  need to refresh their labels and lock state when the language flips —
+ *  whether the user picked it themselves, the admin pushed a default, or
+ *  the admin enabled `forceLanguage`. Returns an unsubscribe function. */
+export function onLangChange(listener: LangChangeListener): () => void {
+	langChangeListeners.add(listener);
+
+	return () => langChangeListeners.delete(listener);
+}
+
+/** True when the active language is being forced by the facilitator.
+ *  Participants can still see the picker but it should be disabled with a
+ *  "Set by facilitator" indicator so the lack of interactivity is explained. */
+export function isLanguageForced(): boolean {
+	return forcedByAdmin;
+}
 
 function detectLanguage(): { lang: LangCode; explicit: boolean } {
 	const params = new URLSearchParams(window.location.search);
@@ -1360,9 +1448,11 @@ function detectLanguage(): { lang: LangCode; explicit: boolean } {
 }
 
 function applyLang(lang: LangCode): void {
+	const changed = lang !== currentLang;
 	currentLang = lang;
 	document.documentElement.dir = isRTL() ? 'rtl' : 'ltr';
 	document.documentElement.lang = currentLang;
+	if (changed) notifyLangChange();
 }
 
 export function initI18n(): void {
@@ -1377,9 +1467,11 @@ export function getLang(): LangCode {
 
 export function setLang(lang: LangCode): void {
 	if (!translations[lang]) return;
+	if (forcedByAdmin) return; // Force flag wins; ignore participant attempts.
 	userExplicitLang = true;
 	localStorage.setItem('freedi_join_lang', lang);
 	applyLang(lang);
+	notifyLangChange(); // Fire even when lang didn't change so consumers can redraw.
 	m.redraw();
 }
 
@@ -1390,13 +1482,36 @@ export function setLang(lang: LangCode): void {
  *   - otherwise, statement.defaultLanguage wins only when the user hasn't
  *     made an explicit choice (URL param or prior setLang)
  * Returns true if the active language changed.
+ *
+ * Also tracks the force-state into a module-level flag so the participant-facing
+ * widget can disable its picker and show a lock chip. The flag is only touched
+ * when the caller actually carries a language opinion — calls with no
+ * `defaultLanguage` are treated as "no opinion" and leave the prior force
+ * state intact. This matters because the join app sync's both the main
+ * statement *and* the active question independently; the question doc usually
+ * has no language fields and shouldn't clobber what the hub set.
  */
 export function applyStatementLanguage(defaultLanguage?: string, forceLanguage?: boolean): boolean {
-	if (!defaultLanguage || !translations[defaultLanguage]) return false;
-	if (defaultLanguage === currentLang) return false;
+	if (!defaultLanguage || !translations[defaultLanguage]) {
+		return false;
+	}
+
+	const wasForced = forcedByAdmin;
+	const nowForced = forceLanguage === true;
+	forcedByAdmin = nowForced;
+
+	if (defaultLanguage === currentLang) {
+		if (wasForced !== nowForced) notifyLangChange();
+
+		return false;
+	}
 
 	const shouldApply = forceLanguage === true || !userExplicitLang;
-	if (!shouldApply) return false;
+	if (!shouldApply) {
+		if (wasForced !== nowForced) notifyLangChange();
+
+		return false;
+	}
 
 	applyLang(defaultLanguage);
 

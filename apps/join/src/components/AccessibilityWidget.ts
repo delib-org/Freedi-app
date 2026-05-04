@@ -13,8 +13,15 @@
  *   • Drag is pointer-event based (works on mouse + touch + stylus).
  */
 
-import { a11yStore, FONT_SIZE_MIN, FONT_SIZE_MAX } from '../lib/accessibility';
-import { t } from '../lib/i18n';
+import { a11yStore } from '../lib/accessibility';
+import {
+	t,
+	getLang,
+	setLang,
+	getAvailableLanguages,
+	isLanguageForced,
+	onLangChange,
+} from '../lib/i18n';
 
 const AUTO_CLOSE_MS = 10_000;
 
@@ -51,353 +58,436 @@ const LIGHT_CONTRAST_SVG = `
 // Widget class
 // --------------------------------------------------------------------------
 export class AccessibilityWidget {
-  private root: HTMLDivElement;
-  private triggerBtn: HTMLButtonElement;
-  private panel: HTMLDivElement;
-  private fontSizeLabel: HTMLSpanElement;
+	private root: HTMLDivElement;
+	private triggerBtn: HTMLButtonElement;
+	private panel: HTMLDivElement;
+	private fontSizeLabel: HTMLSpanElement;
 
-  private isOpen = false;
-  private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+	// Language row references — refreshed on every lang/force change so the
+	// select tracks programmatic changes (admin pushed a defaultLanguage) and
+	// the lock chip appears/disappears as forceLanguage flips.
+	private langSelect: HTMLSelectElement | null = null;
+	private langLockChip: HTMLSpanElement | null = null;
+	private langRowLabel: HTMLSpanElement | null = null;
+	private unsubscribeLang: (() => void) | null = null;
 
-  // Drag state
-  private isDragging = false;
-  private dragMoved = false;
-  private dragStartX = 0;
-  private dragStartY = 0;
-  private dragStartTop = 0;
+	private isOpen = false;
+	private autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
 
-  // Current vertical position (px from top)
-  private positionTop: number;
+	// Drag state
+	private isDragging = false;
+	private dragMoved = false;
+	private dragStartX = 0;
+	private dragStartY = 0;
+	private dragStartTop = 0;
 
-  constructor() {
-    this.positionTop = Math.max(80, window.innerHeight * 0.3);
+	// Current vertical position (px from top)
+	private positionTop: number;
 
-    this.root = this.buildRoot();
-    this.triggerBtn = this.buildTriggerButton();
-    this.panel = this.buildPanel();
-    this.fontSizeLabel = this.panel.querySelector<HTMLSpanElement>(
-      '.a11y-widget__font-label',
-    )!;
+	constructor() {
+		this.positionTop = Math.max(80, window.innerHeight * 0.3);
 
-    this.root.appendChild(this.triggerBtn);
-    this.root.appendChild(this.panel);
-    document.body.appendChild(this.root);
+		this.root = this.buildRoot();
+		this.triggerBtn = this.buildTriggerButton();
+		this.panel = this.buildPanel();
+		this.fontSizeLabel = this.panel.querySelector<HTMLSpanElement>('.a11y-widget__font-label')!;
 
-    this.bindPointerDrag();
-    this.bindKeyboard();
-    this.bindClickOutside();
+		this.root.appendChild(this.triggerBtn);
+		this.root.appendChild(this.panel);
+		document.body.appendChild(this.root);
 
-    // Re-render when store changes (e.g. from a different tab)
-    a11yStore.onChange(() => this.updateUI());
-    this.updateUI();
-  }
+		this.bindPointerDrag();
+		this.bindKeyboard();
+		this.bindClickOutside();
 
-  // --------------------------------------------------------------------------
-  // DOM construction
-  // --------------------------------------------------------------------------
-  private buildRoot(): HTMLDivElement {
-    const el = document.createElement('div');
-    el.className = 'a11y-widget';
-    el.style.top = `${this.positionTop}px`;
-    return el;
-  }
+		// Re-render when store changes (e.g. from a different tab)
+		a11yStore.onChange(() => this.updateUI());
+		// Re-render when language flips (user picked, admin pushed, force toggled)
+		// so the select value, lock chip, and translated labels stay accurate.
+		this.unsubscribeLang = onLangChange(() => this.updateUI());
+		this.updateUI();
+	}
 
-  private buildTriggerButton(): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.className = 'a11y-widget__trigger';
-    btn.setAttribute('aria-label', t('a11y.trigger'));
-    btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-controls', 'a11y-panel');
-    // Explicitly set type to prevent form submission if nested in a form
-    btn.type = 'button';
-    btn.innerHTML = ACCESSIBILITY_SVG;
-    return btn;
-  }
+	// --------------------------------------------------------------------------
+	// DOM construction
+	// --------------------------------------------------------------------------
+	private buildRoot(): HTMLDivElement {
+		const el = document.createElement('div');
+		el.className = 'a11y-widget';
+		el.style.top = `${this.positionTop}px`;
 
-  private buildPanel(): HTMLDivElement {
-    const panel = document.createElement('div');
-    panel.id = 'a11y-panel';
-    panel.className = 'a11y-widget__panel';
-    panel.setAttribute('role', 'dialog');
-    panel.setAttribute('aria-modal', 'false');
-    panel.setAttribute('aria-label', t('a11y.panel_label'));
-    // Visibility/animation is driven by the `.a11y-widget--open` class on the
-    // root (see _components.scss). We use aria-hidden, not the `hidden`
-    // attribute, because `hidden` sets display:none which kills the slide
-    // animation. CSS `visibility: hidden` (with delayed transition) still
-    // removes the panel from the a11y tree and from focus order when closed.
-    panel.setAttribute('aria-hidden', 'true');
+		return el;
+	}
 
-    // --- Font size row ---
-    const fontRow = document.createElement('div');
-    fontRow.className = 'a11y-widget__row a11y-widget__row--font';
-    fontRow.setAttribute('role', 'group');
-    fontRow.setAttribute('aria-label', t('a11y.font_size'));
+	private buildTriggerButton(): HTMLButtonElement {
+		const btn = document.createElement('button');
+		btn.className = 'a11y-widget__trigger';
+		btn.setAttribute('aria-label', t('a11y.trigger'));
+		btn.setAttribute('aria-expanded', 'false');
+		btn.setAttribute('aria-controls', 'a11y-panel');
+		// Explicitly set type to prevent form submission if nested in a form
+		btn.type = 'button';
+		btn.innerHTML = ACCESSIBILITY_SVG;
 
-    const decreaseBtn = this.buildIconButton('–', t('a11y.decrease_font'), () =>
-      this.changeFontSize(-1),
-    );
-    const label = document.createElement('span');
-    label.className = 'a11y-widget__font-label';
-    label.setAttribute('aria-live', 'polite');
-    label.setAttribute('aria-atomic', 'true');
-    label.textContent = 'Aa';
+		return btn;
+	}
 
-    const increaseBtn = this.buildIconButton('+', t('a11y.increase_font'), () =>
-      this.changeFontSize(+1),
-    );
+	private buildPanel(): HTMLDivElement {
+		const panel = document.createElement('div');
+		panel.id = 'a11y-panel';
+		panel.className = 'a11y-widget__panel';
+		panel.setAttribute('role', 'dialog');
+		panel.setAttribute('aria-modal', 'false');
+		panel.setAttribute('aria-label', t('a11y.panel_label'));
+		// Visibility/animation is driven by the `.a11y-widget--open` class on the
+		// root (see _components.scss). We use aria-hidden, not the `hidden`
+		// attribute, because `hidden` sets display:none which kills the slide
+		// animation. CSS `visibility: hidden` (with delayed transition) still
+		// removes the panel from the a11y tree and from focus order when closed.
+		panel.setAttribute('aria-hidden', 'true');
 
-    fontRow.appendChild(decreaseBtn);
-    fontRow.appendChild(label);
-    fontRow.appendChild(increaseBtn);
+		// --- Font size row ---
+		const fontRow = document.createElement('div');
+		fontRow.className = 'a11y-widget__row a11y-widget__row--font';
+		fontRow.setAttribute('role', 'group');
+		fontRow.setAttribute('aria-label', t('a11y.font_size'));
 
-    // --- Contrast row ---
-    const contrastRow = document.createElement('div');
-    contrastRow.className = 'a11y-widget__row a11y-widget__row--contrast';
-    contrastRow.setAttribute('role', 'group');
-    contrastRow.setAttribute('aria-label', t('a11y.contrast'));
+		const decreaseBtn = this.buildIconButton('–', t('a11y.decrease_font'), () =>
+			this.changeFontSize(-1),
+		);
+		const label = document.createElement('span');
+		label.className = 'a11y-widget__font-label';
+		label.setAttribute('aria-live', 'polite');
+		label.setAttribute('aria-atomic', 'true');
+		label.textContent = 'Aa';
 
-    const hcBtn = document.createElement('button');
-    hcBtn.type = 'button';
-    hcBtn.className = 'a11y-widget__contrast-btn a11y-widget__contrast-btn--high';
-    hcBtn.setAttribute('aria-pressed', 'false');
-    hcBtn.innerHTML = `${HIGH_CONTRAST_SVG}<span>${t('a11y.high_contrast')}</span>`;
-    hcBtn.addEventListener('click', () => {
-      a11yStore.setHighContrast(true);
-      this.resetAutoClose();
-    });
+		const increaseBtn = this.buildIconButton('+', t('a11y.increase_font'), () =>
+			this.changeFontSize(+1),
+		);
 
-    const lcBtn = document.createElement('button');
-    lcBtn.type = 'button';
-    lcBtn.className = 'a11y-widget__contrast-btn a11y-widget__contrast-btn--light';
-    lcBtn.setAttribute('aria-pressed', 'false');
-    lcBtn.innerHTML = `${LIGHT_CONTRAST_SVG}<span>${t('a11y.light_contrast')}</span>`;
-    lcBtn.addEventListener('click', () => {
-      a11yStore.setHighContrast(false);
-      this.resetAutoClose();
-    });
+		fontRow.appendChild(decreaseBtn);
+		fontRow.appendChild(label);
+		fontRow.appendChild(increaseBtn);
 
-    contrastRow.appendChild(hcBtn);
-    contrastRow.appendChild(lcBtn);
+		// --- Contrast row ---
+		const contrastRow = document.createElement('div');
+		contrastRow.className = 'a11y-widget__row a11y-widget__row--contrast';
+		contrastRow.setAttribute('role', 'group');
+		contrastRow.setAttribute('aria-label', t('a11y.contrast'));
 
-    panel.appendChild(fontRow);
-    panel.appendChild(contrastRow);
+		const hcBtn = document.createElement('button');
+		hcBtn.type = 'button';
+		hcBtn.className = 'a11y-widget__contrast-btn a11y-widget__contrast-btn--high';
+		hcBtn.setAttribute('aria-pressed', 'false');
+		hcBtn.innerHTML = `${HIGH_CONTRAST_SVG}<span>${t('a11y.high_contrast')}</span>`;
+		hcBtn.addEventListener('click', () => {
+			a11yStore.setHighContrast(true);
+			this.resetAutoClose();
+		});
 
-    return panel;
-  }
+		const lcBtn = document.createElement('button');
+		lcBtn.type = 'button';
+		lcBtn.className = 'a11y-widget__contrast-btn a11y-widget__contrast-btn--light';
+		lcBtn.setAttribute('aria-pressed', 'false');
+		lcBtn.innerHTML = `${LIGHT_CONTRAST_SVG}<span>${t('a11y.light_contrast')}</span>`;
+		lcBtn.addEventListener('click', () => {
+			a11yStore.setHighContrast(false);
+			this.resetAutoClose();
+		});
 
-  private buildIconButton(
-    glyph: string,
-    ariaLabel: string,
-    onClick: () => void,
-  ): HTMLButtonElement {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'a11y-widget__icon-btn';
-    btn.setAttribute('aria-label', ariaLabel);
-    btn.textContent = glyph;
-    btn.addEventListener('click', () => {
-      onClick();
-      this.resetAutoClose();
-    });
-    return btn;
-  }
+		contrastRow.appendChild(hcBtn);
+		contrastRow.appendChild(lcBtn);
 
-  // --------------------------------------------------------------------------
-  // UI state sync
-  // --------------------------------------------------------------------------
-  private updateUI(): void {
-    const prefs = a11yStore.getPrefs();
+		// --- Language row ---
+		// A simple <label> + native <select>. The native select gives us free
+		// OS-level keyboard, RTL handling, and (on mobile) the OS's own picker —
+		// by far the most familiar pattern for "pick from a list of 7". Native
+		// language names (with dir="auto" on each option) sidestep the political
+		// baggage of flags. The whole row is disabled with a lock chip when the
+		// facilitator has set forceLanguage.
+		const languageRow = document.createElement('div');
+		languageRow.className = 'a11y-widget__row a11y-widget__row--language';
+		languageRow.setAttribute('role', 'group');
+		languageRow.setAttribute('aria-label', t('a11y.language'));
 
-    // Font label reflects current size
-    if (this.fontSizeLabel) {
-      this.fontSizeLabel.textContent = `Aa ${prefs.fontSize}px`;
-    }
+		const langLabel = document.createElement('span');
+		langLabel.className = 'a11y-widget__lang-label';
+		langLabel.textContent = `🌐 ${t('a11y.language')}`;
+		this.langRowLabel = langLabel;
 
-    // High-contrast button pressed states
-    const hcBtn = this.panel.querySelector<HTMLButtonElement>(
-      '.a11y-widget__contrast-btn--high',
-    );
-    const lcBtn = this.panel.querySelector<HTMLButtonElement>(
-      '.a11y-widget__contrast-btn--light',
-    );
-    if (hcBtn) hcBtn.setAttribute('aria-pressed', String(prefs.highContrast));
-    if (lcBtn) lcBtn.setAttribute('aria-pressed', String(!prefs.highContrast));
+		const langSelect = document.createElement('select');
+		langSelect.className = 'a11y-widget__lang-select';
+		langSelect.setAttribute('aria-label', t('a11y.language'));
+		for (const { code, name } of getAvailableLanguages()) {
+			const opt = document.createElement('option');
+			opt.value = code;
+			opt.textContent = name;
+			// dir="auto" so RTL native names render correctly even when the
+			// surrounding select is mounted in an LTR document.
+			opt.setAttribute('dir', 'auto');
+			langSelect.appendChild(opt);
+		}
+		langSelect.value = getLang();
+		langSelect.addEventListener('change', (e) => {
+			const code = (e.target as HTMLSelectElement).value;
+			setLang(code);
+			this.resetAutoClose();
+		});
+		this.langSelect = langSelect;
 
-    // Trigger button: reflect active high-contrast state visually
-    if (prefs.highContrast) {
-      this.triggerBtn.classList.add('a11y-widget__trigger--active');
-    } else {
-      this.triggerBtn.classList.remove('a11y-widget__trigger--active');
-    }
-  }
+		const lockChip = document.createElement('span');
+		lockChip.className = 'a11y-widget__lang-lock';
+		lockChip.setAttribute('role', 'note');
+		lockChip.textContent = `🔒 ${t('a11y.language.locked')}`;
+		lockChip.hidden = true;
+		this.langLockChip = lockChip;
 
-  // --------------------------------------------------------------------------
-  // Panel open/close
-  // --------------------------------------------------------------------------
-  private openPanel(): void {
-    if (this.isOpen) return;
-    this.isOpen = true;
-    this.root.classList.add('a11y-widget--open');
-    this.panel.setAttribute('aria-hidden', 'false');
-    this.triggerBtn.setAttribute('aria-expanded', 'true');
+		languageRow.appendChild(langLabel);
+		languageRow.appendChild(langSelect);
+		languageRow.appendChild(lockChip);
 
-    // Move focus into the panel's first interactive child
-    const firstBtn = this.panel.querySelector<HTMLButtonElement>('button');
-    firstBtn?.focus();
+		panel.appendChild(fontRow);
+		panel.appendChild(contrastRow);
+		panel.appendChild(languageRow);
 
-    this.resetAutoClose();
-  }
+		return panel;
+	}
 
-  private closePanel(): void {
-    if (!this.isOpen) return;
-    this.isOpen = false;
-    this.root.classList.remove('a11y-widget--open');
-    this.panel.setAttribute('aria-hidden', 'true');
-    this.triggerBtn.setAttribute('aria-expanded', 'false');
-    this.clearAutoClose();
-  }
+	private buildIconButton(
+		glyph: string,
+		ariaLabel: string,
+		onClick: () => void,
+	): HTMLButtonElement {
+		const btn = document.createElement('button');
+		btn.type = 'button';
+		btn.className = 'a11y-widget__icon-btn';
+		btn.setAttribute('aria-label', ariaLabel);
+		btn.textContent = glyph;
+		btn.addEventListener('click', () => {
+			onClick();
+			this.resetAutoClose();
+		});
 
-  private togglePanel(): void {
-    if (this.isOpen) {
-      this.closePanel();
-    } else {
-      this.openPanel();
-    }
-  }
+		return btn;
+	}
 
-  // --------------------------------------------------------------------------
-  // Auto-close timer
-  // --------------------------------------------------------------------------
-  private resetAutoClose(): void {
-    this.clearAutoClose();
-    this.autoCloseTimer = setTimeout(() => this.closePanel(), AUTO_CLOSE_MS);
-  }
+	// --------------------------------------------------------------------------
+	// UI state sync
+	// --------------------------------------------------------------------------
+	private updateUI(): void {
+		const prefs = a11yStore.getPrefs();
 
-  private clearAutoClose(): void {
-    if (this.autoCloseTimer !== null) {
-      clearTimeout(this.autoCloseTimer);
-      this.autoCloseTimer = null;
-    }
-  }
+		// Font label reflects current size
+		if (this.fontSizeLabel) {
+			this.fontSizeLabel.textContent = `Aa ${prefs.fontSize}px`;
+		}
 
-  // --------------------------------------------------------------------------
-  // Font size
-  // --------------------------------------------------------------------------
-  private changeFontSize(delta: number): void {
-    const current = a11yStore.getPrefs().fontSize;
-    a11yStore.setFontSize(current + delta);
-  }
+		// High-contrast button pressed states
+		const hcBtn = this.panel.querySelector<HTMLButtonElement>('.a11y-widget__contrast-btn--high');
+		const lcBtn = this.panel.querySelector<HTMLButtonElement>('.a11y-widget__contrast-btn--light');
+		if (hcBtn) hcBtn.setAttribute('aria-pressed', String(prefs.highContrast));
+		if (lcBtn) lcBtn.setAttribute('aria-pressed', String(!prefs.highContrast));
 
-  // --------------------------------------------------------------------------
-  // Pointer drag (mouse + touch + stylus)
-  // --------------------------------------------------------------------------
-  private bindPointerDrag(): void {
-    this.triggerBtn.addEventListener('pointerdown', (e: PointerEvent) => {
-      // Only drag with primary button / touch
-      if (e.button > 0) return;
+		// Trigger button: reflect active high-contrast state visually
+		if (prefs.highContrast) {
+			this.triggerBtn.classList.add('a11y-widget__trigger--active');
+		} else {
+			this.triggerBtn.classList.remove('a11y-widget__trigger--active');
+		}
 
-      this.isDragging = false;
-      this.dragMoved = false;
-      this.dragStartX = e.clientX;
-      this.dragStartY = e.clientY;
-      this.dragStartTop = this.positionTop;
+		// Language row sync — value, disabled state, lock chip, label texts.
+		// We refresh translated strings here too so a language change made in the
+		// widget itself flips its own labels without needing a separate code path.
+		const forced = isLanguageForced();
+		if (this.langSelect) {
+			const activeLang = getLang();
+			if (this.langSelect.value !== activeLang) {
+				this.langSelect.value = activeLang;
+			}
+			this.langSelect.disabled = forced;
+			this.langSelect.setAttribute('aria-label', t('a11y.language'));
+		}
+		if (this.langRowLabel) {
+			this.langRowLabel.textContent = `🌐 ${t('a11y.language')}`;
+		}
+		if (this.langLockChip) {
+			this.langLockChip.textContent = `🔒 ${t('a11y.language.locked')}`;
+			this.langLockChip.hidden = !forced;
+		}
+		// Trigger button aria-label may include "language" — refresh on each
+		// language change so screen readers announce the localized version.
+		this.triggerBtn.setAttribute('aria-label', t('a11y.trigger'));
+		this.panel.setAttribute('aria-label', t('a11y.panel_label'));
+	}
 
-      this.triggerBtn.setPointerCapture(e.pointerId);
+	// --------------------------------------------------------------------------
+	// Panel open/close
+	// --------------------------------------------------------------------------
+	private openPanel(): void {
+		if (this.isOpen) return;
+		this.isOpen = true;
+		this.root.classList.add('a11y-widget--open');
+		this.panel.setAttribute('aria-hidden', 'false');
+		this.triggerBtn.setAttribute('aria-expanded', 'true');
 
-      const onMove = (ev: PointerEvent): void => {
-        const dx = Math.abs(ev.clientX - this.dragStartX);
-        const dy = Math.abs(ev.clientY - this.dragStartY);
+		// Move focus into the panel's first interactive child
+		const firstBtn = this.panel.querySelector<HTMLButtonElement>('button');
+		firstBtn?.focus();
 
-        if (!this.isDragging && (dx > 5 || dy > 5)) {
-          this.isDragging = true;
-          this.dragMoved = true;
-          this.root.classList.add('a11y-widget--dragging');
-        }
+		this.resetAutoClose();
+	}
 
-        if (this.isDragging) {
-          const deltaY = ev.clientY - this.dragStartY;
-          this.positionTop = Math.min(
-            Math.max(this.dragStartTop + deltaY, 0),
-            window.innerHeight - 100,
-          );
-          this.root.style.top = `${this.positionTop}px`;
-        }
-      };
+	private closePanel(): void {
+		if (!this.isOpen) return;
+		this.isOpen = false;
+		this.root.classList.remove('a11y-widget--open');
+		this.panel.setAttribute('aria-hidden', 'true');
+		this.triggerBtn.setAttribute('aria-expanded', 'false');
+		this.clearAutoClose();
+	}
 
-      const onUp = (): void => {
-        this.triggerBtn.removeEventListener('pointermove', onMove);
-        this.triggerBtn.removeEventListener('pointerup', onUp);
-        this.triggerBtn.removeEventListener('pointercancel', onUp);
-        this.root.classList.remove('a11y-widget--dragging');
+	private togglePanel(): void {
+		if (this.isOpen) {
+			this.closePanel();
+		} else {
+			this.openPanel();
+		}
+	}
 
-        if (!this.dragMoved) {
-          // It was a tap, not a drag — toggle the panel
-          this.togglePanel();
-        }
+	// --------------------------------------------------------------------------
+	// Auto-close timer
+	// --------------------------------------------------------------------------
+	private resetAutoClose(): void {
+		this.clearAutoClose();
+		this.autoCloseTimer = setTimeout(() => this.closePanel(), AUTO_CLOSE_MS);
+	}
 
-        this.isDragging = false;
-        this.dragMoved = false;
-      };
+	private clearAutoClose(): void {
+		if (this.autoCloseTimer !== null) {
+			clearTimeout(this.autoCloseTimer);
+			this.autoCloseTimer = null;
+		}
+	}
 
-      this.triggerBtn.addEventListener('pointermove', onMove);
-      this.triggerBtn.addEventListener('pointerup', onUp);
-      this.triggerBtn.addEventListener('pointercancel', onUp);
+	// --------------------------------------------------------------------------
+	// Font size
+	// --------------------------------------------------------------------------
+	private changeFontSize(delta: number): void {
+		const current = a11yStore.getPrefs().fontSize;
+		a11yStore.setFontSize(current + delta);
+	}
 
-      // Prevent default to stop text selection on mobile
-      e.preventDefault();
-    });
-  }
+	// --------------------------------------------------------------------------
+	// Pointer drag (mouse + touch + stylus)
+	// --------------------------------------------------------------------------
+	private bindPointerDrag(): void {
+		this.triggerBtn.addEventListener('pointerdown', (e: PointerEvent) => {
+			// Only drag with primary button / touch
+			if (e.button > 0) return;
 
-  // --------------------------------------------------------------------------
-  // Keyboard: Enter/Space on trigger, Escape closes
-  // --------------------------------------------------------------------------
-  private bindKeyboard(): void {
-    this.triggerBtn.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        this.togglePanel();
-      }
-    });
+			this.isDragging = false;
+			this.dragMoved = false;
+			this.dragStartX = e.clientX;
+			this.dragStartY = e.clientY;
+			this.dragStartTop = this.positionTop;
 
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && this.isOpen) {
-        this.closePanel();
-        this.triggerBtn.focus();
-      }
-    });
-  }
+			this.triggerBtn.setPointerCapture(e.pointerId);
 
-  // --------------------------------------------------------------------------
-  // Click outside
-  // --------------------------------------------------------------------------
-  private bindClickOutside(): void {
-    document.addEventListener(
-      'pointerdown',
-      (e: PointerEvent) => {
-        if (!this.isOpen) return;
-        const target = e.target as Node;
-        if (!this.root.contains(target)) {
-          this.closePanel();
-        }
-      },
-      { capture: true },
-    );
-  }
+			const onMove = (ev: PointerEvent): void => {
+				const dx = Math.abs(ev.clientX - this.dragStartX);
+				const dy = Math.abs(ev.clientY - this.dragStartY);
 
-  // --------------------------------------------------------------------------
-  // Public teardown (optional — useful for tests or SPA unmount)
-  // --------------------------------------------------------------------------
-  destroy(): void {
-    this.clearAutoClose();
-    this.root.remove();
-  }
+				if (!this.isDragging && (dx > 5 || dy > 5)) {
+					this.isDragging = true;
+					this.dragMoved = true;
+					this.root.classList.add('a11y-widget--dragging');
+				}
+
+				if (this.isDragging) {
+					const deltaY = ev.clientY - this.dragStartY;
+					this.positionTop = Math.min(
+						Math.max(this.dragStartTop + deltaY, 0),
+						window.innerHeight - 100,
+					);
+					this.root.style.top = `${this.positionTop}px`;
+				}
+			};
+
+			const onUp = (): void => {
+				this.triggerBtn.removeEventListener('pointermove', onMove);
+				this.triggerBtn.removeEventListener('pointerup', onUp);
+				this.triggerBtn.removeEventListener('pointercancel', onUp);
+				this.root.classList.remove('a11y-widget--dragging');
+
+				if (!this.dragMoved) {
+					// It was a tap, not a drag — toggle the panel
+					this.togglePanel();
+				}
+
+				this.isDragging = false;
+				this.dragMoved = false;
+			};
+
+			this.triggerBtn.addEventListener('pointermove', onMove);
+			this.triggerBtn.addEventListener('pointerup', onUp);
+			this.triggerBtn.addEventListener('pointercancel', onUp);
+
+			// Prevent default to stop text selection on mobile
+			e.preventDefault();
+		});
+	}
+
+	// --------------------------------------------------------------------------
+	// Keyboard: Enter/Space on trigger, Escape closes
+	// --------------------------------------------------------------------------
+	private bindKeyboard(): void {
+		this.triggerBtn.addEventListener('keydown', (e: KeyboardEvent) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				this.togglePanel();
+			}
+		});
+
+		document.addEventListener('keydown', (e: KeyboardEvent) => {
+			if (e.key === 'Escape' && this.isOpen) {
+				this.closePanel();
+				this.triggerBtn.focus();
+			}
+		});
+	}
+
+	// --------------------------------------------------------------------------
+	// Click outside
+	// --------------------------------------------------------------------------
+	private bindClickOutside(): void {
+		document.addEventListener(
+			'pointerdown',
+			(e: PointerEvent) => {
+				if (!this.isOpen) return;
+				const target = e.target as Node;
+				if (!this.root.contains(target)) {
+					this.closePanel();
+				}
+			},
+			{ capture: true },
+		);
+	}
+
+	// --------------------------------------------------------------------------
+	// Public teardown (optional — useful for tests or SPA unmount)
+	// --------------------------------------------------------------------------
+	destroy(): void {
+		this.clearAutoClose();
+		this.unsubscribeLang?.();
+		this.unsubscribeLang = null;
+		this.root.remove();
+	}
 }
 
 /** Mount the widget on the page (idempotent — only mounts once). */
 let _instance: AccessibilityWidget | null = null;
 
 export function mountAccessibilityWidget(): void {
-  if (_instance) return;
-  _instance = new AccessibilityWidget();
+	if (_instance) return;
+	_instance = new AccessibilityWidget();
 }

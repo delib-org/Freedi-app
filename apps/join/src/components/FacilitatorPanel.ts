@@ -20,8 +20,10 @@ import {
 	setThemeStyle,
 	getActiveThemeStyle,
 	applyThemeStyleToDOM,
+	setStatementLanguage,
+	getActiveLanguageScope,
 } from '@/lib/store';
-import { t } from '@/lib/i18n';
+import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 
 let isOpen = false;
 let escListenerAttached = false;
@@ -402,6 +404,77 @@ async function pickThemeStyle(
 	applyThemeStyleToDOM();
 	m.redraw();
 	await setThemeStyle(targetId, value);
+}
+
+/** Hub-scoped (with a question fallback) language picker + force toggle.
+ *  Writes `defaultLanguage` and `forceLanguage` to the main statement so the
+ *  whole join experience speaks the chosen language — every participant on
+ *  the next snapshot gets the new language as their default, and (when force
+ *  is on) overrides any personal pick they made. The participant-side widget
+ *  flips to a disabled state with a "Set by facilitator" chip when force is
+ *  on, so the asymmetry is explained on screen. */
+async function pickLanguage(value: string, force: boolean, target: Statement): Promise<void> {
+	// Optimistic local update so the row reflects the choice before Firestore
+	// confirms — the snapshot listener overwrites with the same value when it
+	// lands. Mirrors how the Theme picker handles its own optimistic write.
+	target.defaultLanguage = value;
+	target.forceLanguage = force;
+	m.redraw();
+	await setStatementLanguage(target.statementId, value, force);
+}
+
+function renderLanguageRow(question: Statement | null, main: Statement | null): m.Vnode | null {
+	// Language scope follows the Theme rule: prefer main statement (hub-wide),
+	// fall back to question on legacy non-facilitated routes. Reading from
+	// `getActiveLanguageScope()` keeps the source-of-truth in store.ts.
+	const target = main ?? question;
+	if (!target) return null;
+
+	const scope = getActiveLanguageScope();
+	// Default the picker's displayed value to the active UI language when no
+	// explicit room language has been set yet — matches what the admin sees
+	// and avoids an empty-looking dropdown on first open.
+	const selectedLang = scope.defaultLanguage ?? getLang();
+	const force = scope.forceLanguage;
+	const langs = getAvailableLanguages();
+	const label = t('facilitator.language.label');
+	const forceLabel = t('facilitator.language.force');
+
+	return m('.facilitator-panel__row', [
+		m('.facilitator-panel__row-main', [
+			m('span.facilitator-panel__row-label', [
+				m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, '🌐'),
+				label,
+			]),
+			m('.facilitator-panel__lang-controls', [
+				m(
+					'select.facilitator-panel__lang-select',
+					{
+						'aria-label': label,
+						value: selectedLang,
+						onchange: (e: Event) => {
+							const value = (e.target as HTMLSelectElement).value;
+							void pickLanguage(value, force, target);
+						},
+					},
+					langs.map((l) => m('option', { value: l.code, dir: 'auto' }, l.name)),
+				),
+				m('label.facilitator-panel__lang-force', [
+					m('input', {
+						type: 'checkbox',
+						checked: force,
+						'aria-label': forceLabel,
+						onchange: (e: Event) => {
+							const next = (e.target as HTMLInputElement).checked;
+							void pickLanguage(selectedLang, next, target);
+						},
+					}),
+					m('span', forceLabel),
+				]),
+			]),
+		]),
+		m('.facilitator-panel__row-help', t('facilitator.language.help')),
+	]);
 }
 
 function renderThemeSegmented(question: Statement | null, main: Statement | null): m.Vnode | null {
@@ -928,6 +1001,7 @@ export const FacilitatorPanel: m.Component = {
 								help: t('facilitator.toggle.showQR.help'),
 							})
 						: null,
+					renderLanguageRow(question, main),
 					renderThemeSegmented(question, main),
 					renderSortSegmented(question),
 					renderToggle({

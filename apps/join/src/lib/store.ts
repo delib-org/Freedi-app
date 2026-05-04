@@ -17,7 +17,7 @@ import {
 	Unsubscribe,
 } from './firebase';
 import { getUserState, ensureUser } from './user';
-import { applyStatementLanguage, t } from './i18n';
+import { applyStatementLanguage, isLanguageForced, t } from './i18n';
 import {
 	Access,
 	Collections,
@@ -651,8 +651,10 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 
 function syncQuestionLanguage(): void {
 	if (!question) return;
+	const wasForced = isLanguageForced();
 	applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
 	applyThemeStyleToDOM();
+	maybeShowForcedLanguageToast(isLanguageForced(), wasForced);
 }
 
 /** Optimistic priming: if the requested question is already in the
@@ -786,8 +788,63 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 
 function syncMainStatementLanguage(): void {
 	if (!mainStatement) return;
+	const wasForced = isLanguageForced();
 	applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
 	applyThemeStyleToDOM();
+	maybeShowForcedLanguageToast(isLanguageForced(), wasForced);
+}
+
+/** Toast once per session when forceLanguage transitions from not-forced to
+ *  forced. Without this, a participant would silently watch their own
+ *  language selector disable when the admin flips the toggle remotely.
+ *  We deliberately fire this only once per session — any re-arrival (route
+ *  change, snapshot replay) shouldn't re-toast, since the participant has
+ *  already been informed. The "forced" reading comes from the i18n module
+ *  (read after applyStatementLanguage runs) so it stays the single source
+ *  of truth for what the participant's UI is actually seeing. */
+let forcedLanguageToastShownForSession = false;
+
+function maybeShowForcedLanguageToast(nowForced: boolean, wasForced: boolean): void {
+	if (!nowForced || wasForced) return;
+	if (forcedLanguageToastShownForSession) return;
+	forcedLanguageToastShownForSession = true;
+	showFacilitatorToast(t('facilitator.toast.languageForced'));
+}
+
+/** Admin write: set the room's default language and (optionally) the
+ *  forceLanguage flag on the main statement. Mirrors the Theme picker's
+ *  hub-scoped pattern — falls back to writing the question doc on legacy
+ *  non-facilitated routes (`/q/:qid`) where there's no main statement.
+ *  Both fields are top-level on Statement, not under `statementSettings`. */
+export async function setStatementLanguage(
+	statementId: string,
+	defaultLanguage: string,
+	forceLanguage: boolean,
+): Promise<void> {
+	const ref = doc(db, Collections.statements, statementId);
+	await setDoc(ref, { defaultLanguage, forceLanguage, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Read the active language scope: prefers the main statement when present
+ *  (hub-scoped, like the theme), falls back to the question doc. Returns the
+ *  configured `defaultLanguage` (may be undefined) and the `forceLanguage`
+ *  flag (defaults to false) so the FacilitatorPanel can render its select +
+ *  toggle from a single source of truth. */
+export function getActiveLanguageScope(): {
+	target: Statement | null;
+	defaultLanguage: string | undefined;
+	forceLanguage: boolean;
+} {
+	const target = mainStatement ?? question;
+	if (!target) {
+		return { target: null, defaultLanguage: undefined, forceLanguage: false };
+	}
+
+	return {
+		target,
+		defaultLanguage: target.defaultLanguage,
+		forceLanguage: target.forceLanguage === true,
+	};
 }
 
 /** Admin-only: append a new sub-question under the current main statement. The
@@ -1218,10 +1275,7 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 
 	if (bodyLines.length === 0) {
 		// Single-line: keep the original single-doc write path.
-		await setDoc(
-			doc(db, Collections.statements, parentStatement.statementId),
-			parentStatement,
-		);
+		await setDoc(doc(db, Collections.statements, parentStatement.statementId), parentStatement);
 
 		return;
 	}
