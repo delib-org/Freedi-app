@@ -21,8 +21,7 @@ interface AISettingsProps {
 const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingChange }) => {
 	const { t } = useTranslation();
 	const subscription = useAppSelector(statementSubscriptionSelector(statement.statementId));
-	const isAdminOrCreator =
-		subscription?.role === Role.admin || subscription?.role === Role.creator;
+	const isAdminOrCreator = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const isQuestion = statement.statementType === StatementType.question;
 
 	return (

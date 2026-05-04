@@ -20,12 +20,12 @@ const URL_PARAM = 'framing';
 const selectFramingsByParent = createFramingsByParentSelector(
 	(s: RootState) => s.framings.byParent,
 );
-const selectFramingMode = createFramingModeSelector(
-	(s: RootState) => s.framings.modeByParent,
-);
+const selectFramingMode = createFramingModeSelector((s: RootState) => s.framings.modeByParent);
 
 function isValidMode(value: string | null): value is FramingMode {
-	return value === FramingMode.regular || value === FramingMode.semantic || value === FramingMode.topic;
+	return (
+		value === FramingMode.regular || value === FramingMode.semantic || value === FramingMode.topic
+	);
 }
 
 interface UseActiveFramingResult {
@@ -79,7 +79,6 @@ export function useActiveFraming(parentId: string | undefined): UseActiveFraming
 		};
 		// We deliberately omit `framings.length` from deps — re-running on every
 		// framing change would loop. The cached check handles re-renders.
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [parentId, dispatch]);
 
 	// Sync URL param INTO Redux on first read.
@@ -89,7 +88,6 @@ export function useActiveFraming(parentId: string | undefined): UseActiveFraming
 		if (isValidMode(urlMode) && urlMode !== reduxMode) {
 			dispatch(setFramingMode({ parentId, mode: urlMode }));
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [parentId, searchParams]);
 
 	const setMode = useMemo(

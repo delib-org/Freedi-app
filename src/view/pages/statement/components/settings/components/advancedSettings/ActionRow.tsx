@@ -62,7 +62,7 @@ const ActionRow: FC<ActionRowProps> = ({
 					disabled={disabled || loading}
 					aria-busy={loading}
 				>
-					{loading ? loadingLabel ?? t('Running...') : buttonLabel}
+					{loading ? (loadingLabel ?? t('Running...')) : buttonLabel}
 				</button>
 			</div>
 		</div>

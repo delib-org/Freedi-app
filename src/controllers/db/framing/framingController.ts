@@ -27,9 +27,7 @@ async function getAdminAuthHeaders(): Promise<Record<string, string>> {
  * happy paths return JSON. This helper handles both so callers always get a
  * consistent shape.
  */
-async function parseClusteringResponse(
-	response: Response,
-): Promise<TriggerClusteringResponse> {
+async function parseClusteringResponse(response: Response): Promise<TriggerClusteringResponse> {
 	const contentType = response.headers.get('content-type') ?? '';
 	if (contentType.includes('application/json')) {
 		return (await response.json()) as TriggerClusteringResponse;

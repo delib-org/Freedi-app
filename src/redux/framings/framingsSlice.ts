@@ -13,6 +13,7 @@ export const FramingMode = {
 	topic: 'topic',
 } as const;
 
+// eslint-disable-next-line no-redeclare
 export type FramingMode = (typeof FramingMode)[keyof typeof FramingMode];
 
 export interface FramingsState {
@@ -34,22 +35,13 @@ export const framingsSlice = createSlice({
 	name: 'framings',
 	initialState,
 	reducers: {
-		setFramingsForParent(
-			state,
-			action: PayloadAction<{ parentId: string; framings: Framing[] }>,
-		) {
+		setFramingsForParent(state, action: PayloadAction<{ parentId: string; framings: Framing[] }>) {
 			state.byParent[action.payload.parentId] = action.payload.framings;
 		},
-		setFramingsLoading(
-			state,
-			action: PayloadAction<{ parentId: string; loading: boolean }>,
-		) {
+		setFramingsLoading(state, action: PayloadAction<{ parentId: string; loading: boolean }>) {
 			state.loadingByParent[action.payload.parentId] = action.payload.loading;
 		},
-		setFramingMode(
-			state,
-			action: PayloadAction<{ parentId: string; mode: FramingMode }>,
-		) {
+		setFramingMode(state, action: PayloadAction<{ parentId: string; mode: FramingMode }>) {
 			state.modeByParent[action.payload.parentId] = action.payload.mode;
 		},
 		clearFramingsForParent(state, action: PayloadAction<string>) {
@@ -60,12 +52,8 @@ export const framingsSlice = createSlice({
 	},
 });
 
-export const {
-	setFramingsForParent,
-	setFramingsLoading,
-	setFramingMode,
-	clearFramingsForParent,
-} = framingsSlice.actions;
+export const { setFramingsForParent, setFramingsLoading, setFramingMode, clearFramingsForParent } =
+	framingsSlice.actions;
 
 // ---------------------------------------------------------------------------
 // Selectors
@@ -101,10 +89,7 @@ export function createFramingModeSelector(
  * the framings loaded for this parent. Returns null for `regular` (no framing
  * applied) or when no matching framing exists.
  */
-export function resolveActiveFramingId(
-	mode: FramingMode,
-	framings: Framing[],
-): string | null {
+export function resolveActiveFramingId(mode: FramingMode, framings: Framing[]): string | null {
 	if (mode === FramingMode.regular) return null;
 	const wanted = mode === FramingMode.semantic ? 'hybrid-auto' : 'topic-cluster';
 	const match = framings.find((f) => f.createdBy === wanted && f.isActive);

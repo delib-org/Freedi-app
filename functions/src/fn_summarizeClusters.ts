@@ -10,10 +10,7 @@ import { Request, Response } from 'express';
 import { summarizeFramingClusters } from './services/cluster-summary/summarize';
 import { logError } from './utils/errorHandling';
 
-export async function triggerSummarizeFramingClusters(
-	req: Request,
-	res: Response,
-): Promise<void> {
+export async function triggerSummarizeFramingClusters(req: Request, res: Response): Promise<void> {
 	try {
 		const body = (req.body ?? {}) as {
 			parentId?: unknown;

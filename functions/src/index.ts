@@ -365,7 +365,11 @@ async function verifyAuthToken(req: Request, res: Response): Promise<string | nu
  */
 const wrapAdminHttpFunction = (
 	handler: (req: Request, res: Response) => Promise<void>,
-	overrides: { memory?: '256MiB' | '512MiB' | '1GiB' | '2GiB' | '4GiB' | '8GiB'; timeoutSeconds?: number; secrets?: string[] } = {},
+	overrides: {
+		memory?: '256MiB' | '512MiB' | '1GiB' | '2GiB' | '4GiB' | '8GiB';
+		timeoutSeconds?: number;
+		secrets?: string[];
+	} = {},
 ) => {
 	return onRequest(
 		{
@@ -989,10 +993,10 @@ exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterP
 
 // HTTP endpoint that asks an LLM to summarize each cluster of a Framing from
 // its above-threshold members; writes the result to cluster.brief.
-exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(
-	triggerSummarizeFramingClusters,
-	{ memory: '512MiB', timeoutSeconds: 300 },
-);
+exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(triggerSummarizeFramingClusters, {
+	memory: '512MiB',
+	timeoutSeconds: 300,
+});
 
 // Condensation / Grouped Suggestions — non-destructive clustering on demand,
 // evaluation aggregation writeback, and stale-marking trigger.

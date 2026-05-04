@@ -1,11 +1,6 @@
 import { logger } from 'firebase-functions';
 import { Collections, getRandomUID, StatementType } from '@freedi/shared-types';
-import type {
-	Framing,
-	FramingSnapshot,
-	ClusterSnapshot,
-	Statement,
-} from '@freedi/shared-types';
+import type { Framing, FramingSnapshot, ClusterSnapshot, Statement } from '@freedi/shared-types';
 import {
 	computeClusterEvaluationFromRawEvals,
 	fetchEvaluationsForIds,
@@ -358,14 +353,11 @@ export async function upsertTopicClusterFraming(input: WriterInput): Promise<Wri
 					target.data.consensus = evaluation.agreement;
 					target.data.totalEvaluators = evaluation.numberOfEvaluators;
 				} catch (error) {
-					logger.warn(
-						'Cluster evaluation aggregation failed; cluster will land with consensus 0',
-						{
-							clusterDocId,
-							memberCount: memberIds.length,
-							error: (error as Error).message,
-						},
-					);
+					logger.warn('Cluster evaluation aggregation failed; cluster will land with consensus 0', {
+						clusterDocId,
+						memberCount: memberIds.length,
+						error: (error as Error).message,
+					});
 				}
 			}),
 		);

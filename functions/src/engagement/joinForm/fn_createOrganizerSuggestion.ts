@@ -59,10 +59,7 @@ export const createOrganizerSuggestion = onCall(
 		let authorized = question.creatorId === uid;
 		if (!authorized) {
 			const subId = `${uid}--${questionId}`;
-			const subSnap = await db
-				.collection(Collections.statementsSubscribe)
-				.doc(subId)
-				.get();
+			const subSnap = await db.collection(Collections.statementsSubscribe).doc(subId).get();
 			if (subSnap.exists) {
 				const role = subSnap.data()?.role;
 				authorized = role === Role.admin || role === Role.creator;

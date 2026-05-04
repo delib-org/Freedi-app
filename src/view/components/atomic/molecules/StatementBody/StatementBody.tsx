@@ -1,24 +1,7 @@
-import {
-	FC,
-	useEffect,
-	useRef,
-	useState,
-	useCallback,
-	KeyboardEvent,
-} from 'react';
+import React, { FC, useEffect, useRef, useState, useCallback, KeyboardEvent } from 'react';
 import clsx from 'clsx';
-import {
-	collection,
-	onSnapshot,
-	query,
-	where,
-} from 'firebase/firestore';
-import {
-	Statement,
-	StatementType,
-	ParagraphType,
-	Collections,
-} from '@freedi/shared-types';
+import { collection, onSnapshot, query, where } from 'firebase/firestore';
+import { Statement, StatementType, ParagraphType, Collections } from '@freedi/shared-types';
 import { FireStore } from '@/controllers/db/config';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import {
@@ -103,14 +86,17 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 		[paragraphs.length, flushDebounce],
 	);
 
-	const beginEdit = useCallback((p: Statement) => {
-		if (!canEdit) return;
-		draftRef.current = p.statement ?? '';
-		setFocusedId(p.statementId);
-		setEditingId(p.statementId);
-		// The contentEditable div initializes its own content + focus via the
-		// ref-callback so we don't fight React over the DOM.
-	}, [canEdit]);
+	const beginEdit = useCallback(
+		(p: Statement) => {
+			if (!canEdit) return;
+			draftRef.current = p.statement ?? '';
+			setFocusedId(p.statementId);
+			setEditingId(p.statementId);
+			// The contentEditable div initializes its own content + focus via the
+			// ref-callback so we don't fight React over the DOM.
+		},
+		[canEdit],
+	);
 
 	const commitEdit = useCallback(async () => {
 		if (!editingId) return;
@@ -295,10 +281,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 				onKeyDown={handleEditorKeyDown}
 			/>
 		) : (
-			<span
-				className="statement-body__text"
-				onClick={canEdit ? () => beginEdit(p) : undefined}
-			>
+			<span className="statement-body__text" onClick={canEdit ? () => beginEdit(p) : undefined}>
 				{text || (canEdit ? t('(empty paragraph — click to edit)') : '')}
 			</span>
 		);
@@ -324,9 +307,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 							aria-label={t('Done editing')}
 						>
 							<Check size={16} />
-							<span className="statement-body__icon-button-label">
-								{t('Done')}
-							</span>
+							<span className="statement-body__icon-button-label">{t('Done')}</span>
 						</button>
 						<button
 							type="button"
@@ -402,11 +383,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 	return (
 		<div className={clsx('statement-body', className)}>
 			{isEmpty && canEdit && (
-				<button
-					type="button"
-					className="statement-body__placeholder"
-					onClick={handleAddAtEnd}
-				>
+				<button type="button" className="statement-body__placeholder" onClick={handleAddAtEnd}>
 					{t('Click to add the first paragraph…')}
 				</button>
 			)}
@@ -414,11 +391,7 @@ const StatementBody: FC<StatementBodyProps> = ({ host, canEdit, className }) => 
 			{paragraphs.map((p, idx) => renderBlock(p, idx))}
 
 			{canEdit && !isEmpty && (
-				<button
-					type="button"
-					className="statement-body__add-end"
-					onClick={handleAddAtEnd}
-				>
+				<button type="button" className="statement-body__add-end" onClick={handleAddAtEnd}>
 					<Plus size={16} />
 					<span>{t('Add paragraph')}</span>
 				</button>

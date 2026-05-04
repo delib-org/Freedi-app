@@ -64,7 +64,11 @@ const FramingSwitcher: FC<FramingSwitcherProps> = ({ parentId, className }) => {
 						)}
 						onClick={() => enabled && setMode(opt.mode)}
 						disabled={!enabled || isLoading}
-						title={enabled ? opt.description : t('No clustering of this type available — run it from settings first')}
+						title={
+							enabled
+								? opt.description
+								: t('No clustering of this type available — run it from settings first')
+						}
 						aria-pressed={active}
 					>
 						{opt.label}

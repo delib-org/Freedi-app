@@ -553,7 +553,10 @@ async function upsertHybridFraming(
 	// Pre-aggregate evaluations from member option Statements onto each cluster
 	// (per-user-deduplicated). Done in parallel before the synchronous batch loop
 	// so the resulting consensus/evaluation can be set inline below.
-	const clusterEvalByIdx = new Map<number, Awaited<ReturnType<typeof computeClusterEvaluationFromRawEvals>>['evaluation']>();
+	const clusterEvalByIdx = new Map<
+		number,
+		Awaited<ReturnType<typeof computeClusterEvaluationFromRawEvals>>['evaluation']
+	>();
 	await Promise.all(
 		Array.from(clusters.entries()).map(async ([clusterIdx, memberIds]) => {
 			if (memberIds.length === 0) return;

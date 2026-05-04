@@ -172,9 +172,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				selectedFraming.framingId,
 			);
 			const n = result.summary?.clustersSummarized ?? 0;
-			setStatusMessage(
-				t('Summarized {count} clusters').replace('{count}', String(n)),
-			);
+			setStatusMessage(t('Summarized {count} clusters').replace('{count}', String(n)));
 		} catch (err) {
 			logError(err, {
 				operation: 'ClusteringAdmin.handleSummarizeClusters',
@@ -243,9 +241,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 			<ActionRow
 				icon={Pencil}
 				label={t('Request Custom Framing')}
-				description={t(
-					'Provide your own clustering prompt to create a tailored Framing.',
-				)}
+				description={t('Provide your own clustering prompt to create a tailored Framing.')}
 				buttonLabel={t('Open editor')}
 				disabled={anyRunning}
 				onClick={() => setIsRequestModalOpen(true)}

@@ -1,4 +1,4 @@
-import { setDoc, deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
+import { deleteDoc, updateDoc, writeBatch } from 'firebase/firestore';
 import {
 	Statement,
 	StatementType,
@@ -54,10 +54,7 @@ export async function addParagraphChild({
 		const batch = writeBatch(FireStore);
 
 		if (insertAfterOrder === undefined) {
-			const maxOrder = sorted.reduce(
-				(max, p) => Math.max(max, p.order ?? p.createdAt ?? 0),
-				-1,
-			);
+			const maxOrder = sorted.reduce((max, p) => Math.max(max, p.order ?? p.createdAt ?? 0), -1);
 			newOrder = maxOrder + 1;
 		} else {
 			newOrder = insertAfterOrder + 1;

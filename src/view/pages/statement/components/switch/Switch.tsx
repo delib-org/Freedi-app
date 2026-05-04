@@ -37,9 +37,7 @@ const Switch: React.FC<SwitchProps> = ({ activeView }) => {
 	return (
 		<main ref={mainRef} className="page__main">
 			<OnlineUsers statementId={statement?.statementId} />
-			{statement && (
-				<StatementBody host={statement} canEdit={isAdmin} />
-			)}
+			{statement && <StatementBody host={statement} canEdit={isAdmin} />}
 			{allSubs.length === 0 && activeView === 'chat' && (
 				<div className={styles.onboarding}>
 					<div className={styles.onboarding__step}>

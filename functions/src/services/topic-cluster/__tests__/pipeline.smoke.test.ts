@@ -47,55 +47,57 @@ jest.mock('../../../condensation/aggregation', () => ({
 			},
 		]),
 	),
-	computeClusterEvaluationFromRawEvals: jest.fn((evals: Array<{ evaluatorId: string; evaluation: number }>) => {
-		// Replicate just enough of the real aggregator for the assertions.
-		const byUser = new Map<string, number[]>();
-		for (const e of evals) {
-			const list = byUser.get(e.evaluatorId) ?? [];
-			list.push(e.evaluation);
-			byUser.set(e.evaluatorId, list);
-		}
-		const numberOfEvaluators = byUser.size;
-		let sumEvaluations = 0;
-		let sumPro = 0;
-		let sumCon = 0;
-		let numberOfProEvaluators = 0;
-		let numberOfConEvaluators = 0;
-		byUser.forEach((vals) => {
-			const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
-			sumEvaluations += avg;
-			if (avg > 0) {
-				numberOfProEvaluators++;
-				sumPro += avg;
-			} else if (avg < 0) {
-				numberOfConEvaluators++;
-				sumCon += Math.abs(avg);
+	computeClusterEvaluationFromRawEvals: jest.fn(
+		(evals: Array<{ evaluatorId: string; evaluation: number }>) => {
+			// Replicate just enough of the real aggregator for the assertions.
+			const byUser = new Map<string, number[]>();
+			for (const e of evals) {
+				const list = byUser.get(e.evaluatorId) ?? [];
+				list.push(e.evaluation);
+				byUser.set(e.evaluatorId, list);
 			}
-		});
-		const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
+			const numberOfEvaluators = byUser.size;
+			let sumEvaluations = 0;
+			let sumPro = 0;
+			let sumCon = 0;
+			let numberOfProEvaluators = 0;
+			let numberOfConEvaluators = 0;
+			byUser.forEach((vals) => {
+				const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+				sumEvaluations += avg;
+				if (avg > 0) {
+					numberOfProEvaluators++;
+					sumPro += avg;
+				} else if (avg < 0) {
+					numberOfConEvaluators++;
+					sumCon += Math.abs(avg);
+				}
+			});
+			const averageEvaluation = numberOfEvaluators > 0 ? sumEvaluations / numberOfEvaluators : 0;
 
-		return {
-			evaluation: {
-				sumEvaluations,
-				agreement: averageEvaluation,
-				numberOfEvaluators,
-				sumPro,
-				sumCon,
-				numberOfProEvaluators,
-				numberOfConEvaluators,
-				averageEvaluation,
-				sumSquaredEvaluations: 0,
-				standardDeviation: 0,
-				agreementIndex: 0,
-				likeMindedness: 0,
-				confidenceIndex: 0,
-				evaluationRandomNumber: 0,
-				viewed: 0,
-			},
-			byUser,
-			perUserAverages: new Map(),
-		};
-	}),
+			return {
+				evaluation: {
+					sumEvaluations,
+					agreement: averageEvaluation,
+					numberOfEvaluators,
+					sumPro,
+					sumCon,
+					numberOfProEvaluators,
+					numberOfConEvaluators,
+					averageEvaluation,
+					sumSquaredEvaluations: 0,
+					standardDeviation: 0,
+					agreementIndex: 0,
+					likeMindedness: 0,
+					confidenceIndex: 0,
+					evaluationRandomNumber: 0,
+					viewed: 0,
+				},
+				byUser,
+				perUserAverages: new Map(),
+			};
+		},
+	),
 }));
 
 // 0b. Extend the global firebase-admin/firestore mock with getAll() and per-doc

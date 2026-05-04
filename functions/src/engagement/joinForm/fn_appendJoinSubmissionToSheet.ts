@@ -117,7 +117,14 @@ export const fn_appendJoinSubmissionToSheet = onDocumentWritten(
 
 			const fieldIds = joinForm.fields.map((f) => f.id);
 			const fieldLabels = joinForm.fields.map((f) => f.label);
-			const metadataHeaders = ['userId', 'displayName', 'role', 'optionTitle', 'submittedAt', 'questionId'];
+			const metadataHeaders = [
+				'userId',
+				'displayName',
+				'role',
+				'optionTitle',
+				'submittedAt',
+				'questionId',
+			];
 
 			if (isEmpty) {
 				try {

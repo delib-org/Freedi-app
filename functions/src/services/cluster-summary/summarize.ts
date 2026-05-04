@@ -53,10 +53,7 @@ async function loadMembersByCluster(
 	clusterIds: Set<string>,
 ): Promise<Map<string, Statement[]>> {
 	const db = getFirestore();
-	const snap = await db
-		.collection(Collections.statements)
-		.where('parentId', '==', parentId)
-		.get();
+	const snap = await db.collection(Collections.statements).where('parentId', '==', parentId).get();
 	const out = new Map<string, Statement[]>();
 	for (const doc of snap.docs) {
 		const s = doc.data() as Statement;
@@ -109,9 +106,10 @@ export async function summarizeFramingClusters(
 			`Framing ${framingId} belongs to parent ${framing.parentStatementId}, not ${parentId}`,
 		);
 	}
-	const wanted = opts.clusterIds && opts.clusterIds.length > 0
-		? new Set(opts.clusterIds.filter((id) => framing.clusterIds.includes(id)))
-		: new Set(framing.clusterIds);
+	const wanted =
+		opts.clusterIds && opts.clusterIds.length > 0
+			? new Set(opts.clusterIds.filter((id) => framing.clusterIds.includes(id)))
+			: new Set(framing.clusterIds);
 	if (wanted.size === 0) {
 		return {
 			parentId,
@@ -146,6 +144,7 @@ export async function summarizeFramingClusters(
 				const cluster = clusterById.get(clusterId);
 				if (!cluster) {
 					skipped++;
+
 					return;
 				}
 				const allMembers = membersByCluster.get(clusterId) ?? [];
@@ -161,6 +160,7 @@ export async function summarizeFramingClusters(
 						totalMembers: allMembers.length,
 					});
 					skipped++;
+
 					return;
 				}
 				try {
@@ -184,6 +184,7 @@ export async function summarizeFramingClusters(
 						.trim();
 					if (brief.length === 0) {
 						skipped++;
+
 						return;
 					}
 					await db.collection(Collections.statements).doc(clusterId).update({
