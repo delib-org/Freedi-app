@@ -141,6 +141,12 @@ export const StatementSettingsSchema = object({
 	minJoinMembers: optional(number()), // Minimum members per option (for visual indicator)
 	maxJoinMembers: optional(number()), // Maximum members per option (for visual indicator + split trigger)
 	showEvaluation: optional(boolean()),
+	// Join app: when true, every option card renders the results strip
+	// (consensus / average / evaluators) regardless of whether the 5-face
+	// evaluation row itself is being shown. Independent from showEvaluation
+	// so admins can reveal results at a chosen moment in a facilitated session
+	// without changing the participant evaluation mode.
+	showResults: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
 	enableSimilaritiesSearch: optional(boolean()),
 	enableNavigationalElements: optional(boolean()),

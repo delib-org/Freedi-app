@@ -499,31 +499,82 @@
     font-weight: var(--font-weight-medium);
   }
 
-  // Edit affordance — visually quieter than chat/join so it sits in the meta
-  // row without competing with the primary CTAs. Only renders when the viewer
-  // has permission (creator or question admin); see SolutionCard.ts.
+  // Results strip — three pills (consensus, avg, evaluators) shown on every
+  // card the moment the admin flips "Show Results". The pill matching the
+  // active sort gets `--primary` (larger value, accent ring) so participants
+  // can scan the list by whichever metric the room is sorted by.
+  &__results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__result {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    background: var(--paper-soft);
+    border: 1px solid var(--paper-line);
+    color: var(--ink-muted);              // 8.7:1 on paper-soft ✓ AAA
+    line-height: 1.1;
+
+    &--primary {
+      background: var(--teal-50);
+      border-color: var(--teal-600);
+      color: var(--teal-700);             // 10:1 on teal-50 ✓ AAA
+      // Bump the value font-size for the primary pill so the metric the
+      // room is sorted by reads as the headline number.
+      .solution-card__result-value {
+        font-size: var(--font-size-lg);
+      }
+    }
+  }
+
+  &__result-value {
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  &__result-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  // Edit affordance — only renders when the viewer has permission (creator or
+  // question admin); see SolutionCard.ts. Sized to match the chat pill so the
+  // meta row reads as one cohesive control strip.
   &__edit {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 6px 10px;
+    padding: 8px 14px;
     border-radius: var(--radius-full);
-    border: 1px dashed var(--ink-muted);
-    background: transparent;
-    color: var(--ink-muted);
+    border: 1.5px solid var(--ink);
+    background: var(--bg-card);
+    color: var(--ink);
     font-family: var(--font-body);
     font-size: var(--font-size-sm);
-    font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-semibold);
     cursor: pointer;
+    min-height: 36px;
     transition:
       background var(--dur-quick) var(--ease-out),
-      color var(--dur-quick) var(--ease-out),
-      border-color var(--dur-quick) var(--ease-out);
+      color var(--dur-quick) var(--ease-out);
 
     &:hover {
-      color: var(--ink);
-      border-color: var(--ink);
-      background: var(--paper-line);
+      background: var(--ink);
+      color: var(--paper);
     }
 
     &:focus-visible {

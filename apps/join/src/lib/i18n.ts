@@ -25,6 +25,10 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion_submit': 'Save',
 		'card.activists': '{{count}} activists',
 		'card.organizers': '{{count}} organizers',
+		'card.results.aria_label': 'Results',
+		'card.results.consensus': 'Consensus',
+		'card.results.average': 'Average',
+		'card.results.evaluators': 'Evaluators',
 		'card.join': 'Join',
 		'card.joined': 'Joined \u2713',
 		'card.join_activist': 'Join as activist',
@@ -98,6 +102,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'Allow new options',
 		'facilitator.toggle.allowAdd.help':
 			'When off, the option list is locked — no new options can be added.',
+		'facilitator.toggle.showEvaluation': 'Show evaluation',
+		'facilitator.toggle.showEvaluation.help':
+			'Open the 5-face evaluation row on every option card so participants can vote.',
+		'facilitator.toggle.showResults': 'Show results',
+		'facilitator.toggle.showResults.help':
+			'Reveal consensus, average and evaluator counts on every option card.',
 		'facilitator.mode.label': 'Mode',
 		'facilitator.mode.join': 'Join options',
 		'facilitator.mode.evaluate': 'Evaluate options',
@@ -206,6 +216,10 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion_submit': 'שמירה',
 		'card.activists': '{{count}} פעילים',
 		'card.organizers': '{{count}} מארגנים',
+		'card.results.aria_label': 'תוצאות',
+		'card.results.consensus': 'הסכמה',
+		'card.results.average': 'ממוצע',
+		'card.results.evaluators': 'מעריכים',
 		'card.join': 'הצטרפ/י',
 		'card.joined': 'הצטרפת ✓',
 		'card.join_activist': 'הצטרפ/י כפעיל/ה',
@@ -278,6 +292,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'אפשור אפשרויות חדשות',
 		'facilitator.toggle.allowAdd.help':
 			'כשכבוי, רשימת האפשרויות נעולה — לא ניתן להוסיף אפשרויות חדשות.',
+		'facilitator.toggle.showEvaluation': 'הצגת הערכה',
+		'facilitator.toggle.showEvaluation.help':
+			'פתיחת שורת חמשת הפרצופים על כל כרטיס כדי שמשתתפים יוכלו להצביע.',
+		'facilitator.toggle.showResults': 'הצגת תוצאות',
+		'facilitator.toggle.showResults.help': 'הצגת הסכמה, ממוצע ומספר מעריכים על כל כרטיס.',
 		'facilitator.mode.label': 'מצב',
 		'facilitator.mode.join': 'הצטרפות לאפשרויות',
 		'facilitator.mode.evaluate': 'הערכת אפשרויות',
@@ -385,6 +404,10 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion_submit': 'حفظ',
 		'card.activists': '{{count}} ناشطين',
 		'card.organizers': '{{count}} منظّمين',
+		'card.results.aria_label': 'النتائج',
+		'card.results.consensus': 'التوافق',
+		'card.results.average': 'المتوسط',
+		'card.results.evaluators': 'المقيّمون',
 		'card.join': 'انضم/ي',
 		'card.joined': 'انضممت ✓',
 		'card.join_activist': 'انضم/ي كناشط/ة',
@@ -456,6 +479,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'السماح بخيارات جديدة',
 		'facilitator.toggle.allowAdd.help':
 			'عند الإيقاف، تُقفل قائمة الخيارات — ولا يمكن إضافة خيارات جديدة.',
+		'facilitator.toggle.showEvaluation': 'إظهار التقييم',
+		'facilitator.toggle.showEvaluation.help':
+			'فتح صف الوجوه الخمسة على كل بطاقة خيار حتى يتمكن المشاركون من التصويت.',
+		'facilitator.toggle.showResults': 'عرض النتائج',
+		'facilitator.toggle.showResults.help':
+			'إظهار التوافق والمتوسط وعدد المقيّمين على كل بطاقة خيار.',
 		'facilitator.mode.label': 'الوضع',
 		'facilitator.mode.join': 'الانضمام إلى الخيارات',
 		'facilitator.mode.evaluate': 'تقييم الخيارات',
@@ -558,6 +587,10 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion_submit': 'Speichern',
 		'card.activists': '{{count}} Aktivisten',
 		'card.organizers': '{{count}} Organisatoren',
+		'card.results.aria_label': 'Ergebnisse',
+		'card.results.consensus': 'Konsens',
+		'card.results.average': 'Durchschnitt',
+		'card.results.evaluators': 'Bewertende',
 		'card.join': 'Beitreten',
 		'card.joined': 'Beigetreten ✓',
 		'card.join_activist': 'Als Aktivist beitreten',
@@ -610,6 +643,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'Neue Optionen erlauben',
 		'facilitator.toggle.allowAdd.help':
 			'Wenn aus, ist die Optionsliste gesperrt — es können keine neuen Optionen hinzugefügt werden.',
+		'facilitator.toggle.showEvaluation': 'Bewertung anzeigen',
+		'facilitator.toggle.showEvaluation.help':
+			'Die 5-Gesichter-Bewertungszeile auf jeder Optionskarte öffnen, damit Teilnehmende abstimmen können.',
+		'facilitator.toggle.showResults': 'Ergebnisse anzeigen',
+		'facilitator.toggle.showResults.help':
+			'Konsens, Durchschnitt und Anzahl der Bewertenden auf jeder Optionskarte anzeigen.',
 		'facilitator.mode.label': 'Modus',
 		'facilitator.mode.join': 'Optionen beitreten',
 		'facilitator.mode.evaluate': 'Optionen bewerten',
@@ -715,6 +754,10 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion_submit': 'Guardar',
 		'card.activists': '{{count}} activistas',
 		'card.organizers': '{{count}} organizadores',
+		'card.results.aria_label': 'Resultados',
+		'card.results.consensus': 'Consenso',
+		'card.results.average': 'Promedio',
+		'card.results.evaluators': 'Evaluadores',
 		'card.join': 'Unirse',
 		'card.joined': 'Unido ✓',
 		'card.join_activist': 'Unirse como activista',
@@ -767,6 +810,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'Permitir nuevas opciones',
 		'facilitator.toggle.allowAdd.help':
 			'Cuando está desactivado, la lista de opciones queda bloqueada — no se pueden añadir nuevas opciones.',
+		'facilitator.toggle.showEvaluation': 'Mostrar evaluación',
+		'facilitator.toggle.showEvaluation.help':
+			'Abrir la fila de 5 caras en cada tarjeta de opción para que los participantes puedan votar.',
+		'facilitator.toggle.showResults': 'Mostrar resultados',
+		'facilitator.toggle.showResults.help':
+			'Mostrar consenso, promedio y número de evaluadores en cada tarjeta de opción.',
 		'facilitator.mode.label': 'Modo',
 		'facilitator.mode.join': 'Unirse a opciones',
 		'facilitator.mode.evaluate': 'Evaluar opciones',
@@ -870,6 +919,10 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion_submit': 'Opslaan',
 		'card.activists': '{{count}} activisten',
 		'card.organizers': '{{count}} organisatoren',
+		'card.results.aria_label': 'Resultaten',
+		'card.results.consensus': 'Consensus',
+		'card.results.average': 'Gemiddelde',
+		'card.results.evaluators': 'Beoordelaars',
 		'card.join': 'Deelnemen',
 		'card.joined': 'Deelgenomen ✓',
 		'card.join_activist': 'Word activist',
@@ -921,6 +974,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'Nieuwe opties toestaan',
 		'facilitator.toggle.allowAdd.help':
 			'Wanneer uit, is de optielijst vergrendeld — er kunnen geen nieuwe opties worden toegevoegd.',
+		'facilitator.toggle.showEvaluation': 'Beoordeling tonen',
+		'facilitator.toggle.showEvaluation.help':
+			'Open de rij met 5 gezichten op elke optiekaart zodat deelnemers kunnen stemmen.',
+		'facilitator.toggle.showResults': 'Resultaten tonen',
+		'facilitator.toggle.showResults.help':
+			'Toon consensus, gemiddelde en aantal beoordelaars op elke optiekaart.',
 		'facilitator.mode.label': 'Modus',
 		'facilitator.mode.join': 'Aansluiten bij opties',
 		'facilitator.mode.evaluate': 'Opties beoordelen',
@@ -1016,6 +1075,10 @@ const translations: Record<string, Record<string, string>> = {
 			'برای فعال‌سازی یک فعالیت، حداقل به {{requirements}} نیاز داریم. بپیوندید!',
 		'card.activists': '{{count}} فعال',
 		'card.organizers': '{{count}} سازمان‌دهنده',
+		'card.results.aria_label': 'نتایج',
+		'card.results.consensus': 'اجماع',
+		'card.results.average': 'میانگین',
+		'card.results.evaluators': 'ارزیاب‌ها',
 		'card.join': 'بپیوندید',
 		'card.joined': 'پیوستید ✓',
 		'card.join_activist': 'پیوستن به عنوان فعال',
@@ -1061,6 +1124,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.allowAdd': 'اجازه گزینه‌های جدید',
 		'facilitator.toggle.allowAdd.help':
 			'وقتی خاموش است، فهرست گزینه‌ها قفل می‌شود — نمی‌توان گزینه جدیدی افزود.',
+		'facilitator.toggle.showEvaluation': 'نمایش ارزیابی',
+		'facilitator.toggle.showEvaluation.help':
+			'باز کردن ردیف ۵ صورت روی هر کارت گزینه تا شرکت‌کنندگان بتوانند رأی دهند.',
+		'facilitator.toggle.showResults': 'نمایش نتایج',
+		'facilitator.toggle.showResults.help':
+			'نمایش اجماع، میانگین و تعداد ارزیاب‌ها روی هر کارت گزینه.',
 		'facilitator.mode.label': 'حالت',
 		'facilitator.mode.join': 'پیوستن به گزینه‌ها',
 		'facilitator.mode.evaluate': 'ارزیابی گزینه‌ها',
