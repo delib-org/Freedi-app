@@ -68,6 +68,11 @@
   --bg-chat-mine: var(--terra-50);
   --bg-chat-other: #ffffff;
   --bg-input: #ffffff;
+  // Some legacy components reference `var(--surface-card, #fff)`. Define the
+  // variable here so the dark-mode override actually flips the surface — when
+  // it was undefined, the `#fff` fallback always won and cards stayed white.
+  --surface-card: var(--bg-card);
+  --surface-input: var(--bg-input);
 
   // ---- TEXT ALIASES ----
   --text-primary: var(--ink);
@@ -218,18 +223,22 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #13100e;
-    --paper-soft: #2a241f;       // lifted from #1d1915 so --bg-card separates from --paper by ~12% lightness (was ~4%)
-    --paper-deep: #38302a;       // lifted from #26201b for clearer pressed/chat-bubble surface
+    --paper-soft: #221d18;       // card resting — ~6% lightness step above paper
+    --paper-deep: #312a23;       // input bg / hovered card — another ~6% step
     --paper-line: #3a322b;
+    --paper-elevated: #3d342c;   // pressed / focused input
 
     --ink: #f4ece0;               // ~15:1 on paper ✓ AAA
     --ink-muted: #c9bfb0;         // ~8:1 ✓ AAA
-    --ink-soft: #8f857a;          // ~4.8:1 ✓ AA
-    --ink-faint: #6c6459;
+    --ink-soft: #8f857a;          // ~4.8:1 ✓ AA — safe inside cards/inputs
+    --ink-faint: #6c6459;         // page-bg only; never use inside cards/inputs
 
-    --terra-500: #e47551;         // lifted for dark bg ~5.2:1 ✓ AA
-    --terra-600: #d85e35;
-    --terra-700: #c14a25;
+    // Desaturated terracotta — lower chroma so the brand doesn't "burn" the eye
+    // against the near-black paper. Still warm and recognisable, but the CTA
+    // and floating handles read as confident rather than glowing.
+    --terra-500: #d8835f;         // CTAs ~5.0:1 on paper ✓ AA
+    --terra-600: #c97049;         // pressed / persistent handles
+    --terra-700: #b35a36;         // strokes / borders
 
     --teal-500: #46b5a3;          // lifted ~5.2:1 ✓ AA
     --teal-600: #2f9383;
@@ -238,6 +247,17 @@
     --indigo-500: #9a8fe5;        // lifted ~6:1 ✓ AA
     --indigo-600: #7c70d4;
     --indigo-700: #5e52b8;
+
+    // Tint backgrounds (the *-50 / *-100 shades) — replace with translucent
+    // overlays that automatically inherit whatever surface they sit on.
+    // Without this, the light-mode lavenders/peaches/mints bleed straight
+    // into dark mode (e.g. the admin toolbar showing as bright lavender).
+    --terra-50: rgba(216, 131, 95, 0.12);
+    --terra-100: rgba(216, 131, 95, 0.20);
+    --indigo-50: rgba(154, 143, 229, 0.12);
+    --indigo-100: rgba(154, 143, 229, 0.22);
+    --teal-50: rgba(70, 181, 163, 0.12);
+    --teal-100: rgba(70, 181, 163, 0.20);
 
     --color-primary: var(--terra-500);
     --color-primary-dark: var(--terra-700);
@@ -251,9 +271,11 @@
     --bg-card-hover: var(--paper-deep);
     --bg-subtle: var(--paper-soft);
     --bg-overlay: rgba(0, 0, 0, 0.72);
-    --bg-chat-mine: #3a1e10;
+    --bg-chat-mine: rgba(216, 131, 95, 0.18);  // translucent terra over paper
     --bg-chat-other: var(--paper-soft);
     --bg-input: var(--paper-deep);
+    --surface-card: var(--paper-soft);
+    --surface-input: var(--paper-deep);
 
     --text-primary: var(--ink);
     --text-secondary: var(--ink-muted);

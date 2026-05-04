@@ -1868,7 +1868,10 @@
   font: inherit;
   font-size: var(--font-size-base);
   color: var(--text-primary);
-  background: var(--paper-soft);
+  // `--bg-input` is dark-mode-aware (paper-deep) so the input sits one step
+  // below the surrounding card surface in dark mode; `--paper-soft` was the
+  // *card* color in dark mode, which made the input vanish into the card.
+  background: var(--bg-input);
   border: 1px solid var(--paper-line);
   border-radius: var(--radius-md, 12px);
   transition: border-color var(--dur-quick, 140ms) var(--ease-out);

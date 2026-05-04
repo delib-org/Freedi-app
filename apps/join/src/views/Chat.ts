@@ -168,21 +168,27 @@ export const Chat: m.Component = {
 
     const mainId = m.route.param('mid');
 
+    // Where "back" goes depends on entry path: facilitated participants land
+    // here from /m/:mid/q/:qid (the Solutions list), legacy share links from
+    // /q/:qid. Admins also get the iOS-style corner BackButton as a redundant
+    // affordance \u2014 kept since it's already wired up.
+    const backTo = facilitated && mainId
+      ? `/m/${mainId}/q/${questionId}`
+      : `/q/${questionId}`;
+
     return m(`.chat${facilitated ? '.chat--facilitated' : ''}`, [
       facilitated && mainId
         ? m(BackButton, { to: `/m/${mainId}/q/${questionId}` })
         : null,
       m('.chat__header', [
-        facilitated
-          ? null
-          : m(
-              'button.chat__back',
-              {
-                onclick: () => m.route.set('/q/:qid', { qid: questionId }),
-                'aria-label': t('chat.back'),
-              },
-              '\u2190',
-            ),
+        m(
+          'button.chat__back',
+          {
+            onclick: () => m.route.set(backTo),
+            'aria-label': t('chat.back'),
+          },
+          '\u2190',
+        ),
         m('.chat__title', option.statement),
       ]),
 
