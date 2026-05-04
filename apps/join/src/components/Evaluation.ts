@@ -59,8 +59,16 @@ export const Evaluation: m.Component<EvaluationAttrs> = {
     const score = getEffectiveEvaluation(option.statementId);
     const activeId = score === undefined ? null : thumbIdForScore(score);
 
+    // Once the user has made a choice, the parent gets a modifier class so
+    // sibling (non-active) thumbs can recede further. Before any choice all
+    // five faces stay equally vivid — we only introduce visual hierarchy
+    // *after* the user has voted, never before.
+    const groupClass = activeId === null
+      ? '.evaluation'
+      : '.evaluation.evaluation--has-selection';
+
     return m(
-      '.evaluation',
+      groupClass,
       {
         role: 'radiogroup',
         'aria-label': t('evaluation.aria_label'),
@@ -72,10 +80,10 @@ export const Evaluation: m.Component<EvaluationAttrs> = {
         const active = thumb.id === activeId;
         const altLabel = t(thumb.altKey);
 
-        // Every thumb shows its full face colour, not just the active one —
-        // for a 70+ audience we can't rely on a low-contrast inactive state.
-        // The chosen face is then unambiguous via the dark ring + scale set
-        // by `.evaluation__thumb--active` (see _components.scss).
+        // Every thumb shows its full face colour. The chosen face is set
+        // apart by the brand-coloured halo, scale-up, and check badge in
+        // `.evaluation__thumb--active` (see _components.scss); siblings
+        // additionally recede via `.evaluation--has-selection .evaluation__thumb`.
         return m(
           'button.evaluation__thumb',
           {
@@ -93,6 +101,13 @@ export const Evaluation: m.Component<EvaluationAttrs> = {
             },
           },
           m('img.evaluation__thumb-img', { src: thumb.svg, alt: altLabel }),
+          // Decorative check badge — only rendered for the active face.
+          // Pure CSS would also work, but rendering the element makes the
+          // pulse-in animation easy to scope and skips painting it for
+          // unselected faces (cheaper layer count on long lists).
+          active
+            ? m('span.evaluation__thumb-check', { 'aria-hidden': 'true' }, '✓')
+            : null,
         );
       }),
     );

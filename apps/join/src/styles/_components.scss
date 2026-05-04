@@ -499,6 +499,44 @@
     font-weight: var(--font-weight-medium);
   }
 
+  // Edit affordance — visually quieter than chat/join so it sits in the meta
+  // row without competing with the primary CTAs. Only renders when the viewer
+  // has permission (creator or question admin); see SolutionCard.ts.
+  &__edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: var(--radius-full);
+    border: 1px dashed var(--ink-muted);
+    background: transparent;
+    color: var(--ink-muted);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    cursor: pointer;
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      color var(--dur-quick) var(--ease-out),
+      border-color var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      color: var(--ink);
+      border-color: var(--ink);
+      background: var(--paper-line);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+
+  &__edit-icon {
+    font-size: var(--font-size-base);
+    line-height: 1;
+  }
+
   &__chat {
     position: relative;
     display: inline-flex;
@@ -598,6 +636,7 @@
 
 .evaluation__thumb {
   appearance: none;
+  position: relative;          // anchor for the check-badge pseudo / span
   // Each thumb takes an equal share of the row, capped at 56px so they
   // don't blow up on wide cards and floored at 44px so they never drop
   // below the senior-friendly tap-target minimum. `aspect-ratio` keeps
@@ -610,31 +649,39 @@
   align-items: center;
   justify-content: center;
   // The inline-styled background colour (one --emoji-* per face) is the
-  // primary signal; the border below sits on top for the active state.
-  border: 4px solid transparent;
+  // primary signal; the ring below sits on top for the active state.
+  border: 3px solid transparent;
   border-radius: 50%;
   padding: 0;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  // Smoother, slightly longer transition so the recede / select handoff
+  // reads as one motion rather than several abrupt changes.
   transition:
-    transform var(--dur-quick, 140ms) var(--ease-out),
-    border-color var(--dur-quick, 140ms) var(--ease-out),
-    box-shadow var(--dur-quick, 140ms) var(--ease-out),
-    filter var(--dur-quick, 140ms) var(--ease-out);
+    transform var(--dur-base, 220ms) var(--ease-out),
+    border-color var(--dur-base, 220ms) var(--ease-out),
+    box-shadow var(--dur-base, 220ms) var(--ease-out),
+    filter var(--dur-base, 220ms) var(--ease-out),
+    opacity var(--dur-base, 220ms) var(--ease-out);
 
-  // Inactive faces dim slightly so the eye can still pick out the chosen
-  // one at a glance; the colour itself remains visible on every face.
-  filter: saturate(0.85);
-  opacity: 0.85;
+  // Default (no selection yet): every face is fully vivid. We deliberately
+  // do NOT dim faces before the user has voted — pre-selection dimming
+  // makes the row feel "disabled" to older users.
+  filter: saturate(1);
+  opacity: 1;
 
   &:hover {
-    transform: scale(1.05);
-    opacity: 1;
-    filter: saturate(1);
+    transform: scale(1.06);
   }
 
+  // Press-down: clearly "punched in" — meaningful scale-down + an inset
+  // ring so the touch reads as a real button press. This is the moment a
+  // user with shaky taps most needs reassurance the touch was registered.
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.88);
+    box-shadow:
+      inset 0 0 0 4px rgba(0, 0, 0, 0.22),
+      0 1px 2px rgba(0, 0, 0, 0.2);
   }
 
   &:focus-visible {
@@ -643,22 +690,78 @@
   }
 }
 
+// Once the user has made any choice, non-selected siblings recede so the
+// chosen face wins the visual hierarchy. Targeted via the parent modifier
+// so this only fires AFTER a vote — never on first load.
+.evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active) {
+  filter: saturate(0.45);
+  opacity: 0.55;
+  transform: scale(0.92);
+
+  // Hovering a receded face brings it back, so changing your mind feels
+  // light: the face you're considering re-asserts itself.
+  &:hover {
+    filter: saturate(0.9);
+    opacity: 0.95;
+    transform: scale(1.02);
+  }
+}
+
 // Active = the user has picked this face (optimistic or server-confirmed).
-// Heavy ink ring + scale + double-ring shadow makes the choice impossible
-// to miss for low-vision users.
+// Big scale-up + brand-coloured halo + check badge: three independent cues
+// so even if one fails to register (low vision, colour-blind, mid-tap) the
+// other two still announce the selection.
 .evaluation__thumb--active {
-  border-color: var(--ink, #1c1917);
-  transform: scale(1.12);
-  filter: saturate(1.05);
+  border-color: var(--terra-600);
+  transform: scale(1.18);
+  filter: saturate(1.1);
   opacity: 1;
   box-shadow:
-    0 0 0 3px var(--paper),
-    0 4px 10px rgba(0, 0, 0, 0.28);
-  z-index: 1;
+    0 0 0 4px var(--paper),                // white halo separates ring from row
+    0 0 0 7px var(--terra-600),            // outer brand ring (bold "yes, this one")
+    0 6px 14px rgba(0, 0, 0, 0.32);
+  z-index: 2;
+  // One-shot pulse on the moment of selection so the confirmation has
+  // motion. Skipped under prefers-reduced-motion (see media query below).
+  animation: evaluation-pulse var(--dur-slow, 380ms) var(--ease-spring) 1;
 
   &:hover {
-    transform: scale(1.15);
+    transform: scale(1.22);
   }
+
+  &:active {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 0 4px var(--paper),
+      0 0 0 7px var(--terra-700),
+      inset 0 0 0 4px rgba(0, 0, 0, 0.18);
+  }
+}
+
+// Confirmation check badge — bottom-end corner of the active face.
+// `inset-inline-end` keeps it on the trailing side in both LTR and RTL,
+// matching the natural reading-direction "tick" gesture.
+.evaluation__thumb-check {
+  position: absolute;
+  bottom: -4px;
+  inset-inline-end: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--terra-600);
+  color: var(--text-inverse);
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+  // Pop in with the selection so it doesn't "appear from nothing".
+  animation: evaluation-check-in var(--dur-base, 220ms) var(--ease-spring) 1;
 }
 
 .evaluation__thumb-img {
@@ -671,6 +774,20 @@
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
 }
 
+// Pulse: a brief overshoot beyond the steady-state 1.18 scale, settling
+// back. Reads as "yes, that registered" without being celebratory.
+@keyframes evaluation-pulse {
+  0%   { transform: scale(1.18); }
+  35%  { transform: scale(1.32); }
+  100% { transform: scale(1.18); }
+}
+
+@keyframes evaluation-check-in {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .evaluation__thumb {
     transition: none;
@@ -678,8 +795,14 @@
   .evaluation__thumb:hover,
   .evaluation__thumb:active,
   .evaluation__thumb--active,
-  .evaluation__thumb--active:hover {
+  .evaluation__thumb--active:hover,
+  .evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active),
+  .evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active):hover {
     transform: none;
+  }
+  .evaluation__thumb--active,
+  .evaluation__thumb-check {
+    animation: none;
   }
 }
 
