@@ -338,6 +338,45 @@
     transition: none;
   }
 
+  // -----------------------------------------------------------------------
+  // Per-card rainbow accent — only under the playful themes (kids + teen).
+  // Each card hashes its statementId to one of the 15 voting-palette pairs in
+  // `_tokens.scss` (the same pairs the main app's question-color picker
+  // uses), so participants see a stable Lisa-Frank rainbow without any
+  // server-side state. Serious mode ignores the inline `--card-accent`
+  // custom properties entirely.
+  //
+  // Activated and organizer keep their semantically meaningful colours (teal
+  // and indigo) — the `:not()` chain protects those. We do NOT exclude
+  // `.solution-card--display-only`: that modifier only locks interaction on
+  // facilitated routes, the cards are still regular crowd suggestions and
+  // should rainbow-up like everywhere else.
+  // -----------------------------------------------------------------------
+  :root[data-theme="playful-kids"] &:not(.solution-card--activated):not(.solution-card--organizer),
+  :root[data-theme="playful-teen"] &:not(.solution-card--activated):not(.solution-card--organizer) {
+    background: var(--card-accent-soft, var(--bg-card));
+    border-color: var(--card-accent, var(--paper-line));
+    border-width: 2px;
+
+    &:hover {
+      border-color: var(--card-accent, var(--ink));
+      box-shadow: 0 0 0 1px var(--card-accent), var(--shadow-md);
+    }
+  }
+
+  // Dark mode: pastel-light bg tints clash on the plum-black surface, so we
+  // keep the page bg and lean on a coloured border + faint outer glow to
+  // give each card its neon-poster identity.
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="playful-kids"] &:not(.solution-card--activated):not(.solution-card--organizer),
+    :root[data-theme="playful-teen"] &:not(.solution-card--activated):not(.solution-card--organizer) {
+      background: var(--bg-card);
+      border-color: var(--card-accent, var(--paper-line));
+      border-width: 2px;
+      box-shadow: 0 0 0 1px var(--card-accent), 0 0 18px -10px var(--card-accent);
+    }
+  }
+
   &__activated-badge {
     position: absolute;
     top: var(--space-md);
@@ -2346,7 +2385,7 @@ $facilitator-panel-width: 300px;
   bottom: 0;
   left: 0;
   z-index: 9000;
-  background: rgba(28, 25, 23, 0.32);
+  background: var(--bg-overlay);
   animation: facilitator-panel-fade-in var(--dur-quick, 140ms) var(--ease-out);
 }
 
@@ -2450,6 +2489,18 @@ $facilitator-panel-width: 300px;
   font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-medium, 500);
   color: var(--text-strong, #1c1917);
+}
+
+// Decorative emoji prefix on toggle rows (🗳️ for evaluation, 🤝 for joining,
+// etc.). Sits inline with the label so a facilitator can scan the panel and
+// pick out related toggles without reading every line. Aria-hidden on the
+// element itself; screen readers read just the label text.
+.facilitator-panel__row-icon {
+  display: inline-block;
+  margin-inline-end: 0.4em;
+  font-size: 1.05em;
+  line-height: 1;
+  vertical-align: -0.05em;
 }
 
 .facilitator-panel__row-help {

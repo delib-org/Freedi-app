@@ -18,6 +18,7 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 body {
@@ -29,6 +30,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
+  overflow-x: hidden;
   text-rendering: optimizeLegibility;
 
   // Subtle paper grain — never over ~8% opacity so it doesn't affect
@@ -118,10 +120,11 @@ button, input, textarea, select {
   border-radius: var(--radius-sm);
 }
 
-// Selection — warm terracotta tint, high contrast.
+// Selection — primary tint with the palette's inverse text token so it works
+// across serious / playful-kids / playful-teen and their dark variants.
 ::selection {
   background: var(--terra-500);
-  color: #fff;
+  color: var(--text-inverse);
 }
 
 .confetti-container {

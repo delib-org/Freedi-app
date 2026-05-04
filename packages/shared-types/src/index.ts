@@ -12,7 +12,8 @@ export {
   StepType,
   Screen,
   SortType,
-  QuestionStep
+  QuestionStep,
+  ThemeStyle
 } from "./models/TypeEnums";
 export { isMember, maxKeyInObject, getRandomUID } from "./models/TypeUtils";
 export { functionConfig } from "./models/ConfigFunctions";

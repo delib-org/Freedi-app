@@ -105,6 +105,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'Show evaluation',
 		'facilitator.toggle.showEvaluation.help':
 			'Open the 5-face evaluation row on every option card so participants can vote.',
+		'facilitator.toggle.showJoining': 'Show joining',
+		'facilitator.toggle.showJoining.help':
+			'Show the Activist and Organizer buttons on every option so participants can commit.',
 		'facilitator.toggle.showResults': 'Show results',
 		'facilitator.toggle.showResults.help':
 			'Reveal consensus, average and evaluator counts on every option card.',
@@ -117,6 +120,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'Show QR code',
 		'facilitator.toggle.showQR.help':
 			'Show a QR on the hub so anyone here can invite someone nearby.',
+		'facilitator.theme.label': 'Visual style',
+		'facilitator.theme.help':
+			'Pick the mood for the room. Each style has its own dark-mode palette.',
+		'facilitator.theme.serious': 'Serious',
+		'facilitator.theme.playfulKids': 'Kids',
+		'facilitator.theme.playfulTeen': 'Teen',
 		'qrShare.label': 'Invite someone nearby',
 		'qrShare.share': 'Share',
 		'qrShare.copy': 'Copy link',
@@ -295,6 +304,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'הצגת הערכה',
 		'facilitator.toggle.showEvaluation.help':
 			'פתיחת שורת חמשת הפרצופים על כל כרטיס כדי שמשתתפים יוכלו להצביע.',
+		'facilitator.toggle.showJoining': 'הצגת הצטרפות',
+		'facilitator.toggle.showJoining.help':
+			'הצגת כפתורי פעיל ומארגן על כל כרטיס כדי שמשתתפים יוכלו להתחייב.',
 		'facilitator.toggle.showResults': 'הצגת תוצאות',
 		'facilitator.toggle.showResults.help': 'הצגת הסכמה, ממוצע ומספר מעריכים על כל כרטיס.',
 		'facilitator.mode.label': 'מצב',
@@ -306,6 +318,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'הצגת קוד QR',
 		'facilitator.toggle.showQR.help':
 			'מציגים קוד QR בעמוד הראשי כדי שכל משתתף יוכל להזמין מישהו לידו.',
+		'facilitator.theme.label': 'סגנון ויזואלי',
+		'facilitator.theme.help': 'בוחרים את האווירה למפגש. לכל סגנון יש גם פלטה למצב כהה.',
+		'facilitator.theme.serious': 'רציני',
+		'facilitator.theme.playfulKids': 'ילדים',
+		'facilitator.theme.playfulTeen': 'נוער',
 		'qrShare.label': 'הזמינו מישהו לידכם',
 		'qrShare.share': 'שיתוף',
 		'qrShare.copy': 'העתקת קישור',
@@ -482,6 +499,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'إظهار التقييم',
 		'facilitator.toggle.showEvaluation.help':
 			'فتح صف الوجوه الخمسة على كل بطاقة خيار حتى يتمكن المشاركون من التصويت.',
+		'facilitator.toggle.showJoining': 'إظهار الانضمام',
+		'facilitator.toggle.showJoining.help':
+			'إظهار زرَّي الناشط والمنظِّم على كل خيار حتى يتمكن المشاركون من الالتزام.',
 		'facilitator.toggle.showResults': 'عرض النتائج',
 		'facilitator.toggle.showResults.help':
 			'إظهار التوافق والمتوسط وعدد المقيّمين على كل بطاقة خيار.',
@@ -494,6 +514,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'عرض رمز QR',
 		'facilitator.toggle.showQR.help':
 			'اعرض رمز QR في الصفحة الرئيسية ليتمكن الجميع من دعوة شخص بجانبهم.',
+		'facilitator.theme.label': 'النمط البصري',
+		'facilitator.theme.help': 'اختر مزاج الجلسة. لكل نمط لوحة ألوان مخصصة للوضع الداكن.',
+		'facilitator.theme.serious': 'جاد',
+		'facilitator.theme.playfulKids': 'أطفال',
+		'facilitator.theme.playfulTeen': 'مراهقين',
 		'qrShare.label': 'ادعُ شخصًا بجانبك',
 		'qrShare.share': 'مشاركة',
 		'qrShare.copy': 'نسخ الرابط',
@@ -646,6 +671,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'Bewertung anzeigen',
 		'facilitator.toggle.showEvaluation.help':
 			'Die 5-Gesichter-Bewertungszeile auf jeder Optionskarte öffnen, damit Teilnehmende abstimmen können.',
+		'facilitator.toggle.showJoining': 'Beitritt anzeigen',
+		'facilitator.toggle.showJoining.help':
+			'Die Buttons „Aktivist:in“ und „Organisator:in“ auf jeder Option zeigen, damit Teilnehmende sich verbindlich eintragen können.',
 		'facilitator.toggle.showResults': 'Ergebnisse anzeigen',
 		'facilitator.toggle.showResults.help':
 			'Konsens, Durchschnitt und Anzahl der Bewertenden auf jeder Optionskarte anzeigen.',
@@ -658,6 +686,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'QR-Code anzeigen',
 		'facilitator.toggle.showQR.help':
 			'Zeigt einen QR-Code auf der Hub-Seite, damit alle Anwesenden jemanden einladen können.',
+		'facilitator.theme.label': 'Visueller Stil',
+		'facilitator.theme.help':
+			'Wähle die Stimmung für den Raum. Jeder Stil hat eine eigene Dark-Mode-Palette.',
+		'facilitator.theme.serious': 'Seriös',
+		'facilitator.theme.playfulKids': 'Kinder',
+		'facilitator.theme.playfulTeen': 'Teen',
 		'qrShare.label': 'Lade jemanden in der Nähe ein',
 		'qrShare.share': 'Teilen',
 		'qrShare.copy': 'Link kopieren',
@@ -813,6 +847,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'Mostrar evaluación',
 		'facilitator.toggle.showEvaluation.help':
 			'Abrir la fila de 5 caras en cada tarjeta de opción para que los participantes puedan votar.',
+		'facilitator.toggle.showJoining': 'Mostrar unirse',
+		'facilitator.toggle.showJoining.help':
+			'Mostrar los botones de Activista y Organizador en cada opción para que los participantes puedan comprometerse.',
 		'facilitator.toggle.showResults': 'Mostrar resultados',
 		'facilitator.toggle.showResults.help':
 			'Mostrar consenso, promedio y número de evaluadores en cada tarjeta de opción.',
@@ -825,6 +862,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'Mostrar código QR',
 		'facilitator.toggle.showQR.help':
 			'Muestra un QR en la página principal para que cualquiera invite a alguien cercano.',
+		'facilitator.theme.label': 'Estilo visual',
+		'facilitator.theme.help':
+			'Elige el ambiente de la sala. Cada estilo tiene su propia paleta para modo oscuro.',
+		'facilitator.theme.serious': 'Serio',
+		'facilitator.theme.playfulKids': 'Niños',
+		'facilitator.theme.playfulTeen': 'Adolescentes',
 		'qrShare.label': 'Invita a alguien cerca',
 		'qrShare.share': 'Compartir',
 		'qrShare.copy': 'Copiar enlace',
@@ -977,6 +1020,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'Beoordeling tonen',
 		'facilitator.toggle.showEvaluation.help':
 			'Open de rij met 5 gezichten op elke optiekaart zodat deelnemers kunnen stemmen.',
+		'facilitator.toggle.showJoining': 'Deelname tonen',
+		'facilitator.toggle.showJoining.help':
+			'Toon de knoppen Activist en Organisator op elke optie zodat deelnemers zich kunnen committeren.',
 		'facilitator.toggle.showResults': 'Resultaten tonen',
 		'facilitator.toggle.showResults.help':
 			'Toon consensus, gemiddelde en aantal beoordelaars op elke optiekaart.',
@@ -989,6 +1035,12 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'QR-code tonen',
 		'facilitator.toggle.showQR.help':
 			'Toon een QR-code op de hub zodat iedereen iemand uit de buurt kan uitnodigen.',
+		'facilitator.theme.label': 'Visuele stijl',
+		'facilitator.theme.help':
+			'Kies de sfeer voor de ruimte. Elke stijl heeft een eigen dark-mode palet.',
+		'facilitator.theme.serious': 'Serieus',
+		'facilitator.theme.playfulKids': 'Kids',
+		'facilitator.theme.playfulTeen': 'Tieners',
 		'qrShare.label': 'Nodig iemand naast je uit',
 		'qrShare.share': 'Delen',
 		'qrShare.copy': 'Link kopiëren',
@@ -1127,6 +1179,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showEvaluation': 'نمایش ارزیابی',
 		'facilitator.toggle.showEvaluation.help':
 			'باز کردن ردیف ۵ صورت روی هر کارت گزینه تا شرکت‌کنندگان بتوانند رأی دهند.',
+		'facilitator.toggle.showJoining': 'نمایش پیوستن',
+		'facilitator.toggle.showJoining.help':
+			'نمایش دکمه‌های فعال و سازمان‌دهنده روی هر گزینه تا شرکت‌کنندگان بتوانند تعهد دهند.',
 		'facilitator.toggle.showResults': 'نمایش نتایج',
 		'facilitator.toggle.showResults.help':
 			'نمایش اجماع، میانگین و تعداد ارزیاب‌ها روی هر کارت گزینه.',
@@ -1139,6 +1194,11 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showQR': 'نمایش کد QR',
 		'facilitator.toggle.showQR.help':
 			'یک کد QR در صفحه اصلی نشان داده می‌شود تا هرکس بتواند فردی نزدیک خود را دعوت کند.',
+		'facilitator.theme.label': 'سبک بصری',
+		'facilitator.theme.help': 'حالت اتاق را انتخاب کنید. هر سبک پالت اختصاصی برای حالت تاریک دارد.',
+		'facilitator.theme.serious': 'جدی',
+		'facilitator.theme.playfulKids': 'کودکان',
+		'facilitator.theme.playfulTeen': 'نوجوانان',
 		'qrShare.label': 'کسی نزدیک خود را دعوت کنید',
 		'qrShare.share': 'اشتراک‌گذاری',
 		'qrShare.copy': 'کپی پیوند',

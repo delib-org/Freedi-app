@@ -1,5 +1,5 @@
 import m from 'mithril';
-import { CutoffBy, ResultsBy, SortType, Statement } from '@freedi/shared-types';
+import { CutoffBy, ResultsBy, SortType, Statement, ThemeStyle } from '@freedi/shared-types';
 import type { ResultsSettings } from '@freedi/shared-types';
 import { isAdmin } from '@/lib/admin';
 import {
@@ -11,6 +11,9 @@ import {
 	getPowerFollowMePath,
 	getMainStatement,
 	setMainStatementSetting,
+	setThemeStyle,
+	getActiveThemeStyle,
+	applyThemeStyleToDOM,
 } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
@@ -300,7 +303,10 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 
 	return m('.facilitator-panel__row', [
 		m('.facilitator-panel__row-main', [
-			m('span.facilitator-panel__row-label', t('facilitator.sort.label')),
+			m('span.facilitator-panel__row-label', [
+				m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, '📋'),
+				t('facilitator.sort.label'),
+			]),
 			m(
 				'.facilitator-panel__segmented',
 				{ role: 'radiogroup', 'aria-label': t('facilitator.sort.label') },
@@ -344,18 +350,121 @@ async function flipShowEvaluation(question: Statement): Promise<void> {
 	await setEvaluationEnabled(question.statementId, next);
 }
 
+/** Show or hide the activist / organizer join row on every option card. The
+ *  default is ON (`showJoining ?? true`) so existing questions keep the join
+ *  experience the participant expects — admins explicitly write `false` to
+ *  collapse the card to a pure-evaluation surface. Parallel to the
+ *  showEvaluation toggle above; the two combine independently. */
+async function flipShowJoining(question: Statement): Promise<void> {
+	const next = !(question.statementSettings?.showJoining ?? true);
+	await setQuestionSetting(question.statementId, {
+		statementSettings: {
+			...question.statementSettings,
+			showJoining: next,
+		},
+	});
+}
+
+/** Three-segment theme picker (Serious / Kids / Teen). Writes to the *main*
+ *  statement when there's a hub in scope so the chosen mood applies to the
+ *  whole join experience; falls back to the question doc on legacy
+ *  non-facilitated routes. The DOM `<html data-theme>` attribute is applied
+ *  optimistically on click, and the snapshot listener reapplies it once
+ *  Firestore confirms — so the palette swaps in instantly without a refresh. */
+// Order goes Serious → Teen → Kids — left-to-right reads as a vibrancy ramp,
+// from formal earth tones, through warm pinks/lavenders, to the full neon
+// psychedelic kit.
+const THEME_OPTIONS: Array<{ value: ThemeStyle; icon: string; labelKey: string }> = [
+	{ value: ThemeStyle.serious, icon: '🎩', labelKey: 'facilitator.theme.serious' },
+	{ value: ThemeStyle.playfulTeen, icon: '🌸', labelKey: 'facilitator.theme.playfulTeen' },
+	{ value: ThemeStyle.playfulKids, icon: '🎈', labelKey: 'facilitator.theme.playfulKids' },
+];
+
+async function pickThemeStyle(
+	value: ThemeStyle,
+	targetId: string,
+	target: Statement,
+): Promise<void> {
+	// Optimistic local update + DOM swap so the palette flips before the
+	// Firestore round-trip completes. The snapshot listener will overwrite
+	// these with the confirmed value (typically identical) once it lands.
+	if (target.statementSettings) {
+		target.statementSettings.themeStyle = value;
+	} else {
+		target.statementSettings = { themeStyle: value };
+	}
+	applyThemeStyleToDOM();
+	m.redraw();
+	await setThemeStyle(targetId, value);
+}
+
+function renderThemeSegmented(question: Statement | null, main: Statement | null): m.Vnode | null {
+	// Theme is hub-scoped when there's a main statement — picking a mood for
+	// "the room" feels right, and a single write applies to every sub-question.
+	// On legacy non-facilitated routes (`/q/:qid`) we fall back to the question
+	// itself so the picker still works.
+	const target = main ?? question;
+	if (!target) return null;
+
+	const active = getActiveThemeStyle();
+	const label = t('facilitator.theme.label');
+
+	return m('.facilitator-panel__row', [
+		m('.facilitator-panel__row-main', [
+			m('span.facilitator-panel__row-label', [
+				m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, '🎨'),
+				label,
+			]),
+			m(
+				'.facilitator-panel__segmented',
+				{ role: 'radiogroup', 'aria-label': label },
+				THEME_OPTIONS.map((opt) => {
+					const isActive = active === opt.value;
+					const optLabel = t(opt.labelKey);
+
+					return m(
+						`button.facilitator-panel__segment.facilitator-panel__segment--icon${isActive ? '.facilitator-panel__segment--active' : ''}`,
+						{
+							type: 'button',
+							role: 'radio',
+							'aria-checked': isActive ? 'true' : 'false',
+							'aria-label': optLabel,
+							title: optLabel,
+							onclick: () => {
+								void pickThemeStyle(opt.value, target.statementId, target);
+							},
+						},
+						m('span.facilitator-panel__segment-icon', { 'aria-hidden': 'true' }, opt.icon),
+					);
+				}),
+			),
+		]),
+		m('.facilitator-panel__row-help', t('facilitator.theme.help')),
+	]);
+}
+
 function renderToggle(opts: {
 	label: string;
 	on: boolean;
 	disabled?: boolean;
 	onflip: () => void;
 	help?: string;
+	/** Optional emoji prefix shown next to the label so admins can scan the
+	 *  panel and pick out related toggles (🗳️ evaluation vs 🤝 joining)
+	 *  without reading every line. Decorative only — the aria-label stays
+	 *  the plain text so screen readers don't announce "ballot box…". */
+	icon?: string;
 }): m.Vnode {
-	const { label, on, disabled, onflip, help } = opts;
+	const { label, on, disabled, onflip, help, icon } = opts;
 
 	return m('.facilitator-panel__row', [
 		m('.facilitator-panel__row-main', [
-			m('span.facilitator-panel__row-label', label),
+			m('span.facilitator-panel__row-label', [
+				icon
+					? m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, icon)
+					: null,
+				label,
+			]),
 			m(
 				`button.facilitator-panel__toggle${on ? '.facilitator-panel__toggle--on' : ''}${disabled ? '.facilitator-panel__toggle--disabled' : ''}`,
 				{
@@ -398,6 +507,10 @@ export const FacilitatorPanel: m.Component = {
 		const showEvaluationOn = hasQuestion
 			? (question!.statementSettings?.showEvaluation ?? false)
 			: false;
+		// Default ON ("opt-out"): undefined here means a fresh question that
+		// hasn't yet been touched by the facilitator should still surface
+		// joining as the primary participant action.
+		const showJoiningOn = hasQuestion ? (question!.statementSettings?.showJoining ?? true) : true;
 		// QR sharing is hub-scoped: the toggle writes to the *main* statement so
 		// every participant on the hub sees the same QR. It's only meaningful
 		// when there's a main statement in scope — i.e. on facilitated routes
@@ -497,6 +610,7 @@ export const FacilitatorPanel: m.Component = {
 					]),
 					canFlipShowQR
 						? renderToggle({
+								icon: '📲',
 								label: t('facilitator.toggle.showQR'),
 								on: showQROn,
 								onflip: () => {
@@ -506,8 +620,10 @@ export const FacilitatorPanel: m.Component = {
 								help: t('facilitator.toggle.showQR.help'),
 							})
 						: null,
+					renderThemeSegmented(question, main),
 					renderSortSegmented(question),
 					renderToggle({
+						icon: '🗳️',
 						label: t('facilitator.toggle.showEvaluation'),
 						on: showEvaluationOn,
 						disabled: !hasQuestion,
@@ -518,6 +634,18 @@ export const FacilitatorPanel: m.Component = {
 						help: t('facilitator.toggle.showEvaluation.help'),
 					}),
 					renderToggle({
+						icon: '🤝',
+						label: t('facilitator.toggle.showJoining'),
+						on: showJoiningOn,
+						disabled: !hasQuestion,
+						onflip: () => {
+							if (!hasQuestion) return;
+							void flipShowJoining(question!);
+						},
+						help: t('facilitator.toggle.showJoining.help'),
+					}),
+					renderToggle({
+						icon: '📈',
 						label: t('facilitator.toggle.showResults'),
 						on: showResultsOn,
 						disabled: !hasQuestion,
@@ -528,6 +656,7 @@ export const FacilitatorPanel: m.Component = {
 						help: t('facilitator.toggle.showResults.help'),
 					}),
 					renderToggle({
+						icon: '➕',
 						label: t('facilitator.toggle.allowAdd'),
 						on: allowNewOptionsOn,
 						disabled: !hasQuestion,
@@ -538,6 +667,7 @@ export const FacilitatorPanel: m.Component = {
 						help: t('facilitator.toggle.allowAdd.help'),
 					}),
 					renderToggle({
+						icon: '🎚️',
 						label: t('facilitator.toggle.threshold'),
 						on: thresholdOn,
 						disabled: !hasQuestion,
@@ -577,6 +707,7 @@ export const FacilitatorPanel: m.Component = {
 							])
 						: null,
 					renderToggle({
+						icon: '💬',
 						label: t('facilitator.toggle.allowChat'),
 						on: allowChatOn,
 						disabled: !hasQuestion,

@@ -9,7 +9,7 @@ import {
 	InferOutput,
 	number,
 } from 'valibot';
-import { DeliberationType, SortType } from '../TypeEnums';
+import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
 
 /**
  * Join form — admin-defined contact form shown the first time a user joins
@@ -141,6 +141,12 @@ export const StatementSettingsSchema = object({
 	minJoinMembers: optional(number()), // Minimum members per option (for visual indicator)
 	maxJoinMembers: optional(number()), // Maximum members per option (for visual indicator + split trigger)
 	showEvaluation: optional(boolean()),
+	// Join app: when undefined or true, every option card renders the join
+	// row (Activist / Organizer buttons, or single Join when dualRoleJoin
+	// is explicitly false). Set false to hide all join buttons — admins use
+	// this for a pure-evaluation round. Default ON ("opt-out") so a fresh
+	// question keeps the join experience the participant expects.
+	showJoining: optional(boolean()),
 	// Join app: when true, every option card renders the results strip
 	// (consensus / average / evaluators) regardless of whether the 5-face
 	// evaluation row itself is being shown. Independent from showEvaluation
@@ -182,6 +188,10 @@ export const StatementSettingsSchema = object({
 	// participant computes the same shuffle locally. Admin re-randomizes by
 	// pressing the Random sort button again, which writes a fresh seed.
 	randomSortSeed: optional(number()),
+	// Join app: visual style family. Each style has its own light + dark
+	// palette tuned for legibility (system prefers-color-scheme still drives
+	// light vs dark). Default = serious (current earth-tone palette).
+	themeStyle: optional(enum_(ThemeStyle)),
 });
 
 

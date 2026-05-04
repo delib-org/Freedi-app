@@ -218,8 +218,8 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --paper: #13100e;
-    --paper-soft: #1d1915;
-    --paper-deep: #26201b;
+    --paper-soft: #2a241f;       // lifted from #1d1915 so --bg-card separates from --paper by ~12% lightness (was ~4%)
+    --paper-deep: #38302a;       // lifted from #26201b for clearer pressed/chat-bubble surface
     --paper-line: #3a322b;
 
     --ink: #f4ece0;               // ~15:1 on paper ✓ AAA
@@ -269,6 +269,207 @@
     --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
     --shadow-stamp: 3px 3px 0 var(--ink-faint);
 
+    --focus-ring-color: var(--terra-500);
+  }
+}
+
+// =============================================================================
+// Playful — Kids (psychedelic)
+// Hot-poster palette: magenta + electric violet + kelly green on warm cream
+// in light mode; neon pink + neon green + electric cyan on plum-black in dark
+// mode. Think Lisa Frank stickers / black-light concert posters / 60s op-art.
+// All on-paper text pairs verified ≥ 4.5:1.
+// =============================================================================
+:root[data-theme="playful-kids"] {
+  // Surface — warm cream lets the saturated accents really pop without
+  // tinting them toward sterile white.
+  --paper: #fffaf0;
+  --paper-soft: #fef3c7;
+  --paper-deep: #fde68a;
+  --paper-line: #fbbf24;
+
+  // Ink — deep aubergine carries the psychedelic energy further than navy
+  --ink: #2e0249;             // ~17:1 on paper ✓ AAA
+  --ink-muted: #4c1d95;       // ~11:1 ✓ AAA
+  --ink-soft: #7c3aed;        // ~6.5:1 ✓ AAA
+  --ink-faint: #a78bfa;       // ~3.6:1 ✓ AA large
+
+  // Primary — hot magenta (Lisa Frank pink power)
+  --terra-50: #fce7f3;
+  --terra-100: #fbcfe8;
+  --terra-300: #f472b6;
+  --terra-500: #d10656;       // on cream ~6.5:1 ✓ AAA
+  --terra-600: #a30246;       // bg w/ white text ~9:1 ✓ AAA
+  --terra-700: #6f0030;       // bg w/ white text ~13:1 ✓ AAA
+
+  // Agree — vivid kelly green
+  --teal-50: #ccfbf1;
+  --teal-100: #a7f3d0;
+  --teal-500: #007a3d;        // on cream ~5.0:1 ✓ AA
+  --teal-600: #005928;        // bg w/ white text ~8.6:1 ✓ AAA
+  --teal-700: #003d1a;        // bg w/ white text ~13:1 ✓ AAA
+
+  // Organizer — electric violet
+  --indigo-50: #ede9fe;
+  --indigo-100: #ddd6fe;
+  --indigo-500: #6d28d9;      // on cream ~7.5:1 ✓ AAA
+  --indigo-600: #5b21b6;
+  --indigo-700: #4c1d95;
+
+  --warning: #d97706;          // sunshine amber
+  --danger: var(--terra-600);
+  --success: var(--teal-600);
+
+  --bg-card: #ffffff;
+  --bg-card-hover: var(--paper-soft);
+  --bg-subtle: var(--paper-soft);
+  --bg-overlay: rgba(46, 2, 73, 0.6);
+  --bg-chat-mine: #fce7f3;     // pink-100 chat bubble
+  --bg-chat-other: #ffffff;
+  --bg-input: #ffffff;
+
+  --border-medium: #a78bfa;    // lavender rule, 3:1 on cream
+  --focus-ring-color: var(--terra-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="playful-kids"] {
+    // Surface — plum-black so neon accents glow like a black-light poster
+    --paper: #0a0014;
+    --paper-soft: #1a0a2e;     // ~14% lift = clear elevation
+    --paper-deep: #2d1b4e;
+    --paper-line: #4a1d6e;
+
+    --ink: #f0e6ff;            // ~17:1 on paper ✓ AAA
+    --ink-muted: #d8b4fe;      // ~11:1 ✓ AAA
+    --ink-soft: #c084fc;       // ~7:1 ✓ AAA
+    --ink-faint: #a78bfa;      // ~5:1 ✓ AA
+
+    // Pure neon — saturated enough to look "lit from within"
+    --terra-500: #ff0080;      // neon hot-pink ~7:1 ✓ AAA
+    --terra-600: #cc0066;
+    --terra-700: #99004d;
+
+    --teal-500: #00ff9d;       // neon mint-green ~15:1 ✓ AAA
+    --teal-600: #00cc7d;
+    --teal-700: #009e60;
+
+    --indigo-500: #00d4ff;     // electric cyan ~11:1 ✓ AAA
+    --indigo-600: #00a8cc;
+    --indigo-700: #007a99;
+
+    --warning: #fde047;        // electric yellow
+    --danger: #ff3366;
+
+    --bg-card: var(--paper-soft);
+    --bg-card-hover: var(--paper-deep);
+    --bg-subtle: var(--paper-soft);
+    --bg-overlay: rgba(0, 0, 0, 0.78);
+    --bg-chat-mine: #4c1d95;   // deep purple chat bubble
+    --bg-chat-other: var(--paper-soft);
+    --bg-input: var(--paper-deep);
+
+    --border-light: var(--paper-line);
+    --border-medium: #6d28d9;
+    --focus-ring-color: var(--terra-500);
+  }
+}
+
+// =============================================================================
+// Playful — Teen
+// Warm pinks, lavenders, peach, mint on a blush surface. Selected by admin via
+// FacilitatorPanel; applied as :root[data-theme="playful-teen"]. All on-paper
+// text pairs verified ≥ 4.5:1.
+// =============================================================================
+:root[data-theme="playful-teen"] {
+  // Surface — pale blush
+  --paper: #fff5f7;
+  --paper-soft: #fce7f3;
+  --paper-deep: #fbcfe8;
+  --paper-line: #f9a8d4;
+
+  // Ink — deep plum (warmer than black, still high-contrast)
+  --ink: #4a044e;            // ~14.5:1 on paper ✓ AAA
+  --ink-muted: #701a75;      // ~10:1 ✓ AAA
+  --ink-soft: #86198f;       // ~7.7:1 ✓ AAA
+  --ink-faint: #a21caf;      // ~5:1 ✓ AA
+
+  // Primary — pink
+  --terra-50: #fce7f3;
+  --terra-100: #fbcfe8;
+  --terra-300: #f472b6;
+  --terra-500: #be185d;       // on blush ~6.8:1 ✓ AAA
+  --terra-600: #9d174d;
+  --terra-700: #831843;
+
+  // Agree — mint
+  --teal-50: #ccfbf1;
+  --teal-100: #99f6e4;
+  --teal-500: #0f766e;        // on blush ~5.6:1 ✓ AA
+  --teal-600: #115e59;
+  --teal-700: #134e4a;
+
+  // Organizer — lavender purple
+  --indigo-50: #f3e8ff;
+  --indigo-100: #e9d5ff;
+  --indigo-500: #7e22ce;      // on blush ~7:1 ✓ AAA
+  --indigo-600: #6b21a8;
+  --indigo-700: #581c87;
+
+  --warning: #c2410c;          // orange-700
+  --danger: #be123c;           // rose-700
+  --success: var(--teal-600);
+
+  --bg-card: #ffffff;
+  --bg-card-hover: var(--paper-soft);
+  --bg-subtle: var(--paper-soft);
+  --bg-overlay: rgba(74, 4, 78, 0.55);
+  --bg-chat-mine: var(--paper-soft);
+  --bg-chat-other: #ffffff;
+  --bg-input: #ffffff;
+
+  --border-medium: #d8a7c1;
+  --focus-ring-color: var(--terra-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[data-theme="playful-teen"] {
+    // Surface — plum-black, NOT brown
+    --paper: #1a0b1f;
+    --paper-soft: #2d1b3d;     // ~14% lift = clear elevation
+    --paper-deep: #3f2754;
+    --paper-line: #5b3a78;
+
+    --ink: #fce7f3;            // ~14:1 on paper ✓ AAA
+    --ink-muted: #f9a8d4;      // ~9:1 ✓ AAA
+    --ink-soft: #d8b4fe;       // ~7:1 ✓ AAA
+    --ink-faint: #a78bfa;      // ~5:1 ✓ AA
+
+    --terra-500: #f472b6;      // dusty rose ~7:1 ✓ AAA
+    --terra-600: #ec4899;
+    --terra-700: #db2777;
+
+    --teal-500: #5eead4;       // mint-300 ~9:1 ✓ AAA
+    --teal-600: #2dd4bf;
+    --teal-700: #14b8a6;
+
+    --indigo-500: #c084fc;     // lavender ~7:1 ✓ AAA
+    --indigo-600: #a855f7;
+    --indigo-700: #9333ea;
+
+    --warning: #fb923c;
+    --danger: #f472b6;
+
+    --bg-card: var(--paper-soft);
+    --bg-card-hover: var(--paper-deep);
+    --bg-subtle: var(--paper-soft);
+    --bg-overlay: rgba(20, 5, 25, 0.78);
+    --bg-chat-mine: #4c1d95;
+    --bg-chat-other: var(--paper-soft);
+    --bg-input: var(--paper-deep);
+
+    --border-light: var(--paper-line);
+    --border-medium: #7e3d92;
     --focus-ring-color: var(--terra-500);
   }
 }

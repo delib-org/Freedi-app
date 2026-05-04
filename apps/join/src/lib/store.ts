@@ -24,6 +24,7 @@ import {
 	StatementType,
 	Creator,
 	SortType,
+	ThemeStyle,
 	createStatementObject,
 	CutoffBy,
 } from '@freedi/shared-types';
@@ -388,8 +389,7 @@ function getSortFn(
 		case SortType.random: {
 			const seed = String(randomSeed);
 
-			return (a, b) =>
-				hashStr(seed + a.statementId) - hashStr(seed + b.statementId);
+			return (a, b) => hashStr(seed + a.statementId) - hashStr(seed + b.statementId);
 		}
 		case SortType.accepted:
 		default:
@@ -422,6 +422,55 @@ export async function setMainStatementSetting(
 ): Promise<void> {
 	const ref = doc(db, Collections.statements, mainId);
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Facilitator live-control: pick the visual style family applied to the
+ *  whole join experience. Writes `statementSettings.themeStyle` on whichever
+ *  doc the panel is acting on (main statement when invoked from the hub,
+ *  question doc when invoked from a sub-question). The view layer reads the
+ *  resolved value and sets `<html data-theme="...">` so participants get the
+ *  matching palette without a refresh. */
+export async function setThemeStyle(statementId: string, value: ThemeStyle): Promise<void> {
+	const ref = doc(db, Collections.statements, statementId);
+	await setDoc(
+		ref,
+		{
+			statementSettings: { themeStyle: value },
+			lastUpdate: Date.now(),
+		},
+		{ merge: true },
+	);
+}
+
+/** Read the active theme style — prefers the question's setting, falls back
+ *  to the hub's main-statement setting, then to `serious`. View code calls
+ *  this on every render so a snapshot from either subscription propagates
+ *  to `<html data-theme="...">` immediately. */
+export function getActiveThemeStyle(): ThemeStyle {
+	const fromQuestion = question?.statementSettings?.themeStyle;
+	if (fromQuestion) return fromQuestion;
+
+	const fromMain = mainStatement?.statementSettings?.themeStyle;
+	if (fromMain) return fromMain;
+
+	return ThemeStyle.serious;
+}
+
+/** Sync `<html data-theme="...">` to the active theme style. Called from every
+ *  place that mutates `question` or `mainStatement` so the matching palette
+ *  swaps in on the next paint without a refresh. The serious style omits the
+ *  attribute so the default :root tokens apply (cheaper selector match). */
+export function applyThemeStyleToDOM(): void {
+	if (typeof document === 'undefined') return;
+	const style = getActiveThemeStyle();
+	const root = document.documentElement;
+	if (style === ThemeStyle.playfulKids) {
+		root.setAttribute('data-theme', 'playful-kids');
+	} else if (style === ThemeStyle.playfulTeen) {
+		root.setAttribute('data-theme', 'playful-teen');
+	} else {
+		root.removeAttribute('data-theme');
+	}
 }
 
 /** Admin "lead the session" from inside the Join app: writes
@@ -602,6 +651,7 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 function syncQuestionLanguage(): void {
 	if (!question) return;
 	applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
+	applyThemeStyleToDOM();
 }
 
 /** Optimistic priming: if the requested question is already in the
@@ -674,6 +724,7 @@ export function subscribeQuestion(questionId: string): Unsubscribe {
 			syncQuestionLanguage();
 		} else {
 			question = null;
+			applyThemeStyleToDOM();
 		}
 		m.redraw();
 	});
@@ -735,6 +786,7 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 function syncMainStatementLanguage(): void {
 	if (!mainStatement) return;
 	applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
+	applyThemeStyleToDOM();
 }
 
 /** Admin-only: append a new sub-question under the current main statement. The
@@ -827,6 +879,7 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 	return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
 		if (!snap.exists()) {
 			mainStatement = null;
+			applyThemeStyleToDOM();
 			m.redraw();
 
 			return;

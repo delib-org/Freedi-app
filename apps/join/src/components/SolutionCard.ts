@@ -37,6 +37,29 @@ function getOptionDescription(option: Statement): string | null {
 	return null;
 }
 
+/** Pick one of the 15 voting-palette pairs from the statementId so each card
+ *  has a stable, distinct rainbow accent in the playful themes. The CSS for
+ *  serious mode ignores the resulting custom properties — they're scoped to
+ *  `:root[data-theme="playful-*"]` selectors in `_components.scss`. Same
+ *  FNV-1a hash the random-sort uses, so two participants always agree on
+ *  which colour belongs to which option. Returns a Mithril-friendly style
+ *  object — Mithril v2.2.8 routes hyphenated keys through `setProperty`,
+ *  which is the only reliable way to write CSS custom properties. */
+const CARD_PALETTE_PAIRS = 15;
+function cardAccentStyle(statementId: string): Record<string, string> {
+	let h = 2166136261;
+	for (let i = 0; i < statementId.length; i++) {
+		h ^= statementId.charCodeAt(i);
+		h = Math.imul(h, 16777619);
+	}
+	const idx = ((h >>> 0) % CARD_PALETTE_PAIRS) + 1;
+
+	return {
+		'--card-accent': `var(--voting-palette-pair-${idx}-dark)`,
+		'--card-accent-soft': `var(--voting-palette-pair-${idx}-light)`,
+	};
+}
+
 interface SolutionCardAttrs {
 	option: Statement;
 	questionId: string;
@@ -145,6 +168,9 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 				// Stable identifier the FLIP reorder animation reads on the parent
 				// list; see lib/flipAnimate.ts and views/Solutions.ts.
 				'data-flip-id': option.statementId,
+				// Per-card rainbow accent. The CSS only consumes these vars under
+				// the playful theme selectors, so serious mode is unaffected.
+				style: cardAccentStyle(option.statementId),
 				role: displayOnly ? undefined : 'button',
 				tabindex: displayOnly ? undefined : 0,
 				'aria-label': option.statement,
@@ -263,12 +289,20 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 								],
 							),
 				]),
-				displayOnly
+				// Facilitated mode (`displayOnly`) usually suppresses interactive
+				// controls so the admin owns navigation, but joining is a per-
+				// option commitment — not a navigation — so the admin's explicit
+				// "🤝 Show joining" toggle overrides displayOnly. The toggle
+				// defaults to ON; admin sets it false to collapse to a pure
+				// evaluation surface.
+				question?.statementSettings?.showJoining === false
 					? null
 					: m(
 							'.solution-card__actions',
-							question?.statementSettings?.dualRoleJoin === true
+							question?.statementSettings?.dualRoleJoin !== false
 								? [
+										// Default: dual Activist + Organizer buttons. Admin can collapse
+										// to a single "Join" by setting `dualRoleJoin: false` explicitly.
 										m(
 											`button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
 											{
@@ -296,9 +330,6 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 										),
 									]
 								: [
-										// Default: simple "Join" — single activist-role button. Admin opts
-										// into the dual activist/organizer split via `dualRoleJoin: true`
-										// on the question's statementSettings.
 										m(
 											`button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
 											{
