@@ -1,6 +1,12 @@
 import m from 'mithril';
 import { CutoffBy, ResultsBy, SortType, Statement, ThemeStyle } from '@freedi/shared-types';
-import type { ResultsSettings } from '@freedi/shared-types';
+import type {
+	JoinFormConfig,
+	JoinFormDestination,
+	JoinFormField,
+	JoinFormFieldType,
+	ResultsSettings,
+} from '@freedi/shared-types';
 import { isAdmin } from '@/lib/admin';
 import {
 	getQuestion,
@@ -460,9 +466,7 @@ function renderToggle(opts: {
 	return m('.facilitator-panel__row', [
 		m('.facilitator-panel__row-main', [
 			m('span.facilitator-panel__row-label', [
-				icon
-					? m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, icon)
-					: null,
+				icon ? m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, icon) : null,
 				label,
 			]),
 			m(
@@ -479,6 +483,310 @@ function renderToggle(opts: {
 			),
 		]),
 		help ? m('.facilitator-panel__row-help', help) : null,
+	]);
+}
+
+// --- Join form configurator -------------------------------------------------
+// All saves write to the *current* sub-question's `statementSettings.joinForm`.
+// The participant Solutions view already reads from the same path when handling
+// a Join click, so flips here propagate live (snapshot → store → redraw).
+//
+// Default fields mirror the main app (Name / Phone / Email) so a freshly enabled
+// form has something useful from the first paint — facilitators rarely want to
+// configure a blank list before they can hand the form to participants.
+//
+// `joinFormEditorOpen` keeps the field/destination editor collapsed by default
+// even when the form is enabled, so the panel doesn't grow into a wall of
+// inputs every time the toggle flips on. Click the chevron row to reveal.
+
+let joinFormEditorOpen = false;
+
+function buildDefaultJoinFields(): JoinFormField[] {
+	return [
+		{ id: 'name', label: t('facilitator.joinForm.default.name'), type: 'text', required: true },
+		{
+			id: 'phone',
+			label: t('facilitator.joinForm.default.phone'),
+			type: 'phone',
+			required: true,
+		},
+		{
+			id: 'email',
+			label: t('facilitator.joinForm.default.email'),
+			type: 'email',
+			required: false,
+		},
+	];
+}
+
+function makeFieldId(label: string, existing: JoinFormField[]): string {
+	const slug =
+		label
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')
+			.replace(/^-+|-+$/g, '') || 'field';
+	let candidate = slug;
+	let i = 1;
+	while (existing.some((f) => f.id === candidate)) {
+		candidate = `${slug}-${i++}`;
+	}
+
+	return candidate;
+}
+
+function getJoinFormConfig(question: Statement): JoinFormConfig {
+	const existing = question.statementSettings?.joinForm;
+
+	return {
+		enabled: existing?.enabled ?? false,
+		destination: existing?.destination ?? 'firestore',
+		sheetUrl: existing?.sheetUrl,
+		fields:
+			existing?.fields && existing.fields.length > 0 ? existing.fields : buildDefaultJoinFields(),
+		formLanguage: existing?.formLanguage,
+	};
+}
+
+async function persistJoinForm(question: Statement, next: JoinFormConfig): Promise<void> {
+	// Optimistic local update so the panel UI reflects the change before the
+	// snapshot lands; setQuestionSetting writes to Firestore and the listener
+	// will overwrite (with the same value) on confirmation.
+	if (question.statementSettings) {
+		question.statementSettings.joinForm = next;
+	} else {
+		question.statementSettings = { joinForm: next };
+	}
+	m.redraw();
+	await setQuestionSetting(question.statementId, {
+		statementSettings: { joinForm: next },
+	});
+}
+
+async function flipJoinFormEnabled(question: Statement): Promise<void> {
+	const next = getJoinFormConfig(question);
+	next.enabled = !next.enabled;
+	// Always reset the editor to collapsed when the toggle flips. Turning the
+	// form on shouldn't auto-expand the editor; turning it off should hide it.
+	joinFormEditorOpen = false;
+	await persistJoinForm(question, next);
+}
+
+async function setJoinFormDestination(
+	question: Statement,
+	destination: JoinFormDestination,
+): Promise<void> {
+	const next = getJoinFormConfig(question);
+	next.destination = destination;
+	if (destination !== 'sheets') {
+		next.sheetUrl = undefined;
+	}
+	await persistJoinForm(question, next);
+}
+
+async function setJoinFormSheetUrl(question: Statement, url: string): Promise<void> {
+	const next = getJoinFormConfig(question);
+	next.sheetUrl = url;
+	await persistJoinForm(question, next);
+}
+
+async function updateJoinFormField(
+	question: Statement,
+	index: number,
+	patch: Partial<JoinFormField>,
+): Promise<void> {
+	const next = getJoinFormConfig(question);
+	next.fields = next.fields.map((f, i) => (i === index ? { ...f, ...patch } : f));
+	await persistJoinForm(question, next);
+}
+
+async function addJoinFormField(question: Statement): Promise<void> {
+	const next = getJoinFormConfig(question);
+	const label = t('facilitator.joinForm.default.field');
+	next.fields = [
+		...next.fields,
+		{ id: makeFieldId(label, next.fields), label, type: 'text', required: false },
+	];
+	await persistJoinForm(question, next);
+}
+
+async function removeJoinFormField(question: Statement, index: number): Promise<void> {
+	const next = getJoinFormConfig(question);
+	next.fields = next.fields.filter((_, i) => i !== index);
+	await persistJoinForm(question, next);
+}
+
+function renderJoinFormSection(question: Statement | null): m.Vnode | null {
+	if (!question) return null;
+	const config = getJoinFormConfig(question);
+
+	const toggleRow = renderToggle({
+		icon: '📋',
+		label: t('facilitator.joinForm.label'),
+		on: config.enabled,
+		onflip: () => {
+			void flipJoinFormEnabled(question);
+		},
+		help: t('facilitator.joinForm.help'),
+	});
+
+	if (!config.enabled) return toggleRow;
+
+	const editorHeader = m(
+		'button.facilitator-panel__joinform-accordion',
+		{
+			type: 'button',
+			'aria-expanded': joinFormEditorOpen ? 'true' : 'false',
+			'aria-controls': `joinform-editor-${question.statementId}`,
+			'aria-label': joinFormEditorOpen
+				? t('facilitator.joinForm.editorToggle.collapse')
+				: t('facilitator.joinForm.editorToggle.expand'),
+			onclick: () => {
+				joinFormEditorOpen = !joinFormEditorOpen;
+				m.redraw();
+			},
+		},
+		[
+			m(
+				`span.facilitator-panel__joinform-accordion-chevron${joinFormEditorOpen ? '.facilitator-panel__joinform-accordion-chevron--open' : ''}`,
+				{ 'aria-hidden': 'true' },
+				'▾',
+			),
+			m('span.facilitator-panel__joinform-accordion-label', t('facilitator.joinForm.editorToggle')),
+			m(
+				'span.facilitator-panel__joinform-accordion-meta',
+				`${config.fields.length} · ${
+					config.destination === 'sheets'
+						? t('facilitator.joinForm.destination.sheets')
+						: t('facilitator.joinForm.destination.firestore')
+				}`,
+			),
+		],
+	);
+
+	if (!joinFormEditorOpen) {
+		return m('.facilitator-panel__joinform-wrap', [toggleRow, editorHeader]);
+	}
+
+	return m('.facilitator-panel__joinform-wrap', [
+		toggleRow,
+		editorHeader,
+		m('.facilitator-panel__joinform', { id: `joinform-editor-${question.statementId}` }, [
+			// Destination picker — two compact pill buttons
+			m('.facilitator-panel__joinform-section', [
+				m('.facilitator-panel__joinform-label', t('facilitator.joinForm.destination')),
+				m('.facilitator-panel__joinform-segmented', [
+					m(
+						`button.facilitator-panel__segment${config.destination === 'firestore' ? '.facilitator-panel__segment--active' : ''}`,
+						{
+							type: 'button',
+							onclick: () => {
+								void setJoinFormDestination(question, 'firestore');
+							},
+						},
+						t('facilitator.joinForm.destination.firestore'),
+					),
+					m(
+						`button.facilitator-panel__segment${config.destination === 'sheets' ? '.facilitator-panel__segment--active' : ''}`,
+						{
+							type: 'button',
+							onclick: () => {
+								void setJoinFormDestination(question, 'sheets');
+							},
+						},
+						t('facilitator.joinForm.destination.sheets'),
+					),
+				]),
+			]),
+			config.destination === 'sheets'
+				? m('.facilitator-panel__joinform-section', [
+						m(
+							'label.facilitator-panel__joinform-label',
+							{ for: `joinform-sheet-${question.statementId}` },
+							t('facilitator.joinForm.sheetUrl'),
+						),
+						m('input.facilitator-panel__joinform-input', {
+							id: `joinform-sheet-${question.statementId}`,
+							type: 'url',
+							value: config.sheetUrl ?? '',
+							placeholder: t('facilitator.joinForm.sheetUrl.placeholder'),
+							onchange: (e: Event) => {
+								void setJoinFormSheetUrl(question, (e.target as HTMLInputElement).value);
+							},
+						}),
+					])
+				: null,
+			m('.facilitator-panel__joinform-section', [
+				m('.facilitator-panel__joinform-label', t('facilitator.joinForm.fields')),
+				m(
+					'.facilitator-panel__joinform-fields',
+					config.fields.map((field, index) =>
+						m('.facilitator-panel__joinform-field', { key: field.id }, [
+							m('input.facilitator-panel__joinform-input', {
+								type: 'text',
+								value: field.label,
+								'aria-label': t('facilitator.joinForm.field.label'),
+								onchange: (e: Event) => {
+									void updateJoinFormField(question, index, {
+										label: (e.target as HTMLInputElement).value,
+									});
+								},
+							}),
+							m(
+								'select.facilitator-panel__joinform-select',
+								{
+									value: field.type,
+									'aria-label': t('facilitator.joinForm.field.type'),
+									onchange: (e: Event) => {
+										void updateJoinFormField(question, index, {
+											type: (e.target as HTMLSelectElement).value as JoinFormFieldType,
+										});
+									},
+								},
+								[
+									m('option', { value: 'text' }, t('facilitator.joinForm.field.type.text')),
+									m('option', { value: 'phone' }, t('facilitator.joinForm.field.type.phone')),
+									m('option', { value: 'email' }, t('facilitator.joinForm.field.type.email')),
+								],
+							),
+							m('label.facilitator-panel__joinform-required', [
+								m('input', {
+									type: 'checkbox',
+									checked: field.required,
+									onchange: (e: Event) => {
+										void updateJoinFormField(question, index, {
+											required: (e.target as HTMLInputElement).checked,
+										});
+									},
+								}),
+								m('span', t('facilitator.joinForm.field.required')),
+							]),
+							m(
+								'button.facilitator-panel__joinform-remove',
+								{
+									type: 'button',
+									'aria-label': t('facilitator.joinForm.field.remove'),
+									title: t('facilitator.joinForm.field.remove'),
+									onclick: () => {
+										void removeJoinFormField(question, index);
+									},
+								},
+								'×',
+							),
+						]),
+					),
+				),
+				m(
+					'button.facilitator-panel__joinform-add',
+					{
+						type: 'button',
+						onclick: () => {
+							void addJoinFormField(question);
+						},
+					},
+					t('facilitator.joinForm.field.add'),
+				),
+			]),
+		]),
 	]);
 }
 
@@ -644,6 +952,7 @@ export const FacilitatorPanel: m.Component = {
 						},
 						help: t('facilitator.toggle.showJoining.help'),
 					}),
+					renderJoinFormSection(question),
 					renderToggle({
 						icon: '📈',
 						label: t('facilitator.toggle.showResults'),

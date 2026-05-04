@@ -10,6 +10,7 @@ import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { setStatementSettingToDB } from '@/controllers/db/statementSettings/setStatementSettings';
 import ToggleSwitch from './ToggleSwitch';
 import JoinFormCard from './JoinFormCard';
+import SubQuestionJoinFormsCard from './SubQuestionJoinFormsCard/SubQuestionJoinFormsCard';
 
 interface ParticipationSettingsProps {
 	statement: Statement;
@@ -54,6 +55,7 @@ const ParticipationSettings: FC<ParticipationSettingsProps> = ({
 					{settings.joiningEnabled && (
 						<>
 							<JoinFormCard statement={statement} />
+							<SubQuestionJoinFormsCard statement={statement} />
 							<ToggleSwitch
 								isChecked={threshold?.enabled ?? false}
 								onChange={(checked) => updateThreshold({ enabled: checked })}

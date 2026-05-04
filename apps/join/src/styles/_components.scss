@@ -292,12 +292,11 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-card);
-  border: 1.5px solid var(--paper-line);   // 3.3:1 on paper ✓ AA UI
+  border: 1.5px solid transparent;
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-md) var(--space-md);
   transition:
     transform var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out);
 
   &:focus-visible {
@@ -306,7 +305,6 @@
   }
 
   &:hover {
-    border-color: var(--ink);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
   }
@@ -736,9 +734,7 @@
   gap: var(--space-xs);
   margin: var(--space-sm) 0 var(--space-md);
   padding: var(--space-sm);
-  background: var(--paper-soft);
   border-radius: var(--radius-md);
-  border: 1px solid var(--paper-line);
 }
 
 .evaluation__thumb {
@@ -1632,32 +1628,6 @@
 // Discreet admin-signin link tucked into the top-inline-end corner of the
 // brand row. Hidden once the user is non-anonymous; once admin status is
 // detected the FacilitatorPanel handle takes over.
-.main-hub__admin-signin {
-  position: absolute;
-  top: 0;
-  inset-inline-end: 0;
-  padding: var(--space-xs) var(--space-sm);
-  font-family: var(--font-body);
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--text-muted, #78716c);
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: color var(--dur-quick, 140ms) var(--ease-out);
-}
-
-.main-hub__admin-signin:hover,
-.main-hub__admin-signin:focus-visible {
-  color: var(--text-strong, #1c1917);
-  outline: none;
-}
-
-.main-hub__admin-signin:focus-visible {
-  outline: var(--focus-ring-width) solid var(--focus-ring-color);
-  outline-offset: 2px;
-}
 
 .main-hub__title {
   margin: 0 0 var(--space-sm);
@@ -2667,6 +2637,206 @@ $facilitator-panel-width: 300px;
 @keyframes facilitator-panel-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+// -----------------------------------------------------------------------------
+// Join form editor — sub-panel under the "Join form" toggle. Lets a facilitator
+// configure the contact form participants see when they press Join. Indented
+// slightly from the surrounding rows so it reads as nested config.
+// -----------------------------------------------------------------------------
+.facilitator-panel__joinform-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+// Accordion header that gates the form editor body. Sits below the on/off
+// toggle so flipping the form on doesn't immediately balloon the panel — the
+// editor stays collapsed until the facilitator opts in. Compact, subdued
+// styling (it's not a primary action; the toggle is).
+.facilitator-panel__joinform-accordion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  margin: 0 0 var(--space-xs);
+  padding: 6px 8px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-body, #44403c);
+  background: transparent;
+  border: 1px dashed var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  text-align: start;
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: rgba(20, 95, 84, 0.04);
+    border-color: var(--teal-600, #145f54);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+.facilitator-panel__joinform-accordion-chevron {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  text-align: center;
+  color: var(--text-muted, #78716c);
+  transition: transform var(--dur-quick, 140ms) var(--ease-out);
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.facilitator-panel__joinform-accordion-label {
+  flex: 1 1 auto;
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.facilitator-panel__joinform-accordion-meta {
+  flex-shrink: 0;
+  color: var(--text-muted, #78716c);
+  font-variant-numeric: tabular-nums;
+}
+
+.facilitator-panel__joinform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-sm) var(--space-sm);
+  background: var(--terra-50, rgba(0, 0, 0, 0.03));
+  border-inline-start: 3px solid var(--teal-600, #145f54);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.facilitator-panel__joinform-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.facilitator-panel__joinform-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-muted, #78716c);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.facilitator-panel__joinform-segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted, #d6d3d1);
+  padding: 2px;
+  gap: 2px;
+  align-self: flex-start;
+}
+
+.facilitator-panel__joinform-input,
+.facilitator-panel__joinform-select {
+  width: 100%;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-strong, #1c1917);
+  background: var(--paper, #ffffff);
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:focus {
+    outline: none;
+    border-color: var(--teal-600, #145f54);
+  }
+}
+
+.facilitator-panel__joinform-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.facilitator-panel__joinform-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto auto;
+  gap: 4px;
+  align-items: center;
+}
+
+.facilitator-panel__joinform-required {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-body, #44403c);
+  white-space: nowrap;
+
+  input {
+    margin: 0;
+  }
+}
+
+.facilitator-panel__joinform-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  background: var(--paper, #ffffff);
+  color: var(--text-muted, #78716c);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    color: var(--terra-700, #9a3412);
+    border-color: var(--terra-500, #f97316);
+  }
+}
+
+.facilitator-panel__joinform-add {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--teal-700, #0f766e);
+  background: transparent;
+  border: 1px dashed var(--teal-600, #145f54);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: rgba(20, 95, 84, 0.08);
+  }
+}
+
+@media (max-width: 480px) {
+  .facilitator-panel__joinform-field {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .facilitator-panel__joinform-required,
+  .facilitator-panel__joinform-remove {
+    grid-column: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

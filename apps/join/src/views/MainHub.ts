@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
-import { ensureUser, signInWithGoogle, getUserState } from '@/lib/user';
+import { ensureUser, getUserState } from '@/lib/user';
 import {
 	loadMainStatement,
 	getMainStatement,
@@ -171,7 +171,6 @@ export const MainHub: m.Component = {
 					loading: 'eager',
 					decoding: 'async',
 				}),
-				renderAdminSignIn(main.statementId, main.creatorId),
 			]),
 			m('h1.main-hub__title', main.statement),
 			(() => {
@@ -375,45 +374,3 @@ function renderQuestionCard(
 	);
 }
 
-/** Discreet "Sign in as admin" link in the top-inline-end corner of the
- *  hub brand row. Mirrors `Solutions.renderAdminSignIn` but presented as a
- *  text link rather than a button — the hub is a participant-first surface
- *  and shouldn't grow an admin-shaped CTA. Hidden once the user has a
- *  non-anonymous session, at which point either the FacilitatorPanel handle
- *  takes over (admin) or nothing replaces the link (non-admin Google user). */
-function renderAdminSignIn(mainId: string, creatorId: string): m.Children {
-	const user = getUserState().user;
-	if (!user || !user.isAnonymous) return null;
-
-	return m(
-		'button.main-hub__admin-signin',
-		{
-			type: 'button',
-			onclick: async () => {
-				try {
-					await signInWithGoogle();
-					await checkAdminStatus(mainId, creatorId);
-					// Belated admin confirmation — mark the workspace now so it
-					// appears on the Main page after this hub recognises us.
-					if (isAdmin()) {
-						const main = getMainStatement();
-						const signedInUser = getUserState().user;
-						if (main && signedInUser) {
-							void markOpenedInJoin(
-								main,
-								signedInUser.uid,
-								signedInUser.displayName ?? '',
-							).catch((err) => {
-								console.error('[MainHub] markOpenedInJoin failed:', err);
-							});
-						}
-					}
-					m.redraw();
-				} catch (err) {
-					console.error('[MainHub] Admin sign-in failed:', err);
-				}
-			},
-		},
-		t('admin.signin'),
-	);
-}
