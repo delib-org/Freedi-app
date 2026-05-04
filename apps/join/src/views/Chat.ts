@@ -302,6 +302,12 @@ export const Chat: m.Component = {
                 value: messageText,
                 placeholder: t('chat.placeholder'),
                 rows: 1,
+                oncreate: (vnode: m.VnodeDOM) => {
+                  autosizeTextarea(vnode.dom as HTMLTextAreaElement);
+                },
+                onupdate: (vnode: m.VnodeDOM) => {
+                  autosizeTextarea(vnode.dom as HTMLTextAreaElement);
+                },
                 onfocus: () => {
                   if (needsDisplayName()) {
                     showNamePrompt = true;
@@ -309,7 +315,9 @@ export const Chat: m.Component = {
                   }
                 },
                 oninput: (e: InputEvent) => {
-                  messageText = (e.target as HTMLTextAreaElement).value;
+                  const ta = e.target as HTMLTextAreaElement;
+                  messageText = ta.value;
+                  autosizeTextarea(ta);
                 },
                 onkeydown: (e: KeyboardEvent) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -338,6 +346,15 @@ function confirmName(): void {
   if (!nameInput.trim()) return;
   setCustomDisplayName(nameInput.trim());
   closeNamePrompt();
+}
+
+/** Auto-grow the message textarea to fit the user's text, capped at 6 lines.
+ *  CSS already enforces the 6-line max-height via `max-height` on `.chat__input`;
+ *  this resets `height` so it shrinks back when text is deleted, then matches
+ *  scrollHeight so the input grows in step with the typed content. */
+function autosizeTextarea(el: HTMLTextAreaElement): void {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
 }
 
 async function handleSend(): Promise<void> {

@@ -13,6 +13,7 @@ import {
 	onSnapshot,
 	runTransaction,
 	httpsCallable,
+	writeBatch,
 	Unsubscribe,
 } from './firebase';
 import { getUserState, ensureUser } from './user';
@@ -1190,8 +1191,22 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 
 	const topParentId = question?.statementId || optionId;
 
-	const newStatement = createStatementObject({
-		statement: text.trim(),
+	// Split the user's input on newlines so multi-paragraph messages are stored
+	// in the canonical "parent statement + paragraph child statements" shape.
+	// First non-empty line becomes the parent's title; remaining non-empty lines
+	// become child Statements with `statementType === paragraph`. Single-line
+	// messages skip the batch and write a single doc, same as before.
+	const lines = text
+		.split('\n')
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0);
+	if (lines.length === 0) return;
+
+	const title = lines[0];
+	const bodyLines = lines.slice(1);
+
+	const parentStatement = createStatementObject({
+		statement: title,
 		statementType: StatementType.statement,
 		parentId: optionId,
 		topParentId,
@@ -1199,9 +1214,61 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 		creator,
 	});
 
-	if (!newStatement) return;
+	if (!parentStatement) return;
 
-	await setDoc(doc(db, Collections.statements, newStatement.statementId), newStatement);
+	if (bodyLines.length === 0) {
+		// Single-line: keep the original single-doc write path.
+		await setDoc(
+			doc(db, Collections.statements, parentStatement.statementId),
+			parentStatement,
+		);
+
+		return;
+	}
+
+	// Pre-compute the description preview so the chat can render the full
+	// body immediately, without waiting for the server-side description-regen
+	// trigger to fire after the paragraph children land.
+	const DESCRIPTION_MAX_LENGTH = 200;
+	let description = '';
+	for (const line of bodyLines) {
+		const next = description.length === 0 ? line : description + ' | ' + line;
+		if (next.length >= DESCRIPTION_MAX_LENGTH) {
+			description =
+				next.length > DESCRIPTION_MAX_LENGTH
+					? next.slice(0, DESCRIPTION_MAX_LENGTH - 3) + '...'
+					: next;
+			break;
+		}
+		description = next;
+	}
+
+	const batch = writeBatch(db);
+	batch.set(doc(db, Collections.statements, parentStatement.statementId), {
+		...parentStatement,
+		description,
+	});
+
+	for (let i = 0; i < bodyLines.length; i++) {
+		const child = createStatementObject({
+			statement: bodyLines[i],
+			statementType: StatementType.paragraph,
+			parentId: parentStatement.statementId,
+			topParentId,
+			creatorId: creator.uid,
+			creator,
+		});
+		if (!child) continue;
+		// Preserve order: stagger createdAt by index so paragraphs render in
+		// the order the user wrote them, regardless of write fan-out timing.
+		batch.set(doc(db, Collections.statements, child.statementId), {
+			...child,
+			createdAt: parentStatement.createdAt + i + 1,
+			lastUpdate: parentStatement.createdAt + i + 1,
+		});
+	}
+
+	await batch.commit();
 }
 
 export type JoinRole = 'activist' | 'organizer';

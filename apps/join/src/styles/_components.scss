@@ -1045,13 +1045,17 @@
     padding: 12px var(--space-md);
     font-family: var(--font-body);
     font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
     border: 1.5px solid var(--border-medium);  // 3.2:1 ✓ AA UI
     border-radius: var(--radius-lg);
     background: var(--bg-input);
     color: var(--ink);                         // 16:1 ✓ AAA
     resize: none;
+    overflow-y: auto;
     min-height: var(--touch-target);
-    max-height: 120px;
+    // Auto-grow caps at ~6 lines: 6 × (font-size-base × line-height-normal)
+    // + vertical padding. JS sets height inline; this is the upper bound.
+    max-height: calc(6 * 1em * var(--line-height-normal) + 24px);
     transition: border-color var(--dur-quick) var(--ease-out);
 
     &::placeholder {
@@ -1218,6 +1222,21 @@
   }
 
   &__text {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink);                      // 16:1 ✓ AAA
+    line-height: var(--line-height-normal);
+    word-break: break-word;
+  }
+
+  &__body {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__paragraph {
     font-family: var(--font-body);
     font-size: var(--font-size-base);
     color: var(--ink);                      // 16:1 ✓ AAA

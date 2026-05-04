@@ -43,6 +43,14 @@ export const ChatMessage: m.Component<ChatMessageAttrs> = {
     const color = uidToColor(uid);
     const initials = getInitials(displayName);
 
+    // Multi-paragraph messages are stored as a parent statement (title) plus
+    // paragraph child Statements. The server regenerates `description` from
+    // those children — joined with ' | ' — so we split it back to render each
+    // paragraph on its own line beneath the title.
+    const bodyParagraphs = message.description
+      ? message.description.split(' | ').filter((s) => s.trim().length > 0)
+      : [];
+
     return m(
       `.chat-message${isMine ? '.chat-message--mine' : ''}`,
       [
@@ -61,6 +69,14 @@ export const ChatMessage: m.Component<ChatMessageAttrs> = {
             ])
           : null,
         m('.chat-message__text', message.statement),
+        bodyParagraphs.length > 0
+          ? m(
+              '.chat-message__body',
+              bodyParagraphs.map((line, i) =>
+                m('.chat-message__paragraph', { key: i }, line),
+              ),
+            )
+          : null,
         m('.chat-message__time', formatTime(message.createdAt)),
       ],
     );
