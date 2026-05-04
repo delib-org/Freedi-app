@@ -18,7 +18,7 @@ import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
-import { getUserState } from '@/lib/user';
+import { getUserState, waitForAuthReady } from '@/lib/user';
 import { ChatMessage } from '@/components/ChatMessage';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
@@ -107,6 +107,14 @@ export const Chat: m.Component = {
       const mainId = m.route.param('mid');
       if (mainId) {
         mainUnsub = subscribeMainStatement(mainId);
+      }
+
+      // Anonymous arrivals haven't picked a chat name yet. Surface the prompt
+      // up-front (with a "Stay anonymous" pseudo-name escape hatch) so they
+      // post under a chosen identity instead of being surprised on send.
+      await waitForAuthReady();
+      if (needsDisplayName()) {
+        showNamePrompt = true;
       }
     } catch (err) {
       console.error('[Chat] Failed to load option:', err);
