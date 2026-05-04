@@ -22,17 +22,20 @@ async function getAdminAuthHeaders(): Promise<Record<string, string>> {
 }
 
 /**
- * Parse the body of a clustering trigger response. The admin HTTP wrapper
- * returns plain-text "Internal Server Error" on uncaught exceptions, while
- * happy paths return JSON. This helper handles both so callers always get a
- * consistent shape.
+ * Parse the body of a clustering trigger response. Reads text first, then
+ * tries JSON.parse so it stays safe even if content-type says application/json
+ * but the body is a plain-text infrastructure error (e.g., "Internal Server Error").
  */
 async function parseClusteringResponse(response: Response): Promise<TriggerClusteringResponse> {
+	const text = await response.text();
 	const contentType = response.headers.get('content-type') ?? '';
 	if (contentType.includes('application/json')) {
-		return (await response.json()) as TriggerClusteringResponse;
+		try {
+			return JSON.parse(text) as TriggerClusteringResponse;
+		} catch {
+			// Fall through to plain-text error path
+		}
 	}
-	const text = await response.text();
 	const snippet = text.slice(0, 200).trim() || `${response.status} ${response.statusText}`;
 
 	return {

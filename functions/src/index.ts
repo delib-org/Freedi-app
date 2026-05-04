@@ -289,7 +289,7 @@ const wrapHttpFunction = (handler: (req: Request, res: Response) => Promise<void
 					operation: `httpFunction.${functionName}`,
 					metadata: { duration, endTimestamp },
 				});
-				res.status(500).send('Internal Server Error');
+				res.status(500).json({ ok: false, error: 'Internal Server Error' });
 			}
 		},
 	);
@@ -328,7 +328,7 @@ const wrapMemoryIntensiveHttpFunction = (
 					operation: `memoryIntensiveHttpFunction.${functionName}`,
 					metadata: { duration, endTimestamp },
 				});
-				res.status(500).send('Internal Server Error');
+				res.status(500).json({ ok: false, error: 'Internal Server Error' });
 			}
 		},
 	);
@@ -398,7 +398,7 @@ const wrapAdminHttpFunction = (
 					operation: `adminHttpFunction.${functionName}`,
 					metadata: { duration, endTimestamp, uid },
 				});
-				res.status(500).send('Internal Server Error');
+				res.status(500).json({ ok: false, error: 'Internal Server Error' });
 			}
 		},
 	);
