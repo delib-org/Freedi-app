@@ -12,7 +12,7 @@ import {
 	setSubQuestionHidden,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
-import { recordMyWorkspace } from '@/lib/myWorkspaces';
+import { markOpenedInJoin } from '@/lib/joinSubscriptions';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
@@ -98,16 +98,18 @@ export const MainHub: m.Component = {
 			const main = getMainStatement();
 			if (main) {
 				await checkAdminStatus(mainId, main.creatorId);
-				// Once admin is confirmed, remember this workspace on this device so
-				// it shows up on the Main page list. Non-admin visitors don't get
-				// their visit persisted — the list is "workspaces I run", not
-				// "workspaces I've seen".
+				// Once admin is confirmed, mark this workspace in Firestore so it
+				// shows up on the Main page list (per-user, cross-device).
+				// Non-admin visitors don't get their visit persisted — the list is
+				// "workspaces I run", not "workspaces I've seen". Fire-and-forget;
+				// a failure here shouldn't block the hub from rendering.
 				if (isAdmin()) {
-					recordMyWorkspace({
-						id: main.statementId,
-						title: main.statement,
-						color: main.color,
-					});
+					const user = getUserState().user;
+					if (user) {
+						void markOpenedInJoin(main, user.uid, user.displayName ?? '').catch((err) => {
+							console.error('[MainHub] markOpenedInJoin failed:', err);
+						});
+					}
 				}
 			}
 			mainUnsub = subscribeMainStatement(mainId);
@@ -391,15 +393,18 @@ function renderAdminSignIn(mainId: string, creatorId: string): m.Children {
 				try {
 					await signInWithGoogle();
 					await checkAdminStatus(mainId, creatorId);
-					// Belated admin confirmation — record the workspace now so it
+					// Belated admin confirmation — mark the workspace now so it
 					// appears on the Main page after this hub recognises us.
 					if (isAdmin()) {
 						const main = getMainStatement();
-						if (main) {
-							recordMyWorkspace({
-								id: main.statementId,
-								title: main.statement,
-								color: main.color,
+						const signedInUser = getUserState().user;
+						if (main && signedInUser) {
+							void markOpenedInJoin(
+								main,
+								signedInUser.uid,
+								signedInUser.displayName ?? '',
+							).catch((err) => {
+								console.error('[MainHub] markOpenedInJoin failed:', err);
 							});
 						}
 					}

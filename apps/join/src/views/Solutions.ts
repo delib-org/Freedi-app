@@ -7,6 +7,7 @@ import {
 	getQuestion,
 	getVisibleOptions,
 	getOrganizerSuggestions,
+	getOptionById,
 	subscribeOptions,
 	subscribeQuestion,
 	subscribeMainStatement,
@@ -15,11 +16,13 @@ import {
 	getTotalVisibleCount,
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
+import { markOpenedInJoin } from '@/lib/joinSubscriptions';
 import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
+import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { WizColFooter } from '@/components/WizColFooter';
@@ -42,6 +45,10 @@ let showAddSuggestion = false;
 // organizer (badged Cloud Function path) or as a regular participant (crowd
 // list, no badge), so the modal needs to know which path to take.
 let addAsOrganizer = false;
+// When non-null, the edit modal is open for this option id. We re-resolve the
+// option from the store on every render so the modal sees fresh state if the
+// snapshot changes mid-edit.
+let editingOptionId: string | null = null;
 // Captured at `onbeforeupdate` of `.solutions__list`, replayed at `onupdate`
 // to drive the FLIP reorder animation.
 let capturedListRects: Map<string, DOMRect> | null = null;
@@ -91,6 +98,20 @@ export const Solutions: m.Component = {
 			const mainId = m.route.param('mid');
 			if (mainId) {
 				mainUnsub = subscribeMainStatement(mainId);
+			}
+
+			// Mark the workspace on the join Main page when an admin opens a
+			// top-level question directly via /q/<id>. Sub-questions (the
+			// facilitated /m/:mid/q/:qid path) shouldn't show on Main — those
+			// are children of a workspace, not workspaces themselves.
+			const opened = getQuestion();
+			if (opened && opened.parentId === 'top' && isAdmin()) {
+				const user = getUserState().user;
+				if (user) {
+					void markOpenedInJoin(opened, user.uid, user.displayName ?? '').catch((err) => {
+						console.error('[Solutions] markOpenedInJoin failed:', err);
+					});
+				}
 			}
 		} catch (err) {
 			console.error('[Solutions] Failed to load:', err);
@@ -147,10 +168,10 @@ export const Solutions: m.Component = {
 		// "can people add options to this question".
 		const addOptionEnabled = question.statementSettings?.enableAddEvaluationOption === true;
 		const showUserAddButton = addOptionEnabled && !isAdmin();
-		// Admin sees the participant-style add button alongside the organizer
-		// one whenever participants are allowed to add — letting an admin post
-		// a suggestion "as a regular person" instead of with the badge.
-		const showAdminParticipantAdd = addOptionEnabled && isAdmin();
+		// Admin always gets the participant-style add button alongside the
+		// organizer one — they can seed the crowd list "as a regular person"
+		// regardless of whether participants are allowed to add.
+		const showAdminParticipantAdd = isAdmin();
 
 		return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
 			// Admin gets a return path: in facilitated mode that's the workspace
@@ -277,6 +298,9 @@ export const Solutions: m.Component = {
 											pendingJoinRole = role;
 											showJoinForm = true;
 										},
+										onRequestEdit: (optionId: string) => {
+											editingOptionId = optionId;
+										},
 									}),
 								),
 							),
@@ -306,6 +330,7 @@ export const Solutions: m.Component = {
 						},
 					})
 				: null,
+			renderEditModal(),
 			m(FacilitatorPanel),
 		]);
 	},
@@ -364,10 +389,33 @@ function renderOrganizerSection(
 						pendingJoinRole = role;
 						showJoinForm = true;
 					},
+					onRequestEdit: (optionId: string) => {
+						editingOptionId = optionId;
+					},
 				}),
 			),
 		),
 	]);
+}
+
+function renderEditModal(): m.Children {
+	if (!editingOptionId) return null;
+	// Re-resolve from the store every render so the modal reflects the latest
+	// snapshot. If the option was removed (e.g. admin deleted it during edit),
+	// drop the modal silently rather than crash with a stale reference.
+	const option = getOptionById(editingOptionId);
+	if (!option) {
+		editingOptionId = null;
+
+		return null;
+	}
+
+	return m(EditSuggestionModal, {
+		option,
+		onClose: () => {
+			editingOptionId = null;
+		},
+	});
 }
 
 function buildSubtitleText(question: Statement): string {

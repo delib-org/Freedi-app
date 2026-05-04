@@ -11,7 +11,6 @@ import {
 	UserCheck,
 	Shield,
 	Bell,
-	Network,
 	BarChart3,
 	ShieldAlert,
 	Clock,
@@ -44,7 +43,7 @@ import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSe
 import MembersSettings from '../membership/MembersSettings';
 import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
-import { ClusteringAdmin } from '../ClusteringAdmin';
+// ClusteringAdmin is now rendered inside AISettings (AI & Automation block).
 import { OptionRooms } from '../optionRooms';
 import ModerationLog from '../moderationLog/ModerationLog';
 import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
@@ -255,19 +254,9 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							<EmailNotifications statement={statement} />
 						</SettingsSection>
 
-						{/* Clustering & Analysis - only for questions */}
-						{isQuestion && (
-							<SettingsSection
-								title={t('Clustering & Framings')}
-								description={t('AI-powered grouping and analysis of responses')}
-								icon={Network}
-								priority="low"
-								defaultExpanded={false}
-								tooltip={t('Use AI to cluster similar responses and identify patterns')}
-							>
-								<ClusteringAdmin statement={statement} />
-							</SettingsSection>
-						)}
+						{/* Clustering & Framings is now embedded inside the AI & Automation block
+						   (rendered by EnhancedAdvancedSettings → AISettings → ClusteringAdmin)
+						   so all AI-driven controls live under one collapsible section. */}
 
 						{/* Content Moderation Log Section — admins/creators only (Firestore rules deny others) */}
 						{isAdminOrCreator && (

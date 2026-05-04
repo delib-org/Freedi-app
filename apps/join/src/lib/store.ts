@@ -18,6 +18,7 @@ import {
 import { getUserState, ensureUser } from './user';
 import { applyStatementLanguage, t } from './i18n';
 import {
+	Access,
 	Collections,
 	Statement,
 	StatementType,
@@ -296,6 +297,38 @@ export async function setOptionFlag(
 	await setDoc(ref, { [field]: value, lastUpdate: Date.now() }, { merge: true });
 }
 
+/** Permission gate for editing an option's text. Mirrors the firestore.rules
+ *  `isCreator()` and parent-admin checks: the original creator can always
+ *  edit their own option, and admins of the question (the option's direct
+ *  parent — its "top" from the option's perspective in this app) can edit
+ *  any option under it. */
+export function canEditSuggestion(option: Statement): boolean {
+	const user = getUserState().user;
+	if (!user) return false;
+	if (option.creatorId === user.uid) return true;
+
+	return isAdmin();
+}
+
+/** Update an option's `statement` text. Only the title text is editable —
+ *  touching `statementSettings` here would trip the protected-field rule and
+ *  require admin auth, and we want creators to be able to edit too. The
+ *  Firestore rule allows this write for the option's creator, the question
+ *  admins, and the workspace admins. */
+export async function updateSuggestion(optionId: string, text: string): Promise<void> {
+	const trimmed = text.trim();
+	if (!trimmed) return;
+
+	const option = getOptionById(optionId);
+	if (!option) return;
+	if (!canEditSuggestion(option)) {
+		throw new Error('Not authorized to edit this option');
+	}
+
+	const ref = doc(db, Collections.statements, optionId);
+	await setDoc(ref, { statement: trimmed, lastUpdate: Date.now() }, { merge: true });
+}
+
 /** Facilitator live-control: turn the 5-face evaluation row on/off for all
  *  participants. Writes `statementSettings.showEvaluation` (the same flag
  *  the main app uses to gate its evaluation surfaces) so the join card and
@@ -463,9 +496,9 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 	}
 
 	// Participant path: gate on the admin-controlled toggle so a stale UI
-	// can't push writes after the admin closes additions. Applies to admins
-	// posting as participants too.
-	if (question.statementSettings?.enableAddEvaluationOption !== true) {
+	// can't push writes after the admin closes additions. Admins are exempt —
+	// they own the toggle and can seed the crowd list at any time.
+	if (!isAdmin() && question.statementSettings?.enableAddEvaluationOption !== true) {
 		throw new Error('Adding options is not enabled for this question');
 	}
 
@@ -545,9 +578,20 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 	// for a root statement — but we want it to point at the statement itself
 	// so it lands as its own top-parent (matching how main-app top-level
 	// questions are stored, and how join queries find facilitator descendants).
+	//
+	// `membership.access` is required: Firestore rules for `statementsSubscribe`
+	// look up the parent's `membership.access` to decide whether a self-create
+	// of a subscription doc is allowed (e.g. when the join app marks the
+	// creator's "opened in join" subscription before the cloud function fans
+	// out the admin sub). `openToAll` matches the join app's anonymous-friendly
+	// flow — anyone with the link can participate.
 	const finalQuestion: Statement = {
 		...newQuestion,
 		topParentId: newQuestion.statementId,
+		membership: {
+			...(newQuestion.membership ?? {}),
+			access: Access.openToAll,
+		},
 	};
 
 	await setDoc(doc(db, Collections.statements, finalQuestion.statementId), finalQuestion);

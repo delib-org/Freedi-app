@@ -466,6 +466,21 @@ export {
   isClusterAggregationValid,
 } from "./models/framing/framingModel";
 
+// Topic-cluster pipeline cache models
+export type {
+  TaxonomyCategory,
+  ClusteringTaxonomyCache,
+  NormalizationAction,
+  ClusteringNormalizationCache,
+} from "./models/clustering/clusteringCacheModel";
+
+export {
+  TaxonomyCategorySchema,
+  ClusteringTaxonomyCacheSchema,
+  NormalizationActionSchema,
+  ClusteringNormalizationCacheSchema,
+} from "./models/clustering/clusteringCacheModel";
+
 // Embedding models
 export type {
   StatementEmbedding,

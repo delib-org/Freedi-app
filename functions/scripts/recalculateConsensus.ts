@@ -14,7 +14,7 @@
  */
 
 import { initializeApp, cert, getApps, ServiceAccount } from 'firebase-admin/app';
-import { getFirestore, WriteBatch } from 'firebase-admin/firestore';
+import { getFirestore } from 'firebase-admin/firestore';
 import * as fs from 'fs';
 import * as path from 'path';
 

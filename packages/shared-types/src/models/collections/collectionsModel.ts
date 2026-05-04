@@ -91,4 +91,8 @@ export enum Collections {
     // Research logging
     researchLogs = 'researchLogs',
     researchConsent = 'researchConsent',
+
+    // Topic-cluster pipeline caches
+    clusteringTaxonomies = 'clusteringTaxonomies',
+    clusteringNormalizations = 'clusteringNormalizations',
 }

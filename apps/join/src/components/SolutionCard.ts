@@ -10,6 +10,7 @@ import {
   getNewMessageCount,
   getClusterEvaluatorCount,
   setOptionFlag,
+  canEditSuggestion,
   JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
@@ -42,11 +43,14 @@ interface SolutionCardAttrs {
   /** When true, render in facilitated/locked mode: no clicks, no join buttons,
    *  no admin controls — only the facilitator can move participants. */
   displayOnly?: boolean;
+  /** Open the edit modal for this option. Provided by the parent so the modal
+   *  lives at the page level (single overlay shared across cards). */
+  onRequestEdit?: (optionId: string) => void;
 }
 
 export const SolutionCard: m.Component<SolutionCardAttrs> = {
   view(vnode) {
-    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion, displayOnly } = vnode.attrs;
+    const { option, questionId, onRequestJoinForm, adminMode, isOrganizerSuggestion, displayOnly, onRequestEdit } = vnode.attrs;
     const user = getUserState().user;
     const question = getQuestion();
     const joinedCount = option.joined?.length ?? 0;
@@ -90,6 +94,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 
     const isCluster = option.isCluster === true;
     const groupSize = option.integratedOptions?.length ?? 0;
+    // Show the edit affordance to the option's creator and to question admins.
+    // Suppressed in facilitated/locked mode and on cluster cards (a cluster
+    // wraps multiple originals — its title is system-generated, not authored).
+    const showEdit =
+      !displayOnly && !isCluster && Boolean(onRequestEdit) && canEditSuggestion(option);
 
     const organizerClass = isOrganizerSuggestion ? '.solution-card--organizer' : '';
     const displayOnlyClass = displayOnly ? '.solution-card--display-only' : '';
@@ -155,6 +164,23 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
             m('.solution-card__count', t('card.activists', { count: joinedCount })),
             m('.solution-card__count', t('card.organizers', { count: organizerCount })),
           ]),
+          showEdit
+            ? m(
+                'button.solution-card__edit',
+                {
+                  type: 'button',
+                  'aria-label': t('solutions.edit_suggestion'),
+                  onclick: (e: Event) => {
+                    e.stopPropagation();
+                    onRequestEdit?.(option.statementId);
+                  },
+                },
+                [
+                  m('span.solution-card__edit-icon', { 'aria-hidden': 'true' }, '✎'),
+                  m('span.solution-card__edit-label', t('solutions.edit_suggestion')),
+                ],
+              )
+            : null,
           // Hide the chat affordance globally when a facilitator pauses chat
           // (`hasChat === false`). Treat undefined as ON for back-compat.
           question?.statementSettings?.hasChat === false

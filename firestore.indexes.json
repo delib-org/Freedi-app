@@ -1393,6 +1393,20 @@
           "order": "ASCENDING"
         },
         {
+          "fieldPath": "openedInJoin",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statementsSubscribe",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
           "fieldPath": "statementType",
           "order": "ASCENDING"
         },

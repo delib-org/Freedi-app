@@ -129,6 +129,8 @@ import type { NotificationQueueItem } from '@freedi/shared-types';
 
 // Hybrid Text + Rating Clustering
 import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
+import { triggerTopicClusterPipeline } from './fn_topicClustering';
+import { triggerSummarizeFramingClusters } from './fn_summarizeClusters';
 
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
@@ -361,11 +363,15 @@ async function verifyAuthToken(req: Request, res: Response): Promise<string | nu
  * @param {Function} handler - The function handler to wrap (receives uid as third argument)
  * @returns {Function} - Wrapped function with auth and error handling
  */
-const wrapAdminHttpFunction = (handler: (req: Request, res: Response) => Promise<void>) => {
+const wrapAdminHttpFunction = (
+	handler: (req: Request, res: Response) => Promise<void>,
+	overrides: { memory?: '256MiB' | '512MiB' | '1GiB' | '2GiB' | '4GiB' | '8GiB'; timeoutSeconds?: number; secrets?: string[] } = {},
+) => {
 	return onRequest(
 		{
 			...functionConfig,
 			cors: corsConfig,
+			...overrides,
 		},
 		async (req, res) => {
 			const uid = await verifyAuthToken(req, res);
@@ -945,23 +951,48 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 // HYBRID TEXT + RATING CLUSTERING
 // --------------------------
 
-// Scheduled function: sweep stale hybrid embeddings and re-cluster every 15 minutes
-export const hybridClusteringSweepScheduled = onSchedule(
-	{
-		schedule: '*/15 * * * *',
-		timeZone: 'UTC',
-		...functionConfig,
-		memory: '1GiB',
-		timeoutSeconds: 300,
-		secrets: ['GEMINI_API_KEY'],
-	},
-	async () => {
-		await hybridClusteringSweep();
-	},
-);
+// Scheduled function disabled — clustering is now admin-triggered via the
+// topic-cluster pipeline (fn_topicClustering.ts). The hybrid k-means sweep
+// is preserved as legacy code so existing hybrid-auto framings stay readable;
+// to re-enable, restore the export below.
+// export const hybridClusteringSweepScheduled = onSchedule(
+// 	{
+// 		schedule: '*/15 * * * *',
+// 		timeZone: 'UTC',
+// 		...functionConfig,
+// 		memory: '1GiB',
+// 		timeoutSeconds: 300,
+// 		secrets: ['GEMINI_API_KEY'],
+// 	},
+// 	async () => {
+// 		await hybridClusteringSweep();
+// 	},
+// );
+void hybridClusteringSweep; // keep import alive for future re-enable; no runtime effect
 
 // HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
-exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering);
+// Same memory profile as the disabled scheduled sweep — k-means on 1536-d hybrid vectors.
+exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+	secrets: ['GEMINI_API_KEY'],
+});
+
+// HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
+// Replaces the scheduled sweep above. See functions/src/services/topic-cluster/.
+// Pipeline loads many statements + 1536-d embeddings + UMAP/DBSCAN + Anthropic SDK
+// in one request — needs more memory than the 256 MiB default and a longer timeout.
+exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterPipeline, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+});
+
+// HTTP endpoint that asks an LLM to summarize each cluster of a Framing from
+// its above-threshold members; writes the result to cluster.brief.
+exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(
+	triggerSummarizeFramingClusters,
+	{ memory: '512MiB', timeoutSeconds: 300 },
+);
 
 // Condensation / Grouped Suggestions — non-destructive clustering on demand,
 // evaluation aggregation writeback, and stale-marking trigger.
