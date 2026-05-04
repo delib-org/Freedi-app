@@ -18,7 +18,7 @@ html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -30,7 +30,6 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior: none;
-  overflow-x: hidden;
   text-rendering: optimizeLegibility;
 
   // Subtle paper grain — never over ~8% opacity so it doesn't affect
