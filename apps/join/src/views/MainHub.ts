@@ -18,6 +18,7 @@ import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { QRShare } from '@/components/QRShare';
+import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { createDragReorder } from '@/lib/dragReorder';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -172,7 +173,13 @@ export const MainHub: m.Component = {
 					decoding: 'async',
 				}),
 			]),
-			m('h1.main-hub__title', main.statement),
+			m(EditableTitle, {
+				statementId: main.statementId,
+				value: main.statement,
+				canEdit: admin,
+				as: 'h1',
+				className: 'main-hub__title',
+			}),
 			(() => {
 				const body = getStatementBody(main);
 
