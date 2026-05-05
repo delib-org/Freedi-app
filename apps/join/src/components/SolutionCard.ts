@@ -11,6 +11,8 @@ import {
 	getClusterEvaluatorCount,
 	setOptionFlag,
 	canEditSuggestion,
+	getOptionParagraphs,
+	loadOptionParagraphs,
 	JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
@@ -36,6 +38,130 @@ function getOptionDescription(option: Statement): string | null {
 	}
 
 	return null;
+}
+
+// Per-option expand/collapse state. Module-level so it survives intra-route
+// redraws (Mithril rebuilds the vnode tree on every redraw — local closures
+// would reset the toggle on every keystroke elsewhere on the page).
+const expandedOptions = new Set<string>();
+// Per-option overflow detection — set after first paint when the collapsed
+// rich-body's natural height exceeds its visible (clamped) height. Drives
+// whether the "Read more" affordance appears at all.
+const overflowingOptions = new Set<string>();
+
+function isExpanded(optionId: string): boolean {
+	return expandedOptions.has(optionId);
+}
+
+function toggleExpanded(optionId: string): void {
+	if (expandedOptions.has(optionId)) {
+		expandedOptions.delete(optionId);
+
+		return;
+	}
+	expandedOptions.add(optionId);
+	// Lazy-fetch paragraph children the first time the user opens the card —
+	// preview text (`description`) is capped at ~200 chars by the cloud
+	// function, so the only way to render the full body is to query the
+	// `statementType === paragraph` children. The store caches the result.
+	void loadOptionParagraphs(optionId);
+}
+
+function detectOverflow(optionId: string, dom: Element): void {
+	// 1px buffer absorbs sub-pixel rendering differences across browsers.
+	const overflowing = dom.scrollHeight > dom.clientHeight + 1;
+	const wasOverflowing = overflowingOptions.has(optionId);
+	if (overflowing && !wasOverflowing) {
+		overflowingOptions.add(optionId);
+		m.redraw();
+	} else if (!overflowing && wasOverflowing) {
+		overflowingOptions.delete(optionId);
+		m.redraw();
+	}
+}
+
+/** Split a multi-line `option.statement` into its title (first non-empty line)
+ *  and the remaining body lines. Options created via `AddSuggestionModal`
+ *  store the entire textarea content (including newlines) in `statement`,
+ *  so this is the only way to surface their body content without a separate
+ *  Firestore round-trip. */
+function splitStatement(statement: string): { title: string; bodyLines: string[] } {
+	const paragraphs = statement
+		.split(/\n+/)
+		.map((p) => p.trim())
+		.filter(Boolean);
+
+	if (paragraphs.length === 0) return { title: '', bodyLines: [] };
+
+	const [title, ...bodyLines] = paragraphs;
+
+	return { title, bodyLines };
+}
+
+/** Build the body content (everything below the title): inline body lines from
+ *  a multi-paragraph `statement` field, then any loaded paragraph children,
+ *  then the description preview as a fallback. Skips the description when
+ *  paragraph children are loaded so we don't double up the same content. */
+function renderRichBodyContent(option: Statement, bodyLines: string[]): m.Vnode[] {
+	const nodes: m.Vnode[] = [];
+
+	for (let i = 0; i < bodyLines.length; i++) {
+		nodes.push(m('p.solution-card__body-paragraph', { key: `body-${i}` }, linkify(bodyLines[i])));
+	}
+
+	const paragraphs = getOptionParagraphs(option.statementId);
+	if (paragraphs && paragraphs.length > 0) {
+		for (const p of paragraphs) {
+			if (!p.statement) continue;
+			nodes.push(
+				m(
+					'p.solution-card__body-paragraph',
+					{ key: `para-${p.statementId}` },
+					linkify(p.statement),
+				),
+			);
+		}
+
+		return nodes;
+	}
+
+	const description = getOptionDescription(option);
+	if (description && bodyLines.length === 0) {
+		// Server-cached preview is stored as "para1 | para2 | ...". Split it
+		// back so each preview paragraph reads as its own block — matches the
+		// chat-message body rendering and keeps spacing consistent once the
+		// user expands.
+		const previewParas = description
+			.split(' | ')
+			.map((s) => s.trim())
+			.filter(Boolean);
+		for (let i = 0; i < previewParas.length; i++) {
+			nodes.push(
+				m(
+					'p.solution-card__body-paragraph.solution-card__body-paragraph--preview',
+					{ key: `desc-${i}` },
+					linkify(previewParas[i]),
+				),
+			);
+		}
+	}
+
+	return nodes;
+}
+
+/** Heuristic: even before the DOM reports overflow, surface the toggle when
+ *  the data shape strongly implies there's more content than the collapsed
+ *  body shows. Catches server-truncated descriptions ("…" tail) and the case
+ *  where paragraph children exist but haven't been fetched yet. */
+function hasMoreContent(option: Statement, bodyLines: string[]): boolean {
+	if (bodyLines.length > 2) return true;
+	const description = getOptionDescription(option);
+	if (description && description.endsWith('...')) return true;
+	if (description && description.includes(' | ')) return true;
+	const loadedParas = getOptionParagraphs(option.statementId);
+	if (loadedParas && loadedParas.length > 0) return true;
+
+	return false;
 }
 
 /** Pick one of the 15 voting-palette pairs from the statementId so each card
@@ -77,27 +203,54 @@ interface SolutionCardAttrs {
 	onRequestEdit?: (optionId: string) => void;
 }
 
-function renderStatementParagraphs(statement: string): m.Vnode[] {
-	const paragraphs = statement
-		.split(/\n+/)
-		.map((p) => p.trim())
-		.filter(Boolean);
+function renderTitle(statement: string): m.Vnode | null {
+	const { title } = splitStatement(statement);
+	if (!title) return null;
 
-	if (paragraphs.length === 0) return [];
+	return m('.solution-card__title', linkify(title));
+}
 
-	const [title, ...rest] = paragraphs;
-	const nodes: m.Vnode[] = [m('.solution-card__title', linkify(title))];
+/** Title-less body block: inline body lines + paragraph children + a Read more
+ *  toggle when there's more to show. Returns null when there's nothing below
+ *  the title — keeps the card tight for short single-line suggestions. */
+function renderRichBody(option: Statement): m.Vnode | null {
+	const { bodyLines } = splitStatement(option.statement);
+	const bodyContent = renderRichBodyContent(option, bodyLines);
+	if (bodyContent.length === 0) return null;
 
-	if (rest.length > 0) {
-		nodes.push(
-			m(
-				'.solution-card__body',
-				rest.map((p) => m('p.solution-card__body-paragraph', linkify(p))),
-			),
-		);
-	}
+	const expanded = isExpanded(option.statementId);
+	const overflowing = overflowingOptions.has(option.statementId);
+	const hasMore = hasMoreContent(option, bodyLines);
+	const showToggle = expanded || overflowing || hasMore;
 
-	return nodes;
+	const bodyClass = expanded
+		? '.solution-card__rich-body.solution-card__rich-body--expanded'
+		: '.solution-card__rich-body';
+
+	return m('.solution-card__body', [
+		m(
+			bodyClass,
+			{
+				oncreate: (v: m.VnodeDOM) => detectOverflow(option.statementId, v.dom as Element),
+				onupdate: (v: m.VnodeDOM) => detectOverflow(option.statementId, v.dom as Element),
+			},
+			bodyContent,
+		),
+		showToggle
+			? m(
+					'button.solution-card__read-more',
+					{
+						type: 'button',
+						'aria-expanded': expanded ? 'true' : 'false',
+						onclick: (e: Event) => {
+							e.stopPropagation();
+							toggleExpanded(option.statementId);
+						},
+					},
+					expanded ? t('card.show_less') : t('card.read_more'),
+				)
+			: null,
+	]);
 }
 
 export const SolutionCard: m.Component<SolutionCardAttrs> = {
@@ -216,10 +369,8 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 					: null,
 				isActivated ? m('.solution-card__activated-badge', t('card.activated')) : null,
 				renderMetaRow(option, isCluster, groupSize),
-				...renderStatementParagraphs(option.statement),
-				getOptionDescription(option)
-					? m('.solution-card__description', linkify(getOptionDescription(option) ?? ''))
-					: null,
+				renderTitle(option.statement),
+				renderRichBody(option),
 				// The 5-face evaluation row is gated by the same
 				// `statementSettings.showEvaluation` flag the main app uses, so
 				// both surfaces open and close evaluation in lockstep — and

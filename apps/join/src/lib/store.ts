@@ -207,6 +207,44 @@ export function getOptionById(optionId: string): Statement | undefined {
 	return allOptions.find((o) => o.statementId === optionId);
 }
 
+// Per-option cache of paragraph child Statements. Populated lazily by
+// `loadOptionParagraphs` the first time a card is expanded — paragraph
+// children are not part of the crowd-list options query (which only fetches
+// `statementType === option`), so we fetch them on demand and keep them
+// around for the rest of the session.
+const optionParagraphsCache = new Map<string, Statement[]>();
+const loadingOptionParagraphs = new Set<string>();
+
+export function getOptionParagraphs(optionId: string): Statement[] | null {
+	return optionParagraphsCache.get(optionId) ?? null;
+}
+
+export async function loadOptionParagraphs(optionId: string): Promise<void> {
+	if (optionParagraphsCache.has(optionId)) return;
+	if (loadingOptionParagraphs.has(optionId)) return;
+	loadingOptionParagraphs.add(optionId);
+	try {
+		const q = query(
+			collection(db, Collections.statements),
+			where('parentId', '==', optionId),
+			where('statementType', '==', StatementType.paragraph),
+		);
+		const snap = await getDocs(q);
+		// Order by `createdAt` so paragraphs render in the order the author
+		// wrote them — `sendMessage` staggers child createdAt by index for
+		// exactly this reason.
+		const paras = snap.docs
+			.map((d) => d.data() as Statement)
+			.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+		optionParagraphsCache.set(optionId, paras);
+		m.redraw();
+	} catch (err) {
+		console.error('[loadOptionParagraphs] failed:', err);
+	} finally {
+		loadingOptionParagraphs.delete(optionId);
+	}
+}
+
 export function getMessages(): Statement[] {
 	return messages;
 }

@@ -445,21 +445,25 @@
     text-wrap: balance;
   }
 
-  &__description {
-    font-family: var(--font-body);
-    font-size: var(--font-size-sm);
-    color: var(--ink-muted);               // 8.7:1 ✓ AAA
-    line-height: var(--line-height-normal);
-    margin-bottom: var(--space-md);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
   &__body {
     margin-bottom: var(--space-sm);
+  }
+
+  // Rich body container — holds inline body lines, paragraph children, and
+  // the description preview. Collapsed clamps to ~6 lines with a hard cut;
+  // expanded grows the same card naturally with no inner scroll.
+  &__rich-body {
+    overflow: hidden;
+    max-height: 9.5em;
+    transition: max-height var(--dur-base) var(--ease-out);
+
+    &--expanded {
+      max-height: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
   }
 
   &__body-paragraph {
@@ -472,6 +476,43 @@
 
     &:last-child {
       margin-bottom: 0;
+    }
+
+    // The description preview reads as a slightly quieter, looser block —
+    // matches the chat-message body styling and visually distinguishes
+    // "summary built by the server" from inline author paragraphs.
+    &--preview {
+      font-size: var(--font-size-sm);
+    }
+  }
+
+  // Read more / Show less toggle — small inline button below the body. Sits
+  // outside the clipped rich-body so it stays visible when collapsed.
+  &__read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+    padding: 4px 0;
+    background: transparent;
+    border: none;
+    color: var(--ink);                     // 16:1 ✓ AAA
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--terra-700, var(--ink));
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+      border-radius: 2px;
     }
   }
 
