@@ -339,6 +339,16 @@ export function getVisibleOptions(): Statement[] {
 		for (const f of forced) if (!seen.has(f.statementId)) opts.push(f);
 	}
 
+	// When sorted by anything other than "newest", newly-flushed options are
+	// pinned to the top so participants evaluate them before they sink into the
+	// stack. Once evaluated (or after the highlight timer expires) they animate
+	// to their natural sorted position via the existing FLIP animation.
+	if (sortType !== SortType.newest) {
+		const pinned = opts.filter((o) => bufferHighlightedIds.has(o.statementId));
+		const rest = opts.filter((o) => !bufferHighlightedIds.has(o.statementId));
+		opts = [...pinned, ...rest];
+	}
+
 	return opts;
 }
 
@@ -1253,6 +1263,18 @@ export async function setEvaluation(option: Statement, score: number): Promise<v
 	// Optimistic: paint the chosen face immediately and trigger a redraw so
 	// there's no perceptible lag between click and selected-state.
 	optimisticEvaluations.set(option.statementId, score);
+
+	// Un-pin from the top-of-list highlight so the option falls to its natural
+	// sorted position — the FLIP animation in Solutions.ts handles the move.
+	if (bufferHighlightedIds.has(option.statementId)) {
+		bufferHighlightedIds.delete(option.statementId);
+		const t = bufferHighlightTimers.get(option.statementId);
+		if (t !== undefined) {
+			clearTimeout(t);
+			bufferHighlightTimers.delete(option.statementId);
+		}
+	}
+
 	m.redraw();
 
 	const evaluationId = `${creator.uid}--${option.statementId}`;
