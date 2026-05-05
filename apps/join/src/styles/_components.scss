@@ -1605,6 +1605,9 @@
 .solution-card--organizer {
   background: var(--indigo-50);
   border-color: var(--indigo-500);
+  // Reserve space so the absolutely-positioned badge doesn't overlap the
+  // first line of the suggestion text.
+  padding-top: var(--space-2xl);
 
   &:hover {
     border-color: var(--indigo-700);

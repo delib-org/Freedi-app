@@ -211,7 +211,7 @@ export const Solutions: m.Component = {
 							// expose this action, and admins still need to seed the
 							// list while leading the room.
 							m(
-								'button.btn.btn--small.btn--primary',
+								'button.btn.btn--small.btn--outline-organizer',
 								{
 									onclick: () => {
 										addAsOrganizer = true;
@@ -220,12 +220,14 @@ export const Solutions: m.Component = {
 								},
 								t('admin.add_suggestion'),
 							),
-							// When participants are allowed to add, admin gets a second
-							// button to post "as a regular person" — same crowd-list
-							// path participants use, no organizer badge.
+							// Admin's "as a regular participant" path — same crowd-list
+							// path participants use, no organizer badge. Treated as the
+							// primary action because seeding the people's list is the
+							// expected default for admins; the organizer-section path
+							// is the secondary, more deliberate choice.
 							showAdminParticipantAdd
 								? m(
-										'button.btn.btn--small.btn--outline',
+										'button.btn.btn--small.btn--primary',
 										{
 											onclick: () => {
 												addAsOrganizer = false;
