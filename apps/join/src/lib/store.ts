@@ -284,6 +284,8 @@ export function getVisibleOptions(): Statement[] {
 		// admin-hidden options never render for anyone
 		.filter((o) => o.hide !== true)
 		.filter((o) => o.joinStatus !== 'failed')
+		// buffer: hide options the user hasn't acknowledged yet (pending pill)
+		.filter((o) => !bufferPendingIds.has(o.statementId))
 		.sort(sortFn);
 
 	// Condensation: in "clusters-only" mode for the join surface, hide any
@@ -329,7 +331,8 @@ export function getVisibleOptions(): Statement[] {
 			o.forceShow === true &&
 			o.hide !== true &&
 			o.joinStatus !== 'failed' &&
-			o.creatorRole !== Role.admin,
+			o.creatorRole !== Role.admin &&
+			!bufferPendingIds.has(o.statementId),
 	);
 	if (forced.length > 0) {
 		const seen = new Set(opts.map((o) => o.statementId));
@@ -350,6 +353,7 @@ export function getVisibleOptions(): Statement[] {
 export function getOrganizerSuggestions(): Statement[] {
 	return allOptions
 		.filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
+		.filter((o) => !bufferPendingIds.has(o.statementId))
 		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 }
 
