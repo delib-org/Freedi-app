@@ -24,6 +24,7 @@ import {
 	Statement,
 	StatementType,
 	Creator,
+	Role,
 	SortType,
 	ThemeStyle,
 	createStatementObject,
@@ -211,11 +212,11 @@ export function getMessages(): Statement[] {
 }
 
 export function getVisibleOptions(): Statement[] {
-	// Admin-added options ("admin suggestions") belong in the main people's
-	// list — users vote on them like any other option, and they can become
-	// people's suggestions through evaluation. They are NOT the same as
-	// "organizer suggestions" (which is a separate per-option role concept,
-	// tracked via the `organizers[]` array on each option).
+	// Organizer suggestions (admin-created with `creatorRole === Role.admin`)
+	// render in their own dedicated section — keep them out of the crowd list
+	// here so the two lists stay separate. The "organizer" per-option role
+	// users take via the activist/organizer join buttons is a different
+	// concept tracked via `option.organizers[]`.
 	// Admin-controlled sort: read `defaultSortType` off the question so every
 	// participant subscribed to it sees the same order as the admin. The field
 	// is shared with the main app's sort menu, so flipping it from either
@@ -226,6 +227,8 @@ export function getVisibleOptions(): Statement[] {
 	const randomSeed = question?.statementSettings?.randomSortSeed ?? 0;
 	const sortFn = getSortFn(sortType, randomSeed);
 	let opts = allOptions
+		// organizer suggestions render in their own section above/below the regular list
+		.filter((o) => o.creatorRole !== Role.admin)
 		// admin-hidden options never render for anyone
 		.filter((o) => o.hide !== true)
 		.filter((o) => o.joinStatus !== 'failed')
@@ -267,8 +270,14 @@ export function getVisibleOptions(): Statement[] {
 
 	// Re-inject admin-promoted options that the threshold would otherwise
 	// drop, so admins can keep an option visible regardless of its score.
+	// Organizer suggestions are excluded — they live in their own section and
+	// never participate in the crowd list, even when forceShow is set.
 	const forced = allOptions.filter(
-		(o) => o.forceShow === true && o.hide !== true && o.joinStatus !== 'failed',
+		(o) =>
+			o.forceShow === true &&
+			o.hide !== true &&
+			o.joinStatus !== 'failed' &&
+			o.creatorRole !== Role.admin,
 	);
 	if (forced.length > 0) {
 		const seen = new Set(opts.map((o) => o.statementId));
@@ -278,14 +287,18 @@ export function getVisibleOptions(): Statement[] {
 	return opts;
 }
 
-/** Deprecated: kept as a no-op for callers that still reference it. Admin-
- *  added options (whether created in the main app or via the join app's
- *  "Add suggestion" flow) are now part of the main people's list returned
- *  by `getVisibleOptions()`. The "organizer" concept is now reserved for
- *  the per-option role users can take via the activist/organizer join
- *  buttons. */
+/** Options created by an admin from the Join app (or marked with
+ *  `creatorRole: Role.admin` server-side). Rendered in a dedicated section
+ *  separate from the participant crowd list, sorted newest first.
+ *
+ *  Distinct from the per-option "organizer" role users take via the
+ *  activist/organizer join buttons (tracked via `option.organizers[]`).
+ *  Admins can also seed the crowd list "as a regular participant" — those
+ *  options have no `creatorRole` and appear via `getVisibleOptions()`. */
 export function getOrganizerSuggestions(): Statement[] {
-	return [];
+	return allOptions
+		.filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
+		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 }
 
 /** Admin curation: set `hide` or `forceShow` on a specific option. Uses
