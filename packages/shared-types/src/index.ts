@@ -443,6 +443,21 @@ export {
   calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 
+// Strategic Export (AI-ready report) models
+export type {
+  StrategicExportRequest,
+  StrategicExportResponse,
+  StrategicExportMetadata,
+  StrategicExportSchema,
+  EvaluationAggregate,
+  AggregateMember,
+  DemographicSlice,
+  AggregatedSuggestion,
+  TopicGroup,
+  DemographicAnswerCount,
+  DemographicQuestionSummary,
+} from "./models/strategicExport/strategicExportModel";
+
 // Framing models
 export type {
   Framing,

@@ -2638,5 +2638,10 @@
   "Adding...": "Wird hinzugefügt...",
   "Added {{count}} options": "{{count}} Optionen hinzugefügt",
   "Failed to add options at line {{line}}": "Fehler beim Hinzufügen in Zeile {{line}}",
-  "Clear": "Löschen"
+  "Clear": "Löschen",
+  "Strategic Report (AI-Ready JSON)": "Strategischer Bericht (KI-bereites JSON)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "Erzeugt einen aggregierten, nach Themen gruppierten Bericht, bereit für die KI-Analyse. Kombiniert ähnliche Vorschläge, berechnet den Konsens neu und fügt demografische Aufschlüsselungen unter k-Anonymität hinzu.",
+  "Generate Report": "Bericht erstellen",
+  "Generating report…": "Bericht wird erstellt…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "Die Cluster-Berechnung wird automatisch ausgelöst, falls sie noch nicht durchgeführt wurde. Dies kann bis zu einer Minute dauern."
 }

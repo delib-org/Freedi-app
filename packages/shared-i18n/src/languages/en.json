@@ -3525,5 +3525,10 @@
   "Adding...": "Adding...",
   "Added {{count}} options": "Added {{count}} options",
   "Failed to add options at line {{line}}": "Failed to add options at line {{line}}",
-  "Clear": "Clear"
+  "Clear": "Clear",
+  "Strategic Report (AI-Ready JSON)": "Strategic Report (AI-Ready JSON)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.",
+  "Generate Report": "Generate Report",
+  "Generating report…": "Generating report…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "Clustering will be triggered automatically if it has not run yet. This may take up to a minute."
 }

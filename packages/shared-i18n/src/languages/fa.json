@@ -2862,5 +2862,10 @@
   "Group by topic clustering (LLM-derived themes)": "گروه‌بندی بر اساس خوشه‌بندی موضوعی (تم‌های استخراج‌شده توسط LLM)",
   "View grouping": "گروه‌بندی نما",
   "No clustering of this type available — run it from settings first": "خوشه‌بندی از این نوع در دسترس نیست — ابتدا آن را از تنظیمات اجرا کنید",
-  "Uncategorized": "دسته‌بندی نشده"
+  "Uncategorized": "دسته‌بندی نشده",
+  "Strategic Report (AI-Ready JSON)": "گزارش استراتژیک (JSON آماده برای هوش مصنوعی)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "گزارشی تجمیع‌شده و گروه‌بندی‌شده بر اساس موضوع تولید می‌کند که برای تحلیل توسط هوش مصنوعی آماده است. پیشنهادهای مشابه را ترکیب می‌کند، اجماع را بازمحاسبه می‌کند و تفکیک‌های جمعیتی را با ناشناسی-k اضافه می‌کند.",
+  "Generate Report": "تولید گزارش",
+  "Generating report…": "در حال تولید گزارش…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "اگر خوشه‌بندی هنوز اجرا نشده باشد، به‌طور خودکار شروع می‌شود. این کار ممکن است تا یک دقیقه طول بکشد."
 }

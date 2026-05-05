@@ -2442,5 +2442,10 @@
   "Adding...": "جارٍ الإضافة...",
   "Added {{count}} options": "تمت إضافة {{count}} خيارات",
   "Failed to add options at line {{line}}": "فشل في إضافة الخيارات في السطر {{line}}",
-  "Clear": "مسح"
+  "Clear": "مسح",
+  "Strategic Report (AI-Ready JSON)": "تقرير استراتيجي (JSON جاهز للذكاء الاصطناعي)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "ينشئ تقريراً مجمعاً ومصنفاً حسب المواضيع، جاهزاً لتحليل الذكاء الاصطناعي. يدمج الاقتراحات المتشابهة، ويعيد حساب الإجماع، ويضيف تحليلات ديموغرافية مع الحفاظ على إخفاء الهوية بموجب k.",
+  "Generate Report": "إنشاء تقرير",
+  "Generating report…": "جارٍ إنشاء التقرير…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "سيتم تشغيل التجميع تلقائياً إذا لم يتم تشغيله بعد. قد يستغرق ذلك حتى دقيقة واحدة."
 }

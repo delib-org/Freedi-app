@@ -3088,5 +3088,10 @@
   "Adding...": "מוסיף...",
   "Added {{count}} options": "נוספו {{count}} אפשרויות",
   "Failed to add options at line {{line}}": "כשל בהוספת אפשרויות בשורה {{line}}",
-  "Clear": "נקה"
+  "Clear": "נקה",
+  "Strategic Report (AI-Ready JSON)": "דוח אסטרטגי (JSON מוכן לבינה מלאכותית)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "מייצר דוח מאוגד ומקובץ לפי נושאים, מוכן לניתוח על ידי בינה מלאכותית. משלב הצעות דומות, מחשב מחדש את ההסכמה, ומוסיף פילוחים דמוגרפיים תוך שמירה על אנונימיות-k.",
+  "Generate Report": "צור דוח",
+  "Generating report…": "מייצר דוח…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "אם האשכול עדיין לא הופעל, הוא יתחיל אוטומטית. תהליך זה עשוי להימשך עד דקה."
 }

@@ -2639,5 +2639,10 @@
   "Adding...": "Añadiendo...",
   "Added {{count}} options": "Se añadieron {{count}} opciones",
   "Failed to add options at line {{line}}": "Error al añadir opciones en la línea {{line}}",
-  "Clear": "Limpiar"
+  "Clear": "Limpiar",
+  "Strategic Report (AI-Ready JSON)": "Informe estratégico (JSON listo para IA)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "Genera un informe agregado y agrupado por temas, listo para el análisis de IA. Combina sugerencias similares, recalcula el consenso y añade desgloses demográficos con anonimato-k.",
+  "Generate Report": "Generar informe",
+  "Generating report…": "Generando informe…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "El agrupamiento se activará automáticamente si aún no se ha ejecutado. Esto puede tardar hasta un minuto."
 }

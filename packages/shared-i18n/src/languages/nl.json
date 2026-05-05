@@ -2638,5 +2638,10 @@
   "Adding...": "Bezig met toevoegen...",
   "Added {{count}} options": "{{count}} opties toegevoegd",
   "Failed to add options at line {{line}}": "Toevoegen mislukt bij regel {{line}}",
-  "Clear": "Wissen"
+  "Clear": "Wissen",
+  "Strategic Report (AI-Ready JSON)": "Strategisch rapport (AI-klaar JSON)",
+  "Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.": "Genereert een geaggregeerd, op onderwerp gegroepeerd rapport, klaar voor AI-analyse. Combineert vergelijkbare suggesties, herberekent de consensus en voegt demografische uitsplitsingen toe onder k-anonimiteit.",
+  "Generate Report": "Rapport genereren",
+  "Generating report…": "Rapport wordt gegenereerd…",
+  "Clustering will be triggered automatically if it has not run yet. This may take up to a minute.": "Clustering wordt automatisch gestart als dit nog niet is uitgevoerd. Dit kan tot een minuut duren."
 }

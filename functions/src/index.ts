@@ -132,6 +132,9 @@ import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClust
 import { triggerTopicClusterPipeline } from './fn_topicClustering';
 import { triggerSummarizeFramingClusters } from './fn_summarizeClusters';
 
+// Strategic export (AI-ready report)
+import { strategicExport } from './fn_strategicExport';
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
@@ -996,6 +999,14 @@ exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterP
 exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(triggerSummarizeFramingClusters, {
 	memory: '512MiB',
 	timeoutSeconds: 300,
+});
+
+// AI-ready strategic-report export. May trigger the topic-cluster pipeline as a
+// dependency, plus runs an LLM topic-grouping pass — needs the same memory/
+// timeout profile as triggerTopicClusterPipeline.
+exports.strategicExport = wrapAdminHttpFunction(strategicExport, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
 });
 
 // Condensation / Grouped Suggestions — non-destructive clustering on demand,
