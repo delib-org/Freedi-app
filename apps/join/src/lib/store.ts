@@ -1124,14 +1124,26 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 
 	return onSnapshot(optionsQuery, (snap) => {
 		const incoming = snap.docs.map((d) => d.data() as Statement);
+		const currentUid = getUserState().user?.uid;
 
 		for (const opt of incoming) {
 			const id = opt.statementId;
-			if (!bufferStabilized) {
-				// Warm-up: absorb everything as "already known"
+			if (!bufferStabilized || opt.creatorId === currentUid) {
+				// Warm-up OR own submission: appear immediately, highlight own ones
+				if (bufferStabilized && opt.creatorId === currentUid && !bufferKnownIds.has(id)) {
+					// Own newly-submitted option: skip the pill, highlight directly
+					bufferHighlightedIds.add(id);
+					if (bufferHighlightTimers.has(id)) clearTimeout(bufferHighlightTimers.get(id)!);
+					const timer = setTimeout(() => {
+						bufferHighlightedIds.delete(id);
+						bufferHighlightTimers.delete(id);
+						m.redraw();
+					}, BUFFER_HIGHLIGHT_MS);
+					bufferHighlightTimers.set(id, timer);
+				}
 				bufferKnownIds.add(id);
 			} else if (!bufferKnownIds.has(id) && !bufferPendingIds.has(id)) {
-				// Post-stabilize: genuinely new option — queue it
+				// Post-stabilize: genuinely new option from another user — queue it
 				bufferPendingIds.add(id);
 			} else {
 				bufferKnownIds.add(id);
