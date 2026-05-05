@@ -50,6 +50,20 @@ let messageCountsUnsubs: Unsubscribe[] = [];
 let clusterEvaluatorCounts: Map<string, number> = new Map();
 let clusterLinksUnsubs: Unsubscribe[] = [];
 
+// New-solutions buffer: mirrors main app's useNewSolutionsBuffer logic.
+// Phase 1 (3 s stabilize window): every arriving ID is marked "known" so the
+// initial snapshot and any Firebase catch-up don't produce false positives.
+// Phase 2 (after stabilize): IDs not yet in knownOptionIds go to pendingOptionIds.
+// Flush: pending → highlightedOptionIds for HIGHLIGHT_MS, then auto-cleared.
+const BUFFER_STABILIZE_MS = 3_000;
+const BUFFER_HIGHLIGHT_MS = 10_000;
+let bufferKnownIds = new Set<string>();
+let bufferPendingIds = new Set<string>();
+let bufferHighlightedIds = new Set<string>();
+let bufferStabilized = false;
+let bufferStabilizeTimer: ReturnType<typeof setTimeout> | null = null;
+const bufferHighlightTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
 /** Confirmed (server-side) evaluations the current user has cast for options
  *  under the active question, keyed by optionId. Populated by
  *  `subscribeUserEvaluations`. The scale is -1..1, matching the main app's
@@ -977,6 +991,23 @@ export async function setSubQuestionHidden(subQuestionId: string, hidden: boolea
 	);
 }
 
+/** Admin-only: rename a question (main statement, sub-question, or top-level
+ *  question). Touches only `statement` and `lastUpdate`, so it stays clear of
+ *  the protected `statementSettings` field that requires a stricter rule
+ *  check. The Firestore `update` rule still requires admin/creator/system-admin
+ *  for any non-trivial write — the `isAdmin()` guard here is the client-side
+ *  mirror so we don't fire a write that the rule will reject. */
+export async function updateQuestionTitle(statementId: string, text: string): Promise<void> {
+	if (!isAdmin()) return;
+	const trimmed = text.trim();
+	if (!trimmed) return;
+	await setDoc(
+		doc(db, Collections.statements, statementId),
+		{ statement: trimmed, lastUpdate: Date.now() },
+		{ merge: true },
+	);
+}
+
 export function subscribeMainStatement(mainId: string): Unsubscribe {
 	// When swapping to a different main, reset the dedupe so the first snapshot
 	// for the new mid is allowed to fire a redirect.
@@ -1067,6 +1098,20 @@ export function getMessageCount(optionId: string): number {
 }
 
 export function subscribeOptions(questionId: string): Unsubscribe {
+	// Reset buffer for this question session
+	bufferKnownIds = new Set<string>();
+	bufferPendingIds = new Set<string>();
+	bufferHighlightedIds = new Set<string>();
+	bufferStabilized = false;
+	if (bufferStabilizeTimer !== null) clearTimeout(bufferStabilizeTimer);
+	for (const t of bufferHighlightTimers.values()) clearTimeout(t);
+	bufferHighlightTimers.clear();
+
+	bufferStabilizeTimer = setTimeout(() => {
+		bufferStabilized = true;
+		bufferStabilizeTimer = null;
+	}, BUFFER_STABILIZE_MS);
+
 	const optionsQuery = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', questionId),
@@ -1074,11 +1119,50 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 	);
 
 	return onSnapshot(optionsQuery, (snap) => {
-		allOptions = snap.docs.map((d) => d.data() as Statement);
+		const incoming = snap.docs.map((d) => d.data() as Statement);
+
+		for (const opt of incoming) {
+			const id = opt.statementId;
+			if (!bufferStabilized) {
+				// Warm-up: absorb everything as "already known"
+				bufferKnownIds.add(id);
+			} else if (!bufferKnownIds.has(id) && !bufferPendingIds.has(id)) {
+				// Post-stabilize: genuinely new option — queue it
+				bufferPendingIds.add(id);
+			} else {
+				bufferKnownIds.add(id);
+			}
+		}
+
+		allOptions = incoming;
 		subscribeMessageCounts(questionId);
 		subscribeClusterLinks();
 		m.redraw();
 	});
+}
+
+export function getNewOptionsPendingCount(): number {
+	return bufferPendingIds.size;
+}
+
+export function flushNewOptions(): void {
+	for (const id of bufferPendingIds) {
+		bufferKnownIds.add(id);
+		bufferHighlightedIds.add(id);
+		if (bufferHighlightTimers.has(id)) clearTimeout(bufferHighlightTimers.get(id)!);
+		const timer = setTimeout(() => {
+			bufferHighlightedIds.delete(id);
+			bufferHighlightTimers.delete(id);
+			m.redraw();
+		}, BUFFER_HIGHLIGHT_MS);
+		bufferHighlightTimers.set(id, timer);
+	}
+	bufferPendingIds = new Set<string>();
+	m.redraw();
+}
+
+export function isOptionNewlyArrived(optionId: string): boolean {
+	return bufferHighlightedIds.has(optionId);
 }
 
 /**
@@ -1555,6 +1639,26 @@ export async function getJoinFormSubmissionRole(
 	const submission = await getJoinFormSubmissionData(questionId, userId);
 
 	return submission?.role ?? null;
+}
+
+export interface TestSheetAccessResult {
+	ok: boolean;
+	serviceAccountEmail: string;
+	error?: string;
+}
+
+/** Calls the `testSheetAccess` Cloud Function to verify that the service
+ *  account can read/write the given spreadsheet. Used by the facilitator
+ *  panel "Test connection" button to give immediate feedback before the first
+ *  real submission — catches the "sheet not shared" mistake at setup time. */
+export async function testSheetAccess(sheetUrl: string): Promise<TestSheetAccessResult> {
+	const call = httpsCallable<{ sheetUrl: string }, TestSheetAccessResult>(
+		functions,
+		'testSheetAccess',
+	);
+	const result = await call({ sheetUrl });
+
+	return result.data;
 }
 
 export async function saveJoinFormSubmission(

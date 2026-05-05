@@ -14,6 +14,9 @@ import {
 	subscribeUserEvaluations,
 	getUnreadCount,
 	getTotalVisibleCount,
+	getNewOptionsPendingCount,
+	flushNewOptions,
+	isOptionNewlyArrived,
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
 import { markOpenedInJoin } from '@/lib/joinSubscriptions';
@@ -26,6 +29,7 @@ import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { WizColFooter } from '@/components/WizColFooter';
+import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { captureFlipPositions, playFlipAnimation } from '@/lib/flipAnimate';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -158,6 +162,7 @@ export const Solutions: m.Component = {
 		const options = getVisibleOptions();
 		const total = getTotalVisibleCount();
 		const unread = getUnreadCount();
+		const pendingCount = getNewOptionsPendingCount();
 		const accentColor = question.color || 'var(--terra-500)';
 		const facilitated = isFacilitatedMode();
 		const mainId = m.route.param('mid');
@@ -180,7 +185,31 @@ export const Solutions: m.Component = {
 			// self-gates on `isAdmin()`, so participants don't see it either way.
 			m(BackButton, { to: facilitated && mainId ? `/m/${mainId}` : '/' }),
 			m('.solutions__header', { style: `--q-accent: ${accentColor}` }, [
-				m('h1.solutions__title', question.statement),
+				m(EditableTitle, {
+					statementId: question.statementId,
+					value: question.statement,
+					canEdit: isAdmin(),
+					as: 'h1',
+					className: 'solutions__title',
+				}),
+				pendingCount > 0
+					? m(
+							'button.solutions__new-pill',
+							{
+								onclick: flushNewOptions,
+								'aria-live': 'polite',
+								'aria-label': pendingCount === 1
+									? t('solutions.new_answers')
+									: t('solutions.new_answers_plural', { count: pendingCount }),
+							},
+							[
+								m('span.solutions__new-pill-arrow', '↑'),
+								m('span', pendingCount === 1
+									? t('solutions.new_answers')
+									: t('solutions.new_answers_plural', { count: pendingCount })),
+							],
+						)
+					: null,
 			]),
 			m('.solutions__scroll', [
 				question.statementSettings?.showJoining !== false
@@ -303,6 +332,7 @@ export const Solutions: m.Component = {
 										questionId: question.statementId,
 										adminMode: isAdmin() && adminMode && !facilitated,
 										displayOnly: facilitated,
+										highlighted: isOptionNewlyArrived(option.statementId),
 										onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
 											pendingJoinOptionId = optionId;
 											pendingJoinRole = role;
@@ -317,7 +347,7 @@ export const Solutions: m.Component = {
 						]),
 				// Organizer suggestions render AFTER the crowd list — the crowd
 				// is the primary content, admin additions come last.
-				renderOrganizerSection(question.statementId, adminMode, facilitated),
+				renderOrganizerSection(question.statementId, adminMode, facilitated, isOptionNewlyArrived),
 				m(WizColFooter),
 			]),
 			showJoinForm && question.statementSettings?.joinForm
@@ -378,6 +408,7 @@ function renderOrganizerSection(
 	questionId: string,
 	adminModeActive: boolean,
 	facilitated: boolean,
+	isHighlighted: (id: string) => boolean,
 ): m.Children {
 	const suggestions = getOrganizerSuggestions();
 	if (suggestions.length === 0) return null;
@@ -394,6 +425,7 @@ function renderOrganizerSection(
 					isOrganizerSuggestion: true,
 					adminMode: isAdmin() && adminModeActive && !facilitated,
 					displayOnly: facilitated,
+					highlighted: isHighlighted(option.statementId),
 					onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
 						pendingJoinOptionId = optionId;
 						pendingJoinRole = role;

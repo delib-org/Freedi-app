@@ -201,6 +201,9 @@ interface SolutionCardAttrs {
 	/** Open the edit modal for this option. Provided by the parent so the modal
 	 *  lives at the page level (single overlay shared across cards). */
 	onRequestEdit?: (optionId: string) => void;
+	/** When true, apply a brief bluish highlight — used for newly arrived options
+	 *  that the user flushed from the new-options pill. */
+	highlighted?: boolean;
 }
 
 function renderTitle(statement: string): m.Vnode | null {
@@ -263,6 +266,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 			isOrganizerSuggestion,
 			displayOnly,
 			onRequestEdit,
+			highlighted,
 		} = vnode.attrs;
 		const user = getUserState().user;
 		const question = getQuestion();
@@ -325,9 +329,10 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 
 		const organizerClass = isOrganizerSuggestion ? '.solution-card--organizer' : '';
 		const displayOnlyClass = displayOnly ? '.solution-card--display-only' : '';
+		const highlightClass = highlighted ? '.solution-card--highlighted' : '';
 
 		return m(
-			`.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}${displayOnlyClass}`,
+			`.solution-card${isActivated ? '.solution-card--activated' : ''}${isCluster && groupSize > 0 ? '.solution-card--grouped' : ''}${organizerClass}${displayOnlyClass}${highlightClass}`,
 			{
 				// Stable identifier the FLIP reorder animation reads on the parent
 				// list; see lib/flipAnimate.ts and views/Solutions.ts.

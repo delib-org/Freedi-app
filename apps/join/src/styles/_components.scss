@@ -201,6 +201,21 @@
     margin: 0;
     position: relative;
     z-index: 2;
+
+    // Admin-only inline-edit affordance — see .main-hub__title--editable.
+    &--editable {
+      cursor: text;
+      border-radius: var(--radius-sm, 6px);
+      padding: 0 var(--space-xs, 4px);
+      transition: background-color 120ms ease, box-shadow 120ms ease;
+
+      &:hover,
+      &:focus-visible {
+        background-color: var(--paper-soft);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--terra-300, rgba(0, 0, 0, 0.12));
+      }
+    }
   }
 
   &__scroll {
@@ -269,6 +284,49 @@
     letter-spacing: 0.02em;
   }
 
+  // New-solutions notification pill — appears in the sticky header when fresh
+  // options arrive after the initial load. User taps to flush + highlight them.
+  &__new-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding: 6px 14px;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-inverse);
+    background: var(--teal-600);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 2;
+    animation: pill-pop-in var(--dur-base, 200ms) var(--ease-out, ease-out);
+    transition:
+      background-color var(--dur-quick, 150ms) var(--ease-out, ease-out),
+      transform var(--dur-quick, 150ms) var(--ease-out, ease-out),
+      box-shadow var(--dur-quick, 150ms) var(--ease-out, ease-out);
+
+    &:hover {
+      background: var(--teal-700);
+      box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-xs);
+    }
+  }
+
+  &__new-pill-arrow {
+    font-size: var(--font-size-base);
+    line-height: 1;
+    animation: arrow-bounce 1.2s ease-in-out infinite;
+  }
+
   &__list {
     display: flex;
     flex-direction: column;
@@ -324,6 +382,14 @@
     .solution-card__title {
       color: var(--teal-700);              // 10:1 on teal-50 ✓ AAA
     }
+  }
+
+  // Newly-arrived option highlight. Applied when the user flushes the
+  // new-options pill; fades from a soft teal wash back to the card default
+  // over BUFFER_HIGHLIGHT_MS (10 s). Not applied to activated cards — they
+  // already have a stronger teal treatment.
+  &--highlighted:not(.solution-card--activated) {
+    animation: card-new-highlight 10s ease-out forwards;
   }
 
   // Phase 1 of the FLIP reorder animation (lib/flipAnimate.ts): the inline
@@ -1442,6 +1508,37 @@
   100% { transform: scale(1); opacity: 1; }
 }
 
+@keyframes pill-pop-in {
+  0%   { transform: translateY(-6px) scale(0.85); opacity: 0; }
+  70%  { transform: translateY(2px) scale(1.04); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes arrow-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
+// Highlight fades from teal-50 wash + teal border back to default card styles.
+// Duration matches BUFFER_HIGHLIGHT_MS in store.ts (10 s).
+@keyframes card-new-highlight {
+  0%   {
+    background: var(--teal-50);
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(26, 122, 108, 0.15);
+  }
+  15%  {
+    background: var(--teal-50);
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(26, 122, 108, 0.15);
+  }
+  100% {
+    background: var(--bg-card);
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // WizCol footer — attribution + share (ported from MC)
 // -----------------------------------------------------------------------------
@@ -1708,6 +1805,33 @@
 // brand row. Hidden once the user is non-anonymous; once admin status is
 // detected the FacilitatorPanel handle takes over.
 
+// Inline-edit input variant for admin-editable titles. The EditableTitle
+// component renders an <input> that re-uses the title's class so it inherits
+// font/size/colour, then layers the input-only chrome on top. Reset native
+// input padding/border so the swap from <h1> to <input> doesn't visibly shift.
+.editable-title-input {
+  width: 100%;
+  background: var(--paper, transparent);
+  border: 2px solid var(--terra-500, currentColor);
+  border-radius: var(--radius-sm, 6px);
+  padding: var(--space-xs, 4px) var(--space-sm, 8px);
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04);
+
+  &:focus {
+    border-color: var(--terra-600, currentColor);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: progress;
+  }
+}
+
 .main-hub__title {
   margin: 0 0 var(--space-sm);
   font-family: var(--font-display, var(--font-body));
@@ -1716,6 +1840,23 @@
   line-height: var(--line-height-tight);
   color: var(--text-primary);
   text-align: center;
+
+  // Admin-only inline-edit affordance. Only applied when the title is clickable
+  // (the EditableTitle component adds --editable for admins). Keeps the visual
+  // weight identical for participants — no hover hint, no cursor change.
+  &--editable {
+    cursor: text;
+    border-radius: var(--radius-sm, 6px);
+    padding: 0 var(--space-xs, 4px);
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--paper-soft, rgba(0, 0, 0, 0.04));
+      outline: none;
+      box-shadow: 0 0 0 2px var(--terra-300, rgba(0, 0, 0, 0.12));
+    }
+  }
 }
 
 .main-hub__description {
@@ -2944,6 +3085,88 @@ $facilitator-panel-width: 300px;
     color: var(--terra-700, #9a3412);
     border-color: var(--terra-500, #f97316);
   }
+}
+
+.facilitator-panel__joinform-sheet-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+
+  .facilitator-panel__joinform-input {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.facilitator-panel__joinform-check {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  white-space: nowrap;
+  color: var(--text-strong, #1c1917);
+  background: var(--paper, #ffffff);
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background var(--dur-quick, 140ms) var(--ease-out),
+              border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: rgba(20, 95, 84, 0.06);
+    border-color: var(--teal-600, #145f54);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &--ok {
+    color: var(--agree, #16a34a);
+    border-color: var(--agree, #16a34a);
+    background: rgba(22, 163, 74, 0.06);
+  }
+
+  &--fail {
+    color: var(--disagree, #dc2626);
+    border-color: var(--disagree, #dc2626);
+    background: rgba(220, 38, 38, 0.06);
+  }
+}
+
+.facilitator-panel__joinform-check-status {
+  margin-top: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  line-height: 1.4;
+
+  &--ok {
+    color: var(--agree, #16a34a);
+  }
+
+  &--fail {
+    color: var(--disagree, #dc2626);
+  }
+}
+
+.facilitator-panel__joinform-sheet-hint {
+  margin-top: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  line-height: 1.4;
+}
+
+.facilitator-panel__joinform-sheet-email {
+  display: block;
+  margin-top: 2px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: var(--text-strong, #1c1917);
+  background: var(--bg-muted, #f5f5f4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  user-select: all;
 }
 
 .facilitator-panel__joinform-add {
