@@ -195,6 +195,7 @@ import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActio
 // Civil Activity Hub — Join Form exports
 import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
+import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
 import { createOrganizerSuggestion } from './engagement/joinForm/fn_createOrganizerSuggestion';
 import { resolveJoinIntents } from './engagement/joinForm/fn_resolveJoinIntents';
 
@@ -226,7 +227,10 @@ if (!getApps().length) {
 export const db = getFirestore();
 
 // Environment configuration
-const isProduction = process.env.NODE_ENV === 'production';
+// NODE_ENV is set by GCP at runtime; ENVIRONMENT comes from functions/.env (env-loader)
+const isProduction =
+	process.env.NODE_ENV === 'production' ||
+	process.env.ENVIRONMENT === 'production';
 
 /**
  * Gets current timestamp in HH:MM:SS.mmm format
@@ -844,6 +848,7 @@ exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
 exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
+exports.testSheetAccess = testSheetAccess;
 exports.createOrganizerSuggestion = createOrganizerSuggestion;
 exports.resolveJoinIntents = resolveJoinIntents;
 

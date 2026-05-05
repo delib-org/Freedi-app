@@ -22,6 +22,8 @@ import {
 	applyThemeStyleToDOM,
 	setStatementLanguage,
 	getActiveLanguageScope,
+	testSheetAccess,
+	TestSheetAccessResult,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 
@@ -573,6 +575,8 @@ function renderToggle(opts: {
 // inputs every time the toggle flips on. Click the chevron row to reveal.
 
 let joinFormEditorOpen = false;
+let sheetCheckState: 'idle' | 'checking' | 'ok' | 'fail' = 'idle';
+let sheetCheckResult: TestSheetAccessResult | null = null;
 
 function buildDefaultJoinFields(): JoinFormField[] {
 	return [
@@ -630,8 +634,13 @@ async function persistJoinForm(question: Statement, next: JoinFormConfig): Promi
 		question.statementSettings = { joinForm: next };
 	}
 	m.redraw();
+	// Firestore rejects `undefined` values — strip optional fields that aren't set
+	// so the document write succeeds even when sheetUrl / formLanguage are absent.
+	const safeConfig = Object.fromEntries(
+		Object.entries(next).filter(([, v]) => v !== undefined),
+	) as JoinFormConfig;
 	await setQuestionSetting(question.statementId, {
-		statementSettings: { joinForm: next },
+		statementSettings: { joinForm: safeConfig },
 	});
 }
 
@@ -659,7 +668,25 @@ async function setJoinFormDestination(
 async function setJoinFormSheetUrl(question: Statement, url: string): Promise<void> {
 	const next = getJoinFormConfig(question);
 	next.sheetUrl = url;
+	sheetCheckState = 'idle';
+	sheetCheckResult = null;
 	await persistJoinForm(question, next);
+}
+
+async function runSheetCheck(sheetUrl: string): Promise<void> {
+	if (!sheetUrl) return;
+	sheetCheckState = 'checking';
+	sheetCheckResult = null;
+	m.redraw();
+	try {
+		const result = await testSheetAccess(sheetUrl);
+		sheetCheckResult = result;
+		sheetCheckState = result.ok ? 'ok' : 'fail';
+	} catch {
+		sheetCheckState = 'fail';
+		sheetCheckResult = { ok: false, serviceAccountEmail: '', error: 'Request failed' };
+	}
+	m.redraw();
 }
 
 async function updateJoinFormField(
@@ -777,15 +804,57 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 							{ for: `joinform-sheet-${question.statementId}` },
 							t('facilitator.joinForm.sheetUrl'),
 						),
-						m('input.facilitator-panel__joinform-input', {
-							id: `joinform-sheet-${question.statementId}`,
-							type: 'url',
-							value: config.sheetUrl ?? '',
-							placeholder: t('facilitator.joinForm.sheetUrl.placeholder'),
-							onchange: (e: Event) => {
-								void setJoinFormSheetUrl(question, (e.target as HTMLInputElement).value);
-							},
-						}),
+						m('.facilitator-panel__joinform-sheet-row', [
+							m('input.facilitator-panel__joinform-input', {
+								id: `joinform-sheet-${question.statementId}`,
+								type: 'url',
+								value: config.sheetUrl ?? '',
+								placeholder: t('facilitator.joinForm.sheetUrl.placeholder'),
+								onchange: (e: Event) => {
+									void setJoinFormSheetUrl(question, (e.target as HTMLInputElement).value);
+								},
+							}),
+							m(
+								`button.facilitator-panel__joinform-check${sheetCheckState === 'ok' ? '.facilitator-panel__joinform-check--ok' : ''}${sheetCheckState === 'fail' ? '.facilitator-panel__joinform-check--fail' : ''}`,
+								{
+									type: 'button',
+									disabled: !config.sheetUrl || sheetCheckState === 'checking',
+									onclick: () => {
+										if (config.sheetUrl) void runSheetCheck(config.sheetUrl);
+									},
+								},
+								sheetCheckState === 'checking'
+									? t('facilitator.joinForm.sheetCheck.checking')
+									: sheetCheckState === 'ok'
+										? t('facilitator.joinForm.sheetCheck.ok')
+										: sheetCheckState === 'fail'
+											? t('facilitator.joinForm.sheetCheck.fail')
+											: t('facilitator.joinForm.sheetCheck'),
+							),
+						]),
+						sheetCheckResult
+							? m(
+									`.facilitator-panel__joinform-check-status${sheetCheckResult.ok ? '.facilitator-panel__joinform-check-status--ok' : '.facilitator-panel__joinform-check-status--fail'}`,
+									[
+										sheetCheckResult.error
+											? m('span', sheetCheckResult.error)
+											: null,
+										sheetCheckResult.serviceAccountEmail
+											? m('.facilitator-panel__joinform-sheet-hint', [
+													m('span', t('facilitator.joinForm.sheetHint')),
+													m(
+														'code.facilitator-panel__joinform-sheet-email',
+														sheetCheckResult.serviceAccountEmail,
+													),
+												])
+											: null,
+									],
+								)
+							: !config.sheetUrl
+								? null
+								: m('.facilitator-panel__joinform-sheet-hint', [
+										m('span', t('facilitator.joinForm.sheetHint')),
+									]),
 					])
 				: null,
 			m('.facilitator-panel__joinform-section', [
