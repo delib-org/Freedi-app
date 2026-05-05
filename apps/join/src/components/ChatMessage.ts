@@ -1,6 +1,7 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
 import { t } from '@/lib/i18n';
+import { linkify } from '@/lib/linkify';
 
 interface ChatMessageAttrs {
   message: Statement;
@@ -68,12 +69,12 @@ export const ChatMessage: m.Component<ChatMessageAttrs> = {
               ),
             ])
           : null,
-        m('.chat-message__text', message.statement),
+        m('.chat-message__text', linkify(message.statement)),
         bodyParagraphs.length > 0
           ? m(
               '.chat-message__body',
               bodyParagraphs.map((line, i) =>
-                m('.chat-message__paragraph', { key: i }, line),
+                m('.chat-message__paragraph', { key: i }, linkify(line)),
               ),
             )
           : null,

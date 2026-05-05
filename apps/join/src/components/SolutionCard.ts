@@ -22,6 +22,7 @@ import {
 	launchConfetti,
 } from '@/lib/celebrate';
 import { Evaluation } from '@/components/Evaluation';
+import { linkify } from '@/lib/linkify';
 
 function getOptionDescription(option: Statement): string | null {
 	if (option.description) return option.description;
@@ -85,13 +86,13 @@ function renderStatementParagraphs(statement: string): m.Vnode[] {
 	if (paragraphs.length === 0) return [];
 
 	const [title, ...rest] = paragraphs;
-	const nodes: m.Vnode[] = [m('.solution-card__title', title)];
+	const nodes: m.Vnode[] = [m('.solution-card__title', linkify(title))];
 
 	if (rest.length > 0) {
 		nodes.push(
 			m(
 				'.solution-card__body',
-				rest.map((p) => m('p.solution-card__body-paragraph', p)),
+				rest.map((p) => m('p.solution-card__body-paragraph', linkify(p))),
 			),
 		);
 	}
@@ -217,7 +218,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 				renderMetaRow(option, isCluster, groupSize),
 				...renderStatementParagraphs(option.statement),
 				getOptionDescription(option)
-					? m('.solution-card__description', getOptionDescription(option))
+					? m('.solution-card__description', linkify(getOptionDescription(option) ?? ''))
 					: null,
 				// The 5-face evaluation row is gated by the same
 				// `statementSettings.showEvaluation` flag the main app uses, so

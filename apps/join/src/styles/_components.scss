@@ -1255,6 +1255,22 @@
   }
 }
 
+// Inline link rendered by `linkify()` inside chat messages and solution-card
+// text. Underlined, themed, and breaks long URLs so they don't blow out the
+// bubble's max-width.
+.linkified {
+  color: var(--accent-link, var(--terra-700, currentColor));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration-thickness: 2px;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Modal
 // -----------------------------------------------------------------------------
