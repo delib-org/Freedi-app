@@ -1507,10 +1507,42 @@ export interface ToggleJoiningResult {
 	error?: string;
 }
 
+/** All visible options under the current question where the user is a
+ *  member in either role (joined or organizers). Distinct — a user who's
+ *  both activist and organizer on the same option counts once. Used by the
+ *  per-user cap: the cap is "how many activities you're committed to" and
+ *  is role-agnostic, so a role swap on the same option (activist ↔
+ *  organizer) doesn't bump the count and shouldn't trigger the swap modal.
+ *  Hidden / failed options are filtered out so they don't inflate the count
+ *  toward an admin-imposed cap participants can no longer act on. */
+export function getUserCommittedOptions(): Statement[] {
+	const creator = buildCreator();
+	if (!creator) return [];
+	const uid = creator.uid;
+
+	return allOptions.filter((option) => {
+		if (option.hide === true) return false;
+		if (option.joinStatus === 'failed') return false;
+		const inJoined = Array.isArray(option.joined) && option.joined.some((c: Creator) => c.uid === uid);
+		const inOrgs =
+			Array.isArray(option.organizers) && option.organizers.some((c: Creator) => c.uid === uid);
+
+		return inJoined || inOrgs;
+	});
+}
+
+export interface ToggleJoiningOptions {
+	/** When set, atomically remove the user from this sibling option's
+	 *  `joined`/`organizers` list before adding them to the new one. Used by
+	 *  the LimitReachedModal swap flow so a cap is preserved across the swap. */
+	releaseFromOptionId?: string;
+}
+
 export async function toggleJoining(
 	statementId: string,
 	parentStatementId: string,
 	role: JoinRole = 'activist',
+	options: ToggleJoiningOptions = {},
 ): Promise<ToggleJoiningResult> {
 	const field: 'joined' | 'organizers' = role === 'organizer' ? 'organizers' : 'joined';
 
@@ -1519,6 +1551,9 @@ export async function toggleJoining(
 		if (!creator) throw new Error('User not authenticated');
 
 		const statementRef = doc(db, Collections.statements, statementId);
+		const releaseRef = options.releaseFromOptionId
+			? doc(db, Collections.statements, options.releaseFromOptionId)
+			: null;
 		let leftStatementId: string | undefined;
 		let leftStatementTitle: string | undefined;
 
@@ -1534,6 +1569,10 @@ export async function toggleJoining(
 		await runTransaction(db, async (transaction) => {
 			const statementDB = await transaction.get(statementRef);
 			if (!statementDB.exists()) throw new Error('Statement does not exist');
+
+			// Read the explicit release target inside the transaction too, so the
+			// remove-and-add pair is atomic from the participant's perspective.
+			const releaseSnap = releaseRef ? await transaction.get(releaseRef) : null;
 
 			const statement = statementDB.data() as Statement;
 			const otherField: 'joined' | 'organizers' = field === 'joined' ? 'organizers' : 'joined';
@@ -1557,7 +1596,32 @@ export async function toggleJoining(
 				updatePayload[otherField] = currentOthers.filter((u) => u.uid !== creator.uid);
 			}
 
-			if (role === 'activist' && singleJoinOnly && parentStatementId) {
+			// Explicit swap (LimitReachedModal): remove the user from the option
+			// they picked to leave, then add them to the new one. Cap is role-
+			// agnostic, so the user's commitment on the released option could be
+			// in either `joined` or `organizers` (or both — admins seeded that
+			// way in the past). Strip from whichever lists contain them.
+			if (releaseSnap && releaseSnap.exists() && releaseRef && releaseRef.path !== statementRef.path) {
+				const releaseData = releaseSnap.data() as Statement;
+				const releaseJoined: Creator[] = Array.isArray(releaseData.joined)
+					? releaseData.joined
+					: [];
+				const releaseOrgs: Creator[] = Array.isArray(releaseData.organizers)
+					? releaseData.organizers
+					: [];
+				const releaseUpdate: Record<string, Creator[]> = {};
+				if (releaseJoined.some((u) => u.uid === creator.uid)) {
+					releaseUpdate.joined = releaseJoined.filter((u) => u.uid !== creator.uid);
+				}
+				if (releaseOrgs.some((u) => u.uid === creator.uid)) {
+					releaseUpdate.organizers = releaseOrgs.filter((u) => u.uid !== creator.uid);
+				}
+				if (Object.keys(releaseUpdate).length > 0) {
+					transaction.update(releaseRef, releaseUpdate);
+				}
+				leftStatementId = releaseData.statementId;
+				leftStatementTitle = releaseData.statement;
+			} else if (role === 'activist' && singleJoinOnly && parentStatementId) {
 				const siblingsQuery = query(
 					collection(db, Collections.statements),
 					where('parentId', '==', parentStatementId),

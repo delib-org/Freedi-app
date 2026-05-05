@@ -69,11 +69,17 @@ export type JoinResolutionConfig = InferOutput<typeof JoinResolutionConfigSchema
  * Activation threshold — minimum number of activists and organizers
  * required before an option is considered "activated". When enabled,
  * users see how many more people are needed.
+ *
+ * `maxJoinsPerUser` (optional) caps how many sibling options a single
+ * participant may join as activist under this question. When the user
+ * tries to join past the cap, the join app prompts them to swap out one
+ * existing membership for the new one. 0 / undefined disables the cap.
  */
 export const ActivationThresholdSchema = object({
 	enabled: boolean(),
 	minActivists: optional(number()),
 	minOrganizers: optional(number()),
+	maxJoinsPerUser: optional(number()),
 });
 export type ActivationThreshold = InferOutput<typeof ActivationThresholdSchema>;
 

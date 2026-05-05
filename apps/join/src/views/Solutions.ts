@@ -24,6 +24,7 @@ import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
+import { LimitReachedModal } from '@/components/LimitReachedModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
 import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
@@ -43,6 +44,14 @@ let evaluationsUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
+// Limit-reached swap modal state — set when the user clicks join on a fresh
+// option but is already at the per-user cap. They pick one of `limitCurrentJoins`
+// to release, and `toggleJoining` swaps atomically.
+let showLimitSwap = false;
+let limitPendingOptionId: string | null = null;
+let limitPendingOptionTitle = '';
+let limitPendingRole: 'activist' | 'organizer' = 'activist';
+let limitCurrentJoins: Statement[] = [];
 let adminMode = false;
 let showAddSuggestion = false;
 // Tracks which mode the modal opened in. Admins can open it as either an
@@ -338,6 +347,18 @@ export const Solutions: m.Component = {
 											pendingJoinRole = role;
 											showJoinForm = true;
 										},
+										onRequestLimitSwap: (
+											optionId: string,
+											optionTitle: string,
+											role: 'activist' | 'organizer',
+											currentJoins: Statement[],
+										) => {
+											limitPendingOptionId = optionId;
+											limitPendingOptionTitle = optionTitle;
+											limitPendingRole = role;
+											limitCurrentJoins = currentJoins;
+											showLimitSwap = true;
+										},
 										onRequestEdit: (optionId: string) => {
 											editingOptionId = optionId;
 										},
@@ -367,6 +388,22 @@ export const Solutions: m.Component = {
 						asOrganizer: addAsOrganizer,
 						onClose: () => {
 							showAddSuggestion = false;
+						},
+					})
+				: null,
+			showLimitSwap && limitPendingOptionId
+				? m(LimitReachedModal, {
+						pendingOptionId: limitPendingOptionId,
+						pendingOptionTitle: limitPendingOptionTitle,
+						questionId: question.statementId,
+						role: limitPendingRole,
+						currentJoins: limitCurrentJoins,
+						maxJoinsPerUser:
+							question.statementSettings?.activationThreshold?.maxJoinsPerUser ?? 0,
+						onClose: () => {
+							showLimitSwap = false;
+							limitPendingOptionId = null;
+							limitCurrentJoins = [];
 						},
 					})
 				: null,
@@ -430,6 +467,18 @@ function renderOrganizerSection(
 						pendingJoinOptionId = optionId;
 						pendingJoinRole = role;
 						showJoinForm = true;
+					},
+					onRequestLimitSwap: (
+						optionId: string,
+						optionTitle: string,
+						role: 'activist' | 'organizer',
+						currentJoins: Statement[],
+					) => {
+						limitPendingOptionId = optionId;
+						limitPendingOptionTitle = optionTitle;
+						limitPendingRole = role;
+						limitCurrentJoins = currentJoins;
+						showLimitSwap = true;
 					},
 					onRequestEdit: (optionId: string) => {
 						editingOptionId = optionId;

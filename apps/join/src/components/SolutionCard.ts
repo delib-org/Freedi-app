@@ -13,6 +13,7 @@ import {
 	canEditSuggestion,
 	getOptionParagraphs,
 	loadOptionParagraphs,
+	getUserCommittedOptions,
 	JoinRole,
 } from '@/lib/store';
 import { getUserState } from '@/lib/user';
@@ -191,6 +192,15 @@ interface SolutionCardAttrs {
 	option: Statement;
 	questionId: string;
 	onRequestJoinForm: (optionId: string, role: JoinRole) => void;
+	/** Fired when the user clicks join but is already at the per-user cap.
+	 *  Solutions.ts opens the swap modal so the user can pick which existing
+	 *  membership to release before joining the new option. */
+	onRequestLimitSwap?: (
+		optionId: string,
+		optionTitle: string,
+		role: JoinRole,
+		currentJoins: Statement[],
+	) => void;
 	/** When true, show admin curation controls (Hide / Force-show). */
 	adminMode?: boolean;
 	/** When true, render the organizer-suggestion variant (badge + accent). */
@@ -262,6 +272,7 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 			option,
 			questionId,
 			onRequestJoinForm,
+			onRequestLimitSwap,
 			adminMode,
 			isOrganizerSuggestion,
 			displayOnly,
@@ -473,7 +484,13 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 											{
 												onclick: (e: Event) => {
 													e.stopPropagation();
-													handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+													handleJoin(
+														option,
+														questionId,
+														'activist',
+														onRequestJoinForm,
+														onRequestLimitSwap,
+													);
 												},
 											},
 											isJoinedAsActivist ? t('card.joined_activist') : t('card.join_activist'),
@@ -484,10 +501,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 												onclick: (e: Event) => {
 													e.stopPropagation();
 													handleJoin(
-														option.statementId,
+														option,
 														questionId,
 														'organizer',
 														onRequestJoinForm,
+														onRequestLimitSwap,
 													);
 												},
 											},
@@ -500,7 +518,13 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 											{
 												onclick: (e: Event) => {
 													e.stopPropagation();
-													handleJoin(option.statementId, questionId, 'activist', onRequestJoinForm);
+													handleJoin(
+														option,
+														questionId,
+														'activist',
+														onRequestJoinForm,
+														onRequestLimitSwap,
+													);
 												},
 											},
 											isJoinedAsActivist ? t('card.joined') : t('card.join'),
@@ -539,10 +563,13 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 };
 
 async function handleJoin(
-	optionId: string,
+	option: Statement,
 	questionId: string,
 	role: JoinRole,
 	onRequestJoinForm: (optionId: string, role: JoinRole) => void,
+	onRequestLimitSwap:
+		| ((optionId: string, optionTitle: string, role: JoinRole, currentJoins: Statement[]) => void)
+		| undefined,
 ): Promise<void> {
 	const creator = getCreator();
 	if (!creator) return;
@@ -550,13 +577,37 @@ async function handleJoin(
 	const question = getQuestion();
 	const joinForm = question?.statementSettings?.joinForm;
 
+	// Cap check — counts distinct activities (any role). Skipped when:
+	//   • the user is already on this option in EITHER role (an activist→
+	//     organizer swap on the same option doesn't change their count), or
+	//   • the user is unjoining (the click on an already-joined role removes
+	//     them, so cap can only go down — toggleJoining handles that path).
+	// When the cap is hit on a brand-new option, hand off to the parent's
+	// swap modal. Admin owns the cap via `activationThreshold.maxJoinsPerUser`.
+	const isOnThisOptionAnyRole =
+		(Array.isArray(option.joined) && option.joined.some((c) => c.uid === creator.uid)) ||
+		(Array.isArray(option.organizers) && option.organizers.some((c) => c.uid === creator.uid));
+	const cap = question?.statementSettings?.activationThreshold?.enabled
+		? question.statementSettings.activationThreshold.maxJoinsPerUser ?? 0
+		: 0;
+	if (cap > 0 && !isOnThisOptionAnyRole && onRequestLimitSwap) {
+		const currentJoins = getUserCommittedOptions().filter(
+			(o) => o.statementId !== option.statementId,
+		);
+		if (currentJoins.length >= cap) {
+			onRequestLimitSwap(option.statementId, option.statement, role, currentJoins);
+
+			return;
+		}
+	}
+
 	if (joinForm?.enabled) {
 		// Optimistic path: open the form IMMEDIATELY when the cache doesn't tell
 		// us the user already submitted for this role. The Firestore verification
 		// runs in the background and corrects the cache for next time.
 		const cachedRole = getCachedJoinFormSubmissionRole(questionId, creator.uid);
 		if (cachedRole !== role) {
-			onRequestJoinForm(optionId, role);
+			onRequestJoinForm(option.statementId, role);
 			// Warm the cache so subsequent clicks on the same role skip the form.
 			void getJoinFormSubmissionRole(questionId, creator.uid);
 
@@ -564,7 +615,7 @@ async function handleJoin(
 		}
 	}
 
-	await toggleJoining(optionId, questionId, role);
+	await toggleJoining(option.statementId, questionId, role);
 	m.redraw();
 }
 

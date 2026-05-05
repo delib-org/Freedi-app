@@ -1461,6 +1461,60 @@
     margin-top: var(--space-lg);
     justify-content: flex-end;
   }
+
+  &__text {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink);
+    line-height: 1.45;
+    margin: 0 0 var(--space-md) 0;
+  }
+}
+
+// Limit-reached swap modal — list of activities the user is currently joined
+// to, presented as radio rows so they can pick exactly one to leave before
+// joining the new one. Visual style mirrors the modal__field rhythm so the
+// dialog reads as part of the same family of admin/participant prompts.
+.limit-reached__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.limit-reached__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: border-color var(--dur-quick) var(--ease-out),
+    background-color var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    border-color: var(--terra-600);
+  }
+
+  &--selected {
+    border-color: var(--terra-600);
+    background: var(--terra-50, var(--bg-input));
+  }
+}
+
+.limit-reached__radio {
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--terra-600);
+}
+
+.limit-reached__item-title {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--ink);
+  line-height: 1.4;
 }
 
 // -----------------------------------------------------------------------------
@@ -2855,6 +2909,34 @@ $facilitator-panel-width: 300px;
   font-size: var(--font-size-xs, 0.75rem);
   color: var(--text-muted, #78716c);
   font-variant-numeric: tabular-nums;
+}
+
+// Activation threshold rows — each rendered with renderToggle's row layout, so
+// we only need to style the inline number input and the section grouping.
+.facilitator-panel__activation {
+  display: flex;
+  flex-direction: column;
+  gap: 0; // toggle/number rows already carry their own padding
+}
+
+.facilitator-panel__number-input {
+  width: 5.5rem;
+  padding: 6px var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  transition: border-color var(--dur-quick) var(--ease-out);
+
+  &:focus {
+    border-color: var(--terra-600);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 1px;
+  }
 }
 
 @keyframes facilitator-panel-fade-in {

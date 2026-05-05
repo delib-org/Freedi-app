@@ -375,6 +375,131 @@ async function flipShowJoining(question: Statement): Promise<void> {
 	});
 }
 
+// --- Activation threshold (min organizers / activists / max-joins-per-user) -
+// Writes to `statementSettings.activationThreshold` on the question. The
+// Solutions view reads the same path to render the "X organizers + Y activists
+// needed" subtitle and the per-card quota bar, and the join handler reads
+// `maxJoinsPerUser` to decide whether to prompt the swap modal.
+function getActivationThreshold(question: Statement): {
+	enabled: boolean;
+	minOrganizers: number;
+	minActivists: number;
+	maxJoinsPerUser: number;
+} {
+	const t = question.statementSettings?.activationThreshold;
+
+	return {
+		enabled: t?.enabled ?? false,
+		minOrganizers: t?.minOrganizers ?? 0,
+		minActivists: t?.minActivists ?? 0,
+		maxJoinsPerUser: t?.maxJoinsPerUser ?? 0,
+	};
+}
+
+async function setActivationThreshold(
+	question: Statement,
+	patch: Partial<{
+		enabled: boolean;
+		minOrganizers: number;
+		minActivists: number;
+		maxJoinsPerUser: number;
+	}>,
+): Promise<void> {
+	const current = getActivationThreshold(question);
+	const next = { ...current, ...patch };
+	// Optimistic local update so the inputs/help line reflect the change before
+	// Firestore confirms — the snapshot listener will overwrite with the same
+	// value once the write lands.
+	if (question.statementSettings) {
+		question.statementSettings.activationThreshold = next;
+	} else {
+		question.statementSettings = { activationThreshold: next };
+	}
+	m.redraw();
+	await setQuestionSetting(question.statementId, {
+		statementSettings: {
+			...question.statementSettings,
+			activationThreshold: next,
+		},
+	});
+}
+
+async function flipActivationThresholdEnabled(question: Statement): Promise<void> {
+	const current = getActivationThreshold(question);
+	await setActivationThreshold(question, { enabled: !current.enabled });
+}
+
+function renderActivationThresholdSection(question: Statement | null): m.Vnode | null {
+	if (!question) return null;
+	const cfg = getActivationThreshold(question);
+
+	const toggleRow = renderToggle({
+		icon: '🚦',
+		label: t('facilitator.activation.label'),
+		on: cfg.enabled,
+		onflip: () => {
+			void flipActivationThresholdEnabled(question);
+		},
+		help: t('facilitator.activation.help'),
+	});
+
+	if (!cfg.enabled) return toggleRow;
+
+	const numberRow = (opts: {
+		labelKey: string;
+		helpKey: string;
+		value: number;
+		onChange: (v: number) => void;
+	}): m.Vnode =>
+		m('.facilitator-panel__row', [
+			m('.facilitator-panel__row-main', [
+				m('span.facilitator-panel__row-label', t(opts.labelKey)),
+				m('input.facilitator-panel__number-input', {
+					type: 'number',
+					min: '0',
+					step: '1',
+					value: String(opts.value),
+					'aria-label': t(opts.labelKey),
+					oninput: (e: InputEvent) => {
+						const raw = (e.target as HTMLInputElement).value;
+						const v = Math.max(0, Math.floor(Number(raw)));
+						if (!Number.isFinite(v)) return;
+						opts.onChange(v);
+					},
+				}),
+			]),
+			m('.facilitator-panel__row-help', t(opts.helpKey)),
+		]);
+
+	return m('.facilitator-panel__activation', [
+		toggleRow,
+		numberRow({
+			labelKey: 'facilitator.activation.minOrganizers',
+			helpKey: 'facilitator.activation.minOrganizers.help',
+			value: cfg.minOrganizers,
+			onChange: (v) => {
+				void setActivationThreshold(question, { minOrganizers: v });
+			},
+		}),
+		numberRow({
+			labelKey: 'facilitator.activation.minActivists',
+			helpKey: 'facilitator.activation.minActivists.help',
+			value: cfg.minActivists,
+			onChange: (v) => {
+				void setActivationThreshold(question, { minActivists: v });
+			},
+		}),
+		numberRow({
+			labelKey: 'facilitator.activation.maxJoinsPerUser',
+			helpKey: 'facilitator.activation.maxJoinsPerUser.help',
+			value: cfg.maxJoinsPerUser,
+			onChange: (v) => {
+				void setActivationThreshold(question, { maxJoinsPerUser: v });
+			},
+		}),
+	]);
+}
+
 /** Three-segment theme picker (Serious / Kids / Teen). Writes to the *main*
  *  statement when there's a hub in scope so the chosen mood applies to the
  *  whole join experience; falls back to the question doc on legacy
@@ -1095,6 +1220,7 @@ export const FacilitatorPanel: m.Component = {
 						},
 						help: t('facilitator.toggle.showJoining.help'),
 					}),
+					renderActivationThresholdSection(question),
 					renderJoinFormSection(question),
 					renderToggle({
 						icon: '📈',

@@ -116,6 +116,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'Show joining',
 		'facilitator.toggle.showJoining.help':
 			'Show the Activist and Organizer buttons on every option so participants can commit.',
+		'facilitator.activation.label': 'Activation requirements',
+		'facilitator.activation.help':
+			'Set the minimum people needed to open an activity, and how many activities each participant can join.',
+		'facilitator.activation.minOrganizers': 'Minimum organizers',
+		'facilitator.activation.minOrganizers.help':
+			'Organizers required before an activity is considered active. 0 = no minimum.',
+		'facilitator.activation.minActivists': 'Minimum activists',
+		'facilitator.activation.minActivists.help':
+			'Activists required before an activity is considered active. 0 = no minimum.',
+		'facilitator.activation.maxJoinsPerUser': 'Max activities per participant',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'How many activities each participant may join. When they reach the limit they are asked to swap. 0 = no limit.',
+		'limitReached.title': 'You have reached the limit',
+		'limitReached.message':
+			'You can join up to {{max}} activities. To join "{{option}}", choose one to leave.',
+		'limitReached.listAria': 'Choose an activity to leave',
+		'limitReached.cancel': 'Cancel',
+		'limitReached.confirm': 'Swap',
+		'limitReached.submitting': 'Swapping…',
 		'facilitator.toggle.showResults': 'Show results',
 		'facilitator.toggle.showResults.help':
 			'Reveal consensus, average and evaluator counts on every option card.',
@@ -359,6 +378,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'הצגת הצטרפות',
 		'facilitator.toggle.showJoining.help':
 			'הצגת כפתורי פעיל ומארגן על כל כרטיס כדי שמשתתפים יוכלו להתחייב.',
+		'facilitator.activation.label': 'דרישות הפעלה',
+		'facilitator.activation.help':
+			'קביעת המינימום הנדרש כדי לפתוח פעילות, וכמה פעילויות כל משתתף יכול להצטרף אליהן.',
+		'facilitator.activation.minOrganizers': 'מינימום מארגנים',
+		'facilitator.activation.minOrganizers.help':
+			'מספר המארגנים שנדרש כדי שפעילות תיחשב פעילה. 0 = ללא מינימום.',
+		'facilitator.activation.minActivists': 'מינימום פעילים',
+		'facilitator.activation.minActivists.help':
+			'מספר הפעילים שנדרש כדי שפעילות תיחשב פעילה. 0 = ללא מינימום.',
+		'facilitator.activation.maxJoinsPerUser': 'מקסימום פעילויות למשתתף',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'לכמה פעילויות משתתף יכול להצטרף. כשמגיעים למגבלה תוצג בקשת החלפה. 0 = ללא הגבלה.',
+		'limitReached.title': 'הגעת למגבלה',
+		'limitReached.message':
+			'ניתן להצטרף עד {{max}} פעילויות. כדי להצטרף ל"{{option}}", בחר/י פעילות אחת לעזיבה.',
+		'limitReached.listAria': 'בחר/י פעילות לעזיבה',
+		'limitReached.cancel': 'ביטול',
+		'limitReached.confirm': 'החלפה',
+		'limitReached.submitting': 'מחליף…',
 		'facilitator.toggle.showResults': 'הצגת תוצאות',
 		'facilitator.toggle.showResults.help': 'הצגת הסכמה, ממוצע ומספר מעריכים על כל כרטיס.',
 		'facilitator.mode.label': 'מצב',
@@ -598,6 +636,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'إظهار الانضمام',
 		'facilitator.toggle.showJoining.help':
 			'إظهار زرَّي الناشط والمنظِّم على كل خيار حتى يتمكن المشاركون من الالتزام.',
+		'facilitator.activation.label': 'متطلبات التفعيل',
+		'facilitator.activation.help':
+			'حدِّد الحد الأدنى من الأشخاص لفتح نشاط، وعدد الأنشطة التي يمكن لكل مشارك الانضمام إليها.',
+		'facilitator.activation.minOrganizers': 'الحد الأدنى للمنظِّمين',
+		'facilitator.activation.minOrganizers.help':
+			'عدد المنظِّمين المطلوب لاعتبار النشاط مُفعَّلًا. 0 = بدون حد أدنى.',
+		'facilitator.activation.minActivists': 'الحد الأدنى للناشطين',
+		'facilitator.activation.minActivists.help':
+			'عدد الناشطين المطلوب لاعتبار النشاط مُفعَّلًا. 0 = بدون حد أدنى.',
+		'facilitator.activation.maxJoinsPerUser': 'الحد الأقصى للأنشطة لكل مشارك',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'كم نشاطًا يمكن لكل مشارك الانضمام إليه. عند الوصول للحد يُطلَب منه الاستبدال. 0 = بلا حد.',
+		'limitReached.title': 'لقد بلغت الحد الأقصى',
+		'limitReached.message':
+			'يمكنك الانضمام إلى ما يصل إلى {{max}} أنشطة. للانضمام إلى "{{option}}"، اختر نشاطًا للمغادرة.',
+		'limitReached.listAria': 'اختر نشاطًا للمغادرة',
+		'limitReached.cancel': 'إلغاء',
+		'limitReached.confirm': 'استبدال',
+		'limitReached.submitting': 'جارٍ الاستبدال…',
 		'facilitator.toggle.showResults': 'عرض النتائج',
 		'facilitator.toggle.showResults.help':
 			'إظهار التوافق والمتوسط وعدد المقيّمين على كل بطاقة خيار.',
@@ -784,6 +841,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'Beitritt anzeigen',
 		'facilitator.toggle.showJoining.help':
 			'Die Buttons „Aktivist:in“ und „Organisator:in“ auf jeder Option zeigen, damit Teilnehmende sich verbindlich eintragen können.',
+		'facilitator.activation.label': 'Aktivierungsanforderungen',
+		'facilitator.activation.help':
+			'Mindestpersonen für die Eröffnung einer Aktivität festlegen und wie viele Aktivitäten ein:e Teilnehmer:in beitreten kann.',
+		'facilitator.activation.minOrganizers': 'Mindestanzahl Organisator:innen',
+		'facilitator.activation.minOrganizers.help':
+			'Erforderliche Organisator:innen, damit eine Aktivität als aktiv gilt. 0 = kein Minimum.',
+		'facilitator.activation.minActivists': 'Mindestanzahl Aktivist:innen',
+		'facilitator.activation.minActivists.help':
+			'Erforderliche Aktivist:innen, damit eine Aktivität als aktiv gilt. 0 = kein Minimum.',
+		'facilitator.activation.maxJoinsPerUser': 'Maximale Aktivitäten pro Teilnehmer:in',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'Wie viele Aktivitäten ein:e Teilnehmer:in beitreten darf. Beim Erreichen wird ein Tausch angeboten. 0 = unbegrenzt.',
+		'limitReached.title': 'Limit erreicht',
+		'limitReached.message':
+			'Du kannst bis zu {{max}} Aktivitäten beitreten. Um „{{option}}“ beizutreten, wähle eine zum Verlassen.',
+		'limitReached.listAria': 'Aktivität zum Verlassen wählen',
+		'limitReached.cancel': 'Abbrechen',
+		'limitReached.confirm': 'Tauschen',
+		'limitReached.submitting': 'Tausche…',
 		'facilitator.toggle.showResults': 'Ergebnisse anzeigen',
 		'facilitator.toggle.showResults.help':
 			'Konsens, Durchschnitt und Anzahl der Bewertenden auf jeder Optionskarte anzeigen.',
@@ -975,6 +1051,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'Mostrar unirse',
 		'facilitator.toggle.showJoining.help':
 			'Mostrar los botones de Activista y Organizador en cada opción para que los participantes puedan comprometerse.',
+		'facilitator.activation.label': 'Requisitos de activación',
+		'facilitator.activation.help':
+			'Define el mínimo de personas para abrir una actividad y cuántas actividades puede unirse cada participante.',
+		'facilitator.activation.minOrganizers': 'Mínimo de organizadores',
+		'facilitator.activation.minOrganizers.help':
+			'Organizadores necesarios para que una actividad se considere activa. 0 = sin mínimo.',
+		'facilitator.activation.minActivists': 'Mínimo de activistas',
+		'facilitator.activation.minActivists.help':
+			'Activistas necesarios para que una actividad se considere activa. 0 = sin mínimo.',
+		'facilitator.activation.maxJoinsPerUser': 'Máx. actividades por participante',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'Cuántas actividades puede unirse cada participante. Al alcanzar el límite se le pedirá un cambio. 0 = sin límite.',
+		'limitReached.title': 'Has alcanzado el límite',
+		'limitReached.message':
+			'Puedes unirte hasta a {{max}} actividades. Para unirte a "{{option}}", elige una para dejar.',
+		'limitReached.listAria': 'Elige una actividad para dejar',
+		'limitReached.cancel': 'Cancelar',
+		'limitReached.confirm': 'Cambiar',
+		'limitReached.submitting': 'Cambiando…',
 		'facilitator.toggle.showResults': 'Mostrar resultados',
 		'facilitator.toggle.showResults.help':
 			'Mostrar consenso, promedio y número de evaluadores en cada tarjeta de opción.',
@@ -1163,6 +1258,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'Deelname tonen',
 		'facilitator.toggle.showJoining.help':
 			'Toon de knoppen Activist en Organisator op elke optie zodat deelnemers zich kunnen committeren.',
+		'facilitator.activation.label': 'Activatievereisten',
+		'facilitator.activation.help':
+			'Stel het minimum aantal mensen in om een activiteit te openen, en hoeveel activiteiten elke deelnemer kan aansluiten.',
+		'facilitator.activation.minOrganizers': 'Minimum organisatoren',
+		'facilitator.activation.minOrganizers.help':
+			'Organisatoren nodig voordat een activiteit als actief geldt. 0 = geen minimum.',
+		'facilitator.activation.minActivists': 'Minimum activisten',
+		'facilitator.activation.minActivists.help':
+			'Activisten nodig voordat een activiteit als actief geldt. 0 = geen minimum.',
+		'facilitator.activation.maxJoinsPerUser': 'Max. activiteiten per deelnemer',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'Hoeveel activiteiten elke deelnemer mag aansluiten. Bij het bereiken van de limiet wordt om wisselen gevraagd. 0 = geen limiet.',
+		'limitReached.title': 'Je hebt de limiet bereikt',
+		'limitReached.message':
+			'Je kunt tot {{max}} activiteiten aansluiten. Om bij "{{option}}" aan te sluiten, kies er één om te verlaten.',
+		'limitReached.listAria': 'Kies een activiteit om te verlaten',
+		'limitReached.cancel': 'Annuleren',
+		'limitReached.confirm': 'Wisselen',
+		'limitReached.submitting': 'Wisselen…',
 		'facilitator.toggle.showResults': 'Resultaten tonen',
 		'facilitator.toggle.showResults.help':
 			'Toon consensus, gemiddelde en aantal beoordelaars op elke optiekaart.',
@@ -1337,6 +1451,25 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.toggle.showJoining': 'نمایش پیوستن',
 		'facilitator.toggle.showJoining.help':
 			'نمایش دکمه‌های فعال و سازمان‌دهنده روی هر گزینه تا شرکت‌کنندگان بتوانند تعهد دهند.',
+		'facilitator.activation.label': 'الزامات فعال‌سازی',
+		'facilitator.activation.help':
+			'حداقل افراد لازم برای باز کردن یک فعالیت و تعداد فعالیت‌هایی که هر شرکت‌کننده می‌تواند به آن‌ها بپیوندد را تعیین کنید.',
+		'facilitator.activation.minOrganizers': 'حداقل سازمان‌دهندگان',
+		'facilitator.activation.minOrganizers.help':
+			'سازمان‌دهندگان لازم برای فعال شدن یک فعالیت. 0 = بدون حداقل.',
+		'facilitator.activation.minActivists': 'حداقل فعالان',
+		'facilitator.activation.minActivists.help':
+			'فعالان لازم برای فعال شدن یک فعالیت. 0 = بدون حداقل.',
+		'facilitator.activation.maxJoinsPerUser': 'حداکثر فعالیت برای هر شرکت‌کننده',
+		'facilitator.activation.maxJoinsPerUser.help':
+			'هر شرکت‌کننده می‌تواند به چند فعالیت بپیوندد. در صورت رسیدن به سقف، درخواست تعویض داده می‌شود. 0 = بدون محدودیت.',
+		'limitReached.title': 'به سقف رسیدی',
+		'limitReached.message':
+			'می‌توانید تا {{max}} فعالیت بپیوندید. برای پیوستن به «{{option}}»، یکی را برای ترک انتخاب کنید.',
+		'limitReached.listAria': 'یک فعالیت برای ترک انتخاب کنید',
+		'limitReached.cancel': 'انصراف',
+		'limitReached.confirm': 'تعویض',
+		'limitReached.submitting': 'در حال تعویض…',
 		'facilitator.toggle.showResults': 'نمایش نتایج',
 		'facilitator.toggle.showResults.help':
 			'نمایش اجماع، میانگین و تعداد ارزیاب‌ها روی هر کارت گزینه.',
