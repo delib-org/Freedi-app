@@ -170,6 +170,9 @@ import { summarizeDiscussion } from './fn_summarizeDiscussion';
 // Integration of Similar Statements
 import { findSimilarForIntegration, executeIntegration } from './fn_integrateSimilarStatements';
 
+// Bulk Idea Synthesis (admin-triggered near-duplicate detection)
+import { synthesizeIdeasPreview, synthesizeIdeasExecute } from './fn_synthesizeIdeas';
+
 // Google Docs Import
 import { importGoogleDoc } from './fn_importGoogleDocs';
 
@@ -768,6 +771,10 @@ exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
+
+// Bulk Idea Synthesis
+exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
+exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
 
 // Multi-Framing Clustering
 exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);

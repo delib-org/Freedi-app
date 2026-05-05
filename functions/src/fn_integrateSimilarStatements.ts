@@ -1,14 +1,13 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Statement, Collections, StatementType, Role, functionConfig } from '@freedi/shared-types';
+import { Statement, Collections, Role, StatementType, functionConfig } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import {
 	findSimilarAndGenerateSuggestion,
 	mapStatementToWithEvaluation,
 	StatementWithEvaluation,
 } from './services/integration-ai-service';
-import { migrateEvaluationsToNewStatement } from './evaluation';
-import { textToParagraphs } from './helpers';
+import { performIntegration } from './integrate/performIntegration';
 import { ALLOWED_ORIGINS } from './config/cors';
 
 /**
@@ -158,14 +157,11 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 
 		const db = getFirestore();
 
-		// 1. Fetch parent statement
 		const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
 		if (!parentDoc.exists) {
 			throw new HttpsError('not-found', 'Parent statement not found');
 		}
 		const parentStatement = parentDoc.data() as Statement;
-
-		// 2. Check admin permissions
 		const topParentId = parentStatement.topParentId || parentStatementId;
 
 		const membersSnapshot = await db
@@ -180,104 +176,31 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 			throw new HttpsError('permission-denied', 'Only admins can execute integration');
 		}
 
-		// 3. Fetch all selected statements to verify they exist
-		const selectedStatements: Statement[] = [];
-		for (const id of selectedStatementIds) {
-			const doc = await db.collection(Collections.statements).doc(id).get();
-			if (doc.exists) {
-				selectedStatements.push(doc.data() as Statement);
-			}
-		}
-
-		if (selectedStatements.length === 0) {
-			throw new HttpsError('not-found', 'No valid statements found to integrate');
-		}
-
-		logger.info(`Integrating ${selectedStatements.length} statements`);
-
-		// 4. Create new integrated statement
-		const newStatementId = db.collection(Collections.statements).doc().id;
-		const now = Date.now();
-
-		// Get creator info from the user who initiated integration (admin)
 		const adminDoc = await db.collection('usersV2').doc(userId).get();
 		const adminData = adminDoc.exists ? adminDoc.data() : null;
 
-		const newStatement: Statement = {
-			statementId: newStatementId,
-			statement: integratedTitle.trim(),
-			paragraphs: textToParagraphs(integratedDescription?.trim() || ''),
-			statementType: StatementType.option,
-			parentId: parentStatementId,
-			topParentId: topParentId,
-			creatorId: userId,
-			creator: {
-				displayName: adminData?.displayName || 'Admin',
-				uid: userId,
-				defaultLanguage: adminData?.defaultLanguage || 'en',
-			},
-			createdAt: now,
-			lastUpdate: now,
-			consensus: 0,
-			totalEvaluators: 0,
-			evaluation: {
-				sumEvaluations: 0,
-				numberOfEvaluators: 0,
-				sumPro: 0,
-				sumCon: 0,
-				sumSquaredEvaluations: 0,
-				averageEvaluation: 0,
-				agreement: 0,
-			},
-			hide: false,
-			randomSeed: Math.random(),
-			isCluster: true,
-			integratedOptions: selectedStatementIds, // Source statement IDs that were merged
-		};
-
-		// 6. Create the new statement in Firestore
-		await db.collection(Collections.statements).doc(newStatementId).set(newStatement);
-		logger.info(`Created new integrated statement: ${newStatementId}`);
-
-		// 7. Migrate evaluations from all selected statements to the new one
-		let migratedCount = 0;
 		try {
-			const migrationResult = await migrateEvaluationsToNewStatement(
-				selectedStatementIds,
-				newStatementId,
+			const result = await performIntegration({
 				parentStatementId,
-			);
-			migratedCount = migrationResult.migratedCount;
-			logger.info(`Migrated ${migratedCount} evaluations`);
-		} catch (error) {
-			logger.error('Error migrating evaluations:', error);
-			// Continue even if migration fails - we can recalculate later
-		}
-
-		// 8. Hide the original statements
-		const batch = db.batch();
-		for (const statement of selectedStatements) {
-			const ref = db.collection(Collections.statements).doc(statement.statementId);
-			batch.update(ref, {
-				hide: true,
-				integratedInto: newStatementId,
-				lastUpdate: now,
+				selectedStatementIds,
+				integratedTitle,
+				integratedDescription,
+				creatorId: userId,
+				creatorDisplayName: adminData?.displayName || 'Admin',
+				creatorDefaultLanguage: adminData?.defaultLanguage || 'en',
 			});
+			logger.info('executeIntegration completed', result);
+
+			return {
+				success: true,
+				newStatementId: result.newStatementId,
+				migratedEvaluationsCount: result.migratedEvaluationsCount,
+				hiddenStatementsCount: result.hiddenStatementsCount,
+			};
+		} catch (error) {
+			if (error instanceof HttpsError) throw error;
+			const message = error instanceof Error ? error.message : 'Integration failed';
+			throw new HttpsError('internal', message);
 		}
-		await batch.commit();
-		logger.info(`Hid ${selectedStatements.length} original statements`);
-
-		// 9. Update parent statement's lastChildUpdate
-		await db.collection(Collections.statements).doc(parentStatementId).update({
-			lastChildUpdate: now,
-			lastUpdate: now,
-		});
-
-		return {
-			success: true,
-			newStatementId,
-			migratedEvaluationsCount: migratedCount,
-			hiddenStatementsCount: selectedStatements.length,
-		};
 	},
 );

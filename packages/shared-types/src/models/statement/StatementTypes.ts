@@ -162,7 +162,7 @@ export const StatementSchema = object({
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
 	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
-	derivedByPipeline: optional(picklist(['topic-cluster'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
+	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
 	framingId: optional(string()), // on cluster Statements (isCluster=true): the Framing this cluster belongs to
 	framingClusters: optional(record(string(), nullable(string()))), // on options: map framingId → clusterId (string, or null when cleared)
 	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
@@ -173,6 +173,22 @@ export const StatementSchema = object({
 		inputCount: optional(number()), // number of candidate originals in the last run
 		producedGroupCount: optional(number()), // number of clusters produced by the last run
 		level: optional(picklist(['loose', 'balanced', 'tight'])),
+		error: optional(string()),
+	})),
+	synthesisRun: optional(object({ // set on parent questions when bulk idea synthesis runs (see docs/papers/idea-synthesis-paper.md)
+		lastRunAt: optional(number()),
+		lastRunBy: optional(string()), // userId of the admin who triggered the run
+		threshold: optional(number()), // cosine candidate threshold used (e.g. 0.90)
+		filters: optional(object({ // engagement pre-filters applied for this run
+			minAverage: optional(number()),
+			minConsensus: optional(number()),
+			minEvaluators: optional(number()),
+		})),
+		inputCount: optional(number()), // number of options surviving pre-filter
+		candidateEdgeCount: optional(number()), // edges produced by ANN before LLM verdict
+		groupsCreated: optional(number()), // number of synthesis groups committed by the admin
+		runId: optional(string()), // synthesisRuns subcollection doc id, for audit drill-down
+		status: optional(picklist(['building-graph', 'awaiting-confirmation', 'complete', 'error'])),
 		error: optional(string()),
 	})),
 	creatorOverrides: optional(object({ // set on parent questions — manual reassignments by the creator

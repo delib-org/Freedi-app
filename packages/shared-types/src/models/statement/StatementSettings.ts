@@ -116,6 +116,29 @@ export const CondensationConfigSchema = object({
 });
 export type CondensationConfig = InferOutput<typeof CondensationConfigSchema>;
 
+/**
+ * Idea Synthesis — bulk near-duplicate detection across all options under a
+ * question. Distinct from topic clustering (broad themes) and condensation
+ * (UMAP/DBSCAN re-grouping). Produces verified-same merge groups via
+ * embedding ANN + LLM-as-judge (four-way verdict: same/related/different/
+ * opposite). Resulting merged statements use the existing isCluster=true +
+ * integratedOptions[] data model so render and aggregation paths are shared.
+ *
+ * See docs/papers/idea-synthesis-paper.md for the full method.
+ *
+ * All fields optional — synthesis is admin-triggered and does not run unless
+ * settings are present and `enabled` is true.
+ */
+export const SynthesisConfigSchema = object({
+	enabled: optional(boolean()), // master switch for the synthesis admin button
+	defaultThreshold: optional(number()), // cosine candidate threshold, default 0.90
+	// Eligibility filters applied BEFORE any embedding op. Undefined disables.
+	minAverageForSynthesis: optional(number()),
+	minConsensusForSynthesis: optional(number()), // new filter requested for synthesis flow
+	minEvaluatorsForSynthesis: optional(number()),
+});
+export type SynthesisConfig = InferOutput<typeof SynthesisConfigSchema>;
+
 export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
@@ -179,6 +202,7 @@ export const StatementSettingsSchema = object({
 	enableHybridClustering: optional(boolean()), // if true, hybrid text+rating clustering runs for this question and sub-questions
 	activationThreshold: optional(ActivationThresholdSchema), // min activists/organizers to activate an option
 	condensation: optional(CondensationConfigSchema), // grouped suggestions feature — see CondensationConfigSchema
+	synthesis: optional(SynthesisConfigSchema), // bulk idea synthesis — see SynthesisConfigSchema
 	// Join app: when true, the MainHub renders a QR code section that any
 	// participant can use to share the room URL with someone nearby (peer-to-
 	// peer invite). Hub-scoped — only honoured on the main statement, not

@@ -1,0 +1,487 @@
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
+import { getFirestore } from 'firebase-admin/firestore';
+import { Collections, Role, Statement, StatementType, functionConfig } from '@freedi/shared-types';
+import { logger } from 'firebase-functions';
+import { ALLOWED_ORIGINS } from './config/cors';
+import { embeddingCache } from './services/embedding-cache-service';
+import { buildCandidateEdges } from './services/similarity-grouping-service';
+import {
+	judgeSemanticEquivalence,
+	EquivalenceVerdict,
+	EquivalencePair,
+} from './services/semantic-equivalence-service';
+import { UnionFind } from './utils/unionFind';
+import { refineComponent, pairKey } from './synthesis/completeLinkage';
+import { performIntegration } from './integrate/performIntegration';
+
+/**
+ * Bulk Idea Synthesis — admin-triggered pipeline that detects and merges
+ * near-duplicate proposals under a question.
+ *
+ * Two callables:
+ *   - `synthesizeIdeasPreview`: runs phases 1–6 of the pipeline and returns
+ *     candidate groups for admin review. No writes beyond the run metadata.
+ *   - `synthesizeIdeasExecute`: receives admin-confirmed groups and applies
+ *     each via `performIntegration` (same merge primitive as the per-idea
+ *     integration flow).
+ *
+ * See docs/papers/idea-synthesis-paper.md for the algorithm.
+ */
+
+const DEFAULT_THRESHOLD = 0.9;
+const REQUIRED_EMBEDDING_COVERAGE = 90;
+
+interface SynthesisFilters {
+	minAverage?: number;
+	minConsensus?: number;
+	minEvaluators?: number;
+}
+
+interface PreviewRequest {
+	parentStatementId: string;
+	threshold?: number;
+	filters?: SynthesisFilters;
+}
+
+interface PreviewGroup {
+	groupId: string; // unique id within the run; used by the execute call
+	memberIds: string[];
+	memberPreviews: Array<{ id: string; statement: string }>;
+	suggestedTitle: string;
+	suggestedDescription: string;
+	reasons: string[];
+}
+
+interface PreviewResponse {
+	status: 'ready' | 'needs-embeddings' | 'no-candidates';
+	parentStatementId: string;
+	threshold: number;
+	filters: SynthesisFilters;
+	embeddingCoverage: number;
+	inputCount: number;
+	candidateEdgeCount: number;
+	verifiedSameEdgeCount: number;
+	groups: PreviewGroup[];
+}
+
+interface ExecuteRequest {
+	parentStatementId: string;
+	threshold: number;
+	filters: SynthesisFilters;
+	confirmedGroups: Array<{
+		memberIds: string[];
+		mergedTitle: string;
+		mergedDescription: string;
+	}>;
+}
+
+interface ExecuteResponse {
+	success: true;
+	createdCount: number;
+	createdStatementIds: string[];
+}
+
+async function assertAdmin(parentStatementId: string, userId: string): Promise<Statement> {
+	const db = getFirestore();
+	const parentDoc = await db.collection(Collections.statements).doc(parentStatementId).get();
+	if (!parentDoc.exists) {
+		throw new HttpsError('not-found', 'Parent statement not found');
+	}
+	const parentStatement = parentDoc.data() as Statement;
+	const topParentId = parentStatement.topParentId || parentStatementId;
+
+	const membersSnapshot = await db
+		.collection(Collections.statementsSubscribe)
+		.where('statementId', '==', topParentId)
+		.where('userId', '==', userId)
+		.where('role', 'in', [Role.admin, 'creator', 'admin'])
+		.limit(1)
+		.get();
+
+	if (membersSnapshot.empty) {
+		throw new HttpsError('permission-denied', 'Only admins can run idea synthesis');
+	}
+
+	return parentStatement;
+}
+
+interface OptionWithMetrics {
+	statementId: string;
+	statement: string;
+	averageEvaluation: number;
+	consensus: number;
+	numberOfEvaluators: number;
+}
+
+async function loadEligibleOptions(
+	parentStatementId: string,
+	filters: SynthesisFilters,
+): Promise<OptionWithMetrics[]> {
+	const db = getFirestore();
+	const snapshot = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', parentStatementId)
+		.where('statementType', '==', StatementType.option)
+		.get();
+
+	const options: OptionWithMetrics[] = [];
+	for (const doc of snapshot.docs) {
+		const data = doc.data() as Statement;
+		if (data.hide === true) continue;
+		if (data.isCluster === true) continue;
+		if (!data.statementId || !data.statement) continue;
+
+		const averageEvaluation = data.evaluation?.averageEvaluation ?? 0;
+		const numberOfEvaluators = data.evaluation?.numberOfEvaluators ?? 0;
+		const consensus = data.consensus ?? 0;
+
+		if (filters.minAverage !== undefined && averageEvaluation < filters.minAverage) continue;
+		if (filters.minConsensus !== undefined && consensus < filters.minConsensus) continue;
+		if (filters.minEvaluators !== undefined && numberOfEvaluators < filters.minEvaluators) continue;
+
+		options.push({
+			statementId: data.statementId,
+			statement: data.statement,
+			averageEvaluation,
+			consensus,
+			numberOfEvaluators,
+		});
+	}
+
+	return options;
+}
+
+function pickSuggestedTitle(memberTexts: string[]): { title: string; description: string } {
+	if (memberTexts.length === 0) return { title: '', description: '' };
+	// v1 heuristic: longest text becomes the title; the rest become descriptions.
+	// LLM-driven canonical title generation is deferred to a follow-up.
+	const sorted = [...memberTexts].sort((a, b) => b.length - a.length);
+
+	return {
+		title: sorted[0],
+		description: sorted.slice(1).join('\n\n'),
+	};
+}
+
+async function recordRunMetadata(
+	parentStatementId: string,
+	runId: string,
+	threshold: number,
+	filters: SynthesisFilters,
+	inputCount: number,
+	candidateEdgeCount: number,
+	groupsCreated: number,
+	status: 'awaiting-confirmation' | 'complete' | 'error',
+	userId: string,
+	error?: string,
+): Promise<void> {
+	const db = getFirestore();
+	await db
+		.collection(Collections.statements)
+		.doc(parentStatementId)
+		.update({
+			synthesisRun: {
+				lastRunAt: Date.now(),
+				lastRunBy: userId,
+				threshold,
+				filters,
+				inputCount,
+				candidateEdgeCount,
+				groupsCreated,
+				runId,
+				status,
+				...(error ? { error } : {}),
+			},
+		});
+}
+
+export const synthesizeIdeasPreview = onCall<PreviewRequest>(
+	{
+		timeoutSeconds: 540,
+		memory: '1GiB',
+		region: functionConfig.region,
+		cors: [...ALLOWED_ORIGINS],
+	},
+	async (request): Promise<PreviewResponse> => {
+		const userId = request.auth?.uid;
+		if (!userId) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
+		}
+
+		const { parentStatementId } = request.data;
+		if (!parentStatementId) {
+			throw new HttpsError('invalid-argument', 'parentStatementId is required');
+		}
+
+		const threshold = request.data.threshold ?? DEFAULT_THRESHOLD;
+		const filters: SynthesisFilters = request.data.filters ?? {};
+
+		await assertAdmin(parentStatementId, userId);
+
+		// Phase 1: pre-flight coverage
+		const coverage = await embeddingCache.getEmbeddingCoverage(parentStatementId);
+		if (coverage.coveragePercent < REQUIRED_EMBEDDING_COVERAGE) {
+			return {
+				status: 'needs-embeddings',
+				parentStatementId,
+				threshold,
+				filters,
+				embeddingCoverage: coverage.coveragePercent,
+				inputCount: 0,
+				candidateEdgeCount: 0,
+				verifiedSameEdgeCount: 0,
+				groups: [],
+			};
+		}
+
+		// Phase 2: pre-filter
+		const eligibleOptions = await loadEligibleOptions(parentStatementId, filters);
+		if (eligibleOptions.length < 2) {
+			return {
+				status: 'no-candidates',
+				parentStatementId,
+				threshold,
+				filters,
+				embeddingCoverage: coverage.coveragePercent,
+				inputCount: eligibleOptions.length,
+				candidateEdgeCount: 0,
+				verifiedSameEdgeCount: 0,
+				groups: [],
+			};
+		}
+
+		const idToText = new Map<string, string>();
+		for (const opt of eligibleOptions) {
+			idToText.set(opt.statementId, opt.statement);
+		}
+
+		// Phase 3: candidate edges from embedding ANN
+		const candidateIds = eligibleOptions.map((o) => o.statementId);
+		const candidateEdges = await buildCandidateEdges(candidateIds, {
+			parentId: parentStatementId,
+			threshold,
+		});
+
+		if (candidateEdges.length === 0) {
+			const runId = getFirestore().collection('_').doc().id;
+			await recordRunMetadata(
+				parentStatementId,
+				runId,
+				threshold,
+				filters,
+				eligibleOptions.length,
+				0,
+				0,
+				'complete',
+				userId,
+			);
+
+			return {
+				status: 'no-candidates',
+				parentStatementId,
+				threshold,
+				filters,
+				embeddingCoverage: coverage.coveragePercent,
+				inputCount: eligibleOptions.length,
+				candidateEdgeCount: 0,
+				verifiedSameEdgeCount: 0,
+				groups: [],
+			};
+		}
+
+		// Phase 4: LLM-as-judge — verify every candidate edge
+		const equivalencePairs: EquivalencePair[] = candidateEdges
+			.map((edge) => {
+				const textA = idToText.get(edge.a);
+				const textB = idToText.get(edge.b);
+				if (!textA || !textB) return null;
+
+				return { pairId: pairKey(edge.a, edge.b), textA, textB };
+			})
+			.filter((p): p is EquivalencePair => p !== null);
+
+		const verdictResults = await judgeSemanticEquivalence(equivalencePairs);
+		const verdictMap = new Map<string, EquivalenceVerdict>();
+		const reasonMap = new Map<string, string>();
+		for (const r of verdictResults) {
+			verdictMap.set(r.pairId, r.verdict);
+			reasonMap.set(r.pairId, r.reason);
+		}
+
+		const verifiedSameEdges = candidateEdges.filter(
+			(edge) => verdictMap.get(pairKey(edge.a, edge.b)) === 'same',
+		);
+
+		// Phase 5: union-find on verified-same edges
+		const uf = new UnionFind();
+		for (const id of candidateIds) uf.add(id);
+		for (const edge of verifiedSameEdges) {
+			uf.union(edge.a, edge.b);
+		}
+		const components = uf.components().filter((c) => c.length >= 2);
+
+		// Phase 6: complete-linkage refinement
+		const refinedGroups: string[][] = [];
+		const reasonsByGroup = new Map<string[], string[]>();
+		for (const component of components) {
+			const refined = await refineComponent({
+				memberIds: component,
+				texts: idToText,
+				verdicts: verdictMap,
+			});
+			// Merge any newly-fetched verdicts into the run-level map for reason lookup
+			for (const r of refined.newVerdicts) {
+				verdictMap.set(r.pairId, r.verdict);
+				reasonMap.set(r.pairId, r.reason);
+			}
+			for (const clique of refined.cliques) {
+				refinedGroups.push(clique);
+				const reasons: string[] = [];
+				for (let i = 0; i < clique.length; i++) {
+					for (let j = i + 1; j < clique.length; j++) {
+						const reason = reasonMap.get(pairKey(clique[i], clique[j]));
+						if (reason) reasons.push(reason);
+					}
+				}
+				reasonsByGroup.set(clique, Array.from(new Set(reasons)).slice(0, 3));
+			}
+		}
+
+		// Phase 7 (preview only): build suggested titles from member texts
+		const groups: PreviewGroup[] = refinedGroups.map((memberIds, idx) => {
+			const memberTexts = memberIds
+				.map((id) => idToText.get(id) || '')
+				.filter((t) => t.length > 0);
+			const { title, description } = pickSuggestedTitle(memberTexts);
+
+			return {
+				groupId: `group-${idx}`,
+				memberIds,
+				memberPreviews: memberIds.map((id) => ({
+					id,
+					statement: idToText.get(id) || '',
+				})),
+				suggestedTitle: title,
+				suggestedDescription: description,
+				reasons: reasonsByGroup.get(memberIds) || [],
+			};
+		});
+
+		const runId = getFirestore().collection('_').doc().id;
+		await recordRunMetadata(
+			parentStatementId,
+			runId,
+			threshold,
+			filters,
+			eligibleOptions.length,
+			candidateEdges.length,
+			groups.length,
+			'awaiting-confirmation',
+			userId,
+		);
+
+		logger.info('synthesizeIdeasPreview completed', {
+			parentStatementId,
+			runId,
+			inputCount: eligibleOptions.length,
+			candidateEdgeCount: candidateEdges.length,
+			verifiedSameEdgeCount: verifiedSameEdges.length,
+			groupCount: groups.length,
+		});
+
+		return {
+			status: 'ready',
+			parentStatementId,
+			threshold,
+			filters,
+			embeddingCoverage: coverage.coveragePercent,
+			inputCount: eligibleOptions.length,
+			candidateEdgeCount: candidateEdges.length,
+			verifiedSameEdgeCount: verifiedSameEdges.length,
+			groups,
+		};
+	},
+);
+
+export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
+	{
+		timeoutSeconds: 540,
+		memory: '1GiB',
+		region: functionConfig.region,
+		cors: [...ALLOWED_ORIGINS],
+	},
+	async (request): Promise<ExecuteResponse> => {
+		const userId = request.auth?.uid;
+		if (!userId) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
+		}
+
+		const { parentStatementId, threshold, filters, confirmedGroups } = request.data;
+		if (!parentStatementId) {
+			throw new HttpsError('invalid-argument', 'parentStatementId is required');
+		}
+		if (!Array.isArray(confirmedGroups) || confirmedGroups.length === 0) {
+			throw new HttpsError('invalid-argument', 'At least one confirmed group is required');
+		}
+
+		await assertAdmin(parentStatementId, userId);
+
+		const db = getFirestore();
+		const adminDoc = await db.collection('usersV2').doc(userId).get();
+		const adminData = adminDoc.exists ? adminDoc.data() : null;
+		const creatorDisplayName = adminData?.displayName || 'Admin';
+		const creatorDefaultLanguage = adminData?.defaultLanguage || 'en';
+
+		const createdStatementIds: string[] = [];
+		const errors: string[] = [];
+
+		for (const group of confirmedGroups) {
+			if (!Array.isArray(group.memberIds) || group.memberIds.length < 2) {
+				errors.push('Skipped group with fewer than 2 members');
+				continue;
+			}
+			if (!group.mergedTitle || !group.mergedTitle.trim()) {
+				errors.push('Skipped group with empty title');
+				continue;
+			}
+
+			try {
+				const result = await performIntegration({
+					parentStatementId,
+					selectedStatementIds: group.memberIds,
+					integratedTitle: group.mergedTitle,
+					integratedDescription: group.mergedDescription || '',
+					creatorId: userId,
+					creatorDisplayName,
+					creatorDefaultLanguage,
+					derivedByPipeline: 'synthesis',
+				});
+				createdStatementIds.push(result.newStatementId);
+			} catch (error) {
+				const message = error instanceof Error ? error.message : 'Group merge failed';
+				logger.error('synthesizeIdeasExecute group merge failed', { error: message, group });
+				errors.push(message);
+			}
+		}
+
+		const runId = db.collection('_').doc().id;
+		await recordRunMetadata(
+			parentStatementId,
+			runId,
+			threshold,
+			filters,
+			0,
+			0,
+			createdStatementIds.length,
+			errors.length > 0 ? 'error' : 'complete',
+			userId,
+			errors.length > 0 ? errors.join('; ') : undefined,
+		);
+
+		return {
+			success: true,
+			createdCount: createdStatementIds.length,
+			createdStatementIds,
+		};
+	},
+);

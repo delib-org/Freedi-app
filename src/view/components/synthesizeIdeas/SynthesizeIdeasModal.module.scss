@@ -1,0 +1,247 @@
+.synthesizeModal {
+	display: flex;
+	flex-direction: column;
+	gap: var(--padding);
+	padding: var(--padding);
+	max-width: 720px;
+	width: min(720px, 90vw);
+	max-height: 80vh;
+	overflow-y: auto;
+}
+
+.header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--padding);
+	border-bottom: 1px solid var(--border-subtle);
+	padding-bottom: 0.75rem;
+
+	h2 {
+		margin: 0;
+		font-size: 1.25rem;
+		color: var(--text-heading);
+	}
+}
+
+.subtitle {
+	color: var(--text-muted);
+	font-size: 0.9rem;
+	margin: 0;
+}
+
+.closeButton {
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	font-size: 1.25rem;
+	color: var(--text-muted);
+	padding: 0.25rem 0.5rem;
+
+	&:hover {
+		color: var(--text-body);
+	}
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+
+	label {
+		font-weight: 600;
+		color: var(--text-body);
+		font-size: 0.9rem;
+	}
+
+	input,
+	textarea {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid var(--border-default);
+		border-radius: 6px;
+		background: var(--input-bg, var(--card-default));
+		color: var(--text-body);
+		font: inherit;
+	}
+
+	textarea {
+		min-height: 80px;
+		resize: vertical;
+	}
+
+	small {
+		color: var(--text-muted);
+		font-size: 0.8rem;
+	}
+}
+
+.fieldRow {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+	gap: var(--padding);
+}
+
+.error {
+	background: var(--error-bg, rgba(220, 53, 69, 0.08));
+	color: var(--error, #b00020);
+	padding: 0.75rem 1rem;
+	border-radius: 6px;
+	font-size: 0.9rem;
+}
+
+.notice {
+	background: var(--info-bg, rgba(95, 136, 229, 0.08));
+	color: var(--text-body);
+	padding: 0.75rem 1rem;
+	border-radius: 6px;
+	font-size: 0.9rem;
+
+	strong {
+		display: block;
+		margin-bottom: 0.25rem;
+	}
+}
+
+.summary {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+	gap: 0.75rem;
+	padding: 0.75rem;
+	background: var(--card-subtle, rgba(0, 0, 0, 0.03));
+	border-radius: 6px;
+
+	.metric {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+
+		.value {
+			font-size: 1.25rem;
+			font-weight: 600;
+			color: var(--text-heading);
+		}
+
+		.label {
+			font-size: 0.75rem;
+			color: var(--text-muted);
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+	}
+}
+
+.groupList {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.group {
+	border: 1px solid var(--border-default);
+	border-radius: 8px;
+	padding: 0.75rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+
+	&[data-accepted='false'] {
+		opacity: 0.55;
+	}
+}
+
+.groupHeader {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.75rem;
+
+	input[type='checkbox'] {
+		margin-top: 0.25rem;
+	}
+}
+
+.groupTitle {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+
+	input,
+	textarea {
+		font-family: inherit;
+		font-size: 0.95rem;
+		padding: 0.4rem 0.6rem;
+		border: 1px solid var(--border-subtle);
+		border-radius: 6px;
+		background: var(--input-bg, var(--card-default));
+		color: var(--text-body);
+	}
+
+	textarea {
+		min-height: 56px;
+		resize: vertical;
+	}
+}
+
+.memberCount {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+}
+
+.memberList {
+	margin: 0;
+	padding-left: 1.25rem;
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+
+	li {
+		font-size: 0.85rem;
+		color: var(--text-body);
+	}
+}
+
+.reasons {
+	font-size: 0.8rem;
+	color: var(--text-muted);
+	font-style: italic;
+}
+
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 0.75rem;
+	border-top: 1px solid var(--border-subtle);
+	padding-top: 0.75rem;
+	margin-top: 0.5rem;
+}
+
+.button {
+	padding: 0.5rem 1rem;
+	border-radius: 6px;
+	border: none;
+	cursor: pointer;
+	font: inherit;
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&.primary {
+		background: var(--btn-primary);
+		color: var(--btn-primary-text, #fff);
+	}
+
+	&.secondary {
+		background: transparent;
+		color: var(--text-body);
+		border: 1px solid var(--border-default);
+	}
+}
+
+.empty {
+	padding: 2rem;
+	text-align: center;
+	color: var(--text-muted);
+	font-style: italic;
+}
