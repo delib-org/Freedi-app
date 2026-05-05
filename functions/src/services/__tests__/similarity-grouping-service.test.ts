@@ -106,9 +106,8 @@ describe('similarity-grouping-service', () => {
 			let call = 0;
 			mockFindSimilarByEmbedding.mockImplementation(async () => {
 				call++;
-				return call === 1
-					? [similarResult('s2', 0.91)]
-					: [similarResult('s1', 0.97)];
+
+				return call === 1 ? [similarResult('s2', 0.91)] : [similarResult('s1', 0.97)];
 			});
 
 			const edges = await buildCandidateEdges(['s1', 's2'], { parentId: 'q1', threshold: 0.9 });
@@ -164,9 +163,7 @@ describe('similarity-grouping-service', () => {
 				async (queryEmb: number[], _pid: string, _opts: { threshold: number }) => {
 					const results = [];
 					for (const [id, emb] of embeddings) {
-						const dist = Math.sqrt(
-							(queryEmb[0] - emb[0]) ** 2 + (queryEmb[1] - emb[1]) ** 2,
-						);
+						const dist = Math.sqrt((queryEmb[0] - emb[0]) ** 2 + (queryEmb[1] - emb[1]) ** 2);
 						const sim = 1 - dist; // 1 for identical, low for far
 						if (sim >= 0.9) results.push(similarResult(id, sim));
 					}

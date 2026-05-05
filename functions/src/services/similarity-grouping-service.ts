@@ -63,10 +63,14 @@ export async function buildCandidateEdges(
 		}
 
 		try {
-			const results = await vectorSearchService.findSimilarByEmbedding(embedding, options.parentId, {
-				limit: k,
-				threshold,
-			});
+			const results = await vectorSearchService.findSimilarByEmbedding(
+				embedding,
+				options.parentId,
+				{
+					limit: k,
+					threshold,
+				},
+			);
 
 			for (const result of results) {
 				const otherId = result.statement.statementId;

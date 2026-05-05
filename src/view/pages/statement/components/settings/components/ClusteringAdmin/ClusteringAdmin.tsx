@@ -302,9 +302,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				badge="new"
 				variant="primary"
 			/>
-			{synthesisStatusMessage && (
-				<div className={styles.status}>{synthesisStatusMessage}</div>
-			)}
+			{synthesisStatusMessage && <div className={styles.status}>{synthesisStatusMessage}</div>}
 
 			{isLoading && framings.length === 0 ? (
 				<div className={styles.loaderContainer}>
@@ -350,10 +348,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 					onSuccess={(createdCount) => {
 						setIsSynthesizeModalOpen(false);
 						setSynthesisStatusMessage(
-							t('Synthesis created {n} merged statements').replace(
-								'{n}',
-								String(createdCount),
-							),
+							t('Synthesis created {n} merged statements').replace('{n}', String(createdCount)),
 						);
 					}}
 				/>

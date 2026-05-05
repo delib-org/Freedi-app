@@ -184,9 +184,7 @@ function growClique(
 	});
 
 	for (const candidate of candidates) {
-		const fitsAll = clique.every(
-			(member) => verdicts.get(pairKey(candidate, member)) === 'same',
-		);
+		const fitsAll = clique.every((member) => verdicts.get(pairKey(candidate, member)) === 'same');
 		if (fitsAll) {
 			clique.push(candidate);
 		}

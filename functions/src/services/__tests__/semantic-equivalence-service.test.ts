@@ -49,16 +49,8 @@ describe('semantic-equivalence-service', () => {
 			const pairs: EquivalencePair[] = [
 				pair('p1', 'Increase the budget for public transit', 'Boost public transit funding'),
 				pair('p2', 'Increase the budget for public transit', 'Cut public transit funding'),
-				pair(
-					'p3',
-					'Prioritize economic growth',
-					'Prioritize environmental protection',
-				),
-				pair(
-					'p4',
-					'Add a third lane to highway 5',
-					'Establish a new community garden',
-				),
+				pair('p3', 'Prioritize economic growth', 'Prioritize environmental protection'),
+				pair('p4', 'Add a third lane to highway 5', 'Establish a new community garden'),
 			];
 
 			const results = await judgeSemanticEquivalence(pairs);
@@ -92,6 +84,7 @@ describe('semantic-equivalence-service', () => {
 					});
 				}
 				callIndex++;
+
 				return Promise.resolve(geminiResponse(items));
 			});
 
@@ -105,18 +98,13 @@ describe('semantic-equivalence-service', () => {
 		it('strips markdown fences from the model response', async () => {
 			mockGenerateContent.mockResolvedValueOnce({
 				response: {
-					text: () =>
-						'```json\n[{"pairIndex": 1, "verdict": "same", "reason": "test"}]\n```',
+					text: () => '```json\n[{"pairIndex": 1, "verdict": "same", "reason": "test"}]\n```',
 				},
 			});
 
-			const results = await judgeSemanticEquivalence([
-				pair('p1', 'A text', 'B text'),
-			]);
+			const results = await judgeSemanticEquivalence([pair('p1', 'A text', 'B text')]);
 
-			expect(results).toEqual([
-				{ pairId: 'p1', verdict: 'same', reason: 'test' },
-			]);
+			expect(results).toEqual([{ pairId: 'p1', verdict: 'same', reason: 'test' }]);
 		});
 
 		it('extracts JSON when the model wraps it in prose', async () => {
@@ -127,9 +115,7 @@ describe('semantic-equivalence-service', () => {
 				},
 			});
 
-			const results = await judgeSemanticEquivalence([
-				pair('p1', 'A text', 'B text'),
-			]);
+			const results = await judgeSemanticEquivalence([pair('p1', 'A text', 'B text')]);
 
 			expect(results[0].verdict).toBe<EquivalenceVerdict>('related');
 		});
@@ -178,9 +164,7 @@ describe('semantic-equivalence-service', () => {
 				},
 			});
 
-			const results = await judgeSemanticEquivalence([
-				pair('p1', 'A1', 'B1'),
-			]);
+			const results = await judgeSemanticEquivalence([pair('p1', 'A1', 'B1')]);
 
 			expect(results[0].verdict).toBe<EquivalenceVerdict>('different');
 		});

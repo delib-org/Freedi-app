@@ -194,9 +194,7 @@ describe('synthesis orchestration (phases 4–6)', () => {
 			}),
 		});
 
-		expect(
-			result.groups.map((g) => g.sort()).sort((x, y) => x[0].localeCompare(y[0])),
-		).toEqual([
+		expect(result.groups.map((g) => g.sort()).sort((x, y) => x[0].localeCompare(y[0]))).toEqual([
 			['a1', 'a2'],
 			['b1', 'b2'],
 		]);

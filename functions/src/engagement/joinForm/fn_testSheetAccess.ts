@@ -1,6 +1,10 @@
 import { onCall, HttpsError, CallableRequest } from 'firebase-functions/v2/https';
 import { functionConfig } from '@freedi/shared-types';
-import { extractSheetId, getGoogleSheetsClient, getSheetServiceAccountEmail } from './getGoogleSheetsClient';
+import {
+	extractSheetId,
+	getGoogleSheetsClient,
+	getSheetServiceAccountEmail,
+} from './getGoogleSheetsClient';
 
 interface TestSheetAccessRequest {
 	sheetUrl: string;

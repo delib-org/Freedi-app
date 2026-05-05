@@ -104,12 +104,9 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 		}
 	}, [buildFilters, parentStatementId, t, threshold]);
 
-	const updateGroup = useCallback(
-		(groupId: string, patch: Partial<EditableGroup>) => {
-			setGroups((prev) => prev.map((g) => (g.groupId === groupId ? { ...g, ...patch } : g)));
-		},
-		[],
-	);
+	const updateGroup = useCallback((groupId: string, patch: Partial<EditableGroup>) => {
+		setGroups((prev) => prev.map((g) => (g.groupId === groupId ? { ...g, ...patch } : g)));
+	}, []);
 
 	const handleConfirm = useCallback(async () => {
 		const accepted = groups.filter((g) => g.accepted && g.titleDraft.trim().length > 0);
@@ -205,11 +202,7 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 				<button type="button" className={`${styles.button} ${styles.secondary}`} onClick={onClose}>
 					{t('Cancel')}
 				</button>
-				<button
-					type="button"
-					className={`${styles.button} ${styles.primary}`}
-					onClick={runPreview}
-				>
+				<button type="button" className={`${styles.button} ${styles.primary}`} onClick={runPreview}>
 					{t('Preview groups')}
 				</button>
 			</div>
@@ -261,9 +254,7 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 									/>
 									<textarea
 										value={g.descriptionDraft}
-										onChange={(e) =>
-											updateGroup(g.groupId, { descriptionDraft: e.target.value })
-										}
+										onChange={(e) => updateGroup(g.groupId, { descriptionDraft: e.target.value })}
 										placeholder={t('Merged description (optional)')}
 									/>
 									<span className={styles.memberCount}>

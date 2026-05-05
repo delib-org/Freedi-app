@@ -229,8 +229,7 @@ export const db = getFirestore();
 // Environment configuration
 // NODE_ENV is set by GCP at runtime; ENVIRONMENT comes from functions/.env (env-loader)
 const isProduction =
-	process.env.NODE_ENV === 'production' ||
-	process.env.ENVIRONMENT === 'production';
+	process.env.NODE_ENV === 'production' || process.env.ENVIRONMENT === 'production';
 
 /**
  * Gets current timestamp in HH:MM:SS.mmm format

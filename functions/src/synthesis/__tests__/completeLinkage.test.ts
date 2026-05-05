@@ -1,8 +1,4 @@
-import {
-	refineComponent,
-	pairKey,
-	RefineComponentInput,
-} from '../completeLinkage';
+import { refineComponent, pairKey, RefineComponentInput } from '../completeLinkage';
 import type {
 	EquivalencePair,
 	EquivalenceResult,
@@ -129,12 +125,11 @@ describe('refineComponent', () => {
 			'b,c': 'same',
 		});
 
-		const judge: jest.Mock<
-			Promise<EquivalenceResult[]>,
-			[EquivalencePair[]]
-		> = jest.fn(async (_pairs: EquivalencePair[]) => [
-			{ pairId: pairKey('a', 'c'), verdict: 'same' as EquivalenceVerdict, reason: 'fetched' },
-		]);
+		const judge: jest.Mock<Promise<EquivalenceResult[]>, [EquivalencePair[]]> = jest.fn(
+			async (_pairs: EquivalencePair[]) => [
+				{ pairId: pairKey('a', 'c'), verdict: 'same' as EquivalenceVerdict, reason: 'fetched' },
+			],
+		);
 
 		const result = await refineComponent(input, judge);
 
@@ -191,9 +186,7 @@ describe('refineComponent', () => {
 
 		const result = await refineComponent(input, noopJudge);
 
-		const sortedCliques = result.cliques
-			.map((c) => c.sort())
-			.sort((x, y) => y.length - x.length);
+		const sortedCliques = result.cliques.map((c) => c.sort()).sort((x, y) => y.length - x.length);
 		expect(sortedCliques).toEqual([
 			['a', 'b', 'c'],
 			['d', 'e'],

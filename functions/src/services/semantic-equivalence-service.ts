@@ -147,7 +147,10 @@ interface RawVerdictItem {
 }
 
 function parseVerdictJson(text: string): RawVerdictItem[] {
-	let cleaned = text.replace(/```json\s*/g, '').replace(/```\s*/g, '').trim();
+	let cleaned = text
+		.replace(/```json\s*/g, '')
+		.replace(/```\s*/g, '')
+		.trim();
 	const arrayMatch = cleaned.match(/\[[\s\S]*\]/);
 	if (arrayMatch) {
 		cleaned = arrayMatch[0];

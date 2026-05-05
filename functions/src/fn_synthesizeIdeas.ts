@@ -349,9 +349,7 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 
 		// Phase 7 (preview only): build suggested titles from member texts
 		const groups: PreviewGroup[] = refinedGroups.map((memberIds, idx) => {
-			const memberTexts = memberIds
-				.map((id) => idToText.get(id) || '')
-				.filter((t) => t.length > 0);
+			const memberTexts = memberIds.map((id) => idToText.get(id) || '').filter((t) => t.length > 0);
 			const { title, description } = pickSuggestedTitle(memberTexts);
 
 			return {
