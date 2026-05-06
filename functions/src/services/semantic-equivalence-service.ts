@@ -9,7 +9,7 @@ import { logError } from '../utils/errorHandling';
  * - different — embeddings happened to be close; proposals are unrelated
  * - opposite — explicit contradictions of the same proposition
  *
- * See docs/papers/idea-synthesis-paper.md §2.6 for category definitions.
+ * See docs/clusters and synthesis/idea-synthesis-paper.md §2.6 for category definitions.
  */
 export type EquivalenceVerdict = 'same' | 'related' | 'different' | 'opposite';
 

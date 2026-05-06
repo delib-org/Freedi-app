@@ -13,7 +13,7 @@ import { logError } from '../utils/errorHandling';
  * undirected candidate edges. Caller is responsible for downstream LLM-as-
  * judge verification — see semantic-equivalence-service.
  *
- * See docs/papers/idea-synthesis-paper.md §2.5.
+ * See docs/clusters and synthesis/idea-synthesis-paper.md §2.5.
  */
 
 export interface CandidateEdge {

@@ -25,7 +25,7 @@ import { performIntegration } from './integrate/performIntegration';
  *     each via `performIntegration` (same merge primitive as the per-idea
  *     integration flow).
  *
- * See docs/papers/idea-synthesis-paper.md for the algorithm.
+ * See docs/clusters and synthesis/idea-synthesis-paper.md for the algorithm.
  */
 
 const DEFAULT_THRESHOLD = 0.9;

@@ -175,7 +175,7 @@ export const StatementSchema = object({
 		level: optional(picklist(['loose', 'balanced', 'tight'])),
 		error: optional(string()),
 	})),
-	synthesisRun: optional(object({ // set on parent questions when bulk idea synthesis runs (see docs/papers/idea-synthesis-paper.md)
+	synthesisRun: optional(object({ // set on parent questions when bulk idea synthesis runs (see docs/clusters and synthesis/idea-synthesis-paper.md)
 		lastRunAt: optional(number()),
 		lastRunBy: optional(string()), // userId of the admin who triggered the run
 		threshold: optional(number()), // cosine candidate threshold used (e.g. 0.90)

@@ -89,6 +89,15 @@ Research papers and theoretical foundations.
 - `popper-hebbian-edit-mockups.md` - Edit flow mockups
 - `realistic_support_paper.md` - Realistic support paper
 
+### [`clusters and synthesis/`](./clusters%20and%20synthesis/)
+All documentation for the clustering and idea-synthesis subsystems. The current architecture lives at [`architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md`](../architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md); this folder collects the methodology papers, historical architecture notes, and pre-implementation investigations.
+- `idea-synthesis-paper.md` - Verified-embedding synthesis methodology paper
+- `hybrid-clustering-paper.html` / `.pdf` - Hybrid text-rating clustering paper
+- `UNIFIED_CLUSTERING_ARCHITECTURE.md` - Earlier consolidated architecture
+- `EMBEDDINGS_CLUSTERING_ARCHITECTURE.md` - Historical hybrid embeddings/LLM design
+- `FRAMING_CLUSTER_AGGREGATION_ARCHITECTURE.md` - Historical multi-framing & dedup design
+- `look-for-similarties-scaling-up.md` - Pre-implementation investigation on similarity at scale
+
 ### [`qa/`](./qa/)
 Quality assurance and end-to-end testing.
 - `E2E_TESTING.md` - End-to-end testing guide
@@ -131,7 +140,6 @@ Independent feature plans (read as needed).
 - `SEMANTIC_SEARCH_IMPLEMENTATION_PLAN.md` - Semantic search
 - `SETTINGS_REDESIGN_SPEC.md` / `STATEMENT_SETTINGS_UX_PROPOSAL.md` - Settings redesign
 - `Integration.md` - Integration plan
-- `look-for-similarties-scaling-up.md` - Similarity detection at scale
 
 #### [`plans/ai-ml/`](./plans/ai-ml/) — *AI & ML*
 AI-powered features and evaluation models.

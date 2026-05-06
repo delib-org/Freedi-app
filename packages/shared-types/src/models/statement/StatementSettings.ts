@@ -130,7 +130,7 @@ export type CondensationConfig = InferOutput<typeof CondensationConfigSchema>;
  * opposite). Resulting merged statements use the existing isCluster=true +
  * integratedOptions[] data model so render and aggregation paths are shared.
  *
- * See docs/papers/idea-synthesis-paper.md for the full method.
+ * See docs/clusters and synthesis/idea-synthesis-paper.md for the full method.
  *
  * All fields optional — synthesis is admin-triggered and does not run unless
  * settings are present and `enabled` is true.

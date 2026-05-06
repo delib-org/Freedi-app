@@ -19,7 +19,7 @@ import {
  * mutually confirmed, eliminating chaining at the price of additional LLM
  * verification calls on previously-unseen internal pairs.
  *
- * See docs/papers/idea-synthesis-paper.md §2.8.
+ * See docs/clusters and synthesis/idea-synthesis-paper.md §2.8.
  */
 
 export interface MemberText {
