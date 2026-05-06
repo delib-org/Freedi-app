@@ -2,7 +2,7 @@
  * Disjoint-set / Union-Find with path compression and union-by-rank.
  *
  * Used by the bulk idea-synthesis pipeline to cluster verified-same edges into
- * connected components. See docs/clusters and synthesis/idea-synthesis-paper.md §2.7.
+ * connected components. See docs/clusters and synthesis/clustering-and-synthesis-paper.md §5.7.
  *
  * Operates on string element ids and lazily registers them on first reference.
  */

@@ -641,19 +641,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "embedding",
-          "vectorConfig": {
-            "dimension": 768,
-            "flat": {}
-          }
-        }
-      ]
-    },
-    {
-      "collectionGroup": "statements",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
           "fieldPath": "isChosen",
           "order": "ASCENDING"
         },
@@ -747,23 +734,6 @@
           "fieldPath": "embedding",
           "vectorConfig": {
             "dimension": 1536,
-            "flat": {}
-          }
-        }
-      ]
-    },
-    {
-      "collectionGroup": "statements",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "parentId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "embedding",
-          "vectorConfig": {
-            "dimension": 768,
             "flat": {}
           }
         }

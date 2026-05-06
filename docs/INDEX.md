@@ -90,13 +90,8 @@ Research papers and theoretical foundations.
 - `realistic_support_paper.md` - Realistic support paper
 
 ### [`clusters and synthesis/`](./clusters%20and%20synthesis/)
-All documentation for the clustering and idea-synthesis subsystems. The current architecture lives at [`architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md`](../architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md); this folder collects the methodology papers, historical architecture notes, and pre-implementation investigations.
-- `idea-synthesis-paper.md` - Verified-embedding synthesis methodology paper
-- `hybrid-clustering-paper.html` / `.pdf` - Hybrid text-rating clustering paper
-- `UNIFIED_CLUSTERING_ARCHITECTURE.md` - Earlier consolidated architecture
-- `EMBEDDINGS_CLUSTERING_ARCHITECTURE.md` - Historical hybrid embeddings/LLM design
-- `FRAMING_CLUSTER_AGGREGATION_ARCHITECTURE.md` - Historical multi-framing & dedup design
-- `look-for-similarties-scaling-up.md` - Pre-implementation investigation on similarity at scale
+Methodology paper for the clustering and idea-synthesis subsystems. The current architecture lives at [`architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md`](../architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md).
+- `clustering-and-synthesis-paper.md` - Unified methodology paper (hybrid text-rating clustering + verified-embedding synthesis on a single OpenAI embedding space)
 
 ### [`qa/`](./qa/)
 Quality assurance and end-to-end testing.

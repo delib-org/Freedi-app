@@ -109,7 +109,7 @@ Modern text embeddings encode lexical and topical proximity, not propositional c
 - **Same-topic-opposite-stance**: "Raise taxes on wealth above ten million" / "Lower taxes on wealth above ten million" — cosine similarity ≈ 0.92 in `text-embedding-3-small`. Embedding-only synthesis would merge two opposing factions into one indistinguishable lump.
 - **Same-frame-different-magnitude**: "Add one lane to highway 5" / "Add three lanes to highway 5" — different proposals about the same project, but embeddings rank them as nearly identical.
 
-See `docs/clusters and synthesis/idea-synthesis-paper.md` §1.3 for the full analysis.
+See `docs/clusters and synthesis/clustering-and-synthesis-paper.md` §1.2 for the full analysis.
 
 ### 4.2 Phases
 
@@ -143,7 +143,7 @@ Eligible options
 
 ### 4.3 Cost & scale
 
-`docs/clusters and synthesis/idea-synthesis-paper.md` §3 estimates: 10 000 options per question process in ≈ 2 minutes wall-clock at a marginal LLM cost on the order of $0.20.
+`docs/clusters and synthesis/clustering-and-synthesis-paper.md` §7.2 estimates: 10 000 options per question process in ≈ 2 minutes wall-clock at a marginal LLM cost on the order of $0.20.
 
 ---
 
@@ -181,7 +181,7 @@ Re-runs with unchanged inputs hit caches at every LLM step; only the embedding/U
 
 Runs k-means with automatic k selection (`selectOptimalK`), then a Gemini pass that splits any cluster containing semantic opposites (e.g. "raise taxes" + "lower taxes"). Output: Framing + clusters; post-clustering aggregation runs immediately.
 
-Backed by `docs/clusters and synthesis/hybrid-clustering-paper.html`.
+Backed by `docs/clusters and synthesis/clustering-and-synthesis-paper.md` §3.
 
 ---
 
@@ -288,16 +288,11 @@ Redux: `src/redux/clusterEvaluationLinks/clusterEvaluationLinksSlice.ts` exposes
 
 ---
 
-## 13. Two Embedding Spaces (Note)
+## 13. Embedding Model
 
-The codebase uses **two embedding models** for two different purposes:
+A single embedding space underlies all clustering and synthesis: **OpenAI `text-embedding-3-small`** (1 536-d, L2-normalized). Embeddings are generated context-aware (parent question concatenated with the option text) and cached on the option document. Firestore's flat vector index serves `findNearest` ANN queries server-side-filtered by `parentId`.
 
-| Space | Model | Dim | Used by |
-|-------|-------|-----|---------|
-| Gemini | `text-embedding-004` | 768 | Hybrid k-means, multi-framing pre-clustering, similarity search via Firestore vector index |
-| OpenAI | `text-embedding-3-small` | 1536 | Idea synthesis ANN, topic-cluster category embeddings |
-
-Both spaces coexist; an option may have both embeddings cached. The split is historical — synthesis and topic-cluster were built later on OpenAI for its higher-dim semantic separation. Unifying on one provider is a possible future cleanup but not a blocker.
+Gemini is still used for **text generation** (LLM-as-judge in synthesis, framing prompts, negation detection in hybrid clustering, profanity checking) but no longer for embeddings.
 
 ---
 
@@ -305,8 +300,9 @@ Both spaces coexist; an option may have both embeddings cached. The split is his
 
 | Setting | Location | Purpose |
 |---------|----------|---------|
-| `GEMINI_API_KEY`, `GEMINI_MODEL` | env (`gemini-2.5-flash` default) | Semantic equivalence judge, framing/negation prompts |
-| `OPENAI_API_KEY`, `WORKER_MODEL` | env (`gpt-4o`, `gpt-4o-mini`) | Taxonomy, normalization, summarization |
+| `OPENAI_API_KEY` | env | Embedding generation (`text-embedding-3-small`) + worker-model text tasks |
+| `GEMINI_API_KEY`, `GEMINI_MODEL` | env (`gemini-2.5-flash` default) | LLM-as-judge, framing/negation prompts (text generation only — not embeddings) |
+| `WORKER_MODEL` | env (`gpt-4o-mini` default) | Taxonomy, normalization, summarization |
 | `LLM_CONCURRENCY` | env (default 10) | Cap on parallel LLM calls |
 | `DBSCAN_EPS`, `DBSCAN_MIN_SAMPLES`, `NEAREST_CENTROID_THRESHOLD`, `UMAP_TARGET_COMPONENTS`, `UMAP_MIN_ITEMS` | `functions/src/services/topic-cluster/constants.ts` | Topic-cluster tuning |
 | `DEFAULT_THRESHOLD` (0.9), `REQUIRED_EMBEDDING_COVERAGE` (90) | `functions/src/fn_synthesizeIdeas.ts` | Synthesis tuning |
@@ -318,14 +314,7 @@ All Cloud Functions deploy to **`me-west1`** (Tel Aviv).
 
 ## 15. Related Documents
 
-All historical and supporting documents now live in [`docs/clusters and synthesis/`](../docs/clusters%20and%20synthesis/):
-
-- **[`idea-synthesis-paper.md`](../docs/clusters%20and%20synthesis/idea-synthesis-paper.md)** — full methodology paper for the verified-embedding synthesis pipeline (Tal Yaron). Code-resident references to this paper exist in `fn_synthesizeIdeas.ts`, `unionFind.ts`, `completeLinkage.ts`, `semantic-equivalence-service.ts`, `similarity-grouping-service.ts`, `StatementTypes.ts`, `StatementSettings.ts`.
-- **[`hybrid-clustering-paper.html`](../docs/clusters%20and%20synthesis/hybrid-clustering-paper.html)** / `.pdf` — paper backing the hybrid k-means pipeline.
-- **[`UNIFIED_CLUSTERING_ARCHITECTURE.md`](../docs/clusters%20and%20synthesis/UNIFIED_CLUSTERING_ARCHITECTURE.md)** — earlier consolidated arch (predates synthesis & topic-cluster); kept for the embedding-infrastructure and dedup detail.
-- **[`EMBEDDINGS_CLUSTERING_ARCHITECTURE.md`](../docs/clusters%20and%20synthesis/EMBEDDINGS_CLUSTERING_ARCHITECTURE.md)** — historical hybrid embeddings + LLM design.
-- **[`FRAMING_CLUSTER_AGGREGATION_ARCHITECTURE.md`](../docs/clusters%20and%20synthesis/FRAMING_CLUSTER_AGGREGATION_ARCHITECTURE.md)** — historical multi-framing + dedup design.
-- **[`look-for-similarties-scaling-up.md`](../docs/clusters%20and%20synthesis/look-for-similarties-scaling-up.md)** — the pre-implementation investigation that fed into the current design.
+The methodology and rationale live in the unified paper: **[`docs/clusters and synthesis/clustering-and-synthesis-paper.md`](../docs/clusters%20and%20synthesis/clustering-and-synthesis-paper.md)** — covers the embedding infrastructure, hybrid text–rating clustering, idea synthesis (verified-embedding ANN + LLM-as-judge), shared aggregation, scaling, and limitations. Code-resident references point at this paper from `fn_synthesizeIdeas.ts`, `unionFind.ts`, `completeLinkage.ts`, `semantic-equivalence-service.ts`, `similarity-grouping-service.ts`, `StatementTypes.ts`, and `StatementSettings.ts`.
 
 ---
 
