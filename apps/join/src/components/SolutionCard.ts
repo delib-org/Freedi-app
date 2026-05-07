@@ -26,6 +26,7 @@ import {
 } from '@/lib/celebrate';
 import { Evaluation } from '@/components/Evaluation';
 import { linkify } from '@/lib/linkify';
+import { formatText, matchNumberedItem } from '@/lib/formatText';
 
 function getOptionDescription(option: Statement): string | null {
 	if (option.description) return option.description;
@@ -99,52 +100,91 @@ function splitStatement(statement: string): { title: string; bodyLines: string[]
 	return { title, bodyLines };
 }
 
+/** Single body entry — one paragraph or one list-line. Built from inline
+ *  `statement` body lines, paragraph children, or the description preview. */
+interface BodyEntry {
+	key: string;
+	text: string;
+	preview?: boolean;
+}
+
 /** Build the body content (everything below the title): inline body lines from
  *  a multi-paragraph `statement` field, then any loaded paragraph children,
  *  then the description preview as a fallback. Skips the description when
  *  paragraph children are loaded so we don't double up the same content. */
 function renderRichBodyContent(option: Statement, bodyLines: string[]): m.Vnode[] {
-	const nodes: m.Vnode[] = [];
+	const entries: BodyEntry[] = [];
 
-	for (let i = 0; i < bodyLines.length; i++) {
-		nodes.push(m('p.solution-card__body-paragraph', { key: `body-${i}` }, linkify(bodyLines[i])));
-	}
+	bodyLines.forEach((line, i) => entries.push({ key: `body-${i}`, text: line }));
 
 	const paragraphs = getOptionParagraphs(option.statementId);
 	if (paragraphs && paragraphs.length > 0) {
 		for (const p of paragraphs) {
 			if (!p.statement) continue;
-			nodes.push(
-				m(
-					'p.solution-card__body-paragraph',
-					{ key: `para-${p.statementId}` },
-					linkify(p.statement),
-				),
+			// Paragraph children may themselves contain newlines (rich body
+			// stored as a single paragraph child). Split so numbered-list
+			// detection works at line granularity.
+			const lines = p.statement
+				.split(/\n+/)
+				.map((s) => s.trim())
+				.filter(Boolean);
+			lines.forEach((line, i) => entries.push({ key: `para-${p.statementId}-${i}`, text: line }));
+		}
+	} else if (bodyLines.length === 0) {
+		const description = getOptionDescription(option);
+		if (description) {
+			// Server-cached preview is stored as "para1 | para2 | ...". Split
+			// it back so each preview paragraph reads as its own block.
+			const previewParas = description
+				.split(' | ')
+				.map((s) => s.trim())
+				.filter(Boolean);
+			previewParas.forEach((line, i) =>
+				entries.push({ key: `desc-${i}`, text: line, preview: true }),
 			);
 		}
-
-		return nodes;
 	}
 
-	const description = getOptionDescription(option);
-	if (description && bodyLines.length === 0) {
-		// Server-cached preview is stored as "para1 | para2 | ...". Split it
-		// back so each preview paragraph reads as its own block — matches the
-		// chat-message body rendering and keeps spacing consistent once the
-		// user expands.
-		const previewParas = description
-			.split(' | ')
-			.map((s) => s.trim())
-			.filter(Boolean);
-		for (let i = 0; i < previewParas.length; i++) {
+	return groupBodyEntries(entries);
+}
+
+/** Walk the entries left-to-right; collapse runs of "1. ..." / "2. ..." into
+ *  a single <ol>; render everything else as a paragraph. The list keeps the
+ *  author's starting number via the `start` attribute, so a fragment like
+ *  "3. third\n4. fourth" still numbers 3 and 4 instead of resetting to 1. */
+function groupBodyEntries(entries: BodyEntry[]): m.Vnode[] {
+	const nodes: m.Vnode[] = [];
+	let i = 0;
+
+	while (i < entries.length) {
+		const numbered = matchNumberedItem(entries[i].text);
+		if (numbered) {
+			const items: { entry: BodyEntry; content: string }[] = [];
+			const startNum = numbered.num;
+			while (i < entries.length) {
+				const m2 = matchNumberedItem(entries[i].text);
+				if (!m2) break;
+				items.push({ entry: entries[i], content: m2.content });
+				i++;
+			}
 			nodes.push(
 				m(
-					'p.solution-card__body-paragraph.solution-card__body-paragraph--preview',
-					{ key: `desc-${i}` },
-					linkify(previewParas[i]),
+					'ol.solution-card__body-list',
+					{ key: `ol-${items[0].entry.key}`, start: startNum },
+					items.map((it) =>
+						m('li.solution-card__body-list-item', { key: it.entry.key }, formatText(it.content)),
+					),
 				),
 			);
+			continue;
 		}
+
+		const entry = entries[i];
+		const cls = entry.preview
+			? 'p.solution-card__body-paragraph.solution-card__body-paragraph--preview'
+			: 'p.solution-card__body-paragraph';
+		nodes.push(m(cls, { key: entry.key }, formatText(entry.text)));
+		i++;
 	}
 
 	return nodes;
@@ -588,7 +628,7 @@ async function handleJoin(
 		(Array.isArray(option.joined) && option.joined.some((c) => c.uid === creator.uid)) ||
 		(Array.isArray(option.organizers) && option.organizers.some((c) => c.uid === creator.uid));
 	const cap = question?.statementSettings?.activationThreshold?.enabled
-		? question.statementSettings.activationThreshold.maxJoinsPerUser ?? 0
+		? (question.statementSettings.activationThreshold.maxJoinsPerUser ?? 0)
 		: 0;
 	if (cap > 0 && !isOnThisOptionAnyRole && onRequestLimitSwap) {
 		const currentJoins = getUserCommittedOptions().filter(

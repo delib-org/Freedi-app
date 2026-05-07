@@ -27,6 +27,8 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion': 'Edit suggestion',
 		'solutions.edit_suggestion_placeholder': 'Update the suggestion text',
 		'solutions.edit_suggestion_submit': 'Save',
+		'solutions.format_hint':
+			'Tip: *bold*, _italic_, ~strike~ — start a line with “1. ” for a numbered list.',
 		'card.activists': '{{count}} activists',
 		'card.organizers': '{{count}} organizers',
 		'card.read_more': 'Read more',
@@ -294,6 +296,7 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion': 'עריכת הצעה',
 		'solutions.edit_suggestion_placeholder': 'עדכנו את נוסח ההצעה',
 		'solutions.edit_suggestion_submit': 'שמירה',
+		'solutions.format_hint': 'טיפ: *מודגש*, _נטוי_, ~מחוק~ — התחילו שורה ב־"1. " לרשימה ממוספרת.',
 		'card.activists': '{{count}} פעילים',
 		'card.organizers': '{{count}} מארגנים',
 		'card.read_more': 'קראו עוד',
@@ -553,6 +556,7 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion': 'تعديل الاقتراح',
 		'solutions.edit_suggestion_placeholder': 'حدّث نص الاقتراح',
 		'solutions.edit_suggestion_submit': 'حفظ',
+		'solutions.format_hint': 'نصيحة: *عريض*, _مائل_, ~مشطوب~ — ابدأ السطر بـ "1. " لقائمة مرقّمة.',
 		'card.activists': '{{count}} ناشطين',
 		'card.organizers': '{{count}} منظّمين',
 		'card.read_more': 'اقرأ المزيد',
@@ -777,6 +781,8 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion': 'Vorschlag bearbeiten',
 		'solutions.edit_suggestion_placeholder': 'Aktualisieren Sie den Vorschlagstext',
 		'solutions.edit_suggestion_submit': 'Speichern',
+		'solutions.format_hint':
+			'Tipp: *fett*, _kursiv_, ~durchgestrichen~ — Zeile mit „1. " beginnen für eine nummerierte Liste.',
 		'card.activists': '{{count}} Aktivisten',
 		'card.organizers': '{{count}} Organisatoren',
 		'card.read_more': 'Mehr lesen',
@@ -987,6 +993,8 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion': 'Editar sugerencia',
 		'solutions.edit_suggestion_placeholder': 'Actualiza el texto de la sugerencia',
 		'solutions.edit_suggestion_submit': 'Guardar',
+		'solutions.format_hint':
+			'Truco: *negrita*, _cursiva_, ~tachado~ — empieza una línea con «1. » para una lista numerada.',
 		'card.activists': '{{count}} activistas',
 		'card.organizers': '{{count}} organizadores',
 		'card.read_more': 'Leer más',
@@ -1195,6 +1203,8 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.edit_suggestion': 'Suggestie bewerken',
 		'solutions.edit_suggestion_placeholder': 'Werk de tekst van de suggestie bij',
 		'solutions.edit_suggestion_submit': 'Opslaan',
+		'solutions.format_hint':
+			'Tip: *vet*, _cursief_, ~doorgehaald~ — begin een regel met „1. " voor een genummerde lijst.',
 		'card.activists': '{{count}} activisten',
 		'card.organizers': '{{count}} organisatoren',
 		'card.read_more': 'Lees meer',
@@ -1386,6 +1396,8 @@ const translations: Record<string, Record<string, string>> = {
 		'solutions.loading': 'در حال بارگذاری...',
 		'solutions.error.not_found': 'سؤال یافت نشد',
 		'solutions.error.no_options': 'هنوز راه‌حلی موجود نیست',
+		'solutions.format_hint':
+			'نکته: *ضخیم*, _ایتالیک_, ~خط‌خورده~ — برای فهرست شماره‌دار خط را با «۱. » شروع کنید.',
 		'solutions.subtitle.default':
 			'به فعالیت‌هایی که می‌خواهید ترویج دهید بپیوندید، چه به عنوان فعال و چه به عنوان سازمان‌دهنده',
 		'solutions.subtitle.threshold':

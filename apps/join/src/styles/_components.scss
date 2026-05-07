@@ -550,6 +550,59 @@
     &--preview {
       font-size: var(--font-size-sm);
     }
+
+    // WhatsApp-style inline formatting (formatText.ts emits these).
+    strong {
+      font-weight: var(--font-weight-bold);
+      color: var(--ink);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.8;
+    }
+  }
+
+  // Numbered list rendered when consecutive body lines start with "1. ".
+  // padding-inline-start anchors the markers inside the card without
+  // bleeding past the title's left edge.
+  &__body-list {
+    margin: 0 0 var(--space-xs);
+    padding-inline-start: 1.5em;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink-muted);
+    line-height: var(--line-height-normal);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: var(--font-weight-bold);
+      color: var(--ink);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.8;
+    }
+  }
+
+  &__body-list-item {
+    margin-bottom: var(--space-2xs, 4px);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   // Read more / Show less toggle — small inline button below the body. Sits
@@ -1349,6 +1402,53 @@
     color: var(--ink);                      // 16:1 ✓ AAA
     line-height: var(--line-height-normal);
     word-break: break-word;
+
+    strong {
+      font-weight: var(--font-weight-bold);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.85;
+    }
+  }
+
+  // Numbered list inside a chat-message body — same typographic colour as
+  // a regular paragraph but with the standard list indent so the markers
+  // aren't clipped by the bubble's left padding.
+  &__list {
+    margin: 0;
+    padding-inline-start: 1.5em;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink);
+    line-height: var(--line-height-normal);
+
+    strong {
+      font-weight: var(--font-weight-bold);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.85;
+    }
+  }
+
+  &__list-item {
+    margin-bottom: 4px;
+    word-break: break-word;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
   }
 
   &__time {
@@ -1453,6 +1553,18 @@
       outline: var(--focus-ring-width) solid var(--focus-ring-color);
       outline-offset: 1px;
     }
+  }
+
+  // Inline formatting hint sits directly under the textarea so authors see
+  // the supported markers (*bold*, _italic_, ~strike~, "1. " for lists)
+  // without crowding the modal title. Quiet colour + small size keep it
+  // out of the way of the primary call-to-action.
+  &__hint {
+    margin-top: 6px;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+    line-height: var(--line-height-normal);
   }
 
   &__actions {
