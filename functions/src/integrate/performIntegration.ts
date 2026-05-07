@@ -30,6 +30,15 @@ export interface PerformIntegrationInput {
 	creatorDefaultLanguage: string;
 	/** When set, written to the new Statement's `derivedByPipeline` field. */
 	derivedByPipeline?: 'synthesis' | 'topic-cluster';
+	/**
+	 * Optional rich body. When provided (e.g. by the synthesis pipeline),
+	 * each entry becomes a paragraph child Statement under the new cluster
+	 * (statementType === paragraph), and `Statement.description` is set
+	 * to the first paragraph for cached card previews. Per the project's
+	 * standing rule: paragraphs are child Statements, not the legacy
+	 * `paragraphs[]` array.
+	 */
+	paragraphs?: string[];
 }
 
 export interface PerformIntegrationResult {
@@ -51,6 +60,7 @@ export async function performIntegration(
 		creatorDisplayName,
 		creatorDefaultLanguage,
 		derivedByPipeline,
+		paragraphs,
 	} = input;
 
 	if (!parentStatementId) {
@@ -87,10 +97,24 @@ export async function performIntegration(
 	const newStatementId = db.collection(Collections.statements).doc().id;
 	const now = Date.now();
 
+	// Decide rich-body strategy.
+	// - If `paragraphs` provided (synthesis pipeline): write paragraph children
+	//   per the project's "paragraphs are child Statements" rule, and use the
+	//   first paragraph as the cached `description`.
+	// - Otherwise (legacy / topic-cluster paths): keep the existing
+	//   `paragraphs[]` array shape on the parent doc.
+	const usingParagraphChildren = Array.isArray(paragraphs) && paragraphs.length > 0;
+	const cachedDescription = usingParagraphChildren
+		? paragraphs!.find((p) => p.trim().length > 0)?.trim() || integratedDescription?.trim() || ''
+		: integratedDescription?.trim() || '';
+
 	const newStatement: Statement = {
 		statementId: newStatementId,
 		statement: integratedTitle.trim(),
-		paragraphs: textToParagraphs(integratedDescription?.trim() || ''),
+		// Keep the legacy paragraphs[] EMPTY when using paragraph children, so
+		// downstream readers don't double-render description from both shapes.
+		paragraphs: usingParagraphChildren ? [] : textToParagraphs(integratedDescription?.trim() || ''),
+		description: cachedDescription,
 		statementType: StatementType.option,
 		parentId: parentStatementId,
 		topParentId,
@@ -126,7 +150,42 @@ export async function performIntegration(
 	logger.info(`performIntegration: created statement ${newStatementId}`, {
 		members: selectedStatementIds.length,
 		derivedByPipeline,
+		paragraphChildren: usingParagraphChildren ? paragraphs!.length : 0,
 	});
+
+	// Write paragraph child statements atomically. Each paragraph becomes a
+	// child Statement with `statementType === paragraph`. The order is
+	// preserved by spacing `createdAt` by one millisecond per paragraph so
+	// downstream sorts by `createdAt asc` produce the original sequence.
+	if (usingParagraphChildren) {
+		const parentParents = parentStatement.parents ?? [];
+		const childBatch = db.batch();
+		paragraphs!.forEach((text, idx) => {
+			const trimmed = text.trim();
+			if (!trimmed) return;
+			const childId = db.collection(Collections.statements).doc().id;
+			const childCreatedAt = now + idx;
+			const child: Partial<Statement> & { statementId: string } = {
+				statementId: childId,
+				statement: trimmed,
+				statementType: StatementType.paragraph,
+				parentId: newStatementId,
+				topParentId,
+				parents: [...parentParents, parentStatementId, newStatementId],
+				creatorId,
+				creator: {
+					displayName: creatorDisplayName || 'Admin',
+					uid: creatorId,
+					defaultLanguage: creatorDefaultLanguage || 'en',
+				},
+				createdAt: childCreatedAt,
+				lastUpdate: childCreatedAt,
+				consensus: 0,
+			};
+			childBatch.set(db.collection(Collections.statements).doc(childId), child);
+		});
+		await childBatch.commit();
+	}
 
 	let migratedCount = 0;
 	try {

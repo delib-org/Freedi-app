@@ -13,6 +13,10 @@ import {
 import { UnionFind } from './utils/unionFind';
 import { refineComponent, pairKey } from './synthesis/completeLinkage';
 import { performIntegration } from './integrate/performIntegration';
+import {
+	generateSynthesizedProposal,
+	StatementWithEvaluation,
+} from './services/integration-ai-service';
 
 /**
  * Bulk Idea Synthesis — admin-triggered pipeline that detects and merges
@@ -49,7 +53,23 @@ interface PreviewGroup {
 	memberPreviews: Array<{ id: string; statement: string }>;
 	suggestedTitle: string;
 	suggestedDescription: string;
+	/**
+	 * Multi-paragraph plan written by the synthesis-proposal LLM. When
+	 * non-empty, the execute call will create paragraph child Statements.
+	 * Empty arrays are valid (heuristic fallback returns just title +
+	 * description).
+	 */
+	suggestedParagraphs: string[];
 	reasons: string[];
+	/**
+	 * Set when the synthesis-proposal LLM refused to merge this group
+	 * because the inputs span fundamentally different solution directions
+	 * (e.g. raise-X vs lower-X). The admin UI should surface this as
+	 * "can't synthesize as one — split into N?".
+	 */
+	cannotSynthesize?: boolean;
+	splitReason?: string;
+	splitProposal?: string[][];
 }
 
 interface PreviewResponse {
@@ -72,6 +92,12 @@ interface ExecuteRequest {
 		memberIds: string[];
 		mergedTitle: string;
 		mergedDescription: string;
+		/**
+		 * Optional rich body. When provided, performIntegration writes
+		 * paragraph child Statements per the project's "paragraphs are
+		 * child Statements" rule.
+		 */
+		paragraphs?: string[];
 	}>;
 }
 
@@ -216,7 +242,7 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 		const threshold = request.data.threshold ?? DEFAULT_THRESHOLD;
 		const filters: SynthesisFilters = request.data.filters ?? {};
 
-		await assertAdmin(parentStatementId, userId);
+		const parentStatement = await assertAdmin(parentStatementId, userId);
 
 		// Phase 1: pre-flight coverage
 		const coverage = await embeddingCache.getEmbeddingCoverage(parentStatementId);
@@ -347,23 +373,96 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 			}
 		}
 
-		// Phase 7 (preview only): build suggested titles from member texts
-		const groups: PreviewGroup[] = refinedGroups.map((memberIds, idx) => {
-			const memberTexts = memberIds.map((id) => idToText.get(id) || '').filter((t) => t.length > 0);
-			const { title, description } = pickSuggestedTitle(memberTexts);
+		// Phase 7 (preview): generate a SYNTHESIZED PROPOSAL per group via the
+		// proposal-style LLM (proposal-first, with directional-coherence check).
+		// We pass full evaluation metrics so the LLM can weight inputs by
+		// community support. If the LLM refuses (cannotSynthesize), the
+		// PreviewGroup is emitted with the split metadata so the admin UI can
+		// surface "split into N?" rather than synthesize across directions.
+		// On any other AI error we fall back to the legacy heuristic so the
+		// preview always succeeds — the admin can still edit before commit.
+		const eligibleById = new Map<string, OptionWithMetrics>();
+		for (const o of eligibleOptions) eligibleById.set(o.statementId, o);
 
-			return {
-				groupId: `group-${idx}`,
-				memberIds,
-				memberPreviews: memberIds.map((id) => ({
+		const questionContext = parentStatement.statement || parentStatement.statementId;
+
+		const groups: PreviewGroup[] = await Promise.all(
+			refinedGroups.map(async (memberIds, idx) => {
+				const groupId = `group-${idx}`;
+				const memberPreviews = memberIds.map((id) => ({
 					id,
 					statement: idToText.get(id) || '',
-				})),
-				suggestedTitle: title,
-				suggestedDescription: description,
-				reasons: reasonsByGroup.get(memberIds) || [],
-			};
-		});
+				}));
+				const reasons = reasonsByGroup.get(memberIds) || [];
+
+				// Build the rich payload for the synthesis LLM.
+				const llmInputs: StatementWithEvaluation[] = memberIds.map((id) => {
+					const m = eligibleById.get(id);
+
+					return {
+						statementId: id,
+						statement: m?.statement ?? idToText.get(id) ?? '',
+						paragraphsText: '',
+						numberOfEvaluators: m?.numberOfEvaluators ?? 0,
+						consensus: m?.consensus ?? 0,
+						sumEvaluations: 0,
+					};
+				});
+
+				try {
+					const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+
+					if (proposal.cannotSynthesize === true) {
+						const memberTexts = memberIds
+							.map((id) => idToText.get(id) || '')
+							.filter((t) => t.length > 0);
+						const fallback = pickSuggestedTitle(memberTexts);
+
+						return {
+							groupId,
+							memberIds,
+							memberPreviews,
+							suggestedTitle: fallback.title,
+							suggestedDescription: fallback.description,
+							suggestedParagraphs: [],
+							reasons,
+							cannotSynthesize: true,
+							splitReason: proposal.reason,
+							splitProposal: proposal.splitProposal,
+						};
+					}
+
+					return {
+						groupId,
+						memberIds,
+						memberPreviews,
+						suggestedTitle: proposal.title,
+						suggestedDescription: proposal.description,
+						suggestedParagraphs: proposal.paragraphs,
+						reasons,
+					};
+				} catch (error) {
+					logger.error('synthesizeIdeasPreview: proposal generation failed, using heuristic', {
+						groupId,
+						error: error instanceof Error ? error.message : String(error),
+					});
+					const memberTexts = memberIds
+						.map((id) => idToText.get(id) || '')
+						.filter((t) => t.length > 0);
+					const fallback = pickSuggestedTitle(memberTexts);
+
+					return {
+						groupId,
+						memberIds,
+						memberPreviews,
+						suggestedTitle: fallback.title,
+						suggestedDescription: fallback.description,
+						suggestedParagraphs: [],
+						reasons,
+					};
+				}
+			}),
+		);
 
 		const runId = getFirestore().collection('_').doc().id;
 		await recordRunMetadata(
@@ -453,6 +552,7 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 					creatorDisplayName,
 					creatorDefaultLanguage,
 					derivedByPipeline: 'synthesis',
+					paragraphs: Array.isArray(group.paragraphs) ? group.paragraphs : undefined,
 				});
 				createdStatementIds.push(result.newStatementId);
 			} catch (error) {
@@ -480,6 +580,177 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 			success: true,
 			createdCount: createdStatementIds.length,
 			createdStatementIds,
+		};
+	},
+);
+
+interface RegenerateProposalRequest {
+	clusterStatementId: string;
+}
+
+interface RegenerateProposalResponse {
+	success: boolean;
+	clusterStatementId: string;
+	cannotSynthesize?: boolean;
+	splitReason?: string;
+	splitProposal?: string[][];
+	title?: string;
+	description?: string;
+	paragraphChildrenCreated?: number;
+}
+
+/**
+ * Re-runs the synthesis-proposal LLM on an existing synthesis cluster and
+ * replaces its title, description, and paragraph children atomically.
+ *
+ * Use case: an admin wants a freshly-drafted proposal — either because the
+ * source ideas have moved on, or because the cluster was synthesized by a
+ * legacy heuristic and reads as a paraphrase rather than a proposal.
+ *
+ * If the LLM refuses to synthesize (directional conflict), the call returns
+ * the split metadata without touching Firestore.
+ */
+export const regenerateSynthesisProposal = onCall<RegenerateProposalRequest>(
+	{
+		timeoutSeconds: 120,
+		memory: '512MiB',
+		region: functionConfig.region,
+		cors: [...ALLOWED_ORIGINS],
+	},
+	async (request): Promise<RegenerateProposalResponse> => {
+		const userId = request.auth?.uid;
+		if (!userId) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
+		}
+		const { clusterStatementId } = request.data;
+		if (!clusterStatementId) {
+			throw new HttpsError('invalid-argument', 'clusterStatementId is required');
+		}
+
+		const db = getFirestore();
+		const clusterDoc = await db.collection(Collections.statements).doc(clusterStatementId).get();
+		if (!clusterDoc.exists) {
+			throw new HttpsError('not-found', 'Cluster not found');
+		}
+		const cluster = clusterDoc.data() as Statement;
+		if (cluster.isCluster !== true) {
+			throw new HttpsError('failed-precondition', 'Statement is not a cluster');
+		}
+
+		const parentStatementId = cluster.parentId;
+		if (!parentStatementId) {
+			throw new HttpsError('failed-precondition', 'Cluster has no parent context');
+		}
+		const parentStatement = await assertAdmin(parentStatementId, userId);
+
+		const integrated = cluster.integratedOptions ?? [];
+		if (integrated.length === 0) {
+			throw new HttpsError(
+				'failed-precondition',
+				'Cluster has no integratedOptions to regenerate from',
+			);
+		}
+
+		const llmInputs: StatementWithEvaluation[] = [];
+		for (const id of integrated) {
+			const doc = await db.collection(Collections.statements).doc(id).get();
+			if (!doc.exists) continue;
+			const data = doc.data() as Statement;
+			llmInputs.push({
+				statementId: id,
+				statement: data.statement || '',
+				paragraphsText: '',
+				numberOfEvaluators: data.evaluation?.numberOfEvaluators ?? 0,
+				consensus: data.consensus ?? data.evaluation?.agreement ?? 0,
+				sumEvaluations: data.evaluation?.sumEvaluations ?? 0,
+			});
+		}
+		if (llmInputs.length === 0) {
+			throw new HttpsError('failed-precondition', 'No source statements found for this cluster');
+		}
+
+		const questionContext = parentStatement.statement || parentStatementId;
+		const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+
+		if (proposal.cannotSynthesize === true) {
+			return {
+				success: true,
+				clusterStatementId,
+				cannotSynthesize: true,
+				splitReason: proposal.reason,
+				splitProposal: proposal.splitProposal,
+			};
+		}
+
+		const cachedDescription =
+			proposal.paragraphs.find((p) => p.trim().length > 0)?.trim() ||
+			proposal.description.trim() ||
+			'';
+
+		// Replace existing paragraph children atomically so the cluster never
+		// holds two competing rich bodies. Old children are deleted; new ones
+		// are created in the same batch alongside the cluster doc update.
+		const existingParagraphsSnap = await db
+			.collection(Collections.statements)
+			.where('parentId', '==', clusterStatementId)
+			.where('statementType', '==', StatementType.paragraph)
+			.get();
+
+		const now = Date.now();
+		const batch = db.batch();
+		existingParagraphsSnap.forEach((d) => batch.delete(d.ref));
+
+		let createdCount = 0;
+		const parentParents = parentStatement.parents ?? [];
+		proposal.paragraphs.forEach((text, idx) => {
+			const trimmed = text.trim();
+			if (!trimmed) return;
+			const childId = db.collection(Collections.statements).doc().id;
+			const childCreatedAt = now + idx;
+			const child: Partial<Statement> & { statementId: string } = {
+				statementId: childId,
+				statement: trimmed,
+				statementType: StatementType.paragraph,
+				parentId: clusterStatementId,
+				topParentId: cluster.topParentId || parentStatementId,
+				parents: [...parentParents, parentStatementId, clusterStatementId],
+				creatorId: userId,
+				creator: cluster.creator ?? {
+					uid: userId,
+					displayName: 'Admin',
+					defaultLanguage: 'en',
+				},
+				createdAt: childCreatedAt,
+				lastUpdate: childCreatedAt,
+				consensus: 0,
+			};
+			batch.set(db.collection(Collections.statements).doc(childId), child);
+			createdCount++;
+		});
+
+		batch.update(clusterDoc.ref, {
+			statement: proposal.title.trim(),
+			description: cachedDescription,
+			paragraphs: [],
+			lastUpdate: now,
+			lastChildUpdate: now,
+		});
+
+		await batch.commit();
+
+		logger.info('regenerateSynthesisProposal: complete', {
+			clusterStatementId,
+			parentStatementId,
+			paragraphChildrenCreated: createdCount,
+			deletedExistingParagraphs: existingParagraphsSnap.size,
+		});
+
+		return {
+			success: true,
+			clusterStatementId,
+			title: proposal.title.trim(),
+			description: cachedDescription,
+			paragraphChildrenCreated: createdCount,
 		};
 	},
 );

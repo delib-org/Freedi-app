@@ -1,6 +1,11 @@
 import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
-import { Collections } from '@freedi/shared-types';
+import {
+	Collections,
+	ParagraphType,
+	StatementType,
+	createStatementObject,
+} from '@freedi/shared-types';
 import type { Framing, Statement } from '@freedi/shared-types';
 import pLimit from 'p-limit';
 import { callLLM, WORKER_MODEL } from '../../config/openai-chat';
@@ -187,10 +192,7 @@ export async function summarizeFramingClusters(
 
 						return;
 					}
-					await db.collection(Collections.statements).doc(clusterId).update({
-						brief,
-						lastUpdate: Date.now(),
-					});
+					await writeClusterSummaryParagraphs(cluster, brief);
 					summarized++;
 				} catch (error) {
 					logger.warn('Cluster summary failed', {
@@ -223,4 +225,78 @@ export async function summarizeFramingClusters(
 		threshold,
 		durationMs,
 	};
+}
+
+/**
+ * Replace the cluster's existing summary paragraph children with the new
+ * summary text. Per CLAUDE.md "Paragraphs are child Statements", paragraphs are
+ * the canonical body storage. We write the whole brief as one paragraph (not
+ * one-per-sentence) to keep the per-summarize-run write count proportional to
+ * the number of clusters, not sentences — each paragraph create fans out into
+ * onStatementCreated + updateParentForNewChild + the description-sync trigger,
+ * so reducing fan-out matters in bursts like this.
+ *
+ * `description` is written in the same batch as the paragraph create, so the
+ * description-sync trigger that fires when the paragraph lands sees the cached
+ * field is already current and short-circuits.
+ *
+ * Idempotent: re-running overwrites prior summary paragraphs. Existing user-
+ * authored paragraphs that we didn't write are left alone (filtered by the
+ * `summarySource` marker).
+ */
+async function writeClusterSummaryParagraphs(
+	cluster: Statement,
+	summaryText: string,
+): Promise<void> {
+	const db = getFirestore();
+	const text = summaryText.trim();
+	if (!text) return;
+
+	// Find existing summary-authored paragraphs of this cluster so we can
+	// replace them rather than appending each run.
+	const prevSnap = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', cluster.statementId)
+		.where('statementType', '==', StatementType.paragraph)
+		.where('summarySource', '==', 'cluster-summary')
+		.get();
+
+	const batch = db.batch();
+	for (const doc of prevSnap.docs) batch.delete(doc.ref);
+
+	const creator = cluster.creator ?? {
+		uid: cluster.creatorId ?? 'system',
+		displayName: 'Cluster summarizer',
+		email: '',
+		photoURL: null,
+		isAnonymous: true,
+	};
+
+	const stmt = createStatementObject({
+		statement: text,
+		statementType: StatementType.paragraph,
+		parentId: cluster.statementId,
+		topParentId: cluster.topParentId || cluster.statementId,
+		creatorId: creator.uid,
+		creator,
+	});
+	if (!stmt) return;
+	const paragraphRef = db.collection(Collections.statements).doc(stmt.statementId);
+	batch.set(paragraphRef, {
+		...stmt,
+		blockType: ParagraphType.paragraph,
+		order: 0,
+		summarySource: 'cluster-summary',
+	});
+
+	// Set description in the same batch — the description-sync trigger will
+	// see the cached value already matches the joined paragraph text and exit
+	// without writing the cluster doc again. This avoids 2x cluster writes per
+	// summary call across all clusters.
+	batch.update(db.collection(Collections.statements).doc(cluster.statementId), {
+		description: text,
+		lastUpdate: Date.now(),
+	});
+
+	await batch.commit();
 }

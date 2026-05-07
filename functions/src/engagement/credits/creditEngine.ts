@@ -74,6 +74,23 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 		const today = formatDate(new Date());
 		const engagementRef = getDb().collection(Collections.userEngagement).doc(userId);
 
+		// 3. Cooldown check (pre-transaction).
+		// Firestore transactions require all reads via transaction.get() and
+		// before any writes; these collection queries can't run inside a
+		// transaction safely. Slight race is acceptable for a rate-limit guard.
+		if (rule.cooldownMs > 0) {
+			const cooldownPassed = await isCooldownElapsed(userId, action, rule.cooldownMs);
+			if (!cooldownPassed) {
+				return { success: false, amount: 0, reason: 'Cooldown not elapsed' };
+			}
+		}
+
+		// 4. Daily limit check (pre-transaction, same reason).
+		const todayCount = await getDailyActionCount(userId, action, today);
+		if (todayCount >= rule.dailyLimit) {
+			return { success: false, amount: 0, reason: 'Daily limit reached' };
+		}
+
 		// Run the credit award in a transaction
 		const result = await getDb().runTransaction(async (transaction) => {
 			// Load user engagement doc
@@ -91,20 +108,6 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 			if (engagement.dailyCreditResetDate !== today) {
 				engagement.dailyCreditsEarned = 0;
 				engagement.dailyCreditResetDate = today;
-			}
-
-			// 3. Cooldown check
-			if (rule.cooldownMs > 0) {
-				const cooldownPassed = await isCooldownElapsed(userId, action, rule.cooldownMs);
-				if (!cooldownPassed) {
-					return { success: false, amount: 0, reason: 'Cooldown not elapsed' };
-				}
-			}
-
-			// 4. Daily limit check
-			const todayCount = await getDailyActionCount(userId, action, today);
-			if (todayCount >= rule.dailyLimit) {
-				return { success: false, amount: 0, reason: 'Daily limit reached' };
 			}
 
 			// 5. Daily credit cap check

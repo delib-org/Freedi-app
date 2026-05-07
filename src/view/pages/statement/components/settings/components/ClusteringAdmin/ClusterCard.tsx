@@ -1,13 +1,14 @@
 import { FC } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { ClusterAggregatedEvaluation } from '@freedi/shared-types';
+import { ClusterAggregatedEvaluation, Statement } from '@freedi/shared-types';
 import styles from './ClusteringAdmin.module.scss';
 
 interface ClusterCardProps {
 	aggregation: ClusterAggregatedEvaluation;
+	cluster?: Statement;
 }
 
-const ClusterCard: FC<ClusterCardProps> = ({ aggregation }) => {
+const ClusterCard: FC<ClusterCardProps> = ({ aggregation, cluster }) => {
 	const { t } = useTranslation();
 
 	// Calculate percentages for the visual bar
@@ -28,6 +29,12 @@ const ClusterCard: FC<ClusterCardProps> = ({ aggregation }) => {
 				? styles.negative
 				: styles.neutral;
 
+	const title = cluster?.statement?.trim();
+	// `description` is the cached, joined paragraph-children body, kept up to
+	// date by `fn_syncParagraphChildrenToDescription`. We prefer it for the card
+	// preview; fall back to `brief` for clusters summarized before the migration.
+	const description = cluster?.description?.trim() || cluster?.brief?.trim();
+
 	return (
 		<div className={`${styles.clusterCard} ${aggregation.isStale ? styles.stale : ''}`}>
 			<div className={styles.cardHeader}>
@@ -40,6 +47,13 @@ const ClusterCard: FC<ClusterCardProps> = ({ aggregation }) => {
 					</span>
 				)}
 			</div>
+
+			{(title || description) && (
+				<div className={styles.clusterMeta}>
+					{title && <h5 className={styles.clusterTitle}>{title}</h5>}
+					{description && <p className={styles.clusterBrief}>{description}</p>}
+				</div>
+			)}
 
 			<div className={styles.cardBody}>
 				{/* Unique Evaluators Count */}

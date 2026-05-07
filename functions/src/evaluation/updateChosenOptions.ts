@@ -285,7 +285,11 @@ async function getOptionsUsingMethod(
 			return [];
 		}
 
-		const options = snapshot.docs.map((doc) => doc.data() as Statement);
+		const options = snapshot.docs
+			.map((doc) => doc.data() as Statement)
+			// Exclude hidden originals (e.g. statements integrated into a synthesized cluster).
+			// Their votes already live on the cluster; including them would double-count.
+			.filter((opt) => !opt.hide);
 
 		// Filter options above the threshold
 		const filtered = options.filter(

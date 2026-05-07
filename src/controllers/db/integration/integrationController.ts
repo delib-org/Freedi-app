@@ -56,6 +56,94 @@ export async function findSimilarForIntegration(
 	}
 }
 
+interface ReverseIntegrationParams {
+	clusterStatementId: string;
+}
+
+interface ReverseIntegrationResponse {
+	success: boolean;
+	clusterStatementId: string;
+	restoredOriginalIds: string[];
+	deletedEvaluationsCount: number;
+}
+
+interface RegenerateProposalParams {
+	clusterStatementId: string;
+}
+
+interface RegenerateProposalResponse {
+	success: boolean;
+	clusterStatementId: string;
+	cannotSynthesize?: boolean;
+	splitReason?: string;
+	splitProposal?: string[][];
+	title?: string;
+	description?: string;
+	paragraphChildrenCreated?: number;
+}
+
+/**
+ * Re-runs the synthesis-proposal LLM on an existing synthesis cluster and
+ * replaces its title, description, and paragraph children. If the LLM
+ * detects directional conflict, returns split metadata without writing.
+ */
+export async function regenerateSynthesisProposal(
+	params: RegenerateProposalParams,
+): Promise<RegenerateProposalResponse> {
+	try {
+		const regenerate = httpsCallable<RegenerateProposalParams, RegenerateProposalResponse>(
+			functionsWithRegion,
+			'regenerateSynthesisProposal',
+		);
+		const result = await regenerate(params);
+
+		logger.info('Synthesis proposal regenerated', {
+			clusterStatementId: params.clusterStatementId,
+			cannotSynthesize: result.data.cannotSynthesize === true,
+			paragraphChildrenCreated: result.data.paragraphChildrenCreated,
+		});
+
+		return result.data;
+	} catch (error) {
+		logError(error, {
+			operation: 'integrationController.regenerateSynthesisProposal',
+			statementId: params.clusterStatementId,
+		});
+		throw error;
+	}
+}
+
+/**
+ * Reverses a synthesis / integration, restoring the originals and hiding
+ * the cluster. Admin only.
+ */
+export async function reverseIntegration(
+	params: ReverseIntegrationParams,
+): Promise<ReverseIntegrationResponse> {
+	try {
+		const reverse = httpsCallable<ReverseIntegrationParams, ReverseIntegrationResponse>(
+			functionsWithRegion,
+			'reverseIntegration',
+		);
+
+		const result = await reverse(params);
+
+		logger.info('Synthesis reversed', {
+			clusterStatementId: params.clusterStatementId,
+			restored: result.data.restoredOriginalIds.length,
+			deletedEvaluations: result.data.deletedEvaluationsCount,
+		});
+
+		return result.data;
+	} catch (error) {
+		logError(error, {
+			operation: 'integrationController.reverseIntegration',
+			statementId: params.clusterStatementId,
+		});
+		throw error;
+	}
+}
+
 /**
  * Execute integration of similar statements
  * Creates new integrated statement, migrates evaluations, hides originals

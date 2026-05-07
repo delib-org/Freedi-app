@@ -23,6 +23,7 @@ interface EditableGroup extends SynthesisPreviewGroup {
 	accepted: boolean;
 	titleDraft: string;
 	descriptionDraft: string;
+	paragraphsDraft: string[];
 }
 
 const DEFAULT_THRESHOLD = 0.9;
@@ -75,9 +76,13 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 			setGroups(
 				result.groups.map((g) => ({
 					...g,
-					accepted: true,
+					// Pre-uncheck groups the AI refused to synthesize (directional
+					// split). Admin can override by checking, but the default is
+					// "skip — needs manual splitting first".
+					accepted: g.cannotSynthesize !== true,
 					titleDraft: g.suggestedTitle,
 					descriptionDraft: g.suggestedDescription,
+					paragraphsDraft: Array.isArray(g.suggestedParagraphs) ? g.suggestedParagraphs : [],
 				})),
 			);
 			if (result.status === 'needs-embeddings') {
@@ -127,6 +132,7 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 					memberIds: g.memberIds,
 					mergedTitle: g.titleDraft.trim(),
 					mergedDescription: g.descriptionDraft.trim(),
+					paragraphs: g.paragraphsDraft.length > 0 ? g.paragraphsDraft : undefined,
 				})),
 			});
 			setCreatedCount(result.createdCount);
@@ -237,7 +243,41 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 			) : (
 				<div className={styles.groupList}>
 					{groups.map((g) => (
-						<div key={g.groupId} className={styles.group} data-accepted={String(g.accepted)}>
+						<div
+							key={g.groupId}
+							className={styles.group}
+							data-accepted={String(g.accepted)}
+							data-cannot-synthesize={String(g.cannotSynthesize === true)}
+						>
+							{g.cannotSynthesize && (
+								<div
+									className={styles.splitNotice}
+									role="status"
+									aria-label={t('AI declined to synthesize this group')}
+								>
+									<strong>{t('AI declined: directional conflict')}</strong>
+									<span>
+										{g.splitReason ||
+											t('The source ideas pull in incompatible solution directions.')}
+									</span>
+									{Array.isArray(g.splitProposal) && g.splitProposal.length > 1 && (
+										<span className={styles.splitHint}>
+											{t('Suggested split: ')}
+											{g.splitProposal
+												.map(
+													(grp, i) =>
+														`${t('group')} ${String.fromCharCode(65 + i)} (${grp.length})`,
+												)
+												.join(' / ')}
+										</span>
+									)}
+									<span className={styles.splitHint}>
+										{t(
+											'To proceed, uncheck this group and re-run the pipeline after splitting it manually in the curation UI.',
+										)}
+									</span>
+								</div>
+							)}
 							<div className={styles.groupHeader}>
 								<input
 									type="checkbox"
@@ -262,6 +302,18 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 									</span>
 								</div>
 							</div>
+							{g.paragraphsDraft.length > 0 && (
+								<details className={styles.paragraphPreview}>
+									<summary>
+										{t('Proposal sections ({n})').replace('{n}', String(g.paragraphsDraft.length))}
+									</summary>
+									<ol>
+										{g.paragraphsDraft.map((p, i) => (
+											<li key={i}>{p}</li>
+										))}
+									</ol>
+								</details>
+							)}
 							<ul className={styles.memberList}>
 								{g.memberPreviews.map((m) => (
 									<li key={m.id}>{m.statement}</li>

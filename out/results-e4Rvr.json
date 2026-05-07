@@ -1,0 +1,3163 @@
+{
+  "meta": {
+    "schemaVersion": "1.0.0",
+    "source": "json-snapshot",
+    "sourceProjectId": "wizcol-app",
+    "sourceFile": "test-data/wizcol-e4Rvr.json"
+  },
+  "questionId": "e4RvrhcOzPNt",
+  "questionTitle": "מה יכולות צפת, חצור וראש-פינה לקדם יחד כבר בשנה הקרובה כדי לשפר את החיים באזור?",
+  "exportedAt": 1778051049204,
+  "thresholds": {
+    "standaloneConsensusFloor": 0.35,
+    "minEvaluators": 2,
+    "synthesisIncludesAll": true,
+    "lowSignalEvaluatorThreshold": 5
+  },
+  "summary": {
+    "totalOptions": 711,
+    "totalEvaluators": 450,
+    "topicCount": 39,
+    "synthesizedSolutionCount": 39,
+    "standaloneAboveFloorCount": 18,
+    "filteredOutCount": 749
+  },
+  "agreement": {
+    "questionLevel": {
+      "averageConsensus": 0.23542019891018845,
+      "averageLikeMindedness": 0.7879295792674389,
+      "polarization": 0.2120704207325611,
+      "evaluatorEngagement": 8.08
+    },
+    "coalitions": []
+  },
+  "topics": [
+    {
+      "topicId": "3cFb68qaGDLR",
+      "topicTitle": "קידום תעסוקה באזור הגליל",
+      "memberCount": 110,
+      "displayedCount": 9,
+      "agreement": {
+        "averageConsensus": 0.4613266359913833,
+        "averageLikeMindedness": 0.8313245739003738,
+        "internalDivergence": 0.11606608743600118,
+        "evaluatorOverlap": 0.543046357615894
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "3cFb68qaGDLR",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "קידום תעסוקה באזור הגליל",
+          "provenance": {
+            "sourceCount": 110,
+            "sourceIds": [
+              "07EhzLcexmxEMbyBBdlE",
+              "0aWH9u2DFboKsZK33eWz",
+              "18APKh1izRpAQ7NUVS94",
+              "1GWf5uWpOnXJGlr0Lv3k",
+              "24tF1CztLj9ookMhm9Od",
+              "2o3DEWB4H8NnJ2n3Aotf",
+              "2qLHHyXqqSbdupzZUK7c",
+              "3Kqy8Wl4lm0e33JxtLni",
+              "4VNpzFZAF0GULLRqip55",
+              "4h4OpgnfiF81jTtdv1rK",
+              "526zXMmp8ZR5BFNzxDKJ",
+              "5NIl29VeHDqtf6PzgvSR",
+              "636MLtdfe24a6iKuq0Ag",
+              "6bZl117M1VWrKi38AwuQ",
+              "6i0moMfx9I9azYizcZh0",
+              "7uO4yG9StPdOEPHZSki2",
+              "7woKGbuMrSghJRVzsgQ4",
+              "7xOq9mXRWv5LyWsKmIMr",
+              "8CWrIOv4i4jwdr2JbJr4",
+              "8JTwybc397f0NSP0SfUM",
+              "8ycAdlTnudhIXtMGwyG8",
+              "97fa0nOHyXA2Niv80MSL",
+              "9xrpOChUWBGGYI3dtjil",
+              "9zl84LULoAdQP6hPFBBi",
+              "AQCWHMGkRlScWSFUta4V",
+              "AtqVbm9YBmkhCAMsfu85",
+              "BItIj5KYPvsePb9jN0xH",
+              "BioeHpRYzx2dXjjDLbND",
+              "BlliyAZe1Oy5cm1VC4PM",
+              "Bxl7lKqEvHrpfJpwEQM0",
+              "CfQKjB0R1ZkrQqWF5rER",
+              "DUhHBTm0BJTpiuhXcMN5",
+              "Dw8zsd8oJM8vLyTiMZAa",
+              "E0J5cPHG7fgA",
+              "EmjrYWPFBLwURQF0zjwf",
+              "FNeTGhy2Jnow0x4fDD3c",
+              "GklMfw20fuJLIaZO4Sm0",
+              "GpCy4oNh1wpSq8Ndmlgb",
+              "GsudBpt1k4WltPcPbrI0",
+              "IT0WdvuP6ayjNB1qTqoE",
+              "Iwyx7hiRHNHVtO8gmzcm",
+              "JFZMpa1hWhrtFdd6B0P8",
+              "KPK2XLm03V08Nw1G2uyK",
+              "KVfJETbDHXcgTkiDENl3",
+              "LC5pVoaYhBcPlhlLIuXH",
+              "LI5aA1NkST14npSWTKyZ",
+              "M0a0yuHaNwOWjMPgV4Wi",
+              "MZ94irEAXNFse466nWCf",
+              "Mvv8NGnaHa3BOSSL2Qm6",
+              "NLvdaE44yeY56FDOfZuc",
+              "Nved06DhBRDrKTkuucmg",
+              "O1GE3KlR6xZ1DwIoveeQ",
+              "O5cbZspsFz2XQRE1n4wN",
+              "O9DXahswAT45cCLhs0yI",
+              "PB9JkiehbUYs6a9CD6QQ",
+              "PT970AtHYJVFDoZHw0U0",
+              "Svu1pAKaLr1f59rE0Bxk",
+              "TYqpRI4NhOO5OCaQ9LOf",
+              "TlMrnz2jUF2m0WGL0C3Z",
+              "UMNmlgpogK54HSjmPiLJ",
+              "VA2DBVqcffAtZF9395NM",
+              "Vky9zXY5YiSkSHKRddbg",
+              "Wgo8fYHWjVo0Fpuo5VCZ",
+              "X39clmpvF6BqwspZ92WG",
+              "Xs9brkgIUkNccP3qifcT",
+              "a06SyMmLpMkG96uFKPTC",
+              "aGvMg7lXNMOPd19lJl8s",
+              "aadIDuSHusDAWaH6nIxy",
+              "allFFlTQJTXDO5Sqp9bi",
+              "bXsLBHxH3kYV2MNFHCPN",
+              "bh3WUS4fEMJQQIKdmUS7",
+              "cCv6BcSh0XWnbio04nNp",
+              "cGdyTs2JyrtxWh3LwFUK",
+              "ctxGJpyWoe85wuZwn33L",
+              "d3ws5TdbOK8P7ET1ZSMr",
+              "eBchQxFDpEyFLKnnGbl9",
+              "fdu3FNFZQk2odR0jb1Ng",
+              "g7Nzhxu1uvhQ9ggX3Qg1",
+              "gDtdtxsmI00p4rfhvfpc",
+              "gr2BmcTI5vyqQBKh0loh",
+              "i2WPUwvfqqLjEJfvjzMt",
+              "ix1YoiJmj5LpiqPhLbvi",
+              "jP0uuckHbdS1yRqW4RpT",
+              "k8hdAkbdnkYGDTwuWIEF",
+              "kwbOJBQkzuOG6pXCUOqf",
+              "laF4SrLFGgOFZxrrcyYC",
+              "nd0fsppCastknvMqxMfY",
+              "oVVcaKELwgSWdVJOigIZ",
+              "ourYEKDyyx5Ivg0WWeDs",
+              "qKkWaGv3iHR3lWsTZeqH",
+              "qKl87w60Lp4TJ9po5CCY",
+              "r6GrV2ilO9e07PZ10bW0",
+              "rmbAJzhD4KENgfh674uS",
+              "tQklRkmLvc17NnmvOPKQ",
+              "vQA3zQlIkAlJuzz7XZP6",
+              "vnkqgBolPACP4lP1Zs55",
+              "wFprv7ICwbgIgFgXgDvh",
+              "wKXeHsOcIvlwhrcSW0ed",
+              "weD3DLDimkQvuiIgkwEu",
+              "wjMOKumd0ED46UWHjInR",
+              "x4Hv4qEniEkCU3DTHBqd",
+              "xTY6xNleGj7fe0hAVz5D",
+              "xZkWuI5mzR5vlNH7I8pA",
+              "yHeo9BLnErhwcXw713iX",
+              "z7Wwgaoq1ltQt4jPDgPk",
+              "zS8kFSvNtZrMKLOoNsTu",
+              "zaACq3gaXPNqMSbio6wO",
+              "Y4rC8L5Bn65S",
+              "hK-qcSL0E3El",
+              "5ZgyGeCZfkrd"
+            ],
+            "sourceTitles": [
+              "הקמת קבוצות ווטסאפ קהילתיות לתעסוקה: יצירת פלטפורמה קהילתית באמצעות קבוצות ווטסאפ ייעודיות, שתאפשר לתושבי צפת, חצור וראש-פינה לשתף ולמצוא הזדמנויות תעסוקה באזור. קבוצות אלו יחזקו את הקשר בין מחפשי עבודה למעסיקים ויסייעו בקידום תעסוקה מקומית ושיפור הפרנסה לכלל התושבים.",
+              "יצירת מקומות עבודה בתחום ההייטק: קידום ופיתוח תעשיית ההייטק באזור צפת, חצור וראש-פינה, במטרה ליצור הזדמנויות תעסוקה חדשות ואיכותיות לתושבים המקומיים, למשוך כוח אדם מיומן ולחזק את הכלכלה המקומית.",
+              "פתיחת קורסים והכשרות מקצועיות לשיפור התעסוקה: הצעה זו עוסקת בפתיחת קורסים והכשרות מקצועיות עבור תושבי האזור, במטרה לשפר את אפשרויות התעסוקה המקומיות. הקורסים יוצעו במתכונת מסובסדת או חינמית, ויתמקדו בתחומים מבוקשים ורלוונטיים לשוק העבודה המודרני, כגון מחשבים, עיצוב, מקצועות דיגיטליים והכשרות תעסוקתיות כלליות. יוזמה זו תאפשר לתושבים לרכוש מיומנויות חדשות, להתפתח מקצועית ולהשתלב טוב יותר בשוק העבודה, מבלי הצורך להתרחק מהאזור לצורך הכשרה.",
+              "חייבים לפעול בתחום תעסוקה איכותית!",
+              "יצירה וקידום הזדמנויות תעסוקה אזוריות: רעיון זה מתמקד בשיפור מצב התעסוקה באזור צפת, חצור וראש-פינה. ניתן לקדם יוזמות משותפות ליצירת מקומות עבודה חדשים, פיתוח תעשיות מקומיות, הקמת מרכזי הכשרה מקצועית, עידוד יזמות עסקית ושיתופי פעולה עם חברות וארגונים חיצוניים. המטרה היא להגדיל את היצע המשרות, לשפר את רמת השכר ולהבטיח עתיד כלכלי יציב ומשגשג לתושבי האזור, תוך ניצול היתרונות היחסיים של כל יישוב.",
+              "הרחבת הזדמנויות התעסוקה והתאמתן להשכלה: הצעה להרחיב את היצע מקומות העבודה באזור צפת, חצור וראש-פינה, בדגש על יצירת משרות התואמות מגוון רחב של הכשרות אקדמיות ומקצועיות, כולל בוגרי תארים במדעי הרוח והחברה כדי למנוע מצב שבו בוגרים משכילים אינם מוצאים תעסוקה הולמת.",
+              "להביא לאזור רשתות גדולות (כמו אושר עד, קניון עופר וכדומה) לאזור שזה יביא גם מלא מקומות תעסוקה וגם אפשרות קניה בלי לסוע רחוק",
+              "יצירת מקומות תעסוקה ועידוד צעירים להישאר באזור: קיים חוסר חמור במקומות עבודה באזור, מה שגורם לבריחת צעירים. יש חובה לפעול ליצירת הזדמנויות תעסוקה חדשות ומגוונות כדי למשוך ולשמר אוכלוסייה צעירה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 302,
+            "averageEvaluation": 0.7857461201418156,
+            "consensus": 0.7040882306922104,
+            "agreementIndex": 0.9183421105503948,
+            "likeMindedness": 0.9503599456233403,
+            "proRatio": 0.9503311258278145,
+            "polarization": 0.04964005437665975
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 223,
+            "weaklyAgreeCount": 64,
+            "neutralCount": 7,
+            "weaklyDisagreeCount": 3,
+            "stronglyDisagreeCount": 5,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": [
+        {
+          "solutionId": "oVVcaKELwgSWdVJOigIZ",
+          "kind": "standalone",
+          "title": "פיתוח הזדמנויות תעסוקה לצעירים: יצירה והצעת מגוון רחב יותר של אפשרויות תעסוקה אטרקטיביות ומתגמלות עבור הדור הצעיר באזור, במטרה לעודד אותם להישאר ולבנות את עתידם ביישובים אלו, ובכך לחזק את האוכלוסייה המקומית.",
+          "evaluation": {
+            "numberOfEvaluators": 32,
+            "averageEvaluation": 0.859375,
+            "consensus": 0.5907197033211504,
+            "agreementIndex": 0.7313447033211504,
+            "likeMindedness": 0.8413234323555315,
+            "proRatio": 0.96875,
+            "polarization": 0.15867656764446847
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 26,
+            "weaklyAgreeCount": 5,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.591 >= floor 0.35",
+            "rank": 1
+          }
+        },
+        {
+          "solutionId": "wFprv7ICwbgIgFgXgDvh",
+          "kind": "standalone",
+          "title": "תעסוקה וצמיחה אזורית: פיתוח הייטק ותעשייה בצפת, חצור וראש-פינה",
+          "paragraphs": [
+            "אחד האתגרים המרכזיים העומדים בפני תושבי צפת, חצור וראש-פינה הוא המחסור בתעסוקה במקצועות גבוהים כשכירים, מצב המאלץ בעלי הכשרה להרחיק נדוד עד כרמיאל, בר לב או תל חי כדי למצוא עבודה הולמת קרוב לבית.",
+            "כדי להתמודד עם אתגר זה ולשפר באופן ניכר את איכות החיים באזור, עלינו לקדם יחד, כבר בשנה הקרובה, יצירת מקומות עבודה חדשים ואיכותיים.",
+            "הדבר יכלול פיתוח מואץ של ענף ההייטק המקומי, תוך הקמת חברות הייטק 'נורמליות' שיספקו מענה לבעלי מקצוע, וכן משיכת מפעלים גדולים לאזור. מהלכים אלו יבטיחו צמיחה כלכלית משמעותית ויאפשרו לתושבים למצוא תעסוקה הולמת וקרובה לבית, ללא צורך בנסיעות ארוכות."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 33,
+            "averageEvaluation": 0.7424242424242424,
+            "consensus": 0.47946135219321484,
+            "agreementIndex": 0.7370371097689724,
+            "likeMindedness": 0.8445662074529923,
+            "proRatio": 0.8484848484848485,
+            "polarization": 0.15543379254700773
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 26,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.479 >= floor 0.35",
+            "rank": 2
+          }
+        },
+        {
+          "solutionId": "9zl84LULoAdQP6hPFBBi",
+          "kind": "standalone",
+          "title": "קידום תעסוקה אזורית: פיתוח יוזמות משותפות ליצירת מקומות עבודה חדשים, הכשרה מקצועית והשמת עובדים בתחומים מגוונים, תוך ניצול היתרונות היחסיים של כל יישוב באזור. המטרה היא להגדיל את שיעורי התעסוקה ולשפר את איכות החיים הכלכלית של התושבים.",
+          "paragraphs": [
+            "קידום תעסוקה אזורית: פיתוח יוזמות משותפות ליצירת מקומות עבודה חדשים, הכשרה מקצועית והשמת עובדים בתחומים מגוונים, תוך ניצול היתרונות היחסיים של כל יישוב באזור. המטרה היא להגדיל את שיעורי התעסוקה ולשפר את איכות החיים הכלכלית של התושבים."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 23,
+            "averageEvaluation": 0.7391304347826086,
+            "consensus": 0.44270725957527096,
+            "agreementIndex": 0.7035768247926624,
+            "likeMindedness": 0.8267949192431123,
+            "proRatio": 0.8695652173913043,
+            "polarization": 0.17320508075688767
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 16,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.443 >= floor 0.35",
+            "rank": 3
+          }
+        },
+        {
+          "solutionId": "526zXMmp8ZR5BFNzxDKJ",
+          "kind": "standalone",
+          "title": "בתחום התעסוקה חייבים לעשות מאמצים חובה להביא לאזור מפעלי הייטק רוב הצעירים עוזבים את האיזור בגלל התעסוקה",
+          "evaluation": {
+            "numberOfEvaluators": 31,
+            "averageEvaluation": 0.7096774193548387,
+            "consensus": 0.44126233374708423,
+            "agreementIndex": 0.7315849143922455,
+            "likeMindedness": 0.8415869419217691,
+            "proRatio": 0.8709677419354839,
+            "polarization": 0.15841305807823092
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 23,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 2,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.441 >= floor 0.35",
+            "rank": 4
+          }
+        },
+        {
+          "solutionId": "kwbOJBQkzuOG6pXCUOqf",
+          "kind": "standalone",
+          "title": "קידום תעסוקה ופיתוח הזדמנויות עבודה: רעיון זה מתמקד בקידום ופיתוח הזדמנויות תעסוקה חדשות באזור צפת, חצור וראש-פינה. הדבר יכול לכלול משיכת חברות חדשות, הקמת מרכזי הכשרה מקצועית, תמיכה בעסקים קטנים ובינוניים קיימים, ופיתוח תוכניות לשימור וצמיחת כוח העבודה המקומי. המטרה היא להפחית את האבטלה ולספק מקורות פרנסה יציבים לתושבי האזור.",
+          "paragraphs": [
+            "קידום תעסוקה ופיתוח הזדמנויות עבודה: רעיון זה מתמקד בקידום ופיתוח הזדמנויות תעסוקה חדשות באזור צפת, חצור וראש-פינה. הדבר יכול לכלול משיכת חברות חדשות, הקמת מרכזי הכשרה מקצועית, תמיכה בעסקים קטנים ובינוניים קיימים, ופיתוח תוכניות לשימור וצמיחת כוח העבודה המקומי. המטרה היא להפחית את האבטלה ולספק מקורות פרנסה יציבים לתושבי האזור."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 17,
+            "averageEvaluation": 0.7352941176470589,
+            "consensus": 0.3813428498148897,
+            "agreementIndex": 0.6460487321678308,
+            "likeMindedness": 0.7958758547680685,
+            "proRatio": 0.8235294117647058,
+            "polarization": 0.20412414523193145
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 13,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.381 >= floor 0.35",
+            "rank": 5
+          }
+        },
+        {
+          "solutionId": "O9DXahswAT45cCLhs0yI",
+          "kind": "standalone",
+          "title": "קידום אזור תעשייה הייטק משותף בצפת, חצור וראש-פינה: מנוף לצמיחה כלכלית וחברתית",
+          "paragraphs": [
+            "כדי לשפר את איכות החיים באזור צפת, חצור וראש-פינה כבר בשנה הקרובה, הרשויות המקומיות יכולות לקדם יחד הקמת אזור תעשייה הייטק משותף. יוזמה זו תכלול מתן הטבות מס מפליגות, אשר יהוו תמריץ משמעותי למשיכת חברות טכנולוגיה מתקדמת לאזור.",
+            "מהלך אסטרטגי זה יביא ליצירת מקומות עבודה איכותיים עבור התושבים המקומיים, ימשוך אוכלוסייה צעירה, משכילה ואיכותית לאזור, ויחזק באופן ניכר את הכלכלה המקומית באמצעות חדשנות וטכנולוגיה מתקדמת."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 19,
+            "averageEvaluation": 0.6842105263157895,
+            "consensus": 0.3749451236505151,
+            "agreementIndex": 0.6907345973347256,
+            "likeMindedness": 0.8207157085998409,
+            "proRatio": 0.8947368421052632,
+            "polarization": 0.1792842914001591
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 11,
+            "weaklyAgreeCount": 6,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.375 >= floor 0.35",
+            "rank": 6
+          }
+        },
+        {
+          "solutionId": "yHeo9BLnErhwcXw713iX",
+          "kind": "standalone",
+          "title": "פיתוח תעסוקה והקמת מקומות בילוי חדשים: הצעה זו מתייחסת לחיזוק הכלכלה המקומית ושיפור איכות החיים באזור. היא כוללת יוזמות לפתיחת מקומות תעסוקה חדשים, במגוון תחומים, כדי להציע אפשרויות פרנסה מגוונות לתושבים. במקביל, מוצע להקים מקומות בילוי ופנאי חדשים, שיענו על צרכי האוכלוסייה וישפרו את האטרקטיביות של האזור למגורים ולתיירות.",
+          "paragraphs": [
+            "פיתוח תעסוקה והקמת מקומות בילוי חדשים: הצעה זו מתייחסת לחיזוק הכלכלה המקומית ושיפור איכות החיים באזור. היא כוללת יוזמות לפתיחת מקומות תעסוקה חדשים, במגוון תחומים, כדי להציע אפשרויות פרנסה מגוונות לתושבים. במקביל, מוצע להקים מקומות בילוי ופנאי חדשים, שיענו על צרכי האוכלוסייה וישפרו את האטרקטיביות של האזור למגורים ולתיירות."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 19,
+            "averageEvaluation": 0.6842105263157895,
+            "consensus": 0.36927005575031896,
+            "agreementIndex": 0.6850595294345294,
+            "likeMindedness": 0.8174258141649446,
+            "proRatio": 0.8421052631578947,
+            "polarization": 0.18257418583505536
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 12,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.369 >= floor 0.35",
+            "rank": 7
+          }
+        },
+        {
+          "solutionId": "VA2DBVqcffAtZF9395NM",
+          "kind": "standalone",
+          "title": "יוזמות משולבות לחיזוק צפת והאזור: תעסוקה, פנאי ומסחר",
+          "paragraphs": [
+            "כדי לשפר את איכות החיים באזור, לחזק את קשר תושביו לעיר הקודש צפת ולמנוע עזיבה, וכן להגביר את האטרקטיביות האזורית כולה, צפת, חצור וראש-פינה יכולות לקדם יחד כבר בשנה הקרובה מספר יוזמות משמעותיות.",
+            "בראש ובראשונה, יש להתמקד בתחום התעסוקה ובקידום שיתופי פעולה אזוריים שיכללו שילוב והכשרת צעירים לשוק העבודה המקומי. יוזמות אלו יחזקו באופן ניכר את הכלכלה האזורית ויספקו אופק תעסוקתי לדור הצעיר.",
+            "במקביל, ולמען השלמת מאמצי הפיתוח הכלכלי וחיזוק האטרקטיביות האזורית, חשוב לקדם פיתוח תשתיות פנאי ומסחר בעיר צפת. יוזמות אלו כוללות הקמת קולנוע ומרכז קניות, בילוי ופנאי גדול (כדוגמת \"ביג פאשן\"), אשר ישפרו את היצע הבילוי והשירותים לתושבי האזור כולו, וימשכו אוכלוסיות חדשות."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 9,
+            "averageEvaluation": 0.8333333333333334,
+            "consensus": 0.3681428151777951,
+            "agreementIndex": 0.5348094818444618,
+            "likeMindedness": 0.7432723409737647,
+            "proRatio": 0.8888888888888888,
+            "polarization": 0.2567276590262353
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 7,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          },
+          "kept": {
+            "reason": "consensus 0.368 >= floor 0.35",
+            "rank": 8
+          }
+        }
+      ]
+    },
+    {
+      "topicId": "2UvUIBw4JVtD",
+      "topicTitle": "שיפור שירותי התחבורה הציבורית",
+      "memberCount": 37,
+      "displayedCount": 5,
+      "agreement": {
+        "averageConsensus": 0.46589392897315,
+        "averageLikeMindedness": 0.799154281859009,
+        "internalDivergence": 0.08623573492191955,
+        "evaluatorOverlap": 0.323943661971831
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "2UvUIBw4JVtD",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותי התחבורה הציבורית",
+          "provenance": {
+            "sourceCount": 37,
+            "sourceIds": [
+              "1ErIYNOkLhYufHCq2HzZ",
+              "8WWjg9wFrMFblIImW2C6",
+              "8yqvg2tTlnbCENcBWiDe",
+              "9L9s271OctzMdBF0BEIi",
+              "9TcN0g4NmAuMxEeiy2Gw",
+              "C05ZxHdhPJAid7pC3l5t",
+              "CyLrmvCiVBa53cl2lnsW",
+              "EQm61EKM2q4uYW8hHEhw",
+              "ETEgrEO3dPQmpwxFX6g3",
+              "FJ9CqBgxd14Iu4eISHrU",
+              "FoJtHIZnWvZOIJzT4ZD5",
+              "MZUgOB7DH3XIaS8PikqL",
+              "NjMfwMdzNl5s5DC0iuTm",
+              "NkZo8SkXAkqdxBGVQnyk",
+              "OjGuZ85UjYS83zryeDbx",
+              "UFim3gYsYuIwcd2L1mIl",
+              "Uh1hblgHfUgnWz126hSY",
+              "X3VYaYiHhV3tNQSEDJUi",
+              "aoWI6Ew8pyX5v1ZR0LGN",
+              "bG4hOlW4eWGnTQKWMPXs",
+              "bsx2FvlDHtaRFDTesnJX",
+              "cHQjIxJlqhsxFT0adwpL",
+              "f6cpaPXbRB3t9k5lPo40",
+              "gT62r5g101mzsWgQDDHq",
+              "jdC7sq9Q6rcNDPKyKxM8",
+              "l8iaPB1ynexzGBctkHr2",
+              "mzGV9uICU5aTuRaoX6L9",
+              "n3Jv4IhgVi4GlGiB1k5a",
+              "oNHB2ubhYzmdfoucOCY1",
+              "pREdALdwqpIs4dAwb8tm",
+              "pl58uHWxWQW7lhTVvHrl",
+              "pzHQRIZcnGHuU4PueqA4",
+              "qhClbpB2zkkBNJVJNp7y",
+              "rtiHDlRVWvAyaDWmOz5C",
+              "sK9jIlLztj4RECRsgnYv",
+              "zI4dzqkpVPpsZfhkSJHL",
+              "6O-sgZG1697X"
+            ],
+            "sourceTitles": [
+              "שיפור מערך התחבורה הציבורית לתושבים: הצעה לשיפור כולל של מערך התחבורה הציבורית בין יישובי צפת, חצור וראש-פינה (צח\"ר). השיפור יכלול הוספת מיניבוסים מטעם העירייה או קבלן, במטרה להקל על התושבים להגיע למקומות עבודה, קניות וצרכים יומיומיים אחרים.",
+              "קידום ציר תחבורה אסטרטגי ופיתוח כלכלי אזורי: הצעה לניצול מלא של תוואי השטח הקיים והחיבור שייווצר בין הרשויות (צפת, ראש פינה, חצור) לצורך תכנון וקידום ציר תחבורה אסטרטגי. ציר זה נועד לחבר במהירות וביעילות בין הערים בעתיד, ובכך ליצור נתיבים חדשים למסחר, תעסוקה וצמיחה כלכלית אזורית. המטרה היא להפוך את החיבור הפיזי למנוף לפיתוח כלכלי ארוך טווח ולשיפור הנגישות והקישוריות באזור.",
+              "שיפור ונגישות התחבורה הציבורית: פיתוח מערך תחבורה ציבורית יעיל, נוח ונגיש יותר שיחבר בין היישובים באזור ויאפשר לתושבים להתנייד בקלות רבה יותר לעבודה, ללימודים ולפעילויות פנאי, תוך התחשבות בצרכים של אוכלוסיות שונות.",
+              "לקדם את הנגישות לרבכת, הבנתי שתהיה תחנה, ראש פינה, שיהיה ממש קל ונוח להגיע לשם!",
+              "שיפור שירותי התחבורה הציבורית וחזרה לחברת \"אגד\": יש להרחיב ולהוסיף קווי תחבורה ציבורית נוספים באזור, ולשקול חזרה לשירותי חברת \"אגד\" על מנת לשפר את תדירות, זמינות ואיכות התחבורה הציבורית לרווחת התושבים.",
+              "לסלול את הכביש הפנימי בין ראש פינה לחצור ואז יהיה פחות פקקים בראש פינה בצהרים לעסקים",
+              "הסדרת שבילי אופניים והליכה: פיתוח והסדרת שבילים ייעודיים לאופניים ולהליכה באזור. יוזמה זו תעודד שימוש בתחבורה ירוקה, תפחית את התלות ברכב פרטי ותתרום לשיפור הבריאות הציבורית באמצעות עידוד פעילות גופנית.",
+              "טיפול בפקקי תנועה: יש לפתח וליישם תוכנית מקיפה לטיפול בפקקי התנועה, הכוללת שיפור תשתיות כבישים, תכנון תנועה חכם, ואולי אף עידוד חלופות תחבורתיות."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 142,
+            "averageEvaluation": 0.6990023474178404,
+            "consensus": 0.5844823966480315,
+            "agreementIndex": 0.8854800492301911,
+            "likeMindedness": 0.9303830086505721,
+            "proRatio": 0.8661971830985915,
+            "polarization": 0.06961699134942789
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 93,
+            "weaklyAgreeCount": 30,
+            "neutralCount": 12,
+            "weaklyDisagreeCount": 3,
+            "stronglyDisagreeCount": 4,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": [
+        {
+          "solutionId": "f6cpaPXbRB3t9k5lPo40",
+          "kind": "standalone",
+          "title": "שיפור תשתיות התחבורה באזור: קידום פרויקטים לפתיחת יציאות חדשות מהערים והיישובים באזור, במטרה להפחית את עומסי התנועה הכבדים. בנוסף, יש לטפל באופן יסודי במפגעי כביש קיימים כדי לשפר את בטיחות ונוחות הנסיעה.",
+          "evaluation": {
+            "numberOfEvaluators": 30,
+            "averageEvaluation": 0.7666666666666667,
+            "consensus": 0.5001795448507149,
+            "agreementIndex": 0.7335128781840481,
+            "likeMindedness": 0.842845360726572,
+            "proRatio": 0.9,
+            "polarization": 0.157154639273428
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 22,
+            "weaklyAgreeCount": 5,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.500 >= floor 0.35",
+            "rank": 1
+          }
+        },
+        {
+          "solutionId": "oNHB2ubhYzmdfoucOCY1",
+          "kind": "standalone",
+          "title": "הגדלת התחבורה הציבורית: הצעה זו מתמקדת בשיפור והרחבת שירותי התחבורה הציבורית באזור צפת, חצור וראש-פינה. המטרה היא להקל על התושבים להתנייד בין היישובים השונים, להפחית את התלות ברכב פרטי ולשפר את הנגישות למרכזי תעסוקה, חינוך ופנאי. זה יכול לכלול הוספת קווים, הגברת תדירות, שיפור תשתיות תחנות והכנסת אמצעי תחבורה חדשניים.",
+          "evaluation": {
+            "numberOfEvaluators": 14,
+            "averageEvaluation": 0.8571428571428571,
+            "consensus": 0.48184797863619094,
+            "agreementIndex": 0.6247051214933339,
+            "likeMindedness": 0.7859127903555811,
+            "proRatio": 1,
+            "polarization": 0.21408720964441885
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 10,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.482 >= floor 0.35",
+            "rank": 2
+          }
+        },
+        {
+          "solutionId": "bG4hOlW4eWGnTQKWMPXs",
+          "kind": "standalone",
+          "title": "קידום משמעותי של התחבורה באזור.",
+          "description": "כתושבת צפת אני לפעמים רוצה לנסוע לראש פינה וחצור, אבל החוסר זמינות של התחבורה לגנרי לא מאפשרת את זה",
+          "evaluation": {
+            "numberOfEvaluators": 8,
+            "averageEvaluation": 0.875,
+            "consensus": 0.3823960515789587,
+            "agreementIndex": 0.5073960515789586,
+            "likeMindedness": 0.731258075056715,
+            "proRatio": 1,
+            "polarization": 0.26874192494328497
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 6,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          },
+          "kept": {
+            "reason": "consensus 0.382 >= floor 0.35",
+            "rank": 3
+          }
+        },
+        {
+          "solutionId": "cHQjIxJlqhsxFT0adwpL",
+          "kind": "standalone",
+          "title": "יצירת דרך נוף מקשרת ורב-תכליתית בין צפת, ראש פינה וחצור: הצעה לפיתוח דרך נוף ייעודית שתחבר בין שלוש הרשויות - צפת, ראש פינה וחצור. דרך זו תהווה עורק ירוק ופעיל, ותכלול מגוון אלמנטים לרווחת התושבים והמבקרים: פינות חמד למנוחה ובילוי, שבילי ריצה והליכה מסודרים, נקודות תצפית פנורמיות, עגלות קפה ניידות, עמדות למכירת מוצרים מתוצרת מקומית, ואזורי חניה נגישים. מטרת הפרויקט היא לחזק את הקשר הקהילתי והתיירותי בין היישובים, לשפר את איכות החיים באזור ולהציע מוקדי פנאי ובילוי חדשים.",
+          "evaluation": {
+            "numberOfEvaluators": 7,
+            "averageEvaluation": 0.9285714285714286,
+            "consensus": 0.38056367315185424,
+            "agreementIndex": 0.45199224458042564,
+            "likeMindedness": 0.7053721745056052,
+            "proRatio": 1,
+            "polarization": 0.2946278254943948
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 6,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          },
+          "kept": {
+            "reason": "consensus 0.381 >= floor 0.35",
+            "rank": 4
+          }
+        }
+      ]
+    },
+    {
+      "topicId": "jwlO5GbWM5N4",
+      "topicTitle": "פיתוח תיירות אזורית משותפת",
+      "memberCount": 44,
+      "displayedCount": 3,
+      "agreement": {
+        "averageConsensus": 0.48818949931129224,
+        "averageLikeMindedness": 0.8309744990614453,
+        "internalDivergence": 0.10960781012269236,
+        "evaluatorOverlap": 0.23214285714285715
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "jwlO5GbWM5N4",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "פיתוח תיירות אזורית משותפת",
+          "provenance": {
+            "sourceCount": 44,
+            "sourceIds": [
+              "5fKX9TW02Uwi",
+              "5hSkuFbf4eGFwDHEGnu1",
+              "8vExnUnfm9q4rGfo6xgb",
+              "90qXvNDUojLXuCfCtrVb",
+              "9M9QLTFeI3PfBBbEIBhu",
+              "A8lwgiVXvUENwPRQmvru",
+              "FUoxDkelwCWJBi1LRvYE",
+              "GQze08NHHQQCL51TYz76",
+              "MzudxxiiJ5lpiPwVCpht",
+              "NsMB17TkXWeUOe83asCd",
+              "O2c09Xb56tI0CiHnvIvr",
+              "PLpAnxYwm6iqFH5uyrBw",
+              "Pq5FYpgj3sNiEjmACKMA",
+              "ROYo7uyAfvBCu5N0IUna",
+              "ST4fJztl8sJs7qkV2FtD",
+              "SleR26QYlalw124HTClP",
+              "TvPkiH2wMvNkdlwE2qfI",
+              "UuOWqHQgP3o4LF2Nj3Xn",
+              "V0QjJc9LrpvHu56aiQJF",
+              "VK9mF4sbf2OGgjRkYLHN",
+              "WL16BISmjfvbfk0xFItg",
+              "X9KpVeXeOUIIDkzwW2zd",
+              "YL2rrTyJOmct6LIpqQ2q",
+              "b0xKkrfofTCaeyxWUAG1",
+              "bbPjgE4fzvGbaTnM768B",
+              "bvn4K5uwvo0D4t0MLvhm",
+              "cVD6YR5E0lj9GwQJLaSL",
+              "geQQ9Ob7k0EkYHjS4vQM",
+              "ixE8VLe7p2bUXfBLsOWk",
+              "j3yIMFZgc4U8odTYVqjj",
+              "kBTCT6xdCU2O5fKqsoNi",
+              "lQkgJOc1wjijKawdm38J",
+              "lcVjhFmkWT5ZlRKFB03X",
+              "nYxp9LkPrKCF79hIiSTs",
+              "pQYCJZCn7vDGGZXiAFn8",
+              "rhWkbp2KZc8GN7n9UJit",
+              "s5TAXzKp3EXYzNN8xMLx",
+              "tYG0r3VoyEbsf7BPSEYR",
+              "tdWQFJlEcRp4tgdofWgl",
+              "uJvn2qHVl6oM5dHv8OD0",
+              "yzbXUsiKKFYsOHZI5yjm",
+              "zXq9r0XvZugap3uXdCs4",
+              "9nQTeZR6gV0nWGBnWn1Z",
+              "98xcJ6NyPmqB"
+            ],
+            "sourceTitles": [
+              "צפת, חצור וראש-פינה: שיתוף פעולה לקידום תיירות, תרבות וחיזוק הקהילה בגליל העליון",
+              "מותג תיירות אזורי מאוחד: פיתוח וקידום מותג תיירותי אחד ומשותף לשלושת היישובים – צפת, חצור וראש-פינה. מותג זה יאחד את הנכסים התיירותיים של כל יישוב, יציג את האזור כיעד תיירותי אטרקטיבי ומגוון, ויחזק את הכלכלה המקומית באמצעות הגברת התיירות.",
+              "יצירת אטרקציות משפחתיות עם מודל כניסה מותאם: הצעה ליצור אטרקציות המיועדות לכל המשפחה, תוך התבססות על מודל קיים כמו 'פארק המשפחה הנפלא' בכרמיאל. המודל יכלול כניסה חינם לתושבים המקומיים ותשלום סביר עבור אורחים המגיעים מחוץ לאזור, במטרה לעודד תיירות פנים וליהנות מהמתקנים.",
+              "שיפור תשתיות ושירותי תיירות: הטיפול בתיירות יכלול הוספת שלטים אסתטיים ויפים ברחבי העיר וכן דאגה לשירותים ציבוריים נקיים ומתוחזקים, על מנת לשפר את חווית המבקרים והתיירים בעיר צפת.",
+              "פיתוח מסלולי הליכה משותפים: הצעה זו מתמקדת ביצירת רשת של מסלולי הליכה שיחברו בין הערים צפת, חצור וראש-פינה. מסלולים אלו יכולים לשפר את התיירות באזור, לעודד פעילות גופנית בקרב התושבים, ולחזק את הקשר בין היישובים השונים על ידי יצירת חוויה משותפת ונגישות מוגברת.",
+              "פיתוח וקידום ענף התיירות האזורי: רעיון זה עוסק בחיזוק וקידום התיירות המשותפת של צפת, חצור וראש-פינה. זה יכול לכלול פיתוח אטרקציות תיירותיות חדשות, שיווק משותף של האזור כיעד תיירותי (לדוגמה, 'שביל הגליל העליון'), שיפור תשתיות תיירותיות כמו מלונות וצימרים, קידום סיורים מודרכים וחוויות ייחודיות (כמו תיירות קולינרית, תיירות היסטורית או תיירות רוחנית), והגברת שיתוף הפעולה בין עסקי תיירות מקומיים. המטרה היא למשוך יותר מבקרים לאזור, להגדיל את ההכנסות מתיירות וליצור מקומות עבודה חדשים.",
+              "להביא יותר תיירות מופעים כמו שהיה בפעמים הקודמות בעצמאות ובכלייזמרים בצפת",
+              "קידום אזורי משולב: תיירות, תחבורה וחינוך לשיפור איכות החיים"
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 168,
+            "averageEvaluation": 0.7123015873015873,
+            "consensus": 0.6039722171795425,
+            "agreementIndex": 0.8916706298779552,
+            "likeMindedness": 0.934146279561067,
+            "proRatio": 0.8690476190476191,
+            "polarization": 0.065853720438933
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 113,
+            "weaklyAgreeCount": 33,
+            "neutralCount": 10,
+            "weaklyDisagreeCount": 7,
+            "stronglyDisagreeCount": 5,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": [
+        {
+          "solutionId": "GQze08NHHQQCL51TYz76",
+          "kind": "standalone",
+          "title": "קידום אזורי משולב: תיירות, תחבורה וחינוך לשיפור איכות החיים",
+          "paragraphs": [
+            "פיתוח התיירות האזורית המשותפת תיתן מענה משמעותי לכל תחומי הרווחה והתרבות, ותהווה מנוף מרכזי לשיפור איכות החיים באזור ולפיתוח הכלכלה המקומית.",
+            "לשם כך, יקודמו הצעות לינה מגוונות, לרבות לילה במלון או בצימרים, ושילוב אטרקציות מגוונות כגון באולינג, במטרה למשוך מבקרים ולעודד שהות ארוכה יותר באזור.",
+            "במקביל, יש לפעול לשיפור משמעותי של התחבורה הציבורית והפרטית, לרבות קידום פרויקט הרכבת, כדי להנגיש את האזור למבקרים ולתושבים כאחד, ולתמוך בפיתוח התיירות והכלכלה המקומית.",
+            "בנוסף, יש לתת מענה דחוף למצב החינוך הממלכתי באזור, אשר נראה כרגע כ'קיש אבוד', ולפעול לחיזוקו ושיפורו."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 10,
+            "averageEvaluation": 0.95,
+            "consensus": 0.47456600368875074,
+            "agreementIndex": 0.5245660036887507,
+            "likeMindedness": 0.7352817392476341,
+            "proRatio": 1,
+            "polarization": 0.26471826075236593
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 9,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          },
+          "kept": {
+            "reason": "consensus 0.475 >= floor 0.35",
+            "rank": 1
+          }
+        },
+        {
+          "solutionId": "ST4fJztl8sJs7qkV2FtD",
+          "kind": "standalone",
+          "title": "פיתוח תיירות משותפת ומקומית: קידום תיירות משותפת בין צפת, חצור וראש פינה, שתכלול היבטים קולינריים, אמנותיים ומסורתיים. הרעיון כולל יצירת סיורים מודרכים בשיתוף פעולה עם בעלי עסקים מקומיים, במטרה להבטיח שההכנסות יישארו בתוך הקהילות המקומיות. בנוסף, יש לבנות ולפרסם סיורים אלו באופן אקטיבי כדי למשוך קהל רחב.",
+          "paragraphs": [
+            "פיתוח תיירות משותפת ומקומית: קידום תיירות משותפת בין צפת, חצור וראש פינה, שתכלול היבטים קולינריים, אמנותיים ומסורתיים. הרעיון כולל יצירת סיורים מודרכים בשיתוף פעולה עם בעלי עסקים מקומיים, במטרה להבטיח שההכנסות יישארו בתוך הקהילות המקומיות. בנוסף, יש לבנות ולפרסם סיורים אלו באופן אקטיבי כדי למשוך קהל רחב."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 24,
+            "averageEvaluation": 0.6875,
+            "consensus": 0.3860302770655835,
+            "agreementIndex": 0.6985302770655835,
+            "likeMindedness": 0.8234954783756343,
+            "proRatio": 0.7916666666666666,
+            "polarization": 0.1765045216243657
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 18,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 3,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.386 >= floor 0.35",
+            "rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "topicId": "ZAwpEqoRFxTv",
+      "topicTitle": "שיתוף פעולה תרבותי בין יישובים",
+      "memberCount": 97,
+      "displayedCount": 3,
+      "agreement": {
+        "averageConsensus": 0.4679010933088967,
+        "averageLikeMindedness": 0.8540601498809549,
+        "internalDivergence": 0.13576192501690632,
+        "evaluatorOverlap": 0.4576923076923077
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "ZAwpEqoRFxTv",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיתוף פעולה תרבותי בין יישובים",
+          "provenance": {
+            "sourceCount": 97,
+            "sourceIds": [
+              "07IlqOppwKEzOMEwXQwW",
+              "18kqCohZ6wqMpBCkAv2q",
+              "1Gk1lFyafk0Wuw17yzxv",
+              "1fYmJJupukh48XMAC2Lf",
+              "3pFmPomlCRaK7iU4ti9P",
+              "5ifb0rlAqkXdh3mlD7sK",
+              "615B2wOGnpyjw915s8zc",
+              "7iFxa9bqdHYK4Q479h0i",
+              "7knCwtXd8tEIaoaIk2Ki",
+              "8jwgPBrvxqujhwabI0Mr",
+              "97WJ5BvAesvpqkoV4cIm",
+              "9dIKAxMN2I1sWPJwCgR0",
+              "9kqAYjmp4nid4545Ol14",
+              "A4URGQlsa3hdB6eouKmx",
+              "ABEKwvsIEwgesvVc1D7l",
+              "BRx2Yfghr8RWtDbWzYaT",
+              "BdXyGHx2dELtmmJx4K4D",
+              "CFdmGhkkLgQ0zCdKqM3R",
+              "FBeVGXWObqXzuPj3ypY7",
+              "FfBnyK1X0FjPn9Yg4sM0",
+              "Fou4xd5kJ3DT9WyZwHq5",
+              "FpfuVPsv0zzkd9vkQ1hI",
+              "GTqNagAGo7Ps2D6pwnUf",
+              "GnGFQMXjjgKWiu5vSW0G",
+              "I8gIr4y15Kn3NgdFEL9d",
+              "II5bXPrXx4GraeKUxc6S",
+              "IuplvyIU0sEONn9hQJ0I",
+              "JKdJ6zLPkV7BiJIK7Ey3",
+              "Jesm9KdgAPElA2HpBEZx",
+              "K0fKQDLC8GAdHVwcAtdk",
+              "K7qjU3aSzulcDecPY4jG",
+              "K8PZHa7PNkgVjhSvkzUN",
+              "KQkvruLDeE1LbT0ySUMv",
+              "KUHQyacsNPFOOwFvZCXi",
+              "LRAIh4TtUsFxORVItS2L",
+              "MYSTKK489Evcyl8FpwHO",
+              "NAE7KBhX19Nelsai95EA",
+              "NLPPNIvskS51kiAoFx8C",
+              "NSRZCt51EYA4eMNCQJcY",
+              "OSVStLUigcjaELV8cKVV",
+              "OWQkJVwxeHyFRREr7Uhu",
+              "PTMbzrjVDhTYmIuTSTwO",
+              "QhFgDr2sEGpeof50xNWA",
+              "QxVtfldCu1sA9qXErdcU",
+              "SJxpvTZjdGoFpSG8yezx",
+              "SMHVWHXwvG7oPPYuDSmP",
+              "TQPcSjTtttYMf5eRR1H0",
+              "U2efpAIeVZfTrnCbS51V",
+              "UBUfS9CJQh1fpIEKZ6Oy",
+              "UzvOkEUFAK60Z6YFRPmU",
+              "VEpKjcNNksyXKbyLl0p8",
+              "VNPfSygqIKtZVEpIzaRT",
+              "VbY2o9uYkPYZJrjT9OPj",
+              "WB2On8KdWSfE9raCyRH2",
+              "XSRmgNAl5sL5poZNpalQ",
+              "YZp74y03JkXLyEfmoQzh",
+              "ZYBLa17qAA3wn1UwJRZQ",
+              "aGUy12ftMMtrd0NYmHMx",
+              "bWxaBSsGuCWFg4IMGIid",
+              "beXBoUpw4sccEpxqkywD",
+              "cbPhR7vEnn8pSMI92ErL",
+              "eZUJvE44NvWBJIeZmJyK",
+              "fTkdKAANshOVcGkPPC2j",
+              "g3xWHPOaRoFyuMmBkrsn",
+              "hO0CIJ1K7nRF",
+              "hR7q6MdwQBxg9IkkO0e5",
+              "hjgWvtIpjwT6VGCQF4e5",
+              "iNodOfNwTWgwBJqvJxGY",
+              "j21Mhlyfya4HW4FVZVcn",
+              "j56jtRitQI1CXOmMa6Ti",
+              "k0khQPxDO0c7QuElo5FA",
+              "lglFmh67UnOB9jY4ReBs",
+              "lyx7xJM7sZefAHY3Dwn8",
+              "m6D6tH7CPAbi1puKg7G5",
+              "mVQqMPpw2kPu7fMo7ZLH",
+              "nxu4P44iQVO9HtjCWJyH",
+              "o8t50jig6ykigp0LiBxM",
+              "ow8RMmbK0Sdd0AhFHyg7",
+              "p4LeReHKu7kQd1z03F5S",
+              "qHsiJIoy9IvqHBgolRSS",
+              "tKyvPtzaRSPoSjnOZs2V",
+              "tPiDiWv0dIJBZrlAkixe",
+              "tXftpKrDkij4OC3hKIEq",
+              "taRYylwHhQnfTY0KfwBb",
+              "uwm2ClKa2QXoxMY2Za38",
+              "vnN4AK5lBr2WecpIe1t6",
+              "ycRe7FSKPYTz6PowJNV6",
+              "z7qogCxzSneDus1W763a",
+              "zHTQ2sGEUWyZFbaPyrPq",
+              "zQUUKMiIeBq5LGz3T4ka",
+              "zehSkoVnzoTUwBOjwkxo",
+              "1agiluZ8OIFGOBC47qti",
+              "GgL0oelJckcLmG4e9E9q",
+              "ZuNykv7iPXSNFNr0sJ2W",
+              "jHjRbSoc8CJlbWL7cMJZ",
+              "6RatuSw5NNC0",
+              "P6lbucsGYnyf"
+            ],
+            "sourceTitles": [
+              "ארגון צעדה ואירוע זיכרון משותף: ארגון צעדה משותפת לזכר חללי מערכות ישראל ונפגעי פעולות איבה, בהשתתפות תושבי צפת, חצור וראש-פינה. כל יישוב יכין שלטים לזכר הנופלים, והאירוע יסתיים במופע זמר עם שירי לוחמים, כדרך לכבד את זכרם ולחזק את תחושת הקהילתיות והזיכרון המשותף.",
+              "העשרת הפעילויות והאירועים באזור: הצעה זו קוראת להגדיל את מגוון הפעילויות, האירועים והאטרקציות הזמינות לתושבי צפת, חצור וראש-פינה. המטרה היא לשפר את איכות החיים, לספק אפשרויות בילוי ופנאי מגוונות לכל הגילאים, ולחזק את הקהילתיות והחיבור בין היישובים. זה יכול לכלול אירועי תרבות, ספורט, חינוך בלתי פורמלי, סדנאות, פסטיבלים ועוד. ועוד",
+              "קידום תרבות הקולנוע בצפון: יוזמה לקידום והנגשת פעילויות תרבותיות בדגש על קולנוע, שתשרת את כלל תושבי אזור הצפון, במטרה להעשיר את חיי התרבות באזור.",
+              "קידום ופיתוח תרבותי אזורי: הרחבת והעשרת הפעילות התרבותית בכל האזור, כולל אירועים, פסטיבלים, מופעים ותערוכות, במטרה למשוך קהל רחב ולחזק את הזהות התרבותית המקומית.",
+              "שיתוף פעולה בין רשויות לאירועים משותפים וחיסכון בעלויות: ההצעה היא לשתף פעולה בין הרשויות המקומיות (צפת, חצור וראש-פינה) בקיום אירועים. הרעיון הוא לקבוע מראש נושאים או אירועים משותפים, כאשר כל רשות תארח בתורה מגזר או קבוצת אוכלוסייה אחרת מהרשויות השכנות. גישה זו תאפשר מתן מענה משותף לצרכים מגוונים, תייעל את המשאבים ותביא לחיסכון משמעותי בעלויות הפקת האירועים, במיוחד אלו המותאמים אישית. הדבר נכון במיוחד לפעילויות נוער וצעירים אך גם בכלל.",
+              "פיתוח תרבות אירועים אזורית משותפת: שלוש הרשויות יכולות לפעול יחד לפיתוח וקידום תרבות אירועים עשירה ומגוונת שתשרת את כלל תושבי האזור ותמשוך מבקרים. זה יכול לכלול תיאום לוחות זמנים של אירועים קיימים, יצירת אירועים חדשים משותפים (כמו פסטיבלים אזוריים, ירידים, מופעים), ושיתוף פעולה בשיווק ופרסום האירועים. המטרה היא להעשיר את חיי התרבות באזור, לחזק את הקשרים בין היישובים ולספק פעילויות חברתיות וקהילתיות.",
+              "העשרת חיי התרבות ויצירת אירועי תרבות אזוריים: הצעה זו עוסקת בקידום פעילויות תרבות משותפות שתחברנה בין הקהילות השונות. ניתן לארגן פסטיבלים, תערוכות, מופעים והצגות שיתקיימו לסירוגין ביישובים השונים, תוך שיתוף אמנים מקומיים ומוסדות תרבות. המטרה היא להעשיר את חיי התרבות, לחזק את הזהות האזורית ולמשוך תיירות תרבותית.",
+              "ארגון וקידום הפעלות ואירועי תרבות ופנאי: תכנון וביצוע של מגוון רחב של הפעלות ואירועים קהילתיים, תרבותיים וחינוכיים לכל הגילאים, כגון סדנאות, הופעות, פסטיבלים, ירידים ופעילויות ספורט, במטרה להעשיר את חיי התושבים וליצור מוקדי משיכה אזוריים."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 260,
+            "averageEvaluation": 0.7021937239548576,
+            "consensus": 0.6173205930981744,
+            "agreementIndex": 0.9151268691433169,
+            "likeMindedness": 0.9484053915764844,
+            "proRatio": 0.8923076923076924,
+            "polarization": 0.0515946084235156
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 172,
+            "weaklyAgreeCount": 60,
+            "neutralCount": 9,
+            "weaklyDisagreeCount": 13,
+            "stronglyDisagreeCount": 6,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": [
+        {
+          "solutionId": "18kqCohZ6wqMpBCkAv2q",
+          "kind": "standalone",
+          "title": "העשרת הפעילויות והאירועים באזור: הצעה זו קוראת להגדיל את מגוון הפעילויות, האירועים והאטרקציות הזמינות לתושבי צפת, חצור וראש-פינה. המטרה היא לשפר את איכות החיים, לספק אפשרויות בילוי ופנאי מגוונות לכל הגילאים, ולחזק את הקהילתיות והחיבור בין היישובים. זה יכול לכלול אירועי תרבות, ספורט, חינוך בלתי פורמלי, סדנאות, פסטיבלים ועוד. ועוד",
+          "paragraphs": [
+            "העשרת הפעילויות והאירועים באזור: הצעה זו קוראת להגדיל את מגוון הפעילויות, האירועים והאטרקציות הזמינות לתושבי צפת, חצור וראש-פינה. המטרה היא לשפר את איכות החיים, לספק אפשרויות בילוי ופנאי מגוונות לכל הגילאים, ולחזק את הקהילתיות והחיבור בין היישובים. זה יכול לכלול אירועי תרבות, ספורט, חינוך בלתי פורמלי, סדנאות, פסטיבלים ועוד.",
+            "כל תחום לעשייה משותפת אפשר לפתח.אני נמצאת בקבוצה של נשים מצ\"חר כבר כמה שנים.ארגנו פעילות של טיולים והיו לנו מעט מדי מפגשים,בגלל המציאות שבה אנו חיים.אפשר להקים מעין קבוצה של פעילות משותפת,כמו שאנחנו עשינו,ולהתחיל לפתח ולחזור לפעילות של כייף,עזרה הדדית,טיולים לקבוצות גילאים שונות.צריך רק לרצות...פנו אלי אשמח מאוד לחזור ולעזור ולמקסם את הפעילויות בעזרת אנשים פעילים ויעילים משלוש הרשויות.פנינה חזן 0523409948"
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 18,
+            "averageEvaluation": 0.7777777777777778,
+            "consensus": 0.4342603109729587,
+            "agreementIndex": 0.6564825331951809,
+            "likeMindedness": 0.8013201464402434,
+            "proRatio": 0.9444444444444444,
+            "polarization": 0.1986798535597566
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 13,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.434 >= floor 0.35",
+            "rank": 1
+          }
+        },
+        {
+          "solutionId": "1fYmJJupukh48XMAC2Lf",
+          "kind": "standalone",
+          "title": "קידום ופיתוח תרבותי אזורי: הרחבת והעשרת הפעילות התרבותית בכל האזור, כולל אירועים, פסטיבלים, מופעים ותערוכות, במטרה למשוך קהל רחב ולחזק את הזהות התרבותית המקומית.",
+          "paragraphs": [
+            "קידום ופיתוח תרבותי אזורי: הרחבת והעשרת הפעילות התרבותית בכל האזור, כולל אירועים, פסטיבלים, מופעים ותערוכות, במטרה למשוך קהל רחב ולחזק את הזהות התרבותית המקומית."
+          ],
+          "evaluation": {
+            "numberOfEvaluators": 20,
+            "averageEvaluation": 0.675,
+            "consensus": 0.35212237585555706,
+            "agreementIndex": 0.677122375855557,
+            "likeMindedness": 0.8124549116261368,
+            "proRatio": 0.9,
+            "polarization": 0.1875450883738632
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 13,
+            "weaklyAgreeCount": 5,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.352 >= floor 0.35",
+            "rank": 2
+          }
+        }
+      ]
+    },
+    {
+      "topicId": "IEtIWvQhmyvC",
+      "topicTitle": "שיפור החיים בקהילה המקומית",
+      "memberCount": 49,
+      "displayedCount": 2,
+      "agreement": {
+        "averageConsensus": 0.46576476221188273,
+        "averageLikeMindedness": 0.8679220196397,
+        "internalDivergence": 0.046183816815299705,
+        "evaluatorOverlap": 0.28846153846153844
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "IEtIWvQhmyvC",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור החיים בקהילה המקומית",
+          "provenance": {
+            "sourceCount": 50,
+            "sourceIds": [
+              "1S3poQP6dyqZ45GO6nAd",
+              "4GOfvdmoeieluELeLqdn",
+              "5OjlTF1UlfqEQh0dmoox",
+              "7TdwZCShOwQL2Oec8I8G",
+              "85t3tJRzKbQkoCleKCs7",
+              "98pBrUQ2B4uwBo7HghLH",
+              "9DJjR8WUMuhnBCDtycKX",
+              "BqC64WJujhi6BjO8oEp7",
+              "EbxUMMZRSDJC4DV2eXkK",
+              "Fh13DB94aVXJwEAjLUnQ",
+              "HvUGOrKbr70JHCo69cnB",
+              "KCEl7Z1P4ZmSu4OcKqKc",
+              "Kpkgi0DvXgVzOsUaJo0J",
+              "Mg4pLHNCpYcQN4Az7G6t",
+              "OD9KABQuWLCr84XHsTDO",
+              "QUMXLaUDtSGwdYdhQ2pM",
+              "QzX8YNT9QSSqlOLCw2yd",
+              "RzSkJHHx4AnH9nfWX2Ta",
+              "SbBSVMfhIxRU0Q6jSjgZ",
+              "TYKCrqfbgT0PudZrlOtY",
+              "Tk6fFRbTtVDp1rxc0SRZ",
+              "U4RmRWBGp7D5OJqhVpzs",
+              "V4pJ6kLHb5Rkn0xWhUM6",
+              "Y1canu7MVJ853fPou1ip",
+              "ZfdDEtjq04YXnqN786dH",
+              "aMoOb1cvlnS1GjMWMW5L",
+              "arBm7BxKkqaA9RPnVazE",
+              "bKqMclzMtuVownOY3uei",
+              "bRE4ISTCxG9N8p2XXmDH",
+              "beSdkqRMhFQmcy9uXGul",
+              "dPMUk8beEwOlajHRjqgT",
+              "eUCNRc6TIs3EebJVkrKf",
+              "gfjUZiblzuBnPlbm0ZT8",
+              "h7WHEchircqsgVDbIHNx",
+              "hNsr1IimqlQzI1KCOnwB",
+              "i2fghMHjQ1xvt26Yiq1i",
+              "i94GEXgWlGTpmAdg9dLY",
+              "iBENykTKpaMvJrKQ9btZ",
+              "knDjQcXno56BBZHGyfrd",
+              "nzi5XaMdkNj9hx5rdaHD",
+              "ovjEziHb83jkFTRrH1P7",
+              "rEBtt2qwnELybzOdHhwt",
+              "s7WmS8dipzaF30GIrgT7",
+              "swDQilTCGwgHWaDX5V6L",
+              "vRDWd62xhHQP1ortbpLL",
+              "0dhboEnnYYppHFUErpgf",
+              "SpvDGs7XX6X4nmDmBduY",
+              "Yqft4mRsYeUgKYnXM4C7",
+              "V30VDyEjseD5",
+              "w-D8GIrJJgq8"
+            ],
+            "sourceTitles": [
+              "קידום שיתופי פעולה בתחום הרווחה: פיתוח ויישום תוכניות רווחה משותפות בין צפת, חצור וראש-פינה, במטרה לשפר את איכות החיים של תושבי האזור. זה יכול לכלול שירותי תמיכה למשפחות, קשישים, נוער בסיכון, וקידום יוזמות קהילתיות לחיזוק הלכידות החברתית והמענה לצרכים חברתיים.",
+              "מפגשי ריקוד ושיתוף חברתי לנשים לחיזוק החוסן הנפשי: הקמת מפגשי ערב קבועים לנשים בגילאי 40 עד 70, שיכללו ריקוד משותף (כמו ריקוד זומבה מותאם גיל) ולא רק הרקדה פסיבית. המפגשים יכללו גם שיתוף חברתי ותמיכה הדדית בנושאי חרדות וקשיים, במטרה לבנות חברויות וקבוצות תמיכה שיחזקו את החוסן הנפשי של המשתתפות, במיוחד לאור השפעות המלחמה והחרדות הנלוות.",
+              "ארגון טיולים משותפים לתושבי האזור: יזום וארגון סדרת טיולים משותפים לתושבי צפת, חצור וראש-פינה. הטיולים יאפשרו לתושבים להכיר טוב יותר את האזור, לחזק את הקשרים הקהילתיים בין היישובים השונים ולספק פעילויות פנאי מהנות ומגבשות לכל המשפחה.",
+              "מתן הדרכה וסיוע לזוגות צעירים: הקמת תוכניות הדרכה קבוצתיות או מתן עזרה פרטנית לזוגות צעירים, במטרה לחזק את התא המשפחתי, לסייע בהתמודדות עם אתגרי החיים המשותפים ולספק כלים לחיים זוגיים בריאים ויציבים.",
+              "בניית צוותי עזרה וסיוע לקשישים: הקמה וארגון של צוותים ייעודיים שיספקו עזרה, תמיכה וסיוע לקשישים המתגוררים בצפת, חצור וראש-פינה, במטרה לשפר את איכות חייהם ולהבטיח את רווחתם.",
+              "ארגון מפגשי ארוחות ששי משותפות לקבוצות קטנות (6-8 משתתפים)  לאנשים החיים לבד בכל הגילים. קבוצה אחת כזו מתקיימת כבר למעלה משנה וחבריה מברכים על היוזמה לאחר כל מפגש.",
+              "רווחה",
+              "הגברת הניקיון והטיפוח של השכונה: יש להגביר את פעולות הניקיון והתחזוקה השוטפת של השכונה, כולל פינוי אשפה, גינון וטיפוח המרחבים הציבוריים, על מנת לשפר את חזות השכונה ואיכות החיים בה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 158,
+            "averageEvaluation": 0.6038238396624472,
+            "consensus": 0.49842165226305846,
+            "agreementIndex": 0.8945978126006112,
+            "likeMindedness": 0.9359257219456603,
+            "proRatio": 0.7911392405063291,
+            "polarization": 0.06407427805433974
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 91,
+            "weaklyAgreeCount": 34,
+            "neutralCount": 17,
+            "weaklyDisagreeCount": 11,
+            "stronglyDisagreeCount": 5,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": [
+        {
+          "solutionId": "7TdwZCShOwQL2Oec8I8G",
+          "kind": "standalone",
+          "title": "מתן הדרכה וסיוע לזוגות צעירים: הקמת תוכניות הדרכה קבוצתיות או מתן עזרה פרטנית לזוגות צעירים, במטרה לחזק את התא המשפחתי, לסייע בהתמודדות עם אתגרי החיים המשותפים ולספק כלים לחיים זוגיים בריאים ויציבים.",
+          "evaluation": {
+            "numberOfEvaluators": 16,
+            "averageEvaluation": 0.78125,
+            "consensus": 0.433107872160707,
+            "agreementIndex": 0.651857872160707,
+            "likeMindedness": 0.7999183173337396,
+            "proRatio": 0.9375,
+            "polarization": 0.20008168266626036
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 11,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.433 >= floor 0.35",
+            "rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "topicId": "Lfk0OOpun2H9",
+      "topicTitle": "שיפור איכות הסביבה וניקיון העיר",
+      "memberCount": 14,
+      "displayedCount": 2,
+      "agreement": {
+        "averageConsensus": 0.39809687078016565,
+        "averageLikeMindedness": 0.8399787669351526,
+        "internalDivergence": 0.03887531466369369,
+        "evaluatorOverlap": 0.14583333333333334
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "Lfk0OOpun2H9",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור איכות הסביבה וניקיון העיר",
+          "provenance": {
+            "sourceCount": 14,
+            "sourceIds": [
+              "0V9iAffNFQx11NMLBbFg",
+              "5B4nlMdwTfrR9LrMhW6z",
+              "6xlYVkyz265S1QeJzrvg",
+              "DMGxnGhB4udZl7R2OZwr",
+              "E5og4lVB5PQNVp4crQvA",
+              "TUjcvNlc0M1cqxUmKK7T",
+              "ckDR1NgLmc0qfoes09uS",
+              "j1yuV0YH52jnJpoee1dW",
+              "ljDBwccaa0ZguUAYVjvK",
+              "sO8L4XYlfrqeU0APrF8O",
+              "vE5Qiu2EcNCAjIV7tf7W",
+              "xDlKmue0zXivh91mE4eG",
+              "CSX1Xt5p6XHCPhcmAh9J",
+              "JaJybjbOP4bYnGlvJVPj"
+            ],
+            "sourceTitles": [
+              "קמפיין חינוכי מבוסס בתי ספר לפיתוח מודעות סביבתית: הצעה לפתח גישה מלמטה למעלה על ידי פנייה לדורות הצעירים, במטרה לפתח מודעות תרבותית לדאגה לניקיון. הדבר יתבצע באמצעות קמפיין חינוכי מבוסס בתי ספר, שילמד את חשיבות המודעות הסביבתית ויעודד אי-השלכת פסולת ושמירה על ניקיון הארץ. מודגש הצורך בפיתוח תוכנית מרכזית במקום להטיל את הנטל על בתי ספר בודדים.",
+              "יוזמות משותפות לטיפוח ושימור הסביבה: הצעה זו מתייחסת לשיתוף פעולה בקידום פרויקטים סביבתיים משותפים. זה יכול לכלול ניקיון ושיקום נחלים, פיתוח שבילי טבע ופארקים אזוריים, חינוך סביבתי לקהילה, וקידום פתרונות בני קיימא בתחומי אנרגיה, מים ופסולת. המטרה היא לשפר את איכות הסביבה ולחזק את המודעות האקולוגית באזור כולו.",
+              "הקמת יער מאכל קהילתי: נטיעת יער מאכל קהילתי שישלב עצים וצמחים מניבי פרי וירקות, וישמש כמקור מזון מקומי, מרחב למידה על חקלאות בת קיימא ושטח ירוק לפנאי ובילוי.",
+              "איסוף אשפה לפחים יעודים- נייר, זכוכית, פלסטיק וכו",
+              "ניקיון יומיומי של העיר באמצעות רכב טיטוא: יש להקצות רכב טיטוא שיעבור מדי יום על כל רחובות העיר, במטרה לשמור על ניקיון יומיומי ורציף. ניקיון שוטף יתרום למראה אסתטי יותר של הערים, יפחית מפגעים סביבתיים וישפר את תחושת הרווחה הכללית של התושבים והמבקרים.",
+              "הצבת פחי אשפה מעוצבים במרחב הציבורי: הצבת פחי אשפה מעוצבים ונגישים בתחנות אוטובוס, מגרשי ספורט ובשטחים פתוחים (טיילות ופארקים) ברחבי צפת, חצור וראש-פינה. מטרת ההצבה היא לשפר את חזות הרחוב, לעודד את התושבים והמבקרים לשמור על הניקיון ולהפחית את כמות הפסולת המושלכת ברשות הרבים, ובכך לתרום לאיכות הסביבה ולרווחת התושבים.",
+              "שיפור איכות הסביבה והמרחב הציבורי: התמקדות בשיפור איכות הסביבה הכוללת באזור, בדגש על ניקיון ותחזוקה של מקומות ציבוריים. זה כולל הסדרת חניונים קיימים והקמת חדשים במידת הצורך, וכן פיתוח שבילי הולכי רגל בטוחים ונגישים, במיוחד ברחובות מרכזיים שבהם חסרים שבילים כאלה (כפי שצוין לגבי ראש פינה).",
+              "גישה ממשלתית מלמעלה למטה לשיפור הניקיון: הצעה לנקוט בגישה מלמעלה למטה לטיפול בזיהום רחובות צפת והמרחבים הציבוריים, כאשר הממשלה נוטלת אחריות מרכזית על שינוי המצב. עם זאת, מצוין כי גישה זו עלולה להיות יקרה ולדרוש כוח אדם רב."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 48,
+            "averageEvaluation": 0.626736111111111,
+            "consensus": 0.4255858693996243,
+            "agreementIndex": 0.7988497582885132,
+            "likeMindedness": 0.8800392165365656,
+            "proRatio": 0.8541666666666666,
+            "polarization": 0.11996078346343442
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 29,
+            "weaklyAgreeCount": 12,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 3,
+            "stronglyDisagreeCount": 3,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": [
+        {
+          "solutionId": "E5og4lVB5PQNVp4crQvA",
+          "kind": "standalone",
+          "title": "ניקיון יומיומי של העיר באמצעות רכב טיטוא: יש להקצות רכב טיטוא שיעבור מדי יום על כל רחובות העיר, במטרה לשמור על ניקיון יומיומי ורציף. ניקיון שוטף יתרום למראה אסתטי יותר של הערים, יפחית מפגעים סביבתיים וישפר את תחושת הרווחה הכללית של התושבים והמבקרים.",
+          "evaluation": {
+            "numberOfEvaluators": 16,
+            "averageEvaluation": 0.71875,
+            "consensus": 0.370607872160707,
+            "agreementIndex": 0.651857872160707,
+            "likeMindedness": 0.7999183173337396,
+            "proRatio": 0.875,
+            "polarization": 0.20008168266626036
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 11,
+            "weaklyAgreeCount": 3,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 2,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "consensus"
+          },
+          "kept": {
+            "reason": "consensus 0.371 >= floor 0.35",
+            "rank": 1
+          }
+        }
+      ]
+    },
+    {
+      "topicId": "NicQc2cl4-nh",
+      "topicTitle": "שיפור חיי ילדים ונוער באזור",
+      "memberCount": 72,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.5702988715160667,
+        "averageLikeMindedness": 0.9432184134695787,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.3412322274881517
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "NicQc2cl4-nh",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חיי ילדים ונוער באזור",
+          "provenance": {
+            "sourceCount": 72,
+            "sourceIds": [
+              "04cTeqnwqX9I8AQPnOqP",
+              "1GVZ5E7bjb3mBPPezS4y",
+              "1rG0pSryfYeS7VNck5GA",
+              "3fbNQ8l4bDvJTIZPQHsE",
+              "4h3q5HxxJHaYjlFjYy7B",
+              "4lrbcpFBXMKk3IbtAARr",
+              "6D1Sk3j890IenSEkWlS9",
+              "70yiWB3hv4v4rtauHYQ8",
+              "BXZTHkTzpfkzIsoPXhPE",
+              "BaRQp0bQ1GqpJL2nrZZ6",
+              "EcppkrEDe8cwAc9L8k9q",
+              "F8icpezkkw3WF76qeCau",
+              "FqyQNYDl9d5z7I5fPPVq",
+              "G9bfM5NZGFoY4Cd7jvP3",
+              "HBHxJGNKtcXYiRphmp0m",
+              "KDDasFFvJNqxMFyBJP2b",
+              "KmLooLRPpNVi6mPfay8M",
+              "Ku8BB74uLVulLKwW1jmg",
+              "LJddaRj4TXviwN8BQ9j5",
+              "Lq5IZir1xUZVbYn1eqzL",
+              "MBkpbAr141702k0eymPR",
+              "MMImjvMX2zAvszCfbObR",
+              "N2IRsLqlSQrwPNvA8xjf",
+              "ND9ijzIlDBpkvDqG0Qmr",
+              "O1fAom36eql6HkXeW0XR",
+              "O2Rk1xCIrvwipl29FFmT",
+              "OAkkYvwOyEmtqWF6nKwi",
+              "P3KWkwkYyuBz9lbnsuAR",
+              "PBlbEvpCi2TfrjB0g0G8",
+              "PQvf78lL7TWDKg1d3Sl3",
+              "QAmbLUELs2KcLXtJkTAS",
+              "SarD3PuBWiivWAtlpM5y",
+              "TlrcAvOaAWGENuq68zYH",
+              "UTSeaOTiKpLKezO6585X",
+              "VU7pDz8mSTpvrkH0BGFo",
+              "WMaTxKNuQNBBC0wjdpAy",
+              "WceTU7BVeg1POswYcrv5",
+              "XRhv9pkpU91sSknruqN6",
+              "YKALc5dIxqIjn64t3Bs6",
+              "aIHhwyd8oYmuX3QEUWc0",
+              "aNrMXElShPGrYqAJ2HZh",
+              "bKDGGmYFpYewg4FMcHfH",
+              "bKm26MBePUK6JbYKHyws",
+              "bhEIcQ3hbiGc5wgODVtH",
+              "c7nhqGM8X4ZB5FOHNDQQ",
+              "cZ6oKbinOHqIssDEUh7c",
+              "dSYua0IpM6fmhIGiGKol",
+              "eP3iyGcKESXQKn5tJvLv",
+              "edlp0MuKDByAmoGN6vbl",
+              "fxqtkc6ADaAzLiaPBb1Z",
+              "jQcuRDfg8PHwkcS3BK5S",
+              "jh3znTDMXfrFkg52D3kf",
+              "kA1a34MXg85W0KpYEEiq",
+              "mkotz2jigVyEfKHQprtu",
+              "n7vGVduwWi63bPFsjZS6",
+              "onfVPKTlqEPQ0RnD5Gmg",
+              "rRoTlZyArHPKkzP3VenW",
+              "rzcn941BWwlJ8L8GYoKo",
+              "sDAWAtqWSJCwQlQQzedO",
+              "srr3QBeSx68A5OFKNNcw",
+              "tBReNSHoeBJgjAOVY2f6",
+              "uXfxlKuF7qUn0rR8jAwg",
+              "uyGcjzpJ5A2Pz6BL7bXW",
+              "v9RW8mWx9RD7exjdkMRk",
+              "vOEExDOnmVlFbTdNm3X7",
+              "xKHJvIOkIoQpZFKAaA4V",
+              "zj8N8a78An2zlVimeqs7",
+              "bzxx3ijZi3YdNqgOTLmG",
+              "mNZ0Xt9Q3TE2wvMWToC4",
+              "UfUX50Vs-XuX",
+              "yFBF7XwcEOGA",
+              "Tr9t2U1zv6V2"
+            ],
+            "sourceTitles": [
+              "פיתוח פעילויות חברתיות לילדים צעירים: יש צורך לפתח ולהציע פעילויות חברתיות מהנות ומפיגות לחץ עבור ילדים בגילאי 4-5, אשר יספקו להם מסגרת חברתית מתאימה לגילם.",
+              "פיתוח פעילויות פנאי ותרבות לילדים, בדגש על חינוך מיוחד: הצעה זו קוראת ליצירה והרחבה של מסגרות ופעילויות פנאי ותרבות המיועדות לילדים, עם דגש מיוחד על התאמתן לצרכים הייחודיים של ילדי החינוך המיוחד, על מנת להעשיר את עולמם ולספק להם מסגרות מתאימות.",
+              "הקמת מרכזי בילוי ופנאי לאימהות וילדים: פיתוח והקמת מתחמי בילוי, פנאי ופעילויות משותפות המותאמים במיוחד לאימהות וילדים באזור, במטרה לספק מענה לצרכים חברתיים, תרבותיים וחינוכיים ולשפר את רווחת המשפחות והקהילה.",
+              "קידום חוגים ותעסוקה איכותית לילדים ולנוער",
+              "הקמת ג'ימבורי מקומי גדול ואיכותי לילדים ולהורים: הצעה להקים ג'ימבורי (מרכז משחקים מקורה) גדול ואיכותי באזור, שיכלול מתקנים ומשחקים ברמה גבוהה עבור הילדים, וכן מקום ישיבה נוח להורים. בנוסף, המקום יציע שירותי מזון מהיר, קפה וארטיקים. הדגש הוא על נגישות מקומית, כך שהמשפחות לא יצטרכו לנסוע רחוק כדי ליהנות ולבלות.",
+              "תעסוקה לפעוטות 2-3  כמו גמבורי באזור או מתחם תעסוקה לגיל הזה בשעות יותר נוחות ויותר שעות נגיד מ12 בצהריים עד7   ימי שישי",
+              "הקמת משחקייה ומרכז פעילות לילדים קטנים: הקמה של משחקייה מקורה ומאובזרת המיועדת לילדים קטנים, שתכלול מתקני משחק בטוחים, פינות יצירה ופעילויות חינוכיות, ותספק פתרון בילוי ופנאי להורים ולילדיהם, במיוחד בימים גשומים או חמים.",
+              "הקמת ג'ימבורי גדול ומסובסד: הקמת מתחם ג'ימבורי מקורה וגדול, שיספק פתרון ייחודי לפעילות ומשחק לילדים קטנים, במיוחד בימים חמים או גשומים. המתחם יהיה מסובסד כדי להנגיש אותו לכלל האוכלוסייה, וימלא חסר משמעותי באזור שבו אין מתקן דומה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 211,
+            "averageEvaluation": 0.6637045813586098,
+            "consensus": 0.5702988715160667,
+            "agreementIndex": 0.906594290157457,
+            "likeMindedness": 0.9432184134695787,
+            "proRatio": 0.8388625592417062,
+            "polarization": 0.05678158653042131
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 134,
+            "weaklyAgreeCount": 43,
+            "neutralCount": 17,
+            "weaklyDisagreeCount": 11,
+            "stronglyDisagreeCount": 6,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "O1n9BKk6DDfX",
+      "topicTitle": "שיפור מערכת החינוך באזור",
+      "memberCount": 96,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.5697272951581983,
+        "averageLikeMindedness": 0.947281848824618,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.4090909090909091
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "O1n9BKk6DDfX",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור מערכת החינוך באזור",
+          "provenance": {
+            "sourceCount": 96,
+            "sourceIds": [
+              "03plZAymKyIIJQ4dUcMJ",
+              "0BAFueAJXjt6WHvyZFlc",
+              "348d21KB85VXWXkmg3Ky",
+              "46uENdJJJDjbWz2SbgS9",
+              "4CFjhHuFN5eWVsVd1N9g",
+              "4SK6DPjD8xrqG0NcgctD",
+              "5DWsZEE5iLJ4pCJY2naJ",
+              "5bsNDylVgMHR0ujf7xKK",
+              "648NOIaLzochJz88kSKZ",
+              "6H8m3aG0EtIpiSLyGKKT",
+              "716SR9onPvnpSYlSyVr0",
+              "72mqORzhnzekK9NFSdhp",
+              "8oJGFhp9ZPM0pXWOjuoE",
+              "BQz8dUMV6bVVvl87FIlZ",
+              "CmvrdXaLRGxOa7JXL4ZB",
+              "D3JAMNWG0wtaI98TiHqu",
+              "DPuGJVVcwTROzWzmWjhW",
+              "DpfwEMP8Y2kNEgU9nB7M",
+              "E5WfnmvLnIQfpWsrw8Au",
+              "EM7GOTm87PHFpNrXmQoG",
+              "EmytBI53o93cXvjT1J4c",
+              "Es5hnShP2NTsKeRjGg6T",
+              "FB2rwNeN6gJ33uJKwLBX",
+              "GiRcqzwWp0wqGsVZwqbh",
+              "GicGfo2OsPS8USCP0O9E",
+              "Hg9pJX38JxpeakoXKv8m",
+              "INPIJnqMn2xG2kyCFB6v",
+              "IYNWFKiObjJy3aDRQ5qj",
+              "JIULxQ6sCi5HNv5gjzKa",
+              "KXNp6UwV8seS7FWGyls2",
+              "Kn5gspBXrQViJMfBmDDx",
+              "L4V29bmHL83Z2ToWhrt9",
+              "LIsV9z78vaA6GVCiyXMm",
+              "LXSWuOtq7DDThwtMPXMM",
+              "M8X732y5GQpxy2hPWJg7",
+              "MA51J280B94WAlGUJSGB",
+              "MGAjVxcuCM9d8n4JNSop",
+              "NBV2VoINNPxsrMeSBjiY",
+              "NXDO6KBzExCW6PorqNO9",
+              "OKQ95zC2wcUCIb3iQ5f0",
+              "ORn8eR0O5uuD0h3mjXnk",
+              "Qsm9ix3W7YX0cMW58G61",
+              "RvqxDTyY0LEtNKymPlkk",
+              "RylFa3BZVNnuHe8Xl3K6",
+              "S1cU8G4dZzwO4vnew5yk",
+              "SHTkLdPvdQ2QZGAnx5eB",
+              "T85Ofsme8UQJwX3EPCKn",
+              "UGIxWgmge1nt022IuWKp",
+              "Ux9ktkXM2Of2MG3f0qZn",
+              "UxiqWLMrPzL89YVUhlbn",
+              "V7Kx0UJRgmzEGOyTkvFe",
+              "WLj9VEr6ubWkuq6ip1cI",
+              "XOCb0UdyI82yZPHemAAx",
+              "XkEGZqUxwsGOFLQrrSwk",
+              "Yeuc9iwlWyBtrQSUdn5b",
+              "ZDrhkybP942VlDJKtWR4",
+              "aKZ5auLG5ay203yw9d4J",
+              "bMpEDoHekcNKrTlwmmgs",
+              "bY8pd8nDofpjAironeJJ",
+              "bceBwoNlPiT2rhHcVFLc",
+              "bhVeGtMuKWRbjJqywgdn",
+              "bpBfVN8LWQ18ABPFCwgN",
+              "cZfYhJOVa70DgtDxMhK2",
+              "dSN73PIyTQO9fdI9BhTp",
+              "eyP6cJO2mBn5SA1Udivx",
+              "gctnhilOYrE1cHfaRVao",
+              "gfdyaInZvvZOu9zZJrkz",
+              "gwZOHPKbJXNKGHGf1ncn",
+              "h0EcFmWaH7qKeuQRcVHm",
+              "h1n1qU3lU8BTtPYYRg5y",
+              "hwi7JRaSvmIpg39Wx2fs",
+              "ivYZvP73OicY0mYtPrmR",
+              "j0nJGXACpEPx1XpY9TTo",
+              "jyBKAoeIuGaROlP59Pv4",
+              "kj1lT0WucHWdqQKqd5Oy",
+              "lU7NEPsUlZ1HSGiGQAhX",
+              "nH4rrcEtl6DWUltLoSCy",
+              "p83LMGXR3aV0jgm8kDmo",
+              "qJZpTY5zxEq2pdizy6OH",
+              "qzAHWXiYZK7HV7ej6FDq",
+              "rJ3QprCz7EMP5CFvGvT3",
+              "sZaj4vja3zus",
+              "tPWvGCULjqLzWnsYtD7C",
+              "utUoIV57hUYXYUUPVaQ7",
+              "v9nJRDfyoN3m0xv41v5Z",
+              "xip5VLEZYxlRusj5446W",
+              "yiyVfBDEeU1Pgd2W11Xk",
+              "5hUaUleRIwnZi4Fx8gL1",
+              "GCj95iFg0k70NZgH9GHd",
+              "Jki0JFUS0WXm2AMillTO",
+              "VsFmHDvKNLGm0I1P1vwe",
+              "jlPoPCNb59FKxytEuCGc",
+              "6wT3E0CzVsXg",
+              "1aUzhoCNL2e4",
+              "ONday0qBPRhy",
+              "yrAlo3svsrZX"
+            ],
+            "sourceTitles": [
+              "הקמת מרכז אזורי למחוננים ומצטיינים: הקמת מרכז ייעודי שיספק תוכניות העשרה ופיתוח לתלמידים מחוננים ומצטיינים מהאזור. המרכז יציע חוגים, סדנאות וקורסים מתקדמים במגוון תחומים כמו מדעים, טכנולוגיה, אמנות ומדעי הרוח, ויאפשר להם לממש את הפוטנציאל האישי שלהם בסביבה תומכת ומאתגרת.",
+              "קידום חוגי העשרה לכלל המגזרים: יצירה והפעלת חוגי העשרה מגוונים המיועדים הן למגזר החרדי והן לכלל האוכלוסייה באזור, במטרה להרחיב אופקים ולספק פעילויות פנאי ולימוד לכל הגילאים והאוכלוסיות.",
+              "הקמת ספרייה ציבורית גדולה: הצעה להקים ספרייה ציבורית גדולה באזור, בדומה לספרייה שהייתה קיימת בצפת בעבר. ספרייה כזו תשמש מרכז תרבותי וחינוכי חשוב לכלל האוכלוסייה, ותספק גישה למגוון רחב של ספרים וחומרי קריאה.",
+              "קמפוס חינוך אזורי משותף עם מגמות ייחודיות: הקמת קמפוס חינוך אזורי משותף שישרת את תלמידי צפת, חצור וראש-פינה. הקמפוס יציע מגמות לימוד ייחודיות שאינן קיימות בכל עיר בנפרד, כגון סייבר, מוזיקה, תיירות, קולינריה, רובוטיקה, מדעים, AI ויזמות. מודל זה יאפשר לתלמידים משלושת היישובים להגיע לקמפוס לפי המגמה הנבחרת, ימנע כפילויות במערכות החינוך המקומיות ויעלה את איכות ההוראה וההיצע החינוכי באזור.",
+              "ארגון סדרת הרצאות והעשרה: הערים צפת, חצור וראש-פינה יכולות לארגן יחד סדרת הרצאות בנושאים שונים ומגוונים, כגון היסטוריה, אמנות, מדע, טכנולוגיה, בריאות או פיתוח אישי. הרצאות אלו יכולות להעשיר את הידע של התושבים, לעודד למידה מתמשכת וליצור פלטפורמה לדיון ושיתוף ידע בקהילה.",
+              "קידום לימודים אקדמאים והיכרות אזורית במכללת צפת: קידום לימודים אקדמאים עבור ילדי היישובים הסמוכים במכללת צפת, תוך יצירת פלטפורמה להיכרות וחיבור בין ילדים ובני נוער מהאזור כולו.",
+              "קידום החינוך והקלות בבחינות הבגרות: הצעה זו מתמקדת בשיפור מערכת החינוך המקומית, ובפרט בהקלה על תלמידים בבחינות הבגרות, במטרה להעלות את שיעורי ההצלחה ולאפשר יותר הזדמנויות אקדמיות וחינוכיות לתושבי האזור.",
+              "מרכז למידה ותעסוקה אזורי: הצעה זו מתמקדת בהקמת מרכז משותף לצפת, חצור וראש פינה שישלב הכשרות מקצועיות בתחומים מבוקשים כגון טכנולוגיה, דאטה ופיתוח בסיסי, לצד חללי עבודה משותפים (co-working) שיאפשרו עבודה מרחוק בסביבה מקצועית. המרכז יכלול גם תוכניות לנוער להכנה לעולם התעסוקה העתידי וחיבור ישיר למעסיקים וחברות, במטרה ליצור הזדמנויות תעסוקה איכותיות באזור, לצמצם את הצורך בנסיעות למרכז הארץ ולחזק את הכלכלה המקומית."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 242,
+            "averageEvaluation": 0.6564486538417018,
+            "consensus": 0.5697272951581983,
+            "agreementIndex": 0.9132786413164965,
+            "likeMindedness": 0.947281848824618,
+            "proRatio": 0.859504132231405,
+            "polarization": 0.05271815117538203
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 151,
+            "weaklyAgreeCount": 57,
+            "neutralCount": 15,
+            "weaklyDisagreeCount": 10,
+            "stronglyDisagreeCount": 9,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "21Hi0QfRmwS7",
+      "topicTitle": "פיתוח מתקני ספורט ופנאי באזור",
+      "memberCount": 34,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.5369798794159347,
+        "averageLikeMindedness": 0.9189997177226498,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.1792452830188679
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "21Hi0QfRmwS7",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "פיתוח מתקני ספורט ופנאי באזור",
+          "provenance": {
+            "sourceCount": 34,
+            "sourceIds": [
+              "3Bt0FD5MEjC1ARRfoFQf",
+              "4VXWuVFlO36DOcDX8Mts",
+              "5nrXTQogt4E53YPSUegX",
+              "64tmwiu4dSYDzXlhJiAy",
+              "6sgZkDMtPr0sABbP0WX0",
+              "8XDPLD8ThW3RI3FoEPTl",
+              "8qzEinpRCETUVddsbQat",
+              "CpMQrDNzcs1lgP97VGaW",
+              "IzSfZcKlWrBobhRKpzQT",
+              "Jj3kO5MyvZVFzQQNfSP9",
+              "LgEqU3Sjtvoh4BQZoPOA",
+              "Rfu0rtqYgxOAdnnic1MG",
+              "To75yVjKeR8ry0a6aZuG",
+              "Z39ycHORYvfoHELVeyP7",
+              "bskUDlOSp4qcStK7tq27",
+              "eH5bAQEdWaDo3iS0sPO2",
+              "fEadLcIwQJuTZi3baJdB",
+              "gT9IHgmh1dJ73QGC4aAp",
+              "hmNCuGQBlDEwCHhIbMDR",
+              "i1evN1vSPf6SK2A3YR1R",
+              "oOBAVE6YpkPXPMmJVucm",
+              "p9TAmLaVN0vyoB6ChBoq",
+              "pkvKwWgwQelJ9CfdvkO4",
+              "qxUpPNx0O7eKzwNvRKxY",
+              "rorM8a9sbe7eEEzeGlH7",
+              "sWPBorY1BnHfm3uExRZ0",
+              "t4oeR0pMdSdKyECBU72S",
+              "vxgNa3xAcsUKAPOVMhie",
+              "xNnsxBJlj8X2f6ZlxxqV",
+              "xbnt8B5JOP55e87GS8mx",
+              "yvJTBqDr4rmr5Mi930XA",
+              "MY34Dl7oyBaT",
+              "PPyTnJ1bPChh",
+              "ZrNVMpknj59w"
+            ],
+            "sourceTitles": [
+              "שמי אלרואי סבאן בכיתה ו'בית ספר בירב.אני חושב שספורט יכול לאחד בתי ספר וילדים .אפשר לשפר את המגרשים הקיימים או לבנות חדשים ולקיים טורנירים בצח\"ר שיעודד תלמידים לספורטיביות להכרות ולשיתוף פעולה בין בתי הספר.(אמא עזרה לי לסגנן)",
+              "הקמת קנטרי ענק עם בריכה חי צונית ופנימית מגרשי ספורט אולמות לאימונים . חדר כושר  גקוזי סאונות  חוגים",
+              "פיתוח יוזמות ספורט אזוריות: יצירת פרויקטים ואירועי ספורט משותפים שיעודדו פעילות גופנית בקרב תושבי האזור, יחזקו את הקשרים בין היישובים ויציעו מגוון רחב של ענפי ספורט. זה יכול לכלול הקמת ליגות משותפות, תחרויות אזוריות, או פיתוח תשתיות ספורט נגישות לכלל התושבים.",
+              "הקמת קאנטרי קלאב או פארק מים משולב עם בריכה טיפולית: הקמת מתחם בילוי ופנאי רחב הכולל קאנטרי קלאב או פארק מים עם מגלשות, ובנוסף בריכת שחייה טיפולית, שיספק מענה לצורכי ספורט, פנאי ושיקום לכלל האוכלוסייה.",
+              "לתת שירות סטודיו וחדר ספורט בחינם כדי לעודד אנשים לספורט",
+              "מתחם ענק של קאנטרי קלאב , חורף קיץ",
+              "קידום תחרויות ספורט אזוריות משותפות: צפת, חצור וראש-פינה יכולות לקדם יחד ארגון תחרויות ספורט אזוריות שיכללו ענפים שונים ויאפשרו השתתפות של תושבים מכל היישובים. יוזמה זו תעודד פעילות גופנית, תחזק את הקשרים בין הקהילות ותספק אירועי ספורט מהנים לכלל האוכלוסייה, ובכך תשפר את איכות החיים והלכידות החברתית באזור.",
+              "הקמת מתחמי פנאי ובילוי לכלל האוכלוסייה: יצירת מקומות בילוי ופנאי מגוונים שישרתו את כל שכבות האוכלוסייה, כולל מתחמים משותפים להורים ולילדים (חילונים ודתיים כאחד), וכן מקומות בילוי ייעודיים לצעירים, כגון באולינג, אשר חסרים באזור ודורשים נסיעה ארוכה לקריית שמונה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 106,
+            "averageEvaluation": 0.671383647798742,
+            "consensus": 0.5369798794159347,
+            "agreementIndex": 0.8655962316171927,
+            "likeMindedness": 0.9189997177226498,
+            "proRatio": 0.8490566037735849,
+            "polarization": 0.08100028227735023
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 67,
+            "weaklyAgreeCount": 23,
+            "neutralCount": 8,
+            "weaklyDisagreeCount": 3,
+            "stronglyDisagreeCount": 5,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "odCV0bd4JAOg",
+      "topicTitle": "שיפור תשתיות ופנאי באזור",
+      "memberCount": 38,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.5230650164581022,
+        "averageLikeMindedness": 0.9251834681312999,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.24390243902439024
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "odCV0bd4JAOg",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור תשתיות ופנאי באזור",
+          "provenance": {
+            "sourceCount": 38,
+            "sourceIds": [
+              "0EgrHvxMQnDYc1IGdI7H",
+              "2DyWYMPzok8t6T69lvqF",
+              "3hPz613cKLkoW7Rs6aam",
+              "4MFcp25YhL0w5xRuDnj0",
+              "57FHZKMdks5o4Hg4pupj",
+              "6M9e5xg3KftkPVl3LzSY",
+              "7N37xemQXoMpdSWxCbp7",
+              "95ameyKcvXLHdTFHWsDA",
+              "CxDD8yAjJ1FcVFBqOswK",
+              "DDOYNSJVfZyfpPvV0Jke",
+              "DchcwsRMxtPpHGrGxa4d",
+              "Eq3zHTc3CkVeauZdMFdA",
+              "IjwXiMOPq8mdm60avbkX",
+              "Je5KAWTzELqSpJhFuIg6",
+              "K01Eb2931m3u69xEINwa",
+              "LS8YFsKwgVLZYn0IAeWF",
+              "MaI5Y8LI3ymgRyGll3MT",
+              "MgZlHt6SPfFdWAZ3p4fW",
+              "OnyR8vyZSiCYDF5luJnZ",
+              "QoUAeoGrxZx05K6gQvdr",
+              "TSTknAojZf16MKbb1UHF",
+              "ToFlDbM28mQznP97EfnO",
+              "VXsJ8VpKiW99TUCXOxLA",
+              "XEneKyjPedOlpoUeu5G5",
+              "XgkoDlhijLJoeEkWAicb",
+              "YU3x2MmSxcAlIz0eo7F5",
+              "aVv58seuu0wFrl52hEYs",
+              "bO4yRH9t8n53uahrE1OV",
+              "g2KsY877hRnwdsk1hrbh",
+              "iL5koNxEBy6KLxSqmEQt",
+              "jS18R696txZlimaH3k8I",
+              "n96psxWKkM0L5yLIYnT4",
+              "o7UCkzJ0Cfis7zHx86TN",
+              "sBeTsrwDeGt0n5RgOhMY",
+              "swnv89dPjEzNGGoDHJBc",
+              "vTg1E6E0fvvRR4cC9xB2",
+              "x8behIwLIgxFkYUdzo8l",
+              "w5ojq8V6cRyy"
+            ],
+            "sourceTitles": [
+              "הגדלת היצע מקומות הבילוי: יש לפעול להקמה ופיתוח של מקומות בילוי מגוונים לכל הגילאים, כולל בתי קפה, מסעדות, מרכזי תרבות ופנאי, כדי לשפר את איכות החיים ולמשוך תושבים ותיירים.",
+              "פארק משפחה אזורי גדול ומושקע: הקמת פארק משפחה אזורי גדול ומושקע, שיכלול את כל המתקנים והשירותים הנדרשים מתחילתו ועד סופו (מא-ת), ויהווה מוקד בילוי ופנאי לכל המשפחות באזור.",
+              "הגדרת יעד מינימלי של אטרקציות לכל רשות: הצעה לקבוע מדיניות מחייבת לפיה כל רשות מקומית תגדיר ותקים מראש לפחות חמש אטרקציות מרכזיות, כגון מתחמי החלקה על קרח, באולינג, או פארקי קפיצה (היי ג'אמפ), במטרה להבטיח מגוון פעילויות פנאי לתושבים ולאורחים.",
+              "הקמת סיירת מהירה לטיפול בתקלות עירוניות קטנות: הקמת צוות או סיירת זריזה שתהיה אחראית לטפל במהירות וביעילות בתקלות קטנות ויומיומיות ברחובות העיר, כגון מנורות רחוב שנשרפו, כדי לשמור על תקינות וסדר המרחב הציבורי.",
+              "שדרוג ושיפור פארקים וגני שעשועים לילדים: יש צורך דחוף בשדרוג הפארקים המיועדים לילדים, כולל הוספת אזורי צל רבים ומשטחי גומי רכים ובטוחים, כדי להבטיח סביבה נעימה ובטוחה למשחק.",
+              "שיקום ושיפור תשתיות הכבישים: יש להשקיע בשיקום ושיפור תשתיות הכבישים הקיימים, תיקון בורות ומפגעים, וסלילת כבישים חדשים במידת הצורך, על מנת להבטיח נסיעה בטוחה ונוחה.",
+              "שיפור תשתיות בשכונה: חניות ומדרכות: יש לטפל בחוסר בתשתיות בסיסיות בשכונה, הכולל הוספת מקומות חניה מספקים לתושבים והקמת מדרכות תקניות ובטוחות, שכן כיום קיימים חוסרים משמעותיים בתחומים אלו.",
+              "תכנון והקמת חנייה מרובה ונגישה: תכנון והקמת שטחי חנייה נרחבים ונגישים ממספר כיוונים, שיספקו מענה הולם למבקרים בפארק ובמתחם האירועים. מיקום החנייה יתוכנן בקפידה כדי למנוע הפרעה לתושבים הסמוכים ולהשתלב באופן הרמוני עם הסביבה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 123,
+            "averageEvaluation": 0.6461382113821138,
+            "consensus": 0.5230650164581022,
+            "agreementIndex": 0.8769268050759884,
+            "likeMindedness": 0.9251834681312999,
+            "proRatio": 0.8130081300813008,
+            "polarization": 0.07481653186870008
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 78,
+            "weaklyAgreeCount": 22,
+            "neutralCount": 15,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 7,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "NQhvPIOJ9GjU",
+      "topicTitle": "שיפור כלכלי ושיווקי אזורי",
+      "memberCount": 14,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.5222505092665493,
+        "averageLikeMindedness": 0.8783174421694946,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.10204081632653061
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "NQhvPIOJ9GjU",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור כלכלי ושיווקי אזורי",
+          "provenance": {
+            "sourceCount": 14,
+            "sourceIds": [
+              "3kpm3U4eqHYzxeeha3uf",
+              "46BQtTJXUmLXSWm41SvP",
+              "729O99GcNfk3hkACIQdI",
+              "E9GyZI0OycV3cJ9gvhdG",
+              "EmSWjdIHJ2NIBGzQH2r2",
+              "IbE7oe80xzE4v540Cm85",
+              "KSGQk9izIC2p2Oz8oFCh",
+              "KadlAqe3wFegxBx6EbGd",
+              "LhTIdfQxPer3MgDWQHuZ",
+              "R3XBI8veAVyRKpu3Ycqs",
+              "Trf6RBL6SvSeK6WmKEb8",
+              "XNgBFrL1mvdenle8bwuj",
+              "pRIVjnNVueJ7mNeEEqzf",
+              "tGnmu0edCob1qt1eP3h7"
+            ],
+            "sourceTitles": [
+              "השגת הטבות מס ותמריצים ממשלתיים: פעולה משותפת ואחידה מול הממשלה להשגת הטבות מס, סובסידיות ותמריצים כלכליים ייעודיים לאזור. מטרתם לעודד צמיחה כלכלית, למשוך תושבים ועסקים חדשים, ולחזק את הכלכלה המקומית והאזורית.",
+              "השקת כרטיס הנחות אזורי לתושבים: הצעה ליצור ולהשיק כרטיס הטבות או הנחות מיוחד לתושבים המתגוררים ביישובי האזור (צפת, חצור, ראש-פינה). כרטיס זה יקנה הנחות נוספות ברכישות בחנויות ובבתי עסק מקומיים, במטרה לעודד קניות וצריכה בתוך היישובים ולחזק את הכלכלה המקומית והמסחר באזור.",
+              "הקמת שווקים אורגניים מקומיים: הצעה להקים שווקים אורגניים קבועים בכל רשות מקומית. שווקים אלו יאפשרו לתושבים לרכוש תוצרת טרייה ובריאה ישירות מחקלאים מקומיים, לתמוך בכלכלה המקומית ולקדם אורח חיים בריא.",
+              "הקמת מרכז מסחרי אזורי משותף",
+              "כרטיס הטבות אזורי לעסקים מקומיים: יצירה והשקה של כרטיס הטבות משותף לעסקים הפועלים בערים צפת, חצור וראש-פינה. הכרטיס יאפשר לתושבים ולמבקרים ליהנות מהנחות ומבצעים מיוחדים בעסקים המשתתפים, ובכך לעודד קנייה מקומית, לחזק את הכלכלה האזורית ולסייע לעסקים קטנים ובינוניים באזור.",
+              "להקים מרכז לוגיסטי ושיווקי משותף שיושב בנקודה אסטרטגית בין שלוש הערים ומשמש כזרוע המכירות הדיגיטלית של כל בעלי העסקים והאמנים באזור. המרכז הזה מרכז אליו את כל המוצרים המקומיים, אורז אותם תחת מותג גלילי יוקרתי אחד ושולח אותם ללקוחות בכל רחבי הארץ, בזמן שבני נוער מהאזור מועסקים שם בניהול המכירות, הצילום והשיווק הדיגיטלי. כך העסקים הקטנים פורצים את גבולות הסמטה ומתחילים להרוויח כסף גדול מבחוץ, הנוער מקבל הכשרה מקצועית ושכר גבוה בתוך הבית, והכסף שנכנס מהמכירות נשאר בתוך הקהילה ומחזק את הכלכלה של של",
+              "פיתוח מרכז קניות אזורי: בנוסף לפארק המשחקים, עולה צורך בהקמת מרכז קניות גדול ומושך באזור הצפון. מרכז כזה, שיוכל להיות ממוקם בסמיכות לפארק או במרכז אזורי אחר, יספק מענה לצורך בקניות וישפר את השירותים המסחריים הזמינים לתושבי האזור.",
+              "הוזלת סל הקניות באמצעות הבאת רשת שיווק גדולה: פעולה להבאת רשת סופרמרקטים גדולה ומוזלת כמו 'אושר עד' לאזור השכונות החדשות. מהלך זה יוריד משמעותית את יוקר המחיה לתושבים, יחסוך להם נסיעות ארוכות לקניות, יספק מענה לאזורים חסרי סופרמרקט ויכול לתרום לאכלוס דירות ריקות על ידי הפיכת האזור לאטרקטיבי יותר למגורים."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 49,
+            "averageEvaluation": 0.7261904761904763,
+            "consensus": 0.5222505092665493,
+            "agreementIndex": 0.796060033076073,
+            "likeMindedness": 0.8783174421694946,
+            "proRatio": 0.8775510204081632,
+            "polarization": 0.12168255783050541
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 34,
+            "weaklyAgreeCount": 9,
+            "neutralCount": 3,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "Fq1tEU7kEFBg",
+      "topicTitle": "שיפור הכלכלה המקומית באזור",
+      "memberCount": 12,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.4914257210303468,
+        "averageLikeMindedness": 0.8830663889732507,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.08333333333333333
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "Fq1tEU7kEFBg",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור הכלכלה המקומית באזור",
+          "provenance": {
+            "sourceCount": 12,
+            "sourceIds": [
+              "3Ft7jjCU7d0OLPmNHQPC",
+              "DqnrnxBV6CL1mcwc5fH2",
+              "GYjYYQMPJzr4mCNHyMhi",
+              "NY31cwm0sl2RXa0ofvHd",
+              "QXtTtqbWRpabLZER8wBF",
+              "SFuz7bifYuh8VbX7dtpc",
+              "ULN8SHIXcASYX2Hwwg3O",
+              "ZzwnXHWBM9T2G7GhlNHd",
+              "hlOgfD7jD1pOuy3l8nrI",
+              "uGGL3ubOH88Tf8tgX0B7",
+              "zctiMadRk5eY8K9w0X9i",
+              "s2klAFhj2QFJ"
+            ],
+            "sourceTitles": [
+              "מתן הטבות ותמריצים אטרקטיביים לחברות הייטק: על מנת להבטיח את משיכתן של חברות ומפעלי הייטק לאזור, יש לגבש ולהציע להן חבילת הטבות ותמריצים מפתים במיוחד. הטבות אלו יכולות לכלול הקלות מס משמעותיות, סובסידיות ממשלתיות, סיוע בהקמת תשתיות, הקצאת קרקעות במחירים מועדפים, או כל תמריץ אחר שיעודד אותן לפתוח מפעלים, מרכזי פיתוח ומשרדים באזור צפת, חצור וראש-פינה.",
+              "הצעת הנחות ערב בחנויות: קידום מבצעי הנחות מיוחדים בערבים בכלל החנויות בעיר, במטרה למשוך קונים ולהחיות את הפעילות המסחרית בשעות אלו.",
+              "הפחתת ארנונה כללית: הצעה להפחית את תשלומי הארנונה, ככל הנראה לתושבים או לעסקים באופן כללי, במטרה להקל על הנטל הכלכלי ולשפר את איכות החיים באזור.",
+              "קידום שיתופי פעולה עסקיים אזוריים: יוזמה לחיזוק הכלכלה המקומית באמצעות יצירת פלטפורמות ומנגנונים לעידוד שיתופי פעולה בין עסקים הפועלים בערים צפת, חצור וראש-פינה. המטרה היא להגדיל את היקף הפעילות העסקית, לפתח שווקים חדשים וליצור סינרגיות שיחזקו את העסקים הקיימים וימשכו חדשים לאזור.",
+              "מתן תמיכה מוניציפלית להקמת עסקי פנאי ואטרקציות: הצעה לרשויות המקומיות לספק תמיכה וסיוע בהקמה של עסקים מסוג אטרקציות ופעילויות פנאי, בדומה לאלו שהוזכרו בסעיף הקודם. תמיכה זו יכולה לכלול סיוע בבירוקרטיה, הקצאת שטחים, או תמריצים כלכליים.",
+              "הרחבת שעות פעילות המסחר ותמרוץ עסקים: יצירת תוכנית לתמרוץ עסקים מקומיים להרחיב את שעות הפעילות שלהם, במטרה להגביר את הנגישות לשירותים ומוצרים עבור התושבים ולעודד צמיחה כלכלית באזור.",
+              "עידוד פתיחת סניפים חדשים באמצעות מענקי שיפוי: הצעה לעודד פתיחת סניפים נוספים באזור, תוך מתן מענקי שיפוי ליזמים. כיום, מספר הסניפים מועט, ואיכותם אינה מספקת. המטרה היא להגדיל את היצע השירותים והמוצרים לתושבים ולשפר את איכותם.",
+              "פטור מארנונה לחמש שנים לחברות שיעסיקו מעל 100 עובדים, לא בשכר מינימום, שיעברו לאזור."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 48,
+            "averageEvaluation": 0.6875,
+            "consensus": 0.4914257210303468,
+            "agreementIndex": 0.8039257210303468,
+            "likeMindedness": 0.8830663889732507,
+            "proRatio": 0.875,
+            "polarization": 0.11693361102674926
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 28,
+            "weaklyAgreeCount": 14,
+            "neutralCount": 4,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "Z3z-ZLliC-8T",
+      "topicTitle": "שיפור איכות החיים בגליל",
+      "memberCount": 36,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.3927862498034127,
+        "averageLikeMindedness": 0.9329620208590983,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.21323529411764705
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "Z3z-ZLliC-8T",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור איכות החיים בגליל",
+          "provenance": {
+            "sourceCount": 36,
+            "sourceIds": [
+              "0w0f0gNTJt15mI8sZX2b",
+              "2JOtp6cGrhbkPu57GtVM",
+              "685gDcy9agkZU0XfFCJS",
+              "AfQzNyzrVLQhtVXoA3nj",
+              "AuNEL9e2tJ4CnQctAsOm",
+              "CE3ubjVdNavq0CmKxnPg",
+              "CF5hvGsvRmTwBZimZ8Y9",
+              "FywxzazgRixWswFW4ajr",
+              "H5hEDdX9RIrvAaCcfsVc",
+              "IElf0LsebujjTkmDVprf",
+              "IWX38TjDk1RFwTfXD7og",
+              "LjGzj6BplltbON6PJM4v",
+              "OHR3gj7eb2He5FhqV8hO",
+              "QYzh9hOl6shxTSLZhTUD",
+              "RNstTAYPIt4ehKsC4uGE",
+              "Rm07mWR3gJnKg3MzRlY7",
+              "S0Spmj3ZTwdsntubGeh0",
+              "S2sBG23vRQPNd75pFXjX",
+              "UF8H0QQeji7FWsHU2szr",
+              "cFdddZhHsKD7v0Cdh2w6",
+              "chIXDYwWyZOlgXFpnIDo",
+              "fW1li8aj7RS2hwIrR2Ld",
+              "ivphcoITgWitKmxLzILN",
+              "kF7rAk3o5cVdqlhD4vLS",
+              "l32GzklxLzn553FzsBOj",
+              "lktCmgmMvlu4GlcEizJU",
+              "oUKZaFGAr0u2xfP8CaVJ",
+              "qcfwks0w7IVLPnAv0lMH",
+              "s0cdtAXuzpLXP3BiJtOk",
+              "sd1CxS3g3HPLHLnaLK05",
+              "sz2BgMqOZNWYgv5DUzu5",
+              "wfQ4pzTjIqd1RIm5tKDy",
+              "woBqQQQbPi6raNrmfxWG",
+              "x2Kzi2jbUQ0Z7AEatsno",
+              "zWRG5zFKbCAm6Xh3IRvs",
+              "UB6VwfiUaY9Gm4ecKjf9"
+            ],
+            "sourceTitles": [
+              "חיזוק הזהות והנוכחות היהודית בגליל: הצעה זו מבטאת את המטרה האסטרטגית הכוללת של חיזוק וייהוד הגליל. היא מתייחסת לא רק להיבטים דמוגרפיים והתיישבותיים, אלא גם להיבטים תרבותיים, חינוכיים וכלכליים, שמטרתם להבטיח את אופיו היהודי של האזור לטווח הארוך. פעולות כמו הרחבת ההתיישבות ופיתוח תשתיות יהודיות הן חלק מהאמצעים להגשמת יעד רחב זה.",
+              "שהמורים כבר  ילמדו  יותר רגש לעובדי ערייה",
+              "ארגון מסיבות אלקטרוניות במחצבה: הצעה לארגן מסיבות אלקטרוניות במחצבה, כסוג בילוי המועדף על ידי צעירים בגילאי 22-28, במטרה למשוך אותם ולהשאירם באזור על ידי מתן מענה לצורך במקומות בילוי.",
+              "בית קפה ראשון בחצור הגלילית : אף אחד לא יקח סיכון לפתוח קפה בחינם אשמח שהמועצה יעזרו לי לפתוח פרויקט אני אהיה עליו אני רק רוצה אישורים מהצד שלכם, קהל אני דואג.",
+              "מרחבי חוסן בטבע של רפואת יער ע\"פ הנודל הבינלאומי - זול להקמה ומשמעותי מאוד בתקופה הזאת. למדתי את התחום במרכז לפני שעברתי חזרה לאיזור ואשמח לפרט ככל הדרוש. בר 054-6677792",
+              "הקמת מיזם דוכני אוכל ועגלות קפה ניידים: יצירת מיזם הכולל דוכנים או עגלות קפה ניידות שיפעלו ברחובות שונים באופן מחזורי, במטרה לאפשר גישה נוחה לאוכל רחוב וכיבוד לתושבים שאינם ניידים או מתקשים להגיע למרכזי קניות.",
+              "הארכת שעות פתיחת חנויות עד שעות הלילה המאוחרות: הצעה להאריך את שעות הפתיחה של חנויות באזור עד השעות 1 או 2 בלילה. כיום, העיר נסגרת מוקדם (בסביבות 7 בערב, ועד 10-11 בלילה כמעט הכל סגור), מה שאינו מאפשר מענה לצורך בקניית דברים שונים המתעורר בשעות מאוחרות. זאת בניגוד למרכז הארץ, שם חנויות רבות פתוחות עד חצות ואף מאוחר יותר.",
+              "שיפור תהליכים משפטיים ותגובתיות הרשות המקומית: יש לבחון את הסיבות לכך שהרשות המקומית מפסידה באופן תדיר בתביעות משפטיות, ולפעול לשיפור התהליכים המשפטיים והאדמיניסטרטיביים. המטרה היא לצמצם את הצורך של תושבים לפנות לבתי משפט, על ידי מתן מענה הולם וצודק לפניותיהם ותלונותיהם. יש להבטיח שקיפות, הגינות ושוויון בטיפול בתושבים, כך שגם למי שאין אמצעים כלכליים לתבוע, יקבל מענה הולם וצודק מהרשות."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 136,
+            "averageEvaluation": 0.5030637254901961,
+            "consensus": 0.3927862498034127,
+            "agreementIndex": 0.8897225243132166,
+            "likeMindedness": 0.9329620208590983,
+            "proRatio": 0.7205882352941176,
+            "polarization": 0.0670379791409017
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 68,
+            "weaklyAgreeCount": 30,
+            "neutralCount": 18,
+            "weaklyDisagreeCount": 11,
+            "stronglyDisagreeCount": 9,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "gnF1NqeAvInp",
+      "topicTitle": "שיתוף פעולה בין רשויות מקומיות",
+      "memberCount": 13,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.3699563456149749,
+        "averageLikeMindedness": 0.8950997012315777,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.10909090909090909
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "gnF1NqeAvInp",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיתוף פעולה בין רשויות מקומיות",
+          "provenance": {
+            "sourceCount": 13,
+            "sourceIds": [
+              "27FBWcWxCwzTIkxGHbr6",
+              "5y76SxEByxrlhQG3zAEd",
+              "BrQ76WuGjFoeqWPQ57kG",
+              "Gb3ZQYZ16LOEkTtryeO7",
+              "IEILgJtI45lkjoAMLlqw",
+              "Q3rwvxuRv9J2fHmnmBRG",
+              "d3i3dduXggJRZQmU1C6t",
+              "dtCPAw40SwmXbLSMw1AV",
+              "gWty8UysHEAONl6VSZbU",
+              "ii2lA43SvqJmoO1qPU7R",
+              "rVl7YTIjI7AY4e3PCuCz",
+              "sY70HW7cTzUZMp3ZKVpi",
+              "ygElhrFSOQZJ90YGzGeG"
+            ],
+            "sourceTitles": [
+              "איחוד רשויות של שלושת הישובים לחסכון מצד אחד וליצירת עוצמה מצד שני",
+              "חיזוק שיתוף הפעולה בין הרשויות המקומיות: הצעה לאחד כוחות ולחזק את שיתוף הפעולה בין הרשויות המקומיות צפת, חצור וראש-פינה. איחוד זה יאפשר תיאום טוב יותר בקידום פרויקטים אזוריים משותפים, יוביל ליעילות רבה יותר בשיפור חיי התושבים, וצפוי להביא ל'הענות גדולה' מצד הציבור והגורמים הרלוונטיים.",
+              "הקמת מנהלת צעירים ותעסוקה אזורית משותפת: הקמת מנהלת אזורית משותפת לצעירים ותעסוקה עבור היישובים צפת, ראש פינה וחצור, שמטרתה למקסם את היתרון היחסי של כל אחד מהם ולפעול לשיפור איכות החיים של הצעירים באזור. מנהלת זו תשמש כגוף מתאם ומוביל ליוזמות אזוריות בתחומי התעסוקה, החינוך, התחבורה והתיירות.",
+              "הגברת שיתוף הפעולה בין מחלקות להרחבת קהל היעד: הצעה זו קוראת לקידום שיתוף פעולה הדוק יותר בין מחלקות שונות ברשויות המקומיות (כגון תרבות, חינוך, רווחה, תיירות) ובין הרשויות עצמן. מטרת שיתוף הפעולה היא להרחיב את קהל היעד לפעילויות ואירועים שונים, למנוע כפילויות, לייעל משאבים וליצור סינרגיה שתביא לתוצאות טובות יותר עבור כלל תושבי האזור.",
+              "שיתוף פעולה אזורי להוזלת עלויות מול ספקים: הרשויות יקדמו שיתוף פעולה ביניהן לצורך התאגדות מול ספקים שונים (בתחומי החינוך, התשתיות, השירותים המוניציפליים ועוד). מטרת ההתאגדות היא להשיג כוח קנייה גדול יותר, לנהל משא ומתן אפקטיבי יותר ולהוזיל עלויות עבור שירותים ומוצרים חיוניים לתושבי האזור.",
+              "איחוד רשויות מקומיות לשיפור שירותי רווחה אזוריים: רעיון זה מציע לבחון אפשרות לאיחוד או שיתוף פעולה הדוק בין הרשויות המקומיות צפת, חצור וראש-פינה בתחום הרווחה. איחוד כזה יכול להוביל לניהול יעיל יותר של משאבים, תיאום מדיניות רווחה אחידה, ומתן שירותים מקיפים ואיכותיים יותר לתושבי האזור כולו, תוך ניצול יתרונות לגודל.",
+              "שיפור התקשורת ושיתוף הציבור עם ראשי המועצות: הצעה לשפר את התקשורת בין ראשי המועצות לתושבים, לקיים יותר מפגשים ודיונים פתוחים, שכן כיום התקשורת לוקה בחסר ואינה מספקת.",
+              "הקמת מרכז שירותים עירוני משותף וטיפול בתשלומי מים: הצעה זו כוללת שני היבטים עיקריים: הקמת מרכז עירוני משותף שיטפל בנושאי גינון ותברואה עבור הרשויות המקומיות, וכן טיפול בנושא תשלומי המים. הכוונה היא לאמץ מודל תשלום מים הדומה לזה הקיים בראש פינה, ולהימנע מהמודל של פלג הגליל, במטרה להקל על התושבים ולייעל את השירותים המוניציפליים."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 55,
+            "averageEvaluation": 0.5454545454545454,
+            "consensus": 0.3699563456149749,
+            "agreementIndex": 0.8245018001604295,
+            "likeMindedness": 0.8950997012315777,
+            "proRatio": 0.8,
+            "polarization": 0.10490029876842233
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 27,
+            "weaklyAgreeCount": 17,
+            "neutralCount": 3,
+            "weaklyDisagreeCount": 5,
+            "stronglyDisagreeCount": 3,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "1c0ryPFBqW8l",
+      "topicTitle": "שיפור שירותי הבריאות באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.3031531044008394,
+        "averageLikeMindedness": 0.8186309374724972,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "1c0ryPFBqW8l",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותי הבריאות באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "64sHYuVzEOQm6L1MoXpM"
+            ],
+            "sourceTitles": [
+              "שיפור וחיזוק שירותי הרפואה באזור: שלוש הרשויות יכולות לפעול יחד לשיפור איכות וזמינות שירותי הרפואה באזור. זה יכול לכלול הקמת מרפאות משותפות, הרחבת שעות פעילות של מוקדי חירום, גיוס רופאים מומחים, השקעה בציוד רפואי מתקדם, וקידום תוכניות למניעת מחלות וקידום בריאות. שיתוף פעולה כזה יבטיח שהתושבים יקבלו טיפול רפואי איכותי ונגיש יותר."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 17,
+            "averageEvaluation": 0.6176470588235294,
+            "consensus": 0.3031531044008394,
+            "agreementIndex": 0.68550604557731,
+            "likeMindedness": 0.8186309374724972,
+            "proRatio": 0.7647058823529411,
+            "polarization": 0.18136906252750284
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 10,
+            "weaklyAgreeCount": 3,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 2,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "vxSVLAkrD33Q",
+      "topicTitle": "שיפור הדיור לצעירים באזור",
+      "memberCount": 10,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.2807542272656919,
+        "averageLikeMindedness": 0.8879691626323214,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.14545454545454545
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "vxSVLAkrD33Q",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור הדיור לצעירים באזור",
+          "provenance": {
+            "sourceCount": 10,
+            "sourceIds": [
+              "0aXm0Yrj58bYnMojJAMV",
+              "5uaAxwVGR7EWUa8qp1vw",
+              "HQRmzH5NWEJ97KPIab1Y",
+              "Iyii6hCSnea9o5DWNIPm",
+              "JOutBL0yv9TIZ5tLFRkv",
+              "LEaNCfrLOOYm43kkZSjp",
+              "Q3TMjLPqheweCpR83pfH",
+              "bYMc3xO8wGk5i16QgzIG",
+              "h0aVJTDmjH0Ew8HkyrNT",
+              "ibXdWQsmMobYP0xr4406"
+            ],
+            "sourceTitles": [
+              "הרחבת ראש פינה בדירות נוספות: הצעה זו עוסקת בהגדלת היצע הדיור בראש פינה באמצעות בניית דירות נוספות. הרחבת היישוב בדירות חדשות יכולה לסייע במענה לביקוש למגורים, למשוך אוכלוסייה חדשה לאזור, ולאפשר צמיחה דמוגרפית וכלכלית. זה יכלול תכנון ובנייה של שכונות חדשות או הרחבת שכונות קיימות.",
+              "פיתוח פתרונות דיור מגוונים: הרחבת היצע הדיור באזור על ידי בניית בתים נוספים באופן כללי, ובפרט התמקדות בבניית בתים קטנים ונגישים במחירם עבור צעירים המעוניינים לעבור לגור לבד, במטרה לאפשר להם עצמאות כלכלית ואישית.",
+              "הקמת מגורים מסובסדים ומרכז למידה לצעירי הגליל: בניית מתחמי מגורים מסובסדים עבור צעירים ומתבגרים בגילאי 25 ומעלה ביישובים ראש פינה, צפת וחצור. המגורים ישמשו בסיס ללימוד וקידום פרויקטים משותפים, ובמסגרתם יועברו קורסים מסובסדים בתחומי המחשוב, הקידמה וההייטק לתושבים, במטרה להכשירם ולשלבם בתעסוקה מתקדמת.",
+              "דיור בר השגה לזוגות צעירים ורווקים: הצעה לספק דירות זולות ומסובסדות עבור זוגות צעירים ורווקים באזור, במטרה לאפשר להם להישאר או לעבור לאזור ולעודד צמיחה דמוגרפית.",
+              "התרחבות ופתיחת שטחים למכירה מוזלת לצעירים: הצעה זו מתמקדת בפיתוח נדל\"ן ודיור באזור צפת, חצור וראש-פינה. היא כוללת הרחבת שטחי מגורים זמינים ופתיחתם למכירה במחיר מוזל, במיוחד עבור זוגות צעירים ומשפחות צעירות, במטרה למשוך אוכלוסייה חדשה ולעודד התיישבות באזור.",
+              "הקמת מעונות סטודנטים: הקמת מעונות סטודנטים חדשים או הרחבת קיימים באזור צפת, חצור וראש-פינה, במטרה למשוך סטודנטים למוסדות אקדמיים קיימים או עתידיים, לספק פתרונות דיור במחיר סביר ולעודד צמיחה דמוגרפית וכלכלית באזור.",
+              "קידום ואישור בניית שכונות חדשות לצעירים: הדבר החשוב ביותר הוא קידום פתרונות דיור לצעירים בעיר. יש לאשר בניית שכונות חדשות וגדולות ולהקל על תהליכי הבנייה, על מנת לאפשר לצעירים להישאר לגור בעיר קרוב למשפחותיהם.",
+              "שיפור מדיניות הדיור והורדת יוקר השכירות: יש לפעול להורדת יוקר השכירות באזור, שכן המחירים דומים לאלה שבתל אביב ובמרכז הארץ, דבר המקשה על תושבים ומרתיע צעירים מלהישאר או להגיע לאזור. יש לבחון דרכים להשקיע בפתרונות דיור בר השגה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 55,
+            "averageEvaluation": 0.4681818181818182,
+            "consensus": 0.2807542272656919,
+            "agreementIndex": 0.8125724090838737,
+            "likeMindedness": 0.8879691626323214,
+            "proRatio": 0.7090909090909091,
+            "polarization": 0.1120308373676786
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 30,
+            "weaklyAgreeCount": 9,
+            "neutralCount": 7,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 8,
+            "agreementShape": "consensus"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "LUJe94FM4XbT",
+      "topicTitle": "שיפור חינוך ושירותים קהילתיים",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.23910421348227862,
+        "averageLikeMindedness": 0.7113248654051871,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "LUJe94FM4XbT",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חינוך ושירותים קהילתיים",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "DZMERal7aCeIiBbFxxlq"
+            ],
+            "sourceTitles": [
+              "הקמת מרכז משותף לתלמידים מתקשים: הקמת מרכז אזורי משותף שיספק תמיכה לימודית וחינוכית לתלמידים המתקשים מצפת, חצור וראש-פינה. מטרת המרכז היא לצמצם פערים לימודיים, לחזק את ביטחונם העצמי ולסייע להם להגיע להישגים טובים יותר במערכת החינוך באמצעות שיעורי עזר, קבוצות למידה קטנות ותמיכה מותאמת אישית."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 5,
+            "averageEvaluation": 0.8,
+            "consensus": 0.23910421348227862,
+            "agreementIndex": 0.43910421348227857,
+            "likeMindedness": 0.7113248654051871,
+            "proRatio": 1,
+            "polarization": 0.28867513459481287
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 3,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "yhzKD1D4zH2Q",
+      "topicTitle": "שיפור שירותי בריאות באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.1742799505885788,
+        "averageLikeMindedness": 0.6127016653792583,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "yhzKD1D4zH2Q",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותי בריאות באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "lSLTvY33tLjNjPPm8Uj0"
+            ],
+            "sourceTitles": [
+              "קידום שירותי הרפואה באזור: הקמת מרכז ריפוי בעיסוק, הקמת מרכז דימות גדול שיכלול שירותי צילומים, CT ו-MRI, והבאת רופאים מומחים ברמה ארצית (שאינם עובדים כבר בקופות החולים ובבית החולים זיו) שיעניקו שירותים יום אחד בשבוע, בדומה למרכז רפואי פרטי, ויהיו זמינים לכל קופות החולים."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 1,
+            "consensus": 0.1742799505885788,
+            "agreementIndex": 0.1742799505885788,
+            "likeMindedness": 0.6127016653792583,
+            "proRatio": 1,
+            "polarization": 0.3872983346207417
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 3,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "88nbcuEhOG3R",
+      "topicTitle": "שיפור חיי הנוער באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.1742799505885788,
+        "averageLikeMindedness": 0.6127016653792583,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "88nbcuEhOG3R",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חיי הנוער באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "vwHXGMVDGNX4Dskq1cho"
+            ],
+            "sourceTitles": [
+              "מרחב אזורי לאמנויות ומלאכות לנוער: הקמת מרכז או מרחב ייעודי משותף לצפת, חצור וראש-פינה, שישמש בית ליצירה אמנותית ומלאכותית עבור בני נוער. המרחב יכלול סדנאות, ציוד וחומרים למגוון רחב של אמנויות (ציור, פיסול, מוזיקה, תיאטרון, צילום) ומלאכות יד (נגרות, קרמיקה, תפירה, עיצוב). הוא יציע חוגים, קורסים ופעילויות פתוחות שיעודדו ביטוי אישי, פיתוח כישרונות ויצירתיות, ויספק מקום מפגש חברתי ופורקן יצירתי."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 1,
+            "consensus": 0.1742799505885788,
+            "agreementIndex": 0.1742799505885788,
+            "likeMindedness": 0.6127016653792583,
+            "proRatio": 1,
+            "polarization": 0.3872983346207417
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 3,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "yTn5FbWVOCZj",
+      "topicTitle": "שיפור החיים בצפון הארץ",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.11823879412890059,
+        "averageLikeMindedness": 0.6645898033750315,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "yTn5FbWVOCZj",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור החיים בצפון הארץ",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "DkZ6eOwSFKiDfXQKRjQ3"
+            ],
+            "sourceTitles": [
+              "להקים ירידים לאומנים הרבים שגרים באיזור עם עגלות קפה ואוכל מיוחד."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.8333333333333334,
+            "consensus": 0.11823879412890059,
+            "agreementIndex": 0.2849054607955672,
+            "likeMindedness": 0.6645898033750315,
+            "proRatio": 1,
+            "polarization": 0.3354101966249685
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 2,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "xlFwKsTkfEQE",
+      "topicTitle": "שיפור שירותי הבריאות באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.11823879412890059,
+        "averageLikeMindedness": 0.6645898033750315,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "xlFwKsTkfEQE",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותי הבריאות באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "NTeXKsfPHdL5PbRbqCWS"
+            ],
+            "sourceTitles": [
+              "שיפור שירותי הבריאות באזור: השקעה בתשתיות ובכוח אדם רפואי, הרחבת מגוון השירותים הרפואיים הניתנים לתושבי צפת, חצור וראש-פינה, ושיפור הנגישות למרפאות ובתי חולים, במטרה להבטיח רמת בריאות גבוהה יותר לכלל האוכלוסייה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.8333333333333334,
+            "consensus": 0.11823879412890059,
+            "agreementIndex": 0.2849054607955672,
+            "likeMindedness": 0.6645898033750315,
+            "proRatio": 1,
+            "polarization": 0.3354101966249685
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 2,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "3uP6GpVkziF0",
+      "topicTitle": "שיפור חינוך במגזר הדתי",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.11823879412890059,
+        "averageLikeMindedness": 0.6645898033750315,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "3uP6GpVkziF0",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חינוך במגזר הדתי",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "l6jgMAQDL1tEceXDyvc4"
+            ],
+            "sourceTitles": [
+              "כיתה /כיתות במגזר הדתי שמסייעת לילדים עם בעיות התנהגות בלבד ולא עם בעיות קוגניטיביות או קשיים למידה נטו התנהגותי ,יכול לסייע להמון ילדים להורים מתוסכלים עצם זה שיהיה בצפת או חצור זה יתן מענה להרבה ילדים"
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.8333333333333334,
+            "consensus": 0.11823879412890059,
+            "agreementIndex": 0.2849054607955672,
+            "likeMindedness": 0.6645898033750315,
+            "proRatio": 1,
+            "polarization": 0.3354101966249685
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 2,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "stYAakYLk-Ip",
+      "topicTitle": "שיפור שירותים רפואיים באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.11823879412890059,
+        "averageLikeMindedness": 0.6645898033750315,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "stYAakYLk-Ip",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותים רפואיים באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "oaaSAcezxuwXsS2PdHcs"
+            ],
+            "sourceTitles": [
+              "הקמת מרכז רפואי אזורי גדול ומשותף: הצעה להקים מרכז רפואי גדול ומתקדם שישרת את כלל תושבי צפת, חצור וראש-פינה. מרכז זה יאפשר ריכוז משאבים, ציוד רפואי מתקדם וצוותים מקצועיים, ובכך ישפר משמעותית את איכות וזמינות שירותי הבריאות באזור כולו."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.8333333333333334,
+            "consensus": 0.11823879412890059,
+            "agreementIndex": 0.2849054607955672,
+            "likeMindedness": 0.6645898033750315,
+            "proRatio": 1,
+            "polarization": 0.3354101966249685
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 2,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "dcXlGmFCzNR7",
+      "topicTitle": "שיפור איכות החיים בצפון הארץ",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.08279442036615958,
+        "averageLikeMindedness": 0.726138721247417,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "dcXlGmFCzNR7",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור איכות החיים בצפון הארץ",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "WdiwZdWHNHdyAkkJv7G5"
+            ],
+            "sourceTitles": [
+              "מרחב אמנות ויצירה קהילתי: הקמת מרחב קהילתי לאמנות ויצירה שיציע מגוון רחב של סדנאות המותאמות לגילאים שונים, תוך שמירה על הפרדה מגדרית כדי להתאים לכל המגזרים באוכלוסייה. המרחב יכלול חומרים איכותיים שיסופקו באחריות המפעילה. בנוסף, ניתן יהיה לקיים בו תערוכות מתחלפות של יצירות התושבים, כולל יצירות משותפות, במטרה לקדם ריפוי אישי, חברתי וקהילתי."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.6666666666666666,
+            "consensus": 0.08279442036615958,
+            "agreementIndex": 0.41612775369949295,
+            "likeMindedness": 0.726138721247417,
+            "proRatio": 1,
+            "polarization": 0.27386127875258304
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "7ke7FEX9K6dM",
+      "topicTitle": "שיפור החינוך באזור צפון הארץ",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.08279442036615958,
+        "averageLikeMindedness": 0.726138721247417,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "7ke7FEX9K6dM",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור החינוך באזור צפון הארץ",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "bICbkOBWo34fNWIAUGXB"
+            ],
+            "sourceTitles": [
+              "הקמת בי''ס+ תיכון לחינוך מיוחד נפשי באיזור."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.6666666666666666,
+            "consensus": 0.08279442036615958,
+            "agreementIndex": 0.41612775369949295,
+            "likeMindedness": 0.726138721247417,
+            "proRatio": 1,
+            "polarization": 0.27386127875258304
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "f79KrFhDWGmV",
+      "topicTitle": "שיפור תשתיות טכנולוגיות באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.08279442036615958,
+        "averageLikeMindedness": 0.726138721247417,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "f79KrFhDWGmV",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור תשתיות טכנולוגיות באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "z2nn8uXiKBCLVQoWfqbk"
+            ],
+            "sourceTitles": [
+              "לדאוג שלכל תושבי האזור יש תשתית משודרגת של אינטרנט מהיר בפיבר-אופטי מה שלא קיים כעת בניגוד לרוב הארץ. זה יעזור לעסקים קטנים וגדולים  וגם לאנשים שעובדים מהבית."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.6666666666666666,
+            "consensus": 0.08279442036615958,
+            "agreementIndex": 0.41612775369949295,
+            "likeMindedness": 0.726138721247417,
+            "proRatio": 1,
+            "polarization": 0.27386127875258304
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "0XwTEzBL1kPu",
+      "topicTitle": "שיפור שירותי בריאות קהילתיים",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.050282886535483184,
+        "averageLikeMindedness": 0.7685449750568621,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "0XwTEzBL1kPu",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותי בריאות קהילתיים",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "zoEqs4qPUld3LnysAOdF"
+            ],
+            "sourceTitles": [
+              "קליניקה קהילתית לטיפולים אלטרנטיביים: הקמת קליניקה קהילתית שתציע טיפולים אלטרנטיביים. ישנו כבר מיזם קיים לנשים, וההצעה היא להרחיב אותו כך שיכלול גם טיפולים לגברים, ובכך לשרת את כלל הקהילה."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 5,
+            "averageEvaluation": 0.5,
+            "consensus": 0.050282886535483184,
+            "agreementIndex": 0.5502828865354832,
+            "likeMindedness": 0.7685449750568621,
+            "proRatio": 0.6,
+            "polarization": 0.23145502494313785
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 2,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "HZmvdphL517O",
+      "topicTitle": "שיפור חינוך מיוחד באזור הצפון",
+      "memberCount": 2,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": 0.022677252445568008,
+        "averageLikeMindedness": 0.841886116991581,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0.125
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "HZmvdphL517O",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חינוך מיוחד באזור הצפון",
+          "provenance": {
+            "sourceCount": 2,
+            "sourceIds": [
+              "6oR1wRRAtbfPKOXwgAX3",
+              "LxJQLwVkyfHOYboiVUZD"
+            ],
+            "sourceTitles": [
+              "פיתוח והרחבת פעילויות לחינוך מיוחד ולמעדוניות: הצעה זו עוסקת בקידום ופיתוח תוכניות ופעילויות ייעודיות עבור ילדים ונוער עם צרכים מיוחדים, וכן הרחבת מסגרות ותכנים במעדוניות ובמוסדות דומים. שיתוף הפעולה בין הרשויות יאפשר יצירת תוכניות עשירות ומגוונות יותר, שיתוף משאבים ומומחיות, ומתן מענה טוב יותר לאוכלוסיות אלו ברחבי האזור.",
+              "יותר פעילות לחינוך מיוחד"
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 8,
+            "averageEvaluation": 0.3125,
+            "consensus": 0.022677252445568008,
+            "agreementIndex": 0.7101772524455681,
+            "likeMindedness": 0.841886116991581,
+            "proRatio": 0.625,
+            "polarization": 0.158113883008419
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 4,
+            "neutralCount": 2,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "FUmTFTnjgXAG",
+      "topicTitle": "שיפור החינוך באזור הגליל",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.009427484468837677,
+        "averageLikeMindedness": 0.6772513878160487,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "FUmTFTnjgXAG",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור החינוך באזור הגליל",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "3ZqVPW6NCq7ggDAnj5w1"
+            ],
+            "sourceTitles": [
+              "קידום וחיזוק החינוך המיוחד בחצור הגלילית: הצעה זו מתמקדת בשיפור וקידום מערך החינוך המיוחד ביישוב חצור הגלילית, במטרה להעניק מענה הולם ואיכותי לילדים בעלי צרכים מיוחדים באזור ולחזק את המסגרות הקיימות."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 2,
+            "averageEvaluation": 0.75,
+            "consensus": -0.009427484468837677,
+            "agreementIndex": 0.24057251553116232,
+            "likeMindedness": 0.6772513878160487,
+            "proRatio": 1,
+            "polarization": 0.32274861218395134
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "N4FZX7RNTK-u",
+      "topicTitle": "שיפור שירותי הבריאות באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.025392833438497242,
+        "averageLikeMindedness": 0.771367702909831,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "N4FZX7RNTK-u",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור שירותי הבריאות באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "YxkAUl6OLMIEws3RqxWO"
+            ],
+            "sourceTitles": [
+              "הקמת מתחם רפואה פרטית לטובת התושבים"
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 9,
+            "averageEvaluation": 0.3888888888888889,
+            "consensus": -0.025392833438497242,
+            "agreementIndex": 0.5857182776726139,
+            "likeMindedness": 0.771367702909831,
+            "proRatio": 0.6666666666666666,
+            "polarization": 0.22863229709016897
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 4,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "jdCKoen9pvzg",
+      "topicTitle": "שיתוף פעולה טכנולוגי בין ערים",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.03718200726436416,
+        "averageLikeMindedness": 0.7165266452430796,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "jdCKoen9pvzg",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיתוף פעולה טכנולוגי בין ערים",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "cC7ORMozRQFc9lwYBNHy"
+            ],
+            "sourceTitles": [
+              "הובלה אזורית בהטמעת טכנולוגיות AI: הצעה אסטרטגית זו קוראת להכריז על שלושת הישובים כמובילים אזוריים ואף ארציים בהטמעת טכנולוגיות בינה מלאכותית (AI) בכל תחומי החיים. הדבר כולל פיתוח יוזמות, פרויקטים ותשתיות שיקדמו שימוש ב-AI בחינוך, בתעשייה, בשירותים מוניציפליים ובחיי היום-יום, במטרה למצב את האזור כמרכז חדשנות טכנולוגית."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 6,
+            "averageEvaluation": 0.5,
+            "consensus": -0.03718200726436416,
+            "agreementIndex": 0.46281799273563584,
+            "likeMindedness": 0.7165266452430796,
+            "proRatio": 0.8333333333333334,
+            "polarization": 0.28347335475692037
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 3,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "rrSHiW3KxHld",
+      "topicTitle": "שיתוף פעולה טכנולוגי ופיתוח מקצועי",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.03821769301891631,
+        "averageLikeMindedness": 0.6708597056978083,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "rrSHiW3KxHld",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיתוף פעולה טכנולוגי ופיתוח מקצועי",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "ZjCjjdgpvsoQMN7rPb33"
+            ],
+            "sourceTitles": [
+              "הקמת Hub טכנולוגי משותף ומרכז הכשרה למקצועות המחר: הקמת מרכז טכנולוגי משותף (Hub) ומרכז הכשרה ייעודי למקצועות העתיד, במטרה להגדיל את היצע התעסוקה האיכותית לצעירים באזור, למשוך יזמים ולפתח את הכלכלה המקומית בתחומים חדשניים."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 4,
+            "averageEvaluation": 0.625,
+            "consensus": -0.03821769301891631,
+            "agreementIndex": 0.3367823069810837,
+            "likeMindedness": 0.6708597056978083,
+            "proRatio": 0.75,
+            "polarization": 0.3291402943021917
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 3,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "h-NOMu18CHG9",
+      "topicTitle": "שיפור החיים באמצעות יוזמות קהילתיות",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.1792525917015947,
+        "averageLikeMindedness": 0.7113248654051871,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "h-NOMu18CHG9",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור החיים באמצעות יוזמות קהילתיות",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "ekLBhFqku6Og4mRyLcrb"
+            ],
+            "sourceTitles": [
+              "יום בשבוע ( סופש ) יריד אומנים ומכירה של פרות ירקות תוצרת מקומית ( חקלאים מהאזור"
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 2,
+            "averageEvaluation": 0.5,
+            "consensus": -0.1792525917015947,
+            "agreementIndex": 0.3207474082984053,
+            "likeMindedness": 0.7113248654051871,
+            "proRatio": 0.5,
+            "polarization": 0.28867513459481287
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "f3WLn-bR8OWi",
+      "topicTitle": "שירותים רפואיים משולבים באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.19208500815448004,
+        "averageLikeMindedness": 0.5917517095361369,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "f3WLn-bR8OWi",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שירותים רפואיים משולבים באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "dB8s7ZXPSSrcqBZRWmK8"
+            ],
+            "sourceTitles": [
+              "שירות חירום לרפואת שיניים בסופי שבוע: הקמת שירות חירום אזורי לרפואת שיניים שיהיה זמין בימי שישי ושבת עבור תושבי צפת, חצור וראש-פינה. השירות יכול לפעול במתכונת של מרפאה ייעודית בבית חולים או באמצעות תורנות מסודרת בין המרפאות הפרטיות באזור, ובכך לחסוך נסיעות ארוכות לחיפה במקרי חירום."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 1,
+            "averageEvaluation": 1,
+            "consensus": -0.19208500815448004,
+            "agreementIndex": 0,
+            "likeMindedness": 0.5917517095361369,
+            "proRatio": 1,
+            "polarization": 0.40824829046386313
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "ubbzsC8zGfOg",
+      "topicTitle": "שיפור חינוך לתלמידים מחוננים",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.25053891296717373,
+        "averageLikeMindedness": 0.726138721247417,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "ubbzsC8zGfOg",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חינוך לתלמידים מחוננים",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "TLCSwXkIe8eVYeJVZ0WS"
+            ],
+            "sourceTitles": [
+              "הקמת מסגרות ייעודיות לתלמידים מחוננים באזור: הצעה להקים ולפתח מסגרות חינוכיות ייעודיות לתלמידים מחוננים באזור צפת, חצור וראש-פינה, במטרה לספק להם מענה חינוכי הולם ומתאים לכישוריהם הייחודיים, במקום הצורך לנסוע למסגרות מרוחקות כמו זו שבתל חי."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 3,
+            "averageEvaluation": 0.3333333333333333,
+            "consensus": -0.25053891296717373,
+            "agreementIndex": 0.41612775369949295,
+            "likeMindedness": 0.726138721247417,
+            "proRatio": 0.6666666666666666,
+            "polarization": 0.27386127875258304
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 1,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 1,
+            "stronglyDisagreeCount": 0,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "YmXkLQnW0AD1",
+      "topicTitle": "שיתוף פעולה לקידום בריאות באזור",
+      "memberCount": 2,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.47375,
+        "averageLikeMindedness": 0.75,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "YmXkLQnW0AD1",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיתוף פעולה לקידום בריאות באזור",
+          "provenance": {
+            "sourceCount": 2,
+            "sourceIds": [
+              "CgOWk8zkO7thDDj64t1l",
+              "ADVX9KynVJ1qn7aFLeBv"
+            ],
+            "sourceTitles": [
+              "פתיחת מרכז רפואי גדול ומשותף. בסגנו אסותא או מדיקל סנטר",
+              "מרכז חינוכי טיפולי"
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 6,
+            "averageEvaluation": 0,
+            "consensus": -0.47375,
+            "agreementIndex": 0.52625,
+            "likeMindedness": 0.75,
+            "proRatio": 0.3333333333333333,
+            "polarization": 0.25
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 2,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 2,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "Kqx5pf3faKXW",
+      "topicTitle": "שיפור איכות החיים בצפון הארץ",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.47375,
+        "averageLikeMindedness": 0.75,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "Kqx5pf3faKXW",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור איכות החיים בצפון הארץ",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "sQC8Hrjt17d0ezq1u3we"
+            ],
+            "sourceTitles": [
+              "פתיחת חוגים וסדנאות לציירים: יזום ופתיחת חוגים וסדנאות מקצועיות לציירים תושבי צפת, חצור וראש-פינה. מטרת החוגים היא לפתח את כישוריהם האמנותיים, לספק להם מסגרת יצירתית לשיתוף פעולה והשראה הדדית, ולקדם את קהילת האמנים המקומית."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 6,
+            "averageEvaluation": 0,
+            "consensus": -0.47375,
+            "agreementIndex": 0.52625,
+            "likeMindedness": 0.75,
+            "proRatio": 0.5,
+            "polarization": 0.25
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 2,
+            "neutralCount": 1,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 2,
+            "agreementShape": "skewed-positive"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "q01gv4opXNTC",
+      "topicTitle": "שיפור חינוך ומיגון באזור",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.9606082274614698,
+        "averageLikeMindedness": 0.591751709536137,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "q01gv4opXNTC",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חינוך ומיגון באזור",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "jQiN7ssHd5HLBBysih9p"
+            ],
+            "sourceTitles": [
+              "הקמת בתי ספר לחינוך מיוחד עם מיגון תקני: יש צורך דחוף להוסיף בתי ספר חדשים לחינוך מיוחד שיכללו מיגון תקני ומקלטים, בדומה למה שחסר כיום במוסדות קיימים כמו 'צוהר לטוהר'. ישנה הבטחה למבנה חדש לשנה הבאה, וחשוב לוודא שהבטחה זו תתממש כדי למנוע מצב שבו תלמידים נאלצים ללמוד במקומות חלופיים שאינם מתאימים."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 2,
+            "averageEvaluation": 0,
+            "consensus": -0.9606082274614698,
+            "agreementIndex": 0.03939177253853021,
+            "likeMindedness": 0.591751709536137,
+            "proRatio": 0.5,
+            "polarization": 0.408248290463863
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    },
+    {
+      "topicId": "83aZCp009wGM",
+      "topicTitle": "שיפור חינוך בגני הילדים",
+      "memberCount": 1,
+      "displayedCount": 1,
+      "agreement": {
+        "averageConsensus": -0.9606082274614698,
+        "averageLikeMindedness": 0.591751709536137,
+        "internalDivergence": 0,
+        "evaluatorOverlap": 0
+      },
+      "synthesizedSolutions": [
+        {
+          "solutionId": "83aZCp009wGM",
+          "kind": "synthesis",
+          "derivedByPipeline": "unknown-cluster",
+          "title": "שיפור חינוך בגני הילדים",
+          "provenance": {
+            "sourceCount": 1,
+            "sourceIds": [
+              "xMsZAoWj22eisxnEpk31"
+            ],
+            "sourceTitles": [
+              "הוספת סייעות לגני הילדים (ניקיון ופדגוגיה): הצעה להוספת שתי סייעות לגני הילדים: סייעת ייעודית שתהיה אחראית על נושא הניקיון בגן, וסייעת פדגוגית שתתמקד בקידום קבוצות ילדים. תוספת כוח אדם זו תאפשר לגננת להתפנות יותר למתן מענה לקבוצות מתקדמות ולשיפור כולל של הפעילות החינוכית והתפעולית בגן."
+            ]
+          },
+          "evaluation": {
+            "numberOfEvaluators": 2,
+            "averageEvaluation": 0,
+            "consensus": -0.9606082274614698,
+            "agreementIndex": 0.03939177253853021,
+            "likeMindedness": 0.591751709536137,
+            "proRatio": 0.5,
+            "polarization": 0.408248290463863
+          },
+          "agreementProfile": {
+            "stronglyAgreeCount": 1,
+            "weaklyAgreeCount": 0,
+            "neutralCount": 0,
+            "weaklyDisagreeCount": 0,
+            "stronglyDisagreeCount": 1,
+            "agreementShape": "low-signal"
+          }
+        }
+      ],
+      "standaloneSolutions": []
+    }
+  ],
+  "filteredOut": {
+    "count": 749,
+    "byReason": {
+      "belowConsensusFloor": 659,
+      "lowEvaluators": 25,
+      "hidden": 56,
+      "unassigned": 9
+    }
+  }
+}

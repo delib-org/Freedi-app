@@ -245,3 +245,53 @@
 	color: var(--text-muted);
 	font-style: italic;
 }
+
+.splitNotice {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 10px 12px;
+	margin-bottom: 8px;
+	background: rgba(211, 104, 104, 0.08);
+	border: 1px solid rgba(211, 104, 104, 0.4);
+	border-radius: 6px;
+	color: var(--text-body, #333);
+	font-size: 0.85rem;
+
+	strong {
+		font-size: 0.78rem;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--reject, #c84e4e);
+	}
+}
+
+.splitHint {
+	font-size: 0.78rem;
+	color: var(--text-secondary, #666);
+}
+
+.paragraphPreview {
+	margin: 6px 0 0;
+	padding: 6px 10px;
+	background: rgba(95, 136, 229, 0.05);
+	border: 1px solid rgba(95, 136, 229, 0.25);
+	border-radius: 6px;
+	font-size: 0.85rem;
+
+	summary {
+		cursor: pointer;
+		color: var(--btn-primary);
+		font-weight: 600;
+	}
+
+	ol {
+		margin: 6px 0 0 18px;
+		padding: 0;
+
+		li {
+			margin: 4px 0;
+			line-height: 1.45;
+		}
+	}
+}

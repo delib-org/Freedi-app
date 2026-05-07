@@ -88,6 +88,70 @@
 		white-space: nowrap;
 		margin-inline-end: 0.4rem;
 		box-shadow: 0 1px 3px rgba(95, 136, 229, 0.4);
+
+		// Synthesis: distinct accent so AI-merged paraphrases read differently
+		// from auto-grouped clusters. Uses a violet-leaning gradient over the
+		// primary so the visual hierarchy is preserved across themes.
+		&--synthesis {
+			background: linear-gradient(
+				135deg,
+				var(--btn-primary, #5f88e5) 0%,
+				var(--accent, #b455ff) 100%
+			);
+			box-shadow: 0 1px 3px rgba(180, 85, 255, 0.4);
+		}
+
+		// Topic clusters: muted neutral so they don't compete with synthesis.
+		&--topic {
+			background: var(--text-secondary, #777);
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+		}
+
+		@media (prefers-contrast: more) {
+			background: transparent;
+			color: var(--btn-primary, #5f88e5);
+			border: 2px solid var(--btn-primary, #5f88e5);
+			box-shadow: none;
+
+			&--synthesis {
+				background: transparent;
+				border-color: var(--accent, #b455ff);
+				color: var(--accent, #b455ff);
+				box-shadow: none;
+			}
+
+			&--topic {
+				background: transparent;
+				border-color: var(--text-body, #333);
+				color: var(--text-body, #333);
+				box-shadow: none;
+			}
+		}
+	}
+
+	// Synthesis variant of the whole node — slight violet shift on the rail
+	// so synthesized clusters stand out from auto-grouped ones in the tree.
+	&--synthesis {
+		border-inline-start-color: var(--accent, #b455ff) !important;
+
+		&.tree-option-node--cluster {
+			background-color: rgba(180, 85, 255, 0.10) !important;
+			box-shadow:
+				4px 5px 0 -1px rgba(180, 85, 255, 0.30),
+				10px 11px 0 -2px rgba(180, 85, 255, 0.15);
+
+			[dir='rtl'] & {
+				box-shadow:
+					-4px 5px 0 -1px rgba(180, 85, 255, 0.30),
+					-10px 11px 0 -2px rgba(180, 85, 255, 0.15);
+			}
+		}
+
+		@media (prefers-contrast: more) {
+			background-color: transparent !important;
+			border: 2px solid var(--accent, #b455ff) !important;
+			box-shadow: none;
+		}
 	}
 
 	@keyframes card-blink {
@@ -199,6 +263,177 @@
 			margin: 2px 0;
 			font-size: inherit;
 		}
+	}
+
+	// Synthesis: proposal-first actions row — sources toggle + admin buttons.
+	// Lives between the description and the (collapsed) source list.
+	&__proposal-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		margin-top: 6px;
+	}
+
+	&__sources-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 8px;
+		background: transparent;
+		color: var(--text-secondary, #777);
+		border: 1px dashed rgba(180, 85, 255, 0.4);
+		border-radius: 999px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 120ms ease,
+			color 120ms ease;
+
+		&:hover,
+		&:focus-visible {
+			background: rgba(180, 85, 255, 0.08);
+			color: var(--accent, #b455ff);
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--accent, #b455ff);
+			outline-offset: 1px;
+		}
+	}
+
+	&__proposal-admin-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 3px 7px;
+		background: transparent;
+		color: var(--text-secondary, #888);
+		border: 1px solid rgba(0, 0, 0, 0.15);
+		border-radius: 999px;
+		font-size: 0.68rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 120ms ease,
+			color 120ms ease,
+			border-color 120ms ease;
+
+		&:hover:not(:disabled),
+		&:focus-visible:not(:disabled) {
+			background: rgba(95, 136, 229, 0.08);
+			color: var(--btn-primary, #5f88e5);
+			border-color: var(--btn-primary, #5f88e5);
+			outline: none;
+		}
+
+		&--danger:hover:not(:disabled),
+		&--danger:focus-visible:not(:disabled) {
+			background: rgba(211, 104, 104, 0.08);
+			color: var(--reject, #d36868);
+			border-color: var(--reject, #d36868);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			cursor: progress;
+			opacity: 0.55;
+		}
+	}
+
+	// Synthesis-only inline source list — always visible, click navigates
+	// to the original statement.
+	&__sources {
+		margin-top: 6px;
+		padding: 6px 8px;
+		background: rgba(180, 85, 255, 0.06);
+		border: 1px dashed rgba(180, 85, 255, 0.35);
+		border-radius: 5px;
+
+		@media (prefers-contrast: more) {
+			background: transparent;
+			border: 2px solid var(--accent, #b455ff);
+		}
+	}
+
+	&__sources-header {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		margin-bottom: 4px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--accent, #b455ff);
+		letter-spacing: 0.01em;
+	}
+
+	&__sources-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__sources-item {
+		display: block;
+		margin: 0;
+	}
+
+	&__sources-link {
+		display: flex;
+		align-items: baseline;
+		gap: 6px;
+		width: 100%;
+		padding: 3px 6px;
+		background: none;
+		border: none;
+		border-radius: 3px;
+		color: var(--text-body, #444);
+		font-size: 0.78rem;
+		text-align: start;
+		cursor: pointer;
+		transition: background-color 120ms ease;
+
+		&:hover,
+		&:focus-visible {
+			background: rgba(180, 85, 255, 0.1);
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--accent, #b455ff);
+			outline-offset: 1px;
+		}
+
+		span:first-child {
+			color: var(--accent, #b455ff);
+			font-weight: 700;
+			flex-shrink: 0;
+		}
+	}
+
+	&__sources-title {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__sources-more {
+		display: block;
+		margin-top: 4px;
+		font-size: 0.7rem;
+		color: var(--text-secondary, #777);
+		font-style: italic;
 	}
 
 	&__evaluation {

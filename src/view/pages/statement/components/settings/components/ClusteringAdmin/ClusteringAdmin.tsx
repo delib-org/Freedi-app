@@ -176,6 +176,9 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 			);
 			const n = result.summary?.clustersSummarized ?? 0;
 			setStatusMessage(t('Summarized {count} clusters').replace('{count}', String(n)));
+			// Reload aggregations so the FramingDetail useEffect re-fetches the
+			// cluster Statement docs and the new .brief shows on each card.
+			await loadAggregations(selectedFraming.framingId);
 		} catch (err) {
 			logError(err, {
 				operation: 'ClusteringAdmin.handleSummarizeClusters',

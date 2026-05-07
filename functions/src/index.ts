@@ -131,6 +131,7 @@ import type { NotificationQueueItem } from '@freedi/shared-types';
 import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
 import { triggerTopicClusterPipeline } from './fn_topicClustering';
 import { triggerSummarizeFramingClusters } from './fn_summarizeClusters';
+import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildrenToDescription';
 
 // Strategic export (AI-ready report)
 import { strategicExport } from './fn_strategicExport';
@@ -168,10 +169,18 @@ import { detectStatementType } from './fn_detectStatementType';
 import { summarizeDiscussion } from './fn_summarizeDiscussion';
 
 // Integration of Similar Statements
-import { findSimilarForIntegration, executeIntegration } from './fn_integrateSimilarStatements';
+import {
+	findSimilarForIntegration,
+	executeIntegration,
+	reverseIntegrationCallable,
+} from './fn_integrateSimilarStatements';
 
 // Bulk Idea Synthesis (admin-triggered near-duplicate detection)
-import { synthesizeIdeasPreview, synthesizeIdeasExecute } from './fn_synthesizeIdeas';
+import {
+	synthesizeIdeasPreview,
+	synthesizeIdeasExecute,
+	regenerateSynthesisProposal,
+} from './fn_synthesizeIdeas';
 
 // Google Docs Import
 import { importGoogleDoc } from './fn_importGoogleDocs';
@@ -774,10 +783,12 @@ exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
+exports.reverseIntegration = reverseIntegrationCallable;
 
 // Bulk Idea Synthesis
 exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
 exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
+exports.regenerateSynthesisProposal = regenerateSynthesisProposal;
 
 // Multi-Framing Clustering
 exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);
@@ -845,6 +856,7 @@ exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
+exports.fn_syncParagraphChildrenToDescription = fn_syncParagraphChildrenToDescription;
 exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 exports.testSheetAccess = testSheetAccess;

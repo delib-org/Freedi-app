@@ -70,6 +70,53 @@
   }
 
   // ============================================================================
+  // PIPELINE BADGE — distinguishes synthesis (AI paraphrase merge) from
+  // hybrid/manual grouping. Sits inside the title-wrap so it never collides
+  // with the corner count ribbon. Two variants: synthesis (Sparkles, accent)
+  // and topic (Tags, neutral).
+  // ============================================================================
+  &__pipeline-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.15rem 0.55rem;
+    margin: 0 0 0.35rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    border: 1px solid transparent;
+
+    &--synthesis {
+      background: color-mix(in srgb, var(--btn-primary) 14%, transparent);
+      color: var(--btn-primary);
+      border-color: color-mix(in srgb, var(--btn-primary) 35%, transparent);
+    }
+
+    &--topic {
+      background: color-mix(in srgb, var(--text-secondary, #777) 12%, transparent);
+      color: var(--text-secondary, #777);
+      border-color: color-mix(in srgb, var(--text-secondary, #777) 30%, transparent);
+    }
+  }
+
+  // Synthesis cards get a subtly different accent so the whole card reads
+  // as "AI-merged" — distinct from auto-grouped clusters.
+  &--synthesis {
+    .grouped-suggestion__card {
+      border-left-color: color-mix(in srgb, var(--btn-primary) 75%, var(--accent, #b455ff));
+      background: color-mix(in srgb, var(--btn-primary) 6%, var(--card-default, #fff));
+
+      @include rtl {
+        border-left: none;
+        border-right-color: color-mix(in srgb, var(--btn-primary) 75%, var(--accent, #b455ff));
+      }
+    }
+  }
+
+  // ============================================================================
   // CORNER COUNT RIBBON — anchors the stack metaphor
   // ============================================================================
   &__count-ribbon {
@@ -121,6 +168,300 @@
   &__title-wrap {
     flex: 1;
     min-width: 0;
+  }
+
+  // ============================================================================
+  // PROPOSAL-FIRST LAYOUT (synthesis only)
+  // Synthesis cards read as AI-authored proposals: prominent title, visible
+  // multi-line description, action row, and a collapsed "Built from N ideas"
+  // toggle. Provenance is one click away, not the dominant element.
+  // ============================================================================
+  &__proposal-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin: 0 0 0.25rem;
+    padding: 0.1rem 0;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--btn-primary);
+  }
+
+  &__proposal-title {
+    font-size: 1.15rem;
+    line-height: 1.35;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+  }
+
+  &__proposal-description {
+    // Multi-line, no truncation — the description IS the proposal preview.
+    display: block;
+    margin: 0 0 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--text-body, #333);
+    white-space: pre-wrap;
+  }
+
+  &__proposal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0.5rem 0 0.25rem;
+  }
+
+  &__sources-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.65rem;
+    background: transparent;
+    color: var(--text-secondary, #666);
+    border: 1px dashed color-mix(in srgb, var(--text-secondary, #666) 35%, transparent);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
+      color: var(--btn-primary);
+      border-color: var(--btn-primary);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__proposal-read {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.7rem;
+    background: var(--btn-primary);
+    color: var(--btn-primary-text, #fff);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: filter 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      filter: brightness(1.05);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__proposal-admin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.55rem;
+    background: transparent;
+    color: var(--text-secondary, #777);
+    border: 1px solid color-mix(in srgb, var(--text-secondary, #777) 35%, transparent);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
+      color: var(--btn-primary);
+      border-color: var(--btn-primary);
+      outline: none;
+    }
+
+    &--danger:hover:not(:disabled),
+    &--danger:focus-visible:not(:disabled) {
+      background: color-mix(in srgb, var(--reject, #d36868) 8%, transparent);
+      color: var(--reject, #d36868);
+      border-color: var(--reject, #d36868);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+
+    &:disabled {
+      cursor: progress;
+      opacity: 0.55;
+    }
+  }
+
+  // ============================================================================
+  // SOURCE LIST (synthesis only) — always visible, clickable, with consensus
+  // chip per source. The user sees provenance without having to expand the
+  // drawer; the drawer remains for the full member view with eval UI.
+  // ============================================================================
+  &__sources {
+    margin: 0.4rem 0 0.85rem;
+    padding: 0.55rem 0.75rem;
+    background: color-mix(in srgb, var(--btn-primary) 5%, transparent);
+    border: 1px dashed color-mix(in srgb, var(--btn-primary) 30%, transparent);
+    border-radius: 6px;
+  }
+
+  &__sources-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--btn-primary);
+    letter-spacing: 0.01em;
+  }
+
+  &__sources-header-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+  }
+
+  &__sources-reverse {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.18rem 0.5rem;
+    background: transparent;
+    color: var(--text-secondary, #777);
+    border: 1px solid color-mix(in srgb, var(--text-secondary, #777) 35%, transparent);
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background-color 120ms ease,
+      color 120ms ease,
+      border-color 120ms ease;
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: color-mix(in srgb, var(--btn-primary) 8%, transparent);
+      color: var(--btn-primary);
+      border-color: var(--btn-primary);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+
+    &:disabled {
+      cursor: progress;
+      opacity: 0.6;
+    }
+
+    @media (prefers-contrast: more) {
+      border-color: var(--text-body, #333);
+      color: var(--text-body, #333);
+
+      &:hover:not(:disabled),
+      &:focus-visible:not(:disabled) {
+        background: var(--card-default, #fff);
+        border-color: var(--btn-primary);
+        color: var(--btn-primary);
+      }
+    }
+  }
+
+  &__sources-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__sources-item {
+    display: block;
+    margin: 0;
+  }
+
+  &__sources-link {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.3rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--text-body);
+    text-decoration: none;
+    transition: background-color 120ms ease;
+
+    &::before {
+      content: '›';
+      flex-shrink: 0;
+      color: var(--btn-primary);
+      font-weight: 700;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--btn-primary) 10%, transparent);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__sources-title {
+    flex: 1;
+    min-width: 0;
+    @include truncate;
+  }
+
+  &__sources-chip {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.1rem 0.4rem;
+    background: color-mix(in srgb, var(--btn-primary) 15%, transparent);
+    color: var(--btn-primary);
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__sources-more {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.72rem;
+    color: var(--text-secondary, #777);
+    font-style: italic;
   }
 
   // ============================================================================
@@ -444,6 +785,30 @@
 
     &__original {
       border: 2px solid var(--btn-primary);
+    }
+
+    &__pipeline-badge {
+      background: var(--card-default, #fff);
+
+      &--synthesis {
+        border-color: var(--btn-primary);
+        color: var(--btn-primary);
+      }
+
+      &--topic {
+        border-color: var(--text-body);
+        color: var(--text-body);
+      }
+    }
+
+    &__sources {
+      background: var(--card-default, #fff);
+      border: 2px solid var(--btn-primary);
+    }
+
+    &__sources-chip {
+      background: var(--card-default, #fff);
+      border: 1px solid var(--btn-primary);
     }
   }
 

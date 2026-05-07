@@ -1,0 +1,151 @@
+.manual-reorder-modal {
+	position: fixed;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1000;
+}
+
+.manual-reorder-overlay {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.5);
+	cursor: pointer;
+}
+
+.manual-reorder-dialog {
+	position: relative;
+	background: white;
+	border-radius: 8px;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+	max-width: 600px;
+	width: 90%;
+	max-height: 80vh;
+	display: flex;
+	flex-direction: column;
+}
+
+.manual-reorder-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 20px;
+	border-bottom: 1px solid #e0e0e0;
+}
+
+.manual-reorder-header h2 {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 600;
+}
+
+.manual-reorder-close {
+	background: none;
+	border: none;
+	font-size: 1.5rem;
+	cursor: pointer;
+	color: #666;
+	padding: 0;
+	width: 32px;
+	height: 32px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.manual-reorder-close:hover {
+	color: #333;
+}
+
+.manual-reorder-content {
+	flex: 1;
+	overflow-y: auto;
+	padding: 20px;
+}
+
+.manual-reorder-help {
+	font-size: 0.875rem;
+	color: #666;
+	margin-bottom: 16px;
+	padding: 8px;
+	background: #f5f5f5;
+	border-radius: 4px;
+}
+
+.manual-reorder-list {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.manual-reorder-item {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	background: #f9f9f9;
+	border: 2px solid #e0e0e0;
+	border-radius: 6px;
+	cursor: move;
+	transition: all 0.2s ease;
+}
+
+.manual-reorder-item:hover {
+	background: #f0f0f0;
+	border-color: #999;
+}
+
+.manual-reorder-item.dragging {
+	opacity: 0.5;
+	background: #e8e8e8;
+}
+
+.manual-reorder-drag-handle {
+	font-size: 1rem;
+	color: #999;
+	flex-shrink: 0;
+	cursor: grab;
+}
+
+.manual-reorder-drag-handle:active {
+	cursor: grabbing;
+}
+
+.manual-reorder-number {
+	font-weight: 600;
+	color: #666;
+	min-width: 32px;
+	text-align: center;
+	font-size: 0.875rem;
+}
+
+.manual-reorder-text {
+	flex: 1;
+	font-size: 0.875rem;
+	color: #333;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+}
+
+.manual-reorder-footer {
+	display: flex;
+	justify-content: flex-end;
+	gap: 12px;
+	padding: 16px 20px;
+	border-top: 1px solid #e0e0e0;
+	background: #fafafa;
+}
+
+.manual-reorder-footer .btn {
+	padding: 8px 16px;
+	font-size: 0.875rem;
+}
+
+.manual-reorder-footer .btn:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

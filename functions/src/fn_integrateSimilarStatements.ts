@@ -8,6 +8,7 @@ import {
 	StatementWithEvaluation,
 } from './services/integration-ai-service';
 import { performIntegration } from './integrate/performIntegration';
+import { reverseIntegration } from './integrate/reverseIntegration';
 import { ALLOWED_ORIGINS } from './config/cors';
 
 /**
@@ -200,6 +201,87 @@ export const executeIntegration = onCall<ExecuteIntegrationRequest>(
 		} catch (error) {
 			if (error instanceof HttpsError) throw error;
 			const message = error instanceof Error ? error.message : 'Integration failed';
+			throw new HttpsError('internal', message);
+		}
+	},
+);
+
+interface ReverseIntegrationRequest {
+	clusterStatementId: string;
+}
+
+interface ReverseIntegrationResponse {
+	success: boolean;
+	clusterStatementId: string;
+	restoredOriginalIds: string[];
+	deletedEvaluationsCount: number;
+}
+
+/**
+ * Reverses an integration / synthesis. Admin only. Restores originals,
+ * removes migrated evaluations on the cluster, and hides the cluster.
+ * The cluster doc is preserved for audit (`reversedAt`, `reversedBy`).
+ */
+export const reverseIntegrationCallable = onCall<ReverseIntegrationRequest>(
+	{
+		timeoutSeconds: 120,
+		memory: '512MiB',
+		region: functionConfig.region,
+		cors: [...ALLOWED_ORIGINS],
+	},
+	async (request): Promise<ReverseIntegrationResponse> => {
+		const { clusterStatementId } = request.data;
+		const userId = request.auth?.uid;
+
+		if (!userId) {
+			throw new HttpsError('unauthenticated', 'User must be authenticated');
+		}
+		if (!clusterStatementId) {
+			throw new HttpsError('invalid-argument', 'clusterStatementId is required');
+		}
+
+		const db = getFirestore();
+		const clusterDoc = await db.collection(Collections.statements).doc(clusterStatementId).get();
+		if (!clusterDoc.exists) {
+			throw new HttpsError('not-found', 'Cluster not found');
+		}
+		const cluster = clusterDoc.data() as Statement;
+		if (cluster.isCluster !== true) {
+			throw new HttpsError('failed-precondition', 'Statement is not a cluster');
+		}
+
+		// Authorize against the top-level deliberation, mirroring executeIntegration.
+		const topParentId = cluster.topParentId || cluster.parentId;
+		if (!topParentId) {
+			throw new HttpsError('failed-precondition', 'Cluster has no parent context');
+		}
+		const membersSnapshot = await db
+			.collection(Collections.statementsSubscribe)
+			.where('statementId', '==', topParentId)
+			.where('userId', '==', userId)
+			.where('role', 'in', [Role.admin, 'creator', 'admin'])
+			.limit(1)
+			.get();
+		if (membersSnapshot.empty) {
+			throw new HttpsError('permission-denied', 'Only admins can reverse a synthesis');
+		}
+
+		try {
+			const result = await reverseIntegration({
+				clusterStatementId,
+				reversedByUserId: userId,
+			});
+			logger.info('reverseIntegrationCallable completed', result);
+
+			return {
+				success: true,
+				clusterStatementId: result.clusterStatementId,
+				restoredOriginalIds: result.restoredOriginalIds,
+				deletedEvaluationsCount: result.deletedEvaluationsCount,
+			};
+		} catch (error) {
+			if (error instanceof HttpsError) throw error;
+			const message = error instanceof Error ? error.message : 'Reverse synthesis failed';
 			throw new HttpsError('internal', message);
 		}
 	},

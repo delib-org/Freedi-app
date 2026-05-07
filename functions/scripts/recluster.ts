@@ -40,6 +40,12 @@ if (!getApps().length) {
 	if (serviceAccount) {
 		initializeApp({ credential: cert(serviceAccount) });
 		console.info('Initialized Firebase Admin');
+	} else if (process.env.FIRESTORE_EMULATOR_HOST) {
+		// Emulator mode — admin SDK auto-uses the emulator from FIRESTORE_EMULATOR_HOST,
+		// no real credentials needed.
+		const projectId = process.env.GCLOUD_PROJECT ?? process.env.GOOGLE_CLOUD_PROJECT ?? 'freedi-test';
+		initializeApp({ projectId });
+		console.info(`Initialized Firebase Admin against emulator (project: ${projectId}).`);
 	} else {
 		// Allow --from-file mode without service account (purely offline).
 		const args = process.argv.join(' ');
@@ -48,7 +54,7 @@ if (!getApps().length) {
 			initializeApp({ projectId: 'offline-mode-no-firestore' });
 		} else {
 			console.error(
-				'No service account key found. Set GOOGLE_APPLICATION_CREDENTIALS or place serviceAccountKey.json next to this script.',
+				'No service account key found. Set GOOGLE_APPLICATION_CREDENTIALS, place serviceAccountKey.json next to this script, or set FIRESTORE_EMULATOR_HOST for emulator mode.',
 			);
 			process.exit(1);
 		}

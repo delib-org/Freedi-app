@@ -26,11 +26,13 @@ import {
 	TestSheetAccessResult,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
+import { ManualReorder } from '@/components/ManualReorder';
 
 let isOpen = false;
 let escListenerAttached = false;
 let resizeListenerAttached = false;
 let sliderWriteTimer: number | null = null;
+let showManualReorder = false;
 
 const DEFAULT_THRESHOLD = 0.5;
 const SLIDER_DEBOUNCE_MS = 300;
@@ -1198,6 +1200,27 @@ export const FacilitatorPanel: m.Component = {
 					renderLanguageRow(question, main),
 					renderThemeSegmented(question, main),
 					renderSortSegmented(question),
+					hasQuestion
+						? m('.facilitator-panel__row', [
+								m('.facilitator-panel__row-main', [
+									m(
+										'button.btn.btn--primary',
+										{
+											type: 'button',
+											onclick: () => {
+												showManualReorder = true;
+												m.redraw();
+											},
+										},
+										[
+											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🔄'),
+											m('span.facilitator-panel__action-label', t('facilitator.manual_sort') || 'Reorder'),
+										],
+									),
+								]),
+								m('.facilitator-panel__row-help', t('facilitator.manual_sort_help') || 'Drag to manually arrange solutions'),
+							])
+						: null,
 					renderToggle({
 						icon: '🗳️',
 						label: t('facilitator.toggle.showEvaluation'),
@@ -1296,6 +1319,15 @@ export const FacilitatorPanel: m.Component = {
 					}),
 				],
 			),
+			showManualReorder && hasQuestion
+				? m(ManualReorder, {
+						questionId: question!.statementId,
+						onClose: () => {
+							showManualReorder = false;
+							m.redraw();
+						},
+					})
+				: null,
 		]);
 	},
 };

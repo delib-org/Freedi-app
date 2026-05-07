@@ -275,9 +275,13 @@ export function getVisibleOptions(): Statement[] {
 	// surface stays in sync. The Join facilitator panel exposes four modes —
 	// consensus (accepted), average evaluation, random, and newest — and any
 	// other stale value falls through to the consensus default.
+	// Manual sort: when admin enables manual ordering, read `manualOptionOrder`
+	// (array of option IDs) and sort by that order instead.
 	const sortType = question?.statementSettings?.defaultSortType;
 	const randomSeed = question?.statementSettings?.randomSortSeed ?? 0;
-	const sortFn = getSortFn(sortType, randomSeed);
+	const manualOrder = (question?.statementSettings as any)?.manualOptionOrder as string[] | undefined;
+	const isManualSort = manualOrder && manualOrder.length > 0;
+
 	let opts = allOptions
 		// organizer suggestions render in their own section above/below the regular list
 		.filter((o) => o.creatorRole !== Role.admin)
@@ -285,8 +289,20 @@ export function getVisibleOptions(): Statement[] {
 		.filter((o) => o.hide !== true)
 		.filter((o) => o.joinStatus !== 'failed')
 		// buffer: hide options the user hasn't acknowledged yet (pending pill)
-		.filter((o) => !bufferPendingIds.has(o.statementId))
-		.sort(sortFn);
+		.filter((o) => !bufferPendingIds.has(o.statementId));
+
+	// Apply sort: manual order takes precedence, otherwise use the sort function
+	if (isManualSort) {
+		const manualOrderMap = new Map(manualOrder.map((id, idx) => [id, idx]));
+		opts = opts.sort((a, b) => {
+			const aIdx = manualOrderMap.get(a.statementId) ?? Infinity;
+			const bIdx = manualOrderMap.get(b.statementId) ?? Infinity;
+			return aIdx - bIdx;
+		});
+	} else {
+		const sortFn = getSortFn(sortType, randomSeed);
+		opts = opts.sort(sortFn);
+	}
 
 	// Condensation: in "clusters-only" mode for the join surface, hide any
 	// original that is represented by a cluster (identified via
@@ -434,13 +450,32 @@ export async function setEvaluationEnabled(questionId: string, value: boolean): 
  *  computes the same shuffle, and pressing Random again gives a new order. */
 export async function setSortType(questionId: string, value: SortType): Promise<void> {
 	const ref = doc(db, Collections.statements, questionId);
-	const patch: { statementSettings: { defaultSortType: SortType; randomSortSeed?: number } } = {
+	const patch: { statementSettings: { defaultSortType: SortType; randomSortSeed?: number; manualOptionOrder?: string[] } } = {
 		statementSettings: { defaultSortType: value },
 	};
 	if (value === SortType.random) {
 		patch.statementSettings.randomSortSeed = Date.now();
 	}
+	// Clear manual order when switching away from manual mode
+	if (value !== SortType.random && (question?.statementSettings as any)?.manualOptionOrder) {
+		(patch.statementSettings as any).manualOptionOrder = null;
+	}
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Admin manual reordering: save the manually ordered list of option IDs.
+ *  Participants will see options sorted in this exact order. Only admins can
+ *  call this function. */
+export async function setManualOptionOrder(questionId: string, optionIds: string[]): Promise<void> {
+	const ref = doc(db, Collections.statements, questionId);
+	await setDoc(
+		ref,
+		{
+			statementSettings: { manualOptionOrder: optionIds },
+			lastUpdate: Date.now(),
+		},
+		{ merge: true },
+	);
 }
 
 /** Deterministic 32-bit hash of a string — used to derive a stable per-option

@@ -482,6 +482,29 @@ export {
   isClusterAggregationValid,
 } from "./models/framing/framingModel";
 
+// Topic-Grouped Results Export
+export type {
+  AgreementShape,
+  AgreementHistogram,
+  SolutionEvaluationStats,
+  SynthesisProvenance,
+  RegenerationStatus,
+  SynthesizedSolutionEntry,
+  StandaloneSolutionEntry,
+  SolutionEntry,
+  TopicAgreement,
+  TopicBlock,
+  CoalitionEntry,
+  QuestionAgreement,
+  ExportThresholds,
+  ExportSummary,
+  FilteredOutBlock,
+  ResultsExportMeta,
+  ResultsExport,
+} from "./models/results-export/ResultsExport";
+
+export { RESULTS_EXPORT_SCHEMA_VERSION } from "./models/results-export/ResultsExport";
+
 // Topic-cluster pipeline cache models
 export type {
   TaxonomyCategory,

@@ -24,7 +24,22 @@ export interface SynthesisPreviewGroup {
 	memberPreviews: Array<{ id: string; statement: string }>;
 	suggestedTitle: string;
 	suggestedDescription: string;
+	/**
+	 * Multi-paragraph plan returned by the synthesis-proposal LLM. When
+	 * provided, the execute call writes these as paragraph child Statements
+	 * under the new cluster.
+	 */
+	suggestedParagraphs?: string[];
 	reasons: string[];
+	/**
+	 * Set when the synthesis-proposal LLM refused to merge this group due
+	 * to directional conflict (e.g. raise-X vs lower-X). The admin UI
+	 * surfaces this as "can't synthesize as one — split into N?" rather
+	 * than producing a muddy middle.
+	 */
+	cannotSynthesize?: boolean;
+	splitReason?: string;
+	splitProposal?: string[][];
 }
 
 export type SynthesisPreviewStatus = 'ready' | 'needs-embeddings' | 'no-candidates';
@@ -51,6 +66,8 @@ interface SynthesisExecuteGroup {
 	memberIds: string[];
 	mergedTitle: string;
 	mergedDescription: string;
+	/** Optional rich body — paragraph child Statements per the project's standing rule. */
+	paragraphs?: string[];
 }
 
 interface SynthesisExecuteRequest {
