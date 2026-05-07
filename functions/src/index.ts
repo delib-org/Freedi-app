@@ -209,6 +209,12 @@ import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
 import { createOrganizerSuggestion } from './engagement/joinForm/fn_createOrganizerSuggestion';
 import { resolveJoinIntents } from './engagement/joinForm/fn_resolveJoinIntents';
 
+// Civil Activity Hub — Join Delegate (per-question solution-editing delegation)
+import { fn_createJoinDelegateInvite } from './engagement/joinDelegate/fn_createJoinDelegateInvite';
+import { fn_acceptJoinDelegateInvite } from './engagement/joinDelegate/fn_acceptJoinDelegateInvite';
+import { fn_revokeJoinDelegate } from './engagement/joinDelegate/fn_revokeJoinDelegate';
+import { fn_onJoinDelegateInvitationCreated } from './engagement/joinDelegate/fn_onJoinDelegateInvitationCreated';
+
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
 import {
@@ -864,6 +870,10 @@ exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 exports.testSheetAccess = testSheetAccess;
 exports.createOrganizerSuggestion = createOrganizerSuggestion;
 exports.resolveJoinIntents = resolveJoinIntents;
+exports.fn_createJoinDelegateInvite = fn_createJoinDelegateInvite;
+exports.fn_acceptJoinDelegateInvite = fn_acceptJoinDelegateInvite;
+exports.fn_revokeJoinDelegate = fn_revokeJoinDelegate;
+exports.fn_onJoinDelegateInvitationCreated = fn_onJoinDelegateInvitationCreated;
 
 // --------------------------
 // SCHEDULED FUNCTIONS

@@ -8,6 +8,7 @@ import { Chat } from '@/views/Chat';
 import { MainHub } from '@/views/MainHub';
 import { Login } from '@/views/Login';
 import { Main } from '@/views/Main';
+import { Invite } from '@/views/Invite';
 
 initAuth();
 initI18n();
@@ -43,6 +44,7 @@ if (root) {
 	m.route(root, '/', {
 		'/': requireAuth(Main),
 		'/login': Login,
+		'/invite': Invite,
 		'/q/:qid': Solutions,
 		'/q/:qid/s/:sid': Chat,
 		// Facilitated routes — entry via a main (top-parent) statement. Solutions

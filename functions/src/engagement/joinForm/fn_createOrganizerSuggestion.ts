@@ -3,11 +3,13 @@ import { logger } from 'firebase-functions/v1';
 import { db } from '../../db';
 import {
 	Collections,
+	JoinDelegate,
 	Role,
 	Statement,
 	StatementType,
 	createStatementObject,
 	functionConfig,
+	getJoinDelegateId,
 } from '@freedi/shared-types';
 
 interface Request {
@@ -55,7 +57,8 @@ export const createOrganizerSuggestion = onCall(
 		}
 		const question = qSnap.data() as Statement;
 
-		// Authorize: creator OR admin/creator subscription.
+		// Authorize: creator OR admin/creator subscription OR a delegate with
+		// `canManageOrganizerSolutions === true` for this question.
 		let authorized = question.creatorId === uid;
 		if (!authorized) {
 			const subId = `${uid}--${questionId}`;
@@ -63,6 +66,16 @@ export const createOrganizerSuggestion = onCall(
 			if (subSnap.exists) {
 				const role = subSnap.data()?.role;
 				authorized = role === Role.admin || role === Role.creator;
+			}
+		}
+		if (!authorized) {
+			const delegateSnap = await db
+				.collection(Collections.joinDelegates)
+				.doc(getJoinDelegateId(questionId, uid))
+				.get();
+			if (delegateSnap.exists) {
+				const delegate = delegateSnap.data() as JoinDelegate;
+				authorized = !!delegate.permissions?.canManageOrganizerSolutions;
 			}
 		}
 		if (!authorized) {

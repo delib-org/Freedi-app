@@ -21,6 +21,8 @@ import { applyStatementLanguage, isLanguageForced, t } from './i18n';
 import {
 	Access,
 	Collections,
+	JoinDelegate,
+	JoinDelegateInvitation,
 	Statement,
 	StatementType,
 	Creator,
@@ -29,8 +31,16 @@ import {
 	ThemeStyle,
 	createStatementObject,
 	CutoffBy,
+	getJoinDelegateId,
 } from '@freedi/shared-types';
-import { checkAdminStatus, isAdmin } from './admin';
+import {
+	canEditOption,
+	canEditOrganizerOptions,
+	canEditParticipantOptions,
+	checkAdminStatus,
+	isAdmin,
+	setCurrentDelegate,
+} from './admin';
 import {
 	mapMainAppPathToJoinTarget,
 	joinTargetToRoute,
@@ -42,6 +52,22 @@ let question: Statement | null = null;
 let allOptions: Statement[] = [];
 let messages: Statement[] = [];
 let chatUnsubscribe: Unsubscribe | null = null;
+
+// --- Per-question delegate state ---
+//
+// Two listeners cooperate:
+//   1. `myDelegateUnsub` — watches `joinDelegates/{qid--uid}` so a freshly
+//      accepted invite (or a revocation) takes effect without a refresh.
+//      Drives `setCurrentDelegate` in admin.ts.
+//   2. `delegatesUnsub` / `delegateInvitationsUnsub` — admin-only listeners
+//      that populate the DelegatesPanel lists. Mounted lazily when the panel
+//      opens; torn down on close or question swap.
+let delegatesForQuestion: JoinDelegate[] = [];
+let delegateInvitationsForQuestion: JoinDelegateInvitation[] = [];
+let myDelegateUnsub: Unsubscribe | null = null;
+let delegatesUnsub: Unsubscribe | null = null;
+let delegateInvitationsUnsub: Unsubscribe | null = null;
+
 let messageCounts: Map<string, number> = new Map();
 let messageLatest: Map<string, number> = new Map();
 let messagesByOption: Map<string, number[]> = new Map();
@@ -279,7 +305,9 @@ export function getVisibleOptions(): Statement[] {
 	// (array of option IDs) and sort by that order instead.
 	const sortType = question?.statementSettings?.defaultSortType;
 	const randomSeed = question?.statementSettings?.randomSortSeed ?? 0;
-	const manualOrder = (question?.statementSettings as any)?.manualOptionOrder as string[] | undefined;
+	const manualOrder = (question?.statementSettings as any)?.manualOptionOrder as
+		| string[]
+		| undefined;
 	const isManualSort = manualOrder && manualOrder.length > 0;
 
 	let opts = allOptions
@@ -297,6 +325,7 @@ export function getVisibleOptions(): Statement[] {
 		opts = opts.sort((a, b) => {
 			const aIdx = manualOrderMap.get(a.statementId) ?? Infinity;
 			const bIdx = manualOrderMap.get(b.statementId) ?? Infinity;
+
 			return aIdx - bIdx;
 		});
 	} else {
@@ -394,17 +423,13 @@ export async function setOptionFlag(
 	await setDoc(ref, { [field]: value, lastUpdate: Date.now() }, { merge: true });
 }
 
-/** Permission gate for editing an option's text. Mirrors the firestore.rules
- *  `isCreator()` and parent-admin checks: the original creator can always
- *  edit their own option, and admins of the question (the option's direct
- *  parent — its "top" from the option's perspective in this app) can edit
- *  any option under it. */
+/** Permission gate for editing/deleting an option. The option's creator can
+ *  always edit their own; admins of the question can edit any option; and
+ *  per-question delegates can edit options matching the scope they were
+ *  granted (organizer vs participant solutions). The branch logic lives in
+ *  `canEditOption` so callers don't have to know about the delegate model. */
 export function canEditSuggestion(option: Statement): boolean {
-	const user = getUserState().user;
-	if (!user) return false;
-	if (option.creatorId === user.uid) return true;
-
-	return isAdmin();
+	return canEditOption(option);
 }
 
 /** Update an option's body, writing it as the canonical "title + paragraph
@@ -526,7 +551,13 @@ export async function setEvaluationEnabled(questionId: string, value: boolean): 
  *  computes the same shuffle, and pressing Random again gives a new order. */
 export async function setSortType(questionId: string, value: SortType): Promise<void> {
 	const ref = doc(db, Collections.statements, questionId);
-	const patch: { statementSettings: { defaultSortType: SortType; randomSortSeed?: number; manualOptionOrder?: string[] } } = {
+	const patch: {
+		statementSettings: {
+			defaultSortType: SortType;
+			randomSortSeed?: number;
+			manualOptionOrder?: string[];
+		};
+	} = {
 		statementSettings: { defaultSortType: value },
 	};
 	if (value === SortType.random) {
@@ -715,12 +746,13 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 	const trimmed = text.trim();
 	if (!trimmed) return;
 
-	// Default: admins post as organizer, participants post as themselves.
-	const useOrganizerPath = asOrganizer ?? isAdmin();
+	// Default: anyone with organizer-scope rights (admin or delegate with the
+	// organizer toggle) posts as organizer; everyone else posts as themselves.
+	const useOrganizerPath = asOrganizer ?? canEditOrganizerOptions();
 
 	if (useOrganizerPath) {
-		if (!isAdmin()) {
-			throw new Error('Only admins can post organizer suggestions');
+		if (!canEditOrganizerOptions()) {
+			throw new Error('Only admins or organizer-scope delegates can post organizer suggestions');
 		}
 		const call = httpsCallable<
 			{ questionId: string; text: string; displayName?: string },
@@ -736,9 +768,13 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 	}
 
 	// Participant path: gate on the admin-controlled toggle so a stale UI
-	// can't push writes after the admin closes additions. Admins are exempt —
-	// they own the toggle and can seed the crowd list at any time.
-	if (!isAdmin() && question.statementSettings?.enableAddEvaluationOption !== true) {
+	// can't push writes after the admin closes additions. Admins and
+	// participant-scope delegates are exempt — they own the question's
+	// solution set and can seed the crowd list at any time.
+	if (
+		!canEditParticipantOptions() &&
+		question.statementSettings?.enableAddEvaluationOption !== true
+	) {
 		throw new Error('Adding options is not enabled for this question');
 	}
 
@@ -877,8 +913,15 @@ export async function loadQuestion(questionId: string): Promise<void> {
 	syncQuestionLanguage();
 
 	// Resolve admin status (creator or subscribed admin) before options render,
-	// so the first paint already knows whether to show admin-only UI.
+	// so the first paint already knows whether to show admin-only UI. The
+	// same call also resolves any delegate record for the current user, so
+	// delegates see edit affordances on the first paint too.
 	await checkAdminStatus(questionId, question.creatorId);
+
+	// Live-watch the user's own delegate record so a freshly accepted invite
+	// (or a revocation) takes effect without a refresh. Tear down any prior
+	// listener so we don't leak across question swaps.
+	subscribeMyDelegate(questionId);
 
 	const optionsQuery = query(
 		collection(db, Collections.statements),
@@ -1634,7 +1677,8 @@ export function getUserCommittedOptions(): Statement[] {
 	return allOptions.filter((option) => {
 		if (option.hide === true) return false;
 		if (option.joinStatus === 'failed') return false;
-		const inJoined = Array.isArray(option.joined) && option.joined.some((c: Creator) => c.uid === uid);
+		const inJoined =
+			Array.isArray(option.joined) && option.joined.some((c: Creator) => c.uid === uid);
 		const inOrgs =
 			Array.isArray(option.organizers) && option.organizers.some((c: Creator) => c.uid === uid);
 
@@ -1714,7 +1758,12 @@ export async function toggleJoining(
 			// agnostic, so the user's commitment on the released option could be
 			// in either `joined` or `organizers` (or both — admins seeded that
 			// way in the past). Strip from whichever lists contain them.
-			if (releaseSnap && releaseSnap.exists() && releaseRef && releaseRef.path !== statementRef.path) {
+			if (
+				releaseSnap &&
+				releaseSnap.exists() &&
+				releaseRef &&
+				releaseRef.path !== statementRef.path
+			) {
 				const releaseData = releaseSnap.data() as Statement;
 				const releaseJoined: Creator[] = Array.isArray(releaseData.joined)
 					? releaseData.joined
@@ -1946,4 +1995,137 @@ async function removeUserFromSheet(questionId: string, userId: string): Promise<
 		console.error('[removeUserFromSheet] Error calling function:', error);
 		throw error;
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Per-question delegate subscriptions + admin actions
+// ---------------------------------------------------------------------------
+
+/** Live-watch the current user's own `joinDelegates/{qid--uid}` doc so a
+ *  freshly accepted invite (or a revocation) takes effect without a refresh.
+ *  Anonymous users skip this — delegates must be Google-signed-in. */
+function subscribeMyDelegate(questionId: string): void {
+	if (myDelegateUnsub) {
+		myDelegateUnsub();
+		myDelegateUnsub = null;
+	}
+
+	const user = getUserState().user;
+	if (!user || user.isAnonymous) return;
+
+	const delegateId = getJoinDelegateId(questionId, user.uid);
+	const ref = doc(db, Collections.joinDelegates, delegateId);
+
+	myDelegateUnsub = onSnapshot(
+		ref,
+		(snap) => {
+			const delegate = snap.exists() ? (snap.data() as JoinDelegate) : null;
+			setCurrentDelegate(delegate, questionId);
+		},
+		() => {
+			/* read may be denied if rules haven't propagated yet; ignore */
+		},
+	);
+}
+
+/** Admin-only: live-watch the full delegate + invitation lists for a
+ *  question. Mounted by DelegatesPanel on open, torn down on close. Multiple
+ *  calls for the same question are harmless — we always tear down prior
+ *  listeners first. */
+export function subscribeQuestionDelegates(questionId: string): void {
+	unsubscribeQuestionDelegates();
+
+	const delegatesQuery = query(
+		collection(db, Collections.joinDelegates),
+		where('questionId', '==', questionId),
+	);
+	delegatesUnsub = onSnapshot(delegatesQuery, (snap) => {
+		delegatesForQuestion = snap.docs
+			.map((d) => d.data() as JoinDelegate)
+			.sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
+		m.redraw();
+	});
+
+	const invitesQuery = query(
+		collection(db, Collections.joinDelegateInvitations),
+		where('questionId', '==', questionId),
+	);
+	delegateInvitationsUnsub = onSnapshot(invitesQuery, (snap) => {
+		delegateInvitationsForQuestion = snap.docs
+			.map((d) => d.data() as JoinDelegateInvitation)
+			.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+		m.redraw();
+	});
+}
+
+export function unsubscribeQuestionDelegates(): void {
+	if (delegatesUnsub) {
+		delegatesUnsub();
+		delegatesUnsub = null;
+	}
+	if (delegateInvitationsUnsub) {
+		delegateInvitationsUnsub();
+		delegateInvitationsUnsub = null;
+	}
+	delegatesForQuestion = [];
+	delegateInvitationsForQuestion = [];
+}
+
+export function getDelegatesForQuestion(): JoinDelegate[] {
+	return delegatesForQuestion;
+}
+
+export function getDelegateInvitationsForQuestion(): JoinDelegateInvitation[] {
+	return delegateInvitationsForQuestion;
+}
+
+interface CreateInviteResult {
+	inviteLink: string;
+	invitationId: string;
+}
+
+/** Create a new delegate invitation. Returns the shareable link the admin
+ *  can copy to clipboard. Email is sent server-side by a Firestore trigger.
+ *  Caller is responsible for surfacing the result (success toast / error). */
+export async function createJoinDelegateInvite(args: {
+	questionId: string;
+	email: string;
+	canManageOrganizer: boolean;
+	canManageParticipant: boolean;
+}): Promise<CreateInviteResult> {
+	const call = httpsCallable<typeof args, CreateInviteResult>(
+		functions,
+		'fn_createJoinDelegateInvite',
+	);
+	const result = await call(args);
+
+	return result.data;
+}
+
+/** Revoke a pending invitation (mode 1) or remove an active delegate
+ *  (mode 2). Both modes idempotent — calling twice is a no-op. */
+export async function revokeJoinDelegate(
+	args: { invitationId: string } | { questionId: string; userId: string },
+): Promise<void> {
+	const call = httpsCallable<typeof args, { ok: true }>(functions, 'fn_revokeJoinDelegate');
+	await call(args);
+}
+
+/** Accept a delegate invitation by token. Used only by the AcceptInvite
+ *  view; surfaces the same callable in a typed wrapper so the view doesn't
+ *  reach into firebase.ts directly. */
+export async function acceptJoinDelegateInvite(token: string): Promise<{
+	questionId: string;
+	permissions: { canManageOrganizerSolutions: boolean; canManageParticipantSolutions: boolean };
+}> {
+	const call = httpsCallable<
+		{ token: string },
+		{
+			questionId: string;
+			permissions: { canManageOrganizerSolutions: boolean; canManageParticipantSolutions: boolean };
+		}
+	>(functions, 'fn_acceptJoinDelegateInvite');
+	const result = await call({ token });
+
+	return result.data;
 }

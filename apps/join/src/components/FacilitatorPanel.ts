@@ -24,9 +24,17 @@ import {
 	getActiveLanguageScope,
 	testSheetAccess,
 	TestSheetAccessResult,
+	getDelegatesForQuestion,
+	getDelegateInvitationsForQuestion,
+	subscribeQuestionDelegates,
+	unsubscribeQuestionDelegates,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder } from '@/components/ManualReorder';
+import { DelegateInviteForm } from '@/components/DelegateInviteForm';
+import { DelegateInviteList } from '@/components/DelegateInviteList';
+import { DelegateActiveList } from '@/components/DelegateActiveList';
+import { JoinDelegateInvitationStatus } from '@freedi/shared-types';
 
 let isOpen = false;
 let escListenerAttached = false;
@@ -155,6 +163,11 @@ function toggleOpen(): void {
 function close(): void {
 	if (!isOpen) return;
 	isOpen = false;
+	// Reset accordion + tear down any delegate listeners so reopening the
+	// panel doesn't blink stale state (and so we stop paying for the snapshot
+	// reads while the panel is dismissed).
+	delegatesEditorOpen = false;
+	unsubscribeQuestionDelegates();
 	m.redraw();
 }
 
@@ -316,8 +329,10 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 	const isManual = isManualSort(question);
 	// Treat any non-Join sort value (e.g. legacy `mostUpdated`) as the consensus
 	// default so a stale field doesn't leave every segment looking inactive.
-	const supported = SORT_OPTIONS.some((o) => o.value === current || (o.value === 'manual' && isManual));
-	const active: SortType | string = isManual ? 'manual' : (supported ? current : SortType.accepted);
+	const supported = SORT_OPTIONS.some(
+		(o) => o.value === current || (o.value === 'manual' && isManual),
+	);
+	const active: SortType | string = isManual ? 'manual' : supported ? current : SortType.accepted;
 	const disabled = !question;
 
 	return m('.facilitator-panel__row', [
@@ -709,6 +724,11 @@ function renderToggle(opts: {
 // form has something useful from the first paint — facilitators rarely want to
 // configure a blank list before they can hand the form to participants.
 //
+// `delegatesEditorOpen` mirrors the join-form accordion: false on first open,
+// users explicitly expand to manage delegates. Reset whenever the panel
+// itself is closed so re-opening the panel doesn't re-show the editor.
+let delegatesEditorOpen = false;
+
 // `joinFormEditorOpen` keeps the field/destination editor collapsed by default
 // even when the form is enabled, so the panel doesn't grow into a wall of
 // inputs every time the toggle flips on. Click the chevron row to reveal.
@@ -854,6 +874,84 @@ async function removeJoinFormField(question: Statement, index: number): Promise<
 	await persistJoinForm(question, next);
 }
 
+/** Per-question delegate management. Only real admins can issue invites,
+ *  so the section is hidden behind `isAdmin()`. The list listeners are
+ *  mounted lazily on first expand (and torn down on collapse / panel close
+ *  via `unsubscribeQuestionDelegates`) so the snapshot reads cost nothing
+ *  for admins who never open it. */
+function renderDelegatesSection(question: Statement | null): m.Vnode | null {
+	if (!question) return null;
+	if (!isAdmin()) return null;
+
+	const questionId = question.statementId;
+	const now = Date.now();
+	const activeCount = getDelegatesForQuestion().length;
+	const pendingCount = getDelegateInvitationsForQuestion().filter(
+		(inv) => inv.status === JoinDelegateInvitationStatus.pending && inv.expiresAt >= now,
+	).length;
+	const meta = t('delegates.section.meta', {
+		active: activeCount,
+		pending: pendingCount,
+	});
+
+	const headerRow = m('.facilitator-panel__row', [
+		m('.facilitator-panel__row-main', [
+			m('span.facilitator-panel__row-label', [
+				m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, '🛡'),
+				t('delegates.section.label'),
+			]),
+			m('.facilitator-panel__row-help', t('delegates.section.help')),
+		]),
+		m('span.facilitator-panel__joinform-accordion-meta', meta),
+	]);
+
+	const accordionToggle = m(
+		'button.facilitator-panel__joinform-accordion',
+		{
+			type: 'button',
+			'aria-expanded': delegatesEditorOpen ? 'true' : 'false',
+			'aria-controls': `delegates-editor-${questionId}`,
+			'aria-label': delegatesEditorOpen
+				? t('delegates.accordion.collapse')
+				: t('delegates.accordion.expand'),
+			onclick: () => {
+				delegatesEditorOpen = !delegatesEditorOpen;
+				if (delegatesEditorOpen) {
+					subscribeQuestionDelegates(questionId);
+				} else {
+					unsubscribeQuestionDelegates();
+				}
+				m.redraw();
+			},
+		},
+		[
+			m(
+				`span.facilitator-panel__joinform-accordion-chevron${delegatesEditorOpen ? '.facilitator-panel__joinform-accordion-chevron--open' : ''}`,
+				{ 'aria-hidden': 'true' },
+				'▾',
+			),
+			m(
+				'span.facilitator-panel__joinform-accordion-label',
+				delegatesEditorOpen ? t('delegates.accordion.collapse') : t('delegates.accordion.expand'),
+			),
+		],
+	);
+
+	if (!delegatesEditorOpen) {
+		return m('.facilitator-panel__delegates-wrap', [headerRow, accordionToggle]);
+	}
+
+	return m('.facilitator-panel__delegates-wrap', [
+		headerRow,
+		accordionToggle,
+		m('.facilitator-panel__delegates', { id: `delegates-editor-${questionId}` }, [
+			m(DelegateInviteForm, { questionId }),
+			m(DelegateInviteList, { questionId }),
+			m(DelegateActiveList, { questionId }),
+		]),
+	]);
+}
+
 function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 	if (!question) return null;
 	const config = getJoinFormConfig(question);
@@ -975,9 +1073,7 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 							? m(
 									`.facilitator-panel__joinform-check-status${sheetCheckResult.ok ? '.facilitator-panel__joinform-check-status--ok' : '.facilitator-panel__joinform-check-status--fail'}`,
 									[
-										sheetCheckResult.error
-											? m('span', sheetCheckResult.error)
-											: null,
+										sheetCheckResult.error ? m('span', sheetCheckResult.error) : null,
 										sheetCheckResult.serviceAccountEmail
 											? m('.facilitator-panel__joinform-sheet-hint', [
 													m('span', t('facilitator.joinForm.sheetHint')),
@@ -1226,11 +1322,17 @@ export const FacilitatorPanel: m.Component = {
 										},
 										[
 											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '✏️'),
-											m('span.facilitator-panel__action-label', t('facilitator.edit_manual_sort') || 'Edit order'),
+											m(
+												'span.facilitator-panel__action-label',
+												t('facilitator.edit_manual_sort') || 'Edit order',
+											),
 										],
 									),
 								]),
-								m('.facilitator-panel__row-help', t('facilitator.edit_manual_sort_help') || 'Drag to rearrange'),
+								m(
+									'.facilitator-panel__row-help',
+									t('facilitator.edit_manual_sort_help') || 'Drag to rearrange',
+								),
 							])
 						: null,
 					renderToggle({
@@ -1329,6 +1431,7 @@ export const FacilitatorPanel: m.Component = {
 							void flipAllowChat(question!);
 						},
 					}),
+					renderDelegatesSection(question),
 				],
 			),
 			showManualReorder && hasQuestion

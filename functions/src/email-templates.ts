@@ -337,6 +337,71 @@ export function createMassConsensusNotificationEmail({
 	}
 }
 
+/**
+ * Creates an email template for a join-app delegate invitation.
+ * Sent when a question admin generates an invite link for a trusted user.
+ *
+ * The body explains who invited them, the question they're being invited to
+ * help with, and exactly which permissions they're being granted (organizer
+ * solutions, participant solutions, or both). Single CTA points to the
+ * `/invite?token=...` accept page.
+ */
+export function createJoinDelegateInvitationEmail({
+	inviterName,
+	questionTitle,
+	canManageOrganizer,
+	canManageParticipant,
+	inviteLink,
+	expiresAtMs,
+}: {
+	inviterName: string;
+	questionTitle: string;
+	canManageOrganizer: boolean;
+	canManageParticipant: boolean;
+	inviteLink: string;
+	expiresAtMs: number;
+}): string {
+	try {
+		const safeQuestion = questionTitle?.trim() || 'a Freedi question';
+		const safeInviter = inviterName?.trim() || 'A facilitator';
+
+		const permLines: string[] = [];
+		if (canManageOrganizer) {
+			permLines.push('Add, edit and remove <strong>organizer</strong> solutions');
+		}
+		if (canManageParticipant) {
+			permLines.push('Add, edit and remove <strong>participant</strong> solutions');
+		}
+		const permListHtml = permLines.length
+			? `<ul style="margin: 12px 0; padding-left: 20px;">${permLines
+					.map((line) => `<li style="margin: 4px 0;">${line}</li>`)
+					.join('')}</ul>`
+			: '';
+
+		const expiryDate = new Date(expiresAtMs);
+		const expiryStr = expiryDate.toUTCString();
+
+		const message = `
+${safeInviter} invited you to help edit solutions on <strong>"${safeQuestion}"</strong>.<br><br>
+You'll be able to:
+${permListHtml}
+This invite expires on ${expiryStr}. Click the button below and sign in with the same Google account that received this email.
+		`.trim();
+
+		return createBaseEmailTemplate({
+			title: "You've been invited to help on Freedi",
+			message,
+			buttonText: 'Accept invite',
+			buttonUrl: inviteLink,
+			showButtonLink: true,
+		});
+	} catch (error) {
+		logger.error('Error creating join delegate invitation email:', error);
+
+		return `<p>You've been invited to help edit solutions on Freedi.</p><p><a href="${inviteLink}">Accept invite</a></p>`;
+	}
+}
+
 // Helper function exported for use in fn_emailNotifications
 function getBaseUrl(): string {
 	const currentDomain = process.env.DOMAIN || process.env.FUNCTION_TARGET;

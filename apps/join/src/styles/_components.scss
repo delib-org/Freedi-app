@@ -125,6 +125,22 @@
       border-color: var(--indigo-600);
     }
   }
+
+  // Destructive confirmation — used for inline "Yes, revoke" / "Yes, remove"
+  // buttons. Solid danger tone, white text. Only shown after the user has
+  // already opted into a confirm flow, so it doesn't dominate the chrome.
+  &--danger {
+    background: var(--danger);
+    color: var(--text-inverse);
+    border-color: var(--danger);
+    box-shadow: var(--shadow-xs);
+
+    &:hover:not(:disabled) {
+      background: var(--terra-700);
+      border-color: var(--terra-700);
+      box-shadow: var(--shadow-sm);
+    }
+  }
 }
 
 

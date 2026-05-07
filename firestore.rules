@@ -103,7 +103,23 @@ service cloud.firestore {
                get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
       }
 
-      // Combined check: direct admin, creator, parent admin, topParent admin, or system admin
+      // Join-app delegate check. A user listed in `joinDelegates/{qid--uid}`
+      // with the matching permission can edit/delete options under that
+      // question. `qid` here is the option's parent (the question), so this
+      // function should only be called when `resource.data.parentId` is the
+      // question id — i.e. on option/solution Statements, not on questions.
+      function checkJoinDelegate(neededField) {
+        let parentQid = cleanPath(string(resource.data.parentId));
+        let delegatePath = /databases/$(database)/documents/joinDelegates/$(string(request.auth.uid) + '--' + parentQid);
+        return exists(delegatePath) &&
+               get(delegatePath).data.permissions[neededField] == true;
+      }
+
+      // Combined check: direct admin, creator, parent admin, topParent admin,
+      // system admin, or join-app delegate with the matching solution-type
+      // permission. Delegates are only authorized for option-level writes —
+      // join-form submissions and question settings still require an admin/
+      // creator/system-admin path above.
       function isAuthorized() {
         return isAdmin() || isCreator() || isSystemAdmin() ||
                (resource.data.keys().hasAll(['parentId']) &&
@@ -111,7 +127,15 @@ service cloud.firestore {
                 checkParentAdmin()) ||
                (resource.data.keys().hasAll(['topParentId']) &&
                 resource.data.topParentId != null &&
-                checkTopParentAdmin());
+                checkTopParentAdmin()) ||
+               (resource.data.keys().hasAll(['parentId', 'creatorRole']) &&
+                resource.data.parentId != null &&
+                resource.data.creatorRole == 'admin' &&
+                checkJoinDelegate('canManageOrganizerSolutions')) ||
+               (resource.data.keys().hasAll(['parentId']) &&
+                resource.data.parentId != null &&
+                resource.data.get('creatorRole', '') != 'admin' &&
+                checkJoinDelegate('canManageParticipantSolutions'));
       }
 
       function hasProtectedFieldChanges() {
@@ -886,6 +910,53 @@ service cloud.firestore {
     match /adminStats/{docId} {
       allow read: if request.auth != null;
       // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
+
+    // Join-app delegate invitations. Writes are exclusively via the
+    // `fn_createJoinDelegateInvite` / `fn_revokeJoinDelegate` callables
+    // (which use the Admin SDK and bypass these rules). Reads are scoped to
+    // the question admin so the DelegatesPanel can list pending invites for
+    // a question they own.
+    match /joinDelegateInvitations/{invitationId} {
+      function isQuestionAdmin(qid) {
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(qid));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      function isQuestionCreator(qid) {
+        let qPath = /databases/$(database)/documents/statements/$(qid);
+        return exists(qPath) && get(qPath).data.creatorId == request.auth.uid;
+      }
+      allow get: if request.auth != null && (
+        isQuestionAdmin(resource.data.questionId) ||
+        isQuestionCreator(resource.data.questionId)
+      );
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Join-app accepted delegates. The doc subject (the delegate themself)
+    // and the question admin can both read; writes are exclusively via the
+    // accept/revoke callables.
+    match /joinDelegates/{delegateId} {
+      function isQuestionAdmin(qid) {
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(qid));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      function isQuestionCreator(qid) {
+        let qPath = /databases/$(database)/documents/statements/$(qid);
+        return exists(qPath) && get(qPath).data.creatorId == request.auth.uid;
+      }
+      allow get: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        isQuestionAdmin(resource.data.questionId) ||
+        isQuestionCreator(resource.data.questionId)
+      );
+      allow list: if request.auth != null;
       allow write: if false;
     }
 
