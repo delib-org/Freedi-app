@@ -106,23 +106,27 @@ export const ManualReorder: m.Component<ManualReorderProps> = {
 				]),
 				m('.manual-reorder-footer', [
 					m('button.btn.btn--outline', {
+						type: 'button',
 						onclick: onClose,
-						disabled: isSaving,
+						...(isSaving ? { disabled: true } : {}),
 					}, t('cancel') || 'Cancel'),
 					m('button.btn.btn--primary', {
-						onclick: async () => {
+						type: 'button',
+						onclick: () => {
+							if (isSaving) return;
 							isSaving = true;
 							m.redraw();
-							try {
-								await setManualOptionOrder(questionId, reorderedIds);
-								onClose();
-							} catch (error) {
-								console.error('Failed to save manual order:', error);
-								isSaving = false;
-								m.redraw();
-							}
+							setManualOptionOrder(questionId, reorderedIds)
+								.then(() => {
+									onClose();
+								})
+								.catch((error) => {
+									console.error('Failed to save manual order:', error);
+									isSaving = false;
+									m.redraw();
+								});
 						},
-						disabled: isSaving,
+						...(isSaving ? { disabled: true } : {}),
 					}, isSaving ? t('saving') || 'Saving...' : t('save') || 'Save Order'),
 				]),
 			]),
