@@ -203,6 +203,7 @@ import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActio
 
 // Civil Activity Hub — Join Form exports
 import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
+import { fn_removeUserFromSheet } from './engagement/joinForm/fn_removeUserFromSheet';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
 import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
 import { createOrganizerSuggestion } from './engagement/joinForm/fn_createOrganizerSuggestion';
@@ -858,6 +859,7 @@ exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
 exports.fn_syncParagraphChildrenToDescription = fn_syncParagraphChildrenToDescription;
 exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
+exports.fn_removeUserFromSheet = fn_removeUserFromSheet;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 exports.testSheetAccess = testSheetAccess;
 exports.createOrganizerSuggestion = createOrganizerSuggestion;

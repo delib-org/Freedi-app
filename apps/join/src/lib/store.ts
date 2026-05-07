@@ -1591,6 +1591,7 @@ export async function toggleJoining(
 			: null;
 		let leftStatementId: string | undefined;
 		let leftStatementTitle: string | undefined;
+		let userWasUnjoinedFromStatement = false;
 
 		let singleJoinOnly = false;
 		if (role === 'activist' && parentStatementId) {
@@ -1621,6 +1622,7 @@ export async function toggleJoining(
 			if (isUserMember) {
 				const updated = currentMembers.filter((u) => u.uid !== creator.uid);
 				transaction.update(statementRef, { [field]: updated });
+				userWasUnjoinedFromStatement = true;
 
 				return;
 			}
@@ -1684,6 +1686,13 @@ export async function toggleJoining(
 			updatePayload[field] = [...currentMembers, creator];
 			transaction.update(statementRef, updatePayload);
 		});
+
+		// If user un-joined, remove them from the sheet
+		if (userWasUnjoinedFromStatement) {
+			void removeUserFromSheet(parentStatementId, creator.uid).catch((err) => {
+				console.error('[toggleJoining] Failed to remove from sheet:', err);
+			});
+		}
 
 		return { success: true, leftStatementId, leftStatementTitle };
 	} catch (error) {
@@ -1832,4 +1841,22 @@ export async function saveJoinFormSubmission(
 	joinFormSubmitted.add(key);
 	joinFormSubmittedRole.set(key, role);
 	joinFormSubmissionCache.set(key, { role, displayName, values });
+}
+
+/** Remove a user from the Google Sheet when they un-join an option.
+ *  Calls the Cloud Function with the user's ID to find and delete their row. */
+async function removeUserFromSheet(questionId: string, userId: string): Promise<void> {
+	if (!questionId || !userId) return;
+
+	try {
+		const call = httpsCallable<
+			{ questionId: string; userId: string },
+			{ success: boolean; message?: string }
+		>(functions, 'fn_removeUserFromSheet');
+
+		await call({ questionId, userId });
+	} catch (error) {
+		console.error('[removeUserFromSheet] Error:', error);
+		throw error;
+	}
 }
