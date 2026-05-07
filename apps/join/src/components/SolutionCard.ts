@@ -133,10 +133,13 @@ function renderRichBodyContent(option: Statement, bodyLines: string[]): m.Vnode[
 	} else if (bodyLines.length === 0) {
 		const description = getOptionDescription(option);
 		if (description) {
-			// Server-cached preview is stored as "para1 | para2 | ...". Split
-			// it back so each preview paragraph reads as its own block.
+			// The cached preview can use either separator depending on who wrote
+			// it last: the server-side `fn_syncParagraphChildrenToDescription`
+			// joins with "\n\n", while client-side optimistic writes use " | ".
+			// Split on either so each preview paragraph reads as its own block
+			// regardless of who flushed last.
 			const previewParas = description
-				.split(' | ')
+				.split(/\n+|\s\|\s/)
 				.map((s) => s.trim())
 				.filter(Boolean);
 			previewParas.forEach((line, i) =>
@@ -198,7 +201,9 @@ function hasMoreContent(option: Statement, bodyLines: string[]): boolean {
 	if (bodyLines.length > 2) return true;
 	const description = getOptionDescription(option);
 	if (description && description.endsWith('...')) return true;
-	if (description && description.includes(' | ')) return true;
+	// Server-canonical preview uses "\n\n", client-optimistic uses " | "; either
+	// separator means there's more than one paragraph to reveal.
+	if (description && (description.includes('\n') || description.includes(' | '))) return true;
 	const loadedParas = getOptionParagraphs(option.statementId);
 	if (loadedParas && loadedParas.length > 0) return true;
 

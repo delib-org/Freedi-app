@@ -20,9 +20,7 @@ function seedTextFromOption(option: Statement): string {
 	const paras = getOptionParagraphs(option.statementId);
 	if (paras && paras.length > 0) {
 		const title = option.statement ?? '';
-		const body = paras
-			.map((p) => p.statement ?? '')
-			.filter((s) => s.length > 0);
+		const body = paras.map((p) => p.statement ?? '').filter((s) => s.length > 0);
 
 		return [title, ...body].join('\n');
 	}

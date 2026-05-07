@@ -407,11 +407,14 @@ export function canEditSuggestion(option: Statement): boolean {
 	return isAdmin();
 }
 
-/** Update an option's `statement` text. Only the title text is editable —
- *  touching `statementSettings` here would trip the protected-field rule and
- *  require admin auth, and we want creators to be able to edit too. The
- *  Firestore rule allows this write for the option's creator, the question
- *  admins, and the workspace admins. */
+/** Update an option's body, writing it as the canonical "title + paragraph
+ *  children" shape. The first non-empty line of the textarea becomes the
+ *  option's `statement` (title); remaining non-empty lines become child
+ *  Statements with `statementType === paragraph`. Any pre-existing paragraph
+ *  children are deleted so the post-edit state is the single source of truth.
+ *  Inline-shape options (whole multi-line body in `statement`) are migrated
+ *  to canonical on first edit. The Firestore rule allows this write for the
+ *  option's creator, the question admins, and the workspace admins. */
 export async function updateSuggestion(optionId: string, text: string): Promise<void> {
 	const trimmed = text.trim();
 	if (!trimmed) return;
@@ -422,8 +425,81 @@ export async function updateSuggestion(optionId: string, text: string): Promise<
 		throw new Error('Not authorized to edit this option');
 	}
 
-	const ref = doc(db, Collections.statements, optionId);
-	await setDoc(ref, { statement: trimmed, lastUpdate: Date.now() }, { merge: true });
+	const lines = trimmed
+		.split('\n')
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0);
+	if (lines.length === 0) return;
+
+	const title = lines[0];
+	const bodyLines = lines.slice(1);
+
+	// Make sure we know which paragraph children currently exist so the batch
+	// can delete them. `loadOptionParagraphs` is a no-op when already cached.
+	await loadOptionParagraphs(optionId);
+	const existingParas = getOptionParagraphs(optionId) ?? [];
+
+	// Pre-compute the description preview using the server-canonical "\n\n"
+	// separator (see `functions/src/fn_syncParagraphChildrenToDescription.ts`)
+	// so the optimistic client write matches the format the trigger will
+	// eventually overwrite — no UI flicker between save and server flush.
+	const DESCRIPTION_MAX_LENGTH = 200;
+	let description = '';
+	for (const line of bodyLines) {
+		const next = description.length === 0 ? line : description + '\n\n' + line;
+		if (next.length >= DESCRIPTION_MAX_LENGTH) {
+			description =
+				next.length > DESCRIPTION_MAX_LENGTH
+					? next.slice(0, DESCRIPTION_MAX_LENGTH - 3) + '...'
+					: next;
+			break;
+		}
+		description = next;
+	}
+
+	const now = Date.now();
+	const batch = writeBatch(db);
+
+	batch.set(
+		doc(db, Collections.statements, optionId),
+		{ statement: title, description, lastUpdate: now },
+		{ merge: true },
+	);
+
+	for (const para of existingParas) {
+		batch.delete(doc(db, Collections.statements, para.statementId));
+	}
+
+	if (bodyLines.length > 0) {
+		const creator = getCreator();
+		if (creator) {
+			const topParentId = option.topParentId || optionId;
+			for (let i = 0; i < bodyLines.length; i++) {
+				const child = createStatementObject({
+					statement: bodyLines[i],
+					statementType: StatementType.paragraph,
+					parentId: optionId,
+					topParentId,
+					creatorId: creator.uid,
+					creator,
+				});
+				if (!child) continue;
+				// Stagger createdAt by index so paragraphs render in author order
+				// regardless of write fan-out timing — same trick `sendMessage` uses.
+				batch.set(doc(db, Collections.statements, child.statementId), {
+					...child,
+					createdAt: now + i + 1,
+					lastUpdate: now + i + 1,
+				});
+			}
+		}
+	}
+
+	await batch.commit();
+	// Drop the local paragraph cache so SolutionCard re-fetches fresh children
+	// the next time the card expands — otherwise it would render the deleted
+	// children alongside the new ones.
+	optionParagraphsCache.delete(optionId);
 }
 
 /** Facilitator live-control: turn the 5-face evaluation row on/off for all
