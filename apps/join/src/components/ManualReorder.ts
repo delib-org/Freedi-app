@@ -12,12 +12,15 @@ interface ManualReorderProps {
 let options: Statement[] = [];
 let reorderedIds: string[] = [];
 let draggedId: string | null = null;
+let dragOverId: string | null = null;
 let isSaving = false;
 
 export const ManualReorder: m.Component<ManualReorderProps> = {
 	oninit(vnode) {
 		options = getVisibleOptions();
 		reorderedIds = options.map((o) => o.statementId);
+		draggedId = null;
+		dragOverId = null;
 	},
 
 	view({ attrs: { questionId, onClose } }) {
@@ -35,55 +38,76 @@ export const ManualReorder: m.Component<ManualReorderProps> = {
 				]),
 				m('.manual-reorder-content', [
 					m('.manual-reorder-help', t('admin.manual_sort_help') || 'Drag solutions to reorder them'),
-					m('.manual-reorder-list', reorderedIds.map((id, idx) => {
-						const option = options.find((o) => o.statementId === id);
-						if (!option) return null;
+					m('.manual-reorder-list',
+						reorderedIds.map((id, idx) => {
+							const option = options.find((o) => o.statementId === id);
+							if (!option) return null;
 
-						return m(`.manual-reorder-item${draggedId === id ? '.dragging' : ''}`, {
-							key: id,
-							draggable: true,
-							ondragstart: (e: DragEvent) => {
-								draggedId = id;
-								if (e.dataTransfer) {
-									e.dataTransfer.effectAllowed = 'move';
-									e.dataTransfer.setData('text/plain', id);
-								}
-							},
-							ondragend: () => {
-								draggedId = null;
-							},
-							ondragover: (e: DragEvent) => {
-								e.preventDefault();
-								if (e.dataTransfer) {
-									e.dataTransfer.dropEffect = 'move';
-								}
-							},
-							ondrop: (e: DragEvent) => {
-								e.preventDefault();
-								const draggedItemId = e.dataTransfer?.getData('text/plain');
-								if (draggedItemId && draggedItemId !== id) {
-									const draggedIdx = reorderedIds.indexOf(draggedItemId);
-									const targetIdx = reorderedIds.indexOf(id);
-									if (draggedIdx !== -1 && targetIdx !== -1) {
-										const newOrder = [...reorderedIds];
-										newOrder.splice(draggedIdx, 1);
-										newOrder.splice(targetIdx, 0, draggedItemId);
-										reorderedIds = newOrder;
+							const isBeingDragged = draggedId === id;
+							const isDragOver = dragOverId === id;
+
+							return m(
+								`.manual-reorder-item${isBeingDragged ? '.dragging' : ''}${isDragOver ? '.dragover' : ''}`,
+								{
+									key: id,
+									draggable: true,
+									ondragstart: (e: DragEvent) => {
+										draggedId = id;
+										if (e.dataTransfer) {
+											e.dataTransfer.effectAllowed = 'move';
+											e.dataTransfer.setData('text/plain', id);
+										}
+									},
+									ondragend: () => {
+										draggedId = null;
+										dragOverId = null;
 										m.redraw();
-									}
-								}
-								draggedId = null;
-							},
-						}, [
-							m('.manual-reorder-drag-handle', '⋮⋮'),
-							m('.manual-reorder-number', `${idx + 1}`),
-							m('.manual-reorder-text', option.statement),
-						]);
-					})),
+									},
+									ondragover: (e: DragEvent) => {
+										e.preventDefault();
+										if (e.dataTransfer) {
+											e.dataTransfer.dropEffect = 'move';
+										}
+										dragOverId = id;
+										m.redraw();
+									},
+									ondragleave: () => {
+										dragOverId = null;
+										m.redraw();
+									},
+									ondrop: (e: DragEvent) => {
+										e.preventDefault();
+										e.stopPropagation();
+										const draggedItemId = e.dataTransfer?.getData('text/plain');
+										if (draggedItemId && draggedItemId !== id) {
+											const draggedIdx = reorderedIds.indexOf(draggedItemId);
+											const targetIdx = reorderedIds.indexOf(id);
+											if (draggedIdx !== -1 && targetIdx !== -1) {
+												const newOrder = [...reorderedIds];
+												newOrder.splice(draggedIdx, 1);
+												newOrder.splice(targetIdx, 0, draggedItemId);
+												reorderedIds = newOrder;
+											}
+										}
+										draggedId = null;
+										dragOverId = null;
+										m.redraw();
+									},
+								},
+								[
+									m('.manual-reorder-drag-handle', '⋮⋮'),
+									m('.manual-reorder-number', `${idx + 1}`),
+									m('.manual-reorder-text', option.statement),
+									m('.manual-reorder-dropzone'),
+								],
+							);
+						}),
+					),
 				]),
 				m('.manual-reorder-footer', [
 					m('button.btn.btn--outline', {
 						onclick: onClose,
+						disabled: isSaving,
 					}, t('cancel') || 'Cancel'),
 					m('button.btn.btn--primary', {
 						onclick: async () => {

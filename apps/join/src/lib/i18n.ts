@@ -106,8 +106,9 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.sort.newest': 'Newest',
 		'facilitator.sort.help':
 			'Everyone sees suggestions in this order, including participants you bring with Follow me.',
-		'facilitator.manual_sort': 'Reorder',
-		'facilitator.manual_sort_help': 'Drag to manually arrange solutions',
+		'facilitator.sort.manual': 'Hand',
+		'facilitator.edit_manual_sort': 'Edit order',
+		'facilitator.edit_manual_sort_help': 'Drag to rearrange',
 		'admin.manual_sort_title': 'Manually Reorder Solutions',
 		'admin.manual_sort_help': 'Drag solutions to reorder them',
 		'facilitator.toggle.threshold': 'Show only above threshold',

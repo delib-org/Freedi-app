@@ -292,25 +292,32 @@ async function flipShowQR(main: Statement): Promise<void> {
 	});
 }
 
-/** Four-button segmented control for the admin-controlled sort. Writes to the
+/** Five-button segmented control for the admin-controlled sort. Writes to the
  *  question's `defaultSortType` so every subscriber sees the same order on
  *  the next snapshot — the chosen sort travels with "follow me" because both
  *  participants and the admin render from the same field. Random pushes a
  *  fresh seed every press so participants get a new shared shuffle. The
- *  segments display icons only; the label travels via aria-label/title. */
-const SORT_OPTIONS: Array<{ value: SortType; icon: string; labelKey: string }> = [
+ *  segments display icons only; the label travels via aria-label/title.
+ *  Manual sort activates the reorder interface when selected. */
+const SORT_OPTIONS: Array<{ value: SortType | string; icon: string; labelKey: string }> = [
 	{ value: SortType.accepted, icon: '🤝', labelKey: 'facilitator.sort.consensus' },
 	{ value: SortType.averageEvaluation, icon: '📊', labelKey: 'facilitator.sort.average' },
 	{ value: SortType.random, icon: '🎲', labelKey: 'facilitator.sort.random' },
 	{ value: SortType.newest, icon: '✨', labelKey: 'facilitator.sort.newest' },
+	{ value: 'manual', icon: '✋', labelKey: 'facilitator.sort.manual' },
 ];
+
+function isManualSort(question: Statement | null): boolean {
+	return (question?.statementSettings as any)?.manualOptionOrder ? true : false;
+}
 
 function renderSortSegmented(question: Statement | null): m.Vnode {
 	const current = question?.statementSettings?.defaultSortType ?? SortType.accepted;
+	const isManual = isManualSort(question);
 	// Treat any non-Join sort value (e.g. legacy `mostUpdated`) as the consensus
 	// default so a stale field doesn't leave every segment looking inactive.
-	const supported = SORT_OPTIONS.some((o) => o.value === current);
-	const active = supported ? current : SortType.accepted;
+	const supported = SORT_OPTIONS.some((o) => o.value === current || (o.value === 'manual' && isManual));
+	const active: SortType | string = isManual ? 'manual' : (supported ? current : SortType.accepted);
 	const disabled = !question;
 
 	return m('.facilitator-panel__row', [
@@ -339,7 +346,12 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 								? undefined
 								: () => {
 										if (!question) return;
-										void setSortType(question.statementId, opt.value);
+										if (opt.value === 'manual') {
+											showManualReorder = true;
+											m.redraw();
+										} else {
+											void setSortType(question.statementId, opt.value as SortType);
+										}
 									},
 						},
 						m('span.facilitator-panel__segment-icon', { 'aria-hidden': 'true' }, opt.icon),
@@ -1200,11 +1212,11 @@ export const FacilitatorPanel: m.Component = {
 					renderLanguageRow(question, main),
 					renderThemeSegmented(question, main),
 					renderSortSegmented(question),
-					hasQuestion
+					isManualSort(question) && hasQuestion
 						? m('.facilitator-panel__row', [
 								m('.facilitator-panel__row-main', [
 									m(
-										'button.btn.btn--primary',
+										'button.btn.btn--outline.btn--small',
 										{
 											type: 'button',
 											onclick: () => {
@@ -1213,12 +1225,12 @@ export const FacilitatorPanel: m.Component = {
 											},
 										},
 										[
-											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🔄'),
-											m('span.facilitator-panel__action-label', t('facilitator.manual_sort') || 'Reorder'),
+											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '✏️'),
+											m('span.facilitator-panel__action-label', t('facilitator.edit_manual_sort') || 'Edit order'),
 										],
 									),
 								]),
-								m('.facilitator-panel__row-help', t('facilitator.manual_sort_help') || 'Drag to manually arrange solutions'),
+								m('.facilitator-panel__row-help', t('facilitator.edit_manual_sort_help') || 'Drag to rearrange'),
 							])
 						: null,
 					renderToggle({
