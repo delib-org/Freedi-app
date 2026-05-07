@@ -121,6 +121,22 @@ export {
   INVITATION_EXPIRY
 } from "./models/adminInvitation/AdminInvitation";
 
+// Join Delegate models (per-question solution-editing delegation in the join app)
+export type {
+  JoinDelegatePermissions,
+  JoinDelegateInvitation,
+  JoinDelegate,
+} from "./models/joinDelegate";
+
+export {
+  JoinDelegateInvitationStatus,
+  JoinDelegatePermissionsSchema,
+  JoinDelegateInvitationSchema,
+  JoinDelegateSchema,
+  JOIN_DELEGATE_INVITE_EXPIRY_MS,
+  getJoinDelegateId,
+} from "./models/joinDelegate";
+
 // MassConsensus models
 export type {
   MassConsensusMember,

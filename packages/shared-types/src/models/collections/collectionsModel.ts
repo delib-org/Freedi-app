@@ -61,6 +61,8 @@ export enum Collections {
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',
+    joinDelegateInvitations = 'joinDelegateInvitations',
+    joinDelegates = 'joinDelegates',
     framings = 'framings',
     framingRequests = 'framingRequests',
     clusterAggregations = 'clusterAggregations',
