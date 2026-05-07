@@ -1920,19 +1920,30 @@ export async function saveJoinFormSubmission(
 }
 
 /** Remove a user from the Google Sheet when they un-join an option.
- *  Calls the Cloud Function with the user's ID to find and delete their row. */
+ *  Calls the Cloud Function with the user's ID to find and delete their row.
+ *  Surfaces the result via console so failures show up in DevTools. */
 async function removeUserFromSheet(questionId: string, userId: string): Promise<void> {
 	if (!questionId || !userId) return;
 
 	try {
 		const call = httpsCallable<
 			{ questionId: string; userId: string },
-			{ success: boolean; message?: string }
+			{ success: boolean; message?: string; deletedRow?: number }
 		>(functions, 'fn_removeUserFromSheet');
 
-		await call({ questionId, userId });
+		const result = await call({ questionId, userId });
+
+		if (result.data.success) {
+			console.info(
+				'[removeUserFromSheet] OK:',
+				result.data.message,
+				result.data.deletedRow ? `(row ${result.data.deletedRow})` : '',
+			);
+		} else {
+			console.error('[removeUserFromSheet] Failed:', result.data.message);
+		}
 	} catch (error) {
-		console.error('[removeUserFromSheet] Error:', error);
+		console.error('[removeUserFromSheet] Error calling function:', error);
 		throw error;
 	}
 }
