@@ -1,11 +1,19 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
-import { setManualOptionOrder, getVisibleOptions } from '@/lib/store';
+import {
+	setManualOptionOrder,
+	setManualOrganizerOrder,
+	getVisibleOptions,
+	getOrganizerSuggestions,
+} from '@/lib/store';
 import { t } from '@/lib/i18n';
 import '../styles/ManualReorder.css';
 
+export type ManualReorderMode = 'options' | 'organizers';
+
 interface ManualReorderProps {
 	questionId: string;
+	mode?: ManualReorderMode;
 	onClose: () => void;
 }
 
@@ -15,29 +23,63 @@ let draggedId: string | null = null;
 let dragOverId: string | null = null;
 let isSaving = false;
 
+function getOptionsForMode(mode: ManualReorderMode): Statement[] {
+	return mode === 'organizers' ? getOrganizerSuggestions() : getVisibleOptions();
+}
+
+function persistOrder(
+	mode: ManualReorderMode,
+	questionId: string,
+	ids: string[],
+): Promise<void> {
+	return mode === 'organizers'
+		? setManualOrganizerOrder(questionId, ids)
+		: setManualOptionOrder(questionId, ids);
+}
+
+function getTitle(mode: ManualReorderMode): string {
+	if (mode === 'organizers') {
+		return t('admin.manual_sort_title.organizers') || 'Manually Reorder Organizer Suggestions';
+	}
+
+	return t('admin.manual_sort_title') || 'Manually Reorder Solutions';
+}
+
+function getHelpText(mode: ManualReorderMode): string {
+	if (mode === 'organizers') {
+		return (
+			t('admin.manual_sort_help.organizers') ||
+			'Drag organizer suggestions to reorder them'
+		);
+	}
+
+	return t('admin.manual_sort_help') || 'Drag solutions to reorder them';
+}
+
 export const ManualReorder: m.Component<ManualReorderProps> = {
 	oninit(vnode) {
-		options = getVisibleOptions();
+		const mode = vnode.attrs.mode ?? 'options';
+		options = getOptionsForMode(mode);
 		reorderedIds = options.map((o) => o.statementId);
 		draggedId = null;
 		dragOverId = null;
 	},
 
-	view({ attrs: { questionId, onClose } }) {
+	view({ attrs: { questionId, mode = 'options', onClose } }) {
 		return m('.manual-reorder-modal', [
 			m('.manual-reorder-overlay', {
 				onclick: onClose,
 			}),
 			m('.manual-reorder-dialog', [
 				m('.manual-reorder-header', [
-					m('h2', t('admin.manual_sort_title') || 'Manually Reorder Solutions'),
+					m('h2', getTitle(mode)),
 					m('button.manual-reorder-close', {
 						onclick: onClose,
 						'aria-label': t('close') || 'Close',
 					}, '×'),
 				]),
 				m('.manual-reorder-content', [
-					m('.manual-reorder-help', t('admin.manual_sort_help') || 'Drag solutions to reorder them'),
+					m('.manual-reorder-help', getHelpText(mode)),
 					m('.manual-reorder-list',
 						reorderedIds.map((id, idx) => {
 							const option = options.find((o) => o.statementId === id);
@@ -116,7 +158,7 @@ export const ManualReorder: m.Component<ManualReorderProps> = {
 							if (isSaving) return;
 							isSaving = true;
 							m.redraw();
-							setManualOptionOrder(questionId, reorderedIds)
+							persistOrder(mode, questionId, reorderedIds)
 								.then(() => {
 									onClose();
 								})

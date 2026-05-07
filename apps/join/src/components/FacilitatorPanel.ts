@@ -28,9 +28,10 @@ import {
 	getDelegateInvitationsForQuestion,
 	subscribeQuestionDelegates,
 	unsubscribeQuestionDelegates,
+	getOrganizerSuggestions,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
-import { ManualReorder } from '@/components/ManualReorder';
+import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
 import { DelegateInviteForm } from '@/components/DelegateInviteForm';
 import { DelegateInviteList } from '@/components/DelegateInviteList';
 import { DelegateActiveList } from '@/components/DelegateActiveList';
@@ -40,7 +41,10 @@ let isOpen = false;
 let escListenerAttached = false;
 let resizeListenerAttached = false;
 let sliderWriteTimer: number | null = null;
-let showManualReorder = false;
+// `null` means the modal is closed; otherwise the mode tells the modal which
+// list (crowd options vs organizer suggestions) it's editing. Two buttons in
+// the panel set this to either 'options' or 'organizers'.
+let manualReorderMode: ManualReorderMode | null = null;
 
 const DEFAULT_THRESHOLD = 0.5;
 const SLIDER_DEBOUNCE_MS = 300;
@@ -362,7 +366,7 @@ function renderSortSegmented(question: Statement | null): m.Vnode {
 								: () => {
 										if (!question) return;
 										if (opt.value === 'manual') {
-											showManualReorder = true;
+											manualReorderMode = 'options';
 											m.redraw();
 										} else {
 											void setSortType(question.statementId, opt.value as SortType);
@@ -1316,7 +1320,7 @@ export const FacilitatorPanel: m.Component = {
 										{
 											type: 'button',
 											onclick: () => {
-												showManualReorder = true;
+												manualReorderMode = 'options';
 												m.redraw();
 											},
 										},
@@ -1332,6 +1336,41 @@ export const FacilitatorPanel: m.Component = {
 								m(
 									'.facilitator-panel__row-help',
 									t('facilitator.edit_manual_sort_help') || 'Drag to rearrange',
+								),
+							])
+						: null,
+					// Manual order for organizer suggestions. Independent from the
+					// crowd-list sort (which lives on `defaultSortType` /
+					// `manualOptionOrder`); the organizer section reads its own
+					// `manualOrganizerOrder`. Only rendered when there's at least
+					// one organizer suggestion to reorder — otherwise the button
+					// would be a dead-end for admins.
+					hasQuestion && getOrganizerSuggestions().length > 1
+						? m('.facilitator-panel__row', [
+								m('.facilitator-panel__row-main', [
+									m(
+										'button.btn.btn--outline.btn--small',
+										{
+											type: 'button',
+											onclick: () => {
+												manualReorderMode = 'organizers';
+												m.redraw();
+											},
+										},
+										[
+											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🛠'),
+											m(
+												'span.facilitator-panel__action-label',
+												t('facilitator.edit_manual_sort.organizers') ||
+													'Order organizer suggestions',
+											),
+										],
+									),
+								]),
+								m(
+									'.facilitator-panel__row-help',
+									t('facilitator.edit_manual_sort_help.organizers') ||
+										'Drag organizer suggestions to reorder them',
 								),
 							])
 						: null,
@@ -1434,11 +1473,12 @@ export const FacilitatorPanel: m.Component = {
 					renderDelegatesSection(question),
 				],
 			),
-			showManualReorder && hasQuestion
+			manualReorderMode !== null && hasQuestion
 				? m(ManualReorder, {
 						questionId: question!.statementId,
+						mode: manualReorderMode,
 						onClose: () => {
-							showManualReorder = false;
+							manualReorderMode = null;
 							m.redraw();
 						},
 					})

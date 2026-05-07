@@ -404,12 +404,37 @@ export function getVisibleOptions(): Statement[] {
  *  Distinct from the per-option "organizer" role users take via the
  *  activist/organizer join buttons (tracked via `option.organizers[]`).
  *  Admins can also seed the crowd list "as a regular participant" — those
- *  options have no `creatorRole` and appear via `getVisibleOptions()`. */
+ *  options have no `creatorRole` and appear via `getVisibleOptions()`.
+ *
+ *  Manual order: when admin saves a custom order via the FacilitatorPanel,
+ *  `manualOrganizerOrder` (array of organizer-option IDs) is read here and
+ *  applied instead of the default newest-first sort, mirroring how
+ *  `manualOptionOrder` works for the crowd list. Items missing from the
+ *  manual order list fall to the bottom (preserving newest-first among them)
+ *  so freshly added organizer options stay visible until reordered. */
 export function getOrganizerSuggestions(): Statement[] {
-	return allOptions
+	const manualOrder = (question?.statementSettings as any)?.manualOrganizerOrder as
+		| string[]
+		| undefined;
+	const isManualSort = Array.isArray(manualOrder) && manualOrder.length > 0;
+
+	const filtered = allOptions
 		.filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
-		.filter((o) => !bufferPendingIds.has(o.statementId))
-		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+		.filter((o) => !bufferPendingIds.has(o.statementId));
+
+	if (isManualSort) {
+		const manualOrderMap = new Map(manualOrder!.map((id, idx) => [id, idx]));
+
+		return filtered.sort((a, b) => {
+			const aIdx = manualOrderMap.get(a.statementId) ?? Infinity;
+			const bIdx = manualOrderMap.get(b.statementId) ?? Infinity;
+			if (aIdx !== bIdx) return aIdx - bIdx;
+			// Tiebreak by newest-first for items not in the manual order.
+			return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+		});
+	}
+
+	return filtered.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 }
 
 /** Admin curation: set `hide` or `forceShow` on a specific option. Uses
@@ -579,6 +604,26 @@ export async function setManualOptionOrder(questionId: string, optionIds: string
 		ref,
 		{
 			statementSettings: { manualOptionOrder: optionIds },
+			lastUpdate: Date.now(),
+		},
+		{ merge: true },
+	);
+}
+
+/** Admin manual reordering for organizer suggestions. Same shape as
+ *  `setManualOptionOrder` but writes a separate field so the two lists keep
+ *  independent orders. Stored on the question doc so every subscribing
+ *  participant renders the organizer section in the admin's chosen order
+ *  on the next snapshot. */
+export async function setManualOrganizerOrder(
+	questionId: string,
+	optionIds: string[],
+): Promise<void> {
+	const ref = doc(db, Collections.statements, questionId);
+	await setDoc(
+		ref,
+		{
+			statementSettings: { manualOrganizerOrder: optionIds },
 			lastUpdate: Date.now(),
 		},
 		{ merge: true },

@@ -109,8 +109,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.sort.manual': 'Hand',
 		'facilitator.edit_manual_sort': 'Edit order',
 		'facilitator.edit_manual_sort_help': 'Drag to rearrange',
+		'facilitator.edit_manual_sort.organizers': 'Order organizer suggestions',
+		'facilitator.edit_manual_sort_help.organizers':
+			'Drag organizer suggestions to set the order participants see.',
 		'admin.manual_sort_title': 'Manually Reorder Solutions',
 		'admin.manual_sort_help': 'Drag solutions to reorder them',
+		'admin.manual_sort_title.organizers': 'Manually Reorder Organizer Suggestions',
+		'admin.manual_sort_help.organizers': 'Drag organizer suggestions to reorder them',
 		'facilitator.toggle.threshold': 'Show only above threshold',
 		'facilitator.toggle.threshold.help': 'Hide options whose consensus is below the threshold.',
 		'facilitator.toggle.threshold.value': 'Threshold: {{value}}',
