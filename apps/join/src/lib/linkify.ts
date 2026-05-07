@@ -4,7 +4,12 @@ import m from 'mithril';
 // always sentence-trailing rather than part of the URL (`.,;:!?)]}'"`) is
 // trimmed back below so "see https://example.com." doesn't keep the dot.
 const URL_REGEX = /\b((?:https?:\/\/|www\.)[^\s<>"]+)/gi;
-const TRAILING_PUNCT = /[).,;:!?'"\]}>]+$/;
+const TRAILING_PUNCT = /[).,;:!?'"\]}>…]+$/;
+// A run of two or more dots (or a Unicode ellipsis) at the end of a URL match
+// means the cloud function's ~200-char `description` cap chopped the URL
+// mid-string. Linkifying `https://goo...` would point to `https://goo` (after
+// trailing-punct stripping) which 404s — so we emit the raw text instead.
+const TRUNCATION_TAIL = /(?:\.{2,}|…)$/;
 
 interface LinkifyPart {
 	kind: 'text' | 'url';
@@ -19,13 +24,22 @@ function splitIntoParts(text: string): LinkifyPart[] {
 	for (const match of text.matchAll(URL_REGEX)) {
 		const raw = match[0];
 		const start = match.index ?? 0;
-		// Strip trailing punctuation that isn't really part of the URL.
-		const trimmed = raw.replace(TRAILING_PUNCT, '');
-		const tail = raw.slice(trimmed.length);
 
 		if (start > lastIndex) {
 			parts.push({ kind: 'text', value: text.slice(lastIndex, start) });
 		}
+
+		// Truncated URL (e.g. `https://goo...` from a server-capped preview):
+		// preserve the original text, skip linkification.
+		if (TRUNCATION_TAIL.test(raw)) {
+			parts.push({ kind: 'text', value: raw });
+			lastIndex = start + raw.length;
+			continue;
+		}
+
+		// Strip trailing punctuation that isn't really part of the URL.
+		const trimmed = raw.replace(TRAILING_PUNCT, '');
+		const tail = raw.slice(trimmed.length);
 
 		const href = trimmed.startsWith('www.') ? `https://${trimmed}` : trimmed;
 		parts.push({ kind: 'url', value: trimmed, href });

@@ -59,4 +59,25 @@ describe('linkify', () => {
 		expect(mCalls[0].attrs.href).toBe('https://one.com');
 		expect(mCalls[1].attrs.href).toBe('http://two.com');
 	});
+
+	it('does not linkify a URL truncated with "..." (server preview cap)', () => {
+		mCalls.length = 0;
+		const result = linkify('see https://goo... for more');
+		expect(mCalls).toHaveLength(0);
+		expect(result).toEqual(['see ', 'https://goo...', ' for more']);
+	});
+
+	it('does not linkify a URL truncated with a Unicode ellipsis', () => {
+		mCalls.length = 0;
+		const result = linkify('see https://goo… for more');
+		expect(mCalls).toHaveLength(0);
+		expect(result).toEqual(['see ', 'https://goo…', ' for more']);
+	});
+
+	it('still strips a single trailing dot (sentence punctuation, not truncation)', () => {
+		mCalls.length = 0;
+		linkify('see https://example.com.');
+		expect(mCalls).toHaveLength(1);
+		expect(mCalls[0].attrs.href).toBe('https://example.com');
+	});
 });

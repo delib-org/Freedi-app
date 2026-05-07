@@ -125,6 +125,19 @@ describe('formatText', () => {
 		expect(result).toBe('*not\nmatched*');
 		expect(mCalls.find((c) => c.selector === 'strong')).toBeUndefined();
 	});
+
+	it('does not linkify a URL truncated with "..." (server preview cap)', () => {
+		// `description` is capped at ~200 chars by the cloud function and tail
+		// is "..." — the trailing-punct strip would otherwise leave us pointing
+		// at a partial domain that 404s.
+		formatText('see https://goo... for more');
+		expect(mCalls.find((c) => c.selector === 'a.linkified')).toBeUndefined();
+	});
+
+	it('does not linkify a URL truncated with a Unicode ellipsis', () => {
+		formatText('see https://goo… for more');
+		expect(mCalls.find((c) => c.selector === 'a.linkified')).toBeUndefined();
+	});
 });
 
 describe('matchNumberedItem', () => {
