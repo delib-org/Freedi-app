@@ -15,11 +15,14 @@ import m from 'mithril';
 
 const URL_REGEX = /\b((?:https?:\/\/|www\.)[^\s<>"]+)/gi;
 const TRAILING_PUNCT = /[).,;:!?'"\]}>…]+$/;
-// A run of two or more dots (or a Unicode ellipsis) at the end of a URL match
-// means the cloud function's ~200-char `description` cap chopped the URL
-// mid-string. Linkifying `https://goo...` would point to `https://goo` (after
-// trailing-punct stripping) which 404s — so we emit the raw text instead.
-const TRUNCATION_TAIL = /(?:\.{2,}|…)$/;
+// Markers the cloud functions append when a Statement's `description` preview
+// hits its ~200-char cap mid-string. Three different functions write three
+// different tails (`...`, `…[truncated]`, `...[truncated]`), and any of them
+// can land mid-URL. Two consecutive dots in a matched URL are also treated as
+// truncation — legitimate URLs don't contain `..` after the protocol slash,
+// so the only realistic source is a chop. When detected we emit the matched
+// run as plain text rather than a broken anchor pointing at `https://goo`.
+const TRUNCATION_MARKER = /\.{2,}|…|\[truncated/i;
 
 // One pattern matches any of the three WhatsApp markers. Each alternative has
 // two forms: a multi-character form (`*` + non-space + interior + non-space +
@@ -30,7 +33,7 @@ const INLINE_PATTERN =
 	/(\*[^\s*][^*\n]*?[^\s*]\*|\*[^\s*]\*|_[^\s_][^_\n]*?[^\s_]_|_[^\s_]_|~[^\s~][^~\n]*?[^\s~]~|~[^\s~]~)/g;
 
 interface UrlToken {
-	kind: 'text' | 'url';
+	kind: 'text' | 'url' | 'truncated-url';
 	value: string;
 	href?: string;
 }
@@ -47,10 +50,13 @@ function tokenizeUrls(text: string): UrlToken[] {
 			tokens.push({ kind: 'text', value: text.slice(lastIndex, start) });
 		}
 
-		// Truncated URL (e.g. `https://goo...` from a server-capped preview):
-		// preserve the original text, skip linkification.
-		if (TRUNCATION_TAIL.test(raw)) {
-			tokens.push({ kind: 'text', value: raw });
+		// Truncated URL (e.g. `https://goo...` or `https://goo…[truncated]`
+		// from a server-capped preview). Emit a distinct token kind so the
+		// caller can decide: render as plain text (default, safe), or attach
+		// a deferred-resolve handler that loads the full content and opens
+		// the real URL.
+		if (TRUNCATION_MARKER.test(raw)) {
+			tokens.push({ kind: 'truncated-url', value: raw });
 			lastIndex = start + raw.length;
 			continue;
 		}
@@ -125,13 +131,40 @@ function makeAnchor(href: string, value: string): m.Vnode {
 	);
 }
 
+function makeTruncatedAnchor(
+	value: string,
+	handler: (truncatedText: string, e: Event) => void,
+): m.Vnode {
+	return m(
+		'a.linkified.linkified--truncated',
+		{
+			// `#` is a placeholder — the click handler intercepts navigation
+			// and resolves the full URL from loaded content before opening.
+			href: '#',
+			target: '_blank',
+			rel: 'noopener noreferrer',
+			'aria-label': `${value} (truncated link, click to open full URL)`,
+			onclick: (e: Event) => handler(value, e),
+		},
+		value,
+	);
+}
+
+/** Caller-supplied options. `onTruncatedUrlClick` lets a host component (e.g.
+ *  SolutionCard) render the truncated-URL fragment as a clickable link rather
+ *  than as plain text — useful when the host can resolve the prefix to a full
+ *  URL by loading additional data. */
+export interface FormatTextOptions {
+	onTruncatedUrlClick?: (truncatedText: string, e: Event) => void;
+}
+
 /** Render a plain-text string with WhatsApp-style inline formatting and URL
  *  auto-linking. Returns a Mithril `Children` value safe to drop into any
  *  text-only slot (`m('p', formatText(s))`).
  *
  *  The fast path returns the original string when no markers and no URLs
  *  are present — keeps DOM diffing cheap for the common case. */
-export function formatText(text: string): m.Children {
+export function formatText(text: string, options?: FormatTextOptions): m.Children {
 	if (!text) return text;
 
 	const urlTokens = tokenizeUrls(text);
@@ -140,6 +173,29 @@ export function formatText(text: string): m.Children {
 	for (const token of urlTokens) {
 		if (token.kind === 'url' && token.href) {
 			result.push(makeAnchor(token.href, token.value));
+		} else if (token.kind === 'truncated-url') {
+			const handler = options?.onTruncatedUrlClick;
+			if (handler) {
+				// Caller can resolve the prefix to a full URL — surface as a
+				// clickable truncated anchor so the deferred-resolve flow runs
+				// on click.
+				result.push(makeTruncatedAnchor(token.value, handler));
+			} else {
+				// No resolver: this branch handles user-written ellipses (e.g.
+				// `Visit https://example.com/page...`) where `...` is sentence
+				// punctuation, not a server-side mid-URL chop. Strip the dots
+				// and emit a regular anchor so the URL stays clickable —
+				// matches the pre-truncation-fix behaviour for body / chat
+				// surfaces, while the preview surface (which DOES pass a
+				// handler) still gets the safe deferred-resolve path.
+				const trimmed = token.value.replace(TRAILING_PUNCT, '');
+				const tail = token.value.slice(trimmed.length);
+				if (trimmed) {
+					const href = trimmed.startsWith('www.') ? `https://${trimmed}` : trimmed;
+					result.push(makeAnchor(href, trimmed));
+				}
+				if (tail) result.push(tail);
+			}
 		} else {
 			result.push(...formatInline(token.value));
 		}

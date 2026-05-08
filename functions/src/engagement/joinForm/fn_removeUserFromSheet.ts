@@ -3,6 +3,7 @@ import { logger } from 'firebase-functions/v1';
 import { db } from '../../db';
 import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
+import { ALLOWED_ORIGINS } from '../../config/cors';
 
 interface RemoveUserFromSheetRequest {
 	questionId: string;
@@ -24,7 +25,7 @@ interface RemoveUserFromSheetResult {
  * metadata so the deletion targets the correct tab even when it isn't gid=0.
  */
 export const fn_removeUserFromSheet = onCall<RemoveUserFromSheetRequest, Promise<RemoveUserFromSheetResult>>(
-	{ region: functionConfig.region },
+	{ region: functionConfig.region, cors: [...ALLOWED_ORIGINS] },
 	async (request) => {
 		const { questionId, userId } = request.data;
 

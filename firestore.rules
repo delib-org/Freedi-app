@@ -206,7 +206,12 @@ service cloud.firestore {
                          request.resource.data.questionId == statementId;
         allow update: if request.auth.uid != null &&
                          request.auth.uid == submissionUserId;
-        allow delete: if false;
+        // Admins of the owning question can wipe submissions as part of the
+        // "Reset all joining" admin action (apps/join FacilitatorPanel).
+        // Regular users still can't delete — they remove their own form
+        // submission by toggling join off, which is an `update` to the parent
+        // option and a separate Cloud-Function-driven sheet purge.
+        allow delete: if request.auth.uid != null && isQuestionAdmin();
       }
 
       // Civil Activity Hub — post-resolve per-user state.

@@ -2013,6 +2013,155 @@ export async function saveJoinFormSubmission(
 	joinFormSubmissionCache.set(key, { role, displayName, values });
 }
 
+/** Admin-only: clear `joined` and `organizers` on a single option, sending its
+ *  activist + organizer counters back to zero. Form submissions and Google
+ *  Sheet rows live at the question level (one per user, regardless of which
+ *  option they joined) and are NOT touched here — see `resetQuestionJoining`
+ *  for a full clean slate. The Firestore rule allows this write for question
+ *  admins (same surface that already permits `setOptionFlag`). */
+export async function resetOptionJoining(optionId: string): Promise<void> {
+	if (!isAdmin()) return;
+	await setDoc(
+		doc(db, Collections.statements, optionId),
+		{ joined: [], organizers: [], lastUpdate: Date.now() },
+		{ merge: true },
+	);
+}
+
+export interface ResetQuestionJoiningResult {
+	optionsCleared: number;
+	submissionsDeleted: number;
+	sheetRowsRemoved: number;
+	/** Human-readable identifiers for steps that failed. The UI surfaces these
+	 *  so partial successes (e.g. options cleared but the submissions delete
+	 *  blocked by undeployed Firestore rules) stay visible rather than
+	 *  swallowed by the outer error handler. */
+	errors: string[];
+}
+
+/** Admin-only: nuke every join-related record under a question.
+ *
+ *   1. Walk every child option (`statementType === option`) and clear its
+ *      `joined` + `organizers` arrays in a Firestore batch.
+ *   2. Read the question's `joinFormSubmissions` subcollection (one doc per
+ *      user who filled the form) so we know whose sheet rows to remove.
+ *   3. Best-effort: call `fn_removeUserFromSheet` per submitter. The cloud
+ *      function is a no-op when the question isn't a sheets-destination form
+ *      and surfaces its own errors — we keep going regardless so a single
+ *      failure doesn't strand the rest of the wipe.
+ *   4. Delete the submission docs in a second batch.
+ *   5. Drop the matching entries from the in-memory caches so the next click
+ *      doesn't optimistically skip the form modal.
+ *
+ *  Each step is independently try/caught so a partial failure still returns
+ *  whatever did succeed. The result includes an `errors` array so the UI can
+ *  tell the admin which step needs attention (most often a Firestore-rules
+ *  deploy after this feature first ships, or a missing CORS origin on the
+ *  sheet-removal callable). */
+export async function resetQuestionJoining(
+	questionId: string,
+): Promise<ResetQuestionJoiningResult> {
+	const result: ResetQuestionJoiningResult = {
+		optionsCleared: 0,
+		submissionsDeleted: 0,
+		sheetRowsRemoved: 0,
+		errors: [],
+	};
+	if (!isAdmin() || !questionId) return result;
+
+	const now = Date.now();
+
+	// Step 1 — clear joined/organizers on every option under the question.
+	try {
+		const optionsSnap = await getDocs(
+			query(
+				collection(db, Collections.statements),
+				where('parentId', '==', questionId),
+				where('statementType', '==', StatementType.option),
+			),
+		);
+
+		if (optionsSnap.size > 0) {
+			const batch = writeBatch(db);
+			for (const optionDoc of optionsSnap.docs) {
+				batch.set(
+					optionDoc.ref,
+					{ joined: [], organizers: [], lastUpdate: now },
+					{ merge: true },
+				);
+			}
+			await batch.commit();
+			result.optionsCleared = optionsSnap.size;
+		}
+	} catch (err) {
+		console.error('[resetQuestionJoining] step 1 (clear options) failed', err);
+		result.errors.push('options');
+	}
+
+	// Step 2 — pull every submission so we know which users to wipe from the
+	// sheet (and so we can delete the docs themselves afterward). If the
+	// read itself fails we can't do steps 3 or 4, so bail with what we have.
+	let submissionsSnap: Awaited<ReturnType<typeof getDocs>> | null = null;
+	let userIds: string[] = [];
+	try {
+		submissionsSnap = await getDocs(
+			collection(db, Collections.statements, questionId, 'joinFormSubmissions'),
+		);
+		userIds = submissionsSnap.docs.map((d) => d.id);
+	} catch (err) {
+		console.error('[resetQuestionJoining] step 2 (read submissions) failed', err);
+		result.errors.push('submissions_read');
+
+		return result;
+	}
+
+	// Step 3 — best-effort sheet wipe. Sequential rather than parallel so we
+	// don't hammer the Sheets API; the cloud function rate is the limiter.
+	for (const userId of userIds) {
+		try {
+			await removeUserFromSheet(questionId, userId);
+			result.sheetRowsRemoved++;
+		} catch (err) {
+			console.error('[resetQuestionJoining] step 3 (remove sheet row) failed', {
+				userId,
+				err,
+			});
+		}
+	}
+	if (userIds.length > 0 && result.sheetRowsRemoved < userIds.length) {
+		result.errors.push('sheet');
+	}
+
+	// Step 4 — delete submission docs. Failure here is the most likely outcome
+	// on first deploy: the rule allowing admin delete on `joinFormSubmissions`
+	// has to ship via `firebase deploy --only firestore:rules` before client
+	// deletes succeed. We log + continue rather than throw.
+	if (submissionsSnap.size > 0) {
+		try {
+			const subBatch = writeBatch(db);
+			for (const submissionDoc of submissionsSnap.docs) {
+				subBatch.delete(submissionDoc.ref);
+			}
+			await subBatch.commit();
+			result.submissionsDeleted = submissionsSnap.size;
+		} catch (err) {
+			console.error('[resetQuestionJoining] step 4 (delete submissions) failed', err);
+			result.errors.push('submissions_delete');
+		}
+	}
+
+	// Step 5 — drop matching cache entries. Keying mirrors `${questionId}_${userId}`
+	// used everywhere else in this file. Always safe; never throws.
+	for (const userId of userIds) {
+		const key = `${questionId}_${userId}`;
+		joinFormSubmitted.delete(key);
+		joinFormSubmittedRole.delete(key);
+		joinFormSubmissionCache.delete(key);
+	}
+
+	return result;
+}
+
 /** Remove a user from the Google Sheet when they un-join an option.
  *  Calls the Cloud Function with the user's ID to find and delete their row.
  *  Surfaces the result via console so failures show up in DevTools. */

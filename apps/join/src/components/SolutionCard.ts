@@ -10,6 +10,7 @@ import {
 	getNewMessageCount,
 	getClusterEvaluatorCount,
 	setOptionFlag,
+	resetOptionJoining,
 	canEditSuggestion,
 	getOptionParagraphs,
 	loadOptionParagraphs,
@@ -148,16 +149,87 @@ function renderRichBodyContent(option: Statement, bodyLines: string[]): m.Vnode[
 		}
 	}
 
-	return groupBodyEntries(entries);
+	return groupBodyEntries(option, entries);
+}
+
+/** Click handler for a truncated-URL fragment in the description preview.
+ *  Resolves the prefix to its full URL by loading the option's paragraph
+ *  children (if not already cached), then redirects a placeholder window
+ *  opened synchronously during the user gesture so popup blockers stay
+ *  satisfied. */
+function handleTruncatedUrlClick(option: Statement, truncatedText: string, e: Event): void {
+	e.preventDefault();
+	e.stopPropagation();
+
+	// Open synchronously while the user-gesture token is still live; we'll
+	// either redirect or close it once the full URL is resolved.
+	const placeholder = window.open('about:blank', '_blank', 'noopener,noreferrer');
+
+	const resolveAndOpen = async (): Promise<void> => {
+		try {
+			await loadOptionParagraphs(option.statementId);
+			const fullUrl = resolveTruncatedUrl(option, truncatedText);
+			if (fullUrl && placeholder && !placeholder.closed) {
+				placeholder.location.href = fullUrl;
+
+				return;
+			}
+			if (placeholder && !placeholder.closed) placeholder.close();
+		} catch (err) {
+			console.error('[handleTruncatedUrlClick] failed:', err);
+			if (placeholder && !placeholder.closed) placeholder.close();
+		}
+	};
+
+	void resolveAndOpen();
+}
+
+const TRUNCATED_URL_PREFIX_STRIP = /(?:\.{2,}|…|\[truncated\]?)+$/;
+const FULL_URL_REGEX = /\b((?:https?:\/\/|www\.)[^\s<>"]+)/gi;
+const FULL_URL_TRAILING_PUNCT = /[).,;:!?'"\]}>…]+$/;
+
+/** Find the full URL whose prefix matches the truncated fragment. Searches the
+ *  loaded paragraph children — same source the cloud function used to build
+ *  the preview, so any prefix the preview shows must appear here verbatim. */
+function resolveTruncatedUrl(option: Statement, truncatedText: string): string | null {
+	const prefix = truncatedText.replace(TRUNCATED_URL_PREFIX_STRIP, '').trim();
+	if (!prefix) return null;
+
+	const paragraphs = getOptionParagraphs(option.statementId);
+	if (!paragraphs) return null;
+
+	for (const p of paragraphs) {
+		const text = p.statement ?? '';
+		for (const match of text.matchAll(FULL_URL_REGEX)) {
+			const candidate = match[0].replace(FULL_URL_TRAILING_PUNCT, '');
+			if (candidate.startsWith(prefix)) {
+				return candidate.startsWith('www.') ? `https://${candidate}` : candidate;
+			}
+		}
+	}
+
+	return null;
 }
 
 /** Walk the entries left-to-right; collapse runs of "1. ..." / "2. ..." into
  *  a single <ol>; render everything else as a paragraph. The list keeps the
  *  author's starting number via the `start` attribute, so a fragment like
- *  "3. third\n4. fourth" still numbers 3 and 4 instead of resetting to 1. */
-function groupBodyEntries(entries: BodyEntry[]): m.Vnode[] {
+ *  "3. third\n4. fourth" still numbers 3 and 4 instead of resetting to 1.
+ *
+ *  `option` is threaded through so preview entries (which can carry truncated
+ *  URLs from the server-capped description) can attach a deferred-resolve
+ *  click handler — keeps the truncated text clickable and routes the user to
+ *  the real URL once the paragraph children are loaded. */
+function groupBodyEntries(option: Statement, entries: BodyEntry[]): m.Vnode[] {
 	const nodes: m.Vnode[] = [];
 	let i = 0;
+
+	const formatOptionsFor = (entry: BodyEntry): Parameters<typeof formatText>[1] =>
+		entry.preview
+			? {
+					onTruncatedUrlClick: (text, e) => handleTruncatedUrlClick(option, text, e),
+				}
+			: undefined;
 
 	while (i < entries.length) {
 		const numbered = matchNumberedItem(entries[i].text);
@@ -175,7 +247,11 @@ function groupBodyEntries(entries: BodyEntry[]): m.Vnode[] {
 					'ol.solution-card__body-list',
 					{ key: `ol-${items[0].entry.key}`, start: startNum },
 					items.map((it) =>
-						m('li.solution-card__body-list-item', { key: it.entry.key }, formatText(it.content)),
+						m(
+							'li.solution-card__body-list-item',
+							{ key: it.entry.key },
+							formatText(it.content, formatOptionsFor(it.entry)),
+						),
 					),
 				),
 			);
@@ -186,7 +262,7 @@ function groupBodyEntries(entries: BodyEntry[]): m.Vnode[] {
 		const cls = entry.preview
 			? 'p.solution-card__body-paragraph.solution-card__body-paragraph--preview'
 			: 'p.solution-card__body-paragraph';
-		nodes.push(m(cls, { key: entry.key }, formatText(entry.text)));
+		nodes.push(m(cls, { key: entry.key }, formatText(entry.text, formatOptionsFor(entry))));
 		i++;
 	}
 
@@ -598,6 +674,29 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 											},
 										},
 										option.forceShow ? t('admin.unforce') : t('admin.force_show'),
+									)
+								: null,
+							// Reset counters — surfaced only when there's actually
+							// something to clear so admins can't fire an empty
+							// confirmation on a fresh card.
+							(option.joined?.length ?? 0) + (option.organizers?.length ?? 0) > 0
+								? m(
+										'button.btn.btn--small.btn--outline',
+										{
+											onclick: (e: Event) => {
+												e.stopPropagation();
+												const activists = option.joined?.length ?? 0;
+												const organizers = option.organizers?.length ?? 0;
+												const message = t('admin.reset_confirm', {
+													title: option.statement,
+													activists,
+													organizers,
+												});
+												if (!window.confirm(message)) return;
+												void resetOptionJoining(option.statementId);
+											},
+										},
+										t('admin.reset'),
 									)
 								: null,
 						])

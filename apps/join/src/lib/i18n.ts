@@ -81,6 +81,28 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'Unhide',
 		'admin.force_show': 'Force show',
 		'admin.unforce': 'Unforce',
+		'admin.reset': 'Reset counters',
+		'admin.reset_confirm':
+			'Reset joining counters for "{{title}}"?\n\nThis will clear {{activists}} activists and {{organizers}} organizers on this option. Form submissions and Google Sheet rows are kept.',
+		'facilitator.reset_all': 'Reset all joining',
+		'facilitator.reset_all.in_progress': 'Resetting…',
+		'facilitator.reset_all.help':
+			'Clear activists, organizers, form submissions, and Google Sheet rows for every option under this question. Cannot be undone.',
+		'facilitator.reset_all_confirm':
+			"Reset ALL joining for this question?\n\nThis clears every option's activists and organizers, deletes form submissions, and removes their Google Sheet rows. This cannot be undone.",
+		'facilitator.reset_all_done':
+			'Reset complete: {{options}} options cleared, {{submissions}} form submissions deleted, {{sheet}} sheet rows removed.',
+		'facilitator.reset_all_error':
+			'Reset failed. Please try again or check the console for details.',
+		'facilitator.reset_all_partial': 'Some steps did not complete:',
+		'facilitator.reset_all_error.options':
+			'• Could not clear option counters. Check that you have admin permissions on this question.',
+		'facilitator.reset_all_error.submissions_read':
+			'• Could not read form submissions. Check Firestore permissions.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• Form submissions could not be deleted. Deploy the latest Firestore rules: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• Some Google Sheet rows could not be removed. Check the fn_removeUserFromSheet CORS allowlist or sheet credentials.',
 		'admin.suggestion_badge': 'Organizers',
 		'admin.suggestions_section': 'Organizers suggestions',
 		'admin.suggestion_placeholder': 'Describe the suggestion',
@@ -453,6 +475,27 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'הצגה',
 		'admin.force_show': 'הצגה כפויה',
 		'admin.unforce': 'ביטול כפייה',
+		'admin.reset': 'איפוס מונים',
+		'admin.reset_confirm':
+			'לאפס את מונה ההצטרפות עבור "{{title}}"?\n\nפעולה זו תנקה {{activists}} פעילים ו-{{organizers}} מארגנים באפשרות זו. הטפסים ושורות גיליון Google יישמרו.',
+		'facilitator.reset_all': 'איפוס כל ההצטרפויות',
+		'facilitator.reset_all.in_progress': 'מאפס…',
+		'facilitator.reset_all.help':
+			'מחיקת פעילים, מארגנים, טפסים שהוגשו ושורות מגיליון Google עבור כל האפשרויות בשאלה. לא ניתן לבטל.',
+		'facilitator.reset_all_confirm':
+			'לאפס את כל ההצטרפויות בשאלה זו?\n\nפעולה זו מנקה את הפעילים והמארגנים בכל האפשרויות, מוחקת את הטפסים שהוגשו ומסירה את השורות בגיליון Google. לא ניתן לבטל.',
+		'facilitator.reset_all_done':
+			'האיפוס הושלם: נוקו {{options}} אפשרויות, נמחקו {{submissions}} טפסים, הוסרו {{sheet}} שורות בגיליון.',
+		'facilitator.reset_all_error': 'האיפוס נכשל. נסו שוב או בדקו את הקונסול לפרטים.',
+		'facilitator.reset_all_partial': 'חלק מהשלבים לא הושלמו:',
+		'facilitator.reset_all_error.options':
+			'• לא ניתן לאפס את מוני האפשרויות. בדקו שיש לכם הרשאות ניהול בשאלה.',
+		'facilitator.reset_all_error.submissions_read':
+			'• לא ניתן לקרוא טפסי הצטרפות. בדקו את הרשאות Firestore.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• הטפסים לא נמחקו. יש לפרוס את חוקי Firestore העדכניים: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• חלק מהשורות בגיליון Google לא הוסרו. בדקו את רשימת ההיתרים ב-CORS של fn_removeUserFromSheet או את אישור הגיליון.',
 		'admin.suggestion_badge': 'הצעת מארגן/ת',
 		'admin.suggestions_section': 'הצעות לעיון חוזר של הציבור',
 		'admin.suggestion_placeholder': 'תארו את ההצעה',
@@ -805,6 +848,28 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'إظهار',
 		'admin.force_show': 'إجبار العرض',
 		'admin.unforce': 'إلغاء الإجبار',
+		'admin.reset': 'إعادة تعيين العدّادات',
+		'admin.reset_confirm':
+			'إعادة تعيين عدّادات الانضمام لـ "{{title}}"؟\n\nسيؤدي ذلك إلى مسح {{activists}} ناشطين و{{organizers}} منظمين على هذا الخيار. سيتم الاحتفاظ بنماذج التقديم وصفوف Google Sheet.',
+		'facilitator.reset_all': 'إعادة تعيين كل الانضمام',
+		'facilitator.reset_all.in_progress': 'جارٍ إعادة التعيين…',
+		'facilitator.reset_all.help':
+			'مسح الناشطين والمنظمين ونماذج التقديم وصفوف Google Sheet لكل خيار تحت هذا السؤال. لا يمكن التراجع.',
+		'facilitator.reset_all_confirm':
+			'إعادة تعيين كل الانضمام لهذا السؤال؟\n\nسيؤدي ذلك إلى مسح الناشطين والمنظمين في كل خيار، وحذف نماذج التقديم، وإزالة صفوفهم من Google Sheet. لا يمكن التراجع.',
+		'facilitator.reset_all_done':
+			'اكتملت إعادة التعيين: تم مسح {{options}} خيارات، وحذف {{submissions}} نماذج، وإزالة {{sheet}} صفوف.',
+		'facilitator.reset_all_error':
+			'فشلت إعادة التعيين. يرجى المحاولة مرة أخرى أو مراجعة وحدة التحكم للحصول على التفاصيل.',
+		'facilitator.reset_all_partial': 'بعض الخطوات لم تكتمل:',
+		'facilitator.reset_all_error.options':
+			'• تعذر مسح عدّادات الخيارات. تحقق من أن لديك صلاحيات إدارية على هذا السؤال.',
+		'facilitator.reset_all_error.submissions_read':
+			'• تعذر قراءة نماذج الانضمام. تحقق من أذونات Firestore.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• تعذر حذف النماذج. انشر قواعد Firestore الأحدث: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• تعذر إزالة بعض صفوف Google Sheet. تحقق من قائمة CORS الخاصة بـ fn_removeUserFromSheet أو بيانات اعتماد الجدول.',
 		'admin.suggestion_badge': 'اقتراح المنظم',
 		'admin.suggestions_section': 'اقتراحات المنظمين',
 		'admin.suggestion_placeholder': 'صف الاقتراح',
@@ -1105,6 +1170,28 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'Einblenden',
 		'admin.force_show': 'Erzwungen anzeigen',
 		'admin.unforce': 'Nicht erzwingen',
+		'admin.reset': 'Zähler zurücksetzen',
+		'admin.reset_confirm':
+			'Beitrittszähler für "{{title}}" zurücksetzen?\n\nDies löscht {{activists}} Aktivisten und {{organizers}} Organisatoren auf dieser Option. Formularantworten und Google-Sheet-Zeilen bleiben erhalten.',
+		'facilitator.reset_all': 'Alle Beitritte zurücksetzen',
+		'facilitator.reset_all.in_progress': 'Wird zurückgesetzt…',
+		'facilitator.reset_all.help':
+			'Aktivisten, Organisatoren, Formularantworten und Google-Sheet-Zeilen für alle Optionen unter dieser Frage löschen. Nicht rückgängig zu machen.',
+		'facilitator.reset_all_confirm':
+			'ALLE Beitritte für diese Frage zurücksetzen?\n\nDies löscht Aktivisten und Organisatoren auf allen Optionen, entfernt Formularantworten und ihre Google-Sheet-Zeilen. Nicht rückgängig zu machen.',
+		'facilitator.reset_all_done':
+			'Zurücksetzen abgeschlossen: {{options}} Optionen geleert, {{submissions}} Formularantworten gelöscht, {{sheet}} Sheet-Zeilen entfernt.',
+		'facilitator.reset_all_error':
+			'Zurücksetzen fehlgeschlagen. Bitte erneut versuchen oder Konsole prüfen.',
+		'facilitator.reset_all_partial': 'Einige Schritte wurden nicht abgeschlossen:',
+		'facilitator.reset_all_error.options':
+			'• Optionszähler konnten nicht geleert werden. Prüfen Sie Ihre Adminrechte für diese Frage.',
+		'facilitator.reset_all_error.submissions_read':
+			'• Formularantworten konnten nicht gelesen werden. Prüfen Sie die Firestore-Berechtigungen.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• Formularantworten konnten nicht gelöscht werden. Aktuelle Firestore-Regeln deployen: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• Einige Google-Sheet-Zeilen konnten nicht entfernt werden. CORS-Allowlist von fn_removeUserFromSheet oder Sheet-Anmeldedaten prüfen.',
 		'admin.suggestion_badge': 'Organisatorvorschlag',
 		'admin.suggestions_section': 'Vorschläge der Organisatoren',
 		'admin.suggestion_placeholder': 'Beschreiben Sie den Vorschlag',
@@ -1423,6 +1510,27 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'Mostrar',
 		'admin.force_show': 'Forzar mostrar',
 		'admin.unforce': 'No forzar',
+		'admin.reset': 'Reiniciar contadores',
+		'admin.reset_confirm':
+			'¿Reiniciar contadores de unión para "{{title}}"?\n\nEsto borrará {{activists}} activistas y {{organizers}} organizadores en esta opción. Las respuestas de formularios y filas de Google Sheet se mantienen.',
+		'facilitator.reset_all': 'Reiniciar todas las uniones',
+		'facilitator.reset_all.in_progress': 'Reiniciando…',
+		'facilitator.reset_all.help':
+			'Borrar activistas, organizadores, respuestas de formularios y filas de Google Sheet de cada opción de esta pregunta. No se puede deshacer.',
+		'facilitator.reset_all_confirm':
+			'¿Reiniciar TODAS las uniones de esta pregunta?\n\nEsto borra activistas y organizadores de cada opción, elimina las respuestas de los formularios y quita sus filas de Google Sheet. No se puede deshacer.',
+		'facilitator.reset_all_done':
+			'Reinicio completo: {{options}} opciones limpiadas, {{submissions}} formularios eliminados, {{sheet}} filas removidas.',
+		'facilitator.reset_all_error': 'Error al reiniciar. Inténtalo de nuevo o revisa la consola.',
+		'facilitator.reset_all_partial': 'Algunos pasos no se completaron:',
+		'facilitator.reset_all_error.options':
+			'• No se pudieron borrar los contadores. Verifica que tengas permisos de administrador en esta pregunta.',
+		'facilitator.reset_all_error.submissions_read':
+			'• No se pudieron leer los formularios. Verifica los permisos de Firestore.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• No se pudieron eliminar los formularios. Despliega las reglas de Firestore: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• Algunas filas de Google Sheet no se pudieron quitar. Revisa la lista CORS de fn_removeUserFromSheet o las credenciales del sheet.',
 		'admin.suggestion_badge': 'Sugerencia del organizador',
 		'admin.suggestions_section': 'Sugerencias de los organizadores',
 		'admin.suggestion_placeholder': 'Describe la sugerencia',
@@ -1734,6 +1842,28 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'Tonen',
 		'admin.force_show': 'Gedwongen tonen',
 		'admin.unforce': 'Niet forceren',
+		'admin.reset': 'Tellers resetten',
+		'admin.reset_confirm':
+			'Aanmeldtellers voor "{{title}}" resetten?\n\nDit wist {{activists}} activisten en {{organizers}} organisatoren op deze optie. Formulierinzendingen en Google Sheet-rijen blijven behouden.',
+		'facilitator.reset_all': 'Alle aanmeldingen resetten',
+		'facilitator.reset_all.in_progress': 'Bezig met resetten…',
+		'facilitator.reset_all.help':
+			'Activisten, organisatoren, formulierinzendingen en Google Sheet-rijen voor elke optie onder deze vraag wissen. Kan niet ongedaan worden gemaakt.',
+		'facilitator.reset_all_confirm':
+			'ALLE aanmeldingen voor deze vraag resetten?\n\nDit wist activisten en organisatoren op elke optie, verwijdert formulierinzendingen en hun Google Sheet-rijen. Kan niet ongedaan worden gemaakt.',
+		'facilitator.reset_all_done':
+			'Reset voltooid: {{options}} opties gewist, {{submissions}} formulieren verwijderd, {{sheet}} rijen verwijderd.',
+		'facilitator.reset_all_error':
+			'Resetten mislukt. Probeer het opnieuw of controleer de console.',
+		'facilitator.reset_all_partial': 'Sommige stappen zijn niet voltooid:',
+		'facilitator.reset_all_error.options':
+			'• Tellers konden niet worden gewist. Controleer of je beheerdersrechten hebt op deze vraag.',
+		'facilitator.reset_all_error.submissions_read':
+			'• Formulierinzendingen konden niet worden gelezen. Controleer Firestore-rechten.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• Formulierinzendingen konden niet worden verwijderd. Deploy de nieuwste Firestore-regels: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• Sommige Google Sheet-rijen konden niet worden verwijderd. Controleer de CORS-allowlist van fn_removeUserFromSheet of de sheet-credentials.',
 		'admin.suggestion_badge': 'Organisatorvoorstel',
 		'admin.suggestions_section': 'Voorstellen van organisatoren',
 		'admin.suggestion_placeholder': 'Beschrijf het voorstel',
@@ -2039,6 +2169,28 @@ const translations: Record<string, Record<string, string>> = {
 		'admin.unhide': 'نمایش',
 		'admin.force_show': 'نمایش اجباری',
 		'admin.unforce': 'لغو اجبار',
+		'admin.reset': 'بازنشانی شمارنده‌ها',
+		'admin.reset_confirm':
+			'بازنشانی شمارنده‌های پیوستن برای "{{title}}"؟\n\nاین کار {{activists}} فعال و {{organizers}} سازمان‌دهنده را در این گزینه پاک می‌کند. فرم‌های ارسال‌شده و ردیف‌های Google Sheet حفظ می‌شوند.',
+		'facilitator.reset_all': 'بازنشانی تمام پیوستن‌ها',
+		'facilitator.reset_all.in_progress': 'در حال بازنشانی…',
+		'facilitator.reset_all.help':
+			'پاک کردن فعالان، سازمان‌دهندگان، فرم‌های ارسال‌شده و ردیف‌های Google Sheet برای هر گزینه‌ای زیر این پرسش. قابل بازگشت نیست.',
+		'facilitator.reset_all_confirm':
+			'بازنشانی تمام پیوستن‌ها برای این پرسش؟\n\nاین کار فعالان و سازمان‌دهندگان هر گزینه را پاک می‌کند، فرم‌های ارسال‌شده را حذف می‌کند و ردیف‌های Google Sheet آنها را حذف می‌کند. قابل بازگشت نیست.',
+		'facilitator.reset_all_done':
+			'بازنشانی کامل شد: {{options}} گزینه پاک، {{submissions}} فرم حذف، {{sheet}} ردیف حذف.',
+		'facilitator.reset_all_error':
+			'بازنشانی ناموفق بود. لطفاً دوباره امتحان کنید یا کنسول را بررسی کنید.',
+		'facilitator.reset_all_partial': 'برخی از مراحل کامل نشدند:',
+		'facilitator.reset_all_error.options':
+			'• شمارنده‌های گزینه‌ها پاک نشدند. مطمئن شوید که در این پرسش دسترسی مدیریتی دارید.',
+		'facilitator.reset_all_error.submissions_read':
+			'• فرم‌های پیوستن خوانده نشدند. مجوزهای Firestore را بررسی کنید.',
+		'facilitator.reset_all_error.submissions_delete':
+			'• فرم‌های پیوستن حذف نشدند. قوانین Firestore را به‌روزرسانی کنید: firebase deploy --only firestore:rules.',
+		'facilitator.reset_all_error.sheet':
+			'• برخی ردیف‌های Google Sheet حذف نشدند. فهرست CORS تابع fn_removeUserFromSheet یا اعتبارنامه Sheet را بررسی کنید.',
 		'admin.suggestion_badge': 'پیشنهاد سازمان‌دهنده',
 		'admin.suggestions_section': 'پیشنهادهای سازمان‌دهندگان',
 		'admin.suggestion_placeholder': 'پیشنهاد را توصیف کنید',

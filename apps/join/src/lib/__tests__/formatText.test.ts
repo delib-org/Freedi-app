@@ -126,17 +126,36 @@ describe('formatText', () => {
 		expect(mCalls.find((c) => c.selector === 'strong')).toBeUndefined();
 	});
 
-	it('does not linkify a URL truncated with "..." (server preview cap)', () => {
-		// `description` is capped at ~200 chars by the cloud function and tail
-		// is "..." — the trailing-punct strip would otherwise leave us pointing
-		// at a partial domain that 404s.
+	it('falls back to a regular anchor over the trimmed URL when truncated and no handler', () => {
+		// Without a resolver, the trailing dots are treated as sentence
+		// punctuation — emit a regular anchor so the URL stays clickable.
 		formatText('see https://goo... for more');
-		expect(mCalls.find((c) => c.selector === 'a.linkified')).toBeUndefined();
+		const anchor = mCalls.find((c) => c.selector === 'a.linkified');
+		expect(anchor).toBeDefined();
+		expect(anchor?.attrs.href).toBe('https://goo');
 	});
 
-	it('does not linkify a URL truncated with a Unicode ellipsis', () => {
+	it('falls back to a regular anchor when truncated with a Unicode ellipsis and no handler', () => {
 		formatText('see https://goo… for more');
-		expect(mCalls.find((c) => c.selector === 'a.linkified')).toBeUndefined();
+		const anchor = mCalls.find((c) => c.selector === 'a.linkified');
+		expect(anchor).toBeDefined();
+		expect(anchor?.attrs.href).toBe('https://goo');
+	});
+
+	it('renders a truncated URL as a clickable anchor when onTruncatedUrlClick is provided', () => {
+		const handler = vi.fn();
+		formatText('see https://goo... for more', { onTruncatedUrlClick: handler });
+
+		const truncated = mCalls.find((c) => c.selector === 'a.linkified.linkified--truncated');
+		expect(truncated).toBeDefined();
+		expect(truncated?.attrs.href).toBe('#');
+		expect(truncated?.children).toBe('https://goo...');
+
+		// Click forwards the truncated text to the handler so the host can
+		// resolve it against loaded full content.
+		const fakeEvent = { preventDefault: vi.fn(), stopPropagation: vi.fn() } as unknown as Event;
+		(truncated?.attrs.onclick as (e: Event) => void)(fakeEvent);
+		expect(handler).toHaveBeenCalledWith('https://goo...', fakeEvent);
 	});
 });
 

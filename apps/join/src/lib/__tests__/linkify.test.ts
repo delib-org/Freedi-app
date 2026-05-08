@@ -60,18 +60,23 @@ describe('linkify', () => {
 		expect(mCalls[1].attrs.href).toBe('http://two.com');
 	});
 
-	it('does not linkify a URL truncated with "..." (server preview cap)', () => {
+	it('falls back to a regular anchor over the trimmed URL when truncated with "..." and no handler', () => {
+		// Without a resolver, treat trailing dots as sentence punctuation —
+		// emit an anchor over the trimmed host so the URL stays clickable.
 		mCalls.length = 0;
-		const result = linkify('see https://goo... for more');
-		expect(mCalls).toHaveLength(0);
-		expect(result).toEqual(['see ', 'https://goo...', ' for more']);
+		linkify('see https://goo... for more');
+		expect(mCalls).toHaveLength(1);
+		expect(mCalls[0].selector).toBe('a.linkified');
+		expect(mCalls[0].attrs.href).toBe('https://goo');
+		expect(mCalls[0].child).toBe('https://goo');
 	});
 
-	it('does not linkify a URL truncated with a Unicode ellipsis', () => {
+	it('falls back to a regular anchor when truncated with a Unicode ellipsis and no handler', () => {
 		mCalls.length = 0;
-		const result = linkify('see https://goo… for more');
-		expect(mCalls).toHaveLength(0);
-		expect(result).toEqual(['see ', 'https://goo…', ' for more']);
+		linkify('see https://goo… for more');
+		expect(mCalls).toHaveLength(1);
+		expect(mCalls[0].selector).toBe('a.linkified');
+		expect(mCalls[0].attrs.href).toBe('https://goo');
 	});
 
 	it('still strips a single trailing dot (sentence punctuation, not truncation)', () => {
@@ -79,5 +84,20 @@ describe('linkify', () => {
 		linkify('see https://example.com.');
 		expect(mCalls).toHaveLength(1);
 		expect(mCalls[0].attrs.href).toBe('https://example.com');
+	});
+
+	it('renders a truncated URL as a clickable anchor when onTruncatedUrlClick is provided', () => {
+		mCalls.length = 0;
+		const handler = vi.fn();
+		linkify('see https://goo... for more', { onTruncatedUrlClick: handler });
+		expect(mCalls).toHaveLength(1);
+		expect(mCalls[0].selector).toBe('a.linkified.linkified--truncated');
+		expect(mCalls[0].attrs.href).toBe('#');
+		expect(mCalls[0].child).toBe('https://goo...');
+
+		// Simulating a click should invoke the handler with the truncated text.
+		const fakeEvent = { preventDefault: vi.fn(), stopPropagation: vi.fn() } as unknown as Event;
+		(mCalls[0].attrs.onclick as (e: Event) => void)(fakeEvent);
+		expect(handler).toHaveBeenCalledWith('https://goo...', fakeEvent);
 	});
 });

@@ -29,6 +29,7 @@ import {
 	subscribeQuestionDelegates,
 	unsubscribeQuestionDelegates,
 	getOrganizerSuggestions,
+	resetQuestionJoining,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
@@ -878,6 +879,73 @@ async function removeJoinFormField(question: Statement, index: number): Promise<
 	await persistJoinForm(question, next);
 }
 
+/** Destructive admin action: clears `joined` + `organizers` on every option
+ *  under the question, deletes all `joinFormSubmissions`, and best-effort
+ *  removes the corresponding rows from the configured Google Sheet. Hidden
+ *  for non-admins so the panel section never even appears. Confirmation is
+ *  a native `confirm()` — keeps the action one click + one keypress away
+ *  without spinning up a dedicated modal for a panel-bottom corner case. */
+let resetInProgress = false;
+
+function renderResetJoiningSection(question: Statement | null): m.Vnode | null {
+	if (!question) return null;
+	if (!isAdmin()) return null;
+
+	return m('.facilitator-panel__row', [
+		m('.facilitator-panel__row-main', [
+			m(
+				'button.btn.btn--small.btn--outline.facilitator-panel__action',
+				{
+					type: 'button',
+					disabled: resetInProgress,
+					onclick: async () => {
+						if (resetInProgress) return;
+						const confirmed = window.confirm(t('facilitator.reset_all_confirm'));
+						if (!confirmed) return;
+
+						resetInProgress = true;
+						m.redraw();
+						try {
+							const result = await resetQuestionJoining(question.statementId);
+							const summary = t('facilitator.reset_all_done', {
+								options: result.optionsCleared,
+								submissions: result.submissionsDeleted,
+								sheet: result.sheetRowsRemoved,
+							});
+							// Surface any per-step failures so the admin can act
+							// — most commonly a Firestore-rules deploy after this
+							// feature first ships, or a missing CORS origin on
+							// the sheet-removal callable.
+							const errorLines = result.errors
+								.map((id) => t(`facilitator.reset_all_error.${id}`))
+								.filter(Boolean);
+							const message =
+								errorLines.length > 0
+									? `${summary}\n\n${t('facilitator.reset_all_partial')}\n${errorLines.join('\n')}`
+									: summary;
+							window.alert(message);
+						} catch (err) {
+							console.error('[FacilitatorPanel] resetQuestionJoining failed:', err);
+							window.alert(t('facilitator.reset_all_error'));
+						} finally {
+							resetInProgress = false;
+							m.redraw();
+						}
+					},
+				},
+				[
+					m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🧹'),
+					m(
+						'span.facilitator-panel__action-label',
+						resetInProgress ? t('facilitator.reset_all.in_progress') : t('facilitator.reset_all'),
+					),
+				],
+			),
+		]),
+		m('.facilitator-panel__row-help', t('facilitator.reset_all.help')),
+	]);
+}
+
 /** Per-question delegate management. Only real admins can issue invites,
  *  so the section is hidden behind `isAdmin()`. The list listeners are
  *  mounted lazily on first expand (and torn down on collapse / panel close
@@ -1471,6 +1539,7 @@ export const FacilitatorPanel: m.Component = {
 						},
 					}),
 					renderDelegatesSection(question),
+					renderResetJoiningSection(question),
 				],
 			),
 			manualReorderMode !== null && hasQuestion
