@@ -106,12 +106,51 @@
   // as "AI-merged" — distinct from auto-grouped clusters.
   &--synthesis {
     .grouped-suggestion__card {
-      border-left-color: color-mix(in srgb, var(--btn-primary) 75%, var(--accent, #b455ff));
-      background: color-mix(in srgb, var(--btn-primary) 6%, var(--card-default, #fff));
+      border-left-color: color-mix(in srgb, var(--btn-primary) 75%, var(--cluster-synthesis-accent, #b455ff));
+      background: color-mix(in srgb, var(--cluster-synthesis-accent, #b455ff) 6%, var(--card-default, #fff));
 
       @include rtl {
         border-left: none;
-        border-right-color: color-mix(in srgb, var(--btn-primary) 75%, var(--accent, #b455ff));
+        border-right-color: color-mix(in srgb, var(--btn-primary) 75%, var(--cluster-synthesis-accent, #b455ff));
+      }
+    }
+  }
+
+  // Topic-cluster (LLM-derived taxonomy) tint.
+  &--topic {
+    .grouped-suggestion__card {
+      border-left-color: var(--cluster-topic-accent, #2aa39a);
+      background: color-mix(in srgb, var(--cluster-topic-accent, #2aa39a) 5%, var(--card-default, #fff));
+
+      @include rtl {
+        border-left: none;
+        border-right-color: var(--cluster-topic-accent, #2aa39a);
+      }
+    }
+  }
+
+  // Hybrid k-means / semantic framing tint.
+  &--semantic {
+    .grouped-suggestion__card {
+      border-left-color: var(--cluster-semantic-accent, var(--btn-primary));
+      background: color-mix(in srgb, var(--cluster-semantic-accent, var(--btn-primary)) 4%, var(--card-default, #fff));
+
+      @include rtl {
+        border-left: none;
+        border-right-color: var(--cluster-semantic-accent, var(--btn-primary));
+      }
+    }
+  }
+
+  // Custom admin/AI framing tint.
+  &--custom {
+    .grouped-suggestion__card {
+      border-left-color: var(--cluster-custom-accent, #ef7550);
+      background: color-mix(in srgb, var(--cluster-custom-accent, #ef7550) 4%, var(--card-default, #fff));
+
+      @include rtl {
+        border-left: none;
+        border-right-color: var(--cluster-custom-accent, #ef7550);
       }
     }
   }

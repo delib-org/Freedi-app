@@ -83,12 +83,19 @@ export interface SynthesisExecuteResponse {
 	createdStatementIds: string[];
 }
 
+// Client-side timeout for the long-running synthesis callables. The server
+// is configured for 540s (timeoutSeconds in fn_synthesizeIdeas.ts); the
+// browser callable defaults to only 70s, which trips `deadline-exceeded` on
+// any cold-cache run that needs LLM verdicts. Match the server budget.
+const SYNTHESIS_TIMEOUT_MS = 540_000;
+
 export async function synthesizeIdeasPreview(
 	request: SynthesisPreviewRequest,
 ): Promise<SynthesisPreviewResponse> {
 	const fn = httpsCallable<SynthesisPreviewRequest, SynthesisPreviewResponse>(
 		functionsWithRegion,
 		'synthesizeIdeasPreview',
+		{ timeout: SYNTHESIS_TIMEOUT_MS },
 	);
 	const result = await fn(request);
 
@@ -101,6 +108,7 @@ export async function synthesizeIdeasExecute(
 	const fn = httpsCallable<SynthesisExecuteRequest, SynthesisExecuteResponse>(
 		functionsWithRegion,
 		'synthesizeIdeasExecute',
+		{ timeout: SYNTHESIS_TIMEOUT_MS },
 	);
 	const result = await fn(request);
 

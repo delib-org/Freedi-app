@@ -1,0 +1,122 @@
+// FramingChip — single chip in the framing toolbar. Carries pipeline icon,
+// label, count badge, optional warning/loading dots. Active state inverts
+// to the primary accent.
+
+@use '../mixins' as *;
+
+.framing-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-body);
+  cursor: pointer;
+  appearance: none;
+  white-space: nowrap;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  &:hover:not(:disabled) {
+    background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--btn-primary);
+    outline-offset: 2px;
+  }
+
+  &__icon {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &__label {
+    font-weight: 500;
+  }
+
+  &__count {
+    display: inline-flex;
+    align-items: center;
+    min-width: 1.4rem;
+    height: 1.25rem;
+    padding: 0 0.4rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.06));
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    justify-content: center;
+  }
+
+  &__spinner {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text-secondary);
+    animation: framing-chip-spin 1s linear infinite;
+  }
+
+  &__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &--stale {
+      background: var(--warning, #f0b429);
+    }
+  }
+
+  &--active {
+    background: var(--btn-primary);
+    color: #fff;
+
+    .framing-chip__count {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fff;
+    }
+
+    &:hover:not(:disabled) {
+      background: var(--btn-primary);
+      filter: brightness(1.05);
+    }
+  }
+
+  &--disabled,
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  // Pipeline accents — applied when not active so the icon hints at the
+  // upstream pipeline. The active state always uses the primary accent so
+  // the selected lens stays unambiguous.
+  &--synthesis:not(.framing-chip--active) .framing-chip__icon {
+    color: var(--cluster-synthesis-accent, var(--btn-primary));
+  }
+
+  &--topic:not(.framing-chip--active) .framing-chip__icon {
+    color: var(--cluster-topic-accent, var(--btn-primary));
+  }
+
+  &--semantic:not(.framing-chip--active) .framing-chip__icon {
+    color: var(--cluster-semantic-accent, var(--btn-primary));
+  }
+}
+
+@keyframes framing-chip-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .framing-chip {
+    transition: none;
+  }
+
+  .framing-chip__spinner {
+    animation: none;
+  }
+}

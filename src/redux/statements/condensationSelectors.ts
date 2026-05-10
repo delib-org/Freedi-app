@@ -58,12 +58,19 @@ function buildMaps(clusters: Statement[]): {
  * setting: either shows both clusters and originals, or only clusters plus
  * ungrouped originals.
  *
+ * When `framingId` is supplied, only clusters belonging to that framing are
+ * surfaced — this is how the framing switcher swaps between alternative
+ * clusterings (hybrid-auto vs topic-cluster vs admin custom) of the same
+ * option pool. When `framingId` is omitted (the legacy behaviour) all clusters
+ * regardless of framing are shown — used for synthesized clusters that don't
+ * carry a framingId.
+ *
  * Originals are never hidden from the database — visibility is a display
  * filter only. Evaluations on originals still aggregate into their cluster
  * via server-side `fn_clusterAggregation`.
  */
 export function createGroupedViewSelector(selectStatements: StateSelector<Statement[]>) {
-	return (parentId: string | undefined, surface: CondensationSurface) =>
+	return (parentId: string | undefined, surface: CondensationSurface, framingId?: string | null) =>
 		createSelector([selectStatements], (statements): GroupedView => {
 			const parent = statements.find((s) => s.statementId === parentId);
 			const condensation = parent?.statementSettings?.condensation;
@@ -75,7 +82,14 @@ export function createGroupedViewSelector(selectStatements: StateSelector<Statem
 				(s) => s.parentId === parentId && isOptionLike(s) && !s.hide,
 			);
 
-			const clusters = siblings.filter((s) => s.isCluster === true);
+			let clusters = siblings.filter((s) => s.isCluster === true);
+			if (framingId) {
+				// Restrict to clusters in the active framing. Synthesized clusters
+				// (no framingId) are intentionally excluded when a framing is
+				// selected — they live in a different conceptual layer (paraphrase
+				// merge) and would otherwise leak into every framing view.
+				clusters = clusters.filter((c) => c.framingId === framingId);
+			}
 			const originals = siblings.filter((s) => s.isCluster !== true);
 
 			const { groupMembers, membershipMap } = buildMaps(clusters);

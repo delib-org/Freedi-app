@@ -2340,5 +2340,15 @@
   "{{name}} is writing a suggestion...": "{{name}} schreibt einen Vorschlag...",
   "{{seconds}} seconds ago": "vor {{seconds}} Sekunden",
   "العربية": "Arabisch",
-  "…and {count} more (loading)": "…und {count} weitere (wird geladen)"
+  "…and {count} more (loading)": "…und {count} weitere (wird geladen)",
+  "Flat": "Flat",
+  "View": "View",
+  "View as": "View as",
+  "Custom framing": "Custom framing",
+  "Other suggestions": "Other suggestions",
+  "Show originals inside groups": "Show originals inside groups",
+  "Also show originals inside groups": "Also show originals inside groups",
+  "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
+  "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
 }

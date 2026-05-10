@@ -16,6 +16,7 @@ import { logError } from '@/utils/errorHandling';
 import type { Framing } from '@freedi/shared-types';
 
 const URL_PARAM = 'framing';
+const URL_FRAMING_ID_PARAM = 'framingId';
 
 const selectFramingsByParent = createFramingsByParentSelector(
 	(s: RootState) => s.framings.byParent,
@@ -24,15 +25,26 @@ const selectFramingMode = createFramingModeSelector((s: RootState) => s.framings
 
 function isValidMode(value: string | null): value is FramingMode {
 	return (
-		value === FramingMode.regular || value === FramingMode.semantic || value === FramingMode.topic
+		value === FramingMode.regular ||
+		value === FramingMode.semantic ||
+		value === FramingMode.topic ||
+		value === FramingMode.custom
 	);
 }
 
 interface UseActiveFramingResult {
 	mode: FramingMode;
+	/**
+	 * Switch to a built-in mode. For custom framings, use `setCustomFraming`
+	 * which carries the explicit framingId.
+	 */
 	setMode: (next: FramingMode) => void;
+	/** Switch to a specific custom framing by id. */
+	setCustomFraming: (framingId: string) => void;
 	framingId: string | null;
 	availableModes: FramingMode[]; // modes that have a backing Framing in Firestore
+	/** Custom framings (admin/ai-created, not hybrid-auto / topic-cluster). */
+	customFramings: Framing[];
 	framings: Framing[];
 	isLoading: boolean;
 }
@@ -90,6 +102,12 @@ export function useActiveFraming(parentId: string | undefined): UseActiveFraming
 		}
 	}, [parentId, searchParams]);
 
+	// `custom` mode carries an explicit framingId in the URL alongside the
+	// mode. We only honour it when the URL says so; built-in modes resolve
+	// without an id.
+	const customFramingIdFromUrl =
+		reduxMode === FramingMode.custom ? searchParams.get(URL_FRAMING_ID_PARAM) : null;
+
 	const setMode = useMemo(
 		() => (next: FramingMode) => {
 			if (!parentId) return;
@@ -97,17 +115,42 @@ export function useActiveFraming(parentId: string | undefined): UseActiveFraming
 			const sp = new URLSearchParams(searchParams);
 			if (next === FramingMode.regular) {
 				sp.delete(URL_PARAM);
+				sp.delete(URL_FRAMING_ID_PARAM);
 			} else {
 				sp.set(URL_PARAM, next);
+				// Built-in modes never carry a framingId — clear it.
+				if (next !== FramingMode.custom) {
+					sp.delete(URL_FRAMING_ID_PARAM);
+				}
 			}
 			setSearchParams(sp, { replace: true });
 		},
 		[parentId, dispatch, searchParams, setSearchParams],
 	);
 
+	const setCustomFraming = useMemo(
+		() => (id: string) => {
+			if (!parentId) return;
+			dispatch(setFramingMode({ parentId, mode: FramingMode.custom }));
+			const sp = new URLSearchParams(searchParams);
+			sp.set(URL_PARAM, FramingMode.custom);
+			sp.set(URL_FRAMING_ID_PARAM, id);
+			setSearchParams(sp, { replace: true });
+		},
+		[parentId, dispatch, searchParams, setSearchParams],
+	);
+
 	const framingId = useMemo(
-		() => resolveActiveFramingId(reduxMode, framings),
-		[reduxMode, framings],
+		() => resolveActiveFramingId(reduxMode, framings, customFramingIdFromUrl),
+		[reduxMode, framings, customFramingIdFromUrl],
+	);
+
+	const customFramings = useMemo<Framing[]>(
+		() =>
+			framings.filter(
+				(f) => f.isActive && f.createdBy !== 'hybrid-auto' && f.createdBy !== 'topic-cluster',
+			),
+		[framings],
 	);
 
 	const availableModes = useMemo<FramingMode[]>(() => {
@@ -118,15 +161,20 @@ export function useActiveFraming(parentId: string | undefined): UseActiveFraming
 		if (framings.some((f) => f.createdBy === 'topic-cluster' && f.isActive)) {
 			modes.push(FramingMode.topic);
 		}
+		if (customFramings.length > 0) {
+			modes.push(FramingMode.custom);
+		}
 
 		return modes;
-	}, [framings]);
+	}, [framings, customFramings]);
 
 	return {
 		mode: reduxMode,
 		setMode,
+		setCustomFraming,
 		framingId,
 		availableModes,
+		customFramings,
 		framings,
 		isLoading,
 	};

@@ -1,9 +1,10 @@
-import { FC, useEffect, useState, useMemo } from 'react';
+import { FC, ReactNode, useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useLocation, useNavigate } from 'react-router';
 import { Flipper, Flipped } from 'react-flip-toolkit';
 
 import { Statement, SortType, SelectionFunction, Role, StatementType } from '@freedi/shared-types';
+import { Layers, Sparkles, Tags } from 'lucide-react';
 import { sortByConsensus } from '@/redux/utils/selectorFactories';
 
 import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
@@ -18,9 +19,17 @@ import { creatorSelector } from '@/redux/creator/creatorSlice';
 import SuggestionCard from './suggestionCard/SuggestionCard';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useShowHiddenCards } from '@/controllers/hooks/useShowHiddenCards';
+import { useActiveFraming } from '@/controllers/hooks/useActiveFraming';
+import { useShowOriginalsOverride } from '@/controllers/hooks/useShowOriginalsOverride';
 import styles from './SuggestionCards.module.scss';
-import { GroupedSuggestionCard } from '@/view/components/atomic/molecules/GroupedSuggestionCard';
+import {
+	GroupedSuggestionCard,
+	type GroupedSuggestionPipeline,
+} from '@/view/components/atomic/molecules/GroupedSuggestionCard';
+import { SuggestionsToolbar } from '@/view/components/atomic/molecules/SuggestionsToolbar';
+import { SectionDivider } from '@/view/components/atomic/molecules/SectionDivider';
 import { createGroupedViewSelector } from '@/redux/statements/condensationSelectors';
+import { FramingMode } from '@/redux/framings/framingsSlice';
 import type { RootState } from '@/redux/store';
 
 interface Props {
@@ -111,6 +120,12 @@ const SuggestionCards: FC<Props> = ({
 
 	const statementsFromStore = useSelector(statementOptionsSelector(statement?.statementId));
 
+	// Active framing — drives which clustering layer's clusters surface in the
+	// grouped view. `regular` mode → no framingId → no framing-restricted
+	// clusters (only legacy unframed clusters surface). The toolbar lets the
+	// user switch between framings.
+	const { framingId, mode: framingMode, framings } = useActiveFraming(statement?.statementId);
+
 	// Grouped view — filters the list per-surface based on admin settings.
 	// Returns grouped clusters + the subset of originals that should remain
 	// visible (all of them in "both" mode; only ungrouped originals in
@@ -122,10 +137,16 @@ const SuggestionCards: FC<Props> = ({
 			createGroupedViewSelector((state: RootState) => state.statements.statements)(
 				statement?.statementId,
 				condensationSurface,
+				framingId,
 			),
-		[statement?.statementId, condensationSurface],
+		[statement?.statementId, condensationSurface, framingId],
 	);
 	const groupedView = useSelector(selectGroupedView);
+
+	// Per-user override: show originals inline even when the admin's surface
+	// mode is `clusters-only`. Stored in localStorage per parentId.
+	const { showOriginals: showOriginalsOverride, setShowOriginals: setShowOriginalsOverride } =
+		useShowOriginalsOverride(statement?.statementId);
 
 	// Check if user is admin
 	const isAdmin =
@@ -142,14 +163,16 @@ const SuggestionCards: FC<Props> = ({
 	// - For non-admins: they can see their own hidden cards only
 	// - Cluster statements (grouped suggestions) are rendered separately below
 	//   and excluded from this "originals" list.
-	// - In "clusters-only" mode: originals that are inside a group are hidden.
+	// - In "clusters-only" mode: originals that are inside a group are hidden,
+	//   unless the per-user override is enabled.
 	const originalsHiddenByGroup = useMemo(() => {
 		if (groupedView.mode !== 'clusters-only') return new Set<string>();
+		if (showOriginalsOverride) return new Set<string>();
 		const inGroup = new Set<string>();
 		Object.values(groupedView.groupMembers).forEach((ids) => ids.forEach((id) => inGroup.add(id)));
 
 		return inGroup;
-	}, [groupedView]);
+	}, [groupedView, showOriginalsOverride]);
 
 	const visibleStatements = useMemo(
 		() =>
@@ -228,9 +251,54 @@ const SuggestionCards: FC<Props> = ({
 		navigate(`/statement/${statementId}/thank-you`);
 	};
 
+	const hasClusters = groupedView.groupedSuggestions.length > 0;
+	const hasOriginals = sortedStatements.length > 0;
+
+	// Pipeline tint per cluster — explicit lookup so semantic (hybrid-auto)
+	// and custom (admin/ai-created) framings get correct accents. Synthesized
+	// clusters carry their own derivedByPipeline so the card detects them
+	// even without this hint.
+	const resolvePipeline = (cluster: Statement): GroupedSuggestionPipeline => {
+		if (cluster.derivedByPipeline === 'synthesis') return 'synthesis';
+		if (cluster.derivedByPipeline === 'topic-cluster') return 'topic';
+		if (!cluster.framingId) return 'unknown';
+		const f = framings.find((fr) => fr.framingId === cluster.framingId);
+		if (!f) return 'unknown';
+		if (f.createdBy === 'hybrid-auto') return 'semantic';
+		if (f.createdBy === 'topic-cluster') return 'topic';
+
+		return 'custom';
+	};
+
+	// Section divider — appears between the cluster block and the originals
+	// block when both are present. Tinted to match the active framing so the
+	// boundary reads visually as "↑ clusters / ↓ everything else".
+	let dividerVariant: 'default' | 'synthesis' | 'topic' | 'semantic' = 'default';
+	let dividerIcon: ReactNode = <Layers size={14} aria-hidden />;
+	if (framingMode === FramingMode.semantic) {
+		dividerVariant = 'semantic';
+		dividerIcon = <Layers size={14} aria-hidden />;
+	} else if (framingMode === FramingMode.topic) {
+		dividerVariant = 'topic';
+		dividerIcon = <Tags size={14} aria-hidden />;
+	} else if (
+		groupedView.groupedSuggestions.length > 0 &&
+		groupedView.groupedSuggestions.every((c) => c.derivedByPipeline === 'synthesis')
+	) {
+		dividerVariant = 'synthesis';
+		dividerIcon = <Sparkles size={14} aria-hidden />;
+	}
+
 	return (
 		<>
-			{groupedView.groupedSuggestions.length > 0 && (
+			<SuggestionsToolbar
+				parentId={statement?.statementId}
+				visibilityMode={groupedView.mode}
+				hasActiveClusters={hasClusters}
+				showOriginalsOverride={showOriginalsOverride}
+				onShowOriginalsOverrideChange={setShowOriginalsOverride}
+			/>
+			{hasClusters && (
 				<div className={styles['suggestions-wrapper']}>
 					{groupedView.groupedSuggestions.map((cluster) => (
 						<div key={cluster.statementId} className={styles['card-wrapper']}>
@@ -238,6 +306,7 @@ const SuggestionCards: FC<Props> = ({
 								cluster={cluster}
 								mode={groupedView.mode}
 								allowDrillToOriginals={groupedView.allowDrillToOriginals}
+								pipeline={resolvePipeline(cluster)}
 								renderOriginal={(original) => (
 									<SuggestionCard parentStatement={statement} statement={original} />
 								)}
@@ -245,6 +314,14 @@ const SuggestionCards: FC<Props> = ({
 						</div>
 					))}
 				</div>
+			)}
+			{hasClusters && hasOriginals && (
+				<SectionDivider
+					label={t('Other suggestions')}
+					count={sortedStatements.length}
+					icon={dividerIcon}
+					variant={dividerVariant}
+				/>
 			)}
 			<Flipper
 				flipKey={flipKey}

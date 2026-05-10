@@ -37,6 +37,8 @@ import ScoreBreakdown from './ScoreBreakdown';
  * wrapper assembles classes and passes state; evaluation UI is injected
  * via `evaluationSlot` so the card stays display-only.
  */
+export type GroupedSuggestionPipeline = 'synthesis' | 'topic' | 'semantic' | 'custom' | 'unknown';
+
 export interface GroupedSuggestionCardProps {
 	cluster: Statement;
 	/** 'both' = inline accordion; 'clusters-only' = drill-down modal via parent. */
@@ -45,6 +47,13 @@ export interface GroupedSuggestionCardProps {
 	renderOriginal?: (original: Statement) => React.ReactNode;
 	evaluationSlot?: React.ReactNode;
 	onDrillToOriginals?: (cluster: Statement) => void;
+	/**
+	 * Explicit pipeline tint. When omitted, falls back to detection from
+	 * `cluster.derivedByPipeline` (synthesis/topic-cluster). Supply this when
+	 * the parent knows the active framing (hybrid-auto → 'semantic',
+	 * admin/ai-custom → 'custom') so the card surfaces the correct accent.
+	 */
+	pipeline?: GroupedSuggestionPipeline;
 	className?: string;
 }
 
@@ -58,6 +67,7 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	renderOriginal,
 	evaluationSlot,
 	onDrillToOriginals,
+	pipeline: pipelineOverride,
 	className,
 }) => {
 	const { t } = useTranslation();
@@ -85,6 +95,13 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 	const pipeline = cluster.derivedByPipeline;
 	const isSynthesis = pipeline === 'synthesis';
 	const isTopicCluster = pipeline === 'topic-cluster';
+	// Effective pipeline tint — explicit prop wins so the parent can flag
+	// 'semantic' (hybrid-auto framing) or 'custom' (admin framing). Falls back
+	// to detection from cluster.derivedByPipeline.
+	const effectivePipeline: GroupedSuggestionPipeline =
+		pipelineOverride ?? (isSynthesis ? 'synthesis' : isTopicCluster ? 'topic' : 'unknown');
+	const isSemantic = effectivePipeline === 'semantic';
+	const isCustom = effectivePipeline === 'custom';
 
 	// Synthesis clusters keep an always-visible source list — users have to
 	// see at all times which originals were merged. Other clusters keep the
@@ -121,7 +138,9 @@ const GroupedSuggestionCard: React.FC<GroupedSuggestionCardProps> = ({
 		isAwaiting && 'grouped-suggestion--awaiting',
 		mobileMetaOpen && 'grouped-suggestion--meta-open',
 		isSynthesis && 'grouped-suggestion--synthesis',
-		isTopicCluster && 'grouped-suggestion--topic',
+		(isTopicCluster || effectivePipeline === 'topic') && 'grouped-suggestion--topic',
+		isSemantic && 'grouped-suggestion--semantic',
+		isCustom && 'grouped-suggestion--custom',
 		className,
 	);
 
