@@ -5,7 +5,7 @@
 **Authors:** Tal Yaron · Claude (Anthropic)
 **Affiliation:** Freedi — Free Deliberation Platform
 **Status:** Draft for scientific review
-**Last updated:** 2026-05-06
+**Last updated:** 2026-05-10
 
 ---
 
@@ -334,6 +334,21 @@ Each Gemini 2.5-Flash call processes 20 pairs at ~1–3 seconds wall-clock and o
 
 Batching is the dominant cost control. A single LLM call carrying 20 pairs uses roughly the same input tokens as a single-pair call (the surrounding instructions dominate the prompt) but produces 20 verdicts. Above 20 pairs per call, output JSON becomes unreliable in our measurements (the model truncates or hallucinates pairIndex values). The 20-per-call number is inherited from the existing negation-detection service, where it has been observed to be stable in production.
 
+#### Verdict cache (content-addressable)
+
+Verdicts are persisted in a `synthesisVerdicts` collection keyed by
+
+$$
+\mathrm{pairKey} = \mathrm{sha1}\big(\min(h_A, h_B) \;\Vert\; \text{“|”} \;\Vert\; \max(h_A, h_B)\big),
+\qquad h_X = \mathrm{sha1}\big(\mathrm{normalize}(\mathrm{text}(X))\big),
+$$
+
+so the entry is symmetric in $(A, B)$ and content-addressable: any text edit on either side mutates the doc id and forces a fresh judgment. Each row stores `(textHashA, textHashB, verdict, reason, modelId, promptVer, createdAt)`. A row is treated as a hit only if the persisted `modelId` and `promptVer` match the running configuration **and** both `textHashA, textHashB` match the incoming pair's freshly-computed hashes. Bumping `promptVer` (or switching model) invalidates the entire cache without a migration.
+
+Phase 4 then becomes: for $E$ candidate edges, batch-fetch verdicts in chunks of 30 via Firestore `where(documentId, 'in', …)`, route only the misses to the LLM batches of 20, and persist the new verdicts back. Fallback verdicts (`different` produced by an LLM-call failure or a parse miss) are explicitly **not** written to the cache, so a transient model error never freezes a permanent merge decision.
+
+The dominant practical effect is on **re-runs**. A first synthesis pass on a 500-option question with $\sim 50$ candidate edges still issues $\sim 3$ Gemini calls. A second pass shortly after — typical when an admin tunes thresholds or re-runs after a small batch of new options arrives — issues $0$ calls for any pair whose member texts have not changed. Incremental synthesis becomes cheap by construction: only edges touching new or edited options pay the LLM cost.
+
 ### 5.7 Phase 5 — Union-Find on verified-same edges
 
 Once all edges have a verdict, we restrict to $E_{\mathrm{same}} = \{(i,j) : \mathrm{verdict}(i,j) = \mathrm{same}\}$ and apply a standard disjoint-set union-find with path compression and union-by-rank. Each connected component of the verified graph $(S', E_{\mathrm{same}})$ is a candidate synthesis group. This step is $O(E\, \alpha(N'))$ — effectively linear.
@@ -374,6 +389,8 @@ Both per-idea integration (admin merges two proposals manually) and bulk synthes
 
 This is why a hybrid cluster, a topic cluster, and a synthesized solution share the same data shape — they ARE the same shape; they got there by different algorithms.
 
+At the **end of every synthesis run**, an explicit finalization pass calls `recomputeClusterEvaluation` for each newly-created cluster. This re-runs the per-user-deduplicated aggregation of §6.2 against current member evaluations, writes the canonical `StatementEvaluation` (mean, agreement, like-mindedness, confidence index, distribution counts) to the cluster doc, syncs `clusterEvaluationLinks` provenance, and emits an audit log per cluster. The pass is O(K) reads + writes for K created clusters and provides a single, observable point of truth: after the run returns, every produced cluster carries the augmented evaluation it would compute from the live evaluation table. Hybrid clustering performs the equivalent step inline, computing each cluster's aggregated evaluation before writing the cluster statement (§3.6).
+
 ### 6.2 Per-user-deduplicated evaluation aggregation
 
 When a synthesis group (or any cluster) is built, member evaluations are not summed naively. A user who voted on three variants of the same idea must count once, not three times.
@@ -392,7 +409,15 @@ This deduplication is essential. Without it, both clustering and synthesis would
 
 Per-cluster aggregations (`uniqueEvaluatorCount`, `averageClusterConsensus`, pro/con/neutral counts, etc.) are cached in a `clusterAggregations` collection keyed by `${clusterId}--${framingId}`. A Firestore `onWrite` trigger on the `evaluations` collection marks affected aggregations stale. The next read recomputes via the deduplication of §6.2.
 
-Per-(cluster, user) provenance lives in a separate `clusterEvaluationLinks` collection, supporting after-the-fact explainability ("this user contributed value $x$ to this cluster via these member options").
+The trigger marks three potentially-affected aggregations stale, in this order:
+
+1. **Per-framing aggregations.** Every entry of `statement.framingClusters[framingId] = clusterId` on the changed statement.
+2. **Direct-parent clusters.** When `statement.parentId` is itself a cluster (legacy / direct-child clustering paths).
+3. **Synthesized-cluster aggregations.** When `statement.integratedInto` is set — i.e. the statement is a hidden member of a synthesized cluster. This branch closes the linkage gap that motivated §8.7: a hidden member's `parentId` is the original question, not the synthesized cluster, so without an explicit `integratedInto` lookup the synthesized cluster's aggregation would never invalidate when its members' evaluations changed.
+
+Each branch is an idempotent fast-exit: the trigger reads the candidate aggregation doc first and skips the write if `isStale` is already `true`. Bursts of evaluations on a popular member therefore collapse to one stale-write per affected aggregation rather than one write per evaluation.
+
+Per-(cluster, user) provenance lives in a separate `clusterEvaluationLinks` collection, supporting after-the-fact explainability ("this user contributed value $x$ to this cluster via these member options"). The end-of-run finalization pass (§6.1) keeps these links in sync alongside the aggregated evaluation.
 
 ---
 
@@ -418,23 +443,27 @@ Let $N$ be the total options under a question, $N'$ the surviving subset after p
 |---|---|---|
 | 1: coverage check | $O(1)$ | one Firestore aggregate read |
 | 2: pre-filter | $O(N)$ | linear scan |
-| 3: ANN edge building | $O(N' \log N)$ via Firestore `findNearest` | $N'$ vector queries |
-| 4: LLM verdict | $O(E / 20)$ batched LLM calls | network latency |
+| 3: ANN edge building | $O(N' \log N)$ via Firestore `findNearest` | $N'$ vector queries (parallelized) |
+| 4: LLM verdict | $O(E_{\mathrm{miss}} / 20)$ batched LLM calls | network latency, dominated by cache misses |
 | 5: union-find | $O(E\, \alpha(N'))$ | effectively linear |
-| 6: complete-linkage | $O(K \cdot \overline{|G|}^2 / 20)$ extra LLM calls | small |
-| 7: title + execute | $O(K)$ LLM calls + $O(K)$ Firestore writes | linear |
+| 6: complete-linkage | $O(K \cdot \overline{|G|}^2 / 20)$ extra LLM calls (cache-hit on re-runs) | small |
+| 7: title + execute | $O(K)$ LLM calls + $O(K)$ Firestore writes (parallelized at width 5) | linear |
+
+The Phase 3 vector queries and Phase 7 integration writes are independent across candidates / groups and run under bounded `Promise.all` (concurrency 30 and 5 respectively). On the small-question regime (≤500 options) this is the dominant wall-clock optimization; the 1 GiB Cloud Function instance handles the parallelism without quota pressure. Phase 4's complexity is over **misses** ($E_{\mathrm{miss}}$): the verdict cache (§5.6) collapses re-runs to near-zero LLM cost.
 
 | Regime | $N$ | Wall-clock | Notes |
 |---|---|---|---|
-| v1 (deployed) | up to 10 000 | ~2–3 minutes | Single Cloud Function chain |
+| v1 (deployed) | up to 10 000 | ~2–3 minutes (cold cache) | Single Cloud Function chain, parallel ANN + integrations |
+| v1 re-run | up to 10 000 | ~10–20 seconds | Verdict cache turns Phase 4 into Firestore lookups |
 | v2 (deferred) | up to 100 000 | ~30 minutes | Requires OpenAI Batch API for embedding backfill and Cloud Tasks for parallelism |
 
 For $N = 10\,000$:
 - Embedding backfill (if needed): ~$0.02 USD on `text-embedding-3-small`.
-- LLM-as-judge: ~$0.20 USD on Gemini 2.5-Flash (500 batched calls of 20 pairs).
+- LLM-as-judge (cold cache): ~$0.20 USD on Gemini 2.5-Flash (500 batched calls of 20 pairs).
+- LLM-as-judge (warm cache, no edits): ≈$0.00 — every pair hits the cache.
 - Title generation: ~$0.05 USD (one call per final group).
 
-Total marginal cost per synthesis run: well under one US dollar. Synthesis can be re-run on demand without budget pressure.
+Total marginal cost per synthesis run: well under one US dollar on a cold cache, and effectively the cost of Firestore lookups on a warm one. Synthesis can be re-run on demand without budget pressure.
 
 ---
 
@@ -470,7 +499,9 @@ Frequent re-clustering can cause proposals to migrate between clusters, potentia
 
 ### 8.7 Re-aggregation after evaluation drift (synthesis)
 
-When a synthesis is created, the aggregated evaluation is computed once and stored. If member evaluations subsequently change, the synthesis evaluation does not auto-refresh. The current design relies on the operator re-running synthesis. A Firestore trigger that refreshes synthesis evaluations on member-evaluation writes is straightforward to add but is deferred to avoid trigger amplification on high-traffic questions.
+When a synthesis is created, the aggregated evaluation is computed once and stored on the synthesized statement document. The framing-aware **cache layer** is now kept current: the `onEvaluationChangeInvalidateCache` trigger marks the synthesized cluster's `clusterAggregations` row stale via the `integratedInto` linkage (§6.3), so any read through `getClusterAggregations` recomputes against current evaluations. The end-of-run finalization pass (§6.1) further guarantees the cluster doc itself reflects truth at the moment a run completes.
+
+Between runs, the cluster statement's stored `evaluation` field can still drift relative to live member evaluations — direct reads of the doc (cards, lists, search results) see the snapshot from the last finalize, not the live aggregate. A Firestore trigger that re-runs `recomputeClusterEvaluation` on member-evaluation writes would close this gap completely; it is deferred until trigger-amplification budgeting is in place on high-traffic questions, since a single popular member could otherwise drive O(evaluations) recomputes per second. The cache-and-finalize approach is the chosen interim: the gap is observable only in non-cache reads, and the existing fast-exit on `isStale` keeps trigger work bounded for the cache layer.
 
 ### 8.8 Cross-question synthesis is out of scope
 
