@@ -53,63 +53,96 @@ let allOptions: Statement[] = [];
 let messages: Statement[] = [];
 let chatUnsubscribe: Unsubscribe | null = null;
 
-// --- Per-question delegate state ---
-//
-// Two listeners cooperate:
-//   1. `myDelegateUnsub` — watches `joinDelegates/{qid--uid}` so a freshly
-//      accepted invite (or a revocation) takes effect without a refresh.
-//      Drives `setCurrentDelegate` in admin.ts.
-//   2. `delegatesUnsub` / `delegateInvitationsUnsub` — admin-only listeners
-//      that populate the DelegatesPanel lists. Mounted lazily when the panel
-//      opens; torn down on close or question swap.
-let delegatesForQuestion: JoinDelegate[] = [];
-let delegateInvitationsForQuestion: JoinDelegateInvitation[] = [];
-let myDelegateUnsub: Unsubscribe | null = null;
-let delegatesUnsub: Unsubscribe | null = null;
-let delegateInvitationsUnsub: Unsubscribe | null = null;
+// Delegate-system state + subscriptions live in ./delegates/. Callable
+// wrappers (create/accept/revoke) live in ./delegates/delegateActions.ts.
+// Re-exported below so call sites that import from `@/lib/store` keep working.
+import {
+	subscribeMyDelegate,
+	subscribeQuestionDelegates as _subscribeQuestionDelegates,
+	unsubscribeQuestionDelegates as _unsubscribeQuestionDelegates,
+	getDelegatesForQuestion as _getDelegatesForQuestion,
+	getDelegateInvitationsForQuestion as _getDelegateInvitationsForQuestion,
+} from './delegates/delegateSubscriptions';
+import {
+	createJoinDelegateInvite as _createJoinDelegateInvite,
+	revokeJoinDelegate as _revokeJoinDelegate,
+	acceptJoinDelegateInvite as _acceptJoinDelegateInvite,
+} from './delegates/delegateActions';
+export const subscribeQuestionDelegates = _subscribeQuestionDelegates;
+export const unsubscribeQuestionDelegates = _unsubscribeQuestionDelegates;
+export const getDelegatesForQuestion = _getDelegatesForQuestion;
+export const getDelegateInvitationsForQuestion = _getDelegateInvitationsForQuestion;
+export const createJoinDelegateInvite = _createJoinDelegateInvite;
+export const revokeJoinDelegate = _revokeJoinDelegate;
+export const acceptJoinDelegateInvite = _acceptJoinDelegateInvite;
 
-let messageCounts: Map<string, number> = new Map();
-let messageLatest: Map<string, number> = new Map();
-let messagesByOption: Map<string, number[]> = new Map();
-let messageCountsUnsubs: Unsubscribe[] = [];
+// Chat message counts live in ./chat/messageCounts.ts. Re-exported below.
+import {
+	getMessageCount as _getMessageCount,
+	getNewMessageCount as _getNewMessageCount,
+	markOptionChatRead,
+	subscribeMessageCounts,
+} from './chat/messageCounts';
+export const getMessageCount = _getMessageCount;
+export const getNewMessageCount = _getNewMessageCount;
 /** Cluster-id → unique-evaluator count. Populated by `subscribeClusterLinks`. */
 let clusterEvaluatorCounts: Map<string, number> = new Map();
 let clusterLinksUnsubs: Unsubscribe[] = [];
 
-// New-solutions buffer: mirrors main app's useNewSolutionsBuffer logic.
-// Phase 1 (3 s stabilize window): every arriving ID is marked "known" so the
-// initial snapshot and any Firebase catch-up don't produce false positives.
-// Phase 2 (after stabilize): IDs not yet in knownOptionIds go to pendingOptionIds.
-// Flush: pending → highlightedOptionIds for HIGHLIGHT_MS, then auto-cleared.
-const BUFFER_STABILIZE_MS = 3_000;
-const BUFFER_HIGHLIGHT_MS = 10_000;
-let bufferKnownIds = new Set<string>();
-let bufferPendingIds = new Set<string>();
-let bufferHighlightedIds = new Set<string>();
-let bufferStabilized = false;
-let bufferStabilizeTimer: ReturnType<typeof setTimeout> | null = null;
-const bufferHighlightTimers = new Map<string, ReturnType<typeof setTimeout>>();
+// New-solutions buffer lives in ./newSolutionsBuffer.ts. The buffer-driven
+// helpers are re-exported below so call sites that import from `@/lib/store`
+// keep working.
+import {
+	resetNewSolutionsBuffer,
+	ingestOptionForBuffer,
+	isOptionPending,
+	isOptionHighlighted,
+	unhighlightOption,
+	getNewOptionsPendingCount as _getNewOptionsPendingCount,
+	isOptionNewlyArrived as _isOptionNewlyArrived,
+	flushNewOptions as _flushNewOptions,
+} from './newSolutionsBuffer';
+export const getNewOptionsPendingCount = _getNewOptionsPendingCount;
+export const isOptionNewlyArrived = _isOptionNewlyArrived;
+export const flushNewOptions = _flushNewOptions;
 
-/** Confirmed (server-side) evaluations the current user has cast for options
- *  under the active question, keyed by optionId. Populated by
- *  `subscribeUserEvaluations`. The scale is -1..1, matching the main app's
- *  `enhancedEvaluationsThumbs`. */
-let userEvaluations: Map<string, number> = new Map();
-/** Optimistic overrides from the most recent click. Reading code prefers
- *  these over `userEvaluations` so the picked face stays highlighted even
- *  before Firestore confirms — the listener clears each entry once the
- *  server snapshot agrees with what we wrote. */
-let optimisticEvaluations: Map<string, number> = new Map();
-let userEvaluationsUnsub: Unsubscribe | null = null;
+// User evaluations (confirmed + optimistic) + the snapshot listener live in
+// ./userEvaluations.ts. The public API is re-exported below.
+import {
+	getEffectiveEvaluation as _getEffectiveEvaluation,
+	setEvaluation as _setEvaluation,
+	subscribeUserEvaluations as _subscribeUserEvaluations,
+} from './userEvaluations';
+export const getEffectiveEvaluation = _getEffectiveEvaluation;
+export const setEvaluation = _setEvaluation;
+export const subscribeUserEvaluations = _subscribeUserEvaluations;
 
-const LAST_READ_KEY = 'freedi_join_last_read';
-let joinFormSubmitted = new Set<string>();
-// In-memory cache of the last-known submission role per (questionId, userId).
-// Lets handleJoin decide optimistically whether to open the form without a
-// Firestore read. Populated on successful saveJoinFormSubmission, and by
-// getJoinFormSubmissionRole on its first fetch.
-const joinFormSubmittedRole = new Map<string, JoinRole>();
 let customDisplayName: string | null = null;
+
+// Join-form submission cache + API moved to ./join/joinFormCache.ts. The
+// public API is re-exported below so call sites that import from `@/lib/store`
+// keep working.
+import {
+	type JoinRole,
+	type JoinFormSubmissionData,
+	hasJoinFormSubmission as _hasJoinFormSubmission,
+	getCachedJoinFormSubmissionRole as _getCachedJoinFormSubmissionRole,
+	getCachedJoinFormSubmissionData as _getCachedJoinFormSubmissionData,
+	getJoinFormSubmissionData as _getJoinFormSubmissionData,
+	getJoinFormSubmissionRole as _getJoinFormSubmissionRole,
+	saveJoinFormSubmission as _saveJoinFormSubmission,
+	subscribeUserJoinFormSubmission as _subscribeUserJoinFormSubmission,
+	clearJoinFormCacheForUsers,
+} from './join/joinFormCache';
+
+export type { JoinRole, JoinFormSubmissionData } from './join/joinFormCache';
+export const hasJoinFormSubmission = _hasJoinFormSubmission;
+export const getCachedJoinFormSubmissionRole = _getCachedJoinFormSubmissionRole;
+export const getCachedJoinFormSubmissionData = _getCachedJoinFormSubmissionData;
+export const getJoinFormSubmissionData = _getJoinFormSubmissionData;
+export const getJoinFormSubmissionRole = _getJoinFormSubmissionRole;
+export const saveJoinFormSubmission = _saveJoinFormSubmission;
+export const subscribeUserJoinFormSubmission = _subscribeUserJoinFormSubmission;
 
 const DISPLAY_NAME_KEY = 'freedi_join_name_v2';
 const VISITED_KEY = 'freedi_join_visited';
@@ -147,39 +180,8 @@ export function markOptionRead(optionId: string): void {
 	markOptionChatRead(optionId);
 }
 
-function getLastReadMap(): Record<string, number> {
-	try {
-		const raw = localStorage.getItem(LAST_READ_KEY);
-		if (raw) return JSON.parse(raw);
-	} catch {
-		/* ignore */
-	}
-
-	return {};
-}
-
-function markOptionChatRead(optionId: string): void {
-	try {
-		const map = getLastReadMap();
-		map[optionId] = Date.now();
-		localStorage.setItem(LAST_READ_KEY, JSON.stringify(map));
-	} catch {
-		/* ignore */
-	}
-}
-
-export function getNewMessageCount(optionId: string): number {
-	const lastRead = getLastReadMap()[optionId];
-	if (!lastRead) return messageCounts.get(optionId) ?? 0;
-
-	const latest = messageLatest.get(optionId);
-	if (!latest || latest <= lastRead) return 0;
-
-	const allMsgs = messagesByOption.get(optionId);
-	if (!allMsgs) return 0;
-
-	return allMsgs.filter((ts) => ts > lastRead).length;
-}
+// `getLastReadMap` / `markOptionChatRead` / `getNewMessageCount` live in
+// ./chat/messageCounts.ts (re-exported above).
 
 export function getUnreadCount(): number {
 	const visible = getVisibleOptions();
@@ -317,7 +319,7 @@ export function getVisibleOptions(): Statement[] {
 		.filter((o) => o.hide !== true)
 		.filter((o) => o.joinStatus !== 'failed')
 		// buffer: hide options the user hasn't acknowledged yet (pending pill)
-		.filter((o) => !bufferPendingIds.has(o.statementId));
+		.filter((o) => !isOptionPending(o.statementId));
 
 	// Apply sort: manual order takes precedence, otherwise use the sort function
 	if (isManualSort) {
@@ -377,7 +379,7 @@ export function getVisibleOptions(): Statement[] {
 			o.hide !== true &&
 			o.joinStatus !== 'failed' &&
 			o.creatorRole !== Role.admin &&
-			!bufferPendingIds.has(o.statementId),
+			!isOptionPending(o.statementId),
 	);
 	if (forced.length > 0) {
 		const seen = new Set(opts.map((o) => o.statementId));
@@ -389,8 +391,8 @@ export function getVisibleOptions(): Statement[] {
 	// stack. Once evaluated (or after the highlight timer expires) they animate
 	// to their natural sorted position via the existing FLIP animation.
 	if (sortType !== SortType.newest) {
-		const pinned = opts.filter((o) => bufferHighlightedIds.has(o.statementId));
-		const rest = opts.filter((o) => !bufferHighlightedIds.has(o.statementId));
+		const pinned = opts.filter((o) => isOptionHighlighted(o.statementId));
+		const rest = opts.filter((o) => !isOptionHighlighted(o.statementId));
 		opts = [...pinned, ...rest];
 	}
 
@@ -420,7 +422,7 @@ export function getOrganizerSuggestions(): Statement[] {
 
 	const filtered = allOptions
 		.filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
-		.filter((o) => !bufferPendingIds.has(o.statementId));
+		.filter((o) => !isOptionPending(o.statementId));
 
 	if (isManualSort) {
 		const manualOrderMap = new Map(manualOrder!.map((id, idx) => [id, idx]));
@@ -1306,24 +1308,10 @@ async function applyFacilitatorRedirect(path: string, mainId: string): Promise<v
 	}, FACILITATOR_REDIRECT_DELAY_MS);
 }
 
-export function getMessageCount(optionId: string): number {
-	return messageCounts.get(optionId) ?? 0;
-}
+// `getMessageCount` lives in ./chat/messageCounts.ts (re-exported above).
 
 export function subscribeOptions(questionId: string): Unsubscribe {
-	// Reset buffer for this question session
-	bufferKnownIds = new Set<string>();
-	bufferPendingIds = new Set<string>();
-	bufferHighlightedIds = new Set<string>();
-	bufferStabilized = false;
-	if (bufferStabilizeTimer !== null) clearTimeout(bufferStabilizeTimer);
-	for (const t of bufferHighlightTimers.values()) clearTimeout(t);
-	bufferHighlightTimers.clear();
-
-	bufferStabilizeTimer = setTimeout(() => {
-		bufferStabilized = true;
-		bufferStabilizeTimer = null;
-	}, BUFFER_STABILIZE_MS);
+	resetNewSolutionsBuffer();
 
 	const optionsQuery = query(
 		collection(db, Collections.statements),
@@ -1336,59 +1324,18 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 		const currentUid = getUserState().user?.uid;
 
 		for (const opt of incoming) {
-			const id = opt.statementId;
-			if (!bufferStabilized || opt.creatorId === currentUid) {
-				// Warm-up OR own submission: appear immediately, highlight own ones
-				if (bufferStabilized && opt.creatorId === currentUid && !bufferKnownIds.has(id)) {
-					// Own newly-submitted option: skip the pill, highlight directly
-					bufferHighlightedIds.add(id);
-					if (bufferHighlightTimers.has(id)) clearTimeout(bufferHighlightTimers.get(id)!);
-					const timer = setTimeout(() => {
-						bufferHighlightedIds.delete(id);
-						bufferHighlightTimers.delete(id);
-						m.redraw();
-					}, BUFFER_HIGHLIGHT_MS);
-					bufferHighlightTimers.set(id, timer);
-				}
-				bufferKnownIds.add(id);
-			} else if (!bufferKnownIds.has(id) && !bufferPendingIds.has(id)) {
-				// Post-stabilize: genuinely new option from another user — queue it
-				bufferPendingIds.add(id);
-			} else {
-				bufferKnownIds.add(id);
-			}
+			ingestOptionForBuffer(opt.statementId, opt.creatorId, currentUid);
 		}
 
 		allOptions = incoming;
-		subscribeMessageCounts(questionId);
+		subscribeMessageCounts(allOptions.map((o) => o.statementId));
 		subscribeClusterLinks();
 		m.redraw();
 	});
 }
 
-export function getNewOptionsPendingCount(): number {
-	return bufferPendingIds.size;
-}
-
-export function flushNewOptions(): void {
-	for (const id of bufferPendingIds) {
-		bufferKnownIds.add(id);
-		bufferHighlightedIds.add(id);
-		if (bufferHighlightTimers.has(id)) clearTimeout(bufferHighlightTimers.get(id)!);
-		const timer = setTimeout(() => {
-			bufferHighlightedIds.delete(id);
-			bufferHighlightTimers.delete(id);
-			m.redraw();
-		}, BUFFER_HIGHLIGHT_MS);
-		bufferHighlightTimers.set(id, timer);
-	}
-	bufferPendingIds = new Set<string>();
-	m.redraw();
-}
-
-export function isOptionNewlyArrived(optionId: string): boolean {
-	return bufferHighlightedIds.has(optionId);
-}
+// `getNewOptionsPendingCount`, `flushNewOptions`, `isOptionNewlyArrived` live
+// in ./newSolutionsBuffer.ts and are re-exported at the top of this file.
 
 /**
  * Subscribe to `clusterEvaluationLinks` for every currently-visible cluster,
@@ -1436,217 +1383,11 @@ export function getClusterEvaluatorCount(clusterId: string): number {
 	return clusterEvaluatorCounts.get(clusterId) ?? 0;
 }
 
-/** What face should be highlighted on the option's evaluation row? Returns
- *  the optimistic value if a click is still in flight, otherwise the
- *  server-confirmed value. `undefined` means the user hasn't evaluated yet. */
-export function getEffectiveEvaluation(optionId: string): number | undefined {
-	if (optimisticEvaluations.has(optionId)) {
-		return optimisticEvaluations.get(optionId);
-	}
+// User evaluations (getEffectiveEvaluation, setEvaluation, subscribeUserEvaluations)
+// live in ./userEvaluations.ts — re-exported at the top of this file.
+// `subscribeUserJoinFormSubmission` lives in ./join/joinFormCache.ts (re-exported above).
 
-	return userEvaluations.get(optionId);
-}
-
-/** Optimistic evaluation write — mirrors the main app's
- *  `setEvaluationToDB` shape so the same Cloud Function aggregates the
- *  result. Highlights the face immediately, then writes through; the
- *  evaluations listener clears the optimistic entry as soon as the server
- *  snapshot matches. */
-export async function setEvaluation(option: Statement, score: number): Promise<void> {
-	if (score < -1 || score > 1) return;
-	if (!option.parentId) return;
-
-	const creator = getCreator();
-	if (!creator) return;
-
-	// Optimistic: paint the chosen face immediately and trigger a redraw so
-	// there's no perceptible lag between click and selected-state.
-	optimisticEvaluations.set(option.statementId, score);
-
-	// Un-pin from the top-of-list highlight so the option falls to its natural
-	// sorted position — the FLIP animation in Solutions.ts handles the move.
-	if (bufferHighlightedIds.has(option.statementId)) {
-		bufferHighlightedIds.delete(option.statementId);
-		const t = bufferHighlightTimers.get(option.statementId);
-		if (t !== undefined) {
-			clearTimeout(t);
-			bufferHighlightTimers.delete(option.statementId);
-		}
-	}
-
-	m.redraw();
-
-	const evaluationId = `${creator.uid}--${option.statementId}`;
-	const data = {
-		parentId: option.parentId,
-		evaluationId,
-		statementId: option.statementId,
-		evaluatorId: creator.uid,
-		updatedAt: Date.now(),
-		evaluation: score,
-		evaluator: creator,
-	};
-
-	try {
-		await setDoc(doc(db, Collections.evaluations, evaluationId), data);
-	} catch (err) {
-		// Roll the optimistic entry back so the UI reflects what's actually
-		// saved on the server side.
-		optimisticEvaluations.delete(option.statementId);
-		m.redraw();
-		console.error('[setEvaluation] failed:', err);
-		throw err;
-	}
-}
-
-/** Subscribe to the current user's evaluations under this question, so the
- *  card UI re-renders into the correct selected face when other clients (or
- *  another tab) update the value. Tears down any prior subscription. */
-export function subscribeUserEvaluations(questionId: string): Unsubscribe {
-	if (userEvaluationsUnsub) {
-		userEvaluationsUnsub();
-		userEvaluationsUnsub = null;
-	}
-	userEvaluations = new Map();
-	optimisticEvaluations = new Map();
-
-	const creator = getCreator();
-	if (!creator) {
-		return () => undefined;
-	}
-
-	const q = query(
-		collection(db, Collections.evaluations),
-		where('parentId', '==', questionId),
-		where('evaluatorId', '==', creator.uid),
-	);
-
-	userEvaluationsUnsub = onSnapshot(q, (snap) => {
-		const next = new Map<string, number>();
-		for (const d of snap.docs) {
-			const data = d.data() as { statementId?: string; evaluation?: number };
-			if (typeof data.statementId === 'string' && typeof data.evaluation === 'number') {
-				next.set(data.statementId, data.evaluation);
-			}
-		}
-		userEvaluations = next;
-
-		// Clear optimistic entries that the server has now confirmed (or that
-		// the server resolved to the same value). Keeping a stale optimistic
-		// override would mask a server-rejected write.
-		for (const [optionId, optimisticScore] of optimisticEvaluations) {
-			const confirmed = next.get(optionId);
-			if (confirmed === optimisticScore) {
-				optimisticEvaluations.delete(optionId);
-			}
-		}
-		m.redraw();
-	});
-
-	return userEvaluationsUnsub;
-}
-
-/**
- * Listens to the current user's own `joinFormSubmissions/{uid}` doc for the
- * active question and keeps the in-memory caches (`joinFormSubmittedRole`,
- * `joinFormSubmissionCache`, `joinFormSubmitted`) in sync with Firestore.
- *
- * Without this listener, the worst silent failure is:
- *   1. User has the page open in tab A.
- *   2. Admin runs `resetQuestionJoining` from tab B.
- *   3. Tab A's `joinFormSubmittedRole` cache still says "submitted as activist".
- *   4. User clicks join → cache hit → form modal is skipped → no submission
- *      doc is created → fn_joinOption succeeds → fn_syncOptionMembersToSheet
- *      finds no submission and returns 'skipped-no-submission' → user sees
- *      themselves as joined in the app but is invisible in the sheet.
- *
- * The listener clears the cache as soon as Firestore tells us the doc is
- * gone, so the next click re-opens the form.
- */
-export function subscribeUserJoinFormSubmission(questionId: string): Unsubscribe {
-	const creator = getCreator();
-	if (!creator) {
-		return () => undefined;
-	}
-	const key = `${questionId}_${creator.uid}`;
-	const submissionRef = doc(
-		db,
-		Collections.statements,
-		questionId,
-		'joinFormSubmissions',
-		creator.uid,
-	);
-
-	return onSnapshot(submissionRef, (snap) => {
-		if (!snap.exists()) {
-			joinFormSubmittedRole.delete(key);
-			joinFormSubmissionCache.delete(key);
-			joinFormSubmitted.delete(key);
-			m.redraw();
-
-			return;
-		}
-		const data = snap.data() as
-			| {
-					role?: JoinRole;
-					displayName?: string;
-					values?: Record<string, string>;
-			  }
-			| undefined;
-		joinFormSubmitted.add(key);
-		if (data?.role) joinFormSubmittedRole.set(key, data.role);
-		joinFormSubmissionCache.set(key, {
-			role: data?.role ?? null,
-			displayName: data?.displayName ?? '',
-			values: data?.values ?? {},
-		});
-		m.redraw();
-	});
-}
-
-function subscribeMessageCounts(_questionId: string): void {
-	for (const unsub of messageCountsUnsubs) unsub();
-	messageCountsUnsubs = [];
-
-	const optionIds = allOptions.map((o) => o.statementId);
-	if (optionIds.length === 0) return;
-
-	const batchSize = 30;
-	for (let i = 0; i < optionIds.length; i += batchSize) {
-		const batch = optionIds.slice(i, i + batchSize);
-
-		const chatQuery = query(
-			collection(db, Collections.statements),
-			where('parentId', 'in', batch),
-			where('statementType', '==', StatementType.statement),
-		);
-
-		const unsub = onSnapshot(chatQuery, (snap) => {
-			for (const id of batch) {
-				messageCounts.delete(id);
-				messageLatest.delete(id);
-				messagesByOption.delete(id);
-			}
-
-			for (const d of snap.docs) {
-				const data = d.data() as Statement;
-				const pid = data.parentId;
-				messageCounts.set(pid, (messageCounts.get(pid) ?? 0) + 1);
-
-				const ts = data.createdAt ?? 0;
-				const existing = messageLatest.get(pid) ?? 0;
-				if (ts > existing) messageLatest.set(pid, ts);
-
-				const arr = messagesByOption.get(pid) ?? [];
-				arr.push(ts);
-				messagesByOption.set(pid, arr);
-			}
-			m.redraw();
-		});
-
-		messageCountsUnsubs.push(unsub);
-	}
-}
+// `subscribeMessageCounts` lives in ./chat/messageCounts.ts (imported above).
 
 export function subscribeChat(optionId: string): void {
 	unsubscribeChat();
@@ -1755,558 +1496,39 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 	await batch.commit();
 }
 
-export type JoinRole = 'activist' | 'organizer';
+// `JoinRole` lives in ./join/joinFormCache.ts (re-exported as a type above).
 
-export interface ToggleJoiningResult {
-	success: boolean;
-	leftStatementId?: string;
-	leftStatementTitle?: string;
-	error?: string;
-}
+// Cloud-function wrappers (toggleJoining, resetOptionJoining,
+// resetQuestionJoining, testSheetAccess) live in ./join/joinCallables.ts.
+import {
+	type ToggleJoiningResult as _ToggleJoiningResult,
+	type ToggleJoiningOptions as _ToggleJoiningOptions,
+	type TestSheetAccessResult as _TestSheetAccessResult,
+	type ResetQuestionJoiningResult as _ResetQuestionJoiningResult,
+	toggleJoining as _toggleJoining,
+	testSheetAccess as _testSheetAccess,
+	resetOptionJoining as _resetOptionJoining,
+	resetQuestionJoining as _resetQuestionJoining,
+	getUserCommittedOptionsFrom,
+} from './join/joinCallables';
+export type ToggleJoiningResult = _ToggleJoiningResult;
+export type ToggleJoiningOptions = _ToggleJoiningOptions;
+export type TestSheetAccessResult = _TestSheetAccessResult;
+export type ResetQuestionJoiningResult = _ResetQuestionJoiningResult;
+export const toggleJoining = _toggleJoining;
+export const testSheetAccess = _testSheetAccess;
+export const resetOptionJoining = _resetOptionJoining;
+export const resetQuestionJoining = _resetQuestionJoining;
 
 /** All visible options under the current question where the user is a
- *  member in either role (joined or organizers). Distinct — a user who's
- *  both activist and organizer on the same option counts once. Used by the
- *  per-user cap: the cap is "how many activities you're committed to" and
- *  is role-agnostic, so a role swap on the same option (activist ↔
- *  organizer) doesn't bump the count and shouldn't trigger the swap modal.
- *  Hidden / failed options are filtered out so they don't inflate the count
- *  toward an admin-imposed cap participants can no longer act on. */
+ *  member in either role (joined or organizers). Wraps the pure helper
+ *  in ./join/joinCallables.ts with the active-question state. */
 export function getUserCommittedOptions(): Statement[] {
-	const creator = buildCreator();
-	if (!creator) return [];
-	const uid = creator.uid;
+	const uid = getUserState().user?.uid;
+	if (!uid) return [];
 
-	return allOptions.filter((option) => {
-		if (option.hide === true) return false;
-		if (option.joinStatus === 'failed') return false;
-		const inJoined =
-			Array.isArray(option.joined) && option.joined.some((c: Creator) => c.uid === uid);
-		const inOrgs =
-			Array.isArray(option.organizers) && option.organizers.some((c: Creator) => c.uid === uid);
-
-		return inJoined || inOrgs;
-	});
+	return getUserCommittedOptionsFrom(allOptions, uid);
 }
 
-export interface ToggleJoiningOptions {
-	/** When set, atomically remove the user from this sibling option's
-	 *  `joined`/`organizers` list before adding them to the new one. Used by
-	 *  the LimitReachedModal swap flow so a cap is preserved across the swap. */
-	releaseFromOptionId?: string;
-}
-
-interface JoinOptionCallableRequest {
-	optionId: string;
-	role: JoinRole;
-	releaseFromOptionId?: string;
-}
-
-interface JoinOptionCallableResult {
-	success: true;
-	action: 'joined' | 'left' | 'swapped';
-	role: JoinRole;
-	leftStatementId?: string;
-	leftStatementTitle?: string;
-}
-
-/**
- * Toggles the current user's membership on `statementId` (an option) via
- * the `fn_joinOption` callable. The callable is now the canonical write
- * path: it enforces the per-user cap, applies `singleJoinOnly`, and
- * performs atomic swaps. Firestore rules forbid clients from writing to
- * `joined`/`organizers` directly when a `joinForm` is configured, so this
- * is the only legitimate route.
- *
- * `parentStatementId` is now informational (kept in the signature so call
- * sites don't need to change) — the callable derives it from the option's
- * `parentId`. The `leftStatementId`/`leftStatementTitle` fields on the
- * result are populated when the operation was a swap or a singleJoinOnly
- * implicit removal.
- */
-export async function toggleJoining(
-	statementId: string,
-	_parentStatementId: string,
-	role: JoinRole = 'activist',
-	options: ToggleJoiningOptions = {},
-): Promise<ToggleJoiningResult> {
-	try {
-		const creator = buildCreator();
-		if (!creator) throw new Error('User not authenticated');
-
-		const call = httpsCallable<JoinOptionCallableRequest, JoinOptionCallableResult>(
-			functions,
-			'fn_joinOption',
-		);
-		const payload: JoinOptionCallableRequest = {
-			optionId: statementId,
-			role,
-		};
-		if (options.releaseFromOptionId) {
-			payload.releaseFromOptionId = options.releaseFromOptionId;
-		}
-		const result = await call(payload);
-
-		return {
-			success: true,
-			leftStatementId: result.data.leftStatementId,
-			leftStatementTitle: result.data.leftStatementTitle,
-		};
-	} catch (error) {
-		console.error('[Join] toggleJoining failed:', error);
-
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : 'Failed to toggle joining',
-		};
-	}
-}
-
-export async function hasJoinFormSubmission(questionId: string, userId: string): Promise<boolean> {
-	const key = `${questionId}_${userId}`;
-	if (joinFormSubmitted.has(key)) return true;
-
-	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
-	const snap = await getDoc(submissionRef);
-	if (snap.exists()) {
-		joinFormSubmitted.add(key);
-
-		return true;
-	}
-
-	return false;
-}
-
-/** Synchronous peek at the cached submission role — null if unknown locally. */
-export function getCachedJoinFormSubmissionRole(
-	questionId: string,
-	userId: string,
-): JoinRole | null {
-	return joinFormSubmittedRole.get(`${questionId}_${userId}`) ?? null;
-}
-
-export interface JoinFormSubmissionData {
-	role: JoinRole | null;
-	displayName: string;
-	values: Record<string, string>;
-}
-
-// In-memory cache of the full submission so repeated modal opens don't re-hit
-// Firestore. Populated on every save and on getJoinFormSubmissionData fetch.
-const joinFormSubmissionCache = new Map<string, JoinFormSubmissionData>();
-
-export function getCachedJoinFormSubmissionData(
-	questionId: string,
-	userId: string,
-): JoinFormSubmissionData | null {
-	return joinFormSubmissionCache.get(`${questionId}_${userId}`) ?? null;
-}
-
-export async function getJoinFormSubmissionData(
-	questionId: string,
-	userId: string,
-): Promise<JoinFormSubmissionData | null> {
-	const key = `${questionId}_${userId}`;
-	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
-	const snap = await getDoc(submissionRef);
-	if (!snap.exists()) {
-		joinFormSubmittedRole.delete(key);
-		joinFormSubmissionCache.delete(key);
-
-		return null;
-	}
-	const data = snap.data() as
-		| {
-				role?: JoinRole;
-				displayName?: string;
-				values?: Record<string, string>;
-		  }
-		| undefined;
-
-	const submission: JoinFormSubmissionData = {
-		role: data?.role ?? null,
-		displayName: data?.displayName ?? '',
-		values: data?.values ?? {},
-	};
-	if (submission.role) joinFormSubmittedRole.set(key, submission.role);
-	joinFormSubmissionCache.set(key, submission);
-
-	return submission;
-}
-
-/** Back-compat: legacy role-only lookup. Delegates to the full fetcher. */
-export async function getJoinFormSubmissionRole(
-	questionId: string,
-	userId: string,
-): Promise<JoinRole | null> {
-	const submission = await getJoinFormSubmissionData(questionId, userId);
-
-	return submission?.role ?? null;
-}
-
-export interface TestSheetAccessResult {
-	ok: boolean;
-	serviceAccountEmail: string;
-	error?: string;
-}
-
-/** Calls the `testSheetAccess` Cloud Function to verify that the service
- *  account can read/write the given spreadsheet. Used by the facilitator
- *  panel "Test connection" button to give immediate feedback before the first
- *  real submission — catches the "sheet not shared" mistake at setup time. */
-export async function testSheetAccess(sheetUrl: string): Promise<TestSheetAccessResult> {
-	const call = httpsCallable<{ sheetUrl: string }, TestSheetAccessResult>(
-		functions,
-		'testSheetAccess',
-	);
-	const result = await call({ sheetUrl });
-
-	return result.data;
-}
-
-export async function saveJoinFormSubmission(
-	questionId: string,
-	userId: string,
-	displayName: string,
-	values: Record<string, string>,
-	role: JoinRole = 'activist',
-	optionId?: string,
-	optionTitle?: string,
-): Promise<void> {
-	const now = Date.now();
-	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
-	// Reset syncedToSheet so the onDocumentWritten trigger appends a fresh row
-	// for this (possibly role-changed) submission.
-	await setDoc(
-		submissionRef,
-		{
-			userId,
-			questionId,
-			displayName,
-			values,
-			role,
-			optionId: optionId ?? '',
-			optionTitle: optionTitle ?? '',
-			createdAt: now,
-			lastUpdate: now,
-			syncedToSheet: false,
-		},
-		{ merge: true },
-	);
-
-	const key = `${questionId}_${userId}`;
-	joinFormSubmitted.add(key);
-	joinFormSubmittedRole.set(key, role);
-	joinFormSubmissionCache.set(key, { role, displayName, values });
-}
-
-/** Admin-only: clear `joined` and `organizers` on a single option, sending its
- *  activist + organizer counters back to zero. Form submissions and Google
- *  Sheet rows live at the question level (one per user, regardless of which
- *  option they joined) and are NOT touched here — see `resetQuestionJoining`
- *  for a full clean slate. The Firestore rule allows this write for question
- *  admins (same surface that already permits `setOptionFlag`). */
-export async function resetOptionJoining(optionId: string): Promise<void> {
-	if (!isAdmin()) return;
-	await setDoc(
-		doc(db, Collections.statements, optionId),
-		{ joined: [], organizers: [], lastUpdate: Date.now() },
-		{ merge: true },
-	);
-}
-
-export interface ResetQuestionJoiningResult {
-	optionsCleared: number;
-	submissionsDeleted: number;
-	sheetRowsRemoved: number;
-	/** Human-readable identifiers for steps that failed. The UI surfaces these
-	 *  so partial successes (e.g. options cleared but the submissions delete
-	 *  blocked by undeployed Firestore rules) stay visible rather than
-	 *  swallowed by the outer error handler. */
-	errors: string[];
-}
-
-/** Admin-only: nuke every join-related record under a question.
- *
- *   1. Walk every child option (`statementType === option`) and clear its
- *      `joined` + `organizers` arrays in a Firestore batch.
- *   2. Read the question's `joinFormSubmissions` subcollection (one doc per
- *      user who filled the form) so we know whose sheet rows to remove.
- *   3. Best-effort: call `fn_removeUserFromSheet` per submitter. The cloud
- *      function is a no-op when the question isn't a sheets-destination form
- *      and surfaces its own errors — we keep going regardless so a single
- *      failure doesn't strand the rest of the wipe.
- *   4. Delete the submission docs in a second batch.
- *   5. Drop the matching entries from the in-memory caches so the next click
- *      doesn't optimistically skip the form modal.
- *
- *  Each step is independently try/caught so a partial failure still returns
- *  whatever did succeed. The result includes an `errors` array so the UI can
- *  tell the admin which step needs attention (most often a Firestore-rules
- *  deploy after this feature first ships, or a missing CORS origin on the
- *  sheet-removal callable). */
-export async function resetQuestionJoining(
-	questionId: string,
-): Promise<ResetQuestionJoiningResult> {
-	const result: ResetQuestionJoiningResult = {
-		optionsCleared: 0,
-		submissionsDeleted: 0,
-		sheetRowsRemoved: 0,
-		errors: [],
-	};
-	if (!isAdmin() || !questionId) return result;
-
-	const now = Date.now();
-
-	// Step 1 — clear joined/organizers on every option under the question.
-	try {
-		const optionsSnap = await getDocs(
-			query(
-				collection(db, Collections.statements),
-				where('parentId', '==', questionId),
-				where('statementType', '==', StatementType.option),
-			),
-		);
-
-		if (optionsSnap.size > 0) {
-			const batch = writeBatch(db);
-			for (const optionDoc of optionsSnap.docs) {
-				batch.set(
-					optionDoc.ref,
-					{ joined: [], organizers: [], lastUpdate: now },
-					{ merge: true },
-				);
-			}
-			await batch.commit();
-			result.optionsCleared = optionsSnap.size;
-		}
-	} catch (err) {
-		console.error('[resetQuestionJoining] step 1 (clear options) failed', err);
-		result.errors.push('options');
-	}
-
-	// Step 2 — pull every submission so we know which users to wipe from the
-	// sheet (and so we can delete the docs themselves afterward). If the
-	// read itself fails we can't do steps 3 or 4, so bail with what we have.
-	let submissionsSnap: Awaited<ReturnType<typeof getDocs>> | null = null;
-	let userIds: string[] = [];
-	try {
-		submissionsSnap = await getDocs(
-			collection(db, Collections.statements, questionId, 'joinFormSubmissions'),
-		);
-		userIds = submissionsSnap.docs.map((d) => d.id);
-	} catch (err) {
-		console.error('[resetQuestionJoining] step 2 (read submissions) failed', err);
-		result.errors.push('submissions_read');
-
-		return result;
-	}
-
-	// Step 3 — best-effort sheet wipe. Sequential rather than parallel so we
-	// don't hammer the Sheets API; the cloud function rate is the limiter.
-	for (const userId of userIds) {
-		try {
-			await removeUserFromSheet(questionId, userId);
-			result.sheetRowsRemoved++;
-		} catch (err) {
-			console.error('[resetQuestionJoining] step 3 (remove sheet row) failed', {
-				userId,
-				err,
-			});
-		}
-	}
-	if (userIds.length > 0 && result.sheetRowsRemoved < userIds.length) {
-		result.errors.push('sheet');
-	}
-
-	// Step 4 — delete submission docs. Failure here is the most likely outcome
-	// on first deploy: the rule allowing admin delete on `joinFormSubmissions`
-	// has to ship via `firebase deploy --only firestore:rules` before client
-	// deletes succeed. We log + continue rather than throw.
-	if (submissionsSnap.size > 0) {
-		try {
-			const subBatch = writeBatch(db);
-			for (const submissionDoc of submissionsSnap.docs) {
-				subBatch.delete(submissionDoc.ref);
-			}
-			await subBatch.commit();
-			result.submissionsDeleted = submissionsSnap.size;
-		} catch (err) {
-			console.error('[resetQuestionJoining] step 4 (delete submissions) failed', err);
-			result.errors.push('submissions_delete');
-		}
-	}
-
-	// Step 5 — drop matching cache entries. Keying mirrors `${questionId}_${userId}`
-	// used everywhere else in this file. Always safe; never throws.
-	for (const userId of userIds) {
-		const key = `${questionId}_${userId}`;
-		joinFormSubmitted.delete(key);
-		joinFormSubmittedRole.delete(key);
-		joinFormSubmissionCache.delete(key);
-	}
-
-	return result;
-}
-
-/** Remove a user from the Google Sheet when they un-join an option.
- *  Calls the Cloud Function with the user's ID to find and delete their row.
- *  Surfaces the result via console so failures show up in DevTools. */
-async function removeUserFromSheet(questionId: string, userId: string): Promise<void> {
-	if (!questionId || !userId) return;
-
-	try {
-		const call = httpsCallable<
-			{ questionId: string; userId: string },
-			{ success: boolean; message?: string; deletedRow?: number }
-		>(functions, 'fn_removeUserFromSheet');
-
-		const result = await call({ questionId, userId });
-
-		if (result.data.success) {
-			console.info(
-				'[removeUserFromSheet] OK:',
-				result.data.message,
-				result.data.deletedRow ? `(row ${result.data.deletedRow})` : '',
-			);
-		} else {
-			console.error('[removeUserFromSheet] Failed:', result.data.message);
-		}
-	} catch (error) {
-		console.error('[removeUserFromSheet] Error calling function:', error);
-		throw error;
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Per-question delegate subscriptions + admin actions
-// ---------------------------------------------------------------------------
-
-/** Live-watch the current user's own `joinDelegates/{qid--uid}` doc so a
- *  freshly accepted invite (or a revocation) takes effect without a refresh.
- *  Anonymous users skip this — delegates must be Google-signed-in. */
-function subscribeMyDelegate(questionId: string): void {
-	if (myDelegateUnsub) {
-		myDelegateUnsub();
-		myDelegateUnsub = null;
-	}
-
-	const user = getUserState().user;
-	if (!user || user.isAnonymous) return;
-
-	const delegateId = getJoinDelegateId(questionId, user.uid);
-	const ref = doc(db, Collections.joinDelegates, delegateId);
-
-	myDelegateUnsub = onSnapshot(
-		ref,
-		(snap) => {
-			const delegate = snap.exists() ? (snap.data() as JoinDelegate) : null;
-			setCurrentDelegate(delegate, questionId);
-		},
-		() => {
-			/* read may be denied if rules haven't propagated yet; ignore */
-		},
-	);
-}
-
-/** Admin-only: live-watch the full delegate + invitation lists for a
- *  question. Mounted by DelegatesPanel on open, torn down on close. Multiple
- *  calls for the same question are harmless — we always tear down prior
- *  listeners first. */
-export function subscribeQuestionDelegates(questionId: string): void {
-	unsubscribeQuestionDelegates();
-
-	const delegatesQuery = query(
-		collection(db, Collections.joinDelegates),
-		where('questionId', '==', questionId),
-	);
-	delegatesUnsub = onSnapshot(delegatesQuery, (snap) => {
-		delegatesForQuestion = snap.docs
-			.map((d) => d.data() as JoinDelegate)
-			.sort((a, b) => (b.addedAt ?? 0) - (a.addedAt ?? 0));
-		m.redraw();
-	});
-
-	const invitesQuery = query(
-		collection(db, Collections.joinDelegateInvitations),
-		where('questionId', '==', questionId),
-	);
-	delegateInvitationsUnsub = onSnapshot(invitesQuery, (snap) => {
-		delegateInvitationsForQuestion = snap.docs
-			.map((d) => d.data() as JoinDelegateInvitation)
-			.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-		m.redraw();
-	});
-}
-
-export function unsubscribeQuestionDelegates(): void {
-	if (delegatesUnsub) {
-		delegatesUnsub();
-		delegatesUnsub = null;
-	}
-	if (delegateInvitationsUnsub) {
-		delegateInvitationsUnsub();
-		delegateInvitationsUnsub = null;
-	}
-	delegatesForQuestion = [];
-	delegateInvitationsForQuestion = [];
-}
-
-export function getDelegatesForQuestion(): JoinDelegate[] {
-	return delegatesForQuestion;
-}
-
-export function getDelegateInvitationsForQuestion(): JoinDelegateInvitation[] {
-	return delegateInvitationsForQuestion;
-}
-
-interface CreateInviteResult {
-	inviteLink: string;
-	invitationId: string;
-}
-
-/** Create a new delegate invitation. Returns the shareable link the admin
- *  can copy to clipboard. Email is sent server-side by a Firestore trigger.
- *  Caller is responsible for surfacing the result (success toast / error). */
-export async function createJoinDelegateInvite(args: {
-	questionId: string;
-	email: string;
-	canManageOrganizer: boolean;
-	canManageParticipant: boolean;
-}): Promise<CreateInviteResult> {
-	const call = httpsCallable<typeof args, CreateInviteResult>(
-		functions,
-		'fn_createJoinDelegateInvite',
-	);
-	const result = await call(args);
-
-	return result.data;
-}
-
-/** Revoke a pending invitation (mode 1) or remove an active delegate
- *  (mode 2). Both modes idempotent — calling twice is a no-op. */
-export async function revokeJoinDelegate(
-	args: { invitationId: string } | { questionId: string; userId: string },
-): Promise<void> {
-	const call = httpsCallable<typeof args, { ok: true }>(functions, 'fn_revokeJoinDelegate');
-	await call(args);
-}
-
-/** Accept a delegate invitation by token. Used only by the AcceptInvite
- *  view; surfaces the same callable in a typed wrapper so the view doesn't
- *  reach into firebase.ts directly. */
-export async function acceptJoinDelegateInvite(token: string): Promise<{
-	questionId: string;
-	permissions: { canManageOrganizerSolutions: boolean; canManageParticipantSolutions: boolean };
-}> {
-	const call = httpsCallable<
-		{ token: string },
-		{
-			questionId: string;
-			permissions: { canManageOrganizerSolutions: boolean; canManageParticipantSolutions: boolean };
-		}
-	>(functions, 'fn_acceptJoinDelegateInvite');
-	const result = await call({ token });
-
-	return result.data;
-}
+// Delegate subscriptions + callable wrappers live in ./delegates/
+// (re-exported at the top of this file).
