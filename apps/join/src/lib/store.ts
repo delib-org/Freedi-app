@@ -1756,7 +1756,6 @@ export async function toggleJoining(
 			: null;
 		let leftStatementId: string | undefined;
 		let leftStatementTitle: string | undefined;
-		let userWasUnjoinedFromStatement = false;
 
 		let singleJoinOnly = false;
 		if (role === 'activist' && parentStatementId) {
@@ -1787,7 +1786,6 @@ export async function toggleJoining(
 			if (isUserMember) {
 				const updated = currentMembers.filter((u) => u.uid !== creator.uid);
 				transaction.update(statementRef, { [field]: updated });
-				userWasUnjoinedFromStatement = true;
 
 				return;
 			}
@@ -1857,12 +1855,12 @@ export async function toggleJoining(
 			transaction.update(statementRef, updatePayload);
 		});
 
-		// If user un-joined, remove them from the sheet
-		if (userWasUnjoinedFromStatement) {
-			void removeUserFromSheet(parentStatementId, creator.uid).catch((err) => {
-				console.error('[toggleJoining] Failed to remove from sheet:', err);
-			});
-		}
+		// Sheet sync is driven server-side from option membership changes
+		// (`fn_syncOptionMembersToSheet`). The previous client-side removal
+		// call here matched on userId alone and could wipe a row for an
+		// option the user was still active on — see WhatsApp report from
+		// Dalia, 2026-05-09. The server trigger now removes the precise
+		// (userId, optionId, role) row, so no client call is needed.
 
 		return { success: true, leftStatementId, leftStatementTitle };
 	} catch (error) {

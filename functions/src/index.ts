@@ -202,8 +202,12 @@ import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPen
 import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
 
 // Civil Activity Hub — Join Form exports
-import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
+import { fn_syncOptionMembersToSheet } from './engagement/joinForm/fn_syncOptionMembersToSheet';
 import { fn_removeUserFromSheet } from './engagement/joinForm/fn_removeUserFromSheet';
+import {
+	fn_backupJoinFormSubmission,
+	fn_backupOptionMembership,
+} from './engagement/joinForm/fn_backupJoinRegistration';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
 import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
 import { createOrganizerSuggestion } from './engagement/joinForm/fn_createOrganizerSuggestion';
@@ -864,8 +868,10 @@ exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
 exports.fn_syncParagraphChildrenToDescription = fn_syncParagraphChildrenToDescription;
-exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
+exports.fn_syncOptionMembersToSheet = fn_syncOptionMembersToSheet;
 exports.fn_removeUserFromSheet = fn_removeUserFromSheet;
+exports.fn_backupJoinFormSubmission = fn_backupJoinFormSubmission;
+exports.fn_backupOptionMembership = fn_backupOptionMembership;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 exports.testSheetAccess = testSheetAccess;
 exports.createOrganizerSuggestion = createOrganizerSuggestion;
