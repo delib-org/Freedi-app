@@ -3,22 +3,25 @@
  * wizcol-style export JSON (the same shape `exportProdQuestion.ts` writes).
  *
  * Wipes any existing options/paragraphs/evaluations under the question first,
- * preserves the question doc + admin subscription, then inserts new options.
- *
- * Defaults to seeding 100 options under `ngiXWC5i1xJk` from
- * `test-data/wizcol-e4Rvr.json`. Question doc must already exist (the script
- * uses the existing creator/admin to keep the page accessible).
+ * preserves the question doc + admin subscription, then inserts new options
+ * with synthetic per-option evaluations so every option carries valid
+ * augmented-evaluation data downstream (paper §6.2).
  *
  * USAGE
- *   FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
- *     npx tsx scripts/seedFromWizcolDump.ts
+ *   npm run seed:wizcol -- --count=50 --admin=<uid>
  *
- *   # Override defaults
+ *   # All flags
+ *   npm run seed:wizcol -- \
+ *     --count=100 \
+ *     --admin=MGYBYaAomfPPxcApBB0H0WO0nTj2 \
+ *     --question=seed-test-question \
+ *     --input=test-data/wizcol-e4Rvr.json
+ *
+ *   # Direct invocation (env vars also work as a fallback for CI / older
+ *   # call sites). CLI flags take precedence over env vars.
  *   FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test \
- *     SEED_QUESTION_ID=<id> SEED_INPUT=<path.json> SEED_COUNT=50 \
- *     npx tsx scripts/seedFromWizcolDump.ts
+ *     npx tsx scripts/seedFromWizcolDump.ts --count=50 --admin=<uid>
  */
-
 import { initializeApp, getApps } from 'firebase-admin/app';
 import { getFirestore, WriteBatch } from 'firebase-admin/firestore';
 import { readFileSync } from 'node:fs';
@@ -32,9 +35,43 @@ if (getApps().length === 0)
 	initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
 const db = getFirestore();
 
-const QUESTION_ID = process.env.SEED_QUESTION_ID ?? 'ngiXWC5i1xJk';
-const INPUT_PATH = process.env.SEED_INPUT ?? 'test-data/wizcol-e4Rvr.json';
-const COUNT = Number(process.env.SEED_COUNT ?? '100');
+interface CliArgs {
+	count?: number;
+	admin?: string;
+	question?: string;
+	input?: string;
+}
+
+function parseArgs(): CliArgs {
+	const out: CliArgs = {};
+	for (const raw of process.argv.slice(2)) {
+		if (!raw.startsWith('--')) continue;
+		const [keyRaw, ...rest] = raw.slice(2).split('=');
+		const value = rest.join('=');
+		if (keyRaw === 'count') out.count = Number(value);
+		else if (keyRaw === 'admin') out.admin = value;
+		else if (keyRaw === 'question') out.question = value;
+		else if (keyRaw === 'input') out.input = value;
+		else if (keyRaw === 'help' || keyRaw === 'h') {
+			console.info(
+				'Usage: npm run seed:wizcol -- --count=N --admin=<uid> [--question=<id>] [--input=<path>]',
+			);
+			process.exit(0);
+		}
+	}
+
+	return out;
+}
+
+const args = parseArgs();
+
+const QUESTION_ID =
+	args.question ?? process.env.SEED_QUESTION_ID ?? 'seed-test-question';
+const INPUT_PATH =
+	args.input ?? process.env.SEED_INPUT ?? 'test-data/wizcol-e4Rvr.json';
+const COUNT = Number.isFinite(args.count)
+	? (args.count as number)
+	: Number(process.env.SEED_COUNT ?? '100');
 const MIN_TEXT_CHARS = 30; // matches functions/src/services/topic-cluster/constants.ts
 // Per-option synthetic evaluations. The topic-cluster pipeline quarantines
 // zero-evaluator options as noise when more than NOISE_POOL_MIN_COUNT (=50)
@@ -65,6 +102,15 @@ interface SourceStatement {
 interface DumpFile {
 	statements: SourceStatement[];
 	question?: { statementId?: string };
+}
+
+interface AdminUser {
+	uid: string;
+	displayName: string;
+	email: string;
+	photoURL: string | null;
+	isAnonymous: boolean;
+	defaultLanguage: string;
 }
 
 function sleep(ms: number) {
@@ -113,68 +159,126 @@ function loadOptionTexts(path: string, count: number): string[] {
 	return texts;
 }
 
-// Default test user for emulator runs. Used if the question doesn't exist yet
-// or has no creator. Override with SEED_USER_UID + SEED_USER_NAME +
-// SEED_USER_EMAIL env vars.
-const DEFAULT_USER = {
-	uid: process.env.SEED_USER_UID ?? 'seed_admin_uid',
-	displayName: process.env.SEED_USER_NAME ?? 'Seed Admin',
-	email: process.env.SEED_USER_EMAIL ?? 'seed.admin@example.com',
-	photoURL: null as string | null,
-	isAnonymous: false,
-	defaultLanguage: 'en',
-};
+/**
+ * Resolve the admin user. Order of precedence:
+ *   1. --admin CLI flag, with auth-emulator lookup to fill name/email.
+ *   2. SEED_USER_UID env var, same lookup.
+ *   3. Default seed admin (seed_admin_uid / Seed Admin).
+ *
+ * If the auth emulator has the user, we adopt their displayName/email so the
+ * seeded question reads as belonging to them. If not, we fall back to a
+ * synthetic name/email and create the auth user later.
+ */
+async function resolveAdminUser(): Promise<AdminUser> {
+	const uid = args.admin ?? process.env.SEED_USER_UID ?? 'seed_admin_uid';
+	const fallbackName = process.env.SEED_USER_NAME ?? (uid === 'seed_admin_uid' ? 'Seed Admin' : 'Admin');
+	const fallbackEmail =
+		process.env.SEED_USER_EMAIL ??
+		(uid === 'seed_admin_uid' ? 'seed.admin@example.com' : `${uid}@example.com`);
 
-async function ensureAuthUser(uid: string, displayName: string, email: string) {
+	const looked = await lookupAuthUser(uid);
+
+	return {
+		uid,
+		displayName: looked?.displayName ?? fallbackName,
+		email: looked?.email ?? fallbackEmail,
+		photoURL: looked?.photoURL ?? null,
+		isAnonymous: false,
+		defaultLanguage: 'en',
+	};
+}
+
+interface AuthLookupResult {
+	displayName?: string;
+	email?: string;
+	photoURL?: string;
+}
+
+async function lookupAuthUser(uid: string): Promise<AuthLookupResult | null> {
 	const projectId = process.env.GCLOUD_PROJECT ?? 'freedi-test';
 	const host = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? 'localhost:9099';
-	const url = `http://${host}/identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts`;
+	const url = `http://${host}/identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts:lookup`;
 	try {
-		const lookup = await fetch(`${url}:lookup`, {
+		const res = await fetch(url, {
 			method: 'POST',
 			headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
 			body: JSON.stringify({ localId: [uid] }),
 		});
-		const lookupData = (await lookup.json()) as { users?: Array<{ localId: string }> };
-		if (lookupData.users && lookupData.users.length > 0) return;
+		if (!res.ok) return null;
+		const body = (await res.json()) as {
+			users?: Array<{
+				localId: string;
+				displayName?: string;
+				email?: string;
+				photoUrl?: string;
+			}>;
+		};
+		const user = body.users?.find((u) => u.localId === uid);
+		if (!user) return null;
+
+		return {
+			displayName: user.displayName,
+			email: user.email,
+			photoURL: user.photoUrl,
+		};
 	} catch {
-		// fall through to create
+		return null;
 	}
-	await fetch(`${url}`, {
-		method: 'POST',
-		headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			localId: uid,
-			displayName,
-			email,
-			emailVerified: true,
-			password: 'password',
-		}),
-	});
-	console.info(`✓ Created auth user ${displayName} (${uid}) in emulator`);
+}
+
+async function ensureAuthUser(user: AdminUser) {
+	const projectId = process.env.GCLOUD_PROJECT ?? 'freedi-test';
+	const host = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? 'localhost:9099';
+	const base = `http://${host}/identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts`;
+	const existing = await lookupAuthUser(user.uid);
+	if (existing) return;
+	try {
+		await fetch(base, {
+			method: 'POST',
+			headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				localId: user.uid,
+				displayName: user.displayName,
+				email: user.email,
+				emailVerified: true,
+				password: 'password',
+			}),
+		});
+		console.info(`✓ Created auth user ${user.displayName} (${user.uid}) in emulator`);
+	} catch (error) {
+		// Auth emulator not running is non-fatal — Firestore-only seed still
+		// produces a usable question for clustering/synthesis testing. The
+		// admin role lives in statementsSubscribe; auth is only needed to
+		// log in as that user from the UI.
+		console.warn(
+			`⚠  Auth emulator unreachable at ${host}; skipping user creation. ` +
+				`(Run \`npm run deve\` to start full emulator suite.)`,
+		);
+	}
 }
 
 async function ensureAdminSub(
 	questionId: string,
-	user: typeof DEFAULT_USER,
+	user: AdminUser,
 	question: Record<string, unknown>,
 ) {
 	const subId = `${user.uid}--${questionId}`;
 	const existing = await db.collection('statementsSubscribe').doc(subId).get();
-	if (existing.exists) return;
 	const now = Date.now();
-	await db
-		.collection('statementsSubscribe')
-		.doc(subId)
-		.set({
-			statementsSubscribeId: subId,
-			userId: user.uid,
-			statementId: questionId,
-			role: 'admin',
-			lastUpdate: now,
-			user: { uid: user.uid, displayName: user.displayName, email: user.email },
-			statement: question,
-		});
+	const payload = {
+		statementsSubscribeId: subId,
+		userId: user.uid,
+		statementId: questionId,
+		role: 'admin',
+		lastUpdate: now,
+		user: { uid: user.uid, displayName: user.displayName, email: user.email },
+		statement: question,
+	};
+	// Always (re)write so reseeding with a different admin updates ownership.
+	await db.collection('statementsSubscribe').doc(subId).set(payload);
+	if (!existing.exists) {
+		console.info(`✓ Admin sub created: ${user.displayName} on ${questionId}`);
+	}
 	await db
 		.collection('usersV2')
 		.doc(user.uid)
@@ -189,27 +293,28 @@ async function ensureAdminSub(
 			},
 			{ merge: true },
 		);
-	console.info(`✓ Admin sub created: ${user.displayName} on ${questionId}`);
 }
 
-async function loadQuestion() {
+async function loadQuestion(adminUser: AdminUser) {
 	const doc = await db.collection('statements').doc(QUESTION_ID).get();
 	const now = Date.now();
 
 	// Always (re)write the question doc with the configured user as creator so
-	// reseeding with different SEED_USER_* env vars updates ownership cleanly.
+	// reseeding with different --admin flags updates ownership cleanly.
 	const existing = doc.exists ? (doc.data() as Record<string, unknown>) : {};
 	const questionData: Record<string, unknown> = {
 		...existing,
 		statementId: QUESTION_ID,
-		statement: (existing.statement as string | undefined) ?? 'Regional ideas — what should we do? (seed)',
+		statement:
+			(existing.statement as string | undefined) ??
+			'Regional ideas — what should we do? (seed)',
 		paragraphs: existing.paragraphs ?? [],
 		statementType: 'question',
 		parentId: (existing.parentId as string | undefined) ?? 'top',
 		parents: existing.parents ?? [],
 		topParentId: QUESTION_ID,
-		creatorId: DEFAULT_USER.uid,
-		creator: { ...DEFAULT_USER },
+		creatorId: adminUser.uid,
+		creator: { ...adminUser },
 		createdAt: (existing.createdAt as number | undefined) ?? now,
 		lastUpdate: now,
 		lastChildUpdate: now,
@@ -219,13 +324,13 @@ async function loadQuestion() {
 		randomSeed: existing.randomSeed ?? Math.random(),
 	};
 	await db.collection('statements').doc(QUESTION_ID).set(questionData);
-	await ensureAdminSub(QUESTION_ID, DEFAULT_USER, questionData);
-	await ensureAuthUser(DEFAULT_USER.uid, DEFAULT_USER.displayName, DEFAULT_USER.email);
+	await ensureAdminSub(QUESTION_ID, adminUser, questionData);
+	await ensureAuthUser(adminUser);
 	console.info(
-		`✓ Question ${QUESTION_ID} owned by ${DEFAULT_USER.displayName} (${DEFAULT_USER.uid}).`,
+		`✓ Question ${QUESTION_ID} owned by ${adminUser.displayName} (${adminUser.uid}).`,
 	);
 
-	return { creatorId: DEFAULT_USER.uid, creator: { ...DEFAULT_USER } };
+	return { creatorId: adminUser.uid, creator: { ...adminUser } };
 }
 
 async function clearExisting() {
@@ -315,8 +420,6 @@ async function createOptions(
 	return created;
 }
 
-const EVAL_VALUES = [-1, -0.5, 0, 0.5, 1];
-
 function pickEvaluation(rng: () => number): number {
 	// Skewed-positive draw — most synthetic users are mildly supportive, a few
 	// neutrals/disagrees, so the consensus signal isn't degenerate.
@@ -330,8 +433,10 @@ function pickEvaluation(rng: () => number): number {
 
 function rngFromSeed(seed: number): () => number {
 	let s = seed >>> 0;
+
 	return () => {
 		s = (s * 1664525 + 1013904223) >>> 0;
+
 		return s / 0xffffffff;
 	};
 }
@@ -463,7 +568,8 @@ async function createEvaluations(options: CreatedOption[]) {
 }
 
 (async () => {
-	const { creatorId, creator } = await loadQuestion();
+	const adminUser = await resolveAdminUser();
+	const { creatorId, creator } = await loadQuestion(adminUser);
 	const texts = loadOptionTexts(INPUT_PATH, COUNT);
 	console.info(
 		`Loaded ${texts.length} option texts from ${INPUT_PATH} (min ${MIN_TEXT_CHARS} chars, no clusters/paragraphs).`,
@@ -472,7 +578,7 @@ async function createEvaluations(options: CreatedOption[]) {
 	const created = await createOptions(texts, creatorId, creator);
 	await createEvaluations(created);
 	console.info(
-		`\n✓ Done. ${created.length} options under ${QUESTION_ID} attributed to creator ${creatorId}.`,
+		`\n✓ Done. ${created.length} options under ${QUESTION_ID} attributed to creator ${creatorId} (${adminUser.displayName}).`,
 	);
 	console.info(`Open http://localhost:5173/statement/${QUESTION_ID}`);
 })().catch((e) => {

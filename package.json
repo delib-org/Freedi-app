@@ -66,7 +66,8 @@
     "e2e:main:ui": "npx playwright test --config=e2e/main-app/playwright.config.ts --ui",
     "e2e:sign:ui": "npx playwright test --config=e2e/sign-app/playwright.config.ts --ui",
     "e2e:mc:ui": "npx playwright test --config=e2e/mass-consensus/playwright.config.ts --ui",
-    "e2e:install": "npx playwright install chromium"
+    "e2e:install": "npx playwright install chromium",
+    "seed:wizcol": "FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx tsx scripts/seedFromWizcolDump.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
