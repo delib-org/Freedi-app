@@ -42,6 +42,7 @@ export async function onStatementCreated(
 
 	try {
 		const statementData = event.data.data();
+		if (!statementData) return;
 
 		// Ensure topParentId exists for legacy data that may not have it
 		if (!statementData.topParentId) {
