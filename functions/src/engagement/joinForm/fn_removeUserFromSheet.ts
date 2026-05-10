@@ -4,6 +4,7 @@ import { db } from '../../db';
 import { Collections, Statement, functionConfig } from '@freedi/shared-types';
 import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
 import { ALLOWED_ORIGINS } from '../../config/cors';
+import { logError } from '../../utils/errorHandling';
 
 interface RemoveUserFromSheetRequest {
 	questionId: string;
@@ -74,9 +75,11 @@ export const fn_removeUserFromSheet = onCall<RemoveUserFromSheetRequest, Promise
 
 		const sheets = getGoogleSheetsClient();
 		if (!sheets) {
-			logger.error(
-				'[fn_removeUserFromSheet] GOOGLE_SHEETS_SERVICE_ACCOUNT credentials missing',
-			);
+			logError(new Error('GOOGLE_SHEETS_SERVICE_ACCOUNT credentials missing'), {
+				operation: 'joinForm.removeUserFromSheet',
+				userId,
+				statementId: questionId,
+			});
 
 			return { success: false, message: 'Service account not configured' };
 		}
@@ -198,12 +201,11 @@ export const fn_removeUserFromSheet = onCall<RemoveUserFromSheetRequest, Promise
 				deletedRow: targetRowIndex + 1,
 			};
 		} catch (error) {
-			logger.error('[fn_removeUserFromSheet] Sheets API error', {
-				questionId,
+			logError(error, {
+				operation: 'joinForm.removeUserFromSheet',
 				userId,
-				spreadsheetId,
-				error: error instanceof Error ? error.message : String(error),
-				stack: error instanceof Error ? error.stack : undefined,
+				statementId: questionId,
+				metadata: { spreadsheetId },
 			});
 
 			return {

@@ -1546,6 +1546,64 @@ export function subscribeUserEvaluations(questionId: string): Unsubscribe {
 	return userEvaluationsUnsub;
 }
 
+/**
+ * Listens to the current user's own `joinFormSubmissions/{uid}` doc for the
+ * active question and keeps the in-memory caches (`joinFormSubmittedRole`,
+ * `joinFormSubmissionCache`, `joinFormSubmitted`) in sync with Firestore.
+ *
+ * Without this listener, the worst silent failure is:
+ *   1. User has the page open in tab A.
+ *   2. Admin runs `resetQuestionJoining` from tab B.
+ *   3. Tab A's `joinFormSubmittedRole` cache still says "submitted as activist".
+ *   4. User clicks join → cache hit → form modal is skipped → no submission
+ *      doc is created → fn_joinOption succeeds → fn_syncOptionMembersToSheet
+ *      finds no submission and returns 'skipped-no-submission' → user sees
+ *      themselves as joined in the app but is invisible in the sheet.
+ *
+ * The listener clears the cache as soon as Firestore tells us the doc is
+ * gone, so the next click re-opens the form.
+ */
+export function subscribeUserJoinFormSubmission(questionId: string): Unsubscribe {
+	const creator = getCreator();
+	if (!creator) {
+		return () => undefined;
+	}
+	const key = `${questionId}_${creator.uid}`;
+	const submissionRef = doc(
+		db,
+		Collections.statements,
+		questionId,
+		'joinFormSubmissions',
+		creator.uid,
+	);
+
+	return onSnapshot(submissionRef, (snap) => {
+		if (!snap.exists()) {
+			joinFormSubmittedRole.delete(key);
+			joinFormSubmissionCache.delete(key);
+			joinFormSubmitted.delete(key);
+			m.redraw();
+
+			return;
+		}
+		const data = snap.data() as
+			| {
+					role?: JoinRole;
+					displayName?: string;
+					values?: Record<string, string>;
+			  }
+			| undefined;
+		joinFormSubmitted.add(key);
+		if (data?.role) joinFormSubmittedRole.set(key, data.role);
+		joinFormSubmissionCache.set(key, {
+			role: data?.role ?? null,
+			displayName: data?.displayName ?? '',
+			values: data?.values ?? {},
+		});
+		m.redraw();
+	});
+}
+
 function subscribeMessageCounts(_questionId: string): void {
 	for (const unsub of messageCountsUnsubs) unsub();
 	messageCountsUnsubs = [];
@@ -1738,131 +1796,62 @@ export interface ToggleJoiningOptions {
 	releaseFromOptionId?: string;
 }
 
+interface JoinOptionCallableRequest {
+	optionId: string;
+	role: JoinRole;
+	releaseFromOptionId?: string;
+}
+
+interface JoinOptionCallableResult {
+	success: true;
+	action: 'joined' | 'left' | 'swapped';
+	role: JoinRole;
+	leftStatementId?: string;
+	leftStatementTitle?: string;
+}
+
+/**
+ * Toggles the current user's membership on `statementId` (an option) via
+ * the `fn_joinOption` callable. The callable is now the canonical write
+ * path: it enforces the per-user cap, applies `singleJoinOnly`, and
+ * performs atomic swaps. Firestore rules forbid clients from writing to
+ * `joined`/`organizers` directly when a `joinForm` is configured, so this
+ * is the only legitimate route.
+ *
+ * `parentStatementId` is now informational (kept in the signature so call
+ * sites don't need to change) — the callable derives it from the option's
+ * `parentId`. The `leftStatementId`/`leftStatementTitle` fields on the
+ * result are populated when the operation was a swap or a singleJoinOnly
+ * implicit removal.
+ */
 export async function toggleJoining(
 	statementId: string,
-	parentStatementId: string,
+	_parentStatementId: string,
 	role: JoinRole = 'activist',
 	options: ToggleJoiningOptions = {},
 ): Promise<ToggleJoiningResult> {
-	const field: 'joined' | 'organizers' = role === 'organizer' ? 'organizers' : 'joined';
-
 	try {
 		const creator = buildCreator();
 		if (!creator) throw new Error('User not authenticated');
 
-		const statementRef = doc(db, Collections.statements, statementId);
-		const releaseRef = options.releaseFromOptionId
-			? doc(db, Collections.statements, options.releaseFromOptionId)
-			: null;
-		let leftStatementId: string | undefined;
-		let leftStatementTitle: string | undefined;
-
-		let singleJoinOnly = false;
-		if (role === 'activist' && parentStatementId) {
-			const parentDoc = await getDoc(doc(db, Collections.statements, parentStatementId));
-			if (parentDoc.exists()) {
-				const parent = parentDoc.data() as Statement;
-				singleJoinOnly = parent?.statementSettings?.singleJoinOnly ?? false;
-			}
+		const call = httpsCallable<JoinOptionCallableRequest, JoinOptionCallableResult>(
+			functions,
+			'fn_joinOption',
+		);
+		const payload: JoinOptionCallableRequest = {
+			optionId: statementId,
+			role,
+		};
+		if (options.releaseFromOptionId) {
+			payload.releaseFromOptionId = options.releaseFromOptionId;
 		}
+		const result = await call(payload);
 
-		await runTransaction(db, async (transaction) => {
-			const statementDB = await transaction.get(statementRef);
-			if (!statementDB.exists()) throw new Error('Statement does not exist');
-
-			// Read the explicit release target inside the transaction too, so the
-			// remove-and-add pair is atomic from the participant's perspective.
-			const releaseSnap = releaseRef ? await transaction.get(releaseRef) : null;
-
-			const statement = statementDB.data() as Statement;
-			const otherField: 'joined' | 'organizers' = field === 'joined' ? 'organizers' : 'joined';
-			const currentMembers: Creator[] =
-				(field === 'organizers' ? statement.organizers : statement.joined) ?? [];
-			const currentOthers: Creator[] =
-				(otherField === 'organizers' ? statement.organizers : statement.joined) ?? [];
-
-			const isUserMember = currentMembers.some((u) => u.uid === creator.uid);
-
-			if (isUserMember) {
-				const updated = currentMembers.filter((u) => u.uid !== creator.uid);
-				transaction.update(statementRef, { [field]: updated });
-
-				return;
-			}
-
-			const updatePayload: Record<string, Creator[]> = {};
-			const isUserInOther = currentOthers.some((u) => u.uid === creator.uid);
-			if (isUserInOther) {
-				updatePayload[otherField] = currentOthers.filter((u) => u.uid !== creator.uid);
-			}
-
-			// Explicit swap (LimitReachedModal): remove the user from the option
-			// they picked to leave, then add them to the new one. Cap is role-
-			// agnostic, so the user's commitment on the released option could be
-			// in either `joined` or `organizers` (or both — admins seeded that
-			// way in the past). Strip from whichever lists contain them.
-			if (
-				releaseSnap &&
-				releaseSnap.exists() &&
-				releaseRef &&
-				releaseRef.path !== statementRef.path
-			) {
-				const releaseData = releaseSnap.data() as Statement;
-				const releaseJoined: Creator[] = Array.isArray(releaseData.joined)
-					? releaseData.joined
-					: [];
-				const releaseOrgs: Creator[] = Array.isArray(releaseData.organizers)
-					? releaseData.organizers
-					: [];
-				const releaseUpdate: Record<string, Creator[]> = {};
-				if (releaseJoined.some((u) => u.uid === creator.uid)) {
-					releaseUpdate.joined = releaseJoined.filter((u) => u.uid !== creator.uid);
-				}
-				if (releaseOrgs.some((u) => u.uid === creator.uid)) {
-					releaseUpdate.organizers = releaseOrgs.filter((u) => u.uid !== creator.uid);
-				}
-				if (Object.keys(releaseUpdate).length > 0) {
-					transaction.update(releaseRef, releaseUpdate);
-				}
-				leftStatementId = releaseData.statementId;
-				leftStatementTitle = releaseData.statement;
-			} else if (role === 'activist' && singleJoinOnly && parentStatementId) {
-				const siblingsQuery = query(
-					collection(db, Collections.statements),
-					where('parentId', '==', parentStatementId),
-					where('statementType', '==', StatementType.option),
-				);
-				const siblingsSnapshot = await getDocs(siblingsQuery);
-
-				for (const siblingDoc of siblingsSnapshot.docs) {
-					const sibling = siblingDoc.data() as Statement;
-					if (sibling.statementId === statementId) continue;
-
-					const isJoinedToSibling = sibling.joined?.find((u: Creator) => u.uid === creator.uid);
-					if (isJoinedToSibling) {
-						const siblingRef = doc(db, Collections.statements, sibling.statementId);
-						const updatedSiblingJoined =
-							sibling.joined?.filter((u: Creator) => u.uid !== creator.uid) ?? [];
-						transaction.update(siblingRef, { joined: updatedSiblingJoined });
-
-						leftStatementId = sibling.statementId;
-						leftStatementTitle = sibling.statement;
-					}
-				}
-			}
-
-			updatePayload[field] = [...currentMembers, creator];
-			transaction.update(statementRef, updatePayload);
-		});
-
-		// Sheet sync is driven server-side from option membership changes
-		// (`fn_syncOptionMembersToSheet`). The previous client-side removal
-		// call here matched on userId alone and could wipe a row for an
-		// option the user was still active on — see WhatsApp report from
-		// Dalia, 2026-05-09. The server trigger now removes the precise
-		// (userId, optionId, role) row, so no client call is needed.
-
-		return { success: true, leftStatementId, leftStatementTitle };
+		return {
+			success: true,
+			leftStatementId: result.data.leftStatementId,
+			leftStatementTitle: result.data.leftStatementTitle,
+		};
 	} catch (error) {
 		console.error('[Join] toggleJoining failed:', error);
 

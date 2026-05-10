@@ -2,24 +2,42 @@ import { onDocumentWritten } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { Timestamp } from 'firebase-admin/firestore';
 import { db } from '../../db';
+import { logError } from '../../utils/errorHandling';
+import { computeMembershipEvents } from './joinSheetMath';
 import {
 	Collections,
 	Creator,
 	JOIN_FORM_SUBMISSIONS_SUBCOLLECTION,
+	JOIN_FORM_SUBMISSIONS_HISTORY_COLLECTION,
+	JOIN_FORM_SUBMISSIONS_HISTORY_RETENTION_DAYS,
+	JoinFormSubmission,
 	Statement,
 	StatementType,
 	functionConfig,
+	getJoinFormSubmissionHistoryId,
 } from '@freedi/shared-types';
 
-const BACKUP_COLLECTION = 'joinRegistrationBackups';
-const TTL_DAYS = 7;
-const TTL_MS = TTL_DAYS * 24 * 60 * 60 * 1000;
+const MEMBERSHIP_BACKUP_COLLECTION = 'joinRegistrationBackups';
+const MEMBERSHIP_TTL_DAYS = 7;
+const MEMBERSHIP_TTL_MS = MEMBERSHIP_TTL_DAYS * 24 * 60 * 60 * 1000;
+const HISTORY_TTL_MS = JOIN_FORM_SUBMISSIONS_HISTORY_RETENTION_DAYS * 24 * 60 * 60 * 1000;
 
 /**
- * Defensive 7-day audit log of every join registration. Two triggers feed
- * the same `joinRegistrationBackups` collection while we stabilize the new
- * sheet sync — if anything corrupts or wipes a submission/membership, the
- * recent state is recoverable here.
+ * Two backup triggers feed two collections with two purposes:
+ *
+ *  1. `joinFormSubmissionsHistory` (90d TTL) — durable record of every form
+ *     submission write. Full payload (name, phone, email, custom fields) is
+ *     captured deterministically on every create / update / delete so a
+ *     restore script can rebuild `joinFormSubmissions/{uid}` to any past state.
+ *     Default-deny rules; Admin SDK only.
+ *
+ *  2. `joinRegistrationBackups` (7d TTL) — debugging trace of every option-
+ *     membership change (join / leave). Captures `uid` + `displayName` +
+ *     option triple, NOT the form payload. Useful for the "what just
+ *     happened to user X" support workflow.
+ *
+ * The form-data backup (1) is the load-bearing record. The membership audit
+ * (2) supplements it for activity reconstruction within the past week.
  *
  * `expireAt` is a native Firestore Timestamp (not millis) because Firestore
  * TTL only honors Timestamp fields. This is an exception to the project's
@@ -28,20 +46,64 @@ const TTL_MS = TTL_DAYS * 24 * 60 * 60 * 1000;
  * One-time TTL setup (run from a shell with gcloud authenticated):
  *   gcloud firestore fields ttls update expireAt \
  *     --collection-group=joinRegistrationBackups \
- *     --enable-ttl --project=wizcol
- *
- * After enabling, Firestore auto-deletes any doc whose `expireAt` is in
- * the past — typically within 24h of expiry, no scheduled function needed.
+ *     --enable-ttl --project=wizcol-app
+ *   gcloud firestore fields ttls update expireAt \
+ *     --collection-group=joinFormSubmissionsHistory \
+ *     --enable-ttl --project=wizcol-app
  */
 
-function expireAtFromNow(): Timestamp {
-	return Timestamp.fromMillis(Date.now() + TTL_MS);
+function expireMembershipBackup(): Timestamp {
+	return Timestamp.fromMillis(Date.now() + MEMBERSHIP_TTL_MS);
+}
+
+function expireHistoryEntry(): Timestamp {
+	return Timestamp.fromMillis(Date.now() + HISTORY_TTL_MS);
 }
 
 /**
- * Snapshots every JoinFormSubmission write (form data, role, optionId).
- * Captures both the before and after document so a restoration knows what
- * the submission looked like at each step.
+ * Reads every option doc under the question and reports which ones the user
+ * is currently in (joined / organizers). Used to attach a membership
+ * snapshot to each history entry so a restoration knows the user's full
+ * Join state at the moment the form was last touched.
+ *
+ * One Firestore query (parentId == questionId). N option docs in memory —
+ * acceptable for typical question sizes (≤100 options); for very large
+ * questions consider a maintained denormalized counter, but not yet.
+ */
+async function readUserMembershipSnapshot(
+	questionId: string,
+	userId: string,
+): Promise<{ activistOptions: string[]; organizerOptions: string[] }> {
+	const optionsSnap = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', questionId)
+		.where('statementType', '==', StatementType.option)
+		.get();
+
+	const activistOptions: string[] = [];
+	const organizerOptions: string[] = [];
+	for (const optDoc of optionsSnap.docs) {
+		const opt = optDoc.data() as Statement;
+		// Skip cluster / integrated members — they don't carry real membership.
+		const integratedInto = (opt as { integratedInto?: string }).integratedInto;
+		if (opt.isCluster === true || integratedInto) continue;
+
+		if ((opt.joined ?? []).some((c: Creator) => c?.uid === userId)) {
+			activistOptions.push(opt.statementId);
+		}
+		if ((opt.organizers ?? []).some((c: Creator) => c?.uid === userId)) {
+			organizerOptions.push(opt.statementId);
+		}
+	}
+
+	return { activistOptions, organizerOptions };
+}
+
+/**
+ * Captures every JoinFormSubmission write to the durable history collection.
+ * Deterministic doc id (`{qid}_{uid}_{ms}`) + 90-day TTL means the user's
+ * full form payload is recoverable for the entire retention window, even if
+ * `joinFormSubmissions/{uid}` is wiped by an admin reset or accidental delete.
  */
 export const fn_backupJoinFormSubmission = onDocumentWritten(
 	{
@@ -51,23 +113,73 @@ export const fn_backupJoinFormSubmission = onDocumentWritten(
 	async (event) => {
 		const { questionId, userId } = event.params;
 		try {
-			const before = event.data?.before?.exists ? (event.data.before.data() ?? null) : null;
-			const after = event.data?.after?.exists ? (event.data.after.data() ?? null) : null;
+			const before = event.data?.before?.exists
+				? (event.data.before.data() as JoinFormSubmission | undefined)
+				: undefined;
+			const after = event.data?.after?.exists
+				? (event.data.after.data() as JoinFormSubmission | undefined)
+				: undefined;
 
-			await db.collection(BACKUP_COLLECTION).add({
-				type: 'submission',
-				questionId,
-				userId,
-				before,
-				after,
-				capturedAt: Date.now(),
-				expireAt: expireAtFromNow(),
-			});
+			// Determine the operation type. A delete is a write where after is
+			// missing — we still capture the last-known state from `before` so
+			// a restore can recover the doc that was just deleted.
+			let operation: 'create' | 'update' | 'delete';
+			if (!before && after) operation = 'create';
+			else if (before && !after) operation = 'delete';
+			else operation = 'update';
+
+			const snapshotSource = after ?? before;
+			if (!snapshotSource) {
+				logger.warn('[fn_backupJoinFormSubmission] No before or after data', {
+					questionId,
+					userId,
+				});
+
+				return null;
+			}
+
+			const capturedAt = Date.now();
+			const historyId = getJoinFormSubmissionHistoryId(questionId, userId, capturedAt);
+
+			// Membership snapshot is best-effort — if the read fails we still
+			// write the form-payload entry. Better to have the payload than
+			// to lose it because the snapshot read errored.
+			let membershipSnapshot: { activistOptions: string[]; organizerOptions: string[] } | undefined;
+			try {
+				membershipSnapshot = await readUserMembershipSnapshot(questionId, userId);
+			} catch (snapErr) {
+				logger.warn('[fn_backupJoinFormSubmission] Membership snapshot read failed', {
+					questionId,
+					userId,
+					error: snapErr instanceof Error ? snapErr.message : String(snapErr),
+				});
+			}
+
+			await db
+				.collection(JOIN_FORM_SUBMISSIONS_HISTORY_COLLECTION)
+				.doc(historyId)
+				.set({
+					historyId,
+					questionId,
+					userId,
+					operation,
+					capturedAt,
+					capturedByTrigger: 'fn_backupJoinFormSubmission',
+					displayName: snapshotSource.displayName ?? '',
+					values: snapshotSource.values ?? {},
+					role: snapshotSource.role ?? null,
+					membershipSnapshot: membershipSnapshot ?? null,
+					retentionPolicy: 'standard',
+					expireAt: expireHistoryEntry(),
+				});
 		} catch (error) {
-			logger.error('[fn_backupJoinFormSubmission] Failed to write backup', {
-				questionId,
+			// Trigger MUST NOT throw, otherwise Firestore retries and we'd
+			// write duplicate history entries (the doc id includes capturedAt
+			// which would be re-minted on retry).
+			logError(error, {
+				operation: 'joinForm.backupJoinFormSubmission',
 				userId,
-				error: error instanceof Error ? error.message : String(error),
+				statementId: questionId,
 			});
 		}
 
@@ -79,7 +191,8 @@ export const fn_backupJoinFormSubmission = onDocumentWritten(
  * Snapshots option-doc membership diffs (joined / organizers added & removed).
  * Each event becomes its own backup row so a restoration can replay them in
  * order — covers form-skipped re-joins and admin resets that don't generate
- * a new submission write.
+ * a new submission write. 7-day TTL — debugging trace, not durable backup.
+ * The durable backup of form data lives in `joinFormSubmissionsHistory`.
  */
 export const fn_backupOptionMembership = onDocumentWritten(
 	{
@@ -114,11 +227,11 @@ export const fn_backupOptionMembership = onDocumentWritten(
 				return null;
 			}
 
-			const expireAt = expireAtFromNow();
+			const expireAt = expireMembershipBackup();
 			const capturedAt = Date.now();
 			const batch = db.batch();
 			for (const ev of events) {
-				const ref = db.collection(BACKUP_COLLECTION).doc();
+				const ref = db.collection(MEMBERSHIP_BACKUP_COLLECTION).doc();
 				batch.set(ref, {
 					type: 'membership',
 					questionId: subject.parentId ?? '',
@@ -134,9 +247,9 @@ export const fn_backupOptionMembership = onDocumentWritten(
 			}
 			await batch.commit();
 		} catch (error) {
-			logger.error('[fn_backupOptionMembership] Failed to write backup', {
+			logError(error, {
+				operation: 'joinForm.backupOptionMembership',
 				statementId,
-				error: error instanceof Error ? error.message : String(error),
 			});
 		}
 
@@ -144,52 +257,5 @@ export const fn_backupOptionMembership = onDocumentWritten(
 	},
 );
 
-interface MembershipEvent {
-	action: 'joined' | 'left';
-	role: 'activist' | 'organizer';
-	user: Creator;
-}
-
-function computeMembershipEvents(
-	before: Statement | undefined,
-	after: Statement | undefined,
-): MembershipEvent[] {
-	const events: MembershipEvent[] = [];
-
-	const beforeJoined = toCreatorMap(before?.joined);
-	const afterJoined = toCreatorMap(after?.joined);
-	for (const [uid, creator] of afterJoined) {
-		if (!beforeJoined.has(uid)) {
-			events.push({ action: 'joined', role: 'activist', user: creator });
-		}
-	}
-	for (const [uid, creator] of beforeJoined) {
-		if (!afterJoined.has(uid)) {
-			events.push({ action: 'left', role: 'activist', user: creator });
-		}
-	}
-
-	const beforeOrgs = toCreatorMap(before?.organizers);
-	const afterOrgs = toCreatorMap(after?.organizers);
-	for (const [uid, creator] of afterOrgs) {
-		if (!beforeOrgs.has(uid)) {
-			events.push({ action: 'joined', role: 'organizer', user: creator });
-		}
-	}
-	for (const [uid, creator] of beforeOrgs) {
-		if (!afterOrgs.has(uid)) {
-			events.push({ action: 'left', role: 'organizer', user: creator });
-		}
-	}
-
-	return events;
-}
-
-function toCreatorMap(arr: Creator[] | undefined): Map<string, Creator> {
-	const m = new Map<string, Creator>();
-	for (const c of arr ?? []) {
-		if (c?.uid) m.set(c.uid, c);
-	}
-
-	return m;
-}
+// computeMembershipEvents was extracted to ./joinSheetMath so it can be
+// unit-tested without Firestore/Sheets I/O.

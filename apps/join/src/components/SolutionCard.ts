@@ -728,6 +728,11 @@ async function handleJoin(
 	//     them, so cap can only go down — toggleJoining handles that path).
 	// When the cap is hit on a brand-new option, hand off to the parent's
 	// swap modal. Admin owns the cap via `activationThreshold.maxJoinsPerUser`.
+	//
+	// This is a UX pre-check only — the canonical enforcement now lives in
+	// the `fn_joinOption` callable. A direct Firestore write attempting to
+	// bypass the cap is blocked by firestore.rules (`blocksDirectMembershipMutation`
+	// requires the callable path when a joinForm is configured).
 	const isOnThisOptionAnyRole =
 		(Array.isArray(option.joined) && option.joined.some((c) => c.uid === creator.uid)) ||
 		(Array.isArray(option.organizers) && option.organizers.some((c) => c.uid === creator.uid));

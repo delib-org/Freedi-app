@@ -3,14 +3,12 @@ import { logger } from 'firebase-functions/v1';
 import { db } from '../../db';
 import {
 	Collections,
-	JoinDelegate,
 	Role,
-	Statement,
 	StatementType,
 	createStatementObject,
 	functionConfig,
-	getJoinDelegateId,
 } from '@freedi/shared-types';
+import { assertJoinAdminAuthorized } from '../../utils/joinAuth';
 
 interface Request {
 	questionId: string;
@@ -50,40 +48,14 @@ export const createOrganizerSuggestion = onCall(
 			throw new HttpsError('invalid-argument', 'text cannot be empty');
 		}
 
-		// Load the owning question.
-		const qSnap = await db.collection(Collections.statements).doc(questionId).get();
-		if (!qSnap.exists) {
-			throw new HttpsError('not-found', 'Question not found');
-		}
-		const question = qSnap.data() as Statement;
-
-		// Authorize: creator OR admin/creator subscription OR a delegate with
-		// `canManageOrganizerSolutions === true` for this question.
-		let authorized = question.creatorId === uid;
-		if (!authorized) {
-			const subId = `${uid}--${questionId}`;
-			const subSnap = await db.collection(Collections.statementsSubscribe).doc(subId).get();
-			if (subSnap.exists) {
-				const role = subSnap.data()?.role;
-				authorized = role === Role.admin || role === Role.creator;
-			}
-		}
-		if (!authorized) {
-			const delegateSnap = await db
-				.collection(Collections.joinDelegates)
-				.doc(getJoinDelegateId(questionId, uid))
-				.get();
-			if (delegateSnap.exists) {
-				const delegate = delegateSnap.data() as JoinDelegate;
-				authorized = !!delegate.permissions?.canManageOrganizerSolutions;
-			}
-		}
-		if (!authorized) {
-			throw new HttpsError(
-				'permission-denied',
-				'Only question admins can create organizer suggestions',
-			);
-		}
+		// Authorize via shared helper (creator OR admin/creator subscription
+		// OR delegate with canManageOrganizerSolutions). Returns the loaded
+		// question so we don't pay a second Firestore read.
+		const { question } = await assertJoinAdminAuthorized({
+			uid,
+			questionId,
+			operation: 'joinForm.createOrganizerSuggestion',
+		});
 
 		// Build the statement server-side so the creatorRole is set by us, not
 		// by the caller. The admin SDK write bypasses rules so even with the

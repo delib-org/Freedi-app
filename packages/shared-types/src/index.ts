@@ -256,6 +256,25 @@ export {
 } from "./models/statement/JoinFormSubmission";
 
 export type {
+  JoinFormSubmissionHistoryEntry,
+  JoinFormSubmissionHistoryOperation,
+  JoinFormSubmissionHistoryRole,
+  JoinFormSubmissionHistoryRetention,
+  JoinFormMembershipSnapshot
+} from "./models/statement/JoinFormSubmissionHistory";
+
+export {
+  JoinFormSubmissionHistoryEntrySchema,
+  JoinFormSubmissionHistoryOperationSchema,
+  JoinFormSubmissionHistoryRoleSchema,
+  JoinFormSubmissionHistoryRetentionSchema,
+  JoinFormMembershipSnapshotSchema,
+  JOIN_FORM_SUBMISSIONS_HISTORY_COLLECTION,
+  JOIN_FORM_SUBMISSIONS_HISTORY_RETENTION_DAYS,
+  getJoinFormSubmissionHistoryId
+} from "./models/statement/JoinFormSubmissionHistory";
+
+export type {
   JoinResolutionUser,
   JoinResolutionUserStatus
 } from "./models/statement/JoinResolutionUser";

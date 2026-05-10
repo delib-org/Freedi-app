@@ -155,12 +155,41 @@ service cloud.firestore {
                !isAuthorized();
       }
 
+      // Detects writes that mutate `joined` or `organizers` on an option whose
+      // parent question is configured with a `joinForm`. When that's true,
+      // the canonical write path is the `fn_joinOption` callable (Admin SDK,
+      // bypasses these rules), so direct client writes are blocked here to
+      // prevent end-runs around the per-user cap and `singleJoinOnly`
+      // enforcement. Non-joinForm questions retain the previous permissive
+      // behavior so existing flows (admin reset, direct admin edits) keep
+      // working without an extra get() per write.
+      function changesJoinMembership() {
+        return resource != null && request.resource != null &&
+               (request.resource.data.get('joined', []) != resource.data.get('joined', []) ||
+                request.resource.data.get('organizers', []) != resource.data.get('organizers', []));
+      }
+      function parentHasJoinForm() {
+        let parentId = cleanPath(string(resource.data.parentId));
+        let parentPath = /databases/$(database)/documents/statements/$(parentId);
+        return resource.data.get('parentId', null) != null &&
+               exists(parentPath) &&
+               get(parentPath).data.get('statementSettings', {}).get('joinForm', null) != null;
+      }
+      function blocksDirectMembershipMutation() {
+        return changesJoinMembership() && parentHasJoinForm();
+      }
+
       function isAllowedToUpdate() {
         // Check non-protected field changes FIRST (no get() calls needed).
         // This allows reparenting and other non-sensitive updates without
         // needing the user to be admin/creator of the specific statement.
-        // Only fall through to isAuthorized() if protected fields are changing.
-        return (!hasProtectedFieldChanges() && !hasUnauthorizedAccessChange()) ||
+        // Only fall through to isAuthorized() if protected fields are changing
+        // OR a join-membership mutation is being attempted on a join-form
+        // question (which must use the fn_joinOption callable, not direct
+        // writes — admins bypass via isAuthorized()).
+        return (!hasProtectedFieldChanges() &&
+                !hasUnauthorizedAccessChange() &&
+                !blocksDirectMembershipMutation()) ||
                isAuthorized();
       }
 
@@ -940,6 +969,21 @@ service cloud.firestore {
       );
       allow list: if request.auth != null;
       allow write: if false;
+    }
+
+    // Join-form submission history (durable backup). Written exclusively by
+    // `fn_backupJoinFormSubmission` via the Admin SDK; restoration goes
+    // through `restoreJoinFormSubmissions.ts`. Contains PII (phone, email,
+    // custom form fields) — clients have no read or write access.
+    match /joinFormSubmissionsHistory/{historyId} {
+      allow read, write: if false;
+    }
+
+    // Join-form audit trace (7-day TTL). Written by both backup triggers via
+    // the Admin SDK. Membership-event entries hold uid + displayName only;
+    // submission entries (legacy path) hold full bodies. No client access.
+    match /joinRegistrationBackups/{backupId} {
+      allow read, write: if false;
     }
 
     // Join-app accepted delegates. The doc subject (the delegate themself)

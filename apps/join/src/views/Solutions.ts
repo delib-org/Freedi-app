@@ -12,6 +12,7 @@ import {
 	subscribeQuestion,
 	subscribeMainStatement,
 	subscribeUserEvaluations,
+	subscribeUserJoinFormSubmission,
 	getUnreadCount,
 	getTotalVisibleCount,
 	getNewOptionsPendingCount,
@@ -41,6 +42,7 @@ let questionUnsub: Unsubscribe | null = null;
 let optionsUnsub: Unsubscribe | null = null;
 let mainUnsub: Unsubscribe | null = null;
 let evaluationsUnsub: Unsubscribe | null = null;
+let joinSubmissionUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
@@ -104,6 +106,11 @@ export const Solutions: m.Component = {
 			// 5-face row its "I picked this" highlight on first paint and keeps
 			// it in sync if they evaluate from another tab.
 			evaluationsUnsub = subscribeUserEvaluations(questionId);
+			// Keep our local "form submitted?" caches honest across tabs and
+			// admin resets — without this, a remote delete of the user's
+			// submission doc leaves the cache stale and the next join would
+			// silently skip the form modal.
+			joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
 
 			// In facilitated mode, also keep a listener on the main statement so
 			// the facilitator can move us up to the Hub or across to another
@@ -151,6 +158,10 @@ export const Solutions: m.Component = {
 		if (evaluationsUnsub) {
 			evaluationsUnsub();
 			evaluationsUnsub = null;
+		}
+		if (joinSubmissionUnsub) {
+			joinSubmissionUnsub();
+			joinSubmissionUnsub = null;
 		}
 	},
 

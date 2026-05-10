@@ -6,11 +6,10 @@ import {
 	JOIN_DELEGATE_INVITE_EXPIRY_MS,
 	JoinDelegateInvitation,
 	JoinDelegateInvitationStatus,
-	Role,
-	Statement,
 	functionConfig,
 } from '@freedi/shared-types';
 import { db } from '../../db';
+import { assertJoinAdminAuthorized } from '../../utils/joinAuth';
 
 interface CreateJoinDelegateInviteRequest {
 	questionId: string;
@@ -84,27 +83,16 @@ export const fn_createJoinDelegateInvite = onCall(
 			throw new HttpsError('failed-precondition', 'You cannot invite yourself');
 		}
 
-		// Load question + authorize.
-		const qSnap = await db.collection(Collections.statements).doc(questionId).get();
-		if (!qSnap.exists) {
-			throw new HttpsError('not-found', 'Question not found');
-		}
-		const question = qSnap.data() as Statement;
-
-		let authorized = question.creatorId === uid;
-		if (!authorized) {
-			const subSnap = await db
-				.collection(Collections.statementsSubscribe)
-				.doc(`${uid}--${questionId}`)
-				.get();
-			if (subSnap.exists) {
-				const role = subSnap.data()?.role;
-				authorized = role === Role.admin || role === Role.creator;
-			}
-		}
-		if (!authorized) {
-			throw new HttpsError('permission-denied', 'Only question admins can invite delegates');
-		}
+		// Load question + authorize. allowDelegate is FALSE because letting a
+		// delegate invite further delegates would be a privilege-escalation
+		// surface — only the question creator and admin/creator subscribers
+		// can grow the delegate pool.
+		await assertJoinAdminAuthorized({
+			uid,
+			questionId,
+			allowDelegate: false,
+			operation: 'joinDelegate.createInvite',
+		});
 
 		const token = randomBytes(32).toString('base64url');
 		const tokenName = (request.auth?.token as { name?: string } | undefined)?.name ?? '';
