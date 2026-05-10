@@ -214,7 +214,7 @@ const TreeMessageNode: FC<TreeMessageNodeProps> = ({
 					{!isQuestion && (
 						<>
 							<span className={styles['tree-message-node__author']}>
-								{statement.creator.displayName}
+								{statement.creator?.displayName ?? ''}
 							</span>
 							<span className={styles['tree-message-node__time']}>{timeString}</span>
 						</>
