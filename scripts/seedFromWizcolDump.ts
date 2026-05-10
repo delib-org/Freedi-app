@@ -192,6 +192,7 @@ interface AuthLookupResult {
 	displayName?: string;
 	email?: string;
 	photoURL?: string;
+	providers: string[];
 }
 
 async function lookupAuthUser(uid: string): Promise<AuthLookupResult | null> {
@@ -211,6 +212,7 @@ async function lookupAuthUser(uid: string): Promise<AuthLookupResult | null> {
 				displayName?: string;
 				email?: string;
 				photoUrl?: string;
+				providerUserInfo?: Array<{ providerId?: string }>;
 			}>;
 		};
 		const user = body.users?.find((u) => u.localId === uid);
@@ -220,31 +222,60 @@ async function lookupAuthUser(uid: string): Promise<AuthLookupResult | null> {
 			displayName: user.displayName,
 			email: user.email,
 			photoURL: user.photoUrl,
+			providers: (user.providerUserInfo ?? [])
+				.map((p) => p.providerId)
+				.filter((id): id is string => Boolean(id)),
 		};
 	} catch {
 		return null;
 	}
 }
 
+const SEED_PASSWORD = 'password';
+
 async function ensureAuthUser(user: AdminUser) {
 	const projectId = process.env.GCLOUD_PROJECT ?? 'freedi-test';
 	const host = process.env.FIREBASE_AUTH_EMULATOR_HOST ?? 'localhost:9099';
 	const base = `http://${host}/identitytoolkit.googleapis.com/v1/projects/${projectId}/accounts`;
 	const existing = await lookupAuthUser(user.uid);
-	if (existing) return;
 	try {
-		await fetch(base, {
-			method: 'POST',
-			headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				localId: user.uid,
-				displayName: user.displayName,
-				email: user.email,
-				emailVerified: true,
-				password: 'password',
-			}),
-		});
-		console.info(`✓ Created auth user ${user.displayName} (${user.uid}) in emulator`);
+		if (!existing) {
+			await fetch(base, {
+				method: 'POST',
+				headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					localId: user.uid,
+					displayName: user.displayName,
+					email: user.email,
+					emailVerified: true,
+					password: SEED_PASSWORD,
+				}),
+			});
+			console.info(
+				`✓ Created auth user ${user.displayName} (${user.uid}) in emulator [email/${SEED_PASSWORD}]`,
+			);
+
+			return;
+		}
+
+		// User exists. If they only have federated providers (e.g., google.com)
+		// but no password provider, augment with a password so the UI's
+		// email/password sign-in works for them in the emulator.
+		const hasPassword = existing.providers.includes('password');
+		if (!hasPassword) {
+			await fetch(`${base}:update`, {
+				method: 'POST',
+				headers: { Authorization: 'Bearer owner', 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					localId: user.uid,
+					password: SEED_PASSWORD,
+					emailVerified: true,
+				}),
+			});
+			console.info(
+				`✓ Added password provider to existing user ${user.displayName} (${user.uid}) [email/${SEED_PASSWORD}]`,
+			);
+		}
 	} catch (error) {
 		// Auth emulator not running is non-fatal — Firestore-only seed still
 		// produces a usable question for clustering/synthesis testing. The
