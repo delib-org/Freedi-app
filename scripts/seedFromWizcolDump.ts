@@ -302,6 +302,26 @@ async function loadQuestion(adminUser: AdminUser) {
 	// Always (re)write the question doc with the configured user as creator so
 	// reseeding with different --admin flags updates ownership cleanly.
 	const existing = doc.exists ? (doc.data() as Record<string, unknown>) : {};
+
+	// statementSettings drives which evaluation UI renders for child options.
+	// Default the seed to the 5-face Enhanced ("range") UI — the values it
+	// emits (1, 0.5, 0, -0.5, -1) match `pickEvaluation` exactly. Merged with
+	// any pre-existing settings so a manually-edited question keeps overrides.
+	const existingSettings =
+		(existing.statementSettings as Record<string, unknown> | undefined) ?? {};
+	const statementSettings: Record<string, unknown> = {
+		...existingSettings,
+		evaluationType: existingSettings.evaluationType ?? 'range',
+		// Legacy boolean still consulted by Evaluation.tsx when evaluationType
+		// is missing on older docs; safe to set alongside the new field.
+		enhancedEvaluation: existingSettings.enhancedEvaluation ?? true,
+		// Surface the consensus/score bar and let users click to evaluate.
+		showEvaluation: existingSettings.showEvaluation ?? true,
+		enableEvaluation: existingSettings.enableEvaluation ?? true,
+		enableAddVotingOption: existingSettings.enableAddVotingOption ?? true,
+		hasChat: existingSettings.hasChat ?? true,
+	};
+
 	const questionData: Record<string, unknown> = {
 		...existing,
 		statementId: QUESTION_ID,
@@ -322,6 +342,7 @@ async function loadQuestion(adminUser: AdminUser) {
 		totalEvaluators: existing.totalEvaluators ?? 0,
 		hide: existing.hide ?? false,
 		randomSeed: existing.randomSeed ?? Math.random(),
+		statementSettings,
 	};
 	await db.collection('statements').doc(QUESTION_ID).set(questionData);
 	await ensureAdminSub(QUESTION_ID, adminUser, questionData);
