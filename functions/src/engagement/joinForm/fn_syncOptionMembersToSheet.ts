@@ -76,6 +76,16 @@ export const fn_syncOptionMembersToSheet = onDocumentWritten(
 			if (!subject || subject.statementType !== StatementType.option) {
 				return null;
 			}
+			// Cluster docs (topic / hybrid / synthesis) and hidden integrated
+			// members are option-typed but carry no real membership state.
+			// Skipping them prevents a clustering run from firing this trigger
+			// (and reading the parent question doc) on every produced cluster.
+			// `integratedInto` is set by performIntegration on hidden members
+			// and is not on the shared Statement type, hence the cast.
+			const integratedInto = (subject as { integratedInto?: string }).integratedInto;
+			if (subject.isCluster === true || integratedInto) {
+				return null;
+			}
 
 			// Compute membership diffs. If neither array changed, bail out before
 			// doing any reads against the question doc or the Sheets API.

@@ -33,6 +33,17 @@ export const fn_updateQueueConsensus = onDocumentUpdated(
 				return null;
 			}
 
+			// Cluster docs (topic / hybrid / synthesis) and integrated members
+			// are never paragraph-replacement suggestions. Their consensus
+			// changes during clustering runs and would otherwise force a
+			// paragraphReplacementQueue lookup per cluster update.
+			// `integratedInto` is set by performIntegration on hidden members
+			// and is not on the shared Statement type, hence the cast.
+			const integratedInto = (after as { integratedInto?: string }).integratedInto;
+			if (after.isCluster === true || integratedInto) {
+				return null;
+			}
+
 			// Only if consensus changed
 			if (before.consensus === after.consensus) {
 				return null;

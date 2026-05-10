@@ -61,6 +61,17 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 				return null;
 			}
 
+			// Cluster docs (topic / hybrid / synthesis) and integrated members
+			// are never paragraph-replacement suggestions — skip before the
+			// topParentId fetch a clustering run would otherwise force on every
+			// cluster doc it produces. `integratedInto` is set by
+			// performIntegration on hidden members and is not on the shared
+			// Statement type, hence the cast.
+			const integratedInto = (after as { integratedInto?: string }).integratedInto;
+			if (after.isCluster === true || integratedInto) {
+				return null;
+			}
+
 			// Only process if suggestion has a parent (paragraph)
 			if (!after.parentId || !after.topParentId) {
 				return null;

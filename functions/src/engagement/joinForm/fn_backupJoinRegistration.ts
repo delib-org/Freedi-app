@@ -99,6 +99,15 @@ export const fn_backupOptionMembership = onDocumentWritten(
 			if (!subject || subject.statementType !== StatementType.option) {
 				return null;
 			}
+			// Cluster docs and hidden synthesized-cluster members are option-typed
+			// but never have a real joined/organizers diff — skip them so a
+			// topic/synthesis run doesn't burn this trigger on every cluster doc
+			// it produces. `integratedInto` is set by performIntegration on hidden
+			// members and is not on the shared Statement type, hence the cast.
+			const integratedInto = (subject as { integratedInto?: string }).integratedInto;
+			if (subject.isCluster === true || integratedInto) {
+				return null;
+			}
 
 			const events = computeMembershipEvents(before, after);
 			if (events.length === 0) {
