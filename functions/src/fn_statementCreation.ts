@@ -509,8 +509,14 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		const startTime = Date.now();
 		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
 
-		// Save embedding to the statement document
-		await embeddingCache.saveEmbedding(statement.statementId, result.embedding, context);
+		// Save embedding to the statement document (text passed so textHash
+		// is written for the synthesis verdict cache).
+		await embeddingCache.saveEmbedding(
+			statement.statementId,
+			result.embedding,
+			context,
+			statement.statement,
+		);
 
 		const duration = Date.now() - startTime;
 		logger.info(`Generated embedding for statement ${statement.statementId}`, {

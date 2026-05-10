@@ -1,18 +1,17 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
+import pLimit from 'p-limit';
 import { Collections, Role, Statement, StatementType, functionConfig } from '@freedi/shared-types';
 import { logger } from 'firebase-functions';
 import { ALLOWED_ORIGINS } from './config/cors';
 import { embeddingCache } from './services/embedding-cache-service';
 import { buildCandidateEdges } from './services/similarity-grouping-service';
-import {
-	judgeSemanticEquivalence,
-	EquivalenceVerdict,
-	EquivalencePair,
-} from './services/semantic-equivalence-service';
+import { EquivalenceVerdict, EquivalencePair } from './services/semantic-equivalence-service';
+import { judgeSemanticEquivalenceCached } from './services/verdict-cache-service';
 import { UnionFind } from './utils/unionFind';
 import { refineComponent, pairKey } from './synthesis/completeLinkage';
 import { performIntegration } from './integrate/performIntegration';
+import { recomputeClusterEvaluation } from './condensation/aggregation';
 import {
 	generateSynthesizedProposal,
 	StatementWithEvaluation,
@@ -326,7 +325,7 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 			})
 			.filter((p): p is EquivalencePair => p !== null);
 
-		const verdictResults = await judgeSemanticEquivalence(equivalencePairs);
+		const verdictResults = await judgeSemanticEquivalenceCached(equivalencePairs);
 		const verdictMap = new Map<string, EquivalenceVerdict>();
 		const reasonMap = new Map<string, string>();
 		for (const r of verdictResults) {
@@ -350,11 +349,14 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 		const refinedGroups: string[][] = [];
 		const reasonsByGroup = new Map<string[], string[]>();
 		for (const component of components) {
-			const refined = await refineComponent({
-				memberIds: component,
-				texts: idToText,
-				verdicts: verdictMap,
-			});
+			const refined = await refineComponent(
+				{
+					memberIds: component,
+					texts: idToText,
+					verdicts: verdictMap,
+				},
+				(missingPairs) => judgeSemanticEquivalenceCached(missingPairs),
+			);
 			// Merge any newly-fetched verdicts into the run-level map for reason lookup
 			for (const r of refined.newVerdicts) {
 				verdictMap.set(r.pairId, r.verdict);
@@ -532,35 +534,84 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 		const createdStatementIds: string[] = [];
 		const errors: string[] = [];
 
-		for (const group of confirmedGroups) {
-			if (!Array.isArray(group.memberIds) || group.memberIds.length < 2) {
-				errors.push('Skipped group with fewer than 2 members');
-				continue;
-			}
-			if (!group.mergedTitle || !group.mergedTitle.trim()) {
-				errors.push('Skipped group with empty title');
-				continue;
-			}
+		// Groups write independent docs (new cluster, paragraph children,
+		// member hide updates) so they can run concurrently. Cap at 5 to
+		// avoid overwhelming Firestore writes on a 1GiB instance.
+		const integrationLimit = pLimit(5);
+		await Promise.all<unknown>(
+			confirmedGroups.map((group) =>
+				integrationLimit(async () => {
+					if (!Array.isArray(group.memberIds) || group.memberIds.length < 2) {
+						errors.push('Skipped group with fewer than 2 members');
 
-			try {
-				const result = await performIntegration({
-					parentStatementId,
-					selectedStatementIds: group.memberIds,
-					integratedTitle: group.mergedTitle,
-					integratedDescription: group.mergedDescription || '',
-					creatorId: userId,
-					creatorDisplayName,
-					creatorDefaultLanguage,
-					derivedByPipeline: 'synthesis',
-					paragraphs: Array.isArray(group.paragraphs) ? group.paragraphs : undefined,
-				});
-				createdStatementIds.push(result.newStatementId);
-			} catch (error) {
-				const message = error instanceof Error ? error.message : 'Group merge failed';
-				logger.error('synthesizeIdeasExecute group merge failed', { error: message, group });
-				errors.push(message);
-			}
-		}
+						return;
+					}
+					if (!group.mergedTitle || !group.mergedTitle.trim()) {
+						errors.push('Skipped group with empty title');
+
+						return;
+					}
+
+					try {
+						const result = await performIntegration({
+							parentStatementId,
+							selectedStatementIds: group.memberIds,
+							integratedTitle: group.mergedTitle,
+							integratedDescription: group.mergedDescription || '',
+							creatorId: userId,
+							creatorDisplayName,
+							creatorDefaultLanguage,
+							derivedByPipeline: 'synthesis',
+							paragraphs: Array.isArray(group.paragraphs) ? group.paragraphs : undefined,
+						});
+						createdStatementIds.push(result.newStatementId);
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'Group merge failed';
+						logger.error('synthesizeIdeasExecute group merge failed', {
+							error: message,
+							group,
+						});
+						errors.push(message);
+					}
+				}),
+			),
+		);
+
+		// End-of-run augmented-evaluation finalization.
+		//
+		// performIntegration → migrateEvaluationsToNewStatement already wrote
+		// the per-user-deduplicated evaluation onto each new cluster. We
+		// invoke `recomputeClusterEvaluation` here as the canonical
+		// re-aggregation: it (a) confirms the truth invariant from a single
+		// source of truth (paper §6.2), (b) syncs clusterEvaluationLinks
+		// provenance, and (c) emits an audit log per cluster so the run
+		// metadata can be cross-checked. Cost is O(K) reads/writes where K
+		// is the number of created clusters (≤20 in typical workloads).
+		const finalizeLimit = pLimit(5);
+		await Promise.all(
+			createdStatementIds.map((clusterId) =>
+				finalizeLimit(async () => {
+					try {
+						const evaluation = await recomputeClusterEvaluation(clusterId);
+						if (evaluation) {
+							logger.info('synthesizeIdeasExecute.finalize', {
+								clusterId,
+								numberOfEvaluators: evaluation.numberOfEvaluators,
+								consensus: evaluation.agreement,
+								averageEvaluation: evaluation.averageEvaluation,
+							});
+						}
+					} catch (error) {
+						const message = error instanceof Error ? error.message : 'finalize recompute failed';
+						logger.warn('synthesizeIdeasExecute.finalize failed (non-fatal)', {
+							clusterId,
+							error: message,
+						});
+						errors.push(`finalize:${message}`);
+					}
+				}),
+			),
+		);
 
 		const runId = db.collection('_').doc().id;
 		await recordRunMetadata(

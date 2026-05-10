@@ -1,3 +1,4 @@
+import pLimit from 'p-limit';
 import { vectorSearchService } from './vector-search-service';
 import { embeddingCache } from './embedding-cache-service';
 import { logError } from '../utils/errorHandling';
@@ -33,6 +34,7 @@ export interface BuildCandidateEdgesOptions {
 
 const DEFAULT_THRESHOLD = 0.9;
 const DEFAULT_K = 20;
+const DEFAULT_ANN_CONCURRENCY = 30;
 
 /**
  * For each candidate, query the vector index for its top-K neighbors above
@@ -53,46 +55,57 @@ export async function buildCandidateEdges(
 	const embeddings = await embeddingCache.getBatchEmbeddings(candidateIds);
 
 	const edgeMap = new Map<string, CandidateEdge>();
+	const concurrency = Number(process.env.ANN_CONCURRENCY ?? DEFAULT_ANN_CONCURRENCY);
+	const limit = pLimit(concurrency > 0 ? concurrency : DEFAULT_ANN_CONCURRENCY);
 
-	for (const candidateId of candidateIds) {
-		const embedding = embeddings.get(candidateId);
-		if (!embedding) {
-			// Not having an embedding is recoverable; the caller should arrange a
-			// backfill before running synthesis (the paper requires ≥90% coverage).
-			continue;
-		}
-
-		try {
-			const results = await vectorSearchService.findSimilarByEmbedding(
-				embedding,
-				options.parentId,
-				{
-					limit: k,
-					threshold,
-				},
-			);
-
-			for (const result of results) {
-				const otherId = result.statement.statementId;
-				if (!otherId || otherId === candidateId) continue;
-				const cosine = result.similarity;
-				if (typeof cosine !== 'number' || cosine < threshold) continue;
-
-				const [a, b] = candidateId < otherId ? [candidateId, otherId] : [otherId, candidateId];
-				const key = `${a}|${b}`;
-				const existing = edgeMap.get(key);
-				if (!existing || cosine > existing.cosine) {
-					edgeMap.set(key, { a, b, cosine });
+	// Each `findNearest` call is a separate Firestore round-trip; for ≤500
+	// candidates (the typical workload) running them sequentially adds ~500
+	// round-trip latencies to the wall-clock. Bounded parallelism cuts that
+	// to ~candidates/concurrency. Map.set into edgeMap is safe — Node is
+	// single-threaded so writes interleave at await points only.
+	await Promise.all(
+		candidateIds.map((candidateId) =>
+			limit(async () => {
+				const embedding = embeddings.get(candidateId);
+				if (!embedding) {
+					// Not having an embedding is recoverable; the caller should arrange a
+					// backfill before running synthesis (the paper requires ≥90% coverage).
+					return;
 				}
-			}
-		} catch (error) {
-			logError(error, {
-				operation: 'similarityGrouping.buildCandidateEdges',
-				metadata: { candidateId, parentId: options.parentId },
-			});
-			// Continue with other candidates rather than aborting the chunk
-		}
-	}
+
+				try {
+					const results = await vectorSearchService.findSimilarByEmbedding(
+						embedding,
+						options.parentId,
+						{
+							limit: k,
+							threshold,
+						},
+					);
+
+					for (const result of results) {
+						const otherId = result.statement.statementId;
+						if (!otherId || otherId === candidateId) continue;
+						const cosine = result.similarity;
+						if (typeof cosine !== 'number' || cosine < threshold) continue;
+
+						const [a, b] = candidateId < otherId ? [candidateId, otherId] : [otherId, candidateId];
+						const key = `${a}|${b}`;
+						const existing = edgeMap.get(key);
+						if (!existing || cosine > existing.cosine) {
+							edgeMap.set(key, { a, b, cosine });
+						}
+					}
+				} catch (error) {
+					logError(error, {
+						operation: 'similarityGrouping.buildCandidateEdges',
+						metadata: { candidateId, parentId: options.parentId },
+					});
+					// Continue with other candidates rather than aborting the chunk
+				}
+			}),
+		),
+	);
 
 	return Array.from(edgeMap.values());
 }
