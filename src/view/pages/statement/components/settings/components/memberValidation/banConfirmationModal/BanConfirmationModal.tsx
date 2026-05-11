@@ -54,7 +54,7 @@ const BanConfirmationModal: FC<Props> = ({ member, statement, onConfirm, onCance
 		<div className={styles.modalOverlay}>
 			<div className={styles.modal}>
 				<h2>
-					{t('Remove Member')}: {member.user.displayName}
+					{t('Remove Member')}: {member.user?.displayName ?? ''}
 					{getRoleBadge()}
 				</h2>
 

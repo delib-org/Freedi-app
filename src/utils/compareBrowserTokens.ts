@@ -25,7 +25,12 @@ export async function compareBrowserTokens() {
 	console.info('2. Current Token:', currentToken);
 
 	// Get all tokens for current user
-	const user = JSON.parse(localStorage.getItem('userAuth') || '{}');
+	let user: { uid?: string } = {};
+	try {
+		user = JSON.parse(localStorage.getItem('userAuth') || '{}');
+	} catch {
+		user = {};
+	}
 	if (!user.uid) {
 		logError(new Error('No user logged in'), {
 			operation: 'utils.compareBrowserTokens.compareBrowserTokens',

@@ -16,8 +16,9 @@ interface Props {
 }
 
 const MembershipCard: FC<Props> = ({ member }) => {
-	const firstLetter = member.user.displayName.charAt(0).toUpperCase();
-	const displayImg = member.user.photoURL;
+	const displayName = member.user?.displayName ?? '';
+	const firstLetter = displayName.charAt(0).toUpperCase();
+	const displayImg = member.user?.photoURL;
 	const [role, setRole] = useState(member.role);
 	const { user } = useAuthentication();
 
@@ -28,8 +29,8 @@ const MembershipCard: FC<Props> = ({ member }) => {
 	if (member.user?.uid === user?.uid) return null;
 
 	// Check if this user can be banned (not admin or creator)
-	const userCanBeBanned = canBanUser(role, member.user.uid, member.statement);
-	const banDisabledReason = getBanDisabledReason(role, member.user.uid, member.statement);
+	const userCanBeBanned = canBanUser(role, member.user?.uid ?? '', member.statement);
+	const banDisabledReason = getBanDisabledReason(role, member.user?.uid ?? '', member.statement);
 
 	async function handleRemoveMember() {
 		// If trying to ban, check if user can be banned
@@ -44,6 +45,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 
 		const newRole = role === Role.banned ? Role.member : Role.banned;
 		try {
+			if (!member.user?.uid) throw new Error('No user id');
 			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
@@ -81,7 +83,7 @@ const MembershipCard: FC<Props> = ({ member }) => {
 					{!displayImg && firstLetter}
 				</div>
 				<div className={`${styles.card__info__name} ${isBanned ? styles.bannedText : ''}`}>
-					{member.user.displayName}
+					{displayName}
 				</div>
 			</div>
 			<div className={styles.card__membership}>

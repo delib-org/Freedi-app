@@ -182,7 +182,7 @@ export async function setRoleToDB(statement: Statement, role: Role, user: User):
 		const currentUserStatementSubscription = await getDoc(currentUserStatementSubscriptionRef);
 		const currentUserRole = currentUserStatementSubscription.data()?.role;
 		if (!currentUserRole) throw new Error('Error in getting currentUserRole');
-		if (currentUserRole !== Role.admin || statement.creator.uid === user.uid) return;
+		if (currentUserRole !== Role.admin || statement.creator?.uid === user.uid) return;
 
 		//setting user role in statement
 		const statementSubscriptionId = getStatementSubscriptionId(statement.statementId, user.uid);
