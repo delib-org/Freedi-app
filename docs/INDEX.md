@@ -89,6 +89,10 @@ Research papers and theoretical foundations.
 - `popper-hebbian-edit-mockups.md` - Edit flow mockups
 - `realistic_support_paper.md` - Realistic support paper
 
+### [`clusters and synthesis/`](./clusters%20and%20synthesis/)
+Methodology paper for the clustering and idea-synthesis subsystems. The current architecture lives at [`architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md`](../architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md).
+- `clustering-and-synthesis-paper.md` - Unified methodology paper (hybrid text-rating clustering + verified-embedding synthesis on a single OpenAI embedding space)
+
 ### [`qa/`](./qa/)
 Quality assurance and end-to-end testing.
 - `E2E_TESTING.md` - End-to-end testing guide
@@ -131,7 +135,6 @@ Independent feature plans (read as needed).
 - `SEMANTIC_SEARCH_IMPLEMENTATION_PLAN.md` - Semantic search
 - `SETTINGS_REDESIGN_SPEC.md` / `STATEMENT_SETTINGS_UX_PROPOSAL.md` - Settings redesign
 - `Integration.md` - Integration plan
-- `look-for-similarties-scaling-up.md` - Similarity detection at scale
 
 #### [`plans/ai-ml/`](./plans/ai-ml/) — *AI & ML*
 AI-powered features and evaluation models.

@@ -61,6 +61,8 @@ export enum Collections {
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',
+    joinDelegateInvitations = 'joinDelegateInvitations',
+    joinDelegates = 'joinDelegates',
     framings = 'framings',
     framingRequests = 'framingRequests',
     clusterAggregations = 'clusterAggregations',
@@ -91,4 +93,8 @@ export enum Collections {
     // Research logging
     researchLogs = 'researchLogs',
     researchConsent = 'researchConsent',
+
+    // Topic-cluster pipeline caches
+    clusteringTaxonomies = 'clusteringTaxonomies',
+    clusteringNormalizations = 'clusteringNormalizations',
 }

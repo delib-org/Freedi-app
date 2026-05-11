@@ -1,6 +1,7 @@
 import { Request, Response } from 'firebase-functions/v1';
 import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
+import pLimit from 'p-limit';
 import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { embeddingService } from './services/embedding-service';
 import { embeddingCache } from './services/embedding-cache-service';
@@ -21,6 +22,7 @@ interface BackfillProgress {
 
 const BATCH_SIZE = 50;
 const RATE_LIMIT_DELAY_MS = 200;
+const BACKFILL_CONCURRENCY = 10;
 
 /**
  * Generate embeddings for all option statements under a question
@@ -106,37 +108,48 @@ export async function generateBulkEmbeddings(request: Request, response: Respons
 		for (let i = 0; i < statements.length; i += BATCH_SIZE) {
 			const batch = statements.slice(i, i + BATCH_SIZE);
 
-			for (const { id, data } of batch) {
-				progress.processedStatements++;
-				progress.lastProcessedId = id;
+			// OpenAI embedding calls are independent per statement; running
+			// them concurrently inside the batch cuts wall-clock by roughly
+			// BACKFILL_CONCURRENCY×. The outer RATE_LIMIT_DELAY_MS between
+			// batches stays as a TPM safety net for very large backfills.
+			const limit = pLimit(BACKFILL_CONCURRENCY);
+			await Promise.all(
+				batch.map(({ id, data }) =>
+					limit(async () => {
+						progress.processedStatements++;
+						progress.lastProcessedId = id;
 
-				try {
-					// Skip if already has embedding and not forcing regeneration
-					if (!forceRegenerate) {
-						const hasExisting = await embeddingCache.hasEmbedding(id);
-						if (hasExisting) {
-							progress.skippedStatements++;
-							continue;
+						try {
+							if (!forceRegenerate) {
+								const hasExisting = await embeddingCache.hasEmbedding(id);
+								if (hasExisting) {
+									progress.skippedStatements++;
+
+									return;
+								}
+							}
+
+							if (!data.statement || data.statement.trim().length < 3) {
+								progress.skippedStatements++;
+
+								return;
+							}
+
+							const result = await embeddingService.generateEmbeddingWithRetry(
+								data.statement,
+								context,
+							);
+
+							// text passed so textHash is written for verdict cache.
+							await embeddingCache.saveEmbedding(id, result.embedding, context, data.statement);
+							progress.successfulEmbeddings++;
+						} catch (error) {
+							progress.failedStatements++;
+							logger.warn(`Failed to generate embedding for ${id}:`, error);
 						}
-					}
-
-					// Skip if text is too short
-					if (!data.statement || data.statement.trim().length < 3) {
-						progress.skippedStatements++;
-						continue;
-					}
-
-					// Generate embedding
-					const result = await embeddingService.generateEmbeddingWithRetry(data.statement, context);
-
-					// Save to statement document
-					await embeddingCache.saveEmbedding(id, result.embedding, context);
-					progress.successfulEmbeddings++;
-				} catch (error) {
-					progress.failedStatements++;
-					logger.warn(`Failed to generate embedding for ${id}:`, error);
-				}
-			}
+					}),
+				),
+			);
 
 			// Rate limiting between batches
 			if (i + BATCH_SIZE < statements.length) {
@@ -272,8 +285,8 @@ export async function regenerateEmbedding(request: Request, response: Response):
 		// Generate new embedding
 		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
 
-		// Save to statement
-		await embeddingCache.saveEmbedding(statementId, result.embedding, context);
+		// Save to statement (text passed so textHash is written for verdict cache)
+		await embeddingCache.saveEmbedding(statementId, result.embedding, context, statement.statement);
 
 		const processingTime = Date.now() - startTime;
 

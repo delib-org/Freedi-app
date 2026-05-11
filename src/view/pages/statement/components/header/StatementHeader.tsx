@@ -183,85 +183,85 @@ const StatementHeader: FC<Props> = ({ topParentStatement, onActiveViewChange }) 
 					{/* Sub-header: title, tabs, filters */}
 					<div className={styles.subHeader}>
 						<div className={styles.subHeaderInner}>
-						{isAdmin ? (
-							<button className={styles.header} onClick={handleStartEdit}>
-								{!edit ? (
-									<h1>{renderInlineMarkdown(statement?.statement)}</h1>
-								) : (
-									<h1>
-										<input
-											type="text"
-											defaultValue={statement?.statement}
-											onBlur={() => setEdit(false)}
-											onKeyUp={handleUpdateStatement}
-										/>
-									</h1>
-								)}
-							</button>
-						) : (
-							<div className={styles.header}>
-								<h1>{renderInlineMarkdown(statement?.statement)}</h1>
-							</div>
-						)}
-
-						{isCompound ? (
-							<>
-								<button
-									className={styles.headerToggle}
-									onClick={() => setHeaderCollapsed((prev) => !prev)}
-									aria-expanded={!headerCollapsed}
-								>
-									<span className={styles.headerToggleText}>{t('Details')}</span>
-									<span
-										className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}
-									>
-										&#9662;
-									</span>
+							{isAdmin ? (
+								<button className={styles.header} onClick={handleStartEdit}>
+									{!edit ? (
+										<h1>{renderInlineMarkdown(statement?.statement)}</h1>
+									) : (
+										<h1>
+											<input
+												type="text"
+												defaultValue={statement?.statement}
+												onBlur={() => setEdit(false)}
+												onKeyUp={handleUpdateStatement}
+											/>
+										</h1>
+									)}
 								</button>
-								{!headerCollapsed && (
-									<div className={styles.headerCollapsible}>
-										<DeadlineBanner statement={statement} role={role} />
-										{showSegmentedControl && (
-											<div className={styles.segmentedControlWrapper}>
-												<SegmentedControl
-													segments={segments}
-													activeId={activeView}
-													onChange={handleTabChange}
-												/>
-											</div>
-										)}
-									</div>
-								)}
-							</>
-						) : (
-							<>
-								{statement?.brief && (
-									<StatementDescription
-										brief={statement.brief}
-										callToAction={t('Share your thoughts below')}
-									/>
-								)}
-								<DeadlineBanner statement={statement} role={role} />
-								{showSegmentedControl && (
-									<div className={styles.segmentedControlWrapper}>
-										<SegmentedControl
-											segments={segments}
-											activeId={activeView}
-											onChange={handleTabChange}
-										/>
-									</div>
-								)}
-							</>
-						)}
+							) : (
+								<div className={styles.header}>
+									<h1>{renderInlineMarkdown(statement?.statement)}</h1>
+								</div>
+							)}
 
-						{treeFilter && showSegmentedControl && (
-							<TreeFilterChips
-								activeFilter={treeFilter.filterMode}
-								onFilterChange={treeFilter.setFilterMode}
-								onToggleCollapse={treeFilter.toggleCollapseExpand}
-								isCollapsed={treeFilter.isCollapsed}
-							/>
-						)}
+							{isCompound ? (
+								<>
+									<button
+										className={styles.headerToggle}
+										onClick={() => setHeaderCollapsed((prev) => !prev)}
+										aria-expanded={!headerCollapsed}
+									>
+										<span className={styles.headerToggleText}>{t('Details')}</span>
+										<span
+											className={`${styles.headerToggleChevron} ${!headerCollapsed ? styles.headerToggleChevronOpen : ''}`}
+										>
+											&#9662;
+										</span>
+									</button>
+									{!headerCollapsed && (
+										<div className={styles.headerCollapsible}>
+											<DeadlineBanner statement={statement} role={role} />
+											{showSegmentedControl && (
+												<div className={styles.segmentedControlWrapper}>
+													<SegmentedControl
+														segments={segments}
+														activeId={activeView}
+														onChange={handleTabChange}
+													/>
+												</div>
+											)}
+										</div>
+									)}
+								</>
+							) : (
+								<>
+									{statement?.brief && (
+										<StatementDescription
+											brief={statement.brief}
+											callToAction={t('Share your thoughts below')}
+										/>
+									)}
+									<DeadlineBanner statement={statement} role={role} />
+									{showSegmentedControl && (
+										<div className={styles.segmentedControlWrapper}>
+											<SegmentedControl
+												segments={segments}
+												activeId={activeView}
+												onChange={handleTabChange}
+											/>
+										</div>
+									)}
+								</>
+							)}
+
+							{treeFilter && showSegmentedControl && (
+								<TreeFilterChips
+									activeFilter={treeFilter.filterMode}
+									onFilterChange={treeFilter.setFilterMode}
+									onToggleCollapse={treeFilter.toggleCollapseExpand}
+									isCollapsed={treeFilter.isCollapsed}
+								/>
+							)}
 						</div>
 					</div>
 				</div>

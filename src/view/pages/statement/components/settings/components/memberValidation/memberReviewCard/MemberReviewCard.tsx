@@ -90,7 +90,7 @@ const MemberReviewCard: FC<Props> = ({
 	const getUserIdentifier = () => {
 		// If user has a display name that's not "Anonymous", prefer to use it
 		if (
-			member.user.displayName &&
+			member.user?.displayName &&
 			member.user.displayName !== 'Anonymous' &&
 			member.user.displayName !== 'Guest'
 		) {

@@ -2,19 +2,38 @@
 	display: flex;
 	align-items: flex-start;
 	gap: 8px;
-	padding: 6px 0;
+	padding: 8px 10px;
 	flex: 1;
 	min-width: 0;
 	margin-top: 6px;
 	border-inline-start: 3px solid var(--header-not-chosen, #ffe16a);
-	padding-inline-start: 8px;
-	background-color: rgba(255, 225, 106, 0.06);
+	padding-inline-start: 10px;
+	background-color: var(--card-default, #fff);
 	border-radius: 6px;
-	transition: background-color 0.3s ease;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+	transition: background-color 0.3s ease, box-shadow 0.2s ease;
+
+	// High-contrast mode (OS-level): replace soft shadow with a solid dark
+	// border so the card edge is clearly visible against the page background.
+	@media (prefers-contrast: more) {
+		background-color: var(--card-default, #fff);
+		border: 2px solid #000;
+		border-inline-start: 3px solid var(--header-not-chosen, #ffe16a);
+		box-shadow: none;
+	}
+
+	// High-contrast mode (in-app toggle via Accessibility panel): same
+	// affordance — dark border instead of soft shadow.
+	:global([data-contrast='high']) & {
+		background-color: var(--card-default, #fff);
+		border: 2px solid #000;
+		border-inline-start: 3px solid var(--header-not-chosen, #ffe16a);
+		box-shadow: none;
+	}
 
 	&--selected {
 		border-inline-start-color: var(--approve, #57c6b2);
-		background-color: rgba(87, 198, 178, 0.06);
+		background-color: var(--card-default, #fff);
 	}
 
 	&--highlight {
@@ -88,12 +107,90 @@
 		white-space: nowrap;
 		margin-inline-end: 0.4rem;
 		box-shadow: 0 1px 3px rgba(95, 136, 229, 0.4);
+
+		// Synthesis: match the regular-option chip styling — yellow background
+		// with dark option text — so synthesis badges blend with the normal
+		// option color palette. The Sparkles icon + "Synthesized" label
+		// remain as the textual identifier.
+		&--synthesis {
+			background: var(--header-not-chosen, #ffe16a);
+			color: var(--option-text, #3b4f7d);
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+		}
+
+		// Topic clusters: muted neutral so they don't compete with synthesis.
+		&--topic {
+			background: var(--text-secondary, #777);
+			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+		}
+
+		@media (prefers-contrast: more) {
+			background: transparent;
+			color: var(--btn-primary, #5f88e5);
+			border: 2px solid var(--btn-primary, #5f88e5);
+			box-shadow: none;
+
+			&--synthesis {
+				background: transparent;
+				border-color: var(--option-text, #3b4f7d);
+				color: var(--option-text, #3b4f7d);
+				box-shadow: none;
+			}
+
+			&--topic {
+				background: transparent;
+				border-color: var(--text-body, #333);
+				color: var(--text-body, #333);
+				box-shadow: none;
+			}
+		}
+	}
+
+	// Synthesis variant of the whole node — match the regular option color
+	// treatment so synthesis cards blend visually with non-synthesized
+	// options. The "Synthesized" pill badge in the header is the sole
+	// identifier; the body uses the same white card + yellow rail as a
+	// regular option.
+	&--synthesis {
+		border-inline-start-color: var(--header-not-chosen, #ffe16a) !important;
+
+		&.tree-option-node--cluster {
+			background-color: var(--card-default, #fff) !important;
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+
+			[dir='rtl'] & {
+				box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
+			}
+		}
+
+		@media (prefers-contrast: more) {
+			background-color: var(--card-default, #fff) !important;
+			border: 2px solid #000 !important;
+			border-inline-start: 3px solid var(--header-not-chosen, #ffe16a) !important;
+			box-shadow: none;
+		}
+
+		:global([data-contrast='high']) & {
+			background-color: var(--card-default, #fff) !important;
+			border: 2px solid #000 !important;
+			border-inline-start: 3px solid var(--header-not-chosen, #ffe16a) !important;
+			box-shadow: none;
+
+			&.tree-option-node--cluster {
+				background-color: var(--card-default, #fff) !important;
+				box-shadow: none;
+
+				[dir='rtl'] & {
+					box-shadow: none;
+				}
+			}
+		}
 	}
 
 	@keyframes card-blink {
-		0%, 100% { background-color: rgba(255, 225, 106, 0.06); }
+		0%, 100% { background-color: var(--card-default, #fff); }
 		15%, 45%, 75% { background-color: rgba(95, 136, 229, 0.15); }
-		30%, 60%, 90% { background-color: rgba(255, 225, 106, 0.06); }
+		30%, 60%, 90% { background-color: var(--card-default, #fff); }
 	}
 
 	@keyframes new-solution-fade {
@@ -106,8 +203,8 @@
 			box-shadow: 0 0 0 1px rgba(95, 136, 229, 0.1);
 		}
 		100% {
-			background-color: rgba(255, 225, 106, 0.06);
-			box-shadow: none;
+			background-color: var(--card-default, #fff);
+			box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.04);
 		}
 	}
 
@@ -179,6 +276,13 @@
 		padding-inline-end: 5.5rem;
 	}
 
+	// Synthesis badge reads "Synthesized · N" (plus Sparkles icon), which is
+	// noticeably wider than a plain count badge — reserve extra room so the
+	// title can't slide under it.
+	&--synthesis &__text {
+		padding-inline-end: 8rem;
+	}
+
 	&__description {
 		color: var(--text-secondary, #999);
 		font-size: 0.85rem;
@@ -199,6 +303,177 @@
 			margin: 2px 0;
 			font-size: inherit;
 		}
+	}
+
+	// Synthesis: proposal-first actions row — sources toggle + admin buttons.
+	// Lives between the description and the (collapsed) source list.
+	&__proposal-actions {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 6px;
+		margin-top: 6px;
+	}
+
+	&__sources-toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 3px 8px;
+		background: transparent;
+		color: var(--text-secondary, #777);
+		border: 1px dashed color-mix(in srgb, var(--btn-primary, #5f88e5) 35%, transparent);
+		border-radius: 999px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 120ms ease,
+			color 120ms ease;
+
+		&:hover,
+		&:focus-visible {
+			background: color-mix(in srgb, var(--btn-primary, #5f88e5) 8%, transparent);
+			color: var(--btn-primary, #5f88e5);
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 1px;
+		}
+	}
+
+	&__proposal-admin-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
+		padding: 3px 7px;
+		background: transparent;
+		color: var(--text-secondary, #888);
+		border: 1px solid rgba(0, 0, 0, 0.15);
+		border-radius: 999px;
+		font-size: 0.68rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color 120ms ease,
+			color 120ms ease,
+			border-color 120ms ease;
+
+		&:hover:not(:disabled),
+		&:focus-visible:not(:disabled) {
+			background: rgba(95, 136, 229, 0.08);
+			color: var(--btn-primary, #5f88e5);
+			border-color: var(--btn-primary, #5f88e5);
+			outline: none;
+		}
+
+		&--danger:hover:not(:disabled),
+		&--danger:focus-visible:not(:disabled) {
+			background: rgba(211, 104, 104, 0.08);
+			color: var(--reject, #d36868);
+			border-color: var(--reject, #d36868);
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 1px;
+		}
+
+		&:disabled {
+			cursor: progress;
+			opacity: 0.55;
+		}
+	}
+
+	// Synthesis-only inline source list — always visible, click navigates
+	// to the original statement.
+	&__sources {
+		margin-top: 6px;
+		padding: 6px 8px;
+		background: color-mix(in srgb, var(--btn-primary, #5f88e5) 5%, transparent);
+		border: 1px dashed color-mix(in srgb, var(--btn-primary, #5f88e5) 30%, transparent);
+		border-radius: 5px;
+
+		@media (prefers-contrast: more) {
+			background: transparent;
+			border: 2px solid var(--btn-primary, #5f88e5);
+		}
+	}
+
+	&__sources-header {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		margin-bottom: 4px;
+		font-size: 0.7rem;
+		font-weight: 600;
+		color: var(--btn-primary, #5f88e5);
+		letter-spacing: 0.01em;
+	}
+
+	&__sources-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__sources-item {
+		display: block;
+		margin: 0;
+	}
+
+	&__sources-link {
+		display: flex;
+		align-items: baseline;
+		gap: 6px;
+		width: 100%;
+		padding: 3px 6px;
+		background: none;
+		border: none;
+		border-radius: 3px;
+		color: var(--text-body, #444);
+		font-size: 0.78rem;
+		text-align: start;
+		cursor: pointer;
+		transition: background-color 120ms ease;
+
+		&:hover,
+		&:focus-visible {
+			background: color-mix(in srgb, var(--btn-primary, #5f88e5) 10%, transparent);
+			outline: none;
+		}
+
+		&:focus-visible {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 1px;
+		}
+
+		span:first-child {
+			color: var(--btn-primary, #5f88e5);
+			font-weight: 700;
+			flex-shrink: 0;
+		}
+	}
+
+	&__sources-title {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__sources-more {
+		display: block;
+		margin-top: 4px;
+		font-size: 0.7rem;
+		color: var(--text-secondary, #777);
+		font-style: italic;
 	}
 
 	&__evaluation {

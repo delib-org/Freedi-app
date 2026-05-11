@@ -13,6 +13,6 @@
 		"allowSyntheticDefaultImports": true
 	},
 	"compileOnSave": true,
-	"include": ["src", "../src/types"],
+	"include": ["src", "../src/types", "scripts"],
 	"exclude": ["node_modules", "lib"]
 }

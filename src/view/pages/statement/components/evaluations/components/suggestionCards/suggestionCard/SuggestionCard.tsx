@@ -166,29 +166,29 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 		const target = e.target as HTMLElement;
 
 		// If click is on the chat button or within it, let it proceed
-		const chatButton = elementRef.current?.querySelector('[data-testid="statement-chat-more-button"]');
+		const chatButton = elementRef.current?.querySelector(
+			'[data-testid="statement-chat-more-button"]',
+		);
 		if (chatButton && chatButton.contains(target)) {
-			console.debug('[SuggestionCard] Click on chat button, allowing to proceed');
 			return; // Allow chat button clicks
 		}
 
 		// For all other clicks, make absolutely sure they don't bubble to parent handlers
 		// and don't trigger any navigation
 		if (target.closest('button') || target.closest('a') || target.closest('[role="button"]')) {
-			console.debug('[SuggestionCard] Click on interactive element:', target.tagName);
 			// These are interactive elements, let them handle themselves
 			return;
 		}
 
-		// For non-interactive areas, stop propagation
-		console.debug('[SuggestionCard] Blocking non-interactive click on:', target.tagName);
 		e.stopPropagation();
 	}
 
 	// Also handle pointer events to catch all interaction types
 	function handleCardPointerDown(e: React.PointerEvent<HTMLDivElement>) {
 		const target = e.target as HTMLElement;
-		const chatButton = elementRef.current?.querySelector('[data-testid="statement-chat-more-button"]');
+		const chatButton = elementRef.current?.querySelector(
+			'[data-testid="statement-chat-more-button"]',
+		);
 
 		// Don't block pointer events on the chat button
 		if (chatButton && chatButton.contains(target)) {
@@ -197,7 +197,6 @@ const SuggestionCard: FC<Props> = ({ parentStatement, statement }) => {
 
 		// Block pointer events on non-interactive areas
 		if (!target.closest('button') && !target.closest('a') && !target.closest('[role="button"]')) {
-			console.debug('[SuggestionCard] Blocking pointer event on:', target.tagName);
 			e.preventDefault();
 		}
 	}

@@ -1,9 +1,10 @@
-import { FC } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
-import { Framing, ClusterAggregatedEvaluation } from '@freedi/shared-types';
+import { Framing, ClusterAggregatedEvaluation, Statement } from '@freedi/shared-types';
 import styles from './ClusteringAdmin.module.scss';
 import ClusterCard from './ClusterCard';
 import Loader from '@/view/components/loaders/Loader';
+import { getStatementFromDB } from '@/controllers/db/statements/getStatement';
 
 interface FramingDetailProps {
 	framing: Framing;
@@ -14,6 +15,35 @@ interface FramingDetailProps {
 
 const FramingDetail: FC<FramingDetailProps> = ({ framing, aggregations, isLoading, onRefresh }) => {
 	const { t } = useTranslation();
+	const [clustersById, setClustersById] = useState<Record<string, Statement>>({});
+
+	// Load each cluster Statement so the cards can show its name and brief
+	// (the aggregations API only returns numeric stats). Refetched whenever
+	// the framing or its cluster set changes, or when admin actions can have
+	// updated the underlying docs (Summarize clusters writes to .brief).
+	useEffect(() => {
+		let cancelled = false;
+		const ids = framing.clusterIds ?? [];
+		if (ids.length === 0) {
+			setClustersById({});
+
+			return;
+		}
+		Promise.all(ids.map((id) => getStatementFromDB(id)))
+			.then((results) => {
+				if (cancelled) return;
+				const next: Record<string, Statement> = {};
+				for (const s of results) if (s) next[s.statementId] = s;
+				setClustersById(next);
+			})
+			.catch(() => {
+				if (!cancelled) setClustersById({});
+			});
+
+		return () => {
+			cancelled = true;
+		};
+	}, [framing.framingId, framing.clusterIds, aggregations]);
 
 	// Calculate summary stats
 	const totalUniqueEvaluators = aggregations.reduce(
@@ -90,7 +120,11 @@ const FramingDetail: FC<FramingDetailProps> = ({ framing, aggregations, isLoadin
 					</div>
 				) : (
 					aggregations.map((aggregation) => (
-						<ClusterCard key={aggregation.clusterId} aggregation={aggregation} />
+						<ClusterCard
+							key={aggregation.clusterId}
+							aggregation={aggregation}
+							cluster={clustersById[aggregation.clusterId]}
+						/>
 					))
 				)}
 			</div>

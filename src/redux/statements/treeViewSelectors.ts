@@ -18,9 +18,7 @@ export const createTreeViewSelector = () => {
 			(_: RootState, statementId: string) => statementId,
 		],
 		(allStatements, statementId) => {
-			const statements = allStatements.filter(
-				(s) => s.statementType !== StatementType.paragraph,
-			);
+			const statements = allStatements.filter((s) => s.statementType !== StatementType.paragraph);
 
 			const childrenMap = new Map<string, Statement[]>();
 

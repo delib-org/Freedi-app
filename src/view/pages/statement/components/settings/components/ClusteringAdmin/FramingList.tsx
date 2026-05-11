@@ -54,39 +54,50 @@ const FramingList: FC<FramingListProps> = ({
 		<div className={styles.framingList}>
 			<h4 className={styles.listTitle}>{t('Available Framings')}</h4>
 			<div className={styles.framingItems}>
-				{framings.map((framing) => (
-					<button
-						type="button"
-						key={framing.framingId}
-						className={`${styles.framingItem} ${
-							selectedFraming?.framingId === framing.framingId ? styles.selected : ''
-						}`}
-						onClick={() => onSelectFraming(framing)}
-					>
-						<div className={styles.framingInfo}>
-							<span className={styles.framingName}>{framing.name}</span>
-							<span className={styles.framingMeta}>
-								{framing.createdBy === 'ai' ? (
-									<span className={styles.aiBadge}>{t('AI')}</span>
-								) : (
-									<span className={styles.customBadge}>{t('Custom')}</span>
-								)}
-								<span className={styles.date}>{formatDate(framing.createdAt)}</span>
-							</span>
-							<span className={styles.clusterCount}>
-								{framing.clusterIds.length} {t('clusters')}
-							</span>
-						</div>
-						<button
-							className={styles.deleteBtn}
-							onClick={(e) => handleDelete(e, framing.framingId)}
-							disabled={deletingId === framing.framingId}
-							aria-label={t('Delete framing')}
+				{framings.map((framing) => {
+					const isSelected = selectedFraming?.framingId === framing.framingId;
+
+					return (
+						<div
+							key={framing.framingId}
+							role="button"
+							tabIndex={0}
+							aria-pressed={isSelected}
+							className={`${styles.framingItem} ${isSelected ? styles.selected : ''}`}
+							onClick={() => onSelectFraming(framing)}
+							onKeyDown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									onSelectFraming(framing);
+								}
+							}}
 						>
-							{deletingId === framing.framingId ? '...' : '×'}
-						</button>
-					</button>
-				))}
+							<div className={styles.framingInfo}>
+								<span className={styles.framingName}>{framing.name}</span>
+								<span className={styles.framingMeta}>
+									{framing.createdBy === 'ai' ? (
+										<span className={styles.aiBadge}>{t('AI')}</span>
+									) : (
+										<span className={styles.customBadge}>{t('Custom')}</span>
+									)}
+									<span className={styles.date}>{formatDate(framing.createdAt)}</span>
+								</span>
+								<span className={styles.clusterCount}>
+									{framing.clusterIds.length} {t('clusters')}
+								</span>
+							</div>
+							<button
+								type="button"
+								className={styles.deleteBtn}
+								onClick={(e) => handleDelete(e, framing.framingId)}
+								disabled={deletingId === framing.framingId}
+								aria-label={t('Delete framing')}
+							>
+								{deletingId === framing.framingId ? '...' : '×'}
+							</button>
+						</div>
+					);
+				})}
 			</div>
 		</div>
 	);

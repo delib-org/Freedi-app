@@ -1,4 +1,4 @@
-import { FC, useMemo, MouseEvent } from 'react';
+import { FC, useMemo, MouseEvent, KeyboardEvent, TouchEvent } from 'react';
 import styles from './StatementChatMore.module.scss';
 
 // Icons
@@ -91,7 +91,6 @@ const StatementChatMore: FC<Props> = ({
 		e.preventDefault();
 
 		if (!useLink) {
-			console.debug('[StatementChatMore] useLink is false, not navigating');
 			return;
 		}
 
@@ -99,11 +98,8 @@ const StatementChatMore: FC<Props> = ({
 		// to prevent accidental navigation from parent elements
 		const button = e.currentTarget;
 		if (!button) {
-			console.debug('[StatementChatMore] No currentTarget, not navigating');
 			return;
 		}
-
-		console.debug('[StatementChatMore] Navigating to chat for statement:', statement.statementId);
 
 		// Mark notifications as read when navigating to chat
 		if (hasUnread) {
@@ -171,7 +167,7 @@ const StatementChatMore: FC<Props> = ({
 		</div>
 	);
 
-	const handleKeyDown = (e: React.KeyboardEvent<HTMLButtonElement>) => {
+	const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
 		// Only allow Enter and Space to trigger navigation
 		if (e.key !== 'Enter' && e.key !== ' ') {
 			return;
@@ -179,9 +175,7 @@ const StatementChatMore: FC<Props> = ({
 		// Let the button handle it naturally - this will trigger onClick
 	};
 
-	const handleTouchEnd = (e: React.TouchEvent<HTMLButtonElement>) => {
-		console.debug('[StatementChatMore] Touch event on chat button');
-		// Prevent any parent handlers from intercepting touch
+	const handleTouchEnd = (e: TouchEvent<HTMLButtonElement>) => {
 		e.stopPropagation();
 	};
 

@@ -222,10 +222,12 @@ export const onEvidencePostCreate = onDocumentCreated(
 			return;
 		}
 
-		const statement = snapshot.data() as Statement;
+		const statement = snapshot.data() as Statement | undefined;
 
-		// Only process statements with evidence field
-		if (!statement.evidence) {
+		// Only process statements with evidence field.
+		// Guard against undefined data (emulator edge cases) and the common
+		// fan-out path where this trigger fires on every statement create.
+		if (!statement?.evidence) {
 			return;
 		}
 
@@ -300,11 +302,13 @@ export const onEvidencePostUpdate = onDocumentUpdated(
 			return;
 		}
 
-		const beforeStatement = beforeSnapshot.data() as Statement;
-		const afterStatement = afterSnapshot.data() as Statement;
+		const beforeStatement = beforeSnapshot.data() as Statement | undefined;
+		const afterStatement = afterSnapshot.data() as Statement | undefined;
 
-		// Only process if this is an evidence statement
-		if (!afterStatement.evidence) {
+		// Only process if this is an evidence statement.
+		// Guard against undefined data and the common fan-out path where this
+		// trigger fires on every statement update.
+		if (!afterStatement?.evidence || !beforeStatement) {
 			return;
 		}
 

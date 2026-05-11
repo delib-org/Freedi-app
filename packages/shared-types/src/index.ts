@@ -12,7 +12,8 @@ export {
   StepType,
   Screen,
   SortType,
-  QuestionStep
+  QuestionStep,
+  ThemeStyle
 } from "./models/TypeEnums";
 export { isMember, maxKeyInObject, getRandomUID } from "./models/TypeUtils";
 export { functionConfig } from "./models/ConfigFunctions";
@@ -119,6 +120,22 @@ export {
   hasPermissionLevel,
   INVITATION_EXPIRY
 } from "./models/adminInvitation/AdminInvitation";
+
+// Join Delegate models (per-question solution-editing delegation in the join app)
+export type {
+  JoinDelegatePermissions,
+  JoinDelegateInvitation,
+  JoinDelegate,
+} from "./models/joinDelegate";
+
+export {
+  JoinDelegateInvitationStatus,
+  JoinDelegatePermissionsSchema,
+  JoinDelegateInvitationSchema,
+  JoinDelegateSchema,
+  JOIN_DELEGATE_INVITE_EXPIRY_MS,
+  getJoinDelegateId,
+} from "./models/joinDelegate";
 
 // MassConsensus models
 export type {
@@ -237,6 +254,25 @@ export {
   JoinFormSubmissionSchema,
   JOIN_FORM_SUBMISSIONS_SUBCOLLECTION
 } from "./models/statement/JoinFormSubmission";
+
+export type {
+  JoinFormSubmissionHistoryEntry,
+  JoinFormSubmissionHistoryOperation,
+  JoinFormSubmissionHistoryRole,
+  JoinFormSubmissionHistoryRetention,
+  JoinFormMembershipSnapshot
+} from "./models/statement/JoinFormSubmissionHistory";
+
+export {
+  JoinFormSubmissionHistoryEntrySchema,
+  JoinFormSubmissionHistoryOperationSchema,
+  JoinFormSubmissionHistoryRoleSchema,
+  JoinFormSubmissionHistoryRetentionSchema,
+  JoinFormMembershipSnapshotSchema,
+  JOIN_FORM_SUBMISSIONS_HISTORY_COLLECTION,
+  JOIN_FORM_SUBMISSIONS_HISTORY_RETENTION_DAYS,
+  getJoinFormSubmissionHistoryId
+} from "./models/statement/JoinFormSubmissionHistory";
 
 export type {
   JoinResolutionUser,
@@ -442,6 +478,21 @@ export {
   calcConfidenceIndex,
 } from "./utils/consensusCalculation";
 
+// Strategic Export (AI-ready report) models
+export type {
+  StrategicExportRequest,
+  StrategicExportResponse,
+  StrategicExportMetadata,
+  StrategicExportSchema,
+  EvaluationAggregate,
+  AggregateMember,
+  DemographicSlice,
+  AggregatedSuggestion,
+  TopicGroup,
+  DemographicAnswerCount,
+  DemographicQuestionSummary,
+} from "./models/strategicExport/strategicExportModel";
+
 // Framing models
 export type {
   Framing,
@@ -465,6 +516,44 @@ export {
   getClusterAggregationId,
   isClusterAggregationValid,
 } from "./models/framing/framingModel";
+
+// Topic-Grouped Results Export
+export type {
+  AgreementShape,
+  AgreementHistogram,
+  SolutionEvaluationStats,
+  SynthesisProvenance,
+  RegenerationStatus,
+  SynthesizedSolutionEntry,
+  StandaloneSolutionEntry,
+  SolutionEntry,
+  TopicAgreement,
+  TopicBlock,
+  CoalitionEntry,
+  QuestionAgreement,
+  ExportThresholds,
+  ExportSummary,
+  FilteredOutBlock,
+  ResultsExportMeta,
+  ResultsExport,
+} from "./models/results-export/ResultsExport";
+
+export { RESULTS_EXPORT_SCHEMA_VERSION } from "./models/results-export/ResultsExport";
+
+// Topic-cluster pipeline cache models
+export type {
+  TaxonomyCategory,
+  ClusteringTaxonomyCache,
+  NormalizationAction,
+  ClusteringNormalizationCache,
+} from "./models/clustering/clusteringCacheModel";
+
+export {
+  TaxonomyCategorySchema,
+  ClusteringTaxonomyCacheSchema,
+  NormalizationActionSchema,
+  ClusteringNormalizationCacheSchema,
+} from "./models/clustering/clusteringCacheModel";
 
 // Embedding models
 export type {

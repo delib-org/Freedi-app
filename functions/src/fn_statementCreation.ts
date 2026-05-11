@@ -42,6 +42,7 @@ export async function onStatementCreated(
 
 	try {
 		const statementData = event.data.data();
+		if (!statementData) return;
 
 		// Ensure topParentId exists for legacy data that may not have it
 		if (!statementData.topParentId) {
@@ -414,6 +415,13 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 				const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
 				const questionType = statement.questionSettings?.questionType ?? getDefaultQuestionType();
 
+				// `creatorImage` is schema-optional (`optional(nullable(string()))`),
+				// but Firestore rejects literal `undefined`. The synthesis pipeline
+				// constructs creator objects without `photoURL` (only displayName/uid/
+				// defaultLanguage), so we must omit the key when undefined rather
+				// than write it as undefined. Coerce null-ish to null for an explicit
+				// "no image" signal that the schema accepts.
+				const creatorImage = statement.creator.photoURL ?? null;
 				const newNotification: NotificationType = {
 					userId: subscriber.user.uid,
 					parentId: statement.parentId,
@@ -423,7 +431,7 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 					text: statement.statement,
 					creatorId: statement.creator.uid,
 					creatorName: statement.creator.displayName,
-					creatorImage: statement.creator.photoURL,
+					creatorImage,
 					createdAt: statement.createdAt,
 					read: false,
 					notificationId: notificationId,
@@ -509,8 +517,14 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		const startTime = Date.now();
 		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
 
-		// Save embedding to the statement document
-		await embeddingCache.saveEmbedding(statement.statementId, result.embedding, context);
+		// Save embedding to the statement document (text passed so textHash
+		// is written for the synthesis verdict cache).
+		await embeddingCache.saveEmbedding(
+			statement.statementId,
+			result.embedding,
+			context,
+			statement.statement,
+		);
 
 		const duration = Date.now() - startTime;
 		logger.info(`Generated embedding for statement ${statement.statementId}`, {

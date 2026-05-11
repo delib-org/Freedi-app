@@ -48,7 +48,7 @@ export function handleAddStatement(
 			newStatement.replyTo = {
 				statementId: replyToStatement.statementId,
 				statement: replyToStatement.statement.slice(0, 150),
-				creatorDisplayName: replyToStatement.creator.displayName,
+				creatorDisplayName: replyToStatement.creator?.displayName ?? '',
 			};
 		}
 

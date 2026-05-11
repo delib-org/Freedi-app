@@ -13,20 +13,34 @@ import {
 	onSnapshot,
 	runTransaction,
 	httpsCallable,
+	writeBatch,
 	Unsubscribe,
 } from './firebase';
 import { getUserState, ensureUser } from './user';
-import { applyStatementLanguage, t } from './i18n';
+import { applyStatementLanguage, isLanguageForced, t } from './i18n';
 import {
+	Access,
 	Collections,
+	JoinDelegate,
+	JoinDelegateInvitation,
 	Statement,
 	StatementType,
 	Creator,
+	Role,
 	SortType,
+	ThemeStyle,
 	createStatementObject,
 	CutoffBy,
+	getJoinDelegateId,
 } from '@freedi/shared-types';
-import { checkAdminStatus, isAdmin } from './admin';
+import {
+	canEditOption,
+	canEditOrganizerOptions,
+	canEditParticipantOptions,
+	checkAdminStatus,
+	isAdmin,
+	setCurrentDelegate,
+} from './admin';
 import {
 	mapMainAppPathToJoinTarget,
 	joinTargetToRoute,
@@ -38,34 +52,97 @@ let question: Statement | null = null;
 let allOptions: Statement[] = [];
 let messages: Statement[] = [];
 let chatUnsubscribe: Unsubscribe | null = null;
-let messageCounts: Map<string, number> = new Map();
-let messageLatest: Map<string, number> = new Map();
-let messagesByOption: Map<string, number[]> = new Map();
-let messageCountsUnsubs: Unsubscribe[] = [];
+
+// Delegate-system state + subscriptions live in ./delegates/. Callable
+// wrappers (create/accept/revoke) live in ./delegates/delegateActions.ts.
+// Re-exported below so call sites that import from `@/lib/store` keep working.
+import {
+	subscribeMyDelegate,
+	subscribeQuestionDelegates as _subscribeQuestionDelegates,
+	unsubscribeQuestionDelegates as _unsubscribeQuestionDelegates,
+	getDelegatesForQuestion as _getDelegatesForQuestion,
+	getDelegateInvitationsForQuestion as _getDelegateInvitationsForQuestion,
+} from './delegates/delegateSubscriptions';
+import {
+	createJoinDelegateInvite as _createJoinDelegateInvite,
+	revokeJoinDelegate as _revokeJoinDelegate,
+	acceptJoinDelegateInvite as _acceptJoinDelegateInvite,
+} from './delegates/delegateActions';
+export const subscribeQuestionDelegates = _subscribeQuestionDelegates;
+export const unsubscribeQuestionDelegates = _unsubscribeQuestionDelegates;
+export const getDelegatesForQuestion = _getDelegatesForQuestion;
+export const getDelegateInvitationsForQuestion = _getDelegateInvitationsForQuestion;
+export const createJoinDelegateInvite = _createJoinDelegateInvite;
+export const revokeJoinDelegate = _revokeJoinDelegate;
+export const acceptJoinDelegateInvite = _acceptJoinDelegateInvite;
+
+// Chat message counts live in ./chat/messageCounts.ts. Re-exported below.
+import {
+	getMessageCount as _getMessageCount,
+	getNewMessageCount as _getNewMessageCount,
+	markOptionChatRead,
+	subscribeMessageCounts,
+} from './chat/messageCounts';
+export const getMessageCount = _getMessageCount;
+export const getNewMessageCount = _getNewMessageCount;
 /** Cluster-id → unique-evaluator count. Populated by `subscribeClusterLinks`. */
 let clusterEvaluatorCounts: Map<string, number> = new Map();
 let clusterLinksUnsubs: Unsubscribe[] = [];
 
-/** Confirmed (server-side) evaluations the current user has cast for options
- *  under the active question, keyed by optionId. Populated by
- *  `subscribeUserEvaluations`. The scale is -1..1, matching the main app's
- *  `enhancedEvaluationsThumbs`. */
-let userEvaluations: Map<string, number> = new Map();
-/** Optimistic overrides from the most recent click. Reading code prefers
- *  these over `userEvaluations` so the picked face stays highlighted even
- *  before Firestore confirms — the listener clears each entry once the
- *  server snapshot agrees with what we wrote. */
-let optimisticEvaluations: Map<string, number> = new Map();
-let userEvaluationsUnsub: Unsubscribe | null = null;
+// New-solutions buffer lives in ./newSolutionsBuffer.ts. The buffer-driven
+// helpers are re-exported below so call sites that import from `@/lib/store`
+// keep working.
+import {
+	resetNewSolutionsBuffer,
+	ingestOptionForBuffer,
+	isOptionPending,
+	isOptionHighlighted,
+	unhighlightOption,
+	getNewOptionsPendingCount as _getNewOptionsPendingCount,
+	isOptionNewlyArrived as _isOptionNewlyArrived,
+	flushNewOptions as _flushNewOptions,
+} from './newSolutionsBuffer';
+export const getNewOptionsPendingCount = _getNewOptionsPendingCount;
+export const isOptionNewlyArrived = _isOptionNewlyArrived;
+export const flushNewOptions = _flushNewOptions;
 
-const LAST_READ_KEY = 'freedi_join_last_read';
-let joinFormSubmitted = new Set<string>();
-// In-memory cache of the last-known submission role per (questionId, userId).
-// Lets handleJoin decide optimistically whether to open the form without a
-// Firestore read. Populated on successful saveJoinFormSubmission, and by
-// getJoinFormSubmissionRole on its first fetch.
-const joinFormSubmittedRole = new Map<string, JoinRole>();
+// User evaluations (confirmed + optimistic) + the snapshot listener live in
+// ./userEvaluations.ts. The public API is re-exported below.
+import {
+	getEffectiveEvaluation as _getEffectiveEvaluation,
+	setEvaluation as _setEvaluation,
+	subscribeUserEvaluations as _subscribeUserEvaluations,
+} from './userEvaluations';
+export const getEffectiveEvaluation = _getEffectiveEvaluation;
+export const setEvaluation = _setEvaluation;
+export const subscribeUserEvaluations = _subscribeUserEvaluations;
+
 let customDisplayName: string | null = null;
+
+// Join-form submission cache + API moved to ./join/joinFormCache.ts. The
+// public API is re-exported below so call sites that import from `@/lib/store`
+// keep working.
+import {
+	type JoinRole,
+	type JoinFormSubmissionData,
+	hasJoinFormSubmission as _hasJoinFormSubmission,
+	getCachedJoinFormSubmissionRole as _getCachedJoinFormSubmissionRole,
+	getCachedJoinFormSubmissionData as _getCachedJoinFormSubmissionData,
+	getJoinFormSubmissionData as _getJoinFormSubmissionData,
+	getJoinFormSubmissionRole as _getJoinFormSubmissionRole,
+	saveJoinFormSubmission as _saveJoinFormSubmission,
+	subscribeUserJoinFormSubmission as _subscribeUserJoinFormSubmission,
+	clearJoinFormCacheForUsers,
+} from './join/joinFormCache';
+
+export type { JoinRole, JoinFormSubmissionData } from './join/joinFormCache';
+export const hasJoinFormSubmission = _hasJoinFormSubmission;
+export const getCachedJoinFormSubmissionRole = _getCachedJoinFormSubmissionRole;
+export const getCachedJoinFormSubmissionData = _getCachedJoinFormSubmissionData;
+export const getJoinFormSubmissionData = _getJoinFormSubmissionData;
+export const getJoinFormSubmissionRole = _getJoinFormSubmissionRole;
+export const saveJoinFormSubmission = _saveJoinFormSubmission;
+export const subscribeUserJoinFormSubmission = _subscribeUserJoinFormSubmission;
 
 const DISPLAY_NAME_KEY = 'freedi_join_name_v2';
 const VISITED_KEY = 'freedi_join_visited';
@@ -103,39 +180,8 @@ export function markOptionRead(optionId: string): void {
 	markOptionChatRead(optionId);
 }
 
-function getLastReadMap(): Record<string, number> {
-	try {
-		const raw = localStorage.getItem(LAST_READ_KEY);
-		if (raw) return JSON.parse(raw);
-	} catch {
-		/* ignore */
-	}
-
-	return {};
-}
-
-function markOptionChatRead(optionId: string): void {
-	try {
-		const map = getLastReadMap();
-		map[optionId] = Date.now();
-		localStorage.setItem(LAST_READ_KEY, JSON.stringify(map));
-	} catch {
-		/* ignore */
-	}
-}
-
-export function getNewMessageCount(optionId: string): number {
-	const lastRead = getLastReadMap()[optionId];
-	if (!lastRead) return messageCounts.get(optionId) ?? 0;
-
-	const latest = messageLatest.get(optionId);
-	if (!latest || latest <= lastRead) return 0;
-
-	const allMsgs = messagesByOption.get(optionId);
-	if (!allMsgs) return 0;
-
-	return allMsgs.filter((ts) => ts > lastRead).length;
-}
+// `getLastReadMap` / `markOptionChatRead` / `getNewMessageCount` live in
+// ./chat/messageCounts.ts (re-exported above).
 
 export function getUnreadCount(): number {
 	const visible = getVisibleOptions();
@@ -203,30 +249,91 @@ export function getOptionById(optionId: string): Statement | undefined {
 	return allOptions.find((o) => o.statementId === optionId);
 }
 
+// Per-option cache of paragraph child Statements. Populated lazily by
+// `loadOptionParagraphs` the first time a card is expanded — paragraph
+// children are not part of the crowd-list options query (which only fetches
+// `statementType === option`), so we fetch them on demand and keep them
+// around for the rest of the session.
+const optionParagraphsCache = new Map<string, Statement[]>();
+const loadingOptionParagraphs = new Set<string>();
+
+export function getOptionParagraphs(optionId: string): Statement[] | null {
+	return optionParagraphsCache.get(optionId) ?? null;
+}
+
+export async function loadOptionParagraphs(optionId: string): Promise<void> {
+	if (optionParagraphsCache.has(optionId)) return;
+	if (loadingOptionParagraphs.has(optionId)) return;
+	loadingOptionParagraphs.add(optionId);
+	try {
+		const q = query(
+			collection(db, Collections.statements),
+			where('parentId', '==', optionId),
+			where('statementType', '==', StatementType.paragraph),
+		);
+		const snap = await getDocs(q);
+		// Order by `createdAt` so paragraphs render in the order the author
+		// wrote them — `sendMessage` staggers child createdAt by index for
+		// exactly this reason.
+		const paras = snap.docs
+			.map((d) => d.data() as Statement)
+			.sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+		optionParagraphsCache.set(optionId, paras);
+		m.redraw();
+	} catch (err) {
+		console.error('[loadOptionParagraphs] failed:', err);
+	} finally {
+		loadingOptionParagraphs.delete(optionId);
+	}
+}
+
 export function getMessages(): Statement[] {
 	return messages;
 }
 
 export function getVisibleOptions(): Statement[] {
-	// Admin-added options ("admin suggestions") belong in the main people's
-	// list — users vote on them like any other option, and they can become
-	// people's suggestions through evaluation. They are NOT the same as
-	// "organizer suggestions" (which is a separate per-option role concept,
-	// tracked via the `organizers[]` array on each option).
+	// Organizer suggestions (admin-created with `creatorRole === Role.admin`)
+	// render in their own dedicated section — keep them out of the crowd list
+	// here so the two lists stay separate. The "organizer" per-option role
+	// users take via the activist/organizer join buttons is a different
+	// concept tracked via `option.organizers[]`.
 	// Admin-controlled sort: read `defaultSortType` off the question so every
 	// participant subscribed to it sees the same order as the admin. The field
 	// is shared with the main app's sort menu, so flipping it from either
 	// surface stays in sync. The Join facilitator panel exposes four modes —
 	// consensus (accepted), average evaluation, random, and newest — and any
 	// other stale value falls through to the consensus default.
+	// Manual sort: when admin enables manual ordering, read `manualOptionOrder`
+	// (array of option IDs) and sort by that order instead.
 	const sortType = question?.statementSettings?.defaultSortType;
 	const randomSeed = question?.statementSettings?.randomSortSeed ?? 0;
-	const sortFn = getSortFn(sortType, randomSeed);
+	const manualOrder = (question?.statementSettings as any)?.manualOptionOrder as
+		| string[]
+		| undefined;
+	const isManualSort = manualOrder && manualOrder.length > 0;
+
 	let opts = allOptions
+		// organizer suggestions render in their own section above/below the regular list
+		.filter((o) => o.creatorRole !== Role.admin)
 		// admin-hidden options never render for anyone
 		.filter((o) => o.hide !== true)
 		.filter((o) => o.joinStatus !== 'failed')
-		.sort(sortFn);
+		// buffer: hide options the user hasn't acknowledged yet (pending pill)
+		.filter((o) => !isOptionPending(o.statementId));
+
+	// Apply sort: manual order takes precedence, otherwise use the sort function
+	if (isManualSort) {
+		const manualOrderMap = new Map(manualOrder.map((id, idx) => [id, idx]));
+		opts = opts.sort((a, b) => {
+			const aIdx = manualOrderMap.get(a.statementId) ?? Infinity;
+			const bIdx = manualOrderMap.get(b.statementId) ?? Infinity;
+
+			return aIdx - bIdx;
+		});
+	} else {
+		const sortFn = getSortFn(sortType, randomSeed);
+		opts = opts.sort(sortFn);
+	}
 
 	// Condensation: in "clusters-only" mode for the join surface, hide any
 	// original that is represented by a cluster (identified via
@@ -264,25 +371,72 @@ export function getVisibleOptions(): Statement[] {
 
 	// Re-inject admin-promoted options that the threshold would otherwise
 	// drop, so admins can keep an option visible regardless of its score.
+	// Organizer suggestions are excluded — they live in their own section and
+	// never participate in the crowd list, even when forceShow is set.
 	const forced = allOptions.filter(
-		(o) => o.forceShow === true && o.hide !== true && o.joinStatus !== 'failed',
+		(o) =>
+			o.forceShow === true &&
+			o.hide !== true &&
+			o.joinStatus !== 'failed' &&
+			o.creatorRole !== Role.admin &&
+			!isOptionPending(o.statementId),
 	);
 	if (forced.length > 0) {
 		const seen = new Set(opts.map((o) => o.statementId));
 		for (const f of forced) if (!seen.has(f.statementId)) opts.push(f);
 	}
 
+	// When sorted by anything other than "newest", newly-flushed options are
+	// pinned to the top so participants evaluate them before they sink into the
+	// stack. Once evaluated (or after the highlight timer expires) they animate
+	// to their natural sorted position via the existing FLIP animation.
+	if (sortType !== SortType.newest) {
+		const pinned = opts.filter((o) => isOptionHighlighted(o.statementId));
+		const rest = opts.filter((o) => !isOptionHighlighted(o.statementId));
+		opts = [...pinned, ...rest];
+	}
+
 	return opts;
 }
 
-/** Deprecated: kept as a no-op for callers that still reference it. Admin-
- *  added options (whether created in the main app or via the join app's
- *  "Add suggestion" flow) are now part of the main people's list returned
- *  by `getVisibleOptions()`. The "organizer" concept is now reserved for
- *  the per-option role users can take via the activist/organizer join
- *  buttons. */
+/** Options created by an admin from the Join app (or marked with
+ *  `creatorRole: Role.admin` server-side). Rendered in a dedicated section
+ *  separate from the participant crowd list, sorted newest first.
+ *
+ *  Distinct from the per-option "organizer" role users take via the
+ *  activist/organizer join buttons (tracked via `option.organizers[]`).
+ *  Admins can also seed the crowd list "as a regular participant" — those
+ *  options have no `creatorRole` and appear via `getVisibleOptions()`.
+ *
+ *  Manual order: when admin saves a custom order via the FacilitatorPanel,
+ *  `manualOrganizerOrder` (array of organizer-option IDs) is read here and
+ *  applied instead of the default newest-first sort, mirroring how
+ *  `manualOptionOrder` works for the crowd list. Items missing from the
+ *  manual order list fall to the bottom (preserving newest-first among them)
+ *  so freshly added organizer options stay visible until reordered. */
 export function getOrganizerSuggestions(): Statement[] {
-	return [];
+	const manualOrder = (question?.statementSettings as any)?.manualOrganizerOrder as
+		| string[]
+		| undefined;
+	const isManualSort = Array.isArray(manualOrder) && manualOrder.length > 0;
+
+	const filtered = allOptions
+		.filter((o) => o.creatorRole === Role.admin && o.hide !== true && o.joinStatus !== 'failed')
+		.filter((o) => !isOptionPending(o.statementId));
+
+	if (isManualSort) {
+		const manualOrderMap = new Map(manualOrder!.map((id, idx) => [id, idx]));
+
+		return filtered.sort((a, b) => {
+			const aIdx = manualOrderMap.get(a.statementId) ?? Infinity;
+			const bIdx = manualOrderMap.get(b.statementId) ?? Infinity;
+			if (aIdx !== bIdx) return aIdx - bIdx;
+			// Tiebreak by newest-first for items not in the manual order.
+			return (b.createdAt ?? 0) - (a.createdAt ?? 0);
+		});
+	}
+
+	return filtered.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 }
 
 /** Admin curation: set `hide` or `forceShow` on a specific option. Uses
@@ -294,6 +448,110 @@ export async function setOptionFlag(
 ): Promise<void> {
 	const ref = doc(db, Collections.statements, optionId);
 	await setDoc(ref, { [field]: value, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Permission gate for editing/deleting an option. The option's creator can
+ *  always edit their own; admins of the question can edit any option; and
+ *  per-question delegates can edit options matching the scope they were
+ *  granted (organizer vs participant solutions). The branch logic lives in
+ *  `canEditOption` so callers don't have to know about the delegate model. */
+export function canEditSuggestion(option: Statement): boolean {
+	return canEditOption(option);
+}
+
+/** Update an option's body, writing it as the canonical "title + paragraph
+ *  children" shape. The first non-empty line of the textarea becomes the
+ *  option's `statement` (title); remaining non-empty lines become child
+ *  Statements with `statementType === paragraph`. Any pre-existing paragraph
+ *  children are deleted so the post-edit state is the single source of truth.
+ *  Inline-shape options (whole multi-line body in `statement`) are migrated
+ *  to canonical on first edit. The Firestore rule allows this write for the
+ *  option's creator, the question admins, and the workspace admins. */
+export async function updateSuggestion(optionId: string, text: string): Promise<void> {
+	const trimmed = text.trim();
+	if (!trimmed) return;
+
+	const option = getOptionById(optionId);
+	if (!option) return;
+	if (!canEditSuggestion(option)) {
+		throw new Error('Not authorized to edit this option');
+	}
+
+	const lines = trimmed
+		.split('\n')
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0);
+	if (lines.length === 0) return;
+
+	const title = lines[0];
+	const bodyLines = lines.slice(1);
+
+	// Make sure we know which paragraph children currently exist so the batch
+	// can delete them. `loadOptionParagraphs` is a no-op when already cached.
+	await loadOptionParagraphs(optionId);
+	const existingParas = getOptionParagraphs(optionId) ?? [];
+
+	// Pre-compute the description preview using the server-canonical "\n\n"
+	// separator (see `functions/src/fn_syncParagraphChildrenToDescription.ts`)
+	// so the optimistic client write matches the format the trigger will
+	// eventually overwrite — no UI flicker between save and server flush.
+	const DESCRIPTION_MAX_LENGTH = 200;
+	let description = '';
+	for (const line of bodyLines) {
+		const next = description.length === 0 ? line : description + '\n\n' + line;
+		if (next.length >= DESCRIPTION_MAX_LENGTH) {
+			description =
+				next.length > DESCRIPTION_MAX_LENGTH
+					? next.slice(0, DESCRIPTION_MAX_LENGTH - 3) + '...'
+					: next;
+			break;
+		}
+		description = next;
+	}
+
+	const now = Date.now();
+	const batch = writeBatch(db);
+
+	batch.set(
+		doc(db, Collections.statements, optionId),
+		{ statement: title, description, lastUpdate: now },
+		{ merge: true },
+	);
+
+	for (const para of existingParas) {
+		batch.delete(doc(db, Collections.statements, para.statementId));
+	}
+
+	if (bodyLines.length > 0) {
+		const creator = getCreator();
+		if (creator) {
+			const topParentId = option.topParentId || optionId;
+			for (let i = 0; i < bodyLines.length; i++) {
+				const child = createStatementObject({
+					statement: bodyLines[i],
+					statementType: StatementType.paragraph,
+					parentId: optionId,
+					topParentId,
+					creatorId: creator.uid,
+					creator,
+				});
+				if (!child) continue;
+				// Stagger createdAt by index so paragraphs render in author order
+				// regardless of write fan-out timing — same trick `sendMessage` uses.
+				batch.set(doc(db, Collections.statements, child.statementId), {
+					...child,
+					createdAt: now + i + 1,
+					lastUpdate: now + i + 1,
+				});
+			}
+		}
+	}
+
+	await batch.commit();
+	// Drop the local paragraph cache so SolutionCard re-fetches fresh children
+	// the next time the card expands — otherwise it would render the deleted
+	// children alongside the new ones.
+	optionParagraphsCache.delete(optionId);
 }
 
 /** Facilitator live-control: turn the 5-face evaluation row on/off for all
@@ -320,13 +578,58 @@ export async function setEvaluationEnabled(questionId: string, value: boolean): 
  *  computes the same shuffle, and pressing Random again gives a new order. */
 export async function setSortType(questionId: string, value: SortType): Promise<void> {
 	const ref = doc(db, Collections.statements, questionId);
-	const patch: { statementSettings: { defaultSortType: SortType; randomSortSeed?: number } } = {
+	const patch: {
+		statementSettings: {
+			defaultSortType: SortType;
+			randomSortSeed?: number;
+			manualOptionOrder?: string[];
+		};
+	} = {
 		statementSettings: { defaultSortType: value },
 	};
 	if (value === SortType.random) {
 		patch.statementSettings.randomSortSeed = Date.now();
 	}
+	// Clear manual order when switching away from manual mode
+	if (value !== SortType.random && (question?.statementSettings as any)?.manualOptionOrder) {
+		(patch.statementSettings as any).manualOptionOrder = null;
+	}
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Admin manual reordering: save the manually ordered list of option IDs.
+ *  Participants will see options sorted in this exact order. Only admins can
+ *  call this function. */
+export async function setManualOptionOrder(questionId: string, optionIds: string[]): Promise<void> {
+	const ref = doc(db, Collections.statements, questionId);
+	await setDoc(
+		ref,
+		{
+			statementSettings: { manualOptionOrder: optionIds },
+			lastUpdate: Date.now(),
+		},
+		{ merge: true },
+	);
+}
+
+/** Admin manual reordering for organizer suggestions. Same shape as
+ *  `setManualOptionOrder` but writes a separate field so the two lists keep
+ *  independent orders. Stored on the question doc so every subscribing
+ *  participant renders the organizer section in the admin's chosen order
+ *  on the next snapshot. */
+export async function setManualOrganizerOrder(
+	questionId: string,
+	optionIds: string[],
+): Promise<void> {
+	const ref = doc(db, Collections.statements, questionId);
+	await setDoc(
+		ref,
+		{
+			statementSettings: { manualOrganizerOrder: optionIds },
+			lastUpdate: Date.now(),
+		},
+		{ merge: true },
+	);
 }
 
 /** Deterministic 32-bit hash of a string — used to derive a stable per-option
@@ -355,8 +658,7 @@ function getSortFn(
 		case SortType.random: {
 			const seed = String(randomSeed);
 
-			return (a, b) =>
-				hashStr(seed + a.statementId) - hashStr(seed + b.statementId);
+			return (a, b) => hashStr(seed + a.statementId) - hashStr(seed + b.statementId);
 		}
 		case SortType.accepted:
 		default:
@@ -389,6 +691,55 @@ export async function setMainStatementSetting(
 ): Promise<void> {
 	const ref = doc(db, Collections.statements, mainId);
 	await setDoc(ref, { ...patch, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Facilitator live-control: pick the visual style family applied to the
+ *  whole join experience. Writes `statementSettings.themeStyle` on whichever
+ *  doc the panel is acting on (main statement when invoked from the hub,
+ *  question doc when invoked from a sub-question). The view layer reads the
+ *  resolved value and sets `<html data-theme="...">` so participants get the
+ *  matching palette without a refresh. */
+export async function setThemeStyle(statementId: string, value: ThemeStyle): Promise<void> {
+	const ref = doc(db, Collections.statements, statementId);
+	await setDoc(
+		ref,
+		{
+			statementSettings: { themeStyle: value },
+			lastUpdate: Date.now(),
+		},
+		{ merge: true },
+	);
+}
+
+/** Read the active theme style — prefers the question's setting, falls back
+ *  to the hub's main-statement setting, then to `serious`. View code calls
+ *  this on every render so a snapshot from either subscription propagates
+ *  to `<html data-theme="...">` immediately. */
+export function getActiveThemeStyle(): ThemeStyle {
+	const fromQuestion = question?.statementSettings?.themeStyle;
+	if (fromQuestion) return fromQuestion;
+
+	const fromMain = mainStatement?.statementSettings?.themeStyle;
+	if (fromMain) return fromMain;
+
+	return ThemeStyle.serious;
+}
+
+/** Sync `<html data-theme="...">` to the active theme style. Called from every
+ *  place that mutates `question` or `mainStatement` so the matching palette
+ *  swaps in on the next paint without a refresh. The serious style omits the
+ *  attribute so the default :root tokens apply (cheaper selector match). */
+export function applyThemeStyleToDOM(): void {
+	if (typeof document === 'undefined') return;
+	const style = getActiveThemeStyle();
+	const root = document.documentElement;
+	if (style === ThemeStyle.playfulKids) {
+		root.setAttribute('data-theme', 'playful-kids');
+	} else if (style === ThemeStyle.playfulTeen) {
+		root.setAttribute('data-theme', 'playful-teen');
+	} else {
+		root.removeAttribute('data-theme');
+	}
 }
 
 /** Admin "lead the session" from inside the Join app: writes
@@ -442,12 +793,13 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 	const trimmed = text.trim();
 	if (!trimmed) return;
 
-	// Default: admins post as organizer, participants post as themselves.
-	const useOrganizerPath = asOrganizer ?? isAdmin();
+	// Default: anyone with organizer-scope rights (admin or delegate with the
+	// organizer toggle) posts as organizer; everyone else posts as themselves.
+	const useOrganizerPath = asOrganizer ?? canEditOrganizerOptions();
 
 	if (useOrganizerPath) {
-		if (!isAdmin()) {
-			throw new Error('Only admins can post organizer suggestions');
+		if (!canEditOrganizerOptions()) {
+			throw new Error('Only admins or organizer-scope delegates can post organizer suggestions');
 		}
 		const call = httpsCallable<
 			{ questionId: string; text: string; displayName?: string },
@@ -463,9 +815,13 @@ export async function createSuggestion(text: string, asOrganizer?: boolean): Pro
 	}
 
 	// Participant path: gate on the admin-controlled toggle so a stale UI
-	// can't push writes after the admin closes additions. Applies to admins
-	// posting as participants too.
-	if (question.statementSettings?.enableAddEvaluationOption !== true) {
+	// can't push writes after the admin closes additions. Admins and
+	// participant-scope delegates are exempt — they own the question's
+	// solution set and can seed the crowd list at any time.
+	if (
+		!canEditParticipantOptions() &&
+		question.statementSettings?.enableAddEvaluationOption !== true
+	) {
 		throw new Error('Adding options is not enabled for this question');
 	}
 
@@ -545,9 +901,20 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 	// for a root statement — but we want it to point at the statement itself
 	// so it lands as its own top-parent (matching how main-app top-level
 	// questions are stored, and how join queries find facilitator descendants).
+	//
+	// `membership.access` is required: Firestore rules for `statementsSubscribe`
+	// look up the parent's `membership.access` to decide whether a self-create
+	// of a subscription doc is allowed (e.g. when the join app marks the
+	// creator's "opened in join" subscription before the cloud function fans
+	// out the admin sub). `openToAll` matches the join app's anonymous-friendly
+	// flow — anyone with the link can participate.
 	const finalQuestion: Statement = {
 		...newQuestion,
 		topParentId: newQuestion.statementId,
+		membership: {
+			...(newQuestion.membership ?? {}),
+			access: Access.openToAll,
+		},
 	};
 
 	await setDoc(doc(db, Collections.statements, finalQuestion.statementId), finalQuestion);
@@ -557,7 +924,10 @@ export async function createSimpleQuestion(title: string): Promise<string | null
 
 function syncQuestionLanguage(): void {
 	if (!question) return;
+	const wasForced = isLanguageForced();
 	applyStatementLanguage(question.defaultLanguage, question.forceLanguage);
+	applyThemeStyleToDOM();
+	maybeShowForcedLanguageToast(isLanguageForced(), wasForced);
 }
 
 /** Optimistic priming: if the requested question is already in the
@@ -590,8 +960,15 @@ export async function loadQuestion(questionId: string): Promise<void> {
 	syncQuestionLanguage();
 
 	// Resolve admin status (creator or subscribed admin) before options render,
-	// so the first paint already knows whether to show admin-only UI.
+	// so the first paint already knows whether to show admin-only UI. The
+	// same call also resolves any delegate record for the current user, so
+	// delegates see edit affordances on the first paint too.
 	await checkAdminStatus(questionId, question.creatorId);
+
+	// Live-watch the user's own delegate record so a freshly accepted invite
+	// (or a revocation) takes effect without a refresh. Tear down any prior
+	// listener so we don't leak across question swaps.
+	subscribeMyDelegate(questionId);
 
 	const optionsQuery = query(
 		collection(db, Collections.statements),
@@ -630,6 +1007,7 @@ export function subscribeQuestion(questionId: string): Unsubscribe {
 			syncQuestionLanguage();
 		} else {
 			question = null;
+			applyThemeStyleToDOM();
 		}
 		m.redraw();
 	});
@@ -690,7 +1068,63 @@ export async function loadMainStatement(mainId: string): Promise<void> {
 
 function syncMainStatementLanguage(): void {
 	if (!mainStatement) return;
+	const wasForced = isLanguageForced();
 	applyStatementLanguage(mainStatement.defaultLanguage, mainStatement.forceLanguage);
+	applyThemeStyleToDOM();
+	maybeShowForcedLanguageToast(isLanguageForced(), wasForced);
+}
+
+/** Toast once per session when forceLanguage transitions from not-forced to
+ *  forced. Without this, a participant would silently watch their own
+ *  language selector disable when the admin flips the toggle remotely.
+ *  We deliberately fire this only once per session — any re-arrival (route
+ *  change, snapshot replay) shouldn't re-toast, since the participant has
+ *  already been informed. The "forced" reading comes from the i18n module
+ *  (read after applyStatementLanguage runs) so it stays the single source
+ *  of truth for what the participant's UI is actually seeing. */
+let forcedLanguageToastShownForSession = false;
+
+function maybeShowForcedLanguageToast(nowForced: boolean, wasForced: boolean): void {
+	if (!nowForced || wasForced) return;
+	if (forcedLanguageToastShownForSession) return;
+	forcedLanguageToastShownForSession = true;
+	showFacilitatorToast(t('facilitator.toast.languageForced'));
+}
+
+/** Admin write: set the room's default language and (optionally) the
+ *  forceLanguage flag on the main statement. Mirrors the Theme picker's
+ *  hub-scoped pattern — falls back to writing the question doc on legacy
+ *  non-facilitated routes (`/q/:qid`) where there's no main statement.
+ *  Both fields are top-level on Statement, not under `statementSettings`. */
+export async function setStatementLanguage(
+	statementId: string,
+	defaultLanguage: string,
+	forceLanguage: boolean,
+): Promise<void> {
+	const ref = doc(db, Collections.statements, statementId);
+	await setDoc(ref, { defaultLanguage, forceLanguage, lastUpdate: Date.now() }, { merge: true });
+}
+
+/** Read the active language scope: prefers the main statement when present
+ *  (hub-scoped, like the theme), falls back to the question doc. Returns the
+ *  configured `defaultLanguage` (may be undefined) and the `forceLanguage`
+ *  flag (defaults to false) so the FacilitatorPanel can render its select +
+ *  toggle from a single source of truth. */
+export function getActiveLanguageScope(): {
+	target: Statement | null;
+	defaultLanguage: string | undefined;
+	forceLanguage: boolean;
+} {
+	const target = mainStatement ?? question;
+	if (!target) {
+		return { target: null, defaultLanguage: undefined, forceLanguage: false };
+	}
+
+	return {
+		target,
+		defaultLanguage: target.defaultLanguage,
+		forceLanguage: target.forceLanguage === true,
+	};
 }
 
 /** Admin-only: append a new sub-question under the current main statement. The
@@ -772,6 +1206,23 @@ export async function setSubQuestionHidden(subQuestionId: string, hidden: boolea
 	);
 }
 
+/** Admin-only: rename a question (main statement, sub-question, or top-level
+ *  question). Touches only `statement` and `lastUpdate`, so it stays clear of
+ *  the protected `statementSettings` field that requires a stricter rule
+ *  check. The Firestore `update` rule still requires admin/creator/system-admin
+ *  for any non-trivial write — the `isAdmin()` guard here is the client-side
+ *  mirror so we don't fire a write that the rule will reject. */
+export async function updateQuestionTitle(statementId: string, text: string): Promise<void> {
+	if (!isAdmin()) return;
+	const trimmed = text.trim();
+	if (!trimmed) return;
+	await setDoc(
+		doc(db, Collections.statements, statementId),
+		{ statement: trimmed, lastUpdate: Date.now() },
+		{ merge: true },
+	);
+}
+
 export function subscribeMainStatement(mainId: string): Unsubscribe {
 	// When swapping to a different main, reset the dedupe so the first snapshot
 	// for the new mid is allowed to fire a redirect.
@@ -783,6 +1234,7 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 	return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
 		if (!snap.exists()) {
 			mainStatement = null;
+			applyThemeStyleToDOM();
 			m.redraw();
 
 			return;
@@ -856,11 +1308,11 @@ async function applyFacilitatorRedirect(path: string, mainId: string): Promise<v
 	}, FACILITATOR_REDIRECT_DELAY_MS);
 }
 
-export function getMessageCount(optionId: string): number {
-	return messageCounts.get(optionId) ?? 0;
-}
+// `getMessageCount` lives in ./chat/messageCounts.ts (re-exported above).
 
 export function subscribeOptions(questionId: string): Unsubscribe {
+	resetNewSolutionsBuffer();
+
 	const optionsQuery = query(
 		collection(db, Collections.statements),
 		where('parentId', '==', questionId),
@@ -868,12 +1320,22 @@ export function subscribeOptions(questionId: string): Unsubscribe {
 	);
 
 	return onSnapshot(optionsQuery, (snap) => {
-		allOptions = snap.docs.map((d) => d.data() as Statement);
-		subscribeMessageCounts(questionId);
+		const incoming = snap.docs.map((d) => d.data() as Statement);
+		const currentUid = getUserState().user?.uid;
+
+		for (const opt of incoming) {
+			ingestOptionForBuffer(opt.statementId, opt.creatorId, currentUid);
+		}
+
+		allOptions = incoming;
+		subscribeMessageCounts(allOptions.map((o) => o.statementId));
 		subscribeClusterLinks();
 		m.redraw();
 	});
 }
+
+// `getNewOptionsPendingCount`, `flushNewOptions`, `isOptionNewlyArrived` live
+// in ./newSolutionsBuffer.ts and are re-exported at the top of this file.
 
 /**
  * Subscribe to `clusterEvaluationLinks` for every currently-visible cluster,
@@ -921,147 +1383,11 @@ export function getClusterEvaluatorCount(clusterId: string): number {
 	return clusterEvaluatorCounts.get(clusterId) ?? 0;
 }
 
-/** What face should be highlighted on the option's evaluation row? Returns
- *  the optimistic value if a click is still in flight, otherwise the
- *  server-confirmed value. `undefined` means the user hasn't evaluated yet. */
-export function getEffectiveEvaluation(optionId: string): number | undefined {
-	if (optimisticEvaluations.has(optionId)) {
-		return optimisticEvaluations.get(optionId);
-	}
+// User evaluations (getEffectiveEvaluation, setEvaluation, subscribeUserEvaluations)
+// live in ./userEvaluations.ts — re-exported at the top of this file.
+// `subscribeUserJoinFormSubmission` lives in ./join/joinFormCache.ts (re-exported above).
 
-	return userEvaluations.get(optionId);
-}
-
-/** Optimistic evaluation write — mirrors the main app's
- *  `setEvaluationToDB` shape so the same Cloud Function aggregates the
- *  result. Highlights the face immediately, then writes through; the
- *  evaluations listener clears the optimistic entry as soon as the server
- *  snapshot matches. */
-export async function setEvaluation(option: Statement, score: number): Promise<void> {
-	if (score < -1 || score > 1) return;
-	if (!option.parentId) return;
-
-	const creator = getCreator();
-	if (!creator) return;
-
-	// Optimistic: paint the chosen face immediately and trigger a redraw so
-	// there's no perceptible lag between click and selected-state.
-	optimisticEvaluations.set(option.statementId, score);
-	m.redraw();
-
-	const evaluationId = `${creator.uid}--${option.statementId}`;
-	const data = {
-		parentId: option.parentId,
-		evaluationId,
-		statementId: option.statementId,
-		evaluatorId: creator.uid,
-		updatedAt: Date.now(),
-		evaluation: score,
-		evaluator: creator,
-	};
-
-	try {
-		await setDoc(doc(db, Collections.evaluations, evaluationId), data);
-	} catch (err) {
-		// Roll the optimistic entry back so the UI reflects what's actually
-		// saved on the server side.
-		optimisticEvaluations.delete(option.statementId);
-		m.redraw();
-		console.error('[setEvaluation] failed:', err);
-		throw err;
-	}
-}
-
-/** Subscribe to the current user's evaluations under this question, so the
- *  card UI re-renders into the correct selected face when other clients (or
- *  another tab) update the value. Tears down any prior subscription. */
-export function subscribeUserEvaluations(questionId: string): Unsubscribe {
-	if (userEvaluationsUnsub) {
-		userEvaluationsUnsub();
-		userEvaluationsUnsub = null;
-	}
-	userEvaluations = new Map();
-	optimisticEvaluations = new Map();
-
-	const creator = getCreator();
-	if (!creator) {
-		return () => undefined;
-	}
-
-	const q = query(
-		collection(db, Collections.evaluations),
-		where('parentId', '==', questionId),
-		where('evaluatorId', '==', creator.uid),
-	);
-
-	userEvaluationsUnsub = onSnapshot(q, (snap) => {
-		const next = new Map<string, number>();
-		for (const d of snap.docs) {
-			const data = d.data() as { statementId?: string; evaluation?: number };
-			if (typeof data.statementId === 'string' && typeof data.evaluation === 'number') {
-				next.set(data.statementId, data.evaluation);
-			}
-		}
-		userEvaluations = next;
-
-		// Clear optimistic entries that the server has now confirmed (or that
-		// the server resolved to the same value). Keeping a stale optimistic
-		// override would mask a server-rejected write.
-		for (const [optionId, optimisticScore] of optimisticEvaluations) {
-			const confirmed = next.get(optionId);
-			if (confirmed === optimisticScore) {
-				optimisticEvaluations.delete(optionId);
-			}
-		}
-		m.redraw();
-	});
-
-	return userEvaluationsUnsub;
-}
-
-function subscribeMessageCounts(_questionId: string): void {
-	for (const unsub of messageCountsUnsubs) unsub();
-	messageCountsUnsubs = [];
-
-	const optionIds = allOptions.map((o) => o.statementId);
-	if (optionIds.length === 0) return;
-
-	const batchSize = 30;
-	for (let i = 0; i < optionIds.length; i += batchSize) {
-		const batch = optionIds.slice(i, i + batchSize);
-
-		const chatQuery = query(
-			collection(db, Collections.statements),
-			where('parentId', 'in', batch),
-			where('statementType', '==', StatementType.statement),
-		);
-
-		const unsub = onSnapshot(chatQuery, (snap) => {
-			for (const id of batch) {
-				messageCounts.delete(id);
-				messageLatest.delete(id);
-				messagesByOption.delete(id);
-			}
-
-			for (const d of snap.docs) {
-				const data = d.data() as Statement;
-				const pid = data.parentId;
-				messageCounts.set(pid, (messageCounts.get(pid) ?? 0) + 1);
-
-				const ts = data.createdAt ?? 0;
-				const existing = messageLatest.get(pid) ?? 0;
-				if (ts > existing) messageLatest.set(pid, ts);
-
-				const arr = messagesByOption.get(pid) ?? [];
-				arr.push(ts);
-				messagesByOption.set(pid, arr);
-			}
-			m.redraw();
-		});
-
-		messageCountsUnsubs.push(unsub);
-	}
-}
+// `subscribeMessageCounts` lives in ./chat/messageCounts.ts (imported above).
 
 export function subscribeChat(optionId: string): void {
 	unsubscribeChat();
@@ -1093,8 +1419,22 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 
 	const topParentId = question?.statementId || optionId;
 
-	const newStatement = createStatementObject({
-		statement: text.trim(),
+	// Split the user's input on newlines so multi-paragraph messages are stored
+	// in the canonical "parent statement + paragraph child statements" shape.
+	// First non-empty line becomes the parent's title; remaining non-empty lines
+	// become child Statements with `statementType === paragraph`. Single-line
+	// messages skip the batch and write a single doc, same as before.
+	const lines = text
+		.split('\n')
+		.map((l) => l.trim())
+		.filter((l) => l.length > 0);
+	if (lines.length === 0) return;
+
+	const title = lines[0];
+	const bodyLines = lines.slice(1);
+
+	const parentStatement = createStatementObject({
+		statement: title,
 		statementType: StatementType.statement,
 		parentId: optionId,
 		topParentId,
@@ -1102,224 +1442,93 @@ export async function sendMessage(optionId: string, text: string): Promise<void>
 		creator,
 	});
 
-	if (!newStatement) return;
+	if (!parentStatement) return;
 
-	await setDoc(doc(db, Collections.statements, newStatement.statementId), newStatement);
-}
+	if (bodyLines.length === 0) {
+		// Single-line: keep the original single-doc write path.
+		await setDoc(doc(db, Collections.statements, parentStatement.statementId), parentStatement);
 
-export type JoinRole = 'activist' | 'organizer';
+		return;
+	}
 
-export interface ToggleJoiningResult {
-	success: boolean;
-	leftStatementId?: string;
-	leftStatementTitle?: string;
-	error?: string;
-}
-
-export async function toggleJoining(
-	statementId: string,
-	parentStatementId: string,
-	role: JoinRole = 'activist',
-): Promise<ToggleJoiningResult> {
-	const field: 'joined' | 'organizers' = role === 'organizer' ? 'organizers' : 'joined';
-
-	try {
-		const creator = buildCreator();
-		if (!creator) throw new Error('User not authenticated');
-
-		const statementRef = doc(db, Collections.statements, statementId);
-		let leftStatementId: string | undefined;
-		let leftStatementTitle: string | undefined;
-
-		let singleJoinOnly = false;
-		if (role === 'activist' && parentStatementId) {
-			const parentDoc = await getDoc(doc(db, Collections.statements, parentStatementId));
-			if (parentDoc.exists()) {
-				const parent = parentDoc.data() as Statement;
-				singleJoinOnly = parent?.statementSettings?.singleJoinOnly ?? false;
-			}
+	// Pre-compute the description preview so the chat can render the full
+	// body immediately, without waiting for the server-side description-regen
+	// trigger to fire after the paragraph children land.
+	const DESCRIPTION_MAX_LENGTH = 200;
+	let description = '';
+	for (const line of bodyLines) {
+		const next = description.length === 0 ? line : description + ' | ' + line;
+		if (next.length >= DESCRIPTION_MAX_LENGTH) {
+			description =
+				next.length > DESCRIPTION_MAX_LENGTH
+					? next.slice(0, DESCRIPTION_MAX_LENGTH - 3) + '...'
+					: next;
+			break;
 		}
+		description = next;
+	}
 
-		await runTransaction(db, async (transaction) => {
-			const statementDB = await transaction.get(statementRef);
-			if (!statementDB.exists()) throw new Error('Statement does not exist');
+	const batch = writeBatch(db);
+	batch.set(doc(db, Collections.statements, parentStatement.statementId), {
+		...parentStatement,
+		description,
+	});
 
-			const statement = statementDB.data() as Statement;
-			const otherField: 'joined' | 'organizers' = field === 'joined' ? 'organizers' : 'joined';
-			const currentMembers: Creator[] =
-				(field === 'organizers' ? statement.organizers : statement.joined) ?? [];
-			const currentOthers: Creator[] =
-				(otherField === 'organizers' ? statement.organizers : statement.joined) ?? [];
-
-			const isUserMember = currentMembers.some((u) => u.uid === creator.uid);
-
-			if (isUserMember) {
-				const updated = currentMembers.filter((u) => u.uid !== creator.uid);
-				transaction.update(statementRef, { [field]: updated });
-
-				return;
-			}
-
-			const updatePayload: Record<string, Creator[]> = {};
-			const isUserInOther = currentOthers.some((u) => u.uid === creator.uid);
-			if (isUserInOther) {
-				updatePayload[otherField] = currentOthers.filter((u) => u.uid !== creator.uid);
-			}
-
-			if (role === 'activist' && singleJoinOnly && parentStatementId) {
-				const siblingsQuery = query(
-					collection(db, Collections.statements),
-					where('parentId', '==', parentStatementId),
-					where('statementType', '==', StatementType.option),
-				);
-				const siblingsSnapshot = await getDocs(siblingsQuery);
-
-				for (const siblingDoc of siblingsSnapshot.docs) {
-					const sibling = siblingDoc.data() as Statement;
-					if (sibling.statementId === statementId) continue;
-
-					const isJoinedToSibling = sibling.joined?.find((u: Creator) => u.uid === creator.uid);
-					if (isJoinedToSibling) {
-						const siblingRef = doc(db, Collections.statements, sibling.statementId);
-						const updatedSiblingJoined =
-							sibling.joined?.filter((u: Creator) => u.uid !== creator.uid) ?? [];
-						transaction.update(siblingRef, { joined: updatedSiblingJoined });
-
-						leftStatementId = sibling.statementId;
-						leftStatementTitle = sibling.statement;
-					}
-				}
-			}
-
-			updatePayload[field] = [...currentMembers, creator];
-			transaction.update(statementRef, updatePayload);
+	for (let i = 0; i < bodyLines.length; i++) {
+		const child = createStatementObject({
+			statement: bodyLines[i],
+			statementType: StatementType.paragraph,
+			parentId: parentStatement.statementId,
+			topParentId,
+			creatorId: creator.uid,
+			creator,
 		});
-
-		return { success: true, leftStatementId, leftStatementTitle };
-	} catch (error) {
-		console.error('[Join] toggleJoining failed:', error);
-
-		return {
-			success: false,
-			error: error instanceof Error ? error.message : 'Failed to toggle joining',
-		};
-	}
-}
-
-export async function hasJoinFormSubmission(questionId: string, userId: string): Promise<boolean> {
-	const key = `${questionId}_${userId}`;
-	if (joinFormSubmitted.has(key)) return true;
-
-	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
-	const snap = await getDoc(submissionRef);
-	if (snap.exists()) {
-		joinFormSubmitted.add(key);
-
-		return true;
+		if (!child) continue;
+		// Preserve order: stagger createdAt by index so paragraphs render in
+		// the order the user wrote them, regardless of write fan-out timing.
+		batch.set(doc(db, Collections.statements, child.statementId), {
+			...child,
+			createdAt: parentStatement.createdAt + i + 1,
+			lastUpdate: parentStatement.createdAt + i + 1,
+		});
 	}
 
-	return false;
+	await batch.commit();
 }
 
-/** Synchronous peek at the cached submission role — null if unknown locally. */
-export function getCachedJoinFormSubmissionRole(
-	questionId: string,
-	userId: string,
-): JoinRole | null {
-	return joinFormSubmittedRole.get(`${questionId}_${userId}`) ?? null;
+// `JoinRole` lives in ./join/joinFormCache.ts (re-exported as a type above).
+
+// Cloud-function wrappers (toggleJoining, resetOptionJoining,
+// resetQuestionJoining, testSheetAccess) live in ./join/joinCallables.ts.
+import {
+	type ToggleJoiningResult as _ToggleJoiningResult,
+	type ToggleJoiningOptions as _ToggleJoiningOptions,
+	type TestSheetAccessResult as _TestSheetAccessResult,
+	type ResetQuestionJoiningResult as _ResetQuestionJoiningResult,
+	toggleJoining as _toggleJoining,
+	testSheetAccess as _testSheetAccess,
+	resetOptionJoining as _resetOptionJoining,
+	resetQuestionJoining as _resetQuestionJoining,
+	getUserCommittedOptionsFrom,
+} from './join/joinCallables';
+export type ToggleJoiningResult = _ToggleJoiningResult;
+export type ToggleJoiningOptions = _ToggleJoiningOptions;
+export type TestSheetAccessResult = _TestSheetAccessResult;
+export type ResetQuestionJoiningResult = _ResetQuestionJoiningResult;
+export const toggleJoining = _toggleJoining;
+export const testSheetAccess = _testSheetAccess;
+export const resetOptionJoining = _resetOptionJoining;
+export const resetQuestionJoining = _resetQuestionJoining;
+
+/** All visible options under the current question where the user is a
+ *  member in either role (joined or organizers). Wraps the pure helper
+ *  in ./join/joinCallables.ts with the active-question state. */
+export function getUserCommittedOptions(): Statement[] {
+	const uid = getUserState().user?.uid;
+	if (!uid) return [];
+
+	return getUserCommittedOptionsFrom(allOptions, uid);
 }
 
-export interface JoinFormSubmissionData {
-	role: JoinRole | null;
-	displayName: string;
-	values: Record<string, string>;
-}
-
-// In-memory cache of the full submission so repeated modal opens don't re-hit
-// Firestore. Populated on every save and on getJoinFormSubmissionData fetch.
-const joinFormSubmissionCache = new Map<string, JoinFormSubmissionData>();
-
-export function getCachedJoinFormSubmissionData(
-	questionId: string,
-	userId: string,
-): JoinFormSubmissionData | null {
-	return joinFormSubmissionCache.get(`${questionId}_${userId}`) ?? null;
-}
-
-export async function getJoinFormSubmissionData(
-	questionId: string,
-	userId: string,
-): Promise<JoinFormSubmissionData | null> {
-	const key = `${questionId}_${userId}`;
-	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
-	const snap = await getDoc(submissionRef);
-	if (!snap.exists()) {
-		joinFormSubmittedRole.delete(key);
-		joinFormSubmissionCache.delete(key);
-
-		return null;
-	}
-	const data = snap.data() as
-		| {
-				role?: JoinRole;
-				displayName?: string;
-				values?: Record<string, string>;
-		  }
-		| undefined;
-
-	const submission: JoinFormSubmissionData = {
-		role: data?.role ?? null,
-		displayName: data?.displayName ?? '',
-		values: data?.values ?? {},
-	};
-	if (submission.role) joinFormSubmittedRole.set(key, submission.role);
-	joinFormSubmissionCache.set(key, submission);
-
-	return submission;
-}
-
-/** Back-compat: legacy role-only lookup. Delegates to the full fetcher. */
-export async function getJoinFormSubmissionRole(
-	questionId: string,
-	userId: string,
-): Promise<JoinRole | null> {
-	const submission = await getJoinFormSubmissionData(questionId, userId);
-
-	return submission?.role ?? null;
-}
-
-export async function saveJoinFormSubmission(
-	questionId: string,
-	userId: string,
-	displayName: string,
-	values: Record<string, string>,
-	role: JoinRole = 'activist',
-	optionId?: string,
-	optionTitle?: string,
-): Promise<void> {
-	const now = Date.now();
-	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
-	// Reset syncedToSheet so the onDocumentWritten trigger appends a fresh row
-	// for this (possibly role-changed) submission.
-	await setDoc(
-		submissionRef,
-		{
-			userId,
-			questionId,
-			displayName,
-			values,
-			role,
-			optionId: optionId ?? '',
-			optionTitle: optionTitle ?? '',
-			createdAt: now,
-			lastUpdate: now,
-			syncedToSheet: false,
-		},
-		{ merge: true },
-	);
-
-	const key = `${questionId}_${userId}`;
-	joinFormSubmitted.add(key);
-	joinFormSubmittedRole.set(key, role);
-	joinFormSubmissionCache.set(key, { role, displayName, values });
-}
+// Delegate subscriptions + callable wrappers live in ./delegates/
+// (re-exported at the top of this file).

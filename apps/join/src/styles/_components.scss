@@ -125,6 +125,22 @@
       border-color: var(--indigo-600);
     }
   }
+
+  // Destructive confirmation — used for inline "Yes, revoke" / "Yes, remove"
+  // buttons. Solid danger tone, white text. Only shown after the user has
+  // already opted into a confirm flow, so it doesn't dominate the chrome.
+  &--danger {
+    background: var(--danger);
+    color: var(--text-inverse);
+    border-color: var(--danger);
+    box-shadow: var(--shadow-xs);
+
+    &:hover:not(:disabled) {
+      background: var(--terra-700);
+      border-color: var(--terra-700);
+      box-shadow: var(--shadow-sm);
+    }
+  }
 }
 
 
@@ -201,6 +217,21 @@
     margin: 0;
     position: relative;
     z-index: 2;
+
+    // Admin-only inline-edit affordance — see .main-hub__title--editable.
+    &--editable {
+      cursor: text;
+      border-radius: var(--radius-sm, 6px);
+      padding: 0 var(--space-xs, 4px);
+      transition: background-color 120ms ease, box-shadow 120ms ease;
+
+      &:hover,
+      &:focus-visible {
+        background-color: var(--paper-soft);
+        outline: none;
+        box-shadow: 0 0 0 2px var(--terra-300, rgba(0, 0, 0, 0.12));
+      }
+    }
   }
 
   &__scroll {
@@ -269,6 +300,49 @@
     letter-spacing: 0.02em;
   }
 
+  // New-solutions notification pill — appears in the sticky header when fresh
+  // options arrive after the initial load. User taps to flush + highlight them.
+  &__new-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    margin-top: var(--space-sm);
+    padding: 6px 14px;
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-inverse);
+    background: var(--teal-600);
+    border: none;
+    border-radius: var(--radius-full);
+    cursor: pointer;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    z-index: 2;
+    animation: pill-pop-in var(--dur-base, 200ms) var(--ease-out, ease-out);
+    transition:
+      background-color var(--dur-quick, 150ms) var(--ease-out, ease-out),
+      transform var(--dur-quick, 150ms) var(--ease-out, ease-out),
+      box-shadow var(--dur-quick, 150ms) var(--ease-out, ease-out);
+
+    &:hover {
+      background: var(--teal-700);
+      box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+      box-shadow: var(--shadow-xs);
+    }
+  }
+
+  &__new-pill-arrow {
+    font-size: var(--font-size-base);
+    line-height: 1;
+    animation: arrow-bounce 1.2s ease-in-out infinite;
+  }
+
   &__list {
     display: flex;
     flex-direction: column;
@@ -292,12 +366,11 @@
   position: relative;
   overflow: hidden;
   background: var(--bg-card);
-  border: 1.5px solid var(--paper-line);   // 3.3:1 on paper ✓ AA UI
+  border: 1.5px solid transparent;
   border-radius: var(--radius-lg);
   padding: var(--space-lg) var(--space-md) var(--space-md);
   transition:
     transform var(--dur-base) var(--ease-out),
-    border-color var(--dur-base) var(--ease-out),
     box-shadow var(--dur-base) var(--ease-out);
 
   &:focus-visible {
@@ -306,7 +379,6 @@
   }
 
   &:hover {
-    border-color: var(--ink);
     transform: translateY(-2px);
     box-shadow: var(--shadow-sm);
   }
@@ -328,6 +400,14 @@
     }
   }
 
+  // Newly-arrived option highlight. Applied when the user flushes the
+  // new-options pill; fades from a soft teal wash back to the card default
+  // over BUFFER_HIGHLIGHT_MS (10 s). Not applied to activated cards — they
+  // already have a stronger teal treatment.
+  &--highlighted:not(.solution-card--activated) {
+    animation: card-new-highlight 10s ease-out forwards;
+  }
+
   // Phase 1 of the FLIP reorder animation (lib/flipAnimate.ts): the inline
   // transform that "inverts" the card to its old position is applied with
   // transitions disabled, so the snap-back is instantaneous. The next frame
@@ -336,6 +416,45 @@
   // the card to its new spot.
   &--flipping {
     transition: none;
+  }
+
+  // -----------------------------------------------------------------------
+  // Per-card rainbow accent — only under the playful themes (kids + teen).
+  // Each card hashes its statementId to one of the 15 voting-palette pairs in
+  // `_tokens.scss` (the same pairs the main app's question-color picker
+  // uses), so participants see a stable Lisa-Frank rainbow without any
+  // server-side state. Serious mode ignores the inline `--card-accent`
+  // custom properties entirely.
+  //
+  // Activated and organizer keep their semantically meaningful colours (teal
+  // and indigo) — the `:not()` chain protects those. We do NOT exclude
+  // `.solution-card--display-only`: that modifier only locks interaction on
+  // facilitated routes, the cards are still regular crowd suggestions and
+  // should rainbow-up like everywhere else.
+  // -----------------------------------------------------------------------
+  :root[data-theme="playful-kids"] &:not(.solution-card--activated):not(.solution-card--organizer),
+  :root[data-theme="playful-teen"] &:not(.solution-card--activated):not(.solution-card--organizer) {
+    background: var(--card-accent-soft, var(--bg-card));
+    border-color: var(--card-accent, var(--paper-line));
+    border-width: 2px;
+
+    &:hover {
+      border-color: var(--card-accent, var(--ink));
+      box-shadow: 0 0 0 1px var(--card-accent), var(--shadow-md);
+    }
+  }
+
+  // Dark mode: pastel-light bg tints clash on the plum-black surface, so we
+  // keep the page bg and lean on a coloured border + faint outer glow to
+  // give each card its neon-poster identity.
+  @media (prefers-color-scheme: dark) {
+    :root[data-theme="playful-kids"] &:not(.solution-card--activated):not(.solution-card--organizer),
+    :root[data-theme="playful-teen"] &:not(.solution-card--activated):not(.solution-card--organizer) {
+      background: var(--bg-card);
+      border-color: var(--card-accent, var(--paper-line));
+      border-width: 2px;
+      box-shadow: 0 0 0 1px var(--card-accent), 0 0 18px -10px var(--card-accent);
+    }
   }
 
   &__activated-badge {
@@ -408,17 +527,128 @@
     text-wrap: balance;
   }
 
-  &__description {
+  &__body {
+    margin-bottom: var(--space-sm);
+  }
+
+  // Rich body container — holds inline body lines, paragraph children, and
+  // the description preview. Collapsed clamps to ~6 lines with a hard cut;
+  // expanded grows the same card naturally with no inner scroll.
+  &__rich-body {
+    overflow: hidden;
+    max-height: 9.5em;
+    transition: max-height var(--dur-base) var(--ease-out);
+
+    &--expanded {
+      max-height: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+
+  &__body-paragraph {
     font-family: var(--font-body);
-    font-size: var(--font-size-sm);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-normal);
     color: var(--ink-muted);               // 8.7:1 ✓ AAA
     line-height: var(--line-height-normal);
-    margin-bottom: var(--space-md);
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+    margin: 0 0 var(--space-xs);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    // The description preview reads as a slightly quieter, looser block —
+    // matches the chat-message body styling and visually distinguishes
+    // "summary built by the server" from inline author paragraphs.
+    &--preview {
+      font-size: var(--font-size-sm);
+    }
+
+    // WhatsApp-style inline formatting (formatText.ts emits these).
+    strong {
+      font-weight: var(--font-weight-bold);
+      color: var(--ink);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.8;
+    }
+  }
+
+  // Numbered list rendered when consecutive body lines start with "1. ".
+  // padding-inline-start anchors the markers inside the card without
+  // bleeding past the title's left edge.
+  &__body-list {
+    margin: 0 0 var(--space-xs);
+    padding-inline-start: 1.5em;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink-muted);
+    line-height: var(--line-height-normal);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    strong {
+      font-weight: var(--font-weight-bold);
+      color: var(--ink);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.8;
+    }
+  }
+
+  &__body-list-item {
+    margin-bottom: var(--space-2xs, 4px);
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  // Read more / Show less toggle — small inline button below the body. Sits
+  // outside the clipped rich-body so it stays visible when collapsed.
+  &__read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: var(--space-xs);
+    margin-bottom: var(--space-sm);
+    padding: 4px 0;
+    background: transparent;
+    border: none;
+    color: var(--ink);                     // 16:1 ✓ AAA
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--terra-700, var(--ink));
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+      border-radius: 2px;
+    }
   }
 
   &__quota {
@@ -497,6 +727,95 @@
     align-items: center;
     gap: 4px;
     font-weight: var(--font-weight-medium);
+  }
+
+  // Results strip — three pills (consensus, avg, evaluators) shown on every
+  // card the moment the admin flips "Show Results". The pill matching the
+  // active sort gets `--primary` (larger value, accent ring) so participants
+  // can scan the list by whichever metric the room is sorted by.
+  &__results {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs);
+    margin-bottom: var(--space-sm);
+  }
+
+  &__result {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 56px;
+    padding: 6px 12px;
+    border-radius: var(--radius-md);
+    background: var(--paper-soft);
+    border: 1px solid var(--paper-line);
+    color: var(--ink-muted);              // 8.7:1 on paper-soft ✓ AAA
+    line-height: 1.1;
+
+    &--primary {
+      background: var(--teal-50);
+      border-color: var(--teal-600);
+      color: var(--teal-700);             // 10:1 on teal-50 ✓ AAA
+      // Bump the value font-size for the primary pill so the metric the
+      // room is sorted by reads as the headline number.
+      .solution-card__result-value {
+        font-size: var(--font-size-lg);
+      }
+    }
+  }
+
+  &__result-value {
+    font-family: var(--font-display);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  &__result-label {
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  // Edit affordance — only renders when the viewer has permission (creator or
+  // question admin); see SolutionCard.ts. Sized to match the chat pill so the
+  // meta row reads as one cohesive control strip.
+  &__edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--ink);
+    background: var(--bg-card);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    min-height: 36px;
+    transition:
+      background var(--dur-quick) var(--ease-out),
+      color var(--dur-quick) var(--ease-out);
+
+    &:hover {
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    &:focus-visible {
+      outline: var(--focus-ring-width) solid var(--focus-ring-color);
+      outline-offset: var(--focus-ring-offset);
+    }
+  }
+
+  &__edit-icon {
+    font-size: var(--font-size-base);
+    line-height: 1;
   }
 
   &__chat {
@@ -591,13 +910,12 @@
   gap: var(--space-xs);
   margin: var(--space-sm) 0 var(--space-md);
   padding: var(--space-sm);
-  background: var(--paper-soft);
   border-radius: var(--radius-md);
-  border: 1px solid var(--paper-line);
 }
 
 .evaluation__thumb {
   appearance: none;
+  position: relative;          // anchor for the check-badge pseudo / span
   // Each thumb takes an equal share of the row, capped at 56px so they
   // don't blow up on wide cards and floored at 44px so they never drop
   // below the senior-friendly tap-target minimum. `aspect-ratio` keeps
@@ -610,31 +928,39 @@
   align-items: center;
   justify-content: center;
   // The inline-styled background colour (one --emoji-* per face) is the
-  // primary signal; the border below sits on top for the active state.
-  border: 4px solid transparent;
+  // primary signal; the ring below sits on top for the active state.
+  border: 3px solid transparent;
   border-radius: 50%;
   padding: 0;
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  // Smoother, slightly longer transition so the recede / select handoff
+  // reads as one motion rather than several abrupt changes.
   transition:
-    transform var(--dur-quick, 140ms) var(--ease-out),
-    border-color var(--dur-quick, 140ms) var(--ease-out),
-    box-shadow var(--dur-quick, 140ms) var(--ease-out),
-    filter var(--dur-quick, 140ms) var(--ease-out);
+    transform var(--dur-base, 220ms) var(--ease-out),
+    border-color var(--dur-base, 220ms) var(--ease-out),
+    box-shadow var(--dur-base, 220ms) var(--ease-out),
+    filter var(--dur-base, 220ms) var(--ease-out),
+    opacity var(--dur-base, 220ms) var(--ease-out);
 
-  // Inactive faces dim slightly so the eye can still pick out the chosen
-  // one at a glance; the colour itself remains visible on every face.
-  filter: saturate(0.85);
-  opacity: 0.85;
+  // Default (no selection yet): every face is fully vivid. We deliberately
+  // do NOT dim faces before the user has voted — pre-selection dimming
+  // makes the row feel "disabled" to older users.
+  filter: saturate(1);
+  opacity: 1;
 
   &:hover {
-    transform: scale(1.05);
-    opacity: 1;
-    filter: saturate(1);
+    transform: scale(1.06);
   }
 
+  // Press-down: clearly "punched in" — meaningful scale-down + an inset
+  // ring so the touch reads as a real button press. This is the moment a
+  // user with shaky taps most needs reassurance the touch was registered.
   &:active {
-    transform: scale(0.96);
+    transform: scale(0.88);
+    box-shadow:
+      inset 0 0 0 4px rgba(0, 0, 0, 0.22),
+      0 1px 2px rgba(0, 0, 0, 0.2);
   }
 
   &:focus-visible {
@@ -643,22 +969,78 @@
   }
 }
 
+// Once the user has made any choice, non-selected siblings recede so the
+// chosen face wins the visual hierarchy. Targeted via the parent modifier
+// so this only fires AFTER a vote — never on first load.
+.evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active) {
+  filter: saturate(0.45);
+  opacity: 0.55;
+  transform: scale(0.92);
+
+  // Hovering a receded face brings it back, so changing your mind feels
+  // light: the face you're considering re-asserts itself.
+  &:hover {
+    filter: saturate(0.9);
+    opacity: 0.95;
+    transform: scale(1.02);
+  }
+}
+
 // Active = the user has picked this face (optimistic or server-confirmed).
-// Heavy ink ring + scale + double-ring shadow makes the choice impossible
-// to miss for low-vision users.
+// Big scale-up + brand-coloured halo + check badge: three independent cues
+// so even if one fails to register (low vision, colour-blind, mid-tap) the
+// other two still announce the selection.
 .evaluation__thumb--active {
-  border-color: var(--ink, #1c1917);
-  transform: scale(1.12);
-  filter: saturate(1.05);
+  border-color: var(--terra-600);
+  transform: scale(1.18);
+  filter: saturate(1.1);
   opacity: 1;
   box-shadow:
-    0 0 0 3px var(--paper),
-    0 4px 10px rgba(0, 0, 0, 0.28);
-  z-index: 1;
+    0 0 0 4px var(--paper),                // white halo separates ring from row
+    0 0 0 7px var(--terra-600),            // outer brand ring (bold "yes, this one")
+    0 6px 14px rgba(0, 0, 0, 0.32);
+  z-index: 2;
+  // One-shot pulse on the moment of selection so the confirmation has
+  // motion. Skipped under prefers-reduced-motion (see media query below).
+  animation: evaluation-pulse var(--dur-slow, 380ms) var(--ease-spring) 1;
 
   &:hover {
-    transform: scale(1.15);
+    transform: scale(1.22);
   }
+
+  &:active {
+    transform: scale(1.05);
+    box-shadow:
+      0 0 0 4px var(--paper),
+      0 0 0 7px var(--terra-700),
+      inset 0 0 0 4px rgba(0, 0, 0, 0.18);
+  }
+}
+
+// Confirmation check badge — bottom-end corner of the active face.
+// `inset-inline-end` keeps it on the trailing side in both LTR and RTL,
+// matching the natural reading-direction "tick" gesture.
+.evaluation__thumb-check {
+  position: absolute;
+  bottom: -4px;
+  inset-inline-end: -4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--terra-600);
+  color: var(--text-inverse);
+  font-size: 14px;
+  font-weight: var(--font-weight-bold);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px var(--paper),
+    0 2px 4px rgba(0, 0, 0, 0.25);
+  // Pop in with the selection so it doesn't "appear from nothing".
+  animation: evaluation-check-in var(--dur-base, 220ms) var(--ease-spring) 1;
 }
 
 .evaluation__thumb-img {
@@ -671,6 +1053,20 @@
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
 }
 
+// Pulse: a brief overshoot beyond the steady-state 1.18 scale, settling
+// back. Reads as "yes, that registered" without being celebratory.
+@keyframes evaluation-pulse {
+  0%   { transform: scale(1.18); }
+  35%  { transform: scale(1.32); }
+  100% { transform: scale(1.18); }
+}
+
+@keyframes evaluation-check-in {
+  0%   { transform: scale(0); opacity: 0; }
+  60%  { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .evaluation__thumb {
     transition: none;
@@ -678,8 +1074,14 @@
   .evaluation__thumb:hover,
   .evaluation__thumb:active,
   .evaluation__thumb--active,
-  .evaluation__thumb--active:hover {
+  .evaluation__thumb--active:hover,
+  .evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active),
+  .evaluation--has-selection .evaluation__thumb:not(.evaluation__thumb--active):hover {
     transform: none;
+  }
+  .evaluation__thumb--active,
+  .evaluation__thumb-check {
+    animation: none;
   }
 }
 
@@ -819,13 +1221,17 @@
     padding: 12px var(--space-md);
     font-family: var(--font-body);
     font-size: var(--font-size-base);
+    line-height: var(--line-height-normal);
     border: 1.5px solid var(--border-medium);  // 3.2:1 ✓ AA UI
     border-radius: var(--radius-lg);
     background: var(--bg-input);
     color: var(--ink);                         // 16:1 ✓ AAA
     resize: none;
+    overflow-y: auto;
     min-height: var(--touch-target);
-    max-height: 120px;
+    // Auto-grow caps at ~6 lines: 6 × (font-size-base × line-height-normal)
+    // + vertical padding. JS sets height inline; this is the upper bound.
+    max-height: calc(6 * 1em * var(--line-height-normal) + 24px);
     transition: border-color var(--dur-quick) var(--ease-out);
 
     &::placeholder {
@@ -999,6 +1405,68 @@
     word-break: break-word;
   }
 
+  &__body {
+    margin-top: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__paragraph {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink);                      // 16:1 ✓ AAA
+    line-height: var(--line-height-normal);
+    word-break: break-word;
+
+    strong {
+      font-weight: var(--font-weight-bold);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.85;
+    }
+  }
+
+  // Numbered list inside a chat-message body — same typographic colour as
+  // a regular paragraph but with the standard list indent so the markers
+  // aren't clipped by the bubble's left padding.
+  &__list {
+    margin: 0;
+    padding-inline-start: 1.5em;
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink);
+    line-height: var(--line-height-normal);
+
+    strong {
+      font-weight: var(--font-weight-bold);
+    }
+
+    em {
+      font-style: italic;
+    }
+
+    s {
+      text-decoration: line-through;
+      opacity: 0.85;
+    }
+  }
+
+  &__list-item {
+    margin-bottom: 4px;
+    word-break: break-word;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
   &__time {
     font-family: var(--font-body);
     font-size: var(--font-size-xs);
@@ -1007,6 +1475,22 @@
     text-align: right;
     letter-spacing: 0.02em;
     font-variant-numeric: tabular-nums;
+  }
+}
+
+// Inline link rendered by `linkify()` inside chat messages and solution-card
+// text. Underlined, themed, and breaks long URLs so they don't blow out the
+// bubble's max-width.
+.linkified {
+  color: var(--accent-link, var(--terra-700, currentColor));
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration-thickness: 2px;
   }
 }
 
@@ -1087,12 +1571,78 @@
     }
   }
 
+  // Inline formatting hint sits directly under the textarea so authors see
+  // the supported markers (*bold*, _italic_, ~strike~, "1. " for lists)
+  // without crowding the modal title. Quiet colour + small size keep it
+  // out of the way of the primary call-to-action.
+  &__hint {
+    margin-top: 6px;
+    font-family: var(--font-body);
+    font-size: var(--font-size-xs);
+    color: var(--ink-soft);                 // 5.3:1 ✓ AA
+    line-height: var(--line-height-normal);
+  }
+
   &__actions {
     display: flex;
     gap: var(--space-sm);
     margin-top: var(--space-lg);
     justify-content: flex-end;
   }
+
+  &__text {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink);
+    line-height: 1.45;
+    margin: 0 0 var(--space-md) 0;
+  }
+}
+
+// Limit-reached swap modal — list of activities the user is currently joined
+// to, presented as radio rows so they can pick exactly one to leave before
+// joining the new one. Visual style mirrors the modal__field rhythm so the
+// dialog reads as part of the same family of admin/participant prompts.
+.limit-reached__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-md);
+}
+
+.limit-reached__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: border-color var(--dur-quick) var(--ease-out),
+    background-color var(--dur-quick) var(--ease-out);
+
+  &:hover {
+    border-color: var(--terra-600);
+  }
+
+  &--selected {
+    border-color: var(--terra-600);
+    background: var(--terra-50, var(--bg-input));
+  }
+}
+
+.limit-reached__radio {
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--terra-600);
+}
+
+.limit-reached__item-title {
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  color: var(--ink);
+  line-height: 1.4;
 }
 
 // -----------------------------------------------------------------------------
@@ -1138,6 +1688,37 @@
   0%   { transform: scale(0.4); opacity: 0; }
   60%  { transform: scale(1.15); opacity: 1; }
   100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pill-pop-in {
+  0%   { transform: translateY(-6px) scale(0.85); opacity: 0; }
+  70%  { transform: translateY(2px) scale(1.04); opacity: 1; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+@keyframes arrow-bounce {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-3px); }
+}
+
+// Highlight fades from teal-50 wash + teal border back to default card styles.
+// Duration matches BUFFER_HIGHLIGHT_MS in store.ts (10 s).
+@keyframes card-new-highlight {
+  0%   {
+    background: var(--teal-50);
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(26, 122, 108, 0.15);
+  }
+  15%  {
+    background: var(--teal-50);
+    border-color: var(--teal-500);
+    box-shadow: 0 0 0 3px rgba(26, 122, 108, 0.15);
+  }
+  100% {
+    background: var(--bg-card);
+    border-color: transparent;
+    box-shadow: none;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -1344,6 +1925,9 @@
 .solution-card--organizer {
   background: var(--indigo-50);
   border-color: var(--indigo-500);
+  // Reserve space so the absolutely-positioned badge doesn't overlap the
+  // first line of the suggestion text.
+  padding-top: var(--space-2xl);
 
   &:hover {
     border-color: var(--indigo-700);
@@ -1402,31 +1986,32 @@
 // Discreet admin-signin link tucked into the top-inline-end corner of the
 // brand row. Hidden once the user is non-anonymous; once admin status is
 // detected the FacilitatorPanel handle takes over.
-.main-hub__admin-signin {
-  position: absolute;
-  top: 0;
-  inset-inline-end: 0;
-  padding: var(--space-xs) var(--space-sm);
-  font-family: var(--font-body);
-  font-size: var(--font-size-sm, 0.875rem);
-  font-weight: var(--font-weight-medium, 500);
-  color: var(--text-muted, #78716c);
-  background: transparent;
-  border: 0;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: color var(--dur-quick, 140ms) var(--ease-out);
-}
 
-.main-hub__admin-signin:hover,
-.main-hub__admin-signin:focus-visible {
-  color: var(--text-strong, #1c1917);
+// Inline-edit input variant for admin-editable titles. The EditableTitle
+// component renders an <input> that re-uses the title's class so it inherits
+// font/size/colour, then layers the input-only chrome on top. Reset native
+// input padding/border so the swap from <h1> to <input> doesn't visibly shift.
+.editable-title-input {
+  width: 100%;
+  background: var(--paper, transparent);
+  border: 2px solid var(--terra-500, currentColor);
+  border-radius: var(--radius-sm, 6px);
+  padding: var(--space-xs, 4px) var(--space-sm, 8px);
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: inherit;
   outline: none;
-}
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.04);
 
-.main-hub__admin-signin:focus-visible {
-  outline: var(--focus-ring-width) solid var(--focus-ring-color);
-  outline-offset: 2px;
+  &:focus {
+    border-color: var(--terra-600, currentColor);
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: progress;
+  }
 }
 
 .main-hub__title {
@@ -1437,6 +2022,23 @@
   line-height: var(--line-height-tight);
   color: var(--text-primary);
   text-align: center;
+
+  // Admin-only inline-edit affordance. Only applied when the title is clickable
+  // (the EditableTitle component adds --editable for admins). Keeps the visual
+  // weight identical for participants — no hover hint, no cursor change.
+  &--editable {
+    cursor: text;
+    border-radius: var(--radius-sm, 6px);
+    padding: 0 var(--space-xs, 4px);
+    transition: background-color 120ms ease, box-shadow 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background-color: var(--paper-soft, rgba(0, 0, 0, 0.04));
+      outline: none;
+      box-shadow: 0 0 0 2px var(--terra-300, rgba(0, 0, 0, 0.12));
+    }
+  }
 }
 
 .main-hub__description {
@@ -1649,7 +2251,10 @@
   font: inherit;
   font-size: var(--font-size-base);
   color: var(--text-primary);
-  background: var(--paper-soft);
+  // `--bg-input` is dark-mode-aware (paper-deep) so the input sits one step
+  // below the surrounding card surface in dark mode; `--paper-soft` was the
+  // *card* color in dark mode, which made the input vanish into the card.
+  background: var(--bg-input);
   border: 1px solid var(--paper-line);
   border-radius: var(--radius-md, 12px);
   transition: border-color var(--dur-quick, 140ms) var(--ease-out);
@@ -2155,7 +2760,7 @@ $facilitator-panel-width: 300px;
   bottom: 0;
   left: 0;
   z-index: 9000;
-  background: rgba(28, 25, 23, 0.32);
+  background: var(--bg-overlay);
   animation: facilitator-panel-fade-in var(--dur-quick, 140ms) var(--ease-out);
 }
 
@@ -2259,6 +2864,18 @@ $facilitator-panel-width: 300px;
   font-size: var(--font-size-sm, 0.875rem);
   font-weight: var(--font-weight-medium, 500);
   color: var(--text-strong, #1c1917);
+}
+
+// Decorative emoji prefix on toggle rows (🗳️ for evaluation, 🤝 for joining,
+// etc.). Sits inline with the label so a facilitator can scan the panel and
+// pick out related toggles without reading every line. Aria-hidden on the
+// element itself; screen readers read just the label text.
+.facilitator-panel__row-icon {
+  display: inline-block;
+  margin-inline-end: 0.4em;
+  font-size: 1.05em;
+  line-height: 1;
+  vertical-align: -0.05em;
 }
 
 .facilitator-panel__row-help {
@@ -2422,9 +3039,373 @@ $facilitator-panel-width: 300px;
   font-variant-numeric: tabular-nums;
 }
 
+// Activation threshold rows — each rendered with renderToggle's row layout, so
+// we only need to style the inline number input and the section grouping.
+.facilitator-panel__activation {
+  display: flex;
+  flex-direction: column;
+  gap: 0; // toggle/number rows already carry their own padding
+}
+
+.facilitator-panel__number-input {
+  width: 5.5rem;
+  padding: 6px var(--space-sm);
+  font-family: var(--font-body);
+  font-size: var(--font-size-base);
+  border: 1.5px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  background: var(--bg-input);
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  transition: border-color var(--dur-quick) var(--ease-out);
+
+  &:focus {
+    border-color: var(--terra-600);
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 1px;
+  }
+}
+
 @keyframes facilitator-panel-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+// Language picker — native <select> + inline "Force" checkbox. Matches the
+// theme picker's row rhythm (one row, one help line below) but uses a select
+// because 7 languages won't fit a segmented control. The Force toggle sits
+// inline because it's meaningless without a chosen language — coupling them
+// on one line communicates the dependency.
+.facilitator-panel__lang-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.facilitator-panel__lang-select {
+  padding: 4px 8px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-strong, #1c1917);
+  background: var(--paper, #ffffff);
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  max-width: 9rem;
+  cursor: pointer;
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    border-color: var(--teal-600, #145f54);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+    border-color: var(--teal-600, #145f54);
+  }
+}
+
+.facilitator-panel__lang-force {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-body, #44403c);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+
+  input[type='checkbox'] {
+    accent-color: var(--teal-600, #145f54);
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    margin: 0;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Join form editor — sub-panel under the "Join form" toggle. Lets a facilitator
+// configure the contact form participants see when they press Join. Indented
+// slightly from the surrounding rows so it reads as nested config.
+// -----------------------------------------------------------------------------
+.facilitator-panel__joinform-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+// Accordion header that gates the form editor body. Sits below the on/off
+// toggle so flipping the form on doesn't immediately balloon the panel — the
+// editor stays collapsed until the facilitator opts in. Compact, subdued
+// styling (it's not a primary action; the toggle is).
+.facilitator-panel__joinform-accordion {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  width: 100%;
+  margin: 0 0 var(--space-xs);
+  padding: 6px 8px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-body, #44403c);
+  background: transparent;
+  border: 1px dashed var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  text-align: start;
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: rgba(20, 95, 84, 0.04);
+    border-color: var(--teal-600, #145f54);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+.facilitator-panel__joinform-accordion-chevron {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1em;
+  text-align: center;
+  color: var(--text-muted, #78716c);
+  transition: transform var(--dur-quick, 140ms) var(--ease-out);
+
+  &--open {
+    transform: rotate(180deg);
+  }
+}
+
+.facilitator-panel__joinform-accordion-label {
+  flex: 1 1 auto;
+  font-weight: var(--font-weight-medium, 500);
+}
+
+.facilitator-panel__joinform-accordion-meta {
+  flex-shrink: 0;
+  color: var(--text-muted, #78716c);
+  font-variant-numeric: tabular-nums;
+}
+
+.facilitator-panel__joinform {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin: 0 0 var(--space-sm);
+  padding: var(--space-sm) var(--space-sm);
+  background: var(--terra-50, rgba(0, 0, 0, 0.03));
+  border-inline-start: 3px solid var(--teal-600, #145f54);
+  border-radius: var(--radius-sm, 6px);
+}
+
+.facilitator-panel__joinform-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.facilitator-panel__joinform-label {
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--text-muted, #78716c);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.facilitator-panel__joinform-segmented {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: var(--radius-full);
+  background: var(--bg-muted, #d6d3d1);
+  padding: 2px;
+  gap: 2px;
+  align-self: flex-start;
+}
+
+.facilitator-panel__joinform-input,
+.facilitator-panel__joinform-select {
+  width: 100%;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: var(--font-size-sm, 0.875rem);
+  color: var(--text-strong, #1c1917);
+  background: var(--paper, #ffffff);
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  transition: border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:focus {
+    outline: none;
+    border-color: var(--teal-600, #145f54);
+  }
+}
+
+.facilitator-panel__joinform-fields {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.facilitator-panel__joinform-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) auto auto;
+  gap: 4px;
+  align-items: center;
+}
+
+.facilitator-panel__joinform-required {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-body, #44403c);
+  white-space: nowrap;
+
+  input {
+    margin: 0;
+  }
+}
+
+.facilitator-panel__joinform-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  background: var(--paper, #ffffff);
+  color: var(--text-muted, #78716c);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    color: var(--terra-700, #9a3412);
+    border-color: var(--terra-500, #f97316);
+  }
+}
+
+.facilitator-panel__joinform-sheet-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+
+  .facilitator-panel__joinform-input {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+.facilitator-panel__joinform-check {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  white-space: nowrap;
+  color: var(--text-strong, #1c1917);
+  background: var(--paper, #ffffff);
+  border: 1px solid var(--bg-muted, #d6d3d1);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background var(--dur-quick, 140ms) var(--ease-out),
+              border-color var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: rgba(20, 95, 84, 0.06);
+    border-color: var(--teal-600, #145f54);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &--ok {
+    color: var(--agree, #16a34a);
+    border-color: var(--agree, #16a34a);
+    background: rgba(22, 163, 74, 0.06);
+  }
+
+  &--fail {
+    color: var(--disagree, #dc2626);
+    border-color: var(--disagree, #dc2626);
+    background: rgba(220, 38, 38, 0.06);
+  }
+}
+
+.facilitator-panel__joinform-check-status {
+  margin-top: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  line-height: 1.4;
+
+  &--ok {
+    color: var(--agree, #16a34a);
+  }
+
+  &--fail {
+    color: var(--disagree, #dc2626);
+  }
+}
+
+.facilitator-panel__joinform-sheet-hint {
+  margin-top: 4px;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--text-muted, #78716c);
+  line-height: 1.4;
+}
+
+.facilitator-panel__joinform-sheet-email {
+  display: block;
+  margin-top: 2px;
+  font-family: monospace;
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: var(--text-strong, #1c1917);
+  background: var(--bg-muted, #f5f5f4);
+  padding: 2px 6px;
+  border-radius: 4px;
+  user-select: all;
+}
+
+.facilitator-panel__joinform-add {
+  align-self: flex-start;
+  padding: 4px 10px;
+  font: inherit;
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--teal-700, #0f766e);
+  background: transparent;
+  border: 1px dashed var(--teal-600, #145f54);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: background var(--dur-quick, 140ms) var(--ease-out);
+
+  &:hover {
+    background: rgba(20, 95, 84, 0.08);
+  }
+}
+
+@media (max-width: 480px) {
+  .facilitator-panel__joinform-field {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+
+  .facilitator-panel__joinform-required,
+  .facilitator-panel__joinform-remove {
+    grid-column: auto;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2707,6 +3688,65 @@ $facilitator-panel-width: 300px;
     padding: 0;
     gap: 0;
   }
+
+  // Language row — vertical stack: label, native select, optional lock chip
+  &--language {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.4rem;
+    padding: 0.6rem 0.65rem 0.7rem;
+  }
+}
+
+// Language row label ("🌐 Language")
+.a11y-widget__lang-label {
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-strong);
+  text-align: start;
+}
+
+// Native <select> — full row width, uses tokens to match the panel's chrome.
+// Native control gives free OS-level keyboard, type-ahead, and the mobile
+// system picker. We deliberately don't customize the dropdown arrow so the
+// element keeps platform-native affordance recognition.
+.a11y-widget__lang-select {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: var(--font-size-sm);
+  color: var(--text-strong);
+  background: var(--paper, #ffffff);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: border-color var(--dur-quick) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    border-color: var(--teal-600);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: 2px;
+    border-color: var(--teal-600);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-muted, #f5f5f4);
+  }
+}
+
+// Lock chip shown when forceLanguage is on — explains why the select is
+// disabled. Hidden by default via the `hidden` attribute on the element.
+.a11y-widget__lang-lock {
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
+  text-align: start;
+  line-height: 1.3;
 }
 
 // Font label (Aa + px value)

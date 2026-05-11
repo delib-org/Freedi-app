@@ -1,7 +1,6 @@
 import { db } from '.';
 import { logger, Request, Response } from 'firebase-functions/v1';
 import { Collections, Statement } from '@freedi/shared-types';
-import * as nodemailer from 'nodemailer';
 import {
 	EmailSubscriber,
 	SendEmailNotificationRequest,
@@ -10,6 +9,7 @@ import {
 	AddEmailSubscriberResponse,
 } from './types/email-types';
 import { createMassConsensusNotificationEmail } from './email-templates';
+import { getEmailTransporter } from './utils/emailTransporter';
 
 // Collection name for email subscribers
 const EMAIL_SUBSCRIBERS_COLLECTION = 'emailSubscribers';
@@ -21,35 +21,6 @@ function isValidEmail(email: string): boolean {
 	const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 	return emailRegex.test(email);
-}
-
-/**
- * Gets email transporter configuration
- * Uses process.env variables (EMAIL_USER, EMAIL_PASSWORD, EMAIL_SERVICE)
- */
-async function getEmailTransporter(): Promise<nodemailer.Transporter | null> {
-	try {
-		const emailUser = process.env.EMAIL_USER;
-		const emailPassword = process.env.EMAIL_PASSWORD;
-
-		if (!emailUser || !emailPassword) {
-			logger.warn('Email credentials not configured (EMAIL_USER / EMAIL_PASSWORD missing)');
-
-			return null;
-		}
-
-		return nodemailer.createTransport({
-			service: process.env.EMAIL_SERVICE || 'gmail',
-			auth: {
-				user: emailUser,
-				pass: emailPassword,
-			},
-		});
-	} catch (error) {
-		logger.error('Error creating email transporter:', error);
-
-		return null;
-	}
 }
 
 /**

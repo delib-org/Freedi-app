@@ -15,6 +15,34 @@
       ]
     },
     {
+      "collectionGroup": "joinDelegateInvitations",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "questionId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "joinDelegates",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "questionId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "addedAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
       "collectionGroup": "approval",
       "queryScope": "COLLECTION",
       "fields": [
@@ -641,19 +669,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "embedding",
-          "vectorConfig": {
-            "dimension": 768,
-            "flat": {}
-          }
-        }
-      ]
-    },
-    {
-      "collectionGroup": "statements",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
           "fieldPath": "isChosen",
           "order": "ASCENDING"
         },
@@ -747,23 +762,6 @@
           "fieldPath": "embedding",
           "vectorConfig": {
             "dimension": 1536,
-            "flat": {}
-          }
-        }
-      ]
-    },
-    {
-      "collectionGroup": "statements",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "parentId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "embedding",
-          "vectorConfig": {
-            "dimension": 768,
             "flat": {}
           }
         }
@@ -1381,6 +1379,20 @@
         {
           "fieldPath": "lastUpdate",
           "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "statementsSubscribe",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "openedInJoin",
+          "order": "ASCENDING"
         }
       ]
     },

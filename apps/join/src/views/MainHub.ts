@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { Statement } from '@freedi/shared-types';
-import { ensureUser, signInWithGoogle, getUserState } from '@/lib/user';
+import { ensureUser, getUserState } from '@/lib/user';
 import {
 	loadMainStatement,
 	getMainStatement,
@@ -12,12 +12,13 @@ import {
 	setSubQuestionHidden,
 } from '@/lib/store';
 import { checkAdminStatus, isAdmin } from '@/lib/admin';
-import { recordMyWorkspace } from '@/lib/myWorkspaces';
+import { markOpenedInJoin } from '@/lib/joinSubscriptions';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { QRShare } from '@/components/QRShare';
+import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { createDragReorder } from '@/lib/dragReorder';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -98,16 +99,18 @@ export const MainHub: m.Component = {
 			const main = getMainStatement();
 			if (main) {
 				await checkAdminStatus(mainId, main.creatorId);
-				// Once admin is confirmed, remember this workspace on this device so
-				// it shows up on the Main page list. Non-admin visitors don't get
-				// their visit persisted — the list is "workspaces I run", not
-				// "workspaces I've seen".
+				// Once admin is confirmed, mark this workspace in Firestore so it
+				// shows up on the Main page list (per-user, cross-device).
+				// Non-admin visitors don't get their visit persisted — the list is
+				// "workspaces I run", not "workspaces I've seen". Fire-and-forget;
+				// a failure here shouldn't block the hub from rendering.
 				if (isAdmin()) {
-					recordMyWorkspace({
-						id: main.statementId,
-						title: main.statement,
-						color: main.color,
-					});
+					const user = getUserState().user;
+					if (user) {
+						void markOpenedInJoin(main, user.uid, user.displayName ?? '').catch((err) => {
+							console.error('[MainHub] markOpenedInJoin failed:', err);
+						});
+					}
 				}
 			}
 			mainUnsub = subscribeMainStatement(mainId);
@@ -169,9 +172,14 @@ export const MainHub: m.Component = {
 					loading: 'eager',
 					decoding: 'async',
 				}),
-				renderAdminSignIn(main.statementId, main.creatorId),
 			]),
-			m('h1.main-hub__title', main.statement),
+			m(EditableTitle, {
+				statementId: main.statementId,
+				value: main.statement,
+				canEdit: admin,
+				as: 'h1',
+				className: 'main-hub__title',
+			}),
 			(() => {
 				const body = getStatementBody(main);
 
@@ -373,42 +381,3 @@ function renderQuestionCard(
 	);
 }
 
-/** Discreet "Sign in as admin" link in the top-inline-end corner of the
- *  hub brand row. Mirrors `Solutions.renderAdminSignIn` but presented as a
- *  text link rather than a button — the hub is a participant-first surface
- *  and shouldn't grow an admin-shaped CTA. Hidden once the user has a
- *  non-anonymous session, at which point either the FacilitatorPanel handle
- *  takes over (admin) or nothing replaces the link (non-admin Google user). */
-function renderAdminSignIn(mainId: string, creatorId: string): m.Children {
-	const user = getUserState().user;
-	if (!user || !user.isAnonymous) return null;
-
-	return m(
-		'button.main-hub__admin-signin',
-		{
-			type: 'button',
-			onclick: async () => {
-				try {
-					await signInWithGoogle();
-					await checkAdminStatus(mainId, creatorId);
-					// Belated admin confirmation — record the workspace now so it
-					// appears on the Main page after this hub recognises us.
-					if (isAdmin()) {
-						const main = getMainStatement();
-						if (main) {
-							recordMyWorkspace({
-								id: main.statementId,
-								title: main.statement,
-								color: main.color,
-							});
-						}
-					}
-					m.redraw();
-				} catch (err) {
-					console.error('[MainHub] Admin sign-in failed:', err);
-				}
-			},
-		},
-		t('admin.signin'),
-	);
-}

@@ -7,22 +7,31 @@ import {
 	getQuestion,
 	getVisibleOptions,
 	getOrganizerSuggestions,
+	getOptionById,
 	subscribeOptions,
 	subscribeQuestion,
 	subscribeMainStatement,
 	subscribeUserEvaluations,
+	subscribeUserJoinFormSubmission,
 	getUnreadCount,
 	getTotalVisibleCount,
+	getNewOptionsPendingCount,
+	flushNewOptions,
+	isOptionNewlyArrived,
 } from '@/lib/store';
 import { isAdmin, checkAdminStatus } from '@/lib/admin';
+import { markOpenedInJoin } from '@/lib/joinSubscriptions';
 import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { SolutionCard } from '@/components/SolutionCard';
 import { JoinFormModal } from '@/components/JoinFormModal';
+import { LimitReachedModal } from '@/components/LimitReachedModal';
 import { AddSuggestionModal } from '@/components/AddSuggestionModal';
+import { EditSuggestionModal } from '@/components/EditSuggestionModal';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
 import { WizColFooter } from '@/components/WizColFooter';
+import { EditableTitle } from '@/components/EditableTitle';
 import { SplashLoader } from '@/views/Splash';
 import { captureFlipPositions, playFlipAnimation } from '@/lib/flipAnimate';
 import type { Unsubscribe } from '@/lib/firebase';
@@ -33,15 +42,28 @@ let questionUnsub: Unsubscribe | null = null;
 let optionsUnsub: Unsubscribe | null = null;
 let mainUnsub: Unsubscribe | null = null;
 let evaluationsUnsub: Unsubscribe | null = null;
+let joinSubmissionUnsub: Unsubscribe | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
+// Limit-reached swap modal state — set when the user clicks join on a fresh
+// option but is already at the per-user cap. They pick one of `limitCurrentJoins`
+// to release, and `toggleJoining` swaps atomically.
+let showLimitSwap = false;
+let limitPendingOptionId: string | null = null;
+let limitPendingOptionTitle = '';
+let limitPendingRole: 'activist' | 'organizer' = 'activist';
+let limitCurrentJoins: Statement[] = [];
 let adminMode = false;
 let showAddSuggestion = false;
 // Tracks which mode the modal opened in. Admins can open it as either an
 // organizer (badged Cloud Function path) or as a regular participant (crowd
 // list, no badge), so the modal needs to know which path to take.
 let addAsOrganizer = false;
+// When non-null, the edit modal is open for this option id. We re-resolve the
+// option from the store on every render so the modal sees fresh state if the
+// snapshot changes mid-edit.
+let editingOptionId: string | null = null;
 // Captured at `onbeforeupdate` of `.solutions__list`, replayed at `onupdate`
 // to drive the FLIP reorder animation.
 let capturedListRects: Map<string, DOMRect> | null = null;
@@ -84,6 +106,11 @@ export const Solutions: m.Component = {
 			// 5-face row its "I picked this" highlight on first paint and keeps
 			// it in sync if they evaluate from another tab.
 			evaluationsUnsub = subscribeUserEvaluations(questionId);
+			// Keep our local "form submitted?" caches honest across tabs and
+			// admin resets — without this, a remote delete of the user's
+			// submission doc leaves the cache stale and the next join would
+			// silently skip the form modal.
+			joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
 
 			// In facilitated mode, also keep a listener on the main statement so
 			// the facilitator can move us up to the Hub or across to another
@@ -91,6 +118,20 @@ export const Solutions: m.Component = {
 			const mainId = m.route.param('mid');
 			if (mainId) {
 				mainUnsub = subscribeMainStatement(mainId);
+			}
+
+			// Mark the workspace on the join Main page when an admin opens a
+			// top-level question directly via /q/<id>. Sub-questions (the
+			// facilitated /m/:mid/q/:qid path) shouldn't show on Main — those
+			// are children of a workspace, not workspaces themselves.
+			const opened = getQuestion();
+			if (opened && opened.parentId === 'top' && isAdmin()) {
+				const user = getUserState().user;
+				if (user) {
+					void markOpenedInJoin(opened, user.uid, user.displayName ?? '').catch((err) => {
+						console.error('[Solutions] markOpenedInJoin failed:', err);
+					});
+				}
 			}
 		} catch (err) {
 			console.error('[Solutions] Failed to load:', err);
@@ -118,6 +159,10 @@ export const Solutions: m.Component = {
 			evaluationsUnsub();
 			evaluationsUnsub = null;
 		}
+		if (joinSubmissionUnsub) {
+			joinSubmissionUnsub();
+			joinSubmissionUnsub = null;
+		}
 	},
 
 	view() {
@@ -137,6 +182,7 @@ export const Solutions: m.Component = {
 		const options = getVisibleOptions();
 		const total = getTotalVisibleCount();
 		const unread = getUnreadCount();
+		const pendingCount = getNewOptionsPendingCount();
 		const accentColor = question.color || 'var(--terra-500)';
 		const facilitated = isFacilitatedMode();
 		const mainId = m.route.param('mid');
@@ -147,10 +193,10 @@ export const Solutions: m.Component = {
 		// "can people add options to this question".
 		const addOptionEnabled = question.statementSettings?.enableAddEvaluationOption === true;
 		const showUserAddButton = addOptionEnabled && !isAdmin();
-		// Admin sees the participant-style add button alongside the organizer
-		// one whenever participants are allowed to add — letting an admin post
-		// a suggestion "as a regular person" instead of with the badge.
-		const showAdminParticipantAdd = addOptionEnabled && isAdmin();
+		// Admin always gets the participant-style add button alongside the
+		// organizer one — they can seed the crowd list "as a regular person"
+		// regardless of whether participants are allowed to add.
+		const showAdminParticipantAdd = isAdmin();
 
 		return m(`.solutions${facilitated ? '.solutions--facilitated' : ''}`, [
 			// Admin gets a return path: in facilitated mode that's the workspace
@@ -159,13 +205,45 @@ export const Solutions: m.Component = {
 			// self-gates on `isAdmin()`, so participants don't see it either way.
 			m(BackButton, { to: facilitated && mainId ? `/m/${mainId}` : '/' }),
 			m('.solutions__header', { style: `--q-accent: ${accentColor}` }, [
-				m('h1.solutions__title', question.statement),
+				m(EditableTitle, {
+					statementId: question.statementId,
+					value: question.statement,
+					canEdit: isAdmin(),
+					as: 'h1',
+					className: 'solutions__title',
+				}),
+				pendingCount > 0
+					? m(
+							'button.solutions__new-pill',
+							{
+								onclick: flushNewOptions,
+								'aria-live': 'polite',
+								'aria-label': pendingCount === 1
+									? t('solutions.new_answers')
+									: t('solutions.new_answers_plural', { count: pendingCount }),
+							},
+							[
+								m('span.solutions__new-pill-arrow', '↑'),
+								m('span', pendingCount === 1
+									? t('solutions.new_answers')
+									: t('solutions.new_answers_plural', { count: pendingCount })),
+							],
+						)
+					: null,
 			]),
 			m('.solutions__scroll', [
-				m('.solutions__subtitle', [
-					m('span.solutions__subtitle-icon', '\u2728'),
-					m('span', buildSubtitleText(question)),
-				]),
+				question.statementSettings?.showJoining !== false
+					? m('.solutions__subtitle', [
+							m('span.solutions__subtitle-icon', '\u2728'),
+							m('span', buildSubtitleText(question)),
+						])
+					: null,
+				question.statementSettings?.showEvaluation === true
+					? m('.solutions__subtitle', [
+							m('span.solutions__subtitle-icon', '\u2728'),
+							m('span', t('solutions.subtitle.evaluate')),
+						])
+					: null,
 				m('.solutions__counter', [
 					m('span.solutions__counter-total', t('solutions.counter.options', { count: total })),
 					unread > 0
@@ -182,7 +260,7 @@ export const Solutions: m.Component = {
 							// expose this action, and admins still need to seed the
 							// list while leading the room.
 							m(
-								'button.btn.btn--small.btn--primary',
+								'button.btn.btn--small.btn--outline-organizer',
 								{
 									onclick: () => {
 										addAsOrganizer = true;
@@ -191,12 +269,14 @@ export const Solutions: m.Component = {
 								},
 								t('admin.add_suggestion'),
 							),
-							// When participants are allowed to add, admin gets a second
-							// button to post "as a regular person" — same crowd-list
-							// path participants use, no organizer badge.
+							// Admin's "as a regular participant" path — same crowd-list
+							// path participants use, no organizer badge. Treated as the
+							// primary action because seeding the people's list is the
+							// expected default for admins; the organizer-section path
+							// is the secondary, more deliberate choice.
 							showAdminParticipantAdd
 								? m(
-										'button.btn.btn--small.btn--outline',
+										'button.btn.btn--small.btn--primary',
 										{
 											onclick: () => {
 												addAsOrganizer = false;
@@ -272,10 +352,26 @@ export const Solutions: m.Component = {
 										questionId: question.statementId,
 										adminMode: isAdmin() && adminMode && !facilitated,
 										displayOnly: facilitated,
+										highlighted: isOptionNewlyArrived(option.statementId),
 										onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
 											pendingJoinOptionId = optionId;
 											pendingJoinRole = role;
 											showJoinForm = true;
+										},
+										onRequestLimitSwap: (
+											optionId: string,
+											optionTitle: string,
+											role: 'activist' | 'organizer',
+											currentJoins: Statement[],
+										) => {
+											limitPendingOptionId = optionId;
+											limitPendingOptionTitle = optionTitle;
+											limitPendingRole = role;
+											limitCurrentJoins = currentJoins;
+											showLimitSwap = true;
+										},
+										onRequestEdit: (optionId: string) => {
+											editingOptionId = optionId;
 										},
 									}),
 								),
@@ -283,7 +379,7 @@ export const Solutions: m.Component = {
 						]),
 				// Organizer suggestions render AFTER the crowd list — the crowd
 				// is the primary content, admin additions come last.
-				renderOrganizerSection(question.statementId, adminMode, facilitated),
+				renderOrganizerSection(question.statementId, adminMode, facilitated, isOptionNewlyArrived),
 				m(WizColFooter),
 			]),
 			showJoinForm && question.statementSettings?.joinForm
@@ -306,6 +402,23 @@ export const Solutions: m.Component = {
 						},
 					})
 				: null,
+			showLimitSwap && limitPendingOptionId
+				? m(LimitReachedModal, {
+						pendingOptionId: limitPendingOptionId,
+						pendingOptionTitle: limitPendingOptionTitle,
+						questionId: question.statementId,
+						role: limitPendingRole,
+						currentJoins: limitCurrentJoins,
+						maxJoinsPerUser:
+							question.statementSettings?.activationThreshold?.maxJoinsPerUser ?? 0,
+						onClose: () => {
+							showLimitSwap = false;
+							limitPendingOptionId = null;
+							limitCurrentJoins = [];
+						},
+					})
+				: null,
+			renderEditModal(),
 			m(FacilitatorPanel),
 		]);
 	},
@@ -343,6 +456,7 @@ function renderOrganizerSection(
 	questionId: string,
 	adminModeActive: boolean,
 	facilitated: boolean,
+	isHighlighted: (id: string) => boolean,
 ): m.Children {
 	const suggestions = getOrganizerSuggestions();
 	if (suggestions.length === 0) return null;
@@ -359,15 +473,51 @@ function renderOrganizerSection(
 					isOrganizerSuggestion: true,
 					adminMode: isAdmin() && adminModeActive && !facilitated,
 					displayOnly: facilitated,
+					highlighted: isHighlighted(option.statementId),
 					onRequestJoinForm: (optionId: string, role: 'activist' | 'organizer') => {
 						pendingJoinOptionId = optionId;
 						pendingJoinRole = role;
 						showJoinForm = true;
 					},
+					onRequestLimitSwap: (
+						optionId: string,
+						optionTitle: string,
+						role: 'activist' | 'organizer',
+						currentJoins: Statement[],
+					) => {
+						limitPendingOptionId = optionId;
+						limitPendingOptionTitle = optionTitle;
+						limitPendingRole = role;
+						limitCurrentJoins = currentJoins;
+						showLimitSwap = true;
+					},
+					onRequestEdit: (optionId: string) => {
+						editingOptionId = optionId;
+					},
 				}),
 			),
 		),
 	]);
+}
+
+function renderEditModal(): m.Children {
+	if (!editingOptionId) return null;
+	// Re-resolve from the store every render so the modal reflects the latest
+	// snapshot. If the option was removed (e.g. admin deleted it during edit),
+	// drop the modal silently rather than crash with a stale reference.
+	const option = getOptionById(editingOptionId);
+	if (!option) {
+		editingOptionId = null;
+
+		return null;
+	}
+
+	return m(EditSuggestionModal, {
+		option,
+		onClose: () => {
+			editingOptionId = null;
+		},
+	});
 }
 
 function buildSubtitleText(question: Statement): string {

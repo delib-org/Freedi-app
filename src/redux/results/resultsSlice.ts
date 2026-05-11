@@ -47,4 +47,4 @@ export const { setResults, resetResults } = resultsSlice.actions;
 // Other code such as selectors can use the imported `RootState` type
 export const resultSelector =
 	(statementId: string | undefined) => (state: { results: ResultsState }) =>
-		state.results.results.find((result) => result.top.statementId === statementId);
+		state.results.results.find((result) => result?.top?.statementId === statementId);

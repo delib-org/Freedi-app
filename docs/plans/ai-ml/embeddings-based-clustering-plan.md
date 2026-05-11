@@ -2,7 +2,7 @@
 
 **Date**: 2024-12-23
 **Status**: Planning
-**Architecture**: [EMBEDDINGS_CLUSTERING_ARCHITECTURE.md](../architectures/EMBEDDINGS_CLUSTERING_ARCHITECTURE.md)
+**Architecture**: [CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md](../../../architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md) · **Methodology**: [clustering-and-synthesis-paper.md](../../clusters%20and%20synthesis/clustering-and-synthesis-paper.md)
 
 ## Overview
 
@@ -1322,7 +1322,8 @@ If issues arise:
 
 ## References
 
-- [Architecture Document](../architectures/EMBEDDINGS_CLUSTERING_ARCHITECTURE.md)
+- [Architecture Document](../../../architectures/CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md)
+- [Methodology Paper](../../clusters%20and%20synthesis/clustering-and-synthesis-paper.md)
 - [Firestore Vector Search](https://firebase.google.com/docs/firestore/vector-search)
 - [Gemini Embeddings](https://ai.google.dev/gemini-api/docs/embeddings)
 - [Current findSimilarStatements](../functions/src/fn_findSimilarStatements.ts)

@@ -19,6 +19,7 @@ const FRAMING_COLLECTIONS = {
 interface StatementWithFraming extends Statement {
 	framingId?: string;
 	framingClusters?: Record<string, string>;
+	integratedInto?: string;
 }
 import { Response, Request, logger } from 'firebase-functions/v1';
 import { onDocumentWritten, Change, FirestoreEvent } from 'firebase-functions/v2/firestore';
@@ -383,7 +384,41 @@ export async function recalculateClusterAggregation(req: Request, res: Response)
 }
 
 /**
- * Firestore trigger: Invalidate cache when evaluation changes
+ * Mark a single cluster aggregation as stale, fast-exiting if it is
+ * already stale. Bursts of evaluations on one cluster collapse to one
+ * write + N cheap reads instead of N writes.
+ */
+async function markAggregationStaleIdempotent(aggregationId: string): Promise<void> {
+	const ref = db.collection(FRAMING_COLLECTIONS.clusterAggregations).doc(aggregationId);
+	try {
+		const snap = await ref.get();
+		if (snap.exists) {
+			const data = snap.data() as ClusterAggregatedEvaluation | undefined;
+			if (data?.isStale === true) return;
+			await ref.update({ isStale: true });
+		}
+		// If the doc doesn't exist there's nothing to invalidate; the next
+		// read will compute a fresh aggregation from scratch.
+	} catch {
+		// Best-effort — failing to set isStale only delays cache refresh.
+	}
+}
+
+/**
+ * Firestore trigger: Invalidate cache when evaluation changes.
+ *
+ * Marks three potentially-affected aggregations stale:
+ *  1. Per-framing aggregations the changed statement belongs to (via
+ *     statement.framingClusters[framingId] = clusterId).
+ *  2. The parent cluster aggregation, when statement.parentId itself is
+ *     a cluster (legacy / direct-child clustering).
+ *  3. **The synthesized-cluster aggregation when the statement is a
+ *     hidden member (statement.integratedInto = clusterId).** This is
+ *     the correctness fix for paper §8.7 — without it, evaluations on
+ *     hidden members would not refresh the synthesized cluster.
+ *
+ * All three branches are idempotent fast-exits via
+ * `markAggregationStaleIdempotent`.
  */
 export const onEvaluationChangeInvalidateCache = onDocumentWritten(
 	{
@@ -416,30 +451,25 @@ export const onEvaluationChangeInvalidateCache = onDocumentWritten(
 
 			const statement = statementDoc.data() as StatementWithFraming;
 
-			// Check framingClusters map on the statement
+			// 1. framingClusters map on the statement
 			const framingClusters = statement.framingClusters;
-
 			if (framingClusters && typeof framingClusters === 'object') {
-				// Mark all relevant cluster aggregations as stale
-				const batch = db.batch();
-
-				for (const [framingId, clusterId] of Object.entries(framingClusters)) {
-					const aggregationId = getClusterAggregationId(clusterId as string, framingId);
-					const aggregationRef = db
-						.collection(FRAMING_COLLECTIONS.clusterAggregations)
-						.doc(aggregationId);
-
-					batch.update(aggregationRef, { isStale: true });
+				const entries = Object.entries(framingClusters);
+				if (entries.length > 0) {
+					await Promise.all(
+						entries.map(([framingId, clusterId]) =>
+							markAggregationStaleIdempotent(
+								getClusterAggregationId(clusterId as string, framingId),
+							),
+						),
+					);
+					logger.info(
+						`Marked ${entries.length} framing-cluster aggregations stale for statement ${statementId}`,
+					);
 				}
-
-				await batch.commit();
-
-				logger.info(
-					`Marked ${Object.keys(framingClusters).length} cluster aggregations as stale due to evaluation change on statement ${statementId}`,
-				);
 			}
 
-			// Also check if parent is a cluster
+			// 2. Parent is a cluster (legacy direct-child clustering)
 			if (statement.parentId) {
 				const parentDoc = await db.collection(Collections.statements).doc(statement.parentId).get();
 
@@ -448,17 +478,36 @@ export const onEvaluationChangeInvalidateCache = onDocumentWritten(
 
 					if (parent.isCluster && parent.framingId) {
 						const aggregationId = getClusterAggregationId(statement.parentId, parent.framingId);
-
-						await db
-							.collection(FRAMING_COLLECTIONS.clusterAggregations)
-							.doc(aggregationId)
-							.update({ isStale: true })
-							.catch(() => {
-								// Aggregation may not exist yet, that's fine
-							});
-
+						await markAggregationStaleIdempotent(aggregationId);
 						logger.info(
-							`Marked cluster aggregation ${aggregationId} as stale due to evaluation change`,
+							`Marked parent-cluster aggregation ${aggregationId} stale for statement ${statementId}`,
+						);
+					}
+				}
+			}
+
+			// 3. Statement is a hidden member of a synthesized cluster.
+			// performIntegration sets `integratedInto: <clusterId>` on members
+			// when they are hidden. Without this branch, a user changing their
+			// evaluation on a hidden member would never refresh the synthesized
+			// cluster's aggregated evaluation (paper §8.7). The synthesized
+			// cluster's framingId is set by performIntegration so the
+			// aggregation key is well-defined.
+			if (statement.integratedInto) {
+				const synthDoc = await db
+					.collection(Collections.statements)
+					.doc(statement.integratedInto)
+					.get();
+				if (synthDoc.exists) {
+					const synth = synthDoc.data() as StatementWithFraming;
+					if (synth.isCluster && synth.framingId) {
+						const aggregationId = getClusterAggregationId(
+							statement.integratedInto,
+							synth.framingId,
+						);
+						await markAggregationStaleIdempotent(aggregationId);
+						logger.info(
+							`Marked synthesis-cluster aggregation ${aggregationId} stale for member ${statementId}`,
 						);
 					}
 				}

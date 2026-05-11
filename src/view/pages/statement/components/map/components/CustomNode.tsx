@@ -34,7 +34,8 @@ const nodeStyle = (statementColor: { backgroundColor: string; color: string }) =
 function CustomNode({ data }: NodeProps) {
 	const navigate = useNavigate();
 	const { result, parentStatement, dimensions } = data;
-	const { statementId, statement } = result.top as Statement;
+	const top = result?.top as Statement | undefined;
+	const { statementId, statement } = top ?? ({} as Statement);
 
 	// Get zoom from React Flow
 	const { getZoom } = useReactFlow();
@@ -179,6 +180,8 @@ function CustomNode({ data }: NodeProps) {
 		const textLength = e.target.value.length;
 		setWordLength(textLength);
 	}
+
+	if (!top) return null;
 
 	return (
 		<div className={styles.nodeContainer}>

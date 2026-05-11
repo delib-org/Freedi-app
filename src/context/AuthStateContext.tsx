@@ -36,7 +36,13 @@ export const AuthStateProvider: FC<{ children: ReactNode }> = ({ children }) => 
 	const dispatch = useDispatch();
 
 	const initialRoute = useRef(
-		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null'),
+		(() => {
+			try {
+				return JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null');
+			} catch {
+				return null;
+			}
+		})(),
 	);
 
 	const userSetRef = useRef<string | null>(null);

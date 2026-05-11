@@ -9,7 +9,7 @@ import {
 	InferOutput,
 	number,
 } from 'valibot';
-import { DeliberationType, SortType } from '../TypeEnums';
+import { DeliberationType, SortType, ThemeStyle } from '../TypeEnums';
 
 /**
  * Join form — admin-defined contact form shown the first time a user joins
@@ -69,11 +69,17 @@ export type JoinResolutionConfig = InferOutput<typeof JoinResolutionConfigSchema
  * Activation threshold — minimum number of activists and organizers
  * required before an option is considered "activated". When enabled,
  * users see how many more people are needed.
+ *
+ * `maxJoinsPerUser` (optional) caps how many sibling options a single
+ * participant may join as activist under this question. When the user
+ * tries to join past the cap, the join app prompts them to swap out one
+ * existing membership for the new one. 0 / undefined disables the cap.
  */
 export const ActivationThresholdSchema = object({
 	enabled: boolean(),
 	minActivists: optional(number()),
 	minOrganizers: optional(number()),
+	maxJoinsPerUser: optional(number()),
 });
 export type ActivationThreshold = InferOutput<typeof ActivationThresholdSchema>;
 
@@ -116,6 +122,29 @@ export const CondensationConfigSchema = object({
 });
 export type CondensationConfig = InferOutput<typeof CondensationConfigSchema>;
 
+/**
+ * Idea Synthesis — bulk near-duplicate detection across all options under a
+ * question. Distinct from topic clustering (broad themes) and condensation
+ * (UMAP/DBSCAN re-grouping). Produces verified-same merge groups via
+ * embedding ANN + LLM-as-judge (four-way verdict: same/related/different/
+ * opposite). Resulting merged statements use the existing isCluster=true +
+ * integratedOptions[] data model so render and aggregation paths are shared.
+ *
+ * See docs/clusters and synthesis/clustering-and-synthesis-paper.md §5 for the full method.
+ *
+ * All fields optional — synthesis is admin-triggered and does not run unless
+ * settings are present and `enabled` is true.
+ */
+export const SynthesisConfigSchema = object({
+	enabled: optional(boolean()), // master switch for the synthesis admin button
+	defaultThreshold: optional(number()), // cosine candidate threshold, default 0.90
+	// Eligibility filters applied BEFORE any embedding op. Undefined disables.
+	minAverageForSynthesis: optional(number()),
+	minConsensusForSynthesis: optional(number()), // new filter requested for synthesis flow
+	minEvaluatorsForSynthesis: optional(number()),
+});
+export type SynthesisConfig = InferOutput<typeof SynthesisConfigSchema>;
+
 export enum evaluationType {
 	likeDislike = 'like-dislike',
 	range = 'range',
@@ -141,6 +170,18 @@ export const StatementSettingsSchema = object({
 	minJoinMembers: optional(number()), // Minimum members per option (for visual indicator)
 	maxJoinMembers: optional(number()), // Maximum members per option (for visual indicator + split trigger)
 	showEvaluation: optional(boolean()),
+	// Join app: when undefined or true, every option card renders the join
+	// row (Activist / Organizer buttons, or single Join when dualRoleJoin
+	// is explicitly false). Set false to hide all join buttons — admins use
+	// this for a pure-evaluation round. Default ON ("opt-out") so a fresh
+	// question keeps the join experience the participant expects.
+	showJoining: optional(boolean()),
+	// Join app: when true, every option card renders the results strip
+	// (consensus / average / evaluators) regardless of whether the 5-face
+	// evaluation row itself is being shown. Independent from showEvaluation
+	// so admins can reveal results at a chosen moment in a facilitated session
+	// without changing the participant evaluation mode.
+	showResults: optional(boolean()),
 	inVotingGetOnlyResults: optional(boolean()),
 	enableSimilaritiesSearch: optional(boolean()),
 	enableNavigationalElements: optional(boolean()),
@@ -167,6 +208,7 @@ export const StatementSettingsSchema = object({
 	enableHybridClustering: optional(boolean()), // if true, hybrid text+rating clustering runs for this question and sub-questions
 	activationThreshold: optional(ActivationThresholdSchema), // min activists/organizers to activate an option
 	condensation: optional(CondensationConfigSchema), // grouped suggestions feature — see CondensationConfigSchema
+	synthesis: optional(SynthesisConfigSchema), // bulk idea synthesis — see SynthesisConfigSchema
 	// Join app: when true, the MainHub renders a QR code section that any
 	// participant can use to share the room URL with someone nearby (peer-to-
 	// peer invite). Hub-scoped — only honoured on the main statement, not
@@ -176,6 +218,10 @@ export const StatementSettingsSchema = object({
 	// participant computes the same shuffle locally. Admin re-randomizes by
 	// pressing the Random sort button again, which writes a fresh seed.
 	randomSortSeed: optional(number()),
+	// Join app: visual style family. Each style has its own light + dark
+	// palette tuned for legibility (system prefers-color-scheme still drives
+	// light vs dark). Default = serious (current earth-tone palette).
+	themeStyle: optional(enum_(ThemeStyle)),
 });
 
 

@@ -32,6 +32,10 @@ import {
 	extractEmbeddingArray,
 } from './services/hybrid-vector-service';
 import {
+	computeClusterEvaluationFromRawEvals,
+	fetchEvaluationsForIds,
+} from './condensation/aggregation';
+import {
 	kmeans,
 	selectOptimalK,
 	assignToNearestCentroid,
@@ -546,6 +550,33 @@ async function upsertHybridFraming(
 		framingId = getRandomUID();
 	}
 
+	// Pre-aggregate evaluations from member option Statements onto each cluster
+	// (per-user-deduplicated). Done in parallel before the synchronous batch loop
+	// so the resulting consensus/evaluation can be set inline below.
+	const clusterEvalByIdx = new Map<
+		number,
+		Awaited<ReturnType<typeof computeClusterEvaluationFromRawEvals>>['evaluation']
+	>();
+	await Promise.all(
+		Array.from(clusters.entries()).map(async ([clusterIdx, memberIds]) => {
+			if (memberIds.length === 0) return;
+			try {
+				const evals = await fetchEvaluationsForIds(memberIds);
+				const { evaluation } = computeClusterEvaluationFromRawEvals(evals);
+				clusterEvalByIdx.set(clusterIdx, evaluation);
+			} catch (error) {
+				logger.warn(
+					'Hybrid cluster evaluation aggregation failed; cluster will land with consensus 0',
+					{
+						clusterIdx,
+						memberCount: memberIds.length,
+						error: (error as Error).message,
+					},
+				);
+			}
+		}),
+	);
+
 	// Create new cluster statements and assign options
 	const clusterIds: string[] = [];
 	const clusterSnapshots: ClusterSnapshot[] = [];
@@ -556,6 +587,7 @@ async function upsertHybridFraming(
 		clusterIds.push(clusterId);
 
 		const clusterName = clusterNames.get(clusterIdx) || `Cluster ${clusterIdx + 1}`;
+		const aggregated = clusterEvalByIdx.get(clusterIdx);
 
 		// Create cluster statement
 		const clusterStatement: Record<string, unknown> = {
@@ -569,7 +601,10 @@ async function upsertHybridFraming(
 			createdAt: Date.now(),
 			creator: parentStatement.creator,
 			creatorId: parentStatement.creatorId,
-			consensus: 0,
+			consensus: aggregated?.agreement ?? 0,
+			totalEvaluators: aggregated?.numberOfEvaluators ?? 0,
+			...(aggregated ? { evaluation: aggregated } : {}),
+			integratedOptions: [...memberIds], // surfaces "Group · N" badge in the UI
 			randomSeed: Math.random(),
 			lastUpdate: Date.now(),
 			framingId,

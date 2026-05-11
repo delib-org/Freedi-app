@@ -20,6 +20,7 @@ import { updateStatementParents } from '../../../../../../controllers/db/stateme
 import { useMapContext } from '../../../../../../controllers/hooks/useMap';
 import Modal from '../../../../../components/modal/Modal';
 import { createInitialNodesAndEdges, getLayoutElements } from '../mapHelpers/customNodeCont';
+import { logError } from '@/utils/errorHandling';
 import CustomNode from './CustomNode';
 import MapCancelIcon from '@/assets/icons/MapCancelIcon.svg';
 import MapHamburgerIcon from '@/assets/icons/MapHamburgerIcon.svg';
@@ -179,12 +180,16 @@ function MindMapChart({ descendants, isAdmin, filterBy }: Readonly<Props>) {
 
 	const onRestore = useCallback(() => {
 		const restoreFlow = async () => {
-			const getFlow = localStorage.getItem('flowKey');
-			if (!getFlow) return;
-			const flow = JSON.parse(getFlow);
-			if (flow) {
-				setNodes(flow.nodes ?? []);
-				setEdges(flow.edges ?? []);
+			try {
+				const getFlow = localStorage.getItem('flowKey');
+				if (!getFlow) return;
+				const flow = JSON.parse(getFlow);
+				if (flow) {
+					setNodes(flow.nodes ?? []);
+					setEdges(flow.edges ?? []);
+				}
+			} catch (error) {
+				logError(error, { operation: 'MindMapChart.onRestore' });
 			}
 		};
 		restoreFlow();

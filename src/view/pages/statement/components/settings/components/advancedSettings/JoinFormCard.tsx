@@ -47,11 +47,7 @@ function makeFieldId(label: string, existing: JoinFormField[]): string {
 async function saveJoinForm(statement: Statement, config: JoinFormConfig): Promise<void> {
 	try {
 		const ref = createStatementRef(statement.statementId);
-		await setDoc(
-			ref,
-			{ statementSettings: { joinForm: config } },
-			{ merge: true },
-		);
+		await setDoc(ref, { statementSettings: { joinForm: config } }, { merge: true });
 	} catch (error) {
 		logError(error, {
 			operation: 'JoinFormCard.saveJoinForm',

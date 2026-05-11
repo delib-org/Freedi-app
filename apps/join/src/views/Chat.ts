@@ -18,7 +18,7 @@ import { t } from '@/lib/i18n';
 import { isFacilitatedMode } from '@/lib/facilitator';
 import { db, doc, getDoc, Unsubscribe } from '@/lib/firebase';
 import { Collections, Statement } from '@freedi/shared-types';
-import { getUserState } from '@/lib/user';
+import { getUserState, waitForAuthReady } from '@/lib/user';
 import { ChatMessage } from '@/components/ChatMessage';
 import { FacilitatorPanel } from '@/components/FacilitatorPanel';
 import { BackButton } from '@/components/BackButton';
@@ -108,6 +108,14 @@ export const Chat: m.Component = {
       if (mainId) {
         mainUnsub = subscribeMainStatement(mainId);
       }
+
+      // Anonymous arrivals haven't picked a chat name yet. Surface the prompt
+      // up-front (with a "Stay anonymous" pseudo-name escape hatch) so they
+      // post under a chosen identity instead of being surprised on send.
+      await waitForAuthReady();
+      if (needsDisplayName()) {
+        showNamePrompt = true;
+      }
     } catch (err) {
       console.error('[Chat] Failed to load option:', err);
     } finally {
@@ -160,21 +168,27 @@ export const Chat: m.Component = {
 
     const mainId = m.route.param('mid');
 
+    // Where "back" goes depends on entry path: facilitated participants land
+    // here from /m/:mid/q/:qid (the Solutions list), legacy share links from
+    // /q/:qid. Admins also get the iOS-style corner BackButton as a redundant
+    // affordance \u2014 kept since it's already wired up.
+    const backTo = facilitated && mainId
+      ? `/m/${mainId}/q/${questionId}`
+      : `/q/${questionId}`;
+
     return m(`.chat${facilitated ? '.chat--facilitated' : ''}`, [
       facilitated && mainId
         ? m(BackButton, { to: `/m/${mainId}/q/${questionId}` })
         : null,
       m('.chat__header', [
-        facilitated
-          ? null
-          : m(
-              'button.chat__back',
-              {
-                onclick: () => m.route.set('/q/:qid', { qid: questionId }),
-                'aria-label': t('chat.back'),
-              },
-              '\u2190',
-            ),
+        m(
+          'button.chat__back',
+          {
+            onclick: () => m.route.set(backTo),
+            'aria-label': t('chat.back'),
+          },
+          '\u2190',
+        ),
         m('.chat__title', option.statement),
       ]),
 
@@ -294,6 +308,12 @@ export const Chat: m.Component = {
                 value: messageText,
                 placeholder: t('chat.placeholder'),
                 rows: 1,
+                oncreate: (vnode: m.VnodeDOM) => {
+                  autosizeTextarea(vnode.dom as HTMLTextAreaElement);
+                },
+                onupdate: (vnode: m.VnodeDOM) => {
+                  autosizeTextarea(vnode.dom as HTMLTextAreaElement);
+                },
                 onfocus: () => {
                   if (needsDisplayName()) {
                     showNamePrompt = true;
@@ -301,7 +321,9 @@ export const Chat: m.Component = {
                   }
                 },
                 oninput: (e: InputEvent) => {
-                  messageText = (e.target as HTMLTextAreaElement).value;
+                  const ta = e.target as HTMLTextAreaElement;
+                  messageText = ta.value;
+                  autosizeTextarea(ta);
                 },
                 onkeydown: (e: KeyboardEvent) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
@@ -330,6 +352,15 @@ function confirmName(): void {
   if (!nameInput.trim()) return;
   setCustomDisplayName(nameInput.trim());
   closeNamePrompt();
+}
+
+/** Auto-grow the message textarea to fit the user's text, capped at 6 lines.
+ *  CSS already enforces the 6-line max-height via `max-height` on `.chat__input`;
+ *  this resets `height` so it shrinks back when text is deleted, then matches
+ *  scrollHeight so the input grows in step with the typed content. */
+function autosizeTextarea(el: HTMLTextAreaElement): void {
+  el.style.height = 'auto';
+  el.style.height = `${el.scrollHeight}px`;
 }
 
 async function handleSend(): Promise<void> {

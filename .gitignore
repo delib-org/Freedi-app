@@ -77,3 +77,6 @@ apps/sign/tsconfig.tsbuildinfo
 .worktrees/
 
 env/prod-service-account.json
+
+# Local test data exported from production for emulator testing
+test-data/

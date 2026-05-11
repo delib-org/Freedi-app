@@ -10,7 +10,9 @@ This folder contains comprehensive architecture documentation for all components
 | [FUNCTIONS_ARCHITECTURE.md](./FUNCTIONS_ARCHITECTURE.md) | Firebase Cloud Functions - serverless backend |
 | [MC_APP_ARCHITECTURE.md](./MC_APP_ARCHITECTURE.md) | Mass Consensus - crowdsourced evaluation |
 | [SIGN_APP_ARCHITECTURE.md](./SIGN_APP_ARCHITECTURE.md) | Sign - document signing & deliberation |
-| [EMBEDDINGS_CLUSTERING_ARCHITECTURE.md](./EMBEDDINGS_CLUSTERING_ARCHITECTURE.md) | Hybrid embeddings/LLM for similarity & clustering |
+| [CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md](./CLUSTERING_AND_SYNTHESIS_ARCHITECTURE.md) | Clustering & synthesis pipelines, shared data model, admin UI |
+
+> Historical clustering & synthesis documents (UNIFIED, EMBEDDINGS, FRAMING_CLUSTER_AGGREGATION, papers, scaling investigation) now live in [`../docs/clusters and synthesis/`](../docs/clusters%20and%20synthesis/).
 
 ## Platform Overview
 

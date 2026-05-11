@@ -2,23 +2,30 @@ import m from 'mithril';
 import { getUserState, signOut } from '@/lib/user';
 import { t, isRTL } from '@/lib/i18n';
 import { WizColFooter } from '@/components/WizColFooter';
+import { parseWorkspaceId } from '@/lib/myWorkspaces';
 import {
-	getMyWorkspaces,
-	recordMyWorkspace,
-	removeMyWorkspace,
-	parseWorkspaceId,
-	setMyWorkspacesOrder,
-	workspaceRoute,
-	type MyWorkspace,
-} from '@/lib/myWorkspaces';
-import { createSimpleQuestion } from '@/lib/store';
+	subscribeToJoinMain,
+	unmarkFromJoinMain,
+	setJoinMainOrder,
+	markOpenedInJoin,
+	type JoinMainEntry,
+} from '@/lib/joinSubscriptions';
+import type { Unsubscribe } from '@/lib/firebase';
+import { createSimpleQuestion, loadQuestion, getQuestion } from '@/lib/store';
 import { createDragReorder } from '@/lib/dragReorder';
 
-// Drag-to-reorder for the "My questions" list. Persists straight to
-// localStorage on commit — no admin gate (the list is per-device anyway).
+let workspaces: JoinMainEntry[] = [];
+let workspacesUnsub: Unsubscribe | null = null;
+
+// Drag-to-reorder. Commits to Firestore — `joinOrder` is a numeric index
+// per subscription, so manual ordering survives across devices.
 const workspaceReorder = createDragReorder({
 	onCommit: (orderedIds) => {
-		setMyWorkspacesOrder(orderedIds);
+		const uid = getUserState().user?.uid;
+		if (!uid) return;
+		void setJoinMainOrder(orderedIds, uid).catch((err) => {
+			console.error('[Main] reorder commit failed:', err);
+		});
 	},
 });
 
@@ -78,11 +85,20 @@ async function handleCreateSubmit(e: Event): Promise<void> {
 
 			return;
 		}
-		// Save locally so it shows up in "My questions" immediately, even
-		// before the Cloud Function fans out the admin subscription doc.
-		// Tagged as `workspace` so the list routes back through MainHub
-		// (/m/<id>) on subsequent visits — matching the create-route below.
-		recordMyWorkspace({ id, title, kind: 'workspace' });
+		// Mark this fresh statement as "opened in join" so the live Main
+		// listener picks it up immediately. We re-load it here so we have
+		// the persisted Statement (with topParentId, color, etc.) — the
+		// helper needs the full doc to seed the subscription.
+		const user = getUserState().user;
+		if (user) {
+			await loadQuestion(id);
+			const stmt = getQuestion();
+			if (stmt) {
+				await markOpenedInJoin(stmt, user.uid, user.displayName ?? '').catch((err) => {
+					console.error('[Main] markOpenedInJoin failed:', err);
+				});
+			}
+		}
 		createInput = '';
 		m.route.set(`/m/${id}`);
 	} catch (err) {
@@ -95,8 +111,15 @@ async function handleCreateSubmit(e: Event): Promise<void> {
 }
 
 function handleRemove(id: string): void {
-	removeMyWorkspace(id);
+	const uid = getUserState().user?.uid;
+	if (!uid) return;
+	// Optimistic: drop from the local list before the snapshot round-trips,
+	// so the card vanishes on click. Snapshot will reconcile.
+	workspaces = workspaces.filter((w) => w.id !== id);
 	m.redraw();
+	void unmarkFromJoinMain(id, uid).catch((err) => {
+		console.error('[Main] unmarkFromJoinMain failed:', err);
+	});
 }
 
 function displayName(): string {
@@ -107,7 +130,7 @@ function displayName(): string {
 	return user.displayName || user.email || t('common.anonymous');
 }
 
-function renderWorkspaceCard(w: MyWorkspace, currentIds: string[]): m.Vnode {
+function renderWorkspaceCard(w: JoinMainEntry, currentIds: string[]): m.Vnode {
 	const accent = w.color || 'var(--terra-500)';
 	const dragging = workspaceReorder.isDragging(w.id);
 	const isDropTarget = workspaceReorder.isDropTarget(w.id);
@@ -147,7 +170,10 @@ function renderWorkspaceCard(w: MyWorkspace, currentIds: string[]): m.Vnode {
 				{
 					type: 'button',
 					onclick: () => {
-						m.route.set(workspaceRoute(w));
+						// Always route through the workspace hub. A statement created
+						// from /q is still a top-level question and the hub renders
+						// it correctly when there are no sub-questions.
+						m.route.set(`/m/${w.id}`);
 					},
 				},
 				[m('span.main-page__workspace-title', w.title), m('span.main-page__workspace-id', w.id)],
@@ -169,15 +195,35 @@ function renderWorkspaceCard(w: MyWorkspace, currentIds: string[]): m.Vnode {
 }
 
 export const Main: m.Component = {
+	oninit() {
+		// Subscribe to the user's join-Main entries on mount. Re-mount on auth
+		// change is handled by the route layer; we rebuild the listener if the
+		// uid we see at oninit differs from any existing listener.
+		const uid = getUserState().user?.uid;
+		if (!uid) return;
+		if (workspacesUnsub) workspacesUnsub();
+		workspacesUnsub = subscribeToJoinMain(uid, (entries) => {
+			workspaces = entries;
+			m.redraw();
+		});
+	},
+
+	onremove() {
+		if (workspacesUnsub) {
+			workspacesUnsub();
+			workspacesUnsub = null;
+		}
+	},
+
 	view() {
 		const user = getUserState().user;
 		const logoSrc = isRTL() ? '/wizcol-logo-rtl.png' : '/wizcol-logo-ltr.png';
 		const isGuest = !user || user.isAnonymous;
-		const workspacesRaw = getMyWorkspaces();
-		// Apply the optimistic post-drop ordering while the localStorage write
-		// settles, so the card stays where the user dropped it.
-		const workspaces = workspaceReorder.applyOrder(workspacesRaw, (w) => w.id);
-		const workspaceIds = workspaces.map((w) => w.id);
+		// Apply the optimistic post-drop ordering while the Firestore write
+		// settles, so the card stays where the user dropped it until the
+		// snapshot reflects the new joinOrder values.
+		const orderedWorkspaces = workspaceReorder.applyOrder(workspaces, (w) => w.id);
+		const workspaceIds = orderedWorkspaces.map((w) => w.id);
 
 		return m('.main-page', [
 			m('header.main-page__header', [
@@ -255,13 +301,13 @@ export const Main: m.Component = {
 				]),
 				m('section.main-page__panel', [
 					m('h2.main-page__panel-title', t('main.my_questions_title')),
-					workspaces.length === 0
+					orderedWorkspaces.length === 0
 						? m('p.main-page__panel-text', t('main.my_questions_empty'))
 						: [
 								m(
 									'ul.main-page__workspace-list',
 									workspaceReorder.listAttrs(),
-									workspaces.map((w) =>
+									orderedWorkspaces.map((w) =>
 										m(
 											'li.main-page__workspace-item',
 											{ key: w.id },
