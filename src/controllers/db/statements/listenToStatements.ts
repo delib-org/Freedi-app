@@ -682,12 +682,24 @@ export function listenToTreeDescendants(
 				} else {
 					const changes = statementsDB.docChanges();
 
+					// Window-shift protection: this is a limited query (queryLimit
+					// docs, ordered by createdAt desc). When a doc gets pushed out
+					// of the window by a newer one, Firestore fires a `removed`
+					// event for it — but the doc still exists in the database and
+					// is still wanted by other concurrent listeners (notably the
+					// unlimited listenToSubStatements). Firing deleteStatement
+					// here would remove it from Redux even though it's live,
+					// causing the "flicker and disappear" symptom on bulk seeds.
+					// Only honor a `removed` change when no `added` event in the
+					// same batch suggests an actual deletion rather than a shift.
+					const hasAdditions = changes.some((c) => c.type === 'added');
+
 					changes.forEach((change) => {
 						const stmt = normalizeStatementData(change.doc.data()) as Statement;
 
 						if (change.type === 'added' || change.type === 'modified') {
 							store.dispatch(setStatement(stmt));
-						} else if (change.type === 'removed') {
+						} else if (change.type === 'removed' && !hasAdditions) {
 							store.dispatch(deleteStatement(stmt.statementId));
 						}
 					});
@@ -769,13 +781,20 @@ export function listenToTreeByTopParent(
 				} else {
 					const changes = statementsDB.docChanges();
 
+					// See window-shift note in listenToTreeDescendants — the same
+					// limited-query window-shift problem applies here. A `removed`
+					// event without same-batch additions is treated as a real
+					// deletion; with additions it's likely a shift and we leave
+					// the doc in Redux for the unlimited listener to manage.
+					const hasAdditions = changes.some((c) => c.type === 'added');
+
 					changes.forEach((change) => {
 						try {
 							const stmt = normalizeStatementData(change.doc.data()) as Statement;
 
 							if (change.type === 'added' || change.type === 'modified') {
 								store.dispatch(setStatement(stmt));
-							} else if (change.type === 'removed') {
+							} else if (change.type === 'removed' && !hasAdditions) {
 								store.dispatch(deleteStatement(stmt.statementId));
 							}
 						} catch (error) {

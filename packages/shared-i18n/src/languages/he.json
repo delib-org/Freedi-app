@@ -1857,6 +1857,8 @@
   "Synthesis accepted": "הסנתזה אושרה",
   "Synthesis complete": "הסינתזה הסתיימה",
   "Synthesis created {n} merged statements": "הסינתזה יצרה {n} הצהרות ממוזגות",
+  "Pipeline summary": "סיכום הצינור",
+  "Source ideas ({n})": "רעיונות מקור ({n})",
   "Synthesis groups": "קבוצות סינתזה",
   "Synthesize ideas": "סינתזה של רעיונות",
   "Synthesize selected": "סנתז את הנבחרים",
@@ -3109,5 +3111,6 @@
   "Also show originals inside groups": "Also show originals inside groups",
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
-  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
+  "Synthesized proposals": "Synthesized proposals"
 }

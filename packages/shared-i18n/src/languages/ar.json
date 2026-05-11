@@ -1511,6 +1511,8 @@
   "Synthesis accepted": "تم قبول التجميع",
   "Synthesis complete": "اكتمل التجميع",
   "Synthesis created {n} merged statements": "أنشأت عملية التجميع {n} عبارات مدمجة",
+  "Pipeline summary": "ملخص العملية",
+  "Source ideas ({n})": "الأفكار المصدر ({n})",
   "Synthesis groups": "مجموعات التجميع",
   "Synthesize ideas": "تجميع الأفكار",
   "Synthesize selected": "تجميع المحدد",
@@ -2475,5 +2477,6 @@
   "Also show originals inside groups": "Also show originals inside groups",
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
-  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
+  "Synthesized proposals": "Synthesized proposals"
 }

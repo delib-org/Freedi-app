@@ -1438,6 +1438,8 @@
   "Synthesis accepted": "Synthese akzeptiert",
   "Synthesis complete": "Synthese abgeschlossen",
   "Synthesis created {n} merged statements": "Die Synthese hat {n} zusammengeführte Aussagen erstellt",
+  "Pipeline summary": "Pipeline-Zusammenfassung",
+  "Source ideas ({n})": "Quellideen ({n})",
   "Synthesis groups": "Synthese-Gruppen",
   "Synthesize ideas": "Ideen synthetisieren",
   "Synthesize selected": "Ausgewählte synthetisieren",
@@ -2350,5 +2352,6 @@
   "Also show originals inside groups": "Also show originals inside groups",
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
-  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
+  "Synthesized proposals": "Synthesized proposals"
 }

@@ -138,7 +138,11 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 				return { success: false, amount: 0, reason: 'Amount reduced to zero' };
 			}
 
-			// 9. Create credit transaction
+			// 9. Create credit transaction. Optional fields (statementId,
+			// parentId, topParentId, metadata) are omitted when undefined —
+			// Firestore rejects literal `undefined` writes, and these fields
+			// are legitimately absent for some action paths (e.g. callers that
+			// don't pass metadata). Same pattern used elsewhere in the codebase.
 			const transactionId = `${userId}_${action}_${Date.now()}`;
 			const creditTx: CreditTransaction = {
 				transactionId,
@@ -146,11 +150,11 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 				action,
 				amount,
 				sourceApp,
-				statementId,
-				parentId,
-				topParentId,
-				metadata,
 				createdAt: Date.now(),
+				...(statementId !== undefined ? { statementId } : {}),
+				...(parentId !== undefined ? { parentId } : {}),
+				...(topParentId !== undefined ? { topParentId } : {}),
+				...(metadata !== undefined ? { metadata } : {}),
 			};
 
 			const txRef = getDb().collection(Collections.creditLedger).doc(transactionId);
@@ -240,7 +244,19 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 			newLevel: txResult.leveledUp ? txResult.newLevel : undefined,
 		};
 	} catch (error) {
-		logger.error('Credit award failed', { userId, action, error });
+		// Surface the actual error info — Firestore errors don't serialize via
+		// default JSON.stringify, so we previously logged `error: {}` which
+		// hid the root cause.
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorName = error instanceof Error ? error.name : 'UnknownError';
+		const errorStack = error instanceof Error ? error.stack : undefined;
+		logger.error('Credit award failed', {
+			userId,
+			action,
+			errorName,
+			errorMessage,
+			errorStack,
+		});
 
 		return { success: false, amount: 0, reason: 'Internal error' };
 	}

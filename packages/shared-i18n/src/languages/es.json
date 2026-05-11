@@ -1438,6 +1438,8 @@
   "Synthesis accepted": "Síntesis aceptada",
   "Synthesis complete": "Síntesis completa",
   "Synthesis created {n} merged statements": "La síntesis creó {n} declaraciones fusionadas",
+  "Pipeline summary": "Resumen del proceso",
+  "Source ideas ({n})": "Ideas fuente ({n})",
   "Synthesis groups": "Grupos de síntesis",
   "Synthesize ideas": "Sintetizar ideas",
   "Synthesize selected": "Sintetizar seleccionados",
@@ -2350,5 +2352,6 @@
   "Also show originals inside groups": "Also show originals inside groups",
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
-  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
+  "Synthesized proposals": "Synthesized proposals"
 }

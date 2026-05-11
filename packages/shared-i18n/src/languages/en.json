@@ -1326,6 +1326,7 @@
   "Personal Attack": "Personal Attack",
   "Phone": "Phone",
   "Phone number": "Phone number",
+  "Pipeline summary": "Pipeline summary",
   "Please add your answer to the following question:": "Please add your answer to the following question:",
   "Please answer all required fields before submitting": "Please answer all required fields before submitting",
   "Please answer all required questions": "Please answer all required questions",
@@ -1745,6 +1746,7 @@
   "Sort suggestions by": "Sort suggestions by",
   "Sort:": "Sort:",
   "Source": "Source",
+  "Source ideas ({n})": "Source ideas ({n})",
   "Source ideas synthesized into this proposal": "Source ideas synthesized into this proposal",
   "Spam": "Spam",
   "Specific settings for question statements": "Specific settings for question statements",
@@ -3095,5 +3097,6 @@
   "Also show originals inside groups": "Also show originals inside groups",
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
-  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
+  "Synthesized proposals": "Synthesized proposals"
 }

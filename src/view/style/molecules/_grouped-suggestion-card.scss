@@ -90,9 +90,12 @@
     border: 1px solid transparent;
 
     &--synthesis {
-      background: color-mix(in srgb, var(--btn-primary) 14%, transparent);
-      color: var(--btn-primary);
-      border-color: color-mix(in srgb, var(--btn-primary) 35%, transparent);
+      // Use the synthesis pipeline accent (purple) so this badge is the
+      // unique visual marker that distinguishes a synthesized proposal
+      // from a regular statement option or a cluster.
+      background: color-mix(in srgb, var(--cluster-synthesis-accent, #b455ff) 16%, transparent);
+      color: var(--cluster-synthesis-accent, #b455ff);
+      border-color: color-mix(in srgb, var(--cluster-synthesis-accent, #b455ff) 40%, transparent);
     }
 
     &--topic {
@@ -102,17 +105,68 @@
     }
   }
 
-  // Synthesis cards get a subtly different accent so the whole card reads
-  // as "AI-merged" — distinct from auto-grouped clusters.
+  // Synthesis cards: a synthesized proposal is conceptually a SINGLE
+  // statement (one merged proposal) rather than a stack of distinct ideas.
+  // Visually it should READ like a regular statement option (white card,
+  // small shadow, square corners) with a clear top-banner identity strip
+  // in synthesis purple as the UNIQUE marker. The banner is unmissable;
+  // the card body otherwise blends with the rest of the suggestions list.
   &--synthesis {
-    .grouped-suggestion__card {
-      border-left-color: color-mix(in srgb, var(--btn-primary) 75%, var(--cluster-synthesis-accent, #b455ff));
-      background: color-mix(in srgb, var(--cluster-synthesis-accent, #b455ff) 6%, var(--card-default, #fff));
+    // Suppress the stacked-paper layers — synthesis is ONE proposal, not
+    // a stack of separate ideas. !important defends against any specificity
+    // surprise from the global card classes.
+    &::before,
+    &::after {
+      display: none !important;
+    }
+
+    margin-bottom: 0.75rem; // tighter than cluster cards (no stack to clear)
+    padding-top: 1.75rem;   // make room for the absolute-positioned top banner
+
+    // Top-of-card synthesis identity strip — unmistakeable signal that
+    // distinguishes synthesis from a regular option (which has none) and
+    // from a cluster (which has a corner count ribbon and stacked paper).
+    &::before {
+      display: block !important;
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1.4rem;
+      background: var(--cluster-synthesis-accent, #b455ff);
+      border-radius: 4px 4px 0 0;
+      z-index: 2;
+      // Reset cluster-borrowed properties.
+      bottom: auto;
+      opacity: 1;
+      border: none;
 
       @include rtl {
-        border-left: none;
-        border-right-color: color-mix(in srgb, var(--btn-primary) 75%, var(--cluster-synthesis-accent, #b455ff));
+        left: 0;
+        right: 0;
       }
+    }
+
+    .grouped-suggestion__card {
+      // Match the regular SuggestionCard visual treatment: pale-white
+      // input background, small shadow, square 4px corners (rounded top is
+      // covered by the identity strip above). The strip carries the
+      // synthesis signal; the card body otherwise blends with the rest of
+      // the suggestions list.
+      background-color: var(--inputBackground, #f5fcff) !important;
+      background-image: none !important;
+      border: none !important;
+      border-radius: 0 0 4px 4px !important;
+      padding: 0.6rem 0.75rem !important;
+      box-shadow: 2px 2px 4px var(--shadow, rgba(0, 0, 0, 0.08)) !important;
+    }
+
+    // Hide the cluster corner count ribbon — it implies "stack of items"
+    // which is the wrong metaphor for synthesis. The source count lives
+    // inside the card via the "Built from N source ideas" disclosure.
+    .grouped-suggestion__count-ribbon {
+      display: none !important;
     }
   }
 
@@ -225,7 +279,9 @@
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--btn-primary);
+    // Match the synthesis pipeline accent so all synthesis-specific UI
+    // shares one identity color (badge, kicker, accent strip).
+    color: var(--cluster-synthesis-accent, #b455ff);
   }
 
   &__proposal-title {

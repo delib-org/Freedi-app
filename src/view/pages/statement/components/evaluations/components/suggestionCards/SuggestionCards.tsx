@@ -251,7 +251,18 @@ const SuggestionCards: FC<Props> = ({
 		navigate(`/statement/${statementId}/thank-you`);
 	};
 
-	const hasClusters = groupedView.groupedSuggestions.length > 0;
+	// Split clusters by pipeline. Synthesized proposals (paraphrase-merge,
+	// AI-authored body) are conceptually different from clusters (groupings
+	// of distinct ideas) — they get their own labeled section above the
+	// regular clusters so the user can tell at a glance which is which.
+	const synthesizedClusters = groupedView.groupedSuggestions.filter(
+		(c) => c.derivedByPipeline === 'synthesis',
+	);
+	const regularClusters = groupedView.groupedSuggestions.filter(
+		(c) => c.derivedByPipeline !== 'synthesis',
+	);
+	const hasSynthesized = synthesizedClusters.length > 0;
+	const hasRegularClusters = regularClusters.length > 0;
 	const hasOriginals = sortedStatements.length > 0;
 
 	// Pipeline tint per cluster — explicit lookup so semantic (hybrid-auto)
@@ -270,23 +281,17 @@ const SuggestionCards: FC<Props> = ({
 		return 'custom';
 	};
 
-	// Section divider — appears between the cluster block and the originals
-	// block when both are present. Tinted to match the active framing so the
-	// boundary reads visually as "↑ clusters / ↓ everything else".
-	let dividerVariant: 'default' | 'synthesis' | 'topic' | 'semantic' = 'default';
-	let dividerIcon: ReactNode = <Layers size={14} aria-hidden />;
+	// Section divider between the regular-clusters block and the originals
+	// block (when both are present). Tinted to match the active framing so
+	// the boundary reads visually as "↑ clusters / ↓ everything else".
+	let regularDividerVariant: 'default' | 'topic' | 'semantic' = 'default';
+	let regularDividerIcon: ReactNode = <Layers size={14} aria-hidden />;
 	if (framingMode === FramingMode.semantic) {
-		dividerVariant = 'semantic';
-		dividerIcon = <Layers size={14} aria-hidden />;
+		regularDividerVariant = 'semantic';
+		regularDividerIcon = <Layers size={14} aria-hidden />;
 	} else if (framingMode === FramingMode.topic) {
-		dividerVariant = 'topic';
-		dividerIcon = <Tags size={14} aria-hidden />;
-	} else if (
-		groupedView.groupedSuggestions.length > 0 &&
-		groupedView.groupedSuggestions.every((c) => c.derivedByPipeline === 'synthesis')
-	) {
-		dividerVariant = 'synthesis';
-		dividerIcon = <Sparkles size={14} aria-hidden />;
+		regularDividerVariant = 'topic';
+		regularDividerIcon = <Tags size={14} aria-hidden />;
 	}
 
 	return (
@@ -294,33 +299,71 @@ const SuggestionCards: FC<Props> = ({
 			<SuggestionsToolbar
 				parentId={statement?.statementId}
 				visibilityMode={groupedView.mode}
-				hasActiveClusters={hasClusters}
+				hasActiveClusters={hasSynthesized || hasRegularClusters}
 				showOriginalsOverride={showOriginalsOverride}
 				onShowOriginalsOverrideChange={setShowOriginalsOverride}
 			/>
-			{hasClusters && (
-				<div className={styles['suggestions-wrapper']}>
-					{groupedView.groupedSuggestions.map((cluster) => (
-						<div key={cluster.statementId} className={styles['card-wrapper']}>
-							<GroupedSuggestionCard
-								cluster={cluster}
-								mode={groupedView.mode}
-								allowDrillToOriginals={groupedView.allowDrillToOriginals}
-								pipeline={resolvePipeline(cluster)}
-								renderOriginal={(original) => (
-									<SuggestionCard parentStatement={statement} statement={original} />
-								)}
-							/>
-						</div>
-					))}
-				</div>
+
+			{hasSynthesized && (
+				<>
+					<SectionDivider
+						label={t('Synthesized proposals')}
+						count={synthesizedClusters.length}
+						icon={<Sparkles size={14} aria-hidden />}
+						variant="synthesis"
+					/>
+					<div className={styles['suggestions-wrapper']}>
+						{synthesizedClusters.map((cluster) => (
+							<div key={cluster.statementId} className={styles['card-wrapper']}>
+								<GroupedSuggestionCard
+									cluster={cluster}
+									mode={groupedView.mode}
+									allowDrillToOriginals={groupedView.allowDrillToOriginals}
+									pipeline="synthesis"
+									renderOriginal={(original) => (
+										<SuggestionCard parentStatement={statement} statement={original} />
+									)}
+								/>
+							</div>
+						))}
+					</div>
+				</>
 			)}
-			{hasClusters && hasOriginals && (
+
+			{hasRegularClusters && (
+				<>
+					{hasSynthesized && (
+						<SectionDivider
+							label={t('Clusters')}
+							count={regularClusters.length}
+							icon={<Layers size={14} aria-hidden />}
+							variant={regularDividerVariant}
+						/>
+					)}
+					<div className={styles['suggestions-wrapper']}>
+						{regularClusters.map((cluster) => (
+							<div key={cluster.statementId} className={styles['card-wrapper']}>
+								<GroupedSuggestionCard
+									cluster={cluster}
+									mode={groupedView.mode}
+									allowDrillToOriginals={groupedView.allowDrillToOriginals}
+									pipeline={resolvePipeline(cluster)}
+									renderOriginal={(original) => (
+										<SuggestionCard parentStatement={statement} statement={original} />
+									)}
+								/>
+							</div>
+						))}
+					</div>
+				</>
+			)}
+
+			{(hasSynthesized || hasRegularClusters) && hasOriginals && (
 				<SectionDivider
 					label={t('Other suggestions')}
 					count={sortedStatements.length}
-					icon={dividerIcon}
-					variant={dividerVariant}
+					icon={regularDividerIcon}
+					variant={regularDividerVariant}
 				/>
 			)}
 			<Flipper

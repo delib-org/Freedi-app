@@ -296,12 +296,24 @@ async function ensureAdminSub(
 	const subId = `${user.uid}--${questionId}`;
 	const existing = await db.collection('statementsSubscribe').doc(subId).get();
 	const now = Date.now();
+	// Promoted top-level fields are required for the home-page listener:
+	// listenToStatementSubscriptions queries `where('parentId', '==', 'top')`
+	// directly on the subscription doc (with `statement.parentId` only as a
+	// fallback OR branch). Without these, the seeded question never shows on
+	// the user's home page even though the subscription exists.
+	const questionParentId = (question.parentId as string | undefined) ?? 'top';
+	const questionTopParentId = (question.topParentId as string | undefined) ?? questionId;
+	const questionType = (question.statementType as string | undefined) ?? 'question';
 	const payload = {
 		statementsSubscribeId: subId,
 		userId: user.uid,
 		statementId: questionId,
 		role: 'admin',
 		lastUpdate: now,
+		createdAt: (existing.data()?.createdAt as number | undefined) ?? now,
+		parentId: questionParentId,
+		topParentId: questionTopParentId,
+		statementType: questionType,
 		user: { uid: user.uid, displayName: user.displayName, email: user.email },
 		statement: question,
 	};

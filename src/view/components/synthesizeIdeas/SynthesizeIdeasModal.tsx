@@ -150,7 +150,7 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 
 	const renderConfigStep = () => (
 		<>
-			<p className={styles.subtitle}>
+			<p className={styles.subtitle} dir="auto">
 				{t(
 					'Detect proposals that say the same thing in different words and merge them into one. Embeddings narrow the candidates; an AI judge confirms each pair before merging.',
 				)}
@@ -168,7 +168,7 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 					value={threshold}
 					onChange={(e) => setThreshold(parseFloat(e.target.value))}
 				/>
-				<small>{t('Higher = stricter near-duplicate match (default 0.90)')}</small>
+				<small dir="auto">{t('Higher = stricter near-duplicate match (default 0.90)')}</small>
 			</div>
 			<div className={styles.fieldRow}>
 				<div className={styles.field}>
@@ -204,6 +204,13 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 					/>
 				</div>
 			</div>
+			{/*
+			 * Action footer: secondary first, primary second in source order.
+			 * With justify-content: flex-end this puts primary at the trailing
+			 * edge — right in LTR, left in RTL — which matches platform
+			 * conventions (primary = forward action, on the leading-to-end
+			 * direction of reading).
+			 */}
 			<div className={styles.actions}>
 				<button type="button" className={`${styles.button} ${styles.secondary}`} onClick={onClose}>
 					{t('Cancel')}
@@ -218,7 +225,7 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 	const renderPreviewStep = () => (
 		<>
 			{previewMeta && (
-				<div className={styles.summary}>
+				<div className={styles.summary} role="group" aria-label={t('Pipeline summary')}>
 					<div className={styles.metric}>
 						<span className={styles.value}>{previewMeta.inputCount}</span>
 						<span className={styles.label}>{t('Options considered')}</span>
@@ -256,12 +263,12 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 									aria-label={t('AI declined to synthesize this group')}
 								>
 									<strong>{t('AI declined: directional conflict')}</strong>
-									<span>
+									<span dir="auto">
 										{g.splitReason ||
 											t('The source ideas pull in incompatible solution directions.')}
 									</span>
 									{Array.isArray(g.splitProposal) && g.splitProposal.length > 1 && (
-										<span className={styles.splitHint}>
+										<span className={styles.splitHint} dir="auto">
 											{t('Suggested split: ')}
 											{g.splitProposal
 												.map(
@@ -271,13 +278,15 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 												.join(' / ')}
 										</span>
 									)}
-									<span className={styles.splitHint}>
+									<span className={styles.splitHint} dir="auto">
 										{t(
 											'To proceed, uncheck this group and re-run the pipeline after splitting it manually in the curation UI.',
 										)}
 									</span>
 								</div>
 							)}
+
+							{/* Header row: checkbox + editable title/description */}
 							<div className={styles.groupHeader}>
 								<input
 									type="checkbox"
@@ -291,17 +300,21 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 										value={g.titleDraft}
 										onChange={(e) => updateGroup(g.groupId, { titleDraft: e.target.value })}
 										placeholder={t('Merged title')}
+										dir="auto"
 									/>
 									<textarea
 										value={g.descriptionDraft}
 										onChange={(e) => updateGroup(g.groupId, { descriptionDraft: e.target.value })}
 										placeholder={t('Merged description (optional)')}
+										dir="auto"
 									/>
 									<span className={styles.memberCount}>
 										{t('{n} members').replace('{n}', String(g.memberIds.length))}
 									</span>
 								</div>
 							</div>
+
+							{/* Quiet labeled disclosure — chevron + label, NOT a primary blue bar */}
 							{g.paragraphsDraft.length > 0 && (
 								<details className={styles.paragraphPreview}>
 									<summary>
@@ -309,18 +322,36 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 									</summary>
 									<ol>
 										{g.paragraphsDraft.map((p, i) => (
-											<li key={i}>{p}</li>
+											<li key={i} dir="auto">
+												{p}
+											</li>
 										))}
 									</ol>
 								</details>
 							)}
-							<ul className={styles.memberList}>
-								{g.memberPreviews.map((m) => (
-									<li key={m.id}>{m.statement}</li>
-								))}
-							</ul>
+
+							{/* Source ideas — labeled section with bullet rows that wrap properly */}
+							<div className={styles.sourceSection}>
+								<span className={styles.sourceLabel}>
+									{t('Source ideas ({n})').replace('{n}', String(g.memberPreviews.length))}
+								</span>
+								<ul className={styles.memberList}>
+									{g.memberPreviews.map((m) => (
+										<li key={m.id} dir="auto">
+											{m.statement}
+										</li>
+									))}
+								</ul>
+							</div>
+
+							{/*
+							 * AI explanation. dir="auto" lets the browser pick the right
+							 * base direction per block, so an English AI explanation
+							 * inside a Hebrew modal renders LTR without bleeding into
+							 * the surrounding RTL layout.
+							 */}
 							{g.reasons.length > 0 && (
-								<p className={styles.reasons}>
+								<p className={styles.reasons} dir="auto">
 									{t('AI: {reason}').replace('{reason}', g.reasons.join('; '))}
 								</p>
 							)}
@@ -358,7 +389,9 @@ const SynthesizeIdeasModal: FC<SynthesizeIdeasModalProps> = ({
 
 	const renderErrorStep = () => (
 		<>
-			<div className={styles.error}>{error}</div>
+			<div className={styles.error} dir="auto">
+				{error}
+			</div>
 			<div className={styles.actions}>
 				<button
 					type="button"

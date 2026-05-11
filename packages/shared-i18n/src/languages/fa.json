@@ -1727,6 +1727,8 @@
   "Synthesis accepted": "ترکیب پذیرفته شد",
   "Synthesis complete": "ترکیب کامل شد",
   "Synthesis created {n} merged statements": "ترکیب {n} عبارت ادغام‌شده ایجاد کرد",
+  "Pipeline summary": "خلاصه فرآیند",
+  "Source ideas ({n})": "ایده‌های منبع ({n})",
   "Synthesis groups": "گروه‌های ترکیب",
   "Synthesize ideas": "ترکیب ایده‌ها",
   "Synthesize selected": "ترکیب انتخاب‌شده‌ها",
@@ -2878,5 +2880,6 @@
   "Also show originals inside groups": "Also show originals inside groups",
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
-  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)"
+  "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
+  "Synthesized proposals": "Synthesized proposals"
 }

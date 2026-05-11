@@ -1,11 +1,10 @@
 import { FC, useState, useEffect, useCallback } from 'react';
-import { Sparkles, Pencil, Layers, Brain, FileText, Combine } from 'lucide-react';
+import { Layers, Brain, FileText, Combine } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Statement } from '@freedi/shared-types';
 import { Framing, ClusterAggregatedEvaluation } from '@freedi/shared-types';
 import {
 	getFramingsForStatement,
-	generateMultipleFramings,
 	getClusterAggregations,
 	triggerSemanticClustering,
 	triggerTopicClustering,
@@ -16,7 +15,6 @@ import ActionRow from '../advancedSettings/ActionRow';
 import styles from './ClusteringAdmin.module.scss';
 import FramingList from './FramingList';
 import FramingDetail from './FramingDetail';
-import RequestFramingModal from './RequestFramingModal';
 import SynthesizeIdeasModal from '@/view/components/synthesizeIdeas/SynthesizeIdeasModal';
 import Loader from '@/view/components/loaders/Loader';
 
@@ -32,8 +30,6 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 	const [selectedFraming, setSelectedFraming] = useState<Framing | null>(null);
 	const [aggregations, setAggregations] = useState<ClusterAggregatedEvaluation[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isGenerating, setIsGenerating] = useState(false);
-	const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 	const [isSynthesizeModalOpen, setIsSynthesizeModalOpen] = useState(false);
 	const [synthesisStatusMessage, setSynthesisStatusMessage] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
@@ -84,28 +80,6 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 		},
 		[t],
 	);
-
-	// Generate new AI framings
-	const handleGenerateFramings = async () => {
-		try {
-			setIsGenerating(true);
-			setError(null);
-			const newFramings = await generateMultipleFramings(statement.statementId, 3);
-			setFramings((prev) => [...prev, ...newFramings]);
-
-			if (newFramings.length > 0) {
-				setSelectedFraming(newFramings[0]);
-			}
-		} catch (err) {
-			logError(err, {
-				operation: 'ClusteringAdmin.handleGenerateFramings',
-				statementId: statement.statementId,
-			});
-			setError(t('Failed to generate framings'));
-		} finally {
-			setIsGenerating(false);
-		}
-	};
 
 	// Run the legacy semantic (hybrid k-means) clustering pipeline.
 	const handleRunSemantic = async () => {
@@ -196,13 +170,6 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 		setSelectedFraming(framing);
 	};
 
-	// Handle new custom framing created
-	const handleFramingCreated = (newFraming: Framing) => {
-		setFramings((prev) => [...prev, newFraming]);
-		setSelectedFraming(newFraming);
-		setIsRequestModalOpen(false);
-	};
-
 	// Handle framing deleted
 	const handleFramingDeleted = (framingId: string) => {
 		setFramings((prev) => prev.filter((f) => f.framingId !== framingId));
@@ -223,36 +190,13 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 		}
 	}, [selectedFraming, loadAggregations]);
 
-	const anyRunning =
-		isGenerating || isLoading || isRunningSemantic || isRunningTopic || isSummarizing;
+	const anyRunning = isLoading || isRunningSemantic || isRunningTopic || isSummarizing;
 
 	return (
 		<div className={styles.clusteringAdmin}>
 			{error && <div className={styles.error}>{error}</div>}
 			{statusMessage && <div className={styles.status}>{statusMessage}</div>}
 
-			<ActionRow
-				icon={Sparkles}
-				label={t('Generate AI Framings')}
-				description={t(
-					'Ask AI to propose multiple clustering perspectives in one click — each becomes a Framing you can compare.',
-				)}
-				buttonLabel={t('Generate')}
-				loadingLabel={t('Generating...')}
-				loading={isGenerating}
-				disabled={anyRunning}
-				onClick={handleGenerateFramings}
-				variant="primary"
-			/>
-			<ActionRow
-				icon={Pencil}
-				label={t('Request Custom Framing')}
-				description={t('Provide your own clustering prompt to create a tailored Framing.')}
-				buttonLabel={t('Open editor')}
-				disabled={anyRunning}
-				onClick={() => setIsRequestModalOpen(true)}
-				variant="secondary"
-			/>
 			<ActionRow
 				icon={Layers}
 				label={t('Run Semantic Clustering')}
@@ -315,7 +259,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				<div className={styles.emptyState}>
 					<p>{t('No framings available yet')}</p>
 					<p className={styles.hint}>
-						{t('Click "Generate AI Framings" to create clustering perspectives for your options')}
+						{t('Run Semantic or Topic clustering above to create clustering perspectives for your options')}
 					</p>
 				</div>
 			) : (
@@ -337,13 +281,6 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				</div>
 			)}
 
-			{isRequestModalOpen && (
-				<RequestFramingModal
-					statementId={statement.statementId}
-					onClose={() => setIsRequestModalOpen(false)}
-					onFramingCreated={handleFramingCreated}
-				/>
-			)}
 			{isSynthesizeModalOpen && (
 				<SynthesizeIdeasModal
 					parentStatementId={statement.statementId}
