@@ -1,4 +1,4 @@
-import { FC, useMemo } from 'react';
+import { FC, useMemo, MouseEvent, KeyboardEvent, TouchEvent } from 'react';
 import styles from './StatementChatMore.module.scss';
 
 // Icons
@@ -85,17 +85,30 @@ const StatementChatMore: FC<Props> = ({
 	// Display count: show total if available, otherwise show unread as indicator
 	const displayCount = totalMessages > 0 ? totalMessages : unreadCount > 0 ? unreadCount : 0;
 
-	const handleClick = async () => {
-		if (useLink) {
-			// Mark notifications as read when navigating to chat
-			if (hasUnread) {
-				await markStatementNotificationsAsReadDB(statement.statementId);
-			}
+	const handleClick = async (e: MouseEvent<HTMLButtonElement>) => {
+		// Prevent accidental navigation when selecting text nearby
+		e.stopPropagation();
+		e.preventDefault();
 
-			navigate(`/statement/${statement.statementId}/chat`, {
-				state: { from: window.location.pathname },
-			});
+		if (!useLink) {
+			return;
 		}
+
+		// Verify click is from this button - extra safety check
+		// to prevent accidental navigation from parent elements
+		const button = e.currentTarget;
+		if (!button) {
+			return;
+		}
+
+		// Mark notifications as read when navigating to chat
+		if (hasUnread) {
+			await markStatementNotificationsAsReadDB(statement.statementId);
+		}
+
+		navigate(`/statement/${statement.statementId}/chat`, {
+			state: { from: window.location.pathname },
+		});
 	};
 
 	// Build accessible label
@@ -154,12 +167,27 @@ const StatementChatMore: FC<Props> = ({
 		</div>
 	);
 
+	const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
+		// Only allow Enter and Space to trigger navigation
+		if (e.key !== 'Enter' && e.key !== ' ') {
+			return;
+		}
+		// Let the button handle it naturally - this will trigger onClick
+	};
+
+	const handleTouchEnd = (e: TouchEvent<HTMLButtonElement>) => {
+		e.stopPropagation();
+	};
+
 	return asButton ? (
 		<button
 			className={styles.statementChatMore}
 			aria-label={ariaLabel}
 			onClick={handleClick}
+			onTouchEnd={handleTouchEnd}
+			onKeyDown={handleKeyDown}
 			type="button"
+			data-testid="statement-chat-more-button"
 		>
 			{content}
 		</button>
@@ -168,7 +196,10 @@ const StatementChatMore: FC<Props> = ({
 			type="button"
 			className={styles.statementChatMore}
 			onClick={handleClick}
+			onTouchEnd={handleTouchEnd}
+			onKeyDown={handleKeyDown}
 			aria-label={ariaLabel}
+			data-testid="statement-chat-more-button"
 		>
 			{content}
 		</button>

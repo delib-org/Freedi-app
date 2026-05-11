@@ -61,7 +61,7 @@ describe('useStatementColor', () => {
 				rerender({ stmt: statement });
 			});
 
-			expect(result.current.backgroundColor).toBe('var(--header-not-chosen, #123abc)');
+			expect(result.current.backgroundColor).toBe('var(--header-not-chosen, #ffe16a)');
 			expect(result.current.color).toBe('var(--option-text, #ffffff)');
 		});
 
@@ -80,7 +80,7 @@ describe('useStatementColor', () => {
 				rerender({ stmt: statement });
 			});
 
-			expect(result.current.backgroundColor).toBe('var(--header-question, #123def)');
+			expect(result.current.backgroundColor).toBe('var(--header-question, #47b4ef)');
 			expect(result.current.color).toBe('var(--question-text, #fff)');
 		});
 
@@ -125,13 +125,13 @@ describe('useStatementColor', () => {
 				rerender({ stmt: optionStatement });
 			});
 
-			expect(result.current.backgroundColor).toBe('var(--header-not-chosen, #123abc)');
+			expect(result.current.backgroundColor).toBe('var(--header-not-chosen, #ffe16a)');
 
 			await act(async () => {
 				rerender({ stmt: questionStatement });
 			});
 
-			expect(result.current.backgroundColor).toBe('var(--header-question, #123def)');
+			expect(result.current.backgroundColor).toBe('var(--header-question, #47b4ef)');
 		});
 
 		it('should reset to default when statement becomes undefined', async () => {
@@ -149,7 +149,7 @@ describe('useStatementColor', () => {
 				rerender({ stmt: statement });
 			});
 
-			expect(result.current.backgroundColor).toBe('var(--header-not-chosen, #123abc)');
+			expect(result.current.backgroundColor).toBe('var(--header-not-chosen, #ffe16a)');
 
 			await act(async () => {
 				rerender({ stmt: undefined });

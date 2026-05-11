@@ -46,6 +46,15 @@ export const StatementSubscriptionSchema = object({
 	// Engagement system extensions (backwards-compatible)
 	notificationFrequency: optional(enum_(NotificationFrequency)), // Default frequency for this discussion
 	branchPreferences: optional(record(string(), BranchPreferenceSchema)), // Per-branch overrides keyed by branchStatementId
+
+	// Join app — marks this subscription so the corresponding top-level
+	// statement appears on the join app's Main page list. `openedInJoin` is
+	// the epoch-ms when the user last created/opened it from join; presence
+	// (>0) is the membership flag. `joinOrder` carries the user's manual
+	// drag-to-reorder position; lower values render first, undefined falls
+	// back to `openedInJoin` desc.
+	openedInJoin: optional(number()),
+	joinOrder: optional(number()),
 });
  
 export type StatementSubscription = InferOutput<

@@ -383,14 +383,20 @@ export const isInQuietHours = (config: QuietHoursConfig): boolean => {
 			timeZone: config.timezone,
 		});
 
+		const parseHHMM = (value: string | undefined): [number, number] => {
+			const [h, m] = (value ?? '').split(':').map(Number);
+
+			return [Number.isFinite(h) ? h : 0, Number.isFinite(m) ? m : 0];
+		};
+
 		const currentTime = formatter.format(now);
-		const [currentHour, currentMinute] = currentTime.split(':').map(Number);
+		const [currentHour, currentMinute] = parseHHMM(currentTime);
 		const currentMinutes = currentHour * 60 + currentMinute;
 
-		const [startHour, startMinute] = config.startTime.split(':').map(Number);
+		const [startHour, startMinute] = parseHHMM(config.startTime);
 		const startMinutes = startHour * 60 + startMinute;
 
-		const [endHour, endMinute] = config.endTime.split(':').map(Number);
+		const [endHour, endMinute] = parseHHMM(config.endTime);
 		const endMinutes = endHour * 60 + endMinute;
 
 		// Handle overnight quiet hours (e.g., 22:00 - 08:00)

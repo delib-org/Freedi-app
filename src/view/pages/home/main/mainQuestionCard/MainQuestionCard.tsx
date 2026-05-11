@@ -110,7 +110,8 @@ const MainQuestionCard: FC<Props> = ({ simpleStatement }) => {
 						.slice(0, 3)
 						.map((sub) => (
 							<div key={sub.statementId} className={styles.lastMessage}>
-								<span className={styles.creator}>{sub.creator.displayName}:</span> {sub.statement}
+								<span className={styles.creator}>{sub.creator?.displayName ?? ''}:</span>{' '}
+								{sub.statement}
 								{sub.createdAt && (
 									<span className={styles.messageTime}>{getTime(sub.createdAt)}</span>
 								)}

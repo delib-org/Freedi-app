@@ -1,9 +1,13 @@
 import { FC } from 'react';
-import { Statement, StatementSettings, StatementType } from '@freedi/shared-types';
-import { Sparkles, Search, Target, Database, Scissors } from 'lucide-react';
+import { Statement, StatementSettings, StatementType, Role } from '@freedi/shared-types';
+import { Search, Target, Database, Scissors } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
+import { useAppSelector } from '@/controllers/hooks/reduxHooks';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
+import GroupingSettings from './GroupingSettings';
+import { ClusteringAdmin } from '../ClusteringAdmin';
 
 interface AISettingsProps {
 	statement: Statement;
@@ -16,17 +20,12 @@ interface AISettingsProps {
 
 const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingChange }) => {
 	const { t } = useTranslation();
+	const subscription = useAppSelector(statementSubscriptionSelector(statement.statementId));
+	const isAdminOrCreator = subscription?.role === Role.admin || subscription?.role === Role.creator;
+	const isQuestion = statement.statementType === StatementType.question;
 
 	return (
 		<>
-			<ToggleSwitch
-				isChecked={settings.enableAIImprovement ?? false}
-				onChange={(checked) => handleSettingChange('enableAIImprovement', checked)}
-				label={t('AI Suggestion Enhancement')}
-				description={t('Use AI to improve and refine user suggestions')}
-				icon={Sparkles}
-				badge="premium"
-			/>
 			<ToggleSwitch
 				isChecked={settings.enableSimilaritiesSearch ?? false}
 				onChange={(checked) => handleSettingChange('enableSimilaritiesSearch', checked)}
@@ -61,7 +60,7 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 					</div>
 				</div>
 			)}
-			{statement.statementType === StatementType.question && (
+			{isQuestion && (
 				<>
 					<ToggleSwitch
 						isChecked={settings.defaultLookForSimilarities ?? false}
@@ -78,6 +77,8 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 						icon={Scissors}
 						badge="new"
 					/>
+					<GroupingSettings statement={statement} settings={settings} />
+					{isAdminOrCreator && <ClusteringAdmin statement={statement} />}
 				</>
 			)}
 		</>

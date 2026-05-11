@@ -12,26 +12,67 @@ export function generateAnonymousUserId(): string {
   return `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
 }
 
+// In-memory fallback for contexts where both localStorage and cookies are blocked
+// (e.g., sandboxed iframes, privacy modes). Ensures getOrCreateAnonymousUser()
+// returns a stable id within the same page load.
+let inMemoryAnonymousUserId: string | null = null;
+
+function safeLocalStorageGet(key: string): string | null {
+  try {
+    return typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): void {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(key, value);
+    }
+  } catch {
+    // localStorage blocked (private mode, sandboxed iframe, cookies disabled)
+  }
+}
+
+function readUserIdCookie(): string | null {
+  try {
+    if (typeof document === 'undefined' || !document.cookie) return null;
+    const match = document.cookie.match(/(?:^|;\s*)userId=([^;]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Get or create anonymous user ID (client-side only)
- * This function should only be called in client components
+ * This function should only be called in client components.
+ *
+ * Resilient to environments where localStorage is blocked (SecurityError) —
+ * falls back to the `userId` cookie set by middleware, then to an in-memory id.
  */
 export function getOrCreateAnonymousUser(): string {
   if (typeof window === 'undefined') {
     throw new Error('getOrCreateAnonymousUser can only be called on client-side');
   }
 
-  let userId = localStorage.getItem(USER_ID_KEY);
+  const storedId = safeLocalStorageGet(USER_ID_KEY);
+  if (storedId) return storedId;
 
-  if (!userId) {
-    userId = generateAnonymousUserId();
-    localStorage.setItem(USER_ID_KEY, userId);
+  const cookieId = readUserIdCookie();
+  if (cookieId) {
+    safeLocalStorageSet(USER_ID_KEY, cookieId);
+    return cookieId;
   }
 
-  // Cookie is now set by middleware (HttpOnly _uid cookie)
-  // Legacy userId cookie also set by middleware on first visit
+  if (inMemoryAnonymousUserId) return inMemoryAnonymousUserId;
 
-  return userId;
+  const newId = generateAnonymousUserId();
+  inMemoryAnonymousUserId = newId;
+  safeLocalStorageSet(USER_ID_KEY, newId);
+
+  return newId;
 }
 
 /**

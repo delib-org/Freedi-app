@@ -32,12 +32,19 @@ interface SimpleDescendant {
 	statementId: string;
 }
 
+interface AIFramingMember {
+	statementId: string;
+	/** Optional — the LLM is asked NOT to echo statement text to keep responses
+	 *  small. The server hydrates this from the source pool after parsing. */
+	statement?: string;
+}
+
 interface AIFraming {
 	framingName: string;
 	framingDescription: string;
 	groups: {
 		groupName: string;
-		statements: SimpleDescendant[];
+		statements: AIFramingMember[];
 	}[];
 }
 
@@ -104,8 +111,16 @@ export async function generateMultipleFramings(req: Request, res: Response): Pro
 			statementId: descendant.statementId,
 		}));
 
-		// Generate multiple framings using AI
-		const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+		// Generate multiple framings using AI. JSON mime + bumped output cap
+		// because the default ~8K tokens truncate mid-string on questions with
+		// 50+ options × 3 framings (we observed truncation at ~31K chars).
+		const model = genAI.getGenerativeModel({
+			model: GEMINI_MODEL,
+			generationConfig: {
+				responseMimeType: 'application/json',
+				maxOutputTokens: 65536,
+			},
+		});
 
 		const prompt = buildMultiFramingPrompt(topic, simpleDescendants, maxFramings);
 		const response = await model.generateContent(prompt);
@@ -121,6 +136,23 @@ export async function generateMultipleFramings(req: Request, res: Response): Pro
 
 		if (!aiFramings || aiFramings.length === 0) {
 			throw new Error('Error parsing response: no valid framings found');
+		}
+
+		// Hydrate statement text from the source pool so the rest of the
+		// pipeline (which expects each group member to carry `statement`) keeps
+		// working. The LLM only returns statementIds in the new prompt to keep
+		// the response under the token cap.
+		const idToText = new Map<string, string>(
+			simpleDescendants.map((s) => [s.statementId, s.statement] as const),
+		);
+		for (const framing of aiFramings) {
+			for (const group of framing.groups) {
+				for (const member of group.statements) {
+					if (!member.statement) {
+						member.statement = idToText.get(member.statementId) ?? '';
+					}
+				}
+			}
 		}
 
 		// Create framings and clusters in database
@@ -217,8 +249,15 @@ export async function requestCustomFraming(req: Request, res: Response): Promise
 			statementId: descendant.statementId,
 		}));
 
-		// Generate custom framing using AI
-		const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+		// Generate custom framing using AI. Same JSON-mime + bumped output cap
+		// as generateMultipleFramings to avoid mid-string truncation.
+		const model = genAI.getGenerativeModel({
+			model: GEMINI_MODEL,
+			generationConfig: {
+				responseMimeType: 'application/json',
+				maxOutputTokens: 65536,
+			},
+		});
 
 		const prompt = buildCustomFramingPrompt(topic, simpleDescendants, customPrompt);
 		const response = await model.generateContent(prompt);
@@ -250,6 +289,18 @@ export async function requestCustomFraming(req: Request, res: Response): Promise
 
 		// Take only the first framing from the response
 		const aiFraming = aiFramings[0];
+
+		// Hydrate statement text from the source pool (LLM only returns ids).
+		const idToText = new Map<string, string>(
+			simpleDescendants.map((s) => [s.statementId, s.statement] as const),
+		);
+		for (const group of aiFraming.groups) {
+			for (const member of group.statements) {
+				if (!member.statement) {
+					member.statement = idToText.get(member.statementId) ?? '';
+				}
+			}
+		}
 
 		// Get existing framings count for order
 		const existingFramings = await db
@@ -431,8 +482,8 @@ Return your response as a JSON array with this exact structure:
       {
         "groupName": "Name of the cluster",
         "statements": [
-          {"statement": "Selected statement text", "statementId": "id1"},
-          {"statement": "Selected statement text", "statementId": "id2"}
+          {"statementId": "id1"},
+          {"statementId": "id2"}
         ]
       }
     ]
@@ -442,6 +493,7 @@ Return your response as a JSON array with this exact structure:
 IMPORTANT:
 - Each framing MUST be genuinely different (different logic for grouping)
 - Each statement should appear in exactly one group per framing
+- Return ONLY statementId for each statement (do NOT echo the statement text — the server will hydrate it). This keeps the response small enough to fit the model's output token budget.
 - Return ONLY the JSON array, no additional text
 `;
 }
@@ -478,8 +530,8 @@ Return your response as a JSON array with this exact structure:
       {
         "groupName": "Name of the cluster",
         "statements": [
-          {"statement": "Selected statement text", "statementId": "id1"},
-          {"statement": "Selected statement text", "statementId": "id2"}
+          {"statementId": "id1"},
+          {"statementId": "id2"}
         ]
       }
     ]
@@ -489,41 +541,64 @@ Return your response as a JSON array with this exact structure:
 IMPORTANT:
 - Focus on the perspective requested: "${customPrompt}"
 - Each statement should appear in exactly one group
+- Return ONLY statementId for each statement (do NOT echo the statement text — the server will hydrate it). This keeps the response small enough to fit the model's output token budget.
 - Return ONLY the JSON array, no additional text
 `;
 }
 
 function parseMultiFramingResponse(text: string): AIFraming[] | null {
+	// Clean the response
+	let jsonString = text.replace(/```json/g, '');
+	jsonString = jsonString.replace(/```/g, '');
+	jsonString = jsonString.replace(/^>\s*/gm, '');
+	jsonString = jsonString.trim();
+
+	// First attempt — straight parse.
+	let parsed: unknown;
 	try {
-		// Clean the response
-		let jsonString = text.replace(/```json/g, '');
-		jsonString = jsonString.replace(/```/g, '');
-		jsonString = jsonString.replace(/^>\s*/gm, '');
-		jsonString = jsonString.trim();
-
-		const parsed = JSON.parse(jsonString);
-
-		if (!Array.isArray(parsed)) {
-			logger.error('Response is not an array');
-
-			return null;
-		}
-
-		// Validate structure
-		for (const framing of parsed) {
-			if (!framing.framingName || !framing.framingDescription || !Array.isArray(framing.groups)) {
-				logger.error('Invalid framing structure:', framing);
+		parsed = JSON.parse(jsonString);
+	} catch (error) {
+		// Truncation salvage: if the model ran out of output budget mid-string,
+		// try trimming to the last well-formed top-level array boundary `}]`
+		// and parsing that. We then drop the partial last framing. Better to
+		// surface 1-2 valid framings than to fail the whole run.
+		const lastBoundary = jsonString.lastIndexOf('}]');
+		if (lastBoundary > 0) {
+			const truncated = jsonString.slice(0, lastBoundary + 2);
+			try {
+				parsed = JSON.parse(truncated);
+				logger.warn(
+					`Recovered ${(parsed as unknown[]).length ?? 0} framing(s) from truncated response; original length ${jsonString.length}, salvaged ${truncated.length}.`,
+				);
+			} catch (recoveryError) {
+				logger.error('Error parsing multi-framing response (after truncation salvage):', recoveryError);
 
 				return null;
 			}
-		}
+		} else {
+			logger.error('Error parsing multi-framing response:', error);
 
-		return parsed as AIFraming[];
-	} catch (error) {
-		logger.error('Error parsing multi-framing response:', error);
+			return null;
+		}
+	}
+
+	if (!Array.isArray(parsed)) {
+		logger.error('Response is not an array');
 
 		return null;
 	}
+
+	// Validate structure — drop malformed entries rather than failing the run.
+	const valid: AIFraming[] = [];
+	for (const framing of parsed as AIFraming[]) {
+		if (!framing.framingName || !framing.framingDescription || !Array.isArray(framing.groups)) {
+			logger.warn('Skipping invalid framing structure:', framing);
+			continue;
+		}
+		valid.push(framing);
+	}
+
+	return valid.length > 0 ? valid : null;
 }
 
 async function createFramingsInDatabase(
@@ -619,19 +694,21 @@ async function createSingleFraming(
 
 	await batch.commit();
 
-	// Create framing document
+	// Create framing document. `prompt` and `creatorId` are schema-optional;
+	// Firestore rejects literal `undefined` values, so omit the keys entirely
+	// when the inputs are not supplied (AI auto-generation path).
 	const framing: Framing = {
 		framingId,
 		parentStatementId: topic.statementId,
 		name: aiFraming.framingName,
 		description: aiFraming.framingDescription,
-		prompt: customPrompt,
 		createdAt: Date.now(),
 		createdBy,
-		creatorId,
 		isActive: true,
 		clusterIds,
 		order,
+		...(customPrompt !== undefined ? { prompt: customPrompt } : {}),
+		...(creatorId !== undefined ? { creatorId } : {}),
 	};
 
 	await db.collection(FRAMING_COLLECTIONS.framings).doc(framingId).set(framing);

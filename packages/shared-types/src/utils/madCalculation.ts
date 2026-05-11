@@ -1,6 +1,11 @@
 /**
  * Mean Absolute Deviation (MAD) Calculation Utilities
- * Used for polarization index and demographic divergence analysis
+ * Used for polarization index and demographic divergence analysis.
+ *
+ * This module also exposes calculateAgreementOnEvaluation, which is the Y-axis
+ * of the Collaboration Index 2D map (united <-> divided in evaluation).
+ * The X-axis of that map (oppose <-> support) is computed elsewhere as the
+ * average of the two group means.
  */
 
 export interface MadResult {
@@ -41,17 +46,22 @@ export function calcMadAndMean(values: number[]): MadResult {
 }
 
 /**
- * Calculate Demographic Collaboration Index (DCI) between two groups
+ * Calculate Agreement-on-Evaluation between two groups
  *
- * DCI measures how much two groups agree based on their mean positions
+ * Measures how aligned two groups are in their evaluation of an item,
+ * regardless of whether they support or oppose it. This is the Y-axis
+ * of the Collaboration Index 2D map (united <-> divided).
  *
- * DCI = 1 - (|meanA - meanB| / 2)
+ * Formula: agreementOnEvaluation = 1 - (|meanA - meanB| / 2)
+ *
+ * Direction (support vs. oppose) is captured separately by the X-axis
+ * of the Collaboration Index — typically the average of the two means.
  *
  * @param meanA - Mean position of group A (-1 to +1)
  * @param meanB - Mean position of group B (-1 to +1)
- * @returns DCI value from 0 (maximum disagreement) to 1 (perfect agreement)
+ * @returns Score from 0 (groups at opposite poles) to 1 (groups perfectly aligned in their evaluation)
  */
-export function calculateDCI(meanA: number, meanB: number): number {
+export function calculateAgreementOnEvaluation(meanA: number, meanB: number): number {
   const divergence = Math.abs(meanA - meanB) / 2;
 
   return 1 - divergence;
@@ -72,8 +82,8 @@ export const DEMOGRAPHIC_CONSTANTS = {
     HIGH: 0.8,
   },
 
-  /** DCI thresholds for interpretation */
-  DCI: {
+  /** Agreement-on-Evaluation thresholds for interpretation (Y-axis of Collaboration Index) */
+  AGREEMENT_ON_EVALUATION: {
     STRONG_AGREEMENT: 0.8,
     GOOD_AGREEMENT: 0.6,
     MODERATE: 0.4,
@@ -106,19 +116,24 @@ export function interpretDivergence(groupsMAD: number): string {
 }
 
 /**
- * Interpret a DCI value
+ * Interpret an Agreement-on-Evaluation score
+ *
+ * Note: this score is direction-blind. A "strong-agreement" reading means the
+ * groups are aligned in their evaluation, but doesn't distinguish whether they
+ * jointly support, jointly oppose, or are jointly indifferent. Read in the
+ * context of the Collaboration Index map (X-axis = direction).
  */
-export function interpretDCI(dci: number): string {
-  if (dci >= DEMOGRAPHIC_CONSTANTS.DCI.STRONG_AGREEMENT) {
+export function interpretAgreementOnEvaluation(score: number): string {
+  if (score >= DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.STRONG_AGREEMENT) {
     return 'strong-agreement';
   }
-  if (dci >= DEMOGRAPHIC_CONSTANTS.DCI.GOOD_AGREEMENT) {
+  if (score >= DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.GOOD_AGREEMENT) {
     return 'good-agreement';
   }
-  if (dci >= DEMOGRAPHIC_CONSTANTS.DCI.MODERATE) {
+  if (score >= DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.MODERATE) {
     return 'moderate';
   }
-  if (dci >= DEMOGRAPHIC_CONSTANTS.DCI.WEAK_AGREEMENT) {
+  if (score >= DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.WEAK_AGREEMENT) {
     return 'weak-agreement';
   }
 

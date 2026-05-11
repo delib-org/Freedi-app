@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#1f5895" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="description" content="WizCol-Join — propose, evaluate and choose solutions together." />
+    <title>WizCol-Join</title>
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png" />
+
+    <!-- iOS / Safari PWA -->
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WizCol-Join" />
+    <meta name="application-name" content="WizCol-Join" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Windows tile -->
+    <meta name="msapplication-TileColor" content="#1f5895" />
+    <meta name="msapplication-TileImage" content="/icons/icon-192.png" />
+    <meta name="msapplication-tap-highlight" content="no" />
+
+    <!-- Open Graph / social previews -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="WizCol-Join" />
+    <meta property="og:description" content="Propose, evaluate and choose solutions together." />
+    <meta property="og:image" content="/icons/icon-512.png" />
+    <meta name="twitter:card" content="summary" />
+    <style>
+      /* Initial splash — rendered before the JS bundle loads. Mithril
+         replaces the contents of #app on first render. */
+      html, body { margin: 0; padding: 0; background: #1f5895; }
+      body {
+        font-family: 'Assistant', ui-sans-serif, -apple-system, BlinkMacSystemFont,
+                     'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      }
+      #app:empty::before { content: none; } /* fallback safety */
+
+      .boot-splash {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #1f5895 0%, #163d6b 100%);
+        color: #fff;
+        text-align: center;
+        overflow: hidden;
+        z-index: 0;
+      }
+      .boot-splash::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+          radial-gradient(circle at 20% 80%, rgba(124,172,248,.1) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(87,198,178,.1) 0%, transparent 50%);
+        pointer-events: none;
+      }
+      .boot-splash__content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+        padding: 2rem;
+        animation: bootFade .4s ease-out;
+      }
+      .boot-splash--no-fade .boot-splash__content { animation: none; }
+      .boot-splash__brand {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 600;
+        letter-spacing: -.02em;
+        color: #fff;
+      }
+      .boot-splash__tagline {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 400;
+        color: rgba(255,255,255,.85);
+      }
+      .boot-splash__status {
+        margin: 0;
+        font-size: .95rem;
+        color: rgba(255,255,255,.7);
+        animation: bootStatusPulse 3s ease-in-out infinite;
+      }
+
+      .boot-loader {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        margin: 1rem 0;
+      }
+      .boot-loader__ring {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 80px; height: 80px;
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        animation: bootRingPulse 4s ease-in-out infinite;
+      }
+      .boot-loader__center {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 20px; height: 20px;
+        background: #fff;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 0 25px rgba(255,255,255,.5);
+        animation: bootCenterPulse 2s ease-in-out infinite;
+      }
+      .boot-loader__node {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 12px; height: 12px;
+        margin: -6px 0 0 -6px;
+        border-radius: 50%;
+      }
+      .boot-loader__node::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 12px currentColor;
+      }
+      .boot-loader__node:nth-child(2) {
+        color: #7cacf8;
+        animation: bootOrbit1 4s linear infinite, bootNodeGlow 2s ease-in-out infinite;
+      }
+      .boot-loader__node:nth-child(3) {
+        color: #57c6b2;
+        animation: bootOrbit2 5s linear infinite, bootNodeGlow 2.5s ease-in-out infinite .4s;
+      }
+      .boot-loader__node:nth-child(4) {
+        color: #47b4ef;
+        animation: bootOrbit3 6s linear infinite, bootNodeGlow 3s ease-in-out infinite .8s;
+      }
+      .boot-loader__node:nth-child(5) {
+        color: rgba(255,255,255,.95);
+        animation: bootOrbit4 4.5s linear infinite, bootNodeGlow 2.2s ease-in-out infinite 1.2s;
+      }
+      .boot-loader__node:nth-child(6) {
+        color: #b893e7;
+        animation: bootOrbit5 5.5s linear infinite, bootNodeGlow 2.8s ease-in-out infinite 1.6s;
+      }
+      .boot-loader__node:nth-child(7) {
+        color: #e7d080;
+        animation: bootOrbit6 7s linear infinite, bootNodeGlow 3.2s ease-in-out infinite 2s;
+      }
+      .boot-loader__connections {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 100%; height: 100%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+      }
+      .boot-loader__connections::before,
+      .boot-loader__connections::after {
+        content: '';
+        position: absolute;
+        top: 50%; left: 50%;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,.25), transparent);
+        transform-origin: left center;
+      }
+      .boot-loader__connections::before {
+        width: 90px;
+        animation: bootConnectionRotate 8s linear infinite;
+      }
+      .boot-loader__connections::after {
+        width: 70px;
+        animation: bootConnectionRotate 10s linear infinite reverse;
+      }
+
+      .boot-progress {
+        width: 100%;
+        max-width: 240px;
+        height: 4px;
+        background: rgba(255,255,255,.15);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      .boot-progress__bar {
+        height: 100%;
+        width: 30%;
+        background: linear-gradient(90deg, #7cacf8, #57c6b2, #7cacf8);
+        background-size: 200% 100%;
+        border-radius: 4px;
+        animation:
+          bootProgressShimmer 2s ease-in-out infinite,
+          bootProgressIndeterminate 2.5s ease-in-out infinite;
+      }
+
+      @keyframes bootFade {
+        from { opacity: 0; transform: translateY(10px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes bootCenterPulse {
+        0%,100% { transform: translate(-50%,-50%) scale(1); box-shadow: 0 0 25px rgba(255,255,255,.5); }
+        50%     { transform: translate(-50%,-50%) scale(1.15); box-shadow: 0 0 40px rgba(255,255,255,.7); }
+      }
+      @keyframes bootNodeGlow {
+        0%,100% { opacity: .8; transform: scale(1); }
+        50%     { opacity: 1; transform: scale(1.2); }
+      }
+      @keyframes bootOrbit1 { 0% { transform: rotate(0deg) translateX(40px) rotate(0deg); } 100% { transform: rotate(360deg) translateX(40px) rotate(-360deg); } }
+      @keyframes bootOrbit2 { 0% { transform: rotate(60deg) translateX(48px) rotate(-60deg); } 100% { transform: rotate(420deg) translateX(48px) rotate(-420deg); } }
+      @keyframes bootOrbit3 { 0% { transform: rotate(120deg) translateX(56px) rotate(-120deg); } 100% { transform: rotate(480deg) translateX(56px) rotate(-480deg); } }
+      @keyframes bootOrbit4 { 0% { transform: rotate(180deg) translateX(44px) rotate(-180deg); } 100% { transform: rotate(540deg) translateX(44px) rotate(-540deg); } }
+      @keyframes bootOrbit5 { 0% { transform: rotate(240deg) translateX(60px) rotate(-240deg); } 100% { transform: rotate(600deg) translateX(60px) rotate(-600deg); } }
+      @keyframes bootOrbit6 { 0% { transform: rotate(300deg) translateX(52px) rotate(-300deg); } 100% { transform: rotate(660deg) translateX(52px) rotate(-660deg); } }
+      @keyframes bootConnectionRotate {
+        0%   { transform: rotate(0deg); opacity: 0; }
+        25%  { opacity: .4; }
+        50%  { opacity: 0; }
+        75%  { opacity: .4; }
+        100% { transform: rotate(360deg); opacity: 0; }
+      }
+      @keyframes bootRingPulse {
+        0%,100% { transform: translate(-50%,-50%) scale(1); opacity: .2; }
+        50%     { transform: translate(-50%,-50%) scale(1.1); opacity: .4; }
+      }
+      @keyframes bootStatusPulse { 0%,100% { opacity: .7; } 50% { opacity: 1; } }
+      @keyframes bootProgressShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      @keyframes bootProgressIndeterminate {
+        0%   { width: 0%;  margin-left: 0%; }
+        50%  { width: 60%; margin-left: 20%; }
+        100% { width: 0%;  margin-left: 100%; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .boot-loader__node,
+        .boot-loader__center,
+        .boot-loader__connections::before,
+        .boot-loader__connections::after,
+        .boot-loader__ring,
+        .boot-progress__bar { animation: none; }
+        .boot-loader__node:nth-child(2) { transform: translateX(40px); }
+        .boot-loader__node:nth-child(3) { transform: translateY(-48px); }
+        .boot-loader__node:nth-child(4) { transform: translateX(-56px); }
+        .boot-loader__node:nth-child(5) { transform: translateY(44px); }
+        .boot-loader__node:nth-child(6) { transform: translate(42px, -42px); }
+        .boot-loader__node:nth-child(7) { transform: translate(-37px, 37px); }
+        .boot-progress__bar { width: 50%; }
+        .boot-splash__status { animation: none; opacity: .85; }
+      }
+    </style>
+  </head>
+  <body>
+    <a class="visually-hidden" href="#app">Skip to main content</a>
+    <div id="app" role="main">
+      <div class="boot-splash">
+        <div class="boot-splash__content">
+          <h1 class="boot-splash__brand">WizCol</h1>
+          <p class="boot-splash__tagline">Empowering collective decisions</p>
+          <div class="boot-loader" role="img" aria-label="Loading">
+            <div class="boot-loader__ring"></div>
+            <div class="boot-loader__center"></div>
+            <div class="boot-loader__node"></div>
+            <div class="boot-loader__node"></div>
+            <div class="boot-loader__node"></div>
+            <div class="boot-loader__node"></div>
+            <div class="boot-loader__node"></div>
+            <div class="boot-loader__node"></div>
+            <div class="boot-loader__connections"></div>
+          </div>
+          <p class="boot-splash__status">Loading your workspace...</p>
+          <div class="boot-progress">
+            <div class="boot-progress__bar" role="progressbar" aria-label="Loading"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/index.ts"></script>
+  </body>
+</html>

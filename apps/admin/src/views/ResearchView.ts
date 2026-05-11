@@ -6,7 +6,7 @@ import { subscribeResearch, unsubscribeResearch, getResearchState } from '../sta
 import { ResearchChart } from '../components/ResearchChart';
 import { getResearchActionLabel, normalizeScreenPath } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
-import { setResearchLogging, getResearchLoggingStatus } from '../lib/queries';
+import { setResearchLogging, getResearchLoggingStatus, fetchStatementContextMap } from '../lib/queries';
 
 // ── Constants ────────────────────────────────────────────────────────
 
@@ -185,14 +185,24 @@ function ResearchConfigPanel(): m.Vnode {
 							m('span.research__config-title', entry.title.length > 60 ? entry.title.slice(0, 60) + '...' : entry.title),
 							m('span.research__config-id', entry.statementId),
 						]),
-						m(
-							'button.research__config-toggle',
-							{
-								class: entry.enabled ? 'research__config-toggle--on' : '',
-								onclick: () => handleToggle(entry),
-							},
-							entry.enabled ? 'Enabled' : 'Disabled',
-						),
+						m('.research__config-actions', [
+							m(
+								'button.research__config-export',
+								{
+									onclick: () => exportQuestionJSON(entry.statementId),
+									title: 'Export this question\'s research logs',
+								},
+								'\u2B07 Export',
+							),
+							m(
+								'button.research__config-toggle',
+								{
+									class: entry.enabled ? 'research__config-toggle--on' : '',
+									onclick: () => handleToggle(entry),
+								},
+								entry.enabled ? 'Enabled' : 'Disabled',
+							),
+						]),
 					]),
 				),
 			)
@@ -389,7 +399,32 @@ export function ResearchView(): m.Component {
 
 // ── Export ────────────────────────────────────────────────────────────
 
-function exportJSON(logs: ResearchLog[]): void {
+async function exportQuestionJSON(questionId: string): Promise<void> {
+	const s = getResearchState();
+	const filtered = s.logs.filter(
+		(log) => log.parentId === questionId || log.topParentId === questionId || log.statementId === questionId,
+	);
+	if (filtered.length === 0) {
+		configState.error = 'No research logs found for this question';
+		configState.success = null;
+		m.redraw();
+
+		return;
+	}
+	await exportJSON(filtered, `research-logs_${questionId}_${new Date().toISOString().slice(0, 10)}.json`);
+}
+
+async function exportJSON(logs: ResearchLog[], filename?: string): Promise<void> {
+	// Collect unique statementIds to fetch titles
+	const statementIds = new Set<string>();
+	for (const log of logs) {
+		if (log.statementId) statementIds.add(log.statementId);
+		if (log.parentId) statementIds.add(log.parentId);
+	}
+
+	// Fetch statement titles from Firestore
+	const statements = await fetchStatementContextMap(Array.from(statementIds));
+
 	// Pseudonymize before export
 	const userIdMap = new Map<string, string>();
 	let counter = 1;
@@ -409,11 +444,18 @@ function exportJSON(logs: ResearchLog[]): void {
 		};
 	});
 
-	const blob = new Blob([JSON.stringify(anonymized, null, 2)], { type: 'application/json' });
+	const exportData = {
+		exportedAt: new Date().toISOString(),
+		totalLogs: anonymized.length,
+		statements,
+		logs: anonymized,
+	};
+
+	const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
 	a.href = url;
-	a.download = `research-logs_${new Date().toISOString().slice(0, 10)}.json`;
+	a.download = filename || `research-logs_${new Date().toISOString().slice(0, 10)}.json`;
 	document.body.appendChild(a);
 	a.click();
 	document.body.removeChild(a);

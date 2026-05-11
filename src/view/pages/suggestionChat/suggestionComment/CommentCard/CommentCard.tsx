@@ -28,7 +28,7 @@ const CommentCard: FC<Props> = ({
 			<ProfileImage statement={statement} />
 			<div className={styles[className]}>
 				<div className={styles.creatorInfo}>
-					<span className={styles.creatorName}>{statement.creator.displayName}</span>
+					<span className={styles.creatorName}>{statement.creator?.displayName ?? ''}</span>
 					<CreatorEvaluationIcon evaluationNumber={evaluationNumber} />
 				</div>
 				<div className={styles.commentText} style={{ userSelect: 'text' }}>

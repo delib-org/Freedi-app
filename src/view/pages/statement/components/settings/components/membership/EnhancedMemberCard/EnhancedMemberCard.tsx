@@ -18,8 +18,9 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 	const [role, setRole] = useState(member.role);
 	const [isUpdating, setIsUpdating] = useState(false);
 
-	const firstLetter = member.user.displayName.charAt(0).toUpperCase();
-	const displayImg = member.user.photoURL;
+	const displayName = member.user?.displayName ?? '';
+	const firstLetter = displayName.charAt(0).toUpperCase();
+	const displayImg = member.user?.photoURL;
 
 	// Check if this is the current user (used for conditional rendering, not early return)
 	const isCurrentUser = member.user?.uid === user?.uid;
@@ -29,8 +30,8 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 	}, [member.role]);
 
 	// Check if this user can be banned
-	const userCanBeBanned = canBanUser(role, member.user.uid, member.statement);
-	const banDisabledReason = getBanDisabledReason(role, member.user.uid, member.statement);
+	const userCanBeBanned = canBanUser(role, member.user?.uid ?? '', member.statement);
+	const banDisabledReason = getBanDisabledReason(role, member.user?.uid ?? '', member.statement);
 
 	// Format join date
 	const joinDate = useMemo(() => {
@@ -51,10 +52,10 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 
 	// Highlight search term in name
 	const highlightedName = useMemo(() => {
-		if (!searchTerm) return member.user.displayName;
+		if (!searchTerm) return displayName;
 
 		const regex = new RegExp(`(${searchTerm})`, 'gi');
-		const parts = member.user.displayName.split(regex);
+		const parts = displayName.split(regex);
 
 		return parts.map((part, index) =>
 			regex.test(part) ? (
@@ -65,7 +66,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 				part
 			),
 		);
-	}, [member.user.displayName, searchTerm]);
+	}, [displayName, searchTerm]);
 
 	const handleToggleRole = async () => {
 		if (isUpdating) return;
@@ -105,6 +106,7 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 			setIsUpdating(true);
 			const newRole = role === Role.banned ? Role.member : Role.banned;
 
+			if (!member.user?.uid) throw new Error('No user id');
 			await updateMemberRole(member.statementId, member.user.uid, newRole);
 			setRole(newRole);
 		} catch (error) {
@@ -127,13 +129,13 @@ const EnhancedMemberCard: FC<EnhancedMemberCardProps> = ({ member, searchTerm })
 		<article
 			className={`${styles.memberCard} ${isBanned ? styles['memberCard--banned'] : ''}`}
 			role="article"
-			aria-label={`${t('Member')}: ${member.user.displayName}, ${t('Role')}: ${role}`}
+			aria-label={`${t('Member')}: ${displayName}, ${t('Role')}: ${role}`}
 		>
 			<div className={styles.avatar}>
 				{displayImg ? (
 					<img
 						src={displayImg}
-						alt={member.user.displayName}
+						alt={displayName}
 						className={isBanned ? styles['avatar--banned'] : ''}
 					/>
 				) : (

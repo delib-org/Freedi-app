@@ -74,18 +74,19 @@ export const edgeStyle = {
 };
 
 export const nodeOptions = (result: Results, parentStatement: 'top' | Statement) => {
-	const { statement } = result.top;
+	const top = result?.top;
+	const statement = top?.statement ?? '';
 	const { shortVersion: nodeTitle } = statementTitleToDisplay(statement, 80);
 
 	const estimatedWidth = Math.min(Math.max(nodeTitle.length * 8, 100), 300);
 	const estimatedHeight = Math.ceil(nodeTitle.length / 25) * 20 + 40;
 
 	return {
-		id: result.top.statementId,
+		id: top?.statementId ?? '',
 		data: {
 			result,
 			parentStatement,
-			createdAt: result.top.createdAt,
+			createdAt: top?.createdAt,
 			dimensions: {
 				width: estimatedWidth,
 				height: estimatedHeight,
@@ -99,10 +100,12 @@ export const nodeOptions = (result: Results, parentStatement: 'top' | Statement)
 
 export const edgeOptions = (result: Results, parentId: string): Edge => {
 	try {
+		const topId = result?.top?.statementId ?? '';
+
 		return {
-			id: `e${parentId}-${result.top.statementId}`,
+			id: `e${parentId}-${topId}`,
 			source: parentId,
-			target: result.top.statementId,
+			target: topId,
 			style: edgeStyle,
 		};
 	} catch (error) {

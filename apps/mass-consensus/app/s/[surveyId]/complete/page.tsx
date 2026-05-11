@@ -17,17 +17,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!survey) {
       return {
-        title: 'Survey Complete | Freedi',
+        title: 'Survey Complete | WizCol',
       };
     }
 
     return {
-      title: `${survey.title} - Complete | Freedi Survey`,
+      title: `${survey.title} - Complete | WizCol: Mass Consensus`,
       description: `Thank you for completing the survey: ${survey.title}`,
     };
   } catch {
     return {
-      title: 'Survey Complete | Freedi',
+      title: 'Survey Complete | WizCol',
     };
   }
 }

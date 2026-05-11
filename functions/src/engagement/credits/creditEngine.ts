@@ -74,6 +74,23 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 		const today = formatDate(new Date());
 		const engagementRef = getDb().collection(Collections.userEngagement).doc(userId);
 
+		// 3. Cooldown check (pre-transaction).
+		// Firestore transactions require all reads via transaction.get() and
+		// before any writes; these collection queries can't run inside a
+		// transaction safely. Slight race is acceptable for a rate-limit guard.
+		if (rule.cooldownMs > 0) {
+			const cooldownPassed = await isCooldownElapsed(userId, action, rule.cooldownMs);
+			if (!cooldownPassed) {
+				return { success: false, amount: 0, reason: 'Cooldown not elapsed' };
+			}
+		}
+
+		// 4. Daily limit check (pre-transaction, same reason).
+		const todayCount = await getDailyActionCount(userId, action, today);
+		if (todayCount >= rule.dailyLimit) {
+			return { success: false, amount: 0, reason: 'Daily limit reached' };
+		}
+
 		// Run the credit award in a transaction
 		const result = await getDb().runTransaction(async (transaction) => {
 			// Load user engagement doc
@@ -91,20 +108,6 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 			if (engagement.dailyCreditResetDate !== today) {
 				engagement.dailyCreditsEarned = 0;
 				engagement.dailyCreditResetDate = today;
-			}
-
-			// 3. Cooldown check
-			if (rule.cooldownMs > 0) {
-				const cooldownPassed = await isCooldownElapsed(userId, action, rule.cooldownMs);
-				if (!cooldownPassed) {
-					return { success: false, amount: 0, reason: 'Cooldown not elapsed' };
-				}
-			}
-
-			// 4. Daily limit check
-			const todayCount = await getDailyActionCount(userId, action, today);
-			if (todayCount >= rule.dailyLimit) {
-				return { success: false, amount: 0, reason: 'Daily limit reached' };
 			}
 
 			// 5. Daily credit cap check
@@ -135,7 +138,11 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 				return { success: false, amount: 0, reason: 'Amount reduced to zero' };
 			}
 
-			// 9. Create credit transaction
+			// 9. Create credit transaction. Optional fields (statementId,
+			// parentId, topParentId, metadata) are omitted when undefined —
+			// Firestore rejects literal `undefined` writes, and these fields
+			// are legitimately absent for some action paths (e.g. callers that
+			// don't pass metadata). Same pattern used elsewhere in the codebase.
 			const transactionId = `${userId}_${action}_${Date.now()}`;
 			const creditTx: CreditTransaction = {
 				transactionId,
@@ -143,11 +150,11 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 				action,
 				amount,
 				sourceApp,
-				statementId,
-				parentId,
-				topParentId,
-				metadata,
 				createdAt: Date.now(),
+				...(statementId !== undefined ? { statementId } : {}),
+				...(parentId !== undefined ? { parentId } : {}),
+				...(topParentId !== undefined ? { topParentId } : {}),
+				...(metadata !== undefined ? { metadata } : {}),
 			};
 
 			const txRef = getDb().collection(Collections.creditLedger).doc(transactionId);
@@ -237,7 +244,19 @@ export async function awardCredit(params: AwardCreditParams): Promise<AwardCredi
 			newLevel: txResult.leveledUp ? txResult.newLevel : undefined,
 		};
 	} catch (error) {
-		logger.error('Credit award failed', { userId, action, error });
+		// Surface the actual error info — Firestore errors don't serialize via
+		// default JSON.stringify, so we previously logged `error: {}` which
+		// hid the root cause.
+		const errorMessage = error instanceof Error ? error.message : String(error);
+		const errorName = error instanceof Error ? error.name : 'UnknownError';
+		const errorStack = error instanceof Error ? error.stack : undefined;
+		logger.error('Credit award failed', {
+			userId,
+			action,
+			errorName,
+			errorMessage,
+			errorStack,
+		});
 
 		return { success: false, amount: 0, reason: 'Internal error' };
 	}

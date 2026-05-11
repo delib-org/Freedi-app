@@ -10,7 +10,7 @@
 import { onSchedule } from 'firebase-functions/v2/scheduler';
 import { logger } from 'firebase-functions/v1';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { Collections } from '@freedi/shared-types';
+import { Collections, functionConfig } from '@freedi/shared-types';
 
 const db = getFirestore();
 
@@ -34,6 +34,7 @@ export const cleanupStaleTokens = onSchedule(
 		timeZone: 'UTC',
 		retryCount: 3,
 		memory: '512MiB',
+		region: functionConfig.region,
 	},
 	async (): Promise<void> => {
 		const startTime = Date.now();

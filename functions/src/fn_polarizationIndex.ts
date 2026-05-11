@@ -53,14 +53,30 @@ interface UserDemographicEvaluation {
 		answer: string;
 		userQuestionId: string;
 	}>;
+	/**
+	 * Snapshot of the demographic anchor that was used to resolve this
+	 * evaluator's demographic data. Set when the originating evaluation
+	 * was submitted inside a survey session.
+	 */
+	demographicAnchorId?: string;
 }
 
 export async function updateUserDemographicEvaluation(
 	statement: Statement,
-	userEvalData: { userId: string; evaluation: number },
+	userEvalData: {
+		userId: string;
+		evaluation: number;
+		/**
+		 * When the evaluation was submitted inside a survey session, the
+		 * statementId under which that survey stores its demographic
+		 * answers (from getStatementIdForSurvey(survey)). Enables a
+		 * direct lookup in addition to the ancestor walk.
+		 */
+		demographicAnchorId?: string;
+	},
 ): Promise<void> {
 	try {
-		const { userId, evaluation } = userEvalData;
+		const { userId, evaluation, demographicAnchorId } = userEvalData;
 		const parentId = statement.parentId;
 
 		if (!userId || !parentId) {
@@ -105,7 +121,29 @@ export async function updateUserDemographicEvaluation(
 			}
 		}
 
-		if (groupDemographicSettings.empty && statementDemographicSettings.empty) return;
+		// If the evaluation was submitted in a survey, the demographic questions
+		// for that survey live under the anchor statementId. Treat the
+		// presence of any questions at the anchor as sufficient to proceed —
+		// even when the ancestor walk finds nothing.
+		let anchorDemographicSettings = { empty: true };
+		if (demographicAnchorId) {
+			const anchorQuestions = await db
+				.collection(Collections.userDemographicQuestions)
+				.where('statementId', '==', demographicAnchorId)
+				.limit(1)
+				.get();
+
+			if (!anchorQuestions.empty) {
+				anchorDemographicSettings = anchorQuestions;
+			}
+		}
+
+		if (
+			groupDemographicSettings.empty &&
+			statementDemographicSettings.empty &&
+			anchorDemographicSettings.empty
+		)
+			return;
 
 		// Get excluded inherited demographic IDs for this statement
 		const excludedDemographicIds =
@@ -118,6 +156,7 @@ export async function updateUserDemographicEvaluation(
 			statement,
 			ancestorIds,
 			excludedDemographicIds,
+			demographicAnchorId,
 		);
 
 		if (!usersDemographicEvaluations || usersDemographicEvaluations.length === 0) {
@@ -227,10 +266,16 @@ export async function updateUserDemographicEvaluation(
 		statement: Statement,
 		ancestorIds: string[],
 		excludedDemographicIds: string[],
+		demographicAnchorId?: string,
 	): Promise<DemographicResult> {
 		try {
 			// Fetch user's demographic data
-			let demographicData = await fetchUserDemographicData(userId, parentId, ancestorIds);
+			let demographicData = await fetchUserDemographicData(
+				userId,
+				parentId,
+				ancestorIds,
+				demographicAnchorId,
+			);
 
 			// Filter out excluded inherited demographics
 			if (excludedDemographicIds.length > 0) {
@@ -246,7 +291,13 @@ export async function updateUserDemographicEvaluation(
 			}
 
 			// Save user's evaluation with demographic info
-			await saveUserDemographicEvaluation(userId, statement, evaluation, demographicData);
+			await saveUserDemographicEvaluation(
+				userId,
+				statement,
+				evaluation,
+				demographicData,
+				demographicAnchorId,
+			);
 
 			// Get all evaluations for this statement
 			const allEvaluations = await fetchAllDemographicEvaluations(statement.statementId, parentId);
@@ -273,10 +324,15 @@ export async function updateUserDemographicEvaluation(
 		userId: string,
 		parentId: string,
 		ancestorIds: string[],
+		demographicAnchorId?: string,
 	): Promise<UserDemographicQuestion[]> {
 		const topParentId = statement.topParentId;
 
-		// Merge answers: group-level first, then statement-level across all ancestors
+		// Merge answers using first-wins priority:
+		//   group-level > survey anchor > statement-level ancestor walk
+		// Group demographics are the most explicit user-wide signal;
+		// anchor-based answers belong to a specific survey the user just
+		// completed; ancestor-walk answers are speculative inheritance.
 		const answerMap = new Map<string, UserDemographicQuestion>();
 
 		// 1. Fetch group-level answers (scope = 'group')
@@ -298,8 +354,33 @@ export async function updateUserDemographicEvaluation(
 			}
 		}
 
-		// 2. Fetch statement-level answers across all ancestors (including immediate parent)
+		// 2. Fetch survey-anchor answers (directly from evaluation.demographicAnchorId)
+		// This is the survey-case bridge: a survey stores demographics once under
+		// getStatementIdForSurvey(survey), which is generally NOT in the picked
+		// question's ancestor chain. The anchor lookup finds them in O(1).
+		if (demographicAnchorId) {
+			const anchorSnapshot = await db
+				.collection(Collections.usersData)
+				.where('userId', '==', userId)
+				.where('statementId', '==', demographicAnchorId)
+				.get();
+
+			if (!anchorSnapshot.empty) {
+				anchorSnapshot.docs.forEach((doc) => {
+					const data = doc.data() as UserDemographicQuestion;
+					// Only add if not already present (group-level takes priority)
+					if (data.userQuestionId && !answerMap.has(data.userQuestionId)) {
+						answerMap.set(data.userQuestionId, data);
+					}
+				});
+			}
+		}
+
+		// 3. Fetch statement-level answers across all ancestors (including immediate parent)
 		for (const ancestorId of ancestorIds) {
+			// Skip the anchor ancestor (already covered above) to avoid a redundant query.
+			if (demographicAnchorId && ancestorId === demographicAnchorId) continue;
+
 			const statementSnapshot = await db
 				.collection(Collections.usersData)
 				.where('userId', '==', userId)
@@ -325,6 +406,7 @@ export async function updateUserDemographicEvaluation(
 		statement: Statement,
 		evaluation: number,
 		demographicData: UserDemographicQuestion[],
+		demographicAnchorId?: string,
 	): Promise<void> {
 		const evaluationRef = db
 			.collection(Collections.userDemographicEvaluations)
@@ -336,6 +418,7 @@ export async function updateUserDemographicEvaluation(
 			parentId: statement.parentId,
 			evaluation: evaluation || 0,
 			demographic: buildDemographicSummary(demographicData),
+			...(demographicAnchorId ? { demographicAnchorId } : {}),
 		};
 
 		await evaluationRef.set(evaluationData, { merge: true });

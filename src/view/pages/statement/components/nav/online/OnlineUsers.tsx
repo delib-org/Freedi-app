@@ -35,9 +35,10 @@ const OnlineUsers: React.FC<OnlineUsersProps> = ({ statementId }) => {
 		return null;
 	}
 
+	const validUsers = onlineUsers.filter((online) => online.user?.uid);
 	const amountOfShownUsers = 5;
-	const shownUsers = onlineUsers.slice(0, amountOfShownUsers);
-	const hiddenCount = onlineUsers.length - shownUsers.length;
+	const shownUsers = validUsers.slice(0, amountOfShownUsers);
+	const hiddenCount = validUsers.length - shownUsers.length;
 
 	const handleMouseEnter = (userId: string): void => {
 		setHoveredUserId(userId);

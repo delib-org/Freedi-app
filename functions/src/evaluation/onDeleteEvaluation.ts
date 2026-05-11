@@ -13,6 +13,9 @@ import type { Evaluation } from '@freedi/shared-types';
 import { ActionTypes, isEventAlreadyProcessed, markEventAsProcessed } from './evaluationTypes';
 import { updateStatementEvaluation } from './statementEvaluationUpdater';
 import { updateParentStatementWithChosenOptions } from './updateChosenOptions';
+import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
+import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
+import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
 
 export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
@@ -57,6 +60,26 @@ export async function deleteEvaluation(event: FirestoreEvent<DocumentSnapshot>):
 		}
 
 		await updateParentStatementWithChosenOptions(statement.parentId);
+
+		// Mark hybrid embedding as stale (non-blocking)
+		markHybridEmbeddingStale(statementId).catch((err) =>
+			logger.warn('Hybrid stale marking failed:', err),
+		);
+
+		// Research-mode: record per-evaluation history (aggregate only, no user info)
+		isResearchEnabledForTopParent(statement.topParentId)
+			.then((isResearch) => {
+				if (!isResearch) return;
+
+				return writeHistoryEntry({
+					statement,
+					source: 'evaluation-change',
+					isResearch: true,
+					evaluationDelta: -1 * evaluationValue,
+					evaluationAction: 'delete',
+				});
+			})
+			.catch((err) => logger.warn('[statementHistory] delete write failed:', err));
 	} catch (error) {
 		logger.error('Error in deleteEvaluation:', error);
 	}

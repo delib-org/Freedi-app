@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from '@freedi/shared-i18n/next';
 import { trackEmailSubscribed } from '@/lib/analytics';
 import { logError } from '@/lib/utils/errorHandling';
+import WizColAttribution from '../shared/WizColAttribution';
 import styles from './CompletionScreen.module.scss';
 import AchievementBadge, { BadgeType } from './AchievementBadge';
 
@@ -176,6 +177,7 @@ export default function CompletionScreen({
               <p>{t('You have successfully registered to receive updates. We will send you a message when there is news.')}</p>
             </div>
           )}
+          <WizColAttribution />
         </div>
 
         {/* Fixed Footer - Continue Evaluating Button */}

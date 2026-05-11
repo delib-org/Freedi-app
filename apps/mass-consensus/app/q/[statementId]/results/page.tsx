@@ -24,12 +24,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const question = await getQuestionFromFirebase(params.statementId);
 
     return {
-      title: `Results: ${question.statement} | Freedi Discussion`,
+      title: `Results: ${question.statement} | WizCol: Mass Consensus`,
       description: `View all solutions and their rankings for: ${question.statement}`,
+      openGraph: {
+        title: `Results: ${question.statement}`,
+        description: 'See how the group reached consensus',
+        type: 'website',
+        images: [{ url: '/wizcol-logo.png', width: 800, height: 400, alt: 'WizCol' }],
+      },
     };
   } catch {
     return {
-      title: 'Results | Freedi Discussion',
+      title: 'Results | WizCol',
     };
   }
 }

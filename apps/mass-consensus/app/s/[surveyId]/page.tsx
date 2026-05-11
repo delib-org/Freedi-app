@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { getSurveyWithQuestions } from '@/lib/firebase/surveys';
 import { SurveyStatus } from '@/types/survey';
 import SurveyEntry from '@/components/survey/SurveyEntry';
+import ClosedSurveyView from '@/components/survey/ClosedSurveyView';
 import { LanguageOverrideProvider } from '@/components/providers/LanguageOverrideProvider';
 
 interface PageProps {
@@ -18,22 +19,23 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!survey) {
       return {
-        title: 'Survey Not Found | Freedi',
+        title: 'Survey Not Found | WizCol',
       };
     }
 
     return {
-      title: `${survey.title} | Freedi Survey`,
+      title: `${survey.title} | WizCol: Mass Consensus`,
       description: survey.description || `Participate in this survey: ${survey.title}`,
       openGraph: {
         title: survey.title,
-        description: survey.description || 'Join the survey',
+        description: survey.description || 'A new way to make decisions together',
         type: 'website',
+        images: [{ url: '/wizcol-logo.png', width: 800, height: 400, alt: 'WizCol' }],
       },
     };
   } catch {
     return {
-      title: 'Survey Not Found | Freedi',
+      title: 'Survey Not Found | WizCol',
     };
   }
 }
@@ -58,11 +60,30 @@ export default async function SurveyPage({ params }: PageProps) {
 
     if (!isActive) {
       const isClosed = survey.status === SurveyStatus.closed;
+
+      if (isClosed) {
+        const primaryStatementId = survey.questionIds?.[0] ?? survey.surveyId;
+
+        return (
+          <LanguageOverrideProvider
+            adminLanguage={survey.defaultLanguage}
+            forceLanguage={survey.forceLanguage ?? false}
+          >
+            <div className="page">
+              <ClosedSurveyView
+                surveyTitle={survey.title}
+                primaryStatementId={primaryStatementId}
+              />
+            </div>
+          </LanguageOverrideProvider>
+        );
+      }
+
       return (
         <div className="page">
           <div style={{ textAlign: 'center', padding: '2rem' }}>
-            <h1>{isClosed ? 'Survey Closed' : 'Survey Not Available'}</h1>
-            <p>{isClosed ? 'This survey is no longer accepting responses.' : 'This survey is currently not active.'}</p>
+            <h1>Survey Not Available</h1>
+            <p>This survey is currently not active.</p>
           </div>
         </div>
       );

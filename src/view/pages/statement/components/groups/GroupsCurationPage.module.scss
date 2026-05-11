@@ -1,0 +1,916 @@
+// Groups Curation Page — BEM via CSS module class scoping
+// Two-column layout on desktop, stacked-tab layout on mobile.
+
+@use '@/view/style/mixins' as *;
+
+.curation-page {
+  display: flex;
+  flex-direction: column;
+  // App body has `overflow: hidden; height: 100svh;` — this page is its OWN
+  // scroll container so its header stays pinned feel-wise while content
+  // scrolls. Uses dvh to account for mobile browser chrome (URL bar).
+  height: 100dvh;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: var(--padding, 1rem);
+  gap: 1rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--card-default, #fff);
+
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
+  }
+
+  &__back {
+    background: transparent;
+    border: 1px solid var(--border-light, rgba(0, 0, 0, 0.08));
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+    }
+  }
+
+  &__title-block {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1.25rem;
+    color: var(--text-title);
+  }
+
+  &__subtitle {
+    margin: 0.25rem 0 0;
+    color: var(--text-secondary, #777);
+    font-size: 0.9rem;
+    @include line-clamp(1);
+  }
+
+  // ============================================================================
+  // Mobile tab switcher (hidden on desktop)
+  // ============================================================================
+  &__tabs {
+    display: flex;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border-light);
+    @media (min-width: 768px) {
+      display: none;
+    }
+  }
+
+  &__tab {
+    background: transparent;
+    border: none;
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary, #777);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+
+    &--active {
+      color: var(--btn-primary);
+      border-bottom-color: var(--btn-primary);
+      font-weight: 600;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  // ============================================================================
+  // Body: two-column desktop, stacked mobile
+  // ============================================================================
+  &__body {
+    display: grid;
+    grid-template-columns: minmax(280px, 340px) 1fr;
+    gap: 1.25rem;
+    align-items: start;
+
+    @media (max-width: 767px) {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+
+    @media (max-width: 767px) {
+      display: none;
+
+      &--visible {
+        display: flex;
+      }
+    }
+  }
+
+  &__detail {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--card-default, #fff);
+    border-radius: 8px;
+    border: 1px solid var(--border-light);
+    min-height: 300px;
+
+    @media (max-width: 767px) {
+      display: none;
+
+      &--visible {
+        display: flex;
+      }
+    }
+  }
+
+  &__empty {
+    color: var(--text-secondary, #777);
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 2rem 1rem;
+  }
+
+  // ============================================================================
+  // Group cards in the left list
+  // ============================================================================
+  &__group-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    padding: 0.75rem 0.9rem;
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: start;
+    transition: background 120ms ease, border-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.02));
+      outline: none;
+    }
+
+    &--selected {
+      border-color: var(--btn-primary);
+      box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.2);
+    }
+
+    &--drag-over {
+      border-color: var(--btn-primary);
+      border-width: 2px;
+      background: rgba(95, 136, 229, 0.12);
+      box-shadow: 0 0 0 3px rgba(95, 136, 229, 0.25);
+      transform: scale(1.01);
+    }
+
+    // Fired for ~600ms after a drop is accepted. Quick burst of green glow +
+    // subtle bump + member count pop so the admin can't miss the state change.
+    &--flash {
+      animation: curation-drop-flash 600ms ease-out;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      &--flash {
+        animation: none;
+      }
+
+      &--drag-over {
+        transform: none;
+      }
+    }
+  }
+
+  @keyframes curation-drop-flash {
+    0% {
+      background: rgba(45, 134, 89, 0.35);
+      box-shadow: 0 0 0 6px rgba(45, 134, 89, 0.35);
+      transform: scale(1);
+    }
+    40% {
+      background: rgba(45, 134, 89, 0.18);
+      box-shadow: 0 0 0 4px rgba(45, 134, 89, 0.20);
+      transform: scale(1.03);
+    }
+    100% {
+      background: var(--card-default, #fff);
+      box-shadow: none;
+      transform: scale(1);
+    }
+  }
+
+  &__group-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 600;
+    color: var(--text-title, #1f2a44);
+    font-size: 0.95rem;
+    word-break: break-word;
+  }
+
+  &__group-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+    color: var(--text-secondary, #777);
+    font-size: 0.75rem;
+  }
+
+  &__group-card-meta-muted {
+    font-style: italic;
+    opacity: 0.8;
+  }
+
+  // ============================================================================
+  // + New group inline form
+  // ============================================================================
+  &__new-group-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.6rem 0.75rem;
+    background: transparent;
+    border: 1px dashed var(--btn-primary, #5f88e5);
+    color: var(--btn-primary, #5f88e5);
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 0.5rem;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(95, 136, 229, 0.08);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__new-group-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.6rem;
+    background: rgba(95, 136, 229, 0.05);
+    border: 1px solid var(--btn-primary);
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    animation: curation-suggestion-slide 200ms ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__new-group-input {
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    font-size: 0.95rem;
+    color: var(--text-title, #1f2a44);
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+
+    &:focus {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__new-group-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  // ============================================================================
+  // Ungrouped bucket
+  // ============================================================================
+  &__ungrouped {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.02));
+    border: 1px dashed var(--border-light);
+    border-radius: 8px;
+
+    h3 {
+      margin: 0 0 0.25rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-secondary, #777);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+  }
+
+  &__ungrouped-hint {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary, #777);
+    font-size: 0.75rem;
+  }
+
+  &__ungrouped-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.5rem;
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    margin-bottom: 0.35rem;
+    font-size: 0.85rem;
+  }
+
+  &__ungrouped-item-text {
+    flex: 1;
+    min-width: 0;
+    color: var(--text-body, #1f2a44);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // ============================================================================
+  // Detail panel
+  // ============================================================================
+  &__detail-header {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-light);
+  }
+
+  &__detail-title {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-title);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__detail-description {
+    margin: 0.35rem 0 0;
+    color: var(--text-secondary, #777);
+    font-size: 0.9rem;
+  }
+
+  &__ai-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.2rem;
+    padding: 0.1rem 0.4rem;
+    background: var(--bg-info-light, rgba(95, 136, 229, 0.12));
+    color: var(--btn-primary);
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+  }
+
+  &__detail-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__detail-title-input,
+  &__detail-description-input {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    background: var(--card-default, #fff);
+
+    &:focus {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__detail-description-input {
+    font-size: 0.9rem;
+    resize: vertical;
+  }
+
+  &__detail-edit-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__score-breakdown {
+    margin-top: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.02));
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+  }
+
+  &__detail-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  // ============================================================================
+  // AI title suggestion card
+  // ============================================================================
+  &__suggestion {
+    margin-top: 0.75rem;
+    padding: 0.9rem;
+    background: rgba(95, 136, 229, 0.06);
+    border: 1px solid var(--btn-primary, #5f88e5);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    animation: curation-suggestion-slide 200ms ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__suggestion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__suggestion-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--btn-primary, #5f88e5);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__suggestion-close {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #777);
+    cursor: pointer;
+    padding: 0.2rem;
+    border-radius: 4px;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(0, 0, 0, 0.06);
+      color: var(--text-body);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__suggestion-title {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--text-title, #1f2a44);
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+
+    &:focus {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__suggestion-description {
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.9rem;
+    color: var(--text-body, #1f2a44);
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    resize: vertical;
+    font-family: inherit;
+
+    &:focus {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__suggestion-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #777);
+  }
+
+  &__suggestion-error {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-error, #d04848);
+  }
+
+  &__suggestion-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+  }
+
+  // ============================================================================
+  // Undo banner — shown for 5s after applying a suggestion
+  // ============================================================================
+  &__undo-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 0.75rem;
+    background: rgba(45, 134, 89, 0.08);
+    border: 1px solid rgba(45, 134, 89, 0.35);
+    border-radius: 8px;
+    animation: curation-suggestion-slide 200ms ease-out;
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+  }
+
+  &__undo-banner-text {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--text-body, #1f2a44);
+  }
+
+  &__undo-banner-action {
+    background: transparent;
+    border: 1px solid var(--btn-primary);
+    color: var(--btn-primary);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(95, 136, 229, 0.1);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  // Visually hidden but announced by screen readers.
+  &__aria-live {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @keyframes curation-suggestion-slide {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // ============================================================================
+  // Members list
+  // ============================================================================
+  &__members {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__members-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--text-title);
+    }
+  }
+
+  &__members-bulk {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  // Container for the Merge-into dropdown. Position relative so the menu
+  // anchors to the trigger button, not the page.
+  &__merge-wrap {
+    position: relative;
+  }
+
+  &__merge-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    inset-inline-end: 0;
+    z-index: 20;
+    min-width: 280px;
+    max-width: min(360px, 90vw);
+    max-height: 320px;
+    overflow-y: auto;
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    padding: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__merge-menu-hint {
+    margin: 0 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #777);
+    line-height: 1.35;
+  }
+
+  &__merge-menu-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.15rem;
+    padding: 0.5rem 0.6rem;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: start;
+    color: var(--text-body);
+    transition: background 120ms ease, border-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      border-color: var(--border-light);
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: -2px;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__merge-menu-item-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+    // Wrap long titles within the dropdown width.
+    word-break: break-word;
+  }
+
+  &__merge-menu-item-meta {
+    font-size: 0.75rem;
+    color: var(--text-secondary, #777);
+  }
+
+  &__member {
+    // Grid is more reliable than flex for "control | text | action" rows.
+    // Checkbox gets auto width, text gets the middle 1fr, menu gets auto.
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--bg-subtle, rgba(0, 0, 0, 0.02));
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    cursor: grab;
+    font-size: 0.9rem;
+    color: var(--text-body, #1f2a44);
+
+    &--selected {
+      border-color: var(--btn-primary);
+      background: rgba(95, 136, 229, 0.05);
+    }
+
+    &:active {
+      cursor: grabbing;
+    }
+  }
+
+  &__member-text {
+    min-width: 0;
+    color: var(--text-body, #1f2a44);
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.35;
+  }
+
+  // ============================================================================
+  // Buttons
+  // ============================================================================
+  &__btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.5rem 1rem;
+    background: var(--btn-primary);
+    color: var(--btn-primary-text, #fff);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      opacity: 0.92;
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 2px;
+    }
+  }
+
+  &__btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    background: transparent;
+    color: var(--text-body);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.7rem;
+    background: transparent;
+    color: var(--text-error, #d04848);
+    border: 1px solid var(--text-error, #d04848);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(208, 72, 72, 0.08);
+      outline: none;
+    }
+  }
+}
+
+// ============================================================================
+// Move to… dropdown (keyboard fallback for drag-and-drop)
+// ============================================================================
+.move-menu {
+  position: relative;
+
+  &__trigger {
+    background: transparent;
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.75rem;
+    color: var(--text-secondary, #777);
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      outline: none;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--btn-primary);
+      outline-offset: 1px;
+    }
+  }
+
+  &__list {
+    position: absolute;
+    top: 100%;
+    inset-inline-end: 0;
+    margin-top: 4px;
+    min-width: 220px;
+    max-height: 280px;
+    overflow-y: auto;
+    background: var(--card-default, #fff);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    list-style: none;
+    padding: 0.25rem 0;
+    margin-block-start: 4px;
+    margin-block-end: 0;
+    z-index: 10;
+  }
+
+  &__item {
+    display: block;
+    width: 100%;
+    text-align: start;
+    background: transparent;
+    border: none;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+    color: var(--text-body);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--bg-hover, rgba(0, 0, 0, 0.04));
+      outline: none;
+    }
+  }
+
+  &__divider {
+    height: 1px;
+    margin: 0.25rem 0;
+    background: var(--border-light);
+    list-style: none;
+  }
+}

@@ -3,6 +3,7 @@ import { auth } from './config';
 import { notificationService } from '@/services/notificationService';
 import { analyticsService } from '@/services/analytics';
 import { logger } from '@/services/logger';
+import { logLogout } from '@/controllers/db/researchLogs/researchLogger';
 
 export function googleLogin() {
 	const provider = new GoogleAuthProvider();
@@ -28,6 +29,10 @@ export const logOut = async () => {
 	try {
 		// Track logout before cleaning up
 		analyticsService.trackUserLogout();
+
+		// Research log must be written while the user is still authenticated,
+		// otherwise Firestore security rules reject it.
+		await logLogout();
 
 		// Sign out from Firebase Auth immediately for better UX
 		await auth.signOut();

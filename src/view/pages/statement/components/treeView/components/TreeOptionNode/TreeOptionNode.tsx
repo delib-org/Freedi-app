@@ -1,8 +1,12 @@
-import React, { FC, useState, useRef, useEffect, useCallback } from 'react';
+import React, { FC, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { Statement } from '@freedi/shared-types';
+import { Layers, Sparkles, Tags, ChevronDown, ChevronRight, RefreshCw, Undo2 } from 'lucide-react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
-import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
+import {
+	statementSubscriptionSelector,
+	statementsSelector,
+} from '@/redux/statements/statementsSlice';
 import { isAuthorized } from '@/controllers/general/helpers';
 import { handleAddStatement } from '@/view/pages/statement/components/chat/components/input/StatementInputCont';
 import { logError } from '@/utils/errorHandling';
@@ -12,9 +16,19 @@ import EditableStatement from '@/view/components/edit/EditableStatement';
 import ChatMessageMenu from '@/view/pages/statement/components/chat/components/chatMessageCard/ChatMessageMenu';
 import Evaluation from '@/view/pages/statement/components/evaluations/components/evaluation/Evaluation';
 import { useBookmark } from '@/controllers/hooks/useBookmark';
+import { useAuthorization } from '@/controllers/hooks/useAuthorization';
+import {
+	regenerateSynthesisProposal,
+	reverseIntegration,
+} from '@/controllers/db/integration/integrationController';
 import SendIcon from '@/view/components/icons/SendIcon';
 import JoinButtons from '@/view/pages/statement/components/joining/JoinButtons';
 import styles from './TreeOptionNode.module.scss';
+
+// Stable empty array reference shared across all non-synthesis nodes, so the
+// useMemo bail-out doesn't return a new [] each render and trigger the
+// "selector returned a different result" warning + render storm.
+const EMPTY_STATEMENTS: Statement[] = [];
 
 interface TreeOptionNodeProps {
 	statement: Statement;
@@ -46,11 +60,19 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 	);
 
 	const { isBookmarked, toggle: toggleBookmarkFn } = useBookmark(statement.statementId);
+	// Authorize against the parent so admin actions on the imported question
+	// (regenerate / reverse synthesis) authorize via the parent subscription.
+	const { isAdmin: isParentAdmin } = useAuthorization(statement.parentId);
 
 	const [isEdit, setIsEdit] = useState(false);
 	const [isCardMenuOpen, setIsCardMenuOpen] = useState(false);
 	const [showReplyInput, setShowReplyInput] = useState(false);
 	const [replyText, setReplyText] = useState('');
+	// Synthesis-only: collapse the source list under a "Built from N ideas"
+	// toggle so the proposal text is the dominant element of the node.
+	const [sourcesOpen, setSourcesOpen] = useState(false);
+	const [isRegenerating, setIsRegenerating] = useState(false);
+	const [isReversing, setIsReversing] = useState(false);
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const replyInputRef = useRef<HTMLTextAreaElement>(null);
 	const cardRef = useRef<HTMLDivElement>(null);
@@ -113,6 +135,56 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		setIsEdit(false);
 	}, []);
 
+	const handleRegenerateProposal = useCallback(async () => {
+		const integratedCount = statement.integratedOptions?.length ?? 0;
+		const confirmCopy = t(
+			'Regenerate this synthesized proposal? The AI will redraft the title, description, and sections from the {count} source ideas. Existing evaluations on the proposal stay intact.',
+		).replace('{count}', String(integratedCount));
+		if (!window.confirm(confirmCopy)) return;
+		setIsRegenerating(true);
+		try {
+			const result = await regenerateSynthesisProposal({
+				clusterStatementId: statement.statementId,
+			});
+			if (result.cannotSynthesize) {
+				const reason = result.splitReason || t('The source ideas span incompatible directions.');
+				window.alert(
+					t(
+						'The AI declined to synthesize this group: {reason} Consider reversing this synthesis and re-running the pipeline so the group can be split.',
+					).replace('{reason}', reason),
+				);
+			}
+		} catch (error) {
+			logError(error, {
+				operation: 'TreeOptionNode.handleRegenerateProposal',
+				statementId: statement.statementId,
+			});
+			window.alert(t('Regenerating proposal failed. Please try again.'));
+		} finally {
+			setIsRegenerating(false);
+		}
+	}, [statement.statementId, statement.integratedOptions, t]);
+
+	const handleReverseSynthesis = useCallback(async () => {
+		const integratedCount = statement.integratedOptions?.length ?? 0;
+		const confirmCopy = t(
+			'Reverse this synthesis? The {count} source ideas will be restored as separate proposals and the synthesized proposal will be hidden. Direct evaluations on the synthesis will be deleted; evaluations on each source idea remain intact.',
+		).replace('{count}', String(integratedCount));
+		if (!window.confirm(confirmCopy)) return;
+		setIsReversing(true);
+		try {
+			await reverseIntegration({ clusterStatementId: statement.statementId });
+		} catch (error) {
+			logError(error, {
+				operation: 'TreeOptionNode.handleReverseSynthesis',
+				statementId: statement.statementId,
+			});
+			window.alert(t('Reversing synthesis failed. Please try again.'));
+		} finally {
+			setIsReversing(false);
+		}
+	}, [statement.statementId, statement.integratedOptions, t]);
+
 	const handleToggleAndScroll = useCallback(() => {
 		onToggleChildren?.();
 		setTimeout(() => {
@@ -131,14 +203,76 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 		false;
 
 	const isFailed = statement.joinStatus === 'failed';
+	const isCluster = statement.isCluster === true;
+	const integratedOptions = statement.integratedOptions ?? [];
+	const integratedCount = integratedOptions.length;
+	const pipeline = statement.derivedByPipeline;
+	const isSynthesis = pipeline === 'synthesis';
+	const isTopicCluster = pipeline === 'topic-cluster';
+
+	// Source statements for synthesis: read what's already in Redux. Tree
+	// loads the parent's options, so source originals are present in the
+	// common case; missing ones are quietly omitted with a "loading…" tail.
+	//
+	// IMPORTANT: this selector must NOT return a fresh array reference on
+	// every render — with 100+ tree nodes mounted, that triggers a render
+	// storm that saturates Firestore listeners. Subscribe to the full
+	// statements array via the stable selector, then derive the per-node
+	// sources via useMemo so re-renders happen only when statements change.
+	const allStatements = useAppSelector(statementsSelector);
+	const synthesisSources = useMemo(() => {
+		if (!isSynthesis || integratedOptions.length === 0) return EMPTY_STATEMENTS;
+		const byId = new Map(allStatements.map((s) => [s.statementId, s]));
+		const out: Statement[] = [];
+		for (const id of integratedOptions) {
+			const found = byId.get(id);
+			if (found) out.push(found);
+		}
+
+		return out;
+	}, [isSynthesis, integratedOptions, allStatements]);
+	const synthesisSourcesMissing = isSynthesis
+		? Math.max(0, integratedCount - synthesisSources.length)
+		: 0;
 	const nodeClassName = [
 		styles['tree-option-node'],
 		isInResults ? styles['tree-option-node--selected'] : '',
 		isNew ? styles['tree-option-node--new'] : '',
 		isFailed ? styles['tree-option-node--failed'] : '',
+		isCluster ? styles['tree-option-node--cluster'] : '',
+		isSynthesis ? styles['tree-option-node--synthesis'] : '',
 	]
 		.filter(Boolean)
 		.join(' ');
+
+	// Cluster badge: synthesis gets a Sparkles icon and "Synthesized · N"
+	// label so users can tell paraphrase-merged proposals apart from
+	// auto-grouped ones at a glance.
+	let clusterBadgeIcon: React.ReactNode;
+	let clusterBadgeText: string;
+	let clusterBadgeAria: string;
+	if (isSynthesis) {
+		clusterBadgeIcon = <Sparkles size={12} aria-hidden />;
+		clusterBadgeText = t('Synthesized · {count}').replace('{count}', String(integratedCount));
+		clusterBadgeAria = t('Synthesized proposal merging {count} similar suggestions').replace(
+			'{count}',
+			String(integratedCount),
+		);
+	} else if (isTopicCluster) {
+		clusterBadgeIcon = <Tags size={12} aria-hidden />;
+		clusterBadgeText = t('Topic · {count}').replace('{count}', String(integratedCount));
+		clusterBadgeAria = t('Topic cluster representing {count} suggestions').replace(
+			'{count}',
+			String(integratedCount),
+		);
+	} else {
+		clusterBadgeIcon = <Layers size={12} aria-hidden />;
+		clusterBadgeText = t('Group · {count}').replace('{count}', String(integratedCount));
+		clusterBadgeAria = t('Grouped suggestion representing {count} originals').replace(
+			'{count}',
+			String(integratedCount),
+		);
+	}
 
 	return (
 		<div ref={cardRef} className={nodeClassName}>
@@ -147,6 +281,22 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 			</div>
 			<div className={styles['tree-option-node__body']}>
 				<div className={styles['tree-option-node__header']}>
+					{isCluster && (
+						<span
+							className={[
+								styles['tree-option-node__cluster-badge'],
+								isSynthesis ? styles['tree-option-node__cluster-badge--synthesis'] : '',
+								isTopicCluster ? styles['tree-option-node__cluster-badge--topic'] : '',
+							]
+								.filter(Boolean)
+								.join(' ')}
+							aria-label={clusterBadgeAria}
+							title={clusterBadgeAria}
+						>
+							{clusterBadgeIcon}
+							<span>{clusterBadgeText}</span>
+						</span>
+					)}
 					<div className={styles['tree-option-node__menu']}>
 						<ChatMessageMenu
 							statement={statement}
@@ -182,6 +332,104 @@ const TreeOptionNode: FC<TreeOptionNodeProps> = ({
 						) : statement.description ? (
 							<div className={styles['tree-option-node__description']}>{statement.description}</div>
 						) : null}
+						{isSynthesis && (
+							<>
+								<div className={styles['tree-option-node__proposal-actions']}>
+									{synthesisSources.length > 0 && (
+										<button
+											type="button"
+											className={styles['tree-option-node__sources-toggle']}
+											aria-expanded={sourcesOpen}
+											onClick={() => setSourcesOpen((v) => !v)}
+										>
+											{sourcesOpen ? (
+												<ChevronDown size={12} aria-hidden />
+											) : (
+												<ChevronRight size={12} aria-hidden />
+											)}
+											<span>
+												{t('Built from {count} source ideas').replace(
+													'{count}',
+													String(integratedCount),
+												)}
+											</span>
+										</button>
+									)}
+									{isParentAdmin && (
+										<>
+											<button
+												type="button"
+												className={styles['tree-option-node__proposal-admin-btn']}
+												onClick={handleRegenerateProposal}
+												disabled={isRegenerating}
+												title={t('Regenerate proposal (admin)')}
+												aria-label={t('Regenerate proposal (admin)')}
+											>
+												<RefreshCw size={11} aria-hidden />
+												<span>
+													{isRegenerating ? t('Regenerating…') : t('Regenerate proposal')}
+												</span>
+											</button>
+											<button
+												type="button"
+												className={`${styles['tree-option-node__proposal-admin-btn']} ${styles['tree-option-node__proposal-admin-btn--danger']}`}
+												onClick={handleReverseSynthesis}
+												disabled={isReversing}
+												title={t('Reverse synthesis (admin)')}
+												aria-label={t('Reverse synthesis (admin)')}
+											>
+												<Undo2 size={11} aria-hidden />
+												<span>{isReversing ? t('Reversing…') : t('Reverse synthesis')}</span>
+											</button>
+										</>
+									)}
+								</div>
+								{sourcesOpen && synthesisSources.length > 0 && (
+									<div
+										className={styles['tree-option-node__sources']}
+										aria-label={t('Source ideas synthesized into this proposal')}
+									>
+										<div className={styles['tree-option-node__sources-header']}>
+											<Sparkles size={11} aria-hidden />
+											<span>
+												{t('Synthesized from {count} source ideas:').replace(
+													'{count}',
+													String(integratedCount),
+												)}
+											</span>
+										</div>
+										<ul className={styles['tree-option-node__sources-list']}>
+											{synthesisSources.map((src) => (
+												<li
+													key={src.statementId}
+													className={styles['tree-option-node__sources-item']}
+												>
+													<button
+														type="button"
+														className={styles['tree-option-node__sources-link']}
+														onClick={() => navigate(`/statement/${src.statementId}`)}
+														title={src.statement}
+													>
+														<span>›</span>
+														<span className={styles['tree-option-node__sources-title']}>
+															{src.statement}
+														</span>
+													</button>
+												</li>
+											))}
+										</ul>
+										{synthesisSourcesMissing > 0 && (
+											<span className={styles['tree-option-node__sources-more']}>
+												{t('…and {count} more (loading)').replace(
+													'{count}',
+													String(synthesisSourcesMissing),
+												)}
+											</span>
+										)}
+									</div>
+								)}
+							</>
+						)}
 					</>
 				)}
 				<div className={styles['tree-option-node__evaluation']}>

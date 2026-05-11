@@ -103,7 +103,23 @@ service cloud.firestore {
                get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true;
       }
 
-      // Combined check: direct admin, creator, parent admin, topParent admin, or system admin
+      // Join-app delegate check. A user listed in `joinDelegates/{qid--uid}`
+      // with the matching permission can edit/delete options under that
+      // question. `qid` here is the option's parent (the question), so this
+      // function should only be called when `resource.data.parentId` is the
+      // question id — i.e. on option/solution Statements, not on questions.
+      function checkJoinDelegate(neededField) {
+        let parentQid = cleanPath(string(resource.data.parentId));
+        let delegatePath = /databases/$(database)/documents/joinDelegates/$(string(request.auth.uid) + '--' + parentQid);
+        return exists(delegatePath) &&
+               get(delegatePath).data.permissions[neededField] == true;
+      }
+
+      // Combined check: direct admin, creator, parent admin, topParent admin,
+      // system admin, or join-app delegate with the matching solution-type
+      // permission. Delegates are only authorized for option-level writes —
+      // join-form submissions and question settings still require an admin/
+      // creator/system-admin path above.
       function isAuthorized() {
         return isAdmin() || isCreator() || isSystemAdmin() ||
                (resource.data.keys().hasAll(['parentId']) &&
@@ -111,7 +127,15 @@ service cloud.firestore {
                 checkParentAdmin()) ||
                (resource.data.keys().hasAll(['topParentId']) &&
                 resource.data.topParentId != null &&
-                checkTopParentAdmin());
+                checkTopParentAdmin()) ||
+               (resource.data.keys().hasAll(['parentId', 'creatorRole']) &&
+                resource.data.parentId != null &&
+                resource.data.creatorRole == 'admin' &&
+                checkJoinDelegate('canManageOrganizerSolutions')) ||
+               (resource.data.keys().hasAll(['parentId']) &&
+                resource.data.parentId != null &&
+                resource.data.get('creatorRole', '') != 'admin' &&
+                checkJoinDelegate('canManageParticipantSolutions'));
       }
 
       function hasProtectedFieldChanges() {
@@ -131,18 +155,63 @@ service cloud.firestore {
                !isAuthorized();
       }
 
+      // Detects writes that mutate `joined` or `organizers` on an option whose
+      // parent question is configured with a `joinForm`. When that's true,
+      // the canonical write path is the `fn_joinOption` callable (Admin SDK,
+      // bypasses these rules), so direct client writes are blocked here to
+      // prevent end-runs around the per-user cap and `singleJoinOnly`
+      // enforcement. Non-joinForm questions retain the previous permissive
+      // behavior so existing flows (admin reset, direct admin edits) keep
+      // working without an extra get() per write.
+      function changesJoinMembership() {
+        return resource != null && request.resource != null &&
+               (request.resource.data.get('joined', []) != resource.data.get('joined', []) ||
+                request.resource.data.get('organizers', []) != resource.data.get('organizers', []));
+      }
+      function parentHasJoinForm() {
+        let parentId = cleanPath(string(resource.data.parentId));
+        let parentPath = /databases/$(database)/documents/statements/$(parentId);
+        return resource.data.get('parentId', null) != null &&
+               exists(parentPath) &&
+               get(parentPath).data.get('statementSettings', {}).get('joinForm', null) != null;
+      }
+      function blocksDirectMembershipMutation() {
+        return changesJoinMembership() && parentHasJoinForm();
+      }
+
       function isAllowedToUpdate() {
         // Check non-protected field changes FIRST (no get() calls needed).
         // This allows reparenting and other non-sensitive updates without
         // needing the user to be admin/creator of the specific statement.
-        // Only fall through to isAuthorized() if protected fields are changing.
-        return (!hasProtectedFieldChanges() && !hasUnauthorizedAccessChange()) ||
+        // Only fall through to isAuthorized() if protected fields are changing
+        // OR a join-membership mutation is being attempted on a join-form
+        // question (which must use the fn_joinOption callable, not direct
+        // writes — admins bypass via isAuthorized()).
+        return (!hasProtectedFieldChanges() &&
+                !hasUnauthorizedAccessChange() &&
+                !blocksDirectMembershipMutation()) ||
                isAuthorized();
       }
 
+      // Direct client writes must NEVER set `creatorRole`. This field is
+      // used by the Join app to render the "organizer suggestion" badge, so
+      // allowing anyone to set it would let any authenticated user spoof the
+      // badge on their own option. Legitimate organizer suggestions are
+      // created through the `createOrganizerSuggestion` callable, which uses
+      // the admin SDK and bypasses rule evaluation entirely.
+      function setsCreatorRoleOnCreate() {
+        return request.resource.data.get('creatorRole', null) != null;
+      }
+      function changesCreatorRole() {
+        return resource.data.get('creatorRole', null) !=
+               request.resource.data.get('creatorRole', null);
+      }
+
       allow read;
-      allow create: if request.auth.uid != null;
-      allow update: if request.auth.uid != null && isAllowedToUpdate();
+      allow create: if request.auth.uid != null && !setsCreatorRoleOnCreate();
+      allow update: if request.auth.uid != null &&
+                       !changesCreatorRole() &&
+                       isAllowedToUpdate();
       allow delete: if request.auth.uid != null && isAuthorized();
 
       // Civil Activity Hub — join form submissions subcollection.
@@ -166,7 +235,12 @@ service cloud.firestore {
                          request.resource.data.questionId == statementId;
         allow update: if request.auth.uid != null &&
                          request.auth.uid == submissionUserId;
-        allow delete: if false;
+        // Admins of the owning question can wipe submissions as part of the
+        // "Reset all joining" admin action (apps/join FacilitatorPanel).
+        // Regular users still can't delete — they remove their own form
+        // submission by toggling join off, which is an `update` to the parent
+        // option and a separate Cloud-Function-driven sheet purge.
+        allow delete: if request.auth.uid != null && isQuestionAdmin();
       }
 
       // Civil Activity Hub — post-resolve per-user state.
@@ -837,18 +911,15 @@ service cloud.firestore {
     }
 
     // Research consent - users manage their own consent records
+    // Supports both Firebase Auth users and anonymous users (MC/Sign apps)
+    // For anonymous users: consentId = "userId_topParentId", validated by matching userId field
     match /researchConsent/{consentId} {
-      allow create: if request.auth != null &&
-                     request.auth.uid == request.resource.data.userId;
-      // Allow get on non-existent docs (resource == null returns "not found")
-      // and reads for the owning user or system admins
-      allow read: if request.auth != null &&
-                   (resource == null ||
-                    request.auth.uid == resource.data.userId ||
-                    (exists(/databases/$(database)/documents/usersV2/$(request.auth.uid)) &&
-                     get(/databases/$(database)/documents/usersV2/$(request.auth.uid)).data.systemAdmin == true));
-      allow update: if request.auth != null &&
-                     request.auth.uid == resource.data.userId;
+      allow create: if request.resource.data.userId is string &&
+                     request.resource.data.topParentId is string &&
+                     request.resource.data.consentId == consentId;
+      allow read: if true;
+      allow update: if request.resource.data.consentId == consentId &&
+                     request.resource.data.userId == resource.data.userId;
       allow delete: if false;
     }
 
@@ -873,6 +944,82 @@ service cloud.firestore {
     match /adminStats/{docId} {
       allow read: if request.auth != null;
       // Writes handled by Cloud Functions only
+      allow write: if false;
+    }
+
+    // Join-app delegate invitations. Writes are exclusively via the
+    // `fn_createJoinDelegateInvite` / `fn_revokeJoinDelegate` callables
+    // (which use the Admin SDK and bypass these rules). Reads are scoped to
+    // the question admin so the DelegatesPanel can list pending invites for
+    // a question they own.
+    match /joinDelegateInvitations/{invitationId} {
+      function isQuestionAdmin(qid) {
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(qid));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      function isQuestionCreator(qid) {
+        let qPath = /databases/$(database)/documents/statements/$(qid);
+        return exists(qPath) && get(qPath).data.creatorId == request.auth.uid;
+      }
+      allow get: if request.auth != null && (
+        isQuestionAdmin(resource.data.questionId) ||
+        isQuestionCreator(resource.data.questionId)
+      );
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Join-form submission history (durable backup). Written exclusively by
+    // `fn_backupJoinFormSubmission` via the Admin SDK; restoration goes
+    // through `restoreJoinFormSubmissions.ts`. Contains PII (phone, email,
+    // custom form fields) — clients have no read or write access.
+    match /joinFormSubmissionsHistory/{historyId} {
+      allow read, write: if false;
+    }
+
+    // Join-form audit trace (7-day TTL). Written by both backup triggers via
+    // the Admin SDK. Membership-event entries hold uid + displayName only;
+    // submission entries (legacy path) hold full bodies. No client access.
+    match /joinRegistrationBackups/{backupId} {
+      allow read, write: if false;
+    }
+
+    // Join-app accepted delegates. The doc subject (the delegate themself)
+    // and the question admin can both read; writes are exclusively via the
+    // accept/revoke callables.
+    match /joinDelegates/{delegateId} {
+      function isQuestionAdmin(qid) {
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(qid));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      function isQuestionCreator(qid) {
+        let qPath = /databases/$(database)/documents/statements/$(qid);
+        return exists(qPath) && get(qPath).data.creatorId == request.auth.uid;
+      }
+      allow get: if request.auth != null && (
+        request.auth.uid == resource.data.userId ||
+        isQuestionAdmin(resource.data.questionId) ||
+        isQuestionCreator(resource.data.questionId)
+      );
+      allow list: if request.auth != null;
+      allow write: if false;
+    }
+
+    // Moderation logs - readable only by admins/creators of the topParent statement.
+    // Writes are performed exclusively by Cloud Functions via the Admin SDK.
+    match /moderationLogs/{logId} {
+      function isTopParentAdmin() {
+        let topParentId = resource.data.topParentId;
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(topParentId));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      allow get, list: if request.auth != null && isTopParentAdmin();
       allow write: if false;
     }
   }

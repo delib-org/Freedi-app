@@ -25,6 +25,11 @@ import { FcmSubscriber, processFcmNotificationsImproved } from './fn_notificatio
 import { trackStatementCreation } from './engagement/credits/trackEngagement';
 import { onStatementCreatedStats } from './fn_adminStats';
 import { generateDescriptionFromChildren } from './helpers';
+import {
+	computeHybridVector,
+	isHybridClusteringEnabled,
+	saveHybridEmbedding,
+} from './services/hybrid-vector-service';
 
 /**
  * Consolidated function that handles all tasks when a new statement is created.
@@ -37,6 +42,7 @@ export async function onStatementCreated(
 
 	try {
 		const statementData = event.data.data();
+		if (!statementData) return;
 
 		// Ensure topParentId exists for legacy data that may not have it
 		if (!statementData.topParentId) {
@@ -409,6 +415,13 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 				const notificationRef = db.collection(Collections.inAppNotifications).doc(notificationId);
 				const questionType = statement.questionSettings?.questionType ?? getDefaultQuestionType();
 
+				// `creatorImage` is schema-optional (`optional(nullable(string()))`),
+				// but Firestore rejects literal `undefined`. The synthesis pipeline
+				// constructs creator objects without `photoURL` (only displayName/uid/
+				// defaultLanguage), so we must omit the key when undefined rather
+				// than write it as undefined. Coerce null-ish to null for an explicit
+				// "no image" signal that the schema accepts.
+				const creatorImage = statement.creator.photoURL ?? null;
 				const newNotification: NotificationType = {
 					userId: subscriber.user.uid,
 					parentId: statement.parentId,
@@ -418,7 +431,7 @@ async function createNotificationsForStatement(statement: Statement): Promise<vo
 					text: statement.statement,
 					creatorId: statement.creator.uid,
 					creatorName: statement.creator.displayName,
-					creatorImage: statement.creator.photoURL,
+					creatorImage,
 					createdAt: statement.createdAt,
 					read: false,
 					notificationId: notificationId,
@@ -504,8 +517,14 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 		const startTime = Date.now();
 		const result = await embeddingService.generateEmbeddingWithRetry(statement.statement, context);
 
-		// Save embedding to the statement document
-		await embeddingCache.saveEmbedding(statement.statementId, result.embedding, context);
+		// Save embedding to the statement document (text passed so textHash
+		// is written for the synthesis verdict cache).
+		await embeddingCache.saveEmbedding(
+			statement.statementId,
+			result.embedding,
+			context,
+			statement.statement,
+		);
 
 		const duration = Date.now() - startTime;
 		logger.info(`Generated embedding for statement ${statement.statementId}`, {
@@ -513,6 +532,26 @@ async function generateEmbeddingForStatement(statement: Statement): Promise<void
 			dimensions: result.dimensions,
 			hasContext: Boolean(context),
 		});
+
+		// Generate initial hybrid embedding if hybrid clustering is enabled
+		// Fetch top parent for setting inheritance check
+		let topParent: Statement | undefined;
+		if (parentStatement.topParentId && parentStatement.topParentId !== parentId) {
+			const topDoc = await db
+				.collection(Collections.statements)
+				.doc(parentStatement.topParentId)
+				.get();
+			if (topDoc.exists) {
+				topParent = topDoc.data() as Statement;
+			}
+		}
+
+		if (isHybridClusteringEnabled(parentStatement, topParent)) {
+			const ratingVec = [0, 0, 0, 0, 0, 0, 0, 0];
+			const hybridVec = computeHybridVector(result.embedding, ratingVec, 0);
+			await saveHybridEmbedding(statement.statementId, hybridVec);
+			logger.info(`Generated initial hybrid embedding for statement ${statement.statementId}`);
+		}
 	} catch (error) {
 		// Log but don't fail the trigger - embedding generation is non-critical
 		logger.error(`Failed to generate embedding for statement ${statement.statementId}:`, error);

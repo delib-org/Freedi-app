@@ -5,10 +5,10 @@
 
 import {
 	calcMadAndMean,
-	calculateDCI,
+	calculateAgreementOnEvaluation,
 	meetsKAnonymity,
 	interpretDivergence,
-	interpretDCI,
+	interpretAgreementOnEvaluation,
 	DEMOGRAPHIC_CONSTANTS,
 	MadResult,
 } from '../utils/madCalculation';
@@ -86,28 +86,32 @@ describe('madCalculation', () => {
 		});
 	});
 
-	describe('calculateDCI', () => {
-		it('should return 1 for identical means (perfect agreement)', () => {
-			expect(calculateDCI(0.5, 0.5)).toBe(1);
-			expect(calculateDCI(-0.5, -0.5)).toBe(1);
-			expect(calculateDCI(0, 0)).toBe(1);
+	describe('calculateAgreementOnEvaluation', () => {
+		it('should return 1 for identical means (groups perfectly aligned in evaluation)', () => {
+			// Note: direction-blind. (0, 0) returning 1 means "both indifferent" —
+			// the X-axis of the Collaboration Index map disambiguates support vs. oppose vs. neutral.
+			expect(calculateAgreementOnEvaluation(0.5, 0.5)).toBe(1);
+			expect(calculateAgreementOnEvaluation(-0.5, -0.5)).toBe(1);
+			expect(calculateAgreementOnEvaluation(0, 0)).toBe(1);
 		});
 
 		it('should return 0 for maximum disagreement', () => {
 			// Maximum disagreement: one at -1, one at +1
-			// DCI = 1 - (2/2) = 0
-			expect(calculateDCI(-1, 1)).toBe(0);
-			expect(calculateDCI(1, -1)).toBe(0);
+			// score = 1 - (2/2) = 0
+			expect(calculateAgreementOnEvaluation(-1, 1)).toBe(0);
+			expect(calculateAgreementOnEvaluation(1, -1)).toBe(0);
 		});
 
 		it('should return 0.5 for half disagreement', () => {
-			// DCI = 1 - (1/2) = 0.5
-			expect(calculateDCI(0, 1)).toBe(0.5);
-			expect(calculateDCI(-1, 0)).toBe(0.5);
+			// score = 1 - (1/2) = 0.5
+			expect(calculateAgreementOnEvaluation(0, 1)).toBe(0.5);
+			expect(calculateAgreementOnEvaluation(-1, 0)).toBe(0.5);
 		});
 
 		it('should handle symmetric values', () => {
-			expect(calculateDCI(0.2, 0.8)).toBe(calculateDCI(0.8, 0.2));
+			expect(calculateAgreementOnEvaluation(0.2, 0.8)).toBe(
+				calculateAgreementOnEvaluation(0.8, 0.2)
+			);
 		});
 
 		it('should return values in 0-1 range for valid inputs', () => {
@@ -122,16 +126,16 @@ describe('madCalculation', () => {
 			];
 
 			testCases.forEach(([a, b]) => {
-				const dci = calculateDCI(a, b);
-				expect(dci).toBeGreaterThanOrEqual(0);
-				expect(dci).toBeLessThanOrEqual(1);
+				const score = calculateAgreementOnEvaluation(a, b);
+				expect(score).toBeGreaterThanOrEqual(0);
+				expect(score).toBeLessThanOrEqual(1);
 			});
 		});
 
 		it('should calculate correctly for typical values', () => {
 			// meanA = 0.3, meanB = 0.7
-			// DCI = 1 - (0.4 / 2) = 1 - 0.2 = 0.8
-			expect(calculateDCI(0.3, 0.7)).toBe(0.8);
+			// score = 1 - (0.4 / 2) = 1 - 0.2 = 0.8
+			expect(calculateAgreementOnEvaluation(0.3, 0.7)).toBe(0.8);
 		});
 	});
 
@@ -189,35 +193,35 @@ describe('madCalculation', () => {
 		});
 	});
 
-	describe('interpretDCI', () => {
-		it('should return "strong-agreement" for DCI >= 0.8', () => {
-			expect(interpretDCI(0.8)).toBe('strong-agreement');
-			expect(interpretDCI(0.9)).toBe('strong-agreement');
-			expect(interpretDCI(1)).toBe('strong-agreement');
+	describe('interpretAgreementOnEvaluation', () => {
+		it('should return "strong-agreement" for score >= 0.8', () => {
+			expect(interpretAgreementOnEvaluation(0.8)).toBe('strong-agreement');
+			expect(interpretAgreementOnEvaluation(0.9)).toBe('strong-agreement');
+			expect(interpretAgreementOnEvaluation(1)).toBe('strong-agreement');
 		});
 
-		it('should return "good-agreement" for DCI >= 0.6 and < 0.8', () => {
-			expect(interpretDCI(0.6)).toBe('good-agreement');
-			expect(interpretDCI(0.7)).toBe('good-agreement');
-			expect(interpretDCI(0.79)).toBe('good-agreement');
+		it('should return "good-agreement" for score >= 0.6 and < 0.8', () => {
+			expect(interpretAgreementOnEvaluation(0.6)).toBe('good-agreement');
+			expect(interpretAgreementOnEvaluation(0.7)).toBe('good-agreement');
+			expect(interpretAgreementOnEvaluation(0.79)).toBe('good-agreement');
 		});
 
-		it('should return "moderate" for DCI >= 0.4 and < 0.6', () => {
-			expect(interpretDCI(0.4)).toBe('moderate');
-			expect(interpretDCI(0.5)).toBe('moderate');
-			expect(interpretDCI(0.59)).toBe('moderate');
+		it('should return "moderate" for score >= 0.4 and < 0.6', () => {
+			expect(interpretAgreementOnEvaluation(0.4)).toBe('moderate');
+			expect(interpretAgreementOnEvaluation(0.5)).toBe('moderate');
+			expect(interpretAgreementOnEvaluation(0.59)).toBe('moderate');
 		});
 
-		it('should return "weak-agreement" for DCI >= 0.2 and < 0.4', () => {
-			expect(interpretDCI(0.2)).toBe('weak-agreement');
-			expect(interpretDCI(0.3)).toBe('weak-agreement');
-			expect(interpretDCI(0.39)).toBe('weak-agreement');
+		it('should return "weak-agreement" for score >= 0.2 and < 0.4', () => {
+			expect(interpretAgreementOnEvaluation(0.2)).toBe('weak-agreement');
+			expect(interpretAgreementOnEvaluation(0.3)).toBe('weak-agreement');
+			expect(interpretAgreementOnEvaluation(0.39)).toBe('weak-agreement');
 		});
 
-		it('should return "opposing" for DCI < 0.2', () => {
-			expect(interpretDCI(0)).toBe('opposing');
-			expect(interpretDCI(0.1)).toBe('opposing');
-			expect(interpretDCI(0.19)).toBe('opposing');
+		it('should return "opposing" for score < 0.2', () => {
+			expect(interpretAgreementOnEvaluation(0)).toBe('opposing');
+			expect(interpretAgreementOnEvaluation(0.1)).toBe('opposing');
+			expect(interpretAgreementOnEvaluation(0.19)).toBe('opposing');
 		});
 	});
 
@@ -233,11 +237,11 @@ describe('madCalculation', () => {
 			expect(DEMOGRAPHIC_CONSTANTS.DIVERGENCE.HIGH).toBe(0.8);
 		});
 
-		it('should have correct DCI thresholds', () => {
-			expect(DEMOGRAPHIC_CONSTANTS.DCI.STRONG_AGREEMENT).toBe(0.8);
-			expect(DEMOGRAPHIC_CONSTANTS.DCI.GOOD_AGREEMENT).toBe(0.6);
-			expect(DEMOGRAPHIC_CONSTANTS.DCI.MODERATE).toBe(0.4);
-			expect(DEMOGRAPHIC_CONSTANTS.DCI.WEAK_AGREEMENT).toBe(0.2);
+		it('should have correct AGREEMENT_ON_EVALUATION thresholds', () => {
+			expect(DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.STRONG_AGREEMENT).toBe(0.8);
+			expect(DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.GOOD_AGREEMENT).toBe(0.6);
+			expect(DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.MODERATE).toBe(0.4);
+			expect(DEMOGRAPHIC_CONSTANTS.AGREEMENT_ON_EVALUATION.WEAK_AGREEMENT).toBe(0.2);
 		});
 	});
 });

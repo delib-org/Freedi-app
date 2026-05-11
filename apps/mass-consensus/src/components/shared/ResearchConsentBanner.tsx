@@ -7,7 +7,6 @@ import {
 	getResearchConsent,
 	saveResearchConsent,
 } from '@/lib/utils/researchConsentService';
-import Modal from './Modal';
 import styles from './ResearchConsentBanner.module.css';
 
 interface ResearchConsentBannerProps {
@@ -36,6 +35,16 @@ export default function ResearchConsentBanner({
 		});
 	}, [enableResearchLogging, topParentId]);
 
+	useEffect(() => {
+		if (showBanner) {
+			document.body.style.overflow = 'hidden';
+		}
+
+		return () => {
+			document.body.style.overflow = '';
+		};
+	}, [showBanner]);
+
 	if (!showBanner || !userId) return null;
 
 	async function handleConsent(consented: boolean) {
@@ -44,7 +53,7 @@ export default function ResearchConsentBanner({
 	}
 
 	return (
-		<Modal isOpen={true} onClose={() => handleConsent(false)}>
+		<div className={styles.overlay}>
 			<div className={styles.banner}>
 				<div className={styles.icon}>&#128300;</div>
 				<h2 className={styles.title}>{t('Academic Research')}</h2>
@@ -70,6 +79,6 @@ export default function ResearchConsentBanner({
 					</button>
 				</div>
 			</div>
-		</Modal>
+		</div>
 	);
 }

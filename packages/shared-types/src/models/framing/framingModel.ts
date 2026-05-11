@@ -6,6 +6,8 @@ import * as v from "valibot";
 export const FramingCreatorType = {
   ai: "ai",
   admin: "admin",
+  hybridAuto: "hybrid-auto",
+  topicCluster: "topic-cluster",
 } as const;
 
 export type FramingCreatorType =
@@ -14,6 +16,8 @@ export type FramingCreatorType =
 export const FramingCreatorTypeSchema = v.picklist([
   FramingCreatorType.ai,
   FramingCreatorType.admin,
+  FramingCreatorType.hybridAuto,
+  FramingCreatorType.topicCluster,
 ]);
 
 /**

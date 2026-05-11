@@ -11,7 +11,6 @@ import {
 	UserCheck,
 	Shield,
 	Bell,
-	Network,
 	BarChart3,
 	ShieldAlert,
 	Clock,
@@ -36,6 +35,7 @@ import styles from './StatementSettingsForm.module.scss';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/redux/store';
+import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
 import Loader from '@/view/components/loaders/Loader';
 import { StatementSubscription, Role, Statement, StatementType } from '@freedi/shared-types';
 import MembershipSettings from '../membershipSettings/MembershipSettings';
@@ -43,7 +43,7 @@ import UserDemographicSetting from '../UserDemographicSettings/UserDemographicSe
 import MembersSettings from '../membership/MembersSettings';
 import MemberValidation from '../memberValidation/MemberValidation';
 import EmailNotifications from '../emailNotifications/EmailNotifications';
-import { ClusteringAdmin } from '../ClusteringAdmin';
+// ClusteringAdmin is now rendered inside AISettings (AI & Automation block).
 import { OptionRooms } from '../optionRooms';
 import ModerationLog from '../moderationLog/ModerationLog';
 import DeadlineSettings from '../QuestionSettings/DeadlineSettings';
@@ -80,6 +80,9 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 		);
 
 	const members: StatementSubscription[] = useAppSelector(statementMembershipSelector(statementId));
+	const currentUserSubscription = useAppSelector(statementSubscriptionSelector(statementId));
+	const isAdminOrCreator =
+		currentUserSubscription?.role === Role.admin || currentUserSubscription?.role === Role.creator;
 
 	try {
 		const joinedMembers = members
@@ -251,31 +254,25 @@ const StatementSettingsForm: FC<StatementSettingsFormProps> = ({
 							<EmailNotifications statement={statement} />
 						</SettingsSection>
 
-						{/* Clustering & Analysis - only for questions */}
-						{isQuestion && (
+						{/* Clustering & Framings is now embedded inside the AI & Automation block
+						   (rendered by EnhancedAdvancedSettings → AISettings → ClusteringAdmin)
+						   so all AI-driven controls live under one collapsible section. */}
+
+						{/* Content Moderation Log Section — admins/creators only (Firestore rules deny others) */}
+						{isAdminOrCreator && (
 							<SettingsSection
-								title={t('Clustering & Framings')}
-								description={t('AI-powered grouping and analysis of responses')}
-								icon={Network}
+								title={t('Content Moderation')}
+								description={t('View content rejected by AI moderation')}
+								icon={ShieldAlert}
 								priority="low"
 								defaultExpanded={false}
-								tooltip={t('Use AI to cluster similar responses and identify patterns')}
+								tooltip={t(
+									'Track content that was flagged and rejected by the AI content moderator',
+								)}
 							>
-								<ClusteringAdmin statement={statement} />
+								<ModerationLog statement={statement} />
 							</SettingsSection>
 						)}
-
-						{/* Content Moderation Log Section */}
-						<SettingsSection
-							title={t('Content Moderation')}
-							description={t('View content rejected by AI moderation')}
-							icon={ShieldAlert}
-							priority="low"
-							defaultExpanded={false}
-							tooltip={t('Track content that was flagged and rejected by the AI content moderator')}
-						>
-							<ModerationLog statement={statement} />
-						</SettingsSection>
 
 						{/* Participants Data Section */}
 						<SettingsSection

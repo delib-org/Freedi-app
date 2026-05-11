@@ -110,8 +110,15 @@
 
   &__actions {
     display: flex;
-    gap: 12px;
-    justify-content: flex-end;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__or-separator {
+    font-size: 0.875rem;
+    color: #9ca3af;
+    user-select: none;
   }
 
   &__button {
@@ -126,6 +133,7 @@
     &--primary {
       background: var(--btn-primary);
       color: white;
+      width: 100%;
 
       &:hover:not(:disabled) {
         opacity: 0.9;
@@ -139,11 +147,13 @@
     }
 
     &--secondary {
-      background: var(--rating-neutral);
-      color: var(--text-body);
+      background: none;
+      color: var(--btn-primary);
+      text-decoration: underline;
+      padding: 8px 16px;
 
       &:hover {
-        background: var(--rating-dislike);
+        opacity: 0.8;
       }
     }
   }

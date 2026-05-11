@@ -1,6 +1,6 @@
 import m from 'mithril';
 import { getAuthState, signIn, signOutUser } from '../lib/auth';
-import { Sidebar } from './Sidebar';
+import { Sidebar, toggleSidebar, closeSidebar, isSidebarOpen } from './Sidebar';
 
 export function Layout(): m.Component {
 	return {
@@ -39,6 +39,19 @@ export function Layout(): m.Component {
 			}
 
 			return m('.app', [
+				// Mobile top bar
+				m('.app__topbar', [
+					m('button.app__hamburger', { onclick: () => toggleSidebar() }, [
+						m('span.app__hamburger-line'),
+						m('span.app__hamburger-line'),
+						m('span.app__hamburger-line'),
+					]),
+					m('span.app__topbar-title', 'Freedi Admin'),
+				]),
+				// Overlay for mobile sidebar
+				isSidebarOpen()
+					? m('.app__overlay', { onclick: () => closeSidebar() })
+					: null,
 				m('.app__sidebar', m(Sidebar)),
 				m('.app__content', vnode.children),
 			]);

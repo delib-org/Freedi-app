@@ -1,0 +1,53 @@
+.framingSwitcher {
+	display: inline-flex;
+	gap: 0.25rem;
+	padding: 0.25rem;
+	background: var(--card-default);
+	border: 1px solid rgba(0, 0, 0, 0.08);
+	border-radius: 999px;
+	flex-wrap: wrap;
+}
+
+.chip {
+	appearance: none;
+	border: none;
+	background: transparent;
+	padding: 0.4rem 1rem;
+	border-radius: 999px;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: var(--text-body);
+	cursor: pointer;
+	transition: background 0.15s ease, color 0.15s ease;
+
+	&:hover:not(:disabled) {
+		background: rgba(0, 0, 0, 0.04);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&--active {
+		background: var(--btn-primary);
+		color: white;
+
+		&:hover:not(:disabled) {
+			background: var(--btn-primary);
+			filter: brightness(1.05);
+		}
+	}
+
+	&--disabled,
+	&:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.chip {
+		transition: none;
+	}
+}

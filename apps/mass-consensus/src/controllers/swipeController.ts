@@ -22,13 +22,17 @@ import { Collections } from '@freedi/shared-types';
  * @param rating - Rating value (-1 to +1)
  * @param userId - ID of the user submitting the rating
  * @param userName - Display name of the user
+ * @param surveyId - When rating inside a survey session, the surveyId so
+ *                   the API can stamp the evaluation with a demographic
+ *                   anchor for polarization-index lookups
  */
 export async function submitRating(
   parentId: string,
   statementId: string,
   rating: number,
   userId: string,
-  userName?: string
+  userName?: string,
+  surveyId?: string
 ): Promise<void> {
   try {
     // Validate rating
@@ -57,6 +61,7 @@ export async function submitRating(
         evaluation: rating,
         userId,
         userName,
+        ...(surveyId ? { surveyId } : {}),
       }),
     });
 
@@ -141,7 +146,8 @@ export async function syncPendingEvaluations(
   parentId: string,
   pendingEvaluations: Array<{ statementId: string; rating: number; timestamp: number }>,
   userId: string,
-  userName?: string
+  userName?: string,
+  surveyId?: string
 ): Promise<void> {
   try {
     if (pendingEvaluations.length === 0) {
@@ -157,7 +163,7 @@ export async function syncPendingEvaluations(
     // Sync each evaluation
     for (const evaluation of pendingEvaluations) {
       try {
-        await submitRating(parentId, evaluation.statementId, evaluation.rating, userId, userName);
+        await submitRating(parentId, evaluation.statementId, evaluation.rating, userId, userName, surveyId);
       } catch (error) {
         logError(error, {
           operation: 'swipeController.syncPendingEvaluations',

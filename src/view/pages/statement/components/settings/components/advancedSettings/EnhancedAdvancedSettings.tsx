@@ -52,8 +52,13 @@ interface CategoryConfig {
 	defaultExpanded: boolean;
 }
 
-const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
+const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement: propStatement }) => {
 	const { t } = useTranslation();
+	// Prefer the live Redux statement so async Firestore writes (toggles, etc.)
+	// are reflected immediately once the snapshot listener fires. Fall back to
+	// the prop until the store has it.
+	const liveStatement = useAppSelector(statementSelector(propStatement.statementId));
+	const statement = liveStatement ?? propStatement;
 	const topParentStatement = useAppSelector(statementSelector(statement.topParentId));
 
 	const settings: StatementSettings = statement.statementSettings ?? defaultStatementSettings;

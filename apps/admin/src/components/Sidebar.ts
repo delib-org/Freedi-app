@@ -15,12 +15,28 @@ const navItems: NavItem[] = [
 	{ path: '/research', label: 'Research', icon: '\u{1F52C}' },
 ];
 
+let sidebarOpen = false;
+
+export function toggleSidebar(): void {
+	sidebarOpen = !sidebarOpen;
+	m.redraw();
+}
+
+export function closeSidebar(): void {
+	sidebarOpen = false;
+	m.redraw();
+}
+
+export function isSidebarOpen(): boolean {
+	return sidebarOpen;
+}
+
 export const Sidebar: m.Component = {
 	view() {
 		const currentRoute = m.route.get();
 		const { user } = getAuthState();
 
-		return m('.sidebar', [
+		return m('.sidebar', { class: sidebarOpen ? 'sidebar--open' : '' }, [
 			m('.sidebar__logo', [
 				m('h1', 'Freedi'),
 				m('span', 'Admin Dashboard'),
@@ -38,10 +54,11 @@ export const Sidebar: m.Component = {
 						{
 							href: item.path,
 							class: `sidebar__link${isActive ? ' sidebar__link--active' : ''}`,
+							onclick: () => closeSidebar(),
 						},
 						[
 							m('span.sidebar__icon', item.icon),
-							item.label,
+							m('span.sidebar__label', item.label),
 						]
 					);
 				})

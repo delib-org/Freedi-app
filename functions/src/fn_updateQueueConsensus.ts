@@ -1,7 +1,12 @@
 import { onDocumentUpdated } from 'firebase-functions/v2/firestore';
 import { logger } from 'firebase-functions/v1';
 import { db } from './db';
-import { Collections, Statement, ReplacementQueueStatus } from '@freedi/shared-types';
+import {
+	Collections,
+	Statement,
+	ReplacementQueueStatus,
+	functionConfig,
+} from '@freedi/shared-types';
 
 /**
  * Cloud Function: Update Queue Consensus
@@ -15,13 +20,27 @@ import { Collections, Statement, ReplacementQueueStatus } from '@freedi/shared-t
  * - Non-blocking (errors don't throw)
  */
 export const fn_updateQueueConsensus = onDocumentUpdated(
-	`${Collections.statements}/{suggestionId}`,
+	{
+		document: `${Collections.statements}/{suggestionId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;
 			const after = event.data?.after.data() as Statement;
 
 			if (!before || !after) {
+				return null;
+			}
+
+			// Cluster docs (topic / hybrid / synthesis) and integrated members
+			// are never paragraph-replacement suggestions. Their consensus
+			// changes during clustering runs and would otherwise force a
+			// paragraphReplacementQueue lookup per cluster update.
+			// `integratedInto` is set by performIntegration on hidden members
+			// and is not on the shared Statement type, hence the cast.
+			const integratedInto = (after as { integratedInto?: string }).integratedInto;
+			if (after.isCluster === true || integratedInto) {
 				return null;
 			}
 

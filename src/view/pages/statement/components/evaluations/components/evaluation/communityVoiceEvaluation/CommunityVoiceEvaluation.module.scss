@@ -142,12 +142,19 @@
 			}
 
 			// ===== PRESSED STATES: All use strongest agree shade =====
+			// Show only the colored background — hide the face SVG so the active
+			// state reads as a clean filled circle (the face is the unpressed
+			// visual; selection is conveyed by colour + scale + shadow alone).
 			.voice-option-wrapper .voice-option.active {
 				background-color: var(--agree3);
 				border-color: var(--agree3-border);
 				border-width: 3px;
 				color: var(--agree3-text);
 				box-shadow: 0 4px 14px rgba(87, 198, 178, 0.4);
+
+				img {
+					visibility: hidden;
+				}
 			}
 
 			.voice-label {

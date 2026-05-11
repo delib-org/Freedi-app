@@ -1,7 +1,48 @@
-import { getFunctionsUrl } from '../config';
+import { getFunctionsUrl, auth } from '../config';
 import { logError } from '@/utils/errorHandling';
 import { logger } from '@/services/logger';
 import type { Framing, ClusterAggregatedEvaluation, Statement } from '@freedi/shared-types';
+
+// ============================================================================
+// Admin auth helper — both clustering trigger endpoints below are wrapped with
+// wrapAdminHttpFunction on the server, which calls verifyAuthToken() and
+// requires a Bearer token in the Authorization header.
+// ============================================================================
+
+async function getAdminAuthHeaders(): Promise<Record<string, string>> {
+	const idToken = await auth.currentUser?.getIdToken();
+	if (!idToken) {
+		throw new Error('Not signed in — clustering requires authentication');
+	}
+
+	return {
+		'Content-Type': 'application/json',
+		Authorization: `Bearer ${idToken}`,
+	};
+}
+
+/**
+ * Parse the body of a clustering trigger response. Reads text first, then
+ * tries JSON.parse so it stays safe even if content-type says application/json
+ * but the body is a plain-text infrastructure error (e.g., "Internal Server Error").
+ */
+async function parseClusteringResponse(response: Response): Promise<TriggerClusteringResponse> {
+	const text = await response.text();
+	const contentType = response.headers.get('content-type') ?? '';
+	if (contentType.includes('application/json')) {
+		try {
+			return JSON.parse(text) as TriggerClusteringResponse;
+		} catch {
+			// Fall through to plain-text error path
+		}
+	}
+	const snippet = text.slice(0, 200).trim() || `${response.status} ${response.statusText}`;
+
+	return {
+		ok: false,
+		error: `Server error (${response.status}): ${snippet}. Check Firebase Functions logs for stack trace.`,
+	};
+}
 
 // ============================================================================
 // Types for API responses
@@ -382,6 +423,152 @@ export async function getFramingAggregationSummary(
 		logError(error, {
 			operation: 'framingController.getFramingAggregationSummary',
 			metadata: { framingId },
+		});
+		throw error;
+	}
+}
+
+// ============================================================================
+// Admin-triggered clustering pipelines
+// ============================================================================
+
+interface TriggerClusteringResponse {
+	ok: boolean;
+	error?: string;
+	framingId?: string | null;
+	clustersCreated?: number;
+	optionsProcessed?: number;
+	summary?: unknown;
+}
+
+/**
+ * Run the legacy hybrid k-means clustering on a parent question. Writes to a
+ * Framing with createdBy='hybrid-auto'. The 15-min scheduled sweep is disabled,
+ * so this is the manual way to refresh the semantic clustering.
+ */
+export async function triggerSemanticClustering(
+	parentStatementId: string,
+): Promise<TriggerClusteringResponse> {
+	try {
+		const baseUrl = getFunctionsUrl();
+		const headers = await getAdminAuthHeaders();
+		const response = await fetch(`${baseUrl}/triggerHybridClustering`, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify({ parentStatementId }),
+		});
+		const data = await parseClusteringResponse(response);
+		if (!data.ok) {
+			throw new Error(data.error || 'Failed to run semantic clustering');
+		}
+		logger.info('Semantic clustering complete', {
+			parentStatementId,
+			framingId: data.framingId,
+			clustersCreated: data.clustersCreated,
+		});
+
+		return data;
+	} catch (error) {
+		logError(error, {
+			operation: 'framingController.triggerSemanticClustering',
+			statementId: parentStatementId,
+		});
+		throw error;
+	}
+}
+
+interface SummarizeClustersResult {
+	ok: boolean;
+	error?: string;
+	summary?: {
+		parentId: string;
+		framingId: string;
+		clustersConsidered: number;
+		clustersSummarized: number;
+		clustersSkippedNoMembers: number;
+		threshold: number;
+		durationMs: number;
+	};
+}
+
+/**
+ * Ask an LLM to summarize each cluster of a Framing from its above-threshold
+ * members. Writes the 2-3 sentence summary to `cluster.brief`. Default
+ * threshold is 0.3; pass opts.threshold to override.
+ */
+export async function summarizeFramingClusters(
+	parentStatementId: string,
+	framingId: string,
+	opts: { threshold?: number; clusterIds?: string[] } = {},
+): Promise<SummarizeClustersResult> {
+	try {
+		const baseUrl = getFunctionsUrl();
+		const headers = await getAdminAuthHeaders();
+		const response = await fetch(`${baseUrl}/triggerSummarizeFramingClusters`, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify({ parentId: parentStatementId, framingId, opts }),
+		});
+		const contentType = response.headers.get('content-type') ?? '';
+		const data: SummarizeClustersResult = contentType.includes('application/json')
+			? ((await response.json()) as SummarizeClustersResult)
+			: {
+					ok: false,
+					error: `Server error (${response.status}): ${
+						(await response.text()).slice(0, 200) || response.statusText
+					}. Check Firebase Functions logs.`,
+				};
+		if (!data.ok) {
+			throw new Error(data.error || 'Failed to summarize clusters');
+		}
+		logger.info('Cluster summarization complete', {
+			parentStatementId,
+			framingId,
+			summarized: data.summary?.clustersSummarized,
+		});
+
+		return data;
+	} catch (error) {
+		logError(error, {
+			operation: 'framingController.summarizeFramingClusters',
+			statementId: parentStatementId,
+			metadata: { framingId },
+		});
+		throw error;
+	}
+}
+
+/**
+ * Run the new topic-cluster pipeline on a parent question (Sonnet taxonomy +
+ * Haiku normalization + UMAP/DBSCAN per category + Haiku naming). Writes to a
+ * Framing with createdBy='topic-cluster'. Coexists with the hybrid-auto framing.
+ */
+export async function triggerTopicClustering(
+	parentStatementId: string,
+	opts: { dryRun?: boolean; rebuildCache?: boolean; rebuildTaxonomy?: boolean } = {},
+): Promise<TriggerClusteringResponse> {
+	try {
+		const baseUrl = getFunctionsUrl();
+		const headers = await getAdminAuthHeaders();
+		const response = await fetch(`${baseUrl}/triggerTopicClusterPipeline`, {
+			method: 'POST',
+			headers,
+			body: JSON.stringify({ parentStatementId, opts }),
+		});
+		const data = await parseClusteringResponse(response);
+		if (!data.ok) {
+			throw new Error(data.error || 'Failed to run topic clustering');
+		}
+		logger.info('Topic clustering complete', {
+			parentStatementId,
+			summary: data.summary,
+		});
+
+		return data;
+	} catch (error) {
+		logError(error, {
+			operation: 'framingController.triggerTopicClustering',
+			statementId: parentStatementId,
 		});
 		throw error;
 	}

@@ -1,0 +1,40 @@
+{
+	"parent": {
+		"statementId": "fixture_he_parent",
+		"statement": "מה צפת, חצור וראש פינה יכולות לקדם יחד השנה?",
+		"parentId": "top",
+		"topParentId": "top",
+		"statementType": "question",
+		"creator": { "uid": "u1", "displayName": "fixture", "isAnonymous": false, "email": "" },
+		"creatorId": "u1",
+		"consensus": 0,
+		"createdAt": 1700000000000,
+		"lastUpdate": 1700000000000
+	},
+	"responses": [
+		{ "statementId": "he_1", "statement": "להקים תחבורה ציבורית משותפת בין שלוש הערים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_2", "statement": "להוסיף קווי אוטובוס שמחברים את צפת לחצור ולראש פינה", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_3", "statement": "להקים שירות הסעות לקשישים לבית חולים זיו", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_4", "statement": "להוסיף קווי שירות בתוך הערים בשעות הערב", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_5", "statement": "להפעיל אוטובוסים חשמליים על ציר הצפון", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_6", "statement": "לקדם פסטיבל תרבות אזורי משותף", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_7", "statement": "לארגן פסטיבל אומנות בקיץ בין שלוש הערים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_8", "statement": "להפעיל ימי מורשת משותפים בכל אחת מהערים בתורה", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_9", "statement": "להעמיק את שיתופי הפעולה בין מוזיאוני האזור", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_10", "statement": "לקדם תיירות מורשת קבלית בצפת ובסביבה", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_11", "statement": "לפתח שדרת חינוך מקצועי לנוער", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_12", "statement": "לשפר את מערכת החינוך בבתי הספר העל יסודיים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_13", "statement": "להקים תוכנית הכשרה משותפת לטכנאים ולמורים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_14", "statement": "להוסיף תוכניות מצוינות בבתי הספר היסודיים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_15", "statement": "לקדם שיתוף בין בתי הספר באזור", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_16", "statement": "להקים פארק תעשייה משותף לתעסוקה אזורית", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_17", "statement": "למשוך מפעלי הייטק לאזור הצפון", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_18", "statement": "לקדם אזור תעשייה ירוק בין הערים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_19", "statement": "להקים מרחב עבודה משותף לעצמאים מהאזור", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_20", "statement": "ליצור תוכנית תעסוקה לצעירים שחוזרים מהצבא", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_21", "statement": "לפתח שבילי טיולים אזוריים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_22", "statement": "לטפח את שמורות הטבע בסביבת הערים", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_23", "statement": "להקים אתרי תיירות אקולוגית באזור", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 },
+		{ "statementId": "he_24", "statement": "לקדם תיירות פנים על מסלול הקבלה והגליל", "parentId": "fixture_he_parent", "topParentId": "top", "statementType": "option", "creator": { "uid": "u1", "displayName": "u", "isAnonymous": false, "email": "" }, "creatorId": "u1", "consensus": 0, "createdAt": 1, "lastUpdate": 1 }
+	]
+}
