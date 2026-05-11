@@ -3,9 +3,18 @@
  * wizcol-style export JSON (the same shape `exportProdQuestion.ts` writes).
  *
  * Wipes any existing options/paragraphs/evaluations under the question first,
- * preserves the question doc + admin subscription, then inserts new options
- * with synthetic per-option evaluations so every option carries valid
- * augmented-evaluation data downstream (paper §6.2).
+ * preserves the question doc + admin subscription, then inserts new options.
+ * Original option statementIds from the dump are preserved so the dump's
+ * evaluations can be re-attached to the seeded question.
+ *
+ * Evaluation modes (--evaluations=...):
+ *   - original   default. Replay the dump's real evaluations 1:1, rewriting
+ *                their parentId to the seeded question. Falls back to
+ *                synthetic if the dump has none.
+ *   - synthetic  ignore the dump's evaluations and generate skewed-positive
+ *                synthetic ones (the legacy behavior).
+ *   - both       write originals AND layer synthetic evaluations on top.
+ *   - none       skip evaluation seeding entirely.
  *
  * USAGE
  *   npm run seed:wizcol -- --count=50 --admin=<uid>
@@ -15,7 +24,8 @@
  *     --count=100 \
  *     --admin=MGYBYaAomfPPxcApBB0H0WO0nTj2 \
  *     --question=seed-test-question \
- *     --input=test-data/wizcol-e4Rvr.json
+ *     --input=test-data/wizcol-e4Rvr.json \
+ *     --evaluations=original
  *
  *   # Direct invocation (env vars also work as a fallback for CI / older
  *   # call sites). CLI flags take precedence over env vars.
@@ -35,11 +45,23 @@ if (getApps().length === 0)
 	initializeApp({ projectId: process.env.GCLOUD_PROJECT ?? 'freedi-test' });
 const db = getFirestore();
 
+type EvalMode = 'original' | 'synthetic' | 'both' | 'none';
+
 interface CliArgs {
 	count?: number;
 	admin?: string;
 	question?: string;
 	input?: string;
+	evaluations?: EvalMode;
+}
+
+function parseEvalMode(value: string): EvalMode {
+	const v = value.toLowerCase();
+	if (v === 'original' || v === 'synthetic' || v === 'both' || v === 'none')
+		return v;
+	throw new Error(
+		`Invalid --evaluations=${value}. Expected: original|synthetic|both|none`,
+	);
 }
 
 function parseArgs(): CliArgs {
@@ -52,9 +74,10 @@ function parseArgs(): CliArgs {
 		else if (keyRaw === 'admin') out.admin = value;
 		else if (keyRaw === 'question') out.question = value;
 		else if (keyRaw === 'input') out.input = value;
+		else if (keyRaw === 'evaluations') out.evaluations = parseEvalMode(value);
 		else if (keyRaw === 'help' || keyRaw === 'h') {
 			console.info(
-				'Usage: npm run seed:wizcol -- --count=N --admin=<uid> [--question=<id>] [--input=<path>]',
+				'Usage: npm run seed:wizcol -- --count=N --admin=<uid> [--question=<id>] [--input=<path>] [--evaluations=original|synthetic|both|none]',
 			);
 			process.exit(0);
 		}
@@ -72,6 +95,11 @@ const INPUT_PATH =
 const COUNT = Number.isFinite(args.count)
 	? (args.count as number)
 	: Number(process.env.SEED_COUNT ?? '100');
+const EVAL_MODE: EvalMode =
+	args.evaluations ??
+	(process.env.SEED_EVAL_MODE
+		? parseEvalMode(process.env.SEED_EVAL_MODE)
+		: 'original');
 const MIN_TEXT_CHARS = 30; // matches functions/src/services/topic-cluster/constants.ts
 // Per-option synthetic evaluations. The topic-cluster pipeline quarantines
 // zero-evaluator options as noise when more than NOISE_POOL_MIN_COUNT (=50)
@@ -99,8 +127,19 @@ interface SourceStatement {
 	paragraphs?: SourceParagraph[];
 }
 
+interface SourceEvaluation {
+	evaluationId: string;
+	statementId: string;
+	parentId?: string;
+	evaluatorId: string;
+	evaluation: number;
+	createdAt?: number;
+	lastUpdate?: number;
+}
+
 interface DumpFile {
 	statements: SourceStatement[];
+	evaluations?: SourceEvaluation[];
 	question?: { statementId?: string };
 }
 
@@ -117,21 +156,37 @@ function sleep(ms: number) {
 	return new Promise((r) => setTimeout(r, ms));
 }
 
-function loadOptionTexts(path: string, count: number): string[] {
+let cachedDump: { path: string; data: DumpFile } | null = null;
+
+function loadDump(path: string): DumpFile {
 	const abs = resolve(path);
+	if (cachedDump && cachedDump.path === abs) return cachedDump.data;
 	const raw = readFileSync(abs, 'utf-8');
 	const data = JSON.parse(raw) as DumpFile;
 	if (!Array.isArray(data.statements)) {
 		throw new Error(`Invalid dump file: ${abs} (no statements[])`);
 	}
+	cachedDump = { path: abs, data };
 
-	const texts: string[] = [];
-	const seen = new Set<string>();
+	return data;
+}
+
+interface SourceOption {
+	id: string;
+	text: string;
+}
+
+function loadOptions(path: string, count: number): SourceOption[] {
+	const data = loadDump(path);
+	const options: SourceOption[] = [];
+	const seenText = new Set<string>();
+	const seenId = new Set<string>();
 	for (const s of data.statements) {
 		if (s.statementType !== 'option') continue;
 		if (s.hide === true) continue;
 		if (s.isCluster === true) continue;
 		if (s.derivedByPipeline === 'topic-cluster') continue;
+		if (!s.statementId || seenId.has(s.statementId)) continue;
 
 		// Prefer the joined paragraph body if it's longer + cleaner; fall back to title.
 		let text = (s.statement ?? '').trim();
@@ -144,19 +199,37 @@ function loadOptionTexts(path: string, count: number): string[] {
 			if (joined.length > text.length) text = joined;
 		}
 		if (text.length < MIN_TEXT_CHARS) continue;
-		if (seen.has(text)) continue;
-		seen.add(text);
-		texts.push(text);
-		if (texts.length >= count) break;
+		if (seenText.has(text)) continue;
+		seenText.add(text);
+		seenId.add(s.statementId);
+		options.push({ id: s.statementId, text });
+		if (options.length >= count) break;
 	}
 
-	if (texts.length < count) {
+	if (options.length < count) {
 		console.warn(
-			`Warning: only ${texts.length} valid options in ${path} (asked for ${count}).`,
+			`Warning: only ${options.length} valid options in ${path} (asked for ${count}).`,
 		);
 	}
 
-	return texts;
+	return options;
+}
+
+function loadOriginalEvaluations(
+	path: string,
+	allowedOptionIds: Set<string>,
+): SourceEvaluation[] {
+	const data = loadDump(path);
+	if (!Array.isArray(data.evaluations)) return [];
+
+	return data.evaluations.filter(
+		(e) =>
+			e &&
+			typeof e.evaluation === 'number' &&
+			typeof e.evaluatorId === 'string' &&
+			typeof e.statementId === 'string' &&
+			allowedOptionIds.has(e.statementId),
+	);
 }
 
 /**
@@ -431,32 +504,28 @@ async function clearExisting() {
 	console.info(`✓ Deleted ${deleted} statements + ${evalSnap.size} evaluations`);
 }
 
-interface CreatedOption {
-	id: string;
-	text: string;
-}
+type CreatedOption = SourceOption;
 
 async function createOptions(
-	texts: string[],
+	options: SourceOption[],
 	creatorId: string,
 	creator: Record<string, unknown>,
 ): Promise<CreatedOption[]> {
-	console.info(`\nCreating ${texts.length} options under ${QUESTION_ID}…`);
+	console.info(`\nCreating ${options.length} options under ${QUESTION_ID}…`);
 	const start = Date.now();
 	const BATCH_SIZE = 5;
 	const BATCH_DELAY_MS = 350;
 	const created: CreatedOption[] = [];
 
-	for (let i = 0; i < texts.length; i += BATCH_SIZE) {
-		const slice = texts.slice(i, i + BATCH_SIZE);
+	for (let i = 0; i < options.length; i += BATCH_SIZE) {
+		const slice = options.slice(i, i + BATCH_SIZE);
 		const batch: WriteBatch = db.batch();
 		const now = Date.now();
-		slice.forEach((text, j) => {
-			const id = db.collection('statements').doc().id;
+		slice.forEach((opt, j) => {
 			const createdAt = start + (i + j) * 5;
-			batch.set(db.collection('statements').doc(id), {
-				statementId: id,
-				statement: text,
+			batch.set(db.collection('statements').doc(opt.id), {
+				statementId: opt.id,
+				statement: opt.text,
 				paragraphs: [],
 				statementType: 'option',
 				parentId: QUESTION_ID,
@@ -471,15 +540,15 @@ async function createOptions(
 				hide: false,
 				randomSeed: Math.random(),
 			});
-			created.push({ id, text });
+			created.push(opt);
 		});
 		await batch.commit();
 		process.stdout.write(
-			`  options: ${Math.min(i + BATCH_SIZE, texts.length)}/${texts.length}\r`,
+			`  options: ${Math.min(i + BATCH_SIZE, options.length)}/${options.length}\r`,
 		);
-		if (i + BATCH_SIZE < texts.length) await sleep(BATCH_DELAY_MS);
+		if (i + BATCH_SIZE < options.length) await sleep(BATCH_DELAY_MS);
 	}
-	process.stdout.write(`  options: ${texts.length}/${texts.length}\n`);
+	process.stdout.write(`  options: ${options.length}/${options.length}\n`);
 
 	return created;
 }
@@ -505,59 +574,102 @@ function rngFromSeed(seed: number): () => number {
 	};
 }
 
-async function createEvaluations(options: CreatedOption[]) {
-	if (EVALS_PER_OPTION <= 0) return;
+interface EvalRecord {
+	id: string;
+	data: Record<string, unknown>;
+	statementId: string;
+	evaluatorId: string;
+	value: number;
+}
+
+interface OptionStats {
+	sumEvaluations: number;
+	sumSquaredEvaluations: number;
+	numberOfEvaluators: number;
+	sumPro: number;
+	sumCon: number;
+	numberOfProEvaluators: number;
+	numberOfConEvaluators: number;
+}
+
+function emptyStats(): OptionStats {
+	return {
+		sumEvaluations: 0,
+		sumSquaredEvaluations: 0,
+		numberOfEvaluators: 0,
+		sumPro: 0,
+		sumCon: 0,
+		numberOfProEvaluators: 0,
+		numberOfConEvaluators: 0,
+	};
+}
+
+function accumulate(stats: OptionStats, value: number): void {
+	stats.sumEvaluations += value;
+	stats.sumSquaredEvaluations += value * value;
+	stats.numberOfEvaluators += 1;
+	if (value > 0) {
+		stats.sumPro += value;
+		stats.numberOfProEvaluators += 1;
+	} else if (value < 0) {
+		stats.sumCon += -value;
+		stats.numberOfConEvaluators += 1;
+	}
+}
+
+function buildOriginalEvalRecords(
+	originals: SourceEvaluation[],
+): EvalRecord[] {
+	const records: EvalRecord[] = [];
+	const seenIds = new Set<string>();
+	const seenPair = new Set<string>(); // statementId|evaluatorId — prevents synthetic-pass duplicates
+	for (const e of originals) {
+		const id = e.evaluationId || `${e.statementId}--${e.evaluatorId}`;
+		if (seenIds.has(id)) continue;
+		seenIds.add(id);
+		seenPair.add(`${e.statementId}|${e.evaluatorId}`);
+		records.push({
+			id,
+			data: {
+				evaluationId: id,
+				statementId: e.statementId,
+				parentId: QUESTION_ID,
+				evaluatorId: e.evaluatorId,
+				evaluation: e.evaluation,
+				createdAt: e.createdAt ?? Date.now(),
+				lastUpdate: e.lastUpdate ?? e.createdAt ?? Date.now(),
+			},
+			statementId: e.statementId,
+			evaluatorId: e.evaluatorId,
+			value: e.evaluation,
+		});
+	}
+
+	return records;
+}
+
+function buildSyntheticEvalRecords(
+	options: CreatedOption[],
+	skipPair: Set<string>,
+): EvalRecord[] {
+	if (EVALS_PER_OPTION <= 0) return [];
 	const evaluatorIds = Array.from(
 		{ length: SYNTHETIC_EVALUATOR_COUNT },
 		(_, i) => `seed_evaluator_${String(i).padStart(3, '0')}`,
 	);
-	console.info(
-		`\nSeeding ${EVALS_PER_OPTION} evaluations per option from ${evaluatorIds.length} synthetic evaluators…`,
-	);
-
-	const BATCH_SIZE = 100;
-	const BATCH_DELAY_MS = 200;
-	let totalEvals = 0;
-
-	const optionStatsUpdates = new Map<
-		string,
-		{
-			sumEvaluations: number;
-			sumSquaredEvaluations: number;
-			numberOfEvaluators: number;
-			sumPro: number;
-			sumCon: number;
-			numberOfProEvaluators: number;
-			numberOfConEvaluators: number;
-		}
-	>();
-
-	const evalDocs: Array<{
-		id: string;
-		data: Record<string, unknown>;
-		statementId: string;
-		value: number;
-	}> = [];
-
+	const records: EvalRecord[] = [];
 	for (let oi = 0; oi < options.length; oi++) {
 		const opt = options[oi];
 		const rng = rngFromSeed(0x9e3779b9 ^ oi);
-		// Choose evaluators without replacement up to EVALS_PER_OPTION
 		const shuffled = [...evaluatorIds].sort(() => rng() - 0.5);
 		const chosen = shuffled.slice(0, Math.min(EVALS_PER_OPTION, evaluatorIds.length));
-		const stats = {
-			sumEvaluations: 0,
-			sumSquaredEvaluations: 0,
-			numberOfEvaluators: 0,
-			sumPro: 0,
-			sumCon: 0,
-			numberOfProEvaluators: 0,
-			numberOfConEvaluators: 0,
-		};
 		for (const evaluatorId of chosen) {
+			const pairKey = `${opt.id}|${evaluatorId}`;
+			if (skipPair.has(pairKey)) continue;
+			skipPair.add(pairKey);
 			const value = pickEvaluation(rng);
 			const evalId = `${opt.id}--${evaluatorId}`;
-			evalDocs.push({
+			records.push({
 				id: evalId,
 				data: {
 					evaluationId: evalId,
@@ -569,42 +681,44 @@ async function createEvaluations(options: CreatedOption[]) {
 					lastUpdate: Date.now(),
 				},
 				statementId: opt.id,
+				evaluatorId,
 				value,
 			});
-			stats.sumEvaluations += value;
-			stats.sumSquaredEvaluations += value * value;
-			stats.numberOfEvaluators += 1;
-			if (value > 0) {
-				stats.sumPro += value;
-				stats.numberOfProEvaluators += 1;
-			} else if (value < 0) {
-				stats.sumCon += -value;
-				stats.numberOfConEvaluators += 1;
-			}
 		}
-		optionStatsUpdates.set(opt.id, stats);
 	}
 
-	for (let i = 0; i < evalDocs.length; i += BATCH_SIZE) {
-		const slice = evalDocs.slice(i, i + BATCH_SIZE);
+	return records;
+}
+
+async function writeEvaluationDocs(records: EvalRecord[]): Promise<void> {
+	const BATCH_SIZE = 100;
+	const BATCH_DELAY_MS = 200;
+	let total = 0;
+	for (let i = 0; i < records.length; i += BATCH_SIZE) {
+		const slice = records.slice(i, i + BATCH_SIZE);
 		const batch: WriteBatch = db.batch();
 		for (const ev of slice) {
 			batch.set(db.collection('evaluations').doc(ev.id), ev.data);
 		}
 		await batch.commit();
-		totalEvals += slice.length;
-		process.stdout.write(`  evaluations: ${totalEvals}/${evalDocs.length}\r`);
-		if (i + BATCH_SIZE < evalDocs.length) await sleep(BATCH_DELAY_MS);
+		total += slice.length;
+		process.stdout.write(`  evaluations: ${total}/${records.length}\r`);
+		if (i + BATCH_SIZE < records.length) await sleep(BATCH_DELAY_MS);
 	}
-	process.stdout.write(`  evaluations: ${totalEvals}/${evalDocs.length}\n`);
+	process.stdout.write(`  evaluations: ${total}/${records.length}\n`);
+}
 
+async function writeOptionAggregates(
+	options: CreatedOption[],
+	stats: Map<string, OptionStats>,
+): Promise<void> {
 	console.info('Updating per-option aggregate fields…');
-	const ids = [...optionStatsUpdates.keys()];
+	const ids = options.map((o) => o.id);
 	for (let i = 0; i < ids.length; i += 200) {
 		const slice = ids.slice(i, i + 200);
 		const batch: WriteBatch = db.batch();
 		for (const id of slice) {
-			const s = optionStatsUpdates.get(id)!;
+			const s = stats.get(id) ?? emptyStats();
 			const avg = s.numberOfEvaluators > 0 ? s.sumEvaluations / s.numberOfEvaluators : 0;
 			batch.update(db.collection('statements').doc(id), {
 				totalEvaluators: s.numberOfEvaluators,
@@ -631,16 +745,80 @@ async function createEvaluations(options: CreatedOption[]) {
 	}
 }
 
+async function seedEvaluations(
+	options: CreatedOption[],
+	mode: EvalMode,
+): Promise<void> {
+	if (mode === 'none') {
+		console.info('\nSkipping evaluation seeding (--evaluations=none).');
+
+		return;
+	}
+
+	const optionIds = new Set(options.map((o) => o.id));
+	const originals =
+		mode === 'original' || mode === 'both'
+			? loadOriginalEvaluations(INPUT_PATH, optionIds)
+			: [];
+
+	let effectiveMode: EvalMode = mode;
+	if (mode === 'original' && originals.length === 0) {
+		console.warn(
+			'⚠  --evaluations=original but dump has no matching evaluations; falling back to synthetic.',
+		);
+		effectiveMode = 'synthetic';
+	}
+
+	const records: EvalRecord[] = [];
+	const pairSeen = new Set<string>();
+
+	if (effectiveMode === 'original' || effectiveMode === 'both') {
+		const originalRecords = buildOriginalEvalRecords(originals);
+		for (const r of originalRecords) pairSeen.add(`${r.statementId}|${r.evaluatorId}`);
+		records.push(...originalRecords);
+		console.info(
+			`\nReplaying ${originalRecords.length} original evaluations from dump (${optionIds.size} options in scope).`,
+		);
+	}
+
+	if (effectiveMode === 'synthetic' || effectiveMode === 'both') {
+		const synthetic = buildSyntheticEvalRecords(options, pairSeen);
+		records.push(...synthetic);
+		console.info(
+			`\nSeeding ${synthetic.length} synthetic evaluations (${EVALS_PER_OPTION}/option × ${SYNTHETIC_EVALUATOR_COUNT} evaluators, dedup vs originals).`,
+		);
+	}
+
+	if (records.length === 0) {
+		console.info('No evaluations to write.');
+
+		return;
+	}
+
+	await writeEvaluationDocs(records);
+
+	const stats = new Map<string, OptionStats>();
+	for (const r of records) {
+		let s = stats.get(r.statementId);
+		if (!s) {
+			s = emptyStats();
+			stats.set(r.statementId, s);
+		}
+		accumulate(s, r.value);
+	}
+	await writeOptionAggregates(options, stats);
+}
+
 (async () => {
 	const adminUser = await resolveAdminUser();
 	const { creatorId, creator } = await loadQuestion(adminUser);
-	const texts = loadOptionTexts(INPUT_PATH, COUNT);
+	const sourceOptions = loadOptions(INPUT_PATH, COUNT);
 	console.info(
-		`Loaded ${texts.length} option texts from ${INPUT_PATH} (min ${MIN_TEXT_CHARS} chars, no clusters/paragraphs).`,
+		`Loaded ${sourceOptions.length} option statementIds from ${INPUT_PATH} (min ${MIN_TEXT_CHARS} chars, no clusters/paragraphs). Eval mode: ${EVAL_MODE}.`,
 	);
 	await clearExisting();
-	const created = await createOptions(texts, creatorId, creator);
-	await createEvaluations(created);
+	const created = await createOptions(sourceOptions, creatorId, creator);
+	await seedEvaluations(created, EVAL_MODE);
 	console.info(
 		`\n✓ Done. ${created.length} options under ${QUESTION_ID} attributed to creator ${creatorId} (${adminUser.displayName}).`,
 	);
