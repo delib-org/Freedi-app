@@ -2497,5 +2497,13 @@
   "Continuous synthesis": "التوليف المستمر",
   "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "اسمح للذكاء الاصطناعي بصيانة المجموعات في الخلفية حتى تبقى القائمة منظمة مع وصول اقتراحات جديدة.",
   "Cluster pipeline (advanced)": "خط أنابيب المجموعات (متقدم)",
-  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "تشخيصات وعناصر تحكم يدوية لخطوط أنابيب التجميع الدلالي والموضوعي."
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "تشخيصات وعناصر تحكم يدوية لخطوط أنابيب التجميع الدلالي والموضوعي.",
+  "Finding similar ideas": "العثور على الأفكار المتشابهة",
+  "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.": "يكتشف متى تعبّر إدخالان عن نفس الفكرة. تضبط العتبة هنا مدى صرامة معنى \"متشابه\" لكل ميزة أدناه.",
+  "When people submit": "عند إرسال المستخدمين",
+  "What happens at the moment a user submits a suggestion — in submission order.": "ما يحدث في لحظة إرسال المستخدم لاقتراح — بترتيب الإرسال.",
+  "Merging duplicates": "دمج المكررات",
+  "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "ثلاث طرق متدرجة لتوحيد الاقتراحات شبه المكررة بعد إرسالها: تجميع لطيف، ودمج خلفي مستمر، ودمج يدوي مؤكَّد بالذكاء الاصطناعي.",
+  "Thematic clustering (advanced)": "التجميع الموضوعي (متقدم)",
+  "Groups ideas by theme rather than duplication. Output drives framings.": "يجمع الأفكار حسب الموضوع لا التكرار. والمخرجات تغذي الإطارات."
 }

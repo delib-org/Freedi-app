@@ -12,10 +12,9 @@ import {
 	Database,
 	Scissors,
 	Zap,
-	SearchCheck,
-	Sparkles,
-	Layers,
-	Settings2,
+	PenLine,
+	GitMerge,
+	LayoutGrid,
 } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
@@ -24,6 +23,7 @@ import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
 import GroupingSettings from './GroupingSettings';
 import { ClusteringAdmin } from '../ClusteringAdmin';
+import SynthesizeIdeasAction from '@/view/components/synthesizeIdeas/SynthesizeIdeasAction';
 
 interface AISettingsProps {
 	statement: Statement;
@@ -62,13 +62,8 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 	const isAdminOrCreator = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const isQuestion = statement.statementType === StatementType.question;
 
-	// Live-synth per-question gate (Ship 3b.5). The field isn't on the typed
-	// `StatementSettings` schema yet (the codebase ships `@freedi/shared-types`
-	// as a packaged .tgz and adding a field would force a coordinated rebuild
-	// + reinstall). We read it via a typed cast — same pattern the backend
-	// trigger uses when reading the override. Default state shown to admins
-	// matches the backend gate: explicit override wins; otherwise ON for MC,
-	// OFF for everything else.
+	// Live-synth per-question gate (Ship 3b.5). Field not yet on typed schema;
+	// read via cast as the backend trigger does.
 	const liveSynthOverride = (settings as unknown as Record<string, unknown>)['liveSynthEnabled'];
 	const isMcQuestion = statement.questionSettings?.questionType === QuestionType.massConsensus;
 	const liveSynthEffective =
@@ -81,12 +76,12 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 
 	return (
 		<div className={styles.aiSettings}>
-			{/* 1. Detection — "What is similar?" */}
+			{/* 1. Finding similar ideas — foundation: detection + threshold (everyone) */}
 			<Subsection
-				icon={SearchCheck}
-				title={t('Similarity detection')}
+				icon={Search}
+				title={t('Finding similar ideas')}
 				description={t(
-					'Teach the AI when two suggestions count as the same idea. Everything else here builds on this.',
+					'Detects when two submissions express the same idea. The threshold here tunes how strict "similar" means for every feature below.',
 				)}
 			>
 				<ToggleSwitch
@@ -130,13 +125,13 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 				)}
 			</Subsection>
 
-			{/* 2. Input hygiene — "Catch problems while typing" (questions only) */}
+			{/* 2. When people submit — what happens at submission time (questions only) */}
 			{isQuestion && (
 				<Subsection
-					icon={Scissors}
-					title={t('Input hygiene')}
+					icon={PenLine}
+					title={t('When people submit')}
 					description={t(
-						'Help submitters write cleaner suggestions before they ever hit the list.',
+						'What happens at the moment a user submits a suggestion — in submission order.',
 					)}
 				>
 					<ToggleSwitch
@@ -161,55 +156,46 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 				</Subsection>
 			)}
 
-			{/* 3. Smart grouping — "Merge similar options into clusters" (questions only) */}
+			{/* 3. Merging duplicates — soft → continuous → on-demand (questions only) */}
 			{isQuestion && (
 				<Subsection
-					icon={Layers}
-					title={t('Smart grouping')}
+					icon={GitMerge}
+					title={t('Merging duplicates')}
 					description={t(
-						'Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.',
+						'Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.',
 					)}
 				>
 					<GroupingSettings statement={statement} settings={settings} />
+					{isAdminOrCreator && (
+						<>
+							<ToggleSwitch
+								isChecked={liveSynthEffective}
+								onChange={handleLiveSynthToggle}
+								label={t('Live synthesis')}
+								description={
+									isMcQuestion
+										? t(
+												'Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.',
+											)
+										: t(
+												'Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.',
+											)
+								}
+								icon={Zap}
+								badge="new"
+							/>
+							<SynthesizeIdeasAction parentStatementId={statement.statementId} />
+						</>
+					)}
 				</Subsection>
 			)}
 
-			{/* 4. Automated synthesis — "Keep cleaning up as new options arrive" (admin only) */}
+			{/* 4. Thematic clustering — admin diagnostics for theme-based grouping (admin only) */}
 			{isQuestion && isAdminOrCreator && (
 				<Subsection
-					icon={Sparkles}
-					title={t('Continuous synthesis')}
-					description={t(
-						'Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.',
-					)}
-				>
-					<ToggleSwitch
-						isChecked={liveSynthEffective}
-						onChange={handleLiveSynthToggle}
-						label={t('Live synthesis')}
-						description={
-							isMcQuestion
-								? t(
-										'Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.',
-									)
-								: t(
-										'Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.',
-									)
-						}
-						icon={Zap}
-						badge="new"
-					/>
-				</Subsection>
-			)}
-
-			{/* 5. Cluster pipeline — advanced/diagnostic tools (admin only) */}
-			{isQuestion && isAdminOrCreator && (
-				<Subsection
-					icon={Settings2}
-					title={t('Cluster pipeline (advanced)')}
-					description={t(
-						'Diagnostics and manual controls for the semantic & topic clustering pipelines.',
-					)}
+					icon={LayoutGrid}
+					title={t('Thematic clustering (advanced)')}
+					description={t('Groups ideas by theme rather than duplication. Output drives framings.')}
 				>
 					<ClusteringAdmin statement={statement} />
 				</Subsection>

@@ -3131,5 +3131,13 @@
   "Continuous synthesis": "סינתזה רציפה",
   "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "אפשר ל-AI לתחזק אשכולות ברקע כך שהרשימה תישאר מאורגנת ככל שמגיעות הצעות חדשות.",
   "Cluster pipeline (advanced)": "צינור אשכולות (מתקדם)",
-  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "אבחון ובקרות ידניות עבור צינורות הקיבוץ הסמנטי והנושאי."
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "אבחון ובקרות ידניות עבור צינורות הקיבוץ הסמנטי והנושאי.",
+  "Finding similar ideas": "איתור רעיונות דומים",
+  "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.": "מזהה מתי שתי הצעות מבטאות את אותו רעיון. הסף כאן קובע כמה מחמיר ייחשב \"דומה\" עבור כל הפיצ'רים שמתחת.",
+  "When people submit": "כאשר אנשים מגישים",
+  "What happens at the moment a user submits a suggestion — in submission order.": "מה קורה ברגע שמשתמש מגיש הצעה — לפי סדר ההגשה.",
+  "Merging duplicates": "מיזוג כפילויות",
+  "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "שלוש דרכים מדורגות לאחד הצעות כמעט-זהות לאחר שהוגשו: קיבוץ רך, מיזוג רציף ברקע, ומיזוג ידני באישור AI.",
+  "Thematic clustering (advanced)": "אשכולות נושאיים (מתקדם)",
+  "Groups ideas by theme rather than duplication. Output drives framings.": "מקבץ רעיונות לפי נושא במקום לפי כפילות. הפלט מזין את המסגרות."
 }

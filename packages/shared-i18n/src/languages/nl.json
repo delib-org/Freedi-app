@@ -2372,5 +2372,13 @@
   "Continuous synthesis": "Continue synthese",
   "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "Laat de AI clusters op de achtergrond onderhouden zodat de lijst georganiseerd blijft bij nieuwe suggesties.",
   "Cluster pipeline (advanced)": "Cluster-pijplijn (geavanceerd)",
-  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnostiek en handmatige besturing voor de semantische en thematische clusterpijplijnen."
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnostiek en handmatige besturing voor de semantische en thematische clusterpijplijnen.",
+  "Finding similar ideas": "Vergelijkbare ideeën vinden",
+  "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.": "Detecteert wanneer twee inzendingen hetzelfde idee uitdrukken. De drempel hier bepaalt hoe streng \"vergelijkbaar\" geldt voor elke functie hieronder.",
+  "When people submit": "Wanneer mensen indienen",
+  "What happens at the moment a user submits a suggestion — in submission order.": "Wat er gebeurt op het moment dat een gebruiker een suggestie indient — in volgorde van indiening.",
+  "Merging duplicates": "Duplicaten samenvoegen",
+  "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "Drie oplopende manieren om bijna-duplicaten na indiening te consolideren: zachte groepering, continue achtergrond-samenvoeging, en handmatige door AI geverifieerde samenvoeging.",
+  "Thematic clustering (advanced)": "Thematische clustering (geavanceerd)",
+  "Groups ideas by theme rather than duplication. Output drives framings.": "Groepeert ideeën op thema in plaats van duplicatie. De uitvoer voedt de kaders."
 }

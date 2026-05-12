@@ -3117,5 +3117,13 @@
   "Continuous synthesis": "Continuous synthesis",
   "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.",
   "Cluster pipeline (advanced)": "Cluster pipeline (advanced)",
-  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnostics and manual controls for the semantic & topic clustering pipelines."
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnostics and manual controls for the semantic & topic clustering pipelines.",
+  "Finding similar ideas": "Finding similar ideas",
+  "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.": "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.",
+  "When people submit": "When people submit",
+  "What happens at the moment a user submits a suggestion — in submission order.": "What happens at the moment a user submits a suggestion — in submission order.",
+  "Merging duplicates": "Merging duplicates",
+  "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.",
+  "Thematic clustering (advanced)": "Thematic clustering (advanced)",
+  "Groups ideas by theme rather than duplication. Output drives framings.": "Groups ideas by theme rather than duplication. Output drives framings."
 }

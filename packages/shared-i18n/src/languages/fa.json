@@ -2900,5 +2900,13 @@
   "Continuous synthesis": "ترکیب پیوسته",
   "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "به هوش مصنوعی اجازه دهید خوشه‌ها را در پس‌زمینه نگه‌داری کند تا فهرست با ورود پیشنهادهای جدید منظم بماند.",
   "Cluster pipeline (advanced)": "خط لوله خوشه‌بندی (پیشرفته)",
-  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "تشخیص و کنترل‌های دستی برای خطوط لوله خوشه‌بندی معنایی و موضوعی."
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "تشخیص و کنترل‌های دستی برای خطوط لوله خوشه‌بندی معنایی و موضوعی.",
+  "Finding similar ideas": "یافتن ایده‌های مشابه",
+  "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.": "تشخیص می‌دهد چه زمانی دو ارسال یک ایده را بیان می‌کنند. آستانه اینجا تنظیم می‌کند که \"مشابه\" برای همه ویژگی‌های زیر چقدر سخت‌گیرانه باشد.",
+  "When people submit": "هنگام ارسال کاربران",
+  "What happens at the moment a user submits a suggestion — in submission order.": "آنچه در لحظه ارسال پیشنهاد توسط کاربر رخ می‌دهد — به ترتیب ارسال.",
+  "Merging duplicates": "ادغام موارد تکراری",
+  "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "سه روش پلکانی برای یکپارچه‌سازی موارد نزدیک به تکراری پس از ارسال: گروه‌بندی نرم، ادغام پیوسته در پس‌زمینه، و ادغام دستی تأییدشده توسط هوش مصنوعی.",
+  "Thematic clustering (advanced)": "خوشه‌بندی موضوعی (پیشرفته)",
+  "Groups ideas by theme rather than duplication. Output drives framings.": "ایده‌ها را به‌جای تکرار، بر اساس موضوع گروه‌بندی می‌کند. خروجی، چارچوب‌ها را هدایت می‌کند."
 }

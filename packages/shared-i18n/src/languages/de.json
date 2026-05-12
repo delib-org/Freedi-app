@@ -2372,5 +2372,13 @@
   "Continuous synthesis": "Kontinuierliche Synthese",
   "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "Lassen Sie die KI Cluster im Hintergrund pflegen, damit die Liste bei neuen Vorschlägen organisiert bleibt.",
   "Cluster pipeline (advanced)": "Cluster-Pipeline (Erweitert)",
-  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnose- und manuelle Steuerungen für die semantischen und themenbezogenen Clustering-Pipelines."
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnose- und manuelle Steuerungen für die semantischen und themenbezogenen Clustering-Pipelines.",
+  "Finding similar ideas": "Ähnliche Ideen finden",
+  "Detects when two submissions express the same idea. The threshold here tunes how strict \"similar\" means for every feature below.": "Erkennt, wenn zwei Einreichungen dieselbe Idee ausdrücken. Der Schwellenwert hier legt fest, wie streng \"ähnlich\" für alle unten stehenden Funktionen bedeutet.",
+  "When people submit": "Beim Einreichen",
+  "What happens at the moment a user submits a suggestion — in submission order.": "Was beim Einreichen eines Vorschlags passiert — in der Reihenfolge der Einreichung.",
+  "Merging duplicates": "Duplikate zusammenführen",
+  "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "Drei eskalierende Wege, um nahe Duplikate nach der Einreichung zu konsolidieren: weiche Gruppierung, kontinuierliche Hintergrund-Zusammenführung und manuelle KI-verifizierte Zusammenführung.",
+  "Thematic clustering (advanced)": "Thematisches Clustering (Erweitert)",
+  "Groups ideas by theme rather than duplication. Output drives framings.": "Gruppiert Ideen nach Thema statt nach Duplikation. Die Ausgabe speist die Rahmenwerke."
 }
