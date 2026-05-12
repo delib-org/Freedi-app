@@ -18,7 +18,8 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 } from '@freedi/shared-types';
 
-const db = getFirestore();
+// Lazy init to avoid calling getFirestore() before initializeApp()
+const db = () => getFirestore();
 
 /**
  * Condensation-specific cluster aggregation.
@@ -72,7 +73,7 @@ export async function fetchEvaluationsForIds(statementIds: string[]): Promise<Ev
 	for (let i = 0; i < statementIds.length; i += BATCH) {
 		const batch = statementIds.slice(i, i + BATCH);
 		if (batch.length === 0) continue;
-		const snap = await db
+		const snap = await db()
 			.collection(Collections.evaluations)
 			.where('statementId', 'in', batch)
 			.get();
@@ -230,7 +231,7 @@ export async function recomputeClusterEvaluation(
 	clusterId: string,
 	options: AggregationOptions = {},
 ): Promise<StatementEvaluation | null> {
-	const clusterDoc = await db.collection(Collections.statements).doc(clusterId).get();
+	const clusterDoc = await db().collection(Collections.statements).doc(clusterId).get();
 	if (!clusterDoc.exists) return null;
 
 	const cluster = clusterDoc.data() as Statement;
@@ -289,7 +290,7 @@ async function syncClusterEvaluationLinks(
 ): Promise<void> {
 	const now = Date.now();
 	try {
-		const existingSnap = await db
+		const existingSnap = await db()
 			.collection(Collections.clusterEvaluationLinks)
 			.where('clusterId', '==', clusterId)
 			.get();
@@ -358,13 +359,13 @@ async function syncClusterEvaluationLinks(
 		];
 		for (let i = 0; i < all.length; i += BATCH_CAP) {
 			const chunk = all.slice(i, i + BATCH_CAP);
-			const batch = db.batch();
+			const batch = db().batch();
 			for (const op of chunk) {
 				if (op.type === 'set') {
-					const ref = db.collection(Collections.clusterEvaluationLinks).doc(op.link.linkId);
+					const ref = db().collection(Collections.clusterEvaluationLinks).doc(op.link.linkId);
 					batch.set(ref, op.link);
 				} else {
-					const ref = db.collection(Collections.clusterEvaluationLinks).doc(op.id);
+					const ref = db().collection(Collections.clusterEvaluationLinks).doc(op.id);
 					batch.delete(ref);
 				}
 			}
@@ -392,7 +393,7 @@ export async function findClustersAffectedByEvaluation(statementId: string): Pro
 	const affected = new Set<string>();
 
 	// Case 1: the evaluation was on the cluster statement itself.
-	const targetDoc = await db.collection(Collections.statements).doc(statementId).get();
+	const targetDoc = await db().collection(Collections.statements).doc(statementId).get();
 	if (targetDoc.exists) {
 		const target = targetDoc.data() as Statement;
 		if (target.isCluster === true) {
@@ -402,7 +403,7 @@ export async function findClustersAffectedByEvaluation(statementId: string): Pro
 
 	// Case 2: the evaluation was on an original that is part of one or more
 	// clusters. Look up clusters via `array-contains integratedOptions`.
-	const clustersSnap = await db
+	const clustersSnap = await db()
 		.collection(Collections.statements)
 		.where('integratedOptions', 'array-contains', statementId)
 		.get();
