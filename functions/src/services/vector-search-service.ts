@@ -52,7 +52,7 @@ class VectorSearchService {
 				questionContext,
 			);
 
-			logger.info('Query embedding generated', {
+			logger.debug('Query embedding generated', {
 				userInput: userInput.substring(0, 50),
 				embeddingLength: queryEmbedding.length,
 			});
@@ -116,6 +116,13 @@ class VectorSearchService {
 			const snapshot = await vectorQuery.get();
 
 			const results: SimilarStatement[] = [];
+			// Aggregate counters — replaces a per-doc logger.info that emitted
+			// ~60 INFO lines per call (limit*3) and dominated wall-clock at scale
+			// (~45k log lines for a 764-anchor synthesis run).
+			let candidatesScanned = 0;
+			let candidatesPassed = 0;
+			let topSimilarity = -Infinity;
+			let topStatementId: string | undefined;
 
 			for (const doc of snapshot.docs) {
 				const data = doc.data() as Statement;
@@ -138,22 +145,29 @@ class VectorSearchService {
 
 				const similarity = 1 - distance; // Cosine similarity = 1 - cosine distance
 
-				logger.info('Vector search result', {
-					statementId: data.statementId,
-					statement: data.statement?.substring(0, 50),
-					distance,
-					similarity: similarity.toFixed(3),
-					threshold,
-					passesThreshold: similarity >= threshold,
-				});
+				candidatesScanned += 1;
+				if (similarity > topSimilarity) {
+					topSimilarity = similarity;
+					topStatementId = data.statementId;
+				}
 
 				if (similarity >= threshold) {
+					candidatesPassed += 1;
 					results.push({
 						statement: data,
 						similarity,
 					});
 				}
 			}
+
+			logger.debug('vectorSearch.candidates', {
+				parentId,
+				candidatesScanned,
+				candidatesPassed,
+				topSimilarity: topSimilarity === -Infinity ? null : Number(topSimilarity.toFixed(3)),
+				topStatementId,
+				threshold,
+			});
 
 			// Sort by similarity descending (should already be, but ensure)
 			return results.sort((a, b) => b.similarity - a.similarity);

@@ -990,6 +990,60 @@ export const refreshUserStats = onSchedule(
 	},
 );
 
+// Ship 2 — async-synthesis job model.
+// `synthesisJobStart` and `synthesisJobCancel` are callables that gate on
+// the SYNTHESIS_ASYNC_JOB_MODE flag. The Firestore-write dispatcher routes
+// jobs through their phases. The heartbeat sweep recovers stuck jobs every
+// 5 min. The existing synchronous `synthesizeIdeasPreview` is unchanged —
+// clients pick which entry point to call.
+export { synthesisJobStart, synthesisJobCancel } from './synthesis/asyncJob/fn_synthesisJobStart';
+export { fn_synthesisHeartbeatSweep } from './synthesis/asyncJob/fn_synthesisHeartbeatSweep';
+
+import { dispatchSynthesisJobWrite } from './synthesis/asyncJob/fn_synthesisJobDispatch';
+
+exports.synthesisJobDispatch = createFirestoreFunction(
+	'/synthesisJobs/{jobId}',
+	onDocumentWritten,
+	dispatchSynthesisJobWrite,
+	'synthesisJobDispatch',
+);
+
+// Ship 3a — cluster-aware polarization scheduled flusher.
+// Runs every 1 minute, drains `_clusterRecomputeQueue`, recomputes synth
+// cluster aggregates + polarization indexes. No-ops when the
+// SYNTHESIS_CLUSTER_AWARE_POLARIZATION flag is OFF (drains queue without
+// acting). See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 3" /
+// "Debounced flusher".
+export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomputeFlush';
+
+// Ship 3b — live-synth attach/spawn/dissolve triggers.
+// Both are gated by the SYNTHESIS_LIVE_SYNTH_ENABLED flag and exit
+// immediately at handler entry when OFF. The handlers themselves live in
+// `synthesis/liveSynth/onOptionCreateLive.ts` and `onOptionUpdateLive.ts`.
+// See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 1" / "Trigger 2".
+import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
+import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
+
+exports.liveSynthOnOptionCreate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	async (event: { data?: { data: () => unknown } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionCreate(event.data.data());
+	},
+	'liveSynthOnOptionCreate',
+);
+
+exports.liveSynthOnOptionUpdate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionUpdate(event.data.before.data(), event.data.after.data());
+	},
+	'liveSynthOnOptionUpdate',
+);
+
 // HTTP endpoint for one-time historical backfill (admin auth required)
 exports.backfillAdminStats = wrapAdminHttpFunction(backfillAdminStats);
 

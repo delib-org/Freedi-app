@@ -45,6 +45,25 @@ interface AggregationOptions {
 	 *  parent's evaluationSettings when available. */
 	targetPopulation?: number;
 	samplingQuality?: number;
+	/**
+	 * When true, a user's direct vote on the cluster (an Evaluation whose
+	 * statementId equals `clusterStatementId`) takes precedence over the
+	 * average of their member votes. Required by the live-synth path so
+	 * direct synth votes override member-vote rollup per the
+	 * "one vote per evaluator, direct-wins" model. Default false preserves
+	 * the existing condensation-pipeline semantics (per-user average).
+	 *
+	 * Requires `clusterStatementId` to be set; otherwise falls back to
+	 * average behavior.
+	 */
+	directVoteWins?: boolean;
+	/**
+	 * The statementId of the cluster being aggregated. Only used when
+	 * `directVoteWins` is true. The aggregator inspects each user's
+	 * evaluations and uses the one targeting this id (if present)
+	 * instead of the per-user average.
+	 */
+	clusterStatementId?: string;
 }
 
 export async function fetchEvaluationsForIds(statementIds: string[]): Promise<Evaluation[]> {
@@ -128,18 +147,35 @@ export function computeClusterEvaluationFromRawEvals(
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
 
+	const directWinsActive = options.directVoteWins === true && !!options.clusterStatementId;
+	const clusterStatementId = options.clusterStatementId;
+
 	byUser.forEach((userEvals, userId) => {
-		const values = userEvals.map((e) => e.evaluation);
-		const avg = values.reduce((a, b) => a + b, 0) / values.length;
-		perUserAverages.set(userId, avg);
-		sumEvaluations += avg;
-		sumSquaredEvaluations += avg * avg;
-		if (avg > 0) {
+		// Direct-wins: if the user voted on the cluster itself, use that one
+		// value; ignore their member votes for the rollup. Else average across
+		// whatever they did vote on (the historical condensation behavior).
+		let effective: number;
+		if (directWinsActive) {
+			const directVote = userEvals.find((e) => e.statementId === clusterStatementId);
+			if (directVote) {
+				effective = directVote.evaluation;
+			} else {
+				const values = userEvals.map((e) => e.evaluation);
+				effective = values.reduce((a, b) => a + b, 0) / values.length;
+			}
+		} else {
+			const values = userEvals.map((e) => e.evaluation);
+			effective = values.reduce((a, b) => a + b, 0) / values.length;
+		}
+		perUserAverages.set(userId, effective);
+		sumEvaluations += effective;
+		sumSquaredEvaluations += effective * effective;
+		if (effective > 0) {
 			numberOfProEvaluators++;
-			sumPro += avg;
-		} else if (avg < 0) {
+			sumPro += effective;
+		} else if (effective < 0) {
 			numberOfConEvaluators++;
-			sumCon += Math.abs(avg);
+			sumCon += Math.abs(effective);
 		}
 	});
 
