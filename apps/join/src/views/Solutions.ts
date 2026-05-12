@@ -11,6 +11,7 @@ import {
 	subscribeOptions,
 	subscribeQuestion,
 	subscribeMainStatement,
+	getMainIdForQuestion,
 	subscribeUserEvaluations,
 	subscribeUserJoinFormSubmission,
 	getUnreadCount,
@@ -114,8 +115,16 @@ export const Solutions: m.Component = {
 
 			// In facilitated mode, also keep a listener on the main statement so
 			// the facilitator can move us up to the Hub or across to another
-			// question / chat without us being on the Hub view.
-			const mainId = m.route.param('mid');
+			// question / chat without us being on the Hub view. When the
+			// participant landed on a direct `/q/:qid` link with no `/m/:mid`
+			// prefix, fall back to the question's `topParentId` so they still
+			// follow the facilitator — the redirect itself promotes them onto
+			// `/m/:mid/q/:qid` for subsequent navigation.
+			let mainId: string | undefined = m.route.param('mid');
+			if (!mainId) {
+				const derivedMainId = getMainIdForQuestion(getQuestion());
+				if (derivedMainId) mainId = derivedMainId;
+			}
 			if (mainId) {
 				mainUnsub = subscribeMainStatement(mainId);
 			}

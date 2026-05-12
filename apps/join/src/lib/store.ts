@@ -1231,6 +1231,13 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 		lastFollowedPath = '';
 	}
 
+	// Install the visibility/online resync hooks once — they fire a forced
+	// re-read of the main statement when the tab returns to the foreground or
+	// the network comes back online, which rescues participants whose
+	// Firestore websocket went zombie during a long background suspension
+	// (the symptom: "after ~20 minutes some participants stop following").
+	ensureFacilitatorResyncListeners();
+
 	return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
 		if (!snap.exists()) {
 			mainStatement = null;
@@ -1255,15 +1262,91 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 		// join participants away every time the join admin tried to lead.
 		// `joinFollowMe` is owned by the Join app alone, so a stray main-app
 		// session can't fight us.
+		//
+		// No outer dedupe on `activePath !== lastFollowedPath`: if a participant
+		// drifted off the followed route (browser back, share-link, refresh),
+		// we want any subsequent snapshot — even one carrying the same path —
+		// to pull them back. `applyFacilitatorRedirect` is a no-op when the
+		// resolved route already matches `m.route.get()`, so calling it on
+		// every snapshot is cheap.
 		const activePath = data.joinFollowMe ?? '';
-		if (activePath !== lastFollowedPath) {
-			lastFollowedPath = activePath;
-			if (!isAdmin()) {
-				void applyFacilitatorRedirect(activePath, mainId);
-			}
+		lastFollowedPath = activePath;
+		if (!isAdmin()) {
+			void applyFacilitatorRedirect(activePath, mainId);
 		}
 		m.redraw();
 	});
+}
+
+/** Re-read the active main statement and re-apply its `joinFollowMe`. Used by
+ *  the visibility/online listeners below to recover from a zombie Firestore
+ *  websocket (mobile tabs suspended for ~20 min often lose the listener
+ *  silently — no error, no fresh snapshots). Forcing a `getDoc` round-trip
+ *  bypasses the cache and yanks participants back to the facilitator's
+ *  current path if they missed updates while in the background. */
+async function resyncFacilitatorState(): Promise<void> {
+	const mainId = activeFacilitatedMainId;
+	if (!mainId) return;
+	try {
+		const snap = await getDoc(doc(db, Collections.statements, mainId));
+		if (!snap.exists()) return;
+		const data = snap.data() as Statement;
+		mainStatement = data;
+		syncMainStatementLanguage();
+		const activePath = data.joinFollowMe ?? '';
+		lastFollowedPath = activePath;
+		if (!isAdmin()) {
+			void applyFacilitatorRedirect(activePath, mainId);
+		}
+		m.redraw();
+	} catch (err) {
+		console.error('[facilitator] resync after visibility/online failed:', err);
+	}
+}
+
+let facilitatorResyncListenersAttached = false;
+function ensureFacilitatorResyncListeners(): void {
+	if (facilitatorResyncListenersAttached) return;
+	if (typeof document === 'undefined') return;
+	facilitatorResyncListenersAttached = true;
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'visible') {
+			void resyncFacilitatorState();
+		}
+	});
+	if (typeof window !== 'undefined') {
+		window.addEventListener('online', () => {
+			void resyncFacilitatorState();
+		});
+		// `pageshow` fires when the page is restored from the bfcache (browser
+		// back-forward cache). Firestore listeners do NOT survive bfcache restore
+		// reliably, so treat it like a visibility return.
+		window.addEventListener('pageshow', (e: PageTransitionEvent) => {
+			if (e.persisted) void resyncFacilitatorState();
+		});
+	}
+}
+
+/** Given a (possibly directly-deep-linked) question, return the workspace main
+ *  statement id to subscribe to for follow-me, or null if this question has no
+ *  workspace ancestor. Lets Solutions/Chat keep tracking the facilitator even
+ *  when the participant arrived via `/q/:qid` or `/q/:qid/s/:sid` (no `/m/:mid`
+ *  prefix in the URL). The workspace root is identified by the question's
+ *  `topParentId` — sub-questions inherit it from their parent main statement;
+ *  workspace-root statements themselves have `topParentId === statementId` and
+ *  so are skipped here (they're their own main, but the panel can't lead from
+ *  outside the `/m/:mid` route anyway). */
+export function getMainIdForQuestion(q: Statement | null): string | null {
+	if (!q) return null;
+	const top = q.topParentId;
+	if (!top) return null;
+	// Legacy workspace roots can carry `topParentId === 'top'` (the sentinel
+	// used for `parentId` before the join-app's create flows started writing
+	// the self-id). Subscribing to a `'top'` doc would throw — skip.
+	if (top === 'top') return null;
+	if (top === q.statementId) return null;
+
+	return top;
 }
 
 export function subscribeSubQuestions(mainId: string): Unsubscribe {

@@ -9,6 +9,7 @@ import {
   setCustomDisplayName,
   getCustomDisplayName,
   subscribeMainStatement,
+  getMainIdForQuestion,
   loadQuestion,
   subscribeQuestion,
   getQuestion,
@@ -103,8 +104,16 @@ export const Chat: m.Component = {
       }
 
       // In facilitated mode, keep a listener on the main statement so the
-      // facilitator can move us back up to Solutions or the Hub.
-      const mainId = m.route.param('mid');
+      // facilitator can move us back up to Solutions or the Hub. When the
+      // participant landed on a direct `/q/:qid/s/:sid` link with no
+      // `/m/:mid` prefix, fall back to the question's `topParentId` so they
+      // still follow the facilitator — the redirect itself promotes them
+      // onto `/m/:mid/q/:qid/s/:sid` for subsequent navigation.
+      let mainId: string | undefined = m.route.param('mid');
+      if (!mainId) {
+        const derivedMainId = getMainIdForQuestion(getQuestion());
+        if (derivedMainId) mainId = derivedMainId;
+      }
       if (mainId) {
         mainUnsub = subscribeMainStatement(mainId);
       }
