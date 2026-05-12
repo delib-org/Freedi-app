@@ -8,6 +8,7 @@ import { generateSynthesizedProposal } from '../../services/integration-ai-servi
 import { synthesisFlags } from '../featureFlags';
 import { recordLiveSynthEvent } from './auditLog';
 import { enqueueClusterRecompute } from './clusterRecompute';
+import { isLiveSynthEnabledForQuestion } from './featureGate';
 
 /**
  * Live-synth attach + spawn pipeline.
@@ -400,6 +401,31 @@ export async function liveSynthOnOptionCreate(rawStatement: unknown): Promise<vo
 	if (optedOutOfMergeRaw === false) return;
 
 	try {
+		// Per-question gate (Ship 3b.5): the global env flag is the deploy-
+		// wide kill switch; this is the per-question layer on top. MC
+		// questions get live-synth ON by default; everything else needs an
+		// explicit `statementSettings.liveSynthEnabled === true` opt-in.
+		// Fetched eagerly here (one Firestore read) so the gate sees the
+		// parent before any expensive embedding / vector-search work.
+		const parentDoc = await db().collection(Collections.statements).doc(statement.parentId).get();
+		if (!parentDoc.exists) {
+			logger.warn('liveSynth.onOptionCreate: parent not found, skipping', {
+				parentId: statement.parentId,
+			});
+
+			return;
+		}
+		const parentStatement = parentDoc.data() as Statement;
+		const allowed = await isLiveSynthEnabledForQuestion({ parent: parentStatement });
+		if (!allowed) {
+			logger.debug('liveSynth.onOptionCreate.gated', {
+				statementId: statement.statementId,
+				parentId: statement.parentId,
+			});
+
+			return;
+		}
+
 		const embedding = await ensureEmbedding(statement);
 		if (!embedding) return;
 
@@ -437,17 +463,8 @@ export async function liveSynthOnOptionCreate(rawStatement: unknown): Promise<vo
 		}
 
 		if (top.similarity >= ATTACH_THRESHOLD) {
-			// Top hit is a plain option — fetch the parent so the proposal LLM
-			// has the question context, then spawn.
-			const parentDoc = await db().collection(Collections.statements).doc(statement.parentId).get();
-			if (!parentDoc.exists) {
-				logger.warn('liveSynth.spawn: parent not found, skipping', {
-					parentId: statement.parentId,
-				});
-
-				return;
-			}
-			const parentStatement = parentDoc.data() as Statement;
+			// Top hit is a plain option — spawn a new cluster, reusing the
+			// parent we already loaded for the gate check.
 			await spawnClusterFromPair({
 				option: statement,
 				sibling: top.statement,

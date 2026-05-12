@@ -1,6 +1,12 @@
 import { FC } from 'react';
-import { Statement, StatementSettings, StatementType, Role } from '@freedi/shared-types';
-import { Search, Target, Database, Scissors } from 'lucide-react';
+import {
+	QuestionType,
+	Role,
+	Statement,
+	StatementSettings,
+	StatementType,
+} from '@freedi/shared-types';
+import { Search, Target, Database, Scissors, Zap } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementSubscriptionSelector } from '@/redux/statements/statementsSlice';
@@ -23,6 +29,21 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 	const subscription = useAppSelector(statementSubscriptionSelector(statement.statementId));
 	const isAdminOrCreator = subscription?.role === Role.admin || subscription?.role === Role.creator;
 	const isQuestion = statement.statementType === StatementType.question;
+
+	// Live-synth per-question gate (Ship 3b.5). The field isn't on the typed
+	// `StatementSettings` schema yet (the codebase ships `@freedi/shared-types`
+	// as a packaged .tgz and adding a field would force a coordinated rebuild
+	// + reinstall). We read it via a typed cast — same pattern the backend
+	// trigger uses when reading the override. Default state shown to admins
+	// matches the backend gate: explicit override wins; otherwise ON for MC,
+	// OFF for everything else.
+	const liveSynthOverride = (settings as unknown as Record<string, unknown>)['liveSynthEnabled'];
+	const isMcQuestion = statement.questionSettings?.questionType === QuestionType.massConsensus;
+	const liveSynthEffective =
+		typeof liveSynthOverride === 'boolean' ? liveSynthOverride : isMcQuestion;
+	const handleLiveSynthToggle = (checked: boolean) => {
+		handleSettingChange('liveSynthEnabled' as keyof StatementSettings, checked);
+	};
 
 	return (
 		<>
@@ -78,7 +99,27 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 						badge="new"
 					/>
 					<GroupingSettings statement={statement} settings={settings} />
-					{isAdminOrCreator && <ClusteringAdmin statement={statement} />}
+					{isAdminOrCreator && (
+						<>
+							<ToggleSwitch
+								isChecked={liveSynthEffective}
+								onChange={handleLiveSynthToggle}
+								label={t('Live synthesis')}
+								description={
+									isMcQuestion
+										? t(
+												'Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.',
+											)
+										: t(
+												'Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.',
+											)
+								}
+								icon={Zap}
+								badge="new"
+							/>
+							<ClusteringAdmin statement={statement} />
+						</>
+					)}
 				</>
 			)}
 		</>

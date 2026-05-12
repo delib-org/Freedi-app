@@ -9,6 +9,7 @@ import { recordLiveSynthEvent } from './auditLog';
 import { enqueueClusterRecompute, findClustersContainingMember } from './clusterRecompute';
 import { cosineSimilarity } from '../bulkCluster';
 import { pairKey } from '../completeLinkage';
+import { isLiveSynthEnabledForQuestion } from './featureGate';
 
 /**
  * Live-synth edit invalidation.
@@ -214,6 +215,23 @@ export async function liveSynthOnOptionUpdate(
 	if (!diff) return;
 
 	try {
+		// Per-question gate (Ship 3b.5): same rule as the create trigger.
+		// Even though the option is in a cluster, we respect the question's
+		// live-synth setting — toggling OFF freezes ALL live-synth activity
+		// for the question (no edit invalidation either).
+		const parentDoc = await db().collection(Collections.statements).doc(diff.parentId).get();
+		if (!parentDoc.exists) return;
+		const parentStatement = parentDoc.data() as Statement;
+		const allowed = await isLiveSynthEnabledForQuestion({ parent: parentStatement });
+		if (!allowed) {
+			logger.debug('liveSynth.onOptionUpdate.gated', {
+				statementId: diff.statementId,
+				parentId: diff.parentId,
+			});
+
+			return;
+		}
+
 		const containingClusters = await findClustersContainingMember(diff.statementId);
 		if (containingClusters.length === 0) return;
 

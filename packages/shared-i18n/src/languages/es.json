@@ -2353,5 +2353,8 @@
   "Sort applies to clusters and members within each cluster using the same metric": "Sort applies to clusters and members within each cluster using the same metric",
   "Auto-grouped by similarity (k-means on embeddings)": "Auto-grouped by similarity (k-means on embeddings)",
   "Themes from deliberation (LLM-derived)": "Themes from deliberation (LLM-derived)",
-  "Synthesized proposals": "Synthesized proposals"
+  "Synthesized proposals": "Synthesized proposals",
+  "Live synthesis": "Síntesis en vivo",
+  "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.": "El disparador en segundo plano fusiona automáticamente las opciones nuevas similares en grupos. Activado por defecto para preguntas de Consenso Masivo; desactiva para requerir síntesis manual.",
+  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "El disparador en segundo plano fusiona automáticamente las opciones nuevas similares en grupos. Desactivado por defecto fuera del Consenso Masivo; activa para habilitarlo en esta pregunta."
 }

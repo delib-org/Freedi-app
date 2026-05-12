@@ -99,7 +99,7 @@ function makeBeforeAfter(
 	return [baseBefore, baseAfter] as const;
 }
 
-function setupFirestore() {
+function setupFirestore(options: { mcParent?: boolean } = {}) {
 	const updateMock = jest.fn().mockResolvedValue(undefined);
 	const deleteMock = jest.fn().mockResolvedValue(undefined);
 	const evalsGet = jest.fn().mockResolvedValue({ empty: true, docs: [] });
@@ -108,10 +108,34 @@ function setupFirestore() {
 		set: archiveSet,
 		commit: jest.fn().mockResolvedValue(undefined),
 	};
-	const docMock = jest.fn().mockReturnValue({
-		update: updateMock,
-		delete: deleteMock,
-		set: jest.fn().mockResolvedValue(undefined),
+	// The trigger now fetches the parent question first (for the Ship 3b.5
+	// per-question gate). Default to an MC parent so the gate passes; tests
+	// that want to assert "gate-blocks" set mcParent: false.
+	const isMc = options.mcParent ?? true;
+	const parentGet = jest.fn().mockResolvedValue({
+		exists: true,
+		data: () => ({
+			statementId: 'q1',
+			statementType: 'question',
+			questionSettings: isMc ? { questionType: 'mass-consensus' } : {},
+		}),
+	});
+	const docMock = jest.fn((id: string) => {
+		if (id === 'q1') {
+			return {
+				get: parentGet,
+				update: updateMock,
+				delete: deleteMock,
+				set: jest.fn().mockResolvedValue(undefined),
+			};
+		}
+
+		return {
+			get: parentGet,
+			update: updateMock,
+			delete: deleteMock,
+			set: jest.fn().mockResolvedValue(undefined),
+		};
 	});
 	const whereMock = jest.fn().mockReturnValue({ get: evalsGet });
 	const collMock = jest.fn().mockReturnValue({ doc: docMock, where: whereMock });
@@ -120,7 +144,7 @@ function setupFirestore() {
 		batch: () => batch,
 	});
 
-	return { updateMock, deleteMock, evalsGet, batch, docMock, collMock, archiveSet };
+	return { updateMock, deleteMock, evalsGet, batch, docMock, collMock, archiveSet, parentGet };
 }
 
 describe('diffEditEvent', () => {

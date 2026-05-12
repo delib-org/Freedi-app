@@ -94,16 +94,26 @@ function makeOption(overrides: Record<string, unknown> = {}): unknown {
 }
 
 function setupFirestoreMockForGet(
-	options: { exists: boolean; data?: Record<string, unknown> } = { exists: false },
+	options: { exists?: boolean; data?: Record<string, unknown> } = {},
 ) {
+	// Default: parent exists AND is MC so the per-question gate (Ship 3b.5)
+	// passes by default. Tests that need a non-MC parent or a missing
+	// parent override these explicitly.
+	const exists = options.exists ?? true;
+	const data = options.data ?? {
+		statementId: 'q1',
+		statement: 'the question',
+		statementType: 'question',
+		questionSettings: { questionType: 'mass-consensus' },
+	};
 	const debounceDoc = {
 		get: jest.fn().mockResolvedValue({ exists: false, data: () => ({}) }),
 		set: jest.fn().mockResolvedValue(undefined),
 	};
 	const parentDoc = {
 		get: jest.fn().mockResolvedValue({
-			exists: options.exists,
-			data: () => options.data ?? {},
+			exists,
+			data: () => data,
 		}),
 	};
 	const reviewAdd = jest.fn().mockResolvedValue(undefined);
@@ -186,7 +196,12 @@ describe('liveSynthOnOptionCreate', () => {
 	it('spawns a new cluster when top hit is a plain option at cosine ≥ 0.92', async () => {
 		const fs = setupFirestoreMockForGet({
 			exists: true,
-			data: { statementId: 'q1', statement: 'the question', statementType: 'question' },
+			data: {
+				statementId: 'q1',
+				statement: 'the question',
+				statementType: 'question',
+				questionSettings: { questionType: 'mass-consensus' },
+			},
 		});
 		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
 		mockFindSimilarByEmbedding.mockResolvedValue([
@@ -260,7 +275,11 @@ describe('liveSynthOnOptionCreate', () => {
 	it('does NOT spawn when LLM proposes cannotSynthesize=true (queues for review instead)', async () => {
 		const fs = setupFirestoreMockForGet({
 			exists: true,
-			data: { statementId: 'q1', statement: 'the question' },
+			data: {
+				statementId: 'q1',
+				statement: 'the question',
+				questionSettings: { questionType: 'mass-consensus' },
+			},
 		});
 		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
 		mockFindSimilarByEmbedding.mockResolvedValue([
@@ -291,6 +310,48 @@ describe('liveSynthOnOptionCreate', () => {
 			(c) => c[0]?.action === 'review-queued',
 		);
 		expect(reviewAudit).toBeDefined();
+	});
+
+	it('Ship 3b.5: gates OFF when parent is non-MC and has no override', async () => {
+		setupFirestoreMockForGet({
+			exists: true,
+			data: { statementId: 'q1', statement: 'q', statementType: 'question' },
+		});
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
+		await liveSynthOnOptionCreate(makeOption());
+		expect(mockFindSimilarByEmbedding).not.toHaveBeenCalled();
+	});
+
+	it('Ship 3b.5: gates ON when parent is non-MC but has explicit liveSynthEnabled=true override', async () => {
+		setupFirestoreMockForGet({
+			exists: true,
+			data: {
+				statementId: 'q1',
+				statement: 'q',
+				statementType: 'question',
+				statementSettings: { liveSynthEnabled: true },
+			},
+		});
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
+		mockFindSimilarByEmbedding.mockResolvedValue([]);
+		await liveSynthOnOptionCreate(makeOption());
+		expect(mockFindSimilarByEmbedding).toHaveBeenCalled();
+	});
+
+	it('Ship 3b.5: gates OFF when MC parent has explicit liveSynthEnabled=false override', async () => {
+		setupFirestoreMockForGet({
+			exists: true,
+			data: {
+				statementId: 'q1',
+				statement: 'q',
+				statementType: 'question',
+				questionSettings: { questionType: 'mass-consensus' },
+				statementSettings: { liveSynthEnabled: false },
+			},
+		});
+		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
+		await liveSynthOnOptionCreate(makeOption());
+		expect(mockFindSimilarByEmbedding).not.toHaveBeenCalled();
 	});
 
 	it('falls back to direct embedding generation when cache is empty', async () => {
