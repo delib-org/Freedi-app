@@ -1020,6 +1020,12 @@ let subQuestions: Statement[] = [];
 let lastFollowedPath = '';
 let activeFacilitatedMainId: string | null = null;
 let pendingRedirectTimer: number | null = null;
+// The route the pending timer above is heading to. Lets `applyFacilitatorRedirect`
+// skip re-arming the 700ms timeout when it's already heading to the same target —
+// otherwise rapid back-to-back snapshots (e.g. the admin flips a theme while a
+// follow-me write is in flight) would keep clearing and re-arming the timer,
+// and the redirect would never actually fire.
+let pendingRedirectRoute: string | null = null;
 
 export function getMainStatement(): Statement | null {
 	return mainStatement;
@@ -1370,6 +1376,7 @@ async function applyFacilitatorRedirect(path: string, mainId: string): Promise<v
 			window.clearTimeout(pendingRedirectTimer);
 			pendingRedirectTimer = null;
 		}
+		pendingRedirectRoute = null;
 
 		return;
 	}
@@ -1378,15 +1385,33 @@ async function applyFacilitatorRedirect(path: string, mainId: string): Promise<v
 	if (!target) return;
 
 	const route = joinTargetToRoute(target, mainId);
-	if (route === m.route.get()) return;
+	if (route === m.route.get()) {
+		// Already on the followed route — clear any stale pending redirect that
+		// was queued before the participant arrived here on their own.
+		if (pendingRedirectTimer !== null) {
+			window.clearTimeout(pendingRedirectTimer);
+			pendingRedirectTimer = null;
+		}
+		pendingRedirectRoute = null;
+
+		return;
+	}
+
+	// Coalesce: if a timer is already heading to the same route, don't reset it.
+	// Without this guard, every snapshot from the main statement (theme write,
+	// language change, etc.) would re-call this function and keep pushing the
+	// redirect out by 700ms — the participant would never actually be moved.
+	if (pendingRedirectRoute === route && pendingRedirectTimer !== null) return;
 
 	showFacilitatorToast(t('facilitator.following'));
 
 	if (pendingRedirectTimer !== null) {
 		window.clearTimeout(pendingRedirectTimer);
 	}
+	pendingRedirectRoute = route;
 	pendingRedirectTimer = window.setTimeout(() => {
 		pendingRedirectTimer = null;
+		pendingRedirectRoute = null;
 		if (m.route.get() !== route) m.route.set(route);
 	}, FACILITATOR_REDIRECT_DELAY_MS);
 }
