@@ -68,6 +68,7 @@ import {
 	revokeJoinDelegate as _revokeJoinDelegate,
 	acceptJoinDelegateInvite as _acceptJoinDelegateInvite,
 } from './delegates/delegateActions';
+
 export const subscribeQuestionDelegates = _subscribeQuestionDelegates;
 export const unsubscribeQuestionDelegates = _unsubscribeQuestionDelegates;
 export const getDelegatesForQuestion = _getDelegatesForQuestion;
@@ -83,6 +84,7 @@ import {
 	markOptionChatRead,
 	subscribeMessageCounts,
 } from './chat/messageCounts';
+
 export const getMessageCount = _getMessageCount;
 export const getNewMessageCount = _getNewMessageCount;
 /** Cluster-id → unique-evaluator count. Populated by `subscribeClusterLinks`. */
@@ -102,6 +104,7 @@ import {
 	isOptionNewlyArrived as _isOptionNewlyArrived,
 	flushNewOptions as _flushNewOptions,
 } from './newSolutionsBuffer';
+
 export const getNewOptionsPendingCount = _getNewOptionsPendingCount;
 export const isOptionNewlyArrived = _isOptionNewlyArrived;
 export const flushNewOptions = _flushNewOptions;
@@ -113,6 +116,7 @@ import {
 	setEvaluation as _setEvaluation,
 	subscribeUserEvaluations as _subscribeUserEvaluations,
 } from './userEvaluations';
+
 export const getEffectiveEvaluation = _getEffectiveEvaluation;
 export const setEvaluation = _setEvaluation;
 export const subscribeUserEvaluations = _subscribeUserEvaluations;
@@ -1619,6 +1623,7 @@ import {
 	resetQuestionJoining as _resetQuestionJoining,
 	getUserCommittedOptionsFrom,
 } from './join/joinCallables';
+
 export type ToggleJoiningResult = _ToggleJoiningResult;
 export type ToggleJoiningOptions = _ToggleJoiningOptions;
 export type TestSheetAccessResult = _TestSheetAccessResult;

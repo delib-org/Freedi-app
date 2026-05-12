@@ -251,15 +251,19 @@ export const Solutions: m.Component = {
 							{
 								onclick: flushNewOptions,
 								'aria-live': 'polite',
-								'aria-label': pendingCount === 1
-									? t('solutions.new_answers')
-									: t('solutions.new_answers_plural', { count: pendingCount }),
+								'aria-label':
+									pendingCount === 1
+										? t('solutions.new_answers')
+										: t('solutions.new_answers_plural', { count: pendingCount }),
 							},
 							[
 								m('span.solutions__new-pill-arrow', '↑'),
-								m('span', pendingCount === 1
-									? t('solutions.new_answers')
-									: t('solutions.new_answers_plural', { count: pendingCount })),
+								m(
+									'span',
+									pendingCount === 1
+										? t('solutions.new_answers')
+										: t('solutions.new_answers_plural', { count: pendingCount }),
+								),
 							],
 						)
 					: null,
@@ -442,8 +446,7 @@ export const Solutions: m.Component = {
 						questionId: question.statementId,
 						role: limitPendingRole,
 						currentJoins: limitCurrentJoins,
-						maxJoinsPerUser:
-							question.statementSettings?.activationThreshold?.maxJoinsPerUser ?? 0,
+						maxJoinsPerUser: question.statementSettings?.activationThreshold?.maxJoinsPerUser ?? 0,
 						onClose: () => {
 							showLimitSwap = false;
 							limitPendingOptionId = null;

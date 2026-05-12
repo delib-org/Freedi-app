@@ -17,16 +17,7 @@
 
 import m from 'mithril';
 import { Statement, Collections, Creator } from '@freedi/shared-types';
-import {
-	db,
-	collection,
-	doc,
-	setDoc,
-	query,
-	where,
-	onSnapshot,
-	Unsubscribe,
-} from './firebase';
+import { db, collection, doc, setDoc, query, where, onSnapshot, Unsubscribe } from './firebase';
 import { getUserState } from './user';
 import { unhighlightOption } from './newSolutionsBuffer';
 

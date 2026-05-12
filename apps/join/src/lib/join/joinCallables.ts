@@ -15,11 +15,7 @@
  * Carved out of store.ts so the trust-sensitive wrappers live together.
  */
 
-import {
-	Statement,
-	StatementType,
-	Collections,
-} from '@freedi/shared-types';
+import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import {
 	db,
 	functions,
@@ -34,10 +30,7 @@ import {
 } from '../firebase';
 import { getUserState } from '../user';
 import { isAdmin } from '../admin';
-import {
-	clearJoinFormCacheForUsers,
-	type JoinRole,
-} from './joinFormCache';
+import { clearJoinFormCacheForUsers, type JoinRole } from './joinFormCache';
 
 // ---------------------------------------------------------------------------
 // toggleJoining (server-enforced via fn_joinOption)
@@ -235,11 +228,7 @@ export async function resetQuestionJoining(
 		if (optionsSnap.size > 0) {
 			const batch = writeBatch(db);
 			for (const optionDoc of optionsSnap.docs) {
-				batch.set(
-					optionDoc.ref,
-					{ joined: [], organizers: [], lastUpdate: now },
-					{ merge: true },
-				);
+				batch.set(optionDoc.ref, { joined: [], organizers: [], lastUpdate: now }, { merge: true });
 			}
 			await batch.commit();
 			result.optionsCleared = optionsSnap.size;
@@ -364,19 +353,12 @@ async function removeUserFromSheet(questionId: string, userId: string): Promise<
  * module state so this module stays decoupled from the active-question
  * state in `store.ts`.
  */
-export function getUserCommittedOptionsFrom(
-	allOptions: Statement[],
-	uid: string,
-): Statement[] {
+export function getUserCommittedOptionsFrom(allOptions: Statement[], uid: string): Statement[] {
 	return allOptions.filter((option) => {
 		if (option.hide === true) return false;
 		if (option.joinStatus === 'failed') return false;
-		const inJoined =
-			Array.isArray(option.joined) &&
-			option.joined.some((c) => c.uid === uid);
-		const inOrgs =
-			Array.isArray(option.organizers) &&
-			option.organizers.some((c) => c.uid === uid);
+		const inJoined = Array.isArray(option.joined) && option.joined.some((c) => c.uid === uid);
+		const inOrgs = Array.isArray(option.organizers) && option.organizers.some((c) => c.uid === uid);
 
 		return inJoined || inOrgs;
 	});
