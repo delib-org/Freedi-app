@@ -2908,5 +2908,13 @@
   "Merging duplicates": "ادغام موارد تکراری",
   "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "سه روش پلکانی برای یکپارچه‌سازی موارد نزدیک به تکراری پس از ارسال: گروه‌بندی نرم، ادغام پیوسته در پس‌زمینه، و ادغام دستی تأییدشده توسط هوش مصنوعی.",
   "Thematic clustering (advanced)": "خوشه‌بندی موضوعی (پیشرفته)",
-  "Groups ideas by theme rather than duplication. Output drives framings.": "ایده‌ها را به‌جای تکرار، بر اساس موضوع گروه‌بندی می‌کند. خروجی، چارچوب‌ها را هدایت می‌کند."
+  "Groups ideas by theme rather than duplication. Output drives framings.": "ایده‌ها را به‌جای تکرار، بر اساس موضوع گروه‌بندی می‌کند. خروجی، چارچوب‌ها را هدایت می‌کند.",
+  "Daily Backup": "پشتیبان‌گیری روزانه",
+  "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.": "وقتی فعال است، این سؤال در پشتیبان‌گیری شبانه ساعت 03:00 گنجانده می‌شود. فعال‌سازی نیز پشتیبان‌گیری فوری اجرا می‌کند تا نسخه‌ای از همین لحظه داشته باشید.",
+  "Auto-backup this question": "پشتیبان‌گیری خودکار این سؤال",
+  "Auto-backup on": "پشتیبان‌گیری خودکار روشن",
+  "Auto-backup off": "پشتیبان‌گیری خودکار خاموش",
+  "Requesting backup…": "در حال درخواست پشتیبان‌گیری…",
+  "Backup queued. It will land here within a minute or two:": "پشتیبان‌گیری در صف قرار گرفت. تا یک یا دو دقیقه دیگر اینجا قرار می‌گیرد:",
+  "Backup failed:": "پشتیبان‌گیری ناموفق بود:"
 }

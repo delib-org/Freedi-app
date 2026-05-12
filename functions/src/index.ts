@@ -1117,3 +1117,8 @@ exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensa
 exports.suggestClusterTitle = suggestClusterTitle;
 exports.mergeClusters = mergeClusters;
 exports.evaluationDriftCorrection = evaluationDriftCorrection;
+
+// Per-survey backup pipeline (scheduled + manual)
+export { backupSurveyOnRequest } from './backups/backupSurveyOnRequest';
+export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
+export { backupSurveyCallable } from './backups/backupSurveyCallable';

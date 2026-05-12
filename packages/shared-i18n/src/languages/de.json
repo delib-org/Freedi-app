@@ -2380,5 +2380,13 @@
   "Merging duplicates": "Duplikate zusammenführen",
   "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "Drei eskalierende Wege, um nahe Duplikate nach der Einreichung zu konsolidieren: weiche Gruppierung, kontinuierliche Hintergrund-Zusammenführung und manuelle KI-verifizierte Zusammenführung.",
   "Thematic clustering (advanced)": "Thematisches Clustering (Erweitert)",
-  "Groups ideas by theme rather than duplication. Output drives framings.": "Gruppiert Ideen nach Thema statt nach Duplikation. Die Ausgabe speist die Rahmenwerke."
+  "Groups ideas by theme rather than duplication. Output drives framings.": "Gruppiert Ideen nach Thema statt nach Duplikation. Die Ausgabe speist die Rahmenwerke.",
+  "Daily Backup": "Tägliche Sicherung",
+  "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.": "Wenn aktiviert, ist diese Frage in der nächtlichen Sicherung um 03:00 Uhr enthalten. Beim Aktivieren wird zusätzlich eine sofortige Sicherung erstellt.",
+  "Auto-backup this question": "Diese Frage automatisch sichern",
+  "Auto-backup on": "Auto-Sicherung an",
+  "Auto-backup off": "Auto-Sicherung aus",
+  "Requesting backup…": "Sicherung wird angefordert…",
+  "Backup queued. It will land here within a minute or two:": "Sicherung in der Warteschlange. Sie erscheint hier in ein bis zwei Minuten:",
+  "Backup failed:": "Sicherung fehlgeschlagen:"
 }

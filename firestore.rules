@@ -1009,6 +1009,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // Backup requests - server-side only. Worked by the backupSurveyOnRequest
+    // Firestore trigger and written by scheduledDailyBackups +
+    // backupSurveyCallable. Clients have no business reading or writing this.
+    match /backupRequests/{requestId} {
+      allow read, write: if false;
+    }
+
     // Moderation logs - readable only by admins/creators of the topParent statement.
     // Writes are performed exclusively by Cloud Functions via the Admin SDK.
     match /moderationLogs/{logId} {

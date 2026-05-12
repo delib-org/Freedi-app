@@ -3125,5 +3125,13 @@
   "Merging duplicates": "Merging duplicates",
   "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.",
   "Thematic clustering (advanced)": "Thematic clustering (advanced)",
-  "Groups ideas by theme rather than duplication. Output drives framings.": "Groups ideas by theme rather than duplication. Output drives framings."
+  "Groups ideas by theme rather than duplication. Output drives framings.": "Groups ideas by theme rather than duplication. Output drives framings.",
+  "Daily Backup": "Daily Backup",
+  "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.": "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.",
+  "Auto-backup this question": "Auto-backup this question",
+  "Auto-backup on": "Auto-backup on",
+  "Auto-backup off": "Auto-backup off",
+  "Requesting backup…": "Requesting backup…",
+  "Backup queued. It will land here within a minute or two:": "Backup queued. It will land here within a minute or two:",
+  "Backup failed:": "Backup failed:"
 }

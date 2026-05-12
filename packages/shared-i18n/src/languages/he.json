@@ -3139,5 +3139,13 @@
   "Merging duplicates": "מיזוג כפילויות",
   "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "שלוש דרכים מדורגות לאחד הצעות כמעט-זהות לאחר שהוגשו: קיבוץ רך, מיזוג רציף ברקע, ומיזוג ידני באישור AI.",
   "Thematic clustering (advanced)": "אשכולות נושאיים (מתקדם)",
-  "Groups ideas by theme rather than duplication. Output drives framings.": "מקבץ רעיונות לפי נושא במקום לפי כפילות. הפלט מזין את המסגרות."
+  "Groups ideas by theme rather than duplication. Output drives framings.": "מקבץ רעיונות לפי נושא במקום לפי כפילות. הפלט מזין את המסגרות.",
+  "Daily Backup": "גיבוי יומי",
+  "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.": "כשמופעל, השאלה הזו נכללת בגיבוי הלילי בשעה 03:00. הפעלה גם מריצה גיבוי מיידי כדי שיהיה לך תצלום מצב כעת.",
+  "Auto-backup this question": "גבה אוטומטית את השאלה הזו",
+  "Auto-backup on": "גיבוי אוטומטי פועל",
+  "Auto-backup off": "גיבוי אוטומטי כבוי",
+  "Requesting backup…": "מבקש גיבוי…",
+  "Backup queued. It will land here within a minute or two:": "הגיבוי בתור. הוא יגיע לכאן בתוך דקה או שתיים:",
+  "Backup failed:": "הגיבוי נכשל:"
 }

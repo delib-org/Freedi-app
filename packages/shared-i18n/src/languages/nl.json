@@ -2380,5 +2380,13 @@
   "Merging duplicates": "Duplicaten samenvoegen",
   "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "Drie oplopende manieren om bijna-duplicaten na indiening te consolideren: zachte groepering, continue achtergrond-samenvoeging, en handmatige door AI geverifieerde samenvoeging.",
   "Thematic clustering (advanced)": "Thematische clustering (geavanceerd)",
-  "Groups ideas by theme rather than duplication. Output drives framings.": "Groepeert ideeën op thema in plaats van duplicatie. De uitvoer voedt de kaders."
+  "Groups ideas by theme rather than duplication. Output drives framings.": "Groepeert ideeën op thema in plaats van duplicatie. De uitvoer voedt de kaders.",
+  "Daily Backup": "Dagelijkse back-up",
+  "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.": "Wanneer aan, wordt deze vraag opgenomen in de nachtelijke back-up om 03:00. Inschakelen voert ook direct een back-up uit zodat je nu al een momentopname hebt.",
+  "Auto-backup this question": "Deze vraag automatisch back-uppen",
+  "Auto-backup on": "Auto-back-up aan",
+  "Auto-backup off": "Auto-back-up uit",
+  "Requesting backup…": "Back-up aanvragen…",
+  "Backup queued. It will land here within a minute or two:": "Back-up in de wachtrij. Hij verschijnt hier binnen een minuut of twee:",
+  "Backup failed:": "Back-up mislukt:"
 }

@@ -2505,5 +2505,13 @@
   "Merging duplicates": "دمج المكررات",
   "Three escalating ways to consolidate near-duplicates after they have been submitted: soft grouping, continuous background merging, and on-demand AI-verified merging.": "ثلاث طرق متدرجة لتوحيد الاقتراحات شبه المكررة بعد إرسالها: تجميع لطيف، ودمج خلفي مستمر، ودمج يدوي مؤكَّد بالذكاء الاصطناعي.",
   "Thematic clustering (advanced)": "التجميع الموضوعي (متقدم)",
-  "Groups ideas by theme rather than duplication. Output drives framings.": "يجمع الأفكار حسب الموضوع لا التكرار. والمخرجات تغذي الإطارات."
+  "Groups ideas by theme rather than duplication. Output drives framings.": "يجمع الأفكار حسب الموضوع لا التكرار. والمخرجات تغذي الإطارات.",
+  "Daily Backup": "نسخ احتياطي يومي",
+  "When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.": "عند التشغيل، يتم تضمين هذا السؤال في النسخ الاحتياطي الليلي الساعة 03:00. التشغيل ينفذ أيضًا نسخًا احتياطيًا فوريًا لتحصل على لقطة الآن.",
+  "Auto-backup this question": "نسخ احتياطي تلقائي لهذا السؤال",
+  "Auto-backup on": "النسخ الاحتياطي التلقائي مفعّل",
+  "Auto-backup off": "النسخ الاحتياطي التلقائي معطّل",
+  "Requesting backup…": "جارٍ طلب النسخ الاحتياطي…",
+  "Backup queued. It will land here within a minute or two:": "تم وضع النسخ الاحتياطي في قائمة الانتظار. سيظهر هنا خلال دقيقة أو اثنتين:",
+  "Backup failed:": "فشل النسخ الاحتياطي:"
 }
