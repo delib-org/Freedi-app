@@ -45,36 +45,22 @@ function requireAuth(component: m.Component): m.RouteResolver {
 	};
 }
 
-/** Force Mithril to remount the component when the named URL param changes,
- *  rather than reusing the existing instance with stale `oninit` state. The
- *  follow-me feature drives the participant from `/m/X/q/A` to `/m/X/q/B`;
- *  without a per-`qid` key, Mithril keeps the previous Solutions instance —
- *  the URL updates but `loadQuestion(newQid)` is never called, so the view
- *  keeps showing the previous question. The same applies to Chat keyed by
- *  `sid`, and to the workspace-root key on facilitated routes (so swapping
- *  `mid` from one workspace to another also remounts). */
-function keyedRoute(component: m.Component, ...keyParams: string[]): m.RouteResolver {
-	return {
-		render() {
-			const key = keyParams.map((p) => m.route.param(p) ?? '').join('|');
-
-			return m(component, { key });
-		},
-	};
-}
-
 const root = document.getElementById('app');
 if (root) {
 	m.route(root, '/', {
 		'/': requireAuth(Main),
 		'/login': Login,
 		'/invite': Invite,
-		'/q/:qid': keyedRoute(Solutions, 'qid'),
-		'/q/:qid/s/:sid': keyedRoute(Chat, 'qid', 'sid'),
+		// Param changes within the same route shape (e.g. follow-me from
+		// `/m/X/q/A` to `/m/X/q/B`) don't trigger a fresh `oninit` in Mithril
+		// 2 — the components themselves detect a param swap in
+		// `onbeforeupdate` and re-init their subscriptions for the new id.
+		'/q/:qid': Solutions,
+		'/q/:qid/s/:sid': Chat,
 		// Facilitated routes — entry via a main (top-parent) statement. Solutions
 		// and Chat detect facilitated mode via the /m/ prefix on the active route.
-		'/m/:mid': keyedRoute(MainHub, 'mid'),
-		'/m/:mid/q/:qid': keyedRoute(Solutions, 'mid', 'qid'),
-		'/m/:mid/q/:qid/s/:sid': keyedRoute(Chat, 'mid', 'qid', 'sid'),
+		'/m/:mid': MainHub,
+		'/m/:mid/q/:qid': Solutions,
+		'/m/:mid/q/:qid/s/:sid': Chat,
 	});
 }

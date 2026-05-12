@@ -35,6 +35,12 @@ let closingNamePrompt = false;
 let nameInput = '';
 let mainUnsub: Unsubscribe | null = null;
 let questionUnsub: Unsubscribe | null = null;
+// Tracks the `sid` (option id) this Chat instance is currently subscribed for.
+// Mithril 2 reuses a component instance when the URL changes to the same route
+// shape (e.g. follow-me from `/m/X/q/A/s/Y` to `/m/X/q/A/s/Z`), so `oninit`
+// doesn't re-run. We compare against this on every update tick and re-init
+// when the URL diverges — that's what actually swaps the rendered chat.
+let currentChatOptionId: string | null = null;
 
 let isAtBottom = true;
 let newMessageCount = 0;
@@ -66,83 +72,105 @@ function closeNamePrompt(): void {
   }, 250);
 }
 
+function teardownChatSubscriptions(): void {
+  unsubscribeChat();
+  if (mainUnsub) {
+    mainUnsub();
+    mainUnsub = null;
+  }
+  if (questionUnsub) {
+    questionUnsub();
+    questionUnsub = null;
+  }
+}
+
+async function initChatForOption(optionId: string): Promise<void> {
+  // Re-entrant by design: when the facilitator moves us between chats under
+  // the same route shape, drop the prior subscriptions and rebuild for the
+  // new option. Without this, Mithril's component-instance reuse leaves us
+  // on the previous chat even after the URL has updated.
+  teardownChatSubscriptions();
+  currentChatOptionId = optionId;
+  loading = true;
+  option = null;
+  messageText = '';
+  showNamePrompt = false;
+  closingNamePrompt = false;
+  nameInput = getCustomDisplayName() || '';
+  isAtBottom = true;
+  newMessageCount = 0;
+  prevMessageCount = 0;
+  m.redraw();
+
+  try {
+    const optionDoc = await getDoc(doc(db, Collections.statements, optionId));
+    if (currentChatOptionId !== optionId) return;
+    if (optionDoc.exists()) {
+      option = optionDoc.data() as Statement;
+    }
+    subscribeChat(optionId);
+    markOptionRead(optionId);
+
+    const qid = m.route.param('qid');
+    if (qid) {
+      await loadQuestion(qid);
+      if (currentChatOptionId !== optionId) return;
+      questionUnsub = subscribeQuestion(qid);
+    }
+
+    let mainId: string | undefined = m.route.param('mid');
+    if (!mainId) {
+      const derivedMainId = getMainIdForQuestion(getQuestion());
+      if (derivedMainId) mainId = derivedMainId;
+    }
+    if (mainId) {
+      mainUnsub = subscribeMainStatement(mainId);
+    }
+
+    await waitForAuthReady();
+    if (currentChatOptionId !== optionId) return;
+    if (needsDisplayName()) {
+      showNamePrompt = true;
+    }
+  } catch (err) {
+    console.error('[Chat] Failed to load option:', err);
+  } finally {
+    if (currentChatOptionId === optionId) {
+      loading = false;
+      m.redraw();
+    }
+  }
+}
+
 export const Chat: m.Component = {
   async oninit() {
-    loading = true;
-    option = null;
-    messageText = '';
-    showNamePrompt = false;
-    closingNamePrompt = false;
-    nameInput = getCustomDisplayName() || '';
-    isAtBottom = true;
-    newMessageCount = 0;
-    prevMessageCount = 0;
-
     const optionId = m.route.param('sid');
     if (!optionId) {
       loading = false;
+      currentChatOptionId = null;
       m.redraw();
 
       return;
     }
+    await initChatForOption(optionId);
+  },
 
-    try {
-      const optionDoc = await getDoc(doc(db, Collections.statements, optionId));
-      if (optionDoc.exists()) {
-        option = optionDoc.data() as Statement;
-      }
-      subscribeChat(optionId);
-      markOptionRead(optionId);
-
-      // Load the parent question + keep a live subscription so the chat view
-      // sees real-time `hasChat` flips from the facilitator panel and so the
-      // panel itself can resolve admin status correctly.
-      const qid = m.route.param('qid');
-      if (qid) {
-        await loadQuestion(qid);
-        questionUnsub = subscribeQuestion(qid);
-      }
-
-      // In facilitated mode, keep a listener on the main statement so the
-      // facilitator can move us back up to Solutions or the Hub. When the
-      // participant landed on a direct `/q/:qid/s/:sid` link with no
-      // `/m/:mid` prefix, fall back to the question's `topParentId` so they
-      // still follow the facilitator — the redirect itself promotes them
-      // onto `/m/:mid/q/:qid/s/:sid` for subsequent navigation.
-      let mainId: string | undefined = m.route.param('mid');
-      if (!mainId) {
-        const derivedMainId = getMainIdForQuestion(getQuestion());
-        if (derivedMainId) mainId = derivedMainId;
-      }
-      if (mainId) {
-        mainUnsub = subscribeMainStatement(mainId);
-      }
-
-      // Anonymous arrivals haven't picked a chat name yet. Surface the prompt
-      // up-front (with a "Stay anonymous" pseudo-name escape hatch) so they
-      // post under a chosen identity instead of being surprised on send.
-      await waitForAuthReady();
-      if (needsDisplayName()) {
-        showNamePrompt = true;
-      }
-    } catch (err) {
-      console.error('[Chat] Failed to load option:', err);
-    } finally {
-      loading = false;
-      m.redraw();
+  onbeforeupdate() {
+    // Mithril reuses this instance when the URL changes to another chat under
+    // the same route shape. Re-init when the sid diverges so follow-me can
+    // actually swap to the new chat instead of leaving the previous one on
+    // screen with a stale URL.
+    const optionId = m.route.param('sid');
+    if (optionId && optionId !== currentChatOptionId) {
+      void initChatForOption(optionId);
     }
+
+    return true;
   },
 
   onremove() {
-    unsubscribeChat();
-    if (mainUnsub) {
-      mainUnsub();
-      mainUnsub = null;
-    }
-    if (questionUnsub) {
-      questionUnsub();
-      questionUnsub = null;
-    }
+    teardownChatSubscriptions();
+    currentChatOptionId = null;
     option = null;
     messagesEl = null;
   },

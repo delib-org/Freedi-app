@@ -44,6 +44,13 @@ let optionsUnsub: Unsubscribe | null = null;
 let mainUnsub: Unsubscribe | null = null;
 let evaluationsUnsub: Unsubscribe | null = null;
 let joinSubmissionUnsub: Unsubscribe | null = null;
+// The question id this Solutions instance is currently subscribed for. Mithril
+// 2 reuses a component instance when the URL changes to the same route shape
+// (e.g. follow-me from `/m/X/q/A` to `/m/X/q/B`), so `oninit` doesn't run a
+// second time. We compare the URL param against `currentQuestionId` on every
+// update tick and re-init the subscriptions when they diverge — that's what
+// actually swaps the rendered question.
+let currentQuestionId: string | null = null;
 let showJoinForm = false;
 let pendingJoinOptionId: string | null = null;
 let pendingJoinRole: 'activist' | 'organizer' = 'activist';
@@ -69,109 +76,126 @@ let editingOptionId: string | null = null;
 // to drive the FLIP reorder animation.
 let capturedListRects: Map<string, DOMRect> | null = null;
 
+function teardownSolutionsSubscriptions(): void {
+	if (questionUnsub) {
+		questionUnsub();
+		questionUnsub = null;
+	}
+	if (optionsUnsub) {
+		optionsUnsub();
+		optionsUnsub = null;
+	}
+	if (mainUnsub) {
+		mainUnsub();
+		mainUnsub = null;
+	}
+	if (evaluationsUnsub) {
+		evaluationsUnsub();
+		evaluationsUnsub = null;
+	}
+	if (joinSubmissionUnsub) {
+		joinSubmissionUnsub();
+		joinSubmissionUnsub = null;
+	}
+}
+
+async function initSolutionsForQuestion(questionId: string): Promise<void> {
+	// Re-entrant by design: when the route param changes under us (follow-me
+	// to a sibling sub-question), we drop the previous subscriptions and rebuild
+	// for the new question. Without this, Mithril's component-instance reuse
+	// would leave the participant looking at the previous question.
+	teardownSolutionsSubscriptions();
+	currentQuestionId = questionId;
+	error = null;
+
+	// When the user lands here via the hub (the typical facilitated path),
+	// the sub-question Statement is already in `store.subQuestions[]` from
+	// `subscribeSubQuestions`. Hand it to the active question slot so the
+	// header renders immediately — no splash screen between hub click and
+	// solutions view. Options still stream in via `subscribeOptions` below
+	// (the page just shows an empty list for one frame instead of a splash).
+	const primed = primeQuestionFromCache(questionId);
+	loading = !primed;
+	if (primed) m.redraw();
+
+	try {
+		await ensureUser();
+		// Bail if the participant has navigated again while we were awaiting:
+		// the next init has already taken over and we'd otherwise double-write
+		// the unsub slots.
+		if (currentQuestionId !== questionId) return;
+		// Skip the upfront `loadQuestion` round-trip when we primed from
+		// cache — `subscribeQuestion` will deliver a fresh snapshot within
+		// a frame, and `subscribeOptions` populates the list. For a cold
+		// open (deep link, refresh) we still need the awaited fetch so the
+		// view has data to render before the first snapshot arrives.
+		if (!primed) {
+			await loadQuestion(questionId);
+			if (currentQuestionId !== questionId) return;
+		}
+		questionUnsub = subscribeQuestion(questionId);
+		optionsUnsub = subscribeOptions(questionId);
+		evaluationsUnsub = subscribeUserEvaluations(questionId);
+		joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
+
+		let mainId: string | undefined = m.route.param('mid');
+		if (!mainId) {
+			const derivedMainId = getMainIdForQuestion(getQuestion());
+			if (derivedMainId) mainId = derivedMainId;
+		}
+		if (mainId) {
+			mainUnsub = subscribeMainStatement(mainId);
+		}
+
+		const opened = getQuestion();
+		if (opened && opened.parentId === 'top' && isAdmin()) {
+			const user = getUserState().user;
+			if (user) {
+				void markOpenedInJoin(opened, user.uid, user.displayName ?? '').catch((err) => {
+					console.error('[Solutions] markOpenedInJoin failed:', err);
+				});
+			}
+		}
+	} catch (err) {
+		console.error('[Solutions] Failed to load:', err);
+		error = t('solutions.error.failed');
+	} finally {
+		if (currentQuestionId === questionId) {
+			loading = false;
+			m.redraw();
+		}
+	}
+}
+
 export const Solutions: m.Component = {
 	async oninit() {
-		error = null;
 		const questionId = m.route.param('qid');
 		if (!questionId) {
 			error = t('solutions.error.no_id');
 			loading = false;
+			currentQuestionId = null;
 			m.redraw();
 
 			return;
 		}
+		await initSolutionsForQuestion(questionId);
+	},
 
-		// When the user lands here via the hub (the typical facilitated path),
-		// the sub-question Statement is already in `store.subQuestions[]` from
-		// `subscribeSubQuestions`. Hand it to the active question slot so the
-		// header renders immediately — no splash screen between hub click and
-		// solutions view. Options still stream in via `subscribeOptions` below
-		// (the page just shows an empty list for one frame instead of a splash).
-		const primed = primeQuestionFromCache(questionId);
-		loading = !primed;
-		if (primed) m.redraw();
-
-		try {
-			await ensureUser();
-			// Skip the upfront `loadQuestion` round-trip when we primed from
-			// cache — `subscribeQuestion` will deliver a fresh snapshot within
-			// a frame, and `subscribeOptions` populates the list. For a cold
-			// open (deep link, refresh) we still need the awaited fetch so the
-			// view has data to render before the first snapshot arrives.
-			if (!primed) {
-				await loadQuestion(questionId);
-			}
-			questionUnsub = subscribeQuestion(questionId);
-			optionsUnsub = subscribeOptions(questionId);
-			// Stream just this user's evaluations under the question — gives the
-			// 5-face row its "I picked this" highlight on first paint and keeps
-			// it in sync if they evaluate from another tab.
-			evaluationsUnsub = subscribeUserEvaluations(questionId);
-			// Keep our local "form submitted?" caches honest across tabs and
-			// admin resets — without this, a remote delete of the user's
-			// submission doc leaves the cache stale and the next join would
-			// silently skip the form modal.
-			joinSubmissionUnsub = subscribeUserJoinFormSubmission(questionId);
-
-			// In facilitated mode, also keep a listener on the main statement so
-			// the facilitator can move us up to the Hub or across to another
-			// question / chat without us being on the Hub view. When the
-			// participant landed on a direct `/q/:qid` link with no `/m/:mid`
-			// prefix, fall back to the question's `topParentId` so they still
-			// follow the facilitator — the redirect itself promotes them onto
-			// `/m/:mid/q/:qid` for subsequent navigation.
-			let mainId: string | undefined = m.route.param('mid');
-			if (!mainId) {
-				const derivedMainId = getMainIdForQuestion(getQuestion());
-				if (derivedMainId) mainId = derivedMainId;
-			}
-			if (mainId) {
-				mainUnsub = subscribeMainStatement(mainId);
-			}
-
-			// Mark the workspace on the join Main page when an admin opens a
-			// top-level question directly via /q/<id>. Sub-questions (the
-			// facilitated /m/:mid/q/:qid path) shouldn't show on Main — those
-			// are children of a workspace, not workspaces themselves.
-			const opened = getQuestion();
-			if (opened && opened.parentId === 'top' && isAdmin()) {
-				const user = getUserState().user;
-				if (user) {
-					void markOpenedInJoin(opened, user.uid, user.displayName ?? '').catch((err) => {
-						console.error('[Solutions] markOpenedInJoin failed:', err);
-					});
-				}
-			}
-		} catch (err) {
-			console.error('[Solutions] Failed to load:', err);
-			error = t('solutions.error.failed');
-		} finally {
-			loading = false;
-			m.redraw();
+	onbeforeupdate() {
+		// Mithril reuses this component instance when the URL changes from one
+		// `/m/:mid/q/:qid` to another. Detect a qid change and re-init for the
+		// new question — this is what makes follow-me actually swap the page.
+		const questionId = m.route.param('qid');
+		if (questionId && questionId !== currentQuestionId) {
+			void initSolutionsForQuestion(questionId);
 		}
+
+		return true;
 	},
 
 	onremove() {
-		if (questionUnsub) {
-			questionUnsub();
-			questionUnsub = null;
-		}
-		if (optionsUnsub) {
-			optionsUnsub();
-			optionsUnsub = null;
-		}
-		if (mainUnsub) {
-			mainUnsub();
-			mainUnsub = null;
-		}
-		if (evaluationsUnsub) {
-			evaluationsUnsub();
-			evaluationsUnsub = null;
-		}
-		if (joinSubmissionUnsub) {
-			joinSubmissionUnsub();
-			joinSubmissionUnsub = null;
-		}
+		teardownSolutionsSubscriptions();
+		currentQuestionId = null;
 	},
 
 	view() {
