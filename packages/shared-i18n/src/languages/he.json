@@ -3115,5 +3115,21 @@
   "Synthesized proposals": "Synthesized proposals",
   "Live synthesis": "סינתזה חיה",
   "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.": "מנגנון רקע ממזג אוטומטית הצעות דומות חדשות לאשכולות. פעיל כברירת מחדל בשאלות קונצנזוס המוני; כבה כדי לדרוש סינתזה ידנית.",
-  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "מנגנון רקע ממזג אוטומטית הצעות דומות חדשות לאשכולות. כבוי כברירת מחדל מחוץ לקונצנזוס המוני; הפעל כדי להפעיל עבור שאלה זו."
+  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "מנגנון רקע ממזג אוטומטית הצעות דומות חדשות לאשכולות. כבוי כברירת מחדל מחוץ לקונצנזוס המוני; הפעל כדי להפעיל עבור שאלה זו.",
+  "Similarity detection": "זיהוי דמיון",
+  "Similarity threshold": "סף דמיון",
+  "Enable similarity detection": "הפעל זיהוי דמיון",
+  "Teach the AI when two suggestions count as the same idea. Everything else here builds on this.": "הגדר ל-AI מתי שתי הצעות נחשבות לאותו רעיון. כל שאר ההגדרות כאן מסתמכות על כך.",
+  "Input hygiene": "בקרת קלט",
+  "Help submitters write cleaner suggestions before they ever hit the list.": "עזור למשתמשים לכתוב הצעות נקיות יותר עוד לפני שהן מגיעות לרשימה.",
+  "Auto-check for similar entries": "בדיקה אוטומטית של רשומות דומות",
+  "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.": "כאשר משתמש מקליד הצעה חדשה, הצג לו הצעות דומות קיימות כדי שיוכל להצביע במקום לשכפל.",
+  "Detect multi-idea submissions": "זיהוי הגשות של מספר רעיונות",
+  "Detect when users submit multiple ideas in one entry and offer to split them.": "זהה כאשר משתמשים מגישים מספר רעיונות ברשומה אחת והצע לפצל אותם.",
+  "Smart grouping": "קיבוץ חכם",
+  "Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.": "איחוד הצעות דומות לקבוצה מייצגת. ההערכות מתאגדות; ההצעות המקוריות נשמרות נגישות.",
+  "Continuous synthesis": "סינתזה רציפה",
+  "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "אפשר ל-AI לתחזק אשכולות ברקע כך שהרשימה תישאר מאורגנת ככל שמגיעות הצעות חדשות.",
+  "Cluster pipeline (advanced)": "צינור אשכולות (מתקדם)",
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "אבחון ובקרות ידניות עבור צינורות הקיבוץ הסמנטי והנושאי."
 }

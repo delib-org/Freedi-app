@@ -2481,5 +2481,21 @@
   "Synthesized proposals": "Synthesized proposals",
   "Live synthesis": "التوليف المباشر",
   "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.": "محفز خلفية يدمج تلقائياً الخيارات الجديدة المتشابهة في مجموعات. مفعّل افتراضياً لأسئلة التوافق الجماعي؛ قم بإيقاف التشغيل لطلب التوليف اليدوي.",
-  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "محفز خلفية يدمج تلقائياً الخيارات الجديدة المتشابهة في مجموعات. معطّل افتراضياً خارج التوافق الجماعي؛ قم بتشغيله لتمكينه لهذا السؤال."
+  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "محفز خلفية يدمج تلقائياً الخيارات الجديدة المتشابهة في مجموعات. معطّل افتراضياً خارج التوافق الجماعي؛ قم بتشغيله لتمكينه لهذا السؤال.",
+  "Similarity detection": "كشف التشابه",
+  "Similarity threshold": "عتبة التشابه",
+  "Enable similarity detection": "تمكين كشف التشابه",
+  "Teach the AI when two suggestions count as the same idea. Everything else here builds on this.": "علّم الذكاء الاصطناعي متى تُعتبر اقتراحان نفس الفكرة. كل ما يلي هنا يعتمد على ذلك.",
+  "Input hygiene": "تنقية الإدخال",
+  "Help submitters write cleaner suggestions before they ever hit the list.": "ساعد المستخدمين على كتابة اقتراحات أنظف قبل وصولها إلى القائمة.",
+  "Auto-check for similar entries": "فحص تلقائي للإدخالات المتشابهة",
+  "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.": "عندما يكتب المستخدم اقتراحاً جديداً، اعرض له الاقتراحات المتشابهة الموجودة ليصوّت بدلاً من التكرار.",
+  "Detect multi-idea submissions": "كشف الإدخالات متعددة الأفكار",
+  "Detect when users submit multiple ideas in one entry and offer to split them.": "كشف عندما يقدم المستخدمون عدة أفكار في إدخال واحد واعرض تقسيمها.",
+  "Smart grouping": "التجميع الذكي",
+  "Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.": "دمج الاقتراحات المتشابهة في مجموعة تمثيلية. تتجمع التقييمات؛ وتبقى الاقتراحات الأصلية متاحة.",
+  "Continuous synthesis": "التوليف المستمر",
+  "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "اسمح للذكاء الاصطناعي بصيانة المجموعات في الخلفية حتى تبقى القائمة منظمة مع وصول اقتراحات جديدة.",
+  "Cluster pipeline (advanced)": "خط أنابيب المجموعات (متقدم)",
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "تشخيصات وعناصر تحكم يدوية لخطوط أنابيب التجميع الدلالي والموضوعي."
 }

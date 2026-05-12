@@ -2356,5 +2356,21 @@
   "Synthesized proposals": "Synthesized proposals",
   "Live synthesis": "Live-Synthese",
   "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.": "Hintergrund-Trigger fügt ähnliche neue Optionen automatisch zu Clustern zusammen. Standardmäßig EIN für Mass-Consensus-Fragen; ausschalten, um manuelle Synthese zu erfordern.",
-  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "Hintergrund-Trigger fügt ähnliche neue Optionen automatisch zu Clustern zusammen. Standardmäßig AUS außerhalb von Mass-Consensus; einschalten, um es für diese Frage zu aktivieren."
+  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "Hintergrund-Trigger fügt ähnliche neue Optionen automatisch zu Clustern zusammen. Standardmäßig AUS außerhalb von Mass-Consensus; einschalten, um es für diese Frage zu aktivieren.",
+  "Similarity detection": "Ähnlichkeitserkennung",
+  "Similarity threshold": "Ähnlichkeitsschwelle",
+  "Enable similarity detection": "Ähnlichkeitserkennung aktivieren",
+  "Teach the AI when two suggestions count as the same idea. Everything else here builds on this.": "Bestimmen Sie, wann zwei Vorschläge für die KI als dieselbe Idee gelten. Alles Weitere baut darauf auf.",
+  "Input hygiene": "Eingabe-Hygiene",
+  "Help submitters write cleaner suggestions before they ever hit the list.": "Hilft Einreichern, sauberere Vorschläge zu schreiben, bevor sie überhaupt in der Liste erscheinen.",
+  "Auto-check for similar entries": "Automatische Prüfung auf ähnliche Einträge",
+  "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.": "Wenn ein Nutzer einen neuen Vorschlag eintippt, ähnliche bestehende anzeigen, damit er abstimmen statt duplizieren kann.",
+  "Detect multi-idea submissions": "Mehrfach-Ideen-Einreichungen erkennen",
+  "Detect when users submit multiple ideas in one entry and offer to split them.": "Erkennen, wenn Nutzer mehrere Ideen in einem Eintrag einreichen, und das Aufteilen vorschlagen.",
+  "Smart grouping": "Intelligente Gruppierung",
+  "Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.": "Ähnliche Vorschläge in einer repräsentativen Gruppe zusammenfassen. Bewertungen werden aggregiert; die Originale bleiben zugänglich.",
+  "Continuous synthesis": "Kontinuierliche Synthese",
+  "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "Lassen Sie die KI Cluster im Hintergrund pflegen, damit die Liste bei neuen Vorschlägen organisiert bleibt.",
+  "Cluster pipeline (advanced)": "Cluster-Pipeline (Erweitert)",
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnose- und manuelle Steuerungen für die semantischen und themenbezogenen Clustering-Pipelines."
 }

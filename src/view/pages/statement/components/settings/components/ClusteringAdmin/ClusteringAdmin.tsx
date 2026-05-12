@@ -255,14 +255,7 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				<div className={styles.loaderContainer}>
 					<Loader />
 				</div>
-			) : framings.length === 0 ? (
-				<div className={styles.emptyState}>
-					<p>{t('No framings available yet')}</p>
-					<p className={styles.hint}>
-						{t('Run Semantic or Topic clustering above to create clustering perspectives for your options')}
-					</p>
-				</div>
-			) : (
+			) : framings.length === 0 ? null : (
 				<div className={styles.content}>
 					<FramingList
 						framings={framings}

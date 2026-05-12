@@ -2884,5 +2884,21 @@
   "Synthesized proposals": "Synthesized proposals",
   "Live synthesis": "ترکیب زنده",
   "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.": "تریگر پس‌زمینه گزینه‌های جدید مشابه را به‌طور خودکار در خوشه‌ها ادغام می‌کند. به‌طور پیش‌فرض برای سؤالات اجماع گسترده فعال است؛ برای نیاز به ترکیب دستی غیرفعال کنید.",
-  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "تریگر پس‌زمینه گزینه‌های جدید مشابه را به‌طور خودکار در خوشه‌ها ادغام می‌کند. به‌طور پیش‌فرض خارج از اجماع گسترده غیرفعال است؛ برای فعال کردن آن برای این سؤال فعال کنید."
+  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "تریگر پس‌زمینه گزینه‌های جدید مشابه را به‌طور خودکار در خوشه‌ها ادغام می‌کند. به‌طور پیش‌فرض خارج از اجماع گسترده غیرفعال است؛ برای فعال کردن آن برای این سؤال فعال کنید.",
+  "Similarity detection": "تشخیص مشابهت",
+  "Similarity threshold": "آستانه مشابهت",
+  "Enable similarity detection": "فعال‌سازی تشخیص مشابهت",
+  "Teach the AI when two suggestions count as the same idea. Everything else here builds on this.": "به هوش مصنوعی بیاموزید چه زمانی دو پیشنهاد به‌عنوان یک ایده محسوب می‌شوند. تمام موارد دیگر در اینجا بر این پایه است.",
+  "Input hygiene": "پاکیزگی ورودی",
+  "Help submitters write cleaner suggestions before they ever hit the list.": "به ارسال‌کنندگان کمک کنید پیشنهادهای پاکیزه‌تری بنویسند پیش از آنکه وارد فهرست شوند.",
+  "Auto-check for similar entries": "بررسی خودکار ورودی‌های مشابه",
+  "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.": "وقتی کاربر پیشنهاد جدیدی تایپ می‌کند، پیشنهادهای مشابه موجود را به او نشان دهید تا به‌جای تکرار، رأی دهد.",
+  "Detect multi-idea submissions": "تشخیص ارسال‌های چنداندیشه",
+  "Detect when users submit multiple ideas in one entry and offer to split them.": "تشخیص زمانی که کاربران چند ایده در یک ورودی ارسال می‌کنند و پیشنهاد تفکیک آن‌ها.",
+  "Smart grouping": "گروه‌بندی هوشمند",
+  "Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.": "ترکیب پیشنهادهای مشابه در یک گروه نماینده. ارزیابی‌ها تجمیع می‌شوند؛ نسخه‌های اصلی در دسترس باقی می‌مانند.",
+  "Continuous synthesis": "ترکیب پیوسته",
+  "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "به هوش مصنوعی اجازه دهید خوشه‌ها را در پس‌زمینه نگه‌داری کند تا فهرست با ورود پیشنهادهای جدید منظم بماند.",
+  "Cluster pipeline (advanced)": "خط لوله خوشه‌بندی (پیشرفته)",
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "تشخیص و کنترل‌های دستی برای خطوط لوله خوشه‌بندی معنایی و موضوعی."
 }

@@ -3101,5 +3101,21 @@
   "Synthesized proposals": "Synthesized proposals",
   "Live synthesis": "Live synthesis",
   "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.": "Background trigger merges similar new options into clusters automatically. ON by default for Mass-Consensus questions; toggle off to require manual synthesis.",
-  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question."
+  "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.": "Background trigger merges similar new options into clusters automatically. OFF by default outside Mass-Consensus; toggle on to enable for this question.",
+  "Similarity detection": "Similarity detection",
+  "Similarity threshold": "Similarity threshold",
+  "Enable similarity detection": "Enable similarity detection",
+  "Teach the AI when two suggestions count as the same idea. Everything else here builds on this.": "Teach the AI when two suggestions count as the same idea. Everything else here builds on this.",
+  "Input hygiene": "Input hygiene",
+  "Help submitters write cleaner suggestions before they ever hit the list.": "Help submitters write cleaner suggestions before they ever hit the list.",
+  "Auto-check for similar entries": "Auto-check for similar entries",
+  "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.": "When a user types a new suggestion, show them similar existing ones so they can vote rather than duplicate.",
+  "Detect multi-idea submissions": "Detect multi-idea submissions",
+  "Detect when users submit multiple ideas in one entry and offer to split them.": "Detect when users submit multiple ideas in one entry and offer to split them.",
+  "Smart grouping": "Smart grouping",
+  "Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.": "Combine similar suggestions into a representative group. Evaluations roll up; originals stay accessible.",
+  "Continuous synthesis": "Continuous synthesis",
+  "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.": "Let the AI maintain clusters in the background so the list stays organized as new suggestions come in.",
+  "Cluster pipeline (advanced)": "Cluster pipeline (advanced)",
+  "Diagnostics and manual controls for the semantic & topic clustering pipelines.": "Diagnostics and manual controls for the semantic & topic clustering pipelines."
 }
