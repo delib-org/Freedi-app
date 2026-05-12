@@ -1,8 +1,8 @@
 /**
- * Worker function: backs up a single survey/question. Triggered by a new
- * document in `backupRequests`. The scheduled-discovery function and the
- * manual-trigger callable both write request docs that fan into this worker
- * so timeouts are bounded to a single survey per invocation.
+ * Worker function: backs up a single question's data. Triggered by a new
+ * document in `backupRequests`. The scheduler and the manual callable both
+ * write request docs that fan into this worker so timeouts are bounded to
+ * a single survey per invocation.
  *
  * After a successful backup the request doc is deleted; on failure the doc
  * is updated with the error and left for inspection (Firestore triggers
@@ -27,6 +27,14 @@ export interface BackupRequestDoc {
 	kind: 'mc' | 'sign' | 'manual';
 	createdAt: number;
 	createdBy?: string;
+	/**
+	 * MC admin context: when the cron discovered this question through an
+	 * active row in the `surveys` collection, this is that surveyId. The
+	 * worker uses it to (a) group the output object by survey and (b) embed
+	 * the survey doc + its surveyProgress in the backup so the bundle is
+	 * self-contained.
+	 */
+	mcSurveyId?: string;
 }
 
 export const backupSurveyOnRequest = onDocumentCreated(
@@ -42,7 +50,7 @@ export const backupSurveyOnRequest = onDocumentCreated(
 		if (!snap) return;
 		const requestRef = snap.ref;
 		const data = snap.data() as Partial<BackupRequestDoc>;
-		const { questionId, sourceProjectId, kind } = data;
+		const { questionId, sourceProjectId, kind, mcSurveyId } = data;
 
 		if (!questionId || !sourceProjectId || !kind) {
 			logger.error('backupSurveyOnRequest: malformed request doc', {
@@ -57,15 +65,25 @@ export const backupSurveyOnRequest = onDocumentCreated(
 		const storage = new Storage({ projectId: sourceProjectId });
 		const bucket = `${sourceProjectId}-survey-backups`;
 		const today = new Date().toISOString().slice(0, 10);
-		const objectPath =
-			kind === 'manual'
-				? `manual/${questionId}/${Date.now()}.json`
-				: `scheduled/${questionId}/${today}.json`;
+
+		// Object key layout:
+		//   manual/<questionId>/<ts>.json                       — manual button
+		//   scheduled/<surveyId>/<questionId>-<date>.json       — MC admin survey
+		//   scheduled/<questionId>/<date>.json                  — opt-in question
+		let objectPath: string;
+		if (kind === 'manual') {
+			objectPath = `manual/${questionId}/${Date.now()}.json`;
+		} else if (mcSurveyId) {
+			objectPath = `scheduled/${mcSurveyId}/${questionId}-${today}.json`;
+		} else {
+			objectPath = `scheduled/${questionId}/${today}.json`;
+		}
 
 		const started = Date.now();
 		logger.info('backupSurveyOnRequest: starting', {
 			questionId,
 			kind,
+			mcSurveyId: mcSurveyId ?? null,
 			sourceProjectId,
 			requestId: event.params.requestId,
 		});
@@ -74,12 +92,14 @@ export const backupSurveyOnRequest = onDocumentCreated(
 			const result = await exportSurveyToGcs(db, storage, {
 				questionId,
 				sourceProjectId,
+				mcSurveyId,
 				destination: `gs://${bucket}/${objectPath}`,
 			});
 
 			logger.info('backupSurveyOnRequest: done', {
 				questionId,
 				kind,
+				mcSurveyId: mcSurveyId ?? null,
 				destination: result.destination,
 				bytes: result.bytes,
 				descendantCount: result.descendantCount,
@@ -87,11 +107,10 @@ export const backupSurveyOnRequest = onDocumentCreated(
 				counts: result.counts,
 			});
 
-			// Successful → remove the request doc so the collection doesn't grow.
 			await requestRef.delete();
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			logger.error('backupSurveyOnRequest: failed', { questionId, kind, error: message });
+			logger.error('backupSurveyOnRequest: failed', { questionId, kind, mcSurveyId, error: message });
 			await requestRef.update({ status: 'error', error: message, finishedAt: Date.now() });
 		}
 	},

@@ -24,6 +24,15 @@ export interface ExportSurveyOptions {
 	destination: string | { bucket: string; keyPrefix: string };
 	/** Optional cap on BFS depth when walking descendants. */
 	maxDepth?: number;
+	/**
+	 * When set, the backup is taken in the context of an MC admin survey doc
+	 * (from the `surveys` collection). The helper also embeds:
+	 *   - the survey doc itself
+	 *   - all surveyProgress rows for that survey
+	 * so the bundle is self-contained even though the linked statement tree
+	 * doesn't reference the MC survey directly.
+	 */
+	mcSurveyId?: string;
 }
 
 export interface ExportSurveyResult {
@@ -40,7 +49,7 @@ export async function exportSurveyToGcs(
 	storage: Storage,
 	options: ExportSurveyOptions,
 ): Promise<ExportSurveyResult> {
-	const { questionId, sourceProjectId, maxDepth = Number.POSITIVE_INFINITY } = options;
+	const { questionId, sourceProjectId, mcSurveyId, maxDepth = Number.POSITIVE_INFINITY } = options;
 
 	// ----- helpers -----
 	const fetchByFieldIn = async (
@@ -333,6 +342,23 @@ export async function exportSurveyToGcs(
 	const statementHistory = await fetchSubcollection(descendantIds, 'statementHistory');
 	const joinFormSubmissions = await fetchSubcollection([questionId], 'joinFormSubmissions');
 
+	// MC admin context (optional): fetch the survey doc + all surveyProgress.
+	let mcSurvey: Doc | null = null;
+	const mcSurveyProgress: Doc[] = [];
+	if (mcSurveyId) {
+		const surveyDoc = await db.collection('surveys').doc(mcSurveyId).get();
+		if (surveyDoc.exists) {
+			mcSurvey = { ...(surveyDoc.data() as Doc), surveyId: surveyDoc.id };
+		}
+		const progressSnap = await db
+			.collection('surveyProgress')
+			.where('surveyId', '==', mcSurveyId)
+			.get();
+		progressSnap.forEach((doc) =>
+			mcSurveyProgress.push({ ...(doc.data() as Doc), id: doc.id }),
+		);
+	}
+
 	const counts: Record<string, number> = {
 		statements: statements.length,
 		evaluations: evaluations.length,
@@ -368,6 +394,8 @@ export async function exportSurveyToGcs(
 		framingSnapshots: framingSnapshots.length,
 		statementHistory: statementHistory.length,
 		joinFormSubmissions: joinFormSubmissions.length,
+		mcSurvey: mcSurvey ? 1 : 0,
+		mcSurveyProgress: mcSurveyProgress.length,
 	};
 
 	const payload = {
@@ -376,6 +404,7 @@ export async function exportSurveyToGcs(
 			exportedAt: Date.now(),
 			sourceProjectId,
 			questionId,
+			mcSurveyId: mcSurveyId ?? null,
 			descendantCount: statements.length - 1,
 			counts,
 			statementCount: statements.length,
@@ -419,6 +448,8 @@ export async function exportSurveyToGcs(
 		framingSnapshots,
 		statementHistory,
 		joinFormSubmissions,
+		mcSurvey,
+		mcSurveyProgress,
 	};
 
 	const body = Buffer.from(JSON.stringify(payload, null, 2), 'utf-8');
