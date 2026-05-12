@@ -1,4 +1,5 @@
 import m from 'mithril';
+import { registerSW } from 'virtual:pwa-register';
 import './styles/global.scss';
 import { initSentry, setSentryUser } from '@/lib/sentry';
 import { initAuth, waitForAuthReady, isSignedIn, getUserState } from '@/lib/user';
@@ -14,6 +15,19 @@ import { Invite } from '@/views/Invite';
 initSentry();
 initAuth();
 initI18n();
+
+// Service worker registration. We register manually (instead of letting the
+// plugin auto-inject) so the rejection has a handler. Crawlers (e.g.
+// Google-Read-Aloud), private-mode browsers, and sandboxed contexts reject
+// `register()` — without a catch, that becomes an unhandled promise rejection.
+registerSW({
+	immediate: true,
+	onRegisterError(error: unknown) {
+		if (import.meta.env.DEV) {
+			console.info('Service worker registration skipped:', error);
+		}
+	},
+});
 
 waitForAuthReady().then(() => {
 	setSentryUser(getUserState().user?.uid ?? null);

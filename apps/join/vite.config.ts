@@ -27,7 +27,11 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
-      injectRegister: 'auto',
+      // Registered manually in src/index.ts via `virtual:pwa-register` so we can
+      // swallow rejections from crawlers/sandboxed browsers where
+      // `navigator.serviceWorker.register()` rejects (would otherwise surface as
+      // unhandled promise rejections in Sentry).
+      injectRegister: false,
       includeAssets: [
         'favicon.ico',
         'favicon.svg',

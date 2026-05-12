@@ -89,6 +89,10 @@ export function initSentry(): void {
 			'QuotaExceededError',
 			/UnknownError.*indexedDB/i,
 			/backing store/i,
+			// Service worker registration rejections — crawlers, private
+			// mode, sandboxed browsers; nothing we can do client-side.
+			/serviceWorker\.register/i,
+			/Failed to register a ServiceWorker/i,
 		],
 	});
 
