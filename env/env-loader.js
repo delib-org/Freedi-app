@@ -175,6 +175,28 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       'FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
     },
     extra: ''
+  },
+  join: {
+    path: path.join(ROOT_DIR, 'apps', 'join'),
+    filename: '.env.local',
+    // JOIN_FIREBASE_* overrides win when set (prod uses a dedicated web app
+    // registration inside the wizcol-app project); otherwise fall back to
+    // the shared FIREBASE_* values.
+    mapping: {
+      'JOIN_FIREBASE_API_KEY|FIREBASE_API_KEY': 'VITE_FIREBASE_API_KEY',
+      'JOIN_FIREBASE_AUTH_DOMAIN|FIREBASE_AUTH_DOMAIN': 'VITE_FIREBASE_AUTH_DOMAIN',
+      'JOIN_FIREBASE_PROJECT_ID|FIREBASE_PROJECT_ID': 'VITE_FIREBASE_PROJECT_ID',
+      'JOIN_FIREBASE_STORAGE_BUCKET|FIREBASE_STORAGE_BUCKET': 'VITE_FIREBASE_STORAGE_BUCKET',
+      'JOIN_FIREBASE_MESSAGING_SENDER_ID|FIREBASE_MESSAGING_SENDER_ID': 'VITE_FIREBASE_MESSAGING_SENDER_ID',
+      'JOIN_FIREBASE_APP_ID|FIREBASE_APP_ID': 'VITE_FIREBASE_APP_ID',
+      'JOIN_FIREBASE_MEASUREMENT_ID|FIREBASE_MEASUREMENT_ID': 'VITE_FIREBASE_MEASUREMENT_ID',
+      'JOIN_FIREBASE_DATABASE_URL|FIREBASE_DATABASE_URL': 'VITE_FIREBASE_DATABASE_URL',
+      // Sentry (shares the main app's project; tagged with `app: 'join'` at runtime)
+      'SENTRY_DSN': 'VITE_SENTRY_DSN',
+      'ENVIRONMENT': 'VITE_ENVIRONMENT',
+      'APP_VERSION': 'VITE_APP_VERSION',
+    },
+    extra: ''
   }
 };
 
@@ -256,9 +278,19 @@ function generateEnvFile(appConfig, sourceVars, envName) {
     }
   } else if (appConfig.mapping) {
     // Object format: { sourceKey: targetKey, ... }
+    // sourceKey may contain `|`-separated fallbacks: "PRIMARY|FALLBACK"
+    // resolves to the first defined value in sourceVars.
     for (const [sourceKey, targetKey] of Object.entries(appConfig.mapping)) {
-      if (sourceVars[sourceKey] !== undefined) {
-        lines.push(`${targetKey}=${sourceVars[sourceKey]}`);
+      const candidates = sourceKey.split('|');
+      let value;
+      for (const candidate of candidates) {
+        if (sourceVars[candidate] !== undefined && sourceVars[candidate] !== '') {
+          value = sourceVars[candidate];
+          break;
+        }
+      }
+      if (value !== undefined) {
+        lines.push(`${targetKey}=${value}`);
       }
     }
   }

@@ -132,6 +132,21 @@ export enum SortType {
 	accepted = 'accepted',
 	backendOrder = 'backend-order',
 	mostJoined = 'mostJoined',
+	averageEvaluation = 'averageEvaluation',
+}
+
+/**
+ * Visual style family for the join app. Each style has its own light + dark
+ * palette; system `prefers-color-scheme` still drives light vs dark.
+ *
+ * - serious: current terra/teal/indigo earth-tone palette (default)
+ * - playfulKids: bold primary colors (red, yellow, green, sky blue)
+ * - playfulTeen: warm pinks, lavenders, peach, mint
+ */
+export enum ThemeStyle {
+	serious = 'serious',
+	playfulKids = 'playfulKids',
+	playfulTeen = 'playfulTeen',
 }
 
 

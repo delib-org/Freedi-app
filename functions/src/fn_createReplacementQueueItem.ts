@@ -6,6 +6,7 @@ import {
 	Statement,
 	PendingReplacement,
 	ReplacementQueueStatus,
+	functionConfig,
 } from '@freedi/shared-types';
 
 /**
@@ -38,7 +39,10 @@ function stripHtml(html: string): string {
  * - Track consensus snapshot at creation for staleness detection
  */
 export const fn_createReplacementQueueItem = onDocumentUpdated(
-	`${Collections.statements}/{suggestionId}`,
+	{
+		document: `${Collections.statements}/{suggestionId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;
@@ -54,6 +58,17 @@ export const fn_createReplacementQueueItem = onDocumentUpdated(
 
 			// Only process suggestions (not official paragraphs)
 			if (after.doc?.isOfficialParagraph) {
+				return null;
+			}
+
+			// Cluster docs (topic / hybrid / synthesis) and integrated members
+			// are never paragraph-replacement suggestions — skip before the
+			// topParentId fetch a clustering run would otherwise force on every
+			// cluster doc it produces. `integratedInto` is set by
+			// performIntegration on hidden members and is not on the shared
+			// Statement type, hence the cast.
+			const integratedInto = (after as { integratedInto?: string }).integratedInto;
+			if (after.isCluster === true || integratedInto) {
 				return null;
 			}
 

@@ -13,6 +13,19 @@
   gap: 0.4rem;
   overflow-x: hidden; // Prevent horizontal overflow on mobile
 
+  // CRITICAL: Block all clicks by default to prevent accidental navigation
+  pointer-events: none;
+
+  // Re-enable ONLY for buttons and interactive elements
+  button,
+  a,
+  [role='button'],
+  input,
+  textarea,
+  select {
+    pointer-events: auto;
+  }
+
   // Mobile: more compact layout
   @media screen and (max-width: 600px) {
     margin: 0;
@@ -462,6 +475,8 @@
       padding-top: 1rem;
       gap: 1rem;
       border-top: 1px solid var(--shadow);
+      // Block ALL pointer events by default to prevent accidental navigation
+      pointer-events: none;
 
       .add-sub-question-button svg {
         color: #4e88c7;
@@ -473,6 +488,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
+      }
+
+      .chat {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        // ONLY the chat button container can receive clicks
+        pointer-events: auto !important;
       }
 
       // Mobile: compact actions bar

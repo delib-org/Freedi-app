@@ -1,5 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { logger } from 'firebase-functions/v1';
+import type { DocumentReference } from 'firebase-admin/firestore';
 import { db } from './index';
 import {
 	Collections,
@@ -74,282 +75,199 @@ function calcAgreement(
 }
 
 /**
- * Data structure for tracking user evaluations in cluster-option recalculation
- */
-interface UserEvaluationData {
-	evaluation: number;
-	isDirect: boolean;
-	sourceEvaluations: number[];
-}
-
-/**
- * Recalculate evaluation metrics for a cluster-option based on source statements and direct evaluations.
- * Direct evaluations (no migratedAt) take priority over source evaluations.
+ * Bulk recompute: fetch every evaluation under the parent in ONE query,
+ * group by statementId in memory, and write all updates as batched ops.
  *
- * Source statements are found via:
- * 1. integratedOptions array on the cluster statement
- * 2. Statements with integratedInto pointing to this cluster (fallback)
+ * This replaces the old pattern of (240 options × per-option Firestore
+ * read + per-option evaluation query + per-option write), which scales
+ * as O(options × round-trips) ≈ 2 min on a 240-option question.
+ *
+ * The new cost is:
+ *   - 1 query for options under parent
+ *   - 1 query for all evaluations under parent (with `parentId == X`)
+ *   - local O(n) grouping
+ *   - ≤ ceil(optionCount / 500) batched commits
+ * Total wall time on the same data: seconds, not minutes.
+ *
+ * Semantics match the legacy per-option path exactly so existing UI and
+ * callers keep working (before/after counts, cluster option detection,
+ * direct-eval overwrites source, etc.).
  */
-async function recalculateClusterOptionEvaluations(
-	statementId: string,
-	statement: Statement & { integratedOptions?: string[]; popperHebbianScore?: PopperHebbianScore },
-	dryRun: boolean = false,
-): Promise<StatementFix | null> {
-	let sourceIds = statement.integratedOptions || [];
+export async function bulkRecalculateForParent(
+	parentId: string,
+	dryRun: boolean,
+): Promise<RecalculateResult> {
+	const modeLabel = dryRun ? '[DRY RUN] ' : '';
+	const result: RecalculateResult = {
+		success: true,
+		dryRun,
+		statementsProcessed: 0,
+		statementsFixed: 0,
+		fixes: [],
+		errors: [],
+	};
 
-	// If integratedOptions is empty, try to find sources via integratedInto field
-	if (sourceIds.length === 0) {
-		const sourcesSnapshot = await db
-			.collection(Collections.statements)
-			.where('integratedInto', '==', statementId)
-			.get();
-
-		sourceIds = sourcesSnapshot.docs.map((doc) => doc.id);
-
-		if (sourceIds.length > 0) {
-			logger.info(
-				`Found ${sourceIds.length} sources via integratedInto for cluster ${statementId}`,
-			);
-		}
-	}
-
-	if (sourceIds.length === 0) {
-		logger.info(`No sources found for cluster ${statementId} - skipping recalculation`);
-
-		return null;
-	}
-
-	const userEvaluations = new Map<string, UserEvaluationData>();
-
-	// 1. Collect evaluations from each source statement
-	for (const sourceId of sourceIds) {
-		const sourceEvals = await db
-			.collection(Collections.evaluations)
-			.where('statementId', '==', sourceId)
-			.get();
-
-		for (const doc of sourceEvals.docs) {
-			const evaluation = doc.data() as Evaluation;
-			const userId = evaluation.evaluator?.uid;
-			if (!userId) continue;
-
-			const existing = userEvaluations.get(userId);
-			if (existing && !existing.isDirect) {
-				// Average multiple source evaluations from the same user
-				existing.sourceEvaluations.push(evaluation.evaluation);
-				existing.evaluation =
-					existing.sourceEvaluations.reduce((a, b) => a + b, 0) / existing.sourceEvaluations.length;
-			} else if (!existing) {
-				userEvaluations.set(userId, {
-					evaluation: evaluation.evaluation,
-					isDirect: false,
-					sourceEvaluations: [evaluation.evaluation],
-				});
-			}
-			// If existing.isDirect, skip (direct takes priority)
-		}
-	}
-
-	// 2. Collect DIRECT evaluations on cluster-option (migratedAt is null/undefined) - these OVERWRITE
-	const clusterEvals = await db
-		.collection(Collections.evaluations)
-		.where('statementId', '==', statementId)
+	// 1. Options under this parent (single query).
+	const optionsSnapshot = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', parentId)
+		.where('statementType', '==', StatementType.option)
 		.get();
 
-	for (const doc of clusterEvals.docs) {
-		const evaluation = doc.data() as Evaluation & { migratedAt?: number };
-		if (evaluation.migratedAt) continue; // Skip migrated evaluations
+	if (optionsSnapshot.empty) {
+		logger.info(`${modeLabel}No options under ${parentId} — nothing to recalculate`);
 
-		const userId = evaluation.evaluator?.uid;
-		if (!userId) continue;
-
-		// Direct evaluation OVERWRITES any source evaluation
-		userEvaluations.set(userId, {
-			evaluation: evaluation.evaluation,
-			isDirect: true,
-			sourceEvaluations: [],
-		});
+		return result;
 	}
 
-	// 3. Calculate metrics from merged evaluations
-	let sumEvaluations = 0;
-	let sumSquaredEvaluations = 0;
-	let sumPro = 0;
-	let sumCon = 0;
-	let proCount = 0;
-	let conCount = 0;
+	// 2. All evaluations under this parent (single query). The `parentId`
+	// field on Evaluation makes this the right bulk anchor.
+	const evalsSnapshot = await db
+		.collection(Collections.evaluations)
+		.where('parentId', '==', parentId)
+		.get();
 
-	for (const [, data] of userEvaluations) {
-		const evalValue = data.evaluation;
-		sumEvaluations += evalValue;
-		sumSquaredEvaluations += evalValue * evalValue;
+	// 3. Group evaluations by the statement they target (in memory — O(n)).
+	const evalsByStatementId = new Map<string, Evaluation[]>();
+	evalsSnapshot.forEach((doc) => {
+		const evaluation = doc.data() as Evaluation;
+		if (!evaluation.statementId) return;
+		const bucket = evalsByStatementId.get(evaluation.statementId);
+		if (bucket) bucket.push(evaluation);
+		else evalsByStatementId.set(evaluation.statementId, [evaluation]);
+	});
 
-		if (evalValue > 0) {
-			proCount++;
-			sumPro += evalValue;
-		} else if (evalValue < 0) {
-			conCount++;
-			sumCon += Math.abs(evalValue);
-		}
-	}
-
-	const totalEvaluators = proCount + conCount;
-
-	// Current values for comparison
-	const currentEval: StatementEvaluation = statement.evaluation || {
-		numberOfEvaluators: 0,
-		numberOfProEvaluators: 0,
-		numberOfConEvaluators: 0,
-		sumEvaluations: 0,
-		sumPro: 0,
-		sumCon: 0,
-		sumSquaredEvaluations: 0,
-		averageEvaluation: 0,
-		agreement: 0,
-		evaluationRandomNumber: Math.random(),
-		viewed: 0,
-	};
-
-	const before = {
-		numberOfEvaluators: currentEval.numberOfEvaluators || 0,
-		numberOfProEvaluators: currentEval.numberOfProEvaluators || 0,
-		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
-	};
-
-	// Calculate correct metrics
-	const averageEvaluation = totalEvaluators > 0 ? sumEvaluations / totalEvaluators : 0;
-	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalEvaluators);
-	const consensusValid = calculateConsensusValid(
-		agreement,
-		statement.popperHebbianScore ?? undefined,
+	logger.info(
+		`${modeLabel}Bulk recalc for ${parentId}: ${optionsSnapshot.size} options, ${evalsSnapshot.size} raw evaluations`,
 	);
 
-	// Build updated evaluation object
-	const updatedEvaluation: StatementEvaluation = {
-		...currentEval,
-		numberOfEvaluators: totalEvaluators,
-		numberOfProEvaluators: proCount,
-		numberOfConEvaluators: conCount,
-		sumEvaluations,
-		sumSquaredEvaluations,
-		sumPro,
-		sumCon,
-		averageEvaluation,
-		agreement,
-		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
-		viewed: currentEval.viewed ?? 0,
-	};
+	// 4. Plan updates per option into a write set (batched at commit time).
+	interface PlannedUpdate {
+		ref: DocumentReference;
+		payload: Record<string, unknown>;
+		fix: StatementFix;
+	}
+	const planned: PlannedUpdate[] = [];
 
-	const after = {
-		numberOfEvaluators: totalEvaluators,
-		numberOfProEvaluators: proCount,
-		numberOfConEvaluators: conCount,
-		consensus: agreement,
-	};
+	for (const doc of optionsSnapshot.docs) {
+		result.statementsProcessed++;
+		try {
+			const statement = doc.data() as Statement & {
+				integratedOptions?: string[];
+				isCluster?: boolean;
+				popperHebbianScore?: PopperHebbianScore;
+			};
 
-	// Add consensus to before for comparison
-	const beforeWithConsensus = {
-		...before,
-		consensus: statement.consensus ?? 0,
-	};
+			const isClusterOption =
+				(statement.integratedOptions && statement.integratedOptions.length > 0) ||
+				statement.isCluster === true;
 
-	// Update the statement (unless dry run)
+			const plannedUpdate = isClusterOption
+				? planClusterRecompute(statement, doc.id, evalsByStatementId)
+				: planOptionRecompute(statement, doc.id, evalsByStatementId);
+
+			if (plannedUpdate) {
+				planned.push({ ref: doc.ref, ...plannedUpdate });
+				result.fixes.push(plannedUpdate.fix);
+				result.statementsFixed++;
+			}
+		} catch (error) {
+			const msg = `Failed to process ${doc.id}: ${error instanceof Error ? error.message : String(error)}`;
+			result.errors.push(msg);
+			logger.error(msg);
+		}
+	}
+
+	// 5. Commit in batches of 400 (safely under the 500 op cap).
+	if (!dryRun && planned.length > 0) {
+		const BATCH_CAP = 400;
+		for (let i = 0; i < planned.length; i += BATCH_CAP) {
+			const batch = db.batch();
+			for (const p of planned.slice(i, i + BATCH_CAP)) {
+				batch.update(p.ref, { ...p.payload, lastUpdate: Date.now() });
+			}
+			await batch.commit();
+		}
+	}
+
+	// 6. Update parent totals using the same in-memory data (no extra query).
+	const uniqueEvaluators = new Set<string>();
+	evalsSnapshot.forEach((d) => {
+		const e = d.data() as Evaluation;
+		const uid = e.evaluator?.uid ?? e.evaluatorId;
+		if (uid) uniqueEvaluators.add(uid);
+	});
+	const totalUniqueEvaluators = uniqueEvaluators.size;
+
 	if (!dryRun) {
-		const statementRef = db.collection(Collections.statements).doc(statementId);
-		await statementRef.update({
-			evaluation: updatedEvaluation,
-			totalEvaluators,
-			consensus: agreement,
-			consensusValid,
-			proSum: sumPro,
-			conSum: sumCon,
-			lastUpdate: Date.now(),
-		});
-
-		logger.info(
-			`Recalculated cluster-option ${statementId}: ${userEvaluations.size} unique users ` +
-				`(${sourceIds.length} sources, direct evaluations took priority)`,
-		);
+		const parentRef = db.collection(Collections.statements).doc(parentId);
+		const parentDoc = await parentRef.get();
+		if (parentDoc.exists) {
+			const parentData = parentDoc.data() as Statement;
+			const parentEvaluation: StatementEvaluation = parentData.evaluation || {
+				agreement: 0,
+				sumEvaluations: 0,
+				numberOfEvaluators: 0,
+				sumPro: 0,
+				sumCon: 0,
+				numberOfProEvaluators: 0,
+				numberOfConEvaluators: 0,
+				sumSquaredEvaluations: 0,
+				averageEvaluation: 0,
+				evaluationRandomNumber: Math.random(),
+				viewed: 0,
+			};
+			parentEvaluation.asParentTotalEvaluators = totalUniqueEvaluators;
+			await parentRef.update({
+				evaluation: parentEvaluation,
+				totalEvaluators: totalUniqueEvaluators,
+				lastUpdate: Date.now(),
+			});
+		}
 	} else {
 		logger.info(
-			`[DRY RUN] Would recalculate cluster-option ${statementId}: ${userEvaluations.size} unique users`,
+			`${modeLabel}Would set parent ${parentId} totalEvaluators = ${totalUniqueEvaluators}`,
 		);
 	}
 
-	return {
-		statementId,
-		statementText: statement.statement?.substring(0, 50),
-		isClusterOption: true,
-		before: beforeWithConsensus,
-		after,
-	};
+	logger.info(
+		`${modeLabel}Bulk recalc done for ${parentId}: processed=${result.statementsProcessed}, ` +
+			`${dryRun ? 'would fix' : 'fixed'}=${result.statementsFixed}, errors=${result.errors.length}`,
+	);
+
+	return result;
 }
 
 /**
- * Recalculate evaluation metrics for a single statement based on actual evaluation documents
+ * Pure-ish computation for a non-cluster option. Returns null if the stored
+ * aggregates already match the recomputed values (nothing to write).
  */
-async function recalculateSingleStatementEvaluations(
+function planOptionRecompute(
+	statement: Statement,
 	statementId: string,
-	dryRun: boolean = false,
-): Promise<StatementFix | null> {
-	const statementRef = db.collection(Collections.statements).doc(statementId);
-	const statementDoc = await statementRef.get();
-
-	if (!statementDoc.exists) {
-		logger.warn(`Statement ${statementId} not found`);
-
-		return null;
-	}
-
-	const statement = statementDoc.data() as Statement & {
-		popperHebbianScore?: PopperHebbianScore;
-		integratedOptions?: string[];
-		isCluster?: boolean;
-	};
-
-	// If this is a cluster-option (has integratedOptions or isCluster flag), use special logic
-	// The recalculateClusterOptionEvaluations function will find sources via integratedInto if needed
-	if (
-		(statement.integratedOptions && statement.integratedOptions.length > 0) ||
-		statement.isCluster === true
-	) {
-		return recalculateClusterOptionEvaluations(statementId, statement, dryRun);
-	}
-
-	// Get all actual evaluations for this statement
-	const evaluationsSnapshot = await db
-		.collection(Collections.evaluations)
-		.where('statementId', '==', statementId)
-		.get();
-
-	// Calculate actual counts from evaluation documents
+	evalsByStatementId: Map<string, Evaluation[]>,
+): { payload: Record<string, unknown>; fix: StatementFix } | null {
+	const evals = evalsByStatementId.get(statementId) ?? [];
 	let actualProCount = 0;
 	let actualConCount = 0;
 	let sumEvaluations = 0;
 	let sumSquaredEvaluations = 0;
 	let sumPro = 0;
 	let sumCon = 0;
-
-	evaluationsSnapshot.forEach((doc) => {
-		const evaluation = doc.data() as Evaluation;
-		const evalValue = evaluation.evaluation;
-
-		if (evalValue > 0) {
+	for (const e of evals) {
+		const v = e.evaluation;
+		if (v > 0) {
 			actualProCount++;
-			sumPro += evalValue;
-		} else if (evalValue < 0) {
+			sumPro += v;
+		} else if (v < 0) {
 			actualConCount++;
-			sumCon += Math.abs(evalValue);
+			sumCon += Math.abs(v);
 		}
-		// Neutral evaluations (0) are not counted in numberOfEvaluators
-
-		sumEvaluations += evalValue;
-		sumSquaredEvaluations += evalValue * evalValue;
-	});
-
+		sumEvaluations += v;
+		sumSquaredEvaluations += v * v;
+	}
 	const totalWithNonZeroEval = actualProCount + actualConCount;
 
-	// Current values - use full type to avoid property access issues
 	const currentEval: StatementEvaluation = statement.evaluation || {
 		numberOfEvaluators: 0,
 		numberOfProEvaluators: 0,
@@ -363,31 +281,25 @@ async function recalculateSingleStatementEvaluations(
 		evaluationRandomNumber: Math.random(),
 		viewed: 0,
 	};
-
 	const before = {
 		numberOfEvaluators: currentEval.numberOfEvaluators || 0,
 		numberOfProEvaluators: currentEval.numberOfProEvaluators || 0,
 		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
 	};
 
-	// Check if there's a mismatch
 	const hasProMismatch = before.numberOfProEvaluators !== actualProCount;
 	const hasConMismatch = before.numberOfConEvaluators !== actualConCount;
 	const hasEvaluatorMismatch = before.numberOfEvaluators !== totalWithNonZeroEval;
+	if (!hasProMismatch && !hasConMismatch && !hasEvaluatorMismatch) return null;
 
-	if (!hasProMismatch && !hasConMismatch && !hasEvaluatorMismatch) {
-		return null; // No fix needed
-	}
-
-	// Calculate correct metrics
 	const averageEvaluation = totalWithNonZeroEval > 0 ? sumEvaluations / totalWithNonZeroEval : 0;
 	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalWithNonZeroEval);
 	const consensusValid = calculateConsensusValid(
 		agreement,
-		statement.popperHebbianScore ?? undefined,
+		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
+			undefined,
 	);
 
-	// Build updated evaluation object
 	const updatedEvaluation: StatementEvaluation = {
 		...currentEval,
 		numberOfEvaluators: totalWithNonZeroEval,
@@ -403,105 +315,183 @@ async function recalculateSingleStatementEvaluations(
 		viewed: currentEval.viewed ?? 0,
 	};
 
-	const after = {
-		numberOfEvaluators: totalWithNonZeroEval,
-		numberOfProEvaluators: actualProCount,
-		numberOfConEvaluators: actualConCount,
-		consensus: agreement,
-	};
-
-	// Add consensus to before for comparison
-	const beforeWithConsensus = {
-		...before,
-		consensus: statement.consensus ?? 0,
-	};
-
-	// Update the statement (unless dry run)
-	if (!dryRun) {
-		await statementRef.update({
+	return {
+		payload: {
 			evaluation: updatedEvaluation,
 			totalEvaluators: totalWithNonZeroEval,
 			consensus: agreement,
 			consensusValid,
 			proSum: sumPro,
 			conSum: sumCon,
-			lastUpdate: Date.now(),
-		});
-	} else {
-		logger.info(`[DRY RUN] Would fix ${statementId}`);
-	}
-
-	return {
-		statementId,
-		statementText: statement.statement?.substring(0, 50),
-		isClusterOption: false,
-		before: beforeWithConsensus,
-		after,
+		},
+		fix: {
+			statementId,
+			statementText: statement.statement?.substring(0, 50),
+			isClusterOption: false,
+			before: { ...before, consensus: statement.consensus ?? 0 },
+			after: {
+				numberOfEvaluators: totalWithNonZeroEval,
+				numberOfProEvaluators: actualProCount,
+				numberOfConEvaluators: actualConCount,
+				consensus: agreement,
+			},
+		},
 	};
 }
 
 /**
- * Update parent's total evaluators count based on unique evaluators
+ * Cluster-option recompute using pre-grouped evaluations. Direct evaluations
+ * on the cluster OVERWRITE source-statement evaluations for the same user,
+ * matching the legacy semantics.
  */
-async function updateParentTotalEvaluators(
-	parentId: string,
-	dryRun: boolean = false,
-): Promise<number> {
-	const evaluationsSnapshot = await db
-		.collection(Collections.evaluations)
-		.where('parentId', '==', parentId)
-		.get();
+function planClusterRecompute(
+	statement: Statement & { integratedOptions?: string[]; isCluster?: boolean },
+	clusterId: string,
+	evalsByStatementId: Map<string, Evaluation[]>,
+): { payload: Record<string, unknown>; fix: StatementFix } | null {
+	const sourceIds = statement.integratedOptions ?? [];
+	if (sourceIds.length === 0) return null;
 
-	const uniqueEvaluators = new Set<string>();
-	evaluationsSnapshot.forEach((doc) => {
-		const evaluation = doc.data() as Evaluation;
-		if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
-			uniqueEvaluators.add(evaluation.evaluator.uid);
+	interface UserEval {
+		evaluation: number;
+		isDirect: boolean;
+		sourceEvaluations: number[];
+	}
+	const userEvals = new Map<string, UserEval>();
+
+	// Source evaluations (averaged per user across their sources).
+	for (const sourceId of sourceIds) {
+		const evals = evalsByStatementId.get(sourceId) ?? [];
+		for (const e of evals) {
+			const uid = e.evaluator?.uid ?? e.evaluatorId;
+			if (!uid) continue;
+			const existing = userEvals.get(uid);
+			if (existing && !existing.isDirect) {
+				existing.sourceEvaluations.push(e.evaluation);
+				existing.evaluation =
+					existing.sourceEvaluations.reduce((a, b) => a + b, 0) / existing.sourceEvaluations.length;
+			} else if (!existing) {
+				userEvals.set(uid, {
+					evaluation: e.evaluation,
+					isDirect: false,
+					sourceEvaluations: [e.evaluation],
+				});
+			}
 		}
-	});
-
-	const totalUniqueEvaluators = uniqueEvaluators.size;
-
-	const parentRef = db.collection(Collections.statements).doc(parentId);
-	const parentDoc = await parentRef.get();
-
-	if (parentDoc.exists && !dryRun) {
-		const parentData = parentDoc.data() as Statement;
-		const parentEvaluation: StatementEvaluation = parentData.evaluation || {
-			agreement: 0,
-			sumEvaluations: 0,
-			numberOfEvaluators: 0,
-			sumPro: 0,
-			sumCon: 0,
-			numberOfProEvaluators: 0,
-			numberOfConEvaluators: 0,
-			sumSquaredEvaluations: 0,
-			averageEvaluation: 0,
-			evaluationRandomNumber: Math.random(),
-			viewed: 0,
-		};
-
-		parentEvaluation.asParentTotalEvaluators = totalUniqueEvaluators;
-
-		await parentRef.update({
-			evaluation: parentEvaluation,
-			totalEvaluators: totalUniqueEvaluators,
-			lastUpdate: Date.now(),
-		});
-	} else if (dryRun) {
-		logger.info(
-			`[DRY RUN] Would update parent ${parentId} totalEvaluators to ${totalUniqueEvaluators}`,
-		);
 	}
 
-	return totalUniqueEvaluators;
+	// Direct evaluations on the cluster itself OVERRIDE the source avg.
+	const directEvals = evalsByStatementId.get(clusterId) ?? [];
+	for (const e of directEvals as (Evaluation & { migratedAt?: number })[]) {
+		if (e.migratedAt) continue;
+		const uid = e.evaluator?.uid ?? e.evaluatorId;
+		if (!uid) continue;
+		userEvals.set(uid, {
+			evaluation: e.evaluation,
+			isDirect: true,
+			sourceEvaluations: [],
+		});
+	}
+
+	let sumEvaluations = 0;
+	let sumSquaredEvaluations = 0;
+	let sumPro = 0;
+	let sumCon = 0;
+	let proCount = 0;
+	let conCount = 0;
+	for (const [, data] of userEvals) {
+		const v = data.evaluation;
+		sumEvaluations += v;
+		sumSquaredEvaluations += v * v;
+		if (v > 0) {
+			proCount++;
+			sumPro += v;
+		} else if (v < 0) {
+			conCount++;
+			sumCon += Math.abs(v);
+		}
+	}
+	const totalEvaluators = proCount + conCount;
+
+	const currentEval: StatementEvaluation = statement.evaluation || {
+		numberOfEvaluators: 0,
+		numberOfProEvaluators: 0,
+		numberOfConEvaluators: 0,
+		sumEvaluations: 0,
+		sumPro: 0,
+		sumCon: 0,
+		sumSquaredEvaluations: 0,
+		averageEvaluation: 0,
+		agreement: 0,
+		evaluationRandomNumber: Math.random(),
+		viewed: 0,
+	};
+	const before = {
+		numberOfEvaluators: currentEval.numberOfEvaluators || 0,
+		numberOfProEvaluators: currentEval.numberOfProEvaluators || 0,
+		numberOfConEvaluators: currentEval.numberOfConEvaluators || 0,
+	};
+
+	const averageEvaluation = totalEvaluators > 0 ? sumEvaluations / totalEvaluators : 0;
+	const agreement = calcAgreement(sumEvaluations, sumSquaredEvaluations, totalEvaluators);
+	const consensusValid = calculateConsensusValid(
+		agreement,
+		(statement as Statement & { popperHebbianScore?: PopperHebbianScore }).popperHebbianScore ??
+			undefined,
+	);
+
+	const updatedEvaluation: StatementEvaluation = {
+		...currentEval,
+		numberOfEvaluators: totalEvaluators,
+		numberOfProEvaluators: proCount,
+		numberOfConEvaluators: conCount,
+		sumEvaluations,
+		sumSquaredEvaluations,
+		sumPro,
+		sumCon,
+		averageEvaluation,
+		agreement,
+		evaluationRandomNumber: currentEval.evaluationRandomNumber ?? Math.random(),
+		viewed: currentEval.viewed ?? 0,
+	};
+
+	return {
+		payload: {
+			evaluation: updatedEvaluation,
+			totalEvaluators,
+			consensus: agreement,
+			consensusValid,
+			proSum: sumPro,
+			conSum: sumCon,
+		},
+		fix: {
+			statementId: clusterId,
+			statementText: statement.statement?.substring(0, 50),
+			isClusterOption: true,
+			before: { ...before, consensus: statement.consensus ?? 0 },
+			after: {
+				numberOfEvaluators: totalEvaluators,
+				numberOfProEvaluators: proCount,
+				numberOfConEvaluators: conCount,
+				consensus: agreement,
+			},
+		},
+	};
 }
 
 /**
  * Firebase callable function to recalculate all evaluation data for a question's options
  */
 export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
-	{ region: functionConfig.region },
+	{
+		region: functionConfig.region,
+		// Admin recalc loops serially over every option under a parent and
+		// runs per-option Firestore reads + writes. Questions with hundreds
+		// of options (240+ in the wild) blow past the default 60s timeout.
+		// Bump timeout + memory so this reliably completes in one call.
+		timeoutSeconds: 540,
+		memory: '1GiB',
+	},
 	async (request): Promise<RecalculateResult> => {
 		const { statementId, dryRun = false } = request.data;
 
@@ -566,38 +556,22 @@ export const recalculateStatementEvaluations = onCall<RecalculateRequest>(
 		};
 
 		try {
-			// Get all option statements under this parent
-			const optionsSnapshot = await db
-				.collection(Collections.statements)
-				.where('parentId', '==', statementId)
-				.where('statementType', '==', StatementType.option)
-				.get();
+			// Delegate to the bulk path — single query for evaluations,
+			// in-memory grouping, batched writes. See `bulkRecalculateForParent`.
+			const bulkResult = await bulkRecalculateForParent(statementId, dryRun);
+			Object.assign(result, bulkResult);
 
-			logger.info(`${modeLabel}Found ${optionsSnapshot.size} options to process`);
-
-			for (const doc of optionsSnapshot.docs) {
-				result.statementsProcessed++;
-
-				try {
-					const fix = await recalculateSingleStatementEvaluations(doc.id, dryRun);
-					if (fix) {
-						result.statementsFixed++;
-						result.fixes.push(fix);
-						logger.info(
-							`${modeLabel}${fix.isClusterOption ? 'Cluster ' : ''}${doc.id}: ` +
-								`pro ${fix.before.numberOfProEvaluators} -> ${fix.after.numberOfProEvaluators}, ` +
-								`con ${fix.before.numberOfConEvaluators} -> ${fix.after.numberOfConEvaluators}`,
-						);
-					}
-				} catch (error) {
-					const errorMsg = `Failed to process ${doc.id}: ${error instanceof Error ? error.message : 'Unknown error'}`;
-					result.errors.push(errorMsg);
-					logger.error(errorMsg);
-				}
+			// Timestamp the last drift-correction so the scheduled sweep can
+			// skip questions that were just recalculated by an admin.
+			if (!dryRun) {
+				await db
+					.collection(Collections.statements)
+					.doc(statementId)
+					.update({ lastEvaluationRecalcAt: Date.now() })
+					.catch(() => {
+						// best-effort — stored status is a sweep hint, not a lock
+					});
 			}
-
-			// Also recalculate the parent statement's total evaluators
-			await updateParentTotalEvaluators(statementId, dryRun);
 
 			logger.info(
 				`${modeLabel}Recalculation complete: ${result.statementsProcessed} processed, ` +

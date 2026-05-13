@@ -9,11 +9,13 @@ import {
 	any,
 	enum_,
 	picklist,
+	record,
 	InferOutput,
 	pipe,
 	transform,
 } from 'valibot';
 import { DeliberativeElement, DocumentType, StatementType } from '../TypeEnums';
+import { Role } from '../user/UserSettings';
 import { CreatorSchema, MembershipSchema, StepSchema, UserSchema } from '../user/User';
 import { ResultsSettingsSchema } from '../results/ResultsSettings';
 import { QuestionSettingsSchema } from '../question/QuestionType';
@@ -64,6 +66,7 @@ export const StatementSchema = object({
 	creatorId: string(), // the id of the creator of the statement
 	creator: UserSchema, // the creator of the statement
 	statementType: enum_(StatementType), // the type of the statement: group, stage, option, chat-message, etc.
+	blockType: optional(enum_(ParagraphType)), // for paragraph child-statements (statementType === paragraph): visual block type (h1..h6, paragraph, li). Distinct from the nested doc.paragraphType used by Sign app.
 	evidence: optional(object({
 		evidenceType: optional(enum_(EvidenceType)), // the type of evidence: data, testimony, argument, anecdote, fallacy
 		support: optional(number()), // the strength of support of the evidence (-1 to 1): -1 = strongly challenges, 0 = neutral, 1 = strongly supports
@@ -78,6 +81,7 @@ export const StatementSchema = object({
 	forceLanguage: optional(boolean()), // if true, force the language of the statement
 	followMe: optional(string()),
 	powerFollowMe: optional(string()), // when set, auto-redirects non-admin users to this path
+	joinFollowMe: optional(string()), // join-app-only follow-me; isolated from `powerFollowMe` so a main-app session with power-follow active can't fight the join admin's broadcasts
 	parentId: string(), // the id of the parent statement
 	parents: optional(array(string())), // the list of all parents of the statement
 	topParentId: string(), // the id of the top parent of the statement
@@ -157,6 +161,42 @@ export const StatementSchema = object({
 	isSelected: optional(boolean()), // if true, the statement is selected
 	isCluster: optional(boolean()),
 	integratedOptions: optional(array(string())), // source statement IDs merged into this cluster-option (many-to-many)
+	derivedFromStatementId: optional(string()), // origin statement when this option was synthesized by a pipeline (e.g. compound-response decomposition)
+	derivedByPipeline: optional(picklist(['topic-cluster', 'synthesis'])), // identifies the pipeline that created this synthetic option (used for idempotent rerun)
+	framingId: optional(string()), // on cluster Statements (isCluster=true): the Framing this cluster belongs to
+	framingClusters: optional(record(string(), nullable(string()))), // on options: map framingId → clusterId (string, or null when cleared)
+	titleLockedByCreator: optional(boolean()), // when true, the creator has manually edited the cluster title — suppress AI regeneration
+	condensationStatus: optional(object({ // set on parent questions when the grouping pipeline runs
+		lastRunAt: optional(number()),
+		lastRunBy: optional(string()), // userId of the creator, or 'scheduler' for auto runs
+		isStale: optional(boolean()), // marked true when new suggestions arrive, cleared after run
+		inputCount: optional(number()), // number of candidate originals in the last run
+		producedGroupCount: optional(number()), // number of clusters produced by the last run
+		level: optional(picklist(['loose', 'balanced', 'tight'])),
+		error: optional(string()),
+	})),
+	synthesisRun: optional(object({ // set on parent questions when bulk idea synthesis runs (see docs/clusters and synthesis/clustering-and-synthesis-paper.md §5)
+		lastRunAt: optional(number()),
+		lastRunBy: optional(string()), // userId of the admin who triggered the run
+		threshold: optional(number()), // cosine candidate threshold used (e.g. 0.90)
+		filters: optional(object({ // engagement pre-filters applied for this run
+			minAverage: optional(number()),
+			minConsensus: optional(number()),
+			minEvaluators: optional(number()),
+		})),
+		inputCount: optional(number()), // number of options surviving pre-filter
+		candidateEdgeCount: optional(number()), // edges produced by ANN before LLM verdict
+		groupsCreated: optional(number()), // number of synthesis groups committed by the admin
+		runId: optional(string()), // synthesisRuns subcollection doc id, for audit drill-down
+		status: optional(picklist(['building-graph', 'awaiting-confirmation', 'complete', 'error'])),
+		error: optional(string()),
+	})),
+	creatorOverrides: optional(object({ // set on parent questions — manual reassignments by the creator
+		// map of originalStatementId → clusterStatementId | '__standalone__'
+		// the pipeline respects these on re-run instead of re-grouping them automatically
+		assignments: optional(any()), // Record<string, string> — validated at call sites
+		updatedAt: optional(number()),
+	})),
 	voted: optional(number()), // the number of votes for the statement
 	totalSubStatements: optional(number()), // the total number of sub statements of the statement
 	membership: optional(MembershipSchema), // the membership of the statement
@@ -225,6 +265,12 @@ export const StatementSchema = object({
 	/** Post-resolve status. Undefined before resolve. Set by `fn_resolveJoinIntents`. */
 	joinStatus: optional(picklist(['activated', 'failed'])),
 	hide: optional(boolean()), // if true, the statement is hidden
+	/** If true, admin-promoted: always shown in Join app even if below resultsSettings cutoff. */
+	forceShow: optional(boolean()),
+	/** The role of the user who created this statement. Set to Role.admin for
+	 *  organizer suggestions created from the Join app admin UI — these render
+	 *  in a separate "Organizer suggestions" section and carry a badge. */
+	creatorRole: optional(enum_(Role)),
 	isDocument: optional(boolean()), // if true, this statement is treated as a document in Freedi-sign (allows options to be signable)
 	mergedInto: optional(string()), // ID of the statement this was merged into (for tracking merged proposals)
 	replyTo: optional(object({ // reference to the message this is a reply to (chat view threading)

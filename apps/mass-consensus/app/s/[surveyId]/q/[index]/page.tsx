@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
     if (!survey || questionIndex >= survey.questions.length) {
       return {
-        title: 'Question Not Found | Freedi Survey',
+        title: 'Question Not Found | WizCol',
       };
     }
 
@@ -41,7 +41,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   } catch {
     return {
-      title: 'Question Not Found | Freedi Survey',
+      title: 'Question Not Found | WizCol',
     };
   }
 }
@@ -190,12 +190,14 @@ export default async function SurveyQuestionPage({ params }: PageProps) {
                   question={question}
                   initialSolutions={initialBatch}
                   mergedSettings={mergedSettings}
+                  surveyId={params.surveyId}
                 />
               ) : (
                 <SwipeInterfaceWrapper
                   question={question}
                   initialSolutions={initialBatch}
                   mergedSettings={mergedSettings}
+                  surveyId={params.surveyId}
                 />
               )}
             </Suspense>

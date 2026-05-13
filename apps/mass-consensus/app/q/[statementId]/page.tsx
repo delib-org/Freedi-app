@@ -21,17 +21,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const question = await getQuestionFromFirebase(params.statementId);
 
     return {
-      title: `${question.statement} | Freedi Discussion`,
+      title: `${question.statement} | WizCol: Mass Consensus`,
       description: getParagraphsText(question.paragraphs) || `Participate in this discussion: ${question.statement}`,
       openGraph: {
         title: question.statement,
-        description: getParagraphsText(question.paragraphs) || 'Join the discussion',
+        description: getParagraphsText(question.paragraphs) || 'A new way to make decisions together',
         type: 'website',
+        images: [{ url: '/wizcol-logo.png', width: 800, height: 400, alt: 'WizCol' }],
       },
     };
   } catch {
     return {
-      title: 'Question Not Found | Freedi Discussion',
+      title: 'Question Not Found | WizCol',
     };
   }
 }

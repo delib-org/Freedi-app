@@ -662,4 +662,14 @@
   --credit-earn: var(--agree);
   --progress-track: var(--border-color);
   --progress-fill: var(--btn-primary);
+
+  // --- CLUSTER PIPELINE TINTS ---
+  // Subtle accents per clustering pipeline so the pipeline a card came from
+  // (synthesis / topic / semantic / custom) is recognisable at a glance even
+  // after the badge is no longer salient. Used by GroupedSuggestionCard,
+  // FramingChip, and SectionDivider.
+  --cluster-synthesis-accent: #b455ff;
+  --cluster-topic-accent: #2aa39a;
+  --cluster-semantic-accent: var(--btn-primary);
+  --cluster-custom-accent: #ef7550;
 }

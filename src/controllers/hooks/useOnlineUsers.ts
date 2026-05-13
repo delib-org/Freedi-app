@@ -166,7 +166,7 @@ export const useOnlineUsers = (statementId: string | undefined) => {
 	};
 
 	const isUserOnline = (userId: string) => {
-		return onlineUsers.some((user) => user.user.uid === userId);
+		return onlineUsers.some((user) => user.user?.uid === userId);
 	};
 
 	return {

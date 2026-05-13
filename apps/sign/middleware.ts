@@ -16,8 +16,31 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 export function middleware(request: NextRequest) {
   const secureUid = request.cookies.get(SECURE_UID_COOKIE)?.value;
   const legacyUid = request.cookies.get(LEGACY_UID_COOKIE)?.value;
+  const isProduction = process.env.NODE_ENV === 'production';
 
-  // Already has secure cookie — pass through
+  // Sync `_uid` to `userId` after a client-side login.
+  //
+  // Client-side Firebase login (Google / anonymous) only writes the legacy,
+  // JS-readable `userId` cookie — it cannot touch HttpOnly cookies. Without
+  // this sync, `_uid` stays stuck at whatever anonymous ID we minted on the
+  // very first visit, and `getUserIdFromCookies` (which prefers `_uid`)
+  // keeps reporting the old anon UID. The server then thinks the user is
+  // anonymous after a successful Google sign-in, and bounces them back to
+  // `/login` — an infinite loop.
+  if (secureUid && legacyUid && legacyUid !== secureUid) {
+    const response = NextResponse.next();
+    response.cookies.set(SECURE_UID_COOKIE, legacyUid, {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: 'lax',
+      maxAge: COOKIE_MAX_AGE,
+      path: '/',
+    });
+
+    return response;
+  }
+
+  // Already has secure cookie and matches legacy — pass through
   if (secureUid) {
     return NextResponse.next();
   }
@@ -26,8 +49,6 @@ export function middleware(request: NextRequest) {
 
   // Use legacy userId if available, otherwise generate new anonymous ID
   const userId = legacyUid || `anon_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`;
-
-  const isProduction = process.env.NODE_ENV === 'production';
 
   // Set HttpOnly secure cookie (server-only, XSS-proof)
   response.cookies.set(SECURE_UID_COOKIE, userId, {

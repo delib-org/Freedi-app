@@ -53,7 +53,7 @@ Understanding demographic differences is crucial for:
 This paper proposes solutions to:
 
 1. Enable demographic filtering on all four heatmap types (approval, comments, rating, viewership)
-2. Introduce a **Demographic Collaboration Index** that adapts the main Freedi app's consensus scoring to compare demographic groups
+2. Introduce a **Collaboration Index** — a 2D map (Agreement-on-Evaluation × Direction) that adapts the main Freedi app's consensus scoring to compare demographic groups
 3. Enhance CSV exports with demographic segmentation and comparative analysis
 4. Provide clear visualizations showing where demographics agree and disagree
 
@@ -590,27 +590,37 @@ Age Group Analysis:
 Insight: Clear generational divide - younger groups support, older oppose
 ```
 
-### 5.4 Collaboration Index Calculation
+### 5.4 Collaboration Index — 2D Map
 
-For pairwise comparison between demographic groups, we introduce the **Demographic Collaboration Index (DCI)**:
+The **Collaboration Index** is a 2D analytical framework that plots every proposal × every pair of demographic groups onto a map with two orthogonal axes:
+
+- **Y-axis — Agreement-on-Evaluation** (united ↔ divided): how aligned the two groups are in their evaluation, regardless of direction.
+- **X-axis — Direction** (oppose ↔ support): the joint sentiment of the two groups, computed as the average of their means.
+
+Together, these axes locate every proposal-by-group-pair into one of four readable regions: united-in-support (bottom-right), united-in-rejection (bottom-left), united-in-indifference (bottom-center), and polarized (top).
+
+#### Y-axis: Agreement-on-Evaluation
 
 ```typescript
-// Collaboration between two groups based on their means
-function calculateDCI(groupA: { mean: number }, groupB: { mean: number }): number {
-  // Difference in means, normalized to 0-1 scale
-  const divergence = Math.abs(groupA.mean - groupB.mean) / 2;
+// Y-axis of the Collaboration Index map
+// Direction-blind: measures alignment of evaluation only
+function calculateAgreementOnEvaluation(meanA: number, meanB: number): number {
+  const divergence = Math.abs(meanA - meanB) / 2;
 
-  // DCI: 1 = perfect agreement, 0 = maximum disagreement
+  // 1 = groups perfectly aligned in evaluation, 0 = groups at opposite poles
   return 1 - divergence;
 }
 
 // Example:
 // Group A mean: +0.8, Group B mean: -0.6
 // divergence = |0.8 - (-0.6)| / 2 = 0.7
-// DCI = 1 - 0.7 = 0.3 (significant disagreement)
+// agreementOnEvaluation = 1 - 0.7 = 0.3 (significant disagreement)
 ```
 
-**DCI Matrix:**
+Note: this score is direction-blind. `calculateAgreementOnEvaluation(0, 0)` returns `1` because two indifferent groups *are* aligned in their evaluation. The X-axis disambiguates whether that alignment is on support, opposition, or indifference.
+
+#### Pairwise Agreement Matrix
+
 ```
              18-25  26-35  36-50   51+
 18-25        1.00   0.89   0.60   0.39
@@ -619,9 +629,9 @@ function calculateDCI(groupA: { mean: number }, groupB: { mean: number }): numbe
 51+          0.39   0.50   0.79   1.00
 
 Clusters identified:
-- Young cluster (18-35): High internal DCI (0.89)
-- Older cluster (36+): High internal DCI (0.79)
-- Cross-cluster DCI: 0.39-0.60 (significant divergence)
+- Young cluster (18-35): high internal agreement (0.89)
+- Older cluster (36+): high internal agreement (0.79)
+- Cross-cluster agreement: 0.39-0.60 (significant divergence)
 ```
 
 ### 5.5 Visualization: 2D Polarization Map for Sign
@@ -1136,7 +1146,7 @@ The Sign app adaptation enables administrators to:
 1. **Demographic Heatmap Filtering:** Filter any heatmap type by demographic segment
 2. **Polarization Index Adaptation:** Reuse MAD-based metrics from main app for Sign paragraphs
 3. **groupsMAD Integration:** Show where demographics agree vs. disagree per paragraph
-4. **Demographic Collaboration Index (DCI):** Pairwise measure of cross-demographic agreement
+4. **Collaboration Index:** 2D map of every proposal × every demographic pair, with Agreement-on-Evaluation on the Y-axis and Direction on the X-axis
 5. **Enhanced CSV Export:** Demographic-segmented exports with polarization metrics
 6. **Divergence Heatmap Mode:** New heatmap type showing groupsMAD per paragraph
 

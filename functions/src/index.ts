@@ -91,6 +91,8 @@ import { checkProfanity } from './fn_profanityChecker';
 import { recalculateStatementEvaluations } from './fn_recalculateEvaluations';
 import { deleteResearchLogs } from './fn_deleteResearchLogs';
 import { cleanupResearchLogs } from './fn_researchRetention';
+import { scheduledStatementHistorySnapshot } from './statements/history/scheduledSnapshot';
+import { cleanupStatementHistory } from './statements/history/historyRetention';
 import { recalculateIndices } from './fn_recalculateIndices';
 import { fixClusterIntegration } from './fn_fixClusterIntegration';
 import { handleImproveSuggestion } from './fn_improveSuggestion';
@@ -125,6 +127,15 @@ import { sendDailyDigests, processDailyDigests } from './engagement/scheduled/da
 import { sendWeeklyDigests, processWeeklyDigests } from './engagement/scheduled/weeklyDigest';
 import type { NotificationQueueItem } from '@freedi/shared-types';
 
+// Hybrid Text + Rating Clustering
+import { hybridClusteringSweep, triggerHybridClustering } from './fn_hybridClustering';
+import { triggerTopicClusterPipeline } from './fn_topicClustering';
+import { triggerSummarizeFramingClusters } from './fn_summarizeClusters';
+import { fn_syncParagraphChildrenToDescription } from './fn_syncParagraphChildrenToDescription';
+
+// Strategic export (AI-ready report)
+import { strategicExport } from './fn_strategicExport';
+
 // Popper-Hebbian functions
 import { analyzeFalsifiability } from './fn_popperHebbian_analyzeFalsifiability';
 import { refineIdea } from './fn_popperHebbian_refineIdea';
@@ -158,7 +169,18 @@ import { detectStatementType } from './fn_detectStatementType';
 import { summarizeDiscussion } from './fn_summarizeDiscussion';
 
 // Integration of Similar Statements
-import { findSimilarForIntegration, executeIntegration } from './fn_integrateSimilarStatements';
+import {
+	findSimilarForIntegration,
+	executeIntegration,
+	reverseIntegrationCallable,
+} from './fn_integrateSimilarStatements';
+
+// Bulk Idea Synthesis (admin-triggered near-duplicate detection)
+import {
+	synthesizeIdeasPreview,
+	synthesizeIdeasExecute,
+	regenerateSynthesisProposal,
+} from './fn_synthesizeIdeas';
 
 // Google Docs Import
 import { importGoogleDoc } from './fn_importGoogleDocs';
@@ -180,9 +202,24 @@ import { fn_notifyAdminReplacementPending } from './fn_notifyAdminReplacementPen
 import { fn_autoRemoveParagraph, fn_autoAddParagraph } from './fn_consensusActions';
 
 // Civil Activity Hub — Join Form exports
-import { fn_appendJoinSubmissionToSheet } from './engagement/joinForm/fn_appendJoinSubmissionToSheet';
+import { fn_syncOptionMembersToSheet } from './engagement/joinForm/fn_syncOptionMembersToSheet';
+import { fn_removeUserFromSheet } from './engagement/joinForm/fn_removeUserFromSheet';
+import {
+	fn_backupJoinFormSubmission,
+	fn_backupOptionMembership,
+} from './engagement/joinForm/fn_backupJoinRegistration';
+import { fn_reconcileJoinSheet } from './engagement/joinForm/fn_reconcileJoinSheet';
+import { fn_joinOption } from './engagement/joinForm/fn_joinOption';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
+import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
+import { createOrganizerSuggestion } from './engagement/joinForm/fn_createOrganizerSuggestion';
 import { resolveJoinIntents } from './engagement/joinForm/fn_resolveJoinIntents';
+
+// Civil Activity Hub — Join Delegate (per-question solution-editing delegation)
+import { fn_createJoinDelegateInvite } from './engagement/joinDelegate/fn_createJoinDelegateInvite';
+import { fn_acceptJoinDelegateInvite } from './engagement/joinDelegate/fn_acceptJoinDelegateInvite';
+import { fn_revokeJoinDelegate } from './engagement/joinDelegate/fn_revokeJoinDelegate';
+import { fn_onJoinDelegateInvitationCreated } from './engagement/joinDelegate/fn_onJoinDelegateInvitationCreated';
 
 // Dynamic OG Tags for social media sharing
 import { serveOgTags } from './fn_dynamicOgTags';
@@ -193,6 +230,18 @@ import {
 	deleteEmbedding,
 } from './fn_embeddingOperations';
 
+// Condensation / Grouped Suggestions
+import {
+	runCondensation,
+	onEvaluationChangeRecomputeCondensationClusters,
+	onStatementCreatedMarkCondensationStale,
+} from './condensation/fn_runCondensation';
+import { suggestClusterTitle } from './condensation/fn_suggestClusterTitle';
+import { mergeClusters } from './condensation/fn_mergeClusters';
+
+// Scheduled drift correction for evaluation aggregates
+import { evaluationDriftCorrection } from './fn_evaluationDriftCorrection';
+
 // Initialize Firebase only if not already initialized
 if (!getApps().length) {
 	initializeApp();
@@ -200,7 +249,9 @@ if (!getApps().length) {
 export const db = getFirestore();
 
 // Environment configuration
-const isProduction = process.env.NODE_ENV === 'production';
+// NODE_ENV is set by GCP at runtime; ENVIRONMENT comes from functions/.env (env-loader)
+const isProduction =
+	process.env.NODE_ENV === 'production' || process.env.ENVIRONMENT === 'production';
 
 /**
  * Gets current timestamp in HH:MM:SS.mmm format
@@ -269,7 +320,7 @@ const wrapHttpFunction = (handler: (req: Request, res: Response) => Promise<void
 					operation: `httpFunction.${functionName}`,
 					metadata: { duration, endTimestamp },
 				});
-				res.status(500).send('Internal Server Error');
+				res.status(500).json({ ok: false, error: 'Internal Server Error' });
 			}
 		},
 	);
@@ -308,7 +359,7 @@ const wrapMemoryIntensiveHttpFunction = (
 					operation: `memoryIntensiveHttpFunction.${functionName}`,
 					metadata: { duration, endTimestamp },
 				});
-				res.status(500).send('Internal Server Error');
+				res.status(500).json({ ok: false, error: 'Internal Server Error' });
 			}
 		},
 	);
@@ -343,11 +394,19 @@ async function verifyAuthToken(req: Request, res: Response): Promise<string | nu
  * @param {Function} handler - The function handler to wrap (receives uid as third argument)
  * @returns {Function} - Wrapped function with auth and error handling
  */
-const wrapAdminHttpFunction = (handler: (req: Request, res: Response) => Promise<void>) => {
+const wrapAdminHttpFunction = (
+	handler: (req: Request, res: Response) => Promise<void>,
+	overrides: {
+		memory?: '256MiB' | '512MiB' | '1GiB' | '2GiB' | '4GiB' | '8GiB';
+		timeoutSeconds?: number;
+		secrets?: string[];
+	} = {},
+) => {
 	return onRequest(
 		{
 			...functionConfig,
 			cors: corsConfig,
+			...overrides,
 		},
 		async (req, res) => {
 			const uid = await verifyAuthToken(req, res);
@@ -370,7 +429,7 @@ const wrapAdminHttpFunction = (handler: (req: Request, res: Response) => Promise
 					operation: `adminHttpFunction.${functionName}`,
 					metadata: { duration, endTimestamp, uid },
 				});
-				res.status(500).send('Internal Server Error');
+				res.status(500).json({ ok: false, error: 'Internal Server Error' });
 			}
 		},
 	);
@@ -458,6 +517,8 @@ exports.checkProfanity = checkProfanity;
 exports.recalculateStatementEvaluations = recalculateStatementEvaluations;
 exports.deleteResearchLogs = deleteResearchLogs;
 exports.cleanupResearchLogs = cleanupResearchLogs;
+exports.scheduledStatementHistorySnapshot = scheduledStatementHistorySnapshot;
+exports.cleanupStatementHistory = cleanupStatementHistory;
 exports.recalculateIndices = recalculateIndices;
 exports.fixClusterIntegration = fixClusterIntegration;
 exports.improveSuggestion = wrapMemoryIntensiveHttpFunction(handleImproveSuggestion);
@@ -735,6 +796,12 @@ exports.onSuggestionCreatedAutoGenerate = createFirestoreFunction(
 // Integration of Similar Statements
 exports.findSimilarForIntegration = findSimilarForIntegration;
 exports.executeIntegration = executeIntegration;
+exports.reverseIntegration = reverseIntegrationCallable;
+
+// Bulk Idea Synthesis
+exports.synthesizeIdeasPreview = synthesizeIdeasPreview;
+exports.synthesizeIdeasExecute = synthesizeIdeasExecute;
+exports.regenerateSynthesisProposal = regenerateSynthesisProposal;
 
 // Multi-Framing Clustering
 exports.generateMultipleFramings = wrapHttpFunction(generateMultipleFramings);
@@ -802,9 +869,21 @@ exports.fn_pruneVersionHistory = fn_pruneVersionHistory;
 exports.fn_notifyAdminReplacementPending = fn_notifyAdminReplacementPending;
 exports.fn_autoRemoveParagraph = fn_autoRemoveParagraph;
 exports.fn_autoAddParagraph = fn_autoAddParagraph;
-exports.fn_appendJoinSubmissionToSheet = fn_appendJoinSubmissionToSheet;
+exports.fn_syncParagraphChildrenToDescription = fn_syncParagraphChildrenToDescription;
+exports.fn_syncOptionMembersToSheet = fn_syncOptionMembersToSheet;
+exports.fn_removeUserFromSheet = fn_removeUserFromSheet;
+exports.fn_backupJoinFormSubmission = fn_backupJoinFormSubmission;
+exports.fn_backupOptionMembership = fn_backupOptionMembership;
+exports.fn_reconcileJoinSheet = fn_reconcileJoinSheet;
+exports.fn_joinOption = fn_joinOption;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
+exports.testSheetAccess = testSheetAccess;
+exports.createOrganizerSuggestion = createOrganizerSuggestion;
 exports.resolveJoinIntents = resolveJoinIntents;
+exports.fn_createJoinDelegateInvite = fn_createJoinDelegateInvite;
+exports.fn_acceptJoinDelegateInvite = fn_acceptJoinDelegateInvite;
+exports.fn_revokeJoinDelegate = fn_revokeJoinDelegate;
+exports.fn_onJoinDelegateInvitationCreated = fn_onJoinDelegateInvitationCreated;
 
 // --------------------------
 // SCHEDULED FUNCTIONS
@@ -903,11 +982,66 @@ export const refreshUserStats = onSchedule(
 		schedule: '10 0 * * *',
 		timeZone: 'UTC',
 		...functionConfig,
-		region: 'us-central1',
+		timeoutSeconds: 300,
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await performUserStatsRefresh();
 	},
+);
+
+// Ship 2 — async-synthesis job model.
+// `synthesisJobStart` and `synthesisJobCancel` are callables that gate on
+// the SYNTHESIS_ASYNC_JOB_MODE flag. The Firestore-write dispatcher routes
+// jobs through their phases. The heartbeat sweep recovers stuck jobs every
+// 5 min. The existing synchronous `synthesizeIdeasPreview` is unchanged —
+// clients pick which entry point to call.
+export { synthesisJobStart, synthesisJobCancel } from './synthesis/asyncJob/fn_synthesisJobStart';
+export { fn_synthesisHeartbeatSweep } from './synthesis/asyncJob/fn_synthesisHeartbeatSweep';
+
+import { dispatchSynthesisJobWrite } from './synthesis/asyncJob/fn_synthesisJobDispatch';
+
+exports.synthesisJobDispatch = createFirestoreFunction(
+	'/synthesisJobs/{jobId}',
+	onDocumentWritten,
+	dispatchSynthesisJobWrite,
+	'synthesisJobDispatch',
+);
+
+// Ship 3a — cluster-aware polarization scheduled flusher.
+// Runs every 1 minute, drains `_clusterRecomputeQueue`, recomputes synth
+// cluster aggregates + polarization indexes. No-ops when the
+// SYNTHESIS_CLUSTER_AWARE_POLARIZATION flag is OFF (drains queue without
+// acting). See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 3" /
+// "Debounced flusher".
+export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomputeFlush';
+
+// Ship 3b — live-synth attach/spawn/dissolve triggers.
+// Both are gated by the SYNTHESIS_LIVE_SYNTH_ENABLED flag and exit
+// immediately at handler entry when OFF. The handlers themselves live in
+// `synthesis/liveSynth/onOptionCreateLive.ts` and `onOptionUpdateLive.ts`.
+// See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 1" / "Trigger 2".
+import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
+import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
+
+exports.liveSynthOnOptionCreate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	async (event: { data?: { data: () => unknown } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionCreate(event.data.data());
+	},
+	'liveSynthOnOptionCreate',
+);
+
+exports.liveSynthOnOptionUpdate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionUpdate(event.data.before.data(), event.data.after.data());
+	},
+	'liveSynthOnOptionUpdate',
 );
 
 // HTTP endpoint for one-time historical backfill (admin auth required)
@@ -918,3 +1052,73 @@ exports.manualRefreshUserStats = wrapAdminHttpFunction(async (req: Request, res:
 	const result = await performUserStatsRefresh();
 	res.json(result);
 });
+
+// --------------------------
+// HYBRID TEXT + RATING CLUSTERING
+// --------------------------
+
+// Scheduled function disabled — clustering is now admin-triggered via the
+// topic-cluster pipeline (fn_topicClustering.ts). The hybrid k-means sweep
+// is preserved as legacy code so existing hybrid-auto framings stay readable;
+// to re-enable, restore the export below.
+// export const hybridClusteringSweepScheduled = onSchedule(
+// 	{
+// 		schedule: '*/15 * * * *',
+// 		timeZone: 'UTC',
+// 		...functionConfig,
+// 		memory: '1GiB',
+// 		timeoutSeconds: 300,
+// 		secrets: ['GEMINI_API_KEY'],
+// 	},
+// 	async () => {
+// 		await hybridClusteringSweep();
+// 	},
+// );
+void hybridClusteringSweep; // keep import alive for future re-enable; no runtime effect
+
+// HTTP endpoint for manually triggering hybrid clustering on a specific question (admin auth required)
+// Same memory profile as the disabled scheduled sweep — k-means on 1536-d hybrid vectors.
+exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+	secrets: ['GEMINI_API_KEY'],
+});
+
+// HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
+// Replaces the scheduled sweep above. See functions/src/services/topic-cluster/.
+// Pipeline loads many statements + 1536-d embeddings + UMAP/DBSCAN + Anthropic SDK
+// in one request — needs more memory than the 256 MiB default and a longer timeout.
+exports.triggerTopicClusterPipeline = wrapAdminHttpFunction(triggerTopicClusterPipeline, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+});
+
+// HTTP endpoint that asks an LLM to summarize each cluster of a Framing from
+// its above-threshold members; writes the result to cluster.brief.
+exports.triggerSummarizeFramingClusters = wrapAdminHttpFunction(triggerSummarizeFramingClusters, {
+	memory: '512MiB',
+	timeoutSeconds: 300,
+});
+
+// AI-ready strategic-report export. May trigger the topic-cluster pipeline as a
+// dependency, plus runs an LLM topic-grouping pass — needs the same memory/
+// timeout profile as triggerTopicClusterPipeline.
+exports.strategicExport = wrapAdminHttpFunction(strategicExport, {
+	memory: '1GiB',
+	timeoutSeconds: 540,
+});
+
+// Condensation / Grouped Suggestions — non-destructive clustering on demand,
+// evaluation aggregation writeback, and stale-marking trigger.
+exports.runCondensation = runCondensation;
+exports.onEvaluationChangeRecomputeCondensationClusters =
+	onEvaluationChangeRecomputeCondensationClusters;
+exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensationStale;
+exports.suggestClusterTitle = suggestClusterTitle;
+exports.mergeClusters = mergeClusters;
+exports.evaluationDriftCorrection = evaluationDriftCorrection;
+
+// Per-survey backup pipeline (scheduled + manual)
+export { backupSurveyOnRequest } from './backups/backupSurveyOnRequest';
+export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
+export { backupSurveyCallable } from './backups/backupSurveyCallable';

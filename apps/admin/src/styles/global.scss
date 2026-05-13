@@ -26,6 +26,14 @@ html, body {
   display: flex;
   height: 100vh;
 
+  &__topbar {
+    display: none;
+  }
+
+  &__overlay {
+    display: none;
+  }
+
   &__sidebar {
     width: var(--sidebar-width);
     flex-shrink: 0;
@@ -35,6 +43,102 @@ html, body {
     flex: 1;
     overflow-y: auto;
     padding: var(--space-lg);
+  }
+
+  // ── Mobile layout ──────────────────────────────────────────────────
+  @media (max-width: 768px) {
+    flex-direction: column;
+
+    &__topbar {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      height: var(--topbar-height);
+      padding: 0 var(--space-md);
+      background: var(--sidebar-bg);
+      color: white;
+      flex-shrink: 0;
+      z-index: 1001;
+    }
+
+    &__hamburger {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 4px;
+      width: 36px;
+      height: 36px;
+      padding: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+
+      &-line {
+        display: block;
+        width: 100%;
+        height: 2px;
+        background: white;
+        border-radius: 1px;
+        transition: transform 0.2s, opacity 0.2s;
+      }
+    }
+
+    &__topbar-title {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    &__overlay {
+      display: block;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1002;
+    }
+
+    &__sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: var(--sidebar-width);
+      z-index: 1003;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+
+      .sidebar--open & {
+        // This won't work with BEM, handled via direct class below
+      }
+    }
+
+    // When sidebar is open, slide it in
+    &__sidebar:has(.sidebar--open) {
+      transform: translateX(0);
+    }
+
+    &__content {
+      padding: var(--space-md);
+      height: calc(100vh - var(--topbar-height));
+    }
+  }
+}
+
+// Fallback for browsers without :has() — use JS-toggled class on .app
+// The sidebar--open class is on .sidebar, so we use a global selector
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: var(--sidebar-width);
+    z-index: 1003;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+
+    &--open {
+      transform: translateX(0);
+    }
   }
 }
 
@@ -60,6 +164,20 @@ html, body {
     color: var(--text-secondary);
     margin-top: var(--space-xs);
   }
+
+  @media (max-width: 768px) {
+    margin-bottom: var(--space-md);
+
+    &__title {
+      font-size: 1.35rem;
+    }
+
+    &__row {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-sm);
+    }
+  }
 }
 
 .kpi-row {
@@ -67,6 +185,12 @@ html, body {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-md);
   margin-bottom: var(--space-lg);
+
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-sm);
+    margin-bottom: var(--space-md);
+  }
 }
 
 .grid-2 {

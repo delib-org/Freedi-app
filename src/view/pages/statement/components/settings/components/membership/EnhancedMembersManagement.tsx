@@ -66,6 +66,8 @@ const MemberCard: FC<MemberCardProps> = ({
 	const { t } = useTranslation();
 	const [showActions, setShowActions] = useState(false);
 	const RoleIcon = roleConfig[member.role].icon;
+	const userId = member.user?.uid;
+	const displayName = member.user?.displayName ?? '';
 
 	// Calculate member statistics
 	const memberSince = new Date(member.createdAt).toLocaleDateString();
@@ -77,19 +79,17 @@ const MemberCard: FC<MemberCardProps> = ({
 			<div className={styles.memberHeader} onClick={onToggleExpand}>
 				<div className={styles.memberInfo}>
 					<div className={styles.memberAvatar}>
-						{member.user.photoURL ? (
-							<img src={member.user.photoURL} alt={member.user.displayName} />
+						{member.user?.photoURL ? (
+							<img src={member.user.photoURL} alt={displayName} />
 						) : (
-							<div className={styles.avatarPlaceholder}>
-								{member.user.displayName?.charAt(0).toUpperCase()}
-							</div>
+							<div className={styles.avatarPlaceholder}>{displayName.charAt(0).toUpperCase()}</div>
 						)}
 						{isOnline && <div className={styles.onlineIndicator} />}
 					</div>
 					<div className={styles.memberDetails}>
 						<h4 className={styles.memberName}>
-							{member.user.displayName}
-							{member.user.isAnonymous && (
+							{displayName}
+							{member.user?.isAnonymous && (
 								<span className={styles.anonymousBadge}>
 									<EyeOff size={14} />
 									{t('Anonymous')}
@@ -124,11 +124,11 @@ const MemberCard: FC<MemberCardProps> = ({
 				</div>
 			</div>
 
-			{showActions && (
+			{showActions && userId && (
 				<div className={styles.actionMenu}>
 					<button
 						className={styles.actionMenuItem}
-						onClick={() => onRoleChange(member.user.uid, Role.admin)}
+						onClick={() => onRoleChange(userId, Role.admin)}
 						disabled={member.role === Role.admin}
 					>
 						<Crown size={16} />
@@ -136,7 +136,7 @@ const MemberCard: FC<MemberCardProps> = ({
 					</button>
 					<button
 						className={styles.actionMenuItem}
-						onClick={() => onRoleChange(member.user.uid, Role.member)}
+						onClick={() => onRoleChange(userId, Role.member)}
 						disabled={member.role === Role.member}
 					>
 						<Users size={16} />
@@ -144,7 +144,7 @@ const MemberCard: FC<MemberCardProps> = ({
 					</button>
 					<button
 						className={`${styles.actionMenuItem} ${styles['actionMenuItem--danger']}`}
-						onClick={() => onRoleChange(member.user.uid, Role.banned)}
+						onClick={() => onRoleChange(userId, Role.banned)}
 						disabled={member.role === Role.banned}
 					>
 						<Ban size={16} />
@@ -152,7 +152,7 @@ const MemberCard: FC<MemberCardProps> = ({
 					</button>
 					<button
 						className={`${styles.actionMenuItem} ${styles['actionMenuItem--danger']}`}
-						onClick={() => onRemove(member.user.uid)}
+						onClick={() => onRemove(userId)}
 					>
 						<UserMinus size={16} />
 						{t('Remove Member')}
@@ -213,12 +213,12 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
 
 	// Filter and sort members
 	const filteredMembers = useMemo(() => {
-		let filtered = [...members];
+		let filtered = members.filter((m) => m.user?.uid);
 
 		// Apply search filter
 		if (searchTerm) {
 			filtered = filtered.filter((m) =>
-				m.user.displayName?.toLowerCase().includes(searchTerm.toLowerCase()),
+				(m.user?.displayName ?? '').toLowerCase().includes(searchTerm.toLowerCase()),
 			);
 		}
 
@@ -231,7 +231,7 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
 		filtered.sort((a, b) => {
 			switch (sortBy) {
 				case 'name':
-					return (a.user.displayName || '').localeCompare(b.user.displayName || '');
+					return (a.user?.displayName ?? '').localeCompare(b.user?.displayName ?? '');
 				case 'role':
 					return a.role.localeCompare(b.role);
 				case 'joinDate':
@@ -399,12 +399,12 @@ const EnhancedMembersManagement: FC<EnhancedMembersManagementProps> = ({ stateme
 				{filteredMembers.length > 0 ? (
 					filteredMembers.map((member) => (
 						<MemberCard
-							key={member.user.uid}
+							key={member.user!.uid}
 							member={member}
 							onRoleChange={handleRoleChange}
 							onRemove={handleRemoveMember}
-							isExpanded={expandedMembers.has(member.user.uid)}
-							onToggleExpand={() => toggleMemberExpand(member.user.uid)}
+							isExpanded={expandedMembers.has(member.user!.uid)}
+							onToggleExpand={() => toggleMemberExpand(member.user!.uid)}
 						/>
 					))
 				) : (

@@ -28,9 +28,22 @@ jest.mock('@freedi/shared-types', () => ({
 	Collections: {
 		votes: 'votes',
 		statements: 'statements',
+		researchLogs: 'researchLogs',
 	},
 	VoteSchema: {},
 	getVoteId: jest.fn((userId: string, parentId: string) => `${userId}--${parentId}`),
+	// researchLogger.logVote() references ResearchAction.VOTE / UPDATE_VOTE.
+	// Without these, module evaluation works but runtime access throws.
+	ResearchAction: {
+		VOTE: 'vote',
+		UPDATE_VOTE: 'update_vote',
+	},
+	RESEARCH_GLOBAL_ACTIONS: new Set<string>(),
+	getResearchLogId: jest.fn(
+		(userId: string, action: string, ts: number) => `${userId}--${action}--${ts}`,
+	),
+	bucketLoginCount: jest.fn((n: number) => String(n)),
+	normalizeScreenPath: jest.fn((p: string) => p),
 }));
 
 // Define types locally since we're mocking the module

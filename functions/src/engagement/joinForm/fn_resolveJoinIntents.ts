@@ -5,10 +5,11 @@ import {
 	Collections,
 	JoinResolutionUser,
 	JOIN_RESOLUTION_USERS_SUBCOLLECTION,
-	Role,
 	Statement,
 	StatementType,
+	functionConfig,
 } from '@freedi/shared-types';
+import { assertJoinAdminAuthorized } from '../../utils/joinAuth';
 
 interface ResolveRequest {
 	questionId: string;
@@ -42,7 +43,7 @@ interface ResolveSummary {
  * `minJoinMembers`, and not cleared on failure.
  */
 export const resolveJoinIntents = onCall(
-	{ memory: '512MiB' },
+	{ memory: '512MiB', region: functionConfig.region },
 	async (request: CallableRequest<ResolveRequest>): Promise<ResolveSummary> => {
 		if (!request.auth) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');
@@ -54,24 +55,16 @@ export const resolveJoinIntents = onCall(
 
 		const adminUid = request.auth.uid;
 
-		// --- Admin check: must be admin/creator of the question ---
-		const subscriptionId = `${adminUid}--${questionId}`;
-		const subSnap = await db.collection(Collections.statementsSubscribe).doc(subscriptionId).get();
-		if (!subSnap.exists) {
-			throw new HttpsError('permission-denied', 'Not subscribed to this question');
-		}
-		const role = subSnap.data()?.role;
-		if (role !== Role.admin && role !== 'statement-creator') {
-			throw new HttpsError('permission-denied', 'Only question admins can resolve intents');
-		}
-
-		// --- Load the question itself ---
+		// --- Admin check via shared helper. Accepts creator + admin sub +
+		// delegate paths uniformly with the rest of the join callables. The
+		// previous hand-rolled check only accepted an admin subscription,
+		// which locked the question's creator out if they had no sub doc.
+		const { question } = await assertJoinAdminAuthorized({
+			uid: adminUid,
+			questionId,
+			operation: 'joinForm.resolveJoinIntents',
+		});
 		const questionRef = db.collection(Collections.statements).doc(questionId);
-		const questionSnap = await questionRef.get();
-		if (!questionSnap.exists) {
-			throw new HttpsError('not-found', 'Question not found');
-		}
-		const question = questionSnap.data() as Statement;
 		const resolutionConfig = question.statementSettings?.joinResolution;
 
 		if (!resolutionConfig?.enabled) {

@@ -1,13 +1,20 @@
 import { FC, useState } from 'react';
-import { Statement } from '@freedi/shared-types';
-import { Download, Users, FlaskConical } from 'lucide-react';
+import { Statement, StatementType } from '@freedi/shared-types';
+import { Download, Users, FlaskConical, Sparkles } from 'lucide-react';
 import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { creatorSelector } from '@/redux/creator/creatorSlice';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { exportStatementData } from '@/utils/exportUtils';
 import { exportPrivacyPreservingData } from '@/utils/privacyExportUtils';
 import { logError } from '@/utils/errorHandling';
-import { downloadResearchLogsAsJSON } from '@/controllers/db/researchLogs/researchLogger';
+import {
+	downloadResearchLogsAsJSON,
+	downloadResearchLogsByQuestionAsJSON,
+} from '@/controllers/db/researchLogs/researchLogger';
+import {
+	downloadStrategicExport,
+	fetchStrategicExport,
+} from '@/controllers/db/strategicExport/strategicExportController';
 import type { ExportFormat } from '@/types/export';
 import styles from './EnhancedAdvancedSettings.module.scss';
 
@@ -32,6 +39,12 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 	});
 
 	const [isResearchExporting, setIsResearchExporting] = useState(false);
+	const [isQuestionResearchExporting, setIsQuestionResearchExporting] = useState(false);
+
+	const [isStrategicExporting, setIsStrategicExporting] = useState(false);
+	const [strategicExportError, setStrategicExportError] = useState<string | null>(null);
+
+	const isQuestion = statement.statementType === StatementType.question;
 
 	async function handleExport(format: ExportFormat) {
 		setIsExporting((prev) => ({ ...prev, [format]: true }));
@@ -62,6 +75,20 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 		}
 	}
 
+	async function handleQuestionResearchExport() {
+		setIsQuestionResearchExporting(true);
+		try {
+			await downloadResearchLogsByQuestionAsJSON(statement.statementId);
+		} catch (error) {
+			logError(error, {
+				operation: 'ExportSettings.handleQuestionResearchExport',
+				statementId: statement.statementId,
+			});
+		} finally {
+			setIsQuestionResearchExporting(false);
+		}
+	}
+
 	async function handleUserDataExport(format: ExportFormat) {
 		setIsUserDataExporting((prev) => ({ ...prev, [format]: true }));
 		try {
@@ -77,6 +104,26 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 		}
 	}
 
+	async function handleStrategicExport() {
+		setIsStrategicExporting(true);
+		setStrategicExportError(null);
+		try {
+			const exportData = await fetchStrategicExport({
+				questionStatementId: statement.statementId,
+			});
+			downloadStrategicExport(exportData, statement.statementId);
+		} catch (error) {
+			const message = error instanceof Error ? error.message : 'Strategic export failed';
+			setStrategicExportError(message);
+			logError(error, {
+				operation: 'ExportSettings.handleStrategicExport',
+				statementId: statement.statementId,
+			});
+		} finally {
+			setIsStrategicExporting(false);
+		}
+	}
+
 	return (
 		<div className={styles.dataExportSection}>
 			<h4 className={styles.sectionTitle}>
@@ -88,6 +135,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			</p>
 			<div className={styles.exportButtons}>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleExport('json')}
 					disabled={isExporting.json}
@@ -96,6 +144,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					{isExporting.json ? t('Exporting...') : t('Export JSON')}
 				</button>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleExport('csv')}
 					disabled={isExporting.csv}
@@ -123,6 +172,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			</p>
 			<div className={styles.exportButtons}>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleUserDataExport('json')}
 					disabled={isUserDataExporting.json}
@@ -131,6 +181,7 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					{isUserDataExporting.json ? t('Exporting...') : t('Export JSON')}
 				</button>
 				<button
+					type="button"
 					className={styles.exportButton}
 					onClick={() => handleUserDataExport('csv')}
 					disabled={isUserDataExporting.csv}
@@ -142,6 +193,43 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 			<p className={styles.exportInfo}>
 				{t('Includes evaluation counts, demographic breakdowns, and anonymized data')}
 			</p>
+
+			{/* Strategic Report (AI-Ready JSON) — only for questions */}
+			{isQuestion && (
+				<>
+					<div className={styles.exportDivider} />
+					<h4 className={styles.sectionTitle}>
+						<Sparkles size={18} />
+						{t('Strategic Report (AI-Ready JSON)')}
+					</h4>
+					<p className={styles.sectionDescription}>
+						{t(
+							'Generates an aggregated, topic-grouped report ready for AI analysis. Combines similar suggestions, recomputes consensus, and adds demographic breakdowns under k-anonymity.',
+						)}
+					</p>
+					<div className={styles.exportButtons}>
+						<button
+							type="button"
+							className={styles.exportButton}
+							onClick={handleStrategicExport}
+							disabled={isStrategicExporting}
+						>
+							<Sparkles size={18} />
+							{isStrategicExporting ? t('Generating report…') : t('Generate Report')}
+						</button>
+					</div>
+					{strategicExportError && (
+						<p className={styles.exportInfo} role="alert">
+							{strategicExportError}
+						</p>
+					)}
+					<p className={styles.exportInfo}>
+						{t(
+							'Clustering will be triggered automatically if it has not run yet. This may take up to a minute.',
+						)}
+					</p>
+				</>
+			)}
 
 			{/* Research Logs Export — system admins only */}
 			{isSysAdmin && (
@@ -156,12 +244,22 @@ const ExportSettings: FC<ExportSettingsProps> = ({ statement, subStatements }) =
 					</p>
 					<div className={styles.exportButtons}>
 						<button
+							type="button"
+							className={styles.exportButton}
+							onClick={handleQuestionResearchExport}
+							disabled={isQuestionResearchExporting}
+						>
+							<Download size={18} />
+							{isQuestionResearchExporting ? t('Exporting...') : t('Export This Question')}
+						</button>
+						<button
+							type="button"
 							className={styles.exportButton}
 							onClick={handleResearchExport}
 							disabled={isResearchExporting}
 						>
 							<Download size={18} />
-							{isResearchExporting ? t('Exporting...') : t('Export Research JSON')}
+							{isResearchExporting ? t('Exporting...') : t('Export All Research')}
 						</button>
 					</div>
 				</>

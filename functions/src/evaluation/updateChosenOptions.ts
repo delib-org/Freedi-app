@@ -108,12 +108,11 @@ export async function updateParentTotalEvaluators(parentId: string): Promise<voi
 			.where('parentId', '==', parentId)
 			.get();
 
-		// Count unique evaluators (users who have evaluated at least one option)
+		// Count unique evaluators (all participants, including neutral/zero evaluations)
 		const uniqueEvaluators = new Set<string>();
 		evaluationsSnapshot.forEach((doc) => {
 			const evaluation = doc.data() as Evaluation;
-			// Only count evaluators with non-zero evaluations
-			if (evaluation.evaluator?.uid && evaluation.evaluation !== 0) {
+			if (evaluation.evaluator?.uid) {
 				uniqueEvaluators.add(evaluation.evaluator.uid);
 			}
 		});
@@ -286,7 +285,11 @@ async function getOptionsUsingMethod(
 			return [];
 		}
 
-		const options = snapshot.docs.map((doc) => doc.data() as Statement);
+		const options = snapshot.docs
+			.map((doc) => doc.data() as Statement)
+			// Exclude hidden originals (e.g. statements integrated into a synthesized cluster).
+			// Their votes already live on the cluster; including them would double-count.
+			.filter((opt) => !opt.hide);
 
 		// Filter options above the threshold
 		const filtered = options.filter(

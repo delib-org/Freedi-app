@@ -19,6 +19,7 @@ export async function setEvaluationToDB(
 	statement: Statement,
 	creator: User,
 	evaluation: number,
+	demographicAnchorId?: string,
 ): Promise<void> {
 	try {
 		parse(number(), evaluation);
@@ -44,6 +45,7 @@ export async function setEvaluationToDB(
 			updatedAt: getCurrentTimestamp(),
 			evaluation,
 			evaluator: creator,
+			...(demographicAnchorId ? { demographicAnchorId } : {}),
 		};
 
 		parse(EvaluationSchema, evaluationData);

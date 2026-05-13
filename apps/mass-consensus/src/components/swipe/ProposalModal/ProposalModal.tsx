@@ -184,18 +184,19 @@ const ProposalModal: React.FC<ProposalModalProps> = ({
           <div className="proposal-modal__actions">
             <button
               type="button"
-              className="proposal-modal__button proposal-modal__button--secondary"
-              onClick={onClose}
-            >
-              {t('Cancel')}
-            </button>
-            <button
-              type="button"
               className="proposal-modal__button proposal-modal__button--primary"
               onClick={handleSubmit}
               disabled={!isValid}
             >
-              {t('Submit Proposal')}
+              {t('Add Your Idea')}
+            </button>
+            <span className="proposal-modal__or-separator">— {t('or')} —</span>
+            <button
+              type="button"
+              className="proposal-modal__button proposal-modal__button--secondary"
+              onClick={onClose}
+            >
+              {t('Skip for now')}
             </button>
           </div>
         </div>

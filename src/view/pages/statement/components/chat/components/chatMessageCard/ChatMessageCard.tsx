@@ -141,7 +141,7 @@ const ChatMessageCard: FC<ChatMessageCardProps> = ({
 			{!isPreviousFromSameAuthor && (
 				<div className={styles.user}>
 					<UserAvatar user={statement.creator} />
-					<span>{statement.creator.displayName}</span>
+					<span>{statement.creator?.displayName ?? ''}</span>
 				</div>
 			)}
 

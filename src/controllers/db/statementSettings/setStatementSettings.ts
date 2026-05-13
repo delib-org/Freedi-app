@@ -12,7 +12,7 @@ import { logError } from '@/utils/errorHandling';
 interface SetStatementSettingsProps {
 	statement: Statement;
 	property: keyof StatementSettings | keyof QuestionSettings;
-	newValue: boolean | number | string;
+	newValue: boolean | number | string | Record<string, unknown>;
 	settingsSection: keyof Statement;
 }
 

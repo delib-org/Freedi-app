@@ -1,6 +1,7 @@
 export enum Collections {
     statements = 'statements',
     statementSnapShots = 'statementSnapshots',
+    statementHistory = 'statementHistory', // subcollection on statements/{id}/statementHistory
     termsOfUseAcceptance = 'termsOfUseAcceptance',
     statementsSettings = 'statementsSettings',
     statementsMetaData = 'statementsMeta',
@@ -60,9 +61,12 @@ export enum Collections {
     adminInvitations = 'adminInvitations',
     viewerLinks = 'viewerLinks',
     documentCollaborators = 'documentCollaborators',
+    joinDelegateInvitations = 'joinDelegateInvitations',
+    joinDelegates = 'joinDelegates',
     framings = 'framings',
     framingRequests = 'framingRequests',
     clusterAggregations = 'clusterAggregations',
+    clusterEvaluationLinks = 'clusterEvaluationLinks',
     framingSnapshots = 'framingSnapshots',
     suggestions = 'suggestions',
     documentVersions = 'documentVersions',
@@ -89,4 +93,8 @@ export enum Collections {
     // Research logging
     researchLogs = 'researchLogs',
     researchConsent = 'researchConsent',
+
+    // Topic-cluster pipeline caches
+    clusteringTaxonomies = 'clusteringTaxonomies',
+    clusteringNormalizations = 'clusteringNormalizations',
 }

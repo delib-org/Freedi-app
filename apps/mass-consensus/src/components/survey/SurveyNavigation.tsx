@@ -121,7 +121,7 @@ export default function SurveyNavigation({
           ) : (
             <>
               <ArrowLeftIcon />
-              {t('back')}
+              <span className={styles.navButtonLabel}>{t('back')}</span>
             </>
           )}
         </button>
@@ -162,8 +162,10 @@ export default function SurveyNavigation({
             <ButtonSpinner />
           ) : (
             <>
-              {isLastQuestion ? t('finish') : t('next')}
-              {!isLastQuestion && <ArrowRightIcon />}
+              {isLastQuestion ? (
+                <span className={styles.navButtonLabel}>{t('finish')}</span>
+              ) : null}
+              {isLastQuestion ? <CheckIcon /> : <ArrowRightIcon />}
             </>
           )}
         </button>
@@ -243,6 +245,23 @@ function ArrowRightIcon() {
     >
       <line x1="5" y1="12" x2="19" y2="12" />
       <polyline points="12 5 19 12 12 19" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polyline points="20 6 9 17 4 12" />
     </svg>
   );
 }

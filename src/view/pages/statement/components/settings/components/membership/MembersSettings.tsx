@@ -85,8 +85,9 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 
 	if (!members) return null;
 
-	const joinedMembers = members.filter((member) => member.role !== Role.banned);
-	const bannedUser = members.filter((member) => member.role === Role.banned);
+	const validMembers = members.filter((member) => member.user?.uid);
+	const joinedMembers = validMembers.filter((member) => member.role !== Role.banned);
+	const bannedUser = validMembers.filter((member) => member.role === Role.banned);
 
 	return (
 		<div className={styles.membersSettings}>
@@ -102,7 +103,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 			<div className={styles.membersBox}>
 				{joinedMembers.map((member) => (
-					<MembershipLine key={member.user.uid} member={member} />
+					<MembershipLine key={member.user!.uid} member={member} />
 				))}
 			</div>
 
@@ -111,7 +112,7 @@ const MembersSettings: FC<MembersSettingsProps> = ({ statement }) => {
 			</div>
 			<div className={styles.membersBox}>
 				{bannedUser.map((member) => (
-					<MembershipLine key={member.user.uid} member={member} />
+					<MembershipLine key={member.user!.uid} member={member} />
 				))}
 			</div>
 		</div>

@@ -26,7 +26,7 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
 
 	// Filter members based on search and role
 	const filteredMembers = useMemo(() => {
-		let filtered = [...members];
+		let filtered = members.filter((member) => member.user?.uid);
 
 		// Apply role filter
 		if (roleFilter !== 'all') {
@@ -37,7 +37,7 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
 		if (searchTerm) {
 			const searchLower = searchTerm.toLowerCase();
 			filtered = filtered.filter((member) =>
-				member.user.displayName.toLowerCase().includes(searchLower),
+				(member.user?.displayName ?? '').toLowerCase().includes(searchLower),
 			);
 		}
 
@@ -52,7 +52,7 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
 			if (a.role !== Role.banned && b.role === Role.banned) return -1;
 
 			// Finally sort by name
-			return a.user.displayName.localeCompare(b.user.displayName);
+			return (a.user?.displayName ?? '').localeCompare(b.user?.displayName ?? '');
 		});
 
 		return filtered;
@@ -145,7 +145,7 @@ const FilteredMembersList: FC<FilteredMembersListProps> = ({
 		<div className={styles.membersListContainer}>
 			<div className={styles.membersList}>
 				{displayedMembers.map((member) => (
-					<MemberCard key={member.user.uid} member={member} searchTerm={searchTerm} />
+					<MemberCard key={member.user!.uid} member={member} searchTerm={searchTerm} />
 				))}
 			</div>
 

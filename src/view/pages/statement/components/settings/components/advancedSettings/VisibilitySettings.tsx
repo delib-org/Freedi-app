@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Statement, StatementSettings } from '@freedi/shared-types';
+import { Statement, StatementSettings, SortType } from '@freedi/shared-types';
 import {
 	EyeOff,
 	MessageCircle,
@@ -9,6 +9,7 @@ import {
 	ExternalLink,
 	Layout,
 	TreePine,
+	ArrowUpDown,
 } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { getSignDocumentUrl } from '@/utils/urlHelpers';
@@ -19,6 +20,14 @@ const DEFAULT_VIEW_OPTIONS = [
 	{ value: 'chat', labelKey: 'Chat' },
 	{ value: 'options', labelKey: 'Options' },
 	{ value: 'questions', labelKey: 'Questions' },
+] as const;
+
+const DEFAULT_SORT_OPTIONS = [
+	{ value: SortType.newest, labelKey: 'Newest First' },
+	{ value: SortType.accepted, labelKey: 'Highest Consensus' },
+	{ value: SortType.mostUpdated, labelKey: 'Most Recently Updated' },
+	{ value: SortType.random, labelKey: 'Random' },
+	{ value: SortType.backendOrder, labelKey: 'Backend Order' },
 ] as const;
 
 interface VisibilitySettingsProps {
@@ -43,6 +52,7 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 }) => {
 	const { t } = useTranslation();
 	const currentDefaultView = settings.defaultView ?? 'chat';
+	const currentDefaultSort = settings.defaultSortType ?? SortType.newest;
 
 	return (
 		<>
@@ -89,6 +99,35 @@ const VisibilitySettings: FC<VisibilitySettingsProps> = ({
 										value={option.value}
 										checked={currentDefaultView === option.value}
 										onChange={() => handleSettingChange('defaultView', option.value)}
+									/>
+									<span>{t(option.labelKey)}</span>
+								</label>
+							))}
+						</div>
+					</div>
+				</div>
+			</div>
+			<div className={styles.toggleItem}>
+				<div className={styles.toggleContent}>
+					<div className={styles.toggleIcon}>
+						<ArrowUpDown size={18} />
+					</div>
+					<div className={styles.toggleInfo}>
+						<div className={styles.toggleHeader}>
+							<span className={styles.toggleLabel}>{t('Default Sort Order for Options')}</span>
+						</div>
+						<p className={styles.toggleDescription}>
+							{t('Choose how options are sorted when first displayed')}
+						</p>
+						<div className={styles.defaultViewOptions}>
+							{DEFAULT_SORT_OPTIONS.map((option) => (
+								<label key={option.value} className={styles.defaultViewOption}>
+									<input
+										type="radio"
+										name="defaultSortType"
+										value={option.value}
+										checked={currentDefaultSort === option.value}
+										onChange={() => handleSettingChange('defaultSortType', option.value)}
 									/>
 									<span>{t(option.labelKey)}</span>
 								</label>

@@ -48,7 +48,11 @@ const GetVoters: FC<GetVotersProps> = ({ statementId, joinedMembers }) => {
 							<span>
 								{voters.length} {t('Voted')}
 							</span>
-							<MembersChipsList members={voters.map((v) => v.voter as User)} />
+							<MembersChipsList
+								members={voters
+									.map((v) => v.voter)
+									.filter((voter): voter is User => Boolean(voter?.uid))}
+							/>
 						</>
 					) : (
 						<div>{t('No voters found')}</div>

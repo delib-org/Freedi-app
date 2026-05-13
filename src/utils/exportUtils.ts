@@ -280,7 +280,14 @@ export function createCSVExport(mainStatement: Statement, subStatements: Stateme
  * Trigger file download in browser
  */
 export function downloadFile(content: string, filename: string, mimeType: string): void {
-	const blob = new Blob([content], { type: mimeType });
+	let finalContent = content;
+
+	// Add UTF-8 BOM for CSV files to ensure proper encoding in Excel and other CSV readers
+	if (mimeType === 'text/csv') {
+		finalContent = '﻿' + content;
+	}
+
+	const blob = new Blob([finalContent], { type: mimeType + ';charset=utf-8' });
 	const url = URL.createObjectURL(blob);
 
 	const anchor = document.createElement('a');

@@ -15,7 +15,6 @@ export const cleanupResearchLogs = onSchedule(
 		schedule: '0 3 * * *',
 		timeZone: 'UTC',
 		...functionConfig,
-		region: 'us-central1',
 	},
 	async () => {
 		const cutoffMs = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;

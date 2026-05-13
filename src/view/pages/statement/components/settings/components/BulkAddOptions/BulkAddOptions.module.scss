@@ -1,0 +1,124 @@
+.bulkAddOptions {
+	// The settings page has a position:fixed Save button hovering at bottom: 2%
+	// (z-index: 1000, scaled 1.25). Add bottom space so this panel's own buttons
+	// stay clearly above its strike zone.
+	margin: var(--padding) 0 8rem 0;
+	padding: var(--padding);
+	background: var(--card-default);
+	border-radius: 0.75rem;
+	box-shadow: var(--shadow-card, 0 1px 3px rgba(0, 0, 0, 0.08));
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+
+	&__heading {
+		margin: 0;
+		font-size: 1.125rem;
+		font-weight: 600;
+		color: var(--text-body, var(--text-primary));
+	}
+
+	&__hint {
+		margin: 0;
+		font-size: 0.875rem;
+		color: var(--text-muted, var(--text-secondary));
+		line-height: 1.4;
+	}
+
+	&__textarea {
+		width: 100%;
+		min-height: 12rem;
+		padding: 0.75rem;
+		font-family: inherit;
+		font-size: 1rem;
+		line-height: 1.5;
+		color: var(--text-body, var(--text-primary));
+		background: var(--input-bg, #fff);
+		border: 1px solid var(--input-border, var(--border-default, #d0d4dc));
+		border-radius: 0.5rem;
+		resize: vertical;
+		box-sizing: border-box;
+
+		&:focus {
+			outline: none;
+			border-color: var(--btn-primary);
+			box-shadow: 0 0 0 2px rgba(95, 136, 229, 0.2);
+		}
+
+		&:disabled {
+			opacity: 0.6;
+			cursor: not-allowed;
+		}
+	}
+
+	&__preview {
+		padding: 0.75rem;
+		background: var(--bg-muted, rgba(0, 0, 0, 0.03));
+		border-radius: 0.5rem;
+		max-height: 18rem;
+		overflow-y: auto;
+	}
+
+	&__previewHeading {
+		margin: 0 0 0.5rem 0;
+		font-size: 0.875rem;
+		font-weight: 600;
+		color: var(--text-muted, var(--text-secondary));
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+	}
+
+	&__previewList {
+		margin: 0;
+		padding-inline-start: 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	&__previewItem {
+		font-size: 0.95rem;
+		line-height: 1.4;
+		color: var(--text-body, var(--text-primary));
+	}
+
+	&__previewTitle {
+		font-weight: 500;
+	}
+
+	&__previewDescription {
+		color: var(--text-muted, var(--text-secondary));
+	}
+
+	&__actions {
+		display: flex;
+		gap: 0.5rem;
+		flex-wrap: wrap;
+	}
+
+	&__status--success {
+		margin: 0;
+		padding: 0.75rem 1rem;
+		background: var(--agree-light, rgba(76, 175, 80, 0.15));
+		color: var(--agree, #2e7d32);
+		border: 1px solid var(--agree, rgba(76, 175, 80, 0.4));
+		border-radius: 0.5rem;
+		font-size: 1rem;
+		font-weight: 600;
+	}
+
+	&__status--error {
+		margin: 0;
+		padding: 0.5rem 0.75rem;
+		background: var(--disagree-light, rgba(244, 67, 54, 0.12));
+		color: var(--disagree, #c62828);
+		border-radius: 0.5rem;
+		font-size: 0.9rem;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.bulkAddOptions__textarea {
+		transition: none;
+	}
+}

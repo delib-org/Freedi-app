@@ -13,6 +13,7 @@ import {
 	DEFAULT_ADDITION_THRESHOLD,
 	DEFAULT_MIN_EVALUATORS,
 	StatementType,
+	functionConfig,
 } from '@freedi/shared-types';
 
 /**
@@ -54,7 +55,10 @@ function getConsensusSettings(document: Statement) {
  * Priority: If a suggestion meets replacement threshold, replacement wins over removal.
  */
 export const fn_autoRemoveParagraph = onDocumentUpdated(
-	`${Collections.statements}/{paragraphId}`,
+	{
+		document: `${Collections.statements}/{paragraphId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;
@@ -267,7 +271,10 @@ export const fn_autoRemoveParagraph = onDocumentUpdated(
  * Auto-executes: creates new paragraph, consumes insertion point, creates new insertion points.
  */
 export const fn_autoAddParagraph = onDocumentUpdated(
-	`${Collections.statements}/{suggestionId}`,
+	{
+		document: `${Collections.statements}/{suggestionId}`,
+		region: functionConfig.region,
+	},
 	async (event) => {
 		try {
 			const before = event.data?.before.data() as Statement;

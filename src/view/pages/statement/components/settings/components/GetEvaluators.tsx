@@ -22,7 +22,9 @@ const GetEvaluators: FC<GetEvaluatorsProps> = ({ statementId }) => {
 		}
 	};
 
-	const members = evaluators.flatMap((evaluator) => evaluator.evaluator as User);
+	const members = evaluators
+		.map((evaluation) => evaluation.evaluator)
+		.filter((evaluator): evaluator is User => Boolean(evaluator?.uid));
 
 	return (
 		<>

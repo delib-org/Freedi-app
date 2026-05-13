@@ -98,7 +98,7 @@ const ChatInput: FC<Props> = ({
 				<div className={styles.replyIndicator}>
 					<div className={styles.replyIndicatorContent}>
 						<span className={styles.replyIndicatorAuthor}>
-							{t('Replying to')} {replyToStatement.creator.displayName}
+							{t('Replying to')} {replyToStatement.creator?.displayName ?? ''}
 						</span>
 						<span className={styles.replyIndicatorText}>
 							{replyToStatement.statement.slice(0, 80)}

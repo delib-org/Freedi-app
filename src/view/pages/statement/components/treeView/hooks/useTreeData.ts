@@ -19,6 +19,14 @@ export interface TreeDataOptions {
 	userId?: string;
 	bookmarkedIds?: Set<string>;
 	randomSeed?: number;
+	/**
+	 * When set, remap the tree so that cluster Statements (isCluster=true,
+	 * matching this framingId) become the visible root, and options are placed
+	 * under them by reading `option.framingClusters[activeFramingId]`. Options
+	 * with no mapping for this framing are collected under a synthetic
+	 * "Uncategorized" group at the end. Pass `null` to keep the flat default.
+	 */
+	activeFramingId?: string | null;
 }
 
 const selectTreeView = createTreeViewSelector();
@@ -84,6 +92,7 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 		userId,
 		bookmarkedIds,
 		randomSeed,
+		activeFramingId,
 	} = options || {};
 
 	const { childrenMap: fullChildrenMap, rootChildren: fullRootChildren } = useAppSelector((state) =>
@@ -192,11 +201,81 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 			resultMap = sortedMap;
 		}
 
-		// Apply bookmark/mine filter
+		// Apply bookmark/mine/grouped filter
 		if (filterMode === TreeFilterMode.bookmarked && bookmarkedIds) {
 			resultRoot = resultRoot.filter((c) => bookmarkedIds.has(c.statementId));
 		} else if (filterMode === TreeFilterMode.mine && userId) {
 			resultRoot = resultRoot.filter((c) => c.creatorId === userId);
+		} else if (filterMode === TreeFilterMode.grouped) {
+			resultRoot = resultRoot.filter((c) => c.isCluster === true);
+		}
+
+		// When a framing is active, remap the tree:
+		// - cluster Statements (isCluster=true with matching framingId) become root nodes
+		// - options are re-parented under their cluster via framingClusters[id]
+		// - options with no mapping are collected under a synthetic "Uncategorized" group
+		if (activeFramingId) {
+			const remappedMap = new Map<string, Statement[]>();
+			// Preserve descendants of options (replies etc.) as-is.
+			resultMap.forEach((children, key) => {
+				if (key !== statementId) remappedMap.set(key, [...children]);
+			});
+
+			const directChildren = resultMap.get(statementId) ?? resultRoot;
+			const clusters: Statement[] = [];
+			const optionsByCluster = new Map<string, Statement[]>();
+			const uncategorized: Statement[] = [];
+			const otherTypes: Statement[] = [];
+
+			for (const child of directChildren) {
+				if (child.isCluster === true) {
+					if (child.framingId === activeFramingId) clusters.push(child);
+					// Skip clusters from other framings — they shouldn't appear here.
+					continue;
+				}
+				if (child.statementType !== StatementType.option) {
+					// Non-option types (questions, comments, paragraphs) stay at the root.
+					otherTypes.push(child);
+					continue;
+				}
+				const clusterId = child.framingClusters?.[activeFramingId];
+				if (clusterId) {
+					const list = optionsByCluster.get(clusterId) ?? [];
+					list.push(child);
+					optionsByCluster.set(clusterId, list);
+				} else {
+					uncategorized.push(child);
+				}
+			}
+
+			// Attach options under their clusters in the children map.
+			for (const cluster of clusters) {
+				const members = optionsByCluster.get(cluster.statementId) ?? [];
+				const sorted = sortType ? applySortToStatements(members, sortType, randomSeed) : members;
+				remappedMap.set(cluster.statementId, sorted);
+			}
+
+			const newRoot: Statement[] = [...otherTypes, ...clusters];
+			if (uncategorized.length > 0) {
+				// Synthetic "uncategorized" cluster as a Statement-shaped node so the
+				// existing tree renderer can show it without bespoke types.
+				const syntheticCluster: Statement = {
+					...clusters[0], // borrow shape from a real cluster (ids etc. overridden below)
+					statementId: `uncategorized__${activeFramingId}`,
+					statement: 'Uncategorized',
+					isCluster: true,
+					framingId: activeFramingId,
+				} as Statement;
+				newRoot.push(syntheticCluster);
+				const sorted = sortType
+					? applySortToStatements(uncategorized, sortType, randomSeed)
+					: uncategorized;
+				remappedMap.set(syntheticCluster.statementId, sorted);
+			}
+
+			remappedMap.set(statementId, newRoot);
+			resultMap = remappedMap;
+			resultRoot = newRoot;
 		}
 
 		return { childrenMap: resultMap, rootChildren: resultRoot };
@@ -211,6 +290,7 @@ export function useTreeData(statementId: string, options?: TreeDataOptions): Use
 		userId,
 		bookmarkedIds,
 		randomSeed,
+		activeFramingId,
 	]);
 
 	const getChildren = useMemo(() => {

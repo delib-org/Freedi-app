@@ -17,10 +17,25 @@ export default function LoginPage() {
   // 1. URL parameter (?redirect=/doc/...)
   // 2. Referrer (where user came from)
   // 3. Default to home
-  const redirectUrl = searchParams.get('redirect') ||
-    (typeof window !== 'undefined' && document.referrer ? new URL(document.referrer).pathname : '/');
+  // Sanitize: never redirect to /login itself (creates a loop once
+  // document.referrer becomes /login — e.g. after one bad bounce).
+  const rawRedirect =
+    searchParams.get('redirect') ||
+    (typeof window !== 'undefined' && document.referrer
+      ? (() => {
+          try {
+            return new URL(document.referrer).pathname;
+          } catch {
+            return '/';
+          }
+        })()
+      : '/');
+  const redirectUrl =
+    rawRedirect && rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') && rawRedirect !== '/login'
+      ? rawRedirect
+      : '/';
 
-  console.info('[Login] Redirect URL:', redirectUrl);
+  console.info('[Login] Redirect URL:', redirectUrl, '(raw:', rawRedirect, ')');
 
   const handleLogin = useCallback(
     async (loginFn: typeof googleLogin | typeof anonymousLogin, method: string) => {

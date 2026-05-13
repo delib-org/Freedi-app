@@ -118,13 +118,54 @@ describe('user utilities', () => {
       expect(userId).toBe('existing_user_id');
     });
 
-    it('should set cookie for server-side access', () => {
-      getOrCreateAnonymousUser();
-      expect(documentCookieSetter).toHaveBeenCalled();
-      const cookieValue = documentCookieSetter.mock.calls[0][0];
-      expect(cookieValue).toContain('userId=');
-      expect(cookieValue).toContain('path=/');
-      expect(cookieValue).toContain('SameSite=Lax');
+    it('should fall back to userId cookie when localStorage is blocked', () => {
+      // Simulate localStorage throwing SecurityError (Chrome Mobile private mode, sandboxed iframe, etc.)
+      Object.defineProperty(global, 'localStorage', {
+        value: {
+          getItem: jest.fn(() => {
+            throw new Error('Access is denied for this document.');
+          }),
+          setItem: jest.fn(() => {
+            throw new Error('Access is denied for this document.');
+          }),
+          removeItem: jest.fn(),
+        },
+        writable: true,
+      });
+
+      // Provide a userId cookie (set by middleware in production)
+      Object.defineProperty(global, 'document', {
+        value: { cookie: 'userId=anon_from_cookie_123; Path=/' },
+        writable: true,
+      });
+
+      const userId = getOrCreateAnonymousUser();
+      expect(userId).toBe('anon_from_cookie_123');
+    });
+
+    it('should fall back to in-memory id when localStorage and cookie are both unavailable', () => {
+      Object.defineProperty(global, 'localStorage', {
+        value: {
+          getItem: jest.fn(() => {
+            throw new Error('SecurityError');
+          }),
+          setItem: jest.fn(() => {
+            throw new Error('SecurityError');
+          }),
+          removeItem: jest.fn(),
+        },
+        writable: true,
+      });
+
+      Object.defineProperty(global, 'document', {
+        value: { cookie: '' },
+        writable: true,
+      });
+
+      const firstCall = getOrCreateAnonymousUser();
+      const secondCall = getOrCreateAnonymousUser();
+      expect(firstCall).toMatch(/^anon_/);
+      expect(secondCall).toBe(firstCall);
     });
 
     it('should throw error when called on server-side', () => {

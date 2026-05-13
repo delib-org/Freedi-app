@@ -73,11 +73,13 @@ const NotificationPreferences: React.FC<NotificationPreferencesProps> = ({ state
 
 				setIsLoading(false);
 			} catch (error) {
+				const err = error as { code?: string };
+				setIsLoading(false);
+				if (err?.code === 'permission-denied') return;
 				logError(error, {
-					operation: 'notifications.NotificationPreferences.unknown',
+					operation: 'notifications.NotificationPreferences.loadPreferences',
 					metadata: { message: 'Error loading notification preferences:' },
 				});
-				setIsLoading(false);
 			}
 		};
 

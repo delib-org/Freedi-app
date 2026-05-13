@@ -11,7 +11,7 @@ import { convertFirebaseUserToCreator } from '@/utils/userUtils';
 import { LocalStorageObjects } from '@/types/localStorage/LocalStorageObjects';
 import { setCreator } from '@/redux/creator/creatorSlice';
 import { setUserToDB } from '@/controllers/db/user/setUser';
-import { logLogin, logLogout } from '@/controllers/db/researchLogs/researchLogger';
+import { logLogin } from '@/controllers/db/researchLogs/researchLogger';
 
 export interface AuthState {
 	isAuthenticated: boolean;
@@ -36,7 +36,13 @@ export const AuthStateProvider: FC<{ children: ReactNode }> = ({ children }) => 
 	const dispatch = useDispatch();
 
 	const initialRoute = useRef(
-		JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null'),
+		(() => {
+			try {
+				return JSON.parse(localStorage.getItem(LocalStorageObjects.InitialRoute) || 'null');
+			} catch {
+				return null;
+			}
+		})(),
 	);
 
 	const userSetRef = useRef<string | null>(null);
@@ -61,7 +67,6 @@ export const AuthStateProvider: FC<{ children: ReactNode }> = ({ children }) => 
 					logLogin();
 				}
 			} else {
-				logLogout();
 				userSetRef.current = null;
 
 				setAuthState({

@@ -23,6 +23,10 @@ export default function Accessibility() {
 		Object.entries(colorMappings).forEach(([key, contrastKey]) => {
 			document.documentElement.style.setProperty(key, colorContrast ? `var(${contrastKey})` : '');
 		});
+		// Surface the contrast mode as a data attribute so component styles can
+		// add HC-specific affordances (dark card borders, etc.) without relying
+		// on the OS-level prefers-contrast media query.
+		document.documentElement.dataset.contrast = colorContrast ? 'high' : 'normal';
 	}, [colorContrast]);
 
 	// Drag & Drop
