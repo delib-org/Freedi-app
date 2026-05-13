@@ -239,6 +239,7 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 		memory: '2GiB',
 		region: functionConfig.region,
 		cors: [...ALLOWED_ORIGINS],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async (request): Promise<PreviewResponse> => {
 		const userId = request.auth?.uid;
@@ -791,6 +792,7 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 		memory: '1GiB',
 		region: functionConfig.region,
 		cors: [...ALLOWED_ORIGINS],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async (request): Promise<ExecuteResponse> => {
 		const userId = request.auth?.uid;
@@ -950,6 +952,7 @@ export const regenerateSynthesisProposal = onCall<RegenerateProposalRequest>(
 		memory: '512MiB',
 		region: functionConfig.region,
 		cors: [...ALLOWED_ORIGINS],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async (request): Promise<RegenerateProposalResponse> => {
 		const userId = request.auth?.uid;
