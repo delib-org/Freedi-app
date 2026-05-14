@@ -11,17 +11,33 @@ const MAX_SELECTABLE = 200;
 interface Props {
 	questionId: string;
 	disabled: boolean;
+	/**
+	 * Effective engagement thresholds for this question. Used to identify
+	 * which options are above the engagement bar (eligible for the regular
+	 * synthesize path) versus below it. Selective synthesis is mainly for
+	 * surfacing the above-threshold set so admins can pick subsets to
+	 * force through the pipeline now.
+	 */
+	minEvaluators: number;
+	minConsensus: number;
 	onResult: (result: { enqueued: number; skipped: number; mergedIntoExistingRun: boolean }) => void;
 }
 
-const SelectiveOptionsList: FC<Props> = ({ questionId, disabled, onResult }) => {
+const SelectiveOptionsList: FC<Props> = ({
+	questionId,
+	disabled,
+	minEvaluators,
+	minConsensus,
+	onResult,
+}) => {
 	const { t } = useTranslation();
 	const options = useAppSelector(statementOptionsSelector(questionId));
 
 	const [expanded, setExpanded] = useState(false);
 	const [search, setSearch] = useState('');
 	const [ungroupedOnly, setUngroupedOnly] = useState(false);
-	const [belowThresholdOnly, setBelowThresholdOnly] = useState(false);
+	// Default ON — the typical workflow is "pick from the eligible set."
+	const [aboveThresholdOnly, setAboveThresholdOnly] = useState(true);
 	const [selected, setSelected] = useState<Set<string>>(new Set());
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
@@ -31,15 +47,17 @@ const SelectiveOptionsList: FC<Props> = ({ questionId, disabled, onResult }) => 
 
 		return options.filter((opt: Statement) => {
 			if (ungroupedOnly && (opt.integratedOptions ?? []).length > 0) return false;
-			if (belowThresholdOnly) {
+			if (aboveThresholdOnly) {
 				const evals = opt.evaluation?.numberOfEvaluators ?? 0;
-				if (evals >= 3) return false;
+				const cons = opt.consensus ?? 0;
+				if (evals < minEvaluators) return false;
+				if (cons < minConsensus) return false;
 			}
 			if (lowered && !opt.statement.toLowerCase().includes(lowered)) return false;
 
 			return true;
 		});
-	}, [options, search, ungroupedOnly, belowThresholdOnly]);
+	}, [options, search, ungroupedOnly, aboveThresholdOnly, minEvaluators, minConsensus]);
 
 	function toggle(id: string): void {
 		setSelected((prev) => {
@@ -116,10 +134,10 @@ const SelectiveOptionsList: FC<Props> = ({ questionId, disabled, onResult }) => 
 						<label className={styles.filterCheckbox}>
 							<input
 								type="checkbox"
-								checked={belowThresholdOnly}
-								onChange={(e) => setBelowThresholdOnly(e.target.checked)}
+								checked={aboveThresholdOnly}
+								onChange={(e) => setAboveThresholdOnly(e.target.checked)}
 							/>
-							{t('Below threshold only')}
+							{t('Above threshold only')}
 						</label>
 					</div>
 

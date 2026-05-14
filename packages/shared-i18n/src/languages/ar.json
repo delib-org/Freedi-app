@@ -2559,7 +2559,7 @@
   "Search options…": "البحث في الخيارات…",
   "Search options": "البحث في الخيارات",
   "Ungrouped only": "غير المجموعة فقط",
-  "Below threshold only": "أقل من العتبة فقط",
+  "Above threshold only": "فوق العتبة فقط",
   "No options match the current filter": "لا توجد خيارات تطابق المرشح الحالي",
   "Select all matching filter": "تحديد جميع المطابقة للمرشح",
   "Clear": "مسح",

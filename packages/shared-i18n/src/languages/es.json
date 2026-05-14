@@ -2434,7 +2434,7 @@
   "Search options…": "Buscar opciones…",
   "Search options": "Buscar opciones",
   "Ungrouped only": "Solo no agrupadas",
-  "Below threshold only": "Solo bajo el umbral",
+  "Above threshold only": "Solo por encima del umbral",
   "No options match the current filter": "Ninguna opción coincide con el filtro actual",
   "Select all matching filter": "Seleccionar todas las que coinciden",
   "Clear": "Limpiar",

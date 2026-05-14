@@ -349,6 +349,8 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 				<SelectiveOptionsList
 					questionId={statement.statementId}
 					disabled={!settings.enabled || busyOp !== null || dirty}
+					minEvaluators={settings.minEvaluators}
+					minConsensus={settings.minConsensus}
 					onResult={(result) => {
 						setToast({
 							tone: 'info',

@@ -2434,7 +2434,7 @@
   "Search options…": "Opties zoeken…",
   "Search options": "Opties zoeken",
   "Ungrouped only": "Alleen niet-gegroepeerd",
-  "Below threshold only": "Alleen onder drempel",
+  "Above threshold only": "Alleen boven drempel",
   "No options match the current filter": "Geen opties komen overeen met het huidige filter",
   "Select all matching filter": "Alle overeenkomende selecteren",
   "Clear": "Wissen",
