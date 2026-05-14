@@ -1044,6 +1044,30 @@ exports.liveSynthOnOptionUpdate = createFirestoreFunction(
 	'liveSynthOnOptionUpdate',
 );
 
+// Living-only synthesis (Day 1–5). All entry points flow into `runSinglePipeline`.
+import { liveSynthOnOptionEvaluationChange } from './synthesis/liveSynth/onOptionEvaluationChange';
+
+exports.liveSynthOnOptionEvaluationChange = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionEvaluationChange(event.data.before.data(), event.data.after.data());
+	},
+	'liveSynthOnOptionEvaluationChange',
+);
+
+export { processSynthesisQueue } from './synthesis/queue/processSynthesisQueue';
+export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
+export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
+export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';
+export { saveSynthesisSettings } from './synthesis/admin/fn_saveSynthesisSettings';
+export {
+	synthesisPause,
+	synthesisResume,
+	synthesisCancel,
+} from './synthesis/admin/fn_synthesisControl';
+
 // HTTP endpoint for one-time historical backfill (admin auth required)
 exports.backfillAdminStats = wrapAdminHttpFunction(backfillAdminStats);
 

@@ -87,8 +87,12 @@ function makeOption(overrides: Record<string, unknown> = {}): unknown {
 		creatorId: 'user1',
 		creator: { uid: 'user1', displayName: 'User One', email: 'u@x.com' },
 		integratedOptions: [],
-		consensus: 0,
-		evaluation: { numberOfEvaluators: 0, sumEvaluations: 0 },
+		// Living-only architecture: synth fires only when an option crosses the
+		// engagement threshold (default minEvaluators=3). Tests that exercise
+		// the attach/spawn/review paths supply a numberOfEvaluators value that
+		// meets the default MC threshold.
+		consensus: 0.4,
+		evaluation: { numberOfEvaluators: 5, sumEvaluations: 4 },
 		...overrides,
 	};
 }
@@ -183,7 +187,7 @@ describe('liveSynthOnOptionCreate', () => {
 
 		expect(mockEnqueueClusterRecompute).toHaveBeenCalledWith(
 			'cluster1',
-			'liveSynth:attach',
+			'pipeline:onCreate:attach',
 			'user1',
 		);
 		const auditCalls = mockRecordLiveSynthEvent.mock.calls;
@@ -230,7 +234,7 @@ describe('liveSynthOnOptionCreate', () => {
 		expect(spawnAudit).toBeDefined();
 		expect(mockEnqueueClusterRecompute).toHaveBeenCalledWith(
 			expect.any(String),
-			'liveSynth:spawn',
+			'pipeline:onCreate:spawn',
 			'user1',
 		);
 	});

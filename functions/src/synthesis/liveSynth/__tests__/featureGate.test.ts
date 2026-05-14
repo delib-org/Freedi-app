@@ -17,7 +17,7 @@ import { QuestionType, type Statement } from '@freedi/shared-types';
  *   - Default: ON for MC, OFF otherwise.
  */
 
-function statement(overrides: Partial<Statement> = {}): Statement {
+function statement(_overrides: Partial<Statement> = {}): Statement {
 	return {
 		statementId: 'q1',
 		statement: 'q text',
@@ -25,7 +25,7 @@ function statement(overrides: Partial<Statement> = {}): Statement {
 		parentId: 'top',
 		topParentId: 'q1',
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	} as any as Statement & typeof overrides;
+	} as any as Statement & typeof _overrides;
 	// Note: tests never read more than the fields they set in `overrides`.
 }
 

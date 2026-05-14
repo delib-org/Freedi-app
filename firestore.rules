@@ -1029,5 +1029,24 @@ service cloud.firestore {
       allow get, list: if request.auth != null && isTopParentAdmin();
       allow write: if false;
     }
+
+    // Synthesis queue (living-only architecture). Progress doc is admin-readable
+    // so the UI can stream progress; all writes are server-side via Admin SDK.
+    // Items subcollection is server-only (admins never read individual work units).
+    match /synthesisQueue/{questionId} {
+      function isQuestionAdmin() {
+        let subId = string(request.auth.uid) + '--' + cleanPath(string(questionId));
+        let subPath = /databases/$(database)/documents/statementsSubscribe/$(subId);
+        return exists(subPath) &&
+               (get(subPath).data.role == 'admin' || get(subPath).data.role == 'statement-creator');
+      }
+      allow get: if request.auth != null && isQuestionAdmin();
+      allow list: if request.auth != null && isQuestionAdmin();
+      allow write: if false;
+
+      match /items/{itemId} {
+        allow read, write: if false;
+      }
+    }
   }
 }

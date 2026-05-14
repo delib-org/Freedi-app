@@ -1,0 +1,104 @@
+.progressBar {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	padding: 0.9rem 1rem;
+	background: var(--card-secondary, #eef1f6);
+	border-radius: 10px;
+}
+
+.heading {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: 500;
+	font-size: 0.95rem;
+}
+
+.statusBadge {
+	padding: 0.15rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.75rem;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+
+	&[data-status='running'] {
+		background: var(--info-bg, #eef4ff);
+		color: var(--info, #1c4dbe);
+	}
+
+	&[data-status='paused'] {
+		background: var(--warning-bg, #fff4d6);
+		color: var(--warning, #8a6300);
+	}
+
+	&[data-status='completed'] {
+		background: var(--success-bg, #e6f7ee);
+		color: var(--success, #1d8e4c);
+	}
+
+	&[data-status='failed'],
+	&[data-status='cancelled'] {
+		background: var(--danger-bg, #fdecea);
+		color: var(--danger, #d3493a);
+	}
+}
+
+.bar {
+	width: 100%;
+	height: 8px;
+	background: var(--border-subtle, rgba(0, 0, 0, 0.08));
+	border-radius: 999px;
+	overflow: hidden;
+}
+
+.fill {
+	height: 100%;
+	background: var(--btn-primary, #5f88e5);
+	transition: width 250ms ease;
+}
+
+.detail {
+	font-size: 0.8rem;
+	color: var(--text-muted, #6b7388);
+	display: flex;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.controls {
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 0.25rem;
+}
+
+.controlButton {
+	padding: 0.35rem 0.85rem;
+	font-size: 0.85rem;
+	border: 1px solid var(--border-default, #cdd3dd);
+	border-radius: 6px;
+	background: transparent;
+	color: var(--text-body, #1f2a44);
+	cursor: pointer;
+	font: inherit;
+
+	&:hover:not(:disabled) {
+		background: rgba(0, 0, 0, 0.04);
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&[data-tone='danger'] {
+		color: var(--danger, #d3493a);
+		border-color: var(--danger, #d3493a);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.fill {
+		transition: none;
+	}
+}

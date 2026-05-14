@@ -1,0 +1,157 @@
+.synthesisPanel {
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem;
+	padding: var(--padding, 1rem);
+	background: var(--card-default, #fff);
+	border-radius: 12px;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+	padding-block: 1rem;
+	border-bottom: 1px solid var(--border-subtle, rgba(0, 0, 0, 0.08));
+
+	&:last-child {
+		border-bottom: none;
+	}
+}
+
+.sectionHeader {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-weight: 600;
+	font-size: 1rem;
+	color: var(--text-body, #1f2a44);
+}
+
+.sectionHint {
+	font-size: 0.85rem;
+	color: var(--text-muted, #6b7388);
+	margin: 0;
+}
+
+.toggleRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1rem;
+}
+
+.field {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	align-items: center;
+	gap: 0.75rem;
+
+	label {
+		font-size: 0.9rem;
+		color: var(--text-body, #1f2a44);
+	}
+
+	input[type='number'] {
+		width: 6.5rem;
+		padding: 0.4rem 0.6rem;
+		border: 1px solid var(--border-default, #cdd3dd);
+		border-radius: 6px;
+		font: inherit;
+		text-align: right;
+
+		&:focus {
+			outline: 2px solid var(--btn-primary, #5f88e5);
+			outline-offset: 2px;
+		}
+
+		&[aria-invalid='true'] {
+			border-color: var(--danger, #d3493a);
+		}
+	}
+}
+
+.fieldError {
+	grid-column: 1 / -1;
+	color: var(--danger, #d3493a);
+	font-size: 0.8rem;
+	margin: 0;
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.75rem;
+}
+
+.primaryAction,
+.secondaryAction,
+.dangerAction {
+	padding: 0.6rem 1.1rem;
+	border-radius: 8px;
+	border: none;
+	font: inherit;
+	font-weight: 500;
+	cursor: pointer;
+	transition:
+		filter 120ms ease,
+		transform 60ms ease;
+
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.55;
+	}
+
+	&:not(:disabled):hover {
+		filter: brightness(0.95);
+	}
+
+	&:not(:disabled):active {
+		transform: translateY(1px);
+	}
+}
+
+.primaryAction {
+	background: var(--btn-primary, #5f88e5);
+	color: #fff;
+}
+
+.secondaryAction {
+	background: var(--card-secondary, #eef1f6);
+	color: var(--text-body, #1f2a44);
+}
+
+.dangerAction {
+	background: transparent;
+	color: var(--danger, #d3493a);
+	border: 1px solid var(--danger, #d3493a);
+}
+
+.toast {
+	padding: 0.6rem 0.9rem;
+	border-radius: 8px;
+	font-size: 0.9rem;
+
+	&[data-tone='info'] {
+		background: var(--info-bg, #eef4ff);
+		color: var(--info, #1c4dbe);
+	}
+
+	&[data-tone='error'] {
+		background: var(--danger-bg, #fdecea);
+		color: var(--danger, #d3493a);
+	}
+
+	&[data-tone='success'] {
+		background: var(--success-bg, #e6f7ee);
+		color: var(--success, #1d8e4c);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.primaryAction,
+	.secondaryAction,
+	.dangerAction {
+		transition: none;
+	}
+}
