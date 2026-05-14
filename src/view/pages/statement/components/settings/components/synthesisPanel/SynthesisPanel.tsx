@@ -148,7 +148,10 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 	const errors = validateSettings(settings, metric);
 	const hasErrors = Object.values(errors).some(Boolean);
 	const isRunning = progress?.status === 'running' || progress?.status === 'paused';
-	const panelDisabled = !settings.enabled;
+	// `enabled` no longer means "all of synthesis is off" — it gates ONLY the
+	// continuous (background) triggers. On-demand actions and the eligibility
+	// settings remain meaningful regardless, so we no longer dim the panel.
+	const panelDisabled = false;
 
 	function updateField<K extends keyof SynthesisSettings>(
 		key: K,
@@ -226,11 +229,8 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 	}
 
 	async function handleSynthesizeNow(): Promise<void> {
-		if (!settings.enabled) {
-			setToast({ tone: 'info', message: t('Enable synthesis first') });
-
-			return;
-		}
+		// On-demand is always available — no gate on settings.enabled (that
+		// flag controls only continuous background synthesis).
 		const confirmed = window.confirm(
 			t('Synthesize all eligible options? This runs in the background.'),
 		);
@@ -247,11 +247,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 	}
 
 	async function handleRejudge(): Promise<void> {
-		if (!settings.enabled) {
-			setToast({ tone: 'info', message: t('Enable synthesis first') });
-
-			return;
-		}
+		// On-demand is always available — no gate on settings.enabled.
 		const result = await withBusy('rejudge', () => triggerRejudgeGrayBand(statement.statementId));
 		if (result) {
 			setToast({
@@ -303,15 +299,6 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							'Automatically cluster equivalent participant ideas into a single proposal so duplicates do not dilute the signal.',
 						)}
 					</p>
-				</div>
-				<div className={styles.panel__enable}>
-					<Toggle
-						id="synthesis-enabled"
-						checked={settings.enabled}
-						onChange={(checked) => updateField('enabled', checked)}
-						label={settings.enabled ? t('On') : t('Off')}
-						ariaLabel={t('Enable synthesis on this question')}
-					/>
 				</div>
 			</header>
 
@@ -477,15 +464,25 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 					</div>
 				)}
 
-				{/* Continuous (background) — status card, no buttons */}
+				{/* Continuous (background) — status card with its OWN toggle.
+					The on-demand card below stays available regardless of this toggle. */}
 				<section className={styles.continuousCard} aria-labelledby="synthesis-continuous-heading">
-					<div className={styles.card__head}>
-						<h3 id="synthesis-continuous-heading" className={styles.card__title}>
-							{t('Continuous synthesis (background)')}
-						</h3>
-						<p className={styles.card__subtitle}>
-							{t('Runs automatically as options arrive or cross the threshold.')}
-						</p>
+					<div className={styles.continuousCard__head}>
+						<div>
+							<h3 id="synthesis-continuous-heading" className={styles.card__title}>
+								{t('Continuous synthesis (background)')}
+							</h3>
+							<p className={styles.card__subtitle}>
+								{t('Runs automatically as options arrive or cross the threshold.')}
+							</p>
+						</div>
+						<Toggle
+							id="synthesis-continuous-enabled"
+							checked={settings.enabled}
+							onChange={(checked) => updateField('enabled', checked)}
+							label={settings.enabled ? t('On') : t('Off')}
+							ariaLabel={t('Enable continuous synthesis')}
+						/>
 					</div>
 
 					<div className={styles.continuousCard__row}>
@@ -506,7 +503,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 					<p className={styles.continuousCard__caption}>
 						{settings.enabled
 							? t('Triggers on every new option and on every threshold crossing.')
-							: t('Turn synthesis on (above) to start clustering options automatically.')}
+							: t('Continuous synthesis is off. On-demand actions below are still available.')}
 					</p>
 				</section>
 
@@ -526,13 +523,13 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							text={t('Synthesize')}
 							variant="primary"
 							onClick={handleSynthesizeNow}
-							disabled={!settings.enabled || isRunning || busyOp !== null || dirty}
+							disabled={isRunning || busyOp !== null || dirty}
 						/>
 						<Button
 							text={t('Re-judge gray-band pairs')}
 							variant="secondary"
 							onClick={handleRejudge}
-							disabled={!settings.enabled || busyOp !== null || dirty}
+							disabled={busyOp !== null || dirty}
 						/>
 					</div>
 
@@ -540,7 +537,7 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 
 					<SelectiveOptionsList
 						questionId={statement.statementId}
-						disabled={!settings.enabled || busyOp !== null || dirty}
+						disabled={busyOp !== null || dirty}
 						minEvaluators={settings.minEvaluators}
 						minConsensus={settings.minConsensus}
 						onResult={(result) => {

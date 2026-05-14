@@ -57,10 +57,10 @@ export const synthesizeNow = onCall<SynthesizeNowRequest>(
 
 		await assertSynthesisAdmin(questionId, uid);
 
+		// Admin-initiated on-demand: NOT gated by `settings.enabled`. That
+		// flag controls only the continuous background triggers; on-demand
+		// is always available to admins.
 		const settings = await loadSynthesisSettings(questionId);
-		if (!settings.enabled) {
-			throw new HttpsError('failed-precondition', 'Synthesis is not enabled on this question');
-		}
 
 		if (await isOperationInFlight(questionId)) {
 			throw new HttpsError(

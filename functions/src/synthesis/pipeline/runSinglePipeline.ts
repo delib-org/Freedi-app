@@ -99,7 +99,16 @@ export async function runSinglePipeline(input: PipelineInput): Promise<PipelineR
 	if (!parent) return skipped('parent-not-found', startedAt);
 
 	const settings = loadSynthesisSettingsFromStatement(parent);
-	if (!settings.enabled) return skipped('synthesis-disabled', startedAt);
+
+	// `enabled` means "continuous (background) synthesis is on". It gates
+	// only the two automatic-trigger sources. On-demand work (admin clicked
+	// Synthesize / Selective / Re-judge) flows through the queue worker
+	// and must run regardless of the continuous switch — admins explicitly
+	// asked for it.
+	const isContinuousSource = input.source === 'onCreate' || input.source === 'onThresholdCross';
+	if (isContinuousSource && !settings.enabled) {
+		return skipped('continuous-synthesis-disabled', startedAt);
+	}
 
 	if (!input.forceProcess) {
 		const evals = option.evaluation?.numberOfEvaluators ?? 0;

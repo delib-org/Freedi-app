@@ -124,7 +124,7 @@ describe('runSinglePipeline', () => {
 			parent,
 		});
 		expect(result.action).toBe('skipped');
-		expect(result.reason).toBe('synthesis-disabled');
+		expect(result.reason).toBe('continuous-synthesis-disabled');
 		expect(findSimilarMock).not.toHaveBeenCalled();
 	});
 

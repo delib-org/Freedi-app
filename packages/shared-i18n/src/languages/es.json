@@ -2482,5 +2482,7 @@
   "On-demand synthesis": "Síntesis a demanda",
   "Trigger a clustering run on the existing backlog right now.": "Lance una ejecución de agrupación sobre el inventario existente ahora.",
   "Background synthesis is active. No on-demand runs queued.": "La síntesis de fondo está activa. No hay ejecuciones a demanda en cola.",
-  "Synthesis is off. No background or on-demand runs are happening.": "La síntesis está desactivada. No hay ejecuciones de fondo ni a demanda."
+  "Synthesis is off. No background or on-demand runs are happening.": "La síntesis está desactivada. No hay ejecuciones de fondo ni a demanda.",
+  "Enable continuous synthesis": "Activar síntesis continua",
+  "Continuous synthesis is off. On-demand actions below are still available.": "La síntesis continua está desactivada. Las acciones a demanda de abajo siguen disponibles."
 }

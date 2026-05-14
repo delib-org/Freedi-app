@@ -2607,5 +2607,7 @@
   "On-demand synthesis": "تركيب عند الطلب",
   "Trigger a clustering run on the existing backlog right now.": "ابدأ عملية تجميع على المخزون الحالي الآن.",
   "Background synthesis is active. No on-demand runs queued.": "تركيب الخلفية نشط. لا توجد عمليات عند الطلب في الانتظار.",
-  "Synthesis is off. No background or on-demand runs are happening.": "التركيب متوقف. لا توجد عمليات خلفية أو عند الطلب."
+  "Synthesis is off. No background or on-demand runs are happening.": "التركيب متوقف. لا توجد عمليات خلفية أو عند الطلب.",
+  "Enable continuous synthesis": "تفعيل التركيب المستمر",
+  "Continuous synthesis is off. On-demand actions below are still available.": "التركيب المستمر متوقف. الإجراءات عند الطلب أدناه لا تزال متاحة."
 }

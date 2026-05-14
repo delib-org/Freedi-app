@@ -394,6 +394,15 @@
 	background: var(--bg-success-light);
 }
 
+.continuousCard__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-block-end: 0.5rem;
+}
+
 .continuousCard__row {
 	display: flex;
 	align-items: center;

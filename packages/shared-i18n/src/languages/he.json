@@ -3241,5 +3241,7 @@
   "On-demand synthesis": "סינתזה לפי דרישה",
   "Trigger a clustering run on the existing backlog right now.": "הפעל ריצת קיבוץ על המאגר הקיים עכשיו.",
   "Background synthesis is active. No on-demand runs queued.": "סינתזת רקע פעילה. אין ריצות לפי דרישה בתור.",
-  "Synthesis is off. No background or on-demand runs are happening.": "הסינתזה כבויה. אין ריצות רקע או לפי דרישה."
+  "Synthesis is off. No background or on-demand runs are happening.": "הסינתזה כבויה. אין ריצות רקע או לפי דרישה.",
+  "Enable continuous synthesis": "הפעל סינתזה רציפה",
+  "Continuous synthesis is off. On-demand actions below are still available.": "סינתזה רציפה כבויה. פעולות לפי דרישה למטה עדיין זמינות."
 }

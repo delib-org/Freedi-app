@@ -3010,5 +3010,7 @@
   "On-demand synthesis": "ترکیب بر اساس درخواست",
   "Trigger a clustering run on the existing backlog right now.": "همین الان یک اجرای خوشه‌بندی روی صف موجود را آغاز کنید.",
   "Background synthesis is active. No on-demand runs queued.": "ترکیب پس‌زمینه فعال است. هیچ اجرای درخواستی در صف نیست.",
-  "Synthesis is off. No background or on-demand runs are happening.": "ترکیب خاموش است. هیچ اجرای پس‌زمینه یا درخواستی در حال انجام نیست."
+  "Synthesis is off. No background or on-demand runs are happening.": "ترکیب خاموش است. هیچ اجرای پس‌زمینه یا درخواستی در حال انجام نیست.",
+  "Enable continuous synthesis": "فعال‌سازی ترکیب پیوسته",
+  "Continuous synthesis is off. On-demand actions below are still available.": "ترکیب پیوسته خاموش است. اقدامات بر اساس درخواست در پایین همچنان در دسترس هستند."
 }

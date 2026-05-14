@@ -62,10 +62,9 @@ export const rejudgeGrayBand = onCall<RejudgeRequest>(
 
 		await assertSynthesisAdmin(questionId, uid);
 
+		// Admin-initiated: NOT gated by `settings.enabled` (that controls
+		// only the continuous background triggers).
 		const settings = await loadSynthesisSettings(questionId);
-		if (!settings.enabled) {
-			throw new HttpsError('failed-precondition', 'Synthesis is not enabled on this question');
-		}
 
 		// Find all clusters under this question.
 		const optionsSnap = await db()

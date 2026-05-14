@@ -3226,5 +3226,7 @@
   "On-demand synthesis": "On-demand synthesis",
   "Trigger a clustering run on the existing backlog right now.": "Trigger a clustering run on the existing backlog right now.",
   "Background synthesis is active. No on-demand runs queued.": "Background synthesis is active. No on-demand runs queued.",
-  "Synthesis is off. No background or on-demand runs are happening.": "Synthesis is off. No background or on-demand runs are happening."
+  "Synthesis is off. No background or on-demand runs are happening.": "Synthesis is off. No background or on-demand runs are happening.",
+  "Enable continuous synthesis": "Enable continuous synthesis",
+  "Continuous synthesis is off. On-demand actions below are still available.": "Continuous synthesis is off. On-demand actions below are still available."
 }

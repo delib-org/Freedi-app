@@ -3,7 +3,6 @@ import { logger } from 'firebase-functions';
 import { getFirestore } from 'firebase-admin/firestore';
 import { functionConfig } from '@freedi/shared-types';
 import { ALLOWED_ORIGINS } from '../../config/cors';
-import { loadSynthesisSettings } from '../pipeline/loadSynthesisSettings';
 import { enqueueItem, initProgressDoc, mergeIntoProgressDoc } from '../queue/enqueue';
 import { QUEUE_COLLECTION, type ProgressDoc } from '../queue/types';
 import { assertSynthesisAdmin } from './assertSynthesisAdmin';
@@ -68,11 +67,8 @@ export const synthesizeSelected = onCall<SynthesizeSelectedRequest>(
 
 		await assertSynthesisAdmin(questionId, uid);
 
-		const settings = await loadSynthesisSettings(questionId);
-		if (!settings.enabled) {
-			throw new HttpsError('failed-precondition', 'Synthesis is not enabled on this question');
-		}
-
+		// Admin-initiated: NOT gated by `settings.enabled` (that controls
+		// only the continuous background triggers).
 		const validIds = await validateOptionIdsBelongToQuestion(optionIds, questionId);
 		if (validIds.length === 0) {
 			throw new HttpsError('invalid-argument', 'No valid options for this question in the request');

@@ -2482,5 +2482,7 @@
   "On-demand synthesis": "Synthese op aanvraag",
   "Trigger a clustering run on the existing backlog right now.": "Start nu een clustering-uitvoering op de bestaande backlog.",
   "Background synthesis is active. No on-demand runs queued.": "Achtergrondsynthese is actief. Geen uitvoeringen op aanvraag in de wachtrij.",
-  "Synthesis is off. No background or on-demand runs are happening.": "Synthese staat uit. Er lopen geen achtergrond- of on-demand uitvoeringen."
+  "Synthesis is off. No background or on-demand runs are happening.": "Synthese staat uit. Er lopen geen achtergrond- of on-demand uitvoeringen.",
+  "Enable continuous synthesis": "Doorlopende synthese inschakelen",
+  "Continuous synthesis is off. On-demand actions below are still available.": "Doorlopende synthese staat uit. De on-demand acties hieronder zijn nog steeds beschikbaar."
 }
