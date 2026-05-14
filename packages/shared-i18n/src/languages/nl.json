@@ -2472,5 +2472,15 @@
   "Running selective synthesis": "Selectieve synthese loopt",
   "Re-judging cluster pairs": "Clusterparen worden herbeoordeeld",
   "Running synthesis (mixed)": "Synthese loopt (gemengd)",
-  "Running synthesis": "Synthese loopt"
+  "Running synthesis": "Synthese loopt",
+  "Continuous synthesis (background)": "Doorlopende synthese (achtergrond)",
+  "Runs automatically as options arrive or cross the threshold.": "Loopt automatisch wanneer opties binnenkomen of de drempel overschrijden.",
+  "Active": "Actief",
+  "Idle": "Inactief",
+  "Triggers on every new option and on every threshold crossing.": "Wordt geactiveerd bij elke nieuwe optie en bij elke drempeloverschrijding.",
+  "Turn synthesis on (above) to start clustering options automatically.": "Zet synthese (hierboven) aan om opties automatisch te clusteren.",
+  "On-demand synthesis": "Synthese op aanvraag",
+  "Trigger a clustering run on the existing backlog right now.": "Start nu een clustering-uitvoering op de bestaande backlog.",
+  "Background synthesis is active. No on-demand runs queued.": "Achtergrondsynthese is actief. Geen uitvoeringen op aanvraag in de wachtrij.",
+  "Synthesis is off. No background or on-demand runs are happening.": "Synthese staat uit. Er lopen geen achtergrond- of on-demand uitvoeringen."
 }

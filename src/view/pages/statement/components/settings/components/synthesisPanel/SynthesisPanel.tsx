@@ -477,20 +477,51 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 					</div>
 				)}
 
-				{/* Run synthesis */}
-				<section className={styles.card} aria-labelledby="synthesis-run-heading">
+				{/* Continuous (background) — status card, no buttons */}
+				<section className={styles.continuousCard} aria-labelledby="synthesis-continuous-heading">
 					<div className={styles.card__head}>
-						<h3 id="synthesis-run-heading" className={styles.card__title}>
-							{t('Run synthesis')}
+						<h3 id="synthesis-continuous-heading" className={styles.card__title}>
+							{t('Continuous synthesis (background)')}
 						</h3>
 						<p className={styles.card__subtitle}>
-							{t(
-								'"Synthesize" runs over every eligible option. "Re-judge" looks at existing clusters and merges any that drifted into semantic equivalence.',
-							)}
+							{t('Runs automatically as options arrive or cross the threshold.')}
 						</p>
 					</div>
 
-					<div className={styles.runActions}>
+					<div className={styles.continuousCard__row}>
+						<span
+							className={styles.statusDot}
+							data-active={settings.enabled ? 'true' : 'false'}
+							aria-hidden="true"
+						/>
+						<span
+							className={styles.statusBadge}
+							data-active={settings.enabled ? 'true' : 'false'}
+							aria-live="polite"
+						>
+							{settings.enabled ? t('Active') : t('Idle')}
+						</span>
+					</div>
+
+					<p className={styles.continuousCard__caption}>
+						{settings.enabled
+							? t('Triggers on every new option and on every threshold crossing.')
+							: t('Turn synthesis on (above) to start clustering options automatically.')}
+					</p>
+				</section>
+
+				{/* On-demand — admin-initiated bulk operations */}
+				<section className={styles.onDemandCard} aria-labelledby="synthesis-ondemand-heading">
+					<div className={styles.card__head}>
+						<h3 id="synthesis-ondemand-heading" className={styles.card__title}>
+							{t('On-demand synthesis')}
+						</h3>
+						<p className={styles.card__subtitle}>
+							{t('Trigger a clustering run on the existing backlog right now.')}
+						</p>
+					</div>
+
+					<div className={styles.onDemandActions}>
 						<Button
 							text={t('Synthesize')}
 							variant="primary"
@@ -504,6 +535,8 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							disabled={!settings.enabled || busyOp !== null || dirty}
 						/>
 					</div>
+
+					<hr className={styles.onDemandCard__divider} />
 
 					<SelectiveOptionsList
 						questionId={statement.statementId}
@@ -526,13 +559,21 @@ const SynthesisPanel: FC<Props> = ({ statement }) => {
 							{t('Status')}
 						</h3>
 					</div>
-					<SynthesisProgressBar
-						progress={progress}
-						onPause={handlePause}
-						onResume={handleResume}
-						onCancel={handleCancel}
-						busy={busyOp !== null}
-					/>
+					{isRunning || progress ? (
+						<SynthesisProgressBar
+							progress={progress}
+							onPause={handlePause}
+							onResume={handleResume}
+							onCancel={handleCancel}
+							busy={busyOp !== null}
+						/>
+					) : (
+						<p className={styles.card__subtitle} aria-live="polite">
+							{settings.enabled
+								? t('Background synthesis is active. No on-demand runs queued.')
+								: t('Synthesis is off. No background or on-demand runs are happening.')}
+						</p>
+					)}
 				</section>
 			</div>
 

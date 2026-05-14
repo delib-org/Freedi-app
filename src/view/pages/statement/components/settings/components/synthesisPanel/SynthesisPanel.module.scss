@@ -2,9 +2,13 @@
  * SynthesisPanel — admin block embedded inside the settings page.
  *
  * Design goals:
- *  - Clear vertical rhythm (header → eligibility → advanced → run → status).
+ *  - Clear vertical rhythm (header → eligibility → advanced → continuous →
+ *    on-demand → status).
  *  - Cards as containers instead of borderless form rows, so each concern
  *    has its own visual lane.
+ *  - Two run-modes that share one pipeline are visually distinguished:
+ *      • Continuous → success-tinted, no buttons, pulse dot.
+ *      • On-demand  → neutral surface, primary buttons, selective expander.
  *  - First-class RTL via logical properties only.
  *  - All colors, paddings, radii come from design tokens.
  * ============================================================================ */
@@ -38,7 +42,9 @@
 }
 
 .panel__description {
-	margin: 0.25rem 0 0;
+	margin-block-start: 0.25rem;
+	margin-block-end: 0;
+	margin-inline: 0;
 	font-size: 0.9rem;
 	color: var(--text-caption);
 	line-height: 1.45;
@@ -366,12 +372,132 @@
 	color: var(--text-warning);
 }
 
-/* ---------- Run actions ---------- */
+/* ===========================================================================
+ * Run-mode cards
+ *
+ * Two stacked sub-sections that share the pipeline but communicate different
+ * intent:
+ *   • Continuous (background) — success-tinted, informational only, pulse dot.
+ *   • On-demand              — neutral, primary buttons, selective expander.
+ * =========================================================================== */
 
-.runActions {
+/* ---- Continuous (background) ---- */
+
+.continuousCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	padding: 1rem;
+	border: 1px solid var(--text-success);
+	border-inline-start-width: 4px;
+	border-radius: 10px;
+	background: var(--bg-success-light);
+}
+
+.continuousCard__row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.statusDot {
+	position: relative;
+	flex-shrink: 0;
+	display: inline-block;
+	inline-size: 0.75rem;
+	block-size: 0.75rem;
+	border-radius: 50%;
+	background: var(--text-disabled);
+
+	&[data-active='true'] {
+		background: var(--text-success);
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: 50%;
+			background: var(--text-success);
+			opacity: 0.55;
+			animation: synthesis-pulse 1.8s ease-out infinite;
+		}
+	}
+}
+
+.statusBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding-block: 0.25rem;
+	padding-inline: 0.6rem;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	border-radius: 999px;
+	background: var(--card-default);
+	color: var(--text-disabled);
+	border: 1px solid var(--border-light);
+
+	&[data-active='true'] {
+		color: var(--text-success);
+		border-color: var(--text-success);
+	}
+}
+
+.continuousCard__caption {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--text-caption);
+	line-height: 1.45;
+}
+
+@keyframes synthesis-pulse {
+	0% {
+		transform: scale(1);
+		opacity: 0.55;
+	}
+	70% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+}
+
+/* ---- On-demand ---- */
+
+.onDemandCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	padding: 1rem;
+	background: var(--bg-main);
+	border: 1px solid var(--border-light);
+	border-inline-start: 4px solid var(--btn-primary);
+	border-radius: 10px;
+}
+
+.onDemandActions {
 	display: flex;
 	gap: 0.5rem;
 	flex-wrap: wrap;
+
+	> * {
+		flex: 1 1 12rem;
+		min-inline-size: 12rem;
+	}
+}
+
+.onDemandCard__divider {
+	block-size: 1px;
+	inline-size: 100%;
+	background: var(--border-light);
+	border: none;
+	margin: 0;
 }
 
 /* ---------- Toast ---------- */
@@ -409,5 +535,12 @@
 	.metricPicker__option,
 	.disclosure__chevron {
 		transition: none;
+	}
+
+	.statusDot[data-active='true']::after {
+		animation: none;
+		// Keep a steady halo instead of a pulsing one.
+		opacity: 0.35;
+		transform: scale(1.6);
 	}
 }

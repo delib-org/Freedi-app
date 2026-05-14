@@ -3216,5 +3216,15 @@
   "Running selective synthesis": "Running selective synthesis",
   "Re-judging cluster pairs": "Re-judging cluster pairs",
   "Running synthesis (mixed)": "Running synthesis (mixed)",
-  "Running synthesis": "Running synthesis"
+  "Running synthesis": "Running synthesis",
+  "Continuous synthesis (background)": "Continuous synthesis (background)",
+  "Runs automatically as options arrive or cross the threshold.": "Runs automatically as options arrive or cross the threshold.",
+  "Active": "Active",
+  "Idle": "Idle",
+  "Triggers on every new option and on every threshold crossing.": "Triggers on every new option and on every threshold crossing.",
+  "Turn synthesis on (above) to start clustering options automatically.": "Turn synthesis on (above) to start clustering options automatically.",
+  "On-demand synthesis": "On-demand synthesis",
+  "Trigger a clustering run on the existing backlog right now.": "Trigger a clustering run on the existing backlog right now.",
+  "Background synthesis is active. No on-demand runs queued.": "Background synthesis is active. No on-demand runs queued.",
+  "Synthesis is off. No background or on-demand runs are happening.": "Synthesis is off. No background or on-demand runs are happening."
 }

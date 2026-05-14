@@ -3231,5 +3231,15 @@
   "Running selective synthesis": "סינתזה סלקטיבית רצה",
   "Re-judging cluster pairs": "שיפוט מחדש של זוגות אשכולות",
   "Running synthesis (mixed)": "סינתזה רצה (מעורבת)",
-  "Running synthesis": "סינתזה רצה"
+  "Running synthesis": "סינתזה רצה",
+  "Continuous synthesis (background)": "סינתזה רציפה (ברקע)",
+  "Runs automatically as options arrive or cross the threshold.": "רצה אוטומטית כשאפשרויות מגיעות או חוצות את הסף.",
+  "Active": "פעיל",
+  "Idle": "לא פעיל",
+  "Triggers on every new option and on every threshold crossing.": "נדלקת על כל אפשרות חדשה ועל כל חציית סף.",
+  "Turn synthesis on (above) to start clustering options automatically.": "הפעל את הסינתזה (למעלה) כדי להתחיל לקבץ אפשרויות אוטומטית.",
+  "On-demand synthesis": "סינתזה לפי דרישה",
+  "Trigger a clustering run on the existing backlog right now.": "הפעל ריצת קיבוץ על המאגר הקיים עכשיו.",
+  "Background synthesis is active. No on-demand runs queued.": "סינתזת רקע פעילה. אין ריצות לפי דרישה בתור.",
+  "Synthesis is off. No background or on-demand runs are happening.": "הסינתזה כבויה. אין ריצות רקע או לפי דרישה."
 }

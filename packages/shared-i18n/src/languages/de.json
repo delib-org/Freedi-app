@@ -2472,5 +2472,15 @@
   "Running selective synthesis": "Selektive Synthese läuft",
   "Re-judging cluster pairs": "Cluster-Paare werden neu bewertet",
   "Running synthesis (mixed)": "Synthese läuft (gemischt)",
-  "Running synthesis": "Synthese läuft"
+  "Running synthesis": "Synthese läuft",
+  "Continuous synthesis (background)": "Kontinuierliche Synthese (Hintergrund)",
+  "Runs automatically as options arrive or cross the threshold.": "Läuft automatisch, sobald Optionen eintreffen oder die Schwelle überschreiten.",
+  "Active": "Aktiv",
+  "Idle": "Inaktiv",
+  "Triggers on every new option and on every threshold crossing.": "Wird bei jeder neuen Option und bei jedem Schwellenwechsel ausgelöst.",
+  "Turn synthesis on (above) to start clustering options automatically.": "Schalten Sie die Synthese (oben) ein, um Optionen automatisch zu clustern.",
+  "On-demand synthesis": "Synthese auf Abruf",
+  "Trigger a clustering run on the existing backlog right now.": "Starten Sie jetzt eine Clustering-Ausführung über den vorhandenen Backlog.",
+  "Background synthesis is active. No on-demand runs queued.": "Hintergrund-Synthese ist aktiv. Keine On-Demand-Läufe in der Warteschlange.",
+  "Synthesis is off. No background or on-demand runs are happening.": "Synthese ist aus. Keine Hintergrund- oder On-Demand-Läufe finden statt."
 }

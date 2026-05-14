@@ -2472,5 +2472,15 @@
   "Running selective synthesis": "Ejecutando síntesis selectiva",
   "Re-judging cluster pairs": "Reevaluando pares de clústeres",
   "Running synthesis (mixed)": "Ejecutando síntesis (mixta)",
-  "Running synthesis": "Ejecutando síntesis"
+  "Running synthesis": "Ejecutando síntesis",
+  "Continuous synthesis (background)": "Síntesis continua (en segundo plano)",
+  "Runs automatically as options arrive or cross the threshold.": "Se ejecuta automáticamente cuando llegan opciones o cruzan el umbral.",
+  "Active": "Activa",
+  "Idle": "Inactiva",
+  "Triggers on every new option and on every threshold crossing.": "Se activa con cada opción nueva y cada cruce de umbral.",
+  "Turn synthesis on (above) to start clustering options automatically.": "Active la síntesis (arriba) para empezar a agrupar opciones automáticamente.",
+  "On-demand synthesis": "Síntesis a demanda",
+  "Trigger a clustering run on the existing backlog right now.": "Lance una ejecución de agrupación sobre el inventario existente ahora.",
+  "Background synthesis is active. No on-demand runs queued.": "La síntesis de fondo está activa. No hay ejecuciones a demanda en cola.",
+  "Synthesis is off. No background or on-demand runs are happening.": "La síntesis está desactivada. No hay ejecuciones de fondo ni a demanda."
 }

@@ -2597,5 +2597,15 @@
   "Running selective synthesis": "تشغيل التركيب الانتقائي",
   "Re-judging cluster pairs": "إعادة تقييم أزواج المجموعات",
   "Running synthesis (mixed)": "تشغيل التركيب (مختلط)",
-  "Running synthesis": "تشغيل التركيب"
+  "Running synthesis": "تشغيل التركيب",
+  "Continuous synthesis (background)": "تركيب مستمر (في الخلفية)",
+  "Runs automatically as options arrive or cross the threshold.": "يعمل تلقائياً عند وصول الخيارات أو تجاوز العتبة.",
+  "Active": "نشط",
+  "Idle": "خامل",
+  "Triggers on every new option and on every threshold crossing.": "يُفعَّل عند كل خيار جديد وعند كل تجاوز للعتبة.",
+  "Turn synthesis on (above) to start clustering options automatically.": "فعّل التركيب (في الأعلى) لبدء تجميع الخيارات تلقائياً.",
+  "On-demand synthesis": "تركيب عند الطلب",
+  "Trigger a clustering run on the existing backlog right now.": "ابدأ عملية تجميع على المخزون الحالي الآن.",
+  "Background synthesis is active. No on-demand runs queued.": "تركيب الخلفية نشط. لا توجد عمليات عند الطلب في الانتظار.",
+  "Synthesis is off. No background or on-demand runs are happening.": "التركيب متوقف. لا توجد عمليات خلفية أو عند الطلب."
 }
