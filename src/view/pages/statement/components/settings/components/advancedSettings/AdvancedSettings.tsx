@@ -16,7 +16,6 @@ import { doc, setDoc } from 'firebase/firestore';
 import { FireStore } from '@/controllers/db/config';
 import EvaluationTypeSelector from './EvaluationTypeSelector/EvaluationTypeSelector';
 import LanguageSelector from './LanguageSelector/LanguageSelector';
-import SynthesisPanel from '../synthesisPanel/SynthesisPanel';
 import { setMaxVotesPerUser } from '@/controllers/db/evaluation/setEvaluation';
 import {
 	getOptionsExceedingMax,
@@ -594,14 +593,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 				</div>
 			</div>
 
-			{/* Synthesis (living-only) — only meaningful for questions */}
-			{statement.statementType === StatementType.question && (
-				<div className={styles.category}>
-					<div className={styles.categoryContent}>
-						<SynthesisPanel statement={statement} />
-					</div>
-				</div>
-			)}
 		</div>
 	);
 };

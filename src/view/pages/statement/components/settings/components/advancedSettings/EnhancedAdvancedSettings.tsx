@@ -28,6 +28,7 @@ import {
 	Activity,
 	Globe,
 	Download,
+	Layers,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { createStatementsByParentSelector } from '@/redux/utils/selectorFactories';
@@ -42,6 +43,8 @@ import DiscussionSettings from './DiscussionSettings';
 import NavigationSettings from './NavigationSettings';
 import LocalizationSettings from './LocalizationSettings';
 import ExportSettings from './ExportSettings';
+import SynthesisPanel from '../synthesisPanel/SynthesisPanel';
+import { StatementType } from '@freedi/shared-types';
 
 interface CategoryConfig {
 	id: string;
@@ -135,6 +138,22 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement: propS
 			priority: 'low',
 			defaultExpanded: false,
 		},
+		// Only meaningful for questions — option / group statements don't have
+		// a "synthesize over the children" semantic.
+		...(statement.statementType === StatementType.question
+			? [
+					{
+						id: 'synthesis',
+						title: t('Synthesis'),
+						icon: Layers,
+						description: t(
+							'Continuously cluster equivalent options. Threshold knobs, "Synthesize" button, selective synthesis.',
+						),
+						priority: 'medium' as const,
+						defaultExpanded: false,
+					},
+				]
+			: []),
 	];
 
 	// Initialize expanded state based on category defaults
@@ -375,6 +394,8 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement: propS
 									{category.id === 'dataExport' && (
 										<ExportSettings statement={statement} subStatements={subStatements} />
 									)}
+
+									{category.id === 'synthesis' && <SynthesisPanel statement={statement} />}
 								</div>
 							)}
 						</div>

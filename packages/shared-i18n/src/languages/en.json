@@ -3135,6 +3135,7 @@
   "Backup queued. It will land here within a minute or two:": "Backup queued. It will land here within a minute or two:",
   "Backup failed:": "Backup failed:",
   "Synthesis": "Synthesis",
+  "Continuously cluster equivalent options. Threshold knobs, \"Synthesize\" button, selective synthesis.": "Continuously cluster equivalent options. Threshold knobs, \"Synthesize\" button, selective synthesis.",
   "Enable synthesis on this question": "Enable synthesis on this question",
   "When enabled, options are clustered automatically as they cross the engagement thresholds below.": "When enabled, options are clustered automatically as they cross the engagement thresholds below.",
   "Engagement thresholds": "Engagement thresholds",
