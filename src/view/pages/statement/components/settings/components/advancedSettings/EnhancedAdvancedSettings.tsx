@@ -98,6 +98,23 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement: propS
 			priority: 'medium',
 			defaultExpanded: true,
 		},
+		// Synthesis is positioned ABOVE the AI/threshold category — it's the
+		// primary clustering mechanism in the living-only model, and admins
+		// should see it before the legacy AI knobs.
+		...(statement.statementType === StatementType.question
+			? [
+					{
+						id: 'synthesis',
+						title: t('Synthesis'),
+						icon: Layers,
+						description: t(
+							'Continuously cluster equivalent options. Threshold knobs, "Synthesize" button, selective synthesis.',
+						),
+						priority: 'high' as const,
+						defaultExpanded: false,
+					},
+				]
+			: []),
 		{
 			id: 'ai',
 			title: t('AI & Automation'),
@@ -138,22 +155,6 @@ const EnhancedAdvancedSettings: FC<StatementSettingsProps> = ({ statement: propS
 			priority: 'low',
 			defaultExpanded: false,
 		},
-		// Only meaningful for questions — option / group statements don't have
-		// a "synthesize over the children" semantic.
-		...(statement.statementType === StatementType.question
-			? [
-					{
-						id: 'synthesis',
-						title: t('Synthesis'),
-						icon: Layers,
-						description: t(
-							'Continuously cluster equivalent options. Threshold knobs, "Synthesize" button, selective synthesis.',
-						),
-						priority: 'medium' as const,
-						defaultExpanded: false,
-					},
-				]
-			: []),
 	];
 
 	// Initialize expanded state based on category defaults
