@@ -4,6 +4,7 @@ import { useAppSelector } from '@/controllers/hooks/reduxHooks';
 import { statementOptionsSelector } from '@/redux/statements/statementsSlice';
 import { triggerSynthesizeSelected } from '@/controllers/db/synthesis/synthesisOperations';
 import type { Statement } from '@freedi/shared-types';
+import Button from '@/view/components/atomic/atoms/Button/Button';
 import styles from './SelectiveOptionsList.module.scss';
 
 const MAX_SELECTABLE = 200;
@@ -59,6 +60,19 @@ const SelectiveOptionsList: FC<Props> = ({
 		});
 	}, [options, search, ungroupedOnly, aboveThresholdOnly, minEvaluators, minConsensus]);
 
+	// How many options exist in total / would match without the threshold gate?
+	// We use this to power the "softly suggest unchecking the filter" CTA.
+	const totalMatchingWithoutThreshold = useMemo(() => {
+		const lowered = search.trim().toLowerCase();
+
+		return options.filter((opt: Statement) => {
+			if (ungroupedOnly && (opt.integratedOptions ?? []).length > 0) return false;
+			if (lowered && !opt.statement.toLowerCase().includes(lowered)) return false;
+
+			return true;
+		}).length;
+	}, [options, search, ungroupedOnly]);
+
 	function toggle(id: string): void {
 		setSelected((prev) => {
 			const next = new Set(prev);
@@ -102,71 +116,119 @@ const SelectiveOptionsList: FC<Props> = ({
 		}
 	}
 
+	const visible = filtered.slice(0, 500);
+	const selectedCount = selected.size;
+	// Helpful empty-state context: are we empty because of the threshold filter?
+	const blockedByThresholdFilter =
+		filtered.length === 0 && aboveThresholdOnly && totalMatchingWithoutThreshold > 0;
+
 	return (
-		<div className={styles.selectiveList}>
+		<div className={styles.selective}>
 			<button
 				type="button"
-				className={styles.summary}
+				className={styles.selective__summary}
 				aria-expanded={expanded}
 				aria-controls="selective-list-body"
 				onClick={() => setExpanded((v) => !v)}
 			>
-				{t('Synthesize selected options')}
+				<span className={styles.selective__chevron} aria-hidden="true">
+					{expanded ? '–' : '+'}
+				</span>
+				<span className={styles.selective__summaryText}>{t('Synthesize selected options')}</span>
+				{selectedCount > 0 && <span className={styles.selective__pill}>{selectedCount}</span>}
 			</button>
+
 			{expanded && (
-				<div id="selective-list-body" className={styles.body}>
-					<div className={styles.filterBar}>
+				<div id="selective-list-body" className={styles.selective__body}>
+					{/* Filter bar — search on its own row, chips below to avoid wrapping mess */}
+					<div className={styles.filters}>
 						<input
 							type="text"
+							className={styles.filters__search}
 							placeholder={t('Search options…')}
 							value={search}
 							onChange={(e) => setSearch(e.target.value)}
 							aria-label={t('Search options')}
 						/>
-						<label className={styles.filterCheckbox}>
-							<input
-								type="checkbox"
-								checked={ungroupedOnly}
-								onChange={(e) => setUngroupedOnly(e.target.checked)}
-							/>
-							{t('Ungrouped only')}
-						</label>
-						<label className={styles.filterCheckbox}>
-							<input
-								type="checkbox"
-								checked={aboveThresholdOnly}
-								onChange={(e) => setAboveThresholdOnly(e.target.checked)}
-							/>
-							{t('Above threshold only')}
-						</label>
+						<div className={styles.filters__chips} role="group" aria-label={t('Filters')}>
+							<button
+								type="button"
+								className={styles.chip}
+								data-active={aboveThresholdOnly}
+								onClick={() => setAboveThresholdOnly((v) => !v)}
+								aria-pressed={aboveThresholdOnly}
+							>
+								{t('Above threshold only')}
+							</button>
+							<button
+								type="button"
+								className={styles.chip}
+								data-active={ungroupedOnly}
+								onClick={() => setUngroupedOnly((v) => !v)}
+								aria-pressed={ungroupedOnly}
+							>
+								{t('Ungrouped only')}
+							</button>
+						</div>
 					</div>
 
+					{/* List */}
 					<div className={styles.list}>
-						{filtered.length === 0 ? (
-							<div className={styles.emptyState}>{t('No options match the current filter')}</div>
+						{visible.length === 0 ? (
+							<div className={styles.empty}>
+								<p className={styles.empty__title}>{t('No options match the current filter')}</p>
+								{blockedByThresholdFilter ? (
+									<>
+										<p className={styles.empty__hint}>
+											{`${totalMatchingWithoutThreshold} ${t(
+												'options exist but none have crossed the threshold yet.',
+											)}`}
+										</p>
+										<button
+											type="button"
+											className={styles.empty__action}
+											onClick={() => setAboveThresholdOnly(false)}
+										>
+											{t('Show all options instead')}
+										</button>
+									</>
+								) : (
+									<p className={styles.empty__hint}>
+										{t('Try clearing the search or filters to see more options.')}
+									</p>
+								)}
+							</div>
 						) : (
-							<ul>
-								{filtered.slice(0, 500).map((opt: Statement) => {
+							<ul className={styles.list__items} role="listbox" aria-multiselectable="true">
+								{visible.map((opt: Statement) => {
 									const evals = opt.evaluation?.numberOfEvaluators ?? 0;
 									const cons = opt.consensus ?? 0;
 									const inCluster = (opt.integratedOptions ?? []).length > 0;
 									const checked = selected.has(opt.statementId);
 
 									return (
-										<li key={opt.statementId} className={styles.row}>
-											<input
-												type="checkbox"
-												checked={checked}
-												onChange={() => toggle(opt.statementId)}
-												aria-label={`${t('Select')}: ${opt.statement}`}
-											/>
-											<span className={styles.optionText} title={opt.statement}>
-												{opt.statement}
-											</span>
-											<span className={styles.metric}>
-												{evals} · {cons.toFixed(2)}
-											</span>
-											{inCluster && <span className={styles.clusterBadge}>{t('in cluster')}</span>}
+										<li key={opt.statementId} className={styles.row} data-checked={checked}>
+											<label className={styles.row__label}>
+												<input
+													type="checkbox"
+													className={styles.row__checkbox}
+													checked={checked}
+													onChange={() => toggle(opt.statementId)}
+													aria-label={`${t('Select')}: ${opt.statement}`}
+												/>
+												<span className={styles.row__text} title={opt.statement}>
+													{opt.statement}
+												</span>
+												<span className={styles.row__metrics}>
+													<span className={styles.row__metric} title={t('Number of evaluators')}>
+														{evals}
+													</span>
+													<span className={styles.row__metric} title={t('Consensus score')}>
+														{cons.toFixed(2)}
+													</span>
+												</span>
+												{inCluster && <span className={styles.row__badge}>{t('in cluster')}</span>}
+											</label>
 										</li>
 									);
 								})}
@@ -174,22 +236,25 @@ const SelectiveOptionsList: FC<Props> = ({
 						)}
 					</div>
 
-					<div className={styles.footer}>
-						<div>
+					{/* Sticky footer */}
+					<footer className={styles.footer}>
+						<div className={styles.footer__left}>
 							<button
 								type="button"
-								className={styles.selectAllButton}
+								className={styles.linkButton}
 								onClick={handleSelectAllFiltered}
 								disabled={filtered.length === 0 || disabled}
 							>
 								{t('Select all matching filter')}
 							</button>
-							{selected.size > 0 && (
+							{selectedCount > 0 && (
 								<>
-									{' · '}
+									<span className={styles.footer__divider} aria-hidden="true">
+										·
+									</span>
 									<button
 										type="button"
-										className={styles.selectAllButton}
+										className={styles.linkButton}
 										onClick={handleClear}
 										disabled={disabled}
 									>
@@ -198,19 +263,23 @@ const SelectiveOptionsList: FC<Props> = ({
 								</>
 							)}
 						</div>
-						<button
-							type="button"
-							className={styles.submitButton}
-							onClick={handleSubmit}
-							disabled={selected.size === 0 || disabled || submitting}
-						>
-							{submitting
-								? t('Submitting…')
-								: `${t('Synthesize')} ${selected.size} ${t('selected')}`}
-						</button>
-					</div>
+
+						<div className={styles.footer__right}>
+							<span className={styles.footer__count}>
+								{`${selectedCount} ${t('selected')} / ${MAX_SELECTABLE} ${t('max')}`}
+							</span>
+							<Button
+								text={submitting ? t('Submitting…') : `${t('Synthesize')} ${selectedCount}`}
+								variant="primary"
+								onClick={handleSubmit}
+								disabled={selectedCount === 0 || disabled || submitting}
+								loading={submitting}
+							/>
+						</div>
+					</footer>
+
 					{submitError && (
-						<div role="alert" style={{ color: 'var(--danger, #d3493a)', fontSize: '0.85rem' }}>
+						<div className={styles.errorBanner} role="alert">
 							{submitError}
 						</div>
 					)}
