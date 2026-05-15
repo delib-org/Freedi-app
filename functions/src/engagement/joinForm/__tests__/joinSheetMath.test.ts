@@ -1,9 +1,15 @@
 import type { Creator, Statement } from '@freedi/shared-types';
+import { StatementType } from '@freedi/shared-types';
 import {
+	buildLiveMemberKeys,
 	buildRowFromHeader,
+	columnIndexToA1,
 	computeMembershipEvents,
 	diffMembers,
+	findOrphanRowIndices,
 	findRowIndex,
+	findUserMembershipsInOptions,
+	planV1ToV2Migration,
 } from '../joinSheetMath';
 
 function user(uid: string, displayName?: string): Creator {
@@ -113,7 +119,7 @@ describe('joinSheetMath', () => {
 			optionTitle: 'Option One',
 			submittedAt: '2026-05-10T12:00:00Z',
 			questionId: 'q1',
-			formValues: { 'Phone': '0501234567', 'Email': 'a@b.co' },
+			formValues: { Phone: '0501234567', Email: 'a@b.co' },
 		};
 
 		it('lays out values for the new 10-col schema', () => {
@@ -300,10 +306,7 @@ describe('joinSheetMath', () => {
 		});
 
 		it('refuses to match when role differs', () => {
-			const rows = [
-				newSchemaHeader,
-				newRow('p1', 'a', 'organizer', 'opt1', 'Option One'),
-			];
+			const rows = [newSchemaHeader, newRow('p1', 'a', 'organizer', 'opt1', 'Option One')];
 			expect(
 				findRowIndex(rows, {
 					userId: 'a',
@@ -365,10 +368,7 @@ describe('joinSheetMath', () => {
 		it('refuses to match a row with empty role cell against a non-empty target role', () => {
 			// Defensive: legacy data could have rows with missing role values.
 			// We must NOT match such a row when caller specifies a real role.
-			const rows = [
-				newSchemaHeader,
-				['p1', 'a', 'a', '', 'opt1', 'Option One', 'ts', 'q1'],
-			];
+			const rows = [newSchemaHeader, ['p1', 'a', 'a', '', 'opt1', 'Option One', 'ts', 'q1']];
 			expect(
 				findRowIndex(rows, {
 					userId: 'a',
@@ -392,6 +392,322 @@ describe('joinSheetMath', () => {
 					optionTitle: 'Option One',
 				}),
 			).toBe(-1);
+		});
+	});
+
+	describe('findUserMembershipsInOptions', () => {
+		const opt = (overrides: Partial<Statement> = {}): Statement =>
+			({
+				statementId: 'opt-default',
+				statement: 'Default Option',
+				statementType: StatementType.option,
+				joined: [],
+				organizers: [],
+				...overrides,
+			}) as Statement;
+
+		it('returns empty for empty option list', () => {
+			expect(findUserMembershipsInOptions([], 'u1')).toEqual([]);
+		});
+
+		it('returns empty for empty userId', () => {
+			const options = [opt({ joined: [user('u1')] })];
+			expect(findUserMembershipsInOptions(options, '')).toEqual([]);
+		});
+
+		it('finds an activist membership', () => {
+			const options = [opt({ statementId: 'o1', statement: 'T1', joined: [user('u1')] })];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([
+				{ optionId: 'o1', optionTitle: 'T1', role: 'activist' },
+			]);
+		});
+
+		it('finds an organizer membership', () => {
+			const options = [opt({ statementId: 'o2', statement: 'T2', organizers: [user('u1')] })];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([
+				{ optionId: 'o2', optionTitle: 'T2', role: 'organizer' },
+			]);
+		});
+
+		it('returns both roles when user is in joined AND organizers on the same option', () => {
+			const options = [
+				opt({
+					statementId: 'o3',
+					statement: 'T3',
+					joined: [user('u1')],
+					organizers: [user('u1')],
+				}),
+			];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([
+				{ optionId: 'o3', optionTitle: 'T3', role: 'activist' },
+				{ optionId: 'o3', optionTitle: 'T3', role: 'organizer' },
+			]);
+		});
+
+		it('walks multiple options and returns all memberships', () => {
+			const options = [
+				opt({ statementId: 'o1', statement: 'T1', joined: [user('u1'), user('u2')] }),
+				opt({ statementId: 'o2', statement: 'T2', organizers: [user('u1')] }),
+				opt({ statementId: 'o3', statement: 'T3', joined: [user('u2')] }),
+			];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([
+				{ optionId: 'o1', optionTitle: 'T1', role: 'activist' },
+				{ optionId: 'o2', optionTitle: 'T2', role: 'organizer' },
+			]);
+		});
+
+		it('skips cluster docs (no real membership state)', () => {
+			const options = [
+				opt({ statementId: 'cluster1', isCluster: true, joined: [user('u1')] }),
+				opt({ statementId: 'o2', joined: [user('u1')] }),
+			];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([
+				{ optionId: 'o2', optionTitle: 'Default Option', role: 'activist' },
+			]);
+		});
+
+		it('skips hidden integrated-cluster members', () => {
+			const options = [
+				opt({
+					statementId: 'int1',
+					joined: [user('u1')],
+					// integratedInto isn't on the shared Statement type — cast on
+					// the consumer side mirrors the trigger code.
+					...({ integratedInto: 'cluster-x' } as Partial<Statement>),
+				}),
+				opt({ statementId: 'o2', joined: [user('u1')] }),
+			];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([
+				{ optionId: 'o2', optionTitle: 'Default Option', role: 'activist' },
+			]);
+		});
+
+		it('handles undefined joined/organizers arrays defensively', () => {
+			const options = [
+				opt({ statementId: 'o1', joined: undefined as unknown as Creator[] }),
+				opt({ statementId: 'o2', organizers: undefined as unknown as Creator[] }),
+			];
+			expect(findUserMembershipsInOptions(options, 'u1')).toEqual([]);
+		});
+	});
+
+	describe('buildLiveMemberKeys', () => {
+		it('emits both id-keyed and title-keyed tuples per membership', () => {
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(keys.has('u1|activist|o1')).toBe(true);
+			expect(keys.has('u1|activist|T1')).toBe(true);
+			expect(keys.size).toBe(2);
+		});
+
+		it('skips empty optionId and empty optionTitle independently', () => {
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'organizer', optionId: 'o1', optionTitle: '' },
+				{ userId: 'u2', role: 'activist', optionId: '', optionTitle: 'T2' },
+			]);
+			expect(keys.has('u1|organizer|o1')).toBe(true);
+			expect(keys.has('u2|activist|T2')).toBe(true);
+			expect(keys.size).toBe(2);
+		});
+
+		it('skips entries with no userId', () => {
+			const keys = buildLiveMemberKeys([
+				{ userId: '', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(keys.size).toBe(0);
+		});
+
+		it('deduplicates identical memberships', () => {
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(keys.size).toBe(2);
+		});
+	});
+
+	describe('findOrphanRowIndices', () => {
+		const v2Header = ['name', 'userId', 'displayName', 'role', 'optionId', 'optionTitle'];
+
+		it('returns empty for header-only or empty sheets', () => {
+			expect(findOrphanRowIndices([], new Set())).toEqual([]);
+			expect(findOrphanRowIndices([v2Header], new Set())).toEqual([]);
+		});
+
+		it('refuses to operate on sheets with no userId column', () => {
+			const rows = [
+				['col1', 'col2'],
+				['a', 'b'],
+			];
+			expect(findOrphanRowIndices(rows, new Set(['anything|activist|o1']))).toEqual([]);
+		});
+
+		it('refuses to operate when neither option column exists', () => {
+			const rows = [
+				['userId', 'role'],
+				['u1', 'activist'],
+			];
+			expect(findOrphanRowIndices(rows, new Set(['u1|activist|o1']))).toEqual([]);
+		});
+
+		it('keeps rows that match by optionId in v2 sheets', () => {
+			const rows = [v2Header, ['Alice', 'u1', 'Alice', 'activist', 'o1', 'T1']];
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(findOrphanRowIndices(rows, keys)).toEqual([]);
+		});
+
+		it('keeps rows that match by optionTitle in v1 sheets (no optionId column)', () => {
+			const v1Header = ['name', 'userId', 'displayName', 'role', 'optionTitle'];
+			const rows = [v1Header, ['Alice', 'u1', 'Alice', 'activist', 'T1']];
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(findOrphanRowIndices(rows, keys)).toEqual([]);
+		});
+
+		it('flags rows with no matching membership as orphans', () => {
+			const rows = [
+				v2Header,
+				['Alice', 'u1', 'Alice', 'activist', 'o1', 'T1'], // live → keep
+				['Bob', 'u2', 'Bob', 'activist', 'o2', 'T2'], // not in liveKeys → orphan
+				['Carol', 'u3', 'Carol', 'organizer', 'o3', 'T3'], // not in liveKeys → orphan
+			];
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(findOrphanRowIndices(rows, keys)).toEqual([2, 3]);
+		});
+
+		it('catches user-left case (uid still in sheet, no live membership)', () => {
+			const rows = [v2Header, ['Alice', 'u1', 'Alice', 'activist', 'o1', 'T1']];
+			expect(findOrphanRowIndices(rows, new Set())).toEqual([1]);
+		});
+
+		it('catches role-change case (sheet has activist, live has organizer)', () => {
+			const rows = [v2Header, ['Alice', 'u1', 'Alice', 'activist', 'o1', 'T1']];
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'organizer', optionId: 'o1', optionTitle: 'T1' },
+			]);
+			expect(findOrphanRowIndices(rows, keys)).toEqual([1]);
+		});
+
+		it('catches option-change case (sheet has o1, live has o2)', () => {
+			const rows = [v2Header, ['Alice', 'u1', 'Alice', 'activist', 'o1', 'T1']];
+			const keys = buildLiveMemberKeys([
+				{ userId: 'u1', role: 'activist', optionId: 'o2', optionTitle: 'T2' },
+			]);
+			expect(findOrphanRowIndices(rows, keys)).toEqual([1]);
+		});
+
+		it('skips rows with empty userId (manual notes / blank rows)', () => {
+			const rows = [v2Header, ['Alice', '', '', '', '', ''], ['note', '', 'free text', '', '', '']];
+			expect(findOrphanRowIndices(rows, new Set())).toEqual([]);
+		});
+	});
+
+	describe('planV1ToV2Migration', () => {
+		const v1Header = ['name', 'userId', 'displayName', 'role', 'optionTitle'];
+
+		it('is a no-op on empty sheets', () => {
+			const plan = planV1ToV2Migration([], new Map());
+			expect(plan.needsMigration).toBe(false);
+		});
+
+		it('is a no-op when the header already has optionId (already v2)', () => {
+			const rows = [
+				['userId', 'displayName', 'role', 'optionId', 'optionTitle'],
+				['u1', 'Alice', 'activist', 'o1', 'T1'],
+			];
+			const plan = planV1ToV2Migration(rows, new Map([['T1', 'o1']]));
+			expect(plan.needsMigration).toBe(false);
+		});
+
+		it('plans appending optionId column at the right edge', () => {
+			const rows = [v1Header, ['Alice', 'u1', 'Alice', 'activist', 'T1']];
+			const plan = planV1ToV2Migration(rows, new Map([['T1', 'o1']]));
+			expect(plan.needsMigration).toBe(true);
+			expect(plan.newHeader).toEqual([...v1Header, 'optionId']);
+			expect(plan.optionIdColumnIndex).toBe(5);
+			expect(plan.optionIdsByRow).toEqual(['o1']);
+		});
+
+		it('resolves multiple rows against the title map', () => {
+			const rows = [
+				v1Header,
+				['Alice', 'u1', 'Alice', 'activist', 'T1'],
+				['Bob', 'u2', 'Bob', 'organizer', 'T2'],
+				['Carol', 'u3', 'Carol', 'activist', 'T1'],
+			];
+			const plan = planV1ToV2Migration(
+				rows,
+				new Map([
+					['T1', 'o1'],
+					['T2', 'o2'],
+				]),
+			);
+			expect(plan.optionIdsByRow).toEqual(['o1', 'o2', 'o1']);
+		});
+
+		it('leaves null for rows whose title is not in the map (option deleted/renamed)', () => {
+			const rows = [
+				v1Header,
+				['Alice', 'u1', 'Alice', 'activist', 'T1'],
+				['Bob', 'u2', 'Bob', 'activist', 'T-gone'],
+			];
+			const plan = planV1ToV2Migration(rows, new Map([['T1', 'o1']]));
+			expect(plan.optionIdsByRow).toEqual(['o1', null]);
+		});
+
+		it('leaves null for rows with empty optionTitle', () => {
+			const rows = [v1Header, ['Alice', 'u1', 'Alice', 'activist', '']];
+			const plan = planV1ToV2Migration(rows, new Map([['T1', 'o1']]));
+			expect(plan.optionIdsByRow).toEqual([null]);
+		});
+
+		it('handles sheets with no optionTitle column (every row null)', () => {
+			const rows = [
+				['userId', 'displayName', 'role'],
+				['u1', 'Alice', 'activist'],
+				['u2', 'Bob', 'organizer'],
+			];
+			const plan = planV1ToV2Migration(rows, new Map([['T1', 'o1']]));
+			expect(plan.needsMigration).toBe(true);
+			expect(plan.optionIdsByRow).toEqual([null, null]);
+		});
+
+		it('trims whitespace when matching titles', () => {
+			const rows = [v1Header, ['Alice', 'u1', 'Alice', 'activist', '  T1  ']];
+			const plan = planV1ToV2Migration(rows, new Map([['T1', 'o1']]));
+			expect(plan.optionIdsByRow).toEqual(['o1']);
+		});
+	});
+
+	describe('columnIndexToA1', () => {
+		it('maps single-letter columns', () => {
+			expect(columnIndexToA1(0)).toBe('A');
+			expect(columnIndexToA1(1)).toBe('B');
+			expect(columnIndexToA1(25)).toBe('Z');
+		});
+
+		it('handles the Z → AA boundary correctly (the easy bug)', () => {
+			expect(columnIndexToA1(26)).toBe('AA');
+			expect(columnIndexToA1(27)).toBe('AB');
+			expect(columnIndexToA1(51)).toBe('AZ');
+			expect(columnIndexToA1(52)).toBe('BA');
+		});
+
+		it('handles further wraps', () => {
+			expect(columnIndexToA1(701)).toBe('ZZ');
+			expect(columnIndexToA1(702)).toBe('AAA');
+		});
+
+		it('returns empty string for invalid inputs (defensive)', () => {
+			expect(columnIndexToA1(-1)).toBe('');
+			expect(columnIndexToA1(1.5)).toBe('');
+			expect(columnIndexToA1(NaN)).toBe('');
 		});
 	});
 });

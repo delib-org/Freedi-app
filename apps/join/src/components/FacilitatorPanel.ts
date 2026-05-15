@@ -1246,9 +1246,16 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 															appended: reconcileResult.appended,
 															present: reconcileResult.skippedAlreadyPresent,
 															noSubmission: reconcileResult.skippedNoSubmission,
+															removed: reconcileResult.removed,
 															errors: reconcileResult.errors,
 														}),
 													),
+													reconcileResult.orphanRemovalSkippedV1
+														? m(
+																'.facilitator-panel__joinform-sheet-hint',
+																t('facilitator.reconcileSheet.v1_orphan_skipped'),
+															)
+														: null,
 												],
 											)
 										: null,

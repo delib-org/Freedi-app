@@ -106,11 +106,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'Sync sheet now',
 		'facilitator.reconcileSheet.in_progress': 'Syncing…',
 		'facilitator.reconcileSheet.help':
-			'Compares the Google Sheet with the actual joined/organizer lists and appends any missing rows. Safe to run anytime — never deletes or duplicates.',
+			'Compares the Google Sheet with the actual joined/organizer lists, appends missing rows, and removes rows for users who are no longer joined. Safe to run anytime.',
 		'facilitator.reconcileSheet.done':
-			'Sync complete: {{appended}} row(s) appended, {{present}} already present, {{noSubmission}} member(s) without a form submission, {{errors}} error(s).',
+			'Sync complete: {{appended}} added, {{present}} already in sheet, {{removed}} orphan(s) removed, {{noSubmission}} member(s) without a form submission, {{errors}} error(s).',
 		'facilitator.reconcileSheet.error':
 			'Sync failed. Please try again or check the console for details.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Orphan removal skipped — this sheet uses the legacy schema (no optionId column). Migration runs automatically on the next member change.',
 		'admin.suggestion_badge': 'Organizers',
 		'admin.suggestions_section': 'Organizers suggestions',
 		'admin.suggestion_placeholder': 'Describe the suggestion',
@@ -515,11 +517,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'סנכרון הגיליון',
 		'facilitator.reconcileSheet.in_progress': 'מסנכרן…',
 		'facilitator.reconcileSheet.help':
-			'משווה את גיליון Google עם רשימות הפעילים/המארגנים בפועל ומוסיף שורות חסרות. ניתן להריץ בכל עת — לא מוחק ולא משכפל.',
+			'משווה את גיליון Google עם רשימות הפעילים/המארגנים בפועל, מוסיף שורות חסרות ומסיר שורות של משתמשים שלא מצורפים יותר. ניתן להריץ בכל עת.',
 		'facilitator.reconcileSheet.done':
-			'הסנכרון הושלם: נוספו {{appended}} שורות, {{present}} כבר היו בגיליון, {{noSubmission}} משתתפים ללא טופס, {{errors}} שגיאות.',
+			'הסנכרון הושלם: נוספו {{appended}}, {{present}} כבר היו בגיליון, הוסרו {{removed}} שורות יתומות, {{noSubmission}} משתתפים ללא טופס, {{errors}} שגיאות.',
 		'facilitator.reconcileSheet.error':
 			'הסנכרון נכשל. נסו שוב או בדקו את הקונסול לפרטים.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'הסרת שורות יתומות דולגה — הגיליון בסכמה ישנה (ללא עמודת optionId). המעבר לסכמה חדשה יקרה אוטומטית בשינוי החברות הבא.',
 		'admin.suggestion_badge': 'הצעת מארגן/ת',
 		'admin.suggestions_section': 'הצעות לעיון חוזר של הציבור',
 		'admin.suggestion_placeholder': 'תארו את ההצעה',
@@ -905,11 +909,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'مزامنة الجدول الآن',
 		'facilitator.reconcileSheet.in_progress': 'جارٍ المزامنة…',
 		'facilitator.reconcileSheet.help':
-			'يقارن جدول Google مع قوائم النشطاء/المنظمين الفعلية ويضيف الصفوف الناقصة. آمن للتشغيل في أي وقت — لا يحذف ولا يكرّر.',
+			'يقارن جدول Google مع قوائم النشطاء/المنظمين الفعلية، ويضيف الصفوف الناقصة ويزيل صفوف المستخدمين الذين لم يعودوا منضمين. آمن للتشغيل في أي وقت.',
 		'facilitator.reconcileSheet.done':
-			'اكتملت المزامنة: تمت إضافة {{appended}} صفوف، {{present}} موجودة بالفعل، {{noSubmission}} عضو بدون نموذج، {{errors}} أخطاء.',
+			'اكتملت المزامنة: تمت إضافة {{appended}}، {{present}} موجودة بالفعل، أُزيل {{removed}} صف يتيم، {{noSubmission}} عضو بدون نموذج، {{errors}} أخطاء.',
 		'facilitator.reconcileSheet.error':
 			'فشلت المزامنة. يرجى المحاولة مرة أخرى أو مراجعة وحدة التحكم للحصول على التفاصيل.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'تم تخطّي إزالة الصفوف اليتيمة — يستخدم هذا الجدول المخطّط القديم (بدون عمود optionId). ستتم الترقية تلقائيًا عند تغيير العضوية التالي.',
 		'admin.suggestion_badge': 'اقتراح المنظم',
 		'admin.suggestions_section': 'اقتراحات المنظمين',
 		'admin.suggestion_placeholder': 'صف الاقتراح',
@@ -1243,11 +1249,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'Sheet jetzt synchronisieren',
 		'facilitator.reconcileSheet.in_progress': 'Synchronisieren…',
 		'facilitator.reconcileSheet.help':
-			'Vergleicht das Google-Sheet mit den tatsächlichen Aktivisten-/Organisator-Listen und ergänzt fehlende Zeilen. Jederzeit sicher ausführbar — löscht und dupliziert nicht.',
+			'Vergleicht das Google-Sheet mit den tatsächlichen Aktivisten-/Organisator-Listen, ergänzt fehlende Zeilen und entfernt Zeilen für Personen, die nicht mehr beigetreten sind. Jederzeit sicher ausführbar.',
 		'facilitator.reconcileSheet.done':
-			'Synchronisierung abgeschlossen: {{appended}} Zeilen hinzugefügt, {{present}} bereits vorhanden, {{noSubmission}} Mitglieder ohne Formular, {{errors}} Fehler.',
+			'Synchronisierung abgeschlossen: {{appended}} hinzugefügt, {{present}} bereits im Sheet, {{removed}} verwaiste Zeile(n) entfernt, {{noSubmission}} Mitglieder ohne Formular, {{errors}} Fehler.',
 		'facilitator.reconcileSheet.error':
 			'Synchronisierung fehlgeschlagen. Bitte erneut versuchen oder Konsole prüfen.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Entfernen verwaister Zeilen übersprungen — dieses Sheet verwendet das alte Schema (keine optionId-Spalte). Die Migration läuft automatisch bei der nächsten Mitgliederänderung.',
 		'admin.suggestion_badge': 'Organisatorvorschlag',
 		'admin.suggestions_section': 'Vorschläge der Organisatoren',
 		'admin.suggestion_placeholder': 'Beschreiben Sie den Vorschlag',
@@ -1598,11 +1606,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'Sincronizar el sheet ahora',
 		'facilitator.reconcileSheet.in_progress': 'Sincronizando…',
 		'facilitator.reconcileSheet.help':
-			'Compara el Google Sheet con las listas reales de activistas/organizadores y agrega las filas faltantes. Se puede ejecutar en cualquier momento — nunca borra ni duplica.',
+			'Compara el Google Sheet con las listas reales de activistas/organizadores, agrega las filas faltantes y elimina filas de quienes ya no están unidos. Se puede ejecutar en cualquier momento.',
 		'facilitator.reconcileSheet.done':
-			'Sincronización completa: {{appended}} filas agregadas, {{present}} ya presentes, {{noSubmission}} miembros sin formulario, {{errors}} errores.',
+			'Sincronización completa: {{appended}} agregadas, {{present}} ya presentes, {{removed}} fila(s) huérfana(s) eliminada(s), {{noSubmission}} miembros sin formulario, {{errors}} errores.',
 		'facilitator.reconcileSheet.error':
 			'Sincronización fallida. Inténtalo de nuevo o revisa la consola.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Eliminación de filas huérfanas omitida — este sheet usa el esquema antiguo (sin columna optionId). La migración se ejecutará automáticamente con el próximo cambio de membresía.',
 		'admin.suggestion_badge': 'Sugerencia del organizador',
 		'admin.suggestions_section': 'Sugerencias de los organizadores',
 		'admin.suggestion_placeholder': 'Describe la sugerencia',
@@ -1947,11 +1957,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'Sheet nu synchroniseren',
 		'facilitator.reconcileSheet.in_progress': 'Synchroniseren…',
 		'facilitator.reconcileSheet.help':
-			'Vergelijkt het Google Sheet met de werkelijke activisten-/organisatorenlijsten en voegt ontbrekende rijen toe. Altijd veilig uit te voeren — verwijdert of dupliceert nooit.',
+			'Vergelijkt het Google Sheet met de werkelijke activisten-/organisatorenlijsten, voegt ontbrekende rijen toe en verwijdert rijen voor gebruikers die niet meer zijn aangesloten. Altijd veilig uit te voeren.',
 		'facilitator.reconcileSheet.done':
-			'Synchronisatie voltooid: {{appended}} rijen toegevoegd, {{present}} al aanwezig, {{noSubmission}} leden zonder formulier, {{errors}} fouten.',
+			'Synchronisatie voltooid: {{appended}} toegevoegd, {{present}} al aanwezig, {{removed}} weesrij(en) verwijderd, {{noSubmission}} leden zonder formulier, {{errors}} fouten.',
 		'facilitator.reconcileSheet.error':
 			'Synchronisatie mislukt. Probeer opnieuw of controleer de console.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Verwijderen van weesrijen overgeslagen — dit sheet gebruikt het oude schema (geen optionId-kolom). Migratie vindt automatisch plaats bij de volgende lidmaatschapswijziging.',
 		'admin.suggestion_badge': 'Organisatorvoorstel',
 		'admin.suggestions_section': 'Voorstellen van organisatoren',
 		'admin.suggestion_placeholder': 'Beschrijf het voorstel',
@@ -2290,11 +2302,13 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.reconcileSheet': 'هم‌سان‌سازی Sheet',
 		'facilitator.reconcileSheet.in_progress': 'در حال هم‌سان‌سازی…',
 		'facilitator.reconcileSheet.help':
-			'گوگل شیت را با فهرست‌های واقعی فعالان/سازمان‌دهندگان مقایسه می‌کند و ردیف‌های گم‌شده را اضافه می‌کند. اجرای آن همیشه ایمن است — هرگز حذف یا تکراری نمی‌کند.',
+			'گوگل شیت را با فهرست‌های واقعی فعالان/سازمان‌دهندگان مقایسه می‌کند، ردیف‌های گم‌شده را می‌افزاید و ردیف‌های کاربرانی را که دیگر عضو نیستند حذف می‌کند. اجرای آن همیشه ایمن است.',
 		'facilitator.reconcileSheet.done':
-			'هم‌سان‌سازی کامل شد: {{appended}} ردیف افزوده شد، {{present}} قبلاً موجود بود، {{noSubmission}} عضو بدون فرم، {{errors}} خطا.',
+			'هم‌سان‌سازی کامل شد: {{appended}} افزوده شد، {{present}} قبلاً موجود بود، {{removed}} ردیف بی‌مالک حذف شد، {{noSubmission}} عضو بدون فرم، {{errors}} خطا.',
 		'facilitator.reconcileSheet.error':
 			'هم‌سان‌سازی ناموفق بود. دوباره تلاش کنید یا کنسول را بررسی کنید.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'حذف ردیف‌های بی‌مالک رد شد — این شیت از طرح‌واره قدیمی استفاده می‌کند (بدون ستون optionId). مهاجرت به طور خودکار در تغییر عضویت بعدی انجام می‌شود.',
 		'admin.suggestion_badge': 'پیشنهاد سازمان‌دهنده',
 		'admin.suggestions_section': 'پیشنهادهای سازمان‌دهندگان',
 		'admin.suggestion_placeholder': 'پیشنهاد را توصیف کنید',

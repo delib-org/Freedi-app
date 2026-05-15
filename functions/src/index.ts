@@ -209,6 +209,7 @@ import {
 	fn_backupOptionMembership,
 } from './engagement/joinForm/fn_backupJoinRegistration';
 import { fn_reconcileJoinSheet } from './engagement/joinForm/fn_reconcileJoinSheet';
+import { fn_syncSubmissionToSheet } from './engagement/joinForm/fn_syncSubmissionToSheet';
 import { fn_joinOption } from './engagement/joinForm/fn_joinOption';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
 import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
@@ -875,6 +876,7 @@ exports.fn_removeUserFromSheet = fn_removeUserFromSheet;
 exports.fn_backupJoinFormSubmission = fn_backupJoinFormSubmission;
 exports.fn_backupOptionMembership = fn_backupOptionMembership;
 exports.fn_reconcileJoinSheet = fn_reconcileJoinSheet;
+exports.fn_syncSubmissionToSheet = fn_syncSubmissionToSheet;
 exports.fn_joinOption = fn_joinOption;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 exports.testSheetAccess = testSheetAccess;

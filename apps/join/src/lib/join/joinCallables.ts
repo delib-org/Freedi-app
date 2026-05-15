@@ -154,6 +154,21 @@ export interface ReconcileJoinSheetResult {
 	appended: number;
 	skippedAlreadyPresent: number;
 	skippedNoSubmission: number;
+	/**
+	 * Number of sheet rows removed in the orphan-cleanup pass. Orphans are
+	 * rows whose (userId, role, option) tuple no longer corresponds to any
+	 * live membership — typically users who left an option while the sync
+	 * trigger was unavailable.
+	 */
+	removed: number;
+	/**
+	 * True when orphan removal was skipped because the sheet still uses the
+	 * v1 (no `optionId` column) schema. On v1 the orphan check matches by
+	 * title alone, which is ambiguous if option titles were renamed after
+	 * some users joined — deleting under that ambiguity could remove valid
+	 * rows. Migrate to v2 to enable cleanup.
+	 */
+	orphanRemovalSkippedV1: boolean;
 	errors: number;
 	message: string;
 }
