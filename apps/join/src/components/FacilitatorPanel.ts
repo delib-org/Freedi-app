@@ -30,6 +30,8 @@ import {
 	unsubscribeQuestionDelegates,
 	getOrganizerSuggestions,
 	resetQuestionJoining,
+	reconcileJoinSheet,
+	ReconcileJoinSheetResult,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
@@ -173,6 +175,10 @@ function close(): void {
 	// reads while the panel is dismissed).
 	delegatesEditorOpen = false;
 	unsubscribeQuestionDelegates();
+	// Clear the reconcile summary so the next time the panel opens we don't
+	// flash a stale "x appended" line from a previous session.
+	reconcileResult = null;
+	reconcileError = null;
 	m.redraw();
 }
 
@@ -742,6 +748,16 @@ let joinFormEditorOpen = false;
 let sheetCheckState: 'idle' | 'checking' | 'ok' | 'fail' = 'idle';
 let sheetCheckResult: TestSheetAccessResult | null = null;
 
+// Reconcile-sheet button state. `reconcileInProgress` disables the button +
+// swaps its label while the callable is running; `reconcileResult` holds the
+// last summary so the panel can render a small "x appended / y already present"
+// line beneath the button. We deliberately keep `reconcileResult` across
+// re-renders so the facilitator sees what happened — cleared only when the
+// panel closes (see `closePanel`) or when a new reconcile starts.
+let reconcileInProgress = false;
+let reconcileResult: ReconcileJoinSheetResult | null = null;
+let reconcileError: string | null = null;
+
 function buildDefaultJoinFields(): JoinFormField[] {
 	return [
 		{ id: 'name', label: t('facilitator.joinForm.default.name'), type: 'text', required: true },
@@ -851,6 +867,28 @@ async function runSheetCheck(sheetUrl: string): Promise<void> {
 		sheetCheckResult = { ok: false, serviceAccountEmail: '', error: 'Request failed' };
 	}
 	m.redraw();
+}
+
+/** Invokes `fn_reconcileJoinSheet` for the current question and stashes the
+ *  summary on module state so the panel can render it next to the button.
+ *  Idempotent on the server side — running it twice in a row simply yields
+ *  `skippedAlreadyPresent` for the rows the first call appended. */
+async function runReconcileSheet(question: Statement): Promise<void> {
+	if (reconcileInProgress) return;
+	reconcileInProgress = true;
+	reconcileResult = null;
+	reconcileError = null;
+	m.redraw();
+	try {
+		reconcileResult = await reconcileJoinSheet(question.statementId);
+	} catch (err) {
+		console.error('[FacilitatorPanel] reconcileJoinSheet failed:', err);
+		reconcileError =
+			err instanceof Error && err.message ? err.message : t('facilitator.reconcileSheet.error');
+	} finally {
+		reconcileInProgress = false;
+		m.redraw();
+	}
 }
 
 async function updateJoinFormField(
@@ -1162,6 +1200,66 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 								: m('.facilitator-panel__joinform-sheet-hint', [
 										m('span', t('facilitator.joinForm.sheetHint')),
 									]),
+						// Reconcile-sheet row. Idempotently backfills the sheet
+						// from `joined`/`organizers` arrays. Hidden until a real
+						// sheetUrl is configured. The whole facilitator panel is
+						// admin-only, and the callable re-verifies admin perms
+						// server-side, so we don't gate again here.
+						config.sheetUrl
+							? m('.facilitator-panel__joinform-section', [
+									m('.facilitator-panel__row-main', [
+										m(
+											'button.btn.btn--small.facilitator-panel__action',
+											{
+												type: 'button',
+												disabled: reconcileInProgress,
+												onclick: () => {
+													void runReconcileSheet(question);
+												},
+											},
+											[
+												m(
+													'span.facilitator-panel__action-icon',
+													{ 'aria-hidden': 'true' },
+													'🔄',
+												),
+												m(
+													'span.facilitator-panel__action-label',
+													reconcileInProgress
+														? t('facilitator.reconcileSheet.in_progress')
+														: t('facilitator.reconcileSheet'),
+												),
+											],
+										),
+									]),
+									m(
+										'.facilitator-panel__row-help',
+										t('facilitator.reconcileSheet.help'),
+									),
+									reconcileResult
+										? m(
+												`.facilitator-panel__joinform-check-status${reconcileResult.errors === 0 ? '.facilitator-panel__joinform-check-status--ok' : '.facilitator-panel__joinform-check-status--fail'}`,
+												[
+													m(
+														'span',
+														t('facilitator.reconcileSheet.done', {
+															appended: reconcileResult.appended,
+															present: reconcileResult.skippedAlreadyPresent,
+															noSubmission: reconcileResult.skippedNoSubmission,
+															errors: reconcileResult.errors,
+														}),
+													),
+												],
+											)
+										: null,
+									reconcileError
+										? m(
+												'.facilitator-panel__joinform-check-status.facilitator-panel__joinform-check-status--fail',
+												[m('span', reconcileError)],
+											)
+										: null,
+								])
+							: null,
 					])
 				: null,
 			m('.facilitator-panel__joinform-section', [

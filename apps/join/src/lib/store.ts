@@ -1617,10 +1617,12 @@ import {
 	type ToggleJoiningOptions as _ToggleJoiningOptions,
 	type TestSheetAccessResult as _TestSheetAccessResult,
 	type ResetQuestionJoiningResult as _ResetQuestionJoiningResult,
+	type ReconcileJoinSheetResult as _ReconcileJoinSheetResult,
 	toggleJoining as _toggleJoining,
 	testSheetAccess as _testSheetAccess,
 	resetOptionJoining as _resetOptionJoining,
 	resetQuestionJoining as _resetQuestionJoining,
+	reconcileJoinSheet as _reconcileJoinSheet,
 	getUserCommittedOptionsFrom,
 } from './join/joinCallables';
 
@@ -1628,10 +1630,12 @@ export type ToggleJoiningResult = _ToggleJoiningResult;
 export type ToggleJoiningOptions = _ToggleJoiningOptions;
 export type TestSheetAccessResult = _TestSheetAccessResult;
 export type ResetQuestionJoiningResult = _ResetQuestionJoiningResult;
+export type ReconcileJoinSheetResult = _ReconcileJoinSheetResult;
 export const toggleJoining = _toggleJoining;
 export const testSheetAccess = _testSheetAccess;
 export const resetOptionJoining = _resetOptionJoining;
 export const resetQuestionJoining = _resetQuestionJoining;
+export const reconcileJoinSheet = _reconcileJoinSheet;
 
 /** All visible options under the current question where the user is a
  *  member in either role (joined or organizers). Wraps the pure helper

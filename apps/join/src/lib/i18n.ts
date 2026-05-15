@@ -103,6 +103,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• Form submissions could not be deleted. Deploy the latest Firestore rules: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Some Google Sheet rows could not be removed. Check the fn_removeUserFromSheet CORS allowlist or sheet credentials.',
+		'facilitator.reconcileSheet': 'Sync sheet now',
+		'facilitator.reconcileSheet.in_progress': 'Syncing…',
+		'facilitator.reconcileSheet.help':
+			'Compares the Google Sheet with the actual joined/organizer lists and appends any missing rows. Safe to run anytime — never deletes or duplicates.',
+		'facilitator.reconcileSheet.done':
+			'Sync complete: {{appended}} row(s) appended, {{present}} already present, {{noSubmission}} member(s) without a form submission, {{errors}} error(s).',
+		'facilitator.reconcileSheet.error':
+			'Sync failed. Please try again or check the console for details.',
 		'admin.suggestion_badge': 'Organizers',
 		'admin.suggestions_section': 'Organizers suggestions',
 		'admin.suggestion_placeholder': 'Describe the suggestion',
@@ -504,6 +512,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• הטפסים לא נמחקו. יש לפרוס את חוקי Firestore העדכניים: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• חלק מהשורות בגיליון Google לא הוסרו. בדקו את רשימת ההיתרים ב-CORS של fn_removeUserFromSheet או את אישור הגיליון.',
+		'facilitator.reconcileSheet': 'סנכרון הגיליון',
+		'facilitator.reconcileSheet.in_progress': 'מסנכרן…',
+		'facilitator.reconcileSheet.help':
+			'משווה את גיליון Google עם רשימות הפעילים/המארגנים בפועל ומוסיף שורות חסרות. ניתן להריץ בכל עת — לא מוחק ולא משכפל.',
+		'facilitator.reconcileSheet.done':
+			'הסנכרון הושלם: נוספו {{appended}} שורות, {{present}} כבר היו בגיליון, {{noSubmission}} משתתפים ללא טופס, {{errors}} שגיאות.',
+		'facilitator.reconcileSheet.error':
+			'הסנכרון נכשל. נסו שוב או בדקו את הקונסול לפרטים.',
 		'admin.suggestion_badge': 'הצעת מארגן/ת',
 		'admin.suggestions_section': 'הצעות לעיון חוזר של הציבור',
 		'admin.suggestion_placeholder': 'תארו את ההצעה',
@@ -886,6 +902,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• تعذر حذف النماذج. انشر قواعد Firestore الأحدث: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• تعذر إزالة بعض صفوف Google Sheet. تحقق من قائمة CORS الخاصة بـ fn_removeUserFromSheet أو بيانات اعتماد الجدول.',
+		'facilitator.reconcileSheet': 'مزامنة الجدول الآن',
+		'facilitator.reconcileSheet.in_progress': 'جارٍ المزامنة…',
+		'facilitator.reconcileSheet.help':
+			'يقارن جدول Google مع قوائم النشطاء/المنظمين الفعلية ويضيف الصفوف الناقصة. آمن للتشغيل في أي وقت — لا يحذف ولا يكرّر.',
+		'facilitator.reconcileSheet.done':
+			'اكتملت المزامنة: تمت إضافة {{appended}} صفوف، {{present}} موجودة بالفعل، {{noSubmission}} عضو بدون نموذج، {{errors}} أخطاء.',
+		'facilitator.reconcileSheet.error':
+			'فشلت المزامنة. يرجى المحاولة مرة أخرى أو مراجعة وحدة التحكم للحصول على التفاصيل.',
 		'admin.suggestion_badge': 'اقتراح المنظم',
 		'admin.suggestions_section': 'اقتراحات المنظمين',
 		'admin.suggestion_placeholder': 'صف الاقتراح',
@@ -1216,6 +1240,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• Formularantworten konnten nicht gelöscht werden. Aktuelle Firestore-Regeln deployen: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Einige Google-Sheet-Zeilen konnten nicht entfernt werden. CORS-Allowlist von fn_removeUserFromSheet oder Sheet-Anmeldedaten prüfen.',
+		'facilitator.reconcileSheet': 'Sheet jetzt synchronisieren',
+		'facilitator.reconcileSheet.in_progress': 'Synchronisieren…',
+		'facilitator.reconcileSheet.help':
+			'Vergleicht das Google-Sheet mit den tatsächlichen Aktivisten-/Organisator-Listen und ergänzt fehlende Zeilen. Jederzeit sicher ausführbar — löscht und dupliziert nicht.',
+		'facilitator.reconcileSheet.done':
+			'Synchronisierung abgeschlossen: {{appended}} Zeilen hinzugefügt, {{present}} bereits vorhanden, {{noSubmission}} Mitglieder ohne Formular, {{errors}} Fehler.',
+		'facilitator.reconcileSheet.error':
+			'Synchronisierung fehlgeschlagen. Bitte erneut versuchen oder Konsole prüfen.',
 		'admin.suggestion_badge': 'Organisatorvorschlag',
 		'admin.suggestions_section': 'Vorschläge der Organisatoren',
 		'admin.suggestion_placeholder': 'Beschreiben Sie den Vorschlag',
@@ -1563,6 +1595,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• No se pudieron eliminar los formularios. Despliega las reglas de Firestore: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Algunas filas de Google Sheet no se pudieron quitar. Revisa la lista CORS de fn_removeUserFromSheet o las credenciales del sheet.',
+		'facilitator.reconcileSheet': 'Sincronizar el sheet ahora',
+		'facilitator.reconcileSheet.in_progress': 'Sincronizando…',
+		'facilitator.reconcileSheet.help':
+			'Compara el Google Sheet con las listas reales de activistas/organizadores y agrega las filas faltantes. Se puede ejecutar en cualquier momento — nunca borra ni duplica.',
+		'facilitator.reconcileSheet.done':
+			'Sincronización completa: {{appended}} filas agregadas, {{present}} ya presentes, {{noSubmission}} miembros sin formulario, {{errors}} errores.',
+		'facilitator.reconcileSheet.error':
+			'Sincronización fallida. Inténtalo de nuevo o revisa la consola.',
 		'admin.suggestion_badge': 'Sugerencia del organizador',
 		'admin.suggestions_section': 'Sugerencias de los organizadores',
 		'admin.suggestion_placeholder': 'Describe la sugerencia',
@@ -1904,6 +1944,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• Formulierinzendingen konden niet worden verwijderd. Deploy de nieuwste Firestore-regels: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Sommige Google Sheet-rijen konden niet worden verwijderd. Controleer de CORS-allowlist van fn_removeUserFromSheet of de sheet-credentials.',
+		'facilitator.reconcileSheet': 'Sheet nu synchroniseren',
+		'facilitator.reconcileSheet.in_progress': 'Synchroniseren…',
+		'facilitator.reconcileSheet.help':
+			'Vergelijkt het Google Sheet met de werkelijke activisten-/organisatorenlijsten en voegt ontbrekende rijen toe. Altijd veilig uit te voeren — verwijdert of dupliceert nooit.',
+		'facilitator.reconcileSheet.done':
+			'Synchronisatie voltooid: {{appended}} rijen toegevoegd, {{present}} al aanwezig, {{noSubmission}} leden zonder formulier, {{errors}} fouten.',
+		'facilitator.reconcileSheet.error':
+			'Synchronisatie mislukt. Probeer opnieuw of controleer de console.',
 		'admin.suggestion_badge': 'Organisatorvoorstel',
 		'admin.suggestions_section': 'Voorstellen van organisatoren',
 		'admin.suggestion_placeholder': 'Beschrijf het voorstel',
@@ -2239,6 +2287,14 @@ const translations: Record<string, Record<string, string>> = {
 			'• فرم‌های پیوستن حذف نشدند. قوانین Firestore را به‌روزرسانی کنید: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• برخی ردیف‌های Google Sheet حذف نشدند. فهرست CORS تابع fn_removeUserFromSheet یا اعتبارنامه Sheet را بررسی کنید.',
+		'facilitator.reconcileSheet': 'هم‌سان‌سازی Sheet',
+		'facilitator.reconcileSheet.in_progress': 'در حال هم‌سان‌سازی…',
+		'facilitator.reconcileSheet.help':
+			'گوگل شیت را با فهرست‌های واقعی فعالان/سازمان‌دهندگان مقایسه می‌کند و ردیف‌های گم‌شده را اضافه می‌کند. اجرای آن همیشه ایمن است — هرگز حذف یا تکراری نمی‌کند.',
+		'facilitator.reconcileSheet.done':
+			'هم‌سان‌سازی کامل شد: {{appended}} ردیف افزوده شد، {{present}} قبلاً موجود بود، {{noSubmission}} عضو بدون فرم، {{errors}} خطا.',
+		'facilitator.reconcileSheet.error':
+			'هم‌سان‌سازی ناموفق بود. دوباره تلاش کنید یا کنسول را بررسی کنید.',
 		'admin.suggestion_badge': 'پیشنهاد سازمان‌دهنده',
 		'admin.suggestions_section': 'پیشنهادهای سازمان‌دهندگان',
 		'admin.suggestion_placeholder': 'پیشنهاد را توصیف کنید',

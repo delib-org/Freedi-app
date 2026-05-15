@@ -143,6 +143,46 @@ export async function testSheetAccess(sheetUrl: string): Promise<TestSheetAccess
 }
 
 // ---------------------------------------------------------------------------
+// reconcileJoinSheet
+// ---------------------------------------------------------------------------
+
+export interface ReconcileJoinSheetResult {
+	success: boolean;
+	questionId: string;
+	optionsScanned: number;
+	totalMembers: number;
+	appended: number;
+	skippedAlreadyPresent: number;
+	skippedNoSubmission: number;
+	errors: number;
+	message: string;
+}
+
+/**
+ * Calls `fn_reconcileJoinSheet` to backfill the Google Sheet from the
+ * authoritative option `joined`/`organizers` arrays. Idempotent — only
+ * appends rows that are missing for the (uid, optionId, role) tuple, never
+ * deletes. Surfaced via a facilitator-panel button so admins can fix a
+ * mismatched sheet on demand without waiting for the per-write trigger to
+ * recover.
+ *
+ * The callable enforces admin authorization itself; this wrapper does not
+ * re-check, so facilitators who can see the button (gated by `isAdmin()`
+ * in the panel) get the server's actual permission decision.
+ */
+export async function reconcileJoinSheet(
+	questionId: string,
+): Promise<ReconcileJoinSheetResult> {
+	const call = httpsCallable<{ questionId: string }, ReconcileJoinSheetResult>(
+		functions,
+		'fn_reconcileJoinSheet',
+	);
+	const result = await call({ questionId });
+
+	return result.data;
+}
+
+// ---------------------------------------------------------------------------
 // resetOptionJoining
 // ---------------------------------------------------------------------------
 
