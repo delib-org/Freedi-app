@@ -3,6 +3,7 @@ import { StatementType } from '@freedi/shared-types';
 import {
 	buildLiveMemberKeys,
 	buildRowFromHeader,
+	buildSheetExistingKeys,
 	columnIndexToA1,
 	computeMembershipEvents,
 	diffMembers,
@@ -524,6 +525,62 @@ describe('joinSheetMath', () => {
 				{ userId: 'u1', role: 'activist', optionId: 'o1', optionTitle: 'T1' },
 			]);
 			expect(keys.size).toBe(2);
+		});
+	});
+
+	describe('buildSheetExistingKeys', () => {
+		it('returns empty set for header-only or empty sheets', () => {
+			expect(buildSheetExistingKeys([])).toEqual(new Set());
+			expect(buildSheetExistingKeys([['userId', 'role', 'optionId']])).toEqual(new Set());
+		});
+
+		it('returns empty set when no userId column exists', () => {
+			const rows = [
+				['col1', 'col2'],
+				['a', 'b'],
+			];
+			expect(buildSheetExistingKeys(rows)).toEqual(new Set());
+		});
+
+		it('emits both id-keyed and title-keyed entries per v2 row', () => {
+			const rows = [
+				['userId', 'role', 'optionId', 'optionTitle'],
+				['u1', 'activist', 'o1', 'T1'],
+			];
+			const keys = buildSheetExistingKeys(rows);
+			expect(keys.has('u1|activist|o1')).toBe(true);
+			expect(keys.has('u1|activist|T1')).toBe(true);
+			expect(keys.size).toBe(2);
+		});
+
+		it('emits only title-keyed entries on v1 rows (no optionId column)', () => {
+			const rows = [
+				['userId', 'role', 'optionTitle'],
+				['u1', 'activist', 'T1'],
+			];
+			const keys = buildSheetExistingKeys(rows);
+			expect(keys.has('u1|activist|T1')).toBe(true);
+			expect(keys.size).toBe(1);
+		});
+
+		it('skips rows with empty userId', () => {
+			const rows = [
+				['userId', 'role', 'optionId'],
+				['', 'activist', 'o1'],
+			];
+			expect(buildSheetExistingKeys(rows)).toEqual(new Set());
+		});
+
+		it('handles multiple rows including duplicates', () => {
+			const rows = [
+				['userId', 'role', 'optionId', 'optionTitle'],
+				['u1', 'activist', 'o1', 'T1'],
+				['u2', 'organizer', 'o2', 'T2'],
+				['u1', 'activist', 'o1', 'T1'], // duplicate
+			];
+			const keys = buildSheetExistingKeys(rows);
+			// Set dedups naturally — duplicate row collapses to same keys.
+			expect(keys.size).toBe(4);
 		});
 	});
 

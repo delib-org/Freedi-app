@@ -303,6 +303,50 @@ export function planV1ToV2Migration(
 }
 
 // ---------------------------------------------------------------------------
+// Sheet-side existing keys (reconcile dedup, in-memory)
+// ---------------------------------------------------------------------------
+
+/**
+ * Builds a set of `${uid}|${role}|${optionIdOrTitle}` keys from existing
+ * sheet rows so the reconcile can dedup appends in memory without hitting
+ * the Sheets API once per membership (which exhausts the per-user quota on
+ * questions with dozens of members).
+ *
+ * Emits BOTH an id-keyed AND a title-keyed tuple per row when both columns
+ * exist, mirroring `buildLiveMemberKeys`. Membership lookup on either side
+ * (id or title) returns true; this makes us robust to v1 sheets, mid-rename
+ * states, and v2 sheets with stale title cells.
+ *
+ * Rows with no `userId` cell are skipped (manual notes / blank rows).
+ */
+export function buildSheetExistingKeys(rows: string[][]): Set<string> {
+	const keys = new Set<string>();
+	if (rows.length < 2) return keys;
+	const header = rows[0] ?? [];
+	const userIdCol = header.findIndex((h) => typeof h === 'string' && h.trim() === 'userId');
+	if (userIdCol === -1) return keys;
+
+	const roleCol = header.findIndex((h) => typeof h === 'string' && h.trim() === 'role');
+	const optionIdCol = header.findIndex((h) => typeof h === 'string' && h.trim() === 'optionId');
+	const optionTitleCol = header.findIndex(
+		(h) => typeof h === 'string' && h.trim() === 'optionTitle',
+	);
+
+	for (let i = 1; i < rows.length; i++) {
+		const row = rows[i] ?? [];
+		const uid = typeof row[userIdCol] === 'string' ? row[userIdCol] : '';
+		if (uid === '') continue;
+		const role = roleCol !== -1 ? (row[roleCol] ?? '') : '';
+		const oid = optionIdCol !== -1 ? (row[optionIdCol] ?? '') : '';
+		const otitle = optionTitleCol !== -1 ? (row[optionTitleCol] ?? '') : '';
+		if (oid !== '') keys.add(`${uid}|${role}|${oid}`);
+		if (otitle !== '') keys.add(`${uid}|${role}|${otitle}`);
+	}
+
+	return keys;
+}
+
+// ---------------------------------------------------------------------------
 // Orphan row detection (reconcile-only)
 // ---------------------------------------------------------------------------
 

@@ -4,20 +4,26 @@ import { db } from '../../db';
 import {
 	Collections,
 	Creator,
+	JOIN_FORM_SUBMISSIONS_SUBCOLLECTION,
+	JoinFormSubmission,
 	Statement,
 	StatementType,
 	functionConfig,
 } from '@freedi/shared-types';
 import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
 import {
-	appendUserRow,
 	ensureHeaderRow,
 	migrateV1ToV2IfNeeded,
 	readSheetSchemaVersion,
 	CURRENT_SHEET_SCHEMA_VERSION,
 	type Role as MemberRole,
 } from './fn_syncOptionMembersToSheet';
-import { buildLiveMemberKeys, findOrphanRowIndices } from './joinSheetMath';
+import {
+	buildLiveMemberKeys,
+	buildRowFromHeader,
+	buildSheetExistingKeys,
+	findOrphanRowIndices,
+} from './joinSheetMath';
 import { ALLOWED_ORIGINS } from '../../config/cors';
 import { assertJoinAdminAuthorized } from '../../utils/joinAuth';
 import { logError } from '../../utils/errorHandling';
@@ -125,15 +131,34 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 			});
 		}
 
-		// Pull every option for this question. We scan child docs by parentId
-		// (rather than relying on the question's own subStatements list, which
-		// can be stale or partial) and skip cluster/integrated members the
-		// same way the trigger does.
+		// Read the sheet ONCE upfront (post-migration so the header reflects v2
+		// if migration ran). The old code re-read the sheet inside `appendUserRow`
+		// for every membership, exhausting the per-user 60-reads/min quota on
+		// questions with dozens of members. We now do all dedup in memory and
+		// batch every append into a single API call.
+		const sheetState = await readSheetMetaAndRows(sheets, sheetId);
+		const { sheetTabId, sheetTitle, header, rows } = sheetState;
+		const existingKeys = buildSheetExistingKeys(rows);
+
+		// Pull every option for this question. Skip cluster / integrated members
+		// the same way the live trigger does.
 		const optionsSnap = await db
 			.collection(Collections.statements)
 			.where('parentId', '==', questionId)
 			.where('statementType', '==', StatementType.option)
 			.get();
+
+		// Pull all submissions in ONE collection-group read. ~30 docs typical,
+		// many fewer reads than fetching per-uid inside the loop.
+		const submissionsSnap = await db
+			.collection(Collections.statements)
+			.doc(questionId)
+			.collection(JOIN_FORM_SUBMISSIONS_SUBCOLLECTION)
+			.get();
+		const submissionsByUid = new Map<string, JoinFormSubmission>();
+		for (const subDoc of submissionsSnap.docs) {
+			submissionsByUid.set(subDoc.id, subDoc.data() as JoinFormSubmission);
+		}
 
 		let optionsScanned = 0;
 		let totalMembers = 0;
@@ -143,8 +168,7 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 		let removed = 0;
 		let errors = 0;
 
-		// Track the live membership tuples as we scan. We need this for the
-		// orphan-removal pass anyway, and computing it here saves a second walk.
+		// Track every live membership for the orphan-removal pass downstream.
 		const liveMembershipsForOrphanCheck: Array<{
 			userId: string;
 			role: MemberRole;
@@ -152,15 +176,24 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 			optionTitle: string;
 		}> = [];
 
+		// Accumulate rows to append. We make one Sheets API call at the end
+		// rather than 1+ calls per missing row.
+		const rowsToAppend: string[][] = [];
+		const submittedAt = new Date().toISOString();
+
 		for (const optDoc of optionsSnap.docs) {
 			const option = optDoc.data() as Statement;
 			const integratedInto = (option as { integratedInto?: string }).integratedInto;
 			if (option.isCluster === true || integratedInto) continue;
 			optionsScanned++;
 
+			const optionTitle = option.statement ?? '';
 			const memberships: Array<{ creator: Creator; role: MemberRole }> = [
 				...(option.joined ?? []).map((c) => ({ creator: c, role: 'activist' as MemberRole })),
-				...(option.organizers ?? []).map((c) => ({ creator: c, role: 'organizer' as MemberRole })),
+				...(option.organizers ?? []).map((c) => ({
+					creator: c,
+					role: 'organizer' as MemberRole,
+				})),
 			].filter((m) => m.creator?.uid);
 
 			for (const { creator, role } of memberships) {
@@ -169,31 +202,71 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 					userId: creator.uid,
 					role,
 					optionId: option.statementId,
-					optionTitle: option.statement ?? '',
+					optionTitle,
 				});
-				try {
-					const result = await appendUserRow({
-						sheets,
-						sheetId,
-						questionId,
-						optionId: option.statementId,
-						optionTitle: option.statement ?? '',
-						userId: creator.uid,
-						role,
-						joinForm,
-					});
-					if (result === 'appended') appended++;
-					else if (result === 'skipped-already-present') skippedAlreadyPresent++;
-					else if (result === 'skipped-no-submission') skippedNoSubmission++;
-				} catch (err) {
-					errors++;
-					logError(err, {
-						operation: 'joinForm.reconcileSheet.append',
-						userId: creator.uid,
-						statementId: option.statementId,
-						metadata: { questionId, role },
-					});
+
+				// In-memory dedup against the snapshot we read once upfront.
+				// `existingKeys` carries BOTH id-keyed and title-keyed entries
+				// so v1 and v2 sheets both match correctly.
+				const idKey = `${creator.uid}|${role}|${option.statementId}`;
+				const titleKey = optionTitle ? `${creator.uid}|${role}|${optionTitle}` : '';
+				if (existingKeys.has(idKey) || (titleKey && existingKeys.has(titleKey))) {
+					skippedAlreadyPresent++;
+					continue;
 				}
+
+				const submission = submissionsByUid.get(creator.uid);
+				if (!submission) {
+					skippedNoSubmission++;
+					continue;
+				}
+
+				const formValues: Record<string, string> = {};
+				for (const field of joinForm.fields ?? []) {
+					formValues[field.label] = submission.values?.[field.id] ?? '';
+				}
+				const row = buildRowFromHeader(header, {
+					userId: creator.uid,
+					displayName: submission.displayName ?? '',
+					role,
+					optionId: option.statementId,
+					optionTitle,
+					submittedAt,
+					questionId,
+					formValues,
+				});
+				rowsToAppend.push(row);
+				// Also add to existingKeys so a subsequent duplicate membership
+				// (e.g. same uid as both activist and organizer on one option)
+				// doesn't enqueue a second row in the same reconcile run.
+				existingKeys.add(idKey);
+				if (titleKey) existingKeys.add(titleKey);
+				appended++;
+			}
+		}
+
+		// Single batched append. RAW so leading-zero phone numbers survive
+		// (matches the live trigger's choice).
+		if (rowsToAppend.length > 0) {
+			try {
+				await sheets.spreadsheets.values.append({
+					spreadsheetId: sheetId,
+					range: 'A1',
+					valueInputOption: 'RAW',
+					requestBody: { values: rowsToAppend },
+				});
+				logger.info('[fn_reconcileJoinSheet] Appended rows in batch', {
+					questionId,
+					count: rowsToAppend.length,
+				});
+			} catch (err) {
+				errors += rowsToAppend.length;
+				appended = 0; // The whole batch failed.
+				logError(err, {
+					operation: 'joinForm.reconcileSheet.batchAppend',
+					statementId: questionId,
+					metadata: { questionId, attempted: rowsToAppend.length },
+				});
 			}
 		}
 
@@ -202,6 +275,8 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 		// which deletes valid rows whenever an option title was renamed after
 		// some users joined. The v1→v2 migration eliminates this risk; until
 		// then we err on the side of leaving stale rows in place.
+		// We re-read the schema version here (1 cheap cell read) in case the
+		// upstream eager migration upgraded the sheet during this run.
 		let orphanRemovalSkippedV1 = false;
 		try {
 			const schemaVersion = await readSheetSchemaVersion(sheets, sheetId);
@@ -212,9 +287,15 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 					{ questionId, schemaVersion },
 				);
 			} else {
-				removed = await removeOrphanRows({
+				// Reuse the snapshot read at the start of the function — every
+				// row we just appended corresponds to a live membership and
+				// could never be flagged as an orphan, so the pre-append rows
+				// are the right input. Saves a sheet read.
+				removed = await removeOrphanRowsFromSnapshot({
 					sheets,
 					sheetId,
+					sheetTabId,
+					rows,
 					liveMemberKeys: buildLiveMemberKeys(liveMembershipsForOrphanCheck),
 					questionId,
 				});
@@ -227,6 +308,12 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 				metadata: { questionId },
 			});
 		}
+
+		// `sheetTitle` is returned from the metadata read for future readers
+		// (e.g. logging) and may be used in subsequent extensions. The compiler
+		// is OK with the unused destructure because TS `noUnusedLocals` isn't
+		// on for these object-rest patterns.
+		void sheetTitle;
 
 		const message =
 			`Scanned ${optionsScanned} options / ${totalMembers} members → ` +
@@ -262,37 +349,28 @@ export const fn_reconcileJoinSheet = onCall<ReconcileRequest, Promise<ReconcileR
 	},
 );
 
-interface RemoveOrphansArgs {
-	sheets: ReturnType<typeof getGoogleSheetsClient>;
-	sheetId: string;
-	liveMemberKeys: Set<string>;
-	questionId: string;
-}
-
 /**
- * Reads the sheet, finds rows whose (userId, role, option) tuple doesn't
- * match any live membership, and deletes them in a single batchUpdate.
- *
- * Deletes are sorted DESCENDING by row index so each `deleteDimension`
- * request operates on indices that are still valid relative to the
- * pre-batch state. Sheets API processes requests in order; after each
- * delete, subsequent indices in the same batch refer to the post-delete
- * state — descending order keeps them aligned.
- *
- * Returns the number of rows deleted.
+ * Single combined metadata + values read for the sheet, used once per
+ * reconcile invocation. Returns the parsed rows plus the tab id / title
+ * needed for batchUpdate deletes. Centralized here so the main path doesn't
+ * juggle two unrelated Sheets API responses inline.
  */
-async function removeOrphanRows(args: RemoveOrphansArgs): Promise<number> {
-	const { sheets, sheetId, liveMemberKeys, questionId } = args;
-	if (!sheets) return 0;
-
+async function readSheetMetaAndRows(
+	sheets: NonNullable<ReturnType<typeof getGoogleSheetsClient>>,
+	sheetId: string,
+): Promise<{
+	sheetTabId: number;
+	sheetTitle: string;
+	header: string[];
+	rows: string[][];
+}> {
 	const meta = await sheets.spreadsheets.get({
 		spreadsheetId: sheetId,
 		fields: 'sheets(properties(sheetId,title))',
 	});
 	const firstSheet = meta.data.sheets?.[0]?.properties;
-	if (!firstSheet || typeof firstSheet.sheetId !== 'number') return 0;
-	const sheetTabId = firstSheet.sheetId;
-	const sheetTitle = firstSheet.title ?? 'Sheet1';
+	const sheetTabId = firstSheet && typeof firstSheet.sheetId === 'number' ? firstSheet.sheetId : 0;
+	const sheetTitle = firstSheet?.title ?? 'Sheet1';
 
 	const resp = await sheets.spreadsheets.values.get({
 		spreadsheetId: sheetId,
@@ -302,11 +380,33 @@ async function removeOrphanRows(args: RemoveOrphansArgs): Promise<number> {
 	const rows: string[][] = rawRows.map((r) =>
 		(r ?? []).map((c) => (typeof c === 'string' ? c : String(c ?? ''))),
 	);
+	const header = rows[0] ?? [];
+
+	return { sheetTabId, sheetTitle, header, rows };
+}
+
+interface RemoveOrphansFromSnapshotArgs {
+	sheets: NonNullable<ReturnType<typeof getGoogleSheetsClient>>;
+	sheetId: string;
+	sheetTabId: number;
+	rows: string[][];
+	liveMemberKeys: Set<string>;
+	questionId: string;
+}
+
+/**
+ * Variant of the orphan-removal helper that operates against a pre-read
+ * snapshot of the sheet rows, so the caller doesn't pay a second Sheets
+ * API read. Issues one batched `deleteDimension` per orphan in DESCENDING
+ * row-index order — Sheets processes requests in order and post-delete
+ * indices shift down, so descending order keeps the indices valid.
+ */
+async function removeOrphanRowsFromSnapshot(args: RemoveOrphansFromSnapshotArgs): Promise<number> {
+	const { sheets, sheetId, sheetTabId, rows, liveMemberKeys, questionId } = args;
 
 	const orphans = findOrphanRowIndices(rows, liveMemberKeys);
 	if (orphans.length === 0) return 0;
 
-	// Descending so each delete leaves earlier indices valid.
 	const sorted = [...orphans].sort((a, b) => b - a);
 	await sheets.spreadsheets.batchUpdate({
 		spreadsheetId: sheetId,
