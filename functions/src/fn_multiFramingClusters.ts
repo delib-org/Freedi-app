@@ -571,7 +571,10 @@ function parseMultiFramingResponse(text: string): AIFraming[] | null {
 					`Recovered ${(parsed as unknown[]).length ?? 0} framing(s) from truncated response; original length ${jsonString.length}, salvaged ${truncated.length}.`,
 				);
 			} catch (recoveryError) {
-				logger.error('Error parsing multi-framing response (after truncation salvage):', recoveryError);
+				logger.error(
+					'Error parsing multi-framing response (after truncation salvage):',
+					recoveryError,
+				);
 
 				return null;
 			}

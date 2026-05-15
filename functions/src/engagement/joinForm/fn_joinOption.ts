@@ -133,8 +133,10 @@ export const fn_joinOption = onCall<JoinOptionRequest, Promise<JoinOptionResult>
 			const releaseSnap = releaseRef ? await tx.get(releaseRef) : null;
 
 			const opt = optSnap.data() as Statement;
-			const currentMembers: Creator[] = (field === 'organizers' ? opt.organizers : opt.joined) ?? [];
-			const currentOthers: Creator[] = (otherField === 'organizers' ? opt.organizers : opt.joined) ?? [];
+			const currentMembers: Creator[] =
+				(field === 'organizers' ? opt.organizers : opt.joined) ?? [];
+			const currentOthers: Creator[] =
+				(otherField === 'organizers' ? opt.organizers : opt.joined) ?? [];
 			const isMember = currentMembers.some((u) => u.uid === uid);
 
 			// LEAVE — toggling off. Cap doesn't apply to leaves.
@@ -196,15 +198,14 @@ export const fn_joinOption = onCall<JoinOptionRequest, Promise<JoinOptionResult>
 
 			// Explicit swap (LimitReachedModal): leave the released option
 			// (any role) and join the new one in the same transaction.
-			if (
-				releaseSnap &&
-				releaseSnap.exists &&
-				releaseRef &&
-				releaseRef.path !== optionRef.path
-			) {
+			if (releaseSnap && releaseSnap.exists && releaseRef && releaseRef.path !== optionRef.path) {
 				const releaseData = releaseSnap.data() as Statement;
-				const releaseJoined: Creator[] = Array.isArray(releaseData.joined) ? releaseData.joined : [];
-				const releaseOrgs: Creator[] = Array.isArray(releaseData.organizers) ? releaseData.organizers : [];
+				const releaseJoined: Creator[] = Array.isArray(releaseData.joined)
+					? releaseData.joined
+					: [];
+				const releaseOrgs: Creator[] = Array.isArray(releaseData.organizers)
+					? releaseData.organizers
+					: [];
 				const releaseUpdate: Record<string, Creator[]> = {};
 				if (releaseJoined.some((u) => u.uid === uid)) {
 					releaseUpdate.joined = releaseJoined.filter((u) => u.uid !== uid);

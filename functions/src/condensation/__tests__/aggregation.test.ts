@@ -135,10 +135,10 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 				evalRec({ evaluatorId: 'A', statementId: 'Y', value: 1 }),
 			];
 
-			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(
-				evals,
-				{ directVoteWins: true, clusterStatementId: 'Y' },
-			);
+			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
+				directVoteWins: true,
+				clusterStatementId: 'Y',
+			});
 
 			expect(perUserAverages.get('A')).toBeCloseTo(1);
 			expect(evaluation.numberOfEvaluators).toBe(1);

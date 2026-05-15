@@ -65,6 +65,7 @@ export async function exportSurveyToGcs(
 			const snap = await db.collection(collection).where(field, 'in', slice).get();
 			snap.forEach((doc) => results.push({ ...(doc.data() as Doc), [idField]: doc.id }));
 		}
+
 		return results;
 	};
 
@@ -77,6 +78,7 @@ export async function exportSurveyToGcs(
 		const results: Doc[] = [];
 		const snap = await db.collection(collection).where(field, '==', value).get();
 		snap.forEach((doc) => results.push({ ...(doc.data() as Doc), [idField]: doc.id }));
+
 		return results;
 	};
 
@@ -95,6 +97,7 @@ export async function exportSurveyToGcs(
 				if (doc.exists) results.push({ ...(doc.data() as Doc), [idField]: doc.id });
 			});
 		}
+
 		return results;
 	};
 
@@ -118,6 +121,7 @@ export async function exportSurveyToGcs(
 				results.push({ parentStatementId, docId: doc.id, data: doc.data() as Doc }),
 			);
 		}
+
 		return results;
 	};
 
@@ -136,9 +140,7 @@ export async function exportSurveyToGcs(
 		.collection('statements')
 		.where('topParentId', '==', questionId)
 		.get();
-	byTopParent.forEach((doc) =>
-		allStatements.set(doc.id, { ...doc.data(), statementId: doc.id }),
-	);
+	byTopParent.forEach((doc) => allStatements.set(doc.id, { ...doc.data(), statementId: doc.id }));
 
 	const queue: string[] = [questionId];
 	const visitedParents = new Set<string>();
@@ -171,7 +173,12 @@ export async function exportSurveyToGcs(
 		questionId,
 		'id',
 	);
-	const evaluations = await fetchByFieldIn('evaluations', 'parentId', descendantIds, 'evaluationId');
+	const evaluations = await fetchByFieldIn(
+		'evaluations',
+		'parentId',
+		descendantIds,
+		'evaluationId',
+	);
 
 	// ----- step 4: cluster artifacts -----
 	const clusterAggregations: Doc[] = [];
@@ -211,12 +218,7 @@ export async function exportSurveyToGcs(
 		questionId,
 		'suggestionId',
 	);
-	const userEvaluations = await fetchByFieldIn(
-		'userEvaluations',
-		'parentId',
-		descendantIds,
-		'id',
-	);
+	const userEvaluations = await fetchByFieldIn('userEvaluations', 'parentId', descendantIds, 'id');
 	const polarizationIndex = await fetchByFieldIn(
 		'polarizationIndex',
 		'parentId',
@@ -278,24 +280,14 @@ export async function exportSurveyToGcs(
 	}
 	const userDemographicQuestions = Array.from(demographicQuestionsById.values());
 
-	const surveyProgress = await fetchByFieldEquals(
-		'surveyProgress',
-		'surveyId',
-		questionId,
-		'id',
-	);
+	const surveyProgress = await fetchByFieldEquals('surveyProgress', 'surveyId', questionId, 'id');
 	const moderationLogs = await fetchByFieldEquals(
 		'moderationLogs',
 		'topParentId',
 		questionId,
 		'id',
 	);
-	const researchLogs = await fetchByFieldEquals(
-		'researchLogs',
-		'topParentId',
-		questionId,
-		'logId',
-	);
+	const researchLogs = await fetchByFieldEquals('researchLogs', 'topParentId', questionId, 'logId');
 	const massConsensusProcesses = await fetchByFieldEquals(
 		'massConsensusProcesses',
 		'statementId',
@@ -308,21 +300,24 @@ export async function exportSurveyToGcs(
 		questionId,
 		'memberId',
 	);
-	const joinDelegates = await fetchByFieldEquals(
-		'joinDelegates',
-		'questionId',
-		questionId,
-		'id',
-	);
+	const joinDelegates = await fetchByFieldEquals('joinDelegates', 'questionId', questionId, 'id');
 	const joinDelegateInvitations = await fetchByFieldEquals(
 		'joinDelegateInvitations',
 		'questionId',
 		questionId,
 		'id',
 	);
-	const statementsSettings = await fetchDocsByIds('statementsSettings', descendantIds, 'statementId');
+	const statementsSettings = await fetchDocsByIds(
+		'statementsSettings',
+		descendantIds,
+		'statementId',
+	);
 	const statementsMeta = await fetchDocsByIds('statementsMeta', descendantIds, 'statementId');
-	const statementsPasswords = await fetchDocsByIds('statementsPasswords', descendantIds, 'statementId');
+	const statementsPasswords = await fetchDocsByIds(
+		'statementsPasswords',
+		descendantIds,
+		'statementId',
+	);
 	const evidencePosts = await fetchByFieldIn('evidencePosts', 'parentId', descendantIds, 'id');
 	const evidenceVotes = await fetchByFieldIn('evidenceVotes', 'parentId', descendantIds, 'id');
 	const framings = await fetchByFieldIn('framings', 'topParentId', descendantIds, 'id');
@@ -354,9 +349,7 @@ export async function exportSurveyToGcs(
 			.collection('surveyProgress')
 			.where('surveyId', '==', mcSurveyId)
 			.get();
-		progressSnap.forEach((doc) =>
-			mcSurveyProgress.push({ ...(doc.data() as Doc), id: doc.id }),
-		);
+		progressSnap.forEach((doc) => mcSurveyProgress.push({ ...(doc.data() as Doc), id: doc.id }));
 	}
 
 	const counts: Record<string, number> = {

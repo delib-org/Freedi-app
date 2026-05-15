@@ -11,9 +11,7 @@ import {
 } from '@freedi/shared-types';
 import { db } from '../../db';
 
-type RevokeJoinDelegateRequest =
-	| { invitationId: string }
-	| { questionId: string; userId: string };
+type RevokeJoinDelegateRequest = { invitationId: string } | { questionId: string; userId: string };
 
 interface RevokeJoinDelegateResult {
 	ok: true;
@@ -47,7 +45,9 @@ async function authorizeAdminForQuestion(uid: string, questionId: string): Promi
  */
 export const fn_revokeJoinDelegate = onCall(
 	{ region: functionConfig.region },
-	async (request: CallableRequest<RevokeJoinDelegateRequest>): Promise<RevokeJoinDelegateResult> => {
+	async (
+		request: CallableRequest<RevokeJoinDelegateRequest>,
+	): Promise<RevokeJoinDelegateResult> => {
 		const uid = request.auth?.uid;
 		if (!uid) {
 			throw new HttpsError('unauthenticated', 'User must be authenticated');

@@ -57,7 +57,12 @@ export const backupSurveyOnRequest = onDocumentCreated(
 				requestId: event.params.requestId,
 				data,
 			});
-			await requestRef.update({ status: 'error', error: 'malformed request', finishedAt: Date.now() });
+			await requestRef.update({
+				status: 'error',
+				error: 'malformed request',
+				finishedAt: Date.now(),
+			});
+
 			return;
 		}
 
@@ -110,7 +115,12 @@ export const backupSurveyOnRequest = onDocumentCreated(
 			await requestRef.delete();
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error);
-			logger.error('backupSurveyOnRequest: failed', { questionId, kind, mcSurveyId, error: message });
+			logger.error('backupSurveyOnRequest: failed', {
+				questionId,
+				kind,
+				mcSurveyId,
+				error: message,
+			});
 			await requestRef.update({ status: 'error', error: message, finishedAt: Date.now() });
 		}
 	},

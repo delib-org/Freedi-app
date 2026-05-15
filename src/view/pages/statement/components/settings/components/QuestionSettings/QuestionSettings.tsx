@@ -44,7 +44,10 @@ import JoinResolutionSettings from './JoinResolutionSettings/JoinResolutionSetti
 const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 	const { t } = useTranslation();
 	const [backupStatus, setBackupStatus] = React.useState<
-		{ kind: 'idle' } | { kind: 'pending' } | { kind: 'done'; destination: string } | { kind: 'error'; message: string }
+		| { kind: 'idle' }
+		| { kind: 'pending' }
+		| { kind: 'done'; destination: string }
+		| { kind: 'error'; message: string }
 	>({ kind: 'idle' });
 
 	async function handleAutoBackupToggle(enabled: boolean) {
@@ -286,7 +289,9 @@ const QuestionSettings: FC<StatementSettingsProps> = ({ statement }) => {
 
 				<SectionTitle title={t('Daily Backup')} />
 				<p className={styles.sectionDescription}>
-					{t('When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.')}
+					{t(
+						'When on, this question is included in the nightly backup at 03:00. Flipping it on also runs an immediate backup so you have a snapshot now.',
+					)}
 				</p>
 				<CustomSwitchSmall
 					label={t('Auto-backup this question')}

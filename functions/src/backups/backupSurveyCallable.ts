@@ -44,10 +44,7 @@ export const backupSurveyCallable = onCall<RequestData, Promise<ResponseData>>(
 			throw new HttpsError('not-found', `Question ${questionId} not found.`);
 		}
 
-		const subDoc = await db
-			.collection('statementsSubscribe')
-			.doc(`${userId}--${questionId}`)
-			.get();
+		const subDoc = await db.collection('statementsSubscribe').doc(`${userId}--${questionId}`).get();
 		const role = subDoc.exists ? (subDoc.data()?.role as string | undefined) : undefined;
 		const isAdmin = role === Role.admin || role === Role.creator;
 		if (!isAdmin) {

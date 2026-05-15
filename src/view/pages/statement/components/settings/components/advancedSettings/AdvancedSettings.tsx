@@ -592,7 +592,6 @@ const AdvancedSettings: FC<StatementSettingsProps> = ({ statement }) => {
 					/>
 				</div>
 			</div>
-
 		</div>
 	);
 };
