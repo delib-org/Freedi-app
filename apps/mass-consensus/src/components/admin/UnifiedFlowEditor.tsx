@@ -33,6 +33,8 @@ import ExplanationEditor from './ExplanationEditor';
 import QuestionTextEditor from './QuestionTextEditor';
 import styles from './Admin.module.scss';
 
+const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
+
 interface UnifiedFlowEditorProps {
   questions: Statement[];
   demographicPages: SurveyDemographicPage[];
@@ -199,7 +201,7 @@ function SortableFlowItem({
   };
 
   const getTitle = () => {
-    if (item.type === 'question') return `${item.question.statement} [ID: ${item.question.statementId}]`;
+    if (item.type === 'question') return item.question.statement;
     if (item.type === 'demographic') return item.page.title;
     if (item.type === 'explanation') return item.page.title;
     return '';
@@ -256,6 +258,18 @@ function SortableFlowItem({
         <div className={styles.flowItemContent}>
           {item.type === 'question' && surveySettings && onQuestionSettingsChange && (
             <>
+              <div className={styles.flowItemAdminInfo}>
+                <span className={styles.flowItemAdminLabel}>ID:</span>
+                <code className={styles.flowItemAdminId}>{item.question.statementId}</code>
+                <a
+                  href={`${MAIN_APP_URL}/statement/${item.question.statementId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.flowItemAdminLink}
+                >
+                  {t('viewInMainApp') || 'View in app'}
+                </a>
+              </div>
               {onQuestionTextChange && (
                 <QuestionTextEditor
                   questionText={item.question.statement}
