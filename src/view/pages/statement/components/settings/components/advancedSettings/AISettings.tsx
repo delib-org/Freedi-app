@@ -23,7 +23,6 @@ import styles from './EnhancedAdvancedSettings.module.scss';
 import ToggleSwitch from './ToggleSwitch';
 import GroupingSettings from './GroupingSettings';
 import { ClusteringAdmin } from '../ClusteringAdmin';
-import SynthesizeIdeasAction from '@/view/components/synthesizeIdeas/SynthesizeIdeasAction';
 
 interface AISettingsProps {
 	statement: Statement;
@@ -184,7 +183,6 @@ const AISettings: FC<AISettingsProps> = ({ statement, settings, handleSettingCha
 								icon={Zap}
 								badge="new"
 							/>
-							<SynthesizeIdeasAction parentStatementId={statement.statementId} />
 						</>
 					)}
 				</Subsection>
