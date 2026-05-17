@@ -119,4 +119,108 @@ describe('computeClusterEvaluationFromRawEvals', () => {
 
 		expect(evaluation.numberOfEvaluators).toBe(1);
 	});
+
+	describe('directVoteWins option', () => {
+		// Live-synth model: each evaluator counts once on a cluster Y.
+		// If they cast a direct vote on Y, that wins over their member votes.
+		// Member-only voters fall back to the average of their member votes.
+
+		it('uses direct vote when present, ignoring member votes (single user)', () => {
+			// User A votes +1 on member X1, -0.5 on member X2, then +1 directly on cluster Y.
+			// Effective contribution to Y must be +1 (direct wins), not 0.5 (avg of all three)
+			// nor 0.25 (avg of just members).
+			const evals: Evaluation[] = [
+				evalRec({ evaluatorId: 'A', statementId: 'X1', value: 1 }),
+				evalRec({ evaluatorId: 'A', statementId: 'X2', value: -0.5 }),
+				evalRec({ evaluatorId: 'A', statementId: 'Y', value: 1 }),
+			];
+
+			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
+				directVoteWins: true,
+				clusterStatementId: 'Y',
+			});
+
+			expect(perUserAverages.get('A')).toBeCloseTo(1);
+			expect(evaluation.numberOfEvaluators).toBe(1);
+			expect(evaluation.sumEvaluations).toBeCloseTo(1);
+		});
+
+		it('falls back to member-vote average when no direct vote exists', () => {
+			// User B has only voted on members — must use the average per-user.
+			const evals: Evaluation[] = [
+				evalRec({ evaluatorId: 'B', statementId: 'X1', value: 1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'X2', value: 0 }),
+			];
+
+			const { perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
+				directVoteWins: true,
+				clusterStatementId: 'Y',
+			});
+
+			expect(perUserAverages.get('B')).toBeCloseTo(0.5);
+		});
+
+		it('handles a mix of direct-voters and member-only voters in one rollup', () => {
+			// A: direct vote on Y (+1) plus member vote (-1) → contributes +1
+			// B: member-only votes (avg = 0.5) → contributes 0.5
+			// C: direct vote on Y only (-0.5) → contributes -0.5
+			// D: direct vote on Y (0) plus member vote (+1) → contributes 0
+			const evals: Evaluation[] = [
+				evalRec({ evaluatorId: 'A', statementId: 'X1', value: -1 }),
+				evalRec({ evaluatorId: 'A', statementId: 'Y', value: 1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'X1', value: 1 }),
+				evalRec({ evaluatorId: 'B', statementId: 'X2', value: 0 }),
+				evalRec({ evaluatorId: 'C', statementId: 'Y', value: -0.5 }),
+				evalRec({ evaluatorId: 'D', statementId: 'X1', value: 1 }),
+				evalRec({ evaluatorId: 'D', statementId: 'Y', value: 0 }),
+			];
+
+			const { evaluation, perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
+				directVoteWins: true,
+				clusterStatementId: 'Y',
+			});
+
+			expect(evaluation.numberOfEvaluators).toBe(4);
+			expect(perUserAverages.get('A')).toBeCloseTo(1);
+			expect(perUserAverages.get('B')).toBeCloseTo(0.5);
+			expect(perUserAverages.get('C')).toBeCloseTo(-0.5);
+			expect(perUserAverages.get('D')).toBeCloseTo(0);
+			// sumEvaluations = 1 + 0.5 + (-0.5) + 0 = 1
+			expect(evaluation.sumEvaluations).toBeCloseTo(1);
+		});
+
+		it('falls back to average behavior when directVoteWins=true but clusterStatementId missing', () => {
+			// Safety: the option requires both flags. Without clusterStatementId
+			// we cannot identify the direct vote; preserve historical semantics
+			// (per-user average) rather than silently breaking.
+			const evals: Evaluation[] = [
+				evalRec({ evaluatorId: 'A', statementId: 'X1', value: 1 }),
+				evalRec({ evaluatorId: 'A', statementId: 'Y', value: -1 }),
+			];
+
+			const { perUserAverages } = computeClusterEvaluationFromRawEvals(evals, {
+				directVoteWins: true,
+			});
+
+			// Average of (1, -1) = 0; same as historical behavior.
+			expect(perUserAverages.get('A')).toBeCloseTo(0);
+		});
+
+		it('matches historical average behavior when directVoteWins is false (default)', () => {
+			// Regression guard: existing condensation pipeline callers don't
+			// pass directVoteWins. Their math must stay identical.
+			const evals: Evaluation[] = [
+				evalRec({ evaluatorId: 'A', statementId: 'X1', value: 1 }),
+				evalRec({ evaluatorId: 'A', statementId: 'Y', value: 0 }),
+			];
+
+			const withFalse = computeClusterEvaluationFromRawEvals(evals, {
+				clusterStatementId: 'Y',
+			});
+			const withDefault = computeClusterEvaluationFromRawEvals(evals);
+
+			expect(withFalse.perUserAverages.get('A')).toBeCloseTo(0.5);
+			expect(withDefault.perUserAverages.get('A')).toBeCloseTo(0.5);
+		});
+	});
 });

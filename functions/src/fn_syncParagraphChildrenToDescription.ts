@@ -68,9 +68,7 @@ export const fn_syncParagraphChildrenToDescription = onDocumentWritten(
 				.where('statementType', '==', StatementType.paragraph)
 				.get();
 
-			const paragraphs = snap.docs
-				.map((d) => d.data() as Statement)
-				.filter((p) => p.hide !== true);
+			const paragraphs = snap.docs.map((d) => d.data() as Statement).filter((p) => p.hide !== true);
 
 			paragraphs.sort((a, b) => {
 				const ao = a.order ?? a.createdAt ?? 0;

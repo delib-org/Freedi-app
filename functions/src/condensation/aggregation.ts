@@ -18,7 +18,8 @@ import {
 	DEFAULT_SAMPLING_QUALITY,
 } from '@freedi/shared-types';
 
-const db = getFirestore();
+// Lazy init to avoid calling getFirestore() before initializeApp()
+const db = () => getFirestore();
 
 /**
  * Condensation-specific cluster aggregation.
@@ -45,6 +46,25 @@ interface AggregationOptions {
 	 *  parent's evaluationSettings when available. */
 	targetPopulation?: number;
 	samplingQuality?: number;
+	/**
+	 * When true, a user's direct vote on the cluster (an Evaluation whose
+	 * statementId equals `clusterStatementId`) takes precedence over the
+	 * average of their member votes. Required by the live-synth path so
+	 * direct synth votes override member-vote rollup per the
+	 * "one vote per evaluator, direct-wins" model. Default false preserves
+	 * the existing condensation-pipeline semantics (per-user average).
+	 *
+	 * Requires `clusterStatementId` to be set; otherwise falls back to
+	 * average behavior.
+	 */
+	directVoteWins?: boolean;
+	/**
+	 * The statementId of the cluster being aggregated. Only used when
+	 * `directVoteWins` is true. The aggregator inspects each user's
+	 * evaluations and uses the one targeting this id (if present)
+	 * instead of the per-user average.
+	 */
+	clusterStatementId?: string;
 }
 
 export async function fetchEvaluationsForIds(statementIds: string[]): Promise<Evaluation[]> {
@@ -53,7 +73,7 @@ export async function fetchEvaluationsForIds(statementIds: string[]): Promise<Ev
 	for (let i = 0; i < statementIds.length; i += BATCH) {
 		const batch = statementIds.slice(i, i + BATCH);
 		if (batch.length === 0) continue;
-		const snap = await db
+		const snap = await db()
 			.collection(Collections.evaluations)
 			.where('statementId', 'in', batch)
 			.get();
@@ -128,18 +148,35 @@ export function computeClusterEvaluationFromRawEvals(
 	let numberOfProEvaluators = 0;
 	let numberOfConEvaluators = 0;
 
+	const directWinsActive = options.directVoteWins === true && !!options.clusterStatementId;
+	const clusterStatementId = options.clusterStatementId;
+
 	byUser.forEach((userEvals, userId) => {
-		const values = userEvals.map((e) => e.evaluation);
-		const avg = values.reduce((a, b) => a + b, 0) / values.length;
-		perUserAverages.set(userId, avg);
-		sumEvaluations += avg;
-		sumSquaredEvaluations += avg * avg;
-		if (avg > 0) {
+		// Direct-wins: if the user voted on the cluster itself, use that one
+		// value; ignore their member votes for the rollup. Else average across
+		// whatever they did vote on (the historical condensation behavior).
+		let effective: number;
+		if (directWinsActive) {
+			const directVote = userEvals.find((e) => e.statementId === clusterStatementId);
+			if (directVote) {
+				effective = directVote.evaluation;
+			} else {
+				const values = userEvals.map((e) => e.evaluation);
+				effective = values.reduce((a, b) => a + b, 0) / values.length;
+			}
+		} else {
+			const values = userEvals.map((e) => e.evaluation);
+			effective = values.reduce((a, b) => a + b, 0) / values.length;
+		}
+		perUserAverages.set(userId, effective);
+		sumEvaluations += effective;
+		sumSquaredEvaluations += effective * effective;
+		if (effective > 0) {
 			numberOfProEvaluators++;
-			sumPro += avg;
-		} else if (avg < 0) {
+			sumPro += effective;
+		} else if (effective < 0) {
 			numberOfConEvaluators++;
-			sumCon += Math.abs(avg);
+			sumCon += Math.abs(effective);
 		}
 	});
 
@@ -194,7 +231,7 @@ export async function recomputeClusterEvaluation(
 	clusterId: string,
 	options: AggregationOptions = {},
 ): Promise<StatementEvaluation | null> {
-	const clusterDoc = await db.collection(Collections.statements).doc(clusterId).get();
+	const clusterDoc = await db().collection(Collections.statements).doc(clusterId).get();
 	if (!clusterDoc.exists) return null;
 
 	const cluster = clusterDoc.data() as Statement;
@@ -253,7 +290,7 @@ async function syncClusterEvaluationLinks(
 ): Promise<void> {
 	const now = Date.now();
 	try {
-		const existingSnap = await db
+		const existingSnap = await db()
 			.collection(Collections.clusterEvaluationLinks)
 			.where('clusterId', '==', clusterId)
 			.get();
@@ -322,13 +359,13 @@ async function syncClusterEvaluationLinks(
 		];
 		for (let i = 0; i < all.length; i += BATCH_CAP) {
 			const chunk = all.slice(i, i + BATCH_CAP);
-			const batch = db.batch();
+			const batch = db().batch();
 			for (const op of chunk) {
 				if (op.type === 'set') {
-					const ref = db.collection(Collections.clusterEvaluationLinks).doc(op.link.linkId);
+					const ref = db().collection(Collections.clusterEvaluationLinks).doc(op.link.linkId);
 					batch.set(ref, op.link);
 				} else {
-					const ref = db.collection(Collections.clusterEvaluationLinks).doc(op.id);
+					const ref = db().collection(Collections.clusterEvaluationLinks).doc(op.id);
 					batch.delete(ref);
 				}
 			}
@@ -356,7 +393,7 @@ export async function findClustersAffectedByEvaluation(statementId: string): Pro
 	const affected = new Set<string>();
 
 	// Case 1: the evaluation was on the cluster statement itself.
-	const targetDoc = await db.collection(Collections.statements).doc(statementId).get();
+	const targetDoc = await db().collection(Collections.statements).doc(statementId).get();
 	if (targetDoc.exists) {
 		const target = targetDoc.data() as Statement;
 		if (target.isCluster === true) {
@@ -366,7 +403,7 @@ export async function findClustersAffectedByEvaluation(statementId: string): Pro
 
 	// Case 2: the evaluation was on an original that is part of one or more
 	// clusters. Look up clusters via `array-contains integratedOptions`.
-	const clustersSnap = await db
+	const clustersSnap = await db()
 		.collection(Collections.statements)
 		.where('integratedOptions', 'array-contains', statementId)
 		.get();

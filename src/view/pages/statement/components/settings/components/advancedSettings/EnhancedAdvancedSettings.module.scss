@@ -651,44 +651,79 @@
       align-items: center;
       gap: 1rem;
 
+      // The slider track is rendered via gradient on the input background so it
+      // works in webkit + firefox without relying on browser-specific pseudo-
+      // elements alone. `--slider-progress` is set inline from React.
       .slider {
         flex: 1;
         height: 6px;
         -webkit-appearance: none;
         appearance: none;
-        background: var(--border-color);
+        background: linear-gradient(
+          to right,
+          var(--btn-primary, #5f88e5) 0%,
+          var(--btn-primary, #5f88e5) var(--slider-progress, 50%),
+          var(--border-light, #e0e8fa) var(--slider-progress, 50%),
+          var(--border-light, #e0e8fa) 100%
+        );
         border-radius: 4px;
         outline: none;
         cursor: pointer;
+        margin: 0;
+        padding: 0;
+
+        // Explicit track styling for firefox so the gradient renders correctly.
+        &::-moz-range-track {
+          height: 6px;
+          background: transparent;
+          border-radius: 4px;
+          border: none;
+        }
+
+        // Webkit also needs a runnable-track rule so the input background shows.
+        &::-webkit-slider-runnable-track {
+          height: 6px;
+          background: transparent;
+          border-radius: 4px;
+          border: none;
+        }
 
         &::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
           width: 20px;
           height: 20px;
-          background: var(--accent);
+          background: var(--btn-primary, #5f88e5);
+          border: 2px solid #ffffff;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
           border-radius: 50%;
           cursor: pointer;
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
+          margin-top: -7px; // center the 20px thumb on the 6px track
+          transition: transform 0.15s ease, box-shadow 0.15s ease;
 
           &:hover {
             transform: scale(1.1);
-            box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.4);
+            box-shadow: 0 2px 8px rgba(95, 136, 229, 0.4);
           }
         }
 
         &::-moz-range-thumb {
           width: 20px;
           height: 20px;
-          background: var(--accent);
+          background: var(--btn-primary, #5f88e5);
+          border: 2px solid #ffffff;
+          box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
           border-radius: 50%;
           cursor: pointer;
-          border: none;
         }
 
-        &:focus {
+        &:focus-visible {
           &::-webkit-slider-thumb {
-            box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.2);
+            box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.25);
+          }
+
+          &::-moz-range-thumb {
+            box-shadow: 0 0 0 4px rgba(95, 136, 229, 0.25);
           }
         }
       }
@@ -696,7 +731,7 @@
       .sliderValue {
         min-width: 50px;
         padding: 0.4rem 0.75rem;
-        background: var(--accent);
+        background: var(--btn-primary, #5f88e5);
         color: white;
         border-radius: 20px;
         font-size: 0.9rem;
@@ -704,6 +739,71 @@
         text-align: center;
       }
     }
+  }
+
+  // AI Settings subsection grouping (rationalized: Detect → Hygiene → Group → Synthesize)
+  .aiSettings {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .aiSubsection {
+    border: 1px solid var(--border-light, #e0e8fa);
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(245, 248, 255, 0.5) 0%, #ffffff 100%);
+    overflow: hidden;
+  }
+
+  .aiSubsectionHeader {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 1.25rem 0.75rem;
+    border-bottom: 1px dashed var(--border-light, #e0e8fa);
+  }
+
+  .aiSubsectionIcon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    background: var(--bg-selected, #e5edff);
+    border-radius: 8px;
+    color: var(--icons-blue, #5f88e5);
+
+    svg {
+      color: var(--icons-blue, #5f88e5);
+    }
+  }
+
+  .aiSubsectionTitleGroup {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .aiSubsectionTitle {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-title, #191e29);
+    letter-spacing: -0.01em;
+  }
+
+  .aiSubsectionDescription {
+    margin: 0.25rem 0 0;
+    font-size: 0.85rem;
+    color: var(--text-body, #3d4d71);
+    line-height: 1.4;
+  }
+
+  .aiSubsectionBody {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
   }
 
   // Team Formation Section

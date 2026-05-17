@@ -46,20 +46,11 @@ function cacheKey(questionId: string, userId: string): string {
  * submission under this question. Populates the cache on hit so subsequent
  * calls skip the read.
  */
-export async function hasJoinFormSubmission(
-	questionId: string,
-	userId: string,
-): Promise<boolean> {
+export async function hasJoinFormSubmission(questionId: string, userId: string): Promise<boolean> {
 	const key = cacheKey(questionId, userId);
 	if (joinFormSubmitted.has(key)) return true;
 
-	const submissionRef = doc(
-		db,
-		Collections.statements,
-		questionId,
-		'joinFormSubmissions',
-		userId,
-	);
+	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
 	const snap = await getDoc(submissionRef);
 	if (snap.exists()) {
 		joinFormSubmitted.add(key);
@@ -96,13 +87,7 @@ export async function getJoinFormSubmissionData(
 	userId: string,
 ): Promise<JoinFormSubmissionData | null> {
 	const key = cacheKey(questionId, userId);
-	const submissionRef = doc(
-		db,
-		Collections.statements,
-		questionId,
-		'joinFormSubmissions',
-		userId,
-	);
+	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
 	const snap = await getDoc(submissionRef);
 	if (!snap.exists()) {
 		joinFormSubmittedRole.delete(key);
@@ -151,13 +136,7 @@ export async function saveJoinFormSubmission(
 	optionTitle?: string,
 ): Promise<void> {
 	const now = Date.now();
-	const submissionRef = doc(
-		db,
-		Collections.statements,
-		questionId,
-		'joinFormSubmissions',
-		userId,
-	);
+	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', userId);
 	// Reset syncedToSheet so the legacy onDocumentWritten trigger (no longer
 	// used for sheet sync, but still has a backup write side-effect) reflects
 	// the latest payload.
@@ -203,13 +182,7 @@ export function subscribeUserJoinFormSubmission(questionId: string): Unsubscribe
 	}
 	const uid = user.uid;
 	const key = cacheKey(questionId, uid);
-	const submissionRef = doc(
-		db,
-		Collections.statements,
-		questionId,
-		'joinFormSubmissions',
-		uid,
-	);
+	const submissionRef = doc(db, Collections.statements, questionId, 'joinFormSubmissions', uid);
 
 	return onSnapshot(submissionRef, (snap) => {
 		if (!snap.exists()) {
@@ -239,10 +212,7 @@ export function subscribeUserJoinFormSubmission(questionId: string): Unsubscribe
  * `resetQuestionJoining` after wiping the underlying Firestore docs. Always
  * safe; never throws.
  */
-export function clearJoinFormCacheForUsers(
-	questionId: string,
-	userIds: Iterable<string>,
-): void {
+export function clearJoinFormCacheForUsers(questionId: string, userIds: Iterable<string>): void {
 	for (const userId of userIds) {
 		const key = cacheKey(questionId, userId);
 		joinFormSubmitted.delete(key);

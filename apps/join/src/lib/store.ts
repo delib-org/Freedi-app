@@ -68,6 +68,7 @@ import {
 	revokeJoinDelegate as _revokeJoinDelegate,
 	acceptJoinDelegateInvite as _acceptJoinDelegateInvite,
 } from './delegates/delegateActions';
+
 export const subscribeQuestionDelegates = _subscribeQuestionDelegates;
 export const unsubscribeQuestionDelegates = _unsubscribeQuestionDelegates;
 export const getDelegatesForQuestion = _getDelegatesForQuestion;
@@ -83,6 +84,7 @@ import {
 	markOptionChatRead,
 	subscribeMessageCounts,
 } from './chat/messageCounts';
+
 export const getMessageCount = _getMessageCount;
 export const getNewMessageCount = _getNewMessageCount;
 /** Cluster-id → unique-evaluator count. Populated by `subscribeClusterLinks`. */
@@ -102,6 +104,7 @@ import {
 	isOptionNewlyArrived as _isOptionNewlyArrived,
 	flushNewOptions as _flushNewOptions,
 } from './newSolutionsBuffer';
+
 export const getNewOptionsPendingCount = _getNewOptionsPendingCount;
 export const isOptionNewlyArrived = _isOptionNewlyArrived;
 export const flushNewOptions = _flushNewOptions;
@@ -113,6 +116,7 @@ import {
 	setEvaluation as _setEvaluation,
 	subscribeUserEvaluations as _subscribeUserEvaluations,
 } from './userEvaluations';
+
 export const getEffectiveEvaluation = _getEffectiveEvaluation;
 export const setEvaluation = _setEvaluation;
 export const subscribeUserEvaluations = _subscribeUserEvaluations;
@@ -1020,6 +1024,12 @@ let subQuestions: Statement[] = [];
 let lastFollowedPath = '';
 let activeFacilitatedMainId: string | null = null;
 let pendingRedirectTimer: number | null = null;
+// The route the pending timer above is heading to. Lets `applyFacilitatorRedirect`
+// skip re-arming the 700ms timeout when it's already heading to the same target —
+// otherwise rapid back-to-back snapshots (e.g. the admin flips a theme while a
+// follow-me write is in flight) would keep clearing and re-arming the timer,
+// and the redirect would never actually fire.
+let pendingRedirectRoute: string | null = null;
 
 export function getMainStatement(): Statement | null {
 	return mainStatement;
@@ -1231,6 +1241,13 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 		lastFollowedPath = '';
 	}
 
+	// Install the visibility/online resync hooks once — they fire a forced
+	// re-read of the main statement when the tab returns to the foreground or
+	// the network comes back online, which rescues participants whose
+	// Firestore websocket went zombie during a long background suspension
+	// (the symptom: "after ~20 minutes some participants stop following").
+	ensureFacilitatorResyncListeners();
+
 	return onSnapshot(doc(db, Collections.statements, mainId), (snap) => {
 		if (!snap.exists()) {
 			mainStatement = null;
@@ -1255,15 +1272,91 @@ export function subscribeMainStatement(mainId: string): Unsubscribe {
 		// join participants away every time the join admin tried to lead.
 		// `joinFollowMe` is owned by the Join app alone, so a stray main-app
 		// session can't fight us.
+		//
+		// No outer dedupe on `activePath !== lastFollowedPath`: if a participant
+		// drifted off the followed route (browser back, share-link, refresh),
+		// we want any subsequent snapshot — even one carrying the same path —
+		// to pull them back. `applyFacilitatorRedirect` is a no-op when the
+		// resolved route already matches `m.route.get()`, so calling it on
+		// every snapshot is cheap.
 		const activePath = data.joinFollowMe ?? '';
-		if (activePath !== lastFollowedPath) {
-			lastFollowedPath = activePath;
-			if (!isAdmin()) {
-				void applyFacilitatorRedirect(activePath, mainId);
-			}
+		lastFollowedPath = activePath;
+		if (!isAdmin()) {
+			void applyFacilitatorRedirect(activePath, mainId);
 		}
 		m.redraw();
 	});
+}
+
+/** Re-read the active main statement and re-apply its `joinFollowMe`. Used by
+ *  the visibility/online listeners below to recover from a zombie Firestore
+ *  websocket (mobile tabs suspended for ~20 min often lose the listener
+ *  silently — no error, no fresh snapshots). Forcing a `getDoc` round-trip
+ *  bypasses the cache and yanks participants back to the facilitator's
+ *  current path if they missed updates while in the background. */
+async function resyncFacilitatorState(): Promise<void> {
+	const mainId = activeFacilitatedMainId;
+	if (!mainId) return;
+	try {
+		const snap = await getDoc(doc(db, Collections.statements, mainId));
+		if (!snap.exists()) return;
+		const data = snap.data() as Statement;
+		mainStatement = data;
+		syncMainStatementLanguage();
+		const activePath = data.joinFollowMe ?? '';
+		lastFollowedPath = activePath;
+		if (!isAdmin()) {
+			void applyFacilitatorRedirect(activePath, mainId);
+		}
+		m.redraw();
+	} catch (err) {
+		console.error('[facilitator] resync after visibility/online failed:', err);
+	}
+}
+
+let facilitatorResyncListenersAttached = false;
+function ensureFacilitatorResyncListeners(): void {
+	if (facilitatorResyncListenersAttached) return;
+	if (typeof document === 'undefined') return;
+	facilitatorResyncListenersAttached = true;
+	document.addEventListener('visibilitychange', () => {
+		if (document.visibilityState === 'visible') {
+			void resyncFacilitatorState();
+		}
+	});
+	if (typeof window !== 'undefined') {
+		window.addEventListener('online', () => {
+			void resyncFacilitatorState();
+		});
+		// `pageshow` fires when the page is restored from the bfcache (browser
+		// back-forward cache). Firestore listeners do NOT survive bfcache restore
+		// reliably, so treat it like a visibility return.
+		window.addEventListener('pageshow', (e: PageTransitionEvent) => {
+			if (e.persisted) void resyncFacilitatorState();
+		});
+	}
+}
+
+/** Given a (possibly directly-deep-linked) question, return the workspace main
+ *  statement id to subscribe to for follow-me, or null if this question has no
+ *  workspace ancestor. Lets Solutions/Chat keep tracking the facilitator even
+ *  when the participant arrived via `/q/:qid` or `/q/:qid/s/:sid` (no `/m/:mid`
+ *  prefix in the URL). The workspace root is identified by the question's
+ *  `topParentId` — sub-questions inherit it from their parent main statement;
+ *  workspace-root statements themselves have `topParentId === statementId` and
+ *  so are skipped here (they're their own main, but the panel can't lead from
+ *  outside the `/m/:mid` route anyway). */
+export function getMainIdForQuestion(q: Statement | null): string | null {
+	if (!q) return null;
+	const top = q.topParentId;
+	if (!top) return null;
+	// Legacy workspace roots can carry `topParentId === 'top'` (the sentinel
+	// used for `parentId` before the join-app's create flows started writing
+	// the self-id). Subscribing to a `'top'` doc would throw — skip.
+	if (top === 'top') return null;
+	if (top === q.statementId) return null;
+
+	return top;
 }
 
 export function subscribeSubQuestions(mainId: string): Unsubscribe {
@@ -1287,6 +1380,7 @@ async function applyFacilitatorRedirect(path: string, mainId: string): Promise<v
 			window.clearTimeout(pendingRedirectTimer);
 			pendingRedirectTimer = null;
 		}
+		pendingRedirectRoute = null;
 
 		return;
 	}
@@ -1295,15 +1389,33 @@ async function applyFacilitatorRedirect(path: string, mainId: string): Promise<v
 	if (!target) return;
 
 	const route = joinTargetToRoute(target, mainId);
-	if (route === m.route.get()) return;
+	if (route === m.route.get()) {
+		// Already on the followed route — clear any stale pending redirect that
+		// was queued before the participant arrived here on their own.
+		if (pendingRedirectTimer !== null) {
+			window.clearTimeout(pendingRedirectTimer);
+			pendingRedirectTimer = null;
+		}
+		pendingRedirectRoute = null;
+
+		return;
+	}
+
+	// Coalesce: if a timer is already heading to the same route, don't reset it.
+	// Without this guard, every snapshot from the main statement (theme write,
+	// language change, etc.) would re-call this function and keep pushing the
+	// redirect out by 700ms — the participant would never actually be moved.
+	if (pendingRedirectRoute === route && pendingRedirectTimer !== null) return;
 
 	showFacilitatorToast(t('facilitator.following'));
 
 	if (pendingRedirectTimer !== null) {
 		window.clearTimeout(pendingRedirectTimer);
 	}
+	pendingRedirectRoute = route;
 	pendingRedirectTimer = window.setTimeout(() => {
 		pendingRedirectTimer = null;
+		pendingRedirectRoute = null;
 		if (m.route.get() !== route) m.route.set(route);
 	}, FACILITATOR_REDIRECT_DELAY_MS);
 }
@@ -1505,20 +1617,25 @@ import {
 	type ToggleJoiningOptions as _ToggleJoiningOptions,
 	type TestSheetAccessResult as _TestSheetAccessResult,
 	type ResetQuestionJoiningResult as _ResetQuestionJoiningResult,
+	type ReconcileJoinSheetResult as _ReconcileJoinSheetResult,
 	toggleJoining as _toggleJoining,
 	testSheetAccess as _testSheetAccess,
 	resetOptionJoining as _resetOptionJoining,
 	resetQuestionJoining as _resetQuestionJoining,
+	reconcileJoinSheet as _reconcileJoinSheet,
 	getUserCommittedOptionsFrom,
 } from './join/joinCallables';
+
 export type ToggleJoiningResult = _ToggleJoiningResult;
 export type ToggleJoiningOptions = _ToggleJoiningOptions;
 export type TestSheetAccessResult = _TestSheetAccessResult;
 export type ResetQuestionJoiningResult = _ResetQuestionJoiningResult;
+export type ReconcileJoinSheetResult = _ReconcileJoinSheetResult;
 export const toggleJoining = _toggleJoining;
 export const testSheetAccess = _testSheetAccess;
 export const resetOptionJoining = _resetOptionJoining;
 export const resetQuestionJoining = _resetQuestionJoining;
+export const reconcileJoinSheet = _reconcileJoinSheet;
 
 /** All visible options under the current question where the user is a
  *  member in either role (joined or organizers). Wraps the pure helper

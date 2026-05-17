@@ -3,8 +3,8 @@ import { isAdmin } from '@/lib/admin';
 import { t, isRTL } from '@/lib/i18n';
 
 export interface BackButtonAttrs {
-  /** Mithril route to navigate to when pressed (e.g. `/m/abc` for the hub). */
-  to: string;
+	/** Mithril route to navigate to when pressed (e.g. `/m/abc` for the hub). */
+	to: string;
 }
 
 /**
@@ -18,24 +18,24 @@ export interface BackButtonAttrs {
  * overrides on the SVG side.
  */
 export const BackButton: m.Component<BackButtonAttrs> = {
-  view(vnode) {
-    if (!isAdmin()) return null;
+	view(vnode) {
+		if (!isAdmin()) return null;
 
-    const { to } = vnode.attrs;
-    const glyph = isRTL() ? '›' : '‹';
+		const { to } = vnode.attrs;
+		const glyph = isRTL() ? '›' : '‹';
 
-    return m(
-      'button.back-button',
-      {
-        type: 'button',
-        title: t('nav.back'),
-        'aria-label': t('nav.back'),
-        onclick: (e: Event) => {
-          e.preventDefault();
-          m.route.set(to);
-        },
-      },
-      m('span.back-button__chevron', { 'aria-hidden': 'true' }, glyph),
-    );
-  },
+		return m(
+			'button.back-button',
+			{
+				type: 'button',
+				title: t('nav.back'),
+				'aria-label': t('nav.back'),
+				onclick: (e: Event) => {
+					e.preventDefault();
+					m.route.set(to);
+				},
+			},
+			m('span.back-button__chevron', { 'aria-hidden': 'true' }, glyph),
+		);
+	},
 };

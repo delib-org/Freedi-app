@@ -16,6 +16,13 @@ import {
 	generateSynthesizedProposal,
 	StatementWithEvaluation,
 } from './services/integration-ai-service';
+// Ship 1 modules — only invoked when the corresponding feature flags are ON.
+// See `synthesis/featureFlags.ts` for the env-var gate. Existing pipeline
+// behavior is preserved when flags are OFF.
+import { bayesianFilterOptions } from './synthesis/scoring';
+import { bulkClusterByEmbedding } from './synthesis/bulkCluster';
+import { twoTierJudge, type ClusterMember } from './synthesis/twoTierJudge';
+import { synthesisFlags, shouldUseBulkSynthesisPath } from './synthesis/featureFlags';
 
 /**
  * Bulk Idea Synthesis — admin-triggered pipeline that detects and merges
@@ -223,9 +230,16 @@ async function recordRunMetadata(
 export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 	{
 		timeoutSeconds: 540,
-		memory: '1GiB',
+		// Bumped 1GiB → 2GiB in Ship 1: the bulk in-memory clustering path
+		// (UMAP+HDBSCAN over working-set embeddings) needs the headroom and,
+		// more importantly, the extra CPU that comes proportional to memory
+		// (1 GiB ≈ 1 vCPU, 2 GiB ≈ 1.6 vCPU). This is *not* a workaround for
+		// the timeout — the structural fix lands in the same change. See
+		// plans/synthesis-100k-living-synth.md, Ship 1 §"Memory & timeout knobs".
+		memory: '2GiB',
 		region: functionConfig.region,
 		cors: [...ALLOWED_ORIGINS],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async (request): Promise<PreviewResponse> => {
 		const userId = request.auth?.uid;
@@ -260,7 +274,37 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 		}
 
 		// Phase 2: pre-filter
-		const eligibleOptions = await loadEligibleOptions(parentStatementId, filters);
+		const rawEligibleOptions = await loadEligibleOptions(parentStatementId, filters);
+
+		// Phase 2b (flag-gated): Bayesian-shrunk pre-filter narrows the working
+		// set to confident-good options only. At scale the long tail of single-
+		// evaluator outliers dominates the input; shrinking toward the global
+		// prior keeps high-evidence options and drops loud-thin ones.
+		// See `synthesis/scoring.ts` for the math.
+		let eligibleOptions = rawEligibleOptions;
+		if (synthesisFlags.bayesianPrefilter && rawEligibleOptions.length > 0) {
+			// bayesianFilterOptions consumes Statement-shaped objects. The
+			// OptionWithMetrics fields it reads (consensus, evaluation.numberOfEvaluators)
+			// are present and correctly typed via duck-typing, so a shape cast is safe.
+			const filterStatements = rawEligibleOptions.map((o) => ({
+				statementId: o.statementId,
+				statement: o.statement,
+				consensus: o.consensus,
+				evaluation: { numberOfEvaluators: o.numberOfEvaluators, agreement: o.consensus },
+				// eslint-disable-next-line @typescript-eslint/no-explicit-any
+			})) as any;
+			const filterResult = bayesianFilterOptions(filterStatements);
+			const keptIds = new Set(filterResult.kept.map((s) => s.statement.statementId));
+			eligibleOptions = rawEligibleOptions.filter((o) => keptIds.has(o.statementId));
+			logger.info('synthesizeIdeasPreview.bayesianPrefilter', {
+				inputCount: rawEligibleOptions.length,
+				keptCount: eligibleOptions.length,
+				prior: filterResult.stats.prior,
+				sigma: filterResult.stats.sigma,
+				cutoff: filterResult.stats.cutoff,
+			});
+		}
+
 		if (eligibleOptions.length < 2) {
 			return {
 				status: 'no-candidates',
@@ -282,6 +326,246 @@ export const synthesizeIdeasPreview = onCall<PreviewRequest>(
 
 		// Phase 3: candidate edges from embedding ANN
 		const candidateIds = eligibleOptions.map((o) => o.statementId);
+
+		// Ship 1 fast path: bulk in-memory clustering + two-tier (cosine bands +
+		// medoid LLM) judge. Replaces the legacy N-anchor `findNearest` plus
+		// all-pairs LLM verification (Phases 3–6) in one in-process pass.
+		// Both flags must be ON together (see `shouldUseBulkSynthesisPath`).
+		// When either is OFF, the legacy path runs unchanged.
+		if (shouldUseBulkSynthesisPath()) {
+			const bulkPathStart = Date.now();
+			const embeddingsMap = await embeddingCache.getBatchEmbeddings(candidateIds);
+			const items = candidateIds
+				.map((id) => {
+					const e = embeddingsMap.get(id);
+
+					return e ? { id, embedding: e } : null;
+				})
+				.filter((x): x is { id: string; embedding: number[] } => x !== null);
+
+			if (items.length < 2) {
+				logger.info('synthesizeIdeasPreview.bulkPath.noEmbeddings', {
+					candidateCount: candidateIds.length,
+					itemsWithEmbeddings: items.length,
+				});
+				const runId = getFirestore().collection('_').doc().id;
+				await recordRunMetadata(
+					parentStatementId,
+					runId,
+					threshold,
+					filters,
+					eligibleOptions.length,
+					0,
+					0,
+					'complete',
+					userId,
+				);
+
+				return {
+					status: 'no-candidates',
+					parentStatementId,
+					threshold,
+					filters,
+					embeddingCoverage: coverage.coveragePercent,
+					inputCount: eligibleOptions.length,
+					candidateEdgeCount: 0,
+					verifiedSameEdgeCount: 0,
+					groups: [],
+				};
+			}
+
+			const { clusters: bulkClusters } = bulkClusterByEmbedding(items);
+			const candidateClusters = bulkClusters
+				.filter((c) => c.memberIds.length >= 2)
+				.map((c, i) => ({ clusterId: `bulk-${i}`, memberIds: c.memberIds }));
+
+			const members = new Map<string, ClusterMember>();
+			for (const item of items) {
+				members.set(item.id, {
+					id: item.id,
+					text: idToText.get(item.id) ?? '',
+					embedding: item.embedding,
+				});
+			}
+
+			const judgeResult = await twoTierJudge(candidateClusters, members, {
+				maxLlmCalls: Math.min(2000, Math.ceil(eligibleOptions.length * 0.2)),
+			});
+
+			// Telemetry to keep PreviewResponse shape compatible with the legacy
+			// path. Edge counts here are derived from cluster sizes (intra-cluster
+			// pairs) since we never built an explicit edge list.
+			const candidateEdgeCount = candidateClusters.reduce(
+				(acc, c) => acc + (c.memberIds.length * (c.memberIds.length - 1)) / 2,
+				0,
+			);
+			const allVerified = [...judgeResult.verifiedClusters, ...judgeResult.refinedFromDissent];
+			const refinedGroupsBulk = allVerified.map((c) => c.memberIds);
+			const verifiedSameEdgeCount = refinedGroupsBulk.reduce(
+				(acc, g) => acc + (g.length * (g.length - 1)) / 2,
+				0,
+			);
+
+			logger.info('synthesizeIdeasPreview.bulkPath.complete', {
+				inputCount: eligibleOptions.length,
+				itemsWithEmbeddings: items.length,
+				candidateClusterCount: candidateClusters.length,
+				verifiedClusterCount: judgeResult.verifiedClusters.length,
+				refinedFromDissentCount: judgeResult.refinedFromDissent.length,
+				llmCallsMade: judgeResult.stats.llmCallsMade,
+				llmCallsCapped: judgeResult.stats.llmCallsCapped,
+				durationMs: Date.now() - bulkPathStart,
+			});
+
+			if (refinedGroupsBulk.length === 0) {
+				const runId = getFirestore().collection('_').doc().id;
+				await recordRunMetadata(
+					parentStatementId,
+					runId,
+					threshold,
+					filters,
+					eligibleOptions.length,
+					candidateEdgeCount,
+					0,
+					'complete',
+					userId,
+				);
+
+				return {
+					status: 'no-candidates',
+					parentStatementId,
+					threshold,
+					filters,
+					embeddingCoverage: coverage.coveragePercent,
+					inputCount: eligibleOptions.length,
+					candidateEdgeCount,
+					verifiedSameEdgeCount: 0,
+					groups: [],
+				};
+			}
+
+			// Phase 7 (proposal generation) is unchanged below — it consumes
+			// `refinedGroups`. Bridge the bulk-path output into the same name
+			// so the rest of the function flows identically. The bulk path
+			// doesn't surface per-pair "reasons" (it judges medoid-anchored,
+			// not all-pairs), so the reasonsByGroup map stays empty here.
+			const refinedGroups = refinedGroupsBulk;
+			const reasonsByGroup = new Map<string[], string[]>();
+			const eligibleById = new Map<string, OptionWithMetrics>();
+			for (const o of eligibleOptions) eligibleById.set(o.statementId, o);
+			const questionContext = parentStatement.statement || parentStatement.statementId;
+
+			const groups: PreviewGroup[] = await Promise.all(
+				refinedGroups.map(async (memberIds, idx) => {
+					const groupId = `group-${idx}`;
+					const memberPreviews = memberIds.map((id) => ({
+						id,
+						statement: idToText.get(id) || '',
+					}));
+					const reasons = reasonsByGroup.get(memberIds) || [];
+
+					const llmInputs: StatementWithEvaluation[] = memberIds.map((id) => {
+						const m = eligibleById.get(id);
+
+						return {
+							statementId: id,
+							statement: m?.statement ?? idToText.get(id) ?? '',
+							paragraphsText: '',
+							numberOfEvaluators: m?.numberOfEvaluators ?? 0,
+							consensus: m?.consensus ?? 0,
+							sumEvaluations: 0,
+						};
+					});
+
+					try {
+						const proposal = await generateSynthesizedProposal(llmInputs, questionContext);
+
+						if (proposal.cannotSynthesize === true) {
+							const memberTexts = memberIds
+								.map((id) => idToText.get(id) || '')
+								.filter((t) => t.length > 0);
+							const fallback = pickSuggestedTitle(memberTexts);
+
+							return {
+								groupId,
+								memberIds,
+								memberPreviews,
+								suggestedTitle: fallback.title,
+								suggestedDescription: fallback.description,
+								suggestedParagraphs: [],
+								reasons,
+								cannotSynthesize: true,
+								splitReason: proposal.reason,
+								splitProposal: proposal.splitProposal,
+							};
+						}
+
+						return {
+							groupId,
+							memberIds,
+							memberPreviews,
+							suggestedTitle: proposal.title,
+							suggestedDescription: proposal.description,
+							suggestedParagraphs: proposal.paragraphs,
+							reasons,
+						};
+					} catch (error) {
+						logger.error('synthesizeIdeasPreview: proposal generation failed (bulk path)', {
+							groupId,
+							error: error instanceof Error ? error.message : String(error),
+						});
+						const memberTexts = memberIds
+							.map((id) => idToText.get(id) || '')
+							.filter((t) => t.length > 0);
+						const fallback = pickSuggestedTitle(memberTexts);
+
+						return {
+							groupId,
+							memberIds,
+							memberPreviews,
+							suggestedTitle: fallback.title,
+							suggestedDescription: fallback.description,
+							suggestedParagraphs: [],
+							reasons,
+						};
+					}
+				}),
+			);
+
+			const runId = getFirestore().collection('_').doc().id;
+			await recordRunMetadata(
+				parentStatementId,
+				runId,
+				threshold,
+				filters,
+				eligibleOptions.length,
+				candidateEdgeCount,
+				groups.length,
+				'awaiting-confirmation',
+				userId,
+			);
+
+			logger.info('synthesizeIdeasPreview completed (bulk path)', {
+				parentStatementId,
+				inputCount: eligibleOptions.length,
+				candidateEdgeCount,
+				verifiedSameEdgeCount,
+				groupCount: groups.length,
+			});
+
+			return {
+				status: 'ready',
+				parentStatementId,
+				threshold,
+				filters,
+				embeddingCoverage: coverage.coveragePercent,
+				inputCount: eligibleOptions.length,
+				candidateEdgeCount,
+				verifiedSameEdgeCount,
+				groups,
+			};
+		}
+
 		const candidateEdges = await buildCandidateEdges(candidateIds, {
 			parentId: parentStatementId,
 			threshold,
@@ -508,6 +792,7 @@ export const synthesizeIdeasExecute = onCall<ExecuteRequest>(
 		memory: '1GiB',
 		region: functionConfig.region,
 		cors: [...ALLOWED_ORIGINS],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async (request): Promise<ExecuteResponse> => {
 		const userId = request.auth?.uid;
@@ -667,6 +952,7 @@ export const regenerateSynthesisProposal = onCall<RegenerateProposalRequest>(
 		memory: '512MiB',
 		region: functionConfig.region,
 		cors: [...ALLOWED_ORIGINS],
+		secrets: ['GEMINI_API_KEY'],
 	},
 	async (request): Promise<RegenerateProposalResponse> => {
 		const userId = request.auth?.uid;

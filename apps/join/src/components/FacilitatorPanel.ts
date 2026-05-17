@@ -30,6 +30,8 @@ import {
 	unsubscribeQuestionDelegates,
 	getOrganizerSuggestions,
 	resetQuestionJoining,
+	reconcileJoinSheet,
+	ReconcileJoinSheetResult,
 } from '@/lib/store';
 import { t, getAvailableLanguages, getLang } from '@/lib/i18n';
 import { ManualReorder, ManualReorderMode } from '@/components/ManualReorder';
@@ -173,6 +175,10 @@ function close(): void {
 	// reads while the panel is dismissed).
 	delegatesEditorOpen = false;
 	unsubscribeQuestionDelegates();
+	// Clear the reconcile summary so the next time the panel opens we don't
+	// flash a stale "x appended" line from a previous session.
+	reconcileResult = null;
+	reconcileError = null;
 	m.redraw();
 }
 
@@ -742,6 +748,16 @@ let joinFormEditorOpen = false;
 let sheetCheckState: 'idle' | 'checking' | 'ok' | 'fail' = 'idle';
 let sheetCheckResult: TestSheetAccessResult | null = null;
 
+// Reconcile-sheet button state. `reconcileInProgress` disables the button +
+// swaps its label while the callable is running; `reconcileResult` holds the
+// last summary so the panel can render a small "x appended / y already present"
+// line beneath the button. We deliberately keep `reconcileResult` across
+// re-renders so the facilitator sees what happened — cleared only when the
+// panel closes (see `closePanel`) or when a new reconcile starts.
+let reconcileInProgress = false;
+let reconcileResult: ReconcileJoinSheetResult | null = null;
+let reconcileError: string | null = null;
+
 function buildDefaultJoinFields(): JoinFormField[] {
 	return [
 		{ id: 'name', label: t('facilitator.joinForm.default.name'), type: 'text', required: true },
@@ -853,6 +869,28 @@ async function runSheetCheck(sheetUrl: string): Promise<void> {
 	m.redraw();
 }
 
+/** Invokes `fn_reconcileJoinSheet` for the current question and stashes the
+ *  summary on module state so the panel can render it next to the button.
+ *  Idempotent on the server side — running it twice in a row simply yields
+ *  `skippedAlreadyPresent` for the rows the first call appended. */
+async function runReconcileSheet(question: Statement): Promise<void> {
+	if (reconcileInProgress) return;
+	reconcileInProgress = true;
+	reconcileResult = null;
+	reconcileError = null;
+	m.redraw();
+	try {
+		reconcileResult = await reconcileJoinSheet(question.statementId);
+	} catch (err) {
+		console.error('[FacilitatorPanel] reconcileJoinSheet failed:', err);
+		reconcileError =
+			err instanceof Error && err.message ? err.message : t('facilitator.reconcileSheet.error');
+	} finally {
+		reconcileInProgress = false;
+		m.redraw();
+	}
+}
+
 async function updateJoinFormField(
 	question: Statement,
 	index: number,
@@ -894,7 +932,7 @@ function renderResetJoiningSection(question: Statement | null): m.Vnode | null {
 	return m('.facilitator-panel__row', [
 		m('.facilitator-panel__row-main', [
 			m(
-				'button.btn.btn--small.btn--outline.facilitator-panel__action',
+				'button.btn.btn--small.btn--danger.facilitator-panel__action',
 				{
 					type: 'button',
 					disabled: resetInProgress,
@@ -1162,6 +1200,73 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 								: m('.facilitator-panel__joinform-sheet-hint', [
 										m('span', t('facilitator.joinForm.sheetHint')),
 									]),
+						// Reconcile-sheet row. Idempotently backfills the sheet
+						// from `joined`/`organizers` arrays. Hidden until a real
+						// sheetUrl is configured. The whole facilitator panel is
+						// admin-only, and the callable re-verifies admin perms
+						// server-side, so we don't gate again here.
+						config.sheetUrl
+							? m('.facilitator-panel__joinform-section', [
+									m('.facilitator-panel__row-main', [
+										m(
+											'button.btn.btn--small.facilitator-panel__action',
+											{
+												type: 'button',
+												disabled: reconcileInProgress,
+												onclick: () => {
+													void runReconcileSheet(question);
+												},
+											},
+											[
+												m(
+													'span.facilitator-panel__action-icon',
+													{ 'aria-hidden': 'true' },
+													'🔄',
+												),
+												m(
+													'span.facilitator-panel__action-label',
+													reconcileInProgress
+														? t('facilitator.reconcileSheet.in_progress')
+														: t('facilitator.reconcileSheet'),
+												),
+											],
+										),
+									]),
+									m(
+										'.facilitator-panel__row-help',
+										t('facilitator.reconcileSheet.help'),
+									),
+									reconcileResult
+										? m(
+												`.facilitator-panel__joinform-check-status${reconcileResult.errors === 0 ? '.facilitator-panel__joinform-check-status--ok' : '.facilitator-panel__joinform-check-status--fail'}`,
+												[
+													m(
+														'span',
+														t('facilitator.reconcileSheet.done', {
+															appended: reconcileResult.appended,
+															present: reconcileResult.skippedAlreadyPresent,
+															noSubmission: reconcileResult.skippedNoSubmission,
+															removed: reconcileResult.removed,
+															errors: reconcileResult.errors,
+														}),
+													),
+													reconcileResult.orphanRemovalSkippedV1
+														? m(
+																'.facilitator-panel__joinform-sheet-hint',
+																t('facilitator.reconcileSheet.v1_orphan_skipped'),
+															)
+														: null,
+												],
+											)
+										: null,
+									reconcileError
+										? m(
+												'.facilitator-panel__joinform-check-status.facilitator-panel__joinform-check-status--fail',
+												[m('span', reconcileError)],
+											)
+										: null,
+								])
+							: null,
 					])
 				: null,
 			m('.facilitator-panel__joinform-section', [
@@ -1239,6 +1344,60 @@ function renderJoinFormSection(question: Statement | null): m.Vnode | null {
 	]);
 }
 
+/** Render a labelled section group inside the drawer. Sections give the
+ *  facilitator a stable mental model — "what's happening live?", "what can
+ *  participants do?", "danger zone" — instead of forcing them to scan a flat
+ *  list. A null `titleKey` omits the header (used for the top "live action"
+ *  block where the Follow Me button speaks for itself). The first section
+ *  drops its top border via `--first` so it sits flush under the panel
+ *  header. */
+function renderSection(opts: {
+	id: string;
+	titleKey: string | null;
+	first?: boolean;
+	danger?: boolean;
+	children: m.Children;
+}): m.Vnode | null {
+	const { id, titleKey, first, danger, children } = opts;
+	// If all children are falsy (every row hidden by permission/state), drop
+	// the whole section so we don't render an empty divider + heading. Cast
+	// to `unknown[]` first because Mithril's `m.Children` is a deeply
+	// recursive type — TypeScript chokes on `.flat(Infinity)` against it.
+	const items: unknown[] = Array.isArray(children) ? (children as unknown[]) : [children];
+	const hasContent = items.some((c) => {
+		if (c === null || c === undefined || c === false) return false;
+		// Guard against nested null arrays from optional helpers
+		if (Array.isArray(c)) {
+			return (c as unknown[]).some((cc) => cc !== null && cc !== undefined && cc !== false);
+		}
+
+		return true;
+	});
+	if (!hasContent) return null;
+
+	const classes = [
+		'facilitator-panel__section',
+		first ? 'facilitator-panel__section--first' : null,
+		danger ? 'facilitator-panel__section--danger' : null,
+	]
+		.filter(Boolean)
+		.join('.');
+
+	const titleId = `facilitator-panel-section-${id}`;
+
+	return m(
+		`section.${classes}`,
+		{
+			role: 'group',
+			'aria-labelledby': titleKey ? titleId : undefined,
+		},
+		[
+			titleKey ? m('h3.facilitator-panel__section-title', { id: titleId }, t(titleKey)) : null,
+			children,
+		],
+	);
+}
+
 export const FacilitatorPanel: m.Component = {
 	oninit() {
 		ensureEscListener();
@@ -1280,14 +1439,24 @@ export const FacilitatorPanel: m.Component = {
 
 		const positioned = handleY !== null;
 		const dragging = dragState !== null;
+		// Broadcast is admin-scoped state: any non-empty `joinFollowMe` path on
+		// the main statement means this admin is currently steering participants
+		// somewhere. The handle indicator surfaces that regardless of which
+		// route the admin is on, so they can't accidentally leave broadcast on.
+		const broadcasting = getPowerFollowMePath() !== '';
 		const handleClasses = [
 			'facilitator-panel__handle',
 			isOpen ? 'facilitator-panel__handle--open' : null,
 			positioned ? 'facilitator-panel__handle--positioned' : null,
 			dragging ? 'facilitator-panel__handle--dragging' : null,
+			broadcasting ? 'facilitator-panel__handle--broadcasting' : null,
 		]
 			.filter(Boolean)
 			.join('.');
+
+		const handleLabel = broadcasting
+			? `${t('facilitator.panel.handle')} — ${t('facilitator.panel.handle.broadcasting')}`
+			: t('facilitator.panel.handle');
 
 		return m('.facilitator-panel-root', [
 			m(
@@ -1296,8 +1465,8 @@ export const FacilitatorPanel: m.Component = {
 					type: 'button',
 					'aria-expanded': isOpen ? 'true' : 'false',
 					'aria-controls': 'facilitator-panel-drawer',
-					'aria-label': t('facilitator.panel.handle'),
-					title: t('facilitator.panel.handle'),
+					'aria-label': handleLabel,
+					title: handleLabel,
 					style: positioned ? { top: `${clampHandleY(handleY!)}px` } : undefined,
 					onpointerdown: onHandlePointerDown,
 					onpointermove: onHandlePointerMove,
@@ -1305,7 +1474,15 @@ export const FacilitatorPanel: m.Component = {
 					onpointercancel: onHandlePointerUp,
 					onclick: onHandleClick,
 				},
-				m('span.facilitator-panel__handle-icon', { 'aria-hidden': 'true' }, '⚙'),
+				[
+					m('span.facilitator-panel__handle-icon', { 'aria-hidden': 'true' }, '⚙'),
+					broadcasting
+						? m('span.facilitator-panel__handle-indicator', {
+								'aria-hidden': 'true',
+								title: t('facilitator.panel.handle.broadcasting'),
+							})
+						: null,
+				],
 			),
 			isOpen ? m('.facilitator-panel__backdrop', { onclick: close }) : null,
 			m(
@@ -1331,215 +1508,286 @@ export const FacilitatorPanel: m.Component = {
 						),
 					]),
 					!hasQuestion ? m('.facilitator-panel__notice', t('facilitator.panel.no_question')) : null,
-					m('.facilitator-panel__row', [
-						m('.facilitator-panel__row-main', [
-							m(
-								`button.btn.facilitator-panel__action${followMeOn ? '.btn--secondary.facilitator-panel__action--on' : '.btn--primary'}`,
-								{
-									type: 'button',
-									disabled: !canLead,
-									'aria-pressed': followMeOn ? 'true' : 'false',
-									'aria-label': followMeOn
-										? t('facilitator.action.followMe.stop')
-										: t('facilitator.action.followMe'),
-									onclick: () => {
-										if (!canLead) return;
-										void pressFollowMe(question!, mainId!);
-									},
-								},
-								[
-									m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '📣'),
+
+					// ── Live Action ──────────────────────────────────────────
+					// What the facilitator does in the moment. No section title
+					// — the big Follow Me button is the headline; a label above
+					// it would just compete for attention.
+					renderSection({
+						id: 'live-action',
+						titleKey: null,
+						first: true,
+						children: [
+							m('.facilitator-panel__row', [
+								m('.facilitator-panel__row-main', [
 									m(
-										'span.facilitator-panel__action-label',
-										followMeOn
-											? t('facilitator.action.followMe.stop')
-											: t('facilitator.action.followMe'),
+										`button.btn.facilitator-panel__action${followMeOn ? '.btn--secondary.facilitator-panel__action--on' : '.btn--primary'}`,
+										{
+											type: 'button',
+											disabled: !canLead,
+											'aria-pressed': followMeOn ? 'true' : 'false',
+											'aria-label': followMeOn
+												? t('facilitator.action.followMe.stop')
+												: t('facilitator.action.followMe'),
+											onclick: () => {
+												if (!canLead) return;
+												void pressFollowMe(question!, mainId!);
+											},
+										},
+										[
+											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '📣'),
+											m(
+												'span.facilitator-panel__action-label',
+												followMeOn
+													? t('facilitator.action.followMe.stop')
+													: t('facilitator.action.followMe'),
+											),
+										],
 									),
-								],
-							),
-						]),
-						m(
-							'.facilitator-panel__row-help',
-							followMeOn
-								? t('facilitator.action.followMe.activeHelp')
-								: t('facilitator.action.followMe.help'),
-						),
-					]),
-					canFlipShowQR
-						? renderToggle({
-								icon: '📲',
-								label: t('facilitator.toggle.showQR'),
-								on: showQROn,
+								]),
+								m(
+									'.facilitator-panel__row-help',
+									followMeOn
+										? t('facilitator.action.followMe.activeHelp')
+										: t('facilitator.action.followMe.help'),
+								),
+							]),
+							canFlipShowQR
+								? renderToggle({
+										icon: '📲',
+										label: t('facilitator.toggle.showQR'),
+										on: showQROn,
+										onflip: () => {
+											if (!canFlipShowQR) return;
+											void flipShowQR(main!);
+										},
+										help: t('facilitator.toggle.showQR.help'),
+									})
+								: null,
+						],
+					}),
+
+					// ── Room ─────────────────────────────────────────────────
+					// Hub-wide ambience: language + theme. Both apply to the
+					// whole join experience (not just the current question), so
+					// they belong together above the per-question controls.
+					renderSection({
+						id: 'room',
+						titleKey: 'facilitator.section.room',
+						children: [renderLanguageRow(question, main), renderThemeSegmented(question, main)],
+					}),
+
+					// ── Display & Order ─────────────────────────────────────
+					// How options appear to participants: which sort, manual
+					// reorder shortcuts, results visibility + the threshold
+					// filter. The threshold slider stays glued to its toggle.
+					renderSection({
+						id: 'display',
+						titleKey: 'facilitator.section.display',
+						children: [
+							renderSortSegmented(question),
+							isManualSort(question) && hasQuestion
+								? m('.facilitator-panel__row', [
+										m('.facilitator-panel__row-main', [
+											m(
+												'button.btn.btn--secondary.btn--small.facilitator-panel__action',
+												{
+													type: 'button',
+													onclick: () => {
+														manualReorderMode = 'options';
+														m.redraw();
+													},
+												},
+												[
+													m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '✏️'),
+													m(
+														'span.facilitator-panel__action-label',
+														t('facilitator.edit_manual_sort') || 'Edit order',
+													),
+												],
+											),
+										]),
+										m(
+											'.facilitator-panel__row-help',
+											t('facilitator.edit_manual_sort_help') || 'Drag to rearrange',
+										),
+									])
+								: null,
+							// Manual order for organizer suggestions. Independent from
+							// the crowd-list sort (which lives on `defaultSortType` /
+							// `manualOptionOrder`); the organizer section reads its own
+							// `manualOrganizerOrder`. Only rendered when there's at least
+							// one organizer suggestion to reorder — otherwise the button
+							// would be a dead-end for admins.
+							hasQuestion && getOrganizerSuggestions().length > 1
+								? m('.facilitator-panel__row', [
+										m('.facilitator-panel__row-main', [
+											m(
+												'button.btn.btn--secondary.btn--small.facilitator-panel__action',
+												{
+													type: 'button',
+													onclick: () => {
+														manualReorderMode = 'organizers';
+														m.redraw();
+													},
+												},
+												[
+													m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🛠'),
+													m(
+														'span.facilitator-panel__action-label',
+														t('facilitator.edit_manual_sort.organizers') ||
+															'Order organizer suggestions',
+													),
+												],
+											),
+										]),
+										m(
+											'.facilitator-panel__row-help',
+											t('facilitator.edit_manual_sort_help.organizers') ||
+												'Drag organizer suggestions to reorder them',
+										),
+									])
+								: null,
+							renderToggle({
+								icon: '📈',
+								label: t('facilitator.toggle.showResults'),
+								on: showResultsOn,
+								disabled: !hasQuestion,
 								onflip: () => {
-									if (!canFlipShowQR) return;
-									void flipShowQR(main!);
+									if (!hasQuestion) return;
+									void flipShowResults(question!);
 								},
-								help: t('facilitator.toggle.showQR.help'),
-							})
-						: null,
-					renderLanguageRow(question, main),
-					renderThemeSegmented(question, main),
-					renderSortSegmented(question),
-					isManualSort(question) && hasQuestion
-						? m('.facilitator-panel__row', [
-								m('.facilitator-panel__row-main', [
-									m(
-										'button.btn.btn--outline.btn--small',
-										{
-											type: 'button',
-											onclick: () => {
-												manualReorderMode = 'options';
+								help: t('facilitator.toggle.showResults.help'),
+							}),
+							renderToggle({
+								icon: '🎚️',
+								label: t('facilitator.toggle.threshold'),
+								on: thresholdOn,
+								disabled: !hasQuestion,
+								onflip: () => {
+									if (!hasQuestion) return;
+									void flipThreshold(question!);
+								},
+								help: t('facilitator.toggle.threshold.help'),
+							}),
+							thresholdOn && hasQuestion
+								? m('.facilitator-panel__slider-row', [
+										m('input.facilitator-panel__slider', {
+											type: 'range',
+											min: '0',
+											max: '1',
+											step: '0.05',
+											value: String(thresholdVal),
+											'aria-label': t('facilitator.toggle.threshold'),
+											oninput: (e: InputEvent) => {
+												const raw = (e.target as HTMLInputElement).value;
+												const v = Number(raw);
+												if (!Number.isFinite(v)) return;
+												// Optimistic local update so the label tracks the drag.
+												if (question!.resultsSettings) {
+													question!.resultsSettings.cutoffNumber = v;
+												}
+												writeThresholdValue(question!.statementId, v);
 												m.redraw();
 											},
-										},
-										[
-											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '✏️'),
-											m(
-												'span.facilitator-panel__action-label',
-												t('facilitator.edit_manual_sort') || 'Edit order',
-											),
-										],
-									),
-								]),
-								m(
-									'.facilitator-panel__row-help',
-									t('facilitator.edit_manual_sort_help') || 'Drag to rearrange',
-								),
-							])
-						: null,
-					// Manual order for organizer suggestions. Independent from the
-					// crowd-list sort (which lives on `defaultSortType` /
-					// `manualOptionOrder`); the organizer section reads its own
-					// `manualOrganizerOrder`. Only rendered when there's at least
-					// one organizer suggestion to reorder — otherwise the button
-					// would be a dead-end for admins.
-					hasQuestion && getOrganizerSuggestions().length > 1
-						? m('.facilitator-panel__row', [
-								m('.facilitator-panel__row-main', [
-									m(
-										'button.btn.btn--outline.btn--small',
-										{
-											type: 'button',
-											onclick: () => {
-												manualReorderMode = 'organizers';
-												m.redraw();
-											},
-										},
-										[
-											m('span.facilitator-panel__action-icon', { 'aria-hidden': 'true' }, '🛠'),
-											m(
-												'span.facilitator-panel__action-label',
-												t('facilitator.edit_manual_sort.organizers') ||
-													'Order organizer suggestions',
-											),
-										],
-									),
-								]),
-								m(
-									'.facilitator-panel__row-help',
-									t('facilitator.edit_manual_sort_help.organizers') ||
-										'Drag organizer suggestions to reorder them',
-								),
-							])
-						: null,
-					renderToggle({
-						icon: '🗳️',
-						label: t('facilitator.toggle.showEvaluation'),
-						on: showEvaluationOn,
-						disabled: !hasQuestion,
-						onflip: () => {
-							if (!hasQuestion) return;
-							void flipShowEvaluation(question!);
-						},
-						help: t('facilitator.toggle.showEvaluation.help'),
+										}),
+										m(
+											'span.facilitator-panel__slider-value',
+											t('facilitator.toggle.threshold.value', {
+												value: thresholdVal.toFixed(2),
+											}),
+										),
+									])
+								: null,
+						],
 					}),
-					renderToggle({
-						icon: '🤝',
-						label: t('facilitator.toggle.showJoining'),
-						on: showJoiningOn,
-						disabled: !hasQuestion,
-						onflip: () => {
-							if (!hasQuestion) return;
-							void flipShowJoining(question!);
-						},
-						help: t('facilitator.toggle.showJoining.help'),
+
+					// ── Participation ────────────────────────────────────────
+					// What participants can DO on each option card: rate it,
+					// commit to it, propose new options, talk about it.
+					renderSection({
+						id: 'participation',
+						titleKey: 'facilitator.section.participation',
+						children: [
+							renderToggle({
+								icon: '🗳️',
+								label: t('facilitator.toggle.showEvaluation'),
+								on: showEvaluationOn,
+								disabled: !hasQuestion,
+								onflip: () => {
+									if (!hasQuestion) return;
+									void flipShowEvaluation(question!);
+								},
+								help: t('facilitator.toggle.showEvaluation.help'),
+							}),
+							renderToggle({
+								icon: '🤝',
+								label: t('facilitator.toggle.showJoining'),
+								on: showJoiningOn,
+								disabled: !hasQuestion,
+								onflip: () => {
+									if (!hasQuestion) return;
+									void flipShowJoining(question!);
+								},
+								help: t('facilitator.toggle.showJoining.help'),
+							}),
+							// Join form sits directly under "Show joining" — the two
+							// are read as a pair (turn joining on, then configure the
+							// form participants fill in when they press Join).
+							renderJoinFormSection(question),
+							renderToggle({
+								icon: '➕',
+								label: t('facilitator.toggle.allowAdd'),
+								on: allowNewOptionsOn,
+								disabled: !hasQuestion,
+								onflip: () => {
+									if (!hasQuestion) return;
+									void flipAllowNewOptions(question!);
+								},
+								help: t('facilitator.toggle.allowAdd.help'),
+							}),
+							renderToggle({
+								icon: '💬',
+								label: t('facilitator.toggle.allowChat'),
+								on: allowChatOn,
+								disabled: !hasQuestion,
+								onflip: () => {
+									if (!hasQuestion) return;
+									void flipAllowChat(question!);
+								},
+							}),
+						],
 					}),
-					renderActivationThresholdSection(question),
-					renderJoinFormSection(question),
-					renderToggle({
-						icon: '📈',
-						label: t('facilitator.toggle.showResults'),
-						on: showResultsOn,
-						disabled: !hasQuestion,
-						onflip: () => {
-							if (!hasQuestion) return;
-							void flipShowResults(question!);
-						},
-						help: t('facilitator.toggle.showResults.help'),
+
+					// ── Activation rules ────────────────────────────────────
+					// Quotas that gate when an activity becomes "real":
+					// min organizers, min activists, and the per-user cap.
+					renderSection({
+						id: 'activation',
+						titleKey: 'facilitator.section.activation',
+						children: [renderActivationThresholdSection(question)],
 					}),
-					renderToggle({
-						icon: '➕',
-						label: t('facilitator.toggle.allowAdd'),
-						on: allowNewOptionsOn,
-						disabled: !hasQuestion,
-						onflip: () => {
-							if (!hasQuestion) return;
-							void flipAllowNewOptions(question!);
-						},
-						help: t('facilitator.toggle.allowAdd.help'),
+
+					// ── Delegates ───────────────────────────────────────────
+					// Admin-only trust delegation. Hidden entirely for
+					// non-admins (the helper returns null, so the section
+					// collapses to empty and `renderSection` skips it).
+					renderSection({
+						id: 'delegates',
+						titleKey: 'facilitator.section.delegates',
+						children: [renderDelegatesSection(question)],
 					}),
-					renderToggle({
-						icon: '🎚️',
-						label: t('facilitator.toggle.threshold'),
-						on: thresholdOn,
-						disabled: !hasQuestion,
-						onflip: () => {
-							if (!hasQuestion) return;
-							void flipThreshold(question!);
-						},
-						help: t('facilitator.toggle.threshold.help'),
+
+					// ── Danger zone ─────────────────────────────────────────
+					// Destructive admin action. Visually fenced off with a
+					// danger-toned title + top border so the facilitator never
+					// stumbles into it.
+					renderSection({
+						id: 'danger',
+						titleKey: 'facilitator.section.danger',
+						danger: true,
+						children: [renderResetJoiningSection(question)],
 					}),
-					thresholdOn && hasQuestion
-						? m('.facilitator-panel__slider-row', [
-								m('input.facilitator-panel__slider', {
-									type: 'range',
-									min: '0',
-									max: '1',
-									step: '0.05',
-									value: String(thresholdVal),
-									'aria-label': t('facilitator.toggle.threshold'),
-									oninput: (e: InputEvent) => {
-										const raw = (e.target as HTMLInputElement).value;
-										const v = Number(raw);
-										if (!Number.isFinite(v)) return;
-										// Optimistic local update so the label tracks the drag.
-										if (question!.resultsSettings) {
-											question!.resultsSettings.cutoffNumber = v;
-										}
-										writeThresholdValue(question!.statementId, v);
-										m.redraw();
-									},
-								}),
-								m(
-									'span.facilitator-panel__slider-value',
-									t('facilitator.toggle.threshold.value', {
-										value: thresholdVal.toFixed(2),
-									}),
-								),
-							])
-						: null,
-					renderToggle({
-						icon: '💬',
-						label: t('facilitator.toggle.allowChat'),
-						on: allowChatOn,
-						disabled: !hasQuestion,
-						onflip: () => {
-							if (!hasQuestion) return;
-							void flipAllowChat(question!);
-						},
-					}),
-					renderDelegatesSection(question),
-					renderResetJoiningSection(question),
 				],
 			),
 			manualReorderMode !== null && hasQuestion

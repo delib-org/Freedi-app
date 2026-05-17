@@ -27,11 +27,7 @@ function getOptionsForMode(mode: ManualReorderMode): Statement[] {
 	return mode === 'organizers' ? getOrganizerSuggestions() : getVisibleOptions();
 }
 
-function persistOrder(
-	mode: ManualReorderMode,
-	questionId: string,
-	ids: string[],
-): Promise<void> {
+function persistOrder(mode: ManualReorderMode, questionId: string, ids: string[]): Promise<void> {
 	return mode === 'organizers'
 		? setManualOrganizerOrder(questionId, ids)
 		: setManualOptionOrder(questionId, ids);
@@ -47,10 +43,7 @@ function getTitle(mode: ManualReorderMode): string {
 
 function getHelpText(mode: ManualReorderMode): string {
 	if (mode === 'organizers') {
-		return (
-			t('admin.manual_sort_help.organizers') ||
-			'Drag organizer suggestions to reorder them'
-		);
+		return t('admin.manual_sort_help.organizers') || 'Drag organizer suggestions to reorder them';
 	}
 
 	return t('admin.manual_sort_help') || 'Drag solutions to reorder them';
@@ -73,14 +66,19 @@ export const ManualReorder: m.Component<ManualReorderProps> = {
 			m('.manual-reorder-dialog', [
 				m('.manual-reorder-header', [
 					m('h2', getTitle(mode)),
-					m('button.manual-reorder-close', {
-						onclick: onClose,
-						'aria-label': t('close') || 'Close',
-					}, '×'),
+					m(
+						'button.manual-reorder-close',
+						{
+							onclick: onClose,
+							'aria-label': t('close') || 'Close',
+						},
+						'×',
+					),
 				]),
 				m('.manual-reorder-content', [
 					m('.manual-reorder-help', getHelpText(mode)),
-					m('.manual-reorder-list',
+					m(
+						'.manual-reorder-list',
 						reorderedIds.map((id, idx) => {
 							const option = options.find((o) => o.statementId === id);
 							if (!option) return null;
@@ -147,29 +145,37 @@ export const ManualReorder: m.Component<ManualReorderProps> = {
 					),
 				]),
 				m('.manual-reorder-footer', [
-					m('button.btn.btn--outline', {
-						type: 'button',
-						onclick: onClose,
-						...(isSaving ? { disabled: true } : {}),
-					}, t('cancel') || 'Cancel'),
-					m('button.btn.btn--primary', {
-						type: 'button',
-						onclick: () => {
-							if (isSaving) return;
-							isSaving = true;
-							m.redraw();
-							persistOrder(mode, questionId, reorderedIds)
-								.then(() => {
-									onClose();
-								})
-								.catch((error) => {
-									console.error('Failed to save manual order:', error);
-									isSaving = false;
-									m.redraw();
-								});
+					m(
+						'button.btn.btn--outline',
+						{
+							type: 'button',
+							onclick: onClose,
+							...(isSaving ? { disabled: true } : {}),
 						},
-						...(isSaving ? { disabled: true } : {}),
-					}, isSaving ? t('saving') || 'Saving...' : t('save') || 'Save Order'),
+						t('cancel') || 'Cancel',
+					),
+					m(
+						'button.btn.btn--primary',
+						{
+							type: 'button',
+							onclick: () => {
+								if (isSaving) return;
+								isSaving = true;
+								m.redraw();
+								persistOrder(mode, questionId, reorderedIds)
+									.then(() => {
+										onClose();
+									})
+									.catch((error) => {
+										console.error('Failed to save manual order:', error);
+										isSaving = false;
+										m.redraw();
+									});
+							},
+							...(isSaving ? { disabled: true } : {}),
+						},
+						isSaving ? t('saving') || 'Saving...' : t('save') || 'Save Order',
+					),
 				]),
 			]),
 		]);

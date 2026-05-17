@@ -22,9 +22,7 @@ import { logError } from './errorHandling';
 
 export type JoinAuthSource = 'creator' | 'subscription' | 'delegate';
 
-export type DelegatePermissionKey =
-	| 'canManageOrganizerSolutions'
-	| 'canManageParticipantSolutions';
+export type DelegatePermissionKey = 'canManageOrganizerSolutions' | 'canManageParticipantSolutions';
 
 export interface JoinAdminAuthOptions {
 	uid: string;

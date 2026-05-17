@@ -35,6 +35,42 @@
   gap: var(--spacing-xs);
 }
 
+.adminMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-sm);
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+.adminId {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.adminId code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.05);
+  user-select: all;
+}
+
+.adminLink {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.adminLink:hover {
+  color: var(--text-primary);
+}
+
 @media (max-width: 768px) {
   .header {
     margin-bottom: var(--spacing-sm);
@@ -55,5 +91,10 @@
     flex-direction: row;
     gap: var(--spacing-sm);
     font-size: 0.75rem;
+  }
+
+  .adminMeta {
+    gap: var(--spacing-sm);
+    font-size: 0.7rem;
   }
 }

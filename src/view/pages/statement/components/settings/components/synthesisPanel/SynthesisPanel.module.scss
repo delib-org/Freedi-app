@@ -1,0 +1,555 @@
+/* ============================================================================
+ * SynthesisPanel — admin block embedded inside the settings page.
+ *
+ * Design goals:
+ *  - Clear vertical rhythm (header → eligibility → advanced → continuous →
+ *    on-demand → status).
+ *  - Cards as containers instead of borderless form rows, so each concern
+ *    has its own visual lane.
+ *  - Two run-modes that share one pipeline are visually distinguished:
+ *      • Continuous → success-tinted, no buttons, pulse dot.
+ *      • On-demand  → neutral surface, primary buttons, selective expander.
+ *  - First-class RTL via logical properties only.
+ *  - All colors, paddings, radii come from design tokens.
+ * ============================================================================ */
+
+.synthesisPanel {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	padding: var(--padding);
+	background: var(--card-default);
+	border-radius: 12px;
+	color: var(--text-body);
+}
+
+/* ---------- Header ---------- */
+
+.panel__header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+}
+
+.panel__title {
+	margin: 0;
+	font-size: var(--h4-font-size);
+	font-weight: 600;
+	color: var(--text-title);
+	line-height: 1.25;
+}
+
+.panel__description {
+	margin-block-start: 0.25rem;
+	margin-block-end: 0;
+	margin-inline: 0;
+	font-size: 0.9rem;
+	color: var(--text-caption);
+	line-height: 1.45;
+	max-width: 60ch;
+}
+
+.panel__enable {
+	flex-shrink: 0;
+}
+
+/* ---------- Body wrapper (dims when feature disabled) ---------- */
+
+.panel__body {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+	transition: opacity 200ms ease;
+
+	&[data-disabled='true'] {
+		opacity: 0.55;
+		pointer-events: none;
+
+		// Keep the toggle and header clickable — they live outside this wrapper.
+	}
+}
+
+/* ---------- Generic card container ---------- */
+
+.card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	padding: 1rem;
+	background: var(--bg-main);
+	border: 1px solid var(--border-light);
+	border-radius: 10px;
+}
+
+.card__head {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.card__title {
+	margin: 0;
+	font-size: 1rem;
+	font-weight: 600;
+	color: var(--text-subtitle);
+	line-height: 1.3;
+}
+
+.card__subtitle {
+	margin: 0;
+	font-size: 0.85rem;
+	color: var(--text-caption);
+	line-height: 1.45;
+}
+
+/* ---------- Metric picker (radio cards) ---------- */
+
+.metricPicker {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+	gap: 0.625rem;
+}
+
+.metricPicker__option {
+	display: grid;
+	grid-template-columns: auto 1fr;
+	grid-template-rows: auto auto;
+	column-gap: 0.625rem;
+	row-gap: 0.15rem;
+	align-items: start;
+	padding: 0.75rem 0.875rem;
+	background: var(--card-default);
+	border: 1.5px solid var(--border-light);
+	border-radius: 8px;
+	cursor: pointer;
+	transition:
+		border-color 150ms ease,
+		background-color 150ms ease,
+		box-shadow 150ms ease;
+
+	&:hover {
+		border-color: var(--btn-primary-hover);
+		background: var(--bg-hover);
+	}
+
+	&:focus-within {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	input[type='radio'] {
+		grid-row: 1 / 3;
+		grid-column: 1;
+		margin: 0;
+		align-self: center;
+		accent-color: var(--btn-primary);
+		inline-size: 1.1rem;
+		block-size: 1.1rem;
+		cursor: pointer;
+	}
+
+	&[data-active='true'] {
+		border-color: var(--btn-primary);
+		background: var(--bg-selected);
+		box-shadow: 0 0 0 1px var(--btn-primary) inset;
+	}
+}
+
+.metricPicker__title {
+	grid-row: 1;
+	grid-column: 2;
+	font-weight: 600;
+	font-size: 0.95rem;
+	color: var(--text-subtitle);
+	line-height: 1.2;
+}
+
+.metricPicker__hint {
+	grid-row: 2;
+	grid-column: 2;
+	font-size: 0.8rem;
+	color: var(--text-caption);
+	line-height: 1.35;
+}
+
+/* ---------- Threshold input ---------- */
+
+.threshold {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	grid-template-rows: auto auto;
+	column-gap: 0.75rem;
+	row-gap: 0.25rem;
+	align-items: center;
+	padding: 0.875rem 1rem;
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+}
+
+.threshold__label {
+	grid-row: 1;
+	grid-column: 1;
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--text-body);
+}
+
+.threshold__input {
+	grid-row: 1;
+	grid-column: 2;
+	inline-size: 6.5rem;
+	padding: 0.45rem 0.65rem;
+	border: 1px solid var(--border-primary);
+	border-radius: 6px;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	background: var(--card-default);
+	color: var(--text-body);
+
+	&:focus {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&[aria-invalid='true'] {
+		border-color: var(--text-error);
+	}
+
+	&:disabled {
+		background: var(--bg-disabled);
+		color: var(--text-disabled);
+		cursor: not-allowed;
+	}
+}
+
+.threshold__hint {
+	grid-row: 2;
+	grid-column: 1 / -1;
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--text-caption);
+	line-height: 1.4;
+}
+
+.threshold__error {
+	grid-row: 3;
+	grid-column: 1 / -1;
+	margin: 0;
+	color: var(--text-error);
+	font-size: 0.8rem;
+}
+
+/* ---------- Disclosure (advanced) ---------- */
+
+.disclosure {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.5rem;
+	width: 100%;
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	border: none;
+	color: var(--text-subtitle);
+	font: inherit;
+	font-weight: 600;
+	font-size: 1rem;
+	cursor: pointer;
+	text-align: start;
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 4px;
+		border-radius: 4px;
+	}
+}
+
+.disclosure__title {
+	flex: 1;
+}
+
+.disclosure__chevron {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	inline-size: 1.5rem;
+	block-size: 1.5rem;
+	font-size: 1.1rem;
+	font-weight: 400;
+	color: var(--btn-primary);
+	border-radius: 50%;
+	background: var(--bg-hover);
+}
+
+.advancedBody {
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.advancedBody__note {
+	margin: 0;
+	padding: 0.6rem 0.75rem;
+	background: var(--bg-info-light);
+	border-inline-start: 3px solid var(--btn-primary);
+	border-radius: 6px;
+	font-size: 0.82rem;
+	color: var(--text-body);
+	line-height: 1.45;
+}
+
+.fieldRow {
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 0.75rem;
+	align-items: center;
+	padding: 0.65rem 0.875rem;
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-radius: 8px;
+}
+
+.fieldRow__label {
+	font-size: 0.88rem;
+	color: var(--text-body);
+}
+
+.fieldRow__input {
+	inline-size: 6rem;
+	padding: 0.4rem 0.6rem;
+	border: 1px solid var(--border-primary);
+	border-radius: 6px;
+	font: inherit;
+	font-variant-numeric: tabular-nums;
+	text-align: center;
+	background: var(--card-default);
+	color: var(--text-body);
+
+	&:focus {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&[aria-invalid='true'] {
+		border-color: var(--text-error);
+	}
+
+	&:disabled {
+		background: var(--bg-disabled);
+		color: var(--text-disabled);
+	}
+}
+
+.fieldRow__error {
+	grid-column: 1 / -1;
+	margin: 0;
+	color: var(--text-error);
+	font-size: 0.78rem;
+}
+
+/* ---------- Save bar ---------- */
+
+.saveBar {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+	padding: 0.65rem 0.875rem;
+	background: var(--bg-warning-light);
+	border: 1px solid var(--triangle-dots-agreement-50);
+	border-radius: 8px;
+}
+
+.saveBar__text {
+	font-size: 0.88rem;
+	font-weight: 500;
+	color: var(--text-warning);
+}
+
+/* ===========================================================================
+ * Run-mode cards
+ *
+ * Two stacked sub-sections that share the pipeline but communicate different
+ * intent:
+ *   • Continuous (background) — success-tinted, informational only, pulse dot.
+ *   • On-demand              — neutral, primary buttons, selective expander.
+ * =========================================================================== */
+
+/* ---- Continuous (background) ---- */
+
+.continuousCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	padding: 1rem;
+	border: 1px solid var(--text-success);
+	border-inline-start-width: 4px;
+	border-radius: 10px;
+	background: var(--bg-success-light);
+}
+
+.continuousCard__head {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 1rem;
+	flex-wrap: wrap;
+	margin-block-end: 0.5rem;
+}
+
+.continuousCard__row {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	flex-wrap: wrap;
+}
+
+.statusDot {
+	position: relative;
+	flex-shrink: 0;
+	display: inline-block;
+	inline-size: 0.75rem;
+	block-size: 0.75rem;
+	border-radius: 50%;
+	background: var(--text-disabled);
+
+	&[data-active='true'] {
+		background: var(--text-success);
+
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0;
+			border-radius: 50%;
+			background: var(--text-success);
+			opacity: 0.55;
+			animation: synthesis-pulse 1.8s ease-out infinite;
+		}
+	}
+}
+
+.statusBadge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding-block: 0.25rem;
+	padding-inline: 0.6rem;
+	font-size: 0.78rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+	text-transform: uppercase;
+	border-radius: 999px;
+	background: var(--card-default);
+	color: var(--text-disabled);
+	border: 1px solid var(--border-light);
+
+	&[data-active='true'] {
+		color: var(--text-success);
+		border-color: var(--text-success);
+	}
+}
+
+.continuousCard__caption {
+	margin: 0;
+	font-size: 0.8rem;
+	color: var(--text-caption);
+	line-height: 1.45;
+}
+
+@keyframes synthesis-pulse {
+	0% {
+		transform: scale(1);
+		opacity: 0.55;
+	}
+	70% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+	100% {
+		transform: scale(2.4);
+		opacity: 0;
+	}
+}
+
+/* ---- On-demand ---- */
+
+.onDemandCard {
+	display: flex;
+	flex-direction: column;
+	gap: 0.875rem;
+	padding: 1rem;
+	background: var(--bg-main);
+	border: 1px solid var(--border-light);
+	border-inline-start: 4px solid var(--btn-primary);
+	border-radius: 10px;
+}
+
+.onDemandActions {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+
+	> * {
+		flex: 1 1 12rem;
+		min-inline-size: 12rem;
+	}
+}
+
+.onDemandCard__divider {
+	block-size: 1px;
+	inline-size: 100%;
+	background: var(--border-light);
+	border: none;
+	margin: 0;
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+	padding: 0.65rem 0.875rem;
+	border-radius: 8px;
+	font-size: 0.88rem;
+	line-height: 1.4;
+	border: 1px solid transparent;
+
+	&[data-tone='info'] {
+		background: var(--bg-info-light);
+		color: var(--text-blue);
+		border-color: var(--btn-primary);
+	}
+
+	&[data-tone='error'] {
+		background: var(--bg-error-light);
+		color: var(--text-error);
+		border-color: var(--text-error);
+	}
+
+	&[data-tone='success'] {
+		background: var(--bg-success-light);
+		color: var(--text-success);
+		border-color: var(--text-success);
+	}
+}
+
+/* ---------- Motion & accessibility ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+	.panel__body,
+	.metricPicker__option,
+	.disclosure__chevron {
+		transition: none;
+	}
+
+	.statusDot[data-active='true']::after {
+		animation: none;
+		// Keep a steady halo instead of a pulsing one.
+		opacity: 0.35;
+		transform: scale(1.6);
+	}
+}

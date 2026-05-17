@@ -84,13 +84,53 @@
     }
   }
 
-  // Secondary — ghost, ink border
+  // Secondary — solid paper button with visible ink border. Reads as a real
+  // button (not a ghost link) so admins recognise it as a press target even
+  // among toggles and segmented controls. Used for "Stop following",
+  // "Edit order", accordion toggles, and any non-primary call to action.
   &--secondary {
-    background: transparent;
+    background: var(--bg-card, #ffffff);
     color: var(--ink);                  // 16:1 on paper ✓ AAA
     border-color: var(--ink);
+    box-shadow: var(--shadow-xs);
 
     &:hover:not(:disabled) {
+      background: var(--paper-soft);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  // Outline — alias for secondary so legacy call-sites that use
+  // `.btn--outline` (e.g. older FacilitatorPanel action buttons) render
+  // correctly without renaming. New code should prefer `.btn--secondary`.
+  &--outline {
+    background: var(--bg-card, #ffffff);
+    color: var(--ink);
+    border-color: var(--ink);
+    box-shadow: var(--shadow-xs);
+
+    &:hover:not(:disabled) {
+      background: var(--paper-soft);
+      box-shadow: var(--shadow-sm);
+    }
+  }
+
+  // Tertiary — low-emphasis text action with a subtle hover background.
+  // Still meets the 44 px touch target. Used for "+ Add field" and other
+  // inline utility actions that shouldn't compete with the primary or
+  // secondary buttons for visual weight.
+  &--tertiary {
+    background: transparent;
+    color: var(--teal-700, #0f766e);
+    border-color: transparent;
+    padding: var(--space-xs) var(--space-md);
+
+    &:hover:not(:disabled) {
+      background: var(--paper-soft);
+      color: var(--teal-700, #0f766e);
+    }
+
+    &:focus-visible {
       background: var(--paper-soft);
     }
   }
@@ -2707,6 +2747,42 @@ $facilitator-panel-width: 300px;
   line-height: 1;
 }
 
+// Pulsing red dot pinned to the handle's outer corner whenever admin's
+// "follow me" broadcast is active. Visible without opening the drawer so the
+// admin can't forget that participants are being steered by them.
+.facilitator-panel__handle-indicator {
+  position: absolute;
+  top: 6px;
+  inset-inline-start: 6px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #e53935;
+  box-shadow:
+    0 0 0 2px var(--terra-700, #7c4a2a),
+    0 0 6px rgba(229, 57, 53, 0.7);
+  pointer-events: none;
+  animation: facilitator-handle-pulse 1.4s var(--ease-out) infinite;
+}
+
+@keyframes facilitator-handle-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 2px var(--terra-700, #7c4a2a),
+      0 0 6px rgba(229, 57, 53, 0.7);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+    box-shadow:
+      0 0 0 2px var(--terra-700, #7c4a2a),
+      0 0 10px rgba(229, 57, 53, 0.9);
+  }
+}
+
 .facilitator-panel__handle:hover,
 .facilitator-panel__handle:focus-visible {
   background: var(--terra-600);
@@ -2843,6 +2919,48 @@ $facilitator-panel-width: 300px;
   background: var(--terra-50);
   border-radius: var(--radius-sm);
   font-style: italic;
+}
+
+// Section grouping — wraps a logically related set of rows under an uppercase
+// title. Sections are separated by a thin top border that picks up after the
+// first section, so the panel reads as a clear vertical hierarchy:
+// title → controls → divider → next title → next controls.
+//
+// `--first` removes the top border + padding so the very first section sits
+// flush under the panel header. `--danger` paints the title in the danger tone
+// so the bottom "Reset all joining" section is unmistakable.
+.facilitator-panel__section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  padding-block-start: var(--space-md);
+  margin-block-start: var(--space-xs);
+  border-block-start: 1px solid var(--border, rgba(28, 25, 23, 0.08));
+
+  &--first {
+    padding-block-start: 0;
+    margin-block-start: 0;
+    border-block-start: 0;
+  }
+
+  &--danger {
+    border-block-start-color: var(--danger, #b91c1c);
+  }
+}
+
+.facilitator-panel__section-title {
+  display: block;
+  margin-block-end: var(--space-xs);
+  font-size: var(--font-size-xs, 0.75rem);
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--text-muted, #78716c);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+
+  .facilitator-panel__section--danger & {
+    color: var(--danger, #b91c1c);
+  }
 }
 
 .facilitator-panel__row {
@@ -3138,44 +3256,61 @@ $facilitator-panel-width: 300px;
 
 // Accordion header that gates the form editor body. Sits below the on/off
 // toggle so flipping the form on doesn't immediately balloon the panel — the
-// editor stays collapsed until the facilitator opts in. Compact, subdued
-// styling (it's not a primary action; the toggle is).
+// editor stays collapsed until the facilitator opts in. Styled as a proper
+// secondary button (paper background, solid border, chevron on the trailing
+// edge) so it reads as a press target — not a placeholder.
 .facilitator-panel__joinform-accordion {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  gap: var(--space-sm);
   width: 100%;
   margin: 0 0 var(--space-xs);
-  padding: 6px 8px;
+  padding: var(--space-xs) var(--space-md);
+  min-height: 40px;
   font: inherit;
-  font-size: var(--font-size-xs, 0.75rem);
-  color: var(--text-body, #44403c);
-  background: transparent;
-  border: 1px dashed var(--bg-muted, #d6d3d1);
-  border-radius: var(--radius-sm, 6px);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
+  color: var(--ink, #1c1917);
+  background: var(--bg-card, #ffffff);
+  border: 1.5px solid var(--border-medium, rgba(28, 25, 23, 0.18));
+  border-radius: var(--radius-md, 8px);
   cursor: pointer;
   text-align: start;
+  box-shadow: var(--shadow-xs);
   transition:
     background var(--dur-quick, 140ms) var(--ease-out),
-    border-color var(--dur-quick, 140ms) var(--ease-out);
+    border-color var(--dur-quick, 140ms) var(--ease-out),
+    box-shadow var(--dur-quick, 140ms) var(--ease-out);
 
   &:hover {
-    background: rgba(20, 95, 84, 0.04);
-    border-color: var(--teal-600, #145f54);
+    background: var(--paper-soft, #faf8f5);
+    border-color: var(--ink, #1c1917);
+    box-shadow: var(--shadow-sm);
   }
 
   &:focus-visible {
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
   }
+
+  &[aria-expanded='true'] {
+    background: var(--paper-soft, #faf8f5);
+    border-color: var(--ink, #1c1917);
+  }
 }
 
+// Chevron sits at the trailing edge of the accordion toggle, matching the
+// disclosure convention used across the rest of the app. The label fills the
+// space between the leading edge and the chevron via `flex: 1 1 auto`.
 .facilitator-panel__joinform-accordion-chevron {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  width: 1em;
-  text-align: center;
+  order: 3;                 // Force to the trailing edge regardless of DOM order
+  width: 1.25em;
   color: var(--text-muted, #78716c);
+  font-size: 0.85em;
   transition: transform var(--dur-quick, 140ms) var(--ease-out);
 
   &--open {
@@ -3186,12 +3321,15 @@ $facilitator-panel-width: 300px;
 .facilitator-panel__joinform-accordion-label {
   flex: 1 1 auto;
   font-weight: var(--font-weight-medium, 500);
+  order: 1;
 }
 
 .facilitator-panel__joinform-accordion-meta {
   flex-shrink: 0;
+  font-size: var(--font-size-xs, 0.75rem);
   color: var(--text-muted, #78716c);
   font-variant-numeric: tabular-nums;
+  order: 2;
 }
 
 .facilitator-panel__joinform {
@@ -3379,20 +3517,34 @@ $facilitator-panel-width: 300px;
   user-select: all;
 }
 
+// "+ Add field" — tertiary button. Subtle filled surface (no border at rest)
+// so it sits below the secondary accordion toggle in visual weight, but still
+// looks like a button. Hover deepens the fill for confirmation. Meets the
+// 44 px touch target.
 .facilitator-panel__joinform-add {
   align-self: flex-start;
-  padding: 4px 10px;
+  padding: var(--space-xs) var(--space-md);
+  min-height: 36px;
   font: inherit;
-  font-size: var(--font-size-xs, 0.75rem);
+  font-size: var(--font-size-sm, 0.875rem);
+  font-weight: var(--font-weight-medium, 500);
   color: var(--teal-700, #0f766e);
-  background: transparent;
-  border: 1px dashed var(--teal-600, #145f54);
-  border-radius: var(--radius-sm, 6px);
+  background: var(--paper-soft, #faf8f5);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md, 8px);
   cursor: pointer;
-  transition: background var(--dur-quick, 140ms) var(--ease-out);
+  transition:
+    background var(--dur-quick, 140ms) var(--ease-out),
+    border-color var(--dur-quick, 140ms) var(--ease-out);
 
   &:hover {
-    background: rgba(20, 95, 84, 0.08);
+    background: var(--terra-50, rgba(255, 247, 237, 0.7));
+    border-color: var(--teal-600, #145f54);
+  }
+
+  &:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
   }
 }
 
@@ -3417,7 +3569,8 @@ $facilitator-panel-width: 300px;
     transition: none;
   }
 
-  .facilitator-panel__backdrop {
+  .facilitator-panel__backdrop,
+  .facilitator-panel__handle-indicator {
     animation: none;
   }
 }

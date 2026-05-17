@@ -26,11 +26,20 @@ You also need `tsx` available — it's a dev dep, so `npm install` once is enoug
 
 ## 1. Export from prod
 
+For disaster-recovery backups, the export defaults to a GCS bucket — see
+[`docs/SURVEY_BACKUP_RESTORE.md`](../docs/SURVEY_BACKUP_RESTORE.md).
+
+For the dev workflow described here, write to an absolute path **outside**
+this repo (the export script refuses to write inside the working tree, so
+relative paths like `test-data/...` are rejected — backups can contain PII
+and must not be committable):
+
 ```bash
+mkdir -p /tmp/freedi-test-data
 GCLOUD_PROJECT=<prod-project-id> \
   npx tsx scripts/exportProdQuestion.ts \
     --question-id <statementId> \
-    --out test-data/<descriptive-name>.json
+    --out /tmp/freedi-test-data/<descriptive-name>.json
 ```
 
 **Safety**: the export script refuses to run if `FIRESTORE_EMULATOR_HOST` is
@@ -60,7 +69,7 @@ once via the dev app, then check the Auth emulator UI), then:
 FIRESTORE_EMULATOR_HOST=localhost:8081 \
   GCLOUD_PROJECT=freedi-test \
   npx tsx scripts/importQuestionToEmulator.ts \
-    --in test-data/<name>.json \
+    --in /tmp/freedi-test-data/<name>.json \
     --as-user <your-emulator-uid> \
     --as-display-name "Tal (admin)"
 ```

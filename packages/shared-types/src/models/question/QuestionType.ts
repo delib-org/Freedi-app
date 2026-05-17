@@ -22,6 +22,7 @@ export const QuestionSettingsSchema = object({
 	remainingMsAtPause: optional(number()), // remaining ms when paused; used to compute new deadline on resume
 	isHalted: optional(boolean()), // true = democratic process is halted (no options, no evaluation, no voting)
 	haltedAt: optional(number()), // timestamp when halted
+	autoBackup: optional(boolean()), // true = include in the nightly scheduledDailyBackups run
 });
 
 export type QuestionSettings = InferOutput<typeof QuestionSettingsSchema>;
