@@ -397,6 +397,72 @@
     font-size: var(--font-size-base);
     color: var(--ink-soft);                // 5.3:1 ✓ AA
   }
+
+  // Closed-question takeover. Replaces the entire question content for
+  // participants while the admin has marked the question as closed.
+  &__closed {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    gap: var(--space-md);
+    padding: var(--space-2xl) var(--space-md);
+    min-height: 60dvh;
+  }
+
+  &__closed-icon {
+    font-size: 4rem;
+    line-height: 1;
+  }
+
+  &__closed-title {
+    font-family: var(--font-display);
+    font-size: var(--font-size-2xl);
+    font-weight: var(--font-weight-bold);
+    color: var(--ink);
+    margin: 0;
+  }
+
+  &__closed-message {
+    font-family: var(--font-body);
+    font-size: var(--font-size-base);
+    color: var(--ink-soft);
+    max-width: 32ch;
+    margin: 0;
+    line-height: var(--line-height-snug);
+  }
+
+  // Admin-only status banner — surfaces the gated state (frozen / closed)
+  // while the admin is still seeing the live question content underneath.
+  &__status-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    margin-bottom: var(--space-sm);
+
+    &--frozen {
+      background: var(--paper-soft, #ecfeff);
+      color: var(--ink);
+      border: 1px solid var(--paper-line);
+    }
+
+    &--closed {
+      background: var(--paper-soft, #fee2e2);
+      color: var(--ink);
+      border: 1px solid var(--paper-line);
+    }
+  }
+
+  &__status-banner-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+  }
 }
 
 // -----------------------------------------------------------------------------
@@ -927,6 +993,19 @@
     .btn {
       flex: 1 1 auto;
     }
+
+    // Facilitator has frozen the question — buttons keep their normal
+    // labels (so users still understand the option) but the whole row reads
+    // as locked: muted, non-interactive cursor, and the disabled attribute
+    // on the buttons themselves blocks clicks.
+    &--frozen {
+      opacity: 0.55;
+      cursor: not-allowed;
+
+      .btn {
+        cursor: not-allowed;
+      }
+    }
   }
 }
 
@@ -951,6 +1030,19 @@
   margin: var(--space-sm) 0 var(--space-md);
   padding: var(--space-sm);
   border-radius: var(--radius-md);
+}
+
+// Frozen — facilitator has paused the question. The selected face still
+// reads (so users see the snapshot of their last vote), but the entire row
+// is non-interactive: muted, cursor stays as `not-allowed`, and the
+// disabled attribute on the thumbs blocks clicks.
+.evaluation--frozen {
+  opacity: 0.55;
+  cursor: not-allowed;
+
+  .evaluation__thumb {
+    cursor: not-allowed;
+  }
 }
 
 .evaluation__thumb {

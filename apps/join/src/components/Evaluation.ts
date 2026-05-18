@@ -5,7 +5,7 @@ import evaluation2 from '@/assets/evaluation/evaluation2.svg';
 import evaluation3 from '@/assets/evaluation/evaluation3.svg';
 import evaluation4 from '@/assets/evaluation/evaluation4.svg';
 import evaluation5 from '@/assets/evaluation/evaluation5.svg';
-import { setEvaluation, getEffectiveEvaluation } from '@/lib/store';
+import { setEvaluation, getEffectiveEvaluation, getQuestion } from '@/lib/store';
 import { t } from '@/lib/i18n';
 
 interface EvaluationThumb {
@@ -89,17 +89,27 @@ export const Evaluation: m.Component<EvaluationAttrs> = {
 		const score = getEffectiveEvaluation(option.statementId);
 		const activeId = score === undefined ? null : thumbIdForScore(score);
 
+		// Facilitator-controlled freeze: once the question is frozen, evaluation
+		// becomes read-only — existing selection still highlights, but the
+		// thumbs disable so the user can't change or cast a new vote.
+		const frozen = getQuestion()?.statementSettings?.questionStatus === 'frozen';
+
 		// Once the user has made a choice, the parent gets a modifier class so
 		// sibling (non-active) thumbs can recede further. Before any choice all
 		// five faces stay equally vivid — we only introduce visual hierarchy
 		// *after* the user has voted, never before.
-		const groupClass = activeId === null ? '.evaluation' : '.evaluation.evaluation--has-selection';
+		const groupClasses = [
+			'.evaluation',
+			activeId !== null ? '.evaluation--has-selection' : '',
+			frozen ? '.evaluation--frozen' : '',
+		].join('');
 
 		return m(
-			groupClass,
+			groupClasses,
 			{
 				role: 'radiogroup',
 				'aria-label': t('evaluation.aria_label'),
+				'aria-disabled': frozen ? 'true' : undefined,
 				// The card itself is a button; the evaluation row must absorb its
 				// own clicks so picking a face never navigates to chat.
 				onclick: (e: Event) => e.stopPropagation(),
@@ -120,11 +130,13 @@ export const Evaluation: m.Component<EvaluationAttrs> = {
 						role: 'radio',
 						'aria-checked': active ? 'true' : 'false',
 						'aria-label': altLabel,
-						title: altLabel,
+						title: frozen ? t('frozen.aria_disabled') : altLabel,
 						class: active ? 'evaluation__thumb--active' : '',
+						disabled: frozen ? true : undefined,
 						style: { backgroundColor: `var(${thumb.colorVar})` },
 						onclick: (e: Event) => {
 							e.stopPropagation();
+							if (frozen) return;
 							void setEvaluation(option, thumb.evaluation);
 						},
 					},
