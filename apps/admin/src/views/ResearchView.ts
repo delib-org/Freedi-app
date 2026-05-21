@@ -3,6 +3,7 @@ import { Layout } from '../components/Layout';
 import { KpiCard } from '../components/KpiCard';
 import { Spinner } from '../components/Spinner';
 import { subscribeResearch, unsubscribeResearch, getResearchState } from '../state/research';
+import { whenAdmin } from '../lib/auth';
 import { ResearchChart } from '../components/ResearchChart';
 import { getResearchActionLabel, normalizeScreenPath } from '@freedi/shared-types';
 import type { ResearchLog } from '@freedi/shared-types';
@@ -243,14 +244,22 @@ async function refreshPersistedEntries(): Promise<void> {
 }
 
 export function ResearchView(): m.Component {
+	let stopAuthGate: (() => void) | null = null;
+
 	return {
 		oninit() {
-			subscribeResearch();
 			startTicker();
-			refreshPersistedEntries();
+			stopAuthGate = whenAdmin(
+				() => {
+					subscribeResearch();
+					refreshPersistedEntries();
+				},
+				{ onLost: () => unsubscribeResearch() },
+			);
 		},
 
 		onremove() {
+			stopAuthGate?.();
 			unsubscribeResearch();
 			stopTicker();
 		},
