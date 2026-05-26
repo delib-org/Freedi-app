@@ -7,7 +7,12 @@ export const NOISE_POOL_MIN_COUNT = 50;
 
 // Taxonomy step (Step 2)
 export const TAXONOMY_SAMPLE_MAX = 80;
-export const TAXONOMY_MIN_CATEGORIES = 8;
+// Lowered from 8 to 3 so small or homogeneous corpora (e.g. a question
+// with mostly-paraphrased responses) don't fail the entire pipeline
+// with "Taxonomy derivation failed after 2 attempts" — the LLM can
+// only return as many distinct categories as the data actually
+// supports.
+export const TAXONOMY_MIN_CATEGORIES = 3;
 export const TAXONOMY_MAX_CATEGORIES = 20;
 
 // Normalization step (Step 3)
