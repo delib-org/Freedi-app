@@ -118,13 +118,20 @@ export async function deriveTaxonomy(
 		throw new Error('Taxonomy derivation failed after 2 attempts');
 	}
 
-	// Ensure each category has a unique key — collapse duplicates if any.
-	const seen = new Set<string>();
+	// Ensure each category has a unique key AND a unique display name.
+	// Without name dedup, the LLM can emit several keys that share the same
+	// human-readable name — and since names drive UI grouping, the user sees
+	// what looks like duplicates side-by-side.
+	const seenKeys = new Set<string>();
+	const seenNames = new Set<string>();
 	const uniqueCategories: TaxonomyCategory[] = [];
 	for (const c of parsed.categories) {
 		const key = c.key.trim();
-		if (seen.has(key)) continue;
-		seen.add(key);
+		const normalizedName = c.name.trim().toLocaleLowerCase();
+		if (seenKeys.has(key)) continue;
+		if (seenNames.has(normalizedName)) continue;
+		seenKeys.add(key);
+		seenNames.add(normalizedName);
 		uniqueCategories.push({ ...c, key });
 	}
 

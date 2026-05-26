@@ -63,15 +63,20 @@ function meanVector(vectors: number[][]): number[] {
 export function clusterCategory(categoryKey: string, items: ClusterableItem[]): ClusterGroup[] {
 	if (items.length === 0) return [];
 
-	// Tiny clusters: each item is its own group, no UMAP/DBSCAN.
+	// Tiny buckets: UMAP/DBSCAN aren't meaningful below ~10 points. Instead
+	// of one-singleton-per-item (which floods the UI with single-member
+	// groups), collapse the whole bucket into ONE group per category — the
+	// taxonomy already said "these belong together by topic", so trust it.
 	if (items.length < UMAP_MIN_ITEMS) {
-		return items.map((item, i) => ({
-			groupId: `${categoryKey}_${i}`,
-			categoryKey,
-			clusterIndex: i,
-			memberIndices: [i],
-			centroid: item.embedding,
-		}));
+		return [
+			{
+				groupId: `${categoryKey}_0`,
+				categoryKey,
+				clusterIndex: 0,
+				memberIndices: items.map((_, i) => i),
+				centroid: meanVector(items.map((item) => item.embedding)),
+			},
+		];
 	}
 
 	const dim = items[0].embedding.length;

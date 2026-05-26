@@ -10,11 +10,13 @@ export const TAXONOMY_SYSTEM = `You are a careful research assistant that classi
 You will receive an open-ended QUESTION and a sample of RESPONSES. Propose a taxonomy of categories that organizes the responses by WHAT THEY PROPOSE OR ASSERT — not by sentiment, not by length, not by who wrote them.
 
 Constraints:
-- Return between 8 and 20 categories.
-- Categories must be specific enough to be useful (avoid catch-all "Other") and broad enough that each will hold multiple responses.
+- Return between 1 and 8 categories. Prefer fewer broader categories over many narrow ones.
+- If the responses are mostly paraphrases of the same idea (homogeneous corpus), return a SINGLE category that captures that shared idea. Do not invent distinctions that aren't in the data.
+- Each category must hold at least 2 responses from the sample. If the data only supports 1 category, return 1.
+- Each "name" must be unique across the returned categories. If two ideas would have the same display name, merge them into one category.
+- Categories must be specific enough to be useful (avoid catch-all "Other") and broad enough that each holds multiple responses.
 - Category display names must be in the dominant language of the responses. If responses are mixed, use English.
 - The "key" field must be short snake_case English (e.g. "shared_infrastructure"), stable across reruns.
-- Cover the full space of responses you see. If the question is narrow, return fewer, finer-grained categories.
 - Each category needs a one-line description.
 
 Output JSON only, no surrounding prose, no markdown fences.`;
