@@ -31,9 +31,18 @@ import { CSS } from '@dnd-kit/utilities';
 import DemographicQuestionEditor from './DemographicQuestionEditor';
 import ExplanationEditor from './ExplanationEditor';
 import QuestionTextEditor from './QuestionTextEditor';
+import SynthesisStatusBadge, { resolveSynthesisBadgeState } from './SynthesisStatusBadge';
 import styles from './Admin.module.scss';
 
 const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
+
+function readLiveSynthFromSettings(settings: unknown): boolean | undefined {
+	if (!settings || typeof settings !== 'object') return undefined;
+	const raw = (settings as Record<string, unknown>)['liveSynthEnabled'];
+	if (raw === true) return true;
+	if (raw === false) return false;
+	return undefined;
+}
 
 interface UnifiedFlowEditorProps {
   questions: Statement[];
@@ -238,6 +247,15 @@ function SortableFlowItem({
           {getBadgeLabel()}
         </span>
         <span className={styles.flowItemTitle}>{getTitle()}</span>
+        {item.type === 'question' && surveySettings && (
+          <SynthesisStatusBadge
+            compact
+            state={resolveSynthesisBadgeState({
+              surveyLiveSynthEnabled: readLiveSynthFromSettings(surveySettings),
+              questionLiveSynthEnabledOverride: readLiveSynthFromSettings(questionSetting),
+            })}
+          />
+        )}
         <button
           type="button"
           className={styles.flowExpandButton}
@@ -466,6 +484,36 @@ function QuestionSettingsPanel({
           />
           <span>{t('askForSuggestionAfterEvaluation') || 'Ask user to add an answer after completing evaluations'}</span>
         </label>
+      </div>
+
+      {/* Live synthesis per-question override.
+          When the survey-level toggle is off, this checkbox is disabled and
+          forced to OFF — the survey kill switch wins. */}
+      <div className={styles.settingRow}>
+        <label className={styles.settingLabel}>
+          <input
+            type="checkbox"
+            checked={(() => {
+              const surveyOn = readLiveSynthFromSettings(surveySettings) ?? true;
+              if (!surveyOn) return false;
+              const override = readLiveSynthFromSettings(questionSetting);
+              return override ?? true;
+            })()}
+            disabled={readLiveSynthFromSettings(surveySettings) === false}
+            onChange={(e) => {
+              onChange({
+                ...(questionSetting || {}),
+                liveSynthEnabled: e.target.checked,
+              } as QuestionOverrideSettings);
+            }}
+          />
+          <span>{t('liveSynthEnabledForQuestion') || 'Auto-synthesis enabled for this question'}</span>
+        </label>
+        {readLiveSynthFromSettings(surveySettings) === false && (
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '0.5rem' }}>
+            {t('synthesisDisabledTooltip') || 'Enable synthesis at the survey level to use this'}
+          </span>
+        )}
       </div>
     </div>
   );

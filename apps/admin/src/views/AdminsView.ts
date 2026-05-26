@@ -5,16 +5,21 @@ import { Spinner } from '../components/Spinner';
 import { Badge } from '../components/Badge';
 import { getMainAppUrl } from '../lib/links';
 import { subscribeAdmins, unsubscribeAdmins, getAdminState } from '../state/admins';
+import { whenAdmin } from '../lib/auth';
 
 export function AdminsView(): m.Component {
 	let expandedUserId: string | null = null;
+	let stopAuthGate: (() => void) | null = null;
 
 	return {
 		oninit() {
-			subscribeAdmins();
+			stopAuthGate = whenAdmin(() => subscribeAdmins(), {
+				onLost: () => unsubscribeAdmins(),
+			});
 		},
 
 		onremove() {
+			stopAuthGate?.();
 			unsubscribeAdmins();
 		},
 

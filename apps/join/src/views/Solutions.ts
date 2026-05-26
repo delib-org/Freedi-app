@@ -212,6 +212,24 @@ export const Solutions: m.Component = {
 			return m('.solutions', m('.solutions__empty', t('solutions.error.not_found')));
 		}
 
+		// Closed: replace the entire question content with a "this question is
+		// closed" screen for participants. Admins still see the FacilitatorPanel
+		// (rendered below the closed banner) so they can reopen the question.
+		// Frozen is handled inside the cards (joining + evaluation are disabled).
+		const questionStatus = question.statementSettings?.questionStatus ?? 'live';
+		if (questionStatus === 'closed' && !isAdmin()) {
+			return m('.solutions.solutions--closed', [
+				m(BackButton, {
+					to: isFacilitatedMode() && m.route.param('mid') ? `/m/${m.route.param('mid')}` : '/',
+				}),
+				m('.solutions__closed', [
+					m('.solutions__closed-icon', { 'aria-hidden': 'true' }, '🔒'),
+					m('h1.solutions__closed-title', t('solutions.closed.title')),
+					m('p.solutions__closed-message', t('solutions.closed.message')),
+				]),
+			]);
+		}
+
 		const options = getVisibleOptions();
 		const total = getTotalVisibleCount();
 		const unread = getUnreadCount();
@@ -269,6 +287,29 @@ export const Solutions: m.Component = {
 					: null,
 			]),
 			m('.solutions__scroll', [
+				// Status banner \u2014 only rendered for admins (participants either
+				// see the closed screen above or the normal frozen-but-disabled
+				// surface). Reassures the admin that participants are getting the
+				// gated view while still letting them work the question.
+				questionStatus !== 'live' && isAdmin()
+					? m(
+							`.solutions__status-banner.solutions__status-banner--${questionStatus}`,
+							{ role: 'status' },
+							[
+								m(
+									'span.solutions__status-banner-icon',
+									{ 'aria-hidden': 'true' },
+									questionStatus === 'closed' ? '\ud83d\udd12' : '\ud83e\uddca',
+								),
+								m(
+									'span',
+									questionStatus === 'closed'
+										? t('solutions.status.banner.closed')
+										: t('solutions.status.banner.frozen'),
+								),
+							],
+						)
+					: null,
 				question.statementSettings?.showJoining !== false
 					? m('.solutions__subtitle', [
 							m('span.solutions__subtitle-icon', '\u2728'),

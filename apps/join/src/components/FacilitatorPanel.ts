@@ -5,6 +5,7 @@ import type {
 	JoinFormDestination,
 	JoinFormField,
 	JoinFormFieldType,
+	QuestionStatus,
 	ResultsSettings,
 } from '@freedi/shared-types';
 import { isAdmin } from '@/lib/admin';
@@ -269,6 +270,91 @@ function isFollowMeOn(question: Statement): boolean {
 async function pressFollowMe(question: Statement, mainId: string): Promise<void> {
 	const next = isFollowMeOn(question) ? '' : broadcastPathForQuestion(question.statementId);
 	await setPowerFollowMe(mainId, next);
+}
+
+/** Facilitator lifecycle gate. Default (unset) is treated as 'live'. Writes
+ *  `statementSettings.questionStatus` on the question so every participant on
+ *  the next snapshot sees the same gate — frozen blocks interaction, closed
+ *  swaps in a "This question is closed" screen for non-admins. */
+function getQuestionStatus(question: Statement): QuestionStatus {
+	return question.statementSettings?.questionStatus ?? 'live';
+}
+
+async function setQuestionStatus(question: Statement, value: QuestionStatus): Promise<void> {
+	// Optimistic local update so the segmented control reflects the change
+	// before the snapshot lands; the listener overwrites with the same value
+	// once Firestore confirms.
+	if (question.statementSettings) {
+		question.statementSettings.questionStatus = value;
+	} else {
+		question.statementSettings = { questionStatus: value };
+	}
+	m.redraw();
+	await setQuestionSetting(question.statementId, {
+		statementSettings: {
+			...question.statementSettings,
+			questionStatus: value,
+		},
+	});
+}
+
+const QUESTION_STATUS_OPTIONS: Array<{
+	value: QuestionStatus;
+	icon: string;
+	labelKey: string;
+}> = [
+	{ value: 'live', icon: '🟢', labelKey: 'facilitator.status.live' },
+	{ value: 'frozen', icon: '🧊', labelKey: 'facilitator.status.frozen' },
+	{ value: 'closed', icon: '🔒', labelKey: 'facilitator.status.closed' },
+];
+
+function renderQuestionStatusSegmented(question: Statement | null): m.Vnode | null {
+	if (!question) return null;
+	const active = getQuestionStatus(question);
+	const label = t('facilitator.status.label');
+	const help =
+		active === 'closed'
+			? t('facilitator.status.help.closed')
+			: active === 'frozen'
+				? t('facilitator.status.help.frozen')
+				: t('facilitator.status.help.live');
+
+	return m('.facilitator-panel__row', [
+		m('.facilitator-panel__row-main', [
+			m('span.facilitator-panel__row-label', [
+				m('span.facilitator-panel__row-icon', { 'aria-hidden': 'true' }, '🚦'),
+				label,
+			]),
+			m(
+				'.facilitator-panel__segmented',
+				{ role: 'radiogroup', 'aria-label': label },
+				QUESTION_STATUS_OPTIONS.map((opt) => {
+					const isActive = active === opt.value;
+					const optLabel = t(opt.labelKey);
+
+					return m(
+						`button.facilitator-panel__segment${isActive ? '.facilitator-panel__segment--active' : ''}`,
+						{
+							type: 'button',
+							role: 'radio',
+							'aria-checked': isActive ? 'true' : 'false',
+							'aria-label': optLabel,
+							title: optLabel,
+							onclick: () => {
+								if (isActive) return;
+								void setQuestionStatus(question, opt.value);
+							},
+						},
+						[
+							m('span.facilitator-panel__segment-icon', { 'aria-hidden': 'true' }, opt.icon),
+							m('span.facilitator-panel__segment-label', optLabel),
+						],
+					);
+				}),
+			),
+		]),
+		m('.facilitator-panel__row-help', help),
+	]);
 }
 
 async function flipAllowNewOptions(question: Statement): Promise<void> {
@@ -1564,6 +1650,10 @@ export const FacilitatorPanel: m.Component = {
 										help: t('facilitator.toggle.showQR.help'),
 									})
 								: null,
+							// Lifecycle gate — Live / Frozen / Closed. Sits with the other
+							// "in the moment" controls (Follow Me, Show QR) so the
+							// facilitator doesn't hunt for it mid-session.
+							renderQuestionStatusSegmented(question),
 						],
 					}),
 

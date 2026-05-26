@@ -13,6 +13,7 @@ import {
 } from '@/types/survey';
 import { logger } from '@/lib/utils/logger';
 import { SURVEYS_COLLECTION, generateSurveyId } from './surveyHelpers';
+import { cascadeSynthesisToggle } from '../synthesis/cascadeSynthesisToggle';
 
 /**
  * Create a new survey
@@ -70,6 +71,13 @@ export async function createSurvey(
     'explanationPages:', survey.explanationPages?.length || 0,
     'demographicPages:', survey.demographicPages?.length || 0
   );
+
+  // Cascade liveSynthEnabled to any questions attached at creation time.
+  try {
+    await cascadeSynthesisToggle(survey);
+  } catch (error) {
+    logger.error('[createSurvey] cascadeSynthesisToggle failed:', survey.surveyId, error);
+  }
 
   return survey;
 }
@@ -204,10 +212,28 @@ export async function updateSurvey(
 
   logger.info('[updateSurvey] Updated survey:', surveyId, 'with updates:', JSON.stringify(updates));
 
-  return {
+  const merged: Survey = {
     ...survey,
     ...updates,
   };
+
+  // Cascade liveSynthEnabled whenever survey settings, per-question settings,
+  // or the questionIds set changed. The cascade itself is idempotent and only
+  // writes when the resolved value differs from what's stored.
+  const synthesisRelevantChange =
+    data.settings !== undefined ||
+    data.questionSettings !== undefined ||
+    data.questionIds !== undefined;
+
+  if (synthesisRelevantChange) {
+    try {
+      await cascadeSynthesisToggle(merged);
+    } catch (error) {
+      logger.error('[updateSurvey] cascadeSynthesisToggle failed:', surveyId, error);
+    }
+  }
+
+  return merged;
 }
 
 /**

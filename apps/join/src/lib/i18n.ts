@@ -234,6 +234,23 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'Join form',
 		'facilitator.section.delegates': 'Delegates',
 		'facilitator.section.danger': 'Danger zone',
+		'facilitator.status.label': 'Question status',
+		'facilitator.status.live': 'Live',
+		'facilitator.status.frozen': 'Frozen',
+		'facilitator.status.closed': 'Closed',
+		'facilitator.status.help.live': 'Participants can join, un-join, and evaluate normally.',
+		'facilitator.status.help.frozen':
+			'Question stays visible, but joining, un-joining, and evaluation are blocked.',
+		'facilitator.status.help.closed':
+			'Participants see only a "This question is closed" screen instead of the question.',
+		'solutions.status.banner.frozen':
+			'Frozen — participants can see this question but cannot join, un-join, or evaluate.',
+		'solutions.status.banner.closed':
+			'Closed — participants see only a "This question is closed" screen.',
+		'solutions.closed.title': 'This question is closed',
+		'solutions.closed.message':
+			'The facilitator has closed this question. Please check back later.',
+		'frozen.aria_disabled': 'The facilitator has frozen this question',
 		'qrShare.label': 'Invite someone nearby',
 		'qrShare.share': 'Share',
 		'qrShare.copy': 'Copy link',
@@ -520,8 +537,7 @@ const translations: Record<string, Record<string, string>> = {
 			'משווה את גיליון Google עם רשימות הפעילים/המארגנים בפועל, מוסיף שורות חסרות ומסיר שורות של משתמשים שלא מצורפים יותר. ניתן להריץ בכל עת.',
 		'facilitator.reconcileSheet.done':
 			'הסנכרון הושלם: נוספו {{appended}}, {{present}} כבר היו בגיליון, הוסרו {{removed}} שורות יתומות, {{noSubmission}} משתתפים ללא טופס, {{errors}} שגיאות.',
-		'facilitator.reconcileSheet.error':
-			'הסנכרון נכשל. נסו שוב או בדקו את הקונסול לפרטים.',
+		'facilitator.reconcileSheet.error': 'הסנכרון נכשל. נסו שוב או בדקו את הקונסול לפרטים.',
 		'facilitator.reconcileSheet.v1_orphan_skipped':
 			'הסרת שורות יתומות דולגה — הגיליון בסכמה ישנה (ללא עמודת optionId). המעבר לסכמה חדשה יקרה אוטומטית בשינוי החברות הבא.',
 		'admin.suggestion_badge': 'הצעת מארגן/ת',
@@ -632,6 +648,19 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'טופס הצטרפות',
 		'facilitator.section.delegates': 'נציגים',
 		'facilitator.section.danger': 'אזור מסוכן',
+		'facilitator.status.label': 'מצב השאלה',
+		'facilitator.status.live': 'פעיל',
+		'facilitator.status.frozen': 'מוקפא',
+		'facilitator.status.closed': 'סגור',
+		'facilitator.status.help.live': 'משתתפים יכולים להצטרף, לבטל הצטרפות ולהעריך כרגיל.',
+		'facilitator.status.help.frozen': 'השאלה מוצגת, אך הצטרפות, ביטול הצטרפות והערכה חסומים.',
+		'facilitator.status.help.closed': 'במקום השאלה משתתפים רואים רק מסך "השאלה הזו סגורה".',
+		'solutions.status.banner.frozen':
+			'מוקפא — משתתפים יכולים לראות את השאלה אך אינם יכולים להצטרף, לבטל הצטרפות או להעריך.',
+		'solutions.status.banner.closed': 'סגור — משתתפים רואים רק מסך "השאלה הזו סגורה".',
+		'solutions.closed.title': 'השאלה הזו סגורה',
+		'solutions.closed.message': 'המנחה סגר/ה את השאלה הזו. נסו שוב מאוחר יותר.',
+		'frozen.aria_disabled': 'המנחה הקפיא/ה את השאלה הזו',
 		'qrShare.label': 'הזמינו מישהו לידכם',
 		'qrShare.share': 'שיתוף',
 		'qrShare.copy': 'העתקת קישור',
@@ -997,6 +1026,19 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'استمارة الانضمام',
 		'facilitator.section.delegates': 'المندوبون',
 		'facilitator.section.danger': 'منطقة خطر',
+		'facilitator.status.label': 'حالة السؤال',
+		'facilitator.status.live': 'نشط',
+		'facilitator.status.frozen': 'مجمَّد',
+		'facilitator.status.closed': 'مغلق',
+		'facilitator.status.help.live': 'يمكن للمشاركين الانضمام والانسحاب والتقييم بشكل طبيعي.',
+		'facilitator.status.help.frozen': 'يبقى السؤال مرئيًا، لكن الانضمام والانسحاب والتقييم محظورة.',
+		'facilitator.status.help.closed': 'يرى المشاركون فقط شاشة "هذا السؤال مغلق" بدلًا من السؤال.',
+		'solutions.status.banner.frozen':
+			'مجمَّد — يستطيع المشاركون رؤية السؤال لكن لا يمكنهم الانضمام أو الانسحاب أو التقييم.',
+		'solutions.status.banner.closed': 'مغلق — يرى المشاركون شاشة "هذا السؤال مغلق" فقط.',
+		'solutions.closed.title': 'هذا السؤال مغلق',
+		'solutions.closed.message': 'أغلق الميسّر هذا السؤال. يُرجى المحاولة لاحقًا.',
+		'frozen.aria_disabled': 'قام الميسّر بتجميد هذا السؤال',
 		'qrShare.label': 'ادعُ شخصًا بجانبك',
 		'qrShare.share': 'مشاركة',
 		'qrShare.copy': 'نسخ الرابط',
@@ -1339,6 +1381,23 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'Beitrittsformular',
 		'facilitator.section.delegates': 'Delegierte',
 		'facilitator.section.danger': 'Gefahrenzone',
+		'facilitator.status.label': 'Frage-Status',
+		'facilitator.status.live': 'Aktiv',
+		'facilitator.status.frozen': 'Eingefroren',
+		'facilitator.status.closed': 'Geschlossen',
+		'facilitator.status.help.live': 'Teilnehmende können normal beitreten, austreten und bewerten.',
+		'facilitator.status.help.frozen':
+			'Die Frage bleibt sichtbar, aber Beitritt, Austritt und Bewertung sind gesperrt.',
+		'facilitator.status.help.closed':
+			'Teilnehmende sehen statt der Frage nur einen "Diese Frage ist geschlossen"-Bildschirm.',
+		'solutions.status.banner.frozen':
+			'Eingefroren — Teilnehmende sehen die Frage, können aber nicht beitreten, austreten oder bewerten.',
+		'solutions.status.banner.closed':
+			'Geschlossen — Teilnehmende sehen nur einen "Diese Frage ist geschlossen"-Bildschirm.',
+		'solutions.closed.title': 'Diese Frage ist geschlossen',
+		'solutions.closed.message':
+			'Die Moderation hat diese Frage geschlossen. Bitte versuche es später erneut.',
+		'frozen.aria_disabled': 'Die Moderation hat diese Frage eingefroren',
 		'qrShare.label': 'Lade jemanden in der Nähe ein',
 		'qrShare.share': 'Teilen',
 		'qrShare.copy': 'Link kopieren',
@@ -1696,6 +1755,24 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'Formulario de inscripción',
 		'facilitator.section.delegates': 'Delegados',
 		'facilitator.section.danger': 'Zona de peligro',
+		'facilitator.status.label': 'Estado de la pregunta',
+		'facilitator.status.live': 'Activa',
+		'facilitator.status.frozen': 'Congelada',
+		'facilitator.status.closed': 'Cerrada',
+		'facilitator.status.help.live':
+			'Las personas participantes pueden unirse, salirse y evaluar con normalidad.',
+		'facilitator.status.help.frozen':
+			'La pregunta sigue visible, pero unirse, salirse y evaluar están bloqueados.',
+		'facilitator.status.help.closed':
+			'Las personas participantes ven solo una pantalla de "Esta pregunta está cerrada" en lugar de la pregunta.',
+		'solutions.status.banner.frozen':
+			'Congelada — las personas participantes pueden ver la pregunta, pero no unirse, salirse ni evaluar.',
+		'solutions.status.banner.closed':
+			'Cerrada — las personas participantes solo ven la pantalla "Esta pregunta está cerrada".',
+		'solutions.closed.title': 'Esta pregunta está cerrada',
+		'solutions.closed.message':
+			'La persona facilitadora ha cerrado esta pregunta. Vuelve a intentarlo más tarde.',
+		'frozen.aria_disabled': 'La persona facilitadora ha congelado esta pregunta',
 		'qrShare.label': 'Invita a alguien cerca',
 		'qrShare.share': 'Compartir',
 		'qrShare.copy': 'Copiar enlace',
@@ -2046,6 +2123,23 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'Inschrijfformulier',
 		'facilitator.section.delegates': 'Gedelegeerden',
 		'facilitator.section.danger': 'Gevarenzone',
+		'facilitator.status.label': 'Vraag-status',
+		'facilitator.status.live': 'Live',
+		'facilitator.status.frozen': 'Bevroren',
+		'facilitator.status.closed': 'Gesloten',
+		'facilitator.status.help.live': 'Deelnemers kunnen normaal meedoen, uitstappen en beoordelen.',
+		'facilitator.status.help.frozen':
+			'De vraag blijft zichtbaar, maar meedoen, uitstappen en beoordelen zijn geblokkeerd.',
+		'facilitator.status.help.closed':
+			'Deelnemers zien alleen een scherm met "Deze vraag is gesloten" in plaats van de vraag.',
+		'solutions.status.banner.frozen':
+			'Bevroren — deelnemers kunnen de vraag zien, maar niet meedoen, uitstappen of beoordelen.',
+		'solutions.status.banner.closed':
+			'Gesloten — deelnemers zien alleen het scherm "Deze vraag is gesloten".',
+		'solutions.closed.title': 'Deze vraag is gesloten',
+		'solutions.closed.message':
+			'De moderator heeft deze vraag gesloten. Probeer het later opnieuw.',
+		'frozen.aria_disabled': 'De moderator heeft deze vraag bevroren',
 		'qrShare.label': 'Nodig iemand naast je uit',
 		'qrShare.share': 'Delen',
 		'qrShare.copy': 'Link kopiëren',
@@ -2384,6 +2478,23 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.section.joinForm': 'فرم پیوستن',
 		'facilitator.section.delegates': 'نمایندگان',
 		'facilitator.section.danger': 'منطقه خطر',
+		'facilitator.status.label': 'وضعیت سؤال',
+		'facilitator.status.live': 'فعال',
+		'facilitator.status.frozen': 'منجمد',
+		'facilitator.status.closed': 'بسته',
+		'facilitator.status.help.live':
+			'شرکت‌کنندگان می‌توانند به‌طور عادی بپیوندند، خارج شوند و ارزیابی کنند.',
+		'facilitator.status.help.frozen':
+			'سؤال نمایان می‌ماند، اما پیوستن، خروج و ارزیابی مسدود هستند.',
+		'facilitator.status.help.closed':
+			'به‌جای سؤال، شرکت‌کنندگان فقط صفحهٔ «این سؤال بسته است» را می‌بینند.',
+		'solutions.status.banner.frozen':
+			'منجمد — شرکت‌کنندگان می‌توانند سؤال را ببینند ولی نمی‌توانند بپیوندند، خارج شوند یا ارزیابی کنند.',
+		'solutions.status.banner.closed':
+			'بسته — شرکت‌کنندگان فقط صفحهٔ «این سؤال بسته است» را می‌بینند.',
+		'solutions.closed.title': 'این سؤال بسته است',
+		'solutions.closed.message': 'تسهیل‌گر این سؤال را بسته است. لطفاً بعداً دوباره بررسی کنید.',
+		'frozen.aria_disabled': 'تسهیل‌گر این سؤال را منجمد کرده است',
 		'qrShare.label': 'کسی نزدیک خود را دعوت کنید',
 		'qrShare.share': 'اشتراک‌گذاری',
 		'qrShare.copy': 'کپی پیوند',

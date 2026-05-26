@@ -227,7 +227,8 @@ export type {
   CondensationConfig,
   CondensationLevel,
   CondensationSurfaceVisibility,
-  CondensationVisibility
+  CondensationVisibility,
+  QuestionStatus
 } from "./models/statement/StatementSettings";
 
 export {
@@ -243,7 +244,8 @@ export {
   CondensationConfigSchema,
   CondensationLevelSchema,
   CondensationSurfaceVisibilitySchema,
-  CondensationVisibilitySchema
+  CondensationVisibilitySchema,
+  QuestionStatusSchema
 } from "./models/statement/StatementSettings";
 
 export type {
