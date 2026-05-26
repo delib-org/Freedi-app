@@ -6,6 +6,7 @@ import { useTranslation } from '@freedi/shared-i18n/next';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Survey, SurveyStatus, TestDataCounts } from '@/types/survey';
 import { logError } from '@/lib/utils/errorHandling';
+import SynthesisStatusSummary from './SynthesisStatusSummary';
 import styles from './Admin.module.scss';
 
 interface SurveyStatusManagerProps {
@@ -323,6 +324,9 @@ export default function SurveyStatusManager({ survey, onStatusChange }: SurveySt
           <p>{error}</p>
         </div>
       )}
+
+      {/* Synthesis Status (operational view of AI auto-merging) */}
+      <SynthesisStatusSummary survey={survey} />
 
       {/* Test Mode Section */}
       <div className={styles.testModeSection}>
