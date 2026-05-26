@@ -165,7 +165,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		statementId: clusterId,
 		statement: proposal.title,
 		description: proposal.description ?? '',
-		statementType: StatementType.option,
+		statementType: StatementType.synthesis,
 		parentId: option.parentId,
 		topParentId: option.topParentId ?? option.parentId,
 		creatorId: option.creatorId,
