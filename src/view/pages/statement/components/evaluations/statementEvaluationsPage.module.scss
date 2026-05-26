@@ -77,11 +77,12 @@
     overflow: visible;
     // Override global wrapper styles
     padding-top: 1rem;
+    padding-bottom: var(--page-bottom-clearance);
 
     // Mobile: compact layout - reduce all spacing
     @media screen and (max-width: 600px) {
         padding-top: 0.25rem !important;
-        padding-bottom: 60px !important;
+        padding-bottom: var(--page-bottom-clearance) !important;
         gap: 0.25rem !important;
     }
 
@@ -117,7 +118,7 @@
 
     .wrapper {
         padding-top: 0.5rem;
-        padding-bottom: 3rem;
+        padding-bottom: var(--page-bottom-clearance);
     }
 }
 
