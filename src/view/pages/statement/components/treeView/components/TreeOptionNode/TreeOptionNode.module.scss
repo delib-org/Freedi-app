@@ -269,18 +269,22 @@
 		word-break: break-word;
 	}
 
-	// When the node is a cluster, reserve extra top-end space so the cluster
-	// badge sitting in the absolute-positioned header doesn't collide with
-	// the title on narrow rows.
-	&--cluster &__text {
-		padding-inline-end: 5.5rem;
+	// The absolute-positioned header (badge + ⋮ menu) sits in the top-end
+	// corner with z-index above the body text. Anything on line 1 needs an
+	// inline-end reservation wider than the header or it disappears behind
+	// the badge. Apply to both __text (title) and __description so a
+	// single-line title doesn't push the description under the badge either.
+	&--cluster &__text,
+	&--cluster &__description {
+		padding-inline-end: 7rem;
 	}
 
-	// Synthesis badge reads "Synthesized · N" (plus Sparkles icon), which is
-	// noticeably wider than a plain count badge — reserve extra room so the
-	// title can't slide under it.
-	&--synthesis &__text {
-		padding-inline-end: 8rem;
+	// Synthesis badge reads "Synthesized · N" with a Sparkles icon plus the
+	// adjacent ⋮ menu — measured ≈ 10–11rem at default font sizes. Reserve
+	// 12rem so the title can't slide under it even with multi-digit counts.
+	&--synthesis &__text,
+	&--synthesis &__description {
+		padding-inline-end: 12rem;
 	}
 
 	&__description {
