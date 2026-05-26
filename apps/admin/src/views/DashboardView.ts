@@ -9,6 +9,7 @@ import { TimeChart, MultiTimeChart, MultiSeriesItem } from '../components/TimeCh
 import { statementTypeBadge, sourceAppBadge } from '../components/Badge';
 import { PeriodToggle } from '../components/PeriodToggle';
 import { subscribeDashboard, unsubscribeDashboard, getDashboardState, setPeriodMode } from '../state/dashboard';
+import { whenAdmin } from '../lib/auth';
 
 // ── Color maps ───────────────────────────────────────────────────────
 
@@ -93,12 +94,17 @@ const RecentTable = DataTable<Statement>();
 // ── View ─────────────────────────────────────────────────────────────
 
 export function DashboardView(): m.Component {
+	let stopAuthGate: (() => void) | null = null;
+
 	return {
 		oninit() {
-			subscribeDashboard();
+			stopAuthGate = whenAdmin(() => subscribeDashboard(), {
+				onLost: () => unsubscribeDashboard(),
+			});
 		},
 
 		onremove() {
+			stopAuthGate?.();
 			unsubscribeDashboard();
 		},
 

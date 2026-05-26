@@ -544,6 +544,37 @@ export default function SurveyForm({ existingSurvey, onSurveyUpdate }: SurveyFor
         </div>
       </div>
 
+      {/* Synthesis Settings */}
+      <div className={styles.formSection}>
+        <h2 className={styles.sectionTitle}>{t('synthesisSettings') || 'AI Synthesis'}</h2>
+        <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>
+          {t('synthesisSettingsDescription') || 'Live synthesis automatically merges near-duplicate options into clusters as participants vote. Enabled by default for Mass-Consensus questions.'}
+        </p>
+
+        <div className={styles.formGroup}>
+          <label>
+            <input
+              type="checkbox"
+              checked={
+                typeof (settings as unknown as Record<string, unknown>)['liveSynthEnabled'] === 'boolean'
+                  ? Boolean((settings as unknown as Record<string, unknown>)['liveSynthEnabled'])
+                  : true
+              }
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  liveSynthEnabled: e.target.checked,
+                } as typeof settings)
+              }
+            />
+            {' '}{t('liveSynthEnabledForSurvey') || 'Auto-synthesis enabled for this survey'}
+          </label>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginLeft: '1.5rem' }}>
+            {t('liveSynthSurveyNote') || 'Master kill switch. When off, no question in this survey will auto-synthesize regardless of per-question setting.'}
+          </p>
+        </div>
+      </div>
+
       {/* Display Mode Toggle */}
       <div className={styles.formSection}>
         <h2 className={styles.sectionTitle}>{t('displayMode') || 'Display Mode'}</h2>

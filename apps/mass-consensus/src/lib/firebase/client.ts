@@ -12,7 +12,12 @@ import {
 } from 'firebase/auth';
 import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
 import { getStorage, connectStorageEmulator } from 'firebase/storage';
+import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
 import { logError } from '../utils/errorHandling';
+
+// Region for all Cloud Functions in this project. Matches functionConfig.region
+// in @freedi/shared-types and the deploy targets (me-west1 / Tel Aviv).
+const FUNCTIONS_REGION = 'me-west1';
 
 // Firebase client configuration from environment variables
 const firebaseConfig = {
@@ -35,6 +40,9 @@ const db = getFirestore(app);
 
 // Get Storage instance for client-side operations
 const storage = getStorage(app);
+
+// Get Functions instance pinned to the deploy region
+const functions = getFunctions(app, FUNCTIONS_REGION);
 
 // Connect to emulators in development
 // Check if we're on localhost (development mode)
@@ -65,6 +73,14 @@ if (isLocalhost) {
     console.info('[Firebase Client] Connected to Storage emulator on localhost:9199');
   } catch (error) {
     logError(error, { operation: 'firebaseClient.connectStorageEmulator' });
+  }
+
+  // Connect to Functions emulator
+  try {
+    connectFunctionsEmulator(functions, 'localhost', 5001);
+    console.info('[Firebase Client] Connected to Functions emulator on localhost:5001');
+  } catch (error) {
+    logError(error, { operation: 'firebaseClient.connectFunctionsEmulator' });
   }
 }
 
@@ -169,5 +185,5 @@ export function onAuthChange(callback: (user: User | null) => void): () => void 
   return onAuthStateChanged(auth, callback);
 }
 
-export { auth, app, db, storage };
+export { auth, app, db, storage, functions };
 export type { User };

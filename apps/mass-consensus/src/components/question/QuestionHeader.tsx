@@ -11,8 +11,6 @@ interface QuestionHeaderProps {
   question: Statement;
 }
 
-const MAIN_APP_URL = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'https://app.wizcol.com';
-
 /**
  * Client Component - Question header
  * Displays question title and description with translations
@@ -47,19 +45,6 @@ export default function QuestionHeader({ question }: QuestionHeaderProps) {
         <span className={styles.metaItem}>
           {t('Created')} {formattedDate}
         </span>
-      </div>
-      <div className={styles.adminMeta}>
-        <span className={styles.adminId}>
-          ID: <code>{question.statementId}</code>
-        </span>
-        <a
-          href={`${MAIN_APP_URL}/statement/${question.statementId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={styles.adminLink}
-        >
-          {t('viewInMainApp')}
-        </a>
       </div>
     </header>
   );
