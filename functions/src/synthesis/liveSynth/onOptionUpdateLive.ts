@@ -1,6 +1,6 @@
 import { logger } from 'firebase-functions';
 import { getFirestore, FieldValue } from 'firebase-admin/firestore';
-import { Collections, Statement } from '@freedi/shared-types';
+import { Collections, Statement, StatementType } from '@freedi/shared-types';
 import { embeddingService } from '../../services/embedding-service';
 import { embeddingCache } from '../../services/embedding-cache-service';
 import { judgeSemanticEquivalenceCached } from '../../services/verdict-cache-service';
@@ -10,6 +10,7 @@ import { enqueueClusterRecompute, findClustersContainingMember } from './cluster
 import { cosineSimilarity } from '../bulkCluster';
 import { pairKey } from '../completeLinkage';
 import { isLiveSynthEnabledForQuestion } from './featureGate';
+import { runSinglePipeline } from '../pipeline/runSinglePipeline';
 
 /**
  * Live-synth edit invalidation.
@@ -67,6 +68,28 @@ export function diffEditEvent(beforeRaw: unknown, afterRaw: unknown): EditDiff |
 	if (newText === oldText) return null;
 
 	return { statementId: after.statementId, parentId: after.parentId, oldText, newText };
+}
+
+/**
+ * Detect a statementType promotion: the doc was something else before
+ * (question, statement, paragraph, …) and is now an option. Firestore
+ * fires `onDocumentUpdated` for this — `onDocumentCreated` would NOT —
+ * so without this branch the new option would never enter the synthesis
+ * pipeline.
+ *
+ * Returns the after-Statement when the promotion is real and the doc is
+ * a valid candidate for the pipeline. Returns null otherwise.
+ */
+export function detectBecameOption(beforeRaw: unknown, afterRaw: unknown): Statement | null {
+	if (!afterRaw) return null;
+	const after = afterRaw as Statement;
+	if (after.statementType !== StatementType.option) return null;
+	if (!after.statementId || !after.parentId || after.parentId === 'top') return null;
+
+	const before = (beforeRaw ?? {}) as Statement;
+	if (before.statementType === StatementType.option) return null;
+
+	return after;
 }
 
 interface DissolveContext {
@@ -211,6 +234,36 @@ export async function liveSynthOnOptionUpdate(
 ): Promise<void> {
 	if (!synthesisFlags.liveSynth) return;
 
+	// Branch A: statementType was promoted to `option`. Treat as if the
+	// option had just been created — run the same pipeline `onCreate`
+	// uses. Per-question `settings.enabled` is enforced inside
+	// `runSinglePipeline`, so the SynthesisPanel toggle still gates.
+	const promoted = detectBecameOption(beforeRaw, afterRaw);
+	if (promoted) {
+		try {
+			const result = await runSinglePipeline({
+				optionId: promoted.statementId,
+				source: 'onCreate',
+				option: promoted,
+			});
+			logger.debug('liveSynth.onOptionUpdate.promotedToOption', {
+				statementId: promoted.statementId,
+				action: result.action,
+				reason: result.reason,
+				durationMs: result.durationMs,
+			});
+		} catch (error) {
+			logger.warn('liveSynth.onOptionUpdate: promotion handler failed', {
+				statementId: promoted.statementId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+		}
+
+		return;
+	}
+
+	// Branch B: existing option had its text edited — re-validate cluster
+	// membership. Falls through to the original drift/LLM logic.
 	const diff = diffEditEvent(beforeRaw, afterRaw);
 	if (!diff) return;
 

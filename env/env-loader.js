@@ -104,6 +104,8 @@ VITE_FIREBASE_MEASUREMENT_ID_DEV=\${VITE_FIREBASE_MEASUREMENT_ID}
       // Google Sheets API (join-form export trigger)
       'GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL': 'GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL',
       'GOOGLE_SHEETS_PRIVATE_KEY': 'GOOGLE_SHEETS_PRIVATE_KEY',
+      // Synthesis feature flags — read by functions/src/synthesis/featureFlags.ts
+      'SYNTHESIS_LIVE_SYNTH_ENABLED': 'SYNTHESIS_LIVE_SYNTH_ENABLED',
     },
     extra: ''
   },

@@ -129,10 +129,17 @@ describe('runSinglePipeline', () => {
 	});
 
 	it('skips when below minEvaluators (and forceProcess is off)', async () => {
+		// Use an explicit higher minEvaluators on the parent so the option's
+		// numberOfEvaluators=1 falls under the bar — the global default is now
+		// 1, which would let this option through.
 		const option = makeOption({
 			evaluation: { numberOfEvaluators: 1, sumEvaluations: 1 },
 		} as never);
-		const parent = makeParent();
+		const parent = makeParent({
+			statementSettings: {
+				synthesis: { ...DEFAULT_SYNTHESIS_SETTINGS, enabled: true, minEvaluators: 3 },
+			},
+		});
 		const result = await runSinglePipeline({
 			optionId: option.statementId,
 			source: 'onCreate',
@@ -229,10 +236,12 @@ describe('runSinglePipeline', () => {
 	it('queues for review in the gray band', async () => {
 		const option = makeOption();
 		const parent = makeParent();
+		// Cosine 0.78 sits between the default reviewLowerBound (0.70) and
+		// attachThreshold (0.85), so it routes to admin review without an LLM call.
 		findSimilarMock.mockResolvedValue([
 			{
 				statement: { statementId: 'sibling-3', integratedOptions: [] } as unknown as Statement,
-				similarity: 0.9,
+				similarity: 0.78,
 			},
 		]);
 		const result = await runSinglePipeline({

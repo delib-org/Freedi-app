@@ -239,9 +239,11 @@ describe('liveSynthOnOptionCreate', () => {
 		);
 	});
 
-	it('queues for review when top hit is in [0.85, 0.92) — no LLM call', async () => {
+	it('queues for review when top hit is in the gray band [reviewLowerBound, attachThreshold) — no LLM call', async () => {
 		const fs = setupFirestoreMockForGet();
 		mockGetBatchEmbeddings.mockResolvedValue(new Map([['opt1', [0.5, 0.5, 0.5]]]));
+		// Cosine 0.78 sits between the default reviewLowerBound (0.70) and
+		// attachThreshold (0.85), so it routes to admin review without an LLM call.
 		mockFindSimilarByEmbedding.mockResolvedValue([
 			{
 				statement: {
@@ -250,7 +252,7 @@ describe('liveSynthOnOptionCreate', () => {
 					integratedOptions: [],
 					parentId: 'q1',
 				},
-				similarity: 0.88,
+				similarity: 0.78,
 			},
 		]);
 

@@ -21,13 +21,18 @@ export interface SynthesisSettings {
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	enabled: false,
-	minEvaluators: 3,
+	// `minEvaluators: 1` means "run as soon as the option exists" — the
+	// pipeline fires on the very first option creation. Raise this in the
+	// admin panel for questions where you'd rather wait until an option
+	// has gathered some evaluations before considering it for clustering.
+	minEvaluators: 1,
 	minConsensus: 0.0,
-	// Matches the legacy ATTACH_THRESHOLD in onOptionCreateLive.ts — the value
-	// the live-synth path has used in production. Admins can override per
-	// question via the synthesis settings UI.
-	attachThreshold: 0.92,
-	reviewLowerBound: 0.85,
+	// 0.85 auto-attach / 0.70 review band: tuned so paraphrases (cosine ≈ 0.85+)
+	// fall into the auto-attach lane while clearly different ideas (cosine < 0.70)
+	// are left as singletons. Pairs in the [0.70, 0.85) band go to admin review.
+	// Admins can override per question via the synthesis settings UI.
+	attachThreshold: 0.85,
+	reviewLowerBound: 0.7,
 };
 
 /**

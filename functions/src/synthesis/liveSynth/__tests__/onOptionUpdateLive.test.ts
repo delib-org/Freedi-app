@@ -42,7 +42,12 @@ jest.mock('../auditLog', () => ({
 	recordLiveSynthEvent: (...args: unknown[]) => mockRecordLiveSynthEvent(...args),
 }));
 
-import { liveSynthOnOptionUpdate, diffEditEvent, __INTERNAL } from '../onOptionUpdateLive';
+import {
+	liveSynthOnOptionUpdate,
+	diffEditEvent,
+	detectBecameOption,
+	__INTERNAL,
+} from '../onOptionUpdateLive';
 
 const ORIGINAL_ENV = process.env.SYNTHESIS_LIVE_SYNTH_ENABLED;
 
@@ -146,6 +151,40 @@ function setupFirestore(options: { mcParent?: boolean } = {}) {
 
 	return { updateMock, deleteMock, evalsGet, batch, docMock, collMock, archiveSet, parentGet };
 }
+
+describe('detectBecameOption', () => {
+	it('returns the after-Statement when statementType promoted to option', () => {
+		const result = detectBecameOption(
+			{ statementId: 's1', parentId: 'p', statementType: 'statement', statement: 'a' },
+			{ statementId: 's1', parentId: 'p', statementType: 'option', statement: 'a' },
+		);
+		expect(result).toMatchObject({ statementId: 's1', statementType: 'option' });
+	});
+	it('returns null when both before and after are option', () => {
+		expect(
+			detectBecameOption(
+				{ statementId: 's1', parentId: 'p', statementType: 'option', statement: 'a' },
+				{ statementId: 's1', parentId: 'p', statementType: 'option', statement: 'b' },
+			),
+		).toBeNull();
+	});
+	it('returns null when after is not an option', () => {
+		expect(
+			detectBecameOption(
+				{ statementId: 's1', parentId: 'p', statementType: 'option', statement: 'a' },
+				{ statementId: 's1', parentId: 'p', statementType: 'question', statement: 'a' },
+			),
+		).toBeNull();
+	});
+	it('returns null when parent is missing or "top"', () => {
+		expect(
+			detectBecameOption(
+				{ statementType: 'statement' },
+				{ statementId: 's1', parentId: 'top', statementType: 'option', statement: 'a' },
+			),
+		).toBeNull();
+	});
+});
 
 describe('diffEditEvent', () => {
 	it('returns null when text is unchanged', () => {

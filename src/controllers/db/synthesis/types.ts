@@ -17,10 +17,14 @@ export interface SynthesisSettings {
 
 export const DEFAULT_SYNTHESIS_SETTINGS: SynthesisSettings = {
 	enabled: false,
-	minEvaluators: 3,
+	// `minEvaluators: 1` → trigger fires on the very first option creation.
+	// Bump it in the admin panel for questions that should wait for some
+	// evaluation signal before being considered for clustering.
+	minEvaluators: 1,
 	minConsensus: 0.0,
-	attachThreshold: 0.92,
-	reviewLowerBound: 0.85,
+	// 0.85 auto-attach / 0.70 review band — see functions/src/synthesis/pipeline/types.ts
+	attachThreshold: 0.85,
+	reviewLowerBound: 0.7,
 };
 
 export type SynthesisQueueStatus =
