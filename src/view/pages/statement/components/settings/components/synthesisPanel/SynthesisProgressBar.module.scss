@@ -1,0 +1,286 @@
+/* ============================================================================
+ * SynthesisProgressBar — live status of a synthesis run.
+ *
+ * Renders a single card that adapts its accent color and animation by
+ * status. Pause/Resume/Cancel sit inline with the heading instead of
+ * pushed below the bar, so admins read state + actions together.
+ * ============================================================================ */
+
+.progress {
+	display: flex;
+	flex-direction: column;
+	gap: 0.625rem;
+	padding: 0.875rem 1rem;
+	background: var(--card-default);
+	border: 1px solid var(--border-light);
+	border-inline-start: 4px solid var(--text-disabled);
+	border-radius: 8px;
+	transition: border-color 200ms ease;
+
+	&[data-status='running'] {
+		border-inline-start-color: var(--btn-primary);
+	}
+
+	&[data-status='paused'] {
+		border-inline-start-color: var(--text-warning);
+	}
+
+	&[data-status='completed'] {
+		border-inline-start-color: var(--text-success);
+	}
+
+	&[data-status='failed'],
+	&[data-status='cancelled'] {
+		border-inline-start-color: var(--text-error);
+	}
+}
+
+/* ---------- Heading row ---------- */
+
+.progress__heading {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	flex-wrap: wrap;
+}
+
+.progress__statusDot {
+	flex-shrink: 0;
+	inline-size: 0.65rem;
+	block-size: 0.65rem;
+	border-radius: 50%;
+	background: var(--text-disabled);
+
+	.progress[data-status='running'] & {
+		background: var(--btn-primary);
+		animation: pulse 1.4s ease-in-out infinite;
+	}
+
+	.progress[data-status='paused'] & {
+		background: var(--text-warning);
+	}
+
+	.progress[data-status='completed'] & {
+		background: var(--text-success);
+	}
+
+	.progress[data-status='failed'] &,
+	.progress[data-status='cancelled'] & {
+		background: var(--text-error);
+	}
+}
+
+.progress__headingText {
+	display: flex;
+	flex-direction: column;
+	gap: 0.1rem;
+	flex: 1;
+	min-inline-size: 0;
+}
+
+.progress__title {
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--text-subtitle);
+	line-height: 1.25;
+}
+
+.progress__subtitle {
+	margin: 0;
+	font-size: 0.83rem;
+	color: var(--text-caption);
+}
+
+.progress__counts {
+	font-size: 0.8rem;
+	color: var(--text-caption);
+	font-variant-numeric: tabular-nums;
+}
+
+.progress__badge {
+	padding: 0.18rem 0.6rem;
+	border-radius: 999px;
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+	background: var(--bg-disabled);
+	color: var(--text-body);
+
+	.progress[data-status='running'] & {
+		background: var(--bg-info-light);
+		color: var(--text-blue);
+	}
+
+	.progress[data-status='paused'] & {
+		background: var(--bg-warning-light);
+		color: var(--text-warning);
+	}
+
+	.progress[data-status='completed'] & {
+		background: var(--bg-success-light);
+		color: var(--text-success);
+	}
+
+	.progress[data-status='failed'] &,
+	.progress[data-status='cancelled'] & {
+		background: var(--bg-error-light);
+		color: var(--text-error);
+	}
+}
+
+.progress__controls {
+	display: inline-flex;
+	gap: 0.4rem;
+	margin-inline-start: auto;
+}
+
+/* ---------- Bar ---------- */
+
+.bar {
+	position: relative;
+	width: 100%;
+	block-size: 0.625rem;
+	background: var(--border-light);
+	border-radius: 999px;
+	overflow: hidden;
+}
+
+.bar__fill {
+	position: relative;
+	block-size: 100%;
+	background: var(--text-disabled);
+	border-radius: inherit;
+	transition: inline-size 300ms ease;
+	overflow: hidden;
+
+	.progress[data-status='running'] & {
+		background: var(--btn-primary);
+	}
+
+	.progress[data-status='paused'] & {
+		background: var(--text-warning);
+	}
+
+	.progress[data-status='completed'] & {
+		background: var(--text-success);
+	}
+
+	.progress[data-status='failed'] &,
+	.progress[data-status='cancelled'] & {
+		background: var(--text-error);
+	}
+}
+
+/* Animated stripe overlay — only when running. */
+.bar__stripe {
+	position: absolute;
+	inset: 0;
+	background-image: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.25) 25%,
+		transparent 25%,
+		transparent 50%,
+		rgba(255, 255, 255, 0.25) 50%,
+		rgba(255, 255, 255, 0.25) 75%,
+		transparent 75%,
+		transparent
+	);
+	background-size: 1rem 1rem;
+	animation: stripe-flow 1.1s linear infinite;
+}
+
+/* ---------- Detail row ---------- */
+
+.progress__detail {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.25rem 1rem;
+	font-size: 0.82rem;
+	color: var(--text-caption);
+
+	strong {
+		color: var(--text-body);
+		font-weight: 600;
+		font-variant-numeric: tabular-nums;
+	}
+}
+
+.progress__detailError {
+	color: var(--text-error);
+
+	strong {
+		color: var(--text-error);
+	}
+}
+
+/* ---------- Inline controls ---------- */
+
+.controlButton {
+	padding: 0.32rem 0.75rem;
+	font: inherit;
+	font-size: 0.82rem;
+	border: 1px solid var(--border-primary);
+	border-radius: 6px;
+	background: var(--card-default);
+	color: var(--text-body);
+	cursor: pointer;
+	transition: background-color 120ms ease;
+
+	&:hover:not(:disabled) {
+		background: var(--bg-hover);
+	}
+
+	&:focus-visible {
+		outline: 2px solid var(--btn-primary);
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	&[data-tone='danger'] {
+		color: var(--text-error);
+		border-color: var(--text-error);
+
+		&:hover:not(:disabled) {
+			background: var(--bg-error-light);
+		}
+	}
+}
+
+/* ---------- Animations ---------- */
+
+@keyframes stripe-flow {
+	from {
+		background-position: 0 0;
+	}
+	to {
+		background-position: 1rem 0;
+	}
+}
+
+@keyframes pulse {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.35);
+		opacity: 0.6;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.progress__statusDot,
+	.bar__stripe,
+	.bar__fill,
+	.controlButton,
+	.progress {
+		animation: none !important;
+		transition: none !important;
+	}
+}

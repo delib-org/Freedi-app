@@ -19,14 +19,7 @@
 
 import m from 'mithril';
 import { Statement, StatementType, Collections } from '@freedi/shared-types';
-import {
-	db,
-	collection,
-	query,
-	where,
-	onSnapshot,
-	Unsubscribe,
-} from '../firebase';
+import { db, collection, query, where, onSnapshot, Unsubscribe } from '../firebase';
 
 const LAST_READ_KEY = 'freedi_join_last_read';
 const BATCH_SIZE = 30;

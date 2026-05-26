@@ -15,11 +15,7 @@
  * Carved out of store.ts so the trust-sensitive wrappers live together.
  */
 
-import {
-	Statement,
-	StatementType,
-	Collections,
-} from '@freedi/shared-types';
+import { Statement, StatementType, Collections } from '@freedi/shared-types';
 import {
 	db,
 	functions,
@@ -34,10 +30,7 @@ import {
 } from '../firebase';
 import { getUserState } from '../user';
 import { isAdmin } from '../admin';
-import {
-	clearJoinFormCacheForUsers,
-	type JoinRole,
-} from './joinFormCache';
+import { clearJoinFormCacheForUsers, type JoinRole } from './joinFormCache';
 
 // ---------------------------------------------------------------------------
 // toggleJoining (server-enforced via fn_joinOption)
@@ -150,6 +143,61 @@ export async function testSheetAccess(sheetUrl: string): Promise<TestSheetAccess
 }
 
 // ---------------------------------------------------------------------------
+// reconcileJoinSheet
+// ---------------------------------------------------------------------------
+
+export interface ReconcileJoinSheetResult {
+	success: boolean;
+	questionId: string;
+	optionsScanned: number;
+	totalMembers: number;
+	appended: number;
+	skippedAlreadyPresent: number;
+	skippedNoSubmission: number;
+	/**
+	 * Number of sheet rows removed in the orphan-cleanup pass. Orphans are
+	 * rows whose (userId, role, option) tuple no longer corresponds to any
+	 * live membership — typically users who left an option while the sync
+	 * trigger was unavailable.
+	 */
+	removed: number;
+	/**
+	 * True when orphan removal was skipped because the sheet still uses the
+	 * v1 (no `optionId` column) schema. On v1 the orphan check matches by
+	 * title alone, which is ambiguous if option titles were renamed after
+	 * some users joined — deleting under that ambiguity could remove valid
+	 * rows. Migrate to v2 to enable cleanup.
+	 */
+	orphanRemovalSkippedV1: boolean;
+	errors: number;
+	message: string;
+}
+
+/**
+ * Calls `fn_reconcileJoinSheet` to backfill the Google Sheet from the
+ * authoritative option `joined`/`organizers` arrays. Idempotent — only
+ * appends rows that are missing for the (uid, optionId, role) tuple, never
+ * deletes. Surfaced via a facilitator-panel button so admins can fix a
+ * mismatched sheet on demand without waiting for the per-write trigger to
+ * recover.
+ *
+ * The callable enforces admin authorization itself; this wrapper does not
+ * re-check, so facilitators who can see the button (gated by `isAdmin()`
+ * in the panel) get the server's actual permission decision.
+ */
+export async function reconcileJoinSheet(
+	questionId: string,
+): Promise<ReconcileJoinSheetResult> {
+	const call = httpsCallable<{ questionId: string }, ReconcileJoinSheetResult>(
+		functions,
+		'fn_reconcileJoinSheet',
+	);
+	const result = await call({ questionId });
+
+	return result.data;
+}
+
+// ---------------------------------------------------------------------------
 // resetOptionJoining
 // ---------------------------------------------------------------------------
 
@@ -235,11 +283,7 @@ export async function resetQuestionJoining(
 		if (optionsSnap.size > 0) {
 			const batch = writeBatch(db);
 			for (const optionDoc of optionsSnap.docs) {
-				batch.set(
-					optionDoc.ref,
-					{ joined: [], organizers: [], lastUpdate: now },
-					{ merge: true },
-				);
+				batch.set(optionDoc.ref, { joined: [], organizers: [], lastUpdate: now }, { merge: true });
 			}
 			await batch.commit();
 			result.optionsCleared = optionsSnap.size;
@@ -364,19 +408,12 @@ async function removeUserFromSheet(questionId: string, userId: string): Promise<
  * module state so this module stays decoupled from the active-question
  * state in `store.ts`.
  */
-export function getUserCommittedOptionsFrom(
-	allOptions: Statement[],
-	uid: string,
-): Statement[] {
+export function getUserCommittedOptionsFrom(allOptions: Statement[], uid: string): Statement[] {
 	return allOptions.filter((option) => {
 		if (option.hide === true) return false;
 		if (option.joinStatus === 'failed') return false;
-		const inJoined =
-			Array.isArray(option.joined) &&
-			option.joined.some((c) => c.uid === uid);
-		const inOrgs =
-			Array.isArray(option.organizers) &&
-			option.organizers.some((c) => c.uid === uid);
+		const inJoined = Array.isArray(option.joined) && option.joined.some((c) => c.uid === uid);
+		const inOrgs = Array.isArray(option.organizers) && option.organizers.some((c) => c.uid === uid);
 
 		return inJoined || inOrgs;
 	});

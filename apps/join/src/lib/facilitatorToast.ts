@@ -8,36 +8,36 @@ let activeEl: HTMLElement | null = null;
 let activeTimer: number | null = null;
 
 function clearActive(): void {
-  if (activeTimer !== null) {
-    window.clearTimeout(activeTimer);
-    activeTimer = null;
-  }
-  if (activeEl && activeEl.parentNode) {
-    activeEl.parentNode.removeChild(activeEl);
-  }
-  activeEl = null;
+	if (activeTimer !== null) {
+		window.clearTimeout(activeTimer);
+		activeTimer = null;
+	}
+	if (activeEl && activeEl.parentNode) {
+		activeEl.parentNode.removeChild(activeEl);
+	}
+	activeEl = null;
 }
 
 export function showFacilitatorToast(text: string): void {
-  if (activeEl) {
-    activeEl.textContent = text;
-    if (activeTimer !== null) window.clearTimeout(activeTimer);
-    activeTimer = window.setTimeout(clearActive, FACILITATOR_TOAST_MS);
+	if (activeEl) {
+		activeEl.textContent = text;
+		if (activeTimer !== null) window.clearTimeout(activeTimer);
+		activeTimer = window.setTimeout(clearActive, FACILITATOR_TOAST_MS);
 
-    return;
-  }
+		return;
+	}
 
-  const el = document.createElement('div');
-  el.className = 'facilitator-toast';
-  el.setAttribute('role', 'status');
-  el.setAttribute('aria-live', 'polite');
-  el.textContent = text;
-  document.body.appendChild(el);
-  activeEl = el;
+	const el = document.createElement('div');
+	el.className = 'facilitator-toast';
+	el.setAttribute('role', 'status');
+	el.setAttribute('aria-live', 'polite');
+	el.textContent = text;
+	document.body.appendChild(el);
+	activeEl = el;
 
-  // Force reflow then add the visible class so the CSS transition runs.
-  void el.offsetWidth;
-  el.classList.add('facilitator-toast--visible');
+	// Force reflow then add the visible class so the CSS transition runs.
+	void el.offsetWidth;
+	el.classList.add('facilitator-toast--visible');
 
-  activeTimer = window.setTimeout(clearActive, FACILITATOR_TOAST_MS);
+	activeTimer = window.setTimeout(clearActive, FACILITATOR_TOAST_MS);
 }

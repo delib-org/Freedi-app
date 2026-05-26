@@ -63,14 +63,49 @@ function meanVector(vectors: number[][]): number[] {
 export function clusterCategory(categoryKey: string, items: ClusterableItem[]): ClusterGroup[] {
 	if (items.length === 0) return [];
 
-	// Tiny clusters: each item is its own group, no UMAP/DBSCAN.
+	// Tiny buckets: UMAP/DBSCAN aren't meaningful below ~10 points. Run a
+	// cheap union-find on cosine similarity instead — items pairwise above
+	// SMALL_BUCKET_LINK_THRESHOLD merge into the same group, outliers stay
+	// in their own. This prevents two unrelated minority opinions that the
+	// taxonomy LLM lumped together (e.g. "dogs in the park" + "parking
+	// traffic studies") from being cemented into one cluster, while still
+	// avoiding the singleton-per-item flood from the original fallback.
 	if (items.length < UMAP_MIN_ITEMS) {
-		return items.map((item, i) => ({
-			groupId: `${categoryKey}_${i}`,
+		const SMALL_BUCKET_LINK_THRESHOLD = 0.7;
+		const parent = items.map((_, i) => i);
+		const find = (i: number): number => {
+			while (parent[i] !== i) {
+				parent[i] = parent[parent[i]];
+				i = parent[i];
+			}
+
+			return i;
+		};
+		const union = (a: number, b: number): void => {
+			const ra = find(a);
+			const rb = find(b);
+			if (ra !== rb) parent[ra] = rb;
+		};
+		for (let i = 0; i < items.length; i++) {
+			for (let j = i + 1; j < items.length; j++) {
+				const sim = cosineSimilarity(items[i].embedding, items[j].embedding);
+				if (sim >= SMALL_BUCKET_LINK_THRESHOLD) union(i, j);
+			}
+		}
+		const byRoot = new Map<number, number[]>();
+		for (let i = 0; i < items.length; i++) {
+			const r = find(i);
+			const bucket = byRoot.get(r) ?? [];
+			bucket.push(i);
+			byRoot.set(r, bucket);
+		}
+
+		return Array.from(byRoot.values()).map((memberIndices, idx) => ({
+			groupId: `${categoryKey}_${idx}`,
 			categoryKey,
-			clusterIndex: i,
-			memberIndices: [i],
-			centroid: item.embedding,
+			clusterIndex: idx,
+			memberIndices,
+			centroid: meanVector(memberIndices.map((i) => items[i].embedding)),
 		}));
 	}
 

@@ -176,7 +176,6 @@ jest.mock('../../../config/openai-chat', () => {
 						{ key: 'finances', name: 'Finances', description: 'Saving, budgeting, investing' },
 						{ key: 'transport', name: 'Transport', description: 'Public transit and mobility' },
 						{ key: 'culture', name: 'Culture', description: 'Festivals, heritage, arts' },
-						{ key: 'education', name: 'Education', description: 'Schools and youth programs' },
 						{ key: 'employment', name: 'Employment', description: 'Industry, jobs, hi-tech' },
 						{
 							key: 'tourism_nature',

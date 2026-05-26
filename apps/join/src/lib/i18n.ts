@@ -103,6 +103,16 @@ const translations: Record<string, Record<string, string>> = {
 			'• Form submissions could not be deleted. Deploy the latest Firestore rules: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Some Google Sheet rows could not be removed. Check the fn_removeUserFromSheet CORS allowlist or sheet credentials.',
+		'facilitator.reconcileSheet': 'Sync sheet now',
+		'facilitator.reconcileSheet.in_progress': 'Syncing…',
+		'facilitator.reconcileSheet.help':
+			'Compares the Google Sheet with the actual joined/organizer lists, appends missing rows, and removes rows for users who are no longer joined. Safe to run anytime.',
+		'facilitator.reconcileSheet.done':
+			'Sync complete: {{appended}} added, {{present}} already in sheet, {{removed}} orphan(s) removed, {{noSubmission}} member(s) without a form submission, {{errors}} error(s).',
+		'facilitator.reconcileSheet.error':
+			'Sync failed. Please try again or check the console for details.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Orphan removal skipped — this sheet uses the legacy schema (no optionId column). Migration runs automatically on the next member change.',
 		'admin.suggestion_badge': 'Organizers',
 		'admin.suggestions_section': 'Organizers suggestions',
 		'admin.suggestion_placeholder': 'Describe the suggestion',
@@ -118,6 +128,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'Share',
 		'facilitator.following': 'Following facilitator…',
 		'facilitator.panel.handle': 'Facilitate',
+		'facilitator.panel.handle.broadcasting': 'Participants are following you',
 		'facilitator.panel.title': 'Facilitator controls',
 		'facilitator.panel.close': 'Close facilitator panel',
 		'facilitator.panel.no_question': 'Open a question to control its settings',
@@ -216,6 +227,30 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'Serious',
 		'facilitator.theme.playfulKids': 'Kids',
 		'facilitator.theme.playfulTeen': 'Teen',
+		'facilitator.section.room': 'Room',
+		'facilitator.section.display': 'Display & order',
+		'facilitator.section.participation': 'Participation',
+		'facilitator.section.activation': 'Activation rules',
+		'facilitator.section.joinForm': 'Join form',
+		'facilitator.section.delegates': 'Delegates',
+		'facilitator.section.danger': 'Danger zone',
+		'facilitator.status.label': 'Question status',
+		'facilitator.status.live': 'Live',
+		'facilitator.status.frozen': 'Frozen',
+		'facilitator.status.closed': 'Closed',
+		'facilitator.status.help.live': 'Participants can join, un-join, and evaluate normally.',
+		'facilitator.status.help.frozen':
+			'Question stays visible, but joining, un-joining, and evaluation are blocked.',
+		'facilitator.status.help.closed':
+			'Participants see only a "This question is closed" screen instead of the question.',
+		'solutions.status.banner.frozen':
+			'Frozen — participants can see this question but cannot join, un-join, or evaluate.',
+		'solutions.status.banner.closed':
+			'Closed — participants see only a "This question is closed" screen.',
+		'solutions.closed.title': 'This question is closed',
+		'solutions.closed.message':
+			'The facilitator has closed this question. Please check back later.',
+		'frozen.aria_disabled': 'The facilitator has frozen this question',
 		'qrShare.label': 'Invite someone nearby',
 		'qrShare.share': 'Share',
 		'qrShare.copy': 'Copy link',
@@ -496,6 +531,15 @@ const translations: Record<string, Record<string, string>> = {
 			'• הטפסים לא נמחקו. יש לפרוס את חוקי Firestore העדכניים: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• חלק מהשורות בגיליון Google לא הוסרו. בדקו את רשימת ההיתרים ב-CORS של fn_removeUserFromSheet או את אישור הגיליון.',
+		'facilitator.reconcileSheet': 'סנכרון הגיליון',
+		'facilitator.reconcileSheet.in_progress': 'מסנכרן…',
+		'facilitator.reconcileSheet.help':
+			'משווה את גיליון Google עם רשימות הפעילים/המארגנים בפועל, מוסיף שורות חסרות ומסיר שורות של משתמשים שלא מצורפים יותר. ניתן להריץ בכל עת.',
+		'facilitator.reconcileSheet.done':
+			'הסנכרון הושלם: נוספו {{appended}}, {{present}} כבר היו בגיליון, הוסרו {{removed}} שורות יתומות, {{noSubmission}} משתתפים ללא טופס, {{errors}} שגיאות.',
+		'facilitator.reconcileSheet.error': 'הסנכרון נכשל. נסו שוב או בדקו את הקונסול לפרטים.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'הסרת שורות יתומות דולגה — הגיליון בסכמה ישנה (ללא עמודת optionId). המעבר לסכמה חדשה יקרה אוטומטית בשינוי החברות הבא.',
 		'admin.suggestion_badge': 'הצעת מארגן/ת',
 		'admin.suggestions_section': 'הצעות לעיון חוזר של הציבור',
 		'admin.suggestion_placeholder': 'תארו את ההצעה',
@@ -511,6 +555,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'שתפ/י',
 		'facilitator.following': 'עוקבים אחר המנחה…',
 		'facilitator.panel.handle': 'הנחיה',
+		'facilitator.panel.handle.broadcasting': 'משתתפים עוקבים אחריך',
 		'facilitator.panel.title': 'בקרות מנחה',
 		'facilitator.panel.close': 'סגירת לוח המנחה',
 		'facilitator.panel.no_question': 'פתחו שאלה כדי לשלוט בהגדרותיה',
@@ -596,6 +641,26 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'רציני',
 		'facilitator.theme.playfulKids': 'ילדים',
 		'facilitator.theme.playfulTeen': 'נוער',
+		'facilitator.section.room': 'החדר',
+		'facilitator.section.display': 'תצוגה וסדר',
+		'facilitator.section.participation': 'השתתפות',
+		'facilitator.section.activation': 'תנאי הפעלה',
+		'facilitator.section.joinForm': 'טופס הצטרפות',
+		'facilitator.section.delegates': 'נציגים',
+		'facilitator.section.danger': 'אזור מסוכן',
+		'facilitator.status.label': 'מצב השאלה',
+		'facilitator.status.live': 'פעיל',
+		'facilitator.status.frozen': 'מוקפא',
+		'facilitator.status.closed': 'סגור',
+		'facilitator.status.help.live': 'משתתפים יכולים להצטרף, לבטל הצטרפות ולהעריך כרגיל.',
+		'facilitator.status.help.frozen': 'השאלה מוצגת, אך הצטרפות, ביטול הצטרפות והערכה חסומים.',
+		'facilitator.status.help.closed': 'במקום השאלה משתתפים רואים רק מסך "השאלה הזו סגורה".',
+		'solutions.status.banner.frozen':
+			'מוקפא — משתתפים יכולים לראות את השאלה אך אינם יכולים להצטרף, לבטל הצטרפות או להעריך.',
+		'solutions.status.banner.closed': 'סגור — משתתפים רואים רק מסך "השאלה הזו סגורה".',
+		'solutions.closed.title': 'השאלה הזו סגורה',
+		'solutions.closed.message': 'המנחה סגר/ה את השאלה הזו. נסו שוב מאוחר יותר.',
+		'frozen.aria_disabled': 'המנחה הקפיא/ה את השאלה הזו',
 		'qrShare.label': 'הזמינו מישהו לידכם',
 		'qrShare.share': 'שיתוף',
 		'qrShare.copy': 'העתקת קישור',
@@ -870,6 +935,16 @@ const translations: Record<string, Record<string, string>> = {
 			'• تعذر حذف النماذج. انشر قواعد Firestore الأحدث: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• تعذر إزالة بعض صفوف Google Sheet. تحقق من قائمة CORS الخاصة بـ fn_removeUserFromSheet أو بيانات اعتماد الجدول.',
+		'facilitator.reconcileSheet': 'مزامنة الجدول الآن',
+		'facilitator.reconcileSheet.in_progress': 'جارٍ المزامنة…',
+		'facilitator.reconcileSheet.help':
+			'يقارن جدول Google مع قوائم النشطاء/المنظمين الفعلية، ويضيف الصفوف الناقصة ويزيل صفوف المستخدمين الذين لم يعودوا منضمين. آمن للتشغيل في أي وقت.',
+		'facilitator.reconcileSheet.done':
+			'اكتملت المزامنة: تمت إضافة {{appended}}، {{present}} موجودة بالفعل، أُزيل {{removed}} صف يتيم، {{noSubmission}} عضو بدون نموذج، {{errors}} أخطاء.',
+		'facilitator.reconcileSheet.error':
+			'فشلت المزامنة. يرجى المحاولة مرة أخرى أو مراجعة وحدة التحكم للحصول على التفاصيل.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'تم تخطّي إزالة الصفوف اليتيمة — يستخدم هذا الجدول المخطّط القديم (بدون عمود optionId). ستتم الترقية تلقائيًا عند تغيير العضوية التالي.',
 		'admin.suggestion_badge': 'اقتراح المنظم',
 		'admin.suggestions_section': 'اقتراحات المنظمين',
 		'admin.suggestion_placeholder': 'صف الاقتراح',
@@ -885,6 +960,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'مشاركة',
 		'facilitator.following': 'متابعة الميسّر…',
 		'facilitator.panel.handle': 'التيسير',
+		'facilitator.panel.handle.broadcasting': 'المشاركون يتابعونك',
 		'facilitator.panel.title': 'أدوات الميسّر',
 		'facilitator.panel.close': 'إغلاق لوحة الميسّر',
 		'facilitator.panel.no_question': 'افتح سؤالاً للتحكم في إعداداته',
@@ -943,6 +1019,26 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'جاد',
 		'facilitator.theme.playfulKids': 'أطفال',
 		'facilitator.theme.playfulTeen': 'مراهقين',
+		'facilitator.section.room': 'الغرفة',
+		'facilitator.section.display': 'العرض والترتيب',
+		'facilitator.section.participation': 'المشاركة',
+		'facilitator.section.activation': 'شروط التفعيل',
+		'facilitator.section.joinForm': 'استمارة الانضمام',
+		'facilitator.section.delegates': 'المندوبون',
+		'facilitator.section.danger': 'منطقة خطر',
+		'facilitator.status.label': 'حالة السؤال',
+		'facilitator.status.live': 'نشط',
+		'facilitator.status.frozen': 'مجمَّد',
+		'facilitator.status.closed': 'مغلق',
+		'facilitator.status.help.live': 'يمكن للمشاركين الانضمام والانسحاب والتقييم بشكل طبيعي.',
+		'facilitator.status.help.frozen': 'يبقى السؤال مرئيًا، لكن الانضمام والانسحاب والتقييم محظورة.',
+		'facilitator.status.help.closed': 'يرى المشاركون فقط شاشة "هذا السؤال مغلق" بدلًا من السؤال.',
+		'solutions.status.banner.frozen':
+			'مجمَّد — يستطيع المشاركون رؤية السؤال لكن لا يمكنهم الانضمام أو الانسحاب أو التقييم.',
+		'solutions.status.banner.closed': 'مغلق — يرى المشاركون شاشة "هذا السؤال مغلق" فقط.',
+		'solutions.closed.title': 'هذا السؤال مغلق',
+		'solutions.closed.message': 'أغلق الميسّر هذا السؤال. يُرجى المحاولة لاحقًا.',
+		'frozen.aria_disabled': 'قام الميسّر بتجميد هذا السؤال',
 		'qrShare.label': 'ادعُ شخصًا بجانبك',
 		'qrShare.share': 'مشاركة',
 		'qrShare.copy': 'نسخ الرابط',
@@ -1192,6 +1288,16 @@ const translations: Record<string, Record<string, string>> = {
 			'• Formularantworten konnten nicht gelöscht werden. Aktuelle Firestore-Regeln deployen: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Einige Google-Sheet-Zeilen konnten nicht entfernt werden. CORS-Allowlist von fn_removeUserFromSheet oder Sheet-Anmeldedaten prüfen.',
+		'facilitator.reconcileSheet': 'Sheet jetzt synchronisieren',
+		'facilitator.reconcileSheet.in_progress': 'Synchronisieren…',
+		'facilitator.reconcileSheet.help':
+			'Vergleicht das Google-Sheet mit den tatsächlichen Aktivisten-/Organisator-Listen, ergänzt fehlende Zeilen und entfernt Zeilen für Personen, die nicht mehr beigetreten sind. Jederzeit sicher ausführbar.',
+		'facilitator.reconcileSheet.done':
+			'Synchronisierung abgeschlossen: {{appended}} hinzugefügt, {{present}} bereits im Sheet, {{removed}} verwaiste Zeile(n) entfernt, {{noSubmission}} Mitglieder ohne Formular, {{errors}} Fehler.',
+		'facilitator.reconcileSheet.error':
+			'Synchronisierung fehlgeschlagen. Bitte erneut versuchen oder Konsole prüfen.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Entfernen verwaister Zeilen übersprungen — dieses Sheet verwendet das alte Schema (keine optionId-Spalte). Die Migration läuft automatisch bei der nächsten Mitgliederänderung.',
 		'admin.suggestion_badge': 'Organisatorvorschlag',
 		'admin.suggestions_section': 'Vorschläge der Organisatoren',
 		'admin.suggestion_placeholder': 'Beschreiben Sie den Vorschlag',
@@ -1208,6 +1314,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'Teilen',
 		'facilitator.following': 'Moderator wird gefolgt…',
 		'facilitator.panel.handle': 'Moderieren',
+		'facilitator.panel.handle.broadcasting': 'Teilnehmer folgen dir',
 		'facilitator.panel.title': 'Moderationssteuerung',
 		'facilitator.panel.close': 'Moderationspanel schließen',
 		'facilitator.panel.no_question': 'Öffnen Sie eine Frage, um deren Einstellungen zu steuern',
@@ -1267,6 +1374,30 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'Seriös',
 		'facilitator.theme.playfulKids': 'Kinder',
 		'facilitator.theme.playfulTeen': 'Teen',
+		'facilitator.section.room': 'Raum',
+		'facilitator.section.display': 'Anzeige & Reihenfolge',
+		'facilitator.section.participation': 'Teilnahme',
+		'facilitator.section.activation': 'Aktivierungsregeln',
+		'facilitator.section.joinForm': 'Beitrittsformular',
+		'facilitator.section.delegates': 'Delegierte',
+		'facilitator.section.danger': 'Gefahrenzone',
+		'facilitator.status.label': 'Frage-Status',
+		'facilitator.status.live': 'Aktiv',
+		'facilitator.status.frozen': 'Eingefroren',
+		'facilitator.status.closed': 'Geschlossen',
+		'facilitator.status.help.live': 'Teilnehmende können normal beitreten, austreten und bewerten.',
+		'facilitator.status.help.frozen':
+			'Die Frage bleibt sichtbar, aber Beitritt, Austritt und Bewertung sind gesperrt.',
+		'facilitator.status.help.closed':
+			'Teilnehmende sehen statt der Frage nur einen "Diese Frage ist geschlossen"-Bildschirm.',
+		'solutions.status.banner.frozen':
+			'Eingefroren — Teilnehmende sehen die Frage, können aber nicht beitreten, austreten oder bewerten.',
+		'solutions.status.banner.closed':
+			'Geschlossen — Teilnehmende sehen nur einen "Diese Frage ist geschlossen"-Bildschirm.',
+		'solutions.closed.title': 'Diese Frage ist geschlossen',
+		'solutions.closed.message':
+			'Die Moderation hat diese Frage geschlossen. Bitte versuche es später erneut.',
+		'frozen.aria_disabled': 'Die Moderation hat diese Frage eingefroren',
 		'qrShare.label': 'Lade jemanden in der Nähe ein',
 		'qrShare.share': 'Teilen',
 		'qrShare.copy': 'Link kopieren',
@@ -1531,6 +1662,16 @@ const translations: Record<string, Record<string, string>> = {
 			'• No se pudieron eliminar los formularios. Despliega las reglas de Firestore: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Algunas filas de Google Sheet no se pudieron quitar. Revisa la lista CORS de fn_removeUserFromSheet o las credenciales del sheet.',
+		'facilitator.reconcileSheet': 'Sincronizar el sheet ahora',
+		'facilitator.reconcileSheet.in_progress': 'Sincronizando…',
+		'facilitator.reconcileSheet.help':
+			'Compara el Google Sheet con las listas reales de activistas/organizadores, agrega las filas faltantes y elimina filas de quienes ya no están unidos. Se puede ejecutar en cualquier momento.',
+		'facilitator.reconcileSheet.done':
+			'Sincronización completa: {{appended}} agregadas, {{present}} ya presentes, {{removed}} fila(s) huérfana(s) eliminada(s), {{noSubmission}} miembros sin formulario, {{errors}} errores.',
+		'facilitator.reconcileSheet.error':
+			'Sincronización fallida. Inténtalo de nuevo o revisa la consola.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Eliminación de filas huérfanas omitida — este sheet usa el esquema antiguo (sin columna optionId). La migración se ejecutará automáticamente con el próximo cambio de membresía.',
 		'admin.suggestion_badge': 'Sugerencia del organizador',
 		'admin.suggestions_section': 'Sugerencias de los organizadores',
 		'admin.suggestion_placeholder': 'Describe la sugerencia',
@@ -1546,6 +1687,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'Compartir',
 		'facilitator.following': 'Siguiendo al facilitador…',
 		'facilitator.panel.handle': 'Facilitar',
+		'facilitator.panel.handle.broadcasting': 'Los participantes te siguen',
 		'facilitator.panel.title': 'Controles del facilitador',
 		'facilitator.panel.close': 'Cerrar panel del facilitador',
 		'facilitator.panel.no_question': 'Abra una pregunta para controlar su configuración',
@@ -1606,6 +1748,31 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'Serio',
 		'facilitator.theme.playfulKids': 'Niños',
 		'facilitator.theme.playfulTeen': 'Adolescentes',
+		'facilitator.section.room': 'Sala',
+		'facilitator.section.display': 'Visualización y orden',
+		'facilitator.section.participation': 'Participación',
+		'facilitator.section.activation': 'Reglas de activación',
+		'facilitator.section.joinForm': 'Formulario de inscripción',
+		'facilitator.section.delegates': 'Delegados',
+		'facilitator.section.danger': 'Zona de peligro',
+		'facilitator.status.label': 'Estado de la pregunta',
+		'facilitator.status.live': 'Activa',
+		'facilitator.status.frozen': 'Congelada',
+		'facilitator.status.closed': 'Cerrada',
+		'facilitator.status.help.live':
+			'Las personas participantes pueden unirse, salirse y evaluar con normalidad.',
+		'facilitator.status.help.frozen':
+			'La pregunta sigue visible, pero unirse, salirse y evaluar están bloqueados.',
+		'facilitator.status.help.closed':
+			'Las personas participantes ven solo una pantalla de "Esta pregunta está cerrada" en lugar de la pregunta.',
+		'solutions.status.banner.frozen':
+			'Congelada — las personas participantes pueden ver la pregunta, pero no unirse, salirse ni evaluar.',
+		'solutions.status.banner.closed':
+			'Cerrada — las personas participantes solo ven la pantalla "Esta pregunta está cerrada".',
+		'solutions.closed.title': 'Esta pregunta está cerrada',
+		'solutions.closed.message':
+			'La persona facilitadora ha cerrado esta pregunta. Vuelve a intentarlo más tarde.',
+		'frozen.aria_disabled': 'La persona facilitadora ha congelado esta pregunta',
 		'qrShare.label': 'Invita a alguien cerca',
 		'qrShare.share': 'Compartir',
 		'qrShare.copy': 'Copiar enlace',
@@ -1864,6 +2031,16 @@ const translations: Record<string, Record<string, string>> = {
 			'• Formulierinzendingen konden niet worden verwijderd. Deploy de nieuwste Firestore-regels: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• Sommige Google Sheet-rijen konden niet worden verwijderd. Controleer de CORS-allowlist van fn_removeUserFromSheet of de sheet-credentials.',
+		'facilitator.reconcileSheet': 'Sheet nu synchroniseren',
+		'facilitator.reconcileSheet.in_progress': 'Synchroniseren…',
+		'facilitator.reconcileSheet.help':
+			'Vergelijkt het Google Sheet met de werkelijke activisten-/organisatorenlijsten, voegt ontbrekende rijen toe en verwijdert rijen voor gebruikers die niet meer zijn aangesloten. Altijd veilig uit te voeren.',
+		'facilitator.reconcileSheet.done':
+			'Synchronisatie voltooid: {{appended}} toegevoegd, {{present}} al aanwezig, {{removed}} weesrij(en) verwijderd, {{noSubmission}} leden zonder formulier, {{errors}} fouten.',
+		'facilitator.reconcileSheet.error':
+			'Synchronisatie mislukt. Probeer opnieuw of controleer de console.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'Verwijderen van weesrijen overgeslagen — dit sheet gebruikt het oude schema (geen optionId-kolom). Migratie vindt automatisch plaats bij de volgende lidmaatschapswijziging.',
 		'admin.suggestion_badge': 'Organisatorvoorstel',
 		'admin.suggestions_section': 'Voorstellen van organisatoren',
 		'admin.suggestion_placeholder': 'Beschrijf het voorstel',
@@ -1879,6 +2056,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'Delen',
 		'facilitator.following': 'Facilitator volgen…',
 		'facilitator.panel.handle': 'Faciliteren',
+		'facilitator.panel.handle.broadcasting': 'Deelnemers volgen jou',
 		'facilitator.panel.title': 'Facilitator-bediening',
 		'facilitator.panel.close': 'Facilitator-paneel sluiten',
 		'facilitator.panel.no_question': 'Open een vraag om de instellingen te beheren',
@@ -1938,6 +2116,30 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'Serieus',
 		'facilitator.theme.playfulKids': 'Kids',
 		'facilitator.theme.playfulTeen': 'Tieners',
+		'facilitator.section.room': 'Ruimte',
+		'facilitator.section.display': 'Weergave & volgorde',
+		'facilitator.section.participation': 'Deelname',
+		'facilitator.section.activation': 'Activatieregels',
+		'facilitator.section.joinForm': 'Inschrijfformulier',
+		'facilitator.section.delegates': 'Gedelegeerden',
+		'facilitator.section.danger': 'Gevarenzone',
+		'facilitator.status.label': 'Vraag-status',
+		'facilitator.status.live': 'Live',
+		'facilitator.status.frozen': 'Bevroren',
+		'facilitator.status.closed': 'Gesloten',
+		'facilitator.status.help.live': 'Deelnemers kunnen normaal meedoen, uitstappen en beoordelen.',
+		'facilitator.status.help.frozen':
+			'De vraag blijft zichtbaar, maar meedoen, uitstappen en beoordelen zijn geblokkeerd.',
+		'facilitator.status.help.closed':
+			'Deelnemers zien alleen een scherm met "Deze vraag is gesloten" in plaats van de vraag.',
+		'solutions.status.banner.frozen':
+			'Bevroren — deelnemers kunnen de vraag zien, maar niet meedoen, uitstappen of beoordelen.',
+		'solutions.status.banner.closed':
+			'Gesloten — deelnemers zien alleen het scherm "Deze vraag is gesloten".',
+		'solutions.closed.title': 'Deze vraag is gesloten',
+		'solutions.closed.message':
+			'De moderator heeft deze vraag gesloten. Probeer het later opnieuw.',
+		'frozen.aria_disabled': 'De moderator heeft deze vraag bevroren',
 		'qrShare.label': 'Nodig iemand naast je uit',
 		'qrShare.share': 'Delen',
 		'qrShare.copy': 'Link kopiëren',
@@ -2191,6 +2393,16 @@ const translations: Record<string, Record<string, string>> = {
 			'• فرم‌های پیوستن حذف نشدند. قوانین Firestore را به‌روزرسانی کنید: firebase deploy --only firestore:rules.',
 		'facilitator.reset_all_error.sheet':
 			'• برخی ردیف‌های Google Sheet حذف نشدند. فهرست CORS تابع fn_removeUserFromSheet یا اعتبارنامه Sheet را بررسی کنید.',
+		'facilitator.reconcileSheet': 'هم‌سان‌سازی Sheet',
+		'facilitator.reconcileSheet.in_progress': 'در حال هم‌سان‌سازی…',
+		'facilitator.reconcileSheet.help':
+			'گوگل شیت را با فهرست‌های واقعی فعالان/سازمان‌دهندگان مقایسه می‌کند، ردیف‌های گم‌شده را می‌افزاید و ردیف‌های کاربرانی را که دیگر عضو نیستند حذف می‌کند. اجرای آن همیشه ایمن است.',
+		'facilitator.reconcileSheet.done':
+			'هم‌سان‌سازی کامل شد: {{appended}} افزوده شد، {{present}} قبلاً موجود بود، {{removed}} ردیف بی‌مالک حذف شد، {{noSubmission}} عضو بدون فرم، {{errors}} خطا.',
+		'facilitator.reconcileSheet.error':
+			'هم‌سان‌سازی ناموفق بود. دوباره تلاش کنید یا کنسول را بررسی کنید.',
+		'facilitator.reconcileSheet.v1_orphan_skipped':
+			'حذف ردیف‌های بی‌مالک رد شد — این شیت از طرح‌واره قدیمی استفاده می‌کند (بدون ستون optionId). مهاجرت به طور خودکار در تغییر عضویت بعدی انجام می‌شود.',
 		'admin.suggestion_badge': 'پیشنهاد سازمان‌دهنده',
 		'admin.suggestions_section': 'پیشنهادهای سازمان‌دهندگان',
 		'admin.suggestion_placeholder': 'پیشنهاد را توصیف کنید',
@@ -2206,6 +2418,7 @@ const translations: Record<string, Record<string, string>> = {
 		share: 'اشتراک‌گذاری',
 		'facilitator.following': 'دنبال کردن میزبان…',
 		'facilitator.panel.handle': 'تسهیل',
+		'facilitator.panel.handle.broadcasting': 'شرکت‌کنندگان از شما پیروی می‌کنند',
 		'facilitator.panel.title': 'کنترل‌های میزبان',
 		'facilitator.panel.close': 'بستن پنل میزبان',
 		'facilitator.panel.no_question': 'برای مدیریت تنظیمات، یک پرسش را باز کنید',
@@ -2258,6 +2471,30 @@ const translations: Record<string, Record<string, string>> = {
 		'facilitator.theme.serious': 'جدی',
 		'facilitator.theme.playfulKids': 'کودکان',
 		'facilitator.theme.playfulTeen': 'نوجوانان',
+		'facilitator.section.room': 'اتاق',
+		'facilitator.section.display': 'نمایش و ترتیب',
+		'facilitator.section.participation': 'مشارکت',
+		'facilitator.section.activation': 'قوانین فعال‌سازی',
+		'facilitator.section.joinForm': 'فرم پیوستن',
+		'facilitator.section.delegates': 'نمایندگان',
+		'facilitator.section.danger': 'منطقه خطر',
+		'facilitator.status.label': 'وضعیت سؤال',
+		'facilitator.status.live': 'فعال',
+		'facilitator.status.frozen': 'منجمد',
+		'facilitator.status.closed': 'بسته',
+		'facilitator.status.help.live':
+			'شرکت‌کنندگان می‌توانند به‌طور عادی بپیوندند، خارج شوند و ارزیابی کنند.',
+		'facilitator.status.help.frozen':
+			'سؤال نمایان می‌ماند، اما پیوستن، خروج و ارزیابی مسدود هستند.',
+		'facilitator.status.help.closed':
+			'به‌جای سؤال، شرکت‌کنندگان فقط صفحهٔ «این سؤال بسته است» را می‌بینند.',
+		'solutions.status.banner.frozen':
+			'منجمد — شرکت‌کنندگان می‌توانند سؤال را ببینند ولی نمی‌توانند بپیوندند، خارج شوند یا ارزیابی کنند.',
+		'solutions.status.banner.closed':
+			'بسته — شرکت‌کنندگان فقط صفحهٔ «این سؤال بسته است» را می‌بینند.',
+		'solutions.closed.title': 'این سؤال بسته است',
+		'solutions.closed.message': 'تسهیل‌گر این سؤال را بسته است. لطفاً بعداً دوباره بررسی کنید.',
+		'frozen.aria_disabled': 'تسهیل‌گر این سؤال را منجمد کرده است',
 		'qrShare.label': 'کسی نزدیک خود را دعوت کنید',
 		'qrShare.share': 'اشتراک‌گذاری',
 		'qrShare.copy': 'کپی پیوند',

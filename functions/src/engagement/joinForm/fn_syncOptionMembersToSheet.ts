@@ -16,8 +16,10 @@ import { extractSheetId, getGoogleSheetsClient } from './getGoogleSheetsClient';
 import { logError } from '../../utils/errorHandling';
 import {
 	buildRowFromHeader,
+	columnIndexToA1,
 	diffMembers as diffMembersPure,
 	findRowIndex as findRowIndexPure,
+	planV1ToV2Migration,
 	type MemberDiff,
 	type Role as PureRole,
 } from './joinSheetMath';
@@ -59,8 +61,8 @@ const METADATA_HEADERS = [
  * `buildRowFromHeader` adaptation; a warning surfaces in logs so operators
  * can choose to migrate.
  */
-const CURRENT_SHEET_SCHEMA_VERSION = 2;
-const SCHEMA_VERSION_CELL = 'Z1';
+export const CURRENT_SHEET_SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION_CELL = 'Z1';
 
 /**
  * Drives Google Sheet sync from the option's `joined` and `organizers`
@@ -175,6 +177,27 @@ export const fn_syncOptionMembersToSheet = onDocumentWritten(
 			const optionTitle = (after ?? before)?.statement ?? '';
 
 			await ensureHeaderRow(sheets, sheetId, joinForm);
+
+			// Auto-migrate v1 sheets in place. Idempotent and cheap on v2 sheets
+			// (one Z1 read inside readSheetSchemaVersion + an early exit). Done
+			// after `ensureHeaderRow` so brand-new sheets get the v2 header
+			// directly and skip the migration path entirely.
+			try {
+				const version = await readSheetSchemaVersion(sheets, sheetId);
+				if (version < CURRENT_SHEET_SCHEMA_VERSION) {
+					await migrateV1ToV2IfNeeded(sheets, sheetId, questionId);
+				}
+			} catch (err) {
+				// Migration failure is non-fatal — log and continue with the
+				// member sync. Legacy title-matching still works, and the next
+				// trigger fire will retry the migration (it's idempotent at the
+				// row level via the header check in `planV1ToV2Migration`).
+				logger.warn('[fn_syncOptionMembersToSheet] v1→v2 migration step failed', {
+					sheetId,
+					questionId,
+					error: err instanceof Error ? err.message : String(err),
+				});
+			}
 
 			const additions: Array<{ creator: Creator; role: Role }> = [
 				...activistDiff.added.map((c) => ({ creator: c, role: 'activist' as Role })),
@@ -295,7 +318,7 @@ export async function ensureHeaderRow(
  * Reads the schema version from `Z1`. Treats missing / non-string / unparseable
  * cells as v1 (legacy) so the trigger keeps working on pre-existing sheets.
  */
-async function readSheetSchemaVersion(
+export async function readSheetSchemaVersion(
 	sheets: sheets_v4.Sheets,
 	sheetId: string,
 ): Promise<number> {
@@ -340,26 +363,159 @@ async function ensureSchemaVersionMatches(
 	}
 
 	if (version > CURRENT_SHEET_SCHEMA_VERSION) {
-		logger.error('[fn_syncOptionMembersToSheet] Sheet schema version is newer than this trigger supports — refusing to write', {
-			sheetId,
-			questionId,
-			sheetVersion: version,
-			triggerSupports: CURRENT_SHEET_SCHEMA_VERSION,
-		});
+		logger.error(
+			'[fn_syncOptionMembersToSheet] Sheet schema version is newer than this trigger supports — refusing to write',
+			{
+				sheetId,
+				questionId,
+				sheetVersion: version,
+				triggerSupports: CURRENT_SHEET_SCHEMA_VERSION,
+			},
+		);
 
 		return false;
 	}
 
 	if (version < CURRENT_SHEET_SCHEMA_VERSION) {
-		logger.warn('[fn_syncOptionMembersToSheet] Sheet predates current schema; relying on header adaptation', {
-			sheetId,
-			questionId,
-			sheetVersion: version,
-			triggerSupports: CURRENT_SHEET_SCHEMA_VERSION,
-		});
+		logger.warn(
+			'[fn_syncOptionMembersToSheet] Sheet predates current schema; relying on header adaptation',
+			{
+				sheetId,
+				questionId,
+				sheetVersion: version,
+				triggerSupports: CURRENT_SHEET_SCHEMA_VERSION,
+			},
+		);
 	}
 
 	return true;
+}
+
+// ---------------------------------------------------------------------------
+// v1 → v2 in-place migration
+// ---------------------------------------------------------------------------
+
+/**
+ * One-shot, in-place v1→v2 migration: appends an `optionId` column at the
+ * right edge of the existing header, backfills cells by looking up each
+ * row's `optionTitle` against the question's current options, and stamps
+ * `Z1 = v2`. Idempotent — re-runs on an already-v2 sheet are a single read
+ * and then a no-op.
+ *
+ * Why APPEND rather than INSERT-in-middle:
+ *   - Insert would rewrite every metadata cell; append only writes one
+ *     column. Cheaper, less risk of partial-write corruption.
+ *   - Human-curated column order (e.g. an admin moved phone before email)
+ *     stays intact.
+ *
+ * Failure handling:
+ *   - We stamp Z1 = v2 ONLY after all data writes succeed. A failure
+ *     halfway leaves Z1 at v1, so the next trigger fire re-attempts and
+ *     `planV1ToV2Migration` skips already-migrated rows by detecting the
+ *     `optionId` header.
+ *   - Rows whose title couldn't be resolved against current options (e.g.
+ *     the option was deleted) get an empty `optionId` cell; the legacy
+ *     title-matching path keeps working for them.
+ */
+export async function migrateV1ToV2IfNeeded(
+	sheets: sheets_v4.Sheets,
+	sheetId: string,
+	questionId: string,
+): Promise<void> {
+	const meta = await sheets.spreadsheets.get({
+		spreadsheetId: sheetId,
+		fields: 'sheets(properties(title))',
+	});
+	const sheetTitle = meta.data.sheets?.[0]?.properties?.title ?? 'Sheet1';
+	const valuesResp = await sheets.spreadsheets.values.get({
+		spreadsheetId: sheetId,
+		range: `${sheetTitle}!A:ZZ`,
+	});
+	const rawRows = valuesResp.data.values ?? [];
+	const rows: string[][] = rawRows.map((r) =>
+		(r ?? []).map((c) => (typeof c === 'string' ? c : String(c ?? ''))),
+	);
+
+	// Build a `title → optionId` map from live options. We accept stale
+	// matches (an option whose title was edited won't match its old rows);
+	// those just stay null and keep the legacy match-by-title behavior.
+	const optionsSnap = await db
+		.collection(Collections.statements)
+		.where('parentId', '==', questionId)
+		.where('statementType', '==', StatementType.option)
+		.get();
+	const titleToOptionId = new Map<string, string>();
+	for (const od of optionsSnap.docs) {
+		const o = od.data() as Statement;
+		if (o.isCluster === true) continue;
+		const integratedInto = (o as { integratedInto?: string }).integratedInto;
+		if (integratedInto) continue;
+		const title = (o.statement ?? '').trim();
+		if (title && !titleToOptionId.has(title)) {
+			titleToOptionId.set(title, o.statementId);
+		}
+	}
+
+	const plan = planV1ToV2Migration(rows, titleToOptionId);
+	if (!plan.needsMigration) {
+		// Header already has `optionId` — just make sure Z1 reflects v2 so we
+		// stop checking on subsequent fires. (Safe to overwrite — we only get
+		// here when readSheetSchemaVersion returned < CURRENT, so Z1 is stale.)
+		await stampSchemaVersionV2(sheets, sheetId);
+
+		return;
+	}
+
+	const columnLetter = columnIndexToA1(plan.optionIdColumnIndex);
+	// Guard: if the new column collides with the Z1 schema marker, refuse
+	// to migrate. This only happens on form definitions with 25+ custom
+	// fields — extremely rare, but corrupting Z1 would brick the version
+	// check forever.
+	if (columnLetter === 'Z') {
+		logger.error(
+			'[fn_syncOptionMembersToSheet] v1→v2 migration would overwrite the Z1 schema marker — refusing',
+			{ sheetId, questionId, optionIdColumnIndex: plan.optionIdColumnIndex },
+		);
+
+		return;
+	}
+
+	// Build the full column: [header, ...row values] aligned with rows[1:].
+	// `optionIdsByRow` has one entry per data row in the same order.
+	const columnValues: string[][] = [['optionId']];
+	for (const v of plan.optionIdsByRow) {
+		columnValues.push([v ?? '']);
+	}
+
+	const range = `${columnLetter}1:${columnLetter}${columnValues.length}`;
+	await sheets.spreadsheets.values.update({
+		spreadsheetId: sheetId,
+		range,
+		valueInputOption: 'RAW',
+		requestBody: { values: columnValues },
+	});
+
+	await stampSchemaVersionV2(sheets, sheetId);
+
+	const resolved = plan.optionIdsByRow.filter((v) => v !== null).length;
+	const unresolved = plan.optionIdsByRow.length - resolved;
+	logger.info('[fn_syncOptionMembersToSheet] v1→v2 migration complete', {
+		sheetId,
+		questionId,
+		optionIdColumn: columnLetter,
+		rowsMigrated: plan.optionIdsByRow.length,
+		resolved,
+		unresolved,
+	});
+}
+
+async function stampSchemaVersionV2(sheets: sheets_v4.Sheets, sheetId: string): Promise<void> {
+	await sheets.spreadsheets.values.update({
+		spreadsheetId: sheetId,
+		range: SCHEMA_VERSION_CELL,
+		valueInputOption: 'USER_ENTERED',
+		requestBody: { values: [[`v${CURRENT_SHEET_SCHEMA_VERSION}`]] },
+	});
 }
 
 async function readHeader(sheets: sheets_v4.Sheets, sheetId: string): Promise<string[]> {
@@ -383,7 +539,9 @@ export interface AppendArgs {
 	joinForm: JoinFormConfig;
 }
 
-export async function appendUserRow(args: AppendArgs): Promise<'appended' | 'skipped-already-present' | 'skipped-no-submission'> {
+export async function appendUserRow(
+	args: AppendArgs,
+): Promise<'appended' | 'skipped-already-present' | 'skipped-no-submission'> {
 	const { sheets, sheetId, questionId, optionId, optionTitle, userId, role, joinForm } = args;
 
 	const submissionSnap = await db

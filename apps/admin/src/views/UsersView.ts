@@ -7,6 +7,7 @@ import { Spinner } from '../components/Spinner';
 import { Badge } from '../components/Badge';
 import { subscribeUsers, unsubscribeUsers, loadNextPage, getUsersState } from '../state/users';
 import type { UserDoc } from '../lib/queries';
+import { whenAdmin } from '../lib/auth';
 
 const columns: ColumnConfig<UserDoc>[] = [
 	{
@@ -50,12 +51,17 @@ const columns: ColumnConfig<UserDoc>[] = [
 const UsersTable = DataTable<UserDoc>();
 
 export function UsersView(): m.Component {
+	let stopAuthGate: (() => void) | null = null;
+
 	return {
 		oninit() {
-			subscribeUsers();
+			stopAuthGate = whenAdmin(() => subscribeUsers(), {
+				onLost: () => unsubscribeUsers(),
+			});
 		},
 
 		onremove() {
+			stopAuthGate?.();
 			unsubscribeUsers();
 		},
 

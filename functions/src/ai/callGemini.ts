@@ -5,8 +5,9 @@
  */
 
 import { logError } from '../utils/errorHandling';
+import { GEMINI_MODEL as DEFAULT_GEMINI_MODEL, getGenAI } from '../config/gemini';
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = DEFAULT_GEMINI_MODEL;
 const MAX_TOKENS = 8192;
 const TEMPERATURE = 0.3;
 
@@ -81,64 +82,47 @@ export async function callGemini(
 		temperature?: number;
 	},
 ): Promise<string> {
-	const model = options?.model || GEMINI_MODEL;
+	const modelName = options?.model || GEMINI_MODEL;
 	const maxTokens = options?.maxTokens || MAX_TOKENS;
 	const temperature = options?.temperature ?? TEMPERATURE;
 
-	const apiKey = process.env.GEMINI_API_KEY;
-	if (!apiKey) {
-		console.error('[callGemini] GEMINI_API_KEY is NOT configured in environment');
-		throw new Error('GEMINI_API_KEY not configured');
-	}
-
-	const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey.substring(0, 8)}...`;
-	console.info(`[callGemini] Calling model: ${model}, URL pattern: ${url}`);
-
-	const response = await fetch(
-		`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-		{
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-			},
-			body: JSON.stringify({
-				contents: [
-					{
-						role: 'user',
-						parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
-					},
-				],
-				generationConfig: {
-					temperature,
-					maxOutputTokens: maxTokens,
-					responseMimeType: 'application/json',
-				},
-			}),
+	const model = getGenAI().getGenerativeModel({
+		model: modelName,
+		generationConfig: {
+			temperature,
+			maxOutputTokens: maxTokens,
+			responseMimeType: 'application/json',
 		},
-	);
+	});
 
-	if (!response.ok) {
-		const errorText = await response.text();
-		console.error(
-			`[callGemini] API error: status=${response.status}, body=${errorText.substring(0, 500)}`,
-		);
-		logError(new Error(`Gemini API error: ${response.status}`), {
-			operation: 'ai.callGemini',
-			metadata: { status: response.status, errorText: errorText.substring(0, 500), model },
+	try {
+		const result = await model.generateContent({
+			contents: [
+				{
+					role: 'user',
+					parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }],
+				},
+			],
 		});
-		throw new Error(`Gemini API error: ${response.status} - ${errorText.substring(0, 200)}`);
+		const text = result.response.text();
+
+		if (!text) {
+			const finishReason = result.response.candidates?.[0]?.finishReason;
+			console.error(
+				`[callGemini] Empty response from Gemini. Candidates: ${JSON.stringify(result.response.candidates?.length)}, finishReason: ${finishReason}`,
+			);
+		}
+
+		return text;
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error);
+		console.error(`[callGemini] API error: ${message.substring(0, 500)}`);
+		logError(error instanceof Error ? error : new Error(message), {
+			operation: 'ai.callGemini',
+			metadata: { model: modelName },
+		});
+		throw error;
 	}
-
-	const data = await response.json();
-	const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-
-	if (!text) {
-		console.error(
-			`[callGemini] Empty response from Gemini. Candidates: ${JSON.stringify(data.candidates?.length)}, finishReason: ${data.candidates?.[0]?.finishReason}`,
-		);
-	}
-
-	return text;
 }
 
 export { GEMINI_MODEL };

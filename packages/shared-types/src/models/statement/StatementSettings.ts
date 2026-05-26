@@ -66,6 +66,20 @@ export const JoinResolutionConfigSchema = object({
 export type JoinResolutionConfig = InferOutput<typeof JoinResolutionConfigSchema>;
 
 /**
+ * Question status — facilitator-controlled lifecycle gate.
+ *  - 'live'   : normal operation (default when unset).
+ *  - 'frozen' : the question is visible but no one can join, un-join, or
+ *               submit/change evaluations. Read-only snapshot of the room.
+ *  - 'closed' : participants see only a "This question is closed" screen
+ *               instead of the question content.
+ *
+ * Used by the Join app's FacilitatorPanel. Admins can flip between states
+ * at any time; closing then reopening preserves all existing data.
+ */
+export const QuestionStatusSchema = picklist(['live', 'frozen', 'closed']);
+export type QuestionStatus = InferOutput<typeof QuestionStatusSchema>;
+
+/**
  * Activation threshold — minimum number of activists and organizers
  * required before an option is considered "activated". When enabled,
  * users see how many more people are needed.
@@ -222,6 +236,11 @@ export const StatementSettingsSchema = object({
 	// palette tuned for legibility (system prefers-color-scheme still drives
 	// light vs dark). Default = serious (current earth-tone palette).
 	themeStyle: optional(enum_(ThemeStyle)),
+	// Join app: facilitator-controlled lifecycle gate. Default (undefined) is
+	// treated as 'live'. 'frozen' blocks joining/un-joining/evaluation while
+	// still showing the question; 'closed' replaces the question with a
+	// "This question is closed" screen.
+	questionStatus: optional(QuestionStatusSchema),
 });
 
 

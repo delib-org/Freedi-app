@@ -6,6 +6,14 @@ export enum StatementType {
 	group = 'group',
 	comment = 'comment',
 	paragraph = 'paragraph',
+	/**
+	 * Pipeline-produced synthesis option. A regular `option` semantically,
+	 * but tagged distinctly so the UI/queries can identify and treat it
+	 * separately (e.g. show a "Synthesis" badge, exclude from re-clustering).
+	 * Always carries `isCluster: true` and `derivedByPipeline: 'synthesis'`
+	 * in the document body — the type field is the fast tag.
+	 */
+	synthesis = 'synthesis',
 }
 
 

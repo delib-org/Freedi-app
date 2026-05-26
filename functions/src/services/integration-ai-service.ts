@@ -1,11 +1,10 @@
-import {
-	GenerativeModel,
-	GoogleGenerativeAI,
-	HarmCategory,
-	HarmBlockThreshold,
-} from '@google/generative-ai';
+import { HarmCategory, HarmBlockThreshold } from '@google-cloud/vertexai';
 import { logger } from 'firebase-functions';
-import { GEMINI_MODEL } from '../config/gemini';
+import {
+	GEMINI_MODEL,
+	getGenAI,
+	type CompatGenerativeModel,
+} from '../config/gemini';
 import { Statement, StatementEvaluation } from '@freedi/shared-types';
 import { getParagraphsText } from '../helpers';
 
@@ -69,25 +68,12 @@ export type SynthesisGenerationResult = SynthesizedProposalResult | CannotSynthe
 /**
  * A cached singleton instance of the GenerativeModel.
  */
-let _integrationModel: GenerativeModel | null = null;
-
-/**
- * Get the GoogleGenerativeAI instance
- */
-function getGenAI(): GoogleGenerativeAI {
-	const apiKey = process.env.GEMINI_API_KEY;
-
-	if (!apiKey) {
-		throw new Error('Missing GEMINI_API_KEY environment variable');
-	}
-
-	return new GoogleGenerativeAI(apiKey);
-}
+let _integrationModel: CompatGenerativeModel | null = null;
 
 /**
  * Initializes and retrieves the Generative AI model for integration tasks.
  */
-async function getIntegrationModel(): Promise<GenerativeModel> {
+async function getIntegrationModel(): Promise<CompatGenerativeModel> {
 	if (_integrationModel) {
 		return _integrationModel;
 	}
@@ -555,6 +541,103 @@ Return JSON:
 
 		return synthesisFallback(statements);
 	}
+}
+
+/**
+ * Result of generating a short topic-cluster label from a pair (or more) of
+ * related-but-distinct ideas. Used by the pipeline's "topic cluster" spawn
+ * path — not for synth merging.
+ */
+export interface TopicLabelResult {
+	title: string;
+	description: string;
+}
+
+/**
+ * Produce a short topic-style label that names what a set of related ideas
+ * share, without merging them into one proposal. Cheap by design — short
+ * prompt, short output. Falls back to a truncation of the first input if
+ * the LLM call or parse fails.
+ */
+export async function generateTopicLabel(
+	inputs: Statement[],
+	questionContext: string,
+): Promise<TopicLabelResult> {
+	if (inputs.length === 0) {
+		throw new Error('No inputs provided for topic label');
+	}
+
+	const sample = inputs[0].statement;
+	const isHebrew = /[֐-׿]/.test(sample);
+	const isArabic = /[؀-ۿ]/.test(sample);
+	const languageInstruction = isHebrew
+		? 'Write the label in Hebrew.'
+		: isArabic
+			? 'Write the label in Arabic.'
+			: 'Write the label in the same language as the input ideas.';
+
+	const ideaLines = inputs
+		.slice(0, 6)
+		.map((s, i) => `${i + 1}. ${s.statement}`)
+		.join('\n');
+
+	const prompt = `You are naming a topic that groups related but distinct community ideas.
+
+QUESTION: "${questionContext}"
+
+RELATED IDEAS (different specifics, same general topic):
+${ideaLines}
+
+TASK: Produce a SHORT topic label (3–6 words) describing what these ideas have in common at the topic level — not a merged proposal. Examples of good labels: "Public transit improvements", "Park & green space", "Bike lane expansion". Avoid verb-led action phrasing; this is a category, not a plan.
+
+Also give a one-sentence description (≤ 20 words) describing the topic.
+
+${languageInstruction}
+
+Return JSON:
+{
+  "title": "3–6 word topic label",
+  "description": "One-sentence topic description (≤ 20 words)"
+}`;
+
+	try {
+		const model = await getIntegrationModel();
+		const result = await model.generateContent(prompt);
+		let responseText = result.response.text();
+		responseText = responseText
+			.replace(/```json\s*/gi, '')
+			.replace(/```\s*/g, '')
+			.trim();
+
+		const parsed = JSON.parse(responseText);
+		const title =
+			typeof parsed.title === 'string' && parsed.title.trim() ? parsed.title.trim() : '';
+		const description = typeof parsed.description === 'string' ? parsed.description.trim() : '';
+
+		if (!title) {
+			return topicLabelFallback(inputs);
+		}
+
+		return { title, description };
+	} catch (error) {
+		logger.warn('generateTopicLabel: error, using fallback', {
+			error: error instanceof Error ? error.message : String(error),
+		});
+
+		return topicLabelFallback(inputs);
+	}
+}
+
+function topicLabelFallback(inputs: Statement[]): TopicLabelResult {
+	const primary = inputs[0].statement;
+	const isHebrew = /[֐-׿]/.test(primary);
+	const prefix = isHebrew ? 'נושא: ' : 'Topic: ';
+	const trimmed = primary.length > 50 ? primary.substring(0, 47) + '…' : primary;
+
+	return {
+		title: `${prefix}${trimmed}`,
+		description: '',
+	};
 }
 
 function synthesisFallback(statements: StatementWithEvaluation[]): SynthesizedProposalResult {

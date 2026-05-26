@@ -68,22 +68,16 @@ export const fn_onJoinDelegateInvitationCreated = onDocumentCreated(
 		// Resolve the question title for the email body.
 		let questionTitle = '';
 		try {
-			const qSnap = await db
-				.collection(Collections.statements)
-				.doc(invitation.questionId)
-				.get();
+			const qSnap = await db.collection(Collections.statements).doc(invitation.questionId).get();
 			if (qSnap.exists) {
 				const question = qSnap.data() as Statement;
 				questionTitle = (question?.statement ?? '').trim();
 			}
 		} catch (error) {
-			logger.warn(
-				'[fn_onJoinDelegateInvitationCreated] Failed to load question for title',
-				{
-					invitationId: invitation.invitationId,
-					error: error instanceof Error ? error.message : String(error),
-				},
-			);
+			logger.warn('[fn_onJoinDelegateInvitationCreated] Failed to load question for title', {
+				invitationId: invitation.invitationId,
+				error: error instanceof Error ? error.message : String(error),
+			});
 		}
 
 		const inviteLink = `${getJoinAppBaseUrl()}/invite?token=${encodeURIComponent(invitation.token)}`;

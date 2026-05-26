@@ -23,15 +23,7 @@ import {
 	Collections,
 	getJoinDelegateId,
 } from '@freedi/shared-types';
-import {
-	db,
-	collection,
-	doc,
-	query,
-	where,
-	onSnapshot,
-	Unsubscribe,
-} from '../firebase';
+import { db, collection, doc, query, where, onSnapshot, Unsubscribe } from '../firebase';
 import { getUserState } from '../user';
 import { setCurrentDelegate } from '../admin';
 

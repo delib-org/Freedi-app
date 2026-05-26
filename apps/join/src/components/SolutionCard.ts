@@ -416,6 +416,12 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 
 		const isActivated = isOptionActivated(joinedCount, organizerCount, question);
 
+		// Facilitator-controlled freeze: when the admin has frozen the question,
+		// the card stays visible but joining / un-joining is disabled. Evaluation
+		// is gated separately inside Evaluation.ts. Admin edits/manage-options
+		// stay live so the facilitator can curate during the freeze.
+		const frozen = question?.statementSettings?.questionStatus === 'frozen';
+
 		const navigateToChat = (): void => {
 			const mainId = m.route.param('mid');
 			if (mainId) {
@@ -595,7 +601,8 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 				question?.statementSettings?.showJoining === false
 					? null
 					: m(
-							'.solution-card__actions',
+							`.solution-card__actions${frozen ? '.solution-card__actions--frozen' : ''}`,
+							{ 'aria-disabled': frozen ? 'true' : undefined },
 							question?.statementSettings?.dualRoleJoin !== false
 								? [
 										// Default: dual Activist + Organizer buttons. Admin can collapse
@@ -603,8 +610,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 										m(
 											`button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
 											{
+												disabled: frozen ? true : undefined,
+												title: frozen ? t('frozen.aria_disabled') : undefined,
 												onclick: (e: Event) => {
 													e.stopPropagation();
+													if (frozen) return;
 													handleJoin(
 														option,
 														questionId,
@@ -619,8 +629,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 										m(
 											`button.btn.btn--small${isJoinedAsOrganizer ? '.btn--organizer' : '.btn--outline-organizer'}`,
 											{
+												disabled: frozen ? true : undefined,
+												title: frozen ? t('frozen.aria_disabled') : undefined,
 												onclick: (e: Event) => {
 													e.stopPropagation();
+													if (frozen) return;
 													handleJoin(
 														option,
 														questionId,
@@ -637,8 +650,11 @@ export const SolutionCard: m.Component<SolutionCardAttrs> = {
 										m(
 											`button.btn.btn--small${isJoinedAsActivist ? '.btn--agree' : '.btn--outline-agree'}`,
 											{
+												disabled: frozen ? true : undefined,
+												title: frozen ? t('frozen.aria_disabled') : undefined,
 												onclick: (e: Event) => {
 													e.stopPropagation();
+													if (frozen) return;
 													handleJoin(
 														option,
 														questionId,

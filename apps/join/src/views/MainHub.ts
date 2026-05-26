@@ -380,4 +380,3 @@ function renderQuestionCard(
 		],
 	);
 }
-

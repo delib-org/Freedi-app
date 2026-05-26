@@ -16,7 +16,7 @@
 	&__list {
 		position: relative;
 		padding: var(--padding, 16px);
-		padding-bottom: 5rem;
+		padding-bottom: var(--page-bottom-clearance);
 		flex: 1;
 	}
 

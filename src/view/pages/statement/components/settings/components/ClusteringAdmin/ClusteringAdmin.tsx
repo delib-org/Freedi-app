@@ -1,5 +1,5 @@
 import { FC, useState, useEffect, useCallback } from 'react';
-import { Layers, Brain, FileText, Combine } from 'lucide-react';
+import { Layers, Brain, FileText } from 'lucide-react';
 import { useTranslation } from '@/controllers/hooks/useTranslation';
 import { Statement } from '@freedi/shared-types';
 import { Framing, ClusterAggregatedEvaluation } from '@freedi/shared-types';
@@ -15,7 +15,6 @@ import ActionRow from '../advancedSettings/ActionRow';
 import styles from './ClusteringAdmin.module.scss';
 import FramingList from './FramingList';
 import FramingDetail from './FramingDetail';
-import SynthesizeIdeasModal from '@/view/components/synthesizeIdeas/SynthesizeIdeasModal';
 import Loader from '@/view/components/loaders/Loader';
 
 interface ClusteringAdminProps {
@@ -30,8 +29,6 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 	const [selectedFraming, setSelectedFraming] = useState<Framing | null>(null);
 	const [aggregations, setAggregations] = useState<ClusterAggregatedEvaluation[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-	const [isSynthesizeModalOpen, setIsSynthesizeModalOpen] = useState(false);
-	const [synthesisStatusMessage, setSynthesisStatusMessage] = useState<string | null>(null);
 	const [error, setError] = useState<string | null>(null);
 	const [isRunningSemantic, setIsRunningSemantic] = useState(false);
 	const [isRunningTopic, setIsRunningTopic] = useState(false);
@@ -234,35 +231,12 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 				badge="new"
 				variant="secondary"
 			/>
-			<ActionRow
-				icon={Combine}
-				label={t('Synthesize ideas')}
-				description={t(
-					'Find proposals that say the same thing in different words and merge them. Embeddings find candidates; an AI judge confirms each pair before merging (catches "raise" vs "lower" and similar false positives).',
-				)}
-				buttonLabel={t('Open')}
-				disabled={anyRunning}
-				onClick={() => {
-					setSynthesisStatusMessage(null);
-					setIsSynthesizeModalOpen(true);
-				}}
-				badge="new"
-				variant="primary"
-			/>
-			{synthesisStatusMessage && <div className={styles.status}>{synthesisStatusMessage}</div>}
 
 			{isLoading && framings.length === 0 ? (
 				<div className={styles.loaderContainer}>
 					<Loader />
 				</div>
-			) : framings.length === 0 ? (
-				<div className={styles.emptyState}>
-					<p>{t('No framings available yet')}</p>
-					<p className={styles.hint}>
-						{t('Run Semantic or Topic clustering above to create clustering perspectives for your options')}
-					</p>
-				</div>
-			) : (
+			) : framings.length === 0 ? null : (
 				<div className={styles.content}>
 					<FramingList
 						framings={framings}
@@ -279,19 +253,6 @@ const ClusteringAdmin: FC<ClusteringAdminProps> = ({ statement }) => {
 						/>
 					)}
 				</div>
-			)}
-
-			{isSynthesizeModalOpen && (
-				<SynthesizeIdeasModal
-					parentStatementId={statement.statementId}
-					onClose={() => setIsSynthesizeModalOpen(false)}
-					onSuccess={(createdCount) => {
-						setIsSynthesizeModalOpen(false);
-						setSynthesisStatusMessage(
-							t('Synthesis created {n} merged statements').replace('{n}', String(createdCount)),
-						);
-					}}
-				/>
 			)}
 		</div>
 	);

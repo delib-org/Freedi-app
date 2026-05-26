@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
 import {
 	Collections,
 	getRandomUID,
@@ -7,11 +6,10 @@ import {
 	StatementType,
 } from '@freedi/shared-types';
 import { Framing, FramingRequest, FramingSnapshot, ClusterSnapshot } from '@freedi/shared-types';
-import { Response, Request, onInit, logger } from 'firebase-functions/v1';
+import { Response, Request, logger } from 'firebase-functions/v1';
 import { parse } from 'valibot';
 import { db } from '.';
-import { GEMINI_MODEL } from './config/gemini';
-import { logError } from './utils/errorHandling';
+import { GEMINI_MODEL, getGenAI as getCompatGenAI, type CompatGenAI } from './config/gemini';
 
 // New collection names (not yet in delib-npm)
 const FRAMING_COLLECTIONS = {
@@ -48,19 +46,14 @@ interface AIFraming {
 	}[];
 }
 
-let genAI: GoogleGenerativeAI;
+let genAI: CompatGenAI | undefined;
 
-onInit(() => {
-	try {
-		if (!process.env.GEMINI_API_KEY) {
-			throw new Error('Missing GEMINI_API_KEY environment variable');
-		}
+function getGenAI(): CompatGenAI {
+	if (genAI) return genAI;
+	genAI = getCompatGenAI();
 
-		genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-	} catch (error) {
-		logError(error, { operation: 'multiFramingClusters.initGenAI' });
-	}
-});
+	return genAI;
+}
 
 /**
  * Generate up to 3 AI framings for a given statement
@@ -114,7 +107,7 @@ export async function generateMultipleFramings(req: Request, res: Response): Pro
 		// Generate multiple framings using AI. JSON mime + bumped output cap
 		// because the default ~8K tokens truncate mid-string on questions with
 		// 50+ options × 3 framings (we observed truncation at ~31K chars).
-		const model = genAI.getGenerativeModel({
+		const model = getGenAI().getGenerativeModel({
 			model: GEMINI_MODEL,
 			generationConfig: {
 				responseMimeType: 'application/json',
@@ -251,7 +244,7 @@ export async function requestCustomFraming(req: Request, res: Response): Promise
 
 		// Generate custom framing using AI. Same JSON-mime + bumped output cap
 		// as generateMultipleFramings to avoid mid-string truncation.
-		const model = genAI.getGenerativeModel({
+		const model = getGenAI().getGenerativeModel({
 			model: GEMINI_MODEL,
 			generationConfig: {
 				responseMimeType: 'application/json',
@@ -571,7 +564,10 @@ function parseMultiFramingResponse(text: string): AIFraming[] | null {
 					`Recovered ${(parsed as unknown[]).length ?? 0} framing(s) from truncated response; original length ${jsonString.length}, salvaged ${truncated.length}.`,
 				);
 			} catch (recoveryError) {
-				logger.error('Error parsing multi-framing response (after truncation salvage):', recoveryError);
+				logger.error(
+					'Error parsing multi-framing response (after truncation salvage):',
+					recoveryError,
+				);
 
 				return null;
 			}

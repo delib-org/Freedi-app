@@ -36,6 +36,7 @@ import {
 	createManagedCollectionListener,
 	generateListenerKey,
 } from '@/controllers/utils/firestoreListenerHelpers';
+import { NON_DOCUMENT_STATEMENT_TYPES } from '@/helpers/statementTypeHelpers';
 
 // Helpers
 export const listenToStatementSubscription = (
@@ -177,11 +178,15 @@ export const listenToSubStatements = (
 		// This should be enough for most use cases while dramatically improving load time
 		const descAsc = topBottom === 'top' ? 'desc' : 'asc';
 
-		// Build the base query
+		// Build the base query.
+		// Using `in` against an explicit allowlist (instead of `!= document`)
+		// because Firestore inequality + orderBy on a different field forces
+		// an index scan with poor selectivity (Query Insights flagged a 6.56
+		// scan ratio). The allowlist is derived from the StatementType enum.
 		let q = query(
 			statementsRef,
 			where('parentId', '==', statementId),
-			where('statementType', '!=', StatementType.document),
+			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
 			orderBy('createdAt', descAsc),
 		);
 
@@ -317,7 +322,7 @@ export const listenToMembers = (dispatch: AppDispatch) => (statementId: string) 
 		const q = query(
 			membersRef,
 			where('statementId', '==', statementId),
-			where('statementType', '!=', StatementType.document),
+			where('statementType', 'in', NON_DOCUMENT_STATEMENT_TYPES),
 			orderBy('createdAt', 'desc'),
 			limit(10), // Load only last 10 members initially, more can be loaded on demand
 		);

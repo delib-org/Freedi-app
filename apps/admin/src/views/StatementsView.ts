@@ -16,6 +16,7 @@ import {
 	setFilter,
 	getStatementsState,
 } from '../state/statements';
+import { whenAdmin } from '../lib/auth';
 
 const breadcrumbCache = new Map<string, BreadcrumbItem[]>();
 
@@ -78,6 +79,7 @@ const FilterBarComponent = FilterBar();
 export function StatementsView(): m.Component {
 	let expandedId: string | null = null;
 	let loadingBreadcrumb = false;
+	let stopAuthGate: (() => void) | null = null;
 
 	async function toggleExpand(statement: Statement): Promise<void> {
 		if (expandedId === statement.statementId) {
@@ -106,10 +108,13 @@ export function StatementsView(): m.Component {
 
 	return {
 		oninit() {
-			subscribeStatements();
+			stopAuthGate = whenAdmin(() => subscribeStatements(), {
+				onLost: () => unsubscribeStatements(),
+			});
 		},
 
 		onremove() {
+			stopAuthGate?.();
 			unsubscribeStatements();
 		},
 

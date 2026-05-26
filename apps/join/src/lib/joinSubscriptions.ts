@@ -48,7 +48,11 @@ export interface JoinMainEntry {
 }
 
 function buildSubId(userId: string, statementId: string): string {
-	return getStatementSubscriptionId(statementId, { uid: userId } as Parameters<typeof getStatementSubscriptionId>[1]) ?? `${userId}--${statementId}`;
+	return (
+		getStatementSubscriptionId(statementId, { uid: userId } as Parameters<
+			typeof getStatementSubscriptionId
+		>[1]) ?? `${userId}--${statementId}`
+	);
 }
 
 /** Upsert the user's subscription for `statement` and stamp it as opened in
@@ -110,10 +114,7 @@ export async function markOpenedInJoin(
 /** Remove from the join Main list without dropping the subscription. The
  *  user may still be a participant on this statement elsewhere; we only
  *  clear the join-specific flags. */
-export async function unmarkFromJoinMain(
-	statementId: string,
-	userId: string,
-): Promise<void> {
+export async function unmarkFromJoinMain(statementId: string, userId: string): Promise<void> {
 	const subId = buildSubId(userId, statementId);
 	const ref = doc(db, Collections.statementsSubscribe, subId);
 	await updateDoc(ref, {
@@ -128,10 +129,7 @@ export async function unmarkFromJoinMain(
  *  `orderedIds` are left untouched, so a stale optimistic order from one
  *  tab can't reset another tab's manual reorder of an entry that's drifted
  *  out of the snapshot. */
-export async function setJoinMainOrder(
-	orderedIds: string[],
-	userId: string,
-): Promise<void> {
+export async function setJoinMainOrder(orderedIds: string[], userId: string): Promise<void> {
 	if (orderedIds.length === 0) return;
 	const batch = writeBatch(db);
 	const now = Date.now();

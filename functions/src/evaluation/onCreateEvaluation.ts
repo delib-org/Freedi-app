@@ -20,6 +20,15 @@ import { onEvaluationCreatedStats } from '../fn_adminStats';
 import { markHybridEmbeddingStale } from '../services/hybrid-vector-service';
 import { writeHistoryEntry } from '../statements/history/writeHistoryEntry';
 import { isResearchEnabledForTopParent } from '../statements/history/isResearchEnabled';
+// Ship 3a: cluster-aware polarization. The two helpers below are no-ops at
+// import time; they only do work when `synthesisFlags.clusterAwarePolarization`
+// is ON. The flag is checked inside the trigger handler, not at module load,
+// so it can be flipped at runtime without redeploy.
+import { synthesisFlags } from '../synthesis/featureFlags';
+import {
+	enqueueClusterRecompute,
+	findClustersContainingMember,
+} from '../synthesis/liveSynth/clusterRecompute';
 
 export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Promise<void> {
 	try {
@@ -93,6 +102,28 @@ export async function newEvaluation(event: FirestoreEvent<DocumentSnapshot>): Pr
 			demographicAnchorId: evaluation.demographicAnchorId,
 		};
 		updateUserDemographicEvaluation(statement, userEvalData);
+
+		// Ship 3a: enqueue cluster recompute(s) when this statement belongs to
+		// any synth cluster. Behind `clusterAwarePolarization` flag — when OFF,
+		// the lookup is skipped entirely so the trigger's hot path is unchanged.
+		// Fail-open: any error here is logged and swallowed; the directly-
+		// evaluated statement's polarization compute above still happens.
+		if (synthesisFlags.clusterAwarePolarization) {
+			findClustersContainingMember(statement.statementId)
+				.then(async (containingClusters) => {
+					await Promise.all(
+						containingClusters.map((c) =>
+							enqueueClusterRecompute(c.statementId, 'evaluation:create', userId),
+						),
+					);
+				})
+				.catch((err) =>
+					logger.warn('cluster-aware polarization enqueue failed (create)', {
+						statementId: statement.statementId,
+						error: err instanceof Error ? err.message : String(err),
+					}),
+				);
+		}
 
 		// Track engagement (non-blocking)
 		trackEvaluationEngagement(statementId, userId, parentId, statement.topParentId).catch((err) =>

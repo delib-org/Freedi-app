@@ -209,6 +209,7 @@ import {
 	fn_backupOptionMembership,
 } from './engagement/joinForm/fn_backupJoinRegistration';
 import { fn_reconcileJoinSheet } from './engagement/joinForm/fn_reconcileJoinSheet';
+import { fn_syncSubmissionToSheet } from './engagement/joinForm/fn_syncSubmissionToSheet';
 import { fn_joinOption } from './engagement/joinForm/fn_joinOption';
 import { getSheetServiceAccountEmail } from './engagement/joinForm/fn_getSheetServiceAccountEmail';
 import { testSheetAccess } from './engagement/joinForm/fn_testSheetAccess';
@@ -875,6 +876,7 @@ exports.fn_removeUserFromSheet = fn_removeUserFromSheet;
 exports.fn_backupJoinFormSubmission = fn_backupJoinFormSubmission;
 exports.fn_backupOptionMembership = fn_backupOptionMembership;
 exports.fn_reconcileJoinSheet = fn_reconcileJoinSheet;
+exports.fn_syncSubmissionToSheet = fn_syncSubmissionToSheet;
 exports.fn_joinOption = fn_joinOption;
 exports.getSheetServiceAccountEmail = getSheetServiceAccountEmail;
 exports.testSheetAccess = testSheetAccess;
@@ -983,12 +985,89 @@ export const refreshUserStats = onSchedule(
 		timeZone: 'UTC',
 		...functionConfig,
 		timeoutSeconds: 300,
-		secrets: ['GEMINI_API_KEY'],
 	},
 	async () => {
 		await performUserStatsRefresh();
 	},
 );
+
+// Ship 2 — async-synthesis job model.
+// `synthesisJobStart` and `synthesisJobCancel` are callables that gate on
+// the SYNTHESIS_ASYNC_JOB_MODE flag. The Firestore-write dispatcher routes
+// jobs through their phases. The heartbeat sweep recovers stuck jobs every
+// 5 min. The existing synchronous `synthesizeIdeasPreview` is unchanged —
+// clients pick which entry point to call.
+export { synthesisJobStart, synthesisJobCancel } from './synthesis/asyncJob/fn_synthesisJobStart';
+export { fn_synthesisHeartbeatSweep } from './synthesis/asyncJob/fn_synthesisHeartbeatSweep';
+
+import { dispatchSynthesisJobWrite } from './synthesis/asyncJob/fn_synthesisJobDispatch';
+
+exports.synthesisJobDispatch = createFirestoreFunction(
+	'/synthesisJobs/{jobId}',
+	onDocumentWritten,
+	dispatchSynthesisJobWrite,
+	'synthesisJobDispatch',
+);
+
+// Ship 3a — cluster-aware polarization scheduled flusher.
+// Runs every 1 minute, drains `_clusterRecomputeQueue`, recomputes synth
+// cluster aggregates + polarization indexes. No-ops when the
+// SYNTHESIS_CLUSTER_AWARE_POLARIZATION flag is OFF (drains queue without
+// acting). See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 3" /
+// "Debounced flusher".
+export { fn_clusterRecomputeFlush } from './synthesis/liveSynth/fn_clusterRecomputeFlush';
+
+// Ship 3b — live-synth attach/spawn/dissolve triggers.
+// Both are gated by the SYNTHESIS_LIVE_SYNTH_ENABLED flag and exit
+// immediately at handler entry when OFF. The handlers themselves live in
+// `synthesis/liveSynth/onOptionCreateLive.ts` and `onOptionUpdateLive.ts`.
+// See plans/synthesis-100k-living-synth.md, Ship 3 §"Trigger 1" / "Trigger 2".
+import { liveSynthOnOptionCreate } from './synthesis/liveSynth/onOptionCreateLive';
+import { liveSynthOnOptionUpdate } from './synthesis/liveSynth/onOptionUpdateLive';
+
+exports.liveSynthOnOptionCreate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentCreated,
+	async (event: { data?: { data: () => unknown } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionCreate(event.data.data());
+	},
+	'liveSynthOnOptionCreate',
+);
+
+exports.liveSynthOnOptionUpdate = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionUpdate(event.data.before.data(), event.data.after.data());
+	},
+	'liveSynthOnOptionUpdate',
+);
+
+// Living-only synthesis (Day 1–5). All entry points flow into `runSinglePipeline`.
+import { liveSynthOnOptionEvaluationChange } from './synthesis/liveSynth/onOptionEvaluationChange';
+
+exports.liveSynthOnOptionEvaluationChange = createFirestoreFunction(
+	`/${Collections.statements}/{statementId}`,
+	onDocumentUpdated,
+	async (event: { data?: { before: { data: () => unknown }; after: { data: () => unknown } } }) => {
+		if (!event.data) return;
+		await liveSynthOnOptionEvaluationChange(event.data.before.data(), event.data.after.data());
+	},
+	'liveSynthOnOptionEvaluationChange',
+);
+
+export { processSynthesisQueue } from './synthesis/queue/processSynthesisQueue';
+export { synthesizeNow } from './synthesis/admin/fn_synthesizeNow';
+export { synthesizeSelected } from './synthesis/admin/fn_synthesizeSelected';
+export { rejudgeGrayBand } from './synthesis/admin/fn_rejudgeGrayBand';
+export { saveSynthesisSettings } from './synthesis/admin/fn_saveSynthesisSettings';
+export {
+	synthesisPause,
+	synthesisResume,
+	synthesisCancel,
+} from './synthesis/admin/fn_synthesisControl';
 
 // HTTP endpoint for one-time historical backfill (admin auth required)
 exports.backfillAdminStats = wrapAdminHttpFunction(backfillAdminStats);
@@ -1027,7 +1106,6 @@ void hybridClusteringSweep; // keep import alive for future re-enable; no runtim
 exports.triggerHybridClustering = wrapAdminHttpFunction(triggerHybridClustering, {
 	memory: '1GiB',
 	timeoutSeconds: 540,
-	secrets: ['GEMINI_API_KEY'],
 });
 
 // HTTP endpoint for the new topic-cluster pipeline (admin-triggered, on-demand).
@@ -1063,3 +1141,8 @@ exports.onStatementCreatedMarkCondensationStale = onStatementCreatedMarkCondensa
 exports.suggestClusterTitle = suggestClusterTitle;
 exports.mergeClusters = mergeClusters;
 exports.evaluationDriftCorrection = evaluationDriftCorrection;
+
+// Per-survey backup pipeline (scheduled + manual)
+export { backupSurveyOnRequest } from './backups/backupSurveyOnRequest';
+export { scheduledDailyBackups } from './backups/scheduledDailyBackups';
+export { backupSurveyCallable } from './backups/backupSurveyCallable';

@@ -67,7 +67,9 @@
     "e2e:sign:ui": "npx playwright test --config=e2e/sign-app/playwright.config.ts --ui",
     "e2e:mc:ui": "npx playwright test --config=e2e/mass-consensus/playwright.config.ts --ui",
     "e2e:install": "npx playwright install chromium",
-    "seed:wizcol": "FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx tsx scripts/seedFromWizcolDump.ts"
+    "seed:wizcol": "FIRESTORE_EMULATOR_HOST=localhost:8081 GCLOUD_PROJECT=freedi-test FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 npx tsx scripts/seedFromWizcolDump.ts",
+    "backup:survey": "npx tsx scripts/exportProdQuestion.ts",
+    "restore:survey": "npx tsx scripts/restoreQuestionToProduction.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -84,7 +86,7 @@
     "@types/react-window": "^1.8.8",
     "@vercel/analytics": "^1.6.1",
     "clsx": "^2.1.1",
-    "dompurify": "^3.3.1",
+    "dompurify": "^3.4.6",
     "esbuild": "0.25.2",
     "firebase": "^11.0.2",
     "lucide-react": "^0.474.0",
@@ -152,9 +154,13 @@
     "ttf2woff2": "^8.0.0",
     "typescript": "~5.7.3",
     "typescript-eslint": "^8.20.0",
-    "vite": "^6.0.7",
+    "vite": "^6.4.2",
     "vite-plugin-pwa": "^0.21.1",
     "vite-plugin-svgr": "^4.3.0",
     "workbox-window": "^7.3.0"
+  },
+  "overrides": {
+    "fast-uri": "^3.1.2",
+    "fast-xml-parser": "^5.8.0"
   }
 }

@@ -27,6 +27,7 @@ function setMockDoc(collection: string, docId: string, snap: MockSnap): void {
 				exists: false,
 				data: () => null,
 			};
+
 			return { get: jest.fn(() => Promise.resolve(docMock)) };
 		};
 		cmock = { doc: jest.fn(ref) as unknown as jest.Mock<MockRef, [string]> };
@@ -66,6 +67,7 @@ jest.mock('../../db', () => ({
 				};
 				collectionMocks.set(name, cmock);
 			}
+
 			return cmock;
 		}),
 	},
