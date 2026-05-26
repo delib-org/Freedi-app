@@ -48,7 +48,7 @@
 		justify-content: flex-start;
 		gap: 1rem;
 		overflow-y: auto;
-		padding-bottom: 150px;
+		padding-bottom: var(--page-bottom-clearance);
 
 		@media screen and (min-width: 768px) {
 			padding: 10px;

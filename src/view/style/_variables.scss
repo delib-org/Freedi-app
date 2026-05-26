@@ -139,6 +139,11 @@
   // --- SIZES ---
   --padding: 1rem;
 
+  // Bottom clearance for pages that scroll under a floating bottom nav
+  // (.page__footer, .tree-view__bottom-nav, ChatInput, StatementBottomNav).
+  // ~120px nav + breathing room + iOS home-indicator safe area.
+  --page-bottom-clearance: calc(160px + env(safe-area-inset-bottom, 0px));
+
   // Fonts
   --h1-font-size: 2rem;
   --h2-font-size: 1.7rem;

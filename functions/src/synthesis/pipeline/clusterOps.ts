@@ -1,7 +1,7 @@
 import { getFirestore } from 'firebase-admin/firestore';
 import { logger } from 'firebase-functions';
 import { Collections, type Statement, StatementType, getRandomUID } from '@freedi/shared-types';
-import { generateSynthesizedProposal } from '../../services/integration-ai-service';
+import { generateSynthesizedProposal, generateTopicLabel } from '../../services/integration-ai-service';
 import { recordLiveSynthEvent } from '../liveSynth/auditLog';
 import { enqueueClusterRecompute } from '../liveSynth/clusterRecompute';
 import { checkAndUpdateSpawnDebounce, markSpawnedNow } from './debounce';
@@ -12,6 +12,30 @@ function db() {
 
 export function isCluster(statement: Statement): boolean {
 	return Array.isArray(statement.integratedOptions) && statement.integratedOptions.length > 0;
+}
+
+/**
+ * A synth is a cluster that merges near-duplicate proposals into a single
+ * unified proposal. Title regenerates as members grow.
+ *
+ * Uses the canonical `derivedByPipeline` field from the Statement type.
+ * The legacy `isSynthesis` field is still written for back-compat but
+ * should not be read.
+ */
+export function isSynth(statement: Statement): boolean {
+	return isCluster(statement) && statement.derivedByPipeline === 'synthesis';
+}
+
+/**
+ * A topic-cluster is a cluster that groups distinct-but-related proposals
+ * under a topic label. Title is stable; doesn't regenerate on attach.
+ *
+ * Note: `derivedByPipeline` may be undefined on pre-migration clusters.
+ * We treat any cluster that isn't explicitly a synth as a topic-cluster,
+ * so old clusters keep working.
+ */
+export function isTopicCluster(statement: Statement): boolean {
+	return isCluster(statement) && statement.derivedByPipeline !== 'synthesis';
 }
 
 interface AttachInput {
@@ -100,6 +124,17 @@ interface SpawnInput {
 	triggerSource: string;
 	/** When true, bypass the per-parent spawn debounce. Admin paths set this. */
 	bypassDebounce?: boolean;
+	/**
+	 * - 'synth'  → near-duplicates band (cosine ≥ attachThreshold). Calls
+	 *   generateSynthesizedProposal for a unified proposal. Cluster gets
+	 *   `isSynthesis: true` + `derivedByPipeline: 'synthesis'`.
+	 * - 'cluster' → topic band (clusterThreshold ≤ cosine < attachThreshold).
+	 *   Calls generateTopicLabel for a short theme name. Cluster gets
+	 *   `isSynthesis: false` + `derivedByPipeline: 'topic-cluster'`.
+	 *
+	 * Defaults to 'synth' for back-compat.
+	 */
+	mode?: 'synth' | 'cluster';
 }
 
 interface SpawnResult {
@@ -110,13 +145,22 @@ interface SpawnResult {
 }
 
 /**
- * Generate a merged proposal from `option + sibling` and write a new cluster
- * statement. Emits one Gemini call (the proposal generator). If the LLM
- * refuses (cannotSynthesize), the caller should fall through to the review
- * queue so an admin sees the candidate pair without an autonomous merge.
+ * Generate a merged proposal (or topic label) from `option + sibling` and
+ * write a new cluster statement. For synth mode this emits one Gemini call
+ * (`generateSynthesizedProposal`); if the LLM refuses (`cannotSynthesize`),
+ * the caller should fall through to the review queue. For cluster mode this
+ * emits one short Gemini call (`generateTopicLabel`) and never refuses.
  */
 export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResult> {
-	const { option, sibling, similarity, parentStatement, triggerSource, bypassDebounce } = input;
+	const {
+		option,
+		sibling,
+		similarity,
+		parentStatement,
+		triggerSource,
+		bypassDebounce,
+		mode = 'synth',
+	} = input;
 
 	if (!bypassDebounce) {
 		const allowed = await checkAndUpdateSpawnDebounce(option.parentId);
@@ -125,6 +169,7 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 				parentId: option.parentId,
 				optionId: option.statementId,
 				siblingId: sibling.statementId,
+				mode,
 			});
 
 			return { spawned: false, debounced: true };
@@ -132,40 +177,68 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 	}
 
 	const questionContext = parentStatement.statement || parentStatement.statementId;
-	let proposal: Awaited<ReturnType<typeof generateSynthesizedProposal>>;
-	try {
-		proposal = await generateSynthesizedProposal(
-			[option, sibling].map((s) => ({
-				statementId: s.statementId,
-				statement: s.statement,
-				paragraphsText: '',
-				numberOfEvaluators: s.evaluation?.numberOfEvaluators ?? 0,
-				consensus: s.consensus ?? 0,
-				sumEvaluations: s.evaluation?.sumEvaluations ?? 0,
-			})),
-			questionContext,
-		);
-	} catch (error) {
-		logger.warn('synthesis.pipeline.spawn: proposal generation failed; aborting', {
-			optionId: option.statementId,
-			siblingId: sibling.statementId,
-			error: error instanceof Error ? error.message : String(error),
-		});
 
-		return { spawned: false };
-	}
+	let title: string;
+	let description: string;
 
-	if (proposal.cannotSynthesize === true) {
-		return { spawned: false, cannotSynthesize: true };
+	if (mode === 'synth') {
+		let proposal: Awaited<ReturnType<typeof generateSynthesizedProposal>>;
+		try {
+			proposal = await generateSynthesizedProposal(
+				[option, sibling].map((s) => ({
+					statementId: s.statementId,
+					statement: s.statement,
+					paragraphsText: '',
+					numberOfEvaluators: s.evaluation?.numberOfEvaluators ?? 0,
+					consensus: s.consensus ?? 0,
+					sumEvaluations: s.evaluation?.sumEvaluations ?? 0,
+				})),
+				questionContext,
+			);
+		} catch (error) {
+			logger.warn('synthesis.pipeline.spawn: proposal generation failed; aborting', {
+				optionId: option.statementId,
+				siblingId: sibling.statementId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+
+			return { spawned: false };
+		}
+
+		if (proposal.cannotSynthesize === true) {
+			return { spawned: false, cannotSynthesize: true };
+		}
+		title = proposal.title;
+		description = proposal.description ?? '';
+	} else {
+		try {
+			const label = await generateTopicLabel([option, sibling], questionContext);
+			title = label.title;
+			description = label.description;
+		} catch (error) {
+			logger.warn('synthesis.pipeline.spawn: topic label generation failed; aborting', {
+				optionId: option.statementId,
+				siblingId: sibling.statementId,
+				error: error instanceof Error ? error.message : String(error),
+			});
+
+			return { spawned: false };
+		}
 	}
 
 	const clusterId = getRandomUID();
 	const now = Date.now();
+	// Both synths and topic clusters are written as `statementType: option`
+	// so they show up in the options-list views alongside regular suggestions.
+	// The `isCluster: true` + `isSynthesis: <bool>` flag pair discriminates:
+	// `isSynthesis: true`  → near-duplicate proposals merged into one
+	// `isSynthesis: false` → distinct-but-related ideas grouped by topic
+	const isSynthMode = mode === 'synth';
 	const newCluster: Partial<Statement> & Record<string, unknown> = {
 		statementId: clusterId,
-		statement: proposal.title,
-		description: proposal.description ?? '',
-		statementType: StatementType.synthesis,
+		statement: title,
+		description,
+		statementType: StatementType.option,
 		parentId: option.parentId,
 		topParentId: option.topParentId ?? option.parentId,
 		creatorId: option.creatorId,
@@ -175,9 +248,15 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		consensus: 0,
 		integratedOptions: [option.statementId, sibling.statementId],
 		isCluster: true,
-		derivedByPipeline: 'synthesis',
+		isSynthesis: isSynthMode,
+		derivedByPipeline: isSynthMode ? 'synthesis' : 'topic-cluster',
 		liveSynthOrigin: 'spawn',
 		hide: false,
+		// Synth-only: track how many members were in the set when the
+		// title was last (re-)generated, so the debounced regenerator can
+		// short-circuit when nothing has changed. Initialized to 2 because
+		// spawn always starts with the option+sibling pair.
+		...(isSynthMode ? { lastTitleRegeneratedMembers: 2, lastTitleRegeneratedAt: now } : {}),
 	};
 
 	try {
@@ -200,7 +279,8 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		optionId: option.statementId,
 		siblingId: sibling.statementId,
 		similarity: Number(similarity.toFixed(3)),
-		title: proposal.title?.substring(0, 80),
+		title: title?.substring(0, 80),
+		mode,
 		triggerSource,
 	});
 
@@ -208,11 +288,12 @@ export async function spawnClusterFromPair(input: SpawnInput): Promise<SpawnResu
 		action: 'spawn',
 		clusterId,
 		optionId: option.statementId,
-		reason: `spawn at cosine=${similarity.toFixed(3)}`,
+		reason: `spawn ${mode} at cosine=${similarity.toFixed(3)}`,
 		prevState: { sourceOptionId: option.statementId, siblingId: sibling.statementId },
 		newState: {
 			clusterId,
 			integratedOptions: [option.statementId, sibling.statementId],
+			mode,
 		},
 		triggerSource,
 		parentStatementId: option.parentId,

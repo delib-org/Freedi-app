@@ -57,6 +57,7 @@ export const saveSynthesisSettings = onCall<SaveRequest>(
 			minEvaluators: settings.minEvaluators ?? DEFAULT_SYNTHESIS_SETTINGS.minEvaluators,
 			minConsensus: settings.minConsensus ?? DEFAULT_SYNTHESIS_SETTINGS.minConsensus,
 			attachThreshold: settings.attachThreshold ?? DEFAULT_SYNTHESIS_SETTINGS.attachThreshold,
+			clusterThreshold: settings.clusterThreshold ?? DEFAULT_SYNTHESIS_SETTINGS.clusterThreshold,
 			reviewLowerBound: settings.reviewLowerBound ?? DEFAULT_SYNTHESIS_SETTINGS.reviewLowerBound,
 		};
 
