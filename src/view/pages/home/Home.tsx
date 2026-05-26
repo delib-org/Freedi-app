@@ -96,7 +96,7 @@ export default function Home() {
 			unsubscribeEngagement();
 			unsubscribeCredits();
 		};
-	}, [user]);
+	}, [user?.uid]);
 
 	return (
 		<main className="page slide-in">
